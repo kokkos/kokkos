@@ -148,7 +148,7 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
     ${COMMON_WARNINGS})
 
   ARCH_FLAGS(
-    PGI " "
+    PGI ""
     GNU     ${GNU_WARNINGS}
     DEFAULT ${COMMON_WARNINGS}
   )
@@ -195,8 +195,8 @@ ENDIF()
 
 IF (KOKKOS_ARCH_ARMV81)
   ARCH_FLAGS(
-    Cray " "
-    PGI  " "
+    Cray ""
+    PGI  ""
     DEFAULT -march=armv8.1-a
   )
 ENDIF()
@@ -204,8 +204,8 @@ ENDIF()
 IF (KOKKOS_ARCH_ARMV8_THUNDERX)
   SET(KOKKOS_ARCH_ARMV80 ON CACHE BOOL "enable armv80" FORCE)
   ARCH_FLAGS(
-    Cray " "
-    PGI  " "
+    Cray ""
+    PGI  ""
     DEFAULT -march=armv8-a -mtune=thunderx
   )
 ENDIF()
@@ -213,8 +213,8 @@ ENDIF()
 IF (KOKKOS_ARCH_ARMV8_THUNDERX2)
   SET(KOKKOS_ARCH_ARMV81 ON CACHE BOOL "enable armv80" FORCE)
   ARCH_FLAGS(
-    Cray " "
-    PGI  " "
+    Cray ""
+    PGI  ""
     DEFAULT -march=thunderx2t99 -mtune=thunderx2t99
   )
 ENDIF()
@@ -231,7 +231,7 @@ IF (KOKKOS_ARCH_WSM)
   ARCH_FLAGS(
     Intel   -xSSE4.2
     PGI     -tp=nehalem
-    Cray    " "
+    Cray    ""
     DEFAULT -msse4.2
   )
   SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
@@ -241,7 +241,7 @@ IF (KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
   ARCH_FLAGS(
     Intel   -mavx
     PGI     -tp=sandybridge
-    Cray    " "
+    Cray    ""
     DEFAULT -mavx
   )
   SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
@@ -252,7 +252,7 @@ IF (KOKKOS_ARCH_HSW OR KOKKOS_ARCH_BDW)
   ARCH_FLAGS(
     Intel   -xCORE-AVX2
     PGI     -tp=haswell
-    Cray    " "
+    Cray    ""
     DEFAULT -march=core-avx2 -mtune=core-avx2
   )
   SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
@@ -266,8 +266,8 @@ IF (KOKKOS_ARCH_KNL)
   SET(KOKKOS_ARCH_AVX512MIC ON CACHE BOOL "enable avx-512 MIC" FORCE)
   ARCH_FLAGS(
     Intel   -xMIC-AVX512
-    PGI     " "
-    Cray    " "
+    PGI     ""
+    Cray    ""
     DEFAULT -march=knl -mtune=knl
   )
   SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
@@ -278,8 +278,8 @@ IF (KOKKOS_ARCH_SKX)
   SET(KOKKOS_ARCH_AVX512XEON ON CACHE BOOL "enable avx-512 Xeon" FORCE)
   ARCH_FLAGS(
     Intel   -xCORE-AVX512
-    PGI     " "
-    Cray    " "
+    PGI     ""
+    Cray    ""
     DEFAULT -march=skylake-avx512 -march=skylake-avx512 -mrtm
   )
   SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
@@ -288,7 +288,7 @@ ENDIF()
 
 IF (KOKKOS_ARCH_POWER7)
   ARCH_FLAGS(
-    PGI     " "
+    PGI     ""
     DEFAULT -mcpu=power7 -mtune=power7
   )
   SET(KOKKOS_USE_ISA_POWERPCBE ON CACHE INTERNAL "Power PC Architecture")
@@ -296,8 +296,8 @@ ENDIF()
 
 IF (KOKKOS_ARCH_POWER8)
   ARCH_FLAGS(
-    PGI     " "
-    NVIDIA  " "
+    PGI     ""
+    NVIDIA  ""
     DEFAULT -mcpu=power8 -mtune=power8
   )
   SET(KOKKOS_USE_ISA_POWERPCLE ON CACHE INTERNAL "Power PC Architecture")
@@ -305,8 +305,8 @@ ENDIF()
 
 IF (KOKKOS_ARCH_POWER9)
   ARCH_FLAGS(
-    PGI     " "
-    NVIDIA  " "
+    PGI     ""
+    NVIDIA  ""
     DEFAULT -mcpu=power9 -mtune=power9
   )
   SET(KOKKOS_USE_ISA_POWERPCLE ON CACHE INTERNAL "Power PC Architecture")
