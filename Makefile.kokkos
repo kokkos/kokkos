@@ -583,9 +583,15 @@ ifeq ($(KOKKOS_INTERNAL_DISABLE_PROFILING), 0)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_PROFILING")
 endif
 
-ifeq ($(KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE), 1)
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_DEPRECATED_CODE")
+ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
+  ifeq ($(KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE), 1)
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_DEPRECATED_CODE")
+  endif
+  ifeq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 0)
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_DEPRECATED_CODE")
+  endif
 endif
+
 ifeq ($(KOKKOS_INTERNAL_ENABLE_ETI), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_ETI")
 endif

@@ -266,7 +266,7 @@ public:
       Kokkos::parallel_reduce( team_exec, functor_type( nwork ), tmp );
     }
 
-    execution_space::fence();
+    execution_space().fence();
 
     for ( unsigned i = 0; i < Repeat; ++i ) {
       for ( unsigned j = 0; j < Count; ++j ) {
@@ -392,7 +392,7 @@ public:
       Kokkos::deep_copy( functor.accum, total );
 
       Kokkos::parallel_reduce( team_exec, functor, result_type( & error ) );
-      DeviceType::fence();
+      DeviceType().fence();
 
       Kokkos::deep_copy( accum, functor.accum );
       Kokkos::deep_copy( total, functor.total );
@@ -401,7 +401,7 @@ public:
       ASSERT_EQ( total, accum );
     }
 
-    execution_space::fence();
+    execution_space().fence();
   }
 };
 

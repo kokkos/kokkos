@@ -224,10 +224,19 @@ public:
   typename std::enable_if< is_reducer< ReducerType >::value >::type
   team_reduce( ReducerType const & reducer ) const noexcept
     {
+      team_reduce(reducer,reducer.reference());
+    }
+  
+  template< typename ReducerType >
+  KOKKOS_INLINE_FUNCTION
+  typename std::enable_if< is_reducer< ReducerType >::value >::type
+  team_reduce( ReducerType const & reducer, typename ReducerType::value_type& value ) const noexcept
+    {
       #ifdef __CUDA_ARCH__
-      cuda_intra_block_reduction(reducer,blockDim.y);
+      cuda_intra_block_reduction(reducer,value,blockDim.y);
       #endif /* #ifdef __CUDA_ARCH__ */
     }
+
 
   //--------------------------------------------------------------------------
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
@@ -283,20 +292,28 @@ public:
   template< typename ReducerType >
   KOKKOS_INLINE_FUNCTION static
   typename std::enable_if< is_reducer< ReducerType >::value >::type
-  vector_reduce( ReducerType const & reducer )
+  vector_reduce( ReducerType const & reducer ) {
+    vector_reduce(reducer,reducer.reference());
+  }
+
+  template< typename ReducerType >
+  KOKKOS_INLINE_FUNCTION static
+  typename std::enable_if< is_reducer< ReducerType >::value >::type
+  vector_reduce( ReducerType const & reducer, typename ReducerType::value_type& value )
     {
 
       #ifdef __CUDA_ARCH__
       if(blockDim.x == 1) return;
 
       // Intra vector lane shuffle reduction:
-      typename ReducerType::value_type tmp ( reducer.reference() );
+      typename ReducerType::value_type tmp ( value );
+      typename ReducerType::value_type tmp2 = tmp;
 
       unsigned mask = blockDim.x==32?0xffffffff:((1<<blockDim.x)-1)<<((threadIdx.y%(32/blockDim.x))*blockDim.x);
 
       for ( int i = blockDim.x ; ( i >>= 1 ) ; ) {
-        cuda_shfl_down( reducer.reference() , tmp , i , blockDim.x , mask );
-        if ( (int)threadIdx.x < i ) { reducer.join( tmp , reducer.reference() ); }
+        cuda_shfl_down( tmp2 , tmp , i , blockDim.x , mask );
+        if ( (int)threadIdx.x < i ) { reducer.join( tmp , tmp2 ); }
       }
 
       // Broadcast from root lane to all other lanes.
@@ -304,7 +321,9 @@ public:
       // because floating point summation is not associative
       // and thus different threads could have different results.
 
-      cuda_shfl( reducer.reference() , tmp , 0 , blockDim.x , mask );
+      cuda_shfl( tmp2 , tmp , 0 , blockDim.x , mask );
+      value = tmp2;
+      reducer.reference() = tmp2;
       #endif
     }
 
@@ -557,7 +576,25 @@ struct TeamThreadRangeBoundariesStruct<iType,CudaTeamMember> {
     , end( end_ ) {}
 };
 
+template<typename iType>
+struct TeamVectorRangeBoundariesStruct<iType,CudaTeamMember> {
+  typedef iType index_type;
+  const CudaTeamMember& member;
+  const iType start;
+  const iType end;
 
+  KOKKOS_INLINE_FUNCTION
+  TeamVectorRangeBoundariesStruct (const CudaTeamMember& thread_, const iType& count)
+    : member(thread_)
+    , start( 0 )
+    , end( count ) {}
+
+  KOKKOS_INLINE_FUNCTION
+  TeamVectorRangeBoundariesStruct (const CudaTeamMember& thread_,  const iType& begin_, const iType& end_)
+    : member(thread_)
+    , start( begin_ )
+    , end( end_ ) {}
+};
 
 template<typename iType>
 struct ThreadVectorRangeBoundariesStruct<iType,CudaTeamMember> {
@@ -598,6 +635,22 @@ Impl::TeamThreadRangeBoundariesStruct< typename std::common_type< iType1, iType2
 TeamThreadRange( const Impl::CudaTeamMember & thread, iType1 begin, iType2 end ) {
   typedef typename std::common_type< iType1, iType2 >::type iType;
   return Impl::TeamThreadRangeBoundariesStruct< iType, Impl::CudaTeamMember >( thread, iType(begin), iType(end) );
+}
+
+template<typename iType>
+KOKKOS_INLINE_FUNCTION
+Impl::TeamVectorRangeBoundariesStruct< iType, Impl::CudaTeamMember >
+TeamVectorRange( const Impl::CudaTeamMember & thread, const iType & count ) {
+  return Impl::TeamVectorRangeBoundariesStruct< iType, Impl::CudaTeamMember >( thread, count );
+}
+
+template< typename iType1, typename iType2 >
+KOKKOS_INLINE_FUNCTION
+Impl::TeamVectorRangeBoundariesStruct< typename std::common_type< iType1, iType2 >::type,
+                                       Impl::CudaTeamMember >
+TeamVectorRange( const Impl::CudaTeamMember & thread, const iType1 & begin, const iType2 & end ) {
+  typedef typename std::common_type< iType1, iType2 >::type iType;
+  return Impl::TeamVectorRangeBoundariesStruct< iType, Impl::CudaTeamMember >( thread, iType(begin), iType(end) );
 }
 
 template<typename iType>
@@ -669,16 +722,16 @@ parallel_reduce
   )
 {
 #ifdef __CUDA_ARCH__
-
-  reducer.init( reducer.reference() );
+  typename ReducerType::value_type value;
+  reducer.init( value );
 
   for( iType i = loop_boundaries.start + threadIdx.y
      ; i < loop_boundaries.end
      ; i += blockDim.y ) {
-    closure(i,reducer.reference());
+    closure(i,value);
   }
 
-  loop_boundaries.member.team_reduce( reducer );
+  loop_boundaries.member.team_reduce( reducer, value );
 
 #endif
 }
@@ -703,19 +756,88 @@ parallel_reduce
   )
 {
 #ifdef __CUDA_ARCH__
-
-  Kokkos::Sum<ValueType> reducer(result);
+  ValueType val;
+  Kokkos::Sum<ValueType> reducer(val);
 
   reducer.init( reducer.reference() );
 
   for( iType i = loop_boundaries.start + threadIdx.y
      ; i < loop_boundaries.end
      ; i += blockDim.y ) {
-    closure(i,result);
+    closure(i,val);
   }
 
-  loop_boundaries.member.team_reduce( reducer );
+  loop_boundaries.member.team_reduce( reducer , val);
+  result = reducer.reference();
+#endif
+}
 
+template<typename iType, class Closure >
+KOKKOS_INLINE_FUNCTION
+void parallel_for
+  ( const Impl::TeamVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember>&
+      loop_boundaries
+  , const Closure & closure
+  )
+{
+  #ifdef __CUDA_ARCH__
+  for( iType i = loop_boundaries.start + threadIdx.y * blockDim.x + threadIdx.x
+     ; i < loop_boundaries.end
+     ; i += blockDim.y*blockDim.x )
+    closure(i);
+  #endif
+}
+
+template< typename iType, class Closure, class ReducerType >
+KOKKOS_INLINE_FUNCTION
+typename std::enable_if< Kokkos::is_reducer< ReducerType >::value >::type
+parallel_reduce
+  ( const Impl::TeamVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember> &
+      loop_boundaries
+  , const Closure & closure
+  , const ReducerType & reducer
+  )
+{
+#ifdef __CUDA_ARCH__
+  typename ReducerType::value_type value;
+  reducer.init( value );
+
+  for( iType i = loop_boundaries.start + threadIdx.y * blockDim.x + threadIdx.x
+     ; i < loop_boundaries.end
+     ; i += blockDim.y * blockDim.x ) {
+    closure(i,value);
+  }
+
+  loop_boundaries.member.vector_reduce( reducer, value );
+  loop_boundaries.member.team_reduce( reducer, value );
+#endif
+}
+
+template< typename iType, class Closure, typename ValueType >
+KOKKOS_INLINE_FUNCTION
+typename std::enable_if< ! Kokkos::is_reducer< ValueType >::value >::type
+parallel_reduce
+  ( const Impl::TeamVectorRangeBoundariesStruct<iType,Impl::CudaTeamMember> &
+      loop_boundaries
+  , const Closure & closure
+  , ValueType & result
+  )
+{
+#ifdef __CUDA_ARCH__
+  ValueType val;
+  Kokkos::Sum<ValueType> reducer(val);
+
+  reducer.init( reducer.reference() );
+
+  for( iType i = loop_boundaries.start + threadIdx.y * blockDim.x + threadIdx.x
+     ; i < loop_boundaries.end
+     ; i += blockDim.y * blockDim.x ) {
+    closure(i,val);
+  }
+
+  loop_boundaries.member.vector_reduce( reducer );
+  loop_boundaries.member.team_reduce( reducer );
+  result = reducer.reference();
 #endif
 }
 

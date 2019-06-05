@@ -282,6 +282,7 @@ decrement( SharedAllocationRecord< void , void > * arg_record )
   return arg_record ;
 }
 
+#ifdef KOKKOS_DEBUG
 void
 SharedAllocationRecord< void , void >::
 print_host_accessible_records( std::ostream & s
@@ -289,7 +290,6 @@ print_host_accessible_records( std::ostream & s
                              , const SharedAllocationRecord * const root
                              , const bool detail )
 {
-#ifdef KOKKOS_DEBUG
   const SharedAllocationRecord< void , void > * r = root ;
 
   char buffer[256] ;
@@ -350,12 +350,20 @@ print_host_accessible_records( std::ostream & s
       r = r->m_next ;
     } while ( r != root );
   }
+}
 #else
+void
+SharedAllocationRecord< void , void >::
+print_host_accessible_records( std::ostream &
+                             , const char * const
+                             , const SharedAllocationRecord * const
+                             , const bool )
+{
   Kokkos::Impl::throw_runtime_exception(
       "Kokkos::Impl::SharedAllocationRecord::print_host_accessible_records"
       " only works with KOKKOS_DEBUG enabled");
-#endif
 }
+#endif
 
 } /* namespace Impl */
 } /* namespace Kokkos */

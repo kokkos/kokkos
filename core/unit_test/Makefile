@@ -68,6 +68,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA += TestCuda_AtomicViews.o TestCuda_Atomics.o
     OBJ_CUDA += TestCuda_Team.o TestCuda_TeamScratch.o
     OBJ_CUDA += TestCuda_TeamReductionScan.o TestCuda_TeamTeamSize.o
+    OBJ_CUDA += TestCuda_TeamVectorRange.o
     OBJ_CUDA += TestCuda_Other.o
     OBJ_CUDA += TestCuda_MDRange_a.o TestCuda_MDRange_b.o TestCuda_MDRange_c.o TestCuda_MDRange_d.o TestCuda_MDRange_e.o
     OBJ_CUDA += TestCuda_Crs.o
@@ -159,6 +160,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
     OBJ_THREADS += TestThreads_AtomicViews.o TestThreads_Atomics.o
     OBJ_THREADS += TestThreads_Team.o TestThreads_TeamScratch.o TestThreads_TeamTeamSize.o
     OBJ_THREADS += TestThreads_TeamReductionScan.o
+    OBJ_THREADS += TestThreads_TeamVectorRange.o
     OBJ_THREADS += TestThreads_Other.o
     OBJ_THREADS += TestThreads_MDRange_a.o TestThreads_MDRange_b.o TestThreads_MDRange_c.o TestThreads_MDRange_d.o TestThreads_MDRange_e.o
     OBJ_THREADS += TestThreads_LocalDeepCopy.o
@@ -194,6 +196,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
     OBJ_OPENMP += TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
     OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
     OBJ_OPENMP += TestOpenMP_TeamReductionScan.o TestOpenMP_TeamTeamSize.o
+    OBJ_OPENMP += TestOpenMP_TeamVectorRange.o
     OBJ_OPENMP += TestOpenMP_Other.o
     OBJ_OPENMP += TestOpenMP_MDRange_a.o TestOpenMP_MDRange_b.o TestOpenMP_MDRange_c.o TestOpenMP_MDRange_d.o TestOpenMP_MDRange_e.o
     OBJ_OPENMP += TestOpenMP_Crs.o
@@ -285,6 +288,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX += TestHPX_AtomicOperations_unsignedlongint.o TestHPX_AtomicOperations_longlongint.o TestHPX_AtomicOperations_double.o TestHPX_AtomicOperations_float.o
 	OBJ_HPX += TestHPX_AtomicViews.o TestHPX_Atomics.o
 	OBJ_HPX += TestHPX_Team.o
+	OBJ_HPX += TestHPX_TeamVectorRange.o
 	OBJ_HPX += TestHPX_TeamScratch.o
 	OBJ_HPX += TestHPX_TeamReductionScan.o
 	OBJ_HPX += TestHPX_Other.o
@@ -325,6 +329,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
     OBJ_SERIAL += TestSerial_AtomicOperations_complexfloat.o TestSerial_AtomicOperations_complexdouble.o
     OBJ_SERIAL += TestSerial_AtomicViews.o TestSerial_Atomics.o
     OBJ_SERIAL += TestSerial_Team.o TestSerial_TeamScratch.o
+    OBJ_SERIAL += TestSerial_TeamVectorRange.o
     OBJ_SERIAL += TestSerial_TeamReductionScan.o TestSerial_TeamTeamSize.o
     OBJ_SERIAL += TestSerial_Other.o
     #HCC_WORKAROUND

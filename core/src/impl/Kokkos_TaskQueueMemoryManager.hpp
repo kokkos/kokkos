@@ -221,6 +221,14 @@ public:
     m_pool.deallocate((void*)&obj, 1);
     Kokkos::atomic_decrement(&m_count_alloc); // memory_order_relaxed
   }
+
+  KOKKOS_INLINE_FUNCTION
+  memory_pool& get_memory_pool() { return m_pool; }
+  KOKKOS_INLINE_FUNCTION
+  memory_pool const& get_memory_pool() const { return m_pool; }
+
+  KOKKOS_INLINE_FUNCTION
+  int allocation_count() const noexcept { return m_count_alloc; }
 };
 
 } /* namespace Impl */

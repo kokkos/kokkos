@@ -376,8 +376,8 @@ public:
 
         closure.execute();
 
-        traits::execution_space::fence();
-        //Impl::ChunkArraySpace< typename traits::memory_space >::memory_space::execution_space::fence(); 
+        typename traits::execution_space().fence();
+        //Impl::ChunkArraySpace< typename traits::memory_space >::memory_space::execution_space().fence(); 
       }
 
     void construct_shared_allocation()

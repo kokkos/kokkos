@@ -1114,7 +1114,7 @@ public:
 
       ROCmParallelLaunch< ParallelReduce, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
 
-      ROCM::fence();
+      ROCM().fence();
 
       if ( m_result_ptr ) {
           const int size = ValueTraits::value_size( ReducerConditional::select(m_functor , m_reducer)  );

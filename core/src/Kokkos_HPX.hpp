@@ -191,19 +191,27 @@ public:
   }
 
   static bool in_parallel(HPX const & = HPX()) noexcept { return false; }
-  static void fence(HPX const & = HPX())
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-  {
-    if (hpx::threads::get_self_ptr() == nullptr) {
-      hpx::threads::run_as_hpx_thread([]() { impl_get_future().wait(); });
-    } else {
-      impl_get_future().wait();
+  static void impl_static_fence(HPX const & = HPX())
+  #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
+    {
+      if (hpx::threads::get_self_ptr() == nullptr) {
+        hpx::threads::run_as_hpx_thread([]() { impl_get_future().wait(); });
+      } else {
+        impl_get_future().wait();
+      }
     }
+  #else
+        noexcept {
+    }
+  #endif
+
+  #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+  static void fence(HPX const & = HPX()) {
+  #else
+  void fence() const {
+  #endif
+    impl_static_fence();
   }
-#else
-      noexcept {
-  }
-#endif
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
@@ -1746,6 +1754,24 @@ template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
     typename std::common_type<iType1, iType2>::type, Impl::HPXTeamMember>
 TeamThreadRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
+                const iType2 &i_end) {
+  using iType = typename std::common_type<iType1, iType2>::type;
+  return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
+      thread, iType(i_begin), iType(i_end));
+}
+
+template <typename iType>
+KOKKOS_INLINE_FUNCTION
+    Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
+    TeamVectorRange(const Impl::HPXTeamMember &thread, const iType &count) {
+  return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
+      thread, count);
+}
+
+template <typename iType1, typename iType2>
+KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
+    typename std::common_type<iType1, iType2>::type, Impl::HPXTeamMember>
+TeamVectorRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
                 const iType2 &i_end) {
   using iType = typename std::common_type<iType1, iType2>::type;
   return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(

@@ -241,7 +241,7 @@
   #endif
 #endif
 
-#if defined( __PGIC__ ) 
+#if defined( __PGIC__ )
   #define KOKKOS_COMPILER_PGI __PGIC__*100+__PGIC_MINOR__*10+__PGIC_PATCHLEVEL__
 
   #if ( 1540 > KOKKOS_COMPILER_PGI )
@@ -328,7 +328,10 @@
 
   #if defined( KOKKOS_ARCH_AVX512MIC )
       #define KOKKOS_ENABLE_RFO_PREFETCH 1
-  #endif 
+      #if (KOKKOS_COMPILER_INTEL < 1800) && !defined(KOKKOS_KNL_USE_ASM_WORKAROUND)
+        #define KOKKOS_KNL_USE_ASM_WORKAROUND 1
+      #endif
+  #endif
 
   #if defined( __MIC__ )
     // Compiling for Xeon Phi
@@ -558,10 +561,25 @@
 
 #if (defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20))
   #define KOKKOS_CONSTEXPR_14 constexpr
+  #define KOKKOS_DEPRECATED [[deprecated]]
+  #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
 #else
   #define KOKKOS_CONSTEXPR_14
+  #if defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG)
+    #define KOKKOS_DEPRECATED
+    #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE __attribute__ ((deprecated))
+  #else
+    #define KOKKOS_DEPRECATED
+    #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
+  #endif
 #endif
 
+
+// DJS 05/28/2019: Bugfix: Issue 2155
+// Use KOKKOS_ENABLE_CUDA_LDG_INTRINSIC to avoid memory leak in RandomAccess View
+#if defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
+ #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
+#endif
 
 #endif // #ifndef KOKKOS_MACROS_HPP
 

@@ -41,6 +41,10 @@
 //@HEADER
 */
 
+
+#include <Kokkos_Macros.hpp>
+
+#ifdef KOKKOS_ENABLE_HPX
 #include <Kokkos_HPX.hpp>
 
 #include <hpx/util/yield_while.hpp>
@@ -142,3 +146,7 @@ void HPX::impl_finalize() {
 
 } // namespace Experimental
 } // namespace Kokkos
+
+#else
+void KOKKOS_CORE_SRC_IMPL_HPX_PREVENT_LINK_ERROR() {}
+#endif //#ifdef KOKKOS_ENABLE_HPX

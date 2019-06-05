@@ -1,0 +1,112 @@
+pipeline {
+    agent {
+        label 'docker'
+    }
+    environment {
+        CCACHE_DIR = '/tmp/ccache'
+        CCACHE_MAXSIZE = '10G'
+        CCACHE_CPP2 = 'true'
+    }
+    stages {
+        stage('Build') {
+            parallel {
+                stage('CUDA-9.2-Clang') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.clang'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    environment {
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --compiler=/usr/local/bin/clang++ --with-cuda --with-cuda-options=enable_lambda'
+                    }
+                    steps {
+                        sh 'ln -s /usr/bin/ccache /usr/local/bin/clang++'
+                        sh 'ccache --zero-stats'
+                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
+                stage("CUDA-9.2-NVCC") {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:9.2-devel'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    environment {
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda'
+                    }
+                    steps {
+                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
+                        sh 'ccache --zero-stats'
+                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
+                stage("CUDA-10.1-NVCC") {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    environment {
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda,rdc,force_uvm'
+                    }
+                    steps {
+                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
+                        sh 'ccache --zero-stats'
+                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
+                stage("CUDA-10.1-NVCC-DEBUG") {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    environment {
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70--with-cuda --with-cuda-options=enable_lambda --debug'
+                    }
+                    steps {
+                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
+                        sh 'ccache --zero-stats'
+                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

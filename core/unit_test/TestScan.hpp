@@ -141,7 +141,7 @@ TEST_F( TEST_CATEGORY, scan )
   TestScan< TEST_EXECSPACE >( 0 );
   TestScan< TEST_EXECSPACE >( 100000 );
   TestScan< TEST_EXECSPACE >( 10000000 );
-  TEST_EXECSPACE::fence();
+  TEST_EXECSPACE().fence();
 }
 
 
@@ -156,7 +156,7 @@ TEST_F( TEST_CATEGORY, scan )
   TestScanFunctor( 1000000 );
   TestScanFunctor( 10000000 );
 
-  TEST_EXECSPACE::fence();
+  TEST_EXECSPACE().fence();
 }*/
 
 

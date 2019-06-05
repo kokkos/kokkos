@@ -284,6 +284,8 @@ void finalize_internal( const bool all_spaces = false )
       Kokkos::Cuda::impl_finalize();
 #endif
   }
+#else
+  (void)all_spaces;
 #endif
 
 #if defined( KOKKOS_ENABLE_ROCM )
@@ -356,38 +358,38 @@ void fence_internal()
 
 #if defined( KOKKOS_ENABLE_CUDA )
   if( std::is_same< Kokkos::Cuda , Kokkos::DefaultExecutionSpace >::value ) {
-    Kokkos::Cuda::fence();
+    Kokkos::Cuda::impl_static_fence();
   }
 #endif
 
 #if defined( KOKKOS_ENABLE_ROCM )
   if( std::is_same< Kokkos::Experimental::ROCm , Kokkos::DefaultExecutionSpace >::value ) {
-    Kokkos::Experimental::ROCm::fence();
+    Kokkos::Experimental::ROCm().fence();
   }
 #endif
 
 #if defined( KOKKOS_ENABLE_OPENMP )
   if( std::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
-    Kokkos::OpenMP::fence();
+    Kokkos::OpenMP::impl_static_fence();
   }
 #endif
 
 #if defined( KOKKOS_ENABLE_HPX )
-  Kokkos::Experimental::HPX::fence();
+  Kokkos::Experimental::HPX::impl_static_fence();
 #endif
 
 #if defined( KOKKOS_ENABLE_THREADS )
   if( std::is_same< Kokkos::Threads , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
-    Kokkos::Threads::fence();
+    Kokkos::Threads::impl_static_fence();
   }
 #endif
 
 #if defined( KOKKOS_ENABLE_SERIAL )
   if( std::is_same< Kokkos::Serial , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::Serial , Kokkos::HostSpace::execution_space >::value ) {
-    Kokkos::Serial::fence();
+    Kokkos::Serial::impl_static_fence();
   }
 #endif
 

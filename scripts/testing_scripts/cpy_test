@@ -1,0 +1,9 @@
+exec=$1
+EXEC=$2
+TEST=$3
+
+cp ../../scripts/testing_scripts/TestEXEC_TEST.cpp ${exec}/Test${EXEC}_${TEST}.cpp
+sed -i 's|exec|'${exec}'|g' ${exec}/Test${EXEC}_${TEST}.cpp
+sed -i 's|EXEC|'${EXEC}'|g' ${exec}/Test${EXEC}_${TEST}.cpp
+sed -i 's|TEST|'${TEST}'|g' ${exec}/Test${EXEC}_${TEST}.cpp
+
