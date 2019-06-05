@@ -340,16 +340,16 @@ struct test_scatter_view_config
          duplication, contribution, op>::scatter_view_type scatter_view_def;
    typedef typename test_scatter_view_impl_cls<ExecSpace, Layout, 
          duplication, contribution, op>::orig_view_type orig_view_def;
-   scatter_view_def scatter_view;
 
    test_scatter_view_config() {
    }
 
    void run_test(int n)
    {
-
+     //Test creation via create_scatter_view
+     {
      orig_view_def original_view("original_view", n);
-     scatter_view = Kokkos::Experimental::create_scatter_view
+     scatter_view_def scatter_view = Kokkos::Experimental::create_scatter_view
        < op
        , duplication
        , contribution
@@ -374,6 +374,37 @@ struct test_scatter_view_config
         auto result_view = persistent_view.subview();
         contribute(result_view, persistent_view);
         Kokkos::fence();
+     }
+     }
+     //Test creation via constructor
+     {
+     orig_view_def original_view("original_view", n);
+     scatter_view_def scatter_view = Kokkos::Experimental::create_scatter_view
+       < op
+       , duplication
+       , contribution
+       > (original_view);
+
+     test_scatter_view_impl_cls<ExecSpace, Layout, duplication, contribution, op> scatter_view_test_impl(scatter_view);
+     scatter_view_test_impl.initialize(original_view);
+     scatter_view_test_impl.run_parallel(n);
+
+     Kokkos::Experimental::contribute(original_view, scatter_view);
+     scatter_view.reset_except(original_view);
+
+     scatter_view_test_impl.run_parallel(n);
+
+     Kokkos::Experimental::contribute(original_view, scatter_view);
+     Kokkos::fence();
+
+     scatter_view_test_impl.validateResults(original_view);
+
+     {
+        scatter_view_def persistent_view("persistent", n);
+        auto result_view = persistent_view.subview();
+        contribute(result_view, persistent_view);
+        Kokkos::fence();
+     }
      }
    }
 
