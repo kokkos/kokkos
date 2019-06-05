@@ -379,11 +379,7 @@ struct test_scatter_view_config
      //Test creation via constructor
      {
      orig_view_def original_view("original_view", n);
-     scatter_view_def scatter_view = Kokkos::Experimental::create_scatter_view
-       < op
-       , duplication
-       , contribution
-       > (original_view);
+     scatter_view_def scatter_view(original_view);
 
      test_scatter_view_impl_cls<ExecSpace, Layout, duplication, contribution, op> scatter_view_test_impl(scatter_view);
      scatter_view_test_impl.initialize(original_view);
