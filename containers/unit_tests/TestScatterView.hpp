@@ -386,9 +386,14 @@ struct TestDuplicatedScatterView {
     // ScatterSum test
     test_scatter_view_config<ExecSpace, Kokkos::LayoutRight,
       Kokkos::Experimental::ScatterDuplicated,
-      Kokkos::Experimental::ScatterNonAtomic, 
-      ScatterType> test_sv_config;
-    test_sv_config.run_test(n);
+      Kokkos::Experimental::ScatterNonAtomic,
+      ScatterType> test_sv_right_config;
+    test_sv_right_config.run_test(n);
+    test_scatter_view_config<ExecSpace, Kokkos::LayoutLeft,
+      Kokkos::Experimental::ScatterDuplicated,
+      Kokkos::Experimental::ScatterNonAtomic,
+      ScatterType> test_sv_left_config;
+    test_sv_left_config.run_test(n);
   }
 };
 
