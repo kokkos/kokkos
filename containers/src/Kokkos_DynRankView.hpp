@@ -655,7 +655,7 @@ public:
       const size_t dim_scalar = m_map.dimension_scalar();
       const size_t bytes = this->span() / dim_scalar;
 
-      typedef Kokkos::View<DataType*, typename traits::array_layout, typename traits::device_type, Kokkos::MemoryTraits<Kokkos::Unmanaged | traits::memory_traits::RandomAccess | traits::memory_traits::Atomic> > tmp_view_type;
+      typedef Kokkos::View<DataType*, typename traits::array_layout, typename traits::device_type, Kokkos::MemoryTraits<traits::memory_traits::is_unmanaged | traits::memory_traits::is_random_access | traits::memory_traits::is_atomic> > tmp_view_type;
       tmp_view_type rankone_view(this->data(), bytes, dim_scalar);
       return rankone_view(i0);
     }
