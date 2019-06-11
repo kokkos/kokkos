@@ -260,6 +260,13 @@ public:
 
         Kokkos::memory_fence();
 
+#ifdef __CUDA_ARCH__
+        if(rv != (node_type*)base_t::EndTag) {
+          printf("successfully dequeued %p, retry number %d on %d.%d\n", (void*)(rv), i_retry, blockIdx.x, threadIdx.z);
+          ++i_retry;
+        }
+#endif
+
         return OptionalRef<T>{ *static_cast<T*>(rv) };
       }
       else {
