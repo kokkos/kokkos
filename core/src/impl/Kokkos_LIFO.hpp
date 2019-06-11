@@ -268,7 +268,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool push(node_type& node)
   {
-    while(!this->_try_push_node(node)) { /* retry until success */ }
+    while(!this->_try_push_node(node)) { /* retry until success */ printf("enqueue failed\n"); }
     // for consistency with push interface on other queue types:
     return true;
   }
