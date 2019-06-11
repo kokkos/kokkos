@@ -237,7 +237,7 @@ public:
 
         // TODO @tasking @memory_order DSH I think this needs to be a atomic store release (and the memory fence needs to be removed)
         // Lock is released here
-        this->m_head = next;
+        *(node_type* volatile *)(&this->m_head) = next;
 
         // Mark rv as popped by assigning nullptr to the next
         LinkedListNodeAccess::mark_as_not_enqueued(*rv);
@@ -268,7 +268,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool push(node_type& node)
   {
-    while(!this->_try_push_node(node)) { /* retry until success */ printf("enqueue failed, m_head = %p\n", (void*)this->m_head); }
+    while(!this->_try_push_node(node)) {
+      /* retry until success */
+      //printf("enqueue failed, m_head = %p\n", (void*)this->m_head);
+      printf("enqueue failed, this = %p\n", (void*)this);
+    }
     // for consistency with push interface on other queue types:
     return true;
   }
