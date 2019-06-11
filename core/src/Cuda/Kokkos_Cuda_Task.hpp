@@ -93,7 +93,7 @@ public:
   using member_type = TaskExec<Kokkos::Cuda, scheduler_type> ;
 
   enum : long { max_league_size = 16 };
-  enum : int { warps_per_block = 4 };
+  enum : int { warps_per_block = 2 };
 
   KOKKOS_INLINE_FUNCTION
   static
@@ -230,8 +230,8 @@ public:
     //const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
     //const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );
     const dim3 grid(8, 1, 1);
-    const dim3 block(1, CudaTraits::WarpSize, 1);
-    const int shared_total = shared_per_warp * 1; // warps_per_block;
+    const dim3 block(1, CudaTraits::WarpSize, warps_per_block);
+    const int shared_total = shared_per_warp * warps_per_block;
     const cudaStream_t stream = nullptr;
 
     //KOKKOS_ASSERT(
