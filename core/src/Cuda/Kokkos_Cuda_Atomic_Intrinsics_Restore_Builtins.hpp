@@ -63,25 +63,6 @@
 #undef __atomic_thread_fence
 #undef __atomic_signal_fence
 
-
-//#define __atomic_load_n __atomic_load_n__old
-//#define __atomic_load __atomic_load__old
-//#define __atomic_store_n __atomic_store_n__old
-//#define __atomic_store __atomic_store__old
-//#define __atomic_exchange_n __atomic_exchange_n__old
-//#define __atomic_exchange __atomic_exchange__old
-//#define __atomic_compare_exchange_n __atomic_compare_exchange_n__old
-//#define __atomic_compare_exchange __atomic_compare_exchange__old
-//#define __atomic_fetch_add __atomic_fetch_add__old
-//#define __atomic_fetch_sub __atomic_fetch_sub__old
-//#define __atomic_fetch_and __atomic_fetch_and__old
-//#define __atomic_fetch_xor __atomic_fetch_xor__old
-//#define __atomic_fetch_or __atomic_fetch_or__old
-//#define __atomic_test_and_set __atomic_test_and_set__old
-//#define __atomic_clear __atomic_clear__old
-//#define __atomic_always_lock_free __atomic_always_lock_free__old
-//#define __atomic_is_lock_free __atomic_is_lock_free__old
-//#define __atomic_thread_fence __atomic_thread_fence__old
-//#define __atomic_signal_fence __atomic_signal_fence__old
+#undef KOKKOS_SIMT_ATOMIC_BUILTIN_REPLACEMENTS_DEFINED
 
 #endif // KOKKOS_SIMT_ATOMIC_BUILTIN_REPLACEMENTS_DEFINED
