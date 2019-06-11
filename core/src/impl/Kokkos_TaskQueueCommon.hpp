@@ -261,11 +261,7 @@ public:
     bool task_is_ready = true;
     bool scheduling_info_updated = false;
 
-    // do this before enqueueing and potentially losing exclusive access to task
-    bool task_is_respawning = task.get_respawn_flag();
-
-    // clear the respawn flag, since we're handling the respawn (if any) here
-    task.set_respawn_flag(false);
+    //((RunnableTaskBase<TaskQueueTraits> volatile&)task).set_respawn_flag(false);
 
     if(task.has_predecessor()) {
       // save the predecessor into a local variable, then clear it from the
@@ -277,6 +273,12 @@ public:
       // This needs a load/store fence here, technically
       // making this a release store would also do this
       task.clear_predecessor();
+
+      // do this before enqueueing and potentially losing exclusive access to task
+      bool task_is_respawning = task.get_respawn_flag();
+
+      // clear the respawn flag, since we're handling the respawn (if any) here
+      task.set_respawn_flag(false);
 
       // TODO @tasking @memory_order DSH remove this fence in favor of memory orders
       Kokkos::memory_fence(); // for now
