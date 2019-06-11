@@ -116,7 +116,7 @@ struct LockBasedLIFOCommon
       //     m_head = &node;
       //   }
       //   old_head = m_head;
-      old_head = ::Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
+      old_head = ::Kokkos::atomic_compare_exchange(&m_head, (node_type*)old_head, &node);
 
       if(old_head_tmp == old_head) {
         ::Kokkos::memory_fence();
