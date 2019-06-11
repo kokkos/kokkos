@@ -139,6 +139,12 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
+  T const volatile& operator*() const volatile & {
+    KOKKOS_EXPECTS(this->has_value());
+    return *m_value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   T&& operator*() && {
     KOKKOS_EXPECTS(this->has_value());
     return std::move(*m_value);
@@ -163,6 +169,12 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
+  T const volatile* operator->() const volatile {
+    KOKKOS_EXPECTS(this->has_value());
+    return m_value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   T* get() {
     return m_value;
   }
@@ -174,6 +186,11 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   T volatile* get() volatile {
+    return m_value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  T const volatile* get() const volatile {
     return m_value;
   }
 
@@ -189,6 +206,9 @@ public:
   operator bool() volatile { return m_value != nullptr; }
 
   KOKKOS_INLINE_FUNCTION
+  operator bool() const volatile { return m_value != nullptr; }
+
+  KOKKOS_INLINE_FUNCTION
   bool has_value() { return m_value != nullptr; }
 
   KOKKOS_INLINE_FUNCTION
@@ -196,6 +216,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   bool has_value() volatile { return m_value != nullptr; }
+
+  KOKKOS_INLINE_FUNCTION
+  bool has_value() const volatile { return m_value != nullptr; }
   
 };
 

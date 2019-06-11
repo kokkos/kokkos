@@ -205,12 +205,12 @@ public:
           // If respawn requested copy respawn data back to main memory
           if(shared_memory_task_copy->as_runnable_task().get_respawn_flag()) {
             if(shared_memory_task_copy->as_runnable_task().has_predecessor()) {
-              current_task->as_runnable_task().acquire_predecessor_from(
+              current_task.as_volatile()->as_runnable_task().acquire_predecessor_from(
                 shared_memory_task_copy->as_runnable_task()
               );
             }
-            current_task->set_priority(shared_memory_task_copy->get_priority());
-            current_task->as_runnable_task().set_respawn_flag();
+            current_task.as_volatile()->set_priority(shared_memory_task_copy->get_priority());
+            current_task.as_volatile()->as_runnable_task().set_respawn_flag();
           }
 
           queue.complete(

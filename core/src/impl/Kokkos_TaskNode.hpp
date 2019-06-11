@@ -250,6 +250,20 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
+  RunnableTaskBase<TaskQueueTraits> volatile&
+  as_runnable_task() volatile & {
+    KOKKOS_EXPECTS(this->is_runnable());
+    return static_cast<RunnableTaskBase<TaskQueueTraits> volatile&>(*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  RunnableTaskBase<TaskQueueTraits> const volatile&
+  as_runnable_task() const volatile & {
+    KOKKOS_EXPECTS(this->is_runnable());
+    return static_cast<RunnableTaskBase<TaskQueueTraits> const volatile&>(*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
   RunnableTaskBase<TaskQueueTraits>&&
   as_runnable_task() && {
     KOKKOS_EXPECTS(this->is_runnable());
@@ -311,6 +325,12 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
+  void set_priority(TaskPriority priority) volatile noexcept {
+    KOKKOS_EXPECTS(!this->is_enqueued());
+    m_priority = (priority_type)priority;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   TaskPriority get_priority() const noexcept {
     return (TaskPriority)m_priority;
   }
@@ -320,8 +340,12 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void set_respawn_flag(bool value = true) {
-    // Cuda needs this to be volatile
-    *static_cast<volatile bool*>(&m_is_respawning) = value;
+    m_is_respawning = value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void set_respawn_flag(bool value = true) volatile {
+    m_is_respawning = value;
   }
 
 };
@@ -503,6 +527,15 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void acquire_predecessor_from(runnable_task_type& other)
+  {
+    KOKKOS_EXPECTS(m_predecessor == nullptr || other.m_predecessor == m_predecessor);
+    // since we're transfering, no need to modify the reference count
+    m_predecessor = other.m_predecessor;
+    other.m_predecessor = nullptr;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void acquire_predecessor_from(runnable_task_type& other) volatile
   {
     KOKKOS_EXPECTS(m_predecessor == nullptr || other.m_predecessor == m_predecessor);
     // since we're transfering, no need to modify the reference count

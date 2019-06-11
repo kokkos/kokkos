@@ -97,6 +97,11 @@ private:
   pointer_type const& _next_ptr() const noexcept {
     return m_next;
   }
+  
+  KOKKOS_INLINE_FUNCTION
+  pointer_type const volatile& _next_ptr() const volatile noexcept {
+    return m_next;
+  }
 
   friend struct LinkedListNodeAccess;
 
@@ -105,6 +110,13 @@ public:
   // KOKKOS_CONSTEXPR_14
   KOKKOS_INLINE_FUNCTION
   bool is_enqueued() const noexcept {
+    // TODO @tasking @memory_order DSH make this an atomic load with memory order
+    return m_next != reinterpret_cast<pointer_type>(NotEnqueuedValue);
+  }
+
+  // KOKKOS_CONSTEXPR_14
+  KOKKOS_INLINE_FUNCTION
+  bool is_enqueued() const volatile noexcept {
     // TODO @tasking @memory_order DSH make this an atomic load with memory order
     return m_next != reinterpret_cast<pointer_type>(NotEnqueuedValue);
   }
