@@ -201,7 +201,7 @@ public:
     auto* const lock_tag = (node_type*)base_t::LockTag;
 
     // start with the return value equal to the head
-    auto* rv = this->m_head;
+    auto* rv = ((LockBasedLIFO volatile*)this)->m_head;
 
     // Retry until the lock is acquired or the queue is empty.
     while(rv != (node_type*)base_t::EndTag) {
