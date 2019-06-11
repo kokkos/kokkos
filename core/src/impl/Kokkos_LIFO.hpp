@@ -104,7 +104,7 @@ struct LockBasedLIFOCommon
       ::Kokkos::memory_fence();
 
       // store the old head
-      auto volatile* const old_head_tmp = old_head;
+      auto* const old_head_tmp = old_head;
 
       // attempt to swap task with the old head of the queue
       // as if this were done atomically:
@@ -237,7 +237,8 @@ public:
 
         // TODO @tasking @memory_order DSH I think this needs to be a atomic store release (and the memory fence needs to be removed)
         // Lock is released here
-        *(node_type* volatile *)(&this->m_head) = next;
+        //*(node_type* volatile *)(&this->m_head) = next;
+        this->m_head = next;
 
         // Mark rv as popped by assigning nullptr to the next
         LinkedListNodeAccess::mark_as_not_enqueued(*rv);
