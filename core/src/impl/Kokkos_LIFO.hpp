@@ -90,7 +90,7 @@ struct LockBasedLIFOCommon
     // store the head of the queue in a local variable
     auto* old_head = *(node_type* volatile*)(&m_head);
 
-    printf("enqueue try start, old_head = %p\n", (void*)old_head);
+    printf("enqueue try start, old_head = %p on %d.%d\n", (void*)old_head, blockIdx.x, threadIdx.z);
 
     // retry until someone locks the queue or we successfully compare exchange
     while (old_head != (node_type*)LockTag) {
@@ -117,11 +117,11 @@ struct LockBasedLIFOCommon
       old_head = ::Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
 
       if(old_head_tmp == old_head) {
-        printf("enqueue success\n");
+        printf("enqueue success on %d.%d\n", blockIdx.x, threadIdx.z);
         return true;
       }
 
-      printf("enqueue retry, old_head = %p, old_head_tmp = %p\n", (void*)old_head, (void*)old_head_tmp);
+      printf("enqueue retry, old_head = %p, old_head_tmp = %p on %d.%d\n", (void*)old_head, (void*)old_head_tmp, blockIdx.x, threadIdx.z);
     }
 
     // Failed, replace 'task->m_next' value since 'task' remains
