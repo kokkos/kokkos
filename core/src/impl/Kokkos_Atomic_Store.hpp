@@ -248,6 +248,13 @@ void atomic_store(T volatile* ptr, T val) {
   _atomic_store(ptr, Impl::memory_order_relaxed);
 }
 
+template <class T>
+KOKKOS_FORCEINLINE_FUNCTION
+void atomic_store(T* ptr, T val) {
+  // relaxed by default!
+  _atomic_store((T volatile*)ptr, Impl::memory_order_relaxed);
+}
+
 } // end namespace Impl
 } // end namespace Kokkos
 
