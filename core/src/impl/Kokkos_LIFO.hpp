@@ -91,7 +91,7 @@ struct LockBasedLIFOCommon
     auto* old_head = *(node_type* volatile*)(&m_head);
 
 #ifdef __CUDA_ARCH__
-    printf("enqueue try start, old_head = %p on %d.%d\n", (void*)old_head, blockIdx.x, threadIdx.z);
+    //printf("enqueue try start, old_head = %p on %d.%d\n", (void*)old_head, blockIdx.x, threadIdx.z);
 #endif
 
     // retry until someone locks the queue or we successfully compare exchange
@@ -119,8 +119,9 @@ struct LockBasedLIFOCommon
       old_head = ::Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
 
       if(old_head_tmp == old_head) {
+        ::Kokkos::memory_fence();
 #ifdef __CUDA_ARCH__
-        printf("enqueue success on %d.%d\n", blockIdx.x, threadIdx.z);
+        //printf("enqueue success on %d.%d\n", blockIdx.x, threadIdx.z);
 #endif
         return true;
       }
