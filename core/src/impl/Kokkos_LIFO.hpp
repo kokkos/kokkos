@@ -287,7 +287,7 @@ public:
     while(!this->_try_push_node(node)) {
 
       /* retry until success */
-      printf("enqueue failed, m_head = %p\n, retry number %d", (void*)(this->m_head), i_retry++);
+      printf("enqueue failed, m_head = %p, retry number %d\n", (void*)(this->m_head), i_retry++);
       //printf("enqueue failed, this = %p\n", (void*)this);
       //printf("enqueue failed\n");
     }
