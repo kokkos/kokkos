@@ -287,7 +287,9 @@ public:
     while(!this->_try_push_node(node)) {
 
       /* retry until success */
-      printf("enqueue failed, m_head = %p, retry number %d\n", (void*)(this->m_head), i_retry++);
+#ifdef __CUDA_ARCH__
+      printf("enqueue failed, m_head = %p, retry number %d on %d.%d\n", (void*)(this->m_head), i_retry++, blockIdx.x, threadIdx.z);
+#endif
       //printf("enqueue failed, this = %p\n", (void*)this);
       //printf("enqueue failed\n");
     }
