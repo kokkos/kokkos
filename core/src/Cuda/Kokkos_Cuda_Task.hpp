@@ -230,8 +230,8 @@ public:
     //const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
     //const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );
     const dim3 grid(8, 1, 1);
-    const dim3 block(1, CudaTraits::WarpSize, warps_per_block);
-    const int shared_total = shared_per_warp * warps_per_block;
+    const dim3 block(1, CudaTraits::WarpSize, 1);
+    const int shared_total = shared_per_warp * 1; // warps_per_block;
     const cudaStream_t stream = nullptr;
 
     //KOKKOS_ASSERT(
@@ -250,7 +250,7 @@ public:
 
     // If not large enough then set the stack size, in bytes:
 
-    const size_t larger_stack_size = 2048;
+    const size_t larger_stack_size = 1 << 16;
 
     if (previous_stack_size < larger_stack_size) {
       CUDA_SAFE_CALL(cudaDeviceSetLimit(cudaLimitStackSize, larger_stack_size));
