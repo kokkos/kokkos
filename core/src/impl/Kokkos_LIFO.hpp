@@ -88,7 +88,7 @@ struct LockBasedLIFOCommon
     auto* volatile & next = LinkedListNodeAccess::next_ptr(node);
 
     // store the head of the queue in a local variable
-    auto* old_head = *(node_type* volatile*)(&m_head);
+    auto* volatile old_head = *(node_type* volatile*)(&m_head);
 
 #ifdef __CUDA_ARCH__
     //printf("enqueue try start, old_head = %p on %d.%d\n", (void*)old_head, blockIdx.x, threadIdx.z);
@@ -288,8 +288,9 @@ public:
 
       /* retry until success */
 #ifdef __CUDA_ARCH__
-      printf("enqueue failed, m_head = %p, retry number %d on %d.%d\n", (void*)(this->m_head), i_retry++, blockIdx.x, threadIdx.z);
+      printf("enqueue failed, m_head = %p, retry number %d on %d.%d\n", (void*)(this->m_head), i_retry, blockIdx.x, threadIdx.z);
 #endif
+      ++i_retry;
       //printf("enqueue failed, this = %p\n", (void*)this);
       //printf("enqueue failed\n");
     }
