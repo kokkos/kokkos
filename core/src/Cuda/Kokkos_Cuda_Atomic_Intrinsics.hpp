@@ -71,11 +71,11 @@ LICENSE ASSOCIATED WITH SUBSEQUENT MODIFICATIONS
 @HEADER
 */
 
-#ifndef _SIMT_DETAILS_CONFIG
-#define _SIMT_DETAILS_CONFIG
-
 #include <Kokkos_Macros.hpp>
 #if defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA_ASM_ATOMICS)
+
+#ifndef _SIMT_DETAILS_CONFIG
+#define _SIMT_DETAILS_CONFIG
 
 namespace Kokkos {
 namespace Impl {
@@ -622,7 +622,6 @@ template<class type> void __device__ __atomic_clear_simt(volatile void *ptr, int
 } // end namespace Impl
 } // end namespace Kokkos
 
-#endif //__CUDA_ARCH__ && KOKKOS_ENABLE_CUDA_ASM_ATOMICS
 #endif //_SIMT_DETAILS_CONFIG
 
 #ifndef KOKKOS_SIMT_ATOMIC_BUILTIN_REPLACEMENTS_DEFINED
@@ -652,4 +651,5 @@ template<class type> void __device__ __atomic_clear_simt(volatile void *ptr, int
 
 #define KOKKOS_SIMT_ATOMIC_BUILTIN_REPLACEMENTS_DEFINED
 
-#endif
+#endif //__CUDA_ARCH__ && KOKKOS_ENABLE_CUDA_ASM_ATOMICS
+#endif // KOKKOS_SIMT_ATOMIC_BUILTIN_REPLACEMENTS_DEFINED

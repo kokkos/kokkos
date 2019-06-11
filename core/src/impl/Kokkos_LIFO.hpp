@@ -115,6 +115,8 @@ struct LockBasedLIFOCommon
       old_head = ::Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
 
       if(old_head_tmp == old_head) return true;
+
+      printf("enqueue retry, this = %p\n", (void*)this);
     }
 
     // Failed, replace 'task->m_next' value since 'task' remains
