@@ -230,7 +230,7 @@ public:
     //const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
     //const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );
     const dim3 grid(1, 1, 1);
-    const dim3 block(1, CudaTraits::WarpSize, 1);
+    const dim3 block(1, CudaTraits::WarpSize, warps_per_block);
     const int shared_total = shared_per_warp * warps_per_block;
     const cudaStream_t stream = nullptr;
 
@@ -241,29 +241,29 @@ public:
 
     auto& queue = scheduler.queue();
 
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
     // Query the stack size, in bytes:
 
-    size_t previous_stack_size = 0 ;
-    CUDA_SAFE_CALL( cudaDeviceGetLimit( & previous_stack_size , cudaLimitStackSize ) );
+    size_t previous_stack_size = 0;
+    CUDA_SAFE_CALL(cudaDeviceGetLimit(&previous_stack_size, cudaLimitStackSize));
 
     // If not large enough then set the stack size, in bytes:
 
-    const size_t larger_stack_size = 2048 ;
+    const size_t larger_stack_size = 2048;
 
-    if ( previous_stack_size < larger_stack_size ) {
-      CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , larger_stack_size ) );
+    if (previous_stack_size < larger_stack_size) {
+      CUDA_SAFE_CALL(cudaDeviceSetLimit(cudaLimitStackSize, larger_stack_size));
     }
 
-    cuda_task_queue_execute<<< grid , block , shared_total , stream >>>( scheduler , shared_per_warp );
+    cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(scheduler, shared_per_warp);
 
-    CUDA_SAFE_CALL( cudaGetLastError() );
+    CUDA_SAFE_CALL(cudaGetLastError());
 
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
-    if ( previous_stack_size < larger_stack_size ) {
-      CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , previous_stack_size ) );
+    if (previous_stack_size < larger_stack_size) {
+      CUDA_SAFE_CALL(cudaDeviceSetLimit(cudaLimitStackSize, previous_stack_size));
     }
   }
 
