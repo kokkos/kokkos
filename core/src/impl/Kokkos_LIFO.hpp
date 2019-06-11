@@ -237,6 +237,7 @@ public:
         // calling this method would never make forward progress
 
         // TODO @tasking @memory_order DSH I think this needs to be a atomic store release (and the memory fence needs to be removed)
+        // TODO @tasking DSH prove that this doesn't need to be a volatile store
         // Lock is released here
         this->m_head = next;
 

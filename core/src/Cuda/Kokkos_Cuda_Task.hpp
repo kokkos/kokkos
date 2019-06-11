@@ -212,9 +212,9 @@ public:
             current_task.as_volatile()->set_priority(shared_memory_task_copy->get_priority());
             current_task.as_volatile()->as_runnable_task().set_respawn_flag();
           }
-          else {
-            current_task.as_volatile()->as_runnable_task().set_respawn_flag(false);
-          }
+          //else {
+          //  current_task.as_volatile()->as_runnable_task().set_respawn_flag(false);
+          //}
 
           queue.complete(
             (*std::move(current_task)).as_runnable_task(),

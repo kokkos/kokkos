@@ -922,43 +922,43 @@ struct TestMultipleDependence {
 #undef TEST_SCHEDULER
 #undef TEST_SCHEDULER_SUFFIX
 
-#define TEST_SCHEDULER_SUFFIX _fixed_mempool
-#define TEST_SCHEDULER \
-      Kokkos::SimpleTaskScheduler< \
-        TEST_EXECSPACE, \
-        Kokkos::Impl::SingleTaskQueue< \
-          TEST_EXECSPACE, \
-          Kokkos::Impl::default_tasking_memory_space_for_execution_space_t<TEST_EXECSPACE>, \
-          Kokkos::Impl::TaskQueueTraitsLockBased, \
-          Kokkos::Impl::FixedBlockSizeMemoryPool< \
-            Kokkos::Device<TEST_EXECSPACE, Kokkos::Impl::default_tasking_memory_space_for_execution_space_t<TEST_EXECSPACE>>, \
-            128, \
-            16 \
-          > \
-        > \
-      >
-#include "TestTaskScheduler_single.hpp"
-#undef TEST_SCHEDULER
-#undef TEST_SCHEDULER_SUFFIX
-
-#define TEST_SCHEDULER_SUFFIX _fixed_mempool_multiple
-#define TEST_SCHEDULER \
-      Kokkos::SimpleTaskScheduler< \
-        TEST_EXECSPACE, \
-        Kokkos::Impl::MultipleTaskQueue< \
-          TEST_EXECSPACE, \
-          Kokkos::Impl::default_tasking_memory_space_for_execution_space_t<TEST_EXECSPACE>, \
-          Kokkos::Impl::TaskQueueTraitsLockBased, \
-          Kokkos::Impl::FixedBlockSizeMemoryPool< \
-            Kokkos::Device<TEST_EXECSPACE, Kokkos::Impl::default_tasking_memory_space_for_execution_space_t<TEST_EXECSPACE>>, \
-            128, \
-            16 \
-          > \
-        > \
-      >
-#include "TestTaskScheduler_single.hpp"
-#undef TEST_SCHEDULER
-#undef TEST_SCHEDULER_SUFFIX
+//#define TEST_SCHEDULER_SUFFIX _fixed_mempool
+//#define TEST_SCHEDULER \
+//      Kokkos::SimpleTaskScheduler< \
+//        TEST_EXECSPACE, \
+//        Kokkos::Impl::SingleTaskQueue< \
+//          TEST_EXECSPACE, \
+//          Kokkos::Impl::default_tasking_memory_space_for_execution_space_t<TEST_EXECSPACE>, \
+//          Kokkos::Impl::TaskQueueTraitsLockBased, \
+//          Kokkos::Impl::FixedBlockSizeMemoryPool< \
+//            Kokkos::Device<TEST_EXECSPACE, Kokkos::Impl::default_tasking_memory_space_for_execution_space_t<TEST_EXECSPACE>>, \
+//            128, \
+//            16 \
+//          > \
+//        > \
+//      >
+//#include "TestTaskScheduler_single.hpp"
+//#undef TEST_SCHEDULER
+//#undef TEST_SCHEDULER_SUFFIX
+//
+//#define TEST_SCHEDULER_SUFFIX _fixed_mempool_multiple
+//#define TEST_SCHEDULER \
+//      Kokkos::SimpleTaskScheduler< \
+//        TEST_EXECSPACE, \
+//        Kokkos::Impl::MultipleTaskQueue< \
+//          TEST_EXECSPACE, \
+//          Kokkos::Impl::default_tasking_memory_space_for_execution_space_t<TEST_EXECSPACE>, \
+//          Kokkos::Impl::TaskQueueTraitsLockBased, \
+//          Kokkos::Impl::FixedBlockSizeMemoryPool< \
+//            Kokkos::Device<TEST_EXECSPACE, Kokkos::Impl::default_tasking_memory_space_for_execution_space_t<TEST_EXECSPACE>>, \
+//            128, \
+//            16 \
+//          > \
+//        > \
+//      >
+//#include "TestTaskScheduler_single.hpp"
+//#undef TEST_SCHEDULER
+//#undef TEST_SCHEDULER_SUFFIX
 
 #undef KOKKOS_TEST_WITH_SUFFIX
 #undef KOKKOS_PP_CAT_IMPL
