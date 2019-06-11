@@ -203,6 +203,7 @@ public:
     // start with the return value equal to the head
     auto* rv = ((LockBasedLIFO volatile*)this)->m_head;
 
+    int i_retry = 0;
     // Retry until the lock is acquired or the queue is empty.
     while(rv != (node_type*)base_t::EndTag) {
 
@@ -260,6 +261,17 @@ public:
         Kokkos::memory_fence();
 
         return OptionalRef<T>{ *static_cast<T*>(rv) };
+      }
+      else {
+
+        /* retry until success */
+#ifdef __CUDA_ARCH__
+        printf("lock for pop failed, m_head = %p, retry number %d on %d.%d\n", (void*)(this->m_head), i_retry, blockIdx.x, threadIdx.z);
+#endif
+        ++i_retry;
+        //printf("enqueue failed, this = %p\n", (void*)this);
+        //printf("enqueue failed\n");
+
       }
 
       // Otherwise, the CAS got a value that didn't match (either because
