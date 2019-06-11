@@ -266,9 +266,11 @@ public:
 
         /* retry until success */
 #ifdef __CUDA_ARCH__
-        printf("lock for pop failed, m_head = %p, retry number %d on %d.%d\n", (void*)(this->m_head), i_retry, blockIdx.x, threadIdx.z);
+        if(rv != (node_type*)base_t::EndTag) {
+          printf("lock for pop failed, m_head = %p, retry number %d on %d.%d\n", (void*)(this->m_head), i_retry, blockIdx.x, threadIdx.z);
+          ++i_retry;
+        }
 #endif
-        ++i_retry;
         //printf("enqueue failed, this = %p\n", (void*)this);
         //printf("enqueue failed\n");
 
