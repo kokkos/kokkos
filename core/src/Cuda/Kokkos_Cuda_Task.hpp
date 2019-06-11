@@ -152,6 +152,8 @@ public:
 
       if(current_task) {
 
+        KOKKOS_ASSERT(!current_task->as_runnable_task().get_respawn_flag());
+
         int32_t b = sizeof(scheduling_info_storage_type) / sizeof(int32_t);
         static_assert(
           sizeof(scheduling_info_storage_type) % sizeof(int32_t) == 0,
