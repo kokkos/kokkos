@@ -227,6 +227,9 @@ public:
   bool is_runnable() const noexcept { return m_task_type != TaskType::Aggregate; }
 
   KOKKOS_INLINE_FUNCTION
+  bool is_runnable() const volatile noexcept { return m_task_type != TaskType::Aggregate; }
+
+  KOKKOS_INLINE_FUNCTION
   bool is_single_runnable() const noexcept { return m_task_type == TaskType::TaskSingle; }
 
   KOKKOS_INLINE_FUNCTION
