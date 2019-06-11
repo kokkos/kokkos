@@ -88,11 +88,7 @@ struct LockBasedLIFOCommon
     auto* volatile & next = LinkedListNodeAccess::next_ptr(node);
 
     // store the head of the queue in a local variable
-    auto* volatile old_head = *(node_type* volatile*)(&m_head);
-
-#ifdef __CUDA_ARCH__
-    //printf("enqueue try start, old_head = %p on %d.%d\n", (void*)old_head, blockIdx.x, threadIdx.z);
-#endif
+    auto* old_head = *(node_type* volatile*)(&m_head);
 
     // retry until someone locks the queue or we successfully compare exchange
     while (old_head != (node_type*)LockTag) {
@@ -105,7 +101,7 @@ struct LockBasedLIFOCommon
       // fence to emulate acquire semantics on next and release semantics on
       // the store of m_head
       // Do not proceed until 'next' has been stored.
-      ::Kokkos::memory_fence();
+      Kokkos::memory_fence();
 
       // store the old head
       auto* const old_head_tmp = old_head;
@@ -119,16 +115,8 @@ struct LockBasedLIFOCommon
       old_head = ::Kokkos::atomic_compare_exchange(&m_head, (node_type*)old_head, &node);
 
       if(old_head_tmp == old_head) {
-        ::Kokkos::memory_fence();
-#ifdef __CUDA_ARCH__
-        //printf("enqueue success on %d.%d\n", blockIdx.x, threadIdx.z);
-#endif
         return true;
       }
-
-#ifdef __CUDA_ARCH__
-      //printf("enqueue retry, old_head = %p, old_head_tmp = %p on %d.%d\n", (void*)old_head, (void*)old_head_tmp, blockIdx.x, threadIdx.z);
-#endif
     }
 
     // Failed, replace 'task->m_next' value since 'task' remains
@@ -203,7 +191,6 @@ public:
     // start with the return value equal to the head
     auto* rv = ((LockBasedLIFO volatile*)this)->m_head;
 
-    int i_retry = 0;
     // Retry until the lock is acquired or the queue is empty.
     while(rv != (node_type*)base_t::EndTag) {
 
@@ -260,27 +247,7 @@ public:
 
         Kokkos::memory_fence();
 
-#ifdef __CUDA_ARCH__
-        //if(rv != (node_type*)base_t::EndTag) {
-        //  printf("successfully dequeued %p, retry number %d on %d.%d\n", (void*)(rv), i_retry, blockIdx.x, threadIdx.z);
-        //  ++i_retry;
-        //}
-#endif
-
         return OptionalRef<T>{ *static_cast<T*>(rv) };
-      }
-      else {
-
-        /* retry until success */
-#ifdef __CUDA_ARCH__
-        //if(rv != (node_type*)base_t::EndTag) {
-        //  printf("lock for pop failed, m_head = %p, retry number %d on %d.%d\n", (void*)(this->m_head), i_retry, blockIdx.x, threadIdx.z);
-        //  ++i_retry;
-        //}
-#endif
-        //printf("enqueue failed, this = %p\n", (void*)this);
-        //printf("enqueue failed\n");
-
       }
 
       // Otherwise, the CAS got a value that didn't match (either because
@@ -304,17 +271,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool push(node_type& node)
   {
-    int i_retry = 0;
-    while(!this->_try_push_node(node)) {
-
-      /* retry until success */
-#ifdef __CUDA_ARCH__
-      //printf("enqueue failed, m_head = %p, retry number %d on %d.%d\n", (void*)(this->m_head), i_retry, blockIdx.x, threadIdx.z);
-#endif
-      ++i_retry;
-      //printf("enqueue failed, this = %p\n", (void*)this);
-      //printf("enqueue failed\n");
-    }
+    while(!this->_try_push_node(node)) { /* retry until success */ }
     // for consistency with push interface on other queue types:
     return true;
   }
