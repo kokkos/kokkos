@@ -88,7 +88,7 @@ struct LockBasedLIFOCommon
     auto* volatile & next = LinkedListNodeAccess::next_ptr(node);
 
     // store the head of the queue in a local variable
-    auto volatile* old_head = (node_type volatile*)m_head;
+    auto* volatile old_head = *(node_type* volatile*)(&m_head);
 
     printf("enqueue try start, old_head = %p\n", (void*)old_head);
 
