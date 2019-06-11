@@ -272,7 +272,8 @@ public:
     while(!this->_try_push_node(node)) {
       /* retry until success */
       //printf("enqueue failed, m_head = %p\n", (void*)this->m_head);
-      printf("enqueue failed, this = %p\n", (void*)this);
+      //printf("enqueue failed, this = %p\n", (void*)this);
+      printf("enqueue failed", (void*)this);
     }
     // for consistency with push interface on other queue types:
     return true;
