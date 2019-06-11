@@ -273,7 +273,7 @@ public:
       /* retry until success */
       //printf("enqueue failed, m_head = %p\n", (void*)this->m_head);
       //printf("enqueue failed, this = %p\n", (void*)this);
-      //printf("enqueue failed\n");
+      printf("enqueue failed\n");
     }
     // for consistency with push interface on other queue types:
     return true;
