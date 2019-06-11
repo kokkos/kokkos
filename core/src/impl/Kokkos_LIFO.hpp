@@ -223,7 +223,7 @@ public:
         }
       }
 
-      auto* const old_rv = rv;
+      node_type* const old_rv = rv;
 
       // TODO @tasking @memory_order DSH this should be a weak compare exchange in a loop
       rv = Kokkos::atomic_compare_exchange(&(this->m_head), old_rv, lock_tag);
@@ -251,8 +251,8 @@ public:
 
         // TODO @tasking @memory_order DSH I think this needs to be a atomic store release (and the memory fence needs to be removed)
         // Lock is released here
-        //*(node_type* volatile *)(&this->m_head) = next;
-        this->m_head = next;
+        *(node_type* volatile *)(&this->m_head) = next;
+        //this->m_head = next;
 
         // Mark rv as popped by assigning nullptr to the next
         LinkedListNodeAccess::mark_as_not_enqueued(*rv);

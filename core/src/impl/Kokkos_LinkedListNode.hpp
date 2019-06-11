@@ -89,6 +89,12 @@ private:
   }
 
   KOKKOS_INLINE_FUNCTION
+  void mark_as_not_enqueued() volatile noexcept {
+    // TODO @tasking @memory_order DSH make this an atomic store with memory order
+    m_next = (pointer_type)NotEnqueuedValue;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   pointer_type& _next_ptr() noexcept {
     return m_next;
   }
@@ -130,6 +136,12 @@ struct LinkedListNodeAccess
   template <class Node>
   KOKKOS_INLINE_FUNCTION
   static void mark_as_not_enqueued(Node& node) noexcept {
+    node.mark_as_not_enqueued();
+  }
+
+  template <class Node>
+  KOKKOS_INLINE_FUNCTION
+  static void mark_as_not_enqueued(Node volatile& node) noexcept {
     node.mark_as_not_enqueued();
   }
 
