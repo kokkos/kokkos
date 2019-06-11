@@ -110,13 +110,16 @@ struct LockBasedLIFOCommon
 
       // attempt to swap task with the old head of the queue
       // as if this were done atomically:
-      //   if(*queue == old_head) {
-      //     *queue = task;
+      //   if(m_head == old_head) {
+      //     m_head = &node;
       //   }
-      //   old_head = *queue;
+      //   old_head = m_head;
       old_head = ::Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
 
-      if(old_head_tmp == old_head) return true;
+      if(old_head_tmp == old_head) {
+        printf("enqueue success\n");
+        return true;
+      }
 
       printf("enqueue retry, old_head = %p, old_head_tmp = %p\n", (void*)old_head, (void*)old_head_tmp);
     }
