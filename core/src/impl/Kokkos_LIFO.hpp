@@ -88,7 +88,7 @@ struct LockBasedLIFOCommon
     auto* volatile & next = LinkedListNodeAccess::next_ptr(node);
 
     // store the head of the queue in a local variable
-    auto volatile* old_head = m_head;
+    auto* old_head = m_head;
 
     // retry until someone locks the queue or we successfully compare exchange
     while (old_head != (node_type*)LockTag) {
@@ -112,7 +112,7 @@ struct LockBasedLIFOCommon
       //     *queue = task;
       //   }
       //   old_head = *queue;
-      old_head = ::Kokkos::atomic_compare_exchange_strong(&m_head, old_head, &node, Kokkos::Impl::memory_order_acq_rel, Kokkos::Impl::memory_order_relaxed);
+      old_head = ::Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
 
       if(old_head_tmp == old_head) return true;
     }
