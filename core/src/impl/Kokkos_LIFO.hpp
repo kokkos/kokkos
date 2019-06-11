@@ -126,7 +126,7 @@ struct LockBasedLIFOCommon
       }
 
 #ifdef __CUDA_ARCH__
-      printf("enqueue retry, old_head = %p, old_head_tmp = %p on %d.%d\n", (void*)old_head, (void*)old_head_tmp, blockIdx.x, threadIdx.z);
+      //printf("enqueue retry, old_head = %p, old_head_tmp = %p on %d.%d\n", (void*)old_head, (void*)old_head_tmp, blockIdx.x, threadIdx.z);
 #endif
     }
 
