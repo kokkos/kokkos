@@ -118,7 +118,7 @@ struct LockBasedLIFOCommon
 
       if(old_head_tmp == old_head) return true;
 
-      printf("enqueue retry, old_head = %p\n", (void*)old_head);
+      printf("enqueue retry, old_head = %p, old_head_tmp = %p\n", (void*)old_head, (void*)old_head_tmp);
     }
 
     // Failed, replace 'task->m_next' value since 'task' remains

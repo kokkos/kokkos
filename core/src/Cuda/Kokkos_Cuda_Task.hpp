@@ -139,7 +139,6 @@ public:
       if(warp_lane == 0) {  // should be (?) same as team_exec.team_rank() == 0
         // pop off a task
         current_task = queue.pop_ready_task(team_scheduler.team_scheduler_info());
-        if(!bool(current_task)) printf("failed to pop task on %d.%d\n", blockIdx.x, threadIdx.z);
       }
 
       // Broadcast task pointer:
