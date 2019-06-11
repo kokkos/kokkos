@@ -196,6 +196,12 @@ public:
     return (*(volatile int*)(&m_ready_count)) == 0;
   }
 
+  KOKKOS_INLINE_FUNCTION
+  int32_t ready_count() const noexcept {
+    // TODO @tasking @memory_order DSH Memory order, instead of volatile
+    return (*(volatile int*)(&m_ready_count));
+  }
+
   template <class TaskQueueTraits, class TeamSchedulerInfo>
   KOKKOS_FUNCTION
   void
