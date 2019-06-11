@@ -520,7 +520,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   void set_predecessor(task_base_type& predecessor)
   {
-    KOKKOS_EXPECTS(m_predecessor == nullptr || &predecessor == m_predecessor);
+    KOKKOS_EXPECTS(m_predecessor == nullptr);
     // Increment the reference count so that predecessor doesn't go away
     // before this task is enqueued.
     // (should be memory order acquire)
