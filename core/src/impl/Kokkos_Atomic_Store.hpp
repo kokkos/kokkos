@@ -207,25 +207,25 @@ void _atomic_store(T* ptr, T val, MemoryOrder)
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION
-void atomic_store(T volatile* ptr, T val, Impl::memory_order_seq_cst_t) {
+void atomic_store(T* ptr, T val, Impl::memory_order_seq_cst_t) {
   _atomic_store(ptr, val, Impl::memory_order_seq_cst);
 }
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION
-void atomic_store(T volatile* ptr, T val, Impl::memory_order_release_t) {
+void atomic_store(T* ptr, T val, Impl::memory_order_release_t) {
   _atomic_store(ptr, val, Impl::memory_order_release);
 }
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION
-void atomic_store(T volatile* ptr, T val, Impl::memory_order_relaxed_t) {
+void atomic_store(T* ptr, T val, Impl::memory_order_relaxed_t) {
   _atomic_store(ptr, val, Impl::memory_order_relaxed);
 }
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION
-void atomic_store(T volatile* ptr, T val, Impl::memory_order_acquire_t) {
+void atomic_store(T* ptr, T val, Impl::memory_order_acquire_t) {
   static_assert(
     sizeof(T) == 0, // just something that will always be false, but only on instantiation
     "atomic_store with memory order acquire doesn't make any sense!"
@@ -234,7 +234,7 @@ void atomic_store(T volatile* ptr, T val, Impl::memory_order_acquire_t) {
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION
-void atomic_store(T volatile* ptr, T val, Impl::memory_order_acq_rel_t) {
+void atomic_store(T* ptr, T val, Impl::memory_order_acq_rel_t) {
   static_assert(
     sizeof(T) == 0, // just something that will always be false, but only on instantiation
     "atomic_store with memory order acq_rel doesn't make any sense!"
@@ -243,16 +243,9 @@ void atomic_store(T volatile* ptr, T val, Impl::memory_order_acq_rel_t) {
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION
-void atomic_store(T volatile* ptr, T val) {
-  // relaxed by default!
-  _atomic_store(ptr, Impl::memory_order_relaxed);
-}
-
-template <class T>
-KOKKOS_FORCEINLINE_FUNCTION
 void atomic_store(T* ptr, T val) {
   // relaxed by default!
-  _atomic_store((T volatile*)ptr, Impl::memory_order_relaxed);
+  _atomic_store(ptr, Impl::memory_order_relaxed);
 }
 
 } // end namespace Impl
