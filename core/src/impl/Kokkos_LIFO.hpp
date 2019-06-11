@@ -283,9 +283,11 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool push(node_type& node)
   {
+    int64_t i_retry = 0;
     while(!this->_try_push_node(node)) {
+
       /* retry until success */
-      printf("enqueue failed, m_head = %p\n", (void*)(this->m_head));
+      printf("enqueue failed, m_head = %p\n, retry number %d", (void*)(this->m_head), i_retry++);
       //printf("enqueue failed, this = %p\n", (void*)this);
       //printf("enqueue failed\n");
     }
