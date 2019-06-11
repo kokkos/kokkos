@@ -257,5 +257,9 @@ T atomic_load(T* ptr) {
 } // end namespace Impl
 } // end namespace Kokkos
 
+#if defined(KOKKOS_ENABLE_CUDA)
+#include <Cuda/Kokkos_Cuda_Atomic_Intrinsics_Restore_Builtins.hpp>
+#endif
+
 #endif // defined(KOKKOS_ATOMIC_HPP)
 #endif //KOKKOS_IMPL_KOKKOS_ATOMIC_LOAD_HPP

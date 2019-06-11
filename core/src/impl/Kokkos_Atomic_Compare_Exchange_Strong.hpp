@@ -51,12 +51,14 @@
 
 #if defined(KOKKOS_ENABLE_CUDA)
 #include<Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
-#include <Cuda/Kokkos_Cuda_Atomic_Intrinsics.hpp>
 #endif
 
 #include <impl/Kokkos_Atomic_Memory_Order.hpp>
 #include <impl/Kokkos_Memory_Fence.hpp>
 
+#if defined(KOKKOS_ENABLE_CUDA)
+#include <Cuda/Kokkos_Cuda_Atomic_Intrinsics.hpp>
+#endif
 
 namespace Kokkos {
 
@@ -486,6 +488,10 @@ bool atomic_compare_exchange_strong(
 } // end namespace Impl
 
 } // namespace Kokkos
+
+#if defined(KOKKOS_ENABLE_CUDA)
+#include <Cuda/Kokkos_Cuda_Atomic_Intrinsics_Restore_Builtins.hpp>
+#endif
 
 #endif
 

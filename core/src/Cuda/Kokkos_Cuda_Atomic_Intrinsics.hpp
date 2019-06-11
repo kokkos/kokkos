@@ -621,6 +621,26 @@ template<class type> void __device__ __atomic_clear_simt(volatile void *ptr, int
     builtins
 */
 
+#define __atomic_load_n__old __atomic_load_n
+#define __atomic_load__old __atomic_load
+#define __atomic_store_n__old __atomic_store_n
+#define __atomic_store__old __atomic_store
+#define __atomic_exchange_n__old __atomic_exchange_n
+#define __atomic_exchange__old __atomic_exchange
+#define __atomic_compare_exchange_n__old __atomic_compare_exchange_n
+#define __atomic_compare_exchange__old __atomic_compare_exchange
+#define __atomic_fetch_add__old __atomic_fetch_add
+#define __atomic_fetch_sub__old __atomic_fetch_sub
+#define __atomic_fetch_and__old __atomic_fetch_and
+#define __atomic_fetch_xor__old __atomic_fetch_xor
+#define __atomic_fetch_or__old __atomic_fetch_or
+#define __atomic_test_and_set__old __atomic_test_and_set
+#define __atomic_clear__old __atomic_clear
+#define __atomic_always_lock_free__old __atomic_always_lock_free
+#define __atomic_is_lock_free__old __atomic_is_lock_free
+#define __atomic_thread_fence__old __atomic_thread_fence
+#define __atomic_signal_fence__old __atomic_signal_fence
+
 #define __atomic_load_n __atomic_load_n_simt
 #define __atomic_load __atomic_load_simt
 #define __atomic_store_n __atomic_store_n_simt
@@ -640,6 +660,7 @@ template<class type> void __device__ __atomic_clear_simt(volatile void *ptr, int
 #define __atomic_is_lock_free __atomic_is_lock_free_simt
 #define __atomic_thread_fence __atomic_thread_fence_simt
 #define __atomic_signal_fence __atomic_signal_fence_simt
+
 
 } // end namespace Impl
 } // end namespace Kokkos
