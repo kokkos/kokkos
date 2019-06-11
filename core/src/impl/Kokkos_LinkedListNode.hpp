@@ -100,6 +100,11 @@ private:
   }
 
   KOKKOS_INLINE_FUNCTION
+  pointer_type volatile& _next_ptr() volatile noexcept {
+    return m_next;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   pointer_type const& _next_ptr() const noexcept {
     return m_next;
   }
@@ -150,6 +155,14 @@ struct LinkedListNodeAccess
   static
   typename Node::pointer_type&
   next_ptr(Node& node) noexcept {
+    return node._next_ptr();
+  }
+
+  template <class Node>
+  KOKKOS_INLINE_FUNCTION
+  static
+  typename Node::pointer_type&
+  next_ptr(Node volatile& node) noexcept {
     return node._next_ptr();
   }
 

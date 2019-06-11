@@ -283,7 +283,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool push(node_type& node)
   {
-    int64_t i_retry = 0;
+    int i_retry = 0;
     while(!this->_try_push_node(node)) {
 
       /* retry until success */
