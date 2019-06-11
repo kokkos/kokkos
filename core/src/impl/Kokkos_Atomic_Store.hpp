@@ -62,7 +62,7 @@ namespace Impl {
     || (defined(KOKKOS_ENABLE_INTEL_ATOMICS) && !defined(__CUDA_ARCH__)) \
     || defined(KOKKOS_ENABLE_CUDA_ASM_ATOMICS)
 
-#if defined(__CUDA_ARCH__)
+#if defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA_ASM_ATOMICS)
   #define KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH __inline__ __device__
 #else
   #define KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH inline
