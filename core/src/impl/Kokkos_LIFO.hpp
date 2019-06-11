@@ -88,7 +88,7 @@ struct LockBasedLIFOCommon
     auto* volatile & next = LinkedListNodeAccess::next_ptr(node);
 
     // store the head of the queue in a local variable
-    auto* old_head = *(node_type* volatile*)(&m_head);
+    auto* old_head = m_head;
 
     // retry until someone locks the queue or we successfully compare exchange
     while (old_head != (node_type*)LockTag) {
@@ -112,11 +112,9 @@ struct LockBasedLIFOCommon
       //     m_head = &node;
       //   }
       //   old_head = m_head;
-      old_head = ::Kokkos::atomic_compare_exchange(&m_head, (node_type*)old_head, &node);
+      old_head = ::Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
 
-      if(old_head_tmp == old_head) {
-        return true;
-      }
+      if(old_head_tmp == old_head) return true;
     }
 
     // Failed, replace 'task->m_next' value since 'task' remains
@@ -188,8 +186,9 @@ public:
     // can't do that with static constexpr variables.
     auto* const lock_tag = (node_type*)base_t::LockTag;
 
+    // TODO @tasking @memory_order DSH shouldn't this be a relaxed atomic load?
     // start with the return value equal to the head
-    auto* rv = ((LockBasedLIFO volatile*)this)->m_head;
+    auto* rv = this->m_head;
 
     // Retry until the lock is acquired or the queue is empty.
     while(rv != (node_type*)base_t::EndTag) {
@@ -211,7 +210,7 @@ public:
         }
       }
 
-      node_type* const old_rv = rv;
+      auto* const old_rv = rv;
 
       // TODO @tasking @memory_order DSH this should be a weak compare exchange in a loop
       rv = Kokkos::atomic_compare_exchange(&(this->m_head), old_rv, lock_tag);
@@ -239,8 +238,7 @@ public:
 
         // TODO @tasking @memory_order DSH I think this needs to be a atomic store release (and the memory fence needs to be removed)
         // Lock is released here
-        *(node_type* volatile *)(&this->m_head) = next;
-        //this->m_head = next;
+        this->m_head = next;
 
         // Mark rv as popped by assigning nullptr to the next
         LinkedListNodeAccess::mark_as_not_enqueued(*rv);

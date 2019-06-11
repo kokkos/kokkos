@@ -235,10 +235,10 @@ public:
     const int shared_total = shared_per_warp * warps_per_block;
     const cudaStream_t stream = nullptr;
 
-    //KOKKOS_ASSERT(
-    //  static_cast<long>(grid.x * grid.y * grid.z * block.x * block.y * block.z)
-    //    == static_cast<long>(get_max_team_count(scheduler.get_execution_space()) * Kokkos::Impl::CudaTraits::WarpSize)
-    //);
+    KOKKOS_ASSERT(
+      static_cast<long>(grid.x * grid.y * grid.z * block.x * block.y * block.z)
+        == static_cast<long>(get_max_team_count(scheduler.get_execution_space()) * Kokkos::Impl::CudaTraits::WarpSize)
+    );
 
     auto& queue = scheduler.queue();
 
