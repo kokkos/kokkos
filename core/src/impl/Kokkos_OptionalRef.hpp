@@ -114,13 +114,13 @@ public:
   KOKKOS_INLINE_FUNCTION
   OptionalRef<typename std::add_volatile<T>::type>
   as_volatile() volatile noexcept {
-    return { *(*this) };
+    return *(*this);
   }
 
   KOKKOS_INLINE_FUNCTION
   OptionalRef<typename std::add_volatile<typename std::add_const<T>::type>::type>
   as_volatile() const volatile noexcept {
-    return { *(*this) };
+    return *(*this);
   }
 
 
