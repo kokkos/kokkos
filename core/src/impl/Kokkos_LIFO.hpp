@@ -88,7 +88,9 @@ struct LockBasedLIFOCommon
     auto* volatile & next = LinkedListNodeAccess::next_ptr(node);
 
     // store the head of the queue in a local variable
-    auto* old_head = m_head;
+    auto volatile* old_head = (node_type volatile*)m_head;
+
+    printf("enqueue try start, old_head = %p\n", (void*)old_head);
 
     // retry until someone locks the queue or we successfully compare exchange
     while (old_head != (node_type*)LockTag) {
@@ -116,7 +118,7 @@ struct LockBasedLIFOCommon
 
       if(old_head_tmp == old_head) return true;
 
-      printf("enqueue retry, this = %p\n", (void*)this);
+      printf("enqueue retry, old_head = %p\n", (void*)old_head);
     }
 
     // Failed, replace 'task->m_next' value since 'task' remains
