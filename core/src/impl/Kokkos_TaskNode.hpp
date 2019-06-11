@@ -319,7 +319,10 @@ public:
   bool get_respawn_flag() const { return m_is_respawning; }
 
   KOKKOS_INLINE_FUNCTION
-  void set_respawn_flag(bool value = true) { m_is_respawning = value; }
+  void set_respawn_flag(bool value = true) {
+    // Cuda needs this to be volatile
+    *static_cast<volatile bool*>(&m_is_respawning) = value;
+  }
 
 };
 

@@ -110,7 +110,16 @@ public:
   OptionalRef& operator=(std::nullptr_t) { m_value = nullptr; return *this; }
 
   //----------------------------------------
-  
+
+  KOKKOS_INLINE_FUNCTION
+  OptionalRef<typename std::add_volatile<T>>
+  as_volatile() const volatile noexcept {
+    return { *this };
+  }
+
+
+  //----------------------------------------
+
   KOKKOS_INLINE_FUNCTION
   T& operator*() & {
     KOKKOS_EXPECTS(this->has_value());
