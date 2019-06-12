@@ -211,7 +211,8 @@ public:
       m_wait_queue(),
       m_ready_queue_base(queue_base),
       m_task_type(task_type),
-      m_priority(static_cast<priority_type>(priority))
+      m_priority(static_cast<priority_type>(priority)),
+      m_is_respawning(false)
   { }
 
   TaskNode() = delete;
@@ -489,6 +490,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void clear_predecessor() { m_predecessor = nullptr; }
+
+  KOKKOS_INLINE_FUNCTION
+  void clear_predecessor() volatile { m_predecessor = nullptr; }
 
   template <class SchedulingInfo>
   KOKKOS_INLINE_FUNCTION

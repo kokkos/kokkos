@@ -54,6 +54,7 @@
 
 #include <impl/Kokkos_TaskBase.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp> // CUDA_SAFE_CALL
+#include <impl/Kokkos_TaskTeamMember.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -90,9 +91,11 @@ public:
   using scheduler_type = SimpleTaskScheduler<Kokkos::Cuda, QueueType>;
   using execution_space = Kokkos::Cuda;
   using memory_space = Kokkos::CudaUVMSpace;
-  using member_type = TaskExec<Kokkos::Cuda, scheduler_type> ;
+  //using member_type = TaskExec<Kokkos::Cuda, scheduler_type> ;
+  using member_type = TaskTeamMemberAdapter<CudaTeamMember, scheduler_type>;
 
   enum : long { max_league_size = 16 };
+  enum : int { warps_per_team = 4 };
   enum : int { warps_per_block = 4 };
 
   KOKKOS_INLINE_FUNCTION
@@ -106,7 +109,7 @@ public:
   }
 
   __device__
-  static void driver(scheduler_type scheduler, int32_t shmem_per_warp)
+  static void driver(scheduler_type scheduler, int32_t shmem_per_team)
   {
     using queue_type = typename scheduler_type::task_queue_type;
     using task_base_type = typename scheduler_type::task_base_type;
@@ -117,26 +120,34 @@ public:
         typename scheduler_type::task_scheduling_info_type
       >;
 
+    KOKKOS_EXPECTS(blockDim.x == warps_per_team && blockDim.y == CudaTraits::WarpSize);
+
     extern __shared__ int32_t shmem_all[];
 
-    int32_t* const warp_shmem = shmem_all + (threadIdx.z * shmem_per_warp) / sizeof(int32_t);
+    auto const team_size = blockDim.x * blockDim.y; // = warps_per_team * CudaTraits::WarpSize
 
-    task_base_type* const shared_memory_task_copy = (task_base_type*)warp_shmem;
+    int32_t* const team_shmem = shmem_all + (threadIdx.z * shmem_per_team) / sizeof(int32_t);
 
-    const int warp_lane = threadIdx.x + threadIdx.y * blockDim.x;
+    auto* const shared_memory_task_copy = (task_base_type*)team_shmem;
 
-    member_type single_exec(scheduler, warp_shmem, 1);
-    member_type team_exec(scheduler, warp_shmem, blockDim.y);
+    // TODO double-check whether or not this should be reversed
+    const int team_rank = threadIdx.x + threadIdx.y * blockDim.x;
+
+    member_type single_exec(scheduler, team_shmem,  1);
+    //member_type team_exec(scheduler, warp_shmem, team_size);
+    member_type team_exec(
+      scheduler, nullptr, 0, 0, nullptr, 0, team_rank, team_size
+    );
 
     auto& queue = scheduler.queue();
     auto& team_scheduler = team_exec.scheduler();
 
-    auto current_task = OptionalRef<task_base_type>();
+    __shared__ OptionalRef<task_base_type> current_task; // = OptionalRef<task_base_type>();
 
     // Loop until all queues are empty and no tasks in flight
     while(not queue.is_done()) {
 
-      if(warp_lane == 0) {  // should be (?) same as team_exec.team_rank() == 0
+      if(team_rank == 0) {  // should be (?) same as team_exec.team_rank() == 0
         // pop off a task
         current_task = queue.pop_ready_task(team_scheduler.team_scheduler_info());
       }
@@ -144,11 +155,12 @@ public:
       // Broadcast task pointer:
 
       // Sync before the broadcast
-      KOKKOS_IMPL_CUDA_SYNCWARP;
+      //KOKKOS_IMPL_CUDA_SYNCWARP;
+      __threadfence();
       
       // pretend it's an int* for shuffle purposes
-      ((int*) &current_task)[0] = KOKKOS_IMPL_CUDA_SHFL(((int*) &current_task)[0], 0, 32);
-      ((int*) &current_task)[1] = KOKKOS_IMPL_CUDA_SHFL(((int*) &current_task)[1], 0, 32);
+      //((int*) &current_task)[0] = KOKKOS_IMPL_CUDA_SHFL(((int*) &current_task)[0], 0, 32);
+      //((int*) &current_task)[1] = KOKKOS_IMPL_CUDA_SHFL(((int*) &current_task)[1], 0, 32);
 
       if(current_task) {
 
@@ -165,13 +177,14 @@ public:
         int32_t volatile* const task_mem = (int32_t volatile*)current_task.get();
 
         // do a coordinated copy of the task closure from global to shared memory:
-        for(int32_t i = warp_lane; i < e; i += CudaTraits::WarpSize) {
-          warp_shmem[i] = task_mem[i];
+        for(int32_t i = team_rank; i < e; i += team_size) {
+          team_shmem[i] = task_mem[i];
         }
 
         // Synchronize threads of the warp and insure memory
         // writes are visible to all threads in the warp.
-        KOKKOS_IMPL_CUDA_SYNCWARP;
+        //KOKKOS_IMPL_CUDA_SYNCWARP;
+        __threadfence_block();
 
         if(shared_memory_task_copy->is_team_runnable()) {
           // Thread Team Task
@@ -186,37 +199,54 @@ public:
         // Synchronize threads of the warp and insure memory
         // writes are visible to all threads in the warp.
 
-        KOKKOS_IMPL_CUDA_SYNCWARP;
+        //KOKKOS_IMPL_CUDA_SYNCWARP;
+        __threadfence_block();
 
         //if(warp_lane < b % CudaTraits::WarpSize) b += CudaTraits::WarpSize;
         //b -= b % CudaTraits::WarpSize;
 
         // copy task closure from shared to global memory:
-        for (int32_t i = b + warp_lane; i < e; i += CudaTraits::WarpSize) {
-          task_mem[i] = warp_shmem[i];
+        for (int32_t i = b + team_rank; i < e; i += CudaTraits::WarpSize) {
+          task_mem[i] = team_shmem[i];
         }
 
         // Synchronize threads of the warp and insure memory
         // writes are visible to root thread of the warp for
         // respawn or completion.
 
-        KOKKOS_IMPL_CUDA_SYNCWARP;
+        //KOKKOS_IMPL_CUDA_SYNCWARP;
+        __threadfence_block();
 
 
-        if (warp_lane == 0) {
+        if (team_rank == 0) {
           // If respawn requested copy respawn data back to main memory
           if(shared_memory_task_copy->as_runnable_task().get_respawn_flag()) {
             if(shared_memory_task_copy->as_runnable_task().has_predecessor()) {
-              current_task.as_volatile()->as_runnable_task().acquire_predecessor_from(
+              // It's not necessary to make this a volatile write because
+              // the next read of the predecessor is on this thread in complete,
+              // and the predecessor is cleared there (using a volatile write)
+              current_task->as_runnable_task().acquire_predecessor_from(
                 shared_memory_task_copy->as_runnable_task()
               );
             }
+
+            // It may not necessary to make this a volatile write, since the
+            // next read will be done by this thread in complete where the
+            // rescheduling occurs, but since the task could be stolen later
+            // before this is written again, we should do the volatile write
+            // here.  (It might not be necessary though because I don't know
+            // where else the priority would be read after it is scheduled
+            // by this thread; for now, we leave it volatile, but we should
+            // benchmark the cost of this.)
             current_task.as_volatile()->set_priority(shared_memory_task_copy->get_priority());
-            current_task.as_volatile()->as_runnable_task().set_respawn_flag();
+
+            // It's not necessary to make this a volatile write, since the
+            // next read of it (if true) will be by this thread in `complete()`,
+            // which will unset the flag (using volatile) once it has handled
+            // the respawn
+            current_task->as_runnable_task().set_respawn_flag();
+
           }
-          //else {
-          //  current_task.as_volatile()->as_runnable_task().set_respawn_flag(false);
-          //}
 
           queue.complete(
             (*std::move(current_task)).as_runnable_task(),
@@ -231,10 +261,13 @@ public:
   static
   void execute(scheduler_type const& scheduler)
   {
-    const int shared_per_warp = 2048 ;
+    KOKKOS_EXPECTS(warps_per_block % warps_per_team == 0 && warps_per_team <= warps_per_block);
+    auto const teams_per_block = warps_per_block / warps_per_team;
+
+    const int shared_per_team = 2048;
     const dim3 grid(Kokkos::Impl::cuda_internal_multiprocessor_count(), 1, 1);
-    const dim3 block(1, Kokkos::Impl::CudaTraits::WarpSize, warps_per_block);
-    const int shared_total = shared_per_warp * warps_per_block;
+    const dim3 block(warps_per_team, Kokkos::Impl::CudaTraits::WarpSize, teams_per_block);
+    const int shared_total = shared_per_team * teams_per_block;
     const cudaStream_t stream = nullptr;
 
     KOKKOS_ASSERT(
@@ -259,7 +292,7 @@ public:
       CUDA_SAFE_CALL(cudaDeviceSetLimit(cudaLimitStackSize, larger_stack_size));
     }
 
-    cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(scheduler, shared_per_warp);
+    cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(scheduler, shared_per_team);
 
     CUDA_SAFE_CALL(cudaGetLastError());
 
