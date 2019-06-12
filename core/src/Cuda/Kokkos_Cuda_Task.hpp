@@ -269,7 +269,7 @@ public:
 
     // If not large enough then set the stack size, in bytes:
 
-    const size_t larger_stack_size = 1 << 16;
+    const size_t larger_stack_size = 1 << 11;
 
     if (previous_stack_size < larger_stack_size) {
       CUDA_SAFE_CALL(cudaDeviceSetLimit(cudaLimitStackSize, larger_stack_size));
