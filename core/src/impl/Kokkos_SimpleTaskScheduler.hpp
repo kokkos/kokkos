@@ -100,12 +100,6 @@ protected:
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
-  ExecutionSpaceInstanceStorage()
-    : base_t()
-  { }
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr explicit
   ExecutionSpaceInstanceStorage(ExecutionSpace const& arg_execution_space)
     : base_t(arg_execution_space)
   { }
@@ -146,11 +140,6 @@ private:
 
 protected:
 
-  MemorySpaceInstanceStorage()
-    : base_t()
-  { }
-
-  KOKKOS_INLINE_FUNCTION
   MemorySpaceInstanceStorage()
     : base_t()
   { }
