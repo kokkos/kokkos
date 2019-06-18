@@ -175,6 +175,7 @@ PerformanceData run( const typename FixtureType::FEMeshType & mesh ,
 
   linsys_rhs      = vector_type( "rhs" , local_owned_length );
   linsys_solution = vector_type( "solution" , local_owned_length );
+  fprintf(stderr, "created \"solution\", linsys_solution.use_count() %d\n", linsys_solution.use_count());
 
   //------------------------------------
   // Fill linear system
@@ -254,6 +255,8 @@ PerformanceData run( const typename FixtureType::FEMeshType & mesh ,
       }
     }
   }
+
+  fprintf(stderr, "at end of run(), linsys_solution.use_count() %d\n", linsys_solution.use_count());
 
   return perf_data ;
 }
