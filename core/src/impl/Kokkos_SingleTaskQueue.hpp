@@ -80,15 +80,16 @@ namespace Impl {
 template <
   class ExecSpace,
   class MemorySpace,
-  class TaskQueueTraits
+  class TaskQueueTraits,
+  class MemoryPool
 >
 class SingleTaskQueue
-  : public TaskQueueMemoryManager<ExecSpace, MemorySpace>,
-    public TaskQueueCommonMixin<SingleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits>>
+  : public TaskQueueMemoryManager<ExecSpace, MemorySpace, MemoryPool>,
+    public TaskQueueCommonMixin<SingleTaskQueue<ExecSpace, MemorySpace, TaskQueueTraits, MemoryPool>>
 {
 private:
 
-  using base_t = TaskQueueMemoryManager<ExecSpace, MemorySpace>;
+  using base_t = TaskQueueMemoryManager<ExecSpace, MemorySpace, MemoryPool>;
   using common_mixin_t = TaskQueueCommonMixin<SingleTaskQueue>;
 
   struct EmptyTeamSchedulerInfo { };

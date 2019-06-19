@@ -74,7 +74,8 @@ namespace Impl {
 
 template <
   class ExecSpace,
-  class MemorySpace
+  class MemorySpace,
+  class MemoryPool = Kokkos::MemoryPool<Kokkos::Device<ExecSpace, MemorySpace>>
 >
 class TaskQueueMemoryManager
   : public TaskQueueBase
@@ -84,7 +85,7 @@ public:
   using execution_space = ExecSpace;
   using memory_space = MemorySpace;
   using device_type = Kokkos::Device<execution_space, memory_space>;
-  using memory_pool = Kokkos::MemoryPool<device_type>;
+  using memory_pool = MemoryPool;
   using allocation_size_type = size_t;
 
 private:
@@ -186,7 +187,10 @@ public:
   template <class T, class VLAValueType, class... Args>
   KOKKOS_INLINE_FUNCTION
   T*
-  allocate_and_construct_with_vla_emulation(allocation_size_type n_vla_entries, Args&&... args)
+  allocate_and_construct_with_vla_emulation(
+    allocation_size_type n_vla_entries,
+    Args&&... args
+  )
     // requires
     //   std::is_base_of_v<PoolAllocatedObjectBase<typename memory_pool::size_type>, T>
     //     && std::is_base_of<ObjectWithVLAEmulation<T, VLAValueType>, T>::value

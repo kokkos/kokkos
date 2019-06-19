@@ -54,6 +54,7 @@
 
 #include <impl/Kokkos_TaskBase.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp> // CUDA_SAFE_CALL
+#include <impl/Kokkos_TaskTeamMember.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -152,6 +153,8 @@ public:
 
       if(current_task) {
 
+        KOKKOS_ASSERT(!current_task->as_runnable_task().get_respawn_flag());
+
         int32_t b = sizeof(scheduling_info_storage_type) / sizeof(int32_t);
         static_assert(
           sizeof(scheduling_info_storage_type) % sizeof(int32_t) == 0,
@@ -205,12 +208,30 @@ public:
           // If respawn requested copy respawn data back to main memory
           if(shared_memory_task_copy->as_runnable_task().get_respawn_flag()) {
             if(shared_memory_task_copy->as_runnable_task().has_predecessor()) {
+              // It's not necessary to make this a volatile write because
+              // the next read of the predecessor is on this thread in complete,
+              // and the predecessor is cleared there (using a volatile write)
               current_task->as_runnable_task().acquire_predecessor_from(
                 shared_memory_task_copy->as_runnable_task()
               );
             }
-            current_task->set_priority(shared_memory_task_copy->get_priority());
+
+            // It may not necessary to make this a volatile write, since the
+            // next read will be done by this thread in complete where the
+            // rescheduling occurs, but since the task could be stolen later
+            // before this is written again, we should do the volatile write
+            // here.  (It might not be necessary though because I don't know
+            // where else the priority would be read after it is scheduled
+            // by this thread; for now, we leave it volatile, but we should
+            // benchmark the cost of this.)
+            current_task.as_volatile()->set_priority(shared_memory_task_copy->get_priority());
+
+            // It's not necessary to make this a volatile write, since the
+            // next read of it (if true) will be by this thread in `complete()`,
+            // which will unset the flag (using volatile) once it has handled
+            // the respawn
             current_task->as_runnable_task().set_respawn_flag();
+
           }
 
           queue.complete(
@@ -227,10 +248,10 @@ public:
   void execute(scheduler_type const& scheduler)
   {
     const int shared_per_warp = 2048 ;
-    const dim3 grid( Kokkos::Impl::cuda_internal_multiprocessor_count() , 1 , 1 );
-    const dim3 block( 1 , Kokkos::Impl::CudaTraits::WarpSize , warps_per_block );
-    const int shared_total = shared_per_warp * warps_per_block ;
-    const cudaStream_t stream = 0 ;
+    const dim3 grid(Kokkos::Impl::cuda_internal_multiprocessor_count(), 1, 1);
+    const dim3 block(1, Kokkos::Impl::CudaTraits::WarpSize, warps_per_block);
+    const int shared_total = shared_per_warp * warps_per_block;
+    const cudaStream_t stream = nullptr;
 
     KOKKOS_ASSERT(
       static_cast<long>(grid.x * grid.y * grid.z * block.x * block.y * block.z)
@@ -239,29 +260,29 @@ public:
 
     auto& queue = scheduler.queue();
 
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
     // Query the stack size, in bytes:
 
-    size_t previous_stack_size = 0 ;
-    CUDA_SAFE_CALL( cudaDeviceGetLimit( & previous_stack_size , cudaLimitStackSize ) );
+    size_t previous_stack_size = 0;
+    CUDA_SAFE_CALL(cudaDeviceGetLimit(&previous_stack_size, cudaLimitStackSize));
 
     // If not large enough then set the stack size, in bytes:
 
-    const size_t larger_stack_size = 2048 ;
+    const size_t larger_stack_size = 1 << 11;
 
-    if ( previous_stack_size < larger_stack_size ) {
-      CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , larger_stack_size ) );
+    if (previous_stack_size < larger_stack_size) {
+      CUDA_SAFE_CALL(cudaDeviceSetLimit(cudaLimitStackSize, larger_stack_size));
     }
 
-    cuda_task_queue_execute<<< grid , block , shared_total , stream >>>( scheduler , shared_per_warp );
+    cuda_task_queue_execute<<<grid, block, shared_total, stream>>>(scheduler, shared_per_warp);
 
-    CUDA_SAFE_CALL( cudaGetLastError() );
+    CUDA_SAFE_CALL(cudaGetLastError());
 
-    CUDA_SAFE_CALL( cudaDeviceSynchronize() );
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
-    if ( previous_stack_size < larger_stack_size ) {
-      CUDA_SAFE_CALL( cudaDeviceSetLimit( cudaLimitStackSize , previous_stack_size ) );
+    if (previous_stack_size < larger_stack_size) {
+      CUDA_SAFE_CALL(cudaDeviceSetLimit(cudaLimitStackSize, previous_stack_size));
     }
   }
 

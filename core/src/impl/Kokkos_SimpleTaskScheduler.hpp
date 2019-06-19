@@ -478,6 +478,9 @@ public:
     >;
 
     auto& task = *static_cast<task_type*>(functor);
+
+    KOKKOS_EXPECTS(!task.get_respawn_flag());
+
     task.set_priority(priority);
     task.set_predecessor(*predecessor.m_task);
     task.set_respawn_flag(true);
@@ -496,6 +499,9 @@ public:
     >;
 
     auto& task = *static_cast<task_type*>(functor);
+
+    KOKKOS_EXPECTS(!task.get_respawn_flag());
+
     task.set_priority(priority);
     KOKKOS_ASSERT(not task.has_predecessor());
     task.set_respawn_flag(true);

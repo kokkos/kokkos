@@ -101,17 +101,17 @@ struct LockBasedLIFOCommon
       // fence to emulate acquire semantics on next and release semantics on
       // the store of m_head
       // Do not proceed until 'next' has been stored.
-      ::Kokkos::memory_fence();
+      Kokkos::memory_fence();
 
       // store the old head
       auto* const old_head_tmp = old_head;
 
       // attempt to swap task with the old head of the queue
       // as if this were done atomically:
-      //   if(*queue == old_head) {
-      //     *queue = task;
+      //   if(m_head == old_head) {
+      //     m_head = &node;
       //   }
-      //   old_head = *queue;
+      //   old_head = m_head;
       old_head = ::Kokkos::atomic_compare_exchange(&m_head, old_head, &node);
 
       if(old_head_tmp == old_head) return true;
@@ -132,7 +132,7 @@ struct LockBasedLIFOCommon
 
   bool _is_empty() const noexcept {
     // TODO @tasking @memory_order DSH make this an atomic load with memory order
-    return this->m_head == (node_type*)EndTag;
+    return (volatile node_type*)this->m_head == (node_type*)EndTag;
   }
 
 };
@@ -237,13 +237,14 @@ public:
         // calling this method would never make forward progress
 
         // TODO @tasking @memory_order DSH I think this needs to be a atomic store release (and the memory fence needs to be removed)
+        // TODO @tasking DSH prove that this doesn't need to be a volatile store
         // Lock is released here
         this->m_head = next;
 
         // Mark rv as popped by assigning nullptr to the next
         LinkedListNodeAccess::mark_as_not_enqueued(*rv);
 
-        ::Kokkos::memory_fence();
+        Kokkos::memory_fence();
 
         return OptionalRef<T>{ *static_cast<T*>(rv) };
       }
