@@ -74,6 +74,8 @@ LICENSE ASSOCIATED WITH SUBSEQUENT MODIFICATIONS
 #include <Kokkos_Macros.hpp>
 #if defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA_ASM_ATOMICS)
 
+#include <cassert>
+
 #ifndef _SIMT_DETAILS_CONFIG
 #define _SIMT_DETAILS_CONFIG
 
