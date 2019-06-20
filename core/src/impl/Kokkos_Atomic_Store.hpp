@@ -142,7 +142,7 @@ struct StoreOper {
 
 template <class T>
 __device__ __inline__
-T _relaxed_atomic_store_impl(
+void _relaxed_atomic_store_impl(
   T* ptr, T val,
   typename std::enable_if<
     !(
@@ -159,25 +159,24 @@ T _relaxed_atomic_store_impl(
 
 template <class T>
 __device__ __inline__
-T _atomic_store(T* ptr, T val, memory_order_seq_cst_t) {
+void _atomic_store(T* ptr, T val, memory_order_seq_cst_t) {
   Kokkos::memory_fence();
-  auto rv = Impl::_relaxed_atomic_store_impl(ptr, val);
+  Impl::_relaxed_atomic_store_impl(ptr, val);
   Kokkos::memory_fence();
   return rv;
 }
 
 template <class T>
 __device__ __inline__
-T _atomic_store(T* ptr, T val, memory_order_release_t) {
+void _atomic_store(T* ptr, T val, memory_order_release_t) {
   Kokkos::memory_fence();
-  auto rv = _relaxed_atomic_store_impl(ptr, val);
-  return rv;
+  _relaxed_atomic_store_impl(ptr, val);
 }
 
 template <class T>
 __device__ __inline__
-T _atomic_store(T* ptr, T val, memory_order_relaxed_t) {
-  return _relaxed_atomic_store_impl(ptr, val);
+void _atomic_store(T* ptr, T val, memory_order_relaxed_t) {
+  _relaxed_atomic_store_impl(ptr, val);
 }
 
 #elif defined(KOKKOS_ENABLE_OPENMP_ATOMICS)
