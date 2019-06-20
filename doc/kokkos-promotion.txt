@@ -70,13 +70,28 @@ supported compilers. Those machines are:
 // -------------------------------------------------------------------------------- //
 
 Step 2:
-  2.1. Build and test Trilinos with 4 different configurations; Run scripts for white and blake that are provided in kokkos-kernels/scripts/trilinos-integration. These scripts load their own modules/environment, so don't require preparation. You can run all four at the same time, use separate directories for each.
+  2.1. Build and test Trilinos with the following configurations: 
+       a) serial, openmp, and cuda via the testing scripts in kokkos-kernels/scripts/trilinos-integration (automates the process)
+       b) various ATDM-supported builds via Trilinos configuration scripts located in kokkos{-kernels}/scripts/trilinos-integration/ATDM_configurations (not yet automated)
+       
+       Run scripts for white (openmp and cuda) and blake (seral) that are provided in kokkos{-kernels}/scripts/trilinos-integration. 
+       These scripts load their own modules/environment, so don't require preparation. You can run all four at the same time, use separate directories for each.
 
          mkdir serial
          cd serial
          nohup KOKKOSKERNELS_PATH/scripts/trilinos-integration/blake_jenkins_run_script_serial_intel &
 
-  2.2. Compare the compile errors and test failures between updated and pristine versions. There may be compile failures that happen in both, tests that fail in both, and there may be tests that only fail some times (thus, rerun tests manually as needed).
+       Use scripts to configure Trilinos for waterman (cuda, cuda-debug, cuda-rdc) that are provided in kokkos-kernels/scripts/trilinos-integration/ATDM_configurations. 
+
+       These scripts load their own modules/environment, so don't require preparation of the system environment. You can run all them all at the same time, use separate directories for each. Instructions for compute node allocation, building, and testing are included in the scripts.
+
+       The Trilinos configuration scripts include an override of the kokkos and kokkos-kernels packages; this requires that a symbolic link for each be created in the Trilinos base directory:
+
+         cd Trilinos
+         ln -s <PATH_TO_YOUR_KOKKOS> kokkos
+         ln -s <PATH_TO_YOUR_KOKKOSKERNELS> kokkos-kernels
+
+  2.2. Compare the compile errors and test failures between updated and pristine versions; the ATDM configurations scripts should have 0 build errors and 100% passing tests. There may be compile failures that happen in both, tests that fail in both, and there may be tests that only fail some times (thus, rerun tests manually as needed).
 
 // -------------------------------------------------------------------------------- //
 
