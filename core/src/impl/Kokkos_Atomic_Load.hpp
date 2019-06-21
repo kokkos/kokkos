@@ -159,13 +159,14 @@ T _relaxed_atomic_load_impl(
   T rv{};
   // TODO remove a copy operation here?
   Kokkos::atomic_oper_fetch(NoOpOper<T>{}, &rv, rv);
+  return rv;
 }
 
 template <class T>
 __device__ __inline__
 T _atomic_load(T* ptr, memory_order_seq_cst_t) {
   Kokkos::memory_fence();
-  auto rv = Impl::_relaxed_atomic_load_impl(ptr);
+  T rv = Impl::_relaxed_atomic_load_impl(ptr);
   Kokkos::memory_fence();
   return rv;
 }
@@ -173,7 +174,7 @@ T _atomic_load(T* ptr, memory_order_seq_cst_t) {
 template <class T>
 __device__ __inline__
 T _atomic_load(T* ptr, memory_order_acquire_t) {
-  auto rv = _relaxed_atomic_load_impl(ptr);
+  T rv = Impl::_relaxed_atomic_load_impl(ptr);
   Kokkos::memory_fence();
   return rv;
 }
