@@ -257,8 +257,7 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
 
   IF(${CMAKE_VERSION} VERSION_GREATER "3.13" OR ${CMAKE_VERSION} VERSION_EQUAL "3.13")
     TARGET_LINK_OPTIONS(
-      ${LIBRARY_NAME}
-      PUBLIC ${KOKKOS_LD_FLAGS}
+      ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
     )
   ELSE()
     #Well, this is annoying - I am going to need to hack this for Visual Studio
@@ -311,7 +310,21 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
   ENDIF()
 
   IF (KOKKOS_ENABLE_HWLOC)
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PRIVATE hwloc)
+    #this is really annoying that I have to do this
+    #if CMake links statically, it will not link in hwloc which causes undefined refs downstream
+    #even though hwloc is really "private" and doesn't need to be public I have to link publicly
+    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC hwloc)
+    #what I don't want is the headers to be propagated downstream
+    TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${HWLOC_INCLUDE_DIR})
+  ENDIF()
+
+  IF (KOKKOS_ENABLE_LIBRT)
+    #this is really annoying that I have to do this
+    #if CMake links statically, it will not link in librt which causes undefined refs downstream
+    #even though librt is really "private" and doesn't need to be public I have to link publicly
+    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PRIVATE librt)
+    #what I don't want is the headers to be propagated downstream
+    TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${LIBRT_INCLUDE_DIR})
   ENDIF()
 
   IF (KOKKOS_ENABLE_MEMKIND)
@@ -325,6 +338,9 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     #OH, Well, no choice but the wrong way
     TARGET_COMPILE_OPTIONS(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FLAG})
   ENDIF()
+
+  #dlfcn.h is in header files and needs to propagate
+  TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC libdl)
 
   #Even if separate libs and these are object libraries
   #We still need to install them for transitive flags and deps

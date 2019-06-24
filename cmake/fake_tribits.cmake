@@ -279,7 +279,7 @@ ELSE()
   )
   target_link_libraries(
     ${NAME}
-    PUBLIC ${KOKKOS_LD_FLAGS}
+    PUBLIC ${KOKKOS_LINK_OPTIONS}
   )
 ENDIF()
 ENDFUNCTION(KOKKOS_ADD_TEST_LIBRARY)

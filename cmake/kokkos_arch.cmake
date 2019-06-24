@@ -33,6 +33,9 @@ FUNCTION(ARCH_FLAGS)
   ENDFOREACH()
 
   IF (NOT LINK_ONLY)
+    # The funky logic here is for future handling of argument deduplication
+    # If we naively pass multiple -Xcompiler flags to target_compile_options
+    # -Xcompiler will get deduplicated and break the build
     IF ("-Xcompiler" IN_LIST FLAGS)
       LIST(REMOVE_ITEM FLAGS "-Xcompiler")
       LIST(APPEND NEW_XCOMPILER_OPTIONS ${FLAGS})

@@ -19,10 +19,11 @@ find_package_handle_standard_args(HWLOC DEFAULT_MSG
 
 add_library(hwloc UNKNOWN IMPORTED)
 
+#See note in kokkos_tribits.cmake about why they are not included
+#INTERFACE_INCLUDE_DIRECTORIES "${HWLOC_INCLUDE_DIR}"
 set_target_properties(hwloc PROPERTIES
   INTERFACE_COMPILE_FEATURES ""
   INTERFACE_COMPILE_OPTIONS ""
-  INTERFACE_INCLUDE_DIRECTORIES "${HWLOC_INCLUDE_DIR}"
   IMPORTED_LOCATION "${HWLOC_LIBRARIES}"
 )
 
