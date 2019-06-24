@@ -1,0 +1,27 @@
+FROM nvidia/cuda:9.2-devel
+
+RUN apt-get update && apt-get install -y \
+        bc \
+        git \
+        wget \
+        ccache \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV LLVM_DIR=/opt/llvm
+RUN LLVM_VERSION=8.0.0 && \
+    LLVM_KEY=345AD05D && \
+    LLVM_URL=http://releases.llvm.org/${LLVM_VERSION}/clang+llvm-${LLVM_VERSION}-x86_64-linux-gnu-ubuntu-16.04.tar.xz && \
+    LLVM_ARCHIVE=llvm-${LLVM_VERSION}.tar.xz && \
+    SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
+    wget --quiet ${LLVM_URL} --output-document=${LLVM_ARCHIVE} && \
+    wget --quiet ${LLVM_URL}.sig --output-document=${LLVM_ARCHIVE}.sig && \
+    gpg --keyserver pool.sks-keyservers.net --recv-keys ${LLVM_KEY} && \
+    gpg --verify ${LLVM_ARCHIVE}.sig ${LLVM_ARCHIVE} && \
+    mkdir -p ${LLVM_DIR} && \
+    tar -xvf ${LLVM_ARCHIVE} -C ${LLVM_DIR} --strip-components=1 && \
+    echo "${LLVM_DIR}/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig && \
+    rm -rf /root/.gnupg && \
+    rm -rf ${SCRATCH_DIR}
+ENV PATH=${LLVM_DIR}/bin:$PATH
