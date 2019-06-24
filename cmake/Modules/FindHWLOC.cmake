@@ -10,8 +10,8 @@
 #   HWLOC_INCLUDE_DIR - HWLOC include directory
 #   HWLOC_LIBRARIES - Libraries needed to use HWLOC
 
-find_path(HWLOC_INCLUDE_DIR hwloc.h PATHS "${KOKKOS_HWLOC_DIR}/include" ${hwloc_ROOT}/include)
-find_library(HWLOC_LIBRARIES hwloc PATHS "${KOKKOS_HWLOC_DIR}/lib" ${hwloc_ROOT}/lib)
+find_path(HWLOC_INCLUDE_DIR hwloc.h PATHS "${KOKKOS_HWLOC_DIR}/include" ${hwloc_ROOT}/include ${HWLOC_ROOT}/include)
+find_library(HWLOC_LIBRARIES hwloc PATHS "${KOKKOS_HWLOC_DIR}/lib" ${hwloc_ROOT}/lib ${HWLOC_ROOT}/lib)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(HWLOC DEFAULT_MSG

@@ -281,10 +281,17 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     )
   ENDIF()
 
+  LIST(LENGTH KOKKOS_XCOMPILER_OPTIONS XOPT_LENGTH)
+  IF (XOPT_LENGTH GREATER 1)
+    MESSAGE(FATAL_ERROR "CMake deduplication does not allow multiple -Xcompiler flags (${KOKKOS_XCOMPILER_OPTIONS}): will require Kokkos to upgrade to minimum 3.12")
+  ENDIF()
   IF(KOKKOS_XCOMPILER_OPTIONS)
     SET(NODEDUP_XCOMPILER_OPTIONS)
     FOREACH(OPT ${KOKKOS_XCOMPILER_OPTIONS})
-      LIST(APPEND NODEDUP_XCOMPILER_OPTIONS "-Xcompiler ${OPT}") 
+      #I have to do this for now because we can't guarantee 3.12 support
+      #I really should do this with the shell option 
+      LIST(APPEND NODEDUP_XCOMPILER_OPTIONS -Xcompiler) 
+      LIST(APPEND NODEDUP_XCOMPILER_OPTIONS ${OPT}) 
     ENDFOREACH()
     TARGET_COMPILE_OPTIONS(
       ${LIBRARY_NAME} 
@@ -316,6 +323,15 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC hwloc)
     #what I don't want is the headers to be propagated downstream
     TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${HWLOC_INCLUDE_DIR})
+  ENDIF()
+  
+  IF (KOKKOS_ENABLE_LIBNUMA)
+    #this is really annoying that I have to do this
+    #if CMake links statically, it will not link in hwloc which causes undefined refs downstream
+    #even though hwloc is really "private" and doesn't need to be public I have to link publicly
+    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC libnuma)
+    #what I don't want is the headers to be propagated downstream
+    TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${LIBNUMA_INCLUDE_DIR})
   ENDIF()
 
   IF (KOKKOS_ENABLE_LIBRT)

@@ -19,6 +19,7 @@ KOKKOS_ENABLE_OPTION(Pthread       OFF "Whether to build Pthread backend")
 KOKKOS_ENABLE_OPTION(Cuda          OFF "Whether to build CUDA backend")
 KOKKOS_ENABLE_OPTION(ROCm          OFF "Whether to build AMD ROCm backend")
 KOKKOS_ENABLE_OPTION(HWLOC         OFF "Whether to enable HWLOC features - may also require -DHWLOC_DIR")
+KOKKOS_ENABLE_OPTION(LIBNUMA       OFF "Whether to enable LIBNuMA features - may also require -DLIBNUMA_DIR")
 KOKKOS_ENABLE_OPTION(MEMKIND       OFF "Whether to enable MEMKIND featuers - may also require -DMEMKIND_DIR")
 KOKKOS_ENABLE_OPTION(LIBRT         OFF "Whether to enable LIBRT features")
 KOKKOS_ENABLE_OPTION(Cuda_Relocatable_Device_Code  OFF "Whether to enable relocatable device code (RDC) for CUDA")
@@ -36,6 +37,21 @@ KOKKOS_ENABLE_OPTION(Deprecated_Code      OFF "Whether to enable deprecated code
 KOKKOS_ENABLE_OPTION(Explicit_Instantiation OFF 
   "Whether to explicitly instantiate certain types to lower future compile times")
 SET(KOKKOS_ENABLE_ETI ${KOKKOS_ENABLE_EXPLICIT_INSTANTIATION} CACHE INTERNAL "eti")
+
+IF (KOKKOS_DEVICES MATCHES ",")
+  MESSAGE(WARNING "-- Detected a comma in: KOKKOS_DEVICES=`${KOKKOS_DEVICES}`")
+  MESSAGE("-- Although we prefer KOKKOS_DEVICES to be semicolon-delimited, we do allow")
+  MESSAGE("-- comma-delimited values for compatibility with scripts (see github.com/trilinos/Trilinos/issues/2330)")
+  STRING(REPLACE "," ";" KOKKOS_DEVICES "${KOKKOS_DEVICES}")
+  MESSAGE("-- Commas were changed to semicolons, now KOKKOS_DEVICES=`${KOKKOS_DEVICES}`")
+ENDIF()
+
+FOREACH(DEV ${KOKKOS_DEVICES})
+STRING(TOUPPER ${DEV} UC_NAME)
+SET(ENABLE_NAME KOKKOS_ENABLE_${UC_NAME})
+MESSAGE(STATUS "Setting ${ENABLE_NAME}=ON from KOKKOS_DEVICES")
+SET(${ENABLE_NAME} ON CACHE BOOL "Enable device ${DEV}" FORCE)
+ENDFOREACH()
 
 IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_QTHREAD)             
 SET(QTHR_DEFAULT ON)
@@ -97,6 +113,7 @@ SET(KOKKOS_HPX_DIR "" CACHE PATH "Location of HPX library.")
 SET(KOKKOS_SEPARATE_TESTS OFF CACHE BOOL "Provide unit test targets with finer granularity.")
 
 SET(KOKKOS_HWLOC_DIR "" CACHE PATH "Location of hwloc library. (kokkos tpl)")
+SET(KOKKOS_LIBNUMA_DIR "" CACHE PATH "Location of libnuma library. (kokkos tpl)")
 SET(KOKKOS_MEMKIND_DIR "" CACHE PATH "Location of memkind library. (kokkos tpl)")
 SET(KOKKOS_CUDA_DIR "" CACHE PATH "Location of CUDA library.  Defaults to where nvcc installed.")
 
