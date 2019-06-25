@@ -81,9 +81,9 @@ void call_host_violation_handler(violation_info const& info);
 KOKKOS_INLINE_FUNCTION
 void call_violation_handler(violation_info const& info) {
 #if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
-  __assertfail(info.comment, info.file_name, info.line, info.function_name, sizeof(char));
+  __assertfail(info.comment, info.file_name, info.line_number, info.function_name, sizeof(char));
 #else
-  ::Kokkos::Impl::call_violation_handler(info);
+  ::Kokkos::Impl::call_host_violation_handler(info);
 #endif
 }
 

@@ -56,27 +56,28 @@
 
 namespace Kokkos {
 namespace Impl {
-static void (*violation_handler_pointer)(violation_info const&) = default_violation_handler;
-}
-
-void set_violation_handler(void (*new_handler)(violation_info const&)) {
-  violation_handler_pointer = new_handler;
-}
-
-namespace Impl {
 
 void default_violation_handler(violation_info const& info) {
   fprintf(stderr, "contract violation in %s:%d\nfunction %s\n%s\n",
-      info.file_name, info.line, info.function_name, info.comment);
+      info.file_name, info.line_number, info.function_name, info.comment);
   std::stringstream string_stream;
-  traceback_callstack(string_stream);
+  ::Kokkos::Impl::traceback_callstack(string_stream);
   std::string s = string_stream.str();
   fprintf(stderr, "%s\n", s.c_str());
   std::abort();
 }
 
+static void (*violation_handler_pointer)(violation_info const&) = ::Kokkos::Impl::default_violation_handler;
+}
+
+void set_violation_handler(void (*new_handler)(violation_info const&)) {
+  ::Kokkos::Impl::violation_handler_pointer = new_handler;
+}
+
+namespace Impl {
+
 void call_host_violation_handler(violation_info const& info) {
-  (*violation_handler_pointer)(info);
+  (*::Kokkos::Impl::violation_handler_pointer)(info);
 }
 
 void host_abort( const char * const message )
