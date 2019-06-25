@@ -120,14 +120,14 @@ void cuda_device_synchronize()
   CUDA_SAFE_CALL( cudaDeviceSynchronize() );
 }
 
-void cuda_internal_error_throw( cudaError e , const char * name, const char * file, const int line )
+void cuda_internal_error_throw( cudaError e , const char * call_text, const char * file, char const* function, const int line )
 {
-  std::ostringstream out ;
-  out << name << " error( " << cudaGetErrorName(e) << "): " << cudaGetErrorString(e);
-  if (file) {
-    out << " " << file << ":" << line;
-  }
-  throw_runtime_exception( out.str() );
+  std::string comment = call_text;
+  comment += " returned ";
+  comment += cudaGetErrorName(e);
+  comment += ": ";
+  comment += cudaGetErrorString(e);
+  ::Kokkos::Impl::call_host_violation_handler({line, file, function, comment.c_str()});
 }
 
 //----------------------------------------------------------------------------

@@ -51,15 +51,15 @@ namespace Kokkos { namespace Impl {
 
 void cuda_device_synchronize();
 
-void cuda_internal_error_throw( cudaError e , const char * name, const char * file = NULL, const int line = 0 );
+void cuda_internal_error_throw( cudaError e , const char * name, const char * file, char const* function, const int line );
 
-inline void cuda_internal_safe_call( cudaError e , const char * name, const char * file = NULL, const int line = 0)
+inline void cuda_internal_safe_call( cudaError e , const char * name, const char * file, char const* function, const int line)
 {
-  if ( cudaSuccess != e ) { cuda_internal_error_throw( e , name, file, line ); }
+  if ( cudaSuccess != e ) { cuda_internal_error_throw( e , name, file, function, line ); }
 }
 
 #define CUDA_SAFE_CALL( call )  \
-	Kokkos::Impl::cuda_internal_safe_call( call , #call, __FILE__, __LINE__ )
+	Kokkos::Impl::cuda_internal_safe_call( call , #call, __FILE__, __PRETTY_FUNCTION__, __LINE__ )
 
 }} // namespace Kokkos::Impl
 

@@ -56,6 +56,16 @@
 #endif // ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
 
 namespace Kokkos {
+
+class violation_info {
+ public:
+  int line_number;
+  char const* file_name;
+  char const* function_name;
+  char const* comment;
+};
+void set_violation_handler(void (*new_handler)(violation_info const&));
+
 namespace Impl {
 
 void host_abort( const char * const );
@@ -65,6 +75,17 @@ void throw_runtime_exception( const std::string & );
 void traceback_callstack( std::ostream & );
 
 std::string human_memory_size(size_t arg_bytes);
+
+void call_host_violation_handler(violation_info const& info);
+
+KOKKOS_INLINE_FUNCTION
+void call_violation_handler(violation_info const& info) {
+#if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
+  __assertfail(info.comment, info.file_name, info.line, info.function_name, sizeof(char));
+#else
+  ::Kokkos::Impl::call_violation_handler(info);
+#endif
+}
 
 }
 }
