@@ -373,7 +373,14 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
   ENDIF()
 
   #dlfcn.h is in header files and needs to propagate
-  TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC libdl)
+  
+
+  find_library( dl_lib_ NAMES libdl.so libdl dl )
+  if (dl_lib_)
+     TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC ${dl_lib_})
+  else()
+     TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC dl)
+  endif()
 
   #Even if separate libs and these are object libraries
   #We still need to install them for transitive flags and deps
