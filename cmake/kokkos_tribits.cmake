@@ -337,7 +337,7 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     #this is really annoying that I have to do this
     #if CMake links statically, it will not link in hwloc which causes undefined refs downstream
     #even though hwloc is really "private" and doesn't need to be public I have to link publicly
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC hwloc)
+    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC Kokkos::hwloc)
     #what I don't want is the headers to be propagated downstream
     TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${HWLOC_INCLUDE_DIR})
   ENDIF()
@@ -346,7 +346,7 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     #this is really annoying that I have to do this
     #if CMake links statically, it will not link in hwloc which causes undefined refs downstream
     #even though hwloc is really "private" and doesn't need to be public I have to link publicly
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC libnuma)
+    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC Kokkos::libnuma)
     #what I don't want is the headers to be propagated downstream
     TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${LIBNUMA_INCLUDE_DIR})
   ENDIF()
@@ -355,13 +355,13 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     #this is really annoying that I have to do this
     #if CMake links statically, it will not link in librt which causes undefined refs downstream
     #even though librt is really "private" and doesn't need to be public I have to link publicly
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PRIVATE librt)
+    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PRIVATE Kokkos::librt)
     #what I don't want is the headers to be propagated downstream
     TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${LIBRT_INCLUDE_DIR})
   ENDIF()
 
   IF (KOKKOS_ENABLE_MEMKIND)
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PRIVATE memkind)
+    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PRIVATE Kokkos::memkind)
   ENDIF()
 
   IF (KOKKOS_CXX_STANDARD_FEATURE)

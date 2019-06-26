@@ -10,8 +10,8 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LIBRT DEFAULT_MSG LIBRT_LIBRARIES LIBRT_INCLUDE_DIRS)
 mark_as_advanced(LIBRT_INCLUDE_DIRS LIBRT_LIBRARIES)
 
-add_library(librt UNKNOWN IMPORTED)
-set_target_properties(librt PROPERTIES
+add_library(Kokkos::librt UNKNOWN IMPORTED)
+set_target_properties(Kokkos::librt PROPERTIES
   IMPORTED_LOCATION "${LIBRT_LIBRARIES}"
   INTERFACE_INCLUDE_DIRECTORIES "${LIBRT_INCLUDE_DIRS}")
 

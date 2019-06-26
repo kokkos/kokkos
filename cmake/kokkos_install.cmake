@@ -15,6 +15,7 @@ ELSE()
   LIST(APPEND DEF_INSTALL_CMAKE_DIR lib/CMake/Kokkos)
   #also add the totally normal place for it to be
   LIST(APPEND DEF_INSTALL_CMAKE_DIR lib/cmake)
+  LIST(APPEND DEF_INSTALL_CMAKE_DIR lib/cmake/Kokkos)
 ENDIF()
 SET(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
     "Installation directory for CMake files")

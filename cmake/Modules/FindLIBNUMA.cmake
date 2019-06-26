@@ -17,11 +17,11 @@ include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(LIBNUMA DEFAULT_MSG
                                   LIBNUMA_INCLUDE_DIR LIBNUMA_LIBRARIES)
 
-add_library(libnuma UNKNOWN IMPORTED)
+add_library(Kokkos::libnuma UNKNOWN IMPORTED)
 
 #See note in kokkos_tribits.cmake about why they are not included
 #INTERFACE_INCLUDE_DIRECTORIES "${LIBNUMA_INCLUDE_DIR}"
-set_target_properties(libnuma PROPERTIES
+set_target_properties(Kokkos::libnuma PROPERTIES
   INTERFACE_COMPILE_FEATURES ""
   INTERFACE_COMPILE_OPTIONS ""
   IMPORTED_LOCATION "${LIBNUMA_LIBRARIES}"
