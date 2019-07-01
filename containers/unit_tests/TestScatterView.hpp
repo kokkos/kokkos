@@ -492,7 +492,8 @@ TEST_F( TEST_CATEGORY, scatterview) {
 #ifdef KOKKOS_ENABLE_DEBUG
   int big_n = 100 * 1000;
 #else
-  int big_n = 10 * 1000 * 1000;
+  bool is_serial = std::is_same<TEST_EXECSPACE, Kokkos::Serial>::value;
+  int big_n = is_serial ? 100 * 1000 : 10000 * 1000;
 #endif
   test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterSum>(big_n);
   test_scatter_view<TEST_EXECSPACE,Kokkos::Experimental::ScatterProd>(big_n);
