@@ -25,7 +25,13 @@ FUNCTION(TARGET_LINK_KOKKOS TARGET)
     ""
     ${ARGN}
   )
-  TARGET_LINK_LIBRARIES(${TARGET} ${ARGN} Kokkos::kokkos)
+  IF (Kokkos_SEPARATE_LIBS)
+    TARGET_LINK_LIBRARIES(${TARGET} ${ARGN} Kokkos::kokkoscore)
+    TARGET_LINK_LIBRARIES(${TARGET} ${ARGN} Kokkos::kokkoscontainers)
+    TARGET_LINK_LIBRARIES(${TARGET} ${ARGN} Kokkos::kokkosalgorithms)
+  ELSE()
+    TARGET_LINK_LIBRARIES(${TARGET} ${ARGN} Kokkos::kokkos)
+  ENDIF()
 ENDFUNCTION(TARGET_LINK_KOKKOS)
 
 #Find dependencies

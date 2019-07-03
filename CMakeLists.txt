@@ -84,8 +84,9 @@ KOKKOS_EXCLUDE_AUTOTOOLS_FILES()
 KOKKOS_PACKAGE_POSTPROCESS()
 
 IF (NOT KOKKOS_HAS_TRILINOS)
-  #just always do it - no more separate libs stuff
-  KOKKOS_MAKE_LIBKOKKOS()
+  IF (NOT KOKKOS_SEPARATE_LIBS)
+    KOKKOS_MAKE_LIBKOKKOS()
+  ENDIF()
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 ENDIF()
 
