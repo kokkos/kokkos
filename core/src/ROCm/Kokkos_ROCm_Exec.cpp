@@ -49,56 +49,51 @@
 //#include <ROCm/Kokkos_ROCmExec.hpp>
 #include <hc.hpp>
 
-#define ROCM_SPACE_ATOMIC_MASK      0x1FFFF
-#define ROCM_SPACE_ATOMIC_XOR_MASK  0x15A39
+#define ROCM_SPACE_ATOMIC_MASK 0x1FFFF
+#define ROCM_SPACE_ATOMIC_XOR_MASK 0x15A39
 #define ROCM_CONCURRENCY 20480
 //#define ROCM_CONCURRENCY 81920  # for fiji
 
 namespace Kokkos {
-  static int rocm_space_atomic_locks[ROCM_SPACE_ATOMIC_MASK+1];
-  static int rocm_space_scratch_locks[ROCM_CONCURRENCY];
-  static int rocm_space_threadid_locks[ROCM_CONCURRENCY];
+static int rocm_space_atomic_locks[ROCM_SPACE_ATOMIC_MASK + 1];
+static int rocm_space_scratch_locks[ROCM_CONCURRENCY];
+static int rocm_space_threadid_locks[ROCM_CONCURRENCY];
 namespace Impl {
 // TODO: mimic cuda implemtation, add dgpu capability
 
-  void init_rocm_atomic_lock_array() {
-    static int is_initialized = 0;
-    if(!is_initialized)
-    {
-      for(int i = 0; i < ROCM_SPACE_ATOMIC_MASK+1; i++)
-        rocm_space_atomic_locks[i] = 0;
-      is_initialized = 1;
-    }
-  }
-
-  void init_rocm_scratch_lock_array() {
-    static int is_initialized = 0;
-    if(!is_initialized)
-    {
-      for(int i = 0; i < ROCM_CONCURRENCY; i++)
-        rocm_space_scratch_locks[i] = 0;
-      is_initialized = 1;
-    }
-  }
-
-  void init_rocm_threadid_lock_array() {
-    static int is_initialized = 0;
-    if(!is_initialized)
-    {
-      for(int i = 0; i < ROCM_CONCURRENCY; i++)
-        rocm_space_threadid_locks[i] = 0;
-      is_initialized = 1;
-    }
-  }
-
-  void init_lock_arrays_rocm_space() {
-     init_rocm_atomic_lock_array();
-//     init_rocm_scratch_lock_array();
-//     init_rocm_threadid_lock_array();
+void init_rocm_atomic_lock_array() {
+  static int is_initialized = 0;
+  if (!is_initialized) {
+    for (int i = 0; i < ROCM_SPACE_ATOMIC_MASK + 1; i++)
+      rocm_space_atomic_locks[i] = 0;
+    is_initialized = 1;
   }
 }
 
-} // namespace Kokkos
+void init_rocm_scratch_lock_array() {
+  static int is_initialized = 0;
+  if (!is_initialized) {
+    for (int i = 0; i < ROCM_CONCURRENCY; i++) rocm_space_scratch_locks[i] = 0;
+    is_initialized = 1;
+  }
+}
+
+void init_rocm_threadid_lock_array() {
+  static int is_initialized = 0;
+  if (!is_initialized) {
+    for (int i = 0; i < ROCM_CONCURRENCY; i++) rocm_space_threadid_locks[i] = 0;
+    is_initialized = 1;
+  }
+}
+
+void init_lock_arrays_rocm_space() {
+  init_rocm_atomic_lock_array();
+  //     init_rocm_scratch_lock_array();
+  //     init_rocm_threadid_lock_array();
+}
+}  // namespace Impl
+
+}  // namespace Kokkos
 #if 0
 namespace Kokkos {
 namespace Impl {

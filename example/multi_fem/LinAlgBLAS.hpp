@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -55,42 +55,32 @@
 namespace Kokkos {
 namespace Impl {
 
-template< class Scalar , class Layout , class DeviceType > struct Dot ;
+template <class Scalar, class Layout, class DeviceType>
+struct Dot;
 
-template< class Scalar , class Layout , class DeviceType > struct Dot1 ;
+template <class Scalar, class Layout, class DeviceType>
+struct Dot1;
 
-template< typename ScalarA ,
-          typename ScalarY ,
-          class Layout , class Device >
-struct Scale ;
+template <typename ScalarA, typename ScalarY, class Layout, class Device>
+struct Scale;
 
-template< typename ScalarA ,
-          typename ScalarY ,
-          class Layout , class Device >
-struct Fill ;
+template <typename ScalarA, typename ScalarY, class Layout, class Device>
+struct Fill;
 
-template< typename ScalarA ,
-          typename ScalarX ,
-          typename ScalarY ,
-          class Layout , class Device >
-struct AXPY ;
+template <typename ScalarA, typename ScalarX, typename ScalarY, class Layout,
+          class Device>
+struct AXPY;
 
-template< typename ScalarX ,
-          typename ScalarB ,
-          typename ScalarY ,
-          class Layout , class Device >
-struct XPBY ;
+template <typename ScalarX, typename ScalarB, typename ScalarY, class Layout,
+          class Device>
+struct XPBY;
 
-template< typename ScalarA ,
-          typename ScalarX ,
-          typename ScalarB ,
-          typename ScalarY ,
-          typename ScalarW ,
-          class Layout , class Device >
-struct WAXPBY ;
+template <typename ScalarA, typename ScalarX, typename ScalarB,
+          typename ScalarY, typename ScalarW, class Layout, class Device>
+struct WAXPBY;
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -99,189 +89,134 @@ namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_MPI )
+#if defined(KOKKOS_ENABLE_MPI)
 
-template< typename ScalarX /* Allow mix of const and non-const */ ,
-          typename ScalarY /* Allow mix of const and non-const */ ,
-          class D>
-inline
-double dot( const size_t n ,
-            const View< ScalarX * , D > & x ,
-            const View< ScalarY * , D > & y ,
-            comm::Machine machine )
-{
-  double global_result = 0 ;
-  double local_result = 0 ;
-  using x_type = View<ScalarX*, D>;
-  using L = typename x_type::array_layout;
+template <typename ScalarX /* Allow mix of const and non-const */,
+          typename ScalarY /* Allow mix of const and non-const */, class D>
+inline double dot(const size_t n, const View<ScalarX *, D> &x,
+                  const View<ScalarY *, D> &y, comm::Machine machine) {
+  double global_result = 0;
+  double local_result  = 0;
+  using x_type         = View<ScalarX *, D>;
+  using L              = typename x_type::array_layout;
 
-  Impl::Dot< ScalarX , L , D >( n , x , y , local_result );
+  Impl::Dot<ScalarX, L, D>(n, x, y, local_result);
 
-  MPI_Allreduce( & local_result , & global_result , 1 ,
-                 MPI_DOUBLE , MPI_SUM , machine.mpi_comm );
+  MPI_Allreduce(&local_result, &global_result, 1, MPI_DOUBLE, MPI_SUM,
+                machine.mpi_comm);
 
-  return global_result ;
+  return global_result;
 }
 
 #else
 
-template< typename ScalarX /* Allow mix of const and non-const */ ,
-          typename ScalarY /* Allow mix of const and non-const */ ,
-          class D >
-inline
-double dot( const size_t n ,
-            const View< ScalarX * , D > & x ,
-            const View< ScalarY * , D > & y ,
-            comm::Machine )
-{
-  double global_result = 0 ;
-  using x_type = View<ScalarX*, D>;
-  using L = typename x_type::array_layout;
+template <typename ScalarX /* Allow mix of const and non-const */,
+          typename ScalarY /* Allow mix of const and non-const */, class D>
+inline double dot(const size_t n, const View<ScalarX *, D> &x,
+                  const View<ScalarY *, D> &y, comm::Machine) {
+  double global_result = 0;
+  using x_type         = View<ScalarX *, D>;
+  using L              = typename x_type::array_layout;
 
-  Impl::Dot< ScalarX , L , D >( n , x , y , global_result );
+  Impl::Dot<ScalarX, L, D>(n, x, y, global_result);
 
-  return global_result ;
+  return global_result;
 }
 
 #endif
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_MPI )
+#if defined(KOKKOS_ENABLE_MPI)
 
-template< typename ScalarX /* Allow mix of const and non-const */ ,
-          class L , class D ,
-          class MX /* Allow any management type */ >
-inline
-double dot( const size_t n ,
-            const View< ScalarX * , L , D , MX > & x ,
-            comm::Machine machine )
-{
-  double global_result = 0 ;
-  double local_result = 0 ;
+template <typename ScalarX /* Allow mix of const and non-const */, class L,
+          class D, class MX /* Allow any management type */>
+inline double dot(const size_t n, const View<ScalarX *, L, D, MX> &x,
+                  comm::Machine machine) {
+  double global_result = 0;
+  double local_result  = 0;
 
-  Impl::Dot1< ScalarX , L , D >( n , x , local_result );
+  Impl::Dot1<ScalarX, L, D>(n, x, local_result);
 
-  MPI_Allreduce( & local_result , & global_result , 1 ,
-                 MPI_DOUBLE , MPI_SUM , machine.mpi_comm );
+  MPI_Allreduce(&local_result, &global_result, 1, MPI_DOUBLE, MPI_SUM,
+                machine.mpi_comm);
 
-  return global_result ;
+  return global_result;
 }
 
 #else
 
-template< typename ScalarX /* Allow mix of const and non-const */ ,
-          class D>
-inline
-double dot( const size_t n ,
-            const View< ScalarX * , D> & x ,
-            comm::Machine )
-{
-  double global_result = 0 ;
-  using x_type = View<ScalarX*, D>;
-  using L = typename x_type::array_layout;
+template <typename ScalarX /* Allow mix of const and non-const */, class D>
+inline double dot(const size_t n, const View<ScalarX *, D> &x, comm::Machine) {
+  double global_result = 0;
+  using x_type         = View<ScalarX *, D>;
+  using L              = typename x_type::array_layout;
 
-  Impl::Dot1< ScalarX , L , D >( n , x , global_result );
+  Impl::Dot1<ScalarX, L, D>(n, x, global_result);
 
-  return global_result ;
+  return global_result;
 }
 
 #endif
 
 //----------------------------------------------------------------------------
 
-template< typename ScalarX /* Allow mix of const and non-const */ ,
-          class D >
-inline
-double norm2( const size_t n ,
-              const View< ScalarX * , D > & x ,
-              comm::Machine machine )
-{
-  return std::sqrt( dot( n , x , machine ) );
+template <typename ScalarX /* Allow mix of const and non-const */, class D>
+inline double norm2(const size_t n, const View<ScalarX *, D> &x,
+                    comm::Machine machine) {
+  return std::sqrt(dot(n, x, machine));
 }
 
 //----------------------------------------------------------------------------
 
-template< typename ScalarA ,
-          typename ScalarX ,
-          class L ,
-          class D ,
-          class MX >
-void scale( const size_t n ,
-            const ScalarA & alpha ,
-            const View< ScalarX * , L , D , MX > & x )
-{
-  Impl::Scale< ScalarA , ScalarX , L , D >( n , alpha , x );
+template <typename ScalarA, typename ScalarX, class L, class D, class MX>
+void scale(const size_t n, const ScalarA &alpha,
+           const View<ScalarX *, L, D, MX> &x) {
+  Impl::Scale<ScalarA, ScalarX, L, D>(n, alpha, x);
 }
 
-template< typename ScalarA ,
-          typename ScalarX ,
-          class D >
-void fill( const size_t n ,
-           const ScalarA & alpha ,
-           const View< ScalarX * , D > & x )
-{
-  using x_type = View<ScalarX*, D>;
-  using L = typename x_type::array_layout;
-  Impl::Fill< ScalarA , ScalarX , L , D >( n , alpha , x );
+template <typename ScalarA, typename ScalarX, class D>
+void fill(const size_t n, const ScalarA &alpha, const View<ScalarX *, D> &x) {
+  using x_type = View<ScalarX *, D>;
+  using L      = typename x_type::array_layout;
+  Impl::Fill<ScalarA, ScalarX, L, D>(n, alpha, x);
 }
 
 //----------------------------------------------------------------------------
 
-template< typename ScalarA ,
-          typename ScalarX ,
-          typename ScalarY ,
-          class D >
-void axpy( const size_t n ,
-           const ScalarA & alpha ,
-           const View< ScalarX *, D > & x ,
-           const View< ScalarY *, D > & y )
-{
-  using x_type = View<ScalarX*, D>;
-  using L = typename x_type::array_layout;
-  Impl::AXPY< ScalarA, ScalarX, ScalarY , L , D >( n, alpha, x, y );
+template <typename ScalarA, typename ScalarX, typename ScalarY, class D>
+void axpy(const size_t n, const ScalarA &alpha, const View<ScalarX *, D> &x,
+          const View<ScalarY *, D> &y) {
+  using x_type = View<ScalarX *, D>;
+  using L      = typename x_type::array_layout;
+  Impl::AXPY<ScalarA, ScalarX, ScalarY, L, D>(n, alpha, x, y);
 }
 
 //----------------------------------------------------------------------------
 
-template< typename ScalarX ,
-          typename ScalarB ,
-          typename ScalarY ,
-          class D >
-void xpby( const size_t n ,
-           const View< ScalarX *, D > & x ,
-           const ScalarB & beta ,
-           const View< ScalarY *, D > & y )
-{
-  using x_type = View<ScalarX*, D>;
-  using L = typename x_type::array_layout;
-  Impl::XPBY< ScalarX, ScalarB, ScalarY , L , D >( n, x, beta, y );
+template <typename ScalarX, typename ScalarB, typename ScalarY, class D>
+void xpby(const size_t n, const View<ScalarX *, D> &x, const ScalarB &beta,
+          const View<ScalarY *, D> &y) {
+  using x_type = View<ScalarX *, D>;
+  using L      = typename x_type::array_layout;
+  Impl::XPBY<ScalarX, ScalarB, ScalarY, L, D>(n, x, beta, y);
 }
 
 //----------------------------------------------------------------------------
 // w = alpha * x + beta * y
 
-template< typename ScalarA ,
-          typename ScalarX ,
-          typename ScalarB ,
-          typename ScalarY ,
-          typename ScalarW ,
-          class D
-          >
-void waxpby( const size_t n ,
-             const ScalarA & alpha ,
-             const View< ScalarX * , D > & x ,
-             const ScalarB & beta ,
-             const View< ScalarY * , D > & y ,
-             const View< ScalarW * , D > & w )
-{
+template <typename ScalarA, typename ScalarX, typename ScalarB,
+          typename ScalarY, typename ScalarW, class D>
+void waxpby(const size_t n, const ScalarA &alpha, const View<ScalarX *, D> &x,
+            const ScalarB &beta, const View<ScalarY *, D> &y,
+            const View<ScalarW *, D> &w) {
   using x_type = typename std::decay<decltype(x)>::type;
-  using L = typename x_type::array_layout;
-  Impl::WAXPBY<ScalarA,ScalarX,ScalarB,ScalarY,ScalarW,L,D>
-    ( n , alpha , x , beta , y , w );
+  using L      = typename x_type::array_layout;
+  Impl::WAXPBY<ScalarA, ScalarX, ScalarB, ScalarY, ScalarW, L, D>(n, alpha, x,
+                                                                  beta, y, w);
 }
 
-}
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -289,279 +224,219 @@ void waxpby( const size_t n ,
 namespace Kokkos {
 namespace Impl {
 
-template< typename Scalar , class L , class D >
-struct Dot
-{
-private:
+template <typename Scalar, class L, class D>
+struct Dot {
+ private:
+  typedef View<const Scalar *, L, D, MemoryUnmanaged> vector_const_type;
 
-  typedef View< const Scalar*, L, D, MemoryUnmanaged >  vector_const_type ;
+  const vector_const_type x;
+  const vector_const_type y;
 
-  const vector_const_type x ;
-  const vector_const_type y ;
+ public:
+  typedef typename vector_const_type::execution_space
+      execution_space;        // Manycore device
+  typedef double value_type;  // Reduction value
 
-public:
-
-  typedef typename vector_const_type::execution_space  execution_space ; // Manycore device
-  typedef double      value_type ;  // Reduction value
-
-  template< class ArgX , class ArgY >
-  inline
-  Dot( const size_t n , const ArgX & arg_x , const ArgY & arg_y , double & result )
-    : x( arg_x ), y( arg_y )
-  {
-    parallel_reduce( n , *this , result );
+  template <class ArgX, class ArgY>
+  inline Dot(const size_t n, const ArgX &arg_x, const ArgY &arg_y,
+             double &result)
+      : x(arg_x), y(arg_y) {
+    parallel_reduce(n, *this, result);
   }
 
-  template< typename iType >
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const iType & i , value_type & update ) const
-  { update += x(i) * y(i); }
-
-  KOKKOS_INLINE_FUNCTION
-  static void join( volatile value_type & update ,
-                    const volatile value_type & source )
-  { update += source;    }
-
-  KOKKOS_INLINE_FUNCTION
-  static void init( value_type & update )
-  { update = 0 ; }
-}; // Dot
-
-//----------------------------------------------------------------------------
-
-template< typename Scalar , class L , class D >
-struct Dot1
-{
-private:
-
-  typedef View< const Scalar*, L, D , MemoryUnmanaged >  vector_const_type ;
-
-  const vector_const_type x ;
-
-public:
-
-  typedef typename vector_const_type::execution_space  execution_space ; // Manycore device
-  typedef double      value_type ;  // Reduction value
-
-  template< class ArgX >
-  inline
-  Dot1( const size_t n , const ArgX & arg_x , double & result )
-    : x( arg_x )
-  {
-    parallel_reduce( n , *this , result );
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void operator()(const iType &i,
+                                         value_type &update) const {
+    update += x(i) * y(i);
   }
 
-  template< typename iType >
   KOKKOS_INLINE_FUNCTION
-  void operator()( const iType & i , value_type & update ) const
-  { update += x(i) * x(i) ; }
+  static void join(volatile value_type &update,
+                   const volatile value_type &source) {
+    update += source;
+  }
 
   KOKKOS_INLINE_FUNCTION
-  static void join( volatile value_type & update ,
-                    const volatile value_type & source )
-  { update += source ; }
+  static void init(value_type &update) { update = 0; }
+};  // Dot
+
+//----------------------------------------------------------------------------
+
+template <typename Scalar, class L, class D>
+struct Dot1 {
+ private:
+  typedef View<const Scalar *, L, D, MemoryUnmanaged> vector_const_type;
+
+  const vector_const_type x;
+
+ public:
+  typedef typename vector_const_type::execution_space
+      execution_space;        // Manycore device
+  typedef double value_type;  // Reduction value
+
+  template <class ArgX>
+  inline Dot1(const size_t n, const ArgX &arg_x, double &result) : x(arg_x) {
+    parallel_reduce(n, *this, result);
+  }
+
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void operator()(const iType &i,
+                                         value_type &update) const {
+    update += x(i) * x(i);
+  }
 
   KOKKOS_INLINE_FUNCTION
-  static void init( value_type & update )
-  { update = 0 ; }
-}; // Dot
+  static void join(volatile value_type &update,
+                   const volatile value_type &source) {
+    update += source;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type &update) { update = 0; }
+};  // Dot
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template < typename ScalarA ,
-           typename ScalarX ,
-           typename ScalarB ,
-           typename ScalarY ,
-           typename ScalarW ,
-           class L , class D >
-struct WAXPBY
-{
-private:
+template <typename ScalarA, typename ScalarX, typename ScalarB,
+          typename ScalarY, typename ScalarW, class L, class D>
+struct WAXPBY {
+ private:
+  typedef View<ScalarW *, L, D, MemoryUnmanaged> ViewW;
+  typedef View<const ScalarX *, L, D, MemoryUnmanaged> ViewX;
+  typedef View<const ScalarY *, L, D, MemoryUnmanaged> ViewY;
 
-  typedef View<       ScalarW *, L , D , MemoryUnmanaged > ViewW ;
-  typedef View< const ScalarX *, L , D , MemoryUnmanaged > ViewX ;
-  typedef View< const ScalarY *, L , D , MemoryUnmanaged > ViewY ;
+  const ViewW w;
+  const ViewX x;
+  const ViewY y;
+  const ScalarA alpha;
+  const ScalarB beta;
 
-  const ViewW    w ;
-  const ViewX    x ;
-  const ViewY    y ;
-  const ScalarA  alpha ;
-  const ScalarB  beta ;
+ public:
+  typedef typename ViewW::execution_space execution_space;
 
-public:
-
-  typedef typename ViewW::execution_space  execution_space ;
-
-  template< typename iType >
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const iType inode ) const
-  {
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void operator()(const iType inode) const {
     w(inode) = alpha * x(inode) + beta * y(inode);
   }
 
-  template< class ArgX , class ArgY , class ArgW >
-  inline
-  WAXPBY( const size_t  n ,
-          const ScalarA & arg_alpha ,
-          const ArgX    & arg_x ,
-          const ScalarB & arg_beta ,
-          const ArgY    & arg_y ,
-          const ArgW    & arg_w )
-    : w( arg_w ), x( arg_x ), y( arg_y )
-    , alpha( arg_alpha ), beta( arg_beta )
-  {
-    parallel_for( n , *this );
+  template <class ArgX, class ArgY, class ArgW>
+  inline WAXPBY(const size_t n, const ScalarA &arg_alpha, const ArgX &arg_x,
+                const ScalarB &arg_beta, const ArgY &arg_y, const ArgW &arg_w)
+      : w(arg_w), x(arg_x), y(arg_y), alpha(arg_alpha), beta(arg_beta) {
+    parallel_for(n, *this);
   }
-}; // WAXPBY
+};  // WAXPBY
 
 //----------------------------------------------------------------------------
 
-template < typename ScalarB ,
-           typename ScalarW ,
-           class L , class D >
-struct Scale
-{
-private:
+template <typename ScalarB, typename ScalarW, class L, class D>
+struct Scale {
+ private:
+  typedef View<ScalarW *, L, D, MemoryUnmanaged> ViewW;
+  const ViewW w;
+  const ScalarB beta;
 
-  typedef View< ScalarW *, L , D , MemoryUnmanaged >  ViewW ;
-  const ViewW    w ;
-  const ScalarB  beta ;
+ public:
+  typedef typename ViewW::execution_space execution_space;
 
-public:
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void operator()(const iType &i) const {
+    w(i) *= beta;
+  }
 
-  typedef typename ViewW::execution_space  execution_space ;
-
-  template< typename iType >
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const iType & i ) const
-  { w(i) *= beta ; }
-
-  template< class ArgW >
-  inline
-  Scale( const size_t n , const ScalarB & arg_beta , const ArgW & arg_w )
-    : w( arg_w )
-    , beta( arg_beta )
-  {
-    parallel_for( n , *this );
+  template <class ArgW>
+  inline Scale(const size_t n, const ScalarB &arg_beta, const ArgW &arg_w)
+      : w(arg_w), beta(arg_beta) {
+    parallel_for(n, *this);
   }
 };
 
-template < typename ScalarB ,
-           typename ScalarW ,
-           class L , class D >
-struct Fill
-{
-private:
+template <typename ScalarB, typename ScalarW, class L, class D>
+struct Fill {
+ private:
+  typedef View<ScalarW *, L, D, MemoryUnmanaged> ViewW;
+  const ViewW w;
+  const ScalarB beta;
 
-  typedef View< ScalarW *, L , D , MemoryUnmanaged >  ViewW ;
-  const ViewW    w ;
-  const ScalarB  beta ;
+ public:
+  typedef typename ViewW::execution_space execution_space;
 
-public:
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void operator()(const iType &i) const {
+    w(i) = beta;
+  }
 
-  typedef typename ViewW::execution_space  execution_space ;
-
-  template< typename iType >
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const iType & i ) const
-  { w(i) = beta ; }
-
-  template< class ArgW >
-  inline
-  Fill( const size_t n , const ScalarB & arg_beta , const ArgW & arg_w )
-    : w( arg_w )
-    , beta( arg_beta )
-  {
-    parallel_for( n , *this );
+  template <class ArgW>
+  inline Fill(const size_t n, const ScalarB &arg_beta, const ArgW &arg_w)
+      : w(arg_w), beta(arg_beta) {
+    parallel_for(n, *this);
   }
 };
 
 //----------------------------------------------------------------------------
 
-template < typename ScalarA ,
-           typename ScalarX ,
-           typename ScalarW ,
-           class L , class D >
-struct AXPY
-{
-private:
+template <typename ScalarA, typename ScalarX, typename ScalarW, class L,
+          class D>
+struct AXPY {
+ private:
+  typedef View<ScalarW *, L, D, MemoryUnmanaged> ViewW;
+  typedef View<const ScalarX *, L, D, MemoryUnmanaged> ViewX;
 
-  typedef View<       ScalarW *, L , D , MemoryUnmanaged >  ViewW ;
-  typedef View< const ScalarX *, L , D , MemoryUnmanaged >  ViewX ;
+  const ViewW w;
+  const ViewX x;
+  const ScalarA alpha;
 
-  const ViewW    w ;
-  const ViewX    x ;
-  const ScalarA  alpha ;
+ public:
+  typedef typename ViewW::execution_space execution_space;
 
-public:
-
-  typedef typename ViewW::execution_space  execution_space ;
-
-  template< typename iType >
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const iType & i ) const
-  { w(i) += alpha * x(i); }
-
-  template< class ArgX , class ArgW >
-  inline
-  AXPY( const size_t  n ,
-        const ScalarA & arg_alpha ,
-        const ArgX    & arg_x ,
-        const ArgW    & arg_w )
-    : w( arg_w ), x( arg_x )
-    , alpha( arg_alpha )
-  {
-    parallel_for( n , *this );
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void operator()(const iType &i) const {
+    w(i) += alpha * x(i);
   }
-}; // AXPY
 
-template< typename ScalarX ,
-          typename ScalarB ,
-          typename ScalarW ,
-          class L , class D >
-struct XPBY
-{
-private:
-
-  typedef View<       ScalarW *, L , D , MemoryUnmanaged >  ViewW ;
-  typedef View< const ScalarX *, L , D , MemoryUnmanaged >  ViewX ;
-
-  const ViewW    w ;
-  const ViewX    x ;
-  const ScalarB  beta ;
-
-public:
-
-  typedef typename ViewW::execution_space  execution_space ;
-
-  template< typename iType >
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const iType & i ) const
-  { w(i) = x(i) + beta * w(i); }
-
-  template< class ArgX , class ArgW >
-  inline
-  XPBY( const size_t  n ,
-        const ArgX    & arg_x ,
-        const ScalarB & arg_beta ,
-        const ArgW    & arg_w )
-    : w( arg_w ), x( arg_x )
-    , beta( arg_beta )
-  {
-    parallel_for( n , *this );
+  template <class ArgX, class ArgW>
+  inline AXPY(const size_t n, const ScalarA &arg_alpha, const ArgX &arg_x,
+              const ArgW &arg_w)
+      : w(arg_w), x(arg_x), alpha(arg_alpha) {
+    parallel_for(n, *this);
   }
-}; // XPBY
+};  // AXPY
+
+template <typename ScalarX, typename ScalarB, typename ScalarW, class L,
+          class D>
+struct XPBY {
+ private:
+  typedef View<ScalarW *, L, D, MemoryUnmanaged> ViewW;
+  typedef View<const ScalarX *, L, D, MemoryUnmanaged> ViewX;
+
+  const ViewW w;
+  const ViewX x;
+  const ScalarB beta;
+
+ public:
+  typedef typename ViewW::execution_space execution_space;
+
+  template <typename iType>
+  KOKKOS_INLINE_FUNCTION void operator()(const iType &i) const {
+    w(i) = x(i) + beta * w(i);
+  }
+
+  template <class ArgX, class ArgW>
+  inline XPBY(const size_t n, const ArgX &arg_x, const ScalarB &arg_beta,
+              const ArgW &arg_w)
+      : w(arg_w), x(arg_x), beta(arg_beta) {
+    parallel_for(n, *this);
+  }
+};  // XPBY
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 #endif /* #ifndef USESCASES_LINALG_BLAS_HPP */
-
-

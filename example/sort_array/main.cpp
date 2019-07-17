@@ -50,46 +50,44 @@
 
 #include <sort_array.hpp>
 
+int main(int argc, char** argv) {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_THREADS) || \
+    defined(KOKKOS_ENABLE_OPENMP)
+  Kokkos::initialize(argc, argv);
 
-int main( int argc , char ** argv )
-{
-#if defined( KOKKOS_ENABLE_CUDA ) || defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMP )
-  Kokkos::initialize( argc , argv );
+  int length_array = 100000;
 
-  int length_array = 100000 ;
-
-  for ( int i = 0 ; i < argc ; ++i ) {
-    if ( 0 == strcmp( argv[i] , "length_array" ) ) {
-      length_array = atoi( argv[i+1] );
+  for (int i = 0; i < argc; ++i) {
+    if (0 == strcmp(argv[i], "length_array")) {
+      length_array = atoi(argv[i + 1]);
     }
   }
 
-  int length_total_array  = length_array * 100;
+  int length_total_array = length_array * 100;
 
-#if defined( KOKKOS_ENABLE_CUDA )
-  if ( Kokkos::Cuda::is_initialized() ) {
-    std::cout << "Kokkos::Cuda" << std::endl ;
-    Example::sort_array< Kokkos::Cuda >( length_array , length_total_array );
+#if defined(KOKKOS_ENABLE_CUDA)
+  if (Kokkos::Cuda::is_initialized()) {
+    std::cout << "Kokkos::Cuda" << std::endl;
+    Example::sort_array<Kokkos::Cuda>(length_array, length_total_array);
   }
 #endif
 
-#if defined( KOKKOS_ENABLE_THREADS )
-  if ( Kokkos::Threads::is_initialized() ) {
-    std::cout << "Kokkos::Threads" << std::endl ;
-    Example::sort_array< Kokkos::Threads >( length_array , length_total_array );
+#if defined(KOKKOS_ENABLE_THREADS)
+  if (Kokkos::Threads::is_initialized()) {
+    std::cout << "Kokkos::Threads" << std::endl;
+    Example::sort_array<Kokkos::Threads>(length_array, length_total_array);
   }
 #endif
 
-#if defined( KOKKOS_ENABLE_OPENMP )
-  if ( Kokkos::OpenMP::is_initialized() ) {
-    std::cout << "Kokkos::OpenMP" << std::endl ;
-    Example::sort_array< Kokkos::OpenMP >( length_array , length_total_array );
+#if defined(KOKKOS_ENABLE_OPENMP)
+  if (Kokkos::OpenMP::is_initialized()) {
+    std::cout << "Kokkos::OpenMP" << std::endl;
+    Example::sort_array<Kokkos::OpenMP>(length_array, length_total_array);
   }
 #endif
 
   Kokkos::finalize();
 #endif
 
-  return 0 ;
+  return 0;
 }
-

@@ -46,10 +46,8 @@
 
 namespace Test {
 
-
-TEST_F( TEST_CATEGORY, impl_shared_alloc )
-{
-  test_shared_alloc< Kokkos::HostSpace, TEST_EXECSPACE >();
+TEST_F(TEST_CATEGORY, impl_shared_alloc) {
+  test_shared_alloc<Kokkos::HostSpace, TEST_EXECSPACE>();
 }
 
-} // namespace Test
+}  // namespace Test

@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<openmptarget/TestOpenMPTarget_Category.hpp>
-#include<TestAtomicOperations_complexdouble.hpp>
-
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
+#include <TestAtomicOperations_complexdouble.hpp>

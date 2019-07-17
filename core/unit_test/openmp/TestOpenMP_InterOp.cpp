@@ -47,44 +47,42 @@
 
 namespace Test {
 
-// Test whether allocations survive Kokkos initialize/finalize if done via Raw Cuda.
-TEST_F( openmp, raw_openmp_interop )
-{
+// Test whether allocations survive Kokkos initialize/finalize if done via Raw
+// Cuda.
+TEST_F(openmp, raw_openmp_interop) {
   int count = 0;
-  int num_threads,concurrency;
-  #pragma omp parallel
+  int num_threads, concurrency;
+#pragma omp parallel
   {
-    #pragma omp atomic
+#pragma omp atomic
     count++;
-    if(omp_get_thread_num()==0)
-      num_threads = omp_get_num_threads();
+    if (omp_get_thread_num() == 0) num_threads = omp_get_num_threads();
   }
 
-  ASSERT_EQ(count,num_threads);
+  ASSERT_EQ(count, num_threads);
 
-  Kokkos::InitArguments arguments{-1,-1,-1, false};
+  Kokkos::InitArguments arguments{-1, -1, -1, false};
   Kokkos::initialize(arguments);
 
   count = 0;
-  #pragma omp parallel
+#pragma omp parallel
   {
-    #pragma omp atomic
+#pragma omp atomic
     count++;
   }
 
   concurrency = Kokkos::OpenMP::concurrency();
-  ASSERT_EQ(count,concurrency);
+  ASSERT_EQ(count, concurrency);
 
   Kokkos::finalize();
 
   count = 0;
-  #pragma omp parallel
+#pragma omp parallel
   {
-    #pragma omp atomic
+#pragma omp atomic
     count++;
   }
 
-  ASSERT_EQ(count,concurrency);
-
+  ASSERT_EQ(count, concurrency);
 }
-}
+}  // namespace Test

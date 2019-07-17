@@ -57,28 +57,24 @@
 namespace Kokkos {
 namespace Impl {
 
-void host_abort( const char * const message )
-{
-  fwrite(message,1,strlen(message),stderr);
+void host_abort(const char *const message) {
+  fwrite(message, 1, strlen(message), stderr);
   fflush(stderr);
   ::abort();
 }
 
-void throw_runtime_exception( const std::string & msg )
-{
-  std::ostringstream o ;
-  o << msg ;
-  traceback_callstack( o );
-  throw std::runtime_error( o.str() );
+void throw_runtime_exception(const std::string &msg) {
+  std::ostringstream o;
+  o << msg;
+  traceback_callstack(o);
+  throw std::runtime_error(o.str());
 }
 
-
-std::string human_memory_size(size_t arg_bytes)
-{
-  double bytes = arg_bytes;
+std::string human_memory_size(size_t arg_bytes) {
+  double bytes   = arg_bytes;
   const double K = 1024;
-  const double M = K*1024;
-  const double G = M*1024;
+  const double M = K * 1024;
+  const double G = M * 1024;
 
   std::ostringstream out;
   if (bytes < K) {
@@ -96,13 +92,13 @@ std::string human_memory_size(size_t arg_bytes)
   return out.str();
 }
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if defined( __GNUC__ ) && defined( ENABLE_TRACEBACK )
+#if defined(__GNUC__) && defined(ENABLE_TRACEBACK)
 
 /*  This is only known to work with GNU C++
  *  Must be compiled with '-rdynamic'
@@ -133,8 +129,7 @@ std::string human_memory_size(size_t arg_bytes)
 namespace Kokkos {
 namespace Impl {
 
-void traceback_callstack( std::ostream & msg )
-{
+void traceback_callstack(std::ostream &msg) {
   using namespace abi;
 
   enum { MAX_DEPTH = 32 };
@@ -146,49 +141,44 @@ void traceback_callstack( std::ostream & msg )
 
   int trace_size = backtrace(trace, MAX_DEPTH);
 
-  msg << std::endl << "Call stack {" << std::endl ;
+  msg << std::endl << "Call stack {" << std::endl;
 
-  for (int i=1; i<trace_size; ++i)
-  {
-    if(!dladdr(trace[i], &dlinfo))
-        continue;
+  for (int i = 1; i < trace_size; ++i) {
+    if (!dladdr(trace[i], &dlinfo)) continue;
 
-    const char * symname = dlinfo.dli_sname;
+    const char *symname = dlinfo.dli_sname;
 
-    char * demangled = __cxa_demangle(symname, NULL, 0, &status);
+    char *demangled = __cxa_demangle(symname, NULL, 0, &status);
 
-    if ( status == 0 && demangled ) {
+    if (status == 0 && demangled) {
       symname = demangled;
     }
 
-    if ( symname && *symname != 0 ) {
-      msg << "  object: " << dlinfo.dli_fname
-          << " function: " << symname
-          << std::endl ;
+    if (symname && *symname != 0) {
+      msg << "  object: " << dlinfo.dli_fname << " function: " << symname
+          << std::endl;
     }
 
-    if ( demangled ) {
-        free(demangled);
+    if (demangled) {
+      free(demangled);
     }
   }
-  msg << "}" ;
+  msg << "}";
 }
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos
 
 #else
 
 namespace Kokkos {
 namespace Impl {
 
-void traceback_callstack( std::ostream & msg )
-{
-  msg << std::endl << "Traceback functionality not available" << std::endl ;
+void traceback_callstack(std::ostream &msg) {
+  msg << std::endl << "Traceback functionality not available" << std::endl;
 }
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif
-

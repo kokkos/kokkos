@@ -42,7 +42,5 @@
 //@HEADER
 */
 
-#include<threads/TestThreads_Category.hpp>
-#include<TestTeamVectorRange.hpp>
-
-
+#include <threads/TestThreads_Category.hpp>
+#include <TestTeamVectorRange.hpp>

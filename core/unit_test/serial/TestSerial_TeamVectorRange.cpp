@@ -42,7 +42,5 @@
 //@HEADER
 */
 
-#include<serial/TestSerial_Category.hpp>
-#include<TestTeamVectorRange.hpp>
-
-
+#include <serial/TestSerial_Category.hpp>
+#include <TestTeamVectorRange.hpp>

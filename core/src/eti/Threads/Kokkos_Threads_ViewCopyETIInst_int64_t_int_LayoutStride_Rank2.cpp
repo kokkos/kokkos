@@ -1,14 +1,14 @@
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
 //
 // Kokkos is licensed under 3-clause BSD terms of use:
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -37,18 +37,20 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 
 #define KOKKOS_IMPL_COMPILING_LIBRARY true
-#include<Kokkos_Core.hpp>
+#include <Kokkos_Core.hpp>
 namespace Kokkos {
 namespace Impl {
-KOKKOS_IMPL_VIEWCOPY_ETI_INST(int**,LayoutStride,LayoutRight, Threads,int64_t)
-KOKKOS_IMPL_VIEWCOPY_ETI_INST(int**,LayoutStride,LayoutLeft,  Threads,int64_t)
-KOKKOS_IMPL_VIEWCOPY_ETI_INST(int**,LayoutStride,LayoutStride,Threads,int64_t)
-KOKKOS_IMPL_VIEWFILL_ETI_INST(int**,LayoutStride,Threads,int64_t)
+KOKKOS_IMPL_VIEWCOPY_ETI_INST(int**, LayoutStride, LayoutRight, Threads,
+                              int64_t)
+KOKKOS_IMPL_VIEWCOPY_ETI_INST(int**, LayoutStride, LayoutLeft, Threads, int64_t)
+KOKKOS_IMPL_VIEWCOPY_ETI_INST(int**, LayoutStride, LayoutStride, Threads,
+                              int64_t)
+KOKKOS_IMPL_VIEWFILL_ETI_INST(int**, LayoutStride, Threads, int64_t)
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos

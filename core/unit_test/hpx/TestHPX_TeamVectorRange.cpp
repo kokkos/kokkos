@@ -42,7 +42,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestTeamVectorRange.hpp>
-
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestTeamVectorRange.hpp>

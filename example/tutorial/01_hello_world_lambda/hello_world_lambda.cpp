@@ -58,7 +58,7 @@
 // lambdas have their places.
 //
 
-int main (int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
   // You must call initialize() before you may call Kokkos.
   //
   // With no arguments, this initializes the default execution space
@@ -66,13 +66,13 @@ int main (int argc, char* argv[]) {
   // parameters.  You may also pass in argc and argv, analogously to
   // MPI_Init().  It reads and removes command-line arguments that
   // start with "--kokkos-".
-  Kokkos::initialize (argc, argv);
+  Kokkos::initialize(argc, argv);
 
   // Print the name of Kokkos' default execution space.  We're using
   // typeid here, so the name might get a bit mangled by the linker,
   // but you should still be able to figure out what it is.
-  printf ("Hello World on Kokkos execution space %s\n",
-          typeid (Kokkos::DefaultExecutionSpace).name ());
+  printf("Hello World on Kokkos execution space %s\n",
+         typeid(Kokkos::DefaultExecutionSpace).name());
 
   // Run lambda on the default Kokkos execution space in parallel,
   // with a parallel for loop count of 15.  The lambda's argument is
@@ -101,12 +101,12 @@ int main (int argc, char* argv[]) {
   // We also need to protect the usage of a lambda against compiling
   // with a backend which doesn't support it (i.e. Cuda 6.5/7.0).
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-  Kokkos::parallel_for (15, KOKKOS_LAMBDA (const int i) {
-      // printf works in a CUDA parallel kernel; std::ostream does not.
-      printf ("Hello from i = %i\n", i);
-    });
+  Kokkos::parallel_for(
+      15, KOKKOS_LAMBDA(const int i) {
+        // printf works in a CUDA parallel kernel; std::ostream does not.
+        printf("Hello from i = %i\n", i);
+      });
 #endif
   // You must call finalize() after you are done using Kokkos.
-  Kokkos::finalize ();
+  Kokkos::finalize();
 }
-

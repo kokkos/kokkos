@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -46,7 +46,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-#if defined( KOKKOS_ENABLE_MPI )
+#if defined(KOKKOS_ENABLE_MPI)
 #include <mpi.h>
 #endif
 
@@ -55,46 +55,43 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-int main( int argc , char ** argv )
-{
-  std::ostringstream msg ;
+int main(int argc, char** argv) {
+  std::ostringstream msg;
 
-#if defined( KOKKOS_ENABLE_MPI )
+#if defined(KOKKOS_ENABLE_MPI)
 
-  MPI_Init( & argc , & argv );
+  MPI_Init(&argc, &argv);
 
-  int mpi_rank = 0 ;
+  int mpi_rank = 0;
 
-  MPI_Comm_rank( MPI_COMM_WORLD , & mpi_rank );
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-  msg << "MPI rank(" << mpi_rank << ") " ;
+  msg << "MPI rank(" << mpi_rank << ") ";
 
 #endif
 
-  msg << "{" << std::endl ;
+  msg << "{" << std::endl;
 
-  if ( Kokkos::hwloc::available() ) {
+  if (Kokkos::hwloc::available()) {
     msg << "hwloc( NUMA[" << Kokkos::hwloc::get_available_numa_count()
-        << "] x CORE["    << Kokkos::hwloc::get_available_cores_per_numa()
-        << "] x HT["      << Kokkos::hwloc::get_available_threads_per_core()
-        << "] )"
-        << std::endl ;
+        << "] x CORE[" << Kokkos::hwloc::get_available_cores_per_numa()
+        << "] x HT[" << Kokkos::hwloc::get_available_threads_per_core() << "] )"
+        << std::endl;
   }
 
-#if defined( KOKKOS_ENABLE_CUDA )
-  Kokkos::Cuda::print_configuration( msg );
+#if defined(KOKKOS_ENABLE_CUDA)
+  Kokkos::Cuda::print_configuration(msg);
 #endif
 
-  msg << "}" << std::endl ;
+  msg << "}" << std::endl;
 
   std::cout << msg.str();
 
-#if defined( KOKKOS_ENABLE_MPI )
+#if defined(KOKKOS_ENABLE_MPI)
 
   MPI_Finalize();
 
 #endif
 
-  return 0 ;
+  return 0;
 }
-

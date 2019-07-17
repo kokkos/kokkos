@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<openmp/TestOpenMP_Category.hpp>
-#include<TestDynViewAPI_rank12345.hpp>
-
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestDynViewAPI_rank12345.hpp>
