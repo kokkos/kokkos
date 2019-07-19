@@ -46,7 +46,7 @@ if [ $verbose -eq 0 ]; then
     exec &>/dev/null
 fi
 
-cpp_source_files=$(git ls-files | grep -E "\.hpp$|\.cpp$|\.h$|\.c$")
+cpp_source_files=$(git ls-files | grep -E "\.hpp$|\.cpp$|\.h$|\.c$" | grep -v -f .clang-format-ignore)
 
 unformatted_files=()
 for file in $cpp_source_files; do
