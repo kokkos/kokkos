@@ -112,7 +112,7 @@ pipeline {
                             filename 'Dockerfile.clang'
                             dir 'scripts/docker'
                             additionalBuildArgs '--pull'
-                            label 'nvidia-docker && volta'
+                            label 'nvidia-docker || docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
