@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -70,14 +70,14 @@ struct System {
 
   double delta;
 
-  double neigh_cut,neigh_cutsq;
+  double neigh_cut, neigh_cutsq;
 
   int mbins;
-  int nbinx,nbiny,nbinz;
-  int mbinx,mbiny,mbinz;
-  int mbinxlo,mbinylo,mbinzlo;
-  double binsizex,binsizey,binsizez;
-  double bininvx,bininvy,bininvz;
+  int nbinx, nbiny, nbinz;
+  int mbinx, mbiny, mbinz;
+  int mbinxlo, mbinylo, mbinzlo;
+  double binsizex, binsizey, binsizez;
+  double bininvx, bininvy, bininvz;
 
   t_int_1d bincount;
   t_int_2d bins;
@@ -87,6 +87,6 @@ struct System {
   t_int_1d_host h_stencil;
   int nstencil;
 
-  double force_cut,force_cutsq;
+  double force_cut, force_cutsq;
 };
 #endif
