@@ -41,36 +41,39 @@
 //@HEADER
 */
 
-#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
+#if defined(KOKKOS_ENABLE_RFO_PREFETCH)
 #include <xmmintrin.h>
 #endif
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ATOMIC_HPP ) && ! defined( KOKKOS_ATOMIC_FETCH_AND_HPP )
+#if defined(KOKKOS_ATOMIC_HPP) && !defined(KOKKOS_ATOMIC_FETCH_AND_HPP)
 #define KOKKOS_ATOMIC_FETCH_AND_HPP
 
 namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA)
 #if defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 
 // Support for int, unsigned int, unsigned long long int, and float
 
-__inline__ __device__
-int atomic_fetch_and( volatile int * const dest , const int val )
-{ return atomicAnd((int*)dest,val); }
+__inline__ __device__ int atomic_fetch_and(volatile int* const dest,
+                                           const int val) {
+  return atomicAnd((int*)dest, val);
+}
 
-__inline__ __device__
-unsigned int atomic_fetch_and( volatile unsigned int * const dest , const unsigned int val )
-{ return atomicAnd((unsigned int*)dest,val); }
+__inline__ __device__ unsigned int atomic_fetch_and(
+    volatile unsigned int* const dest, const unsigned int val) {
+  return atomicAnd((unsigned int*)dest, val);
+}
 
-#if defined( __CUDA_ARCH__ ) && ( 350 <= __CUDA_ARCH__ )
-__inline__ __device__
-unsigned long long int atomic_fetch_and( volatile unsigned long long int * const dest ,
-                                         const unsigned long long int val )
-{ return atomicAnd((unsigned long long int*)dest,val); }
+#if defined(__CUDA_ARCH__) && (350 <= __CUDA_ARCH__)
+__inline__ __device__ unsigned long long int atomic_fetch_and(
+    volatile unsigned long long int* const dest,
+    const unsigned long long int val) {
+  return atomicAnd((unsigned long long int*)dest, val);
+}
 #endif
 #endif
 #endif
@@ -78,53 +81,47 @@ unsigned long long int atomic_fetch_and( volatile unsigned long long int * const
 #if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
-inline
-int atomic_fetch_and( volatile int * const dest , const int val )
-{
-#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
-  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+inline int atomic_fetch_and(volatile int* const dest, const int val) {
+#if defined(KOKKOS_ENABLE_RFO_PREFETCH)
+  _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
-  return __sync_fetch_and_and(dest,val);
+  return __sync_fetch_and_and(dest, val);
 }
 
-inline
-long int atomic_fetch_and( volatile long int * const dest , const long int val )
-{
-#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
-  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+inline long int atomic_fetch_and(volatile long int* const dest,
+                                 const long int val) {
+#if defined(KOKKOS_ENABLE_RFO_PREFETCH)
+  _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
-  return __sync_fetch_and_and(dest,val);
+  return __sync_fetch_and_and(dest, val);
 }
 
-#if defined( KOKKOS_ENABLE_GNU_ATOMICS )
+#if defined(KOKKOS_ENABLE_GNU_ATOMICS)
 
-inline
-unsigned int atomic_fetch_and( volatile unsigned int * const dest , const unsigned int val )
-{ 
-#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
-  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+inline unsigned int atomic_fetch_and(volatile unsigned int* const dest,
+                                     const unsigned int val) {
+#if defined(KOKKOS_ENABLE_RFO_PREFETCH)
+  _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
-  return __sync_fetch_and_and(dest,val);
+  return __sync_fetch_and_and(dest, val);
 }
 
-inline
-unsigned long int atomic_fetch_and( volatile unsigned long int * const dest , const unsigned long int val )
-{
-#if defined( KOKKOS_ENABLE_RFO_PREFETCH )
-  _mm_prefetch( (const char*) dest, _MM_HINT_ET0 );
+inline unsigned long int atomic_fetch_and(
+    volatile unsigned long int* const dest, const unsigned long int val) {
+#if defined(KOKKOS_ENABLE_RFO_PREFETCH)
+  _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
-  return __sync_fetch_and_and(dest,val);
+  return __sync_fetch_and_and(dest, val);
 }
 
 #endif
 
 //----------------------------------------------------------------------------
 
-#elif defined( KOKKOS_ENABLE_OPENMP_ATOMICS )
+#elif defined(KOKKOS_ENABLE_OPENMP_ATOMICS)
 
-template< typename T >
-T atomic_fetch_and( volatile T * const dest , const T val )
-{
+template <typename T>
+T atomic_fetch_and(volatile T* const dest, const T val) {
   T retval;
 #pragma omp atomic capture
   {
@@ -134,12 +131,11 @@ T atomic_fetch_and( volatile T * const dest , const T val )
   return retval;
 }
 
-#elif defined( KOKKOS_ENABLE_SERIAL_ATOMICS )
+#elif defined(KOKKOS_ENABLE_SERIAL_ATOMICS)
 
-template< typename T >
-T atomic_fetch_and( volatile T * const dest_v , const T val )
-{
-  T* dest = const_cast<T*>(dest_v);
+template <typename T>
+T atomic_fetch_and(volatile T* const dest_v, const T val) {
+  T* dest  = const_cast<T*>(dest_v);
   T retval = *dest;
   *dest &= val;
   return retval;
@@ -151,21 +147,19 @@ T atomic_fetch_and( volatile T * const dest_v , const T val )
 
 // dummy for non-CUDA Kokkos headers being processed by NVCC
 #if defined(__CUDA_ARCH__) && !defined(KOKKOS_ENABLE_CUDA)
-template< typename T >
-__inline__ __device__
-T atomic_fetch_and(volatile T* const, Kokkos::Impl::identity_t<T>) {
+template <typename T>
+__inline__ __device__ T atomic_fetch_and(volatile T* const,
+                                         Kokkos::Impl::identity_t<T>) {
   return T();
 }
 #endif
 
 // Simpler version of atomic_fetch_and without the fetch
 template <typename T>
-KOKKOS_INLINE_FUNCTION
-void atomic_and(volatile T * const dest, const T src) {
-  (void)atomic_fetch_and(dest,src);
+KOKKOS_INLINE_FUNCTION void atomic_and(volatile T* const dest, const T src) {
+  (void)atomic_fetch_and(dest, src);
 }
 
-}
+}  // namespace Kokkos
 
 #endif
-

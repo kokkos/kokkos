@@ -42,9 +42,7 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestInit.hpp>
-#include<TestCompilerMacros.hpp>
-#include<TestPolicyConstruction.hpp>
-
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestInit.hpp>
+#include <TestCompilerMacros.hpp>
+#include <TestPolicyConstruction.hpp>

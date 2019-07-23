@@ -53,7 +53,7 @@ struct KokkosPDeviceInfo {
   uint32_t deviceID;
 };
 
-}
-}
+}  // namespace Profiling
+}  // namespace Kokkos
 
 #endif

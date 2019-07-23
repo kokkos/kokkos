@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -52,87 +52,81 @@
 #endif
 
 #ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
-#  define KOKKOS_ABORT_MESSAGE_BUFFER_SIZE 2048
-#endif // ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
+#define KOKKOS_ABORT_MESSAGE_BUFFER_SIZE 2048
+#endif  // ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
 
 namespace Kokkos {
 namespace Impl {
 
-void host_abort( const char * const );
+void host_abort(const char* const);
 
-void throw_runtime_exception( const std::string & );
+void throw_runtime_exception(const std::string&);
 
-void traceback_callstack( std::ostream & );
+void traceback_callstack(std::ostream&);
 
 std::string human_memory_size(size_t arg_bytes);
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
 
 namespace Kokkos {
 KOKKOS_INLINE_FUNCTION
-void abort( const char * const message ) {
+void abort(const char* const message) {
 #if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
   Kokkos::Impl::cuda_abort(message);
 #else
-  #if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__)
-    Kokkos::Impl::host_abort(message);
-  #endif
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__)
+  Kokkos::Impl::host_abort(message);
+#endif
 #endif
 }
 
-}
-
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-
-#if !defined(NDEBUG) || defined(KOKKOS_ENFORCE_CONTRACTS) || defined(KOKKOS_DEBUG)
-#  define KOKKOS_EXPECTS(...) \
-  { \
-    if(!bool(__VA_ARGS__)) { \
-      ::Kokkos::abort( \
-        "Kokkos contract violation:\n  " \
-        "  Expected precondition `" #__VA_ARGS__ "` evaluated false." \
-      ); \
-    } \
+#if !defined(NDEBUG) || defined(KOKKOS_ENFORCE_CONTRACTS) || \
+    defined(KOKKOS_DEBUG)
+#define KOKKOS_EXPECTS(...)                                               \
+  {                                                                       \
+    if (!bool(__VA_ARGS__)) {                                             \
+      ::Kokkos::abort(                                                    \
+          "Kokkos contract violation:\n  "                                \
+          "  Expected precondition `" #__VA_ARGS__ "` evaluated false."); \
+    }                                                                     \
   }
-#  define KOKKOS_ENSURES(...) \
-  { \
-    if(!bool(__VA_ARGS__)) { \
-      ::Kokkos::abort( \
-        "Kokkos contract violation:\n  " \
-        "  Ensured postcondition `" #__VA_ARGS__ "` evaluated false." \
-      ); \
-    } \
+#define KOKKOS_ENSURES(...)                                               \
+  {                                                                       \
+    if (!bool(__VA_ARGS__)) {                                             \
+      ::Kokkos::abort(                                                    \
+          "Kokkos contract violation:\n  "                                \
+          "  Ensured postcondition `" #__VA_ARGS__ "` evaluated false."); \
+    }                                                                     \
   }
 // some projects already define this for themselves, so don't mess them up
-#  ifndef KOKKOS_ASSERT
-#    define KOKKOS_ASSERT(...) \
-  { \
-    if(!bool(__VA_ARGS__)) { \
-      ::Kokkos::abort( \
-        "Kokkos contract violation:\n  " \
-        "  Asserted condition `" #__VA_ARGS__ "` evaluated false." \
-      ); \
-    } \
+#ifndef KOKKOS_ASSERT
+#define KOKKOS_ASSERT(...)                                             \
+  {                                                                    \
+    if (!bool(__VA_ARGS__)) {                                          \
+      ::Kokkos::abort(                                                 \
+          "Kokkos contract violation:\n  "                             \
+          "  Asserted condition `" #__VA_ARGS__ "` evaluated false."); \
+    }                                                                  \
   }
-#  endif // ifndef KOKKOS_ASSERT
-#else // not debug mode
-#  define KOKKOS_EXPECTS(...)
-#  define KOKKOS_ENSURES(...)
-#  ifndef KOKKOS_ASSERT
-#    define KOKKOS_ASSERT(...)
-#  endif // ifndef KOKKOS_ASSERT
-#endif // end debug mode ifdefs
+#endif  // ifndef KOKKOS_ASSERT
+#else   // not debug mode
+#define KOKKOS_EXPECTS(...)
+#define KOKKOS_ENSURES(...)
+#ifndef KOKKOS_ASSERT
+#define KOKKOS_ASSERT(...)
+#endif  // ifndef KOKKOS_ASSERT
+#endif  // end debug mode ifdefs
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 #endif /* #ifndef KOKKOS_IMPL_ERROR_HPP */
-

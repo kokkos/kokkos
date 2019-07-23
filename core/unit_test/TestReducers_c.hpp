@@ -44,8 +44,7 @@
 #include <TestReducers.hpp>
 
 namespace Test {
-TEST_F( TEST_CATEGORY, reducers_double )
-{
-  TestReducers< double, TEST_EXECSPACE >::execute_float();
+TEST_F(TEST_CATEGORY, reducers_double) {
+  TestReducers<double, TEST_EXECSPACE>::execute_float();
 }
-} // namespace Test
+}  // namespace Test

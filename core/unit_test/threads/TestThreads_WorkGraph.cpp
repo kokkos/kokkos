@@ -41,5 +41,5 @@
 //@HEADER
 */
 
-#include<threads/TestThreads_Category.hpp>
-#include<TestWorkGraph.hpp>
+#include <threads/TestThreads_Category.hpp>
+#include <TestWorkGraph.hpp>

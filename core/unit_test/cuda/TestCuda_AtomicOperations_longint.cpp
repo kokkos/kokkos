@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<cuda/TestCuda_Category.hpp>
-#include<TestAtomicOperations_longint.hpp>
-
+#include <cuda/TestCuda_Category.hpp>
+#include <TestAtomicOperations_longint.hpp>
