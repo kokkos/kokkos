@@ -89,29 +89,6 @@ ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL PGI)
   ENDIF()
 ENDIF()
 
-# Enforce that extensions are turned off for nvcc_wrapper.
-# For compiling CUDA code using nvcc_wrapper, we will use the host compiler's
-# flags for turning on C++11.  Since for compiler ID and versioning purposes
-# CMake recognizes the host compiler when calling nvcc_wrapper, this just
-# works.  Both NVCC and nvcc_wrapper only recognize '-std=c++11' which means
-# that we can only use host compilers for CUDA builds that use those flags.
-# It also means that extensions (gnu++11) can't be turned on for CUDA builds.
-IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
-  IF(CMAKE_CXX_EXTENSIONS)
-    MESSAGE(FATAL_ERROR "NVCC doesn't support C++ extensions.  Set -DCMAKE_CXX_EXTENSIONS=OFF")
-  ENDIF()
-ENDIF()
-
-IF(KOKKOS_ENABLE_CUDA)
-  # ENFORCE that the compiler can compile CUDA code.
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-    IF(KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 4.0.0)
-      MESSAGE(FATAL_ERROR "Compiling CUDA code directly with Clang requires version 4.0.0 or higher.")
-    ENDIF()
-  ELSEIF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
-    MESSAGE(FATAL_ERROR "Invalid compiler for CUDA.  The compiler must be nvcc_wrapper or Clang, but compiler ID was ${KOKKOS_CXX_COMPILER_ID}")
-  ENDIF()
-ENDIF()
 
 
 # From CMake 3.10 documentation
@@ -208,6 +185,37 @@ ELSE()
     GLOBAL_SET(KOKKOS_ENABLE_CXX17 ON)
   ELSEIF (KOKKOS_CXX_STANDARD STREQUAL "2A")
     GLOBAL_SET(KOKKOS_ENABLE_CXX20 ON)
+  ENDIF()
+ENDIF()
+
+# Enforce that extensions are turned off for nvcc_wrapper.
+# For compiling CUDA code using nvcc_wrapper, we will use the host compiler's
+# flags for turning on C++11.  Since for compiler ID and versioning purposes
+# CMake recognizes the host compiler when calling nvcc_wrapper, this just
+# works.  Both NVCC and nvcc_wrapper only recognize '-std=c++11' which means
+# that we can only use host compilers for CUDA builds that use those flags.
+# It also means that extensions (gnu++11) can't be turned on for CUDA builds.
+IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+  IF(NOT DEFINED CMAKE_CXX_EXTENSIONS)
+    MESSAGE(FATAL_ERROR "NVCC doesn't support C++ extensions.  Set -DCMAKE_CXX_EXTENSIONS=OFF")
+  ELSEIF(CMAKE_CXX_EXTENSIONS)
+    MESSAGE(FATAL_ERROR "NVCC doesn't support C++ extensions.  Set -DCMAKE_CXX_EXTENSIONS=OFF")
+  ENDIF()
+ENDIF()
+
+IF(KOKKOS_ENABLE_CUDA)
+  # ENFORCE that the compiler can compile CUDA code.
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+    IF(KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 4.0.0)
+      MESSAGE(FATAL_ERROR "Compiling CUDA code directly with Clang requires version 4.0.0 or higher.")
+    ENDIF()
+    IF(NOT DEFINED CMAKE_CXX_EXTENSIONS)
+      MESSAGE(FATAL_ERROR "Compiling CUDA code with clang doesn't support C++ extensions.  Set -DCMAKE_CXX_EXTENSIONS=OFF")
+    ELSEIF(CMAKE_CXX_EXTENSIONS)
+      MESSAGE(FATAL_ERROR "Compiling CUDA code with clang doesn't support C++ extensions.  Set -DCMAKE_CXX_EXTENSIONS=OFF")
+    ENDIF()
+  ELSEIF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+    MESSAGE(FATAL_ERROR "Invalid compiler for CUDA.  The compiler must be nvcc_wrapper or Clang, but compiler ID was ${KOKKOS_CXX_COMPILER_ID}")
   ENDIF()
 ENDIF()
 
