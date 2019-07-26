@@ -113,11 +113,11 @@ LIST(APPEND KOKKOS_ARCH_LIST
 
 # Ensure that KOKKOS_ARCH is in the ARCH_LIST
 IF (KOKKOS_ARCH MATCHES ",")
-  MESSAGE(WARNING "-- Detected a comma in: KOKKOS_ARCH=`${KOKKOS_ARCH}`")
-  MESSAGE("-- Although we prefer KOKKOS_ARCH to be semicolon-delimited, we do allow")
-  MESSAGE("-- comma-delimited values for compatibility with scripts (see github.com/trilinos/Trilinos/issues/2330)")
+#  MESSAGE(WARNING "-- Detected a comma in: KOKKOS_ARCH=`${KOKKOS_ARCH}`")
+#  MESSAGE("-- Although we prefer KOKKOS_ARCH to be semicolon-delimited, we do allow")
+#  MESSAGE("-- comma-delimited values for compatibility with scripts (see github.com/trilinos/Trilinos/issues/2330)")
   STRING(REPLACE "," ";" KOKKOS_ARCH "${KOKKOS_ARCH}")
-  MESSAGE("-- Commas were changed to semicolons, now KOKKOS_ARCH=`${KOKKOS_ARCH}`")
+#  MESSAGE("-- Commas were changed to semicolons, now KOKKOS_ARCH=`${KOKKOS_ARCH}`")
 ENDIF()
 
 IF (KOKKOS_ARCH MATCHES "-")
