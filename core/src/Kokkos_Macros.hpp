@@ -263,6 +263,20 @@
 #endif
 #endif
 
+#if defined(KOKKOS_ENABLE_HIP)
+
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
+
+#define KOKKOS_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
+#define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
+#define KOKKOS_FUNCTION __device__ __host__
+#define KOKKOS_LAMBDA [=] __host__ __device__
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+#define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
+#endif
+#endif  // #if defined( KOKKOS_ENABLE_HIP )
+
 #if defined(KOKKOS_ENABLE_ROCM) && defined(__HCC__)
 
 #define KOKKOS_FORCEINLINE_FUNCTION __attribute__((amp, cpu)) inline
@@ -480,6 +494,7 @@
 // There is zero or one default execution space specified.
 
 #if 1 < ((defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA) ? 1 : 0) +         \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP) ? 1 : 0) +          \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM) ? 1 : 0) +         \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET) ? 1 : 0) + \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP) ? 1 : 0) +       \
@@ -502,6 +517,8 @@
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
 #elif defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
+#elif defined(KOKKOS_ENABLE_HIP)
+#define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
 #elif defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -526,6 +543,10 @@
 #elif defined(__HCC__) && defined(__HCC_ACCELERATOR__) && \
     defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU
+#elif defined(__HIPCC__) &&                                     \
+    (defined(__HCC_ACCELERATOR__) || defined(__CUDA_ARCH__)) && \
+    defined(KOKKOS_ENABLE_HIP)
+#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
 #else
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif
