@@ -163,6 +163,8 @@ namespace Kokkos {
 typedef Cuda DefaultExecutionSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET)
 typedef Experimental::OpenMPTarget DefaultExecutionSpace;
+#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
+typedef Experimental::HIP DefaultExecutionSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM)
 typedef Experimental::ROCm DefaultExecutionSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
@@ -219,6 +221,8 @@ namespace Impl {
 typedef Kokkos::CudaSpace ActiveExecutionMemorySpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU)
 typedef Kokkos::HostSpace ActiveExecutionMemorySpace;
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
+typedef Kokkos::Experimental::HIPSpace ActiveExecutionMemorySpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 typedef Kokkos::HostSpace ActiveExecutionMemorySpace;
 #else
