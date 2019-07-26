@@ -564,9 +564,13 @@
 // If compiling with CUDA, we must use relocateable device code
 // to enable the task policy.
 
-#if !defined(KOKKOS_ENABLE_CUDA) || \
+#if defined(KOKKOS_ENABLE_CUDA) && \
     defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
 #define KOKKOS_ENABLE_TASKDAG
+#else
+#ifndef KOKKOS_ENABLE_HIP
+#define KOKKOS_ENABLE_TASKDAG
+#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
