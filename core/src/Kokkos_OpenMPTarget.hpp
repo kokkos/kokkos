@@ -46,7 +46,7 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_ENABLE_OPENMPTARGET ) && defined( _OPENMP )
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(_OPENMP)
 
 #include <omp.h>
 
@@ -67,21 +67,21 @@ namespace Experimental {
 /// \class OpenMPTarget
 /// \brief Kokkos device for multicore processors in the host memory space.
 class OpenMPTarget {
-public:
+ public:
   //------------------------------------
   //! \name Type declarations that all Kokkos devices must provide.
   //@{
 
   //! Tag this class as a kokkos execution space
-  typedef OpenMPTarget                execution_space ;
-  typedef OpenMPTargetSpace           memory_space ;
+  typedef OpenMPTarget execution_space;
+  typedef OpenMPTargetSpace memory_space;
   //! This execution space preferred device_type
-  typedef Kokkos::Device<execution_space,memory_space> device_type;
+  typedef Kokkos::Device<execution_space, memory_space> device_type;
 
-  typedef LayoutLeft           array_layout ;
-  typedef memory_space::size_type  size_type ;
+  typedef LayoutLeft array_layout;
+  typedef memory_space::size_type size_type;
 
-  typedef ScratchMemorySpace< OpenMPTarget > scratch_memory_space ;
+  typedef ScratchMemorySpace<OpenMPTarget> scratch_memory_space;
 
   //@}
   //------------------------------------
@@ -96,11 +96,12 @@ public:
   /** \brief Wake the device from the 'sleep' state. A noop for OpenMPTarget. */
   static bool wake();
 
-  /** \brief Wait until all dispatched functors complete. A noop for OpenMPTarget. */
+  /** \brief Wait until all dispatched functors complete. A noop for
+   * OpenMPTarget. */
   static void fence() {}
 
   /// \brief Print configuration information to the given output stream.
-  static void print_configuration( std::ostream & , const bool detail = false );
+  static void print_configuration(std::ostream&, const bool detail = false);
 
   /// \brief Free any resources being consumed by the device.
   static void finalize();
@@ -114,9 +115,8 @@ public:
    *  2) Allocate a HostThread for each OpenMPTarget thread to hold its
    *     topology and fan in/out data.
    */
-  static void initialize( unsigned thread_count = 0 ,
-                          unsigned use_numa_count = 0 ,
-                          unsigned use_cores_per_numa = 0 );
+  static void initialize(unsigned thread_count = 0, unsigned use_numa_count = 0,
+                         unsigned use_cores_per_numa = 0);
 
   static int is_initialized();
 
@@ -125,14 +125,16 @@ public:
 
   //@}
   //------------------------------------
-  /** \brief  This execution space has a topological thread pool which can be queried.
+  /** \brief  This execution space has a topological thread pool which can be
+   * queried.
    *
-   *  All threads within a pool have a common memory space for which they are cache coherent.
-   *    depth = 0  gives the number of threads in the whole pool.
-   *    depth = 1  gives the number of threads in a NUMA region, typically sharing L3 cache.
-   *    depth = 2  gives the number of threads at the finest granularity, typically sharing L1 cache.
+   *  All threads within a pool have a common memory space for which they are
+   * cache coherent. depth = 0  gives the number of threads in the whole pool.
+   *    depth = 1  gives the number of threads in a NUMA region, typically
+   * sharing L3 cache. depth = 2  gives the number of threads at the finest
+   * granularity, typically sharing L1 cache.
    */
-  inline static int thread_pool_size( int depth = 0 );
+  inline static int thread_pool_size(int depth = 0);
 
   /** \brief  The rank of the executing thread in this thread pool */
   KOKKOS_INLINE_FUNCTION static int thread_pool_rank();
@@ -141,15 +143,17 @@ public:
 
   inline static unsigned max_hardware_threads() { return thread_pool_size(0); }
 
-  KOKKOS_INLINE_FUNCTION static
-  unsigned hardware_thread_id() { return thread_pool_rank(); }
+  KOKKOS_INLINE_FUNCTION static unsigned hardware_thread_id() {
+    return thread_pool_rank();
+  }
 
   static const char* name();
-private:
+
+ private:
   static bool m_is_initialized;
 };
-} // namespace Experimental
-} // namespace Kokkos
+}  // namespace Experimental
+}  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -157,19 +161,17 @@ private:
 namespace Kokkos {
 namespace Impl {
 
-template<>
-struct VerifyExecutionCanAccessMemorySpace
-  < Kokkos::Experimental::OpenMPTarget::memory_space
-  , Kokkos::Experimental::OpenMPTarget::scratch_memory_space
-  >
-{
+template <>
+struct VerifyExecutionCanAccessMemorySpace<
+    Kokkos::Experimental::OpenMPTarget::memory_space,
+    Kokkos::Experimental::OpenMPTarget::scratch_memory_space> {
   enum { value = true };
-  inline static void verify( void ) { }
-  inline static void verify( const void * ) { }
+  inline static void verify(void) {}
+  inline static void verify(const void*) {}
 };
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -182,5 +184,3 @@ struct VerifyExecutionCanAccessMemorySpace
 
 #endif /* #if defined( KOKKOS_ENABLE_OPENMPTARGET ) && defined( _OPENMP ) */
 #endif /* #ifndef KOKKOS_OPENMPTARGET_HPP */
-
-

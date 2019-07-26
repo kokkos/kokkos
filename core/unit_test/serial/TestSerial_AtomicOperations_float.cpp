@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<serial/TestSerial_Category.hpp>
-#include<TestAtomicOperations_float.hpp>
-
+#include <serial/TestSerial_Category.hpp>
+#include <TestAtomicOperations_float.hpp>

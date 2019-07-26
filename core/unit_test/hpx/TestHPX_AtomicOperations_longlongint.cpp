@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestAtomicOperations_longlongint.hpp>
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestAtomicOperations_longlongint.hpp>

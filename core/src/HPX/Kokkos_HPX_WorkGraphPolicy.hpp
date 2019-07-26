@@ -53,8 +53,8 @@ namespace Impl {
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
                   Kokkos::Experimental::HPX> {
-private:
-  using Policy = Kokkos::WorkGraphPolicy<Traits...>;
+ private:
+  using Policy  = Kokkos::WorkGraphPolicy<Traits...>;
   using WorkTag = typename Policy::work_tag;
 
   Policy m_policy;
@@ -73,7 +73,7 @@ private:
     m_functor(t, w);
   }
 
-public:
+ public:
   void execute() const {
     dispatch_execute_task(this);
     Kokkos::Experimental::HPX().fence();
@@ -110,7 +110,7 @@ public:
       : m_policy(arg_policy), m_functor(arg_functor) {}
 };
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif /* #define KOKKOS_HPX_WORKGRAPHPOLICY_HPP */

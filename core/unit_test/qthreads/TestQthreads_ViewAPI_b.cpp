@@ -45,37 +45,32 @@
 
 namespace Test {
 
-TEST_F( qthreads, impl_shared_alloc )
-{
+TEST_F(qthreads, impl_shared_alloc) {
 #if 0
   test_shared_alloc< Kokkos::HostSpace, Kokkos::Qthreads >();
 #endif
 }
 
-TEST_F( qthreads, impl_view_mapping_b )
-{
+TEST_F(qthreads, impl_view_mapping_b) {
 #if 0
   test_view_mapping_subview< Kokkos::Qthreads >();
   TestViewMappingAtomic< Kokkos::Qthreads >::run();
 #endif
 }
 
-TEST_F( qthreads, view_api )
-{
+TEST_F(qthreads, view_api) {
 #if 0
   TestViewAPI< double, Kokkos::Qthreads >();
 #endif
 }
 
-TEST_F( qthreads, view_nested_view )
-{
+TEST_F(qthreads, view_nested_view) {
 #if 0
   ::Test::view_nested_view< Kokkos::Qthreads >();
 #endif
 }
 
-TEST_F( qthreads, view_remap )
-{
+TEST_F(qthreads, view_remap) {
 #if 0
   enum { N0 = 3, N1 = 2, N2 = 8, N3 = 9 };
 
@@ -121,18 +116,16 @@ TEST_F( qthreads, view_remap )
 #endif
 }
 
-TEST_F( qthreads, view_aggregate )
-{
+TEST_F(qthreads, view_aggregate) {
 #if 0
   TestViewAggregate< Kokkos::Qthreads >();
 #endif
 }
 
-TEST_F( qthreads, template_meta_functions )
-{
+TEST_F(qthreads, template_meta_functions) {
 #if 0
   TestTemplateMetaFunctions< int, Kokkos::Qthreads >();
 #endif
 }
 
-} // namespace Test
+}  // namespace Test

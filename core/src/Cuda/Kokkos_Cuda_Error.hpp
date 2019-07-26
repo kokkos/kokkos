@@ -47,7 +47,8 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
-namespace Kokkos { namespace Impl {
+namespace Kokkos {
+namespace Impl {
 
 void cuda_device_synchronize();
 
@@ -61,8 +62,8 @@ inline void cuda_internal_safe_call( cudaError e , const char * name, const char
 #define CUDA_SAFE_CALL( call )  \
 	Kokkos::Impl::cuda_internal_safe_call( call , #call, __FILE__, __PRETTY_FUNCTION__, __LINE__ )
 
-}} // namespace Kokkos::Impl
+}  // namespace Impl
+}  // namespace Kokkos
 
-#endif //KOKKOS_ENABLE_CUDA
-#endif //KOKKOS_CUDA_ERROR_HPP
-
+#endif  // KOKKOS_ENABLE_CUDA
+#endif  // KOKKOS_CUDA_ERROR_HPP

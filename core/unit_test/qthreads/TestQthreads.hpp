@@ -82,28 +82,27 @@
 namespace Test {
 
 class qthreads : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
-    const unsigned numa_count       = Kokkos::hwloc::get_available_numa_count();
-    const unsigned cores_per_numa   = Kokkos::hwloc::get_available_cores_per_numa();
-    const unsigned threads_per_core = Kokkos::hwloc::get_available_threads_per_core();
+ protected:
+  static void SetUpTestCase() {
+    const unsigned numa_count = Kokkos::hwloc::get_available_numa_count();
+    const unsigned cores_per_numa =
+        Kokkos::hwloc::get_available_cores_per_numa();
+    const unsigned threads_per_core =
+        Kokkos::hwloc::get_available_threads_per_core();
 
-    const unsigned threads_count = std::max( 1u, numa_count ) *
-                                   std::max( 2u, ( cores_per_numa * threads_per_core ) / 2 );
+    const unsigned threads_count =
+        std::max(1u, numa_count) *
+        std::max(2u, (cores_per_numa * threads_per_core) / 2);
 
-    Kokkos::Qthreads::initialize( threads_count );
-    Kokkos::print_configuration( std::cout, true );
+    Kokkos::Qthreads::initialize(threads_count);
+    Kokkos::print_configuration(std::cout, true);
 
-    srand( 10231 );
+    srand(10231);
   }
 
-  static void TearDownTestCase()
-  {
-    Kokkos::Qthreads::finalize();
-  }
+  static void TearDownTestCase() { Kokkos::Qthreads::finalize(); }
 };
 
-} // namespace Test
+}  // namespace Test
 
 #endif
