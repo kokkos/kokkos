@@ -137,6 +137,13 @@ class ROCm;       ///< Execution space for ROCm GPU
 }  // namespace Experimental
 #endif
 
+#if defined(KOKKOS_ENABLE_HIP)
+namespace Experimental {
+class HIPSpace;  ///< Memory space on HIP GPU
+class HIP;       ///< Execution space for HIP GPU
+}  // namespace Experimental
+#endif
+
 template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
