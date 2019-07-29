@@ -132,8 +132,8 @@ struct HIPParallelLaunch<
       printf("Pre Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
 
       hipLaunchKernelGGL(
-          hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                           MinBlocksPerSM>,
+          (hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+                                            MinBlocksPerSM>),
           grid, block, shmem, hip_instance->m_stream, driver);
 
       Kokkos::Experimental::HIP().fence();
