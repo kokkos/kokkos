@@ -551,20 +551,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_LIBRT), 1)
   KOKKOS_TPL_LIBRARY_NAMES += rt
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
-  ifneq ($(MEMKIND_PATH),)
-    ifneq ($(KOKKOS_CMAKE), yes)
-      KOKKOS_CXXFLAGS += -I$(MEMKIND_PATH)/include
-    endif
-    KOKKOS_LDFLAGS += -L$(MEMKIND_PATH)/lib
-    KOKKOS_CXXLDFLAGS += -L$(MEMKIND_PATH)/lib
-    KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
-    KOKKOS_TPL_LIBRARY_DIRS += $(MEMKIND_PATH)/lib
-  endif
-  KOKKOS_LIBS += -lmemkind -lnuma
-  KOKKOS_TPL_LIBRARY_NAMES += memkind numa
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HBWSPACE")
-endif
+tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HBWSPACE")
 
 ifeq ($(KOKKOS_INTERNAL_DISABLE_PROFILING), 0)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_PROFILING")
@@ -1193,11 +1180,6 @@ ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
   KOKKOS_INTERNAL_GCC_TOOLCHAIN = $(KOKKOS_INTERNAL_GCC_PATH:/bin/g++=)
   KOKKOS_CXXFLAGS += --gcc-toolchain=$(KOKKOS_INTERNAL_GCC_TOOLCHAIN)
   KOKKOS_LDFLAGS += --gcc-toolchain=$(KOKKOS_INTERNAL_GCC_TOOLCHAIN)
-endif
-
-# Don't include Kokkos_HBWSpace.cpp if not using MEMKIND to avoid a link warning.
-ifneq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
-  KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_HBWSpace.cpp,$(KOKKOS_SRC))
 endif
 
 # Don't include Kokkos_Serial.cpp or Kokkos_Serial_Task.cpp if not using Serial

@@ -57,9 +57,6 @@
 #include <Kokkos_HBWSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
-#ifdef KOKKOS_ENABLE_HBWSPACE
-#include <memkind.h>
-#endif
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -90,12 +87,7 @@ HBWSpace::HBWSpace( const HBWSpace::AllocationMechanism & arg_alloc_mech )
   : m_alloc_mech( HBWSpace::STD_MALLOC )
 {
 printf("Init2\n");
-setenv("MEMKIND_HBW_NODES", "1", 0);
-  if ( arg_alloc_mech == STD_MALLOC ) {
-    m_alloc_mech = HBWSpace::STD_MALLOC ;
-  }
 }
-
 void * HBWSpace::allocate( const size_t arg_alloc_size ) const
 {
   static_assert( sizeof(void*) == sizeof(uintptr_t)
@@ -115,7 +107,7 @@ void * HBWSpace::allocate( const size_t arg_alloc_size ) const
       // Over-allocate to and round up to guarantee proper alignment.
       size_t size_padded = arg_alloc_size + sizeof(void*) + alignment ;
 
-      void * alloc_ptr = memkind_malloc(MEMKIND_TYPE, size_padded );
+      void * alloc_ptr = malloc( size_padded );
 
       if (alloc_ptr) {
         uintptr_t address = reinterpret_cast<uintptr_t>(alloc_ptr);
@@ -160,7 +152,7 @@ void HBWSpace::deallocate( void * const arg_alloc_ptr , const size_t arg_alloc_s
 
     if ( m_alloc_mech == STD_MALLOC ) {
       void * alloc_ptr = *(reinterpret_cast<void **>(arg_alloc_ptr) -1);
-      memkind_free(MEMKIND_TYPE, alloc_ptr );
+      free(alloc_ptr );
     }
 
   }
