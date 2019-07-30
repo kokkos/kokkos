@@ -64,17 +64,16 @@ struct TestRange {
   struct VerifyOffsetTag {};
 
   int N;
-  #ifndef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
+#ifndef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
   static const int offset = 13;
-  #else
+#else
   int offset;
-  #endif
-  TestRange( const size_t N_ )
-    : m_flags( Kokkos::ViewAllocateWithoutInitializing( "flags" ), N_ ), N(N_)
-    {
-    #ifdef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
+#endif
+  TestRange(const size_t N_)
+      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_), N(N_) {
+#ifdef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
     offset = 13;
-    #endif
+#endif
   }
 
   void test_for() {

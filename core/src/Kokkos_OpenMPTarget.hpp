@@ -95,11 +95,10 @@ class OpenMPTarget {
   static int concurrency();
 
   //! Print configuration information to the given output stream.
-  void print_configuration( std::ostream & , const bool detail = false );
-
+  void print_configuration(std::ostream&, const bool detail = false);
 
   static const char* name();
-  
+
   //! Free any resources being consumed by the device.
   void impl_finalize();
 
@@ -109,14 +108,15 @@ class OpenMPTarget {
   //! Initialize, telling the CUDA run-time library which device to use.
   void impl_initialize();
 
-  inline Impl::OpenMPTargetInternal* impl_internal_space_instance() const { return m_space_instance; }  
+  inline Impl::OpenMPTargetInternal* impl_internal_space_instance() const {
+    return m_space_instance;
+  }
 
   OpenMPTarget();
   ~OpenMPTarget();
 
-private:
+ private:
   Impl::OpenMPTargetInternal* m_space_instance;
-
 };
 }  // namespace Experimental
 }  // namespace Kokkos

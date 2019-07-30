@@ -60,16 +60,16 @@ namespace {
 KOKKOS_INLINE_FUNCTION
 int kokkos_omp_in_parallel();
 
-//int kokkos_omp_in_critical_region = ( Kokkos::HostSpace::register_in_parallel( kokkos_omp_in_parallel ) , 0 );
+// int kokkos_omp_in_critical_region = (
+// Kokkos::HostSpace::register_in_parallel( kokkos_omp_in_parallel ) , 0 );
 
 KOKKOS_INLINE_FUNCTION
-int kokkos_omp_in_parallel()
-{
-/*#ifndef __CUDA_ARCH__
-  return omp_in_parallel() && ! kokkos_omp_in_critical_region ;
-#else
-  return 0;
-#endif*/
+int kokkos_omp_in_parallel() {
+  /*#ifndef __CUDA_ARCH__
+    return omp_in_parallel() && ! kokkos_omp_in_critical_region ;
+  #else
+    return 0;
+  #endif*/
   return omp_in_parallel();
 }
 
@@ -98,14 +98,12 @@ void OpenMPTargetExec::verify_is_process(const char* const label) {
   }
 }
 
-void OpenMPTargetExec::verify_initialized( const char * const label )
-{
-  if ( 0 == Kokkos::Experimental::OpenMPTarget().impl_is_initialized() ) {
-    std::string msg( label );
-    msg.append( " ERROR: not initialized" );
-    Kokkos::Impl::throw_runtime_exception( msg );
+void OpenMPTargetExec::verify_initialized(const char* const label) {
+  if (0 == Kokkos::Experimental::OpenMPTarget().impl_is_initialized()) {
+    std::string msg(label);
+    msg.append(" ERROR: not initialized");
+    Kokkos::Impl::throw_runtime_exception(msg);
   }
-
 }
 
 void* OpenMPTargetExec::m_scratch_ptr    = NULL;
@@ -140,4 +138,4 @@ void OpenMPTargetExec::resize_scratch(int64_t reduce_bytes,
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif //KOKKOS_ENABLE_OPENMPTARGET
+#endif  // KOKKOS_ENABLE_OPENMPTARGET

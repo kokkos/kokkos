@@ -196,13 +196,15 @@ void initialize_internal(const InitArguments& args) {
 #endif
 #endif
 
-#if defined( KOKKOS_ENABLE_OPENMPTARGET )
-  if( Impl::is_same< Kokkos::Experimental::OpenMPTarget , Kokkos::DefaultExecutionSpace >::value ) {
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+  if (Impl::is_same<Kokkos::Experimental::OpenMPTarget,
+                    Kokkos::DefaultExecutionSpace>::value) {
     Kokkos::Experimental::OpenMPTarget().impl_initialize();
-    //std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized" << std::endl ;
-  }
-  else {
-    //std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not initialized" << std::endl ;
+    // std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized"
+    // << std::endl ;
+  } else {
+    // std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not
+    // initialized" << std::endl ;
   }
 #endif
 
@@ -254,57 +256,59 @@ void finalize_internal(const bool all_spaces = false) {
     auto f = finalize_hooks.top();
     try {
     } catch (...) {
-	      std::cerr << "Kokkos::finalize: A finalize hook (set via "
-			   "Kokkos::push_finalize_hook) threw an exception that it did "
-			   "not catch."
-			   "  Per std::atexit rules, this results in std::terminate.  "
-			   "This is "
-			   "finalize hook number "
-			<< numSuccessfulCalls
-			<< " (1-based indexing) "
-			   "out of "
-			<< finalize_hooks.size()
-			<< " to call.  Remember that "
-			   "Kokkos::finalize calls finalize hooks in reverse order "
-			   "from how they "
-			   "were pushed."
-			<< std::endl;
-	      std::terminate();
-	    }
-	    finalize_hooks.pop();
-	    ++numSuccessfulCalls;
-	  }
+      std::cerr << "Kokkos::finalize: A finalize hook (set via "
+                   "Kokkos::push_finalize_hook) threw an exception that it did "
+                   "not catch."
+                   "  Per std::atexit rules, this results in std::terminate.  "
+                   "This is "
+                   "finalize hook number "
+                << numSuccessfulCalls
+                << " (1-based indexing) "
+                   "out of "
+                << finalize_hooks.size()
+                << " to call.  Remember that "
+                   "Kokkos::finalize calls finalize hooks in reverse order "
+                   "from how they "
+                   "were pushed."
+                << std::endl;
+      std::terminate();
+    }
+    finalize_hooks.pop();
+    ++numSuccessfulCalls;
+  }
 
-	#if defined(KOKKOS_ENABLE_PROFILING)
-	  Kokkos::Profiling::finalize();
-	#endif
+#if defined(KOKKOS_ENABLE_PROFILING)
+  Kokkos::Profiling::finalize();
+#endif
 
-	#if defined(KOKKOS_ENABLE_CUDA)
-	  if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
-	      all_spaces) {
-	#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-	    if (Kokkos::Cuda::is_initialized()) Kokkos::Cuda::finalize();
-	#else
-	    if (Kokkos::Cuda::impl_is_initialized()) Kokkos::Cuda::impl_finalize();
-	#endif
-	  }
-	#else
-	  (void)all_spaces;
-	#endif
+#if defined(KOKKOS_ENABLE_CUDA)
+  if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
+      all_spaces) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    if (Kokkos::Cuda::is_initialized()) Kokkos::Cuda::finalize();
+#else
+    if (Kokkos::Cuda::impl_is_initialized()) Kokkos::Cuda::impl_finalize();
+#endif
+  }
+#else
+  (void)all_spaces;
+#endif
 
-	#if defined(KOKKOS_ENABLE_ROCM)
-	  if (std::is_same<Kokkos::Experimental::ROCm,
-			   Kokkos::DefaultExecutionSpace>::value ||
-	      all_spaces) {
-	    if (Kokkos::Experimental::ROCm::is_initialized())
-	      Kokkos::Experimental::ROCm::finalize();
-	  }
-	#endif
+#if defined(KOKKOS_ENABLE_ROCM)
+  if (std::is_same<Kokkos::Experimental::ROCm,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      all_spaces) {
+    if (Kokkos::Experimental::ROCm::is_initialized())
+      Kokkos::Experimental::ROCm::finalize();
+  }
+#endif
 
-	#if defined( KOKKOS_ENABLE_OPENMPTARGET )
-	  if( std::is_same< Kokkos::Experimental::OpenMPTarget , Kokkos::DefaultExecutionSpace >::value || all_spaces ) {
-	    if(Kokkos::Experimental::OpenMPTarget().impl_is_initialized())
-	      Kokkos::Experimental::OpenMPTarget().impl_finalize();
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+  if (std::is_same<Kokkos::Experimental::OpenMPTarget,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      all_spaces) {
+    if (Kokkos::Experimental::OpenMPTarget().impl_is_initialized())
+      Kokkos::Experimental::OpenMPTarget().impl_finalize();
   }
 #endif
 

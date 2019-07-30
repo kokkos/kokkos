@@ -1,27 +1,26 @@
-#include<Kokkos_OpenMPTarget.hpp>
+#include <Kokkos_OpenMPTarget.hpp>
 
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
 class OpenMPTargetInternal {
-private:
-
+ private:
   OpenMPTargetInternal();
-  OpenMPTargetInternal( const OpenMPTargetInternal & ) = default;
-  OpenMPTargetInternal & operator = ( const OpenMPTargetInternal & ) = default;
+  OpenMPTargetInternal(const OpenMPTargetInternal&) = default;
+  OpenMPTargetInternal& operator=(const OpenMPTargetInternal&) = default;
 
-public: 
+ public:
   void fence();
 
   /** \brief  Return the maximum amount of concurrency.  */
   int concurrency();
 
   //! Print configuration information to the given output stream.
-  void print_configuration( std::ostream & , const bool detail = false );
+  void print_configuration(std::ostream&, const bool detail = false);
 
   static const char* name();
-  
+
   //! Free any resources being consumed by the device.
   void impl_finalize();
 
@@ -32,11 +31,10 @@ public:
   void impl_initialize();
 
   static OpenMPTargetInternal* impl_singleton();
-private:
+
+ private:
   bool m_is_initialized;
-
 };
-} // Namespace Impl
-} // Namespace Experimental
-} // Namespace Kokkos
-
+}  // Namespace Impl
+}  // Namespace Experimental
+}  // Namespace Kokkos

@@ -85,37 +85,36 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     for (int i = begin; i < end; i++) m_functor(i);
   }
 
-  template< class TagType >
-  inline
-  typename std::enable_if< std::is_same< TagType , void >::value >::type
-  execute_impl() const
-    {
-      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
-      const typename Policy::member_type begin = m_policy.begin();
-      const typename Policy::member_type end = m_policy.end();
-      FunctorType a_functor(m_functor);
-      #pragma omp target teams distribute parallel for map(to:a_functor)
-      for(int i=begin; i<end; i++)
-        a_functor(i);
-    }
+  template <class TagType>
+  inline typename std::enable_if<std::is_same<TagType, void>::value>::type
+  execute_impl() const {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    const typename Policy::member_type begin = m_policy.begin();
+    const typename Policy::member_type end   = m_policy.end();
+    FunctorType a_functor(m_functor);
+#pragma omp target teams distribute parallel for map(to : a_functor)
+    for (int i = begin; i < end; i++) a_functor(i);
+  }
 
+  template <class TagType>
+  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
+  execute_impl() const {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    const typename Policy::member_type begin = m_policy.begin();
+    const typename Policy::member_type end   = m_policy.end();
 
-  template< class TagType >
-  inline
-  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  execute_impl() const
-    {
-      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
-      const typename Policy::member_type begin = m_policy.begin();
-      const typename Policy::member_type end = m_policy.end();
-
-      FunctorType a_functor(m_functor);
-      #pragma omp target teams distribute parallel for num_threads(128) map(to:a_functor)
-      for(int i=begin; i<end; i++)
-        a_functor(TagType(),i);
-    }
+    FunctorType a_functor(m_functor);
+#pragma omp target teams distribute parallel for num_threads(128) \
+    map(to                                                        \
+        : a_functor)
+    for (int i = begin; i < end; i++) a_functor(TagType(), i);
+  }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
@@ -484,64 +483,78 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     execute_impl<WorkTag>();
   }
 
-private:
-  template< class TagType >
-  inline
-  typename std::enable_if< std::is_same< TagType , void >::value >::type
-  execute_impl() const
-    {
-      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
-      const int league_size = m_policy.league_size();
-      const int team_size = m_policy.team_size();
-      const int vector_length = m_policy.vector_length();
-      const int nteams = OpenMPTargetExec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetExec::MAX_ACTIVE_TEAMS:league_size;
+ private:
+  template <class TagType>
+  inline typename std::enable_if<std::is_same<TagType, void>::value>::type
+  execute_impl() const {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    const int league_size   = m_policy.league_size();
+    const int team_size     = m_policy.team_size();
+    const int vector_length = m_policy.vector_length();
+    const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
+                           ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
+                           : league_size;
 
-      OpenMPTargetExec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
-      void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,
+                                     0, 0);
+    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
-      FunctorType a_functor(m_functor);
-      #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) \
-          map(to:a_functor,scratch_ptr) 
-      for(int i=0 ; i<league_size*team_size*vector_length ; i++) {
-        typename Policy::member_type team(i/(team_size*vector_length),league_size,team_size,vector_length, scratch_ptr, 0,0);
-        m_functor(team);
-      }
+    FunctorType a_functor(m_functor);
+#pragma omp target teams distribute parallel for num_teams(league_size) \
+    num_threads(team_size* vector_length) schedule(static, 1)           \
+        map(to                                                          \
+            : a_functor, scratch_ptr)
+    for (int i = 0; i < league_size * team_size * vector_length; i++) {
+      typename Policy::member_type team(i / (team_size * vector_length),
+                                        league_size, team_size, vector_length,
+                                        scratch_ptr, 0, 0);
+      m_functor(team);
     }
   }
+}
 
-  template< class TagType >
-  inline
-  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  execute_impl() const
-    {
-      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget parallel_for");
-      const int league_size = m_policy.league_size();
-      const int team_size = m_policy.team_size();
-      const int vector_length = m_policy.vector_length();
-      const int nteams = OpenMPTargetExec::MAX_ACTIVE_TEAMS<league_size?OpenMPTargetExec::MAX_ACTIVE_TEAMS:league_size;
-      FunctorType a_functor(m_functor);
+template <class TagType>
+inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
+execute_impl() const {
+  OpenMPTargetExec::verify_is_process(
+      "Kokkos::Experimental::OpenMPTarget parallel_for");
+  OpenMPTargetExec::verify_initialized(
+      "Kokkos::Experimental::OpenMPTarget parallel_for");
+  const int league_size   = m_policy.league_size();
+  const int team_size     = m_policy.team_size();
+  const int vector_length = m_policy.vector_length();
+  const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
+                         ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
+                         : league_size;
+  FunctorType a_functor(m_functor);
 
-      OpenMPTargetExec::resize_scratch(0,Policy::member_type::TEAM_REDUCE_SIZE,0,0);
-      void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
-      #pragma omp target teams distribute parallel for num_teams(league_size) num_threads(team_size*vector_length) schedule(static,1) \
-         map(to:a_functor,scratch_ptr)
-      for(int i=0 ; i<league_size ; i++) {
-        typename Policy::member_type team(i/(team_size*vector_length),league_size,team_size,vector_length, scratch_ptr, 0,0);
-        m_functor(TagType(), team);
-      }
-    }
+  OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE, 0,
+                                   0);
+  void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+#pragma omp target teams distribute parallel for num_teams(league_size) \
+    num_threads(team_size* vector_length) schedule(static, 1)           \
+        map(to                                                          \
+            : a_functor, scratch_ptr)
+  for (int i = 0; i < league_size; i++) {
+    typename Policy::member_type team(i / (team_size * vector_length),
+                                      league_size, team_size, vector_length,
+                                      scratch_ptr, 0, 0);
+    m_functor(TagType(), team);
   }
+}
+}  // namespace Impl
 
- public:
-  inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
-                     FunctorTeamShmemSize<FunctorType>::value(
-                         arg_functor, arg_policy.team_size())) {}
-};
+public:
+inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
+    : m_functor(arg_functor),
+      m_policy(arg_policy),
+      m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
+                   FunctorTeamShmemSize<FunctorType>::value(
+                       arg_functor, arg_policy.team_size())) {}
+};  // namespace Kokkos
 
 template <class FunctorType, class ReducerType, class PointerType,
           class ValueType, class... PolicyArgs>
