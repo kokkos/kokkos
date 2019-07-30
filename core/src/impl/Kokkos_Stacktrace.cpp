@@ -1,4 +1,4 @@
-#include "Kokkos_stacktrace.hpp"
+#include "Kokkos_Stacktrace.hpp"
 
 // backtrace() function for retrieving the stacktrace
 #include <execinfo.h>
@@ -164,7 +164,7 @@ find_main_column (const std::vector<std::string>& traceback)
                              }
                            });
   }
-  return {found_main, main_col, max_col_lens};
+  return std::make_tuple(found_main, main_col, max_col_lens);
 }
 
 void
