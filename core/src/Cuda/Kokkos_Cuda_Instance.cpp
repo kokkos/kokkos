@@ -295,6 +295,9 @@ CudaInternal & CudaInternal::singleton()
   static CudaInternal self ;
   return self ;
 }
+void CudaInternal::fence() const {
+  cudaStreamSynchronize(m_stream);
+}
 
 void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
 {
@@ -383,6 +386,15 @@ void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
 
     m_maxBlock = cudaProp.maxGridSize[0] ;
 
+    m_shmemPerSM = cudaProp.sharedMemPerMultiprocessor ;
+    m_maxShmemPerBlock = cudaProp.sharedMemPerBlock ;
+    m_regsPerSM = cudaProp.regsPerMultiprocessor ;
+    m_maxBlocksPerSM = m_cudaArch < 500 ? 16 : (
+                       m_cudaArch < 750 ? 32 : (
+                       m_cudaArch == 750 ? 16 : 32));
+    m_maxThreadsPerSM = cudaProp.maxThreadsPerMultiProcessor ;
+    m_maxThreadsPerBlock = cudaProp.maxThreadsPerBlock ;
+
     //----------------------------------
 
     m_scratchUnifiedSupported = cudaProp.unifiedAddressing ;
@@ -411,10 +423,9 @@ void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
     // Concurrent bitset for obtaining unique tokens from within
     // an executing kernel.
     {
-      const unsigned max_threads_per_sm = 2048 ; // up to capability 7.0
 
       m_maxConcurrency =
-        max_threads_per_sm * cudaProp.multiProcessorCount ;
+        m_maxThreadsPerSM * cudaProp.multiProcessorCount ;
 
       const int32_t buffer_bound =
          Kokkos::Impl::concurrent_bitset::buffer_bound( m_maxConcurrency );
@@ -463,7 +474,7 @@ void CudaInternal::initialize( int cuda_device_id , cudaStream_t stream )
     if( Kokkos::show_warnings() && !cuda_launch_blocking() ) {
       std::cerr << "Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default" << std::endl;
       std::cerr << "                                  without setting CUDA_LAUNCH_BLOCKING=1." << std::endl;
-      std::cerr << "                                  The code must call Cuda::fence() after each kernel" << std::endl;
+      std::cerr << "                                  The code must call Cuda().fence() after each kernel" << std::endl;
       std::cerr << "                                  or will likely crash when accessing data on the host." << std::endl;
     }
 
@@ -778,10 +789,20 @@ bool Cuda::sleep() { return false ; }
 bool Cuda::wake() { return true ; }
 #endif
 
-void Cuda::fence()
+void Cuda::impl_static_fence()
 {
   Kokkos::Impl::cuda_device_synchronize();
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+void Cuda::fence() {
+  impl_static_fence();
+}
+#else
+void Cuda::fence() const {
+  m_space_instance->fence();
+}
+#endif
 
 const char* Cuda::name() { return "Cuda"; }
 

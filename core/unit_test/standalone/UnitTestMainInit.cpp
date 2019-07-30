@@ -69,7 +69,7 @@
 #include <serial/TestSerial_Category.hpp>
 #endif
 #endif 
-#include <TestRange.hpp>
+#include <TestReduceDeviceView.hpp>
 
 int main( int argc, char *argv[] ) {
   Kokkos::initialize(argc,argv);

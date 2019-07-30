@@ -97,6 +97,7 @@ public:
   }
 
   ~TaskQueueCommonMixin() {
+    KOKKOS_EXPECTS((Kokkos::memory_fence(), m_ready_count < 1));
     KOKKOS_EXPECTS(m_ready_count == 0);
   }
 
@@ -184,6 +185,7 @@ protected:
   void _decrement_ready_count() {
     // TODO @tasking @memory_order DSH memory order
     Kokkos::atomic_decrement(&this->m_ready_count);
+    Kokkos::memory_fence();
   }
 
 public:
@@ -192,6 +194,12 @@ public:
   bool is_done() const noexcept {
     // TODO @tasking @memory_order DSH Memory order, instead of volatile
     return (*(volatile int*)(&m_ready_count)) == 0;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  int32_t ready_count() const noexcept {
+    // TODO @tasking @memory_order DSH Memory order, instead of volatile
+    return (*(volatile int*)(&m_ready_count));
   }
 
   template <class TaskQueueTraits, class TeamSchedulerInfo>
@@ -253,6 +261,14 @@ public:
     bool task_is_ready = true;
     bool scheduling_info_updated = false;
 
+    // do this before enqueueing and potentially losing exclusive access to task
+    bool task_is_respawning = task.get_respawn_flag();
+
+    // clear the respawn flag, since we're handling the respawn (if any) here.
+    // We must make sure this is written through the cache, since the next
+    // thread to access it might be a Cuda thread from a different thread block.
+    ((RunnableTaskBase<TaskQueueTraits> volatile&)task).set_respawn_flag(false);
+
     if(task.has_predecessor()) {
       // save the predecessor into a local variable, then clear it from the
       // task before adding it to the wait queue of the predecessor
@@ -262,13 +278,7 @@ public:
       auto& predecessor = task.get_predecessor();
       // This needs a load/store fence here, technically
       // making this a release store would also do this
-      task.clear_predecessor();
-
-      // do this before enqueueing and potentially losing exclusive access to task
-      bool task_is_respawning = task.get_respawn_flag();
-
-      // clear the respawn flag, since we're handling the respawn (if any) here
-      task.set_respawn_flag(false);
+      ((RunnableTaskBase<TaskQueueTraits> volatile&)task).clear_predecessor();
 
       // TODO @tasking @memory_order DSH remove this fence in favor of memory orders
       Kokkos::memory_fence(); // for now

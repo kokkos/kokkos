@@ -40,9 +40,9 @@ export LAPACK_LIBRARIES="${LAPACK_ROOT}/lib/liblapack.a;gfortran;gomp"
 export JENKINS_DO_TESTS=ON
 export JENKINS_DO_EXAMPLES=ON
 
-export QUEUE=rhel7F
+export QUEUE=rhel7T
 
-module load python
+module load python/2.7.12
 
 export KOKKOS_PATH=${PWD}/kokkos
 

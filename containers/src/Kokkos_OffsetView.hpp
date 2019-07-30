@@ -1080,7 +1080,7 @@ namespace Kokkos {
             // Fence using the trait's executon space (which will be Kokkos::Cuda)
             // to avoid incomplete type errors from usng Kokkos::Cuda directly.
             if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
-               traits::device_type::memory_space::execution_space::fence();
+               typename traits::device_type::memory_space::execution_space().fence();
             }
 #endif
             //------------------------------------------------------------
@@ -1091,7 +1091,7 @@ namespace Kokkos {
             //------------------------------------------------------------
 #if defined( KOKKOS_ENABLE_CUDA )
             if ( std::is_same< Kokkos::CudaUVMSpace , typename traits::device_type::memory_space >::value ) {
-               traits::device_type::memory_space::execution_space::fence();
+               typename traits::device_type::memory_space::execution_space().fence();
             }
 #endif
             //------------------------------------------------------------

@@ -177,6 +177,20 @@
   #if ( 10000 > CUDA_VERSION )
     #define KOKKOS_ENABLE_PRE_CUDA_10_DEPRECATION_API
   #endif
+
+  #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700)
+    // PTX atomics with memory order semantics are only available on volta and later
+    #if !defined(KOKKOS_DISABLE_CUDA_ASM)
+      #if !defined(KOKKOS_ENABLE_CUDA_ASM)
+        #define KOKKOS_ENABLE_CUDA_ASM
+        #if !defined(KOKKOS_DISABLE_CUDA_ASM_ATOMICS)
+          #define KOKKOS_ENABLE_CUDA_ASM_ATOMICS
+        #endif
+      #endif
+    #endif
+  #endif
+
+
 #endif // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
 
 
@@ -241,7 +255,7 @@
   #endif
 #endif
 
-#if defined( __PGIC__ ) 
+#if defined( __PGIC__ )
   #define KOKKOS_COMPILER_PGI __PGIC__*100+__PGIC_MINOR__*10+__PGIC_PATCHLEVEL__
 
   #if ( 1540 > KOKKOS_COMPILER_PGI )
@@ -429,7 +443,7 @@
 // Define function marking macros if compiler specific macros are undefined:
 
 #if !defined( KOKKOS_FORCEINLINE_FUNCTION )
-  #define KOKKOS_FORCEINLINE_FUNCTION  inline
+  define KOKKOS_FORCEINLINE_FUNCTION  inline
 #endif
 
 #if !defined( KOKKOS_INLINE_FUNCTION )
@@ -561,10 +575,25 @@
 
 #if (defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20))
   #define KOKKOS_CONSTEXPR_14 constexpr
+  #define KOKKOS_DEPRECATED [[deprecated]]
+  #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
 #else
   #define KOKKOS_CONSTEXPR_14
+  #if defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG)
+    #define KOKKOS_DEPRECATED
+    #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE __attribute__ ((deprecated))
+  #else
+    #define KOKKOS_DEPRECATED
+    #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
+  #endif
 #endif
 
+
+// DJS 05/28/2019: Bugfix: Issue 2155
+// Use KOKKOS_ENABLE_CUDA_LDG_INTRINSIC to avoid memory leak in RandomAccess View
+#if defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_CUDA_LDG_INTRINSIC)
+ #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
+#endif
 
 #endif // #ifndef KOKKOS_MACROS_HPP
 

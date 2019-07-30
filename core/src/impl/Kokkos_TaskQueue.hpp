@@ -112,7 +112,7 @@ protected:
   memory_pool               m_memory ;
   task_root_type * volatile m_ready[ NumQueue ][ 2 ];
   //long                      m_accum_alloc ; // Accumulated number of allocations
-  int                       m_count_alloc ; // Current number of allocations
+  int                       m_count_alloc = 0 ; // Current number of allocations
   int                       m_max_alloc ;   // Maximum number of allocations
   int                       m_ready_count ; // Number of ready or executing
 
@@ -169,6 +169,10 @@ protected:
 
 
 public:
+
+  KOKKOS_INLINE_FUNCTION
+  int allocation_count() const noexcept { return m_count_alloc; }
+
 
   KOKKOS_INLINE_FUNCTION
   void initialize_team_queues(int pool_size) const noexcept { }

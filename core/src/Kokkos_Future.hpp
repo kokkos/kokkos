@@ -56,6 +56,7 @@
 #include <impl/Kokkos_TaskQueue.hpp>
 #include <impl/Kokkos_TaskResult.hpp>
 #include <impl/Kokkos_TaskBase.hpp>
+#include <Kokkos_Atomic.hpp>
 
 #include <Kokkos_Concepts.hpp> // is_space
 
@@ -126,8 +127,10 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   BasicFuture(BasicFuture const& rhs)
-    : m_task(rhs.m_task)
+  //  : m_task(rhs.m_task)
+    : m_task(nullptr)
   {
+    *static_cast<task_base_type* volatile*>(&m_task) = rhs.m_task;
     if(m_task) m_task->increment_reference_count();
   }
 
@@ -136,7 +139,8 @@ public:
   {
     if(m_task != rhs.m_task) {
       clear();
-      m_task = std::move(rhs.m_task);
+      //m_task = std::move(rhs.m_task);
+      *static_cast<task_base_type* volatile*>(&m_task) = rhs.m_task;
       // rhs.m_task reference count is unchanged, since this is a move
     }
     else {
@@ -152,9 +156,10 @@ public:
   {
     if(m_task != rhs.m_task) {
       clear();
-      m_task = rhs.m_task;
-      if(m_task != nullptr) { m_task->increment_reference_count(); }
+      //m_task = rhs.m_task;
+      *static_cast<task_base_type* volatile*>(&m_task) = rhs.m_task;
     }
+    if(m_task != nullptr) { m_task->increment_reference_count(); }
     return *this;
   }
 
@@ -184,7 +189,8 @@ public:
   template <class T, class S>
   KOKKOS_INLINE_FUNCTION
   BasicFuture(BasicFuture<T, S> const& rhs) // NOLINT(google-explicit-constructor)
-    : m_task(rhs.m_task)
+    //: m_task(rhs.m_task)
+    : m_task(nullptr)
   {
     static_assert(
       std::is_same<scheduler_type, void>::value ||
@@ -198,6 +204,7 @@ public:
       "Copied Futures must have the same value_type"
     );
 
+    *static_cast<task_base_type* volatile*>(&m_task) = rhs.m_task;
     if(m_task) m_task->increment_reference_count();
   }
 
@@ -220,7 +227,8 @@ public:
 
     if(m_task != rhs.m_task) {
       clear();
-      m_task = rhs.m_task;
+      //m_task = rhs.m_task;
+      *static_cast<task_base_type* volatile*>(&m_task) = rhs.m_task;
       if(m_task != nullptr) { m_task->increment_reference_count(); }
     }
     return *this;
@@ -244,7 +252,8 @@ public:
 
     if(m_task != rhs.m_task) {
       clear();
-      m_task = std::move(rhs.m_task);
+      //m_task = std::move(rhs.m_task);
+      *static_cast<task_base_type* volatile*>(&m_task) = rhs.m_task;
       // rhs.m_task reference count is unchanged, since this is a move
     }
     else {
@@ -254,8 +263,6 @@ public:
     rhs.m_task = nullptr;
     return *this ;
   }
-
-  //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
   ~BasicFuture() noexcept { clear(); }
@@ -271,6 +278,8 @@ public:
           ->deallocate(std::move(*m_task));
       }
     }
+    //m_task = nullptr;
+    *static_cast<task_base_type* volatile*>(&m_task) = nullptr;
   }
 
   KOKKOS_INLINE_FUNCTION

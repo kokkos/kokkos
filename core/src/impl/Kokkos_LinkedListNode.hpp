@@ -89,12 +89,28 @@ private:
   }
 
   KOKKOS_INLINE_FUNCTION
+  void mark_as_not_enqueued() volatile noexcept {
+    // TODO @tasking @memory_order DSH make this an atomic store with memory order
+    m_next = (pointer_type)NotEnqueuedValue;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   pointer_type& _next_ptr() noexcept {
     return m_next;
   }
 
   KOKKOS_INLINE_FUNCTION
+  pointer_type volatile& _next_ptr() volatile noexcept {
+    return m_next;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   pointer_type const& _next_ptr() const noexcept {
+    return m_next;
+  }
+  
+  KOKKOS_INLINE_FUNCTION
+  pointer_type const volatile& _next_ptr() const volatile noexcept {
     return m_next;
   }
 
@@ -105,6 +121,13 @@ public:
   // KOKKOS_CONSTEXPR_14
   KOKKOS_INLINE_FUNCTION
   bool is_enqueued() const noexcept {
+    // TODO @tasking @memory_order DSH make this an atomic load with memory order
+    return m_next != reinterpret_cast<pointer_type>(NotEnqueuedValue);
+  }
+
+  // KOKKOS_CONSTEXPR_14
+  KOKKOS_INLINE_FUNCTION
+  bool is_enqueued() const volatile noexcept {
     // TODO @tasking @memory_order DSH make this an atomic load with memory order
     return m_next != reinterpret_cast<pointer_type>(NotEnqueuedValue);
   }
@@ -123,9 +146,23 @@ struct LinkedListNodeAccess
 
   template <class Node>
   KOKKOS_INLINE_FUNCTION
+  static void mark_as_not_enqueued(Node volatile& node) noexcept {
+    node.mark_as_not_enqueued();
+  }
+
+  template <class Node>
+  KOKKOS_INLINE_FUNCTION
   static
   typename Node::pointer_type&
   next_ptr(Node& node) noexcept {
+    return node._next_ptr();
+  }
+
+  template <class Node>
+  KOKKOS_INLINE_FUNCTION
+  static
+  typename Node::pointer_type&
+  next_ptr(Node volatile& node) noexcept {
     return node._next_ptr();
   }
 

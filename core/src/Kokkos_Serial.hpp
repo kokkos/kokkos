@@ -118,10 +118,16 @@ public:
   /// return asynchronously, before the functor completes.  This
   /// method does not return until all dispatched functors on this
   /// device have completed.
+  static void impl_static_fence() {}
+
+  #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   static void fence() {}
+  #else
+  void fence() const {}
+  #endif
 
   /** \brief  Return the maximum amount of concurrency.  */
-  static int concurrency() {return 1;};
+  static int concurrency() {return 1;}
 
   //! Print configuration information to the given output stream.
   static void print_configuration( std::ostream & , const bool /* detail */ = false ) {}

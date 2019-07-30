@@ -139,8 +139,8 @@ public:
     predecessor_future_type arg_predecessor,
     Kokkos::TaskPriority arg_priority
   ) : m_scheduler(std::move(arg_scheduler)),
-      m_predecessor(std::move(arg_predecessor)),
-      m_priority(arg_priority)
+      m_priority(arg_priority),
+      m_predecessor(std::move(arg_predecessor))
   { }
 
   TaskPolicyWithScheduler() = delete;

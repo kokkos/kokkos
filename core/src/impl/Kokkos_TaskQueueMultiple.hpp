@@ -117,14 +117,14 @@ public:
     : base_t(arg_memory_pool),
       m_league_rank(0)
   {
-    void* other_queues_buffer = this->allocate(sizeof(queue_collection_t));
+    void* other_queues_buffer = typename base_t::memory_space{}.allocate(sizeof(queue_collection_t));
     m_other_queues = new(other_queues_buffer) queue_collection_t(this);
   }
 
   ~TaskQueueMultiple() {
     if(m_league_rank == 0 && m_other_queues != nullptr) {
       m_other_queues->~queue_collection_t();
-      this->deallocate(m_other_queues, sizeof(queue_collection_t));
+      typename base_t::memory_space{}.deallocate(m_other_queues, sizeof(queue_collection_t));
     }
     // rest of destruction is handled in the base class
   }

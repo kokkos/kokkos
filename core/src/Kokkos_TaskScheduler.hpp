@@ -134,11 +134,6 @@ private:
     return { m_track, &m_queue->get_team_queue(team_rank) };
   }
 
-  KOKKOS_INLINE_FUNCTION
-  constexpr queue_type& queue() const noexcept {
-    return *m_queue;
-  }
-
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
@@ -284,6 +279,12 @@ public:
     {}
 
   //----------------------------------------
+
+  KOKKOS_INLINE_FUNCTION
+  queue_type& queue() const noexcept {
+    KOKKOS_EXPECTS(m_queue != nullptr);
+    return *m_queue;
+  }
 
   KOKKOS_INLINE_FUNCTION
   memory_pool * memory() const noexcept

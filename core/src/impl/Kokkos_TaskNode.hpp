@@ -211,7 +211,8 @@ public:
       m_wait_queue(),
       m_ready_queue_base(queue_base),
       m_task_type(task_type),
-      m_priority(static_cast<priority_type>(priority))
+      m_priority(static_cast<priority_type>(priority)),
+      m_is_respawning(false)
   { }
 
   TaskNode() = delete;
@@ -225,6 +226,9 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   bool is_runnable() const noexcept { return m_task_type != TaskType::Aggregate; }
+
+  KOKKOS_INLINE_FUNCTION
+  bool is_runnable() const volatile noexcept { return m_task_type != TaskType::Aggregate; }
 
   KOKKOS_INLINE_FUNCTION
   bool is_single_runnable() const noexcept { return m_task_type == TaskType::TaskSingle; }
@@ -247,6 +251,20 @@ public:
   as_runnable_task() const & {
     KOKKOS_EXPECTS(this->is_runnable());
     return static_cast<RunnableTaskBase<TaskQueueTraits> const&>(*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  RunnableTaskBase<TaskQueueTraits> volatile&
+  as_runnable_task() volatile & {
+    KOKKOS_EXPECTS(this->is_runnable());
+    return static_cast<RunnableTaskBase<TaskQueueTraits> volatile&>(*this);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  RunnableTaskBase<TaskQueueTraits> const volatile&
+  as_runnable_task() const volatile & {
+    KOKKOS_EXPECTS(this->is_runnable());
+    return static_cast<RunnableTaskBase<TaskQueueTraits> const volatile&>(*this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -311,6 +329,12 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
+  void set_priority(TaskPriority priority) volatile noexcept {
+    KOKKOS_EXPECTS(!this->is_enqueued());
+    m_priority = (priority_type)priority;
+  }
+
+  KOKKOS_INLINE_FUNCTION
   TaskPriority get_priority() const noexcept {
     return (TaskPriority)m_priority;
   }
@@ -319,7 +343,14 @@ public:
   bool get_respawn_flag() const { return m_is_respawning; }
 
   KOKKOS_INLINE_FUNCTION
-  void set_respawn_flag(bool value = true) { m_is_respawning = value; }
+  void set_respawn_flag(bool value = true) {
+    m_is_respawning = value;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void set_respawn_flag(bool value = true) volatile {
+    m_is_respawning = value;
+  }
 
 };
 
@@ -460,6 +491,9 @@ public:
   KOKKOS_INLINE_FUNCTION
   void clear_predecessor() { m_predecessor = nullptr; }
 
+  KOKKOS_INLINE_FUNCTION
+  void clear_predecessor() volatile { m_predecessor = nullptr; }
+
   template <class SchedulingInfo>
   KOKKOS_INLINE_FUNCTION
   SchedulingInfo&
@@ -490,7 +524,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   void set_predecessor(task_base_type& predecessor)
   {
-    KOKKOS_EXPECTS(m_predecessor == nullptr || &predecessor == m_predecessor);
+    KOKKOS_EXPECTS(m_predecessor == nullptr);
     // Increment the reference count so that predecessor doesn't go away
     // before this task is enqueued.
     // (should be memory order acquire)
@@ -500,6 +534,15 @@ public:
 
   KOKKOS_INLINE_FUNCTION
   void acquire_predecessor_from(runnable_task_type& other)
+  {
+    KOKKOS_EXPECTS(m_predecessor == nullptr || other.m_predecessor == m_predecessor);
+    // since we're transfering, no need to modify the reference count
+    m_predecessor = other.m_predecessor;
+    other.m_predecessor = nullptr;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void acquire_predecessor_from(runnable_task_type& other) volatile
   {
     KOKKOS_EXPECTS(m_predecessor == nullptr || other.m_predecessor == m_predecessor);
     // since we're transfering, no need to modify the reference count
@@ -683,6 +726,9 @@ public:
 #else
       0 == member->team_rank();
 #endif
+
+    // Ensure that the respawn flag is set to zero
+    self->set_respawn_flag(false);
 
     //task->apply_functor(member, TaskResult<result_type>::ptr(task));
     task->apply_functor(member, task->value_pointer());

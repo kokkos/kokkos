@@ -68,14 +68,96 @@ namespace Impl {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+template <class NodeType, size_t CircularBufferSize, class SizeType = size_t>
+struct fixed_size_circular_buffer {
+public:
+
+  using node_type = NodeType;
+  using size_type = SizeType;
+
+private:
+
+  node_type* m_buffer[CircularBufferSize] = { nullptr };
+
+public:
+
+  fixed_size_circular_buffer() = default;
+  fixed_size_circular_buffer(fixed_size_circular_buffer const&) = delete;
+  fixed_size_circular_buffer(fixed_size_circular_buffer&&) = default;
+  fixed_size_circular_buffer& operator=(fixed_size_circular_buffer const&) = delete;
+  fixed_size_circular_buffer& operator=(fixed_size_circular_buffer&&) = default;
+  ~fixed_size_circular_buffer() = default;
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  static constexpr size_type size() noexcept {
+    return size_type(CircularBufferSize);
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  node_type* operator[](size_type idx) const noexcept {
+    return m_buffer[idx % size()];
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  node_type*& operator[](size_type idx) noexcept {
+    return m_buffer[idx % size()];
+  }
+};
+
+template <class NodeType, class SizeType = size_t>
+struct non_owning_variable_size_circular_buffer {
+public:
+
+  using node_type = NodeType;
+  using size_type = SizeType;
+
+private:
+
+  ObservingRawPtr<node_type*> m_buffer = nullptr;
+  size_type m_size = 0;
+
+public:
+
+  KOKKOS_INLINE_FUNCTION
+  non_owning_variable_size_circular_buffer(
+    ObservingRawPtr<node_type*> buffer,
+    size_type arg_size
+  ) noexcept
+    : m_buffer(buffer),
+      m_size(arg_size)
+  { }
+
+  non_owning_variable_size_circular_buffer() = default;
+  non_owning_variable_size_circular_buffer(non_owning_variable_size_circular_buffer const&) = delete;
+  non_owning_variable_size_circular_buffer(non_owning_variable_size_circular_buffer&&) = default;
+  non_owning_variable_size_circular_buffer& operator=(non_owning_variable_size_circular_buffer const&) = delete;
+  non_owning_variable_size_circular_buffer& operator=(non_owning_variable_size_circular_buffer&&) = default;
+  ~non_owning_variable_size_circular_buffer() = default;
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  constexpr size_type size() const noexcept {
+    return m_size;
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  node_type* operator[](size_type idx) const noexcept {
+    return m_buffer[idx % size()];
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  node_type*& operator[](size_type idx) noexcept {
+    return m_buffer[idx % size()];
+  }
+};
+
 /** Based on "Correct and Efficient Work-Stealing for Weak Memory Models,"
  * PPoPP '13, https://www.di.ens.fr/~zappa/readings/ppopp13.pdf
  *
  */
 template <
   class T,
-  class SizeType = int32_t,
-  size_t CircularBufferSize = 64
+  class CircularBufferT,
+  class SizeType = int32_t
 >
 struct ChaseLevDeque {
 public:
@@ -89,29 +171,25 @@ private:
 
   // TODO @tasking @new_feature DSH variable size circular buffer?
 
-
-  struct fixed_size_circular_buffer {
-
-    node_type* buffer[CircularBufferSize] = { nullptr };
-    static constexpr auto size = size_type(CircularBufferSize);
-
-    KOKKOS_INLINE_FUNCTION
-    fixed_size_circular_buffer grow() {
-      Kokkos::abort("Circular buffer is fixed size only for now; can't grow");
-      return {};
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    fixed_size_circular_buffer* operator->() { return this; }
-
-  };
-
-  fixed_size_circular_buffer m_array;
+  CircularBufferT m_array;
   size_type m_top = 0;
   size_type m_bottom = 0;
 
 
 public:
+
+  template <
+    class _ignore=void,
+    class=typename std::enable_if<
+      std::is_default_constructible<CircularBufferT>::value
+    >::type
+  >
+  ChaseLevDeque() : m_array() { }
+
+  explicit
+  ChaseLevDeque(CircularBufferT buffer)
+    : m_array(std::move(buffer))
+  { }
 
   KOKKOS_INLINE_FUNCTION
   bool empty() const {
@@ -122,24 +200,21 @@ public:
   KOKKOS_INLINE_FUNCTION
   OptionalRef<T>
   pop() {
-    auto b = m_bottom - 1; // TODO @tasking @memory_order DSH atomic load as relaxed
-    auto& a = m_array; // TODO @tasking @memory_order DSH atomic load relaxed
-    m_bottom = b; // TODO @tasking @memory_order DSH atomic store relaxed
+    auto b = m_bottom - 1; // atomic load relaxed
+    auto& a = m_array; // atomic load relaxed
+    m_bottom = b; // atomic store relaxed
     Kokkos::memory_fence(); // memory order seq_cst
-    auto t = m_top; // TODO @tasking @memory_order DSH atomic load relaxed
+    auto t = m_top; // atomic load relaxed
     OptionalRef<T> return_value;
     if(t <= b) {
       /* non-empty queue */
-      return_value = *static_cast<T*>(a->buffer[b % a->size]); // TODO @tasking @memory_order DSH relaxed load
+      return_value = *static_cast<T*>(a[b]); // relaxed load
       if(t == b) {
         /* single last element in the queue. */
-        // TODO @tasking @memory_order DSH memory orders instead of fence
-        Kokkos::memory_fence();
-        if(not Kokkos::atomic_compare_exchange_strong(&m_top, t, t+1)) { // memory orders: seq_cst, relaxed
+        if(not Impl::atomic_compare_exchange_strong(&m_top, t, t+1, memory_order_seq_cst, memory_order_relaxed)) {
           /* failed race, someone else stole it */
           return_value = nullptr;
         }
-        Kokkos::memory_fence();
         m_bottom = b + 1; // memory order relaxed
       }
     } else {
@@ -160,18 +235,16 @@ public:
   bool push(node_type& node)
   {
     auto b = m_bottom; // memory order relaxed
-    auto t = m_top; // TODO @tasking @memory_order DSH: memory order acquire!
-    Kokkos::memory_fence(); // TODO @tasking @memory_order DSH: memory order instead of fence here
+    auto t = Impl::atomic_load(&m_top, memory_order_acquire);
     auto& a = m_array;
-    if(b - t > a->size - 1) {
+    if(b - t > a.size() - 1) {
       /* queue is full, resize */
       //m_array = a->grow();
       //a = m_array;
       return false;
     }
-    a->buffer[b % a->size] = &node; // relaxed
-    Kokkos::memory_fence(); // TODO @tasking @memory_order DSH: memory order release
-    m_bottom = b + 1; // relaxed store
+    a[b] = &node; // relaxed
+    Impl::atomic_store(&m_bottom, b + 1, memory_order_release);
     return true;
   }
 
@@ -180,16 +253,14 @@ public:
   steal() {
     auto t = m_top; // TODO @tasking @memory_order DSH: atomic load acquire
     Kokkos::memory_fence(); // seq_cst fence, so why does the above need to be acquire?
-    auto b = m_bottom; // TODO @tasking @memory_order DSH: atomic load acquire
-    Kokkos::memory_fence(); // TODO @tasking @memory_order DSH memory order instead of fence here
+    auto b = Impl::atomic_load(&m_bottom, memory_order_acquire);
     OptionalRef<T> return_value;
     if(t < b) {
       /* Non-empty queue */
       auto& a = m_array; // TODO @tasking @memory_order DSH: technically consume ordered, but acquire should be fine
       Kokkos::load_fence(); // TODO @tasking @memory_order DSH memory order instead of fence
-      return_value = *static_cast<T*>(a->buffer[t % a->size]); // relaxed
-      Kokkos::memory_fence(); // TODO @tasking @memory_order DSH memory order instead of fence
-      if(not Kokkos::atomic_compare_exchange_strong(&m_top, t, t+1)) { // TODO @tasking @memory_order DSH memory orders: seq_cst, relaxed
+      return_value = *static_cast<T*>(a[t]); // relaxed
+      if(not Impl::atomic_compare_exchange_strong(&m_top, t, t+1, memory_order_seq_cst, memory_order_relaxed)) {
         return_value = nullptr;
       }
     }
@@ -198,6 +269,16 @@ public:
 
 };
 
+/*
+      // The atomicity of this load was more important in the paper's version
+      // because that version had a circular buffer that could grow.  We're
+      // essentially using the memory order in this version as a fence, which
+      // may be unnecessary
+      auto buffer_ptr = (node_type***)&m_array.buffer;
+      auto a = Impl::atomic_load(buffer_ptr, memory_order_acquire); // technically consume ordered, but acquire should be fine
+      return_value = *static_cast<T*>(a[t % m_array->size]); // relaxed; we'd have to replace the m_array->size if we ever allow growth
+*/
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -205,7 +286,11 @@ template <size_t CircularBufferSize>
 struct TaskQueueTraitsChaseLev {
 
   template <class Task>
-  using ready_queue_type = ChaseLevDeque<Task, int32_t, CircularBufferSize>;
+  using ready_queue_type = ChaseLevDeque<
+    Task,
+    fixed_size_circular_buffer<SimpleSinglyLinkedListNode<>, CircularBufferSize, int32_t>,
+    int32_t
+  >;
 
   template <class Task>
   using waiting_queue_type = SingleConsumeOperationLIFO<Task>;

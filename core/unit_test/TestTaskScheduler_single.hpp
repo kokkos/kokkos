@@ -41,38 +41,52 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_STATICASSERT_HPP
-#define KOKKOS_STATICASSERT_HPP
+namespace Test {
 
-namespace Kokkos {
-namespace Impl {
+TEST_F( TEST_CATEGORY, KOKKOS_TEST_WITH_SUFFIX(task_fib, TEST_SCHEDULER_SUFFIX) )
+{
+  const int N = 27 ;
+  for ( int i = 0; i < N; ++i ) {
+    TestTaskScheduler::TestFib< TEST_SCHEDULER >::run( i , ( i + 1 ) * ( i + 1 ) * 64000 );
+  }
+}
 
-template < bool , class T = void >
-struct StaticAssert ;
+TEST_F( TEST_CATEGORY, KOKKOS_TEST_WITH_SUFFIX(task_depend, TEST_SCHEDULER_SUFFIX) )
+{
+  for ( int i = 0; i < 25; ++i ) {
+    TestTaskScheduler::TestTaskDependence< TEST_SCHEDULER >::run( i );
+  }
+}
 
-template< class T >
-struct StaticAssert< true , T > {
-  typedef T type ;
-  static const bool value = true ;
-};
+TEST_F( TEST_CATEGORY, KOKKOS_TEST_WITH_SUFFIX(task_team, TEST_SCHEDULER_SUFFIX) )
+{
+  TestTaskScheduler::TestTaskTeam< TEST_SCHEDULER >::run( 1000 );
+  //TestTaskScheduler::TestTaskTeamValue< TEST_EXECSPACE >::run( 1000 ); // Put back after testing.
+}
 
-template < class A , class B >
-struct StaticAssertSame ;
+TEST_F( TEST_CATEGORY, KOKKOS_TEST_WITH_SUFFIX(task_with_mempool, TEST_SCHEDULER_SUFFIX) )
+{
+  TestTaskScheduler::TestTaskSpawnWithPool<TEST_SCHEDULER>::run();
+}
 
-template < class A >
-struct StaticAssertSame<A,A> { typedef A type ; };
+TEST_F( TEST_CATEGORY, KOKKOS_TEST_WITH_SUFFIX(task_multiple_depend, TEST_SCHEDULER_SUFFIX) )
+{
+  for ( int i = 2; i < 6; ++i ) {
+    TestTaskScheduler::TestMultipleDependence<TEST_SCHEDULER>::run( i );
+  }
+}
 
-template < class A , class B >
-struct StaticAssertAssignable ;
+TEST_F( TEST_CATEGORY, KOKKOS_TEST_WITH_SUFFIX(task_scheduler_ctors, TEST_SCHEDULER_SUFFIX) )
+{
+  TEST_SCHEDULER sched;
+  TEST_SCHEDULER sched2 = sched;
+  sched = sched2;
+}
 
-template < class A >
-struct StaticAssertAssignable<A,A> { typedef A type ; };
+TEST_F( TEST_CATEGORY, KOKKOS_TEST_WITH_SUFFIX(task_scheduer_ctors_device, TEST_SCHEDULER_SUFFIX) )
+{
+  TestTaskScheduler::TestTaskCtorsDevice<TEST_SCHEDULER>::run();
+}
 
-template < class A >
-struct StaticAssertAssignable< const A , A > { typedef const A type ; };
 
-} // namespace Impl
-} // namespace Kokkos
-
-#endif /* KOKKOS_STATICASSERT_HPP */
-
+} // end namespace Test

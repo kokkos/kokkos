@@ -85,13 +85,18 @@ struct DefaultDestroy {
 
 template <class ExecutionSpace>
 class ExecutionSpaceInstanceStorage
-  : private NoUniqueAddressMemberEmulation<ExecutionSpace>
+  : private NoUniqueAddressMemberEmulation<ExecutionSpace, DefaultCtorNotOnDevice>
 {
 private:
 
-  using base_t = NoUniqueAddressMemberEmulation<ExecutionSpace>;
+  using base_t = NoUniqueAddressMemberEmulation<ExecutionSpace, DefaultCtorNotOnDevice>;
 
 protected:
+
+  constexpr explicit
+  ExecutionSpaceInstanceStorage()
+    : base_t()
+  { }
 
   KOKKOS_INLINE_FUNCTION
   constexpr explicit
@@ -127,13 +132,17 @@ protected:
 
 template <class MemorySpace>
 class MemorySpaceInstanceStorage
-  : private NoUniqueAddressMemberEmulation<MemorySpace>
+  : private NoUniqueAddressMemberEmulation<MemorySpace, DefaultCtorNotOnDevice>
 {
 private:
 
-  using base_t = NoUniqueAddressMemberEmulation<MemorySpace>;
+  using base_t = NoUniqueAddressMemberEmulation<MemorySpace, DefaultCtorNotOnDevice>;
 
 protected:
+
+  MemorySpaceInstanceStorage()
+    : base_t()
+  { }
 
   KOKKOS_INLINE_FUNCTION
   MemorySpaceInstanceStorage(MemorySpace const& arg_memory_space)
@@ -267,6 +276,7 @@ private:
         runnable_task, *arg_predecessor_task
       );
       runnable_task.set_predecessor(*arg_predecessor_task);
+      arg_predecessor_task->decrement_and_check_reference_count();
     }
     else {
       m_queue->initialize_scheduling_info_from_team_scheduler_info(
@@ -293,7 +303,7 @@ public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
-  SimpleTaskScheduler() = delete;
+  SimpleTaskScheduler() = default;
 
   explicit
   SimpleTaskScheduler(
@@ -394,6 +404,22 @@ public:
     return this->team_scheduler_info_storage::no_unique_address_data_member();
   }
 
+  //----------------------------------------------------------------------------
+
+  #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+  // For backwards compatibility purposes only
+  KOKKOS_DEPRECATED
+  KOKKOS_INLINE_FUNCTION
+  memory_pool*
+  memory() const noexcept KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
+  {
+    if(m_queue != nullptr) return &(m_queue->get_memory_pool());
+    else return nullptr;
+  }
+  #endif
+
+  //----------------------------------------------------------------------------
+
   template <int TaskEnum, typename DepFutureType, typename FunctorType>
   KOKKOS_FUNCTION
   static
@@ -452,12 +478,15 @@ public:
     >;
 
     auto& task = *static_cast<task_type*>(functor);
+
+    KOKKOS_EXPECTS(!task.get_respawn_flag());
+
     task.set_priority(priority);
     task.set_predecessor(*predecessor.m_task);
     task.set_respawn_flag(true);
   }
 
-  template <class FunctorType, class ValueType, class Scheduler>
+  template <class FunctorType>
   KOKKOS_FUNCTION
   static void
   respawn(
@@ -470,6 +499,9 @@ public:
     >;
 
     auto& task = *static_cast<task_type*>(functor);
+
+    KOKKOS_EXPECTS(!task.get_respawn_flag());
+
     task.set_priority(priority);
     KOKKOS_ASSERT(not task.has_predecessor());
     task.set_respawn_flag(true);
