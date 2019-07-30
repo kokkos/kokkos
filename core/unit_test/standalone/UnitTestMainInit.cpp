@@ -61,6 +61,9 @@
 #ifdef KOKKOS_ENABLE_HPX
 #include <hpx/TestHPX_Category.hpp>
 #endif
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
+#endif
 #ifndef TEST_EXECSPACE
 #ifdef KOKKOS_ENABLE_SERIAL
 #include <serial/TestSerial_Category.hpp>

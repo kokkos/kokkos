@@ -57,10 +57,10 @@
 #include <Kokkos_OpenMP.hpp>
 #endif
 
-//#if defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined( KOKKOS_ENABLE_OPENMPTARGET )
 #include <Kokkos_OpenMPTarget.hpp>
 #include <Kokkos_OpenMPTargetSpace.hpp>
-//#endif
+#endif
 
 #if defined(KOKKOS_ENABLE_QTHREADS)
 #include <Kokkos_Qthreads.hpp>
