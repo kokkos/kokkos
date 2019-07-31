@@ -70,7 +70,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const { execute_impl<WorkTag>(); }
-
+/*
   template <class TagType>
   inline typename std::enable_if<std::is_same<TagType, void>::value>::type
   execute_impl() const {
@@ -81,10 +81,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     const typename Policy::member_type begin = m_policy.begin();
     const typename Policy::member_type end   = m_policy.end();
 
-#pragma omp target teams distribute parallel for map(to : this->m_functor)
+#pragma omp target teams distribute parallel for map(to: this->m_functor)
     for (int i = begin; i < end; i++) m_functor(i);
   }
-
+*/
   template <class TagType>
   inline typename std::enable_if<std::is_same<TagType, void>::value>::type
   execute_impl() const {
@@ -514,7 +514,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       m_functor(team);
     }
   }
-}
 
 template <class TagType>
 inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
@@ -545,8 +544,6 @@ execute_impl() const {
     m_functor(TagType(), team);
   }
 }
-}  // namespace Impl
-
 public:
 inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
     : m_functor(arg_functor),
@@ -554,7 +551,8 @@ inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                    FunctorTeamShmemSize<FunctorType>::value(
                        arg_functor, arg_policy.team_size())) {}
-};  // namespace Kokkos
+};
+
 
 template <class FunctorType, class ReducerType, class PointerType,
           class ValueType, class... PolicyArgs>
