@@ -131,6 +131,10 @@ void * HBWSpace::allocate( const size_t arg_alloc_size ) const
     msg << "Kokkos::Experimental::HBWSpace::allocate[ " ;
     switch( m_alloc_mech ) {
     case STD_MALLOC: msg << "STD_MALLOC" ; break ;
+    case POSIX_MEMALIGN: msg << "POSIX_MEMALIGN" ; break ;
+    case POSIX_MMAP: msg << "POSIX_MMAP" ; break ;
+    case INTEL_MM_ALLOC: msg << "INTEL_MM_ALLOC" ; break ;
+   
     }
     msg << " ]( " << arg_alloc_size << " ) FAILED" ;
     if ( ptr == NULL ) { msg << " NULL" ; }
