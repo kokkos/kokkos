@@ -48,6 +48,7 @@
 #if defined(KOKKOS_ATOMIC_HPP)
 
 #include <impl/Kokkos_Atomic_Memory_Order.hpp>
+#include <impl/Kokkos_Atomic_Generic.hpp>
 
 #if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/Kokkos_Cuda_Atomic_Intrinsics.hpp>
@@ -111,7 +112,10 @@ __device__ __inline__ T _relaxed_atomic_load_impl(
 
 template <class T>
 struct NoOpOper {
-  __device__ __inline__ static constexpr T apply(T const&, T const&) noexcept {}
+  __device__ __inline__ static constexpr T apply(T const& t,
+                                                 T const&) noexcept {
+    return t;
+  }
 };
 
 template <class T>
@@ -121,7 +125,7 @@ __device__ __inline__ T _relaxed_atomic_load_impl(
                                     void const**>::type = nullptr) {
   T rv{};
   // TODO remove a copy operation here?
-  Kokkos::atomic_oper_fetch(NoOpOper<T>{}, &rv, rv);
+  Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, &rv, rv);
   return rv;
 }
 
