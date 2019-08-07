@@ -48,6 +48,7 @@
 #if defined(KOKKOS_ATOMIC_HPP)
 
 #include <impl/Kokkos_Atomic_Memory_Order.hpp>
+#include <impl/Kokkos_Atomic_Generic.hpp>
 
 #if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/Kokkos_Cuda_Atomic_Intrinsics.hpp>
@@ -122,7 +123,7 @@ __device__ __inline__ void _relaxed_atomic_store_impl(
     typename std::enable_if<!(sizeof(T) == 1 || sizeof(T) == 2 ||
                               sizeof(T) == 4 || sizeof(T) == 8),
                             void const**>::type = nullptr) {
-  Kokkos::atomic_oper_fetch(StoreOper<T>{}, &rv, (T &&) val);
+  Kokkos::Impl::atomic_oper_fetch(StoreOper<T>{}, ptr, (T &&) val);
 }
 
 template <class T>
@@ -131,7 +132,6 @@ __device__ __inline__ void _atomic_store(T* ptr, T val,
   Kokkos::memory_fence();
   Impl::_relaxed_atomic_store_impl(ptr, val);
   Kokkos::memory_fence();
-  return rv;
 }
 
 template <class T>
