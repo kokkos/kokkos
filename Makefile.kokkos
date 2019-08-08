@@ -221,7 +221,8 @@ ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
 else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
     #KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_BUG_WORKAROUND_IBM_CLANG_OMP45_VIEW_INIT -fopenmp-implicit-declare-target -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp -fopenmp=libomp
-    KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_BUG_WORKAROUND_IBM_CLANG_OMP45_VIEW_INIT -Xopenmp-target -march=sm_35 -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp -fopenmp=libomp
+    KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -DKOKKOS_BUG_WORKAROUND_IBM_CLANG_OMP45_VIEW_INIT -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp -fopenmp=libomp
+    KOKKOS_INTERNAL_OPENMPTARGET_LIB := -lomptarget
   else
     #Assume GCC
     KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -fopenmp -foffload=nvptx-none
@@ -1123,6 +1124,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
     KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_OPENMPTARGET_FLAG)
   endif
   KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_OPENMPTARGET_FLAG)
+  KOKKOS_LIBS += $(KOKKOS_INTERNAL_OPENMPTARGET_LIB)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)

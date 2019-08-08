@@ -69,7 +69,50 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   const Policy m_policy;
 
  public:
-  inline void execute() const { execute_impl<WorkTag>(); }
+  inline void execute() const {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    const int64_t begin = m_policy.begin();
+    const int64_t end   = m_policy.end();
+    FunctorType functor(m_functor);
+    Policy policy = m_policy;
+    #pragma omp target teams distribute map(to : a_functor) num_teams(end-begin)
+    {
+      #pragma omp parallel
+      {
+        ptrdiff_t tile_idx = omp_get_league_rank();
+        typename Policy::point_type offset;
+        if (Policy::outer_direction == Policy::Left) {
+          for (int i = 0; i < Policy::rank; ++i) {
+            offset[i] =
+                (tile_idx % policy.m_tile_end[i]) * policy.m_tile[i] + policy.m_lower[i];
+            tile_idx /= policy.m_tile_end[i];
+          }
+        } else {
+          for (int i = Policy::rank - 1; i >= 0; --i) {
+            offset[i] =
+                (tile_idx % policy.m_tile_end[i]) * policy.m_tile[i] + policy.m_lower[i];
+            tile_idx /= policy.m_tile_end[i];
+          }
+        }
+        execute_tile<Policy::rank>(offset,functor,policy);
+      }
+    }
+  }
+
+  template <int Rank>
+    inline typename std::enable_if<std::is_same<Rank, 1>::value>::type
+    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) {
+      const ptrdiff_t begin_0 = offset[0];
+      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
+      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
+      #pragma omp for
+      for(ptrdiff_t i0=begin_0; i0<end_0; i0++) {
+        functor(i0);
+      }
+    }
 /*
   template <class TagType>
   inline typename std::enable_if<std::is_same<TagType, void>::value>::type
@@ -85,18 +128,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     for (int i = begin; i < end; i++) m_functor(i);
   }
 */
-  template <class TagType>
   inline typename std::enable_if<std::is_same<TagType, void>::value>::type
   execute_impl() const {
-    OpenMPTargetExec::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const typename Policy::member_type begin = m_policy.begin();
-    const typename Policy::member_type end   = m_policy.end();
-    FunctorType a_functor(m_functor);
-#pragma omp target teams distribute parallel for map(to : a_functor)
-    for (int i = begin; i < end; i++) a_functor(i);
+
   }
 
   template <class TagType>
