@@ -113,42 +113,147 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         functor(i0);
       }
     }
-/*
-  template <class TagType>
-  inline typename std::enable_if<std::is_same<TagType, void>::value>::type
-  execute_impl() const {
-    OpenMPTargetExec::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const typename Policy::member_type begin = m_policy.begin();
-    const typename Policy::member_type end   = m_policy.end();
 
-#pragma omp target teams distribute parallel for map(to: this->m_functor)
-    for (int i = begin; i < end; i++) m_functor(i);
-  }
-*/
-  inline typename std::enable_if<std::is_same<TagType, void>::value>::type
-  execute_impl() const {
+  template <int Rank>
+    inline typename std::enable_if<std::is_same<Rank, 2>::value>::type
+    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) {
+      const ptrdiff_t begin_0 = offset[0];
+      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
+      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
 
-  }
+      const ptrdiff_t begin_1 = offset[1];
+      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
+      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
 
-  template <class TagType>
-  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  execute_impl() const {
-    OpenMPTargetExec::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const typename Policy::member_type begin = m_policy.begin();
-    const typename Policy::member_type end   = m_policy.end();
+      #pragma omp for collapse
+      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
+        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
+          functor(i0,i1);
 
-    FunctorType a_functor(m_functor);
-#pragma omp target teams distribute parallel for num_threads(128) \
-    map(to                                                        \
-        : a_functor)
-    for (int i = begin; i < end; i++) a_functor(TagType(), i);
-  }
+    }
+
+  template <int Rank>
+    inline typename std::enable_if<std::is_same<Rank, 3>::value>::type
+    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) {
+      const ptrdiff_t begin_0 = offset[0];
+      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
+      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
+
+      const ptrdiff_t begin_1 = offset[1];
+      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
+      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
+
+      const ptrdiff_t begin_2 = offset[2];
+      ptrdiff_t end_2 = begin_2 + policy.m_tile[2];
+      end_2 = end_2<policy.m_upper[2]?end_2:policy.m_upper[2];
+
+      #pragma omp for collapse
+      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
+        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
+          for(ptrdiff_t i2=begin_2; i2<end_2; i2++)
+            functor(i0,i1,i2);
+
+    }
+
+
+  template <int Rank>
+    inline typename std::enable_if<std::is_same<Rank, 4>::value>::type
+    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) {
+      const ptrdiff_t begin_0 = offset[0];
+      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
+      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
+
+      const ptrdiff_t begin_1 = offset[1];
+      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
+      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
+
+      const ptrdiff_t begin_2 = offset[2];
+      ptrdiff_t end_2 = begin_2 + policy.m_tile[2];
+      end_2 = end_2<policy.m_upper[2]?end_2:policy.m_upper[2];
+
+      const ptrdiff_t begin_3 = offset[3];
+      ptrdiff_t end_3 = begin_3 + policy.m_tile[3];
+      end_3 = end_3<policy.m_upper[3]?end_3:policy.m_upper[3];
+
+      #pragma omp for collapse
+      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
+        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
+          for(ptrdiff_t i2=begin_2; i2<end_2; i2++)
+            for(ptrdiff_t i3=begin_3; i3<end_3; i3++)
+              functor(i0,i1,i2,i3);
+
+    }
+
+  template <int Rank>
+    inline typename std::enable_if<std::is_same<Rank, 5>::value>::type
+    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) {
+      const ptrdiff_t begin_0 = offset[0];
+      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
+      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
+
+      const ptrdiff_t begin_1 = offset[1];
+      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
+      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
+
+      const ptrdiff_t begin_2 = offset[2];
+      ptrdiff_t end_2 = begin_2 + policy.m_tile[2];
+      end_2 = end_2<policy.m_upper[2]?end_2:policy.m_upper[2];
+
+      const ptrdiff_t begin_3 = offset[3];
+      ptrdiff_t end_3 = begin_3 + policy.m_tile[3];
+      end_3 = end_3<policy.m_upper[3]?end_3:policy.m_upper[3];
+
+      const ptrdiff_t begin_4 = offset[4];
+      ptrdiff_t end_4 = begin_4 + policy.m_tile[4];
+      end_4 = end_4<policy.m_upper[4]?end_4:policy.m_upper[4];
+
+      #pragma omp for collapse
+      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
+        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
+          for(ptrdiff_t i2=begin_2; i2<end_2; i2++)
+            for(ptrdiff_t i3=begin_3; i3<end_3; i3++)
+              for(ptrdiff_t i4=begin_4; i4<end_4; i4++)
+                functor(i0,i1,i2,i3,i4);
+
+    }
+
+  template <int Rank>
+    inline typename std::enable_if<std::is_same<Rank, 6>::value>::type
+    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) {
+      const ptrdiff_t begin_0 = offset[0];
+      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
+      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
+
+      const ptrdiff_t begin_1 = offset[1];
+      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
+      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
+
+      const ptrdiff_t begin_2 = offset[2];
+      ptrdiff_t end_2 = begin_2 + policy.m_tile[2];
+      end_2 = end_2<policy.m_upper[2]?end_2:policy.m_upper[2];
+
+      const ptrdiff_t begin_3 = offset[3];
+      ptrdiff_t end_3 = begin_3 + policy.m_tile[3];
+      end_3 = end_3<policy.m_upper[3]?end_3:policy.m_upper[3];
+
+      const ptrdiff_t begin_4 = offset[4];
+      ptrdiff_t end_4 = begin_4 + policy.m_tile[4];
+      end_4 = end_4<policy.m_upper[4]?end_4:policy.m_upper[4];
+
+      const ptrdiff_t begin_5 = offset[5];
+      ptrdiff_t end_5 = begin_5 + policy.m_tile[5];
+      end_5 = end_5<policy.m_upper[5]?end_5:policy.m_upper[5];
+
+      #pragma omp for collapse
+      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
+        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
+          for(ptrdiff_t i2=begin_2; i2<end_2; i2++)
+            for(ptrdiff_t i3=begin_3; i3<end_3; i3++)
+              for(ptrdiff_t i4=begin_4; i4<end_4; i4++)
+                for(ptrdiff_t i5=begin_5; i5<end_5; i5++)
+                  functor(i0,i1,i2,i3,i4,i5);
+
+    }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
