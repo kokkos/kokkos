@@ -644,7 +644,7 @@ typename Scheduler::template future_type_for_functor<
     defined(KOKKOS_ENABLE_CUDA)
 
   // This doesn't work with clang cuda
-  //static_assert(
+  // static_assert(
   //    !std::is_same<Kokkos::Cuda, typename Scheduler::execution_space>::value,
   //    "Error calling Kokkos::task_spawn for Cuda space within Host code");
 

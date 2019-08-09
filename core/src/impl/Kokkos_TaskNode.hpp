@@ -353,7 +353,7 @@ class SchedulingInfoStorage
  public:
   // Can't just do using base_t::base_t because of stupid stuff with clang cuda
   template <class... Args>
-    // requires std::is_constructible_v<base_t, Args&&...>
+  // requires std::is_constructible_v<base_t, Args&&...>
   KOKKOS_INLINE_FUNCTION constexpr explicit SchedulingInfoStorage(
       Args&&... args)
       : base_t(std::forward<Args>(args)...) {}
@@ -516,13 +516,12 @@ class TaskResultStorage : public Base {
   alignas(Base) ResultType m_value = ResultType{};
 
  public:
-  //using base_t::base_t;
+  // using base_t::base_t;
   // Can't just do using base_t::base_t because of stupid stuff with clang cuda
   template <class... Args>
-    // requires std::is_constructible_v<base_t, Args&&...>
-  KOKKOS_INLINE_FUNCTION constexpr explicit TaskResultStorage(
-    Args&&... args)
-    : base_t(std::forward<Args>(args)...) {}
+  // requires std::is_constructible_v<base_t, Args&&...>
+  KOKKOS_INLINE_FUNCTION constexpr explicit TaskResultStorage(Args&&... args)
+      : base_t(std::forward<Args>(args)...) {}
 
   KOKKOS_INLINE_FUNCTION
   ResultType* value_pointer() {
@@ -547,14 +546,12 @@ class TaskResultStorage<void, Base> : public Base {
   using base_t = Base;
 
  public:
-  //using base_t::base_t;
+  // using base_t::base_t;
   // Can't just do using base_t::base_t because of stupid stuff with clang cuda
   template <class... Args>
-    // requires std::is_constructible_v<base_t, Args&&...>
-  KOKKOS_INLINE_FUNCTION constexpr explicit TaskResultStorage(
-    Args&&... args)
-    : base_t(std::forward<Args>(args)...) {}
-
+  // requires std::is_constructible_v<base_t, Args&&...>
+  KOKKOS_INLINE_FUNCTION constexpr explicit TaskResultStorage(Args&&... args)
+      : base_t(std::forward<Args>(args)...) {}
 
   KOKKOS_INLINE_FUNCTION
   void* value_pointer() noexcept { return nullptr; }

@@ -112,7 +112,10 @@ __device__ __inline__ T _relaxed_atomic_load_impl(
 
 template <class T>
 struct NoOpOper {
-  __device__ __inline__ static constexpr T apply(T const& t, T const&) noexcept { return t; }
+  __device__ __inline__ static constexpr T apply(T const& t,
+                                                 T const&) noexcept {
+    return t;
+  }
 };
 
 template <class T>
