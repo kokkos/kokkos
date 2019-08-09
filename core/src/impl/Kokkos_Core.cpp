@@ -255,8 +255,10 @@ void initialize_internal(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
 #else
-  if(getenv("KOKKOS_PROFILE_LIBRARY")!=nullptr){
-    std::cerr << "Kokkos::initialize() warning: Requested Kokkos Profiling, but Kokkos was built without Profiling support" << std::endl;
+  if (getenv("KOKKOS_PROFILE_LIBRARY") != nullptr) {
+    std::cerr << "Kokkos::initialize() warning: Requested Kokkos Profiling, "
+                 "but Kokkos was built without Profiling support"
+              << std::endl;
   }
 #endif
   g_is_initialized = true;
