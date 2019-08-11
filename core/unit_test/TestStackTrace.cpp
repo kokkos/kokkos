@@ -45,94 +45,84 @@
 #include "Kokkos_Core.hpp"
 #include "impl/Kokkos_stacktrace.hpp"
 
-namespace { // (anonymous)
+namespace {  // (anonymous)
 
-void f0 (std::ostream& out)
-{
-  out << "Top of f0" << std::endl;
-}
+void f0(std::ostream& out) { out << "Top of f0" << std::endl; }
 
-int f1 (std::ostream& out) {
+int f1(std::ostream& out) {
   out << "Top of f1" << std::endl;
-  f0 (out);
-  Kokkos::Impl::save_stacktrace ();
-  f0 (out);
+  f0(out);
+  Kokkos::Impl::save_stacktrace();
+  f0(out);
   return 42;
 }
 
-void f2 (std::ostream& out) {
+void f2(std::ostream& out) {
   out << "Top of f2" << std::endl;
-  const int result = f1 (out);
+  const int result = f1(out);
   out << "f2: f1 returned " << result << std::endl;
 }
 
-int f3 (std::ostream& out, const int level) {
+int f3(std::ostream& out, const int level) {
   if (level <= 0) {
-    return f1 (out);
-  }
-  else {
-    return f3 (out, level-1);
+    return f1(out);
+  } else {
+    return f3(out, level - 1);
   }
 }
 
-void f4 () {
-  Kokkos::Impl::save_stacktrace ();
-}
+void f4() { Kokkos::Impl::save_stacktrace(); }
 
-void
-my_fancy_handler ()
-{
+void my_fancy_handler() {
   std::cerr << "I am the custom std::terminate handler." << std::endl;
-  std::abort ();
+  std::abort();
 }
 
-} // namespace (anonymous)
+}  // namespace
 
-int
-main (int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
   using std::cout;
   using std::endl;
 
-  Kokkos::ScopeGuard kokkosSession (argc, argv);
+  Kokkos::ScopeGuard kokkosSession(argc, argv);
   bool success = true;
 
-  f1 (cout);
+  f1(cout);
   // TODO test by making sure that f1 and f2, but no other functions,
   // appear in the stack trace.
 
   cout << endl << "Mangled stacktrace:" << endl << endl;
-  Kokkos::Impl::print_saved_stacktrace (cout);
+  Kokkos::Impl::print_saved_stacktrace(cout);
   cout << endl << "Demangled stacktrace:" << endl << endl;
-  Kokkos::Impl::print_demangled_saved_stacktrace (cout);
+  Kokkos::Impl::print_demangled_saved_stacktrace(cout);
 
-  f3 (cout, 4);
+  f3(cout, 4);
   // TODO test by making sure that f3 and f1, but no other functions,
   // appear in the stack trace, and that f3 appears 5 times.
   cout << endl << "Mangled stacktrace:" << endl << endl;
-  Kokkos::Impl::print_saved_stacktrace (cout);
+  Kokkos::Impl::print_saved_stacktrace(cout);
   cout << endl << "Demangled stacktrace:" << endl << endl;
-  Kokkos::Impl::print_demangled_saved_stacktrace (cout);
+  Kokkos::Impl::print_demangled_saved_stacktrace(cout);
 
-  cout << endl << "Demangled version of \"main\": "
-       << Kokkos::Impl::demangle ("main") << endl;
+  cout << endl
+       << "Demangled version of \"main\": " << Kokkos::Impl::demangle("main")
+       << endl;
 
   if (argc > 1) {
     cout << "Test setting std::terminate handler that prints "
-      "the last saved stack trace" << endl;
+            "the last saved stack trace"
+         << endl;
 
-    f4 ();
-    Kokkos::Impl::set_kokkos_terminate_handler (); // just test syntax
-    Kokkos::Impl::set_kokkos_terminate_handler (my_fancy_handler);
+    f4();
+    Kokkos::Impl::set_kokkos_terminate_handler();  // just test syntax
+    Kokkos::Impl::set_kokkos_terminate_handler(my_fancy_handler);
 
     // TODO test that this prints "Oh noes!" and the correct stacktrace.
-    std::terminate ();
-  }
-  else {
+    std::terminate();
+  } else {
     if (success) {
       cout << "SUCCESS" << endl;
-    }
-    else {
+    } else {
       cout << "FAILED" << endl;
     }
     return success ? EXIT_SUCCESS : EXIT_FAILURE;

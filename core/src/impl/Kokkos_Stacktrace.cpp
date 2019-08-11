@@ -6,8 +6,8 @@
 #define KOKKOS_ENABLE_CXXABI 1
 
 #ifdef KOKKOS_ENABLE_CXXABI
-#  include <cxxabi.h>
-#endif // KOKKOS_ENABLE_CXXABI
+#include <cxxabi.h>
+#endif  // KOKKOS_ENABLE_CXXABI
 
 #include <exception>
 #include <iostream>
@@ -17,43 +17,42 @@
 namespace Kokkos {
 namespace Impl {
 
-std::string demangle (const std::string& name)
-{
+std::string demangle(const std::string& name) {
 #ifndef KOKKOS_ENABLE_CXXABI
   return name;
 #else
   std::string s;
 
-  if (name.length () != 0) {
-    int status = 0;
+  if (name.length() != 0) {
+    int status          = 0;
     char* output_buffer = nullptr;
-    size_t* length = nullptr;
-    char* d = abi::__cxa_demangle (name.c_str (), output_buffer, length, &status);
+    size_t* length      = nullptr;
+    char* d = abi::__cxa_demangle(name.c_str(), output_buffer, length, &status);
     if (d != nullptr) {
       s = d;
-      free (d);
+      free(d);
     }
   }
 
   // Special cases for "main" and "start" on Mac
-  if (s.length () == 0) {
+  if (s.length() == 0) {
     if (name == "main" || name == "start") {
       s = name;
     }
   }
-#endif // KOKKOS_ENABLE_CXXABI
+#endif  // KOKKOS_ENABLE_CXXABI
 
   return s;
 }
 
 class Stacktrace {
-public:
-  Stacktrace () = delete;
-  Stacktrace (const Stacktrace&) = delete;
-  Stacktrace& operator= (const Stacktrace&) = delete;
-  Stacktrace (Stacktrace&&) = delete;
-  Stacktrace& operator= (Stacktrace&&) = delete;
-  ~Stacktrace () = delete;
+ public:
+  Stacktrace()                  = delete;
+  Stacktrace(const Stacktrace&) = delete;
+  Stacktrace& operator=(const Stacktrace&) = delete;
+  Stacktrace(Stacktrace&&)                 = delete;
+  Stacktrace& operator=(Stacktrace&&) = delete;
+  ~Stacktrace()                       = delete;
 
   // These are public only to avoid wasting an extra stacktrace line.
   // See save_stacktrace below.
@@ -61,20 +60,18 @@ public:
   static void* buffer[capacity];
   static int length;
 
-  static std::vector<std::string> lines ()
-  {
-    char** symbols = backtrace_symbols (buffer, length);
+  static std::vector<std::string> lines() {
+    char** symbols = backtrace_symbols(buffer, length);
     if (symbols == nullptr) {
       return {};
-    }
-    else {
-      std::vector<std::string> trace (length);
+    } else {
+      std::vector<std::string> trace(length);
       for (int i = 0; i < length; ++i) {
         if (symbols[i] != nullptr) {
-          trace[i] = std::string (symbols[i]);
+          trace[i] = std::string(symbols[i]);
         }
       }
-      free (symbols);
+      free(symbols);
       return trace;
     }
   }
@@ -83,37 +80,31 @@ public:
 int Stacktrace::length = 0;
 void* Stacktrace::buffer[Stacktrace::capacity];
 
-void save_stacktrace ()
-{
-  Stacktrace::length = backtrace (Stacktrace::buffer,
-                                  Stacktrace::capacity);
+void save_stacktrace() {
+  Stacktrace::length = backtrace(Stacktrace::buffer, Stacktrace::capacity);
 }
 
-size_t
-find_first_non_whitespace (const std::string& s, const size_t start_pos)
-{
+size_t find_first_non_whitespace(const std::string& s, const size_t start_pos) {
   constexpr size_t num_ws_chars = 3;
-  const char ws_chars[] = "\n\t ";
-  return s.find_first_not_of (ws_chars, start_pos, num_ws_chars);
+  const char ws_chars[]         = "\n\t ";
+  return s.find_first_not_of(ws_chars, start_pos, num_ws_chars);
 }
 
-size_t
-find_first_whitespace (const std::string& s, const size_t start_pos)
-{
+size_t find_first_whitespace(const std::string& s, const size_t start_pos) {
   constexpr size_t num_ws_chars = 3;
-  const char ws_chars[] = "\n\t ";
-  return s.find_first_of (ws_chars, start_pos, num_ws_chars);
+  const char ws_chars[]         = "\n\t ";
+  return s.find_first_of(ws_chars, start_pos, num_ws_chars);
 }
 
-template<class Callback>
-void for_each_token (const std::string& s, Callback c) {
-  size_t cur = find_first_non_whitespace (s, 0);
+template <class Callback>
+void for_each_token(const std::string& s, Callback c) {
+  size_t cur = find_first_non_whitespace(s, 0);
   while (cur != std::string::npos) {
-    const size_t end = find_first_whitespace (s, cur);
-    const bool last = (end == std::string::npos);
-    const size_t count = last ? end : size_t (end - cur);
-    c (s.substr (cur, count), last);
-    cur = find_first_non_whitespace (s, end);
+    const size_t end   = find_first_whitespace(s, cur);
+    const bool last    = (end == std::string::npos);
+    const size_t count = last ? end : size_t(end - cur);
+    c(s.substr(cur, count), last);
+    cur = find_first_non_whitespace(s, end);
   }
 }
 
@@ -122,21 +113,20 @@ void for_each_token (const std::string& s, Callback c) {
 // While we're doing that, figure out the longest column,
 // so we can compute spacing correctly.
 
-std::tuple<bool, size_t, std::vector<size_t>>
-find_main_column (const std::vector<std::string>& traceback)
-{
+std::tuple<bool, size_t, std::vector<size_t>> find_main_column(
+    const std::vector<std::string>& traceback) {
   bool found_main = false;
   size_t main_col = 0;
   for (auto&& entry : traceback) {
     size_t col_count = 0;
-    for_each_token (entry, [&] (const std::string& s, bool) {
-                             const size_t pos = s.find ("main");
-                             if (pos != std::string::npos) {
-                               found_main = true;
-                               main_col = col_count;
-                             }
-                             ++col_count;
-                           });
+    for_each_token(entry, [&](const std::string& s, bool) {
+      const size_t pos = s.find("main");
+      if (pos != std::string::npos) {
+        found_main = true;
+        main_col   = col_count;
+      }
+      ++col_count;
+    });
     if (found_main) {
       break;
     }
@@ -147,119 +137,100 @@ find_main_column (const std::vector<std::string>& traceback)
   std::vector<size_t> max_col_lens;
   for (auto&& entry : traceback) {
     size_t col_count = 0;
-    for_each_token (entry, [&] (const std::string& s, bool) {
-                             const size_t cur_col_len =
-                               (found_main && col_count == main_col) ?
-                               demangle (s).size () :
-                               s.size ();
-                             ++col_count;
-                             if (max_col_lens.size () < col_count) {
-                               max_col_lens.push_back (cur_col_len);
-                             }
-                             else {
-                               const size_t old_max_len = max_col_lens[col_count-1];
-                               if (old_max_len < cur_col_len) {
-                                 max_col_lens[col_count-1] = cur_col_len;
-                               }
-                             }
-                           });
+    for_each_token(entry, [&](const std::string& s, bool) {
+      const size_t cur_col_len =
+          (found_main && col_count == main_col) ? demangle(s).size() : s.size();
+      ++col_count;
+      if (max_col_lens.size() < col_count) {
+        max_col_lens.push_back(cur_col_len);
+      } else {
+        const size_t old_max_len = max_col_lens[col_count - 1];
+        if (old_max_len < cur_col_len) {
+          max_col_lens[col_count - 1] = cur_col_len;
+        }
+      }
+    });
   }
   return std::make_tuple(found_main, main_col, max_col_lens);
 }
 
-void
-demangle_and_print_traceback_entry (std::ostream& out,
-                                    const std::string& traceback_entry,
-                                    const bool found_main,
-                                    const size_t main_col,
-                                    const std::vector<size_t>& max_col_lens)
-{
+void demangle_and_print_traceback_entry(
+    std::ostream& out, const std::string& traceback_entry,
+    const bool found_main, const size_t main_col,
+    const std::vector<size_t>& max_col_lens) {
   std::vector<std::string> tokens;
   size_t cur_col = 0;
-  for_each_token (traceback_entry,
-                  [&] (const std::string& s, bool last) {
-                    const size_t old_width (out.width ());
-                    out.width (max_col_lens[cur_col]);
-                    try {
-                      if (found_main && cur_col == main_col) {
-                        out << demangle (s);
-                      }
-                      else {
-                        out << s;
-                      }
-                      if (! last) {
-                        out << " ";
-                      }
-                      ++cur_col;
-                    }
-                    catch (...) {
-                      out.width (old_width);
-                      throw;
-                    }
-                    out.width (old_width);
-                  });
+  for_each_token(traceback_entry, [&](const std::string& s, bool last) {
+    const size_t old_width(out.width());
+    out.width(max_col_lens[cur_col]);
+    try {
+      if (found_main && cur_col == main_col) {
+        out << demangle(s);
+      } else {
+        out << s;
+      }
+      if (!last) {
+        out << " ";
+      }
+      ++cur_col;
+    } catch (...) {
+      out.width(old_width);
+      throw;
+    }
+    out.width(old_width);
+  });
 }
 
-void
-demangle_and_print_traceback (std::ostream& out,
-                              const std::vector<std::string>& traceback)
-{
-  const auto result = find_main_column (traceback);
+void demangle_and_print_traceback(std::ostream& out,
+                                  const std::vector<std::string>& traceback) {
+  const auto result = find_main_column(traceback);
   for (auto&& entry : traceback) {
     using std::get;
-    demangle_and_print_traceback_entry (out, entry, get<0> (result),
-                                        get<1> (result), get<2> (result));
+    demangle_and_print_traceback_entry(out, entry, get<0>(result),
+                                       get<1>(result), get<2>(result));
     out << std::endl;
   }
 }
 
-void
-print_saved_stacktrace (std::ostream& out)
-{
-  auto lines = Stacktrace::lines ();
+void print_saved_stacktrace(std::ostream& out) {
+  auto lines = Stacktrace::lines();
   for (auto&& entry : lines) {
     out << entry << std::endl;
   }
 }
 
-void
-print_demangled_saved_stacktrace (std::ostream& out)
-{
-  demangle_and_print_traceback (out, Stacktrace::lines ());
+void print_demangled_saved_stacktrace(std::ostream& out) {
+  demangle_and_print_traceback(out, Stacktrace::lines());
 }
 
 std::function<void()> user_terminate_handler_post_;
 
-void kokkos_terminate_handler ()
-{
+void kokkos_terminate_handler() {
   using std::cerr;
   using std::endl;
 
   cerr << "Kokkos observes that std::terminate has been called.  "
-    "Here is the last saved stack trace.  Note that this does not "
-    "necessarily show what called std::terminate." << endl << endl;
-  print_demangled_saved_stacktrace (std::cerr);
+          "Here is the last saved stack trace.  Note that this does not "
+          "necessarily show what called std::terminate."
+       << endl
+       << endl;
+  print_demangled_saved_stacktrace(std::cerr);
 
   if (user_terminate_handler_post_) {
-    user_terminate_handler_post_ ();
-  }
-  else {
-    std::abort ();
+    user_terminate_handler_post_();
+  } else {
+    std::abort();
   }
 }
 
-void
-set_kokkos_terminate_handler ()
-{
+void set_kokkos_terminate_handler() {
   user_terminate_handler_post_ = std::abort;
 }
 
-void
-set_kokkos_terminate_handler (std::function<void()> user_post)
-{
+void set_kokkos_terminate_handler(std::function<void()> user_post) {
   user_terminate_handler_post_ = user_post;
-  std::set_terminate (kokkos_terminate_handler);
+  std::set_terminate(kokkos_terminate_handler);
 }
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos

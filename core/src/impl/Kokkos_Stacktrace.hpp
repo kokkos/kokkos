@@ -10,28 +10,28 @@ namespace Impl {
 
 /// \brief Return the demangled version of the input symbol, or the
 ///   original input if demangling is not possible.
-std::string demangle (const std::string& name);
+std::string demangle(const std::string& name);
 
 /// \brief Save the current stacktrace.
 ///
 /// You may only save one stacktrace at a time.  If you call this
 /// twice, the second call will overwrite the result of the first
 /// call.
-void save_stacktrace ();
+void save_stacktrace();
 
 /// \brief Print the raw form of the currently saved stacktrace, if
 ///   any, to the given output stream.
-void print_saved_stacktrace (std::ostream& out);
+void print_saved_stacktrace(std::ostream& out);
 
 /// \brief Print the currently saved, demangled stacktrace, if any, to
 ///   the given output stream.
 ///
 /// Demangling is best effort only.
-void print_demangled_saved_stacktrace (std::ostream& out);
+void print_demangled_saved_stacktrace(std::ostream& out);
 
 /// \brief Set the std::terminate handler so that it prints the
 ///   currently saved stack trace, then calls std::abort.
-void set_kokkos_terminate_handler ();
+void set_kokkos_terminate_handler();
 
 /// \brief Set the std::terminate handler so that it prints the
 ///   currently saved stack trace, then calls user_post.
@@ -41,9 +41,9 @@ void set_kokkos_terminate_handler ();
 /// without including their header file, and Kokkos does not depend on
 /// MPI, so there's no way for Kokkos to depend on MPI_Abort in a
 /// portable way.
-void set_kokkos_terminate_handler (std::function<void()> user_post);
+void set_kokkos_terminate_handler(std::function<void()> user_post);
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
-#endif // KOKKOS_STACKTRACE_HPP
+#endif  // KOKKOS_STACKTRACE_HPP
