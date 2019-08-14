@@ -171,7 +171,7 @@ do
     shift
     ;;
   #Handle known nvcc args
-  --dryrun|--verbose|--keep|--keep-dir*|-G|--relocatable-device-code*|-lineinfo|-expt-extended-lambda|--resource-usage|-Xptxas*)
+  --dryrun|--verbose|--keep|--keep-dir*|-G|--relocatable-device-code*|-lineinfo|--expt-extended-lambda|--resource-usage|-Xptxas*)
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
