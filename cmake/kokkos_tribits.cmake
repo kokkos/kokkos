@@ -185,8 +185,10 @@ MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
   # ADD Kokkos' modules to CMake's module path.
   SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kokkos_SOURCE_DIR}/cmake/Modules/")
 
+  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_devices.cmake)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_options.cmake)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_cxx.cmake)
+  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
+  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_cxx_std.cmake)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tpls.cmake)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
  ENDIF()
@@ -417,6 +419,9 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
   IF (KOKKOS_CXX_STANDARD_FEATURE)
     #GREAT! I can't do this the right way
     TARGET_COMPILE_FEATURES(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FEATURE})
+    IF (NOT KOKKOS_USE_CXX_EXTENSIONS)
+      SET_TARGET_PROPERTIES(${LIBRARY_NAME} PROPERTIES CXX_EXTENSIONS OFF)
+    ENDIF()
   ELSE()
     #OH, Well, no choice but the wrong way
     TARGET_COMPILE_OPTIONS(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FLAG})
