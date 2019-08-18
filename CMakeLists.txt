@@ -1,6 +1,10 @@
 # Is this a build as part of Trilinos?
 
-#Pay no attention to the man behind the curtain
+# We want to determine if options are given with the wrong case
+# In order to detect which arguments are given to compare against
+# the list of valid arguments, at the beginning here we need to
+# form a list of all the given variables. If it begins with any 
+# case of KoKkOS, we add it to the list.
 GET_CMAKE_PROPERTY(_variableNames VARIABLES)
 SET(KOKKOS_GIVEN_VARIABLES)
 FOREACH (var ${_variableNames})
