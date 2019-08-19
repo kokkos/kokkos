@@ -35,7 +35,6 @@ FOREACH(DEV ${KOKKOS_DEVICES})
 ENDFOREACH()
 KOKKOS_DEVICE_OPTION(SERIAL        ON  "Whether to build serial  backend")
 KOKKOS_DEVICE_OPTION(PTHREAD       OFF "Whether to build Pthread backend")
-KOKKOS_DEVICE_OPTION(CUDA          OFF "Whether to build CUDA backend")
 KOKKOS_DEVICE_OPTION(ROCM          OFF "Whether to build AMD ROCm backend")
 
 IF(Trilinos_ENABLE_Kokkos AND Trilinos_ENABLE_OpenMP)
