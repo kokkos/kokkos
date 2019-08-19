@@ -1,4 +1,3 @@
-# Is this a build as part of Trilinos?
 
 # We want to determine if options are given with the wrong case
 # In order to detect which arguments are given to compare against
@@ -15,6 +14,7 @@ FOREACH (var ${_variableNames})
   ENDIF()
 ENDFOREACH()
 
+# Is this a build as part of Trilinos?
 IF(COMMAND TRIBITS_PACKAGE_DECL)
   SET(KOKKOS_HAS_TRILINOS ON CACHE BOOL "")
 ELSE()
