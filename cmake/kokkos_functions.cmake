@@ -8,6 +8,9 @@ FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
   SET(CAMEL_NAME Kokkos_${CAMEL_SUFFIX})
   STRING(TOUPPER ${CAMEL_NAME} UC_NAME)
 
+  # Make sure this appears in the cache with the appropriate DOCSTRING
+  SET(${CAMEL_NAME} ${DEFAULT} CACHE ${TYPE} ${DOCSTRING})
+
   #I don't love doing it this way because it's N^2 in number options, but cest la vie
   FOREACH(opt ${KOKKOS_GIVEN_VARIABLES})
     STRING(TOUPPER ${opt} OPT_UC)
