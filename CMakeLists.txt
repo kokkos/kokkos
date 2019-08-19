@@ -16,9 +16,9 @@ ENDFOREACH()
 
 # Is this a build as part of Trilinos?
 IF(COMMAND TRIBITS_PACKAGE_DECL)
-  SET(KOKKOS_HAS_TRILINOS ON CACHE BOOL "")
+  SET(KOKKOS_HAS_TRILINOS ON)
 ELSE()
-  SET(KOKKOS_HAS_TRILINOS OFF CACHE BOOL "")
+  SET(KOKKOS_HAS_TRILINOS OFF)
 ENDIF()
 
 # Basic initialization (Used in KOKKOS_SETTINGS)
@@ -164,7 +164,7 @@ INSTALL(FILES "${CMAKE_BINARY_DIR}/KokkosCore_config.h" DESTINATION include)
 #  Finally - if we are a subproject - make sure the enabled devices are visible
 IF (HAS_PARENT)
   FOREACH(DEV Kokkos_ENABLED_DEVICES)
-    #I would much rather not make these cache variables, but I can't
+    #I would much rather not make these cache variables or global properties, but I can't
     #make any guarantees on whether PARENT_SCOPE is good enough to make 
     #these variables visible where I need them
     SET(Kokkos_ENABLE_${DEV} ON PARENT_SCOPE)
