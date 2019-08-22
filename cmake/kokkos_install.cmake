@@ -8,18 +8,6 @@ SET(INSTALL_INCLUDE_DIR ${KOKKOS_HEADER_DIR} CACHE PATH
 GET_PROPERTY(KOKKOS_PROP_LIBS GLOBAL PROPERTY KOKKOS_LIBRARIES_NAMES)
 SET(KOKKOS_LIBRARIES ${KOKKOS_PROP_LIBS})
 
-SET(DEF_INSTALL_CMAKE_DIR)
-IF(WIN32 AND NOT CYGWIN)
-  LIST(APPEND DEF_INSTALL_CMAKE_DIR CMake)
-ELSE()
-  LIST(APPEND DEF_INSTALL_CMAKE_DIR lib/CMake/Kokkos)
-  #also add the totally normal place for it to be
-  LIST(APPEND DEF_INSTALL_CMAKE_DIR lib/cmake)
-  LIST(APPEND DEF_INSTALL_CMAKE_DIR lib/cmake/Kokkos)
-ENDIF()
-SET(INSTALL_CMAKE_DIR ${DEF_INSTALL_CMAKE_DIR} CACHE PATH
-    "Installation directory for CMake files")
-
 # Make relative paths absolute (needed later on)
 FOREACH(p LIB BIN INCLUDE CMAKE)
   SET(var INSTALL_${p}_DIR)
@@ -37,26 +25,23 @@ WRITE_BASIC_PACKAGE_VERSION_FILE("${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake
       COMPATIBILITY SameMajorVersion)
 
 # Install the KokkosConfig.cmake and KokkosConfigVersion.cmake
-FOREACH(DIR ${INSTALL_CMAKE_DIR})
-  install(FILES
-    "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
-    DESTINATION ${DIR})
-  install(FILES
-    "${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
-    DESTINATION ${DIR})
+set(right_place lib/cmake/Kokkos)
+set(wrong_place lib/CMake/Kokkos)
+#                   ^^ case-sensitive
+install(FILES
+  "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
+  "${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
+  DESTINATION ${right_place})
+install(EXPORT KokkosTargets NAMESPACE Kokkos:: DESTINATION ${right_place})
 
-  # Install the export set for use with the install-tree
-  INSTALL(EXPORT 
-    KokkosDeprecatedTargets 
-    DESTINATION ${DIR}
-  )
-
-  INSTALL(EXPORT 
-    KokkosTargets 
-    NAMESPACE   Kokkos::
-    DESTINATION ${DIR}
-  )
-ENDFOREACH()
+# For backward compatibility, export legacy target (not namespaced) to the old
+# location that will not be discovered by CMake when Kokkos install prefix is
+# added to CMAKE_PREFIX_PATH in user code.
+install(FILES
+  "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
+  "${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
+  DESTINATION ${wrong_place})
+install(EXPORT KokkosDeprecatedTargets DESTINATION ${wrong_place})
 
 # build and install pkgconfig file
 CONFIGURE_FILE(core/src/kokkos.pc.in kokkos.pc @ONLY)
