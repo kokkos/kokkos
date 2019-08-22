@@ -70,7 +70,6 @@ KOKKOS_CFG_DEPENDS(ARCH OPTIONS)
 #-------------------------------------------------------------------------------
 SET(KOKKOS_ARCH_LIST)
 LIST(APPEND KOKKOS_ARCH_LIST
-     NONE            # No architecture optimization
      AMDAVX          # (HOST) AMD chip
      ARMV80          # (HOST) ARMv8.0 Compatible CPU
      ARMV81          # (HOST) ARMv8.1 Compatible CPU
@@ -109,8 +108,7 @@ LIST(APPEND KOKKOS_ARCH_LIST
      VEGA
      GFX901
     )
-SET(tmpr "\n       ")
-STRING(REPLACE ";" ${tmpr} KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_ARCH_LIST}")
+STRING(REPLACE ";" ", " KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_ARCH_LIST}")
 SET(KOKKOS_INTERNAL_ARCH_DOCSTR "${tmpr}${KOKKOS_INTERNAL_ARCH_DOCSTR}")
 
 
@@ -118,7 +116,7 @@ SET(KOKKOS_INTERNAL_ARCH_DOCSTR "${tmpr}${KOKKOS_INTERNAL_ARCH_DOCSTR}")
 # performance by turning on architecture specific code.
 # NOT SET is used to determine if the option is passed in.  It is reset to
 # default "None" down below.
-KOKKOS_OPTION(ARCH "NONE" STRING "Optimize for specific host architecture. Options are: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
+KOKKOS_OPTION(ARCH "" STRING "Optimize for specific host architecture. Options are: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
 
 # Ensure that KOKKOS_ARCH is in the ARCH_LIST
 IF (KOKKOS_ARCH MATCHES ",")
@@ -138,11 +136,11 @@ ENDIF()
 FOREACH(Arch ${KOKKOS_ARCH})
   STRING(TOUPPER ${Arch} ARCH)
   #force on all the architectures in the list
-  SET(Kokkos_ARCH_${ARCH} ON CACHE BOOL "optimize for architecture ${Arch}" FORCE)
   IF (NOT ${ARCH} IN_LIST KOKKOS_ARCH_LIST)
     MESSAGE(FATAL_ERROR "`${Arch}` is not an accepted value in KOKKOS_ARCH=`${KOKKOS_ARCH}`."
       "  Please pick from these choices: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
   ENDIF()
+  SET(Kokkos_ARCH_${ARCH} ON CACHE BOOL "optimize for architecture ${Arch}" FORCE)
   MESSAGE(STATUS "Setting Kokkos_ARCH_${ARCH}=ON from Kokkos_ARCH")
 ENDFOREACH()
 
