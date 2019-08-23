@@ -104,6 +104,55 @@ FUNCTION(TARGET_LINK_KOKKOS TARGET)
   ENDFOREACH()
 ENDFUNCTION(TARGET_LINK_KOKKOS)
 
+
+
+include(FindPackageHandleStandardArgs)
+
+#   This function makes sure that Kokkos was built with the requested backends
+#   and target architectures and generates a fatal error if it was not.
+#
+#   kokkos_check(
+#     [DEVICES <devices>...] # Set of backends (e.g. "OpenMP" and/or "Cuda")
+#     [ARCH <archs>...]      # Target architectures (e.g. "Power9" and/or "Volta70")
+#     [OPTIONS <options>...] # Optional settings (e.g. "PROFILING")
+#     [TPLS <tpls>...]       # Third party libraries
+#   )
+function(kokkos_check)
+  set(ALLOWED_ARGS DEVICES ARCH OPTIONS TPLS)
+  cmake_parse_arguments(KOKKOS_CHECK "" "" "${ALLOWED_ARGS}" ${ARGN})
+  # Get the list of keywords that were actually passed to the function.
+  set(REQUESTED_ARGS)
+  foreach(arg ${ALLOWED_ARGS})
+      if(KOKKOS_CHECK_${arg})
+      list(APPEND REQUESTED_ARGS ${arg})
+    endif()
+  endforeach()
+  set(KOKKOS_CHECK_SUCCESS TRUE)
+  foreach(arg ${REQUESTED_ARGS})
+    # Define variables named after the required arguments that are provided by
+    # the Kokkos install.
+    foreach(requested ${KOKKOS_CHECK_${arg}})
+      foreach(provided ${Kokkos_${arg}})
+        if(requested STREQUAL provided)
+          string(REPLACE ";" " " ${requested} "${KOKKOS_CHECK_${arg}}")
+        endif()
+      endforeach()
+    endforeach()
+    # Somewhat divert the CMake function below from its original purpose and
+    # use it to check that there are variables defined for all required
+    # arguments. Success or failure messages will be displayed but we are
+    # responsible for signaling failure and skip the build system generation.
+    find_package_handle_standard_args("Kokkos_${arg}" DEFAULT_MSG
+            ${KOKKOS_CHECK_${arg}})
+    if(NOT Kokkos_${arg}_FOUND)
+      set(KOKKOS_CHECK_SUCCESS FALSE)
+    endif()
+  endforeach()
+  if(NOT KOKKOS_CHECK_SUCCESS)
+    message(FATAL_ERROR "Kokkos does NOT provide all backends and/or architectures requested")
+  endif()
+endfunction()
+
 #Find dependencies
 INCLUDE(CMakeFindDependencyMacro)
 SET(FOUND_HPX_DIR @HPX_DIR@)
