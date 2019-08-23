@@ -41,7 +41,7 @@ install(FILES
   "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
   "${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
   DESTINATION ${wrong_place})
-install(EXPORT KokkosDeprecatedTargets DESTINATION ${wrong_place})
+install(EXPORT KokkosTargets DESTINATION ${wrong_place})
 
 # build and install pkgconfig file
 CONFIGURE_FILE(core/src/kokkos.pc.in kokkos.pc @ONLY)
