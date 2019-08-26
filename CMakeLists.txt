@@ -30,7 +30,6 @@ SET(KOKKOS_TOP_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 SET(KOKKOS_ENABLED_OPTIONS)      #exported in config file
 SET(KOKKOS_ENABLED_DEVICES)      #exported in config file
-SET(KOKKOS_ENABLED_DEVICES_UC)   #exported in config file
 SET(KOKKOS_ENABLED_ARCH_LIST)    #exported in config file
 
 

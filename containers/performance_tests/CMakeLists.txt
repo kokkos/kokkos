@@ -8,11 +8,11 @@ SET(SOURCES
   TestCuda.cpp
   )
 
-IF(Kokkos_ENABLE_Pthread)
+IF(Kokkos_ENABLE_PTHREAD)
   LIST( APPEND SOURCES TestThreads.cpp)
 ENDIF()
 
-IF(Kokkos_ENABLE_OpenMP)
+IF(Kokkos_ENABLE_OPENMP)
   LIST( APPEND SOURCES TestOpenMP.cpp)
 ENDIF()
 

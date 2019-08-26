@@ -153,7 +153,7 @@ The best way to install Kokkos is using the CMake build system. Assuming Kokkos 
 cmake $srcdir \
   -DCMAKE_CXX_COMPILER=$path_to_compiler \
   -DCMAKE_INSTALL_PREFIX=$path_to_install \
-  -DKokkos_ENABLE_OpenMP=On \
+  -DKokkos_ENABLE_OPENMP=On \
   -DKokkos_ARCH_HSW=On \
   -DKokkos_ENABLE_HWLOC=On \
   -DKokkos_HWLOC_DIR=$path_to_hwloc
@@ -172,7 +172,7 @@ The above is equivalent to:
 cmake $srcdir \
   -DCMAKE_CXX_COMPILER=$path_to_compiler \
   -DCMAKE_INSTALL_PREFIX=$path_to_install \
-  -DKokkos_DEVICES=OpenMP,SERIAL \
+  -DKokkos_DEVICES=OPENMP,SERIAL \
   -DKokkos_ARCH=HSW \
   -DKokkos_ENABLE_HWLOC=On \
   -DKokkos_HWLOC_DIR=$path_to_hwloc

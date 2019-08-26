@@ -353,9 +353,7 @@ Strings passed to `Kokkos_ARCH` are not case-sensitive.
     * Whether to optimize for the WSM architecture
     * BOOL Default: OFF
 
-
-
-##### [LICENSE](https://github.com/sstsimulator/sst-core/blob/devel/LICENSE)
+##### [LICENSE](https://github.com/kokkos/kokkos/blob/devel/LICENSE)
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
