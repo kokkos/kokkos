@@ -39,13 +39,13 @@ IF(Kokkos_ENABLE_HPX)
   )
 ENDIF()
 
-IF(Kokkos_ENABLE_Serial)
+IF(Kokkos_ENABLE_SERIAL)
   LIST( APPEND SOURCES
     TestSerial.cpp
   )
 ENDIF()
 
-IF(Kokkos_ENABLE_Pthread)
+IF(Kokkos_ENABLE_PTHREAD)
   LIST( APPEND SOURCES
     TestThreads.cpp
   )

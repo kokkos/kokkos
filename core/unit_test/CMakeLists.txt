@@ -193,7 +193,7 @@ IF(KOKKOS_ENABLE_SERIAL)
   ENDIF()
 ENDIF()
 
-IF(Kokkos_ENABLE_Pthread)
+IF(Kokkos_ENABLE_PTHREAD)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Threads
     SOURCES
@@ -508,7 +508,7 @@ IF(Kokkos_ENABLE_HPX)
   )
 ENDIF()
 
-IF(Kokkos_ENABLE_Qthreads)
+IF(Kokkos_ENABLE_QTHREADS)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Qthreads
     SOURCES
@@ -545,7 +545,7 @@ IF(Kokkos_ENABLE_Qthreads)
   )
 ENDIF()
 
-IF(Kokkos_ENABLE_Cuda)
+IF(Kokkos_ENABLE_CUDA)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Cuda
     SOURCES

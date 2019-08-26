@@ -8,7 +8,7 @@ SET(SOURCES
   TestCuda.cpp
   )
 
-IF(Kokkos_ENABLE_Pthread)
+IF(Kokkos_ENABLE_PTHREAD)
   LIST( APPEND SOURCES TestThreads.cpp)
 ENDIF()
 
