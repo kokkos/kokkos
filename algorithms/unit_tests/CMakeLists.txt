@@ -27,7 +27,7 @@ SET(SOURCES
   TestCuda.cpp
   )
 
-IF(Kokkos_ENABLE_OpenMP)
+IF(Kokkos_ENABLE_OPENMP)
   LIST( APPEND SOURCES
     TestOpenMP.cpp
   )

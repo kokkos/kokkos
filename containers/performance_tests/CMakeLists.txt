@@ -12,7 +12,7 @@ IF(Kokkos_ENABLE_Pthread)
   LIST( APPEND SOURCES TestThreads.cpp)
 ENDIF()
 
-IF(Kokkos_ENABLE_OpenMP)
+IF(Kokkos_ENABLE_OPENMP)
   LIST( APPEND SOURCES TestOpenMP.cpp)
 ENDIF()
 

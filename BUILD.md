@@ -188,7 +188,7 @@ Detailed build instructions coming soon!
 * Kokkos_ENABLE_MEMKIND
     * Whether to enable the MEMKIND library
     * BOOL Default: Off
-* Kokkos_ENABLE_OpenMP
+* Kokkos_ENABLE_OPENMP
     * Whether to build OpenMP backend
     * BOOL Default: OFF
 * Kokkos_ENABLE_PROFILING
