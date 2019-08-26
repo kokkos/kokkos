@@ -56,6 +56,15 @@ list(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+  IF (Spack_WORKAROUND) 
+    #if we are explicitly using Spack for development,
+    #nuke the Spack compiler
+    SEt(SPACK_CXX $ENV{SPACK_CXX})
+    IF(SPACK_CXX)
+      SET(CMAKE_CXX_COMPILER ${SPACK_CXX} CACHE STRING "the C++ compiler" FORCE)
+      SET(ENV{CXX} ${SPACK_CXX})
+    ENDIF()
+  ENDif()
   IF(NOT DEFINED ${PROJECT_NAME})
     PROJECT(Kokkos CXX)
   ENDIF()

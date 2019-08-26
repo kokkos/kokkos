@@ -188,13 +188,44 @@ target_link_libraries(myTarget Kokkos::kokkos)
 ````
 should be added to your CMakeLists.txt. Your configure should additionally include
 ````
--DKokkos_DIR=$path_to_install/cmake/lib
+-DKokkos_DIR=$path_to_install/cmake/lib/Kokkos
 ````
 or
 ````
 -DKokkos_ROOT=$path_to_install
 ````
 for the install location given above.
+
+## Spack
+An alternative to manually building with the CMake is to use the Spack package manager.
+To do so, download the `kokkos-spack` git repo and add to the package list:
+````
+spack repo add $path-to-kokkos-spack
+````
+A basic installation would be done as:
+````
+spack install kokkos
+````
+Spack allows options and and compilers to be tuned in the install command.
+````
+spack install kokkos@3.0 %gcc@7.3.0 +openmp
+````
+This example illustrates the three most common parameters to Spack:
+* Variants: specified with, e.g. `+openmp`, this activates (or deactivates with, e.g. `~openmp`) certain options.
+* Version:  immediately following `kokkos` the `@version` can specify a particular Kokkos to build
+* Compiler: a default compiler will be chosen if not specified, but an exact compiler version can be given with the `%`option.
+
+For a complete list of Kokkos options, run:
+````
+spack info kokkos
+````
+Spack currently installs packages to a location determined by a unique hash. This hash name is not really "human readable".
+Generally, Spack usage should never really require you to reference the computer-generated unique install folder. 
+More details are given in the [build instructions](BUILD.md). If you must know, you can locate Spack Kokkos installations with:
+````
+spack find -p kokkos ...
+````
+where `...` is the unique spec identifying the particular Kokkos configuration and version.
 
 
 ## Raw Makefile 
