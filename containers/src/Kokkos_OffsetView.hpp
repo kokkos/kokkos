@@ -809,7 +809,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   KOKKOS_INLINE_FUNCTION
   OffsetView() : m_track(), m_map() {
-    for (size_t i = 0; i < Rank; ++i) m_begins[i] = KOKKOS_INVALID_INDEX;
+    for (size_t i = 0; i < Rank; ++i) m_begins[i] = KOKKOS_INVALID_OFFSET;
   }
 
   KOKKOS_INLINE_FUNCTION
