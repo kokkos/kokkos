@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestMDRange_a.hpp>
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestMDRange_a.hpp>

@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<openmp/TestOpenMP_Category.hpp>
-#include<TestMDRange_a.hpp>
-
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestMDRange_a.hpp>

@@ -43,4 +43,3 @@
 
 #include <threads/TestThreads_Category.hpp>
 #include <TestViewOfClass.hpp>
-

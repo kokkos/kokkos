@@ -47,36 +47,36 @@
 namespace Test {
 
 #if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
-TEST_F( TEST_CATEGORY, team_scan )
-{
-  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 0 );
-  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
-  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 10 );
-  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 10 );
-  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 10000 );
-  TestScanTeam< TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 10000 );
+TEST_F(TEST_CATEGORY, team_scan) {
+  TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
+  TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
+  TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(10);
+  TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(10);
+  TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(10000);
+  TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(10000);
 }
 #endif
 
-TEST_F( TEST_CATEGORY, team_long_reduce )
-{
-  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 0 );
-  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
-  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 3 );
-  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
-  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 100000 );
-  TestReduceTeam< long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
+TEST_F(TEST_CATEGORY, team_long_reduce) {
+  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
+  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
+  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(3);
+  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(3);
+  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(
+      100000);
+  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(
+      100000);
 }
 
-TEST_F( TEST_CATEGORY, team_double_reduce )
-{
-  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 0 );
-  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
-  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 3 );
-  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 3 );
-  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >( 100000 );
-  TestReduceTeam< double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >( 100000 );
+TEST_F(TEST_CATEGORY, team_double_reduce) {
+  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
+  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
+  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(3);
+  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(3);
+  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(
+      100000);
+  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(
+      100000);
 }
 
-} // namespace Test
-
+}  // namespace Test

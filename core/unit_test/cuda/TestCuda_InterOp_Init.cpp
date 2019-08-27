@@ -47,39 +47,38 @@
 namespace Test {
 
 __global__ void offset(int* p) {
-  int idx = blockIdx.x*blockDim.x + threadIdx.x;
-  if(idx<100) {
-    p[idx]+=idx;
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < 100) {
+    p[idx] += idx;
   }
 }
 
-// Test whether allocations survive Kokkos initialize/finalize if done via Raw Cuda.
-TEST_F( cuda, raw_cuda_interop )
-{
+// Test whether allocations survive Kokkos initialize/finalize if done via Raw
+// Cuda.
+TEST_F(cuda, raw_cuda_interop) {
   int* p;
-  cudaMalloc(&p,sizeof(int)*100);
-  Kokkos::InitArguments arguments{-1,-1,-1, false};
+  cudaMalloc(&p, sizeof(int) * 100);
+  Kokkos::InitArguments arguments{-1, -1, -1, false};
   Kokkos::initialize(arguments);
 
-  Kokkos::View<int*,Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-    v(p,100);
-  Kokkos::deep_copy(v,5);
+  Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(p, 100);
+  Kokkos::deep_copy(v, 5);
 
   Kokkos::finalize();
 
-  offset<<<100,64>>>(p);
-  CUDA_SAFE_CALL( cudaDeviceSynchronize());
+  offset<<<100, 64>>>(p);
+  CUDA_SAFE_CALL(cudaDeviceSynchronize());
 
   int* h_p = new int[100];
-  cudaMemcpy( h_p , p , sizeof(int)*100 , cudaMemcpyDefault );
-  CUDA_SAFE_CALL( cudaDeviceSynchronize());
-  int64_t sum = 0;
+  cudaMemcpy(h_p, p, sizeof(int) * 100, cudaMemcpyDefault);
+  CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  int64_t sum        = 0;
   int64_t sum_expect = 0;
-  for(int i=0; i<100; i++) {
+  for (int i = 0; i < 100; i++) {
     sum += h_p[i];
-    sum_expect += 5+i;
+    sum_expect += 5 + i;
   }
 
-  ASSERT_EQ(sum,sum_expect);
+  ASSERT_EQ(sum, sum_expect);
 }
-}
+}  // namespace Test

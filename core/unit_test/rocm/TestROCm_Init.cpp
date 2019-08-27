@@ -42,9 +42,7 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestInit.hpp>
-#include<TestCompilerMacros.hpp>
-#include<TestPolicyConstruction.hpp>
-
-
+#include <rocm/TestROCm_Category.hpp>
+#include <TestInit.hpp>
+#include <TestCompilerMacros.hpp>
+#include <TestPolicyConstruction.hpp>

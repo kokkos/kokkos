@@ -45,11 +45,11 @@
 
 namespace Test {
 
-TEST_F( default_exec, ViewResize_Rank8 ) {
+TEST_F(default_exec, ViewResize_Rank8) {
   printf("Resize View Performance for LayoutLeft:\n");
-  run_resizeview_tests8<Kokkos::LayoutLeft>(10,1);
+  run_resizeview_tests8<Kokkos::LayoutLeft>(10, 1);
   printf("Resize View Performance for LayoutRight:\n");
-  run_resizeview_tests8<Kokkos::LayoutRight>(10,1);
+  run_resizeview_tests8<Kokkos::LayoutRight>(10, 1);
 }
 
-}
+}  // namespace Test

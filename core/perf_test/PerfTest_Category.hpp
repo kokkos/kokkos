@@ -52,15 +52,13 @@ extern int command_line_num_args(int n = 0);
 extern const char* command_line_arg(int k, char** input_args = NULL);
 
 class default_exec : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {
-  }
+ protected:
+  static void SetUpTestCase() {}
 
-  static void TearDownTestCase() {
-  }
+  static void TearDownTestCase() {}
 };
 
-} // namespace Test
+}  // namespace Test
 
 #define TEST_CATEGORY default_exec
 #define TEST_EXECSPACE Kokkos::DefaultExecutionSpace

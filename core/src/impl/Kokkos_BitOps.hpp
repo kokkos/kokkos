@@ -49,35 +49,35 @@
 #include <climits>
 
 #ifdef KOKKOS_COMPILER_INTEL
-#include<immintrin.h>
+#include <immintrin.h>
 #endif
 
-#if defined( __HCC_ACCELERATOR__ )
+#if defined(__HCC_ACCELERATOR__)
 #include <hc.hpp>
 #endif
 
 namespace Kokkos {
 
 KOKKOS_FORCEINLINE_FUNCTION
-int log2( unsigned i )
-{
+int log2(unsigned i) {
   enum : int { shift = sizeof(unsigned) * CHAR_BIT - 1 };
-#if defined( __CUDA_ARCH__ )
+#if defined(__CUDA_ARCH__)
   return shift - __clz(i);
-#elif defined( __HCC_ACCELERATOR__ )
-  return  (int)hc::__firstbit_u32_u32(i);
-#elif defined( KOKKOS_COMPILER_INTEL )
+#elif defined(__HCC_ACCELERATOR__)
+  return (int)hc::__firstbit_u32_u32(i);
+#elif defined(KOKKOS_COMPILER_INTEL)
   return _bit_scan_reverse(i);
-#elif defined( KOKKOS_COMPILER_IBM )
+#elif defined(KOKKOS_COMPILER_IBM)
   return shift - __cntlz4(i);
-#elif defined( KOKKOS_COMPILER_CRAYC )
-  return i ? shift - _leadz32(i) : 0 ;
-#elif defined( __GNUC__ ) || defined( __GNUG__ )
+#elif defined(KOKKOS_COMPILER_CRAYC)
+  return i ? shift - _leadz32(i) : 0;
+#elif defined(__GNUC__) || defined(__GNUG__)
   return shift - __builtin_clz(i);
 #else
   int offset = 0;
-  if ( i ) {
-    for ( offset = shift ; (i & ( 1 << offset ) ) == 0 ; --offset );
+  if (i) {
+    for (offset = shift; (i & (1 << offset)) == 0; --offset)
+      ;
   }
   return offset;
 #endif
@@ -90,50 +90,50 @@ namespace Impl {
  *  If none then return -1 ;
  */
 KOKKOS_FORCEINLINE_FUNCTION
-int bit_first_zero( unsigned i ) noexcept
-{
+int bit_first_zero(unsigned i) noexcept {
   enum : unsigned { full = ~0u };
 
-#if defined( __CUDA_ARCH__ )
-  return full != i ? __ffs( ~i ) - 1 : -1 ;
-#elif defined( __HCC_ACCELERATOR__ )
-  return full != i ? (int)hc::__firstbit_u32_u32(~i) : -1 ;
-#elif defined( KOKKOS_COMPILER_INTEL )
-  return full != i ? _bit_scan_forward( ~i ) : -1 ;
-#elif defined( KOKKOS_COMPILER_IBM )
-  return full != i ? __cnttz4( ~i ) : -1 ;
-#elif defined( KOKKOS_COMPILER_CRAYC )
-  return full != i ? _popcnt( i ^ (i+1) ) - 1 : -1 ;
-#elif defined( KOKKOS_COMPILER_GNU ) || defined( __GNUC__ ) || defined( __GNUG__ )
-  return full != i ? __builtin_ffs( ~i ) - 1 : -1 ;
+#if defined(__CUDA_ARCH__)
+  return full != i ? __ffs(~i) - 1 : -1;
+#elif defined(__HCC_ACCELERATOR__)
+  return full != i ? (int)hc::__firstbit_u32_u32(~i) : -1;
+#elif defined(KOKKOS_COMPILER_INTEL)
+  return full != i ? _bit_scan_forward(~i) : -1;
+#elif defined(KOKKOS_COMPILER_IBM)
+  return full != i ? __cnttz4(~i) : -1;
+#elif defined(KOKKOS_COMPILER_CRAYC)
+  return full != i ? _popcnt(i ^ (i + 1)) - 1 : -1;
+#elif defined(KOKKOS_COMPILER_GNU) || defined(__GNUC__) || defined(__GNUG__)
+  return full != i ? __builtin_ffs(~i) - 1 : -1;
 #else
-  int offset = -1 ;
-  if ( full != i ) {
-    for ( offset = 0 ; i & ( 1 << offset ) ; ++offset );
+  int offset = -1;
+  if (full != i) {
+    for (offset = 0; i & (1 << offset); ++offset)
+      ;
   }
-  return offset ;
+  return offset;
 #endif
 }
 
 KOKKOS_FORCEINLINE_FUNCTION
-int bit_scan_forward( unsigned i )
-{
-#if defined( __CUDA_ARCH__ )
+int bit_scan_forward(unsigned i) {
+#if defined(__CUDA_ARCH__)
   return __ffs(i) - 1;
-#elif defined( __HCC_ACCELERATOR__ )
-  return  (int)hc::__firstbit_u32_u32(i);
-#elif defined( KOKKOS_COMPILER_INTEL )
+#elif defined(__HCC_ACCELERATOR__)
+  return (int)hc::__firstbit_u32_u32(i);
+#elif defined(KOKKOS_COMPILER_INTEL)
   return _bit_scan_forward(i);
-#elif defined( KOKKOS_COMPILER_IBM )
+#elif defined(KOKKOS_COMPILER_IBM)
   return __cnttz4(i);
-#elif defined( KOKKOS_COMPILER_CRAYC )
-  return i ? _popcnt(~i & (i-1)) : -1;
-#elif defined( KOKKOS_COMPILER_GNU ) || defined( __GNUC__ ) || defined( __GNUG__ )
+#elif defined(KOKKOS_COMPILER_CRAYC)
+  return i ? _popcnt(~i & (i - 1)) : -1;
+#elif defined(KOKKOS_COMPILER_GNU) || defined(__GNUC__) || defined(__GNUG__)
   return __builtin_ffs(i) - 1;
 #else
   int offset = -1;
-  if ( i ) {
-    for ( offset = 0 ; (i & ( 1 << offset ) ) == 0 ; ++offset );
+  if (i) {
+    for (offset = 0; (i & (1 << offset)) == 0; ++offset)
+      ;
   }
   return offset;
 #endif
@@ -141,41 +141,37 @@ int bit_scan_forward( unsigned i )
 
 /// Count the number of bits set.
 KOKKOS_FORCEINLINE_FUNCTION
-int bit_count( unsigned i )
-{
-#if defined( __CUDA_ARCH__ )
+int bit_count(unsigned i) {
+#if defined(__CUDA_ARCH__)
   return __popc(i);
-#elif defined( __HCC_ACCELERATOR__ )
-  return  (int)hc::__popcount_u32_b32(i);
-#elif defined ( __INTEL_COMPILER )
+#elif defined(__HCC_ACCELERATOR__)
+  return (int)hc::__popcount_u32_b32(i);
+#elif defined(__INTEL_COMPILER)
   return _popcnt32(i);
-#elif defined( KOKKOS_COMPILER_IBM )
+#elif defined(KOKKOS_COMPILER_IBM)
   return __popcnt4(i);
-#elif defined( KOKKOS_COMPILER_CRAYC )
+#elif defined(KOKKOS_COMPILER_CRAYC)
   return _popcnt(i);
-#elif defined( __GNUC__ ) || defined( __GNUG__ )
+#elif defined(__GNUC__) || defined(__GNUG__)
   return __builtin_popcount(i);
 #else
   // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetNaive
-  i = i - ( ( i >> 1 ) & ~0u / 3u );                             // temp
-  i = ( i & ~0u / 15u * 3u ) + ( ( i >> 2 ) & ~0u / 15u * 3u );  // temp
-  i = ( i + ( i >> 4 ) ) & ~0u / 255u * 15u;                     // temp
+  i = i - ((i >> 1) & ~0u / 3u);                           // temp
+  i = (i & ~0u / 15u * 3u) + ((i >> 2) & ~0u / 15u * 3u);  // temp
+  i = (i + (i >> 4)) & ~0u / 255u * 15u;                   // temp
 
   // count
-  return (int)( ( i * ( ~0u / 255u ) ) >> ( sizeof(unsigned) - 1 ) * CHAR_BIT );
+  return (int)((i * (~0u / 255u)) >> (sizeof(unsigned) - 1) * CHAR_BIT);
 #endif
 }
 
 KOKKOS_INLINE_FUNCTION
-unsigned integral_power_of_two_that_contains( const unsigned N )
-{
-  const unsigned i = Kokkos::log2( N );
-  return ( (1u << i) < N ) ? i + 1 : i ;
+unsigned integral_power_of_two_that_contains(const unsigned N) {
+  const unsigned i = Kokkos::log2(N);
+  return ((1u << i) < N) ? i + 1 : i;
 }
 
+}  // namespace Impl
+}  // namespace Kokkos
 
-} // namespace Impl
-} // namespace Kokkos
-
-#endif // KOKKOS_BITOPS_HPP
-
+#endif  // KOKKOS_BITOPS_HPP

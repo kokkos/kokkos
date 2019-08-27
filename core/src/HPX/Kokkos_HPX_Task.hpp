@@ -65,7 +65,7 @@ namespace Impl {
 template <class QueueType>
 class TaskQueueSpecialization<
     SimpleTaskScheduler<Kokkos::Experimental::HPX, QueueType>> {
-public:
+ public:
   using execution_space = Kokkos::Experimental::HPX;
   using scheduler_type =
       SimpleTaskScheduler<Kokkos::Experimental::HPX, QueueType>;
@@ -105,15 +105,16 @@ public:
         std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
 
         buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id());
-        HPXTeamMember member(TeamPolicyInternal<Kokkos::Experimental::HPX>(
-                                 Kokkos::Experimental::HPX(), num_worker_threads, 1),
-                             0, t, buffer.get(t), 512);
+        HPXTeamMember member(
+            TeamPolicyInternal<Kokkos::Experimental::HPX>(
+                Kokkos::Experimental::HPX(), num_worker_threads, 1),
+            0, t, buffer.get(t), 512);
 
         member_type single_exec(*scheduler, member);
         member_type &team_exec = single_exec;
 
         auto &team_scheduler = team_exec.scheduler();
-        auto current_task = OptionalRef<task_base_type>(nullptr);
+        auto current_task    = OptionalRef<task_base_type>(nullptr);
 
         while (!queue.is_done()) {
           current_task =
@@ -142,11 +143,11 @@ public:
   template <typename TaskType>
   static void get_function_pointer(typename TaskType::function_type &ptr,
                                    typename TaskType::destroy_type &dtor) {
-    ptr = TaskType::apply;
+    ptr  = TaskType::apply;
     dtor = TaskType::destroy;
   }
 
-private:
+ private:
   const scheduler_type *scheduler;
 };
 
@@ -155,21 +156,21 @@ class TaskQueueSpecializationConstrained<
     Scheduler, typename std::enable_if<
                    std::is_same<typename Scheduler::execution_space,
                                 Kokkos::Experimental::HPX>::value>::type> {
-public:
+ public:
   using execution_space = Kokkos::Experimental::HPX;
-  using scheduler_type = Scheduler;
+  using scheduler_type  = Scheduler;
   using member_type =
       TaskTeamMemberAdapter<Kokkos::Impl::HPXTeamMember, scheduler_type>;
   using memory_space = Kokkos::HostSpace;
 
-  static void
-  iff_single_thread_recursive_execute(scheduler_type const &scheduler) {
+  static void iff_single_thread_recursive_execute(
+      scheduler_type const &scheduler) {
     using task_base_type = typename scheduler_type::task_base;
-    using queue_type = typename scheduler_type::queue_type;
+    using queue_type     = typename scheduler_type::queue_type;
 
     if (1 == Kokkos::Experimental::HPX::concurrency()) {
       task_base_type *const end = (task_base_type *)task_base_type::EndTag;
-      task_base_type *task = end;
+      task_base_type *task      = end;
 
       HPXTeamMember member(TeamPolicyInternal<Kokkos::Experimental::HPX>(
                                Kokkos::Experimental::HPX(), 1, 1),
@@ -187,8 +188,7 @@ public:
           }
         }
 
-        if (end == task)
-          break;
+        if (end == task) break;
 
         (*task->m_apply)(task, &single_exec);
 
@@ -212,9 +212,9 @@ public:
     using hpx::apply;
     using hpx::lcos::local::counting_semaphore;
     using task_base_type = typename scheduler_type::task_base;
-    using queue_type = typename scheduler_type::queue_type;
+    using queue_type     = typename scheduler_type::queue_type;
 
-    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+    const int num_worker_threads     = Kokkos::Experimental::HPX::concurrency();
     static task_base_type *const end = (task_base_type *)task_base_type::EndTag;
     constexpr task_base_type *no_more_tasks_sentinel = nullptr;
 
@@ -242,7 +242,7 @@ public:
         member_type single_exec(*scheduler, member);
         member_type &team_exec = single_exec;
 
-        auto &team_queue = team_exec.scheduler().queue();
+        auto &team_queue     = team_exec.scheduler().queue();
         task_base_type *task = no_more_tasks_sentinel;
 
         do {
@@ -276,11 +276,11 @@ public:
   template <typename TaskType>
   static void get_function_pointer(typename TaskType::function_type &ptr,
                                    typename TaskType::destroy_type &dtor) {
-    ptr = TaskType::apply;
+    ptr  = TaskType::apply;
     dtor = TaskType::destroy;
   }
 
-private:
+ private:
   const scheduler_type *scheduler;
 };
 
@@ -288,8 +288,8 @@ extern template class TaskQueue<
     Kokkos::Experimental::HPX,
     typename Kokkos::Experimental::HPX::memory_space>;
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

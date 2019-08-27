@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestRange.hpp>
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestRange.hpp>

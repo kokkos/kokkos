@@ -133,7 +133,11 @@ do
     if [ $optimization_applied -eq 1 ]; then
        echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-O*), only the first is used because nvcc can only accept a single optimization setting."
     else
-       shared_args="$shared_args $1"
+       if [ "$1" = "-O" ]; then
+         shared_args="$shared_args -O2"
+       else
+         shared_args="$shared_args $1"
+       fi
        optimization_applied=1
     fi
     ;;
@@ -179,7 +183,7 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument
-  -rdc|-maxrregcount|--default-stream)
+  -rdc|-maxrregcount|--default-stream|-Xnvlink)
     cuda_args="$cuda_args $1 $2"
     shift
     ;;
@@ -307,16 +311,6 @@ do
 
   shift
 done
-
-#Check if nvcc exists
-if [ $host_only -ne 1 ]; then
-  var=$(which nvcc )
-  if [ $? -gt 0 ]; then
-    echo "Could not find nvcc in PATH"
-    exit $?
-  fi
-fi
-
 
 # Only print host compiler version
 if [ $get_host_version -eq 1 ]; then

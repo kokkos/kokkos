@@ -53,12 +53,11 @@ namespace Kokkos {
 namespace Impl {
 
 struct concurrent_bitset {
-public:
-
+ public:
   // 32 bits per integer value
 
-  enum : uint32_t { bits_per_int_lg2  = 5 };
-  enum : uint32_t { bits_per_int_mask = ( 1 << bits_per_int_lg2 ) - 1 };
+  enum : uint32_t { bits_per_int_lg2 = 5 };
+  enum : uint32_t { bits_per_int_mask = (1 << bits_per_int_lg2) - 1 };
 
   // Buffer is uint32_t[ buffer_bound ]
   //   [ uint32_t { state_header | used_count } , uint32_t bits[*] ]
@@ -74,29 +73,28 @@ public:
   //    before risking an overflow race condition on a full bitset.
 
   enum : uint32_t { max_bit_count_lg2 = 25 };
-  enum : uint32_t { max_bit_count     = 1u << max_bit_count_lg2 };
+  enum : uint32_t { max_bit_count = 1u << max_bit_count_lg2 };
   enum : uint32_t { state_shift = 26 };
-  enum : uint32_t { state_used_mask   = ( 1 << state_shift ) - 1 };
+  enum : uint32_t { state_used_mask = (1 << state_shift) - 1 };
   enum : uint32_t { state_header_mask = uint32_t(0x001f) << state_shift };
 
-  KOKKOS_INLINE_FUNCTION static constexpr
-  uint32_t buffer_bound_lg2( uint32_t const bit_bound_lg2 ) noexcept
-    {
-      return bit_bound_lg2 <= max_bit_count_lg2
-           ? 1 + ( 1u << ( bit_bound_lg2 > bits_per_int_lg2
-                         ? bit_bound_lg2 - bits_per_int_lg2 : 0 ) )
-           : 0 ;
-    }
+  KOKKOS_INLINE_FUNCTION static constexpr uint32_t buffer_bound_lg2(
+      uint32_t const bit_bound_lg2) noexcept {
+    return bit_bound_lg2 <= max_bit_count_lg2
+               ? 1 + (1u << (bit_bound_lg2 > bits_per_int_lg2
+                                 ? bit_bound_lg2 - bits_per_int_lg2
+                                 : 0))
+               : 0;
+  }
 
   /**\brief  Initialize bitset buffer */
-  KOKKOS_INLINE_FUNCTION static constexpr
-  uint32_t buffer_bound( uint32_t const bit_bound ) noexcept
-    {
-      return bit_bound <= max_bit_count
-           ? 1 + ( bit_bound >> bits_per_int_lg2 ) +
-             ( bit_bound & bits_per_int_mask ? 1 : 0 )
-           : 0 ;
-    }
+  KOKKOS_INLINE_FUNCTION static constexpr uint32_t buffer_bound(
+      uint32_t const bit_bound) noexcept {
+    return bit_bound <= max_bit_count
+               ? 1 + (bit_bound >> bits_per_int_lg2) +
+                     (bit_bound & bits_per_int_mask ? 1 : 0)
+               : 0;
+  }
 
   /**\brief  Claim any bit within the bitset bound.
    *
@@ -118,77 +116,70 @@ public:
    *  Recommended to have hint
    *    bit = Kokkos::Impl::clock_tic() & ((1u<<bit_bound_lg2) - 1)
    */
-  KOKKOS_INLINE_FUNCTION static
-  Kokkos::pair<int,int>
-  acquire_bounded_lg2( uint32_t volatile * const buffer
-                     , uint32_t const bit_bound_lg2
-                     , uint32_t bit = 0                /* optional hint */
-                     , uint32_t const state_header = 0 /* optional header */
-                     ) noexcept
-    {
-      typedef Kokkos::pair<int,int> type ;
+  KOKKOS_INLINE_FUNCTION static Kokkos::pair<int, int> acquire_bounded_lg2(
+      uint32_t volatile *const buffer, uint32_t const bit_bound_lg2,
+      uint32_t bit = 0 /* optional hint */
+      ,
+      uint32_t const state_header = 0 /* optional header */
+      ) noexcept {
+    typedef Kokkos::pair<int, int> type;
 
-      const uint32_t bit_bound  = 1 << bit_bound_lg2 ;
-      const uint32_t word_count = bit_bound >> bits_per_int_lg2 ;
+    const uint32_t bit_bound  = 1 << bit_bound_lg2;
+    const uint32_t word_count = bit_bound >> bits_per_int_lg2;
 
-      if ( ( max_bit_count_lg2 < bit_bound_lg2 ) ||
-           ( state_header & ~state_header_mask ) ||
-           ( bit_bound < bit ) ) {
-        return type(-3,-3);
+    if ((max_bit_count_lg2 < bit_bound_lg2) ||
+        (state_header & ~state_header_mask) || (bit_bound < bit)) {
+      return type(-3, -3);
+    }
+
+    // Use potentially two fetch_add to avoid CAS loop.
+    // Could generate "racing" failure-to-acquire
+    // when is full at the atomic_fetch_add(+1)
+    // then a release occurs before the atomic_fetch_add(-1).
+
+    const uint32_t state =
+        (uint32_t)Kokkos::atomic_fetch_add((volatile int *)buffer, 1);
+
+    const uint32_t state_error = state_header != (state & state_header_mask);
+
+    const uint32_t state_bit_used = state & state_used_mask;
+
+    if (state_error || (bit_bound <= state_bit_used)) {
+      Kokkos::atomic_fetch_add((volatile int *)buffer, -1);
+      return state_error ? type(-2, -2) : type(-1, -1);
+    }
+
+    // Do not update bit until count is visible:
+
+    Kokkos::memory_fence();
+
+    // There is a zero bit available somewhere,
+    // now find the (first) available bit and set it.
+
+    while (1) {
+      const uint32_t word = bit >> bits_per_int_lg2;
+      const uint32_t mask = 1u << (bit & bits_per_int_mask);
+      const uint32_t prev = Kokkos::atomic_fetch_or(buffer + word + 1, mask);
+
+      if (!(prev & mask)) {
+        // Successfully claimed 'result.first' by
+        // atomically setting that bit.
+        return type(bit, state_bit_used + 1);
       }
 
-      // Use potentially two fetch_add to avoid CAS loop.
-      // Could generate "racing" failure-to-acquire
-      // when is full at the atomic_fetch_add(+1)
-      // then a release occurs before the atomic_fetch_add(-1).
+      // Failed race to set the selected bit
+      // Find a new bit to try.
 
-      const uint32_t state = (uint32_t)
-        Kokkos::atomic_fetch_add( (volatile int *) buffer , 1 );
+      const int j = Kokkos::Impl::bit_first_zero(prev);
 
-      const uint32_t state_error =
-        state_header != ( state & state_header_mask );
-
-      const uint32_t state_bit_used = state & state_used_mask ;
-
-      if ( state_error || ( bit_bound <= state_bit_used ) ) {
-        Kokkos::atomic_fetch_add( (volatile int *) buffer , -1 );
-        return state_error ? type(-2,-2) : type(-1,-1);
-      }
-
-      // Do not update bit until count is visible:
-
-      Kokkos::memory_fence();
-
-      // There is a zero bit available somewhere,
-      // now find the (first) available bit and set it.
-
-      while(1) {
-
-        const uint32_t word = bit >> bits_per_int_lg2 ;
-        const uint32_t mask = 1u << ( bit & bits_per_int_mask );
-        const uint32_t prev = Kokkos::atomic_fetch_or(buffer + word + 1, mask);
-
-        if ( ! ( prev & mask ) ) {
-          // Successfully claimed 'result.first' by
-          // atomically setting that bit.
-          return type( bit , state_bit_used + 1 );
-        }
-
-        // Failed race to set the selected bit
-        // Find a new bit to try.
-
-        const int j = Kokkos::Impl::bit_first_zero( prev );
-
-        if ( 0 <= j ) {
-          bit = ( word << bits_per_int_lg2 ) | uint32_t(j);
-        }
-        else {
-          bit =
-            ( (word+1) < word_count ? ((word+1) << bits_per_int_lg2) : 0 )
-            | ( bit & bits_per_int_mask );
-        }
+      if (0 <= j) {
+        bit = (word << bits_per_int_lg2) | uint32_t(j);
+      } else {
+        bit = ((word + 1) < word_count ? ((word + 1) << bits_per_int_lg2) : 0) |
+              (bit & bits_per_int_mask);
       }
     }
+  }
 
   /**\brief  Claim any bit within the bitset bound.
    *
@@ -210,77 +201,71 @@ public:
    *  Recommended to have hint
    *    bit = Kokkos::Impl::clock_tic() % bit_bound
    */
-  KOKKOS_INLINE_FUNCTION static
-  Kokkos::pair<int,int>
-  acquire_bounded( uint32_t volatile * const buffer
-                 , uint32_t const bit_bound
-                 , uint32_t bit = 0                /* optional hint */
-                 , uint32_t const state_header = 0 /* optional header */
-                 ) noexcept
-    {
-      typedef Kokkos::pair<int,int> type ;
+  KOKKOS_INLINE_FUNCTION static Kokkos::pair<int, int> acquire_bounded(
+      uint32_t volatile *const buffer, uint32_t const bit_bound,
+      uint32_t bit = 0 /* optional hint */
+      ,
+      uint32_t const state_header = 0 /* optional header */
+      ) noexcept {
+    typedef Kokkos::pair<int, int> type;
 
-      if ( ( max_bit_count < bit_bound ) ||
-           ( state_header & ~state_header_mask ) ||
-           ( bit_bound <= bit ) ) {
-        return type(-3,-3);
+    if ((max_bit_count < bit_bound) || (state_header & ~state_header_mask) ||
+        (bit_bound <= bit)) {
+      return type(-3, -3);
+    }
+
+    const uint32_t word_count = bit_bound >> bits_per_int_lg2;
+
+    // Use potentially two fetch_add to avoid CAS loop.
+    // Could generate "racing" failure-to-acquire
+    // when is full at the atomic_fetch_add(+1)
+    // then a release occurs before the atomic_fetch_add(-1).
+
+    const uint32_t state =
+        (uint32_t)Kokkos::atomic_fetch_add((volatile int *)buffer, 1);
+
+    const uint32_t state_error = state_header != (state & state_header_mask);
+
+    const uint32_t state_bit_used = state & state_used_mask;
+
+    if (state_error || (bit_bound <= state_bit_used)) {
+      Kokkos::atomic_fetch_add((volatile int *)buffer, -1);
+      return state_error ? type(-2, -2) : type(-1, -1);
+    }
+
+    // Do not update bit until count is visible:
+
+    Kokkos::memory_fence();
+
+    // There is a zero bit available somewhere,
+    // now find the (first) available bit and set it.
+
+    while (1) {
+      const uint32_t word = bit >> bits_per_int_lg2;
+      const uint32_t mask = 1u << (bit & bits_per_int_mask);
+      const uint32_t prev = Kokkos::atomic_fetch_or(buffer + word + 1, mask);
+
+      if (!(prev & mask)) {
+        // Successfully claimed 'result.first' by
+        // atomically setting that bit.
+        return type(bit, state_bit_used + 1);
       }
 
-      const uint32_t word_count = bit_bound >> bits_per_int_lg2 ;
+      // Failed race to set the selected bit
+      // Find a new bit to try.
 
-      // Use potentially two fetch_add to avoid CAS loop.
-      // Could generate "racing" failure-to-acquire
-      // when is full at the atomic_fetch_add(+1)
-      // then a release occurs before the atomic_fetch_add(-1).
+      const int j = Kokkos::Impl::bit_first_zero(prev);
 
-      const uint32_t state = (uint32_t)
-        Kokkos::atomic_fetch_add( (volatile int *) buffer , 1 );
-
-      const uint32_t state_error =
-        state_header != ( state & state_header_mask );
-
-      const uint32_t state_bit_used = state & state_used_mask ;
-
-      if ( state_error || ( bit_bound <= state_bit_used ) ) {
-        Kokkos::atomic_fetch_add( (volatile int *) buffer , -1 );
-        return state_error ? type(-2,-2) : type(-1,-1);
+      if (0 <= j) {
+        bit = (word << bits_per_int_lg2) | uint32_t(j);
       }
 
-      // Do not update bit until count is visible:
-
-      Kokkos::memory_fence();
-
-      // There is a zero bit available somewhere,
-      // now find the (first) available bit and set it.
-
-      while(1) {
-
-        const uint32_t word = bit >> bits_per_int_lg2 ;
-        const uint32_t mask = 1u << ( bit & bits_per_int_mask );
-        const uint32_t prev = Kokkos::atomic_fetch_or(buffer + word + 1, mask);
-
-        if ( ! ( prev & mask ) ) {
-          // Successfully claimed 'result.first' by
-          // atomically setting that bit.
-          return type( bit , state_bit_used + 1 );
-        }
-
-        // Failed race to set the selected bit
-        // Find a new bit to try.
-
-        const int j = Kokkos::Impl::bit_first_zero( prev );
-
-        if ( 0 <= j ) {
-          bit = (word << bits_per_int_lg2 ) | uint32_t(j);
-        }
-
-        if ( ( j < 0 ) || ( bit_bound <= bit ) ) {
-          bit =
-            ( (word+1) < word_count ? ((word+1) << bits_per_int_lg2) : 0 )
-            | ( bit & bits_per_int_mask );
-        }
+      if ((j < 0) || (bit_bound <= bit)) {
+        bit = ((word + 1) < word_count ? ((word + 1) << bits_per_int_lg2) : 0) |
+              (bit & bits_per_int_mask);
       }
     }
+  }
 
   /**\brief
    *
@@ -291,30 +276,29 @@ public:
    *    -1 bit was already released
    *    -2 state_header error
    */
-  KOKKOS_INLINE_FUNCTION static
-  int release( uint32_t volatile * const buffer
-             , uint32_t const bit
-             , uint32_t const state_header = 0 /* optional header */
-             ) noexcept
-    {
-      if ( state_header != ( state_header_mask & *buffer ) ) { return -2 ; }
-
-      const uint32_t mask = 1u << ( bit & bits_per_int_mask );
-      const uint32_t prev =
-        Kokkos::atomic_fetch_and( buffer + ( bit >> bits_per_int_lg2 ) + 1
-                                , ~mask
-                                );
-
-      if ( ! ( prev & mask ) ) { return -1 ; }
-
-      // Do not update count until bit clear is visible
-      Kokkos::memory_fence();
-
-      const int count =
-        Kokkos::atomic_fetch_add( (volatile int *) buffer , -1 );
-
-      return ( count & state_used_mask ) - 1 ;
+  KOKKOS_INLINE_FUNCTION static int release(
+      uint32_t volatile *const buffer, uint32_t const bit,
+      uint32_t const state_header = 0 /* optional header */
+      ) noexcept {
+    if (state_header != (state_header_mask & *buffer)) {
+      return -2;
     }
+
+    const uint32_t mask = 1u << (bit & bits_per_int_mask);
+    const uint32_t prev =
+        Kokkos::atomic_fetch_and(buffer + (bit >> bits_per_int_lg2) + 1, ~mask);
+
+    if (!(prev & mask)) {
+      return -1;
+    }
+
+    // Do not update count until bit clear is visible
+    Kokkos::memory_fence();
+
+    const int count = Kokkos::atomic_fetch_add((volatile int *)buffer, -1);
+
+    return (count & state_used_mask) - 1;
+  }
 
   /**\brief
    *
@@ -325,33 +309,32 @@ public:
    *    -1 bit was already released
    *    -2 bit or state_header error
    */
-  KOKKOS_INLINE_FUNCTION static
-  int set( uint32_t volatile * const buffer
-         , uint32_t const bit
-         , uint32_t const state_header = 0 /* optional header */
-         ) noexcept
-    {
-      if ( state_header != ( state_header_mask & *buffer ) ) { return -2 ; }
-
-      const uint32_t mask = 1u << ( bit & bits_per_int_mask );
-      const uint32_t prev =
-        Kokkos::atomic_fetch_or( buffer + ( bit >> bits_per_int_lg2 ) + 1
-                               , mask
-                               );
-
-      if ( ! ( prev & mask ) ) { return -1 ; }
-
-      // Do not update count until bit clear is visible
-      Kokkos::memory_fence();
-
-      const int count =
-        Kokkos::atomic_fetch_add( (volatile int *) buffer , -1 );
-
-      return ( count & state_used_mask ) - 1 ;
+  KOKKOS_INLINE_FUNCTION static int set(
+      uint32_t volatile *const buffer, uint32_t const bit,
+      uint32_t const state_header = 0 /* optional header */
+      ) noexcept {
+    if (state_header != (state_header_mask & *buffer)) {
+      return -2;
     }
+
+    const uint32_t mask = 1u << (bit & bits_per_int_mask);
+    const uint32_t prev =
+        Kokkos::atomic_fetch_or(buffer + (bit >> bits_per_int_lg2) + 1, mask);
+
+    if (!(prev & mask)) {
+      return -1;
+    }
+
+    // Do not update count until bit clear is visible
+    Kokkos::memory_fence();
+
+    const int count = Kokkos::atomic_fetch_add((volatile int *)buffer, -1);
+
+    return (count & state_used_mask) - 1;
+  }
 };
 
-}} // namespace Kokkos::Impl
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_CONCURRENTBITSET_HPP */
-

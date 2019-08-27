@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<cuda/TestCuda_Category.hpp>
-#include<TestDynViewAPI_rank12345.hpp>
-
+#include <cuda/TestCuda_Category.hpp>
+#include <TestDynViewAPI_rank12345.hpp>

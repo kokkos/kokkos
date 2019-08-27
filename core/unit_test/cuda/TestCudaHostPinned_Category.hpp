@@ -49,18 +49,17 @@
 namespace Test {
 
 class cuda_hostpinned : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {
-  }
+ protected:
+  static void SetUpTestCase() {}
 
-  static void TearDownTestCase() {
-  }
+  static void TearDownTestCase() {}
 };
 
-} // namespace Test
+}  // namespace Test
 
 #define TEST_CATEGORY cuda_hostpinned
-//#define TEST_EXECSPACE Kokkos::Device<Kokkos::Cuda,Kokkos::CudaHostPinnedSpace>
+//#define TEST_EXECSPACE
+// Kokkos::Device<Kokkos::Cuda,Kokkos::CudaHostPinnedSpace>
 #define TEST_EXECSPACE Kokkos::CudaHostPinnedSpace
 
 #endif

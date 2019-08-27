@@ -47,22 +47,27 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
-namespace Kokkos { namespace Impl {
+namespace Kokkos {
+namespace Impl {
 
 void cuda_device_synchronize();
 
-void cuda_internal_error_throw( cudaError e , const char * name, const char * file = NULL, const int line = 0 );
+void cuda_internal_error_throw(cudaError e, const char* name,
+                               const char* file = NULL, const int line = 0);
 
-inline void cuda_internal_safe_call( cudaError e , const char * name, const char * file = NULL, const int line = 0)
-{
-  if ( cudaSuccess != e ) { cuda_internal_error_throw( e , name, file, line ); }
+inline void cuda_internal_safe_call(cudaError e, const char* name,
+                                    const char* file = NULL,
+                                    const int line   = 0) {
+  if (cudaSuccess != e) {
+    cuda_internal_error_throw(e, name, file, line);
+  }
 }
 
-#define CUDA_SAFE_CALL( call )  \
-	Kokkos::Impl::cuda_internal_safe_call( call , #call, __FILE__, __LINE__ )
+#define CUDA_SAFE_CALL(call) \
+  Kokkos::Impl::cuda_internal_safe_call(call, #call, __FILE__, __LINE__)
 
-}} // namespace Kokkos::Impl
+}  // namespace Impl
+}  // namespace Kokkos
 
-#endif //KOKKOS_ENABLE_CUDA
-#endif //KOKKOS_CUDA_ERROR_HPP
-
+#endif  // KOKKOS_ENABLE_CUDA
+#endif  // KOKKOS_CUDA_ERROR_HPP

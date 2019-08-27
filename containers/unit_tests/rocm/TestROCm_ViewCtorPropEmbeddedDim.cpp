@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestViewCtorPropEmbeddedDim.hpp>
-
+#include <rocm/TestROCm_Category.hpp>
+#include <TestViewCtorPropEmbeddedDim.hpp>
