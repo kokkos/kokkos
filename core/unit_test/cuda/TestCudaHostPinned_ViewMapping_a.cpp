@@ -43,4 +43,3 @@
 
 #include <cuda/TestCudaHostPinned_Category.hpp>
 #include <TestViewMapping_a.hpp>
-

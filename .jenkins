@@ -93,7 +93,7 @@ pipeline {
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70--with-cuda --with-cuda-options=enable_lambda --debug'
+                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda --debug'
                     }
                     steps {
                         sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
@@ -104,6 +104,20 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                         }
+                    }
+                }
+                stage("Clang-Format") {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.clang'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull'
+                            label 'nvidia-docker || docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    steps {
+                        sh './scripts/docker/check_format_cpp.sh'
                     }
                 }
             }

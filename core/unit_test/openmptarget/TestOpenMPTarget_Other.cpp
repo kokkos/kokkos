@@ -42,9 +42,9 @@
 //@HEADER
 */
 
-#include<openmptarget/TestOpenMPTarget_Category.hpp>
-#include<TestTemplateMetaFunctions.hpp>
-#include<TestAggregate.hpp>
-#include<TestMemoryPool.hpp>
-#include<TestCXX11.hpp>
-#include<TestTile.hpp>
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
+#include <TestTemplateMetaFunctions.hpp>
+#include <TestAggregate.hpp>
+#include <TestMemoryPool.hpp>
+#include <TestCXX11.hpp>
+#include <TestTile.hpp>

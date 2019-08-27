@@ -43,4 +43,3 @@
 
 #include <openmptarget/TestOpenMPTarget_Category.hpp>
 #include <TestAtomic.hpp>
-

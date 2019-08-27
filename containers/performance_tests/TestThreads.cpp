@@ -42,7 +42,7 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_THREADS )
+#if defined(KOKKOS_ENABLE_THREADS)
 
 #include <gtest/gtest.h>
 
@@ -65,9 +65,8 @@
 namespace Performance {
 
 class threads : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
+ protected:
+  static void SetUpTestCase() {
     std::cout << std::setprecision(5) << std::scientific;
 
     unsigned num_threads = 4;
@@ -76,66 +75,57 @@ protected:
       num_threads = Kokkos::hwloc::get_available_numa_count() *
                     Kokkos::hwloc::get_available_cores_per_numa() *
                     Kokkos::hwloc::get_available_threads_per_core();
-
     }
 
     std::cout << "Threads: " << num_threads << std::endl;
 
-    Kokkos::initialize( Kokkos::InitArguments(num_threads) );
+    Kokkos::initialize(Kokkos::InitArguments(num_threads));
   }
 
-  static void TearDownTestCase()
-  {
-    Kokkos::finalize();
-  }
+  static void TearDownTestCase() { Kokkos::finalize(); }
 };
 
-TEST_F( threads, dynrankview_perf )
-{
+TEST_F(threads, dynrankview_perf) {
   std::cout << "Threads" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
-  test_dynrankview_op_perf<Kokkos::Threads>( 8192 );
+  test_dynrankview_op_perf<Kokkos::Threads>(8192);
 }
 
-TEST_F( threads, global_2_local)
-{
+TEST_F(threads, global_2_local) {
   std::cout << "Threads" << std::endl;
   std::cout << "size, create, generate, fill, find" << std::endl;
-  for (unsigned i=Performance::begin_id_size; i<=Performance::end_id_size; i *= Performance::id_step)
+  for (unsigned i = Performance::begin_id_size; i <= Performance::end_id_size;
+       i *= Performance::id_step)
     test_global_to_local_ids<Kokkos::Threads>(i);
 }
 
-TEST_F( threads, unordered_map_performance_near)
-{
+TEST_F(threads, unordered_map_performance_near) {
   unsigned num_threads = 4;
   if (Kokkos::hwloc::available()) {
     num_threads = Kokkos::hwloc::get_available_numa_count() *
                   Kokkos::hwloc::get_available_cores_per_numa() *
                   Kokkos::hwloc::get_available_threads_per_core();
-
   }
   std::ostringstream base_file_name;
   base_file_name << "threads-" << num_threads << "-near";
-  Perf::run_performance_tests<Kokkos::Threads,true>(base_file_name.str());
+  Perf::run_performance_tests<Kokkos::Threads, true>(base_file_name.str());
 }
 
-TEST_F( threads, unordered_map_performance_far)
-{
+TEST_F(threads, unordered_map_performance_far) {
   unsigned num_threads = 4;
   if (Kokkos::hwloc::available()) {
     num_threads = Kokkos::hwloc::get_available_numa_count() *
                   Kokkos::hwloc::get_available_cores_per_numa() *
                   Kokkos::hwloc::get_available_threads_per_core();
-
   }
   std::ostringstream base_file_name;
   base_file_name << "threads-" << num_threads << "-far";
-  Perf::run_performance_tests<Kokkos::Threads,false>(base_file_name.str());
+  Perf::run_performance_tests<Kokkos::Threads, false>(base_file_name.str());
 }
 
-} // namespace Performance
+}  // namespace Performance
 
 #else
-void KOKKOS_CONTAINERS_PERFORMANCE_TESTS_TESTTHREADS_PREVENT_EMPTY_LINK_ERROR() {}
+void KOKKOS_CONTAINERS_PERFORMANCE_TESTS_TESTTHREADS_PREVENT_EMPTY_LINK_ERROR() {
+}
 #endif
-

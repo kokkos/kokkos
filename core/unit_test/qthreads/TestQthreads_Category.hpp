@@ -49,15 +49,13 @@
 namespace Test {
 
 class qthreads : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {
-  }
+ protected:
+  static void SetUpTestCase() {}
 
-  static void TearDownTestCase() {
-  }
+  static void TearDownTestCase() {}
 };
 
-} // namespace Test
+}  // namespace Test
 
 #define TEST_CATEGORY qthreads
 #define TEST_EXECSPACE Kokkos::Qthreads

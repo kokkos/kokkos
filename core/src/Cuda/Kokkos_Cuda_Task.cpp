@@ -42,7 +42,7 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_CUDA ) && defined( KOKKOS_ENABLE_TASKDAG )
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_TASKDAG)
 
 #include <Kokkos_Core.hpp>
 
@@ -54,13 +54,18 @@
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue< Kokkos::Cuda, Impl::default_tasking_memory_space_for_execution_space_t<Kokkos::Cuda> > ;
-template class TaskQueueMultiple< Kokkos::Cuda, Impl::default_tasking_memory_space_for_execution_space_t<Kokkos::Cuda> > ;
+template class TaskQueue<
+    Kokkos::Cuda,
+    Impl::default_tasking_memory_space_for_execution_space_t<Kokkos::Cuda> >;
+template class TaskQueueMultiple<
+    Kokkos::Cuda,
+    Impl::default_tasking_memory_space_for_execution_space_t<Kokkos::Cuda> >;
 
-}} /* namespace Kokkos::Impl */
+}  // namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 #else
 void KOKKOS_CORE_SRC_CUDA_KOKKOS_CUDA_TASK_PREVENT_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_CUDA ) && defined( KOKKOS_ENABLE_TASKDAG ) */
-
+#endif /* #if defined( KOKKOS_ENABLE_CUDA ) && defined( KOKKOS_ENABLE_TASKDAG \
+          ) */

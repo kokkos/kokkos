@@ -51,17 +51,14 @@ namespace Kokkos {
 namespace Example {
 
 template void feint<Kokkos::Experimental::HPX, false>(
-  const unsigned global_elem_nx ,
-  const unsigned global_elem_ny ,
-  const unsigned global_elem_nz );
+    const unsigned global_elem_nx, const unsigned global_elem_ny,
+    const unsigned global_elem_nz);
 
 template void feint<Kokkos::Experimental::HPX, true>(
-  const unsigned global_elem_nx ,
-  const unsigned global_elem_ny ,
-  const unsigned global_elem_nz );
+    const unsigned global_elem_nx, const unsigned global_elem_ny,
+    const unsigned global_elem_nz);
 
 } /* namespace Example */
 } /* namespace Kokkos */
 
 #endif /* #if defined( KOKKOS_ENABLE_HPX ) */
-

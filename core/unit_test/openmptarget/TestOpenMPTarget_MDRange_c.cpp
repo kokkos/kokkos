@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<openmptarget/TestOpenMPTarget_Category.hpp>
-#include<TestMDRange_c.hpp>
-
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
+#include <TestMDRange_c.hpp>

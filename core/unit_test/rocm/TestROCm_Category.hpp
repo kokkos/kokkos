@@ -49,15 +49,13 @@
 namespace Test {
 
 class rocm : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {
-  }
+ protected:
+  static void SetUpTestCase() {}
 
-  static void TearDownTestCase() {
-  }
+  static void TearDownTestCase() {}
 };
 
-} // namespace Test
+}  // namespace Test
 
 #define TEST_CATEGORY rocm
 #define TEST_EXECSPACE Kokkos::Experimental::ROCm

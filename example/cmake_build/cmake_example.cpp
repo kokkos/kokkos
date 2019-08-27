@@ -65,9 +65,9 @@ int main(int argc, char* argv[]) {
 
   // Compute the number of even integers from 0 to n-1, in parallel.
   long count = 0;
-  Kokkos::parallel_reduce(n, KOKKOS_LAMBDA (const long i, long& lcount) {
-    lcount += (i % 2) == 0;
-  }, count);
+  Kokkos::parallel_reduce(
+      n, KOKKOS_LAMBDA(const long i, long& lcount) { lcount += (i % 2) == 0; },
+      count);
 
   double count_time = timer.seconds();
   printf("  Parallel: %ld    %10.6f\n", count, count_time);

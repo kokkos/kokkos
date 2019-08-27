@@ -56,17 +56,15 @@
 
 namespace Example {
 
-template< class Device >
+template <class Device>
 struct SortView {
-
-  template< typename ValueType >
-  SortView( const Kokkos::View<ValueType*,Device> v , int begin , int end )
-    {
-      std::sort( v.ptr_on_device() + begin , v.ptr_on_device() + end );
-    }
+  template <typename ValueType>
+  SortView(const Kokkos::View<ValueType*, Device> v, int begin, int end) {
+    std::sort(v.ptr_on_device() + begin, v.ptr_on_device() + end);
+  }
 };
 
-}
+}  // namespace Example
 
 #if defined(KOKKOS_ENABLE_CUDA)
 
@@ -75,17 +73,16 @@ struct SortView {
 
 namespace Example {
 
-template<>
-struct SortView< Kokkos::Cuda > {
-  template< typename ValueType >
-  SortView( const Kokkos::View<ValueType*,Kokkos::Cuda> v , int begin , int end )
-    {
-      thrust::sort( thrust::device_ptr<ValueType>( v.ptr_on_device() + begin )
-                  , thrust::device_ptr<ValueType>( v.ptr_on_device() + end ) );
-    }
+template <>
+struct SortView<Kokkos::Cuda> {
+  template <typename ValueType>
+  SortView(const Kokkos::View<ValueType*, Kokkos::Cuda> v, int begin, int end) {
+    thrust::sort(thrust::device_ptr<ValueType>(v.ptr_on_device() + begin),
+                 thrust::device_ptr<ValueType>(v.ptr_on_device() + end));
+  }
 };
 
-}
+}  // namespace Example
 
 #endif
 
@@ -94,44 +91,44 @@ struct SortView< Kokkos::Cuda > {
 
 namespace Example {
 
-template< class Device >
-void sort_array( const size_t array_length /* length of spans of array to sort */
-               , const size_t total_length /* total length of array */
-               , const int print = 1 )
-{
-  typedef Device execution_space ;
-  typedef Kokkos::View<int*,Device>  device_array_type ;
+template <class Device>
+void sort_array(const size_t array_length /* length of spans of array to sort */
+                ,
+                const size_t total_length /* total length of array */
+                ,
+                const int print = 1) {
+  typedef Device execution_space;
+  typedef Kokkos::View<int*, Device> device_array_type;
 
-#if defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA)
 
-  typedef typename
-    Kokkos::Impl::if_c< std::is_same< Device , Kokkos::Cuda >::value
-                      , Kokkos::View<int*,Kokkos::Cuda::array_layout,Kokkos::CudaHostPinnedSpace>
-                      , typename device_array_type::HostMirror
-                      >::type  host_array_type ;
+  typedef
+      typename Kokkos::Impl::if_c<std::is_same<Device, Kokkos::Cuda>::value,
+                                  Kokkos::View<int*, Kokkos::Cuda::array_layout,
+                                               Kokkos::CudaHostPinnedSpace>,
+                                  typename device_array_type::HostMirror>::type
+          host_array_type;
 
 #else
 
-  typedef typename device_array_type::HostMirror  host_array_type ;
+  typedef typename device_array_type::HostMirror host_array_type;
 
 #endif
 
   Kokkos::Timer timer;
 
-  const device_array_type  work_array("work_array" , array_length );
-  const host_array_type    host_array("host_array" , total_length );
+  const device_array_type work_array("work_array", array_length);
+  const host_array_type host_array("host_array", total_length);
 
   std::cout << "sort_array length( " << total_length << " )"
-            << " in chunks( " << array_length << " )"
-            << std::endl ;
+            << " in chunks( " << array_length << " )" << std::endl;
 
   double sec = timer.seconds();
-  std::cout << "declaring Views took "
-            << sec << " seconds" << std::endl;
+  std::cout << "declaring Views took " << sec << " seconds" << std::endl;
   timer.reset();
 
-  for ( size_t i = 0 ; i < total_length ; ++i ) {
-    host_array(i) = ( lrand48() * total_length ) >> 31 ;
+  for (size_t i = 0; i < total_length; ++i) {
+    host_array(i) = (lrand48() * total_length) >> 31;
   }
 
   sec = timer.seconds();
@@ -139,52 +136,56 @@ void sort_array( const size_t array_length /* length of spans of array to sort *
             << sec << " seconds" << std::endl;
   timer.reset();
 
-  double sec_copy_in  = 0 ;
-  double sec_sort     = 0 ;
-  double sec_copy_out = 0 ;
-  double sec_error    = 0 ;
-  size_t error_count  = 0 ;
+  double sec_copy_in  = 0;
+  double sec_sort     = 0;
+  double sec_copy_out = 0;
+  double sec_error    = 0;
+  size_t error_count  = 0;
 
-  for ( size_t begin = 0 ; begin < total_length ; begin += array_length ) {
-
+  for (size_t begin = 0; begin < total_length; begin += array_length) {
     const size_t end = begin + array_length < total_length
-                     ? begin + array_length : total_length ;
+                           ? begin + array_length
+                           : total_length;
 
-    const std::pair<size_t,size_t> host_range(begin,end);
+    const std::pair<size_t, size_t> host_range(begin, end);
 
-    const host_array_type host_subarray = Kokkos::subview( host_array , host_range );
+    const host_array_type host_subarray =
+        Kokkos::subview(host_array, host_range);
 
     timer.reset();
 
-    Kokkos::deep_copy( work_array , host_subarray );
+    Kokkos::deep_copy(work_array, host_subarray);
 
-    sec_copy_in += timer.seconds(); timer.reset();
+    sec_copy_in += timer.seconds();
+    timer.reset();
 
-    SortView< execution_space >( work_array , 0 , end - begin );
+    SortView<execution_space>(work_array, 0, end - begin);
 
-    sec_sort += timer.seconds(); timer.reset();
+    sec_sort += timer.seconds();
+    timer.reset();
 
-    Kokkos::deep_copy( host_subarray , work_array );
+    Kokkos::deep_copy(host_subarray, work_array);
 
-    sec_copy_out += timer.seconds(); timer.reset();
+    sec_copy_out += timer.seconds();
+    timer.reset();
 
-    for ( size_t i = begin + 1 ; i < end ; ++i ) {
-      if ( host_array(i) < host_array(i-1) ) ++error_count ;
+    for (size_t i = begin + 1; i < end; ++i) {
+      if (host_array(i) < host_array(i - 1)) ++error_count;
     }
 
-    sec_error += timer.seconds(); timer.reset();
+    sec_error += timer.seconds();
+    timer.reset();
   }
 
-  std::cout << "copy to   device " << sec_copy_in  << " seconds" << std::endl
-            << "sort on   device " << sec_sort     << " seconds" << std::endl
+  std::cout << "copy to   device " << sec_copy_in << " seconds" << std::endl
+            << "sort on   device " << sec_sort << " seconds" << std::endl
             << "copy from device " << sec_copy_out << " seconds" << std::endl
-            << "errors " << error_count << " took " << sec_error << " seconds" << std::endl
-            ;
+            << "errors " << error_count << " took " << sec_error << " seconds"
+            << std::endl;
 }
 
-} // namespace Example
+}  // namespace Example
 
 //----------------------------------------------------------------------------
 
 #endif /* #ifndef EXAMPLE_SORT_ARRAY */
-

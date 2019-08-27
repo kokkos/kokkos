@@ -49,29 +49,27 @@
 namespace Test {
 int command_line_num_args(int n = 0) {
   static int n_args = 0;
-  if(n>0)
-    n_args = n;
+  if (n > 0) n_args = n;
   return n_args;
 }
 
 const char* command_line_arg(int k, char** input_args = NULL) {
   static char** args;
-  if(input_args != NULL)
-    args = input_args;
-  if(command_line_num_args() > k)
+  if (input_args != NULL) args = input_args;
+  if (command_line_num_args() > k)
     return args[k];
   else
     return NULL;
 }
 
-}
+}  // namespace Test
 
-int main(int argc, char *argv[]) {
-  ::testing::InitGoogleTest(&argc,argv);
-  Kokkos::initialize(argc,argv);
+int main(int argc, char* argv[]) {
+  ::testing::InitGoogleTest(&argc, argv);
+  Kokkos::initialize(argc, argv);
 
-  (void) Test::command_line_num_args(argc);
-  (void) Test::command_line_arg(0,argv);
+  (void)Test::command_line_num_args(argc);
+  (void)Test::command_line_arg(0, argv);
 
   int result = RUN_ALL_TESTS();
 
