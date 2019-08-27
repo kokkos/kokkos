@@ -201,7 +201,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       typename iType,
       typename std::enable_if<std::is_integral<iType>::value, iType>::type = 0>
   KOKKOS_INLINE_FUNCTION int64_t begin(const iType local_dimension) const {
-    return local_dimension < Rank ? m_begins[local_dimension] : 0;
+    return local_dimension < Rank ? m_begins[local_dimension]
+                                  : KOKKOS_INVALID_OFFSET;
   }
 
   KOKKOS_INLINE_FUNCTION
