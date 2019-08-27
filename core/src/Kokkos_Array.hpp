@@ -196,19 +196,17 @@ struct Array<T, 0, Proxy> {
   KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const { return 0; }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION value_type operator[](const iType&) {
+  KOKKOS_INLINE_FUNCTION reference operator[](const iType&) {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
-    return value_type();
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION value_type operator[](const iType&) const {
+  KOKKOS_INLINE_FUNCTION const_reference operator[](const iType&) const {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
-    return value_type();
   }
 
   KOKKOS_INLINE_FUNCTION pointer data() { return pointer(0); }
