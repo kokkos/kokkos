@@ -460,13 +460,121 @@ void test_offsetview_subview(unsigned int size) {
   }
 }
 
+KOKKOS_INLINE_FUNCTION int element(std::initializer_list<int> il) {
+  return std::accumulate(il.begin(), il.end(), 0,
+                         [](int l, int r) { return l * 10 + r; });
+}
+
+template <typename DEVICE>
+void test_offsetview_offsets_rank1() {
+  using data_type        = int*;
+  using view_type        = Kokkos::View<data_type, DEVICE>;
+  using index_type       = Kokkos::IndexType<int>;
+  using execution_policy = Kokkos::RangePolicy<DEVICE, index_type>;
+  using offset_view_type = Kokkos::Experimental::OffsetView<data_type, DEVICE>;
+
+  view_type v("View1", 10);
+  Kokkos::parallel_for(
+      "For1", execution_policy(0, v.extent_int(0)),
+      KOKKOS_LAMBDA(const int i) { v(i) = element({i}); });
+
+  int errors;
+  Kokkos::parallel_reduce(
+      "Reduce1", execution_policy(-3, 4),
+      KOKKOS_LAMBDA(const int ii, int& lerrors) {
+        offset_view_type ov(v, {ii});
+        lerrors += (ov(3) != element({3 - ii}));
+      },
+      errors);
+
+  ASSERT_EQ(0, errors);
+}
+
+template <typename DEVICE>
+void test_offsetview_offsets_rank2() {
+  using data_type        = int**;
+  using view_type        = Kokkos::View<data_type, DEVICE>;
+  using index_type       = Kokkos::IndexType<int>;
+  using execution_policy = Kokkos::RangePolicy<DEVICE, index_type>;
+  using offset_view_type = Kokkos::Experimental::OffsetView<data_type, DEVICE>;
+
+  view_type v("View2", 10, 10);
+  Kokkos::parallel_for(
+      "For2", execution_policy(0, v.extent_int(0)), KOKKOS_LAMBDA(const int i) {
+        for (int j = 0; j != v.extent_int(1); ++j) {
+          v(i, j) = element({i, j});
+        }
+      });
+
+  int errors;
+  Kokkos::parallel_reduce(
+      "Reduce2", execution_policy(-3, 4),
+      KOKKOS_LAMBDA(const int ii, int& lerrors) {
+        for (int jj = -3; jj <= 3; ++jj) {
+          offset_view_type ov(v, {ii, jj});
+          lerrors += (ov(3, 3) != element({3 - ii, 3 - jj}));
+        }
+      },
+      errors);
+
+  ASSERT_EQ(0, errors);
+}
+
+template <typename DEVICE>
+void test_offsetview_offsets_rank3() {
+  using data_type        = int***;
+  using view_type        = Kokkos::View<data_type, DEVICE>;
+  using index_type       = Kokkos::IndexType<int>;
+  using execution_policy = Kokkos::RangePolicy<DEVICE, index_type>;
+  using offset_view_type = Kokkos::Experimental::OffsetView<data_type, DEVICE>;
+
+  view_type v("View3", 10, 10, 10);
+  Kokkos::parallel_for(
+      "For3", execution_policy(0, v.extent_int(0)), KOKKOS_LAMBDA(const int i) {
+        for (int j = 0; j != v.extent_int(1); ++j) {
+          for (int k = 0; k != v.extent_int(2); ++k) {
+            v(i, j, k) = element({i, j, k});
+          }
+        }
+      });
+
+  int errors;
+  Kokkos::parallel_reduce(
+      "Reduce3", execution_policy(-3, 4),
+      KOKKOS_LAMBDA(const int ii, int& lerrors) {
+        for (int jj = -3; jj <= 3; ++jj) {
+          for (int kk = -3; kk <= 3; ++kk) {
+            offset_view_type ov(v, {ii, jj, kk});
+            lerrors += (ov(3, 3, 3) != element({3 - ii, 3 - jj, 3 - kk}));
+          }
+        }
+      },
+      errors);
+
+  ASSERT_EQ(0, errors);
+}
+
 TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>(10);
 }
+
 TEST(TEST_CATEGORY, offsetview_subview) {
   test_offsetview_subview<int, TEST_EXECSPACE>(10);
+}
+
+TEST(TEST_CATEGORY, offsetview_offsets_rank1) {
+  test_offsetview_offsets_rank1<TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY, offsetview_offsets_rank2) {
+  test_offsetview_offsets_rank2<TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY, offsetview_offsets_rank3) {
+  test_offsetview_offsets_rank3<TEST_EXECSPACE>();
 }
 
 }  // namespace Test
 
 #endif /* CONTAINERS_UNIT_TESTS_TESTOFFSETVIEW_HPP_ */
+
