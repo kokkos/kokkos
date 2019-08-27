@@ -200,6 +200,7 @@ struct Array<T, 0, Proxy> {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
+    Kokkos::abort("Unreachable code");
   }
 
   template <typename iType>
@@ -207,6 +208,7 @@ struct Array<T, 0, Proxy> {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
+    Kokkos::abort("Unreachable code");
   }
 
   KOKKOS_INLINE_FUNCTION pointer data() { return pointer(0); }
