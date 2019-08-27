@@ -144,7 +144,7 @@ void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
 
   size_t numOffsets = 0;
   for (size_t i = 0; i < minIndices.size(); ++i) {
-    if (minIndices.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+    if (minIndices.begin()[i] != KOKKOS_INVALID_OFFSET) numOffsets++;
   }
   if (numOffsets != rank_dynamic) {
     message += "The number of offsets provided ( " +
@@ -167,7 +167,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
   }
   size_t numOffsets = 0;
   for (size_t i = 0; i < minIndices.size(); ++i) {
-    if (minIndices.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+    if (minIndices.begin()[i] != KOKKOS_INVALID_OFFSET) numOffsets++;
   }
   if (numOffsets != rank) {
     Kokkos::abort(
