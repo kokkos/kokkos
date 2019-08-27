@@ -1,18 +1,10 @@
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
-INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../src )
+KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
+KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
+KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../src )
 
-IF(NOT KOKKOS_HAS_TRILINOS)
-  IF(KOKKOS_SEPARATE_LIBS)
-    set(TEST_LINK_TARGETS kokkoscore)
-  ELSE()
-    set(TEST_LINK_TARGETS kokkos)
-  ENDIF()
-ENDIF()
-
-IF(Kokkos_ENABLE_Pthread)
-TRIBITS_ADD_EXECUTABLE_AND_TEST(
+IF(Kokkos_ENABLE_PTHREAD)
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Threads
   SOURCES
     UnitTestMain.cpp
@@ -29,15 +21,11 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     threads/TestThreads_UnorderedMap.cpp
     threads/TestThreads_Vector.cpp
     threads/TestThreads_ViewCtorPropEmbeddedDim.cpp
-  COMM serial mpi
-  NUM_MPI_PROCS 1
-  FAIL_REGULAR_EXPRESSION "  FAILED  "
-  TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
   )
 ENDIF()
 
-IF(Kokkos_ENABLE_Serial)
-TRIBITS_ADD_EXECUTABLE_AND_TEST(
+IF(Kokkos_ENABLE_SERIAL)
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Serial
   SOURCES
     UnitTestMain.cpp
@@ -54,15 +42,11 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     serial/TestSerial_UnorderedMap.cpp
     serial/TestSerial_Vector.cpp
     serial/TestSerial_ViewCtorPropEmbeddedDim.cpp
-  COMM serial mpi
-  NUM_MPI_PROCS 1
-  FAIL_REGULAR_EXPRESSION "  FAILED  "
-  TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
   )
 ENDIF()
 
-IF(Kokkos_ENABLE_OpenMP)
-TRIBITS_ADD_EXECUTABLE_AND_TEST(
+IF(Kokkos_ENABLE_OPENMP)
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_OpenMP
   SOURCES
     UnitTestMain.cpp
@@ -79,15 +63,11 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     openmp/TestOpenMP_UnorderedMap.cpp
     openmp/TestOpenMP_Vector.cpp
     openmp/TestOpenMP_ViewCtorPropEmbeddedDim.cpp
-  COMM serial mpi
-  NUM_MPI_PROCS 1
-  FAIL_REGULAR_EXPRESSION "  FAILED  "
-  TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
   )
 ENDIF()
 
 IF(Kokkos_ENABLE_HPX)
-TRIBITS_ADD_EXECUTABLE_AND_TEST(
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_HPX
   SOURCES
     UnitTestMain.cpp
@@ -104,15 +84,11 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     hpx/TestHPX_UnorderedMap.cpp
     hpx/TestHPX_Vector.cpp
     hpx/TestHPX_ViewCtorPropEmbeddedDim.cpp
-  COMM serial mpi
-  NUM_MPI_PROCS 1
-  FAIL_REGULAR_EXPRESSION "  FAILED  "
-  TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
   )
 ENDIF()
 
-IF(Kokkos_ENABLE_Cuda)
-TRIBITS_ADD_EXECUTABLE_AND_TEST(
+IF(Kokkos_ENABLE_CUDA)
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Cuda
   SOURCES
     UnitTestMain.cpp
@@ -129,10 +105,6 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
     cuda/TestCuda_UnorderedMap.cpp
     cuda/TestCuda_Vector.cpp
     cuda/TestCuda_ViewCtorPropEmbeddedDim.cpp
-  COMM serial mpi
-  NUM_MPI_PROCS 1
-  FAIL_REGULAR_EXPRESSION "  FAILED  "
-  TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
   )
 ENDIF()
 
