@@ -183,12 +183,12 @@ struct Array {
 template <class T, class Proxy>
 struct Array<T, 0, Proxy> {
  public:
-  typedef typename std::add_const<T>::type& reference;
+  typedef T& reference;
   typedef typename std::add_const<T>::type& const_reference;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
-  typedef typename std::add_const<T>::type value_type;
-  typedef typename std::add_const<T>::type* pointer;
+  typedef T value_type;
+  typedef T* pointer;
   typedef typename std::add_const<T>::type* const_pointer;
 
   KOKKOS_INLINE_FUNCTION static constexpr size_type size() { return 0; }
