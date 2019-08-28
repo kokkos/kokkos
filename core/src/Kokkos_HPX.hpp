@@ -57,6 +57,7 @@
 #include <Kokkos_HBWSpace.hpp>
 #endif
 
+#include <HPX/Kokkos_HPX_ChunkedRoundRobinExecutor.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
@@ -74,7 +75,7 @@
 #include <hpx/apply.hpp>
 #include <hpx/hpx_start.hpp>
 #include <hpx/lcos/local/barrier.hpp>
-#include <hpx/lcos/local/counting_semaphore.hpp>
+#include <hpx/lcos/local/latch.hpp>
 #include <hpx/parallel/algorithms/for_loop.hpp>
 #include <hpx/parallel/algorithms/reduce.hpp>
 #include <hpx/parallel/executors/static_chunk_size.hpp>
@@ -97,6 +98,7 @@
 // - 1: The manual way. This way is more verbose and does not take advantage of
 //      e.g. parallel::for_loop in HPX but it is significantly faster in many
 //      benchmarks.
+// - 2: Like 1, but spawn tasks using for_loop and a custom executor.
 //
 // In the long run 0 should be the preferred implementation, but until HPX is
 // improved 1 will be the default.
@@ -104,7 +106,7 @@
 #define KOKKOS_HPX_IMPLEMENTATION 1
 #endif
 
-#if (KOKKOS_HPX_IMPLEMENTATION < 0) || (KOKKOS_HPX_IMPLEMENTATION > 1)
+#if (KOKKOS_HPX_IMPLEMENTATION < 0) || (KOKKOS_HPX_IMPLEMENTATION > 2)
 #error "You have chosen an invalid value for KOKKOS_HPX_IMPLEMENTATION"
 #endif
 
@@ -207,13 +209,7 @@ class HPX {
   }
 #endif
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  static void fence(HPX const & = HPX()) {
-#else
-  void fence() const {
-#endif
-    impl_static_fence();
-  }
+  void fence() const { impl_static_fence(); }
 
   static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
@@ -291,6 +287,7 @@ class HPX {
   static Kokkos::Impl::thread_buffer &impl_get_buffer() noexcept {
     return m_buffer;
   }
+
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   static hpx::future<void> &impl_get_future() noexcept { return m_future; }
 #endif
@@ -394,7 +391,6 @@ struct HPXTeamMember {
 
  private:
   scratch_memory_space m_team_shared;
-  std::size_t m_team_shared_size;
 
   int m_league_size;
   int m_league_rank;
@@ -435,7 +431,6 @@ struct HPXTeamMember {
       const int team_rank, const int league_rank, void *scratch,
       int scratch_size) noexcept
       : m_team_shared(scratch, scratch_size, scratch, scratch_size),
-        m_team_shared_size(scratch_size),
         m_league_size(policy.league_size()),
         m_league_rank(league_rank),
         m_team_size(policy.team_size()),
@@ -717,25 +712,44 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::apply;
-    using hpx::lcos::local::counting_semaphore;
+    using hpx::lcos::local::latch;
 
-    counting_semaphore sem(0);
-    std::size_t num_tasks = 0;
+    const int num_tasks =
+        (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
+        m_policy.chunk_size();
+    latch num_tasks_remaining(num_tasks);
+    ChunkedRoundRobinExecutor exec(num_tasks);
 
     for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
          i_begin += m_policy.chunk_size()) {
-      apply([this, &sem, i_begin]() {
+      apply(exec, [this, &num_tasks_remaining, i_begin]() {
         const Member i_end =
             (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
         execute_functor_range<WorkTag>(m_functor, i_begin, i_end);
 
-        sem.signal(1);
+        num_tasks_remaining.count_down(1);
       });
-
-      ++num_tasks;
     }
 
-    sem.wait(num_tasks);
+    num_tasks_remaining.wait();
+
+#elif KOKKOS_HPX_IMPLEMENTATION == 2
+    using hpx::parallel::for_loop_strided;
+    using hpx::parallel::execution::par;
+    using hpx::parallel::execution::static_chunk_size;
+
+    const int num_tasks =
+        (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
+        m_policy.chunk_size();
+    ChunkedRoundRobinExecutor exec(num_tasks);
+
+    for_loop_strided(
+        par.on(exec).with(static_chunk_size(1)), m_policy.begin(),
+        m_policy.end(), m_policy.chunk_size(), [this](const Member i_begin) {
+          const Member i_end =
+              (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
+          execute_functor_range<WorkTag>(m_functor, i_begin, i_end);
+        });
 #endif
   }
 
@@ -776,27 +790,48 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::apply;
-    using hpx::lcos::local::counting_semaphore;
+    using hpx::lcos::local::latch;
 
-    counting_semaphore sem(0);
-    std::size_t num_tasks = 0;
+    const int num_tasks =
+        (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
+        m_policy.chunk_size();
+    latch num_tasks_remaining(num_tasks);
+    ChunkedRoundRobinExecutor exec(num_tasks);
 
     for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
          i_begin += m_policy.chunk_size()) {
-      apply([this, &sem, i_begin]() {
+      apply(exec, [this, &num_tasks_remaining, i_begin]() {
         const Member i_end =
             (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
         for (Member i = i_begin; i < i_end; ++i) {
           iterate_type(m_mdr_policy, m_functor)(i);
         }
 
-        sem.signal(1);
+        num_tasks_remaining.count_down(1);
       });
-
-      ++num_tasks;
     }
 
-    sem.wait(num_tasks);
+    num_tasks_remaining.wait();
+
+#elif KOKKOS_HPX_IMPLEMENTATION == 2
+    using hpx::parallel::for_loop_strided;
+    using hpx::parallel::execution::par;
+    using hpx::parallel::execution::static_chunk_size;
+
+    const int num_tasks =
+        (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
+        m_policy.chunk_size();
+    ChunkedRoundRobinExecutor exec(num_tasks);
+
+    for_loop_strided(
+        par.on(exec).with(static_chunk_size(1)), m_policy.begin(),
+        m_policy.end(), m_policy.chunk_size(), [this](const Member i_begin) {
+          const Member i_end =
+              (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
+          for (Member i = i_begin; i < i_end; ++i) {
+            iterate_type(m_mdr_policy, m_functor)(i);
+          }
+        });
 #endif
   }
 
@@ -953,20 +988,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   void execute() const { dispatch_execute_task(this); }
 
   inline void execute_task() const {
-    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
-
-    std::size_t value_size =
+    const std::size_t value_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
-
-    using hpx::parallel::for_loop;
-    using hpx::parallel::execution::par;
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
     // NOTE: This version makes the most use of HPX functionality, but
     // requires the struct value_type_wrapper to handle different
     // reference_types. It is also significantly slower than the version
     // below due to not reusing the buffer used by other functions.
+    using hpx::parallel::for_loop;
     using hpx::parallel::reduction;
+    using hpx::parallel::execution::par;
     using hpx::parallel::execution::static_chunk_size;
 
     value_type_wrapper final_value(value_size);
@@ -994,23 +1026,39 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     pointer_type final_value_ptr = final_value.pointer();
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+
     thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, value_size);
 
-    for_loop(par, 0, num_worker_threads, [this, &buffer](std::size_t t) {
-      ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                      reinterpret_cast<pointer_type>(buffer.get(t)));
-    });
-
     using hpx::apply;
-    using hpx::lcos::local::counting_semaphore;
+    using hpx::lcos::local::latch;
 
-    counting_semaphore sem(0);
-    std::size_t num_tasks = 0;
+    {
+      latch num_tasks_remaining(num_worker_threads);
+      ChunkedRoundRobinExecutor exec(num_worker_threads);
+
+      for (int t = 0; t < num_worker_threads; ++t) {
+        apply(exec, [this, &num_tasks_remaining, &buffer, t]() {
+          ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                          reinterpret_cast<pointer_type>(buffer.get(t)));
+
+          num_tasks_remaining.count_down(1);
+        });
+      }
+
+      num_tasks_remaining.wait();
+    }
+
+    const int num_tasks =
+        (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
+        m_policy.chunk_size();
+    latch num_tasks_remaining(num_tasks);
+    ChunkedRoundRobinExecutor exec(num_tasks);
 
     for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
          i_begin += m_policy.chunk_size()) {
-      apply([this, &buffer, &sem, i_begin]() {
+      apply(exec, [this, &num_tasks_remaining, &buffer, i_begin]() {
         reference_type update =
             ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(
                 Kokkos::Experimental::HPX::impl_hardware_thread_id())));
@@ -1018,13 +1066,59 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
         execute_functor_range<WorkTag>(update, i_begin, i_end);
 
-        sem.signal(1);
+        num_tasks_remaining.count_down(1);
       });
-
-      ++num_tasks;
     }
 
-    sem.wait(num_tasks);
+    num_tasks_remaining.wait();
+
+    for (int i = 1; i < num_worker_threads; ++i) {
+      ValueJoin::join(ReducerConditional::select(m_functor, m_reducer),
+                      reinterpret_cast<pointer_type>(buffer.get(0)),
+                      reinterpret_cast<pointer_type>(buffer.get(i)));
+    }
+
+    pointer_type final_value_ptr =
+        reinterpret_cast<pointer_type>(buffer.get(0));
+
+#elif KOKKOS_HPX_IMPLEMENTATION == 2
+    const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
+
+    thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
+    buffer.resize(num_worker_threads, value_size);
+
+    using hpx::parallel::for_loop;
+    using hpx::parallel::for_loop_strided;
+    using hpx::parallel::execution::par;
+    using hpx::parallel::execution::static_chunk_size;
+
+    {
+      ChunkedRoundRobinExecutor exec(num_worker_threads);
+
+      for_loop(par.on(exec).with(static_chunk_size(1)), std::size_t(0),
+               num_worker_threads, [this, &buffer](const std::size_t t) {
+                 ValueInit::init(
+                     ReducerConditional::select(m_functor, m_reducer),
+                     reinterpret_cast<pointer_type>(buffer.get(t)));
+               });
+    }
+
+    const int num_tasks =
+        (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
+        m_policy.chunk_size();
+    ChunkedRoundRobinExecutor exec(num_tasks);
+
+    for_loop_strided(
+        par.on(exec).with(static_chunk_size(1)), m_policy.begin(),
+        m_policy.end(), m_policy.chunk_size(),
+        [this, &buffer](const Member i_begin) {
+          reference_type update =
+              ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(
+                  Kokkos::Experimental::HPX::impl_hardware_thread_id())));
+          const Member i_end =
+              (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
+          execute_functor_range<WorkTag>(update, i_begin, i_end);
+        });
 
     for (int i = 1; i < num_worker_threads; ++i) {
       ValueJoin::join(ReducerConditional::select(m_functor, m_reducer),
@@ -1118,16 +1212,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, value_size);
 
+#if KOKKOS_HPX_IMPLEMENTATION == 0
     using hpx::parallel::for_loop;
     using hpx::parallel::execution::par;
+    using hpx::parallel::execution::static_chunk_size;
 
     for_loop(par, 0, num_worker_threads, [this, &buffer](std::size_t t) {
       ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                       reinterpret_cast<pointer_type>(buffer.get(t)));
     });
-
-#if KOKKOS_HPX_IMPLEMENTATION == 0
-    using hpx::parallel::execution::static_chunk_size;
 
     for_loop(par.with(static_chunk_size(m_policy.chunk_size())),
              m_policy.begin(), m_policy.end(), [this, &buffer](const Member i) {
@@ -1139,14 +1232,33 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::apply;
-    using hpx::lcos::local::counting_semaphore;
+    using hpx::lcos::local::latch;
 
-    counting_semaphore sem(0);
-    std::size_t num_tasks = 0;
+    {
+      latch num_tasks_remaining(num_worker_threads);
+      ChunkedRoundRobinExecutor exec(num_worker_threads);
+
+      for (int t = 0; t < num_worker_threads; ++t) {
+        apply(exec, [this, &buffer, &num_tasks_remaining, t]() {
+          ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                          reinterpret_cast<pointer_type>(buffer.get(t)));
+
+          num_tasks_remaining.count_down(1);
+        });
+      }
+
+      num_tasks_remaining.wait();
+    }
+
+    const int num_tasks =
+        (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
+        m_policy.chunk_size();
+    latch num_tasks_remaining(num_tasks);
+    ChunkedRoundRobinExecutor exec(num_tasks);
 
     for (Member i_begin = m_policy.begin(); i_begin < m_policy.end();
          i_begin += m_policy.chunk_size()) {
-      apply([this, &buffer, &sem, i_begin]() {
+      apply(exec, [this, &num_tasks_remaining, &buffer, i_begin]() {
         reference_type update =
             ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(
                 Kokkos::Experimental::HPX::impl_hardware_thread_id())));
@@ -1157,13 +1269,48 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           iterate_type(m_mdr_policy, m_functor, update)(i);
         }
 
-        sem.signal(1);
+        num_tasks_remaining.count_down(1);
       });
-
-      ++num_tasks;
     }
 
-    sem.wait(num_tasks);
+    num_tasks_remaining.wait();
+
+#elif KOKKOS_HPX_IMPLEMENTATION == 2
+    using hpx::parallel::for_loop;
+    using hpx::parallel::for_loop_strided;
+    using hpx::parallel::execution::par;
+    using hpx::parallel::execution::static_chunk_size;
+
+    {
+      ChunkedRoundRobinExecutor exec(num_worker_threads);
+
+      for_loop(par.on(exec).with(static_chunk_size(1)), std::size_t(0),
+               num_worker_threads, [this, &buffer](const std::size_t t) {
+                 ValueInit::init(
+                     ReducerConditional::select(m_functor, m_reducer),
+                     reinterpret_cast<pointer_type>(buffer.get(t)));
+               });
+    }
+
+    const int num_tasks =
+        (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
+        m_policy.chunk_size();
+    ChunkedRoundRobinExecutor exec(num_tasks);
+
+    for_loop_strided(
+        par.on(exec).with(static_chunk_size(1)), m_policy.begin(),
+        m_policy.end(), m_policy.chunk_size(),
+        [this, &buffer](const Member i_begin) {
+          reference_type update =
+              ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(
+                  Kokkos::Experimental::HPX::impl_hardware_thread_id())));
+          const Member i_end =
+              (std::min)(i_begin + m_policy.chunk_size(), m_policy.end());
+
+          for (Member i = i_begin; i < i_end; ++i) {
+            iterate_type(m_mdr_policy, m_functor, update)(i);
+          }
+        });
 #endif
 
     for (int i = 1; i < num_worker_threads; ++i) {
@@ -1269,53 +1416,59 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, 2 * value_size);
 
+    using hpx::apply;
     using hpx::lcos::local::barrier;
-    using hpx::parallel::for_loop;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::lcos::local::latch;
 
     barrier bar(num_worker_threads);
+    latch num_tasks_remaining(num_worker_threads);
+    ChunkedRoundRobinExecutor exec(num_worker_threads);
 
-    for_loop(par.with(static_chunk_size(1)), 0, num_worker_threads,
-             [this, &buffer, &bar, num_worker_threads, value_count,
-              value_size](std::size_t const t) {
-               reference_type update_sum = ValueInit::init(
-                   m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
+    for (int t = 0; t < num_worker_threads; ++t) {
+      apply(exec, [this, &bar, &buffer, &num_tasks_remaining,
+                   num_worker_threads, value_count, value_size, t]() {
+        reference_type update_sum = ValueInit::init(
+            m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
 
-               const WorkRange range(m_policy, t, num_worker_threads);
-               execute_functor_range<WorkTag>(m_functor, range.begin(),
-                                              range.end(), update_sum, false);
+        const WorkRange range(m_policy, t, num_worker_threads);
+        execute_functor_range<WorkTag>(m_functor, range.begin(), range.end(),
+                                       update_sum, false);
 
-               bar.wait();
+        bar.wait();
 
-               if (t == 0) {
-                 ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
-                                                buffer.get(0) + value_size));
+        if (t == 0) {
+          ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
+                                         buffer.get(0) + value_size));
 
-                 for (int i = 1; i < num_worker_threads; ++i) {
-                   pointer_type ptr_1_prev =
-                       reinterpret_cast<pointer_type>(buffer.get(i - 1));
-                   pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
-                       buffer.get(i - 1) + value_size);
-                   pointer_type ptr_2 = reinterpret_cast<pointer_type>(
-                       buffer.get(i) + value_size);
+          for (int i = 1; i < num_worker_threads; ++i) {
+            pointer_type ptr_1_prev =
+                reinterpret_cast<pointer_type>(buffer.get(i - 1));
+            pointer_type ptr_2_prev =
+                reinterpret_cast<pointer_type>(buffer.get(i - 1) + value_size);
+            pointer_type ptr_2 =
+                reinterpret_cast<pointer_type>(buffer.get(i) + value_size);
 
-                   for (int j = 0; j < value_count; ++j) {
-                     ptr_2[j] = ptr_2_prev[j];
-                   }
+            for (int j = 0; j < value_count; ++j) {
+              ptr_2[j] = ptr_2_prev[j];
+            }
 
-                   ValueJoin::join(m_functor, ptr_2, ptr_1_prev);
-                 }
-               }
+            ValueJoin::join(m_functor, ptr_2, ptr_1_prev);
+          }
+        }
 
-               bar.wait();
+        bar.wait();
 
-               reference_type update_base = ValueOps::reference(
-                   reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
+        reference_type update_base = ValueOps::reference(
+            reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
 
-               execute_functor_range<WorkTag>(m_functor, range.begin(),
-                                              range.end(), update_base, true);
-             });
+        execute_functor_range<WorkTag>(m_functor, range.begin(), range.end(),
+                                       update_base, true);
+
+        num_tasks_remaining.count_down(1);
+      });
+    }
+
+    num_tasks_remaining.wait();
   }
 
   inline ParallelScan(const FunctorType &arg_functor, const Policy &arg_policy)
@@ -1377,57 +1530,63 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, 2 * value_size);
 
+    using hpx::apply;
     using hpx::lcos::local::barrier;
-    using hpx::parallel::for_loop;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::lcos::local::latch;
 
     barrier bar(num_worker_threads);
+    latch num_tasks_remaining(num_worker_threads);
+    ChunkedRoundRobinExecutor exec(num_worker_threads);
 
-    for_loop(par.with(static_chunk_size(1)), 0, num_worker_threads,
-             [this, &buffer, &bar, num_worker_threads, value_count,
-              value_size](std::size_t const t) {
-               reference_type update_sum = ValueInit::init(
-                   m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
+    for (int t = 0; t < num_worker_threads; ++t) {
+      apply(exec, [this, &bar, &buffer, &num_tasks_remaining,
+                   num_worker_threads, value_count, value_size, t]() {
+        reference_type update_sum = ValueInit::init(
+            m_functor, reinterpret_cast<pointer_type>(buffer.get(t)));
 
-               const WorkRange range(m_policy, t, num_worker_threads);
-               execute_functor_range<WorkTag>(m_functor, range.begin(),
-                                              range.end(), update_sum, false);
+        const WorkRange range(m_policy, t, num_worker_threads);
+        execute_functor_range<WorkTag>(m_functor, range.begin(), range.end(),
+                                       update_sum, false);
 
-               bar.wait();
+        bar.wait();
 
-               if (t == 0) {
-                 ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
-                                                buffer.get(0) + value_size));
+        if (t == 0) {
+          ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
+                                         buffer.get(0) + value_size));
 
-                 for (int i = 1; i < num_worker_threads; ++i) {
-                   pointer_type ptr_1_prev =
-                       reinterpret_cast<pointer_type>(buffer.get(i - 1));
-                   pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
-                       buffer.get(i - 1) + value_size);
-                   pointer_type ptr_2 = reinterpret_cast<pointer_type>(
-                       buffer.get(i) + value_size);
+          for (int i = 1; i < num_worker_threads; ++i) {
+            pointer_type ptr_1_prev =
+                reinterpret_cast<pointer_type>(buffer.get(i - 1));
+            pointer_type ptr_2_prev =
+                reinterpret_cast<pointer_type>(buffer.get(i - 1) + value_size);
+            pointer_type ptr_2 =
+                reinterpret_cast<pointer_type>(buffer.get(i) + value_size);
 
-                   for (int j = 0; j < value_count; ++j) {
-                     ptr_2[j] = ptr_2_prev[j];
-                   }
+            for (int j = 0; j < value_count; ++j) {
+              ptr_2[j] = ptr_2_prev[j];
+            }
 
-                   ValueJoin::join(m_functor, ptr_2, ptr_1_prev);
-                 }
-               }
+            ValueJoin::join(m_functor, ptr_2, ptr_1_prev);
+          }
+        }
 
-               bar.wait();
+        bar.wait();
 
-               reference_type update_base = ValueOps::reference(
-                   reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
+        reference_type update_base = ValueOps::reference(
+            reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
 
-               execute_functor_range<WorkTag>(m_functor, range.begin(),
-                                              range.end(), update_base, true);
+        execute_functor_range<WorkTag>(m_functor, range.begin(), range.end(),
+                                       update_base, true);
 
-               if (t == std::size_t(num_worker_threads - 1)) {
-                 m_returnvalue = update_base;
-               }
-             });
+        if (t == num_worker_threads - 1) {
+          m_returnvalue = update_base;
+        }
+
+        num_tasks_remaining.count_down(1);
+      });
+    }
+
+    num_tasks_remaining.wait();
   }
 
   inline ParallelScanWithTotal(const FunctorType &arg_functor,
@@ -1528,14 +1687,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::apply;
-    using hpx::lcos::local::counting_semaphore;
+    using hpx::lcos::local::latch;
 
-    counting_semaphore sem(0);
-    std::size_t num_tasks = 0;
+    const int num_tasks = (m_policy.league_size() + m_policy.chunk_size() - 1) /
+                          m_policy.chunk_size();
+    latch num_tasks_remaining(num_tasks);
+    ChunkedRoundRobinExecutor exec(num_tasks);
 
     for (int league_rank_begin = 0; league_rank_begin < m_policy.league_size();
          league_rank_begin += m_policy.chunk_size()) {
-      apply([this, &buffer, &sem, league_rank_begin]() {
+      apply(exec, [this, &buffer, &num_tasks_remaining, league_rank_begin]() {
         const int league_rank_end = (std::min)(
             league_rank_begin + m_policy.chunk_size(), m_policy.league_size());
         execute_functor_range<WorkTag>(
@@ -1543,13 +1704,32 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id()),
             m_shared);
 
-        sem.signal(1);
+        num_tasks_remaining.count_down(1);
       });
-
-      ++num_tasks;
     }
 
-    sem.wait(num_tasks);
+    num_tasks_remaining.wait();
+
+#elif KOKKOS_HPX_IMPLEMENTATION == 2
+    using hpx::parallel::for_loop_strided;
+    using hpx::parallel::execution::par;
+    using hpx::parallel::execution::static_chunk_size;
+
+    const int num_tasks = (m_policy.league_size() + m_policy.chunk_size() - 1) /
+                          m_policy.chunk_size();
+    ChunkedRoundRobinExecutor exec(num_tasks);
+
+    for_loop_strided(
+        par.on(exec).with(static_chunk_size(1)), 0, m_policy.league_size(),
+        m_policy.chunk_size(), [this, &buffer](const int league_rank_begin) {
+          const int league_rank_end =
+              (std::min)(league_rank_begin + m_policy.chunk_size(),
+                         m_policy.league_size());
+          execute_functor_range<WorkTag>(
+              m_functor, m_policy, league_rank_begin, league_rank_end,
+              buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id()),
+              m_shared);
+        });
 #endif
   }
 
@@ -1660,15 +1840,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     thread_buffer &buffer = Kokkos::Experimental::HPX::impl_get_buffer();
     buffer.resize(num_worker_threads, value_size + m_shared);
 
+#if KOKKOS_HPX_IMPLEMENTATION == 0
     using hpx::parallel::for_loop;
     using hpx::parallel::execution::par;
 
-    for_loop(par, 0, num_worker_threads, [this, &buffer](std::size_t t) {
+    for_loop(par, 0, num_worker_threads, [this, &buffer](const std::size_t t) {
       ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                       reinterpret_cast<pointer_type>(buffer.get(t)));
     });
 
-#if KOKKOS_HPX_IMPLEMENTATION == 0
     using hpx::parallel::execution::static_chunk_size;
 
     hpx::parallel::for_loop(
@@ -1686,14 +1866,33 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::apply;
-    using hpx::lcos::local::counting_semaphore;
+    using hpx::lcos::local::latch;
 
-    counting_semaphore sem(0);
-    std::size_t num_tasks = 0;
+    {
+      latch num_tasks_remaining(num_worker_threads);
+      ChunkedRoundRobinExecutor exec(num_worker_threads);
+
+      for (int t = 0; t < num_worker_threads; ++t) {
+        apply(exec, [this, &buffer, &num_tasks_remaining, t]() {
+          ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                          reinterpret_cast<pointer_type>(buffer.get(t)));
+
+          num_tasks_remaining.count_down(1);
+        });
+      }
+
+      num_tasks_remaining.wait();
+    }
+
+    const int num_tasks = (m_policy.league_size() + m_policy.chunk_size() - 1) /
+                          m_policy.chunk_size();
+    latch num_tasks_remaining(num_tasks);
+    ChunkedRoundRobinExecutor exec(num_tasks);
 
     for (int league_rank_begin = 0; league_rank_begin < m_policy.league_size();
          league_rank_begin += m_policy.chunk_size()) {
-      apply([this, &buffer, &sem, league_rank_begin, value_size]() {
+      apply(exec, [this, &buffer, &num_tasks_remaining, league_rank_begin,
+                   value_size]() {
         std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
         reference_type update =
             ValueOps::reference(reinterpret_cast<pointer_type>(buffer.get(t)));
@@ -1703,13 +1902,47 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             m_functor, m_policy, league_rank_begin, league_rank_end,
             buffer.get(t) + value_size, m_shared, update);
 
-        sem.signal(1);
+        num_tasks_remaining.count_down(1);
       });
-
-      ++num_tasks;
     }
 
-    sem.wait(num_tasks);
+    num_tasks_remaining.wait();
+
+#elif KOKKOS_HPX_IMPLEMENTATION == 2
+    using hpx::parallel::for_loop;
+    using hpx::parallel::for_loop_strided;
+    using hpx::parallel::execution::par;
+    using hpx::parallel::execution::static_chunk_size;
+
+    {
+      ChunkedRoundRobinExecutor exec(num_worker_threads);
+
+      for_loop(par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
+               [this, &buffer](std::size_t const t) {
+                 ValueInit::init(
+                     ReducerConditional::select(m_functor, m_reducer),
+                     reinterpret_cast<pointer_type>(buffer.get(t)));
+               });
+    }
+
+    const int num_tasks = (m_policy.league_size() + m_policy.chunk_size() - 1) /
+                          m_policy.chunk_size();
+    ChunkedRoundRobinExecutor exec(num_tasks);
+
+    for_loop_strided(
+        par.on(exec).with(static_chunk_size(1)), 0, m_policy.league_size(),
+        m_policy.chunk_size(),
+        [this, &buffer, value_size](int const league_rank_begin) {
+          std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
+          reference_type update = ValueOps::reference(
+              reinterpret_cast<pointer_type>(buffer.get(t)));
+          const int league_rank_end =
+              (std::min)(league_rank_begin + m_policy.chunk_size(),
+                         m_policy.league_size());
+          execute_functor_range<WorkTag>(
+              m_functor, m_policy, league_rank_begin, league_rank_end,
+              buffer.get(t) + value_size, m_shared, update);
+        });
 #endif
 
     const pointer_type ptr = reinterpret_cast<pointer_type>(buffer.get(0));
