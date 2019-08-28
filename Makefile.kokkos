@@ -1215,6 +1215,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
     KOKKOS_LDFLAGS  += -L$(COMPUTEPP_PATH)/lib
     KOKKOS_LIBS     += -lComputeCpp -lOpenCL
   endif
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    KOKKOS_CPPFLAGS += -fsycl -fsycl-unnamed-lambda -DSYCL_JUST_DONT_NAME_KERNELS
+    KOKKOS_LDFLAGS += -fsycl
+    KOKKOS_LIBS  += -lOpenCL -lsycl
+  endif 
 endif 
 
 # Explicitly set the GCC Toolchain for Clang.
