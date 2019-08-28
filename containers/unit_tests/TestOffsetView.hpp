@@ -81,6 +81,7 @@ void test_offsetview_construction(unsigned int size) {
   ASSERT_EQ(ov.extent(1), 5);
 
   const int ovmin0 = ov.begin(0);
+
   const int ovend0 = ov.end(0);
   const int ovmin1 = ov.begin(1);
   const int ovend1 = ov.end(1);
@@ -460,11 +461,33 @@ void test_offsetview_subview(unsigned int size) {
   }
 }
 
+template<typename SCALAR, typename DEVICE>
+void test_offsetview_offsets()
+{
+    using view_type = Kokkos::View<SCALAR*, DEVICE>;
+    using offset_view_type = Kokkos::Experimental::OffsetView<SCALAR*>;
+
+    view_type v("View", 10);
+    for (int i = 0; i != v.extent_int(0); ++i)
+        v(i) = static_cast<SCALAR>(i);
+
+    // Test offsets -3..3, including 0
+    for (int j = -3; j != 3; ++j)
+    {
+        offset_view_type ov(v, {j});
+        ASSERT_EQ(ov(3), static_cast<SCALAR>(3 - j)) << "offset " << j << " is broken.";
+    }
+}
+
 TEST_F(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>(10);
 }
 TEST_F(TEST_CATEGORY, offsetview_subview) {
   test_offsetview_subview<int, TEST_EXECSPACE>(10);
+}
+
+TEST_F(TEST_CATEGORY, offsetview_positive_offset) {
+    test_offsetview_offsets<int, TEST_EXECSPACE>();
 }
 
 }  // namespace Test
