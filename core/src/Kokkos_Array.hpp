@@ -183,12 +183,12 @@ struct Array {
 template <class T, class Proxy>
 struct Array<T, 0, Proxy> {
  public:
-  typedef typename std::add_const<T>::type& reference;
+  typedef T& reference;
   typedef typename std::add_const<T>::type& const_reference;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
-  typedef typename std::add_const<T>::type value_type;
-  typedef typename std::add_const<T>::type* pointer;
+  typedef T value_type;
+  typedef T* pointer;
   typedef typename std::add_const<T>::type* const_pointer;
 
   KOKKOS_INLINE_FUNCTION static constexpr size_type size() { return 0; }
@@ -196,19 +196,21 @@ struct Array<T, 0, Proxy> {
   KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const { return 0; }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION value_type operator[](const iType&) {
+  KOKKOS_INLINE_FUNCTION reference operator[](const iType&) {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
-    return value_type();
+    Kokkos::abort("Unreachable code");
+    return *reinterpret_cast<pointer>(-1);
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION value_type operator[](const iType&) const {
+  KOKKOS_INLINE_FUNCTION const_reference operator[](const iType&) const {
     static_assert(
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
-    return value_type();
+    Kokkos::abort("Unreachable code");
+    return *reinterpret_cast<const_pointer>(-1);
   }
 
   KOKKOS_INLINE_FUNCTION pointer data() { return pointer(0); }

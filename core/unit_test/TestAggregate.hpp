@@ -128,6 +128,15 @@ void TestViewAggregate() {
   }
   // But the following line would not compile
   //  Kokkos::Array< double, 3 > initialized_with_too_many{ { 1, 2, 3, 4 } };
+
+  // The code below must compile for zero-sized arrays.
+  using T = float;
+
+  constexpr int N = 0;
+  Kokkos::Array<T, N> a;
+  for (int i = 0; i < N; ++i) {
+    a[i] = T();
+  }
 }
 
 TEST_F(TEST_CATEGORY, view_aggregate) { TestViewAggregate<TEST_EXECSPACE>(); }
