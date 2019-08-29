@@ -44,7 +44,7 @@ pipeline {
                         }
                     }
                     environment {
-                        OPTIONS = '-DCMAKE_BUILD_TYPE=Release -DKokkos_DEVICES=CUDA -DKokkos_ARCH=Volta70 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA -DKokkos_ENABLE_TESTS=ON'
+                        OPTIONS = '-DCMAKE_BUILD_TYPE=Release -DKokkos_DEVICES=CUDA -DKokkos_ARCH=Volta70 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA -DKokkos_ENABLE_TESTS=ON -DKokkos_CUDA_DIR=/usr/local/cuda/targets/x86_64-linux/lib'
                     }
                     steps {
                         sh 'ccache --zero-stats'
