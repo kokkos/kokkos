@@ -201,7 +201,7 @@ struct Array<T, 0, Proxy> {
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
     Kokkos::abort("Unreachable code");
-    return value_type();
+    return *reinterpret_cast<pointer>(-1);
   }
 
   template <typename iType>
@@ -210,7 +210,7 @@ struct Array<T, 0, Proxy> {
         (std::is_integral<iType>::value || std::is_enum<iType>::value),
         "Must be integer argument");
     Kokkos::abort("Unreachable code");
-    return value_type();
+    return *reinterpret_cast<const_pointer>(-1);
   }
 
   KOKKOS_INLINE_FUNCTION pointer data() { return pointer(0); }
