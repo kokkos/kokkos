@@ -132,9 +132,9 @@ void TestViewAggregate() {
   // The code below must compile for zero-sized arrays.
   using T = float;
 
-  constexpr std::size_t N = 0;
+  constexpr int N = 0;
   Kokkos::Array<T, N> a;
-  for (std::size_t i = 0; i < N; ++i) {
+  for (int i = 0; i < N; ++i) {
     a[i] = T();
   }
 }
