@@ -21,12 +21,11 @@ pipeline {
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --compiler=/usr/local/bin/clang++ --with-cuda --with-cuda-options=enable_lambda'
+                        OPTIONS = '-DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_COMPILER_WARNINGS=ON -DKokkos_ARCH=Volta70 -DCMAKE_CXX_COMPILER=clang++ -DKokkos_ENABLE_CUDA=ON -DKokkos_ENABLE_CUDA_LAMBDA=ON -DKokkos_ENABLE_TESTS=ON'
                     }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/clang++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh 'rm -rf build && mkdir -p build && cd build && cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache $OPTIONS .. && make -j8 && ctest --output-on-failure'
                     }
                     post {
                         always {
@@ -45,12 +44,11 @@ pipeline {
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda'
+                        OPTIONS = '-DCMAKE_BUILD_TYPE=Release -DKokkos_DEVICES=CUDA -DKokkos_ARCH=Volta70 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA -DKokkos_ENABLE_TESTS=ON'
                     }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh 'rm -rf build && mkdir -p build && cd build && cmake -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper -DCMAKE_CXX_COMPILER_LAUNCHER=ccache $OPTIONS .. && make -j8 && ctest --output-on-failure'
                     }
                     post {
                         always {
@@ -69,12 +67,11 @@ pipeline {
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda,rdc,force_uvm'
+                        OPTIONS = '-DCMAKE_BUILD_TYPE=Release -DKokkos_DEVICES=CUDA -DKokkos_ARCH=Volta70 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA,RELOCATABLE_DEVICE_CODE,FORCE_UVM -DKokkos_ENABLE_TESTS=ON'
                     }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh 'rm -rf build && mkdir -p build && cd build && cmake -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper -DCMAKE_CXX_COMPILER_LAUNCHER=ccache $OPTIONS .. && make -j8 && ctest --output-on-failure'
                     }
                     post {
                         always {
@@ -93,12 +90,11 @@ pipeline {
                         }
                     }
                     environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda --debug'
+                        OPTIONS = '-DCMAKE_BUILD_TYPE=Debug -DKokkos_DEVICES=CUDA -DKokkos_ARCH=Volta70 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA -DKokkos_ENABLE_TESTS=ON'
                     }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh 'rm -rf build && mkdir -p build && cd build && cmake -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper -DCMAKE_CXX_COMPILER_LAUNCHER=ccache $OPTIONS .. && make -j8 && ctest --output-on-failure'
                     }
                     post {
                         always {
