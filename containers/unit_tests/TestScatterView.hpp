@@ -45,6 +45,7 @@
 #define KOKKOS_TEST_SCATTER_VIEW_HPP
 
 #include <Kokkos_ScatterView.hpp>
+#include <gtest/gtest.h>
 
 namespace Test {
 
