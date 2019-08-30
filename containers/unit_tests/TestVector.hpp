@@ -111,7 +111,7 @@ void test_vector_combinations(unsigned int size) {
   ASSERT_EQ(test.reference, test.result);
 }
 
-TEST_F(TEST_CATEGORY, vector_combination) {
+TEST(TEST_CATEGORY, vector_combination) {
   test_vector_combinations<int, TEST_EXECSPACE>(10);
   test_vector_combinations<int, TEST_EXECSPACE>(3057);
 }

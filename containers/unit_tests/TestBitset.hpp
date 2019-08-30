@@ -252,7 +252,7 @@ void test_bitset() {
   }
 }
 
-TEST_F(TEST_CATEGORY, bitset) { test_bitset<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, bitset) { test_bitset<TEST_EXECSPACE>(); }
 
 }  // namespace Test
 

@@ -199,11 +199,11 @@ void test_dualview_deep_copy() {
   Impl::test_dual_view_deep_copy<Scalar, Device>();
 }
 
-TEST_F(TEST_CATEGORY, dualview_combination) {
+TEST(TEST_CATEGORY, dualview_combination) {
   test_dualview_combinations<int, TEST_EXECSPACE>(10);
 }
 
-TEST_F(TEST_CATEGORY, dualview_deep_copy) {
+TEST(TEST_CATEGORY, dualview_deep_copy) {
   test_dualview_deep_copy<int, TEST_EXECSPACE>();
   test_dualview_deep_copy<double, TEST_EXECSPACE>();
 }

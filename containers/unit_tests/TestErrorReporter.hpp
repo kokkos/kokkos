@@ -225,12 +225,12 @@ struct ErrorReporterDriverNativeOpenMP
 #endif
 
 #if defined(KOKKOS_CLASS_LAMBDA)
-TEST_F(TEST_CATEGORY, ErrorReporterViaLambda) {
+TEST(TEST_CATEGORY, ErrorReporterViaLambda) {
   TestErrorReporter<ErrorReporterDriverUseLambda<TEST_EXECSPACE>>();
 }
 #endif
 
-TEST_F(TEST_CATEGORY, ErrorReporter) {
+TEST(TEST_CATEGORY, ErrorReporter) {
   TestErrorReporter<ErrorReporterDriver<TEST_EXECSPACE>>();
 }
 
