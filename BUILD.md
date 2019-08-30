@@ -193,9 +193,6 @@ Strings passed to `Kokkos_OPTIONS` are not case-sensitive.
 * Kokkos_SEPARATE_LIBS
     * whether to build libkokkos or libkokkoscontainers, etc
     * BOOL Default: OFF
-* Kokkos_SEPARATE_TESTS
-    * Provide unit test targets with finer granularity.
-    * BOOL Default: OFF
 
 ## Third-party Libraries (TPLs)
 The following options control activating and locating varial options TPLs.

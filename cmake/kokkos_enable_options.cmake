@@ -53,7 +53,6 @@ GLOBAL_SET(${ENABLE_NAME} ${ENABLE_FLAG})
 ENDFOREACH()
 
 KOKKOS_OPTION(SEPARATE_LIBS  OFF BOOL "whether to build libkokkos or libkokkoscontainers, etc")
-KOKKOS_OPTION(SEPARATE_TESTS OFF BOOL "Provide unit test targets with finer granularity.")
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to enable unified virtual memory (UVM) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
