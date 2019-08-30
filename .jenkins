@@ -122,6 +122,8 @@ pipeline {
                                 -DKokkos_ARCH=Volta70 \
                                 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_DEBUG=ON \
+                                -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
