@@ -20,12 +20,20 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '-DCMAKE_BUILD_TYPE=Release -DKokkos_ENABLE_COMPILER_WARNINGS=ON -DKokkos_ARCH=Volta70 -DCMAKE_CXX_COMPILER=clang++ -DKokkos_ENABLE_CUDA=ON -DKokkos_ENABLE_CUDA_LAMBDA=ON -DKokkos_ENABLE_TESTS=ON'
-                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && cmake -DCMAKE_CXX_COMPILER_LAUNCHER=ccache $OPTIONS .. && make -j8 && ctest --output-on-failure'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=clang++ \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ARCH=Volta70 \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -43,12 +51,19 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '-DCMAKE_BUILD_TYPE=Release -DKokkos_DEVICES=CUDA -DKokkos_ARCH=Volta70 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA -DKokkos_ENABLE_TESTS=ON -DKokkos_CUDA_DIR=/usr/local/cuda/targets/x86_64-linux/lib'
-                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && cmake -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper -DCMAKE_CXX_COMPILER_LAUNCHER=ccache $OPTIONS .. && make -j8 && ctest --output-on-failure'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DKokkos_DEVICES=CUDA \
+                                -DKokkos_ARCH=Volta70 \
+                                -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA \
+                                -DKokkos_ENABLE_TESTS=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -66,12 +81,19 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '-DCMAKE_BUILD_TYPE=Release -DKokkos_DEVICES=CUDA -DKokkos_ARCH=Volta70 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA,RELOCATABLE_DEVICE_CODE,FORCE_UVM -DKokkos_ENABLE_TESTS=ON'
-                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && cmake -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper -DCMAKE_CXX_COMPILER_LAUNCHER=ccache $OPTIONS .. && make -j8 && ctest --output-on-failure'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DKokkos_DEVICES=CUDA \
+                                -DKokkos_ARCH=Volta70 \
+                                -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA,RELOCATABLE_DEVICE_CODE,FORCE_UVM \
+                                -DKokkos_ENABLE_TESTS=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -89,12 +111,19 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '-DCMAKE_BUILD_TYPE=Debug -DKokkos_DEVICES=CUDA -DKokkos_ARCH=Volta70 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA -DKokkos_ENABLE_TESTS=ON'
-                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && cmake -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper -DCMAKE_CXX_COMPILER_LAUNCHER=ccache $OPTIONS .. && make -j8 && ctest --output-on-failure'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DKokkos_DEVICES=CUDA \
+                                -DKokkos_ARCH=Volta70 \
+                                -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA \
+                                -DKokkos_ENABLE_TESTS=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
