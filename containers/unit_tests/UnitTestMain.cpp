@@ -42,7 +42,6 @@
 */
 
 #include <gtest/gtest.h>
-#include <cstdlib>
 #include <Kokkos_Core.hpp>
 
 int main(int argc, char *argv[]) {
