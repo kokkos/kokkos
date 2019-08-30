@@ -479,7 +479,7 @@ void test_scatter_view(int n) {
   TestDuplicatedScatterView<ExecSpace, ScatterType> duptest(n);
 }
 
-TEST_F(TEST_CATEGORY, scatterview) {
+TEST(TEST_CATEGORY, scatterview) {
 #ifndef KOKKOS_ENABLE_ROCM
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum>(10);
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterProd>(10);

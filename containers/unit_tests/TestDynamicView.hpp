@@ -233,7 +233,7 @@ struct TestDynamicView {
   }
 };
 
-TEST_F(TEST_CATEGORY, dynamic_view) {
+TEST(TEST_CATEGORY, dynamic_view) {
   typedef TestDynamicView<double, TEST_EXECSPACE> TestDynView;
 
   for (int i = 0; i < 10; ++i) {

@@ -275,7 +275,7 @@ void run_test_graph4() {
 
 } /* namespace TestStaticCrsGraph */
 
-TEST_F(TEST_CATEGORY, staticcrsgraph) {
+TEST(TEST_CATEGORY, staticcrsgraph) {
   TestStaticCrsGraph::run_test_graph<TEST_EXECSPACE>();
   TestStaticCrsGraph::run_test_graph2<TEST_EXECSPACE>();
   TestStaticCrsGraph::run_test_graph3<TEST_EXECSPACE>(1, 0);

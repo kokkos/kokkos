@@ -460,10 +460,10 @@ void test_offsetview_subview(unsigned int size) {
   }
 }
 
-TEST_F(TEST_CATEGORY, offsetview_construction) {
+TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>(10);
 }
-TEST_F(TEST_CATEGORY, offsetview_subview) {
+TEST(TEST_CATEGORY, offsetview_subview) {
   test_offsetview_subview<int, TEST_EXECSPACE>(10);
 }
 
