@@ -6,12 +6,12 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../src )
 foreach(Tag Threads;Serial;OpenMP;HPX;Cuda)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
-    set(ARCH "PTHREAD")
+    set(DEVICE "PTHREAD")
   else()
-    string(TOUPPER ${Tag} ARCH)
+    string(TOUPPER ${Tag} DEVICE)
   endif()
   # Add test for that backend if it is enabled
-  if(Kokkos_ENABLE_${ARCH})
+  if(Kokkos_ENABLE_${DEVICE})
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
       UnitTest_${Tag}
       SOURCES
