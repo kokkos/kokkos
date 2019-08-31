@@ -10,25 +10,26 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda)
   else()
     string(TOUPPER ${Tag} DEVICE)
   endif()
+  string(TOLOWER ${Tag} dir)
   # Add test for that backend if it is enabled
   if(Kokkos_ENABLE_${DEVICE})
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
       UnitTest_${Tag}
       SOURCES
         UnitTestMain.cpp
-        ${Tag}/Test${Tag}_BitSet.cpp
-        ${Tag}/Test${Tag}_DualView.cpp
-        ${Tag}/Test${Tag}_DynamicView.cpp
-        ${Tag}/Test${Tag}_DynRankViewAPI_generic.cpp
-        ${Tag}/Test${Tag}_DynRankViewAPI_rank12345.cpp
-        ${Tag}/Test${Tag}_DynRankViewAPI_rank67.cpp
-        ${Tag}/Test${Tag}_ErrorReporter.cpp
-        ${Tag}/Test${Tag}_OffsetView.cpp
-        ${Tag}/Test${Tag}_ScatterView.cpp
-        ${Tag}/Test${Tag}_StaticCrsGraph.cpp
-        ${Tag}/Test${Tag}_UnorderedMap.cpp
-        ${Tag}/Test${Tag}_Vector.cpp
-        ${Tag}/Test${Tag}_ViewCtorPropEmbeddedDim.cpp
+        ${dir}/Test${Tag}_BitSet.cpp
+        ${dir}/Test${Tag}_DualView.cpp
+        ${dir}/Test${Tag}_DynamicView.cpp
+        ${dir}/Test${Tag}_DynRankViewAPI_generic.cpp
+        ${dir}/Test${Tag}_DynRankViewAPI_rank12345.cpp
+        ${dir}/Test${Tag}_DynRankViewAPI_rank67.cpp
+        ${dir}/Test${Tag}_ErrorReporter.cpp
+        ${dir}/Test${Tag}_OffsetView.cpp
+        ${dir}/Test${Tag}_ScatterView.cpp
+        ${dir}/Test${Tag}_StaticCrsGraph.cpp
+        ${dir}/Test${Tag}_UnorderedMap.cpp
+        ${dir}/Test${Tag}_Vector.cpp
+        ${dir}/Test${Tag}_ViewCtorPropEmbeddedDim.cpp
       )
   endif()
 endforeach()
