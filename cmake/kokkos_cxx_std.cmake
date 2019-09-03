@@ -43,7 +43,7 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
       MESSAGE(FATAL_ERROR "Compiler ${KOKKOS_CXX_COMPILER_ID} should support ${FEATURE_NAME}, but CMake reports feature not supported")
     ENDIF()
   ENDIF()
-ENDFUNCTION(kokkos_set_cxx_standard_feature)
+ENDFUNCTION()
 
 
 
