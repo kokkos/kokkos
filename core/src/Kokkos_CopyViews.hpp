@@ -1444,7 +1444,7 @@ inline void deep_copy(
         ViewTypeFlat;
 
     ViewTypeFlat dst_flat(dst.data(), dst.size());
-    if (dst.span() < std::numeric_limits<int>::max()) {
+    if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
       Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight,
                              typename ViewType::execution_space,
                              ViewTypeFlat::Rank, int>(dst_flat, value);
@@ -1485,7 +1485,7 @@ inline void deep_copy(
   typedef typename std::conditional<
       ViewType::Rank == 0, typename ViewType::uniform_runtime_type,
       typename ViewType::uniform_runtime_nomemspace_type>::type ViewTypeUniform;
-  if (dst.span() > std::numeric_limits<int>::max()) {
+  if (dst.span() > static_cast<size_t>(std::numeric_limits<int>::max())) {
     if (iterate == Kokkos::Iterate::Right)
       Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutRight,
                              typename ViewType::execution_space, ViewType::Rank,
