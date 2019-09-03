@@ -273,7 +273,7 @@ namespace Kokkos {
 namespace Impl {
 
 template <class ExecutionSpace>
-struct DeepCopy<Experimental::HBWSpace, Experimental::HBWSpace,
+struct DeepCopy<Kokkos::Experimental::HBWSpace, Kokkos::Experimental::HBWSpace,
                 ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) { memcpy(dst, src, n); }
 
@@ -284,7 +284,7 @@ struct DeepCopy<Experimental::HBWSpace, Experimental::HBWSpace,
 };
 
 template <class ExecutionSpace>
-struct DeepCopy<HostSpace, Experimental::HBWSpace, ExecutionSpace> {
+struct DeepCopy<HostSpace, Kokkos::Experimental::HBWSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) { memcpy(dst, src, n); }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
@@ -294,7 +294,7 @@ struct DeepCopy<HostSpace, Experimental::HBWSpace, ExecutionSpace> {
 };
 
 template <class ExecutionSpace>
-struct DeepCopy<Experimental::HBWSpace, HostSpace, ExecutionSpace> {
+struct DeepCopy<Kokkos::Experimental::HBWSpace, HostSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) { memcpy(dst, src, n); }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
