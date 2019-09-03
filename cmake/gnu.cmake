@@ -1,6 +1,6 @@
 
-FUNCTION(kokkos_set_gnu_flags standard)
-  STRING(TOLOWER ${standard} LC_STANDARD)
+FUNCTION(KOKKOS_SET_GNU_FLAGS STANDARD)
+  STRING(TOLOWER ${STANDARD} LC_STANDARD)
   # The following three blocks of code were copied from
   # /Modules/Compiler/Intel-CXX.cmake from CMake 3.7.2 and then modified.
   IF(CMAKE_CXX_SIMULATE_ID STREQUAL MSVC)

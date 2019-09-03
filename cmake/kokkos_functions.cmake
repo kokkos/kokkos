@@ -1,10 +1,10 @@
 ################################### FUNCTIONS ##################################
 # List of functions
-#   kokkos_option
+#   KOKKOS_OPTION
 
 # Validate options are given with correct case and define an internal
 # upper-case version for use within 
-FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
+FUNCTION(KOKKOS_OPTION CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
   SET(CAMEL_NAME Kokkos_${CAMEL_SUFFIX})
   STRING(TOUPPER ${CAMEL_NAME} UC_NAME)
 
@@ -28,7 +28,7 @@ FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
     SET(${UC_NAME} ${DEFAULT} PARENT_SCOPE)
   ENDIF()
 
-ENDFUNCTION(kokkos_option)
+ENDFUNCTION(KOKKOS_OPTION)
 
 
 

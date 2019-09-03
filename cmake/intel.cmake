@@ -1,6 +1,6 @@
 
-function(kokkos_set_intel_flags standard)
-  STRING(TOLOWER ${standard} LC_STANDARD)
+FUNCTION(KOKKOS_SET_INTEL_FLAGS STANDARD)
+  STRING(TOLOWER ${STANDARD} LC_STANDARD)
   # The following three blocks of code were copied from
   # /Modules/Compiler/Intel-CXX.cmake from CMake 3.7.2 and then modified.
   if(CMAKE_CXX_SIMULATE_ID STREQUAL MSVC)
@@ -24,5 +24,5 @@ function(kokkos_set_intel_flags standard)
     message(FATAL_ERROR "Intel compiler version too low - need 13.0 for C++11 and 15.0 for C++14")
   endif()
 
-endfunction()
+ENDFUNCTION()
 

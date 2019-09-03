@@ -25,13 +25,13 @@ include(FindPackageHandleStandardArgs)
 #   This function makes sure that Kokkos was built with the requested backends
 #   and target architectures and generates a fatal error if it was not.
 #
-#   kokkos_check(
+#   KOKKOS_CHECK(
 #     [DEVICES <devices>...] # Set of backends (e.g. "OpenMP" and/or "Cuda")
 #     [ARCH <archs>...]      # Target architectures (e.g. "Power9" and/or "Volta70")
 #     [OPTIONS <options>...] # Optional settings (e.g. "PROFILING")
 #     [TPLS <tpls>...]       # Third party libraries
 #   )
-function(kokkos_check)
+FUNCTION(KOKKOS_CHECK)
   set(ALLOWED_ARGS DEVICES ARCH OPTIONS TPLS)
   cmake_parse_arguments(KOKKOS_CHECK "" "" "${ALLOWED_ARGS}" ${ARGN})
   # Get the list of keywords that were actually passed to the function.
@@ -67,7 +67,7 @@ function(kokkos_check)
   if(NOT KOKKOS_CHECK_SUCCESS)
     message(FATAL_ERROR "Kokkos does NOT provide all backends and/or architectures requested")
   endif()
-endfunction()
+ENDFUNCTION()
 
 #Find dependencies
 INCLUDE(CMakeFindDependencyMacro)
