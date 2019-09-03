@@ -54,29 +54,20 @@
 
 namespace Test {
 
-class openmp : public ::testing::Test {
- protected:
-  static void SetUpTestCase() {
-    std::cout << std::setprecision(5) << std::scientific;
-  }
-
-  static void TearDownTestCase() {}
-};
-
 #define OPENMP_RANDOM_XORSHIFT64(num_draws)                             \
-  TEST_F(openmp, Random_XorShift64) {                                   \
+  TEST(openmp, Random_XorShift64) {                                     \
     Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::OpenMP> >( \
         num_draws);                                                     \
   }
 
 #define OPENMP_RANDOM_XORSHIFT1024(num_draws)                             \
-  TEST_F(openmp, Random_XorShift1024) {                                   \
+  TEST(openmp, Random_XorShift1024) {                                     \
     Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> >( \
         num_draws);                                                       \
   }
 
 #define OPENMP_SORT_UNSIGNED(size)                   \
-  TEST_F(openmp, SortUnsigned) {                     \
+  TEST(openmp, SortUnsigned) {                       \
     Impl::test_sort<Kokkos::OpenMP, unsigned>(size); \
   }
 
