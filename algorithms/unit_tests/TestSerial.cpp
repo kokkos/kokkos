@@ -56,27 +56,20 @@
 
 namespace Test {
 
-class serial : public ::testing::Test {
- protected:
-  static void SetUpTestCase() {}
-
-  static void TearDownTestCase() {}
-};
-
 #define SERIAL_RANDOM_XORSHIFT64(num_draws)                             \
-  TEST_F(serial, Random_XorShift64) {                                   \
+  TEST(serial, Random_XorShift64) {                                     \
     Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Serial> >( \
         num_draws);                                                     \
   }
 
 #define SERIAL_RANDOM_XORSHIFT1024(num_draws)                             \
-  TEST_F(serial, Random_XorShift1024) {                                   \
+  TEST(serial, Random_XorShift1024) {                                     \
     Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Serial> >( \
         num_draws);                                                       \
   }
 
 #define SERIAL_SORT_UNSIGNED(size)                   \
-  TEST_F(serial, SortUnsigned) {                     \
+  TEST(serial, SortUnsigned) {                       \
     Impl::test_sort<Kokkos::Serial, unsigned>(size); \
   }
 
