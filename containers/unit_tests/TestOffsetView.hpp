@@ -460,9 +460,18 @@ void test_offsetview_subview(unsigned int size) {
   }
 }
 
+template <class InputIt, class T, class BinaryOperation>
+KOKKOS_INLINE_FUNCTION T std_accumulate(InputIt first, InputIt last, T init,
+                                        BinaryOperation op) {
+  for (; first != last; ++first) {
+    init = op(std::move(init), *first);
+  }
+  return init;
+}
+
 KOKKOS_INLINE_FUNCTION int element(std::initializer_list<int> il) {
-  return std::accumulate(il.begin(), il.end(), 0,
-                         [](int l, int r) { return l * 10 + r; });
+  return std_accumulate(il.begin(), il.end(), 0,
+                        [](int l, int r) { return l * 10 + r; });
 }
 
 template <typename DEVICE>
@@ -577,4 +586,3 @@ TEST(TEST_CATEGORY, offsetview_offsets_rank3) {
 }  // namespace Test
 
 #endif /* CONTAINERS_UNIT_TESTS_TESTOFFSETVIEW_HPP_ */
-
