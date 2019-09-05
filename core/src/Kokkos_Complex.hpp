@@ -58,10 +58,8 @@ namespace Kokkos {
 ///   \c float, \c double, and <tt>long double</tt>.  The latter is
 ///   currently forbidden in CUDA device kernels.
 template <class RealType>
-class alignas(2 * alignof(RealType)) complex {
+class alignas(2 * sizeof(RealType)) complex {
  private:
-  static constexpr RealType zero = RealType(0);
-
   RealType re_{};
   RealType im_{};
 
@@ -126,7 +124,7 @@ class alignas(2 * alignof(RealType)) complex {
   template <class RType>
   KOKKOS_INLINE_FUNCTION complex& operator=(const RType& val) {
     re_ = val;
-    im_ = zero;
+    im_ = RealType(0);
     return *this;
   }
 
@@ -255,7 +253,7 @@ class alignas(2 * alignof(RealType)) complex {
     // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
     // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
     // because y/s is NaN.
-    if (s == zero) {
+    if (s == RealType(0)) {
       this->re_ /= s;
       this->im_ /= s;
     } else {
@@ -279,7 +277,7 @@ class alignas(2 * alignof(RealType)) complex {
     // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
     // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
     // because y/s is NaN.
-    if (s == zero) {
+    if (s == RealType(0)) {
       this->re_ /= s;
       this->im_ /= s;
     } else {
@@ -337,7 +335,7 @@ class alignas(2 * alignof(RealType)) complex {
                                                 const RType b) {
     static_assert(std::is_convertible<RType, RealType>::value,
                   "RType must be convertible to RealType");
-    return (a.real() == static_cast<RealType>(b)) && (a.imag() == zero);
+    return (a.real() == static_cast<RealType>(b)) && (a.imag() == RealType(0));
   }
 
   template <typename RType>
@@ -428,7 +426,7 @@ class alignas(2 * alignof(RealType)) complex {
   template <class RType>
   KOKKOS_INLINE_FUNCTION void operator=(const RType& val) volatile {
     re_ = val;
-    im_ = zero;
+    im_ = RealType(0);
   }
 
   //! The imaginary part of this complex number (volatile overload).
@@ -470,8 +468,9 @@ class alignas(2 * alignof(RealType)) complex {
                   "RType must be convertible to RealType");
     const RealType realPart = re_ * src.re_ - im_ * src.im_;
     const RealType imagPart = re_ * src.im_ + im_ * src.re_;
-    re_                     = realPart;
-    im_                     = imagPart;
+
+    re_ = realPart;
+    im_ = imagPart;
   }
 
   template <typename RType>
