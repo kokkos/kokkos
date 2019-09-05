@@ -30,7 +30,7 @@ struct is_offset_view<OffsetView<D, P...> > : public std::true_type {};
 template <class D, class... P>
 struct is_offset_view<const OffsetView<D, P...> > : public std::true_type {};
 
-#define KOKKOS_INVALID_OFFSET int64_t(0)
+#define KOKKOS_INVALID_OFFSET int64_t(0x7FFFFFFFFFFFFFFFLL)
 #define KOKKOS_INVALID_INDEX_RANGE \
   { KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET }
 
@@ -144,7 +144,7 @@ void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
 
   size_t numOffsets = 0;
   for (size_t i = 0; i < minIndices.size(); ++i) {
-    if (minIndices.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+    if (minIndices.begin()[i] != KOKKOS_INVALID_OFFSET) numOffsets++;
   }
   if (numOffsets != rank_dynamic) {
     message += "The number of offsets provided ( " +
@@ -167,7 +167,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
   }
   size_t numOffsets = 0;
   for (size_t i = 0; i < minIndices.size(); ++i) {
-    if (minIndices.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+    if (minIndices.begin()[i] != KOKKOS_INVALID_OFFSET) numOffsets++;
   }
   if (numOffsets != rank) {
     Kokkos::abort(
@@ -201,7 +201,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       typename iType,
       typename std::enable_if<std::is_integral<iType>::value, iType>::type = 0>
   KOKKOS_INLINE_FUNCTION int64_t begin(const iType local_dimension) const {
-    return local_dimension < Rank ? m_begins[local_dimension] : 0;
+    return local_dimension < Rank ? m_begins[local_dimension]
+                                  : KOKKOS_INVALID_OFFSET;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -808,7 +809,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   KOKKOS_INLINE_FUNCTION
   OffsetView() : m_track(), m_map() {
-    for (size_t i = 0; i < Rank; ++i) m_begins[i] = KOKKOS_INVALID_INDEX;
+    for (size_t i = 0; i < Rank; ++i) m_begins[i] = KOKKOS_INVALID_OFFSET;
   }
 
   KOKKOS_INLINE_FUNCTION
