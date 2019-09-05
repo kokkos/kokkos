@@ -177,20 +177,19 @@ ENDIF()
 ENDFUNCTION()
 
 MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_functions.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_devices.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_options.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_cxx_std.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
  IF (NOT KOKKOS_HAS_TRILINOS)
   #------------ COMPILER AND FEATURE CHECKS ------------------------------------
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_functions.cmake)
 
   #------------ GET OPTIONS AND KOKKOS_SETTINGS --------------------------------
   # ADD Kokkos' modules to CMake's module path.
   SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kokkos_SOURCE_DIR}/cmake/Modules/")
-
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_devices.cmake)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_options.cmake)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_cxx_std.cmake)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tpls.cmake)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
  ENDIF()
 ENDMACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
 

@@ -51,12 +51,6 @@
 # myapp_CFLAGS = $(KOKKOS_CFLAGS)
 # myapp_LDADD = $(KOKKOS_LIBS)
 
-# Use this in CMake:
-# CMakeLists.txt:
-# find_package(PkgConfig)
-# pkg_check_modules(KOKKOS IMPORTED_TARGET kokkos)
-# target_link_libraries(<lib> PkgConfig::KOKKOS)
-
 prefix=@CMAKE_INSTALL_PREFIX@
 libdir=${prefix}/lib
 includedir=${prefix}/include
@@ -68,4 +62,4 @@ Version:
 Requires:
 Libs: -L${libdir} -lkokkos @KOKKOS_EXTRA_LIBS_LIST@ @KOKKOS_LINK_FLAGS@
 Libs.private: -lm
-Cflags: -I${includedir} @KOKKOS_CXXFLAGS@
+Cflags: -I${includedir} @KOKKOS_PKGCONFIG_CXXFLAGS@

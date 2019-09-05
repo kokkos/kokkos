@@ -2,6 +2,9 @@
 
 # Installing and Using Kokkos
 
+This document contains build instructions for users.
+For build system details for development, refer to the [developer instructions](DEVELOPER.md).
+
 ## Kokkos Philosophy
 Kokkos provides a modern CMake style build system.
 As C++ continues to develop for C++20 and beyond, CMake is likely to provide the most robust support
@@ -30,7 +33,7 @@ cmake ${srcdir} \
  -DCMAKE_CXX_COMPILER=g++ \
  -DCMAKE_INSTALL_PREFIX=${my_install_folder}
 ````
-which builds and installed a default Kokkos when you run `make install`.
+which builds and installs a default Kokkos when you run `make install`.
 There are numerous device backends, options, and architecture-specific optimizations that can be configured, e.g.
 ````
 cmake ${srcdir} \
@@ -74,7 +77,7 @@ spack find -p kokkos ...
 where `...` is the unique spec identifying the particular Kokkos configuration and version.
 
 A better way to use Spack for doing Kokkos development is the DIY feature of Spack.
-If you wish to develop Kokkos itself, go to the Kokkos source folder:
+If you wish to develop Kokkos itself, go to the Kokkos source folder and run:
 ````
 spack diy -u cmake kokkos@diy ... 
 ````
@@ -88,7 +91,7 @@ spack diy -u cmake ${myproject}@${myversion} ... ^kokkos...
 where the `...` are the specs for your project and the desired Kokkos configuration.
 Again, a `spack-build` directory will be created where you can run `make`.
 
-Spack has a few idiosyncracies that make building outside of Spack annoying related to Spack forcing use of a compiler wrapper. This can be worked around by having a `-DSpack_WORKAROUND=On` given your CMake. Then add the block of code to your CMakeLists.txt:
+Spack has a few idiosyncracies that make building outside of Spack annoying related to Spack forcing use of a compiler wrapper. This can be worked around by having a `-DSpack_WORKAROUND=On` given in your CMake. Then add this block of code to your CMakeLists.txt:
 
 ````
 if (Spack_WORKAROUND)
@@ -168,7 +171,7 @@ Strings passed to `Kokkos_OPTIONS` are not case-sensitive.
     * Whether to enable deprecated code
     * BOOL Default: OFF
 * Kokkos_ENABLE_EXAMPLES
-    * Whether to build OpenMP  backend
+    * Whether to build examples
     * BOOL Default: OFF
 * Kokkos_ENABLE_EXPLICIT_INSTANTIATION
     * Whether to explicitly instantiate certain types to lower futurecompile times
@@ -183,7 +186,7 @@ Strings passed to `Kokkos_OPTIONS` are not case-sensitive.
     * Whether to print information about which profiling tools gotloaded
     * BOOL Default: OFF
 * Kokkos_ENABLE_TESTS
-    * Whether to build serial  backend
+    * Whether to build tests
     * BOOL Default: OFF
 
 ## Other Options
