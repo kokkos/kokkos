@@ -27,7 +27,7 @@ Only Kokkos needs these flags, not a package that depends on Kokkos.
 Flags that must be used in a downstream project are `PUBLIC`.
 Kokkos must tell other projects to use them.
 
-In Kokkos, almost everything is a public flag since Kokkos is driven by headers and Kokkos is in charge of optimizing your code (performance portability!).
+In Kokkos, almost everything is a public flag since Kokkos is driven by headers and Kokkos is in charge of optimizing your code - performance portability!
 Include paths, C++ standard flags, architecture-specific optimizations, or OpenMP and CUDA flags are all example of flags that Kokkos configures and adds to your project.
 
 Modern CMake now automatically propagates flags through the `target_link_libraries` command.
@@ -54,11 +54,11 @@ Each target has a set of standard properties:
 * `INTERFACE_COMPILE_FEATURES` essentially adds compiler flags, but with extra complications. Features names are specific to CMake. More later.
 
 CMake makes it easy to append to these properties using:
-* `target_compile_options(kokkos PUBLIC -fmyflag)
-* `target_include_directories(kokkos PUBLIC mySpecialFolder)
-* `target_compile_definitions(kokkos PUBLIC -DmySpecialFlag=0)
-* `target_link_libraries(kokkos PUBLIC mySpecialLibrary)
-* `target_compile_features(kokkos PUBLIC mySpecialFeature)
+* `target_compile_options(kokkos PUBLIC -fmyflag)`
+* `target_include_directories(kokkos PUBLIC mySpecialFolder)`
+* `target_compile_definitions(kokkos PUBLIC -DmySpecialFlag=0)`
+* `target_link_libraries(kokkos PUBLIC mySpecialLibrary)`
+* `target_compile_features(kokkos PUBLIC mySpecialFeature)`
 Note that all of these use `PUBLIC`! Almost every Kokkos flag is not private to Kokkos, but must also be used by downstream projects.
 
 
@@ -86,7 +86,7 @@ target_compile_options(A PUBLIC -std=c++11)
 ````
 
 ### Adding Kokkos Options
-Aftering configuring for the first time, 
+After configuring for the first time, 
 CMake creates a cache of configure variables in `CMakeCache.txt`.
 Reconfiguring in the folder "restarts" from those variables.
 All flags passed as `-DKokkos_SOME_OPTION=X` to `cmake` become variables in the cache.
@@ -112,7 +112,7 @@ depending on the given default and whether the option was specified.
 
 ### Defining Kokkos Config Macros
 
-Sometimes you may want to add `#define Kokkos_X` macros to config header.
+Sometimes you may want to add `#define Kokkos_X` macros to the config header.
 This is straightforward with CMake.
 Suppose you want to define an optional macro `KOKKOS_SUPER_SCIENCE`.
 Simply go into `KokkosCore_config.h.in` and add
@@ -140,7 +140,7 @@ modern CMake allows us to propagate dependent libraries.
 If Kokkos depends on, e.g. `hwloc` the downstream project will also need to link `hwloc`.
 There are three stages in adding a new third-party library (TPL):
 * Finding: find the desired library on the system and verify the installation is correct
-# Importing: create a CMake target (if not already CMake) that is compatible with `target_link_libraries`
+* Importing: create a CMake target (if not already CMake) that is compatible with `target_link_libraries`
 * Exporting: make the desired library visible to downstream projects 
 
 #### Finding TPLs
@@ -152,7 +152,7 @@ You will ususally need to verify the expected headers with `find_path`
 find_path(TPL_INCLUDE_DIR mytpl.h PATHS "${KOKKOS_MYTPL_DIR}/include")
 ````
 This insures that the library header is in the expected include directory and defines the variable `TPL_INCLUDE_DIR` with a valid path if successful.
-Similar, you can verify a library
+Similarly, you can verify a library
 ````
 find_library(TPL_LIBRARIES mytpl PATHS "${KOKKOS_MYTPL_DIR/lib")
 ````
@@ -166,7 +166,7 @@ find_package_handle_standard_args(MYTPL DEFAULT_MSG
 
 #### Importing TPLs
 
-The library must be no made into a CMake target. CMake allows libraries to be created that are built externally as follows:
+The library must now be made into a CMake target. CMake allows libraries to be added that are built externally as follows:
 ````
 add_library(Kokkos::mytpl UNKNOWN IMPORTED)
 ````
@@ -181,7 +181,7 @@ set_target_properties(Kokkos::mytpl PROPERTIES
 
 #### Exporting TPLs
 
-Kokkos may now depend on the target `Kokkos::mytpl` as `PUBLIC` library (remembering building and using).
+Kokkos may now depend on the target `Kokkos::mytpl` as a `PUBLIC` library (remember building and using).
 This means that downstream projects must also know about `Kokkos::myptl` - so Kokkos must export them.
 In the `KokkosConfig.cmake.in` file, we need to add code like the following:
 ````
@@ -205,7 +205,6 @@ TriBITS greatly limited verbosity of CMake files, handled complicated dependency
 Kokkos is now used by numerous projects that don't (and won't) depend on TriBITS for their build systems.
 Kokkos has to work outside of TriBITS and provide a standard CMake 3+ build system.
 At the same time, Kokkos is used by numerous projects that depend on TriBITS and don't (and won't) switch to a standard CMake 3+ build system.
-Now that we have CMake version 3 and Spack, TriBITS is debatably dated.
 
 Nevertheless, Kokkos must satisfy all customers for now.
 Kokkos is implemented as something TriBITS-like.
