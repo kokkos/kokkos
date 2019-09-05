@@ -460,6 +460,7 @@ void test_offsetview_subview(unsigned int size) {
   }
 }
 
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
 template <class InputIt, class T, class BinaryOperation>
 KOKKOS_INLINE_FUNCTION T std_accumulate(InputIt first, InputIt last, T init,
                                         BinaryOperation op) {
@@ -562,6 +563,7 @@ void test_offsetview_offsets_rank3() {
 
   ASSERT_EQ(0, errors);
 }
+#endif
 
 TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>(10);
@@ -571,6 +573,7 @@ TEST(TEST_CATEGORY, offsetview_subview) {
   test_offsetview_subview<int, TEST_EXECSPACE>(10);
 }
 
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
 TEST(TEST_CATEGORY, offsetview_offsets_rank1) {
   test_offsetview_offsets_rank1<TEST_EXECSPACE>();
 }
@@ -582,6 +585,7 @@ TEST(TEST_CATEGORY, offsetview_offsets_rank2) {
 TEST(TEST_CATEGORY, offsetview_offsets_rank3) {
   test_offsetview_offsets_rank3<TEST_EXECSPACE>();
 }
+#endif
 
 }  // namespace Test
 
