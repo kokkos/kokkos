@@ -104,6 +104,11 @@ KOKKOS_SETUP_BUILD_ENVIRONMENT()
 # 6) Recurse into subdirectories and configure individual libraries
 # 7) Export and install targets
 
+OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+IF(BUILD_SHARED_LIBS)
+  SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+ENDIF()
+
 IF(Kokkos_SEPARATE_LIBS)
  SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms)
  SET(KOKKOS_INT_LIBRARIES kokkoscore kokkoscontainers kokkosalgorithms)
