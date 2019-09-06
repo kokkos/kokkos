@@ -21,7 +21,7 @@ CONFIGURE_PACKAGE_CONFIG_FILE(cmake/KokkosConfig.cmake.in
   "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
   INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake)
 WRITE_BASIC_PACKAGE_VERSION_FILE("${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
-      VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}"
+      VERSION "${Kokkos_VERSION}"
       COMPATIBILITY SameMajorVersion)
 
 # Install the KokkosConfig.cmake and KokkosConfigVersion.cmake
