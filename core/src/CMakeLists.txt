@@ -68,8 +68,3 @@ KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
-# build and install pkgconfig file
-#CONFIGURE_FILE(kokkos.pc.in kokkos.pc @ONLY)
-#INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/kokkos.pc DESTINATION lib/pkgconfig)
-
