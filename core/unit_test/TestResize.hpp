@@ -46,7 +46,7 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-namespace Test {
+namespace TestViewResize {
 
 template <class DeviceType>
 void testResize() {
@@ -465,11 +465,14 @@ void testResize() {
     EXPECT_TRUE(test == true);
   }
 }
+}  // namespace TestViewResize
+
+namespace Test {
 
 TEST_F(TEST_CATEGORY, view_resize) {
   typedef TEST_EXECSPACE ExecSpace;
-  testResize<ExecSpace>();
+  TestViewResize::testResize<ExecSpace>();
 }
-}  // namespace Test
 
+}  // namespace Test
 #endif  // TESTVIEWRESIZE_HPP_
