@@ -510,6 +510,21 @@ KOKKOS_INLINE_FUNCTION
   return return_type(args...);
 }
 
+template <class... Args>
+inline Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>
+view_resize(Args const&... args) {
+  typedef Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>
+      return_type;
+
+  static_assert(!return_type::has_memory_space &&
+                    !return_type::has_execution_space &&
+                    !return_type::has_label && !return_type::has_pointer &&
+                    !return_type::allow_padding && !return_type::initialize,
+                "Must only give uninitializing option for this view resizing");
+
+  return return_type(args...);
+}
+
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
