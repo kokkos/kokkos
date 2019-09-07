@@ -42,4 +42,4 @@
 */
 
 #include <serial/TestSerial_Category.hpp>
-#include <TestResize.hpp>
+#include <TestViewResize.hpp>

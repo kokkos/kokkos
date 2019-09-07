@@ -42,4 +42,4 @@
 */
 
 #include <threads/TestThreads_Category.hpp>
-#include <TestResize.hpp>
+#include <TestViewResize.hpp>

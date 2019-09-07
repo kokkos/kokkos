@@ -40,6 +40,18 @@
 // ************************************************************************
 //@HEADER
 */
+#ifndef TESTVIEWRESIZE_HPP_
+#define TESTVIEWRESIZE_HPP_
 
-#include <openmp/TestOpenMP_Category.hpp>
-#include <TestViewResize.hpp>
+#include <gtest/gtest.h>
+#include "TestResize.hpp"
+
+namespace Test {
+
+TEST_F(TEST_CATEGORY, view_resize) {
+  typedef TEST_EXECSPACE ExecSpace;
+  TestViewResize::testResize<ExecSpace>();
+}
+
+}  // namespace Test
+#endif  // TESTVIEWRESIZE_HPP_

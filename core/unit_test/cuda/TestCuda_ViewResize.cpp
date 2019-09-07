@@ -42,4 +42,4 @@
 */
 
 #include <cuda/TestCuda_Category.hpp>
-#include <TestResize.hpp>
+#include <TestViewResize.hpp>

@@ -40,8 +40,8 @@
 // ************************************************************************
 //@HEADER
 */
-#ifndef TESTVIEWRESIZE_HPP_
-#define TESTVIEWRESIZE_HPP_
+#ifndef TESTRESIZE_HPP_
+#define TESTRESIZE_HPP_
 
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
@@ -465,14 +465,6 @@ void testResize() {
     EXPECT_TRUE(test == true);
   }
 }
+
 }  // namespace TestViewResize
-
-namespace Test {
-
-TEST_F(TEST_CATEGORY, view_resize) {
-  typedef TEST_EXECSPACE ExecSpace;
-  TestViewResize::testResize<ExecSpace>();
-}
-
-}  // namespace Test
-#endif  // TESTVIEWRESIZE_HPP_
+#endif  // TESTRESIZE_HPP_
