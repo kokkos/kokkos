@@ -130,7 +130,7 @@ ELSEIF(HAS_PARENT)
   SET(KOKKOS_HEADER_DIR "include/kokkos")
   SET(KOKKOS_IS_SUBDIRECTORY TRUE)
 ELSE()
-  SET(KOKKOS_HEADER_DIR "include")
+  SET(KOKKOS_HEADER_DIR "${CMAKE_INSTALL_INCLUDEDIR}")
   SET(KOKKOS_IS_SUBDIRECTORY FALSE)
 ENDIF()
 
@@ -173,8 +173,8 @@ ENDIF()
 # executables also need nvcc_wrapper.  Thus, we need to install it.
 # If the argument of DESTINATION is a relative path, CMake computes it
 # as relative to ${CMAKE_INSTALL_PATH}.
-INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION bin)
-INSTALL(FILES "${CMAKE_BINARY_DIR}/KokkosCore_config.h" DESTINATION include)
+INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION ${CMAKE_INSTALL_BINDIR})
+INSTALL(FILES "${CMAKE_BINARY_DIR}/KokkosCore_config.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 
 #  Finally - if we are a subproject - make sure the enabled devices are visible
