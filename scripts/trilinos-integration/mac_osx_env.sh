@@ -1,0 +1,15 @@
+#!/bin/bash -el
+
+export OMP_NUM_THREADS=4
+export JENKINS_DO_CUDA=OFF
+export JENKINS_DO_OPENMP=OFF
+export JENKINS_DO_PTHREAD=OFF
+export JENKINS_DO_SERIAL=ON
+export JENKINS_DO_COMPLEX=OFF
+
+export BLAS_LIBRARIES="-lblas"
+export LAPACK_LIBRARIES="llapack"
+
+export JENKINS_DO_TESTS=ON
+export JENKINS_DO_EXAMPLES=ON
+
