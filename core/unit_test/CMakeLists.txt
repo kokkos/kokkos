@@ -86,6 +86,7 @@ IF(KOKKOS_ENABLE_SERIAL)
       serial/TestSerial_ViewOfClass.cpp
       serial/TestSerial_Crs.cpp
       serial/TestSerial_WorkGraph.cpp
+      serial/TestSerial_ViewResize.cpp
   )
 ENDIF()
 
@@ -150,6 +151,7 @@ IF(Kokkos_ENABLE_PTHREAD)
       threads/TestThreads_ViewOfClass.cpp
       threads/TestThreads_Crs.cpp
       threads/TestThreads_WorkGraph.cpp
+      threads/TestThreads_ViewResize.cpp
   )
 ENDIF()
 
@@ -215,6 +217,7 @@ IF(Kokkos_ENABLE_OPENMP)
       openmp/TestOpenMP_Crs.cpp
       openmp/TestOpenMP_WorkGraph.cpp
       openmp/TestOpenMP_UniqueToken.cpp
+      openmp/TestOpenMP_ViewResize.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMPInterOp
@@ -414,6 +417,7 @@ IF(Kokkos_ENABLE_CUDA)
       cuda/TestCuda_Crs.cpp
       cuda/TestCuda_WorkGraph.cpp
       cuda/TestCuda_UniqueToken.cpp
+      cuda/TestCuda_ViewResize.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_CudaInterOpInit
