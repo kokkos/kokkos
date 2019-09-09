@@ -428,7 +428,8 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     ENDIF()
   ELSE()
     #OH, Well, no choice but the wrong way
-    TARGET_COMPILE_OPTIONS(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FLAG})
+    ## commenting this out because it seems redundant (if it is left in there are two -std=c++11 entries) ...
+    ## TARGET_COMPILE_OPTIONS(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FLAG})
   ENDIF()
 
   IF (KOKKOS_SEPARATE_LIBS OR ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12")

@@ -36,7 +36,7 @@ if [[ "$HOSTNAME" == kokkos-dev-2* ]]; then
   MACHINE=kokkos-dev-2
 fi
 
-if [[ "$HOSTNAME" == mayer\.* ]]; then
+if [[ "$HOSTNAME" == mayer* ]]; then
   MACHINE=mayer
 #  module load git
 fi
@@ -97,7 +97,7 @@ CXX_FLAGS_EXTRA=""
 LD_FLAGS_EXTRA=""
 KOKKOS_OPTIONS=""
 
-CXX_STANDARD="c++11"
+CXX_STANDARD="11"
 
 #
 # Handle arguments.
@@ -154,7 +154,12 @@ do
       CXX_FLAGS_EXTRA="${key#*=}"
       ;;
     --cxxstandard*)
-      CXX_STANDARD="${key#*=}"
+      FULL_CXX_STANDARD="${key#*=}"
+      if [[ ${FULL_CXX_STANDARD} == *++* ]]; then
+         CXX_STANDARD="${FULL_CXX_STANDARD#*++}"
+      else
+         CXX_STANDARD="${FULL_CXX_STANDARD}"
+      fi
       ;;
     --ldflags-extra*)
       LD_FLAGS_EXTRA="${key#*=}"
@@ -287,10 +292,10 @@ elif [ "$MACHINE" = "white" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=32
 
-  BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
-  IBM_MODULE_LIST="<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
-  CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.0"
-  CUDA10_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.0"
+  BASE_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>"
+  IBM_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
+  CUDA_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.0"
+  CUDA10_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.0"
 
   # Don't do pthread on white.
   GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -322,7 +327,7 @@ elif [ "$MACHINE" = "bowman" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=32
 
-  BASE_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
+  BASE_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
   OLD_INTEL_BUILD_LIST="Pthread,Serial,Pthread_Serial"
 
@@ -340,12 +345,12 @@ elif [ "$MACHINE" = "mayer" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=96
 
-  BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
-  ARM_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
+  BASE_MODULE_LIST="cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>"
+  ARM_MODULE_LIST="cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("gnu/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "arm/19.0.0 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
+  COMPILERS=("gnu7/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "arm/19.0 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=ARMv8-TX2"
@@ -719,6 +724,7 @@ setup_env() {
     module list 2>&1 | grep "$mod" >& /dev/null || return 1
   done
 
+  source /ascldap/users/jsmiles/update_lib.sh $MACHINE
   return 0
 }
 
@@ -792,6 +798,9 @@ single_build_and_test() {
     if [[ "$LOCAL_KOKKOS_DEVICES" = *Cuda* ]]; then
        CUDA_ENABLE_CMD="--with-cuda=$CUDA_ROOT"
     fi
+    echo "kokkos options: ${KOKKOS_OPTIONS}"
+    echo "kokkos devices: ${LOCAL_KOKKOS_DEVICES}"
+    echo "kokkos cxx: ${cxxflags}"
     run_cmd ${KOKKOS_PATH}/cm_generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --no-examples $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local -i build_start_time=$(date +%s)
     run_cmd make -j 48 all >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }

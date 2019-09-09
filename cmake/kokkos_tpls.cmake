@@ -19,7 +19,16 @@ KOKKOS_TPL_OPTION(QTHREAD ${QTHR_DEFAULT}
 KOKKOS_TPL_OPTION(HWLOC   Off)
 KOKKOS_TPL_OPTION(LIBNUMA Off)
 KOKKOS_TPL_OPTION(MEMKIND Off)
-KOKKOS_TPL_OPTION(CUDA    Off)
+
+##Using the KOKKOS_TPL_OPTION this way for Cuda only turns it off after 
+##we have been instructed to turn it on in Kokkos_DEVICES
+##All we really need here is to set KOKKOS_CUDA_DIR...
+##KOKKOS_TPL_OPTION(CUDA    Off)
+IF (KOKKOS_ENABLE_CUDA)
+   IF(DEFINED Kokkos_CUDA_DIR)
+      SET(KOKKOS_CUDA_DIR ${Kokkos_CUDA_DIR} PARENT_SCOPE)
+   ENDIF()
+ENDIF()
 
 IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_HPX)
 SET(HPX_DEFAULT ON)

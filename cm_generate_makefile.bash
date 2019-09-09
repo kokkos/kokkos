@@ -1,5 +1,21 @@
 #!/bin/bash
 
+update_kokkos_devices() {
+   SEARCH_TEXT="*$1*"
+   if [[ $KOKKOS_DEVICES == $SEARCH_TEXT ]]; then
+      echo kokkos devices already includes $SEARCH_TEXT
+   else
+      if [ "$KOKKOS_DEVICES" = "" ]; then
+         KOKKOS_DEVICES="$1"
+         echo reseting kokkos devices to $KOKKOS_DEVICES
+      else
+         KOKKOS_DEVICES="${KOKKOS_DEVICES},$1"
+         echo appending to kokkos devices $KOKKOS_DEVICES
+      fi
+   fi
+}
+
+
 KOKKOS_DO_EXAMPLES=ON
 
 while [[ $# > 0 ]]
@@ -20,7 +36,7 @@ do
       PREFIX="${key#*=}"
       ;;
     --with-cuda)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
+      update_kokkos_devices Cuda
       CUDA_PATH_NVCC=$(command -v nvcc)
       CUDA_PATH=${CUDA_PATH_NVCC%/bin/nvcc}
       ;;
@@ -29,23 +45,23 @@ do
       KOKKOS_CUDA_OPT="${key#*=}"
       ;;
     --with-cuda*)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
+      update_kokkos_devices Cuda
       CUDA_PATH="${key#*=}"
       ;;
     --with-rocm)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},ROCm"
+      update_kokkos_devices ROCm
       ;;
     --with-openmp)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},OpenMP"
+      update_kokkos_devices OpenMP
       ;;
     --with-pthread)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Pthread"
+      update_kokkos_devices Pthread
       ;;
     --with-serial)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"
+      update_kokkos_devices Serial
       ;;
     --with-qthreads*)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Qthreads"
+      update_kokkos_devices Qthreads
       if [ -z "$QTHREADS_PATH" ]; then
         QTHREADS_PATH="${key#*=}"
       fi
@@ -54,14 +70,18 @@ do
       KOKKOS_HPX_OPT="${key#*=}"
       ;;
     --with-hpx*)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},HPX"
+      update_kokkos_devices HPX
       if [ -z "$HPX_PATH" ]; then
         HPX_PATH="${key#*=}"
       fi
       ;;
     --with-devices*)
       DEVICES="${key#*=}"
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},${DEVICES}"
+      PARSE_DEVICES=$(echo $DEVICES | tr "," "\n")
+      for DEVICE_ in $PARSE_DEVICES
+      do 
+         update_kokkos_devices $DEVICE_
+      done
       ;;
     --with-gtest*)
       GTEST_PATH="${key#*=}"
@@ -217,4 +237,5 @@ else
     COMPILER_CMD='-DCMAKE_CXX_COMPILER=$COMPILER'
 fi
 
-cmake $COMPILER_CMD -DCMAKE_INSTALL_PREFIX=${PREFIX} -DKOKKOS_DEVICES=$KOKKOS_DEVICES -DKOKKOS_ARCH=$KOKKOS_ARCH -DKOKKOS_ENABLE_TESTS=ON -DKOKKOS_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} -DKOKKOS_OPTIONS=${KOKKOS_OPT} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKOKKOS_CUDA_DIR=${CUDA_PATH} ${KOKKOS_PATH}
+echo cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${CXXFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} -DKokkos_DEVICES=$KOKKOS_DEVICES -DKokkos_ARCH=$KOKKOS_ARCH -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} -DKokkos_OPTIONS=${KOKKOS_OPT} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CUDA_DIR=${CUDA_PATH} -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_PATH} 
+cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${CXXFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} -DKokkos_DEVICES=$KOKKOS_DEVICES -DKokkos_ARCH=$KOKKOS_ARCH -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} -DKokkos_OPTIONS=${KOKKOS_OPT} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CUDA_DIR=${CUDA_PATH} -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_PATH} 
