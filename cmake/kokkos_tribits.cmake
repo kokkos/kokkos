@@ -191,6 +191,11 @@ MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_cxx_std.cmake)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tpls.cmake)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
+
+  FILE(GLOB OBJECT_FILES_IN_SOURCE_DIRECTORY ${KOKKOS_SRC_PATH}/core/src/*.o)
+  IF(OBJECT_FILES_IN_SOURCE_DIRECTORY)
+    MESSAGE(WARNING "Running cmake with object files in the core/src directory, build may behave unexpectedly")
+  ENDIF()
  ENDIF()
 ENDMACRO()
 
