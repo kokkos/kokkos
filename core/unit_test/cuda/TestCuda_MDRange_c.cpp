@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<cuda/TestCuda_Category.hpp>
-#include<TestMDRange_c.hpp>
-
+#include <cuda/TestCuda_Category.hpp>
+#include <TestMDRange_c.hpp>

@@ -3,108 +3,33 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../src )
 
-IF(Kokkos_ENABLE_PTHREAD)
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_Threads
-  SOURCES
-    UnitTestMain.cpp
-    threads/TestThreads_BitSet.cpp
-    threads/TestThreads_DualView.cpp
-    threads/TestThreads_DynamicView.cpp
-    threads/TestThreads_DynRankViewAPI_generic.cpp
-    threads/TestThreads_DynRankViewAPI_rank12345.cpp
-    threads/TestThreads_DynRankViewAPI_rank67.cpp
-    threads/TestThreads_ErrorReporter.cpp
-    threads/TestThreads_OffsetView.cpp
-    threads/TestThreads_ScatterView.cpp
-    threads/TestThreads_StaticCrsGraph.cpp
-    threads/TestThreads_UnorderedMap.cpp
-    threads/TestThreads_Vector.cpp
-    threads/TestThreads_ViewCtorPropEmbeddedDim.cpp
-  )
-ENDIF()
-
-IF(Kokkos_ENABLE_SERIAL)
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_Serial
-  SOURCES
-    UnitTestMain.cpp
-    serial/TestSerial_BitSet.cpp
-    serial/TestSerial_DualView.cpp
-    serial/TestSerial_DynamicView.cpp
-    serial/TestSerial_DynRankViewAPI_generic.cpp
-    serial/TestSerial_DynRankViewAPI_rank12345.cpp
-    serial/TestSerial_DynRankViewAPI_rank67.cpp
-    serial/TestSerial_ErrorReporter.cpp
-    serial/TestSerial_OffsetView.cpp
-    serial/TestSerial_ScatterView.cpp
-    serial/TestSerial_StaticCrsGraph.cpp
-    serial/TestSerial_UnorderedMap.cpp
-    serial/TestSerial_Vector.cpp
-    serial/TestSerial_ViewCtorPropEmbeddedDim.cpp
-  )
-ENDIF()
-
-IF(Kokkos_ENABLE_OPENMP)
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_OpenMP
-  SOURCES
-    UnitTestMain.cpp
-    openmp/TestOpenMP_BitSet.cpp
-    openmp/TestOpenMP_DualView.cpp
-    openmp/TestOpenMP_DynamicView.cpp
-    openmp/TestOpenMP_DynRankViewAPI_generic.cpp
-    openmp/TestOpenMP_DynRankViewAPI_rank12345.cpp
-    openmp/TestOpenMP_DynRankViewAPI_rank67.cpp
-    openmp/TestOpenMP_ErrorReporter.cpp
-    openmp/TestOpenMP_OffsetView.cpp
-    openmp/TestOpenMP_ScatterView.cpp
-    openmp/TestOpenMP_StaticCrsGraph.cpp
-    openmp/TestOpenMP_UnorderedMap.cpp
-    openmp/TestOpenMP_Vector.cpp
-    openmp/TestOpenMP_ViewCtorPropEmbeddedDim.cpp
-  )
-ENDIF()
-
-IF(Kokkos_ENABLE_HPX)
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_HPX
-  SOURCES
-    UnitTestMain.cpp
-    hpx/TestHPX_BitSet.cpp
-    hpx/TestHPX_DualView.cpp
-    hpx/TestHPX_DynamicView.cpp
-    hpx/TestHPX_DynRankViewAPI_generic.cpp
-    hpx/TestHPX_DynRankViewAPI_rank12345.cpp
-    hpx/TestHPX_DynRankViewAPI_rank67.cpp
-    hpx/TestHPX_ErrorReporter.cpp
-    hpx/TestHPX_OffsetView.cpp
-    hpx/TestHPX_ScatterView.cpp
-    hpx/TestHPX_StaticCrsGraph.cpp
-    hpx/TestHPX_UnorderedMap.cpp
-    hpx/TestHPX_Vector.cpp
-    hpx/TestHPX_ViewCtorPropEmbeddedDim.cpp
-  )
-ENDIF()
-
-IF(Kokkos_ENABLE_CUDA)
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_Cuda
-  SOURCES
-    UnitTestMain.cpp
-    cuda/TestCuda_BitSet.cpp
-    cuda/TestCuda_DualView.cpp
-    cuda/TestCuda_DynamicView.cpp
-    cuda/TestCuda_DynRankViewAPI_generic.cpp
-    cuda/TestCuda_DynRankViewAPI_rank12345.cpp
-    cuda/TestCuda_DynRankViewAPI_rank67.cpp
-    cuda/TestCuda_ErrorReporter.cpp
-    cuda/TestCuda_OffsetView.cpp
-    cuda/TestCuda_ScatterView.cpp
-    cuda/TestCuda_StaticCrsGraph.cpp
-    cuda/TestCuda_UnorderedMap.cpp
-    cuda/TestCuda_Vector.cpp
-    cuda/TestCuda_ViewCtorPropEmbeddedDim.cpp
-  )
-ENDIF()
-
+foreach(Tag Threads;Serial;OpenMP;HPX;Cuda)
+  # Because there is always an exception to the rule
+  if(Tag STREQUAL "Threads")
+    set(DEVICE "PTHREAD")
+  else()
+    string(TOUPPER ${Tag} DEVICE)
+  endif()
+  string(TOLOWER ${Tag} dir)
+  # Add test for that backend if it is enabled
+  if(Kokkos_ENABLE_${DEVICE})
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_${Tag}
+      SOURCES
+        UnitTestMain.cpp
+        ${dir}/Test${Tag}_BitSet.cpp
+        ${dir}/Test${Tag}_DualView.cpp
+        ${dir}/Test${Tag}_DynamicView.cpp
+        ${dir}/Test${Tag}_DynRankViewAPI_generic.cpp
+        ${dir}/Test${Tag}_DynRankViewAPI_rank12345.cpp
+        ${dir}/Test${Tag}_DynRankViewAPI_rank67.cpp
+        ${dir}/Test${Tag}_ErrorReporter.cpp
+        ${dir}/Test${Tag}_OffsetView.cpp
+        ${dir}/Test${Tag}_ScatterView.cpp
+        ${dir}/Test${Tag}_StaticCrsGraph.cpp
+        ${dir}/Test${Tag}_UnorderedMap.cpp
+        ${dir}/Test${Tag}_Vector.cpp
+        ${dir}/Test${Tag}_ViewCtorPropEmbeddedDim.cpp
+      )
+  endif()
+endforeach()

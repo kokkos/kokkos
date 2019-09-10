@@ -42,9 +42,7 @@
 //@HEADER
 */
 
-#include<cuda/TestCuda_Category.hpp>
-#include<TestInit.hpp>
-#include<TestCompilerMacros.hpp>
-#include<TestPolicyConstruction.hpp>
-
-
+#include <cuda/TestCuda_Category.hpp>
+#include <TestInit.hpp>
+#include <TestCompilerMacros.hpp>
+#include <TestPolicyConstruction.hpp>

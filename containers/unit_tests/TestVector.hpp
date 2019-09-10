@@ -52,85 +52,70 @@ namespace Test {
 
 namespace Impl {
 
-  template <typename Scalar, class Device>
-  struct test_vector_combinations
-  {
-    typedef test_vector_combinations<Scalar,Device> self_type;
+template <typename Scalar, class Device>
+struct test_vector_combinations {
+  typedef test_vector_combinations<Scalar, Device> self_type;
 
-    typedef Scalar scalar_type;
-    typedef Device execution_space;
+  typedef Scalar scalar_type;
+  typedef Device execution_space;
 
-    Scalar reference;
-    Scalar result;
+  Scalar reference;
+  Scalar result;
 
-    template <typename Vector>
-    Scalar run_me(unsigned int n){
-      Vector a(n,1);
+  template <typename Vector>
+  Scalar run_me(unsigned int n) {
+    Vector a(n, 1);
 
+    a.push_back(2);
+    a.resize(n + 4);
+    a[n + 1] = 3;
+    a[n + 2] = 4;
+    a[n + 3] = 5;
 
-      a.push_back(2);
-      a.resize(n+4);
-      a[n+1] = 3;
-      a[n+2] = 4;
-      a[n+3] = 5;
+    Scalar temp1 = a[2];
+    Scalar temp2 = a[n];
+    Scalar temp3 = a[n + 1];
 
+    a.assign(n + 2, -1);
 
-      Scalar temp1 = a[2];
-      Scalar temp2 = a[n];
-      Scalar temp3 = a[n+1];
+    a[2]     = temp1;
+    a[n]     = temp2;
+    a[n + 1] = temp3;
 
-      a.assign(n+2,-1);
+    Scalar test1 = 0;
+    for (unsigned int i = 0; i < a.size(); i++) test1 += a[i];
 
-      a[2] = temp1;
-      a[n] = temp2;
-      a[n+1] = temp3;
+    a.assign(n + 1, -2);
+    Scalar test2 = 0;
+    for (unsigned int i = 0; i < a.size(); i++) test2 += a[i];
 
-      Scalar test1 = 0;
-      for(unsigned int i=0; i<a.size(); i++)
-        test1+=a[i];
+    a.reserve(n + 10);
 
-      a.assign(n+1,-2);
-      Scalar test2 = 0;
-      for(unsigned int i=0; i<a.size(); i++)
-        test2+=a[i];
+    Scalar test3 = 0;
+    for (unsigned int i = 0; i < a.size(); i++) test3 += a[i];
 
-      a.reserve(n+10);
+    return (test1 * test2 + test3) * test2 + test1 * test3;
+  }
 
-      Scalar test3 = 0;
-      for(unsigned int i=0; i<a.size(); i++)
-        test3+=a[i];
+  test_vector_combinations(unsigned int size) {
+    reference = run_me<std::vector<Scalar> >(size);
+    result    = run_me<Kokkos::vector<Scalar, Device> >(size);
+  }
+};
 
-
-      return (test1*test2+test3)*test2+test1*test3;
-    }
-
-
-    test_vector_combinations(unsigned int size)
-    {
-      reference = run_me<std::vector<Scalar> >(size);
-      result = run_me<Kokkos::vector<Scalar,Device> >(size);
-    }
-
-   };
-
-} // namespace Impl
-
-
-
+}  // namespace Impl
 
 template <typename Scalar, typename Device>
-void test_vector_combinations(unsigned int size)
-{
-  Impl::test_vector_combinations<Scalar,Device> test(size);
-  ASSERT_EQ( test.reference, test.result);
+void test_vector_combinations(unsigned int size) {
+  Impl::test_vector_combinations<Scalar, Device> test(size);
+  ASSERT_EQ(test.reference, test.result);
 }
 
-TEST_F( TEST_CATEGORY, vector_combination) {
-  test_vector_combinations<int,TEST_EXECSPACE>(10);
-  test_vector_combinations<int,TEST_EXECSPACE>(3057);
+TEST(TEST_CATEGORY, vector_combination) {
+  test_vector_combinations<int, TEST_EXECSPACE>(10);
+  test_vector_combinations<int, TEST_EXECSPACE>(3057);
 }
 
-} // namespace Test
+}  // namespace Test
 
-#endif //KOKKOS_TEST_UNORDERED_MAP_HPP
-
+#endif  // KOKKOS_TEST_UNORDERED_MAP_HPP

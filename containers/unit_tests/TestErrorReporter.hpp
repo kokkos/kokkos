@@ -51,47 +51,47 @@
 
 namespace Test {
 
-// Just save the data in the report.  Informative text goies in the operator<<(..).
+// Just save the data in the report.  Informative text goies in the
+// operator<<(..).
 template <typename DataType1, typename DataType2, typename DataType3>
-struct ThreeValReport
-{
+struct ThreeValReport {
   DataType1 m_data1;
   DataType2 m_data2;
   DataType3 m_data3;
-
 };
 
 template <typename DataType1, typename DataType2, typename DataType3>
-std::ostream &operator<<(std::ostream & os, const ThreeValReport<DataType1, DataType2, DataType3> &val)
-{
-  return os << "{" << val.m_data1 << " " << val.m_data2 << " " << val.m_data3 << "}";
+std::ostream &operator<<(
+    std::ostream &os,
+    const ThreeValReport<DataType1, DataType2, DataType3> &val) {
+  return os << "{" << val.m_data1 << " " << val.m_data2 << " " << val.m_data3
+            << "}";
 }
 
-template<typename ReportType>
+template <typename ReportType>
 void checkReportersAndReportsAgree(const std::vector<int> &reporters,
-                                   const std::vector<ReportType> &reports)
-{
+                                   const std::vector<ReportType> &reports) {
   for (size_t i = 0; i < reports.size(); ++i) {
     EXPECT_EQ(1, reporters[i] % 2);
     EXPECT_EQ(reporters[i], reports[i].m_data1);
   }
 }
 
-
 template <typename DeviceType>
 struct ErrorReporterDriverBase {
-
-  typedef ThreeValReport<int, int, double>                                      report_type;
-  typedef Kokkos::Experimental::ErrorReporter<report_type, DeviceType>  error_reporter_type;
+  typedef ThreeValReport<int, int, double> report_type;
+  typedef Kokkos::Experimental::ErrorReporter<report_type, DeviceType>
+      error_reporter_type;
   error_reporter_type m_errorReporter;
 
   ErrorReporterDriverBase(int reporter_capacity, int test_size)
-    : m_errorReporter(reporter_capacity)  {  }
+      : m_errorReporter(reporter_capacity) {}
 
-  KOKKOS_INLINE_FUNCTION bool error_condition(const int work_idx) const { return (work_idx % 2 != 0); }
+  KOKKOS_INLINE_FUNCTION bool error_condition(const int work_idx) const {
+    return (work_idx % 2 != 0);
+  }
 
-  void check_expectations(int reporter_capacity, int test_size)
-  {
+  void check_expectations(int reporter_capacity, int test_size) {
     int num_reported = m_errorReporter.getNumReports();
     int num_attempts = m_errorReporter.getNumReportAttempts();
 
@@ -99,15 +99,14 @@ struct ErrorReporterDriverBase {
     EXPECT_EQ(expected_num_reports, num_reported);
     EXPECT_EQ(test_size / 2, num_attempts);
 
-    bool expect_full = (reporter_capacity <= (test_size / 2));
+    bool expect_full   = (reporter_capacity <= (test_size / 2));
     bool reported_full = m_errorReporter.full();
     EXPECT_EQ(expect_full, reported_full);
   }
 };
 
 template <typename ErrorReporterDriverType>
-void TestErrorReporter()
-{
+void TestErrorReporter() {
   typedef ErrorReporterDriverType tester_type;
   std::vector<int> reporters;
   std::vector<typename tester_type::report_type> reports;
@@ -120,9 +119,12 @@ void TestErrorReporter()
   test2.m_errorReporter.getReports(reporters, reports);
   checkReportersAndReportsAgree(reporters, reports);
 
-  typename Kokkos::View<int*, typename ErrorReporterDriverType::execution_space >::HostMirror view_reporters;
-  typename Kokkos::View<typename tester_type::report_type*, typename ErrorReporterDriverType::execution_space >::HostMirror
-     view_reports;
+  typename Kokkos::View<
+      int *, typename ErrorReporterDriverType::execution_space>::HostMirror
+      view_reporters;
+  typename Kokkos::View<typename tester_type::report_type *,
+                        typename ErrorReporterDriverType::execution_space>::
+      HostMirror view_reports;
   test2.m_errorReporter.getReports(view_reporters, view_reports);
 
   int num_reports = view_reporters.extent(0);
@@ -136,19 +138,16 @@ void TestErrorReporter()
     reports.push_back(view_reports(i));
   }
   checkReportersAndReportsAgree(reporters, reports);
-
 }
 
-
 template <typename DeviceType>
-struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType>
-{
-  typedef ErrorReporterDriverBase<DeviceType>                             driver_base;
-  typedef typename driver_base::error_reporter_type::execution_space  execution_space;
+struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType> {
+  typedef ErrorReporterDriverBase<DeviceType> driver_base;
+  typedef typename driver_base::error_reporter_type::execution_space
+      execution_space;
 
   ErrorReporterDriver(int reporter_capacity, int test_size)
-    : driver_base(reporter_capacity, test_size)
-  {
+      : driver_base(reporter_capacity, test_size) {
     execute(reporter_capacity, test_size);
 
     // Test that clear() and resize() work across memory spaces.
@@ -159,19 +158,18 @@ struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType>
     }
   }
 
-  void execute(int reporter_capacity, int test_size)
-  {
-    Kokkos::parallel_for(Kokkos::RangePolicy<execution_space>(0,test_size), *this);
+  void execute(int reporter_capacity, int test_size) {
+    Kokkos::parallel_for(Kokkos::RangePolicy<execution_space>(0, test_size),
+                         *this);
     Kokkos::fence();
     driver_base::check_expectations(reporter_capacity, test_size);
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int work_idx) const
-  {
+  void operator()(const int work_idx) const {
     if (driver_base::error_condition(work_idx)) {
       double val = M_PI * static_cast<double>(work_idx);
-      typename driver_base::report_type report = {work_idx, -2*work_idx, val};
+      typename driver_base::report_type report = {work_idx, -2 * work_idx, val};
       driver_base::m_errorReporter.add_report(work_idx, report);
     }
   }
@@ -179,45 +177,45 @@ struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType>
 
 #if defined(KOKKOS_CLASS_LAMBDA)
 template <typename DeviceType>
-struct ErrorReporterDriverUseLambda : public ErrorReporterDriverBase<DeviceType>
-{
-
-  typedef ErrorReporterDriverBase<DeviceType>                             driver_base;
-  typedef typename driver_base::error_reporter_type::execution_space  execution_space;
+struct ErrorReporterDriverUseLambda
+    : public ErrorReporterDriverBase<DeviceType> {
+  typedef ErrorReporterDriverBase<DeviceType> driver_base;
+  typedef typename driver_base::error_reporter_type::execution_space
+      execution_space;
 
   ErrorReporterDriverUseLambda(int reporter_capacity, int test_size)
-    : driver_base(reporter_capacity, test_size)
-  {
-    Kokkos::parallel_for(Kokkos::RangePolicy<execution_space>(0,test_size), KOKKOS_CLASS_LAMBDA (const int work_idx) {
-      if (driver_base::error_condition(work_idx)) {
-        double val = M_PI * static_cast<double>(work_idx);
-        typename driver_base::report_type report = {work_idx, -2*work_idx, val};
-        driver_base::m_errorReporter.add_report(work_idx, report);
-      }
-    });
+      : driver_base(reporter_capacity, test_size) {
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<execution_space>(0, test_size),
+        KOKKOS_CLASS_LAMBDA(const int work_idx) {
+          if (driver_base::error_condition(work_idx)) {
+            double val = M_PI * static_cast<double>(work_idx);
+            typename driver_base::report_type report = {work_idx, -2 * work_idx,
+                                                        val};
+            driver_base::m_errorReporter.add_report(work_idx, report);
+          }
+        });
     Kokkos::fence();
     driver_base::check_expectations(reporter_capacity, test_size);
   }
-
 };
 #endif
 
-
 #ifdef KOKKOS_ENABLE_OPENMP
-struct ErrorReporterDriverNativeOpenMP : public ErrorReporterDriverBase<Kokkos::OpenMP>
-{
-  typedef ErrorReporterDriverBase<Kokkos::OpenMP>  driver_base;
-  typedef typename driver_base::error_reporter_type::execution_space  execution_space;
+struct ErrorReporterDriverNativeOpenMP
+    : public ErrorReporterDriverBase<Kokkos::OpenMP> {
+  typedef ErrorReporterDriverBase<Kokkos::OpenMP> driver_base;
+  typedef typename driver_base::error_reporter_type::execution_space
+      execution_space;
 
   ErrorReporterDriverNativeOpenMP(int reporter_capacity, int test_size)
-    : driver_base(reporter_capacity, test_size)
-  {
+      : driver_base(reporter_capacity, test_size) {
 #pragma omp parallel for
-    for(int work_idx = 0; work_idx < test_size; ++work_idx)
-    {
+    for (int work_idx = 0; work_idx < test_size; ++work_idx) {
       if (driver_base::error_condition(work_idx)) {
         double val = M_PI * static_cast<double>(work_idx);
-        typename driver_base::report_type report = {work_idx, -2*work_idx, val};
+        typename driver_base::report_type report = {work_idx, -2 * work_idx,
+                                                    val};
         driver_base::m_errorReporter.add_report(work_idx, report);
       }
     };
@@ -227,17 +225,14 @@ struct ErrorReporterDriverNativeOpenMP : public ErrorReporterDriverBase<Kokkos::
 #endif
 
 #if defined(KOKKOS_CLASS_LAMBDA)
-TEST_F(TEST_CATEGORY, ErrorReporterViaLambda)
-{
+TEST(TEST_CATEGORY, ErrorReporterViaLambda) {
   TestErrorReporter<ErrorReporterDriverUseLambda<TEST_EXECSPACE>>();
 }
 #endif
 
-TEST_F(TEST_CATEGORY, ErrorReporter)
-{
+TEST(TEST_CATEGORY, ErrorReporter) {
   TestErrorReporter<ErrorReporterDriver<TEST_EXECSPACE>>();
 }
 
-} // namespace Test
-#endif // #ifndef KOKKOS_TEST_ERROR_REPORTING_HPP
-
+}  // namespace Test
+#endif  // #ifndef KOKKOS_TEST_ERROR_REPORTING_HPP

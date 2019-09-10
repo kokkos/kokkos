@@ -48,7 +48,7 @@ FUNCTION(KOKKOS_CFG_DEPENDS SUCCESSOR PRECURSOR)
     MESSAGE(FATAL_ERROR "Bad CMake refactor: feature ${SUCCESSOR} cannot be configured until ${PRECURSOR} is configured")
   ENDIF()
   GLOBAL_SET(${POST_FLAG} On)
-ENDFUNCTION(KOKKOS_CFG_DEPENDS)
+ENDFUNCTION()
 
 
 list(APPEND CMAKE_MODULE_PATH cmake/Modules)
@@ -67,10 +67,12 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   IF(NOT DEFINED ${PROJECT_NAME})
     PROJECT(Kokkos CXX)
   ENDIF()
-  set (Kokkos_VERSION_MAJOR 3)
-  set (Kokkos_VERSION_MINOR 0)
-  set (Kokkos_VERSION_PATCH 0)
 ENDIF()
+
+set(Kokkos_VERSION_MAJOR 3)
+set(Kokkos_VERSION_MINOR 0)
+set(Kokkos_VERSION_PATCH 0)
+set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 
 IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0") 
   MESSAGE(STATUS "Setting policy CMP0074 to use <Package>_ROOT variables")
@@ -103,6 +105,12 @@ KOKKOS_SETUP_BUILD_ENVIRONMENT()
 # Finish off the build
 # 6) Recurse into subdirectories and configure individual libraries
 # 7) Export and install targets
+
+OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+# Workaround for building position independent code.
+IF(BUILD_SHARED_LIBS)
+  SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
+ENDIF()
 
 IF(Kokkos_SEPARATE_LIBS)
  SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms)

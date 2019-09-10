@@ -45,11 +45,10 @@
 
 namespace Test {
 
-TEST_F( qthreads, view_subview_2d_from_3d_randomaccess )
-{
+TEST_F(qthreads, view_subview_2d_from_3d_randomaccess) {
 #if 0
   TestViewSubview::test_2d_subview_3d< Kokkos::Qthreads, Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 #endif
 }
 
-} // namespace Test
+}  // namespace Test

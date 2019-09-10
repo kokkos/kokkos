@@ -57,51 +57,31 @@
 
 namespace Test {
 
-class cuda : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
-  }
-  static void TearDownTestCase()
-  {
-  }
-};
-
-void cuda_test_random_xorshift64( int num_draws  )
-{
+void cuda_test_random_xorshift64(int num_draws) {
   Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Cuda> >(num_draws);
 }
 
-void cuda_test_random_xorshift1024( int num_draws  )
-{
+void cuda_test_random_xorshift1024(int num_draws) {
   Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Cuda> >(num_draws);
 }
 
+#define CUDA_RANDOM_XORSHIFT64(num_draws) \
+  TEST(cuda, Random_XorShift64) { cuda_test_random_xorshift64(num_draws); }
 
-#define CUDA_RANDOM_XORSHIFT64( num_draws )                                \
-  TEST_F( cuda, Random_XorShift64 ) {   \
-  cuda_test_random_xorshift64(num_draws);                                   \
-  }
+#define CUDA_RANDOM_XORSHIFT1024(num_draws) \
+  TEST(cuda, Random_XorShift1024) { cuda_test_random_xorshift1024(num_draws); }
 
-#define CUDA_RANDOM_XORSHIFT1024( num_draws )                                \
-  TEST_F( cuda, Random_XorShift1024 ) {   \
-  cuda_test_random_xorshift1024(num_draws);                                   \
-  }
+#define CUDA_SORT_UNSIGNED(size) \
+  TEST(cuda, SortUnsigned) { Impl::test_sort<Kokkos::Cuda, unsigned>(size); }
 
-#define CUDA_SORT_UNSIGNED( size )                                \
-  TEST_F( cuda, SortUnsigned ) {   \
-      Impl::test_sort< Kokkos::Cuda, unsigned >(size);                                   \
-  }
-
-CUDA_RANDOM_XORSHIFT64(  132141141 )
-CUDA_RANDOM_XORSHIFT1024( 52428813 )
+CUDA_RANDOM_XORSHIFT64(132141141)
+CUDA_RANDOM_XORSHIFT1024(52428813)
 CUDA_SORT_UNSIGNED(171)
 
 #undef CUDA_RANDOM_XORSHIFT64
 #undef CUDA_RANDOM_XORSHIFT1024
 #undef CUDA_SORT_UNSIGNED
-}
+}  // namespace Test
 #else
 void KOKKOS_ALGORITHMS_UNITTESTS_TESTCUDA_PREVENT_LINK_ERROR() {}
-#endif  /* #ifdef KOKKOS_ENABLE_CUDA */
-
+#endif /* #ifdef KOKKOS_ENABLE_CUDA */

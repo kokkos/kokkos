@@ -41,14 +41,13 @@
 //@HEADER
 */
 
-#include<TestViewAPI.hpp>
+#include <TestViewAPI.hpp>
 
 namespace Test {
 
-TEST_F( TEST_CATEGORY, view_api_c )
-{
-  TestViewAPI< double, TEST_EXECSPACE >::run_test_deep_copy_empty();
-  TestViewAPI< double, TEST_EXECSPACE >::run_test_view_operator_b();
+TEST_F(TEST_CATEGORY, view_api_c) {
+  TestViewAPI<double, TEST_EXECSPACE>::run_test_deep_copy_empty();
+  TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_b();
 }
 
-}
+}  // namespace Test

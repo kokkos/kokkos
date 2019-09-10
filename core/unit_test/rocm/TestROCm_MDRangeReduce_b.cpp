@@ -42,13 +42,12 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestMDRange.hpp>
+#include <rocm/TestROCm_Category.hpp>
+#include <TestMDRange.hpp>
 namespace Test {
 
-TEST_F( TEST_CATEGORY , mdrange_6d_reduce ) {
-  TestMDRange_6D< TEST_EXECSPACE >::test_reduce6( 10, 10, 10, 10, 10, 5 );
+TEST_F(TEST_CATEGORY, mdrange_6d_reduce) {
+  TestMDRange_6D<TEST_EXECSPACE>::test_reduce6(10, 10, 10, 10, 10, 5);
 }
 
-}
-
+}  // namespace Test

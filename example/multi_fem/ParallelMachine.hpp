@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -54,10 +54,10 @@
 
 //------------------------------------------------------------------------
 
-#if defined( KOKKOS_ENABLE_MPI )
+#if defined(KOKKOS_ENABLE_MPI)
 #include <mpi.h>
 #else
-  typedef int MPI_Comm ;
+typedef int MPI_Comm;
 #endif
 
 //------------------------------------------------------------------------
@@ -65,54 +65,52 @@
 
 namespace Parallel {
 
-/** \brief  Hybrid parallel machine with MPI+Kokkos::Threads or MPI+Kokkos::Cuda.
+/** \brief  Hybrid parallel machine with MPI+Kokkos::Threads or
+ * MPI+Kokkos::Cuda.
  *
  *  Initialization of MPI and Kokkos device has interdependencies which this
- *  class manages.  The command line and environment variables are queried to initialize
- *  the Threads or Cuda device:
+ *  class manages.  The command line and environment variables are queried to
+ * initialize the Threads or Cuda device:
  *
  *    1)  cuda               : initializes Cuda device
- *    2)  host               : initializes Threads device with all hwloc detected cores.
- *    3)  host #gang #worker : initializes Threads with specified
+ *    2)  host               : initializes Threads device with all hwloc
+ * detected cores. 3)  host #gang #worker : initializes Threads with specified
  */
 class Machine {
-private:
-
-  MPI_Comm m_mpi_comm ;
-  int      m_mpi_size ;
-  int      m_mpi_rank ;
-  unsigned m_mpi_gpu ;
-  unsigned m_gpu_arch ;
+ private:
+  MPI_Comm m_mpi_comm;
+  int m_mpi_size;
+  int m_mpi_rank;
+  unsigned m_mpi_gpu;
+  unsigned m_gpu_arch;
 
   Machine();
-  Machine( const Machine & );
-  Machine & operator = ( const Machine & );
+  Machine(const Machine&);
+  Machine& operator=(const Machine&);
 
-public:
-
-  /** \brief  Coordinated initialize MPI, Cuda, or Threads devices from 'main'.  */
-  Machine( int * argc , char *** argv );
+ public:
+  /** \brief  Coordinated initialize MPI, Cuda, or Threads devices from 'main'.
+   */
+  Machine(int* argc, char*** argv);
 
   ~Machine();
 
-  MPI_Comm mpi_comm() const { return m_mpi_comm ; }
+  MPI_Comm mpi_comm() const { return m_mpi_comm; }
 
-  int mpi_size() const { return m_mpi_size ; }
-  int mpi_rank() const { return m_mpi_rank ; }
+  int mpi_size() const { return m_mpi_size; }
+  int mpi_rank() const { return m_mpi_rank; }
 
   /** \brief  If using MPI that can directly operate on GPU memory */
-  bool mpi_gpu() const { return m_mpi_gpu ; }
+  bool mpi_gpu() const { return m_mpi_gpu; }
 
   /** \brief  If using GPU then what architecture */
-  unsigned gpu_arch() const { return m_gpu_arch ; }
+  unsigned gpu_arch() const { return m_gpu_arch; }
 
-  void print_configuration( std::ostream & ) const ;
+  void print_configuration(std::ostream&) const;
 };
 
-}
+}  // namespace Parallel
 
 //------------------------------------------------------------------------
 
 #endif /* #ifndef PARALLELMACHINE_HPP */
-
-

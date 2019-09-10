@@ -83,13 +83,12 @@
 namespace Test {
 
 class openmp : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
+ protected:
+  static void SetUpTestCase() {
     int threads_count = 0;
-    #pragma omp parallel
+#pragma omp parallel
     {
-      #pragma omp atomic
+#pragma omp atomic
       ++threads_count;
     }
 
@@ -97,18 +96,15 @@ protected:
       threads_count /= 2;
     }
 
-    Kokkos::OpenMP::initialize( threads_count );
-    Kokkos::print_configuration( std::cout, true );
+    Kokkos::OpenMP::initialize(threads_count);
+    Kokkos::print_configuration(std::cout, true);
 
-    srand( 10231 );
+    srand(10231);
   }
 
-  static void TearDownTestCase()
-  {
-    Kokkos::OpenMP::finalize();
-  }
+  static void TearDownTestCase() { Kokkos::OpenMP::finalize(); }
 };
 
-} // namespace Test
+}  // namespace Test
 
 #endif

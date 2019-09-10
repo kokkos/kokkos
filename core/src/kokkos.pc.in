@@ -58,7 +58,7 @@ includedir=${prefix}/include
 Name: kokkos
 Description: Kokkos C++ Performance Portability Programming EcoSystem
 URL: https://github.com/kokkos
-Version:
+Version: @Kokkos_VERSION@
 Requires:
 Libs: -L${libdir} -lkokkos @KOKKOS_EXTRA_LIBS_LIST@ @KOKKOS_LINK_FLAGS@
 Libs.private: -lm

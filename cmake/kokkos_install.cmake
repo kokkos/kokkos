@@ -25,25 +25,11 @@ WRITE_BASIC_PACKAGE_VERSION_FILE("${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake
       COMPATIBILITY SameMajorVersion)
 
 # Install the KokkosConfig.cmake and KokkosConfigVersion.cmake
-set(right_place lib/cmake/Kokkos)
-set(wrong_place lib/CMake/Kokkos)
-#                   ^^ case-sensitive
 install(FILES
   "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
   "${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
-  DESTINATION ${right_place})
-install(EXPORT KokkosTargets NAMESPACE Kokkos:: DESTINATION ${right_place})
-
-if (NOT APPLE) #case insensitive, can only install one config
-# For backward compatibility, export legacy target (not namespaced) to the old
-# location that will not be discovered by CMake when Kokkos install prefix is
-# added to CMAKE_PREFIX_PATH in user code.
-install(FILES
-  "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
-  "${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"
-  DESTINATION ${wrong_place})
-install(EXPORT KokkosTargets DESTINATION ${wrong_place})
-endif()
+  DESTINATION lib/cmake/Kokkos)
+install(EXPORT KokkosTargets NAMESPACE Kokkos:: DESTINATION lib/cmake/Kokkos)
 
 
 

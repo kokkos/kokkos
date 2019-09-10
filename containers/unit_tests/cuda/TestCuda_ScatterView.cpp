@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<cuda/TestCuda_Category.hpp>
-#include<TestScatterView.hpp>
-
+#include <cuda/TestCuda_Category.hpp>
+#include <TestScatterView.hpp>

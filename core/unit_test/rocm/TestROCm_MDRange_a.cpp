@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestMDRange_a.hpp>
-
+#include <rocm/TestROCm_Category.hpp>
+#include <TestMDRange_a.hpp>
