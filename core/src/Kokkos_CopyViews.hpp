@@ -2903,7 +2903,7 @@ inline typename std::enable_if<
                  Kokkos::LayoutLeft>::value ||
     std::is_same<typename Kokkos::View<T, P...>::array_layout,
                  Kokkos::LayoutRight>::value>::type
-resize(const Impl::ViewCtorProp<I>& arg_prop, Kokkos::View<T, P...>& v,
+resize(const I& arg_prop, Kokkos::View<T, P...>& v,
        const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
        const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -2985,8 +2985,8 @@ resize(const Impl::ViewCtorProp<I>& arg_prop, Kokkos::View<T, P...>& v,
   // reallocates if any of the dimensions change, even if the old View
   // has enough space.
 
-  view_type v_resized(view_alloc(v.label(), WithoutInitializing), n0, n1, n2,
-                      n3, n4, n5, n6, n7);
+  view_type v_resized(view_alloc(v.label(), std::forward<const I>(arg_prop)),
+                      n0, n1, n2, n3, n4, n5, n6, n7);
 
   Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
 

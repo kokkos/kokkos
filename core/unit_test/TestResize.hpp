@@ -58,8 +58,7 @@ inline void resize_dispatch(Default, View& v, Args&&... args) {
 
 template <typename View, typename... Args>
 inline void resize_dispatch(WithoutInitializing, View& v, Args&&... args) {
-  Kokkos::resize(Kokkos::view_resize(Kokkos::WithoutInitializing), v,
-                 std::forward<Args>(args)...);
+  Kokkos::resize(Kokkos::WithoutInitializing, v, std::forward<Args>(args)...);
 }
 
 template <class DeviceType, class Tag = Default>

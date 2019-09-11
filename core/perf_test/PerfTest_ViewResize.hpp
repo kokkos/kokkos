@@ -90,8 +90,7 @@ void run_resizeview_tests123(int N, int R) {
     Kokkos::Timer timer;
     for (int r = 0; r < R; r++) {
       Kokkos::View<double*, Layout> a_(a);
-      Kokkos::resize(Kokkos::view_resize(Kokkos::WithoutInitializing), a_,
-                     int(N8 * 1.1));
+      Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N8 * 1.1));
     }
     time1_noinit = timer.seconds() / R;
   }
@@ -100,8 +99,7 @@ void run_resizeview_tests123(int N, int R) {
     Kokkos::Timer timer;
     for (int r = 0; r < R; r++) {
       Kokkos::View<double**, Layout> a_(a);
-      Kokkos::resize(Kokkos::view_resize(Kokkos::WithoutInitializing), a_,
-                     int(N4 * 1.1), N4);
+      Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N4 * 1.1), N4);
     }
     time2_noinit = timer.seconds() / R;
   }
@@ -110,8 +108,7 @@ void run_resizeview_tests123(int N, int R) {
     Kokkos::Timer timer;
     for (int r = 0; r < R; r++) {
       Kokkos::View<double***, Layout> a_(a);
-      Kokkos::resize(Kokkos::view_resize(Kokkos::WithoutInitializing), a_,
-                     int(N3 * 1.1), N3, N2);
+      Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N3 * 1.1), N3, N2);
     }
     time3_noinit = timer.seconds() / R;
   }
@@ -181,8 +178,8 @@ void run_resizeview_tests45(int N, int R) {
     Kokkos::Timer timer;
     for (int r = 0; r < R; r++) {
       Kokkos::View<double****, Layout> a_(a);
-      Kokkos::resize(Kokkos::view_resize(Kokkos::WithoutInitializing), a_,
-                     int(N2 * 1.1), N2, N2, N2);
+      Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N2 * 1.1), N2, N2,
+                     N2);
     }
     time4_noinit = timer.seconds() / R;
   }
@@ -191,8 +188,8 @@ void run_resizeview_tests45(int N, int R) {
     Kokkos::Timer timer;
     for (int r = 0; r < R; r++) {
       Kokkos::View<double*****, Layout> a_(a);
-      Kokkos::resize(Kokkos::view_resize(Kokkos::WithoutInitializing), a_,
-                     int(N2 * 1.1), N2, N1, N1, N2);
+      Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N2 * 1.1), N2, N1, N1,
+                     N2);
     }
     time5_noinit = timer.seconds() / R;
   }
@@ -248,8 +245,8 @@ void run_resizeview_tests6(int N, int R) {
     Kokkos::Timer timer;
     for (int r = 0; r < R; r++) {
       Kokkos::View<double******, Layout> a_(a);
-      Kokkos::resize(Kokkos::view_resize(Kokkos::WithoutInitializing), a_,
-                     int(N2 * 1.1), N1, N1, N1, N1, N2);
+      Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N2 * 1.1), N1, N1, N1,
+                     N1, N2);
     }
     time6_noinit = timer.seconds() / R;
   }
@@ -301,8 +298,8 @@ void run_resizeview_tests7(int N, int R) {
     Kokkos::Timer timer;
     for (int r = 0; r < R; r++) {
       Kokkos::View<double*******, Layout> a_(a);
-      Kokkos::resize(Kokkos::view_resize(Kokkos::WithoutInitializing), a_,
-                     int(N2 * 1.1), N1, N1, N1, N1, N1, N1);
+      Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N2 * 1.1), N1, N1, N1,
+                     N1, N1, N1);
     }
     time7_noinit = timer.seconds() / R;
   }
@@ -356,8 +353,8 @@ void run_resizeview_tests8(int N, int R) {
     Kokkos::Timer timer;
     for (int r = 0; r < R; r++) {
       Kokkos::View<double********, Layout> a_(a);
-      Kokkos::resize(Kokkos::view_resize(Kokkos::WithoutInitializing), a_,
-                     int(N1 * 1.1), N1, N1, N1, N1, N1, N1, N1);
+      Kokkos::resize(Kokkos::WithoutInitializing, a_, int(N1 * 1.1), N1, N1, N1,
+                     N1, N1, N1, N1);
     }
     time8_noinit = timer.seconds() / R;
   }
