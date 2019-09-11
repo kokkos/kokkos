@@ -272,7 +272,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX += TestHPX_RangePolicy.o
 	OBJ_HPX += TestHPX_View_64bit.o
 	OBJ_HPX += TestHPX_ViewAPI_a.o TestHPX_ViewAPI_b.o TestHPX_ViewAPI_c.o TestHPX_ViewAPI_d.o TestHPX_ViewAPI_e.o
-	OBJ_HPX += TestHPX_ViewMapping_a.o TestHPX_ViewMapping_b.o TestHPX_ViewMapping_subview.o
+	OBJ_HPX += TestHPX_ViewMapping_a.o TestHPX_ViewMapping_b.o TestHPX_ViewMapping_subview.o TestHPX_ViewResize.o
 	OBJ_HPX += TestHPX_ViewOfClass.o
 	OBJ_HPX += TestHPX_SubView_a.o TestHPX_SubView_b.o
 	OBJ_HPX += TestHPX_SubView_c01.o TestHPX_SubView_c02.o TestHPX_SubView_c03.o

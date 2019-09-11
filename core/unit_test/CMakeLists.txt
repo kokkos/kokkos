@@ -287,6 +287,7 @@ IF(Kokkos_ENABLE_HPX)
       hpx/TestHPX_Crs.cpp
       hpx/TestHPX_WorkGraph.cpp
       hpx/TestHPX_UniqueToken.cpp
+      hpx/TestHPX_ViewResize.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HPXInterOp
