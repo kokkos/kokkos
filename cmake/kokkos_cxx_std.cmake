@@ -105,7 +105,6 @@ ELSEIF(NOT CMAKE_CXX_STANDARD)
   SET(CMAKE_CXX_STANDARD ${KOKKOS_CXX_STANDARD})
 ENDIF()
 
-
 IF (KOKKOS_CXX_STANDARD AND CMAKE_CXX_STANDARD)
   #make sure these are consistent
   IF (NOT KOKKOS_CXX_STANDARD STREQUAL CMAKE_CXX_STANDARD)
@@ -175,6 +174,25 @@ IF(KOKKOS_ENABLE_CUDA)
   ELSEIF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
     MESSAGE(FATAL_ERROR "Invalid compiler for CUDA.  The compiler must be nvcc_wrapper or Clang, but compiler ID was ${KOKKOS_CXX_COMPILER_ID}")
   ENDIF()
+ENDIF()
+
+IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+    execute_process(
+      COMMAND "which"
+      g++
+      OUTPUT_VARIABLE gcc_exec_path ERROR_VARIABLE gcc_exec_path
+      RESULT_VARIABLE gcc_result
+      TIMEOUT 10
+      )
+    if (gcc_exec_path MATCHES "/bin/g")
+      STRING(REPLACE "/bin/g++\n" "" GCC_PATH "${gcc_exec_path}")
+      MESSAGE(STATUS "Clang using gcc toolchain ${GCC_PATH}")
+      GLOBAL_APPEND(KOKKOS_COMPILE_OPTIONS --gcc-toolchain=${GCC_PATH})
+
+      LIST(APPEND CLANG_LINK_OPTIONS ${KOKKOS_LINK_OPTIONS})
+      LIST(APPEND CLANG_LINK_OPTIONS --gcc-toolchain=${GCC_PATH})
+      GLOBAL_SET(KOKKOS_LINK_OPTIONS ${CLANG_LINK_OPTIONS})
+    endif()
 ENDIF()
 
 IF (NOT KOKKOS_CXX_STANDARD_FEATURE)
