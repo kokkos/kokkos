@@ -1,9 +1,7 @@
-#!/bin/bash -el
-ulimit -c 0
 module purge
 module load devpack/20171203/openmpi/2.1.2/intel/18.1.163
 # Trilinos now requires cmake version >= 3.10.0
-module load cmake/3.10.2
+module swap cmake/3.9.0 cmake/3.10.2
 
 export OMP_NUM_THREADS=8
 export JENKINS_DO_CUDA=OFF

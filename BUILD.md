@@ -39,7 +39,7 @@ There are numerous device backends, options, and architecture-specific optimizat
 cmake ${srcdir} \
  -DCMAKE_CXX_COMPILER=g++ \
  -DCMAKE_INSTALL_PREFIX=${my_install_folder} \
- -DKokkos_ENABLE_OpenMP=On 
+ -DKokkos_ENABLE_OPENMP=On 
 ```` 
 which activates the OpenMP backend. All of the options controlling device backends, options, architectures, and third-party libraries (TPLs) are given below.
 
@@ -107,7 +107,7 @@ endif()
 
 ## Device Backends
 Device backends can either be enabled by specifiying `-DKokkos_ENABLE_X` or by passing all arguments as a string to
-`-DKokkos_DEVICES=X,Y`. Note that the `Kokkos_ENABLE_X` options are case-sensitive and all upper case (except for OpenMP, which CMake style defines to be Camel Case).
+`-DKokkos_DEVICES=X,Y`. Note that the `Kokkos_ENABLE_X` options are case-sensitive and all upper case.
 Strings passed to `Kokkos_DEVICES` are not case-sensitive.
 
 * Kokkos_DEVICES
@@ -116,8 +116,8 @@ Strings passed to `Kokkos_DEVICES` are not case-sensitive.
 * Kokkos_ENABLE_CUDA
     * Whether to build CUDA backend
     * BOOL Default: OFF
-* Kokkos_ENABLE_OpenMP
-    * Whether to build OpenMP backend
+* Kokkos_ENABLE_OPENMP
+    * Whether to build OPENMP backend
     * BOOL Default: OFF
 * Kokkos_ENABLE_PTHREAD
     * Whether to build Pthread backend

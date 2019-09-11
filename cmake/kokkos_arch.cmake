@@ -111,7 +111,6 @@ LIST(APPEND KOKKOS_ARCH_LIST
 STRING(REPLACE ";" ", " KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_ARCH_LIST}")
 SET(KOKKOS_INTERNAL_ARCH_DOCSTR "${tmpr}${KOKKOS_INTERNAL_ARCH_DOCSTR}")
 
-
 # Setting this variable to a value other than "None" can improve host
 # performance by turning on architecture specific code.
 # NOT SET is used to determine if the option is passed in.  It is reset to

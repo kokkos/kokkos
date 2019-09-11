@@ -6,14 +6,15 @@
 #endif
 
 /* Execution Spaces */
-#cmakedefine KOKKOS_ENABLE_SERIAL
-#cmakedefine KOKKOS_ENABLE_OPENMP
+#cmakedefine KOKKOS_ENABLE_SERIAL        
+#cmakedefine KOKKOS_ENABLE_OPENMP        
+#cmakedefine KOKKOS_ENABLE_PTHREAD       
 #cmakedefine KOKKOS_ENABLE_THREADS
-#cmakedefine KOKKOS_ENABLE_CUDA
-#cmakedefine KOKKOS_ENABLE_ROCM
-#cmakedefine KOKKOS_ENABLE_HWLOC
-#cmakedefine KOKKOS_ENABLE_MEMKIND
-#cmakedefine KOKKOS_ENABLE_LIBRT
+#cmakedefine KOKKOS_ENABLE_CUDA          
+#cmakedefine KOKKOS_ENABLE_ROCM          
+#cmakedefine KOKKOS_ENABLE_HWLOC         
+#cmakedefine KOKKOS_ENABLE_MEMKIND       
+#cmakedefine KOKKOS_ENABLE_LIBRT         
 
 #ifndef __CUDA_ARCH__
 #cmakedefine KOKKOS_ENABLE_TM

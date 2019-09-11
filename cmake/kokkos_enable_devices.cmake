@@ -30,6 +30,13 @@ KOKKOS_DEVICE_OPTION(SERIAL        ON  "Whether to build serial  backend")
 KOKKOS_DEVICE_OPTION(PTHREAD       OFF "Whether to build Pthread backend")
 KOKKOS_DEVICE_OPTION(ROCM          OFF "Whether to build AMD ROCm backend")
 
+IF(KOKKOS_ENABLE_PTHREAD)
+#TODO: fix this inconsistency
+#all the header macros use KOKKOS_ENABLE_THREADS even though we call this option
+#Pthread
+SET(KOKKOS_ENABLE_THREADS ON)
+ENDIF()
+
 IF(Trilinos_ENABLE_Kokkos AND Trilinos_ENABLE_OpenMP)
   SET(OMP_DEFAULT ON)
 ELSE()
