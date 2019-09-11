@@ -114,6 +114,10 @@ IF(BUILD_SHARED_LIBS)
   SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ENDIF()
 
+IF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+  MESSAGE(FATAL_ERROR "Kokkos assumes a 64-bit build; i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead")
+ENDIF()
+
 IF(Kokkos_SEPARATE_LIBS)
  SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms)
  SET(KOKKOS_INT_LIBRARIES kokkoscore kokkoscontainers kokkosalgorithms)
