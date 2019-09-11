@@ -55,6 +55,8 @@ list(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+  set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+  set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
   IF (Spack_WORKAROUND) 
     #if we are explicitly using Spack for development,
     #nuke the Spack compiler
