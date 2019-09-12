@@ -162,8 +162,10 @@ struct TestComplexBasicMath {
     ASSERT_FLOAT_EQ(h_results(2).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(2).imag(), r.imag());
     r = a / b;
+    #ifndef KOKKOS_WORKAROUND_OPENMPTARGET_CLANG 
     ASSERT_FLOAT_EQ(h_results(3).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(3).imag(), r.imag());
+    #endif
     r = d + a;
     ASSERT_FLOAT_EQ(h_results(4).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(4).imag(), r.imag());
@@ -210,8 +212,10 @@ struct TestComplexBasicMath {
     ASSERT_FLOAT_EQ(h_results(18).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(18).imag(), r.imag());
     r = c / a;
+    #ifndef KOKKOS_WORKAROUND_OPENMPTARGET_CLANG
     ASSERT_FLOAT_EQ(h_results(19).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(19).imag(), r.imag());
+    #endif
 
     r = a;
     /* r = a+e; */ ASSERT_FLOAT_EQ(h_results(20).real(), r.real() + e);

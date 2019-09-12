@@ -1086,7 +1086,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    unsigned n = CudaTraits::WarpSize * 8;
+    unsigned n = CudaTraits::WarpSize * 32;
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
             f, n);

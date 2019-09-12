@@ -92,9 +92,7 @@
 #include <Kokkos_hwloc.hpp>
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_TaskScheduler.hpp>
-#ifndef KOKKOS_ENABLE_OPENMPTARGET 
 #include <Kokkos_Complex.hpp>
-#endif
 #include <Kokkos_CopyViews.hpp>
 #include <functional>
 #include <iosfwd>
