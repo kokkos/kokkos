@@ -4,9 +4,9 @@ ulimit -c 0
 module purge
 
 module load devpack/20180521/openmpi/2.1.2/gcc/7.2.0/cuda/9.2.88
-module load netlib/3.8.0/gcc/7.2.0
+module swap openblas/0.2.20/gcc/7.2.0 netlib/3.8.0/gcc/7.2.0
 # Trilinos now requires cmake version >= 3.10.0
-module load cmake/3.12.3
+module swap cmake/3.9.6 cmake/3.12.3
 export OMP_NUM_THREADS=8
 export JENKINS_DO_CUDA=ON
 export JENKINS_DO_OPENMP=OFF
@@ -31,3 +31,5 @@ export CUDA_LAUNCH_BLOCKING=1
 export CUDA_MANAGED_FORCE_DEVICE_ALLOC=1
 
 export OMPI_CXX=${KOKKOS_PATH}/bin/nvcc_wrapper
+
+export KOKKOS_EXTRA_FLAGS="-DKokkos_ENABLE_CUDA_LAMBDA=ON -DTrilinos_CXX11_FLAGS=-expt-extended-lambda"

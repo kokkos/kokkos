@@ -161,11 +161,10 @@ ENDIF()
 ENDFUNCTION()
 
 MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
- INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_functions.cmake)
  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_devices.cmake)
  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_options.cmake)
  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
- INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_cxx_std.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_test_cxx_std.cmake)
  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
  IF (NOT KOKKOS_HAS_TRILINOS)
   #------------ COMPILER AND FEATURE CHECKS ------------------------------------
@@ -404,13 +403,13 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
 
 
   IF (KOKKOS_CXX_STANDARD_FEATURE)
-    #GREAT! I can't do this the right way
+    #GREAT! I can do this the right way
     TARGET_COMPILE_FEATURES(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FEATURE})
     IF (NOT KOKKOS_USE_CXX_EXTENSIONS)
       SET_TARGET_PROPERTIES(${LIBRARY_NAME} PROPERTIES CXX_EXTENSIONS OFF)
     ENDIF()
   ELSE()
-    #OH, Well, no choice but the wrong way
+    #OH, well, no choice but the wrong way
     TARGET_COMPILE_OPTIONS(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FLAG})
   ENDIF()
 

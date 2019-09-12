@@ -41,18 +41,21 @@ source ${ENV_FILE}
 ln -s ${KOKKOS_PATH} ${TRILINOS_PATH}/kokkos
 ln -s ${KOKKOSKERNELS_PATH} ${TRILINOS_PATH}/kokkos-kernels
 
-if [ ! -d "${KOKKOS_PATH}" ]; then
-  mkdir promotion-test
-else
-  rm -rf promotion-test
-  mkdir promotion-test
-fi
+stringToHash="$1 $2 $3 $4"
+hash=`cksum <<< '$stringToHash' | cut -f 1 -d ' '`
 
-cd promotion-test
+testFolder="promotion-test-$hash"
+echo "Running test in folder $testFolder"
+
+rm -rf $testFolder
+mkdir $testFolder
+
+cd $testFolder
 
 ${TRILINOS_PATH}/sampleScripts/Sandia-SEMS/configure-testbeds-jenkins \
   -DKokkos_SOURCE_DIR_OVERRIDE=kokkos \
-  -DKokkosKernels_SOURCE_DIR_OVERRIDE=kokkos-kernels
+  -DKokkosKernels_SOURCE_DIR_OVERRIDE=kokkos-kernels \
+  ${KOKKOS_EXTRA_FLAGS} >& config.out
 
 
 
