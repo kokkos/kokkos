@@ -179,7 +179,6 @@ IF(KOKKOS_ENABLE_CUDA)
 ENDIF()
 
 IF (NOT KOKKOS_CXX_STANDARD_FEATURE)
-  #don't let cmake do this as a feature either
   #we need to pick the C++ flags ourselves
   UNSET(CMAKE_CXX_STANDARD)
   UNSET(CMAKE_CXX_STANDARD CACHE)
