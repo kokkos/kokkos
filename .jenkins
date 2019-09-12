@@ -90,7 +90,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ARCH=Volta70 \
-                                -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA,CUDA_RELOCATABLE_DEVICE_CODE,CUDA_UVM \
+                                -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA,CUDA_UVM \
                                 -DKokkos_ENABLE_TESTS=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
