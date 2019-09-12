@@ -133,7 +133,7 @@ ELSE()
   ENDIF()
   #okay, this is funky - kill this variable
   #this value is not really valid as a cmake variable
-  UNSET(CMAKE_CXX_STANDARD CACHE)
+  UNSET(CMAKE_CXX_STANDARD)
   IF     (KOKKOS_CXX_STANDARD STREQUAL "1Y")
     GLOBAL_SET(KOKKOS_ENABLE_CXX14 ON)
   ELSEIF (KOKKOS_CXX_STANDARD STREQUAL "1Z")
