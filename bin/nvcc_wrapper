@@ -191,7 +191,30 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle c++11
-  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++1y|-std=c++1y|--std=c++17|-std=c++17|--std=c++1z|-std=c++1z)
+  --std=c++1y|-std=c++1y|--std=c++1z|-std=c++1z|--std=gnu++1y|-std=gnu++1y|--std=gnu++1z|-std=gnu++1z)
+    if [ $stdcxx_applied -eq 1 ]; then
+       echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
+    else
+       if [ ! -z "${KOKKOS_CMAKE_CXX_STANDARD}" ]; then
+         echo "nvcc_wrapper does not accept intermediate standard flag $1, but I will use -std=c++${KOKKOS_CMAKE_CXX_STANDARD} instead"
+         shared_args="$shared_args -std=c++${KOKKOS_CMAKE_CXX_STANDARD}"
+       else
+	echo "nvcc_wrapper has been given intermediate standard flag $1 - nvcc only accepts full standard flags like -std=c++11"
+	exit 1
+       fi
+       stdcxx_applied=1
+    fi
+    ;;
+  -std=gnu*)
+    if [ $stdcxx_applied -eq 1 ]; then
+       echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
+    else
+       stdFlag=${1/gnu/c}
+       echo "nvcc_wrapper has been given GNU extension standard flag $1 - reverting flag to $stdFlag"
+       shared_args="$shared_args $stdFlag"
+    fi
+  ;;
+  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++17|-std=c++17)
     if [ $stdcxx_applied -eq 1 ]; then
        echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
     else
