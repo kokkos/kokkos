@@ -133,6 +133,7 @@ ELSE()
   ENDIF()
   #okay, this is funky - kill this variable
   #this value is not really valid as a cmake variable
+  UNSET(CMAKE_CXX_STANDARD)
   UNSET(CMAKE_CXX_STANDARD CACHE)
   IF     (KOKKOS_CXX_STANDARD STREQUAL "1Y")
     GLOBAL_SET(KOKKOS_ENABLE_CXX14 ON)
@@ -178,8 +179,9 @@ IF(KOKKOS_ENABLE_CUDA)
 ENDIF()
 
 IF (NOT KOKKOS_CXX_STANDARD_FEATURE)
-  UNSET(CMAKE_CXX_STANDARD CACHE) #don't let cmake do this as a feature either
   #we need to pick the C++ flags ourselves
+  UNSET(CMAKE_CXX_STANDARD)
+  UNSET(CMAKE_CXX_STANDARD CACHE)
   IF(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
     INCLUDE(${KOKKOS_SRC_PATH}/cmake/cray.cmake)
     kokkos_set_cray_flags(${KOKKOS_CXX_STANDARD})
