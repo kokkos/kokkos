@@ -15,6 +15,10 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_ENABLE_OPENMP)
     COMPILE_DEFINITIONS -fopenmp=libomp
     LINK_LIBRARIES -fopenmp=libomp
   )
+  IF (NOT CLANG_HAS_OMP)
+    UNSET(CLANG_HAS_OMP CACHE) #make sure CMake always re-runs this
+    MESSAGE(FATAL_ERROR "Clang failed OpenMP check. You have requested -DKokkos_ENABLE_OPENMP=ON, but the Clang compiler does not appear to have been built with OpenMP support")
+  ENDIF()
   UNSET(CLANG_HAS_OMP CACHE) #make sure CMake always re-runs this
 ENDIF()
 
