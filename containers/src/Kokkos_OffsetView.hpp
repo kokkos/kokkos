@@ -925,6 +925,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     Mapping::assign(m_map, rhs.m_map, rhs.m_track);  // swb what about assign?
   }
 
+  KOKKOS_INLINE_FUNCTION
   OffsetView(const pointer_type& p, const begins_type& begins,
              const begins_type& ends)
       : OffsetView(
