@@ -1,11 +1,11 @@
+#include "Kokkos_Macros.hpp"
 #include "Kokkos_Stacktrace.hpp"
 
+#ifdef KOKKOS_IMPL_ENABLE_STACKTRACE
 // backtrace() function for retrieving the stacktrace
 #include <execinfo.h>
-
-#define KOKKOS_ENABLE_CXXABI 1
-
-#ifdef KOKKOS_ENABLE_CXXABI
+#endif
+#ifdef KOKKOS_IMPL_ENABLE_CXXABI
 #include <cxxabi.h>
 #endif  // KOKKOS_ENABLE_CXXABI
 
@@ -16,9 +16,13 @@
 
 namespace Kokkos {
 namespace Impl {
+#ifndef KOKKOS_IMPL_ENABLE_STACKTRACE
+int backtrace(void**,int) { return 0; }
+char** backtrace_symbols(void* const*, int) { return NULL; }
+#endif
 
 std::string demangle(const std::string& name) {
-#ifndef KOKKOS_ENABLE_CXXABI
+#ifndef KOKKOS_IMPL_ENABLE_CXXABI
   return name;
 #else
   std::string s;
@@ -40,9 +44,8 @@ std::string demangle(const std::string& name) {
       s = name;
     }
   }
-#endif  // KOKKOS_ENABLE_CXXABI
-
   return s;
+#endif  // KOKKOS_ENABLE_CXXABI
 }
 
 class Stacktrace {
