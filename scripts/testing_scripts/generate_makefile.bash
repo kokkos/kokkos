@@ -218,7 +218,7 @@ KOKKOS_DEVICES=$(echo $KOKKOS_DEVICES | sed 's/^,//')
 
 # If KOKKOS_PATH undefined, assume parent dir of this script is the KOKKOS_PATH.
 if [ -z "$KOKKOS_PATH" ]; then
-  KOKKOS_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+  KOKKOS_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd ../../ && pwd )
 else
   # Ensure KOKKOS_PATH is abs path
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
@@ -319,6 +319,9 @@ KOKKOS_SETTINGS_NO_KOKKOS_PATH="${KOKKOS_SETTINGS}"
 
 
 gen_makefile=Makefile.kokkos
+echo "#Makefile to satisfy existence of target kokkos-clean before installing the library" > install/${gen_makefile}
+echo "kokkos-clean:" >> install/${gen_makefile}
+echo "" >> install/${gen_makefile}
 mkdir -p core
 mkdir -p core/unit_test
 mkdir -p core/perf_test

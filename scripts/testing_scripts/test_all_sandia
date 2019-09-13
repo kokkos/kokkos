@@ -781,7 +781,7 @@ single_build_and_test() {
       run_cmd ls fake_problem >& ${desc}.configure.log || { report_and_log_test_result 1 $desc configure && return 0; }
     fi
   else
-    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$build $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+    run_cmd ${KOKKOS_PATH}/scripts/testing_scripts/generate_makefile.bash --with-devices=$build $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local -i build_start_time=$(date +%s)
     run_cmd make -j 48 build-test >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
     local -i build_end_time=$(date +%s)
