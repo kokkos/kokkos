@@ -31,7 +31,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
-                                -DKokkos_ARCH=Volta70 \
+                                -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
