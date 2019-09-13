@@ -356,17 +356,32 @@ ELSE()
   MESSAGE(STATUS "  Device Parallel: NONE")
 ENDIF()
 
-IF(KOKKOS_ENABLE_OPENMP)
-  MESSAGE(STATUS "    Host Parallel: OPENMP")
-ELSEIF(KOKKOS_ENABLE_PTHREAD)
+FOREACH (_BACKEND OPENMP PTHREAD QTHREAD HPX)
+  IF(KOKKOS_ENABLE_${_BACKEND})
+    IF(_HOST_PARALLEL)
+      MESSAGE(FATAL_ERROR "Multiple host parallel execution spaces are not allowed! "
+                          "Trying to enable execution space ${_BACKEND}, "
+                          "but execution space ${_HOST_PARALLEL} is already enabled. "
+                          "Remove the CMakeCache.txt file and re-configure.")
+    ENDIF()
+    SET(_HOST_PARALLEL ${_BACKEND})
+  ENDIF()
+ENDFOREACH()
+
+IF(NOT _HOST_PARALLEL AND NOT KOKKOS_ENABLE_SERIAL)
+  MESSAGE(FATAL_ERROR "At least one host execution space must be enabled, "
+                      "but no host parallel execution space was requested "
+                      "and Kokkos_ENABLE_SERIAL=OFF.")
+ENDIF()
+
+IF(NOT _HOST_PARALLEL)
+  SET(_HOST_PARALLEL "NONE")
+ENDIF()
+MESSAGE(STATUS "    Host Parallel: ${_HOST_PARALLEL}")
+UNSET(_HOST_PARALLEL)
+
+IF(KOKKOS_ENABLE_PTHREAD)
   SET(KOKKOS_ENABLE_THREADS ON)
-  MESSAGE(STATUS "    Host Parallel: PTHREAD")
-ELSEIF(KOKKOS_ENABLE_QTHREADS)
-  MESSAGE(STATUS "    Host Parallel: QTHREADS")
-ELSEIF(KOKKOS_ENABLE_HPX)
-  MESSAGE(STATUS "    Host Parallel: HPX")
-ELSE()
-  MESSAGE(STATUS "    Host Parallel: NONE")
 ENDIF()
 
 IF(KOKKOS_ENABLE_SERIAL)
