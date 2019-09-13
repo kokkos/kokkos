@@ -400,7 +400,8 @@ FOREACH (_BACKEND OPENMP PTHREAD QTHREAD HPX)
     IF(_HOST_PARALLEL)
       MESSAGE(FATAL_ERROR "Multiple host parallel execution spaces are not allowed! "
                           "Trying to enable execution space ${_BACKEND}, "
-                          "but execution space ${_HOST_PARALLEL} is already enabled.")
+                          "but execution space ${_HOST_PARALLEL} is already enabled. "
+                          "Remove the CMakeCache.txt file and re-configure.")
     ENDIF()
     SET(_HOST_PARALLEL ${_BACKEND})
   ENDIF()
