@@ -83,5 +83,5 @@ IF (DEFINED CUDA_VERSION AND CUDA_VERSION VERSION_GREATER "7.0")
 ELSE()
   SET(LAMBDA_DEFAULT OFF)
 ENDIF()
-KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${LAMBDA_DEFAULT} "Whether to activate experimental laambda features")
+KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${LAMBDA_DEFAULT} "Whether to activate experimental lambda features")
 

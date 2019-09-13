@@ -144,7 +144,7 @@ Strings passed to `Kokkos_OPTIONS` are not case-sensitive.
     * Whether to print all compiler warnings
     * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_LAMBDA
-    * Whether to activate experimental laambda features
+    * Whether to activate experimental lambda features
     * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_LDG_INTRINSIC
     * Whether to use CUDA LDG intrinsics
