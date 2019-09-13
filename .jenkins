@@ -60,7 +60,8 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
-                                -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
@@ -90,7 +91,9 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
-                                -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA,CUDA_UVM \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
@@ -120,7 +123,8 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
-                                -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_DEBUG=ON \
                                 -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
