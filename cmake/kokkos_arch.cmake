@@ -406,6 +406,13 @@ FOREACH (_BACKEND OPENMP PTHREAD QTHREAD HPX)
     SET(_HOST_PARALLEL ${_BACKEND})
   ENDIF()
 ENDFOREACH()
+
+IF(NOT _HOST_PARALLEL AND NOT KOKKOS_ENABLE_SERIAL)
+  MESSAGE(FATAL_ERROR "At least one host execution space must be enabled, "
+                      "but no host parallel execution space was requested "
+                      "and Kokkos_ENABLE_SERIAL=OFF.")
+ENDIF()
+
 IF(NOT _HOST_PARALLEL)
   SET(_HOST_PARALLEL "NONE")
 ENDIF()
