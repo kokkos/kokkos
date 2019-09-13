@@ -395,39 +395,25 @@ ELSE()
   MESSAGE(STATUS "  Device Parallel: None")
 ENDIF()
 
-IF(KOKKOS_ENABLE_OPENMP)
-  SET(_HOST_PARALLEL "OPENMP")
-ENDIF()
-IF(KOKKOS_ENABLE_PTHREAD)
-  IF(_HOST_PARALLEL)
-    MESSAGE(FATAL_ERROR "Multiple host parallel execution spaces are not allowed! "
-                        "Trying to enable execution space PTHREAD, "
-			"but execution space ${_HOST_PARALLEL} is already enabled.")
+FOREACH (_BACKEND OPENMP PTHREAD QTHREAD HPX)
+  IF(KOKKOS_ENABLE_${_BACKEND})
+    IF(_HOST_PARALLEL)
+      MESSAGE(FATAL_ERROR "Multiple host parallel execution spaces are not allowed! "
+                          "Trying to enable execution space ${_BACKEND}, "
+                          "but execution space ${_HOST_PARALLEL} is already enabled.")
+    ENDIF()
+    SET(_HOST_PARALLEL ${_BACKEND})
   ENDIF()
-  SET(_HOST_PARALLEL "PTHREAD")
-  SET(KOKKOS_ENABLE_THREADS ON)
-ENDIF()
-IF(KOKKOS_ENABLE_QTHREADS)
-  IF(_HOST_PARALLEL)
-    MESSAGE(FATAL_ERROR "Multiple host parallel execution spaces are not allowed "
-                        "Trying to enable execution space QTHREADS, "
-                        "but execution space ${_HOST_PARALLEL} is already enabled.")
-  ENDIF()
-  SET(_HOST_PARALLEL "QTHREADS")
-ENDIF()
-IF(KOKKOS_ENABLE_HPX)
-  IF(_HOST_PARALLEL)
-    MESSAGE(FATAL_ERROR "Multiple host parallel execution spaces are not allowed! "
-                        "Trying to enable execution space HPX, "
-                        "but execution space ${_HOST_PARALLEL} is already enabled.")
-  ENDIF()
-  SET(_HOST_PARALLEL "HPX")
-ENDIF()
+ENDFOREACH()
 IF(NOT _HOST_PARALLEL)
   SET(_HOST_PARALLEL "NONE")
 ENDIF()
 MESSAGE(STATUS "    Host Parallel: ${_HOST_PARALLEL}")
 UNSET(_HOST_PARALLEL)
+
+IF(KOKKOS_ENABLE_PTHREAD)
+  SET(KOKKOS_ENABLE_THREADS ON)
+ENDIF()
 
 IF(KOKKOS_ENABLE_SERIAL)
   MESSAGE(STATUS "      Host Serial: SERIAL")
