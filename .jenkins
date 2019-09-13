@@ -59,7 +59,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DKokkos_ENABLE_CUDA=ON \
-                                -DKokkos_ARCH=Volta70 \
+                                -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA \
                                 -DKokkos_ENABLE_TESTS=ON \
                               .. && \
@@ -89,7 +89,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DKokkos_ENABLE_CUDA=ON \
-                                -DKokkos_ARCH=Volta70 \
+                                -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA,CUDA_UVM \
                                 -DKokkos_ENABLE_TESTS=ON \
                               .. && \
@@ -119,7 +119,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DKokkos_ENABLE_CUDA=ON \
-                                -DKokkos_ARCH=Volta70 \
+                                -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_OPTIONS=COMPILER_WARNINGS,CUDA_LAMBDA \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_DEBUG=ON \
