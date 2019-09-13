@@ -166,19 +166,6 @@ To validate the Kokkos build, configure with
 ````
 and run `make test` after completing the build.
 
-There are different ways to configure Kokkos shown in the [build instructions](BUILD.md).
-The above is equivalent to:
-````
-cmake $srcdir \
-  -DCMAKE_CXX_COMPILER=$path_to_compiler \
-  -DCMAKE_INSTALL_PREFIX=$path_to_install \
-  -DKokkos_DEVICES=OPENMP,SERIAL \
-  -DKokkos_ARCH=HSW \
-  -DKokkos_ENABLE_HWLOC=On \
-  -DKokkos_HWLOC_DIR=$path_to_hwloc
-````
-which provides a list of device backends and architecture optimizations to enable.
-
 For your CMake project using Kokkos, code such as the following:
 
 ````
