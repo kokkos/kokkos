@@ -23,3 +23,9 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_ENABLE_OPENMP)
 ENDIF()
 
 
+IF (KOKKOS_CXX_STANDARD STREQUAL 17)
+  IF (KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 7)
+    MESSAGE(FATAL_ERROR "You have requested c++17 support for GCC ${KOKKOS_CXX_COMPILER_VERSION}. Although CMake has allowed this and GCC accecpts -std=c++1z/c++17, GCC <= 6 does not properly support *this capture. Please reduce the C++ standard to 14 or upgrade the compiler if you do need 17 support")
+  ENDIF()
+ENDIF()
+
