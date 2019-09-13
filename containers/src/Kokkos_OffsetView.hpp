@@ -925,34 +925,6 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     Mapping::assign(m_map, rhs.m_map, rhs.m_track);  // swb what about assign?
   }
 
-  KOKKOS_INLINE_FUNCTION
-  View<DataType, Properties...> make_unmanaged_view(pointer_type p,
-                                                    begins_type begins,
-                                                    begins_type ends) {
-    return View<DataType, Properties...>(
-        p, Rank > 0 ? ends[0] - begins[0] : 0,
-        Rank > 1 ? ends[1] - begins[1] : 0, Rank > 2 ? ends[2] - begins[2] : 0,
-        Rank > 0 ? ends[3] - begins[3] : 0, Rank > 0 ? ends[4] - begins[4] : 0,
-        Rank > 0 ? ends[5] - begins[5] : 0, Rank > 0 ? ends[6] - begins[6] : 0,
-        Rank > 7 ? ends[7] - begins[7] : 0);
-  }
-
-#if 0
-  // NLIBER
-  KOKKOS_INLINE_FUNCTION
-  OffsetView(const pointer_type& p, const begins_type& begins,
-             const begins_type& ends)
-      : OffsetView(
-            View<DataType, Properties...>(p, Rank > 0 ? ends[0] - begins[0] : 0,
-                                          Rank > 1 ? ends[1] - begins[1] : 0,
-                                          Rank > 2 ? ends[2] - begins[2] : 0,
-                                          Rank > 3 ? ends[3] - begins[3] : 0,
-                                          Rank > 4 ? ends[4] - begins[4] : 0,
-                                          Rank > 5 ? ends[5] - begins[5] : 0,
-                                          Rank > 6 ? ends[6] - begins[6] : 0,
-                                          Rank > 7 ? ends[7] - begins[7] : 0),
-            begins) {}
-#else
   OffsetView(const pointer_type& p, const begins_type& begins,
              const begins_type& ends)
       : OffsetView(
@@ -975,7 +947,6 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                 Rank > 6 ? begins[6] : KOKKOS_INVALID_OFFSET,
                 Rank > 7 ? begins[7] : KOKKOS_INVALID_OFFSET,
             }) {}
-#endif
 
   //----------------------------------------
   // Allocation tracking properties
