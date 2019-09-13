@@ -192,6 +192,7 @@ MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_cxx_std.cmake)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tpls.cmake)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
+  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_corner_cases.cmake)
  ENDIF()
 ENDMACRO()
 

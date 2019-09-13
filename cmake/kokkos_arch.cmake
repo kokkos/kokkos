@@ -158,7 +158,7 @@ ENDIF()
 
 IF(KOKKOS_ENABLE_OPENMP)
   IF (KOKKOS_CXX_COMPILER_ID STREQUAL AppleClang)
-    MESSAGE(FATAL_ERROR "Apple Clang does not support OpenMP. Use native clang instead")
+    MESSAGE(FATAL_ERROR "Apple Clang does not support OpenMP. Use native Clang instead")
   ENDIF()
   ARCH_FLAGS(
     Clang      -fopenmp=libomp
