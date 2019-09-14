@@ -932,63 +932,72 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     overflow,
   };
 
+  // Subtraction should return a strictly positive number and not overflow
   template <typename I>
   KOKKOS_INLINE_FUNCTION static subtraction_failure check_subtraction(I lhs,
                                                                       I rhs) {
     if (lhs <= rhs) return subtraction_failure::non_negative;
 
     if (std::is_signed<I>::value) {
-      using U     = typename std::make_unsigned<I>::type;
-      const U max = (static_cast<U>(0) - static_cast<U>(1)) >>
-                    1;  // works for 2s complement
-      if (static_cast<U>(lhs) - static_cast<U>(rhs) > max)
-        return subtraction_failure::overflow;
+      using U = typename std::make_unsigned<I>::type;
+      U diff  = static_cast<U>(lhs) - static_cast<U>(rhs);
+      U max   = (static_cast<U>(0) - static_cast<U>(1)) >> 1;
+      if (diff > max) return subtraction_failure::overflow;
     }
 
     return subtraction_failure::none;
   }
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  // Check that begins < ends for all elements
   KOKKOS_INLINE_FUNCTION
   static subtraction_failure runtime_check_begins_ends_host(
       const begins_type& begins, const begins_type& ends) {
     std::string message;
-    for (typename begins_type::size_type i = 0; i != begins.size(); ++i) {
+    for (typename begins_type::size_type i = 0; i != begins_type::size(); ++i) {
       switch (check_subtraction(ends[i], begins[i])) {
         case subtraction_failure::non_negative:
-          message += "ends[" + std::to_string(i) +
-                     "]"
-                     " "
-                     "(" +
-                     std::to_string(ends[i]) +
-                     ")"
-                     " - "
-                     "begins[" +
-                     std::to_string(i) +
-                     "]"
-                     " "
-                     "(" +
-                     std::to_string(begins[i]) +
-                     ")"
-                     " must be positive\n";
+          message +=
+              "("
+              "ends[" +
+              std::to_string(i) +
+              "]"
+              " "
+              "(" +
+              std::to_string(ends[i]) +
+              ")"
+              " - "
+              "begins[" +
+              std::to_string(i) +
+              "]"
+              " "
+              "(" +
+              std::to_string(begins[i]) +
+              ")"
+              ")"
+              " must be positive\n";
           break;
 
         case subtraction_failure::overflow:
-          message += "ends[" + std::to_string(i) +
-                     "]"
-                     " "
-                     "(" +
-                     std::to_string(ends[i]) +
-                     ")"
-                     " - "
-                     "begins[" +
-                     std::to_string(i) +
-                     "]"
-                     " "
-                     "(" +
-                     std::to_string(begins[i]) +
-                     ")"
-                     " overflows\n";
+          message +=
+              "("
+              "ends[" +
+              std::to_string(i) +
+              "]"
+              " "
+              "(" +
+              std::to_string(ends[i]) +
+              ")"
+              " - "
+              "begins[" +
+              std::to_string(i) +
+              "]"
+              " "
+              "(" +
+              std::to_string(begins[i]) +
+              ")"
+              ")"
+              " overflows\n";
           break;
         default: break;
       }
@@ -1004,10 +1013,11 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   }
 #endif  // KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 
+  // Check the begins < ends for all elements
   KOKKOS_INLINE_FUNCTION
   static subtraction_failure runtime_check_begins_ends_device(
       const begins_type& begins, const begins_type& ends) {
-    for (typename begins_type::size_type i = 0; i != begins.size(); ++i) {
+    for (typename begins_type::size_type i = 0; i != begins_type::size(); ++i) {
       switch (check_subtraction(ends[i], begins[i])) {
         case subtraction_failure::non_negative:
           Kokkos::abort(
@@ -1026,6 +1036,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     return subtraction_failure::none;
   }
 
+  // Constructor around unmanaged data after checking begins < ends for all
+  // elements
   KOKKOS_INLINE_FUNCTION
   OffsetView(const pointer_type& p, const begins_type& begins,
              const begins_type& ends, subtraction_failure)
@@ -1044,6 +1056,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
         m_begins(begins) {}
 
  public:
+  // Constructor around unmanaged data
   KOKKOS_INLINE_FUNCTION
   OffsetView(const pointer_type& p, const begins_type& begins,
              const begins_type& ends)
