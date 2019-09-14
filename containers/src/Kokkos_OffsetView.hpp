@@ -950,8 +950,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   KOKKOS_INLINE_FUNCTION
-  static void runtime_check_begins_ends_host(const begins_type& begins,
-                                             const begins_type& ends) {
+  static subtraction_failure runtime_check_begins_ends_host(
+      const begins_type& begins, const begins_type& ends) {
     std::string message;
     for (typename begins_type::size_type i = 0; i != begins.size(); ++i) {
       switch (check_subtraction(ends[i], begins[i])) {
@@ -999,12 +999,14 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
           message;
       Kokkos::Impl::throw_runtime_exception(message);
     }
+
+    return subtraction_failure::none;
   }
 #endif  // KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 
   KOKKOS_INLINE_FUNCTION
-  static void runtime_check_begins_ends_device(const begins_type& begins,
-                                               const begins_type& ends) {
+  static subtraction_failure runtime_check_begins_ends_device(
+      const begins_type& begins, const begins_type& ends) {
     for (typename begins_type::size_type i = 0; i != begins.size(); ++i) {
       switch (check_subtraction(ends[i], begins[i])) {
         case subtraction_failure::non_negative:
@@ -1020,12 +1022,13 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
         default: break;
       }
     }
+
+    return subtraction_failure::none;
   }
 
- public:
   KOKKOS_INLINE_FUNCTION
   OffsetView(const pointer_type& p, const begins_type& begins,
-             const begins_type& ends)
+             const begins_type& ends, subtraction_failure)
       : m_track()  // no tracking
         ,
         m_map(
@@ -1038,12 +1041,20 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                                           Rank > 5 ? ends[5] - begins[5] : 0,
                                           Rank > 6 ? ends[6] - begins[6] : 0,
                                           Rank > 7 ? ends[7] - begins[7] : 0)),
-        m_begins(begins) {
+        m_begins(begins) {}
+
+ public:
+  KOKKOS_INLINE_FUNCTION
+  OffsetView(const pointer_type& p, const begins_type& begins,
+             const begins_type& ends)
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    runtime_check_begins_ends_host(begins, ends);
+      : OffsetView(p, begins, ends,
+                   runtime_check_begins_ends_host(begins, ends))
 #else
-    runtime_check_begins_ends_device(begins, ends);
+      : OffsetView(p, begins, ends,
+                   runtime_check_begins_ends_device(begins, ends))
 #endif
+  {
   }
 
   //----------------------------------------
