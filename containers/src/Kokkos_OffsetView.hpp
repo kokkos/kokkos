@@ -925,6 +925,104 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     Mapping::assign(m_map, rhs.m_map, rhs.m_track);  // swb what about assign?
   }
 
+ private:
+  enum class subtraction_failure {
+    none,
+    non_negative,
+    overflow,
+  };
+
+  template <typename I>
+  KOKKOS_INLINE_FUNCTION static subtraction_failure check_subtraction(I lhs,
+                                                                      I rhs) {
+    if (lhs <= rhs) return subtraction_failure::non_negative;
+
+    if (std::is_signed<I>::value) {
+      using U     = typename std::make_unsigned<I>::type;
+      const U max = (static_cast<U>(0) - static_cast<U>(1)) >>
+                    1;  // works for 2s complement
+      if (static_cast<U>(lhs) - static_cast<U>(rhs) > max)
+        return subtraction_failure::overflow;
+    }
+
+    return subtraction_failure::none;
+  }
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  KOKKOS_INLINE_FUNCTION
+  static void runtime_check_begins_ends_host(const begins_type& begins,
+                                             const begins_type& ends) {
+    std::string message;
+    for (typename begins_type::size_type i = 0; i != begins.size(); ++i) {
+      switch (check_subtraction(ends[i], begins[i])) {
+        case subtraction_failure::non_negative:
+          message += "ends[" + std::to_string(i) +
+                     "]"
+                     " "
+                     "(" +
+                     std::to_string(ends[i]) +
+                     ")"
+                     " - "
+                     "begins[" +
+                     std::to_string(i) +
+                     "]"
+                     " "
+                     "(" +
+                     std::to_string(begins[i]) +
+                     ")"
+                     " must be positive\n";
+          break;
+
+        case subtraction_failure::overflow:
+          message += "ends[" + std::to_string(i) +
+                     "]"
+                     " "
+                     "(" +
+                     std::to_string(ends[i]) +
+                     ")"
+                     " - "
+                     "begins[" +
+                     std::to_string(i) +
+                     "]"
+                     " "
+                     "(" +
+                     std::to_string(begins[i]) +
+                     ")"
+                     " overflows\n";
+          break;
+        default: break;
+      }
+    }
+    if (!message.empty()) {
+      message =
+          "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView\n" +
+          message;
+      Kokkos::Impl::throw_runtime_exception(message);
+    }
+  }
+#endif  // KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+
+  KOKKOS_INLINE_FUNCTION
+  static void runtime_check_begins_ends_device(const begins_type& begins,
+                                               const begins_type& ends) {
+    for (typename begins_type::size_type i = 0; i != begins.size(); ++i) {
+      switch (check_subtraction(ends[i], begins[i])) {
+        case subtraction_failure::non_negative:
+          Kokkos::abort(
+              "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
+              "OffsetView: bad range");
+          break;
+        case subtraction_failure::overflow:
+          Kokkos::abort(
+              "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
+              "OffsetView: range overflows");
+          break;
+        default: break;
+      }
+    }
+  }
+
+ public:
   KOKKOS_INLINE_FUNCTION
   OffsetView(const pointer_type& p, const begins_type& begins,
              const begins_type& ends)
@@ -940,7 +1038,13 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                                           Rank > 5 ? ends[5] - begins[5] : 0,
                                           Rank > 6 ? ends[6] - begins[6] : 0,
                                           Rank > 7 ? ends[7] - begins[7] : 0)),
-        m_begins(begins) {}
+        m_begins(begins) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+    runtime_check_begins_ends_host(begins, ends);
+#else
+    runtime_check_begins_ends_device(begins, ends);
+#endif
+  }
 
   //----------------------------------------
   // Allocation tracking properties
