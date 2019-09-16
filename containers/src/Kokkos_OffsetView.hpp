@@ -1067,6 +1067,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   // Constructor around unmanaged data after checking begins < ends for all
   // elements
   // Each of B, E can be begins_type and/or index_list_type
+  // Precondition: begins.size() == ends.size() == m_begins.size() == Rank
   template <typename B, typename E>
   KOKKOS_INLINE_FUNCTION OffsetView(const pointer_type& p, const B& begins,
                                     const E& ends,
@@ -1083,7 +1084,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                   Rank > 5 ? at(ends, 5) - at(begins, 5) : 0,
                   Rank > 6 ? at(ends, 6) - at(begins, 6) : 0,
                   Rank > 7 ? at(ends, 7) - at(begins, 7) : 0)) {
-    for (size_t i = 0; i != begins.size(); ++i) {
+    for (size_t i = 0; i != m_begins.size(); ++i) {
       m_begins[i] = at(begins, i);
     };
   }

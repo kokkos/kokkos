@@ -301,8 +301,8 @@ void test_offsetview_unmanaged_construction() {
   }
 
   {
-    Kokkos::Array<int64_t, 2> begins2{{2, 3}};
-    Kokkos::Array<int64_t, 2> ends2{{5, 7}};
+    Kokkos::Array<int64_t, 2> begins2{{-2, -7}};
+    Kokkos::Array<int64_t, 2> ends2{{5, -3}};
     Kokkos::Experimental::OffsetView<Scalar**, Device> ov2(&s, begins2, ends2);
 
     Kokkos::View<Scalar**, Device> v2(&s, ends2[0] - begins2[0],
@@ -328,6 +328,22 @@ void test_offsetview_unmanaged_construction() {
         << "OffsetView unmanaged construction fails for rank 3";
   }
 
+  {
+    // Test all four public constructor overloads (begins_type x
+    // index_list_type)
+    Kokkos::Array<int64_t, 1> begins{{-3}};
+    Kokkos::Array<int64_t, 1> ends{{2}};
+
+    Kokkos::Experimental::OffsetView<Scalar*, Device> bb(&s, begins, ends);
+    Kokkos::Experimental::OffsetView<Scalar*, Device> bi(&s, begins, {2});
+    Kokkos::Experimental::OffsetView<Scalar*, Device> ib(&s, {-3}, ends);
+    Kokkos::Experimental::OffsetView<Scalar*, Device> ii(&s, {-3}, {2});
+
+    ASSERT_EQ(bb, bi);
+    ASSERT_EQ(bb, ib);
+    ASSERT_EQ(bb, ii);
+  }
+
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   {
     using offset_view_type = Kokkos::Experimental::OffsetView<Scalar*, Device>;
@@ -348,6 +364,25 @@ void test_offsetview_unmanaged_construction() {
     ASSERT_THROW(
         offset_view_type(&s, {-0x7fffffffffffffffl - 1}, {0x7fffffffffffffffl}),
         std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {-0x7fffffffffffffffl - 1}, {0}),
+                 std::runtime_error);
+  }
+
+  {
+    using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
+
+    // Should throw when the rank of begins and/or ends doesn't match that of
+    // OffsetView
+    ASSERT_THROW(offset_view_type(&s, {0}, {1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0}, {1, 1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0}, {1, 1, 1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0, 0}, {1}), std::runtime_error);
+    ASSERT_NO_THROW(offset_view_type(&s, {0, 0}, {1, 1}));
+    ASSERT_THROW(offset_view_type(&s, {0, 0}, {1, 1, 1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1, 1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1, 1, 1}),
+                 std::runtime_error);
   }
 #endif  // KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 }
