@@ -1250,6 +1250,9 @@ libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
 	ranlib libkokkos.a
 
+print-cxx-flags: 
+	echo "$(KOKKOS_CXXFLAGS)"
+
 KOKKOS_LINK_DEPENDS=libkokkos.a
 
 #we have carefully separated LDFLAGS from LIBS and LIBDIRS

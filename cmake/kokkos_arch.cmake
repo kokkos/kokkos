@@ -108,42 +108,45 @@ KOKKOS_ARCH_OPTION(VEGA            GPU  "AMD Vega architecture")
 KOKKOS_ARCH_OPTION(GFX901          GPU  "AMD GFX architecture")
 
 
-#Choose default version numbers if not given
-IF (KOKKOS_ARCH_KEPLER)
-  SET(KOKKOS_ARCH_KEPLER35 ON)
+IF (KOKKOS_ENABLE_CUDA)
+ #Choose default version numbers if not given
+ IF (KOKKOS_ARCH_KEPLER)
+   SET(KOKKOS_ARCH_KEPLER35 ON)
+ ENDIF()
+ 
+ IF (KOKKOS_ARCH_MAXWELL)
+   SET(KOKKOS_ARCH_MAXWELL50 ON)
+ ENDIF()
+ 
+ IF (KOKKOS_ARCH_PASCAL)
+   SET(KOKKOS_ARCH_PASCAL60 ON)
+ ENDIF()
+ 
+ IF (KOKKOS_ARCH_VOLTA)
+   SET(KOKKOS_ARCH_VOLTA70 ON)
+ ENDIF()
+ 
+ #Regardless of version, make sure we define the general architecture name
+ IF (KOKKOS_ARCH_KEPLER30 OR KOKKOS_ARCH_KEPLER32 OR KOKKOS_ARCH_KEPLER35 OR KOKKOS_ARCH_KEPLER37)
+   SET(KOKKOS_ARCH_KEPLER ON)
+ ENDIF()
+ 
+ #Regardless of version, make sure we define the general architecture name
+ IF (KOKKOS_ARCH_MAXWELL50 OR KOKKOS_ARCH_MAXWELL52 OR KOKKOS_ARCH_MAXWELL53)
+   SET(KOKKOS_ARCH_MAXWELL ON)
+ ENDIF()
+
+ #Regardless of version, make sure we define the general architecture name
+ IF (KOKKOS_ARCH_PASCAL60 OR KOKKOS_ARCH_PASCAL61)
+   SET(KOKKOS_ARCH_PASCAL ON)
+ ENDIF()
+
+  #Regardless of version, make sure we define the general architecture name
+  IF (KOKKOS_ARCH_VOLTA70 OR KOKKOS_ARCH_VOLTA72)
+    SET(KOKKOS_ARCH_VOLTA ON)
+  ENDIF()
 ENDIF()
 
-IF (KOKKOS_ARCH_MAXWELL)
-  SET(KOKKOS_ARCH_MAXWELL50 ON)
-ENDIF()
-
-IF (KOKKOS_ARCH_PASCAL)
-  SET(KOKKOS_ARCH_PASCAL60 ON)
-ENDIF()
-
-IF (KOKKOS_ARCH_VOLTA)
-  SET(KOKKOS_ARCH_VOLTA70 ON)
-ENDIF()
-
-#Regardless of version, make sure we define the general architecture name
-IF (KOKKOS_ARCH_KEPLER30 OR KOKKOS_ARCH_KEPLER32 OR KOKKOS_ARCH_KEPLER35 OR KOKKOS_ARCH_KEPLER37)
-  SET(KOKKOS_ARCH_KEPLER ON)
-ENDIF()
-
-#Regardless of version, make sure we define the general architecture name
-IF (KOKKOS_ARCH_MAXWELL50 OR KOKKOS_ARCH_MAXWELL52 OR KOKKOS_ARCH_MAXWELL53)
-  SET(KOKKOS_ARCH_MAXWELL ON)
-ENDIF()
-
-#Regardless of version, make sure we define the general architecture name
-IF (KOKKOS_ARCH_PASCAL60 OR KOKKOS_ARCH_PASCAL61)
-  SET(KOKKOS_ARCH_PASCAL ON)
-ENDIF()
-
-#Regardless of version, make sure we define the general architecture name
-IF (KOKKOS_ARCH_VOLTA70 OR KOKKOS_ARCH_VOLTA72)
-  SET(KOKKOS_ARCH_VOLTA ON)
-ENDIF()
 
 KOKKOS_DEPRECATED_LIST(ARCH ARCH)
 
@@ -404,7 +407,9 @@ CHECK_CUDA_ARCH(VOLTA70  sm_70)
 CHECK_CUDA_ARCH(VOLTA72  sm_72)
 CHECK_CUDA_ARCH(TURING75  sm_75)
 
-SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_VERSION_MAJOR}${KOKKOS_VERSION_MINOR}")
+IF (KOKKOS_ENABLE_CUDA)
+  SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_VERSION_MAJOR}${KOKKOS_VERSION_MINOR}")
+ENDIF()
 
 #CMake verbose is kind of pointless
 #Let's just always print things
