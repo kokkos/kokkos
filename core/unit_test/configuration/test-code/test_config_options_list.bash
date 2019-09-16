@@ -13,7 +13,12 @@ CMakeArch=$4
 for option in "${Options[@]}"
 do
   option_up=`echo $option | tr a-z A-Z`
-  CMAKE_OPTION="-DKokkos_ENABLE_${option_up}=ON"
+  if [[ $option_up == *"DISABLE"* ]]; then
+    new_option_up=${option_up/DISABLE_/}
+    CMAKE_OPTION="-DKokkos_ENABLE_${new_option_up}=OFF"
+  else
+    CMAKE_OPTION="-DKokkos_ENABLE_${option_up}=ON"
+  fi
 
   #Renaming options as GNU Make expects them
   option=${option/deprecated_code/enable_deprecated_code}

@@ -33,7 +33,8 @@ do
       ${SRC_DIR}/test_config_arch_list.bash "$hpdevice,$accdevice,Serial" "${CMAKE_HPDEVICE} ${CMAKE_ACCDEVICE} -DKokkos_ENABLE_SERIAL=ON"
     done
   else
-    export CXX=g++
+    #no, I need to be able to specify this
+    #export CXX=g++
     ${SRC_DIR}/test_config_arch_list.bash "$hpdevice" "${CMAKE_HPDEVICE}"
     ${SRC_DIR}/test_config_arch_list.bash "$hpdevice,Serial" "${CMAKE_HPDEVICE} -DKokkos_ENABLE_SERIAL=ON"
   fi 
