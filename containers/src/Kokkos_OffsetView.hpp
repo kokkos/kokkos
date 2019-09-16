@@ -987,40 +987,40 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
           ")"
           "\n";
 
-    if (message.empty()) {
-      for (size_t i = 0; i != begins.size(); ++i) {
-        subtraction_failure sf = check_subtraction(at(ends, i), at(begins, i));
-        if (sf != subtraction_failure::none) {
-          message +=
-              "("
-              "ends[" +
-              std::to_string(i) +
-              "]"
-              " "
-              "(" +
-              std::to_string(at(ends, i)) +
-              ")"
-              " - "
-              "begins[" +
-              std::to_string(i) +
-              "]"
-              " "
-              "(" +
-              std::to_string(at(begins, i)) +
-              ")"
-              ")";
-          switch (sf) {
-            case subtraction_failure::negative:
-              message += " must be non-negative\n";
-              break;
-            case subtraction_failure::overflow:
-              message += " overflows\n";
-              break;
-            default: break;
-          }
+    // If there are no errors so far, then rank == Rank
+    // Otherwise, check as much as possible
+    size_t rank = begins.size() < ends.size() ? begins.size() : ends.size();
+    for (size_t i = 0; i != rank; ++i) {
+      subtraction_failure sf = check_subtraction(at(ends, i), at(begins, i));
+      if (sf != subtraction_failure::none) {
+        message +=
+            "("
+            "ends[" +
+            std::to_string(i) +
+            "]"
+            " "
+            "(" +
+            std::to_string(at(ends, i)) +
+            ")"
+            " - "
+            "begins[" +
+            std::to_string(i) +
+            "]"
+            " "
+            "(" +
+            std::to_string(at(begins, i)) +
+            ")"
+            ")";
+        switch (sf) {
+          case subtraction_failure::negative:
+            message += " must be non-negative\n";
+            break;
+          case subtraction_failure::overflow: message += " overflows\n"; break;
+          default: break;
         }
       }
     }
+
     if (!message.empty()) {
       message =
           "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView\n" +
