@@ -40,13 +40,13 @@ get_kokkos_cuda_option_list() {
   for CUDA_ in $PARSE_CUDA_LST
   do 
      CUDA_OPT_NAME=
-     if [ "${CUDA_}" == "enable_lambda"]; then
+     if [ "${CUDA_}" == "enable_lambda" ]; then
         CUDA_OPT_NAME=CUDA_LAMBDA
-     elif  [ "${CUDA_}" == "rdc"]; then	
+     elif  [ "${CUDA_}" == "rdc" ]; then	
         CUDA_OPT_NAME=CUDA_RELOCATABLE_DEVICE_CODE
-     elif  [ "${CUDA_}" == "force_uvm"]; then
+     elif  [ "${CUDA_}" == "force_uvm" ]; then
         CUDA_OPT_NAME=CUDA_UVM
-     elif  [ "${CUDA_}" == "use_ldg"]; then
+     elif  [ "${CUDA_}" == "use_ldg" ]; then
         CUDA_OPT_NAME=CUDA_LDG_INTRINSIC
      else
         echo "${CUDA_} is not a valid cuda options..."
@@ -63,9 +63,9 @@ get_kokkos_option_list() {
   PARSE_OPTIONS_LST=$(echo $KOKKOS_OPTIONS | tr "," "\n")
   for OPT_ in $PARSE_OPTIONS_LST
   do 
-     UC_OPT_ = ${OPT_}
+     UC_OPT_=${OPT_^^}
      if [[ "$UC_OPT_" == *DISABLE* ]]; then
-        FLIP_OPT_ = ${UC_OPT_/DISABLE/ENABLE}
+        FLIP_OPT_=${UC_OPT_/DISABLE/ENABLE}
         KOKKOS_OPTION_CMD="-DKokkos_${FLIP_OPT_}=OFF ${KOKKOS_OPTION_CMD}"
      elif [[ "$UC_OPT_" == *ENABLE* ]]; then
         KOKKOS_OPTION_CMD="-DKokkos_${UC_OPT_}=ON ${KOKKOS_OPTION_CMD}"
@@ -101,7 +101,7 @@ do
       ;;
     # Catch this before '--with-cuda*'
     --with-cuda-options*)
-      KOKKOS_CUDA_OPT="${key#*=}"
+      KOKKOS_CUDA_OPTIONS="${key#*=}"
       ;;
     --with-cuda*)
       update_kokkos_devices Cuda
@@ -196,7 +196,7 @@ do
       COMPILER=${COMPDIR}/${COMPNAME}
       ;;
     --with-options*)
-      KOKKOS_OPT="${key#*=}"
+      KOKKOS_OPTIONS="${key#*=}"
       ;;
     --gcc-toolchain*)
       KOKKOS_GCC_TOOLCHAIN="${key#*=}"

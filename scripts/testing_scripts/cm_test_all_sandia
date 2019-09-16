@@ -145,10 +145,12 @@ do
       OPT_FLAG="${key#*=}"
       ;;
     --with-cuda-options*)
-      KOKKOS_CUDA_OPTIONS="--with-cuda-options=${key#*=}"
+      KOKKOS_CUDA_OPTIONS="${key#*=}"
+      export KOKKOS_CUDA_OPTIONS
       ;;
     --with-options*)
-      KOKKOS_OPTIONS="--with-options=${key#*=}"
+      KOKKOS_OPTIONS="${key#*=}"
+      export KOKKOS_OPTIONS
       ;;
     --cxxflags-extra*)
       CXX_FLAGS_EXTRA="${key#*=}"
