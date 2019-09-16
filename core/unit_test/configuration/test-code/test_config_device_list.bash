@@ -2,6 +2,9 @@
 SRC_DIR=${KOKKOS_PATH}/core/unit_test/configuration/test-code
 # List of parallel device types 
 HostPDevices=(OpenMP Threads)
+if [ ! -z "$KOKKOS_ARCH_TEST" ]; then
+  HostPDevices=(OpenMP)
+fi
 
 if [ ! -z "$HPX_ROOT" ]
 then 

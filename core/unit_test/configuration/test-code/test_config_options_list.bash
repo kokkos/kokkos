@@ -2,8 +2,12 @@ SRC_DIR=${KOKKOS_PATH}/core/unit_test/configuration/test-code
 
 # List of parallel device types 
 Options=(deprecated_code aggressive_vectorization disable_profiling large_mem_tests)
-
 CudaOptions=(lambda relocatable_device_code uvm)
+
+if [ ! -z "$KOKKOS_ARCH_TEST" ]; then
+  Options=(disable_profiling)
+  CudaOptions=(uvm)
+fi
 
 MakeDevices=$1
 CMakeDevices=$2
