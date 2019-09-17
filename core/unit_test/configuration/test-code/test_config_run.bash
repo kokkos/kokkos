@@ -47,20 +47,28 @@ else
   echo CMake: "cmake -DCMAKE_CXX_COMPILER=$CXX $CMakeDevices $CMakeArch $CMakeOptions $SRC_DIR"
 fi
 
+#find because it goes in different locations
+#grep out compiler warnings
 #head multiple matches
-#cut after generator expressions
-#cut off trailing garbage
-#sed change cmake list to spaces
+#sed a bunch of stuff to clean up cmake garbage
+#awk trim whitespace
 #awk print each on new line
 #grep remove empty lines
+#grep don't consider -std flags in the comparison
 #sort and print unique flags
-grep INTERFACE_COMPILE_OPTIONS cmake/kokkos/CMakeFiles/Export/lib/cmake/Kokkos/KokkosTargets.cmake \
+find cmake/kokkos -name KokkosTargets.cmake -exec grep -h INTERFACE_COMPILE_OPTIONS {} \; \
+  | grep -v skew \
   | head -n 1 \
-  | cut -d":" -f3 \
-  | cut -d">" -f 1 \
+  | sed 's/INTERFACE_COMPILE_OPTIONS//g' \
   | sed 's/;/ /g' \
+  | sed 's/"//g' \
+  | sed 's/\\$<\\$<//g' \
+  | sed 's/COMPILE_LANGUAGE:CXX>://g' \
+  | sed 's/> / /g' \
+  | awk '{$1=$1;print}' \
   | awk -v RS=" " '{print}' \
   | grep -v -e '^$' \
+  | grep -v '\-std' \
   | sort | uniq > cmake_cxx_flags
 
 #-I flags and -std= flags are not part of CMake's compile options
