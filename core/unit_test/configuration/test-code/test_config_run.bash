@@ -76,6 +76,7 @@ tail -n 1 gnu-make/cxxflags \
   | grep -v -e '^$' \
   | grep -v '\-I' \
   | grep -v '\-std=' \
+  | grep -v 'gcc-toolchain' \
   | sort | uniq > gnu_make_cxx_flags
 diff gnu_make_cxx_flags cmake_cxx_flags &> config_cxxflags_diff
 diff_exists=`cat config_cxxflags_diff | wc -l`

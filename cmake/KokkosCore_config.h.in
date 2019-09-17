@@ -20,7 +20,7 @@
 #cmakedefine KOKKOS_USE_ISA_X86_64
 #cmakedefine KOKKOS_USE_ISA_KNC
 #cmakedefine KOKKOS_USE_ISA_POWERPCLE
-#cmakedefine KOKkOS_USE_ISA_POWERPCBE
+#cmakedefine KOKKOS_USE_ISA_POWERPCBE
 #endif
 
 /* General Settings */

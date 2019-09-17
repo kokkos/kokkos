@@ -211,6 +211,14 @@ IF(KOKKOS_ENABLE_OPENMP)
   )
 ENDIF()
 
+IF (KOKKOS_ARCH_ARMV80)
+  ARCH_FLAGS(
+    Cray ""
+    PGI  ""
+    DEFAULT -march=armv8-a
+  )
+ENDIF()
+
 IF (KOKKOS_ARCH_ARMV81)
   ARCH_FLAGS(
     Cray ""
@@ -266,15 +274,31 @@ IF (KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
   )
 ENDIF()
 
-IF (KOKKOS_ARCH_HSW OR KOKKOS_ARCH_BDW OR KOKKOS_ARCH_EPYC)
-  IF (NOT KOKKOS_ARCH_EPYC) #I think this is wrong for Epyc
-    SET(KOKKOS_ARCH_AVX2 ON) 
-  ENDIF()
+IF (KOKKOS_ARCH_HSW)
+  SET(KOKKOS_ARCH_AVX2 ON)
   ARCH_FLAGS(
     Intel   -xCORE-AVX2
     PGI     -tp=haswell
     Cray    ""
     DEFAULT -march=core-avx2 -mtune=core-avx2
+  )
+ENDIF()
+
+IF (KOKKOS_ARCH_BDW)
+  SET(KOKKOS_ARCH_AVX2 ON)
+  ARCH_FLAGS(
+    Intel   -xCORE-AVX2
+    PGI     -tp=haswell
+    Cray    ""
+    DEFAULT -march=core-avx2 -mtune=core-avx2 -mrtm
+  )
+ENDIF()
+
+IF (KOKKOS_ARCH_EPYC)
+  SET(KOKKOS_ARCH_AMD_AVX2 ON)
+  ARCH_FLAGS(
+    Intel   -mvax2
+    DEFAULT  -march=znver1 -mtune=znver1
   )
 ENDIF()
 
@@ -303,7 +327,7 @@ IF (KOKKOS_ARCH_SKX)
     Intel   -xCORE-AVX512
     PGI     ""
     Cray    ""
-    DEFAULT -march=skylake-avx512 -march=skylake-avx512 -mrtm
+    DEFAULT -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
   )
 ENDIF()
 
