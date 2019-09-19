@@ -243,6 +243,12 @@ else
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
 
+export KOKKOS_VALIDATION_STR=
+if [ ! -z "$KOKKOS_CUDA_OPTIONS" ]; then
+   if [ "$SPOT_CHECK" = "True" ]; then
+      export KOKKOS_VALIDATION_STR="-DKokkos_SKIP_VALIDATION=ON"
+   fi
+fi
 
 #
 # Machine specific config.
@@ -485,6 +491,7 @@ elif [ "$MACHINE" = "apollo" ]; then
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "hpx/1.2.1 $HPX_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
     )
   fi
 
@@ -606,15 +613,17 @@ for ARG in $ARGS; do
       else
         echo "Tried to add $COMPILER twice"
       fi
-    else
-      echo "-----------------------------------------------"
-      echo "   !!!! Invalid Compiler provided  '$ARG' !!!!"
-      echo "-----------------------------------------------"
-      print_help
-      exit 0
-    fi
+     fi
   done
 done
+
+if [ "$COMPILERS_TO_TEST" == "" ]; then
+   echo "-----------------------------------------------"
+   echo "   !!!! Invalid Compiler provided  '$ARGS' !!!!"
+   echo "-----------------------------------------------"
+   print_help
+   exit 0
+fi
 
 # Check if Qthreads build requested.
 HAVE_QTHREADS_BUILD="False"
