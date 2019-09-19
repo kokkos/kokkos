@@ -8,6 +8,61 @@ set -o pipefail
 
 # Determine current machine.
 
+print_help() {
+  echo "test_all_sandia <ARGS> <OPTIONS>:"
+  echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
+  echo "    Defaults to root repo containing this script"
+  echo "--debug: Run tests in debug. Defaults to False"
+  echo "--test-script: Test this script, not Kokkos"
+  echo "--skip-hwloc: Do not do hwloc tests"
+  echo "--num=N: Number of jobs to run in parallel"
+  echo "--spot-check: Minimal test set to issue pull request"
+  echo "--dry-run: Just print what would be executed"
+  echo "--build-only: Just do builds, don't run anything"
+  echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
+  echo "--cxxflags-extra=FLAGS: Extra flags to be added to CXX_FLAGS"
+  echo "--ldflags-extra=FLAGS: Extra flags to be added to LD_FLAGS"
+  echo "--arch=ARCHITECTURE: overwrite architecture flags"
+  echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"
+  echo "--with-options=OPT: set KOKKOS_OPTIONS"
+  echo "--build-list=BUILD,BUILD,BUILD..."
+  echo "    Provide a comma-separated list of builds instead of running all builds"
+  echo "    Valid items:"
+  echo "      OpenMP, Pthread, Qthreads, Serial, OpenMP_Serial, Pthread_Serial"
+  echo "      Qthreads_Serial, Cuda_OpenMP, Cuda_Pthread, Cuda_Serial"
+  echo ""
+
+  echo "ARGS: list of expressions matching compilers to test"
+  echo "  supported compilers sems"
+  for COMPILER_DATA in "${COMPILERS[@]}"; do
+    ARR=($COMPILER_DATA)
+    COMPILER=${ARR[0]}
+    echo "    $COMPILER"
+  done
+  echo ""
+
+  echo "Examples:"
+  echo "  Run all tests"
+  echo "  % test_all_sandia"
+  echo ""
+  echo "  Run all gcc tests"
+  echo "  % test_all_sandia gcc"
+  echo ""
+  echo "  Run all gcc/4.8.4 and all intel tests"
+  echo "  % test_all_sandia gcc/4.8.4 intel"
+  echo ""
+  echo "  Run all tests in debug"
+  echo "  % test_all_sandia --debug"
+  echo ""
+  echo "  Run gcc/4.8.4 and only do OpenMP and OpenMP_Serial builds"
+  echo "  % test_all_sandia gcc/4.8.4 --build-list=OpenMP,OpenMP_Serial"
+  echo ""
+  echo "If you want to kill the tests, do:"
+  echo "  hit ctrl-z"
+  echo "  % kill -9 %1"
+  echo
+}
+
 MACHINE=""
 HOSTNAME=$(hostname)
 PROCESSOR=`uname -p`
@@ -188,17 +243,12 @@ else
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
 
-UNCOMMITTED=`cd ${KOKKOS_PATH}; git status --porcelain 2>/dev/null`
-if ! [ -z "$UNCOMMITTED" ]; then
-  echo "WARNING!! THE FOLLOWING CHANGES ARE UNCOMMITTED!! :"
-  echo "$UNCOMMITTED"
-  echo ""
+export KOKKOS_VALIDATION_STR=
+if [ ! -z "$KOKKOS_CUDA_OPTIONS" ]; then
+   if [ "$SPOT_CHECK" = "True" ]; then
+      export KOKKOS_VALIDATION_STR="-DKokkos_SKIP_VALIDATION=ON"
+   fi
 fi
-
-GITSTATUS=`cd ${KOKKOS_PATH}; git log -n 1 --format=oneline`
-echo "Repository Status: " ${GITSTATUS}
-echo ""
-echo ""
 
 #
 # Machine specific config.
@@ -441,6 +491,7 @@ elif [ "$MACHINE" = "apollo" ]; then
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "hpx/1.2.1 $HPX_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
     )
   fi
 
@@ -520,59 +571,21 @@ declare -i NUM_RESULTS_TO_KEEP=7
 RESULT_ROOT_PREFIX=TestAll
 
 if [ "$PRINT_HELP" = "True" ]; then
-  echo "test_all_sandia <ARGS> <OPTIONS>:"
-  echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
-  echo "    Defaults to root repo containing this script"
-  echo "--debug: Run tests in debug. Defaults to False"
-  echo "--test-script: Test this script, not Kokkos"
-  echo "--skip-hwloc: Do not do hwloc tests"
-  echo "--num=N: Number of jobs to run in parallel"
-  echo "--spot-check: Minimal test set to issue pull request"
-  echo "--dry-run: Just print what would be executed"
-  echo "--build-only: Just do builds, don't run anything"
-  echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
-  echo "--cxxflags-extra=FLAGS: Extra flags to be added to CXX_FLAGS"
-  echo "--ldflags-extra=FLAGS: Extra flags to be added to LD_FLAGS"
-  echo "--arch=ARCHITECTURE: overwrite architecture flags"
-  echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"
-  echo "--build-list=BUILD,BUILD,BUILD..."
-  echo "    Provide a comma-separated list of builds instead of running all builds"
-  echo "    Valid items:"
-  echo "      OpenMP, Pthread, Qthreads, Serial, OpenMP_Serial, Pthread_Serial"
-  echo "      Qthreads_Serial, Cuda_OpenMP, Cuda_Pthread, Cuda_Serial"
-  echo ""
-
-  echo "ARGS: list of expressions matching compilers to test"
-  echo "  supported compilers sems"
-  for COMPILER_DATA in "${COMPILERS[@]}"; do
-    ARR=($COMPILER_DATA)
-    COMPILER=${ARR[0]}
-    echo "    $COMPILER"
-  done
-  echo ""
-
-  echo "Examples:"
-  echo "  Run all tests"
-  echo "  % test_all_sandia"
-  echo ""
-  echo "  Run all gcc tests"
-  echo "  % test_all_sandia gcc"
-  echo ""
-  echo "  Run all gcc/4.8.4 and all intel tests"
-  echo "  % test_all_sandia gcc/4.8.4 intel"
-  echo ""
-  echo "  Run all tests in debug"
-  echo "  % test_all_sandia --debug"
-  echo ""
-  echo "  Run gcc/4.8.4 and only do OpenMP and OpenMP_Serial builds"
-  echo "  % test_all_sandia gcc/4.8.4 --build-list=OpenMP,OpenMP_Serial"
-  echo ""
-  echo "If you want to kill the tests, do:"
-  echo "  hit ctrl-z"
-  echo "  % kill -9 %1"
-  echo
+  print_help
   exit 0
 fi
+
+UNCOMMITTED=`cd ${KOKKOS_PATH}; git status --porcelain 2>/dev/null`
+if ! [ -z "$UNCOMMITTED" ]; then
+  echo "WARNING!! THE FOLLOWING CHANGES ARE UNCOMMITTED!! :"
+  echo "$UNCOMMITTED"
+  echo ""
+fi
+
+GITSTATUS=`cd ${KOKKOS_PATH}; git log -n 1 --format=oneline`
+echo "Repository Status: " ${GITSTATUS}
+echo ""
+echo ""
 
 # Set build type.
 if [ "$DEBUG" = "True" ]; then
@@ -600,9 +613,17 @@ for ARG in $ARGS; do
       else
         echo "Tried to add $COMPILER twice"
       fi
-    fi
+     fi
   done
 done
+
+if [ "$COMPILERS_TO_TEST" == "" ]; then
+   echo "-----------------------------------------------"
+   echo "   !!!! Invalid Compiler provided  '$ARGS' !!!!"
+   echo "-----------------------------------------------"
+   print_help
+   exit 0
+fi
 
 # Check if Qthreads build requested.
 HAVE_QTHREADS_BUILD="False"
@@ -747,8 +768,14 @@ single_build_and_test() {
   local compiler_warning_flags=$(get_compiler_warning_flags $compiler)
   local compiler_exe=$(get_compiler_exe_name $compiler)
 
+  if [[ "$KOKKOS_OPTIONS" == "" ]]; then
+    local extra_args="--with-options=enable_large_mem_tests"
+  else 
+    local extra_args=
+  fi    
+
   if [[ "$build_type" = hwloc* ]]; then
-    local extra_args=--with-hwloc=$(dirname $(dirname $(which hwloc-info)))
+    local extra_args="$extra_args --with-hwloc=$(dirname $(dirname $(which hwloc-info)))"
   fi
 
   if [[ "$build" = *Qthreads* ]]; then
@@ -777,14 +804,6 @@ single_build_and_test() {
 
   local cxx_standard="${CXX_STANDARD}"
 
-  if [[ "$KOKKOS_CUDA_OPTIONS" != "" ]]; then
-    local extra_args="$extra_args $KOKKOS_CUDA_OPTIONS"
-  fi
-  if [[ "$KOKKOS_OPTIONS" != "" ]]; then
-    local extra_args="$extra_args $KOKKOS_OPTIONS"
-  else
-    local extra_args="$extra_args --with-options=enable_large_mem_tests"
-  fi    
 
   echo "  Starting job $desc"
 
