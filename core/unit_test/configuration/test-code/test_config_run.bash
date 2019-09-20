@@ -65,6 +65,7 @@ find cmake/kokkos -name KokkosTargets.cmake -exec grep -h INTERFACE_COMPILE_OPTI
   | sed 's/\\$<\\$<//g' \
   | sed 's/COMPILE_LANGUAGE:CXX>://g' \
   | sed 's/> / /g' \
+  | sed 's/>$//g' \
   | awk '{$1=$1;print}' \
   | awk -v RS=" " '{print}' \
   | grep -v -e '^$' \

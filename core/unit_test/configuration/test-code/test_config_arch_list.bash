@@ -11,7 +11,7 @@ fi
 if [ ! -z "$KOKKOS_DEVICE_ARCH_TEST" ]; then
   export KOKKOS_ARCH_TEST=1
   HostArch=(SNB)
-  DeviceArch=(Kepler Kepler30 Kepler32 Kepler35 Kepler37 Maxwell Maxwell50 Maxwell52 Maxwell53 Pascal60 Pascal61 Volta70 Volta72)
+  DeviceArch=(Kepler30 Kepler32 Kepler35 Kepler37 Maxwell50 Maxwell52 Maxwell53 Pascal60 Pascal61 Volta70 Volta72)
 fi
 
 MakeDevices=$1
