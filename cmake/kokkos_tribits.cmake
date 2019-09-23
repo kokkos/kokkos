@@ -178,20 +178,14 @@ ENDIF()
 ENDFUNCTION()
 
 MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_devices.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_options.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_test_cxx_std.cmake)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
  IF (NOT KOKKOS_HAS_TRILINOS)
-  #------------ COMPILER AND FEATURE CHECKS ------------------------------------
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_functions.cmake)
-
-  #------------ GET OPTIONS AND KOKKOS_SETTINGS --------------------------------
-  # ADD Kokkos' modules to CMake's module path.
   SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kokkos_SOURCE_DIR}/cmake/Modules/")
-
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_devices.cmake)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_options.cmake)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_cxx_std.cmake)
   INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tpls.cmake)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
  ENDIF()
 ENDMACRO()
 
@@ -245,6 +239,11 @@ MACRO(KOKKOS_MAKE_LIBKOKKOS)
     GET_TARGET_PROPERTY(CTRS_FLAGS kokkoscontainers INTERFACE_COMPILE_OPTIONS)
     TARGET_COMPILE_OPTIONS(kokkos PUBLIC ${CORE_FLAGS})
     TARGET_COMPILE_OPTIONS(kokkos PUBLIC ${CTRS_FLAGS})
+
+    GET_TARGET_PROPERTY(CORE_FEATURES kokkoscore       INTERFACE_COMPILE_FEATURES)
+    GET_TARGET_PROPERTY(CTRS_FEATURES kokkoscontainers INTERFACE_COMPILE_FEATURES)
+    TARGET_COMPILE_FEATURES(kokkos PUBLIC ${CORE_FEATURES})
+    TARGET_COMPILE_FEATURES(kokkos PUBLIC ${CTRS_FEATURES})
   ELSE()
     ADD_LIBRARY(kokkos ${KOKKOS_SOURCE_DIR}/core/src/dummy.cpp)
     TARGET_LINK_LIBRARIES(kokkos PUBLIC kokkoscore kokkoscontainers)
@@ -423,13 +422,13 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
 
 
   IF (KOKKOS_CXX_STANDARD_FEATURE)
-    #GREAT! I can't do this the right way
+    #GREAT! I can do this the right way
     TARGET_COMPILE_FEATURES(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FEATURE})
     IF (NOT KOKKOS_USE_CXX_EXTENSIONS)
       SET_TARGET_PROPERTIES(${LIBRARY_NAME} PROPERTIES CXX_EXTENSIONS OFF)
     ENDIF()
   ELSE()
-    #OH, Well, no choice but the wrong way
+    #OH, well, no choice but the wrong way
     TARGET_COMPILE_OPTIONS(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FLAG})
   ENDIF()
 

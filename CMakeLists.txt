@@ -4,6 +4,8 @@
 # the list of valid arguments, at the beginning here we need to
 # form a list of all the given variables. If it begins with any 
 # case of KoKkOS, we add it to the list.
+
+
 GET_CMAKE_PROPERTY(_variableNames VARIABLES)
 SET(KOKKOS_GIVEN_VARIABLES)
 FOREACH (var ${_variableNames})
@@ -14,13 +16,6 @@ FOREACH (var ${_variableNames})
   ENDIF()
 ENDFOREACH()
 
-# Is this a build as part of Trilinos?
-IF(COMMAND TRIBITS_PACKAGE_DECL)
-  SET(KOKKOS_HAS_TRILINOS ON)
-ELSE()
-  SET(KOKKOS_HAS_TRILINOS OFF)
-ENDIF()
-
 # Basic initialization (Used in KOKKOS_SETTINGS)
 SET(Kokkos_SOURCE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
 SET(KOKKOS_SOURCE_DIR    ${CMAKE_CURRENT_SOURCE_DIR})
@@ -28,10 +23,24 @@ SET(KOKKOS_SRC_PATH      ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_PATH          ${Kokkos_SOURCE_DIR})
 SET(KOKKOS_TOP_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
+# Needed to simplify syntax of if statements
+CMAKE_POLICY(SET CMP0054 NEW)
+
+# Is this a build as part of Trilinos?
+IF(COMMAND TRIBITS_PACKAGE_DECL)
+  SET(KOKKOS_HAS_TRILINOS ON)
+ELSE()
+  SET(KOKKOS_HAS_TRILINOS OFF)
+ENDIF()
+
+IF (NOT KOKKOS_HAS_TRILINOS)
+  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_preamble.cmake)
+ENDIF()
+
+
 SET(KOKKOS_ENABLED_OPTIONS)      #exported in config file
 SET(KOKKOS_ENABLED_DEVICES)      #exported in config file
 SET(KOKKOS_ENABLED_ARCH_LIST)    #exported in config file
-
 
 #These are helper flags used for sanity checks during config
 #Certain features should depend on other features being configured first

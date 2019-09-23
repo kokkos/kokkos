@@ -1069,23 +1069,23 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   // Each of B, E can be begins_type and/or index_list_type
   // Precondition: begins.size() == ends.size() == m_begins.size() == Rank
   template <typename B, typename E>
-  KOKKOS_INLINE_FUNCTION OffsetView(const pointer_type& p, const B& begins,
-                                    const E& ends,
+  KOKKOS_INLINE_FUNCTION OffsetView(const pointer_type& p, const B& begins_,
+                                    const E& ends_,
                                     subtraction_failure)
       : m_track()  // no tracking
         ,
         m_map(Kokkos::Impl::ViewCtorProp<pointer_type>(p),
               typename traits::array_layout(
-                  Rank > 0 ? at(ends, 0) - at(begins, 0) : 0,
-                  Rank > 1 ? at(ends, 1) - at(begins, 1) : 0,
-                  Rank > 2 ? at(ends, 2) - at(begins, 2) : 0,
-                  Rank > 3 ? at(ends, 3) - at(begins, 3) : 0,
-                  Rank > 4 ? at(ends, 4) - at(begins, 4) : 0,
-                  Rank > 5 ? at(ends, 5) - at(begins, 5) : 0,
-                  Rank > 6 ? at(ends, 6) - at(begins, 6) : 0,
-                  Rank > 7 ? at(ends, 7) - at(begins, 7) : 0)) {
+                  Rank > 0 ? at(ends_, 0) - at(begins_, 0) : 0,
+                  Rank > 1 ? at(ends_, 1) - at(begins_, 1) : 0,
+                  Rank > 2 ? at(ends_, 2) - at(begins_, 2) : 0,
+                  Rank > 3 ? at(ends_, 3) - at(begins_, 3) : 0,
+                  Rank > 4 ? at(ends_, 4) - at(begins_, 4) : 0,
+                  Rank > 5 ? at(ends_, 5) - at(begins_, 5) : 0,
+                  Rank > 6 ? at(ends_, 6) - at(begins_, 6) : 0,
+                  Rank > 7 ? at(ends_, 7) - at(begins_, 7) : 0)) {
     for (size_t i = 0; i != m_begins.size(); ++i) {
-      m_begins[i] = at(begins, i);
+      m_begins[i] = at(begins_, i);
     };
   }
 
@@ -1094,53 +1094,53 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   // Four overloads, as both begins and ends can be either
   // begins_type or index_list_type
   KOKKOS_INLINE_FUNCTION
-  OffsetView(const pointer_type& p, const begins_type& begins,
-             const begins_type& ends)
+  OffsetView(const pointer_type& p, const begins_type& begins_,
+             const begins_type& ends_)
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-      : OffsetView(p, begins, ends,
-                   runtime_check_begins_ends_host(begins, ends))
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_host(begins_, ends_))
 #else
-      : OffsetView(p, begins, ends,
-                   runtime_check_begins_ends_device(begins, ends))
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_device(begins_, ends_))
 #endif
   {
   }
 
   KOKKOS_INLINE_FUNCTION
-  OffsetView(const pointer_type& p, const begins_type& begins,
-             index_list_type ends)
+  OffsetView(const pointer_type& p, const begins_type& begins_,
+             index_list_type ends_)
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-      : OffsetView(p, begins, ends,
-                   runtime_check_begins_ends_host(begins, ends))
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_host(begins_, ends_))
 #else
-      : OffsetView(p, begins, ends,
-                   runtime_check_begins_ends_device(begins, ends))
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_device(begins_, ends_))
 #endif
   {
   }
 
   KOKKOS_INLINE_FUNCTION
-  OffsetView(const pointer_type& p, index_list_type begins,
-             const begins_type& ends)
+  OffsetView(const pointer_type& p, index_list_type begins_,
+             const begins_type& ends_)
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-      : OffsetView(p, begins, ends,
-                   runtime_check_begins_ends_host(begins, ends))
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_host(begins_, ends_))
 #else
-      : OffsetView(p, begins, ends,
-                   runtime_check_begins_ends_device(begins, ends))
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_device(begins_, ends_))
 #endif
   {
   }
 
   KOKKOS_INLINE_FUNCTION
-  OffsetView(const pointer_type& p, index_list_type begins,
-             index_list_type ends)
+  OffsetView(const pointer_type& p, index_list_type begins_,
+             index_list_type ends_)
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-      : OffsetView(p, begins, ends,
-                   runtime_check_begins_ends_host(begins, ends))
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_host(begins_, ends_))
 #else
-      : OffsetView(p, begins, ends,
-                   runtime_check_begins_ends_device(begins, ends))
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_device(begins_, ends_))
 #endif
   {
   }
