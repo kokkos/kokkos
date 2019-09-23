@@ -8,6 +8,61 @@ set -o pipefail
 
 # Determine current machine.
 
+print_help() {
+  echo "test_all_sandia <ARGS> <OPTIONS>:"
+  echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
+  echo "    Defaults to root repo containing this script"
+  echo "--debug: Run tests in debug. Defaults to False"
+  echo "--test-script: Test this script, not Kokkos"
+  echo "--skip-hwloc: Do not do hwloc tests"
+  echo "--num=N: Number of jobs to run in parallel"
+  echo "--spot-check: Minimal test set to issue pull request"
+  echo "--dry-run: Just print what would be executed"
+  echo "--build-only: Just do builds, don't run anything"
+  echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
+  echo "--cxxflags-extra=FLAGS: Extra flags to be added to CXX_FLAGS"
+  echo "--ldflags-extra=FLAGS: Extra flags to be added to LD_FLAGS"
+  echo "--arch=ARCHITECTURE: overwrite architecture flags"
+  echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"
+  echo "--with-options=OPT: set KOKKOS_OPTIONS"
+  echo "--build-list=BUILD,BUILD,BUILD..."
+  echo "    Provide a comma-separated list of builds instead of running all builds"
+  echo "    Valid items:"
+  echo "      OpenMP, Pthread, Qthreads, Serial, OpenMP_Serial, Pthread_Serial"
+  echo "      Qthreads_Serial, Cuda_OpenMP, Cuda_Pthread, Cuda_Serial"
+  echo ""
+
+  echo "ARGS: list of expressions matching compilers to test"
+  echo "  supported compilers sems"
+  for COMPILER_DATA in "${COMPILERS[@]}"; do
+    ARR=($COMPILER_DATA)
+    COMPILER=${ARR[0]}
+    echo "    $COMPILER"
+  done
+  echo ""
+
+  echo "Examples:"
+  echo "  Run all tests"
+  echo "  % test_all_sandia"
+  echo ""
+  echo "  Run all gcc tests"
+  echo "  % test_all_sandia gcc"
+  echo ""
+  echo "  Run all gcc/4.8.4 and all intel tests"
+  echo "  % test_all_sandia gcc/4.8.4 intel"
+  echo ""
+  echo "  Run all tests in debug"
+  echo "  % test_all_sandia --debug"
+  echo ""
+  echo "  Run gcc/4.8.4 and only do OpenMP and OpenMP_Serial builds"
+  echo "  % test_all_sandia gcc/4.8.4 --build-list=OpenMP,OpenMP_Serial"
+  echo ""
+  echo "If you want to kill the tests, do:"
+  echo "  hit ctrl-z"
+  echo "  % kill -9 %1"
+  echo
+}
+
 MACHINE=""
 HOSTNAME=$(hostname)
 PROCESSOR=`uname -p`
@@ -36,7 +91,7 @@ if [[ "$HOSTNAME" == kokkos-dev-2* ]]; then
   MACHINE=kokkos-dev-2
 fi
 
-if [[ "$HOSTNAME" == mayer\.* ]]; then
+if [[ "$HOSTNAME" == mayer* ]]; then
   MACHINE=mayer
 #  module load git
 fi
@@ -97,7 +152,7 @@ CXX_FLAGS_EXTRA=""
 LD_FLAGS_EXTRA=""
 KOKKOS_OPTIONS=""
 
-CXX_STANDARD="c++11"
+CXX_STANDARD="11"
 
 #
 # Handle arguments.
@@ -145,16 +200,23 @@ do
       OPT_FLAG="${key#*=}"
       ;;
     --with-cuda-options*)
-      KOKKOS_CUDA_OPTIONS="--with-cuda-options=${key#*=}"
+      KOKKOS_CUDA_OPTIONS="${key#*=}"
+      export KOKKOS_CUDA_OPTIONS
       ;;
     --with-options*)
-      KOKKOS_OPTIONS="--with-options=${key#*=}"
+      KOKKOS_OPTIONS="${key#*=}"
+      export KOKKOS_OPTIONS
       ;;
     --cxxflags-extra*)
       CXX_FLAGS_EXTRA="${key#*=}"
       ;;
     --cxxstandard*)
-      CXX_STANDARD="${key#*=}"
+      FULL_CXX_STANDARD="${key#*=}"
+      if [[ ${FULL_CXX_STANDARD} == *++* ]]; then
+         CXX_STANDARD="${FULL_CXX_STANDARD#*++}"
+      else
+         CXX_STANDARD="${FULL_CXX_STANDARD}"
+      fi
       ;;
     --ldflags-extra*)
       LD_FLAGS_EXTRA="${key#*=}"
@@ -181,17 +243,12 @@ else
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
 
-UNCOMMITTED=`cd ${KOKKOS_PATH}; git status --porcelain 2>/dev/null`
-if ! [ -z "$UNCOMMITTED" ]; then
-  echo "WARNING!! THE FOLLOWING CHANGES ARE UNCOMMITTED!! :"
-  echo "$UNCOMMITTED"
-  echo ""
+export KOKKOS_VALIDATION_STR=
+if [ ! -z "$KOKKOS_CUDA_OPTIONS" ]; then
+   if [ "$SPOT_CHECK" = "True" ]; then
+      export KOKKOS_VALIDATION_STR="-DKokkos_SKIP_VALIDATION=ON"
+   fi
 fi
-
-GITSTATUS=`cd ${KOKKOS_PATH}; git log -n 1 --format=oneline`
-echo "Repository Status: " ${GITSTATUS}
-echo ""
-echo ""
 
 #
 # Machine specific config.
@@ -287,10 +344,10 @@ elif [ "$MACHINE" = "white" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=32
 
-  BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
-  IBM_MODULE_LIST="<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
-  CUDA_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.0"
-  CUDA10_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.0"
+  BASE_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>"
+  IBM_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
+  CUDA_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.0"
+  CUDA10_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.0"
 
   # Don't do pthread on white.
   GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -322,7 +379,7 @@ elif [ "$MACHINE" = "bowman" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=32
 
-  BASE_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
+  BASE_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
   OLD_INTEL_BUILD_LIST="Pthread,Serial,Pthread_Serial"
 
@@ -340,12 +397,12 @@ elif [ "$MACHINE" = "mayer" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=96
 
-  BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
-  ARM_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
+  BASE_MODULE_LIST="cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>"
+  ARM_MODULE_LIST="cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("gnu/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "arm/19.0.0 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
+  COMPILERS=("gnu7/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "arm/19.0 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=ARMv8-TX2"
@@ -388,21 +445,21 @@ elif [ "$MACHINE" = "apollo" ]; then
 
   module load sems-git
   module load sems-tex
-  module load sems-cmake/3.5.2
+  module load sems-cmake/3.12.2
   module load sems-gdb
   module load binutils
 
   SKIP_HWLOC=True
 
-  BASE_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  CUDA_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.8.4,kokkos-hwloc/1.10.1/base"
-  CUDA8_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
-  CUDA10_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
+  BASE_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
+  CUDA_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.8.4,kokkos-hwloc/1.10.1/base"
+  CUDA8_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
+  CUDA10_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
 
-  CLANG_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.0.69"
-  CLANG7_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.1"
-  NVCC_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
-  HPX_MODULE_LIST="sems-env,kokkos-env,hpx/1.2.1,sems-gcc/6.1.0,binutils"
+  CLANG_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.0.69"
+  CLANG7_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,sems-gcc/6.1.0,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.1"
+  NVCC_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
+  HPX_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,hpx/1.2.1,sems-gcc/6.1.0,binutils"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_OpenMP"
   BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_Pthread"
@@ -434,6 +491,7 @@ elif [ "$MACHINE" = "apollo" ]; then
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "hpx/1.2.1 $HPX_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
     )
   fi
 
@@ -455,12 +513,12 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
 
   SKIP_HWLOC=True
 
-  BASE_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  GCC91_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>"
-  NVCC_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
+  BASE_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
+  GCC91_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>"
+  NVCC_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
 
-  CLANG_MODULE_LIST="sems-env,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0"
-  CLANG8_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
+  CLANG_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0"
+  CLANG8_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_Pthread"
   BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_OpenMP"
@@ -513,59 +571,21 @@ declare -i NUM_RESULTS_TO_KEEP=7
 RESULT_ROOT_PREFIX=TestAll
 
 if [ "$PRINT_HELP" = "True" ]; then
-  echo "test_all_sandia <ARGS> <OPTIONS>:"
-  echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
-  echo "    Defaults to root repo containing this script"
-  echo "--debug: Run tests in debug. Defaults to False"
-  echo "--test-script: Test this script, not Kokkos"
-  echo "--skip-hwloc: Do not do hwloc tests"
-  echo "--num=N: Number of jobs to run in parallel"
-  echo "--spot-check: Minimal test set to issue pull request"
-  echo "--dry-run: Just print what would be executed"
-  echo "--build-only: Just do builds, don't run anything"
-  echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
-  echo "--cxxflags-extra=FLAGS: Extra flags to be added to CXX_FLAGS"
-  echo "--ldflags-extra=FLAGS: Extra flags to be added to LD_FLAGS"
-  echo "--arch=ARCHITECTURE: overwrite architecture flags"
-  echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"
-  echo "--build-list=BUILD,BUILD,BUILD..."
-  echo "    Provide a comma-separated list of builds instead of running all builds"
-  echo "    Valid items:"
-  echo "      OpenMP, Pthread, Qthreads, Serial, OpenMP_Serial, Pthread_Serial"
-  echo "      Qthreads_Serial, Cuda_OpenMP, Cuda_Pthread, Cuda_Serial"
-  echo ""
-
-  echo "ARGS: list of expressions matching compilers to test"
-  echo "  supported compilers sems"
-  for COMPILER_DATA in "${COMPILERS[@]}"; do
-    ARR=($COMPILER_DATA)
-    COMPILER=${ARR[0]}
-    echo "    $COMPILER"
-  done
-  echo ""
-
-  echo "Examples:"
-  echo "  Run all tests"
-  echo "  % test_all_sandia"
-  echo ""
-  echo "  Run all gcc tests"
-  echo "  % test_all_sandia gcc"
-  echo ""
-  echo "  Run all gcc/4.8.4 and all intel tests"
-  echo "  % test_all_sandia gcc/4.8.4 intel"
-  echo ""
-  echo "  Run all tests in debug"
-  echo "  % test_all_sandia --debug"
-  echo ""
-  echo "  Run gcc/4.8.4 and only do OpenMP and OpenMP_Serial builds"
-  echo "  % test_all_sandia gcc/4.8.4 --build-list=OpenMP,OpenMP_Serial"
-  echo ""
-  echo "If you want to kill the tests, do:"
-  echo "  hit ctrl-z"
-  echo "  % kill -9 %1"
-  echo
+  print_help
   exit 0
 fi
+
+UNCOMMITTED=`cd ${KOKKOS_PATH}; git status --porcelain 2>/dev/null`
+if ! [ -z "$UNCOMMITTED" ]; then
+  echo "WARNING!! THE FOLLOWING CHANGES ARE UNCOMMITTED!! :"
+  echo "$UNCOMMITTED"
+  echo ""
+fi
+
+GITSTATUS=`cd ${KOKKOS_PATH}; git log -n 1 --format=oneline`
+echo "Repository Status: " ${GITSTATUS}
+echo ""
+echo ""
 
 # Set build type.
 if [ "$DEBUG" = "True" ]; then
@@ -593,9 +613,17 @@ for ARG in $ARGS; do
       else
         echo "Tried to add $COMPILER twice"
       fi
-    fi
+     fi
   done
 done
+
+if [ "$COMPILERS_TO_TEST" == "" ]; then
+   echo "-----------------------------------------------"
+   echo "   !!!! Invalid Compiler provided  '$ARGS' !!!!"
+   echo "-----------------------------------------------"
+   print_help
+   exit 0
+fi
 
 # Check if Qthreads build requested.
 HAVE_QTHREADS_BUILD="False"
@@ -719,6 +747,9 @@ setup_env() {
     module list 2>&1 | grep "$mod" >& /dev/null || return 1
   done
 
+  if [ -e ./update_lib.sh ]; then
+     source ./update_lib.sh $MACHINE
+  fi
   return 0
 }
 
@@ -737,8 +768,14 @@ single_build_and_test() {
   local compiler_warning_flags=$(get_compiler_warning_flags $compiler)
   local compiler_exe=$(get_compiler_exe_name $compiler)
 
+  if [[ "$KOKKOS_OPTIONS" == "" ]]; then
+    local extra_args="--with-options=enable_large_mem_tests"
+  else 
+    local extra_args=
+  fi    
+
   if [[ "$build_type" = hwloc* ]]; then
-    local extra_args=--with-hwloc=$(dirname $(dirname $(which hwloc-info)))
+    local extra_args="$extra_args --with-hwloc=$(dirname $(dirname $(which hwloc-info)))"
   fi
 
   if [[ "$build" = *Qthreads* ]]; then
@@ -767,14 +804,6 @@ single_build_and_test() {
 
   local cxx_standard="${CXX_STANDARD}"
 
-  if [[ "$KOKKOS_CUDA_OPTIONS" != "" ]]; then
-    local extra_args="$extra_args $KOKKOS_CUDA_OPTIONS"
-  fi
-  if [[ "$KOKKOS_OPTIONS" != "" ]]; then
-    local extra_args="$extra_args $KOKKOS_OPTIONS"
-  else
-    local extra_args="$extra_args --with-options=enable_large_mem_tests"
-  fi    
 
   echo "  Starting job $desc"
 
@@ -792,6 +821,9 @@ single_build_and_test() {
     if [[ "$LOCAL_KOKKOS_DEVICES" = *Cuda* ]]; then
        CUDA_ENABLE_CMD="--with-cuda=$CUDA_ROOT"
     fi
+    echo "kokkos options: ${KOKKOS_OPTIONS}"
+    echo "kokkos devices: ${LOCAL_KOKKOS_DEVICES}"
+    echo "kokkos cxx: ${cxxflags}"
     run_cmd ${KOKKOS_PATH}/cm_generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --no-examples $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local -i build_start_time=$(date +%s)
     run_cmd make -j 48 all >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
