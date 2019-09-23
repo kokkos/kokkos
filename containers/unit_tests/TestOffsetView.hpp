@@ -80,7 +80,6 @@ void test_offsetview_construction(unsigned int size) {
   ASSERT_EQ(ov.extent(0), 5);
   ASSERT_EQ(ov.extent(1), 5);
 
-
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
   const int ovmin0 = ov.begin(0);
   const int ovend0 = ov.end(0);
