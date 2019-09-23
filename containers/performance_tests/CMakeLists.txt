@@ -3,34 +3,60 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../src )
 
-SET(SOURCES
-  TestMain.cpp 
-  TestCuda.cpp
-  )
+IF(Kokkos_ENABLE_CUDA)
+   SET(SOURCES
+     TestMain.cpp 
+     TestCuda.cpp
+     )
+
+   KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_Cuda
+                               SOURCES ${SOURCES}
+                             )
+
+   KOKKOS_ADD_TEST( NAME PerformanceTest_Cuda
+                    EXE  PerfTestExec_Cuda
+                  )
+ENDIF()
 
 IF(Kokkos_ENABLE_PTHREAD)
-  LIST( APPEND SOURCES TestThreads.cpp)
+   SET(SOURCES
+     TestMain.cpp 
+     TestThreads.cpp
+   )
+   KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_Threads
+                               SOURCES ${SOURCES}
+                             )
+
+   KOKKOS_ADD_TEST( NAME PerformanceTest_Threads
+                    EXE  PerfTestExec_Threads
+                  )
 ENDIF()
 
 IF(Kokkos_ENABLE_OPENMP)
-  LIST( APPEND SOURCES TestOpenMP.cpp)
+   SET(SOURCES
+     TestMain.cpp 
+     TestOpenMP.cpp
+   )
+   KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_OpenMP
+                               SOURCES ${SOURCES}
+                             )
+
+   KOKKOS_ADD_TEST( NAME PerformanceTest_OpenMP
+                    EXE  PerfTestExec_OpenMP
+                  )
 ENDIF()
 
 IF(Kokkos_ENABLE_HPX)
-  LIST( APPEND SOURCES TestHPX.cpp)
+   SET(SOURCES
+     TestMain.cpp 
+     TestHPX.cpp
+   )
+   KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_HPX
+                               SOURCES ${SOURCES}
+                             )
+
+   KOKKOS_ADD_TEST( NAME PerformanceTest_HPX
+                    EXE  PerfTestExec_HPX
+                  )
 ENDIF()
-
-# Per #374, we always want to build this test, but we only want to run
-# it as a PERFORMANCE test.  That's why we separate building the test
-# from running the test.
-
-KOKKOS_ADD_TEST_EXECUTABLE(
-  PerfTestExec
-  SOURCES ${SOURCES}
-)
-
-KOKKOS_ADD_TEST(
-  NAME PerformanceTest
-  EXE  PerfTestExec
-)
 

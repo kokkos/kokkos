@@ -80,12 +80,11 @@ void test_offsetview_construction(unsigned int size) {
   ASSERT_EQ(ov.extent(0), 5);
   ASSERT_EQ(ov.extent(1), 5);
 
+#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
   const int ovmin0 = ov.begin(0);
   const int ovend0 = ov.end(0);
   const int ovmin1 = ov.begin(1);
   const int ovend1 = ov.end(1);
-
-#if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
   {
     Kokkos::Experimental::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView",
                                                                range0);
@@ -278,6 +277,115 @@ void test_offsetview_construction(unsigned int size) {
 #endif
   }
 }
+
+template <typename Scalar, typename Device>
+void test_offsetview_unmanaged_construction() {
+  // Preallocated memory (Only need a valid address for this test)
+  Scalar s;
+
+  {
+    // Constructing an OffsetView directly around our preallocated memory
+    Kokkos::Array<int64_t, 1> begins1{{2}};
+    Kokkos::Array<int64_t, 1> ends1{{3}};
+    Kokkos::Experimental::OffsetView<Scalar*, Device> ov1(&s, begins1, ends1);
+
+    // Constructing an OffsetView around an unmanaged View of our preallocated
+    // memory
+    Kokkos::View<Scalar*, Device> v1(&s, ends1[0] - begins1[0]);
+    Kokkos::Experimental::OffsetView<Scalar*, Device> ovv1(v1, begins1);
+
+    // They should match
+    ASSERT_EQ(ovv1, ov1)
+        << "OffsetView unmanaged construction fails for rank 1";
+  }
+
+  {
+    Kokkos::Array<int64_t, 2> begins2{{-2, -7}};
+    Kokkos::Array<int64_t, 2> ends2{{5, -3}};
+    Kokkos::Experimental::OffsetView<Scalar**, Device> ov2(&s, begins2, ends2);
+
+    Kokkos::View<Scalar**, Device> v2(&s, ends2[0] - begins2[0],
+                                      ends2[1] - begins2[1]);
+    Kokkos::Experimental::OffsetView<Scalar**, Device> ovv2(v2, begins2);
+
+    ASSERT_EQ(ovv2, ov2)
+        << "OffsetView unmanaged construction fails for rank 2";
+  }
+
+  {
+    Kokkos::Array<int64_t, 3> begins3{{2, 3, 5}};
+    Kokkos::Array<int64_t, 3> ends3{{7, 11, 13}};
+    Kokkos::Experimental::OffsetView<Scalar***, Device> ovv3(&s, begins3,
+                                                             ends3);
+
+    Kokkos::View<Scalar***, Device> v3(&s, ends3[0] - begins3[0],
+                                       ends3[1] - begins3[1],
+                                       ends3[2] - begins3[2]);
+    Kokkos::Experimental::OffsetView<Scalar***, Device> ov3(v3, begins3);
+
+    ASSERT_EQ(ovv3, ov3)
+        << "OffsetView unmanaged construction fails for rank 3";
+  }
+
+  {
+    // Test all four public constructor overloads (begins_type x
+    // index_list_type)
+    Kokkos::Array<int64_t, 1> begins{{-3}};
+    Kokkos::Array<int64_t, 1> ends{{2}};
+
+    Kokkos::Experimental::OffsetView<Scalar*, Device> bb(&s, begins, ends);
+    Kokkos::Experimental::OffsetView<Scalar*, Device> bi(&s, begins, {2});
+    Kokkos::Experimental::OffsetView<Scalar*, Device> ib(&s, {-3}, ends);
+    Kokkos::Experimental::OffsetView<Scalar*, Device> ii(&s, {-3}, {2});
+
+    ASSERT_EQ(bb, bi);
+    ASSERT_EQ(bb, ib);
+    ASSERT_EQ(bb, ii);
+  }
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  {
+    using offset_view_type = Kokkos::Experimental::OffsetView<Scalar*, Device>;
+
+    // Range calculations must be positive
+    ASSERT_NO_THROW(offset_view_type(&s, {0}, {1}));
+    ASSERT_NO_THROW(offset_view_type(&s, {0}, {0}));
+    ASSERT_THROW(offset_view_type(&s, {0}, {-1}), std::runtime_error);
+  }
+
+  {
+    using offset_view_type = Kokkos::Experimental::OffsetView<Scalar*, Device>;
+
+    // Range calculations must not overflow
+    ASSERT_NO_THROW(offset_view_type(&s, {0}, {0x7fffffffffffffffl}));
+    ASSERT_THROW(offset_view_type(&s, {-1}, {0x7fffffffffffffffl}),
+                 std::runtime_error);
+    ASSERT_THROW(
+        offset_view_type(&s, {-0x7fffffffffffffffl - 1}, {0x7fffffffffffffffl}),
+        std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {-0x7fffffffffffffffl - 1}, {0}),
+                 std::runtime_error);
+  }
+
+  {
+    using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
+
+    // Should throw when the rank of begins and/or ends doesn't match that of
+    // OffsetView
+    ASSERT_THROW(offset_view_type(&s, {0}, {1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0}, {1, 1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0}, {1, 1, 1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0, 0}, {1}), std::runtime_error);
+    ASSERT_NO_THROW(offset_view_type(&s, {0, 0}, {1, 1}));
+    ASSERT_THROW(offset_view_type(&s, {0, 0}, {1, 1, 1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1, 1}), std::runtime_error);
+    ASSERT_THROW(offset_view_type(&s, {0, 0, 0}, {1, 1, 1}),
+                 std::runtime_error);
+  }
+#endif  // KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+}
+
 template <typename Scalar, typename Device>
 void test_offsetview_subview(unsigned int size) {
   {  // test subview 1
@@ -567,6 +675,10 @@ void test_offsetview_offsets_rank3() {
 
 TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>(10);
+}
+
+TEST(TEST_CATEGORY, offsetview_unmanaged_construction) {
+  test_offsetview_unmanaged_construction<int, TEST_EXECSPACE>();
 }
 
 TEST(TEST_CATEGORY, offsetview_subview) {

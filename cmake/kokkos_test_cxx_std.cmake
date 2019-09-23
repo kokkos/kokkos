@@ -68,8 +68,9 @@ ELSE()
     MESSAGE(FATAL_ERROR "nvcc_wrapper does not support intermediate standards (1Y,1Z,2A) - must use 11, 14, or 17")
   ENDIF()
   #okay, this is funky - kill this variable
-  UNSET(CMAKE_CXX_STANDARD CACHE) #don't let cmake do this as a feature either
-  UNSET(CMAKE_CXX_STANDARD) #this may have been given as a cache variable... or not... 
+  #this value is not really valid as a cmake variable
+  UNSET(CMAKE_CXX_STANDARD)
+  UNSET(CMAKE_CXX_STANDARD CACHE)
   IF     (KOKKOS_CXX_STANDARD STREQUAL "1Y")
     GLOBAL_SET(KOKKOS_ENABLE_CXX14 ON)
   ELSEIF (KOKKOS_CXX_STANDARD STREQUAL "1Z")
@@ -115,6 +116,8 @@ ENDIF()
 
 IF (NOT KOKKOS_CXX_STANDARD_FEATURE)
   #we need to pick the C++ flags ourselves
+  UNSET(CMAKE_CXX_STANDARD)
+  UNSET(CMAKE_CXX_STANDARD CACHE)
   IF(KOKKOS_CXX_COMPILER_ID STREQUAL Cray)
     INCLUDE(${KOKKOS_SRC_PATH}/cmake/cray.cmake)
     kokkos_set_cray_flags(${KOKKOS_CXX_STANDARD})
