@@ -199,7 +199,6 @@ inline int atomic_fetch_add(volatile int* dest, const int val) {
   return original;
 }
 #else
-KOKKOS_THREAD_SANITIZER_IGNORE
 inline int atomic_fetch_add(volatile int* const dest, const int val) {
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
@@ -208,7 +207,6 @@ inline int atomic_fetch_add(volatile int* const dest, const int val) {
 }
 #endif
 
-KOKKOS_THREAD_SANITIZER_IGNORE
 inline long int atomic_fetch_add(volatile long int* const dest,
                                  const long int val) {
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -219,7 +217,6 @@ inline long int atomic_fetch_add(volatile long int* const dest,
 
 #if defined(KOKKOS_ENABLE_GNU_ATOMICS)
 
-KOKKOS_THREAD_SANITIZER_IGNORE
 inline unsigned int atomic_fetch_add(volatile unsigned int* const dest,
                                      const unsigned int val) {
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -228,7 +225,6 @@ inline unsigned int atomic_fetch_add(volatile unsigned int* const dest,
   return __sync_fetch_and_add(dest, val);
 }
 
-KOKKOS_THREAD_SANITIZER_IGNORE
 inline unsigned long int atomic_fetch_add(
     volatile unsigned long int* const dest, const unsigned long int val) {
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -240,7 +236,7 @@ inline unsigned long int atomic_fetch_add(
 #endif
 
 template <typename T>
-inline T atomic_fetch_add(
+KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T>::type
         val) {
@@ -266,7 +262,7 @@ inline T atomic_fetch_add(
 }
 
 template <typename T>
-inline T atomic_fetch_add(
+KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) != sizeof(int) &&
                                          sizeof(T) == sizeof(long),
@@ -294,7 +290,7 @@ inline T atomic_fetch_add(
 
 #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
 template <typename T>
-inline T atomic_fetch_add(
+KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) != sizeof(int) &&
                                          sizeof(T) != sizeof(long) &&
@@ -353,7 +349,7 @@ inline T atomic_fetch_add(
 
   return return_val;
 }
-  //----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 
 #elif defined(KOKKOS_ENABLE_OPENMP_ATOMICS)
 

@@ -597,7 +597,7 @@ class MemoryPool {
       if (sb_id < 0) {
         // No superblock specified, try the hint for this block size
 
-        sb_id = hint_sb_id = int32_t(*hint_sb_id_ptr);
+        sb_id = hint_sb_id = Impl::atomic_load(hint_sb_id_ptr);
 
         sb_state_array = m_sb_state_array + (sb_id * m_sb_state_size);
       }
@@ -606,7 +606,8 @@ class MemoryPool {
       //   0 <= sb_id
       //   sb_state_array == m_sb_state_array + m_sb_state_size * sb_id
 
-      if (sb_state == (state_header_mask & *sb_state_array)) {
+      // TODO memory order
+      if (sb_state == (state_header_mask & Impl::atomic_load(sb_state_array))) {
         // This superblock state is as expected, for the moment.
         // Attempt to claim a bit.  The attempt updates the state
         // so have already made sure the state header is as expected.
@@ -673,7 +674,7 @@ class MemoryPool {
         //  Note that the state may change at any moment
         //  as concurrent allocations and deallocations occur.
 
-        const uint32_t full_state = *sb_state_array;
+        const uint32_t full_state = Impl::atomic_load(sb_state_array);
         const uint32_t used       = full_state & state_used_mask;
         const uint32_t state      = full_state & state_header_mask;
 
@@ -744,7 +745,7 @@ class MemoryPool {
           //  If successfully changed assignment of empty superblock 'sb_id'
           //  to this block_size then update the hint.
 
-          const uint32_t state_empty = state_header_mask & *sb_state_array;
+          const uint32_t state_empty = state_header_mask & Impl::atomic_load(sb_state_array);
 
           // If this thread claims the empty block then update the hint
           update_hint =
@@ -803,7 +804,7 @@ class MemoryPool {
       volatile uint32_t *const sb_state_array =
           m_sb_state_array + (sb_id * m_sb_state_size);
 
-      const uint32_t block_state = (*sb_state_array) & state_header_mask;
+      const uint32_t block_state = Impl::atomic_load(sb_state_array) & state_header_mask;
       const uint32_t block_size_lg2 =
           m_sb_size_lg2 - (block_state >> state_shift);
 

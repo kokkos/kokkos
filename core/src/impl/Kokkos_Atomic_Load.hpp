@@ -76,7 +76,8 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _atomic_load(
         (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
          sizeof(T) == 8) &&
             std::is_same<typename MemoryOrder::memory_order,
-                         typename std::remove_cv<MemoryOrder>::type>::value,
+                         typename std::remove_cv<MemoryOrder>::type>::value &&
+            (std::is_integral<T>::value || std::is_pointer<T>::value),
         void const**>::type = nullptr) {
   return __atomic_load_n(ptr, MemoryOrder::gnu_constant);
 }
@@ -89,11 +90,97 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _atomic_load(
           sizeof(T) == 8) &&
             std::is_default_constructible<T>::value &&
             std::is_same<typename MemoryOrder::memory_order,
-                         typename std::remove_cv<MemoryOrder>::type>::value,
+                         typename std::remove_cv<MemoryOrder>::type>::value &&
+            std::is_trivially_copyable<T>::value,
         void const**>::type = nullptr) {
   T rv{};
   __atomic_load(ptr, &rv, MemoryOrder::gnu_constant);
   return rv;
+}
+
+template <class T>
+KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T
+_relaxed_atomic_load_impl(
+    T* ptr, typename std::enable_if<(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                     sizeof(T) == 4 || sizeof(T) == 8) &&
+                                        !(std::is_integral<T>::value ||
+                                          std::is_pointer<T>::value),
+                                    void const**>::type = nullptr) {
+  // TODO verify that this doesn't tear for sizeof(T) == 8
+  return *ptr;
+}
+
+template <class T>
+struct NoOpOper {
+  KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH
+  static constexpr T apply(T const volatile& t, T const&) noexcept { return t; }
+  KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH
+  static constexpr T apply(T const& t, T const&) noexcept { return t; }
+};
+
+template <class T>
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _relaxed_atomic_load_impl(
+    T* ptr, typename std::enable_if<!(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                      sizeof(T) == 4 || sizeof(T) == 8) &&
+                                        !std::is_trivially_copyable<T>::value,
+                                    void const**>::type = nullptr) {
+  T rv{};
+  // TODO remove a copy operation here?
+  Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, &rv, rv);
+  return rv;
+}
+
+template <class T>
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T
+_atomic_load(T* ptr, memory_order_seq_cst_t,
+             typename std::enable_if<(!(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                        sizeof(T) == 4 || sizeof(T) == 8) &&
+                                      std::is_default_constructible<T>::value &&
+                                      !std::is_trivially_copyable<T>::value) ||
+                                         ((sizeof(T) == 1 || sizeof(T) == 2 ||
+                                           sizeof(T) == 4 || sizeof(T) == 8) &&
+                                          !(std::is_integral<T>::value ||
+                                            std::is_pointer<T>::value)),
+
+                                     void const**>::type = nullptr) {
+  Kokkos::memory_fence();
+  T rv = Impl::_relaxed_atomic_load_impl(ptr);
+  Kokkos::memory_fence();
+  return rv;
+}
+
+template <class T>
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T
+_atomic_load(T* ptr, memory_order_acquire_t,
+             typename std::enable_if<(!(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                        sizeof(T) == 4 || sizeof(T) == 8) &&
+                                      std::is_default_constructible<T>::value &&
+                                      !std::is_trivially_copyable<T>::value) ||
+                                         ((sizeof(T) == 1 || sizeof(T) == 2 ||
+                                           sizeof(T) == 4 || sizeof(T) == 8) &&
+                                          !(std::is_integral<T>::value ||
+                                            std::is_pointer<T>::value)),
+
+                                     void const**>::type = nullptr) {
+  T rv = Impl::_relaxed_atomic_load_impl(ptr);
+  Kokkos::memory_fence();
+  return rv;
+}
+
+template <class T>
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T
+_atomic_load(T* ptr, memory_order_relaxed_t,
+             typename std::enable_if<(!(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                        sizeof(T) == 4 || sizeof(T) == 8) &&
+                                      std::is_default_constructible<T>::value &&
+                                      !std::is_trivially_copyable<T>::value) ||
+                                         ((sizeof(T) == 1 || sizeof(T) == 2 ||
+                                           sizeof(T) == 4 || sizeof(T) == 8) &&
+                                          !(std::is_integral<T>::value ||
+                                            std::is_pointer<T>::value)),
+
+                                     void const**>::type = nullptr) {
+  return _relaxed_atomic_load_impl(ptr);
 }
 
 #undef KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH

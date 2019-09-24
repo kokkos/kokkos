@@ -211,7 +211,7 @@ inline unsigned long int atomic_fetch_sub(
 #endif
 
 template <typename T>
-inline T atomic_fetch_sub(
+KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_sub(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T>::type
         val) {
@@ -237,7 +237,7 @@ inline T atomic_fetch_sub(
 }
 
 template <typename T>
-inline T atomic_fetch_sub(
+KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_sub(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) != sizeof(int) &&
                                          sizeof(T) == sizeof(long),
@@ -266,7 +266,7 @@ inline T atomic_fetch_sub(
 //----------------------------------------------------------------------------
 
 template <typename T>
-inline T atomic_fetch_sub(
+KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_sub(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8),
                                      const T>::type& val) {

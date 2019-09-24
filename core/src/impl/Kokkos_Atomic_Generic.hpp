@@ -152,7 +152,7 @@ struct RShiftOper {
 };
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
+KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<
         sizeof(T) != sizeof(int) && sizeof(T) == sizeof(unsigned long long int),
@@ -176,7 +176,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
+KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<
         sizeof(T) != sizeof(int) && sizeof(T) == sizeof(unsigned long long int),
@@ -200,7 +200,7 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
+KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T>::type
         val) {
@@ -222,7 +222,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
+KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T>::type
         val) {
@@ -244,7 +244,7 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
+KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8),
                                      const T>::type val) {
@@ -287,11 +287,12 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
+KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
 #if defined(KOKKOS_ENABLE_ASM) && \
-    defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+    defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST) && \
+    0 /* TODO fix the preprocessor conditionals for the 128-bit CAS version of this */
                                          && (sizeof(T) != 16)
 #endif
                                          ,

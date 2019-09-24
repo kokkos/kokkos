@@ -270,6 +270,7 @@ inline T atomic_compare_exchange(
 
   while (!Impl::lock_address_host_space((void*)dest))
     ;
+  KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED((void*)dest);
   T return_val = *dest;
   if (return_val == compare) {
     // Don't use the following line of code here:
@@ -287,6 +288,7 @@ inline T atomic_compare_exchange(
     (void)tmp;
 #endif
   }
+  KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING((void*)dest);
   Impl::unlock_address_host_space((void*)dest);
   return return_val;
 }

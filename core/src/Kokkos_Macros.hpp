@@ -609,16 +609,91 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
+//----------------------------------------------------------------------------
+// Thread sanitizer and intel inspector compiler macros
+
 #ifndef KOKKOS_THREAD_SANITIZER_IGNORE
-#  if defined(__has_feature)
-#    if __has_feature(thread_sanitizer)
-#       define  KOKKOS_THREAD_SANITIZER_IGNORE __attribute__((no_sanitize("thread")))
-#    else
-#       define  KOKKOS_THREAD_SANITIZER_IGNORE
-#    endif
-#  else
-#    define  KOKKOS_THREAD_SANITIZER_IGNORE
-#  endif
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define KOKKOS_THREAD_SANITIZER_IGNORE __attribute__((no_sanitize("thread")))
+#else
+#define KOKKOS_THREAD_SANITIZER_IGNORE
+#endif
+#else
+#define KOKKOS_THREAD_SANITIZER_IGNORE
+#endif
+#endif
+
+// Intel Inspector annotations are enabled by default in debug mode unless
+// they're explicitly disabled
+/* Don't just enable this by default because it requires extra linker flags
+#if defined(KOKKOS_COMPILER_INTEL) && defined(KOKKOS_ENABLE_DEBUG)
+#if !defined(KOKKOS_DISABLE_INTEL_INSPECTOR_ANNOTATIONS) && \
+    !defined(KOKKOS_ENABLE_INTEL_INSPECTOR_ANNOTATIONS)
+#define KOKKOS_ENABLE_INTEL_INSPECTOR_ANNOTATIONS
+#endif
+#endif
+ */
+
+#ifdef KOKKOS_ENABLE_INTEL_INSPECTOR_ANNOTATIONS
+#if defined(KOKKOS_COMPILER_INTEL)
+#include <ittnotify.h>
+#ifndef KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED
+#define KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED(...) \
+  __itt_sync_acquired(__VA_ARGS__)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING
+#define KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING(...) \
+  __itt_sync_releasing(__VA_ARGS__)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY
+#define KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(...) \
+  __itt_sync_releasing(__VA_ARGS__)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
+#define KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS \
+  __itt_suppress_push(__itt_supress_threading_errors)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+#define KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS \
+  __itt_suppress_pop(__itt_supress_threading_errors)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE
+#define KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(addr, \
+                                                                        size) \
+  __itt_suppress_mark_range(__itt_supress_range,                              \
+                            __itt_supress_threading_errors, addr, size)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE
+#define KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(addr, \
+                                                                      size) \
+  __itt_suppress_clear_range(__itt_supress_range,                           \
+                             __itt_supress_threading_errors, addr, size)
+#endif
+#endif
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED
+#define KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED(...)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING
+#define KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING(...)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY
+#define KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(...)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
+#define KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+#define KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE
+#define KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(addr, \
+                                                                        size)
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE
+#define KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(addr, \
+                                                                      size)
 #endif
 
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)

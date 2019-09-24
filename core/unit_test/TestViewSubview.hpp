@@ -1668,7 +1668,7 @@ struct FillView_3D {
                       ? (ii / a.extent(0)) % a.extent(1)
                       : (ii / a.extent(2)) % a.extent(1);
 
-    const int k = std::is_same<Layout, Kokkos::LayoutRight>::value
+    const int k = std::is_same<Layout, Kokkos::LayoutLeft>::value
                       ? ii / (a.extent(0) * a.extent(1))
                       : ii % a.extent(2);
 
@@ -1690,11 +1690,11 @@ struct FillView_4D {
                       ? (ii / a.extent(0)) % a.extent(1)
                       : (ii / (a.extent(2) * a.extent(3)) % a.extent(1));
 
-    const int k = std::is_same<Layout, Kokkos::LayoutRight>::value
+    const int k = std::is_same<Layout, Kokkos::LayoutLeft>::value
                       ? (ii / (a.extent(0) * a.extent(1))) % a.extent(2)
                       : (ii / a.extent(3)) % a.extent(2);
 
-    const int l = std::is_same<Layout, Kokkos::LayoutRight>::value
+    const int l = std::is_same<Layout, Kokkos::LayoutLeft>::value
                       ? ii / (a.extent(0) * a.extent(1) * a.extent(2))
                       : ii % a.extent(3);
 
@@ -1718,7 +1718,7 @@ struct CheckSubviewCorrectness_3D_3D {
                       ? (ii / b.extent(0)) % b.extent(1)
                       : (ii / b.extent(2)) % b.extent(1);
 
-    const int k = std::is_same<Layout, Kokkos::LayoutRight>::value
+    const int k = std::is_same<Layout, Kokkos::LayoutLeft>::value
                       ? ii / (b.extent(0) * b.extent(1))
                       : ii % b.extent(2);
 
@@ -1746,7 +1746,7 @@ struct CheckSubviewCorrectness_3D_4D {
                       ? (ii / b.extent(0)) % b.extent(1)
                       : (ii / b.extent(2)) % b.extent(1);
 
-    const int k = std::is_same<Layout, Kokkos::LayoutRight>::value
+    const int k = std::is_same<Layout, Kokkos::LayoutLeft>::value
                       ? ii / (b.extent(0) * b.extent(1))
                       : ii % b.extent(2);
 

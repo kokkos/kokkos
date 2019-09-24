@@ -161,7 +161,7 @@ class SharedAllocationRecord<void, void> {
   size_t size() const { return m_alloc_size - sizeof(SharedAllocationHeader); }
 
   /* Cannot be 'constexpr' because 'm_count' is volatile */
-  int use_count() const { return *static_cast<const volatile int*>(&m_count); }
+  int use_count() const;
 
   /* Increment use count */
   static void increment(SharedAllocationRecord*);
