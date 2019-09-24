@@ -609,6 +609,18 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
+#ifndef KOKKOS_THREAD_SANITIZER_IGNORE
+#  if defined(__has_feature)
+#    if __has_feature(thread_sanitizer)
+#       define  KOKKOS_THREAD_SANITIZER_IGNORE __attribute__((no_sanitize("thread")))
+#    else
+#       define  KOKKOS_THREAD_SANITIZER_IGNORE
+#    endif
+#  else
+#    define  KOKKOS_THREAD_SANITIZER_IGNORE
+#  endif
+#endif
+
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 #else

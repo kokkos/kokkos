@@ -186,6 +186,7 @@ __inline__ __device__ void atomic_assign(
 #if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
 template <typename T>
+KOKKOS_THREAD_SANITIZER_IGNORE
 inline T atomic_exchange(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int) ||
@@ -249,6 +250,7 @@ inline T atomic_exchange(
 //----------------------------------------------------------------------------
 
 template <typename T>
+KOKKOS_THREAD_SANITIZER_IGNORE
 inline T atomic_exchange(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)

@@ -170,12 +170,14 @@ inline long atomic_compare_exchange(volatile long* const dest,
 
 // GCC supports unsigned
 
+KOKKOS_THREAD_SANITIZER_IGNORE
 inline unsigned int atomic_compare_exchange(volatile unsigned int* const dest,
                                             const unsigned int compare,
                                             const unsigned int val) {
   return __sync_val_compare_and_swap(dest, compare, val);
 }
 
+KOKKOS_THREAD_SANITIZER_IGNORE
 inline unsigned long atomic_compare_exchange(volatile unsigned long* const dest,
                                              const unsigned long compare,
                                              const unsigned long val) {
@@ -185,6 +187,7 @@ inline unsigned long atomic_compare_exchange(volatile unsigned long* const dest,
 #endif
 
 template <typename T>
+KOKKOS_THREAD_SANITIZER_IGNORE
 inline T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T&>::type
@@ -205,6 +208,7 @@ inline T atomic_compare_exchange(
 }
 
 template <typename T>
+KOKKOS_THREAD_SANITIZER_IGNORE
 inline T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
     typename Kokkos::Impl::enable_if<sizeof(T) != sizeof(int) &&
@@ -227,6 +231,7 @@ inline T atomic_compare_exchange(
 
 #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
 template <typename T>
+KOKKOS_THREAD_SANITIZER_IGNORE
 inline T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
     typename Kokkos::Impl::enable_if<sizeof(T) != sizeof(int) &&
@@ -250,6 +255,7 @@ inline T atomic_compare_exchange(
 #endif
 
 template <typename T>
+KOKKOS_THREAD_SANITIZER_IGNORE
 inline T atomic_compare_exchange(
     volatile T* const dest, const T compare,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
