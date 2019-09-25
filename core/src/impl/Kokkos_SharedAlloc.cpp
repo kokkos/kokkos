@@ -367,7 +367,9 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
 }
 #endif
 
-int SharedAllocationRecord<void, void>::use_count() const { return Impl::atomic_load(&m_count); }
+int SharedAllocationRecord<void, void>::use_count() const {
+  return Impl::atomic_load(&m_count);
+}
 
 } /* namespace Impl */
 } /* namespace Kokkos */

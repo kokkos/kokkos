@@ -745,7 +745,8 @@ class MemoryPool {
           //  If successfully changed assignment of empty superblock 'sb_id'
           //  to this block_size then update the hint.
 
-          const uint32_t state_empty = state_header_mask & Impl::atomic_load(sb_state_array);
+          const uint32_t state_empty =
+              state_header_mask & Impl::atomic_load(sb_state_array);
 
           // If this thread claims the empty block then update the hint
           update_hint =
@@ -804,7 +805,8 @@ class MemoryPool {
       volatile uint32_t *const sb_state_array =
           m_sb_state_array + (sb_id * m_sb_state_size);
 
-      const uint32_t block_state = Impl::atomic_load(sb_state_array) & state_header_mask;
+      const uint32_t block_state =
+          Impl::atomic_load(sb_state_array) & state_header_mask;
       const uint32_t block_size_lg2 =
           m_sb_size_lg2 - (block_state >> state_shift);
 

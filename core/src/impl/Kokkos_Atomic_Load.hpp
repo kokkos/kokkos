@@ -214,10 +214,7 @@ __device__ __inline__ T _relaxed_atomic_load_impl(
     T* ptr, typename std::enable_if<!(sizeof(T) == 1 || sizeof(T) == 2 ||
                                       sizeof(T) == 4 || sizeof(T) == 8),
                                     void const**>::type = nullptr) {
-  T rv{};
-  // TODO remove a copy operation here?
-  Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, &rv, rv);
-  return rv;
+  return Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, ptr, *ptr);
 }
 
 template <class T>

@@ -85,8 +85,8 @@ template <class T, class U, class MemoryOrder>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH void _atomic_store(
     T* ptr, U val, MemoryOrder,
     typename std::enable_if<
-            std::is_same<typename MemoryOrder::memory_order,
-                    typename std::remove_cv<MemoryOrder>::type>::value &&
+        std::is_same<typename MemoryOrder::memory_order,
+                     typename std::remove_cv<MemoryOrder>::type>::value &&
             ((!(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
                 sizeof(T) == 8) &&
               std::is_default_constructible<T>::value &&

@@ -246,7 +246,8 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
 
   // Retry until the lock is acquired or the queue is empty.
 
-  task_root_type *task = Impl::atomic_load(queue); // TODO this should be acquire
+  task_root_type *task =
+      Impl::atomic_load(queue);  // TODO this should be acquire
 
   while (end != task) {
     // The only possible values for the queue are
@@ -281,7 +282,7 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
       // context switch this thread at this point and the rest of the threads
       // calling this method would never make forward progress
 
-      *queue = next; // TODO this should be an atomic store
+      *queue = next;  // TODO this should be an atomic store
       next   = lock;
 
       Kokkos::memory_fence();
