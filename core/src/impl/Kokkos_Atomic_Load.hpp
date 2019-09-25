@@ -86,28 +86,32 @@ template <class T, class MemoryOrder>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _atomic_load(
     T* ptr, MemoryOrder,
     typename std::enable_if<
-        !(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
-          sizeof(T) == 8) &&
-            std::is_default_constructible<T>::value &&
-            std::is_same<typename MemoryOrder::memory_order,
-                         typename std::remove_cv<MemoryOrder>::type>::value &&
-            std::is_trivially_copyable<T>::value,
+        std::is_same<typename MemoryOrder::memory_order,
+                     typename std::remove_cv<MemoryOrder>::type>::value &&
+            ((!(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
+                sizeof(T) == 8) &&
+              std::is_default_constructible<T>::value &&
+              std::is_trivially_copyable<T>::value) ||
+             ((sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
+               sizeof(T) == 8) &&
+              std::is_floating_point<T>::value)),
         void const**>::type = nullptr) {
-  T rv{};
+  typename std::remove_volatile<T>::type rv{};
   __atomic_load(ptr, &rv, MemoryOrder::gnu_constant);
   return rv;
 }
 
 template <class T>
-KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T
-_relaxed_atomic_load_impl(
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _relaxed_atomic_load_impl(
     T* ptr, typename std::enable_if<(sizeof(T) == 1 || sizeof(T) == 2 ||
                                      sizeof(T) == 4 || sizeof(T) == 8) &&
                                         !(std::is_integral<T>::value ||
+                                          std::is_floating_point<T>::value ||
                                           std::is_pointer<T>::value),
                                     void const**>::type = nullptr) {
   // TODO verify that this doesn't tear for sizeof(T) == 8
-  return *ptr;
+  // TODO figure out if this really needs to be volatile
+  return *(volatile T*)ptr;
 }
 
 template <class T>
@@ -124,10 +128,7 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _relaxed_atomic_load_impl(
                                       sizeof(T) == 4 || sizeof(T) == 8) &&
                                         !std::is_trivially_copyable<T>::value,
                                     void const**>::type = nullptr) {
-  T rv{};
-  // TODO remove a copy operation here?
-  Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, &rv, rv);
-  return rv;
+  return Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, ptr, *ptr);
 }
 
 template <class T>
@@ -140,6 +141,7 @@ _atomic_load(T* ptr, memory_order_seq_cst_t,
                                          ((sizeof(T) == 1 || sizeof(T) == 2 ||
                                            sizeof(T) == 4 || sizeof(T) == 8) &&
                                           !(std::is_integral<T>::value ||
+                                            std::is_floating_point<T>::value ||
                                             std::is_pointer<T>::value)),
 
                                      void const**>::type = nullptr) {
@@ -159,6 +161,7 @@ _atomic_load(T* ptr, memory_order_acquire_t,
                                          ((sizeof(T) == 1 || sizeof(T) == 2 ||
                                            sizeof(T) == 4 || sizeof(T) == 8) &&
                                           !(std::is_integral<T>::value ||
+                                            std::is_floating_point<T>::value ||
                                             std::is_pointer<T>::value)),
 
                                      void const**>::type = nullptr) {
@@ -177,6 +180,7 @@ _atomic_load(T* ptr, memory_order_relaxed_t,
                                          ((sizeof(T) == 1 || sizeof(T) == 2 ||
                                            sizeof(T) == 4 || sizeof(T) == 8) &&
                                           !(std::is_integral<T>::value ||
+                                            std::is_floating_point<T>::value ||
                                             std::is_pointer<T>::value)),
 
                                      void const**>::type = nullptr) {

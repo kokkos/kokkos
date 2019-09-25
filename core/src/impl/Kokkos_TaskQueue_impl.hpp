@@ -46,6 +46,8 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
 
+#include <impl/Kokkos_Atomic_Store.hpp>
+
 #define KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING 0
 
 namespace Kokkos {
@@ -191,7 +193,7 @@ KOKKOS_FUNCTION bool TaskQueue<ExecSpace, MemorySpace>::push_task(
   }
 
   // store the head of the queue
-  task_root_type *old_head = *queue;
+  task_root_type *old_head = Impl::atomic_load(queue);
 
   while (old_head != lock) {
     // set task->next to the head of the queue
@@ -244,7 +246,7 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
 
   // Retry until the lock is acquired or the queue is empty.
 
-  task_root_type *task = *queue;
+  task_root_type *task = Impl::atomic_load(queue); // TODO this should be acquire
 
   while (end != task) {
     // The only possible values for the queue are
@@ -279,7 +281,7 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
       // context switch this thread at this point and the rest of the threads
       // calling this method would never make forward progress
 
-      *queue = next;
+      *queue = next; // TODO this should be an atomic store
       next   = lock;
 
       Kokkos::memory_fence();

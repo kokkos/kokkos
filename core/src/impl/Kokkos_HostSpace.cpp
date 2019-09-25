@@ -508,11 +508,13 @@ bool lock_address_host_space(void *ptr) {
     return 1;
   } else {
 #endif
-    return 0 == atomic_compare_exchange(
-                    &HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) &
-                                              HOST_SPACE_ATOMIC_MASK) ^
-                                             HOST_SPACE_ATOMIC_XOR_MASK],
-                    0, 1);
+    auto rv = 0 == atomic_compare_exchange(
+                       &HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) &
+                                                 HOST_SPACE_ATOMIC_MASK) ^
+                                                HOST_SPACE_ATOMIC_XOR_MASK],
+                       0, 1);
+    KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED(ptr);
+    return rv;
 #if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM) && \
     !defined(KOKKOS_COMPILER_PGI)
   }
@@ -529,6 +531,8 @@ void unlock_address_host_space(void *ptr) {
                             HOST_SPACE_ATOMIC_XOR_MASK] = 0;
   } else {
 #endif
+    KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING(ptr);
+    // KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(ptr);
     atomic_exchange(
         &HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) & HOST_SPACE_ATOMIC_MASK) ^
                                  HOST_SPACE_ATOMIC_XOR_MASK],

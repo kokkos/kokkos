@@ -116,6 +116,14 @@ void HostThreadTeamData::disband_pool() {
   m_league_rank          = 0;
   m_league_size          = 1;
   m_team_rendezvous_step = 0;
+  // Disopose of the records for the intel inspector associated with the pool
+  // rendevous
+  KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(
+      (int *)(m_pool_scratch + m_pool_rendezvous) + 32 / sizeof(int));
+  KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(
+      (int *)(m_pool_scratch + m_pool_rendezvous) + 64 / sizeof(int));
+  KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(
+      (int *)(m_pool_scratch + m_pool_rendezvous) + 96 / sizeof(int));
 }
 
 int HostThreadTeamData::organize_team(const int team_size) {

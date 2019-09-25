@@ -49,6 +49,8 @@
 #if defined(KOKKOS_ATOMIC_HPP) && !defined(KOKKOS_ATOMIC_EXCHANGE_HPP)
 #define KOKKOS_ATOMIC_EXCHANGE_HPP
 
+#include <impl/Kokkos_Atomic_Load.hpp>
+
 #if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 #endif
@@ -186,7 +188,6 @@ __inline__ __device__ void atomic_assign(
 #if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
 template <typename T>
-KOKKOS_THREAD_SANITIZER_IGNORE
 inline T atomic_exchange(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int) ||
@@ -208,7 +209,7 @@ inline T atomic_exchange(
     inline U(){};
   } old;
 
-  old.val_T = *dest;
+  old.val_T = Impl::atomic_load(dest);
 
   do {
     assumed = old.val_type;
@@ -250,8 +251,7 @@ inline T atomic_exchange(
 //----------------------------------------------------------------------------
 
 template <typename T>
-KOKKOS_THREAD_SANITIZER_IGNORE
-inline T atomic_exchange(
+KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_exchange(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
 #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)

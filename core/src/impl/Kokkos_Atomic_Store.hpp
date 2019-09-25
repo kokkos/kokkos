@@ -69,9 +69,9 @@ namespace Impl {
 #define KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH inline
 #endif
 
-template <class T, class MemoryOrder>
+template <class T, class U, class MemoryOrder>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH void _atomic_store(
-    T* ptr, T val, MemoryOrder,
+    T* ptr, U val, MemoryOrder,
     typename std::enable_if<
         (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
          sizeof(T) == 8) &&
@@ -81,15 +81,19 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH void _atomic_store(
   __atomic_store_n(ptr, val, MemoryOrder::gnu_constant);
 }
 
-template <class T, class MemoryOrder>
+template <class T, class U, class MemoryOrder>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH void _atomic_store(
-    T* ptr, T val, MemoryOrder,
+    T* ptr, U val, MemoryOrder,
     typename std::enable_if<
-        !(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
-          sizeof(T) == 8) &&
-            std::is_default_constructible<T>::value &&
             std::is_same<typename MemoryOrder::memory_order,
-                         typename std::remove_cv<MemoryOrder>::type>::value,
+                    typename std::remove_cv<MemoryOrder>::type>::value &&
+            ((!(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
+                sizeof(T) == 8) &&
+              std::is_default_constructible<T>::value &&
+              std::is_trivially_copyable<T>::value) ||
+             ((sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
+               sizeof(T) == 8) &&
+              std::is_floating_point<T>::value)),
         void const**>::type = nullptr) {
   __atomic_store(ptr, &val, MemoryOrder::gnu_constant);
 }
@@ -205,7 +209,13 @@ KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* ptr, T val,
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* ptr, T val) {
   // relaxed by default!
-  _atomic_store(ptr, Impl::memory_order_relaxed);
+  _atomic_store(ptr, val, Impl::memory_order_relaxed);
+}
+
+template <class T>
+KOKKOS_FORCEINLINE_FUNCTION void atomic_store(volatile T* ptr, T val) {
+  // relaxed by default!
+  _atomic_store(ptr, val, Impl::memory_order_relaxed);
 }
 
 }  // end namespace Impl

@@ -49,6 +49,8 @@
 #if defined(KOKKOS_ATOMIC_HPP) && !defined(KOKKOS_ATOMIC_FETCH_ADD_HPP)
 #define KOKKOS_ATOMIC_FETCH_ADD_HPP
 
+#include <impl/Kokkos_Atomic_Load.hpp>
+
 #if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 #endif
@@ -236,7 +238,7 @@ inline unsigned long int atomic_fetch_add(
 #endif
 
 template <typename T>
-KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
+inline T atomic_fetch_add(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T>::type
         val) {
@@ -250,7 +252,7 @@ KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
 
-  oldval.t = *dest;
+  oldval.t = Impl::atomic_load(dest /* relaxed */);
 
   do {
     assume.i = oldval.i;
@@ -262,7 +264,7 @@ KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
 }
 
 template <typename T>
-KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
+inline T atomic_fetch_add(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) != sizeof(int) &&
                                          sizeof(T) == sizeof(long),
@@ -277,7 +279,7 @@ KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
 
-  oldval.t = *dest;
+  oldval.t = Impl::atomic_load(dest /* relaxed */);
 
   do {
     assume.i = oldval.i;
@@ -290,7 +292,7 @@ KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
 
 #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
 template <typename T>
-KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
+inline T atomic_fetch_add(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) != sizeof(int) &&
                                          sizeof(T) != sizeof(long) &&
@@ -306,7 +308,7 @@ KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_fetch_add(
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
 
-  oldval.t = *dest;
+  oldval.t = Impl::atomic_load(dest /* relaxed */);
 
   do {
     assume.i = oldval.i;

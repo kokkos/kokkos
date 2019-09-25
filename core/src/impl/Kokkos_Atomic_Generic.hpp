@@ -46,6 +46,8 @@
 #define KOKKOS_ATOMIC_GENERIC_HPP
 #include <Kokkos_Macros.hpp>
 
+#include <impl/Kokkos_Atomic_Compare_Exchange_Strong.hpp>
+
 #if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 #endif
@@ -187,6 +189,9 @@ KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     KOKKOS_INLINE_FUNCTION U() {}
   } oldval, assume, newval;
 
+  // KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
+  KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
   oldval.t = *dest;
 
   do {
@@ -195,6 +200,9 @@ KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
                                                assume.i, newval.i);
   } while (assume.i != oldval.i);
+  KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+  // KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
 
   return newval.t;
 }
@@ -212,11 +220,17 @@ KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 
   oldval.t = *dest;
 
+  // KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
+  KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
   do {
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
   } while (assume.i != oldval.i);
+  KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+  // KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
 
   return oldval.t;
 }
@@ -232,6 +246,9 @@ KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     KOKKOS_INLINE_FUNCTION U() {}
   } oldval, assume, newval;
 
+  // KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
+  KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
   oldval.t = *dest;
 
   do {
@@ -239,6 +256,9 @@ KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     newval.t = Oper::apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
   } while (assume.i != oldval.i);
+  KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+  // KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
 
   return newval.t;
 }
@@ -290,9 +310,10 @@ template <class Oper, typename T>
 KOKKOS_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
-#if defined(KOKKOS_ENABLE_ASM) && \
-    defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST) && \
-    0 /* TODO fix the preprocessor conditionals for the 128-bit CAS version of this */
+#if defined(KOKKOS_ENABLE_ASM) &&                                              \
+    defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST) &&                      \
+    0 /* TODO fix the preprocessor conditionals for the 128-bit CAS version of \
+         this */
                                          && (sizeof(T) != 16)
 #endif
                                          ,

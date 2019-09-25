@@ -102,10 +102,15 @@ class HostBarrier {
 
     ++step;
     Kokkos::memory_fence();
+    // see example in
+    // https://software.intel.com/en-us/inspector-user-guide-linux-apis-for-custom-synchronization
+    KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING(buffer + arrive_idx);
     const bool result =
         Kokkos::atomic_fetch_add(buffer + arrive_idx, 1) == size - 1;
 
     if (master_wait && result) {
+      KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED(buffer + arrive_idx);
+      KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING(buffer + master_idx);
       Kokkos::atomic_fetch_add(buffer + master_idx, 1);
     }
 
@@ -120,7 +125,9 @@ class HostBarrier {
                             ) noexcept {
     if (size <= 1) return;
     Kokkos::memory_fence();
+    KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING(buffer + arrive_idx);
     Kokkos::atomic_fetch_sub(buffer + arrive_idx, size);
+    KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING(buffer + wait_idx);
     Kokkos::atomic_fetch_add(buffer + wait_idx, 1);
   }
 
@@ -131,6 +138,7 @@ class HostBarrier {
                                 const bool active_wait = true) noexcept {
     if (size <= 1) return;
     wait_until_equal(buffer + master_idx, step, active_wait);
+    KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED(buffer + master_idx);
   }
 
   // arrive, last thread automatically release waiting threads
@@ -155,6 +163,7 @@ class HostBarrier {
                    bool active_wait = true) noexcept {
     if (size <= 1) return;
     wait_until_equal(buffer + wait_idx, step, active_wait);
+    KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED(buffer + wait_idx);
   }
 
  public:

@@ -640,35 +640,43 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #include <ittnotify.h>
 #ifndef KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED
 #define KOKKOS_INTEL_INSPECTOR_SYNC_ACQUIRED(...) \
-  __itt_sync_acquired(__VA_ARGS__)
+  __itt_sync_acquired((void*)(__VA_ARGS__))
 #endif
 #ifndef KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING
 #define KOKKOS_INTEL_INSPECTOR_SYNC_RELEASING(...) \
-  __itt_sync_releasing(__VA_ARGS__)
+  __itt_sync_releasing((void*)(__VA_ARGS__))
 #endif
 #ifndef KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY
 #define KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(...) \
-  __itt_sync_releasing(__VA_ARGS__)
+  __itt_sync_releasing((void*)(__VA_ARGS__))
 #endif
 #ifndef KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
 #define KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS \
-  __itt_suppress_push(__itt_supress_threading_errors)
+  __itt_suppress_push(__itt_suppress_threading_errors);
 #endif
 #ifndef KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
 #define KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS \
-  __itt_suppress_pop(__itt_supress_threading_errors)
+  __itt_suppress_pop();
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS
+#define KOKKOS_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS(...) \
+    KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS; \
+    __VA_ARGS__; \
+    KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS;
 #endif
 #ifndef KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE
 #define KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(addr, \
                                                                         size) \
-  __itt_suppress_mark_range(__itt_supress_range,                              \
-                            __itt_supress_threading_errors, addr, size)
+  __itt_suppress_mark_range(__itt_suppress_range,                             \
+                            __itt_suppress_threading_errors, (void*)(addr),   \
+                            size)
 #endif
 #ifndef KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE
-#define KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(addr, \
-                                                                      size) \
-  __itt_suppress_clear_range(__itt_supress_range,                           \
-                             __itt_supress_threading_errors, addr, size)
+#define KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(addr,  \
+                                                                      size)  \
+  __itt_suppress_clear_range(__itt_suppress_range,                           \
+                             __itt_suppress_threading_errors, (void*)(addr), \
+                             size)
 #endif
 #endif
 #endif
@@ -683,6 +691,9 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #endif
 #ifndef KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
 #define KOKKOS_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
+#endif
+#ifndef KOKKOS_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS
+#define KOKKOS_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS(...) __VA_ARGS__
 #endif
 #ifndef KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
 #define KOKKOS_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS

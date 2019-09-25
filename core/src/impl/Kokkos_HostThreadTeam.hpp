@@ -590,6 +590,7 @@ class HostThreadTeamMember {
   }
 
   template <typename ReducerType>
+  KOKKOS_THREAD_SANITIZER_IGNORE  // TODO stop having to ignore here, maybe?
   KOKKOS_INLINE_FUNCTION
       typename std::enable_if<is_reducer<ReducerType>::value>::type
       team_reduce(ReducerType const& reducer,
@@ -631,7 +632,12 @@ class HostThreadTeamMember {
         // with a return value of 'false'
       } else {
         // Copy from root member's buffer:
-        reducer.reference() = *((value_type*)m_data.team_reduce());
+        // These can be write/write data races, but it doesn't matter
+        // clang-format off
+        KOKKOS_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS(
+          reducer.reference() = *((value_type*)m_data.team_reduce());
+        ) // end supress threading errors
+        // clang-format on
       }
     } else {
       reducer.reference() = contribution;
@@ -881,6 +887,7 @@ parallel_reduce(
 }
 
 template <typename iType, typename Closure, typename ValueType, typename Member>
+KOKKOS_THREAD_SANITIZER_IGNORE  // TODO stop having to ignore here, maybe?
 KOKKOS_INLINE_FUNCTION typename std::enable_if<
     !Kokkos::is_reducer<ValueType>::value &&
     Impl::is_host_thread_team_member<Member>::value>::type
@@ -897,7 +904,12 @@ parallel_reduce(
   }
 
   loop_boundaries.thread.team_reduce(reducer);
-  result = reducer.reference();
+  // These can be write/write data races, but it doesn't matter
+  // clang-format off
+  KOKKOS_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS(
+    result = reducer.reference();
+  ) // end supress threading errors
+  // clang-format on
 }
 
 /*template< typename iType, class Space
