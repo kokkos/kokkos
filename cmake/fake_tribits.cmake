@@ -292,6 +292,19 @@ ELSE()
     ${NAME}
     PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
   )
+  IF (KOKKOS_ENABLE_CUDA)
+
+    IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+       IF (DEFINED Kokkos_CUDA_DIR)
+          IF (EXISTS ${Kokkos_CUDA_DIR})        
+             TARGET_COMPILE_OPTIONS(
+                ${NAME}
+                PUBLIC $<$<COMPILE_LANGUAGE:CXX>:--cuda-path=${Kokkos_CUDA_DIR}>
+              )
+          ENDIF()
+       ENDIF()
+    ENDIF()
+  ENDIF()
   target_link_libraries(
     ${NAME}
     PUBLIC ${KOKKOS_LINK_OPTIONS}
