@@ -587,9 +587,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
   ifeq ($(KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE), 1)
     tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_DEPRECATED_CODE")
   endif
-  ifeq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 0)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_DEPRECATED_CODE")
-  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_ENABLE_ETI), 1)
@@ -1252,6 +1249,9 @@ kokkos-clean:
 libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
 	ranlib libkokkos.a
+
+print-cxx-flags: 
+	echo "$(KOKKOS_CXXFLAGS)"
 
 KOKKOS_LINK_DEPENDS=libkokkos.a
 

@@ -1,5 +1,5 @@
 
-FUNCTION(KOKKOS_DEVICE_OPTION SUFFIX DEFAULT DOCSTRING)
+FUNCTION(KOKKOS_DEVICE_OPTION SUFFIX DEFAULT DEV_TYPE DOCSTRING)
   KOKKOS_OPTION(ENABLE_${SUFFIX} ${DEFAULT} BOOL ${DOCSTRING})
   STRING(TOUPPER ${SUFFIX} UC_NAME)
   IF (KOKKOS_ENABLE_${UC_NAME})
@@ -8,42 +8,50 @@ FUNCTION(KOKKOS_DEVICE_OPTION SUFFIX DEFAULT DOCSTRING)
     SET(KOKKOS_ENABLED_DEVICES    ${KOKKOS_ENABLED_DEVICES}    PARENT_SCOPE)
   ENDIF()
   SET(KOKKOS_ENABLE_${UC_NAME} ${KOKKOS_ENABLE_${UC_NAME}} PARENT_SCOPE)
+  IF (KOKKOS_ENABLE_${UC_NAME} AND DEV_TYPE STREQUAL "HOST")
+    SET(KOKKOS_HAS_HOST ON PARENT_SCOPE)
+  ENDIF()
 ENDFUNCTION()
 
 KOKKOS_CFG_DEPENDS(DEVICES NONE)
 
-KOKKOS_OPTION(DEVICES "SERIAL" STRING "A list of devices to enable")
-IF (KOKKOS_DEVICES MATCHES ",")
-  MESSAGE(WARNING "-- Detected a comma in: Kokkos_DEVICES=`${KOKKOS_DEVICES}`")
-  MESSAGE("-- Although we prefer KOKKOS_DEVICES to be semicolon-delimited, we do allow")
-  MESSAGE("-- comma-delimited values for compatibility with scripts (see github.com/trilinos/Trilinos/issues/2330)")
-  STRING(REPLACE "," ";" KOKKOS_DEVICES "${KOKKOS_DEVICES}")
-  MESSAGE("-- Commas were changed to semicolons, now Kokkos_DEVICES=`${KOKKOS_DEVICES}`")
-ENDIF()
+# Put a check in just in case people are using this option
+KOKKOS_DEPRECATED_LIST(DEVICES ENABLE)
 
-FOREACH(DEV ${KOKKOS_DEVICES})
-  STRING(TOUPPER ${DEV} UC_NAME)
-  SET(Kokkos_ENABLE_${UC_NAME} On)
-  MESSAGE(STATUS "Setting Kokkos_ENABLE_${UC_NAME}=ON from Kokkos_DEVICES")
-ENDFOREACH()
-KOKKOS_DEVICE_OPTION(SERIAL        ON  "Whether to build serial  backend")
-KOKKOS_DEVICE_OPTION(PTHREAD       OFF "Whether to build Pthread backend")
-KOKKOS_DEVICE_OPTION(ROCM          OFF "Whether to build AMD ROCm backend")
+
+KOKKOS_DEVICE_OPTION(PTHREAD       OFF HOST "Whether to build Pthread backend")
+IF (KOKKOS_ENABLE_PTHREAD)
+  #patch the naming here
+  SET(KOKKOS_ENABLE_THREADS ON)
+ENDIF()
+KOKKOS_DEVICE_OPTION(ROCM          OFF DEVICE "Whether to build AMD ROCm backend")
 
 IF(Trilinos_ENABLE_Kokkos AND Trilinos_ENABLE_OpenMP)
   SET(OMP_DEFAULT ON)
 ELSE()
   SET(OMP_DEFAULT OFF)
 ENDIF()
-KOKKOS_DEVICE_OPTION(OPENMP ${OMP_DEFAULT} "Whether to build OpenMP backend")
+KOKKOS_DEVICE_OPTION(OPENMP ${OMP_DEFAULT} HOST "Whether to build OpenMP backend")
 
 IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
   SET(CUDA_DEFAULT ON)
 ELSE()
   SET(CUDA_DEFAULT OFF)
 ENDIF()
-KOKKOS_DEVICE_OPTION(CUDA ${CUDA_DEFAULT} "Whether to build CUDA backend")
+KOKKOS_DEVICE_OPTION(CUDA ${CUDA_DEFAULT} DEVICE "Whether to build CUDA backend")
 
 IF (KOKKOS_ENABLE_CUDA)
-GLOBAL_SET(KOKKOS_DONT_ALLOW_EXTENSIONS "CUDA enabled")
+  GLOBAL_SET(KOKKOS_DONT_ALLOW_EXTENSIONS "CUDA enabled")
 ENDIF()
+
+# We want this to default to OFF for cache reasons
+# Someone may later activative OpenMP, at which point SERIAL should be OFF
+# If have default to ON, both serial and OpenMP would both be on which
+# would be behavior inconsistent with -DOpenMP=X...
+KOKKOS_DEVICE_OPTION(SERIAL OFF HOST "Whether to build serial backend")
+# If we have no other hosts, turn serial on
+IF (NOT KOKKOS_HAS_HOST)
+  SET(KOKKOS_ENABLE_SERIAL ON)
+ENDIF()
+
+KOKKOS_DEVICE_OPTION(HPX OFF HOST "Whether to build HPX backend")

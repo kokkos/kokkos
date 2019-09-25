@@ -1,7 +1,7 @@
 
-FUNCTION(KOKKOS_ARCH_OPTION SUFFIX DOCSTRING)
+FUNCTION(KOKKOS_ARCH_OPTION SUFFIX DEV_TYPE DESCRIPTION)
   #all optimizations off by default
-  KOKKOS_OPTION(ARCH_${SUFFIX} OFF BOOL ${DOCSTRING})
+  KOKKOS_OPTION(ARCH_${SUFFIX} OFF BOOL "Optimize for ${DESCRIPTION} (${DEV_TYPE})")
   IF (KOKKOS_ARCH_${SUFFIX})
     LIST(APPEND KOKKOS_ENABLED_ARCH_LIST ${SUFFIX})
     SET(KOKKOS_ENABLED_ARCH_LIST ${KOKKOS_ENABLED_ARCH_LIST} PARENT_SCOPE)
@@ -63,90 +63,73 @@ KOKKOS_CFG_DEPENDS(ARCH DEVICES)
 KOKKOS_CFG_DEPENDS(ARCH OPTIONS)
 
 
-
-
 #-------------------------------------------------------------------------------
 # List of possible host architectures.
 #-------------------------------------------------------------------------------
 SET(KOKKOS_ARCH_LIST)
-LIST(APPEND KOKKOS_ARCH_LIST
-     AMDAVX          # (HOST) AMD chip
-     ARMV80          # (HOST) ARMv8.0 Compatible CPU
-     ARMV81          # (HOST) ARMv8.1 Compatible CPU
-     ARMV8_THUNDERX  # (HOST) ARMv8 Cavium ThunderX CPU
-     ARMV8_TX2       # (HOST) ARMv8 Cavium ThunderX2 CPU
-     WSM             # (HOST) Intel Westmere CPU
-     SNB             # (HOST) Intel Sandy/Ivy Bridge CPUs
-     HSW             # (HOST) Intel Haswell CPUs
-     BDW             # (HOST) Intel Broadwell Xeon E-class CPUs
-     SKX             # (HOST) Intel Sky Lake Xeon E-class HPC CPUs (AVX512)
-     KNC             # (HOST) Intel Knights Corner Xeon Phi
-     KNL             # (HOST) Intel Knights Landing Xeon Phi
-     BGQ             # (HOST) IBM Blue Gene Q
-     POWER7          # (HOST) IBM POWER7 CPUs
-     POWER8          # (HOST) IBM POWER8 CPUs
-     POWER9          # (HOST) IBM POWER9 CPUs
-     KEPLER          # (GPU) NVIDIA Kepler default (generation CC 3.5)
-     KEPLER30        # (GPU) NVIDIA Kepler generation CC 3.0
-     KEPLER32        # (GPU) NVIDIA Kepler generation CC 3.2
-     KEPLER35        # (GPU) NVIDIA Kepler generation CC 3.5
-     KEPLER37        # (GPU) NVIDIA Kepler generation CC 3.7
-     MAXWELL         # (GPU) NVIDIA Maxwell default (generation CC 5.0)
-     MAXWELL50       # (GPU) NVIDIA Maxwell generation CC 5.0
-     MAXWELL52       # (GPU) NVIDIA Maxwell generation CC 5.2
-     MAXWELL53       # (GPU) NVIDIA Maxwell generation CC 5.3
-     PASCAL60        # (GPU) NVIDIA Pascal generation CC 6.0
-     PASCAL61        # (GPU) NVIDIA Pascal generation CC 6.1
-     VOLTA70         # (GPU) NVIDIA Volta generation CC 7.0
-     VOLTA72         # (GPU) NVIDIA Volta generation CC 7.2
-     TURING75         # (GPU) NVIDIA Turing generation CC 7.5
-     RYZEN
-     EPYC
-     KAVERI
-     CARRIZO
-     FIJI
-     VEGA
-     GFX901
-    )
-STRING(REPLACE ";" ", " KOKKOS_INTERNAL_ARCH_DOCSTR "${KOKKOS_ARCH_LIST}")
-SET(KOKKOS_INTERNAL_ARCH_DOCSTR "${tmpr}${KOKKOS_INTERNAL_ARCH_DOCSTR}")
 
 
-# Setting this variable to a value other than "None" can improve host
-# performance by turning on architecture specific code.
-# NOT SET is used to determine if the option is passed in.  It is reset to
-# default "None" down below.
-KOKKOS_OPTION(ARCH "" STRING "Optimize for specific host architecture. Options are: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
+KOKKOS_ARCH_OPTION(AMDAVX          HOST "AMD chip")
+KOKKOS_ARCH_OPTION(ARMV80          HOST "ARMv8.0 Compatible CPU")
+KOKKOS_ARCH_OPTION(ARMV81          HOST "ARMv8.1 Compatible CPU")
+KOKKOS_ARCH_OPTION(ARMV8_THUNDERX  HOST "ARMv8 Cavium ThunderX CPU")
+KOKKOS_ARCH_OPTION(ARMV8_TX2       HOST "ARMv8 Cavium ThunderX2 CPU")
+KOKKOS_ARCH_OPTION(WSM             HOST "Intel Westmere CPU")
+KOKKOS_ARCH_OPTION(SNB             HOST "Intel Sandy/Ivy Bridge CPUs")
+KOKKOS_ARCH_OPTION(HSW             HOST "Intel Haswell CPUs")
+KOKKOS_ARCH_OPTION(BDW             HOST "Intel Broadwell Xeon E-class CPUs")
+KOKKOS_ARCH_OPTION(SKX             HOST "Intel Sky Lake Xeon E-class HPC CPUs (AVX512)")
+KOKKOS_ARCH_OPTION(KNC             HOST "Intel Knights Corner Xeon Phi")
+KOKKOS_ARCH_OPTION(KNL             HOST "Intel Knights Landing Xeon Phi")
+KOKKOS_ARCH_OPTION(BGQ             HOST "IBM Blue Gene Q")
+KOKKOS_ARCH_OPTION(POWER7          HOST "IBM POWER7 CPUs")
+KOKKOS_ARCH_OPTION(POWER8          HOST "IBM POWER8 CPUs")
+KOKKOS_ARCH_OPTION(POWER9          HOST "IBM POWER9 CPUs")
+KOKKOS_ARCH_OPTION(KEPLER30        GPU  "NVIDIA Kepler generation CC 3.0")
+KOKKOS_ARCH_OPTION(KEPLER32        GPU  "NVIDIA Kepler generation CC 3.2")
+KOKKOS_ARCH_OPTION(KEPLER35        GPU  "NVIDIA Kepler generation CC 3.5")
+KOKKOS_ARCH_OPTION(KEPLER37        GPU  "NVIDIA Kepler generation CC 3.7")
+KOKKOS_ARCH_OPTION(MAXWELL50       GPU  "NVIDIA Maxwell generation CC 5.0")
+KOKKOS_ARCH_OPTION(MAXWELL52       GPU  "NVIDIA Maxwell generation CC 5.2")
+KOKKOS_ARCH_OPTION(MAXWELL53       GPU  "NVIDIA Maxwell generation CC 5.3")
+KOKKOS_ARCH_OPTION(PASCAL60        GPU  "NVIDIA Pascal generation CC 6.0")
+KOKKOS_ARCH_OPTION(PASCAL61        GPU  "NVIDIA Pascal generation CC 6.1")
+KOKKOS_ARCH_OPTION(VOLTA70         GPU  "NVIDIA Volta generation CC 7.0")
+KOKKOS_ARCH_OPTION(VOLTA72         GPU  "NVIDIA Volta generation CC 7.2")
+KOKKOS_ARCH_OPTION(TURING75        GPU  "NVIDIA Turing generation CC 7.5")
+KOKKOS_ARCH_OPTION(RYZEN           HOST "AMD Ryzen architecture")
+KOKKOS_ARCH_OPTION(EPYC            HOST "AMD Epyc architecture")
+KOKKOS_ARCH_OPTION(KAVERI          APU  "AMD Kaveri architecture")
+KOKKOS_ARCH_OPTION(CARRIZO         APU  "AMD Carrizo architecture")
+KOKKOS_ARCH_OPTION(FIJI            GPU  "AMD Fiji architecture")
+KOKKOS_ARCH_OPTION(VEGA            GPU  "AMD Vega architecture")
+KOKKOS_ARCH_OPTION(GFX901          GPU  "AMD GFX architecture")
 
-# Ensure that KOKKOS_ARCH is in the ARCH_LIST
-IF (KOKKOS_ARCH MATCHES ",")
-  MESSAGE(WARNING "-- Detected a comma in: KOKKOS_ARCH=`${KOKKOS_ARCH}`")
-  MESSAGE("-- Although we prefer KOKKOS_ARCH to be semicolon-delimited, we do allow")
-  MESSAGE("-- comma-delimited values for compatibility with scripts (see github.com/trilinos/Trilinos/issues/2330)")
-  STRING(REPLACE "," ";" KOKKOS_ARCH "${KOKKOS_ARCH}")
-  MESSAGE("-- Commas were changed to semicolons, now KOKKOS_ARCH=`${KOKKOS_ARCH}`")
-ENDIF()
 
-IF (KOKKOS_ARCH MATCHES "-")
-  STRING(REPLACE "-" "_" KOKKOS_ARCH "${KOKKOS_ARCH}")
-ENDIF()
+IF (KOKKOS_ENABLE_CUDA)
+ #Regardless of version, make sure we define the general architecture name
+ IF (KOKKOS_ARCH_KEPLER30 OR KOKKOS_ARCH_KEPLER32 OR KOKKOS_ARCH_KEPLER35 OR KOKKOS_ARCH_KEPLER37)
+   SET(KOKKOS_ARCH_KEPLER ON)
+ ENDIF()
+ 
+ #Regardless of version, make sure we define the general architecture name
+ IF (KOKKOS_ARCH_MAXWELL50 OR KOKKOS_ARCH_MAXWELL52 OR KOKKOS_ARCH_MAXWELL53)
+   SET(KOKKOS_ARCH_MAXWELL ON)
+ ENDIF()
 
+ #Regardless of version, make sure we define the general architecture name
+ IF (KOKKOS_ARCH_PASCAL60 OR KOKKOS_ARCH_PASCAL61)
+   SET(KOKKOS_ARCH_PASCAL ON)
+ ENDIF()
 
-
-FOREACH(Arch ${KOKKOS_ARCH})
-  STRING(TOUPPER ${Arch} ARCH)
-  #force on all the architectures in the list
-  IF (NOT ${ARCH} IN_LIST KOKKOS_ARCH_LIST)
-    MESSAGE(FATAL_ERROR "`${Arch}` is not an accepted value in KOKKOS_ARCH=`${KOKKOS_ARCH}`."
-      "  Please pick from these choices: ${KOKKOS_INTERNAL_ARCH_DOCSTR}")
+  #Regardless of version, make sure we define the general architecture name
+  IF (KOKKOS_ARCH_VOLTA70 OR KOKKOS_ARCH_VOLTA72)
+    SET(KOKKOS_ARCH_VOLTA ON)
   ENDIF()
-  SET(Kokkos_ARCH_${ARCH} ON CACHE BOOL "optimize for architecture ${Arch}" FORCE)
-  MESSAGE(STATUS "Setting Kokkos_ARCH_${ARCH}=ON from Kokkos_ARCH")
-ENDFOREACH()
+ENDIF()
 
-FOREACH(Arch ${KOKKOS_ARCH_LIST})
-  KOKKOS_ARCH_OPTION(${Arch} "Whether to optimize for the ${Arch} architecture")
-ENDFOREACH()
+
+KOKKOS_DEPRECATED_LIST(ARCH ARCH)
 
 IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
   SET(COMMON_WARNINGS
@@ -197,7 +180,7 @@ ENDIF()
 
 IF(KOKKOS_ENABLE_OPENMP)
   IF (KOKKOS_CXX_COMPILER_ID STREQUAL AppleClang)
-    MESSAGE(FATAL_ERROR "Apple Clang does not support OpenMP. Use native clang instead")
+    MESSAGE(FATAL_ERROR "Apple Clang does not support OpenMP. Use native Clang instead")
   ENDIF()
   ARCH_FLAGS(
     Clang      -fopenmp=libomp
@@ -206,6 +189,14 @@ IF(KOKKOS_ENABLE_OPENMP)
     Cray       ""
     XL         -qsmp=omp
     DEFAULT    -fopenmp 
+  )
+ENDIF()
+
+IF (KOKKOS_ARCH_ARMV80)
+  ARCH_FLAGS(
+    Cray ""
+    PGI  ""
+    DEFAULT -march=armv8-a
   )
 ENDIF()
 
@@ -218,7 +209,7 @@ IF (KOKKOS_ARCH_ARMV81)
 ENDIF()
 
 IF (KOKKOS_ARCH_ARMV8_THUNDERX)
-  SET(KOKKOS_ARCH_ARMV80 ON CACHE BOOL "enable armv80" FORCE)
+  SET(KOKKOS_ARCH_ARMV80 ON) #Not a cache variable
   ARCH_FLAGS(
     Cray ""
     PGI  ""
@@ -227,7 +218,7 @@ IF (KOKKOS_ARCH_ARMV8_THUNDERX)
 ENDIF()
 
 IF (KOKKOS_ARCH_ARMV8_THUNDERX2)
-  SET(KOKKOS_ARCH_ARMV81 ON CACHE BOOL "enable armv80" FORCE)
+  SET(KOKKOS_ARCH_ARMV81 ON) #Not a cache variable
   ARCH_FLAGS(
     Cray ""
     PGI  ""
@@ -240,7 +231,8 @@ IF (KOKKOS_ARCH_EPYC)
     Intel   -mavx2
     DEFAULT -march=znver1 -mtune=znver1
   )
-  SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
+  SET(KOKKOS_ARCH_AMD_EPYC ON)
+  SET(KOKKOS_ARCH_AMD_AVX2 ON)
 ENDIF()
 
 IF (KOKKOS_ARCH_WSM)
@@ -250,56 +242,82 @@ IF (KOKKOS_ARCH_WSM)
     Cray    ""
     DEFAULT -msse4.2
   )
-  SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
+  SET(KOKKOS_ARCH_SSE42 ON)
 ENDIF()
 
 IF (KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
+  SET(KOKKOS_ARCH_AVX ON)
   ARCH_FLAGS(
     Intel   -mavx
     PGI     -tp=sandybridge
     Cray    ""
     DEFAULT -mavx
   )
-  SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
 ENDIF()
 
-IF (KOKKOS_ARCH_HSW OR KOKKOS_ARCH_BDW)
-  SET(KOKKOS_ARCH_AVX2 ON CACHE BOOL "enable avx2" FORCE)
+IF (KOKKOS_ARCH_HSW)
+  SET(KOKKOS_ARCH_AVX2 ON)
   ARCH_FLAGS(
     Intel   -xCORE-AVX2
     PGI     -tp=haswell
     Cray    ""
     DEFAULT -march=core-avx2 -mtune=core-avx2
   )
-  SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
-  IF (KOKKOS_ARCH_BDW)
-    SET(KOKKOS_ENABLE_TM ON CACHE INTERNAL "whether transactional memory supported")
-  ENDIF()
+ENDIF()
+
+IF (KOKKOS_ARCH_BDW)
+  SET(KOKKOS_ARCH_AVX2 ON)
+  ARCH_FLAGS(
+    Intel   -xCORE-AVX2
+    PGI     -tp=haswell
+    Cray    ""
+    DEFAULT -march=core-avx2 -mtune=core-avx2 -mrtm
+  )
+ENDIF()
+
+IF (KOKKOS_ARCH_EPYC)
+  SET(KOKKOS_ARCH_AMD_AVX2 ON)
+  ARCH_FLAGS(
+    Intel   -mvax2
+    DEFAULT  -march=znver1 -mtune=znver1
+  )
 ENDIF()
 
 IF (KOKKOS_ARCH_KNL)
   #avx512-mic
-  SET(KOKKOS_ARCH_AVX512MIC ON CACHE BOOL "enable avx-512 MIC" FORCE)
+  SET(KOKKOS_ARCH_AVX512MIC ON) #not a cache variable
   ARCH_FLAGS(
     Intel   -xMIC-AVX512
     PGI     ""
     Cray    ""
     DEFAULT -march=knl -mtune=knl
   )
-  SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
+ENDIF()
+
+IF (KOKKOS_ARCH_KNC)
+  SET(KOKKOS_USE_ISA_KNC ON)
+  ARCH_FLAGS(
+    DEFAULT -mmic
+  )
 ENDIF()
 
 IF (KOKKOS_ARCH_SKX)
   #avx512-xeon
-  SET(KOKKOS_ARCH_AVX512XEON ON CACHE BOOL "enable avx-512 Xeon" FORCE)
+  SET(KOKKOS_ARCH_AVX512XEON ON)
   ARCH_FLAGS(
     Intel   -xCORE-AVX512
     PGI     ""
     Cray    ""
-    DEFAULT -march=skylake-avx512 -march=skylake-avx512 -mrtm
+    DEFAULT -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
   )
-  SET(KOKKOS_USE_ISA_X86_64 ON CACHE INTERNAL "x86-64 architecture")
-  SET(KOKKOS_ENABLE_TM ON CACHE INTERNAL "whether transactional memory supported")
+ENDIF()
+
+IF (KOKKOS_ARCH_WSM OR KOKKOS_ARCH_SNB OR KOKKOS_ARCH_HSW OR KOKKOS_ARCH_BDW OR KOKKOS_ARCH_KNL OR KOKKOS_ARCH_SKX OR KOKKOS_ARCH_EPYC)
+  SET(KOKKOS_USE_ISA_X86_64 ON)
+ENDIF()
+
+IF (KOKKOS_ARCH_BDW OR KOKKOS_ARCH_SKX)
+  SET(KOKKOS_ENABLE_TM ON) #not a cache variable
 ENDIF()
 
 IF (KOKKOS_ARCH_POWER7)
@@ -307,7 +325,7 @@ IF (KOKKOS_ARCH_POWER7)
     PGI     ""
     DEFAULT -mcpu=power7 -mtune=power7
   )
-  SET(KOKKOS_USE_ISA_POWERPCBE ON CACHE INTERNAL "Power PC Architecture")
+  SET(KOKKOS_USE_ISA_POWERPCBE ON)
 ENDIF()
 
 IF (KOKKOS_ARCH_POWER8)
@@ -316,7 +334,6 @@ IF (KOKKOS_ARCH_POWER8)
     NVIDIA  ""
     DEFAULT -mcpu=power8 -mtune=power8
   )
-  SET(KOKKOS_USE_ISA_POWERPCLE ON CACHE INTERNAL "Power PC Architecture")
 ENDIF()
 
 IF (KOKKOS_ARCH_POWER9)
@@ -325,28 +342,31 @@ IF (KOKKOS_ARCH_POWER9)
     NVIDIA  ""
     DEFAULT -mcpu=power9 -mtune=power9
   )
-  SET(KOKKOS_USE_ISA_POWERPCLE ON CACHE INTERNAL "Power PC Architecture")
+ENDIF()
+
+IF (KOKKOS_ARCH_POWER8 OR KOKKOS_ARCH_POWER9)
+  SET(KOKKOS_USE_ISA_POWERPCLE ON)
 ENDIF()
 
 
 IF (KOKKOS_ARCH_KAVERI)
-  SET(KOKKOS_ARCH_ROCM 701 CACHE STRING "rocm arch" FORCE)
+  SET(KOKKOS_ARCH_ROCM 701)
 ENDIF()
 
 IF (KOKKOS_ARCH_CARRIZO)
-  SET(KOKKOS_ARCH_ROCM 801 CACHE STRING "rocm arch" FORCE)
+  SET(KOKKOS_ARCH_ROCM 801)
 ENDIF()
 
 IF (KOKKOS_ARCH_FIJI)
-  SET(KOKKOS_ARCH_ROCM 803 CACHE STRING "rocm arch" FORCE)
+  SET(KOKKOS_ARCH_ROCM 803)
 ENDIF()
 
 IF (KOKKOS_ARCH_VEGA)
-  SET(KOKKOS_ARCH_ROCM 900 CACHE STRING "rocm arch" FORCE)
+  SET(KOKKOS_ARCH_ROCM 900)
 ENDIF()
 
 IF (KOKKOS_ARCH_GFX901)
-  SET(KOKKOS_ARCH_ROCM 901 CACHE STRING "rocm arch" FORCE)
+  SET(KOKKOS_ARCH_ROCM 901)
 ENDIF()
 
 IF (KOKKOS_ARCH_RYZEN)
@@ -368,6 +388,10 @@ IF(KOKKOS_ARCH_${ARCH})
   ENDIF()
   SET(CUDA_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
   GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "${CUDA_ARCH_FLAG}=${FLAG}")
+  IF (NOT KOKKOS_ENABLE_CUDA)
+    MESSAGE(WARNING "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA is OFF. Option will be ignored.")
+    UNSET(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
+  ENDIF()
 ENDIF()
 ENDFUNCTION()
 
@@ -385,27 +409,45 @@ CHECK_CUDA_ARCH(VOLTA70  sm_70)
 CHECK_CUDA_ARCH(VOLTA72  sm_72)
 CHECK_CUDA_ARCH(TURING75  sm_75)
 
+IF (KOKKOS_ENABLE_CUDA)
+  SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_VERSION_MAJOR}${KOKKOS_VERSION_MINOR}")
+ENDIF()
 
 #CMake verbose is kind of pointless
 #Let's just always print things
 MESSAGE(STATUS "Execution Spaces:")
 IF(KOKKOS_ENABLE_CUDA)
-  MESSAGE(STATUS "  Device Parallel: Cuda")
+  MESSAGE(STATUS "  Device Parallel: CUDA")
 ELSE()
-  MESSAGE(STATUS "  Device Parallel: None")
+  MESSAGE(STATUS "  Device Parallel: NONE")
 ENDIF()
 
-IF(KOKKOS_ENABLE_OPENMP)
-  MESSAGE(STATUS "    Host Parallel: OPENMP")
-ELSEIF(KOKKOS_ENABLE_PTHREAD)
+FOREACH (_BACKEND OPENMP PTHREAD QTHREAD HPX)
+  IF(KOKKOS_ENABLE_${_BACKEND})
+    IF(_HOST_PARALLEL)
+      MESSAGE(FATAL_ERROR "Multiple host parallel execution spaces are not allowed! "
+                          "Trying to enable execution space ${_BACKEND}, "
+                          "but execution space ${_HOST_PARALLEL} is already enabled. "
+                          "Remove the CMakeCache.txt file and re-configure.")
+    ENDIF()
+    SET(_HOST_PARALLEL ${_BACKEND})
+  ENDIF()
+ENDFOREACH()
+
+IF(NOT _HOST_PARALLEL AND NOT KOKKOS_ENABLE_SERIAL)
+  MESSAGE(FATAL_ERROR "At least one host execution space must be enabled, "
+                      "but no host parallel execution space was requested "
+                      "and Kokkos_ENABLE_SERIAL=OFF.")
+ENDIF()
+
+IF(NOT _HOST_PARALLEL)
+  SET(_HOST_PARALLEL "NONE")
+ENDIF()
+MESSAGE(STATUS "    Host Parallel: ${_HOST_PARALLEL}")
+UNSET(_HOST_PARALLEL)
+
+IF(KOKKOS_ENABLE_PTHREAD)
   SET(KOKKOS_ENABLE_THREADS ON)
-  MESSAGE(STATUS "    Host Parallel: PTHREAD")
-ELSEIF(KOKKOS_ENABLE_QTHREADS)
-  MESSAGE(STATUS "    Host Parallel: QTHREADS")
-ELSEIF(KOKKOS_ENABLE_HPX)
-  MESSAGE(STATUS "    Host Parallel: HPX")
-ELSE()
-  MESSAGE(STATUS "    Host Parallel: NONE")
 ENDIF()
 
 IF(KOKKOS_ENABLE_SERIAL)
@@ -416,9 +458,7 @@ ENDIF()
 
 MESSAGE(STATUS "")
 MESSAGE(STATUS "Architectures:")
-FOREACH(Arch ${KOKKOS_ARCH_LIST})
-  STRING(TOUPPER ${Arch} ARCH)
-  IF (KOKKOS_ARCH_${ARCH})
-    MESSAGE(STATUS " ${Arch}")
-  ENDIF()
+FOREACH(Arch ${KOKKOS_ENABLED_ARCH_LIST})
+  MESSAGE(STATUS " ${Arch}")
 ENDFOREACH()
+

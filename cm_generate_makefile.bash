@@ -1,128 +1,82 @@
 #!/bin/bash
 
-KOKKOS_DO_EXAMPLES=ON
+update_kokkos_devices() {
+   SEARCH_TEXT="*$1*"
+   if [[ $KOKKOS_DEVICES == $SEARCH_TEXT ]]; then
+      echo kokkos devices already includes $SEARCH_TEXT
+   else
+      if [ "$KOKKOS_DEVICES" = "" ]; then
+         KOKKOS_DEVICES="$1"
+         echo reseting kokkos devices to $KOKKOS_DEVICES
+      else
+         KOKKOS_DEVICES="${KOKKOS_DEVICES},$1"
+         echo appending to kokkos devices $KOKKOS_DEVICES
+      fi
+   fi
+}
 
-while [[ $# > 0 ]]
-do
-  key="$1"
+get_kokkos_device_list() {
+  KOKKOS_DEVICE_CMD=
+  PARSE_DEVICES_LST=$(echo $KOKKOS_DEVICES | tr "," "\n")
+  for DEVICE_ in $PARSE_DEVICES_LST
+  do 
+     KOKKOS_DEVICE_CMD="-DKokkos_ENABLE_${DEVICE_^^}=ON ${KOKKOS_DEVICE_CMD}"
+  done
+}
 
-  case $key in
-    --kokkos-path*)
-      KOKKOS_PATH="${key#*=}"
-      ;;
-    --qthreads-path*)
-      QTHREADS_PATH="${key#*=}"
-      ;;
-    --hpx-path*)
-      HPX_PATH="${key#*=}"
-      ;;
-    --prefix*)
-      PREFIX="${key#*=}"
-      ;;
-    --with-cuda)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
-      CUDA_PATH_NVCC=$(command -v nvcc)
-      CUDA_PATH=${CUDA_PATH_NVCC%/bin/nvcc}
-      ;;
-    # Catch this before '--with-cuda*'
-    --with-cuda-options*)
-      KOKKOS_CUDA_OPT="${key#*=}"
-      ;;
-    --with-cuda*)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
-      CUDA_PATH="${key#*=}"
-      ;;
-    --with-rocm)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},ROCm"
-      ;;
-    --with-openmp)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},OpenMP"
-      ;;
-    --with-pthread)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Pthread"
-      ;;
-    --with-serial)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"
-      ;;
-    --with-qthreads*)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Qthreads"
-      if [ -z "$QTHREADS_PATH" ]; then
-        QTHREADS_PATH="${key#*=}"
-      fi
-      ;;
-    --with-hpx-options*)
-      KOKKOS_HPX_OPT="${key#*=}"
-      ;;
-    --with-hpx*)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},HPX"
-      if [ -z "$HPX_PATH" ]; then
-        HPX_PATH="${key#*=}"
-      fi
-      ;;
-    --with-devices*)
-      DEVICES="${key#*=}"
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},${DEVICES}"
-      ;;
-    --with-gtest*)
-      GTEST_PATH="${key#*=}"
-      ;;
-    --with-hwloc*)
-      HWLOC_PATH="${key#*=}"
-      ;;
-    --with-memkind*)
-      MEMKIND_PATH="${key#*=}"
-      ;;
-    --arch*)
-      KOKKOS_ARCH="${key#*=}"
-      ;;
-    --cxxflags*)
-      CXXFLAGS="${key#*=}"
-      ;;
-    --cxxstandard*)
-      KOKKOS_CXX_STANDARD="${key#*=}"
-      ;;
-    --ldflags*)
-      LDFLAGS="${key#*=}"
-      ;;
-    --debug|-dbg)
-      KOKKOS_DEBUG=yes
-      ;;
-    --make-j*)
-      echo "Warning: ${key} is deprecated"
-      echo "Call make with appropriate -j flag"
-      ;;
-    --no-examples)
-      KOKKOS_DO_EXAMPLES=OFF
-      ;;
-    --compiler*)
-      COMPILER="${key#*=}"
-      CNUM=$(command -v ${COMPILER} 2>&1 >/dev/null | grep "no ${COMPILER}" | wc -l)
-      if [ ${CNUM} -gt 0 ]; then
-        echo "Invalid compiler by --compiler command: '${COMPILER}'"
-        exit
-      fi
-      if [[ ! -n  ${COMPILER} ]]; then
-        echo "Empty compiler specified by --compiler command."
-        exit
-      fi
-      CNUM=$(command -v ${COMPILER} | grep ${COMPILER} | wc -l)
-      if [ ${CNUM} -eq 0 ]; then
-        echo "Invalid compiler by --compiler command: '${COMPILER}'"
-        exit
-      fi
-      # ... valid compiler, ensure absolute path set 
-      WCOMPATH=$(command -v $COMPILER)
-      COMPDIR=$(dirname $WCOMPATH)
-      COMPNAME=$(basename $WCOMPATH)
-      COMPILER=${COMPDIR}/${COMPNAME}
-      ;;
-    --with-options*)
-      KOKKOS_OPT="${key#*=}"
-      ;;
-    --gcc-toolchain*)
-      KOKKOS_GCC_TOOLCHAIN="${key#*=}"
-      ;;
-    --help)
+get_kokkos_arch_list() {
+  KOKKOS_ARCH_CMD=
+  PARSE_ARCH_LST=$(echo $KOKKOS_ARCH | tr "," "\n")
+  for ARCH_ in $PARSE_ARCH_LST
+  do 
+     KOKKOS_ARCH_CMD="-DKokkos_ARCH_${ARCH_^^}=ON ${KOKKOS_ARCH_CMD}"
+  done
+}
+
+get_kokkos_cuda_option_list() {
+  echo parsing KOKKOS_CUDA_OPTIONS=$KOKKOS_CUDA_OPTIONS
+  KOKKOS_CUDA_OPTION_CMD=
+  PARSE_CUDA_LST=$(echo $KOKKOS_CUDA_OPTIONS | tr "," "\n")
+  for CUDA_ in $PARSE_CUDA_LST
+  do 
+     CUDA_OPT_NAME=
+     if [ "${CUDA_}" == "enable_lambda" ]; then
+        CUDA_OPT_NAME=CUDA_LAMBDA
+     elif  [ "${CUDA_}" == "rdc" ]; then	
+        CUDA_OPT_NAME=CUDA_RELOCATABLE_DEVICE_CODE
+     elif  [ "${CUDA_}" == "force_uvm" ]; then
+        CUDA_OPT_NAME=CUDA_UVM
+     elif  [ "${CUDA_}" == "use_ldg" ]; then
+        CUDA_OPT_NAME=CUDA_LDG_INTRINSIC
+     else
+        echo "${CUDA_} is not a valid cuda options..."
+     fi
+     if [ "${CUDA_OPT_NAME}" != "" ]; then
+        KOKKOS_CUDA_OPTION_CMD="-DKokkos_ENABLE_${CUDA_OPT_NAME}=ON ${KOKKOS_CUDA_OPTION_CMD}"
+     fi
+  done
+}
+
+get_kokkos_option_list() {
+  echo parsing KOKKOS_OPTIONS=$KOKKOS_OPTIONS
+  KOKKOS_OPTION_CMD=
+  PARSE_OPTIONS_LST=$(echo $KOKKOS_OPTIONS | tr "," "\n")
+  for OPT_ in $PARSE_OPTIONS_LST
+  do 
+     UC_OPT_=${OPT_^^}
+     if [[ "$UC_OPT_" == *DISABLE* ]]; then
+        FLIP_OPT_=${UC_OPT_/DISABLE/ENABLE}
+        KOKKOS_OPTION_CMD="-DKokkos_${FLIP_OPT_}=OFF ${KOKKOS_OPTION_CMD}"
+     elif [[ "$UC_OPT_" == *ENABLE* ]]; then
+        KOKKOS_OPTION_CMD="-DKokkos_${UC_OPT_}=ON ${KOKKOS_OPTION_CMD}"
+     else
+        KOKKOS_OPTION_CMD="-DKokkos_ENABLE_${UC_OPT_}=ON ${KOKKOS_OPTION_CMD}"
+     fi
+  done
+}
+
+display_help_text() {
+
       echo "Kokkos configure options:"
       echo ""
       echo "--kokkos-path=/Path/To/Kokkos:        Path to the Kokkos root directory."
@@ -201,6 +155,137 @@ do
       echo "--gcc-toolchain=/Path/To/GccRoot:  Set the gcc toolchain to use with clang (e.g. /usr)" 
       echo "--make-j=[NUM]:               DEPRECATED: call make with appropriate"
       echo "                                -j flag"
+
+}
+
+KOKKOS_DO_EXAMPLES=ON
+
+while [[ $# > 0 ]]
+do
+  key="$1"
+
+  case $key in
+    --kokkos-path*)
+      KOKKOS_PATH="${key#*=}"
+      ;;
+    --qthreads-path*)
+      QTHREADS_PATH="${key#*=}"
+      ;;
+    --hpx-path*)
+      HPX_PATH="${key#*=}"
+      ;;
+    --prefix*)
+      PREFIX="${key#*=}"
+      ;;
+    --with-cuda)
+      update_kokkos_devices Cuda
+      CUDA_PATH_NVCC=$(command -v nvcc)
+      CUDA_PATH=${CUDA_PATH_NVCC%/bin/nvcc}
+      ;;
+    # Catch this before '--with-cuda*'
+    --with-cuda-options*)
+      KOKKOS_CUDA_OPTIONS="${key#*=}"
+      ;;
+    --with-cuda*)
+      update_kokkos_devices Cuda
+      CUDA_PATH="${key#*=}"
+      ;;
+    --with-rocm)
+      update_kokkos_devices ROCm
+      ;;
+    --with-openmp)
+      update_kokkos_devices OpenMP
+      ;;
+    --with-pthread)
+      update_kokkos_devices Pthread
+      ;;
+    --with-serial)
+      update_kokkos_devices Serial
+      ;;
+    --with-qthreads*)
+      update_kokkos_devices Qthreads
+      if [ -z "$QTHREADS_PATH" ]; then
+        QTHREADS_PATH="${key#*=}"
+      fi
+      ;;
+    --with-hpx-options*)
+      KOKKOS_HPX_OPT="${key#*=}"
+      ;;
+    --with-hpx*)
+      update_kokkos_devices HPX
+      if [ -z "$HPX_PATH" ]; then
+        HPX_PATH="${key#*=}"
+      fi
+      ;;
+    --with-devices*)
+      DEVICES="${key#*=}"
+      PARSE_DEVICES=$(echo $DEVICES | tr "," "\n")
+      for DEVICE_ in $PARSE_DEVICES
+      do 
+         update_kokkos_devices $DEVICE_
+      done
+      ;;
+    --with-gtest*)
+      GTEST_PATH="${key#*=}"
+      ;;
+    --with-hwloc*)
+      HWLOC_PATH="${key#*=}"
+      ;;
+    --with-memkind*)
+      MEMKIND_PATH="${key#*=}"
+      ;;
+    --arch*)
+      KOKKOS_ARCH="${key#*=}"
+      ;;
+    --cxxflags*)
+      KOKKOS_CXXFLAGS="${key#*=}"
+      ;;
+    --cxxstandard*)
+      KOKKOS_CXX_STANDARD="${key#*=}"
+      ;;
+    --ldflags*)
+      KOKKOS_LDFLAGS="${key#*=}"
+      ;;
+    --debug|-dbg)
+      KOKKOS_DEBUG=yes
+      ;;
+    --make-j*)
+      echo "Warning: ${key} is deprecated"
+      echo "Call make with appropriate -j flag"
+      ;;
+    --no-examples)
+      KOKKOS_DO_EXAMPLES=OFF
+      ;;
+    --compiler*)
+      COMPILER="${key#*=}"
+      CNUM=$(command -v ${COMPILER} 2>&1 >/dev/null | grep "no ${COMPILER}" | wc -l)
+      if [ ${CNUM} -gt 0 ]; then
+        echo "Invalid compiler by --compiler command: '${COMPILER}'"
+        exit
+      fi
+      if [[ ! -n  ${COMPILER} ]]; then
+        echo "Empty compiler specified by --compiler command."
+        exit
+      fi
+      CNUM=$(command -v ${COMPILER} | grep ${COMPILER} | wc -l)
+      if [ ${CNUM} -eq 0 ]; then
+        echo "Invalid compiler by --compiler command: '${COMPILER}'"
+        exit
+      fi
+      # ... valid compiler, ensure absolute path set 
+      WCOMPATH=$(command -v $COMPILER)
+      COMPDIR=$(dirname $WCOMPATH)
+      COMPNAME=$(basename $WCOMPATH)
+      COMPILER=${COMPDIR}/${COMPNAME}
+      ;;
+    --with-options*)
+      KOKKOS_OPTIONS="${key#*=}"
+      ;;
+    --gcc-toolchain*)
+      KOKKOS_GCC_TOOLCHAIN="${key#*=}"
+      ;;
+    --help)
+      display_help_text
       exit 0
       ;;
     *)
@@ -217,4 +302,24 @@ else
     COMPILER_CMD='-DCMAKE_CXX_COMPILER=$COMPILER'
 fi
 
-cmake $COMPILER_CMD -DCMAKE_INSTALL_PREFIX=${PREFIX} -DKOKKOS_DEVICES=$KOKKOS_DEVICES -DKOKKOS_ARCH=$KOKKOS_ARCH -DKOKKOS_ENABLE_TESTS=ON -DKOKKOS_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} -DKOKKOS_OPTIONS=${KOKKOS_OPT} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKOKKOS_CUDA_DIR=${CUDA_PATH} ${KOKKOS_PATH}
+if [ ! -e ${KOKKOS_PATH}/CMakeLists.txt ]; then
+   echo "Kokkos PATH does not appear to be set properly. please specify in ENV or cmd line arguements"   
+   display_help_text
+   exit 0
+fi
+
+get_kokkos_device_list
+get_kokkos_option_list
+get_kokkos_arch_list
+get_kokkos_cuda_option_list
+
+## if HPX is enabled, we need to enforce cxx standard = 14
+if [[ ${KOKKOS_DEVICE_CMD} == *Kokkos_ENABLE_HPX* ]]; then
+   if [ ${#KOKKOS_CXX_STANDARD} -lt 14 ]; then
+      echo CXX Standard must be 14 or higher for HPX to work.
+      KOKKOS_CXX_STANDARD=14
+   fi
+fi
+ 
+echo cmake $COMPILER_CMD  -DKokkos_CXX_FLAGS="${KOKKOS_CXXFLAGS}" -DKokkos_LINK_FLAGS="${KOKKOS_LDFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CUDA_DIR=${CUDA_PATH} -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_VALIDATION_STR} ${KOKKOS_PATH} 
+cmake $COMPILER_CMD  -DKokkos_CXX_FLAGS="${KOKKOS_CXXFLAGS//\"}" -DKokkos_LINK_FLAGS="${KOKKOS_LDFLAGS//\"}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CUDA_DIR=${CUDA_PATH} -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_VALIDATION_STR} ${KOKKOS_PATH} 

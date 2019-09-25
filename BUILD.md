@@ -103,13 +103,8 @@ endif()
 # Kokkos Keyword Listing
 
 ## Device Backends
-Device backends can either be enabled by specifiying `-DKokkos_ENABLE_X` or by passing all arguments as a string to
-`-DKokkos_DEVICES=X,Y`. Note that the `Kokkos_ENABLE_X` options are case-sensitive and all upper case (except for OpenMP, which CMake style defines to be Camel Case).
-Strings passed to `Kokkos_DEVICES` are not case-sensitive.
+Device backends can be enabled by specifiying `-DKokkos_ENABLE_X`.
 
-* Kokkos_DEVICES
-    * A list of devices to enable. Not case-sensitive.
-    * STRING Default: SERIAL
 * Kokkos_ENABLE_CUDA
     * Whether to build CUDA backend
     * BOOL Default: OFF
@@ -130,13 +125,8 @@ Strings passed to `Kokkos_DEVICES` are not case-sensitive.
     * BOOL Default: ON
 
 ## Enable Options
-Options can either be enabled by specifiying `-DKokkos_ENABLE_X` or by passing all arguments as a string to
-`-DKokkos_OPTIONS=X,Y`. Note that the `Kokkos_ENABLE_X` options are case-sensitive and all upper case.
-Strings passed to `Kokkos_OPTIONS` are not case-sensitive.
+Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
 
-* Kokkos_OPTIONS
-    * A list of options to enable. Not case-sensitive.
-    * STRING Default: 
 * Kokkos_ENABLE_AGGRESSIVE_VECTORIZATION
     * Whether to aggressively vectorize loops
     * BOOL Default: OFF
@@ -144,7 +134,7 @@ Strings passed to `Kokkos_OPTIONS` are not case-sensitive.
     * Whether to print all compiler warnings
     * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_LAMBDA
-    * Whether to activate experimental laambda features
+    * Whether to activate experimental lambda features
     * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_LDG_INTRINSIC
     * Whether to use CUDA LDG intrinsics
@@ -188,8 +178,8 @@ Strings passed to `Kokkos_OPTIONS` are not case-sensitive.
 
 ## Other Options
 * Kokkos_CXX_STANDARD
-    * The C++ standard for Kokkos to use: c++11, c++14, or c++17
-    * STRING Default: 
+    * The C++ standard for Kokkos to use: c++11, c++14, or c++17. This should be given in CMake style as 11, 14, or 17.
+    * STRING Default: 11 
 * Kokkos_SEPARATE_LIBS
     * whether to build libkokkos or libkokkoscontainers, etc
     * BOOL Default: OFF
@@ -229,12 +219,8 @@ The following options control activating and locating varial options TPLs.
     * PATH Default: 
 
 ## Architecture Keywords
-Architecture-specific optimizations can either be enabled by specifiying `-DKokkos_ARCH_X` or by passing all arguments as a string to `-DKokkos_ARCH=X,Y`. Note that the `Kokkos_ARCH_X` options are case-sensitive and all upper case.
-Strings passed to `Kokkos_ARCH` are not case-sensitive.
+Architecture-specific optimizations can be enabled by specifiying `-DKokkos_ARCH_X`.
 
-* Kokkos_ARCH
-    * Optimize for specific host architecture. Options are:, NONE, AMDAVX, ARMV80, ARMV81, ARMV8_THUNDERX, ARMV8_TX2, WSM, SNB, HSW, BDW, SKX, KNC, KNL, BGQ, POWER7, POWER8, POWER9, KEPLER, KEPLER30, KEPLER32, KEPLER35, KEPLER37, MAXWELL, MAXWELL50, MAXWELL52, MAXWELL53, PASCAL60, PASCAL61, VOLTA70, VOLTA72, TURING75, RYZEN, EPYC, KAVERI, CARRIZO, FIJI, VEGA, GFX901
-    * STRING Default: NONE
 * Kokkos_ARCH_AMDAVX
     * Whether to optimize for the AMDAVX architecture
     * BOOL Default: OFF

@@ -769,11 +769,11 @@ std::ostream& operator<<(std::ostream& os, const complex<RealType>& x) {
 }
 
 template <class RealType>
-std::ostream& operator>>(std::ostream& os, complex<RealType>& x) {
+std::istream& operator>>(std::istream& is, complex<RealType>& x) {
   std::complex<RealType> x_std;
-  os >> x_std;
+  is >> x_std;
   x = x_std;  // only assigns on success of above
-  return os;
+  return is;
 }
 
 template <class T>
