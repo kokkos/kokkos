@@ -114,23 +114,19 @@ struct Rank {
 // multi-dimensional iteration pattern
 template <typename... Properties>
 struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
+
+ public:
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="Public member types and constexpr data members"> {{{2
+
   using traits       = Kokkos::Impl::PolicyTraits<Properties...>;
   using range_policy = RangePolicy<Properties...>;
-
-  typename traits::execution_space m_space;
-
   using impl_range_policy =
       RangePolicy<typename traits::execution_space,
                   typename traits::schedule_type, typename traits::index_type>;
-
-  typedef MDRangePolicy
-      execution_policy;  // needed for is_execution_space interrogation
-
-  template <class... OtherProperties>
-  friend struct MDRangePolicy;
-
-  static_assert(!std::is_same<typename traits::iteration_pattern, void>::value,
-                "Kokkos Error: MD iteration pattern not defined");
+  // needed for is_execution_policy interrogation
+  using execution_policy = MDRangePolicy<Properties...>;
 
   using iteration_pattern = typename traits::iteration_pattern;
   using work_tag          = typename traits::work_tag;
@@ -140,20 +136,81 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   enum { rank = static_cast<int>(iteration_pattern::rank) };
 
   using index_type       = typename traits::index_type;
-  using array_index_type = long;
-  using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
-  using tile_type  = Kokkos::Array<array_index_type, rank>;
+  using array_index_type = typename std::make_signed<index_type>::type;
+  using execution_space  = typename traits::execution_space;
+
   // If point_type or tile_type is not templated on a signed integral type (if
   // it is unsigned), then if user passes in intializer_list of
-  // runtime-determined values of signed integral type that are not const will
-  // receive a compiler error due to an invalid case for implicit conversion -
-  // "conversion from integer or unscoped enumeration type to integer type that
-  // cannot represent all values of the original, except where source is a
-  // constant expression whose value can be stored exactly in the target type"
-  // This would require the user to either pass a matching index_type parameter
-  // as template parameter to the MDRangePolicy or static_cast the individual
-  // values
+  // runtime-determined values of signed integral type that are not a constant
+  // expression will receive a compiler error due to an invalid case for
+  // implicit conversion - "conversion from integer or unscoped enumeration type
+  // to integer type that cannot represent all values of the original, except
+  // where source is a constant expression whose value can be stored exactly in
+  // the target type"  This would require the user to either pass a matching
+  // index_type parameter as template parameter to the MDRangePolicy or
+  // static_cast the individual values
+  using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
+  using tile_type  = Kokkos::Array<array_index_type, rank>;
 
+  static constexpr int outer_direction = static_cast<int>(
+          (iteration_pattern::outer_direction != Iterate::Default)
+          ? iteration_pattern::outer_direction
+          : default_outer_direction<typename traits::execution_space>::value);
+
+  static constexpr int inner_direction = static_cast<int>(
+          iteration_pattern::inner_direction != Iterate::Default
+          ? iteration_pattern::inner_direction
+          : default_inner_direction<typename traits::execution_space>::value);
+
+  static constexpr int Right = static_cast<int>(Iterate::Right);
+  static constexpr int Left  = static_cast<int>(Iterate::Left);
+
+  // </editor-fold> end Public member types and constexpr data members }}}2
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="Friends"> {{{2
+
+  template <class... OtherProperties>
+  friend struct MDRangePolicy;
+
+  // for now, make Impl::ParallelFor, etc., friends
+  // TODO design and implement a public interface for the things ParallelFor
+  //      and friends need
+
+  template <class, class, class>
+  friend class Kokkos::Impl::ParallelFor;
+
+  template <class, class, class, class>
+  friend class Kokkos::Impl::ParallelReduce;
+
+  template <class, class, class>
+  friend class Kokkos::Impl::ParallelScan;
+
+  template <class, class, class, class>
+  friend class Kokkos::Impl::ParallelScanWithTotal;
+
+  template <class, class, class, class, class>
+  friend struct Kokkos::Impl::HostIterateTile;
+
+#if defined(KOKKOS_ENABLE_CUDA)
+  template <int, class, class, class>
+  friend struct Kokkos::Impl::Refactor::DeviceIterateTile;
+#endif
+
+  // </editor-fold> end Friends }}}2
+  //----------------------------------------------------------------------------
+
+
+  static_assert(!std::is_same<typename traits::iteration_pattern, void>::value,
+                "Kokkos Error: MD iteration pattern not defined");
+
+ private:
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="Private data members"> {{{2
+
+  execution_space m_space;
   point_type m_lower;
   point_type m_upper;
   tile_type m_tile;
@@ -161,40 +218,14 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   index_type m_num_tiles;
   index_type m_prod_tile_dims;
 
-  /*
-    // NDE enum impl definition alternative - replace static constexpr int ?
-    enum { outer_direction = static_cast<int> (
-        (iteration_pattern::outer_direction != Iterate::Default)
-      ? iteration_pattern::outer_direction
-      : default_outer_direction< typename traits::execution_space>::value ) };
+  // </editor-fold> end Private data members }}}2
+  //----------------------------------------------------------------------------
 
-    enum { inner_direction = static_cast<int> (
-        iteration_pattern::inner_direction != Iterate::Default
-      ? iteration_pattern::inner_direction
-      : default_inner_direction< typename traits::execution_space>::value ) };
+ public:
 
-    enum { Right = static_cast<int>( Iterate::Right ) };
-    enum { Left  = static_cast<int>( Iterate::Left ) };
-  */
-  // static constexpr int rank = iteration_pattern::rank;
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
-  static constexpr int outer_direction = static_cast<int>(
-      (iteration_pattern::outer_direction != Iterate::Default)
-          ? iteration_pattern::outer_direction
-          : default_outer_direction<typename traits::execution_space>::value);
-
-  static constexpr int inner_direction = static_cast<int>(
-      iteration_pattern::inner_direction != Iterate::Default
-          ? iteration_pattern::inner_direction
-          : default_inner_direction<typename traits::execution_space>::value);
-
-  // Ugly ugly workaround intel 14 not handling scoped enum correctly
-  static constexpr int Right = static_cast<int>(Iterate::Right);
-  static constexpr int Left  = static_cast<int>(Iterate::Left);
-
-  KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
-    return m_space;
-  }
   template <typename LT, typename UT, typename TT = array_index_type>
   MDRangePolicy(std::initializer_list<LT> const& lower,
                 std::initializer_list<UT> const& upper,
@@ -245,7 +276,17 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_num_tiles(p.m_num_tiles),
         m_prod_tile_dims(p.m_prod_tile_dims) {}
 
- private:
+
+  // </editor-fold> end Constructors, destructor, and assignment }}}2
+  //----------------------------------------------------------------------------
+
+  KOKKOS_INLINE_FUNCTION const execution_space& space() const {
+      return m_space;
+  }
+
+
+private:
+
   void init() {
     // Host
     if (true
@@ -274,8 +315,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_prod_tile_dims *= m_tile[i];
       }
     }
-#if defined(KOKKOS_ENABLE_CUDA)
-    else  // Cuda
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM)
+    else  // Cuda or ROCm
     {
       index_type span;
       int increment  = 1;
@@ -289,12 +330,16 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       for (int i = rank_start; i != rank_end; i += increment) {
         span = m_upper[i] - m_lower[i];
         if (m_tile[i] <= 0) {
-          // TODO: determine what is a good default tile size for cuda
+          // TODO: determine what is a good default tile size for cuda/rocm
           // may be rank dependent
           if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
               ((int)inner_direction == (int)Left && (i > 0))) {
             if (m_prod_tile_dims < 256) {
+#if defined(KOKKOS_ENABLE_CUDA)
               m_tile[i] = 2;
+#elif defined(KOKKOS_ENABLE_ROCM)
+              m_tile[i] = 4;
+#endif
             } else {
               m_tile[i] = 1;
             }
@@ -312,55 +357,13 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
                    // max per dim (Kepler), but product num_threads < 1024
         printf(" Tile dimensions exceed Cuda limits\n");
         Kokkos::abort(
-            " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of "
-            "threads per block - choose smaller tile dims");
-        // Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error:
-        // MDRange tile dims exceed maximum number of threads per block - choose
-        // smaller tile dims");
-      }
-    }
+#if defined(KOKKOS_ENABLE_CUDA)
+            " Cuda"
+#elif defined(KOKKOS_ENABLE_ROCM)
+            " ROCm"
 #endif
-#if defined(KOKKOS_ENABLE_ROCM)
-    else  // ROCm
-    {
-      index_type span;
-      int increment  = 1;
-      int rank_start = 0;
-      int rank_end   = rank;
-      if ((int)inner_direction == (int)Right) {
-        increment  = -1;
-        rank_start = rank - 1;
-        rank_end   = -1;
-      }
-      for (int i = rank_start; i != rank_end; i += increment) {
-        span = m_upper[i] - m_lower[i];
-        if (m_tile[i] <= 0) {
-          // TODO: determine what is a good default tile size for rocm
-          // may be rank dependent
-          if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
-              ((int)inner_direction == (int)Left && (i > 0))) {
-            if (m_prod_tile_dims < 256) {
-              m_tile[i] = 4;
-            } else {
-              m_tile[i] = 1;
-            }
-          } else {
-            m_tile[i] = 16;
-          }
-        }
-        m_tile_end[i] =
-            static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
-        m_num_tiles *= m_tile_end[i];
-        m_prod_tile_dims *= m_tile[i];
-      }
-      if (m_prod_tile_dims > 1024) {  // but product num_threads < 1024
-        printf(" Tile dimensions exceed ROCm limits\n");
-        Kokkos::abort(
-            " ROCm ExecSpace Error: MDRange tile dims exceed maximum number of "
+            " ExecSpace Error: MDRange tile dims exceed maximum number of "
             "threads per block - choose smaller tile dims");
-        // Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error:
-        // MDRange tile dims exceed maximum number of threads per block - choose
-        // smaller tile dims");
       }
     }
 #endif
@@ -414,7 +417,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_prod_tile_dims *= m_tile[i];
       }
     }
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM)
     else  // Cuda
     {
       index_type span;
@@ -447,62 +450,18 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_num_tiles *= m_tile_end[i];
         m_prod_tile_dims *= m_tile[i];
       }
-      if (m_prod_tile_dims >
-          1024) {  // Match Cuda restriction for ParallelReduce; 1024,1024,64
-                   // max per dim (Kepler), but product num_threads < 1024
+      // Match Cuda restriction for ParallelReduce; 1024,1024,64
+      // max per dim (Kepler), but product num_threads < 1024
+      if (m_prod_tile_dims > 1024) {
         printf(" Tile dimensions exceed Cuda limits\n");
         Kokkos::abort(
-            " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of "
-            "threads per block - choose smaller tile dims");
-        // Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error:
-        // MDRange tile dims exceed maximum number of threads per block - choose
-        // smaller tile dims");
-      }
-    }
+#if defined(KOKKOS_ENABLE_CUDA)
+            " Cuda"
+#elif defined(KOKKOS_ENABLE_ROCM)
+            " ROCm"
 #endif
-#if defined(KOKKOS_ENABLE_ROCM)
-    else  // ROCm
-    {
-      index_type span;
-      int increment  = 1;
-      int rank_start = 0;
-      int rank_end   = rank;
-      if ((int)inner_direction == (int)Right) {
-        increment  = -1;
-        rank_start = rank - 1;
-        rank_end   = -1;
-      }
-      for (int i = rank_start; i != rank_end; i += increment) {
-        span = m_upper[i] - m_lower[i];
-        if (m_tile[i] <= 0) {
-          // TODO: determine what is a good default tile size for cuda
-          // may be rank dependent
-          if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
-              ((int)inner_direction == (int)Left && (i > 0))) {
-            if (m_prod_tile_dims < 256) {
-              m_tile[i] = 2;
-            } else {
-              m_tile[i] = 1;
-            }
-          } else {
-            m_tile[i] = 16;
-          }
-        }
-        m_tile_end[i] =
-            static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
-        m_num_tiles *= m_tile_end[i];
-        m_prod_tile_dims *= m_tile[i];
-      }
-      if (m_prod_tile_dims >
-          1024) {  // Match ROCm restriction for ParallelReduce; 1024,1024,1024
-                   // max per dim , but product num_threads < 1024
-        printf(" Tile dimensions exceed ROCm limits\n");
-        Kokkos::abort(
-            " ROCm ExecSpace Error: MDRange tile dims exceed maximum number of "
+            "ExecSpace Error: MDRange tile dims exceed maximum number of "
             "threads per block - choose smaller tile dims");
-        // Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error:
-        // MDRange tile dims exceed maximum number of threads per block - choose
-        // smaller tile dims");
       }
     }
 #endif
