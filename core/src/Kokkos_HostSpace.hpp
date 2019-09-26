@@ -298,8 +298,6 @@ namespace Kokkos {
 
 namespace Impl {
 
-#define PAR_DEEP_COPY_USE_MEMCPY
-
 template <class ExecutionSpace>
 struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
