@@ -288,10 +288,7 @@ ELSE()
     LIST(REMOVE_DUPLICATES PARSE_SOURCES)
   ENDIF()
   ADD_LIBRARY(${NAME} ${PARSE_SOURCES})
-  target_compile_options(
-    ${NAME}
-    PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
-  )
+
   target_link_libraries(
     ${NAME}
     PUBLIC ${KOKKOS_LINK_OPTIONS}
