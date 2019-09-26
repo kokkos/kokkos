@@ -14,16 +14,13 @@ cache:
   - ccache
 
 env:
-  - THREADING="serial"
-  - THREADING="openmp"
-  - THREADING="pthread"
+  - 
+  - BACKEND="OPENMP"
+  - BACKEND="PTHREAD"
 
-# Apple GCC does not support OpenMP.  GCC with OpenMP requires Homebrew.
-# Apple Clang does not support OpenMP.  Clang with OpenMP requires Homebrew.
+# Apple GCC is just an alias to AppleClang
 matrix:
   exclude:
-    - os: osx
-      env: THREADING="openmp"
     - os: osx
       compiler: gcc
 
@@ -46,11 +43,10 @@ script:
   - if [[ ${TRAVIS_OS_NAME} = linux && ${CC} = clang ]]; then
       ln -s /usr/bin/ccache $HOME/bin/clang++;
       export CCACHE_CPP2=yes;
-      GENERATE_OPTS="--gcc-toolchain=/usr";
     fi
   - mkdir build
   - cd build
-  - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings --cxxflags="-O3 -Werror" ${GENERATE_OPTS}
+  - cmake .. ${BACKEND:+-DKokks_ENABLE_${BACKEND}=On} -DKokkos_ENABLE_TESTS=On 
   - make
   - make test
 
