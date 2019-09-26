@@ -196,6 +196,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 #if defined(KOKKOS_ENABLE_CUDA)
   template <int, class, class, class>
   friend struct Kokkos::Impl::Refactor::DeviceIterateTile;
+  template <int, class, class, class, class, class>
+  friend struct Kokkos::Impl::Reduce::DeviceIterateTile;
 #endif
 
   // </editor-fold> end Friends }}}2

@@ -622,9 +622,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
  private:
   using RP = Policy;
-  typedef typename Policy::array_index_type array_index_type;
-  typedef typename Policy::index_type index_type;
-  typedef typename Policy::launch_bounds LaunchBounds;
+  using array_index_type = typename Policy::array_index_type;
+  using index_type = typename Policy::index_type;
+  using LaunchBounds = typename Policy::launch_bounds;
 
   const FunctorType m_functor;
   const Policy m_rp;
@@ -639,14 +639,14 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
   inline void execute() const {
     if (m_rp.m_num_tiles == 0) return;
-    const array_index_type maxblocks = static_cast<array_index_type>(
+    auto maxblocks = static_cast<index_type>(
         m_rp.space().impl_internal_space_instance()->m_maxBlock);
     if (RP::rank == 2) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], 1);
       const dim3 grid(
-          std::min((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
+          std::min(static_cast<index_type>((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x),
                    maxblocks),
-          std::min((m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1) / block.y,
+          std::min(static_cast<index_type>((m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1) / block.y),
                    maxblocks),
           1);
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
@@ -655,11 +655,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     } else if (RP::rank == 3) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], m_rp.m_tile[2]);
       const dim3 grid(
-          std::min((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
+          std::min(static_cast<index_type>((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x),
                    maxblocks),
-          std::min((m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1) / block.y,
+          std::min(static_cast<index_type>((m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1) / block.y),
                    maxblocks),
-          std::min((m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1) / block.z,
+          std::min(static_cast<index_type>((m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1) / block.z),
                    maxblocks));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
@@ -673,9 +673,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
           std::min(
               static_cast<index_type>(m_rp.m_tile_end[0] * m_rp.m_tile_end[1]),
               static_cast<index_type>(maxblocks)),
-          std::min((m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1) / block.y,
+          std::min(static_cast<index_type>((m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1) / block.y),
                    maxblocks),
-          std::min((m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1) / block.z,
+          std::min(static_cast<index_type>((m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1) / block.z),
                    maxblocks));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
@@ -692,7 +692,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
           std::min(
               static_cast<index_type>(m_rp.m_tile_end[2] * m_rp.m_tile_end[3]),
               static_cast<index_type>(maxblocks)),
-          std::min((m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1) / block.z,
+          std::min(static_cast<index_type>((m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1) / block.z),
                    maxblocks));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
@@ -1266,13 +1266,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   inline __device__ void operator()(void) const {
-    /*    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType,
-      DummySHMEMReductionType>::select(1,1.0) );
-      }
 
-      __device__ inline
-      void run(const DummySHMEMReductionType& ) const
-      {*/
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(
@@ -1324,49 +1318,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     }
   }
 
-  /*  __device__ inline
-     void run(const DummyShflReductionType&) const
-     {
-
-       value_type value;
-       ValueInit::init( ReducerConditional::select(m_functor , m_reducer) ,
-     &value);
-       // Number of blocks is bounded so that the reduction can be limited to
-     two passes.
-       // Each thread block is given an approximately equal amount of work to
-     perform.
-       // Accumulate the values for this block.
-       // The accumulation ordering does not match the final pass, but is
-     arithmatically equivalent.
-
-       const Member work_part =
-         ( ( m_policy.m_num_tiles + ( gridDim.x - 1 ) ) / gridDim.x ); //portion
-     of tiles handled by each block
-
-       this-> exec_range( value );
-
-       pointer_type const result = (pointer_type) (m_unified_space ?
-     m_unified_space : m_scratch_space) ;
-
-       int max_active_thread = work_part < blockDim.y ? work_part:blockDim.y;
-       max_active_thread = (max_active_thread ==
-     0)?blockDim.y:max_active_thread;
-
-       value_type init;
-       ValueInit::init( ReducerConditional::select(m_functor , m_reducer) ,
-     &init);
-       if(Impl::cuda_inter_block_reduction<ReducerTypeFwd,ValueJoin,WorkTagFwd>
-           (value,init,ValueJoin(ReducerConditional::select(m_functor ,
-     m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
-         const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
-         if(id==0) {
-           Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final(
-     ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
-           *result = value;
-         }
-       }
-     }
-  */
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
