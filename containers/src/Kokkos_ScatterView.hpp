@@ -1095,8 +1095,8 @@ class ScatterView<DataType, Kokkos::LayoutLeft, ExecSpace, Op,
 
  protected:
   template <typename... Args>
-  KOKKOS_FORCEINLINE_FUNCTION
-  original_reference_type at(int thread_id, Args... args) const {
+  KOKKOS_FORCEINLINE_FUNCTION original_reference_type at(int thread_id,
+                                                         Args... args) const {
     return internal_view(args..., thread_id);
   }
 
