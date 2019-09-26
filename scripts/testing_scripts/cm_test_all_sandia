@@ -243,12 +243,7 @@ else
   KOKKOS_PATH=$( cd $KOKKOS_PATH && pwd )
 fi
 
-export KOKKOS_VALIDATION_STR=
-if [ ! -z "$KOKKOS_CUDA_OPTIONS" ]; then
-   if [ "$SPOT_CHECK" = "True" ]; then
-      export KOKKOS_VALIDATION_STR="-DKokkos_SKIP_VALIDATION=ON"
-   fi
-fi
+
 
 #
 # Machine specific config.
