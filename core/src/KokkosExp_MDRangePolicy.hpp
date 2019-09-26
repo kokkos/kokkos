@@ -114,9 +114,7 @@ struct Rank {
 // multi-dimensional iteration pattern
 template <typename... Properties>
 struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
-
  public:
-
   //----------------------------------------------------------------------------
   // <editor-fold desc="Public member types and constexpr data members"> {{{2
 
@@ -153,12 +151,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   using tile_type  = Kokkos::Array<array_index_type, rank>;
 
   static constexpr int outer_direction = static_cast<int>(
-          (iteration_pattern::outer_direction != Iterate::Default)
+      (iteration_pattern::outer_direction != Iterate::Default)
           ? iteration_pattern::outer_direction
           : default_outer_direction<typename traits::execution_space>::value);
 
   static constexpr int inner_direction = static_cast<int>(
-          iteration_pattern::inner_direction != Iterate::Default
+      iteration_pattern::inner_direction != Iterate::Default
           ? iteration_pattern::inner_direction
           : default_inner_direction<typename traits::execution_space>::value);
 
@@ -203,12 +201,10 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   // </editor-fold> end Friends }}}2
   //----------------------------------------------------------------------------
 
-
   static_assert(!std::is_same<typename traits::iteration_pattern, void>::value,
                 "Kokkos Error: MD iteration pattern not defined");
 
  private:
-
   //----------------------------------------------------------------------------
   // <editor-fold desc="Private data members"> {{{2
 
@@ -224,22 +220,21 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   //----------------------------------------------------------------------------
 
  public:
-
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
   template <typename LT, typename UT, typename TT = array_index_type>
-  MDRangePolicy(std::initializer_list<LT> const& lower,
-                std::initializer_list<UT> const& upper,
+  MDRangePolicy(std::array<LT, rank> const& lower,
+                std::array<UT, rank> const& upper,
                 std::initializer_list<TT> const& tile = {})
       : m_space() {
     init(lower, upper, tile);
   }
 
   template <typename LT, typename UT, typename TT = array_index_type>
-  MDRangePolicy(const typename traits::execution_space& work_space,
-                std::initializer_list<LT> const& lower,
-                std::initializer_list<UT> const& upper,
+  MDRangePolicy(const execution_space& work_space,
+                std::array<LT, rank> const& lower,
+                std::array<UT, rank> const& upper,
                 std::initializer_list<TT> const& tile = {})
       : m_space(work_space) {
     init(lower, upper, tile);
@@ -258,7 +253,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   MDRangePolicy(const typename traits::execution_space& work_space,
                 point_type const& lower, point_type const& upper,
-                tile_type const& tile = tile_type{})
+                tile_type const& tile = tile_type{}) noexcept
       : m_space(work_space),
         m_lower(lower),
         m_upper(upper),
@@ -269,7 +264,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   }
 
   template <class... OtherProperties>
-  MDRangePolicy(const MDRangePolicy<OtherProperties...> p)
+  MDRangePolicy(const MDRangePolicy<OtherProperties...> p) noexcept
       : m_space(p.m_space),
         m_lower(p.m_lower),
         m_upper(p.m_upper),
@@ -278,28 +273,19 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_num_tiles(p.m_num_tiles),
         m_prod_tile_dims(p.m_prod_tile_dims) {}
 
-
   // </editor-fold> end Constructors, destructor, and assignment }}}2
   //----------------------------------------------------------------------------
 
   KOKKOS_INLINE_FUNCTION const execution_space& space() const {
-      return m_space;
+    return m_space;
   }
 
-
-private:
-
+ private:
   void init() {
     // Host
-    if (true
-#if defined(KOKKOS_ENABLE_CUDA)
-        && !std::is_same<typename traits::execution_space, Kokkos::Cuda>::value
-#endif
-#if defined(KOKKOS_ENABLE_ROCM)
-        && !std::is_same<typename traits::execution_space,
-                         Kokkos::Experimental::ROCm>::value
-#endif
-    ) {
+    if (!std::is_same<typename traits::execution_space, Kokkos::Cuda>::value ||
+        !std::is_same<typename traits::execution_space,
+                      Kokkos::Experimental::ROCm>::value) {
       index_type span;
       for (int i = 0; i < rank; ++i) {
         span = m_upper[i] - m_lower[i];
@@ -316,9 +302,7 @@ private:
         m_num_tiles *= m_tile_end[i];
         m_prod_tile_dims *= m_tile[i];
       }
-    }
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM)
-    else  // Cuda or ROCm
+    } else  // Cuda or ROCm
     {
       index_type span;
       int increment  = 1;
@@ -368,7 +352,6 @@ private:
             "threads per block - choose smaller tile dims");
       }
     }
-#endif
   }
 
   template <typename LT, typename UT, typename TT = array_index_type>
@@ -393,15 +376,9 @@ private:
     m_prod_tile_dims = 1;
 
     // Host
-    if (true
-#if defined(KOKKOS_ENABLE_CUDA)
-        && !std::is_same<typename traits::execution_space, Kokkos::Cuda>::value
-#endif
-#if defined(KOKKOS_ENABLE_ROCM)
-        && !std::is_same<typename traits::execution_space,
-                         Kokkos::Experimental::ROCm>::value
-#endif
-    ) {
+    if (!std::is_same<typename traits::execution_space, Kokkos::Cuda>::value ||
+        !std::is_same<typename traits::execution_space,
+                      Kokkos::Experimental::ROCm>::value) {
       index_type span;
       for (int i = 0; i < rank; ++i) {
         span = m_upper[i] - m_lower[i];
@@ -418,9 +395,7 @@ private:
         m_num_tiles *= m_tile_end[i];
         m_prod_tile_dims *= m_tile[i];
       }
-    }
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM)
-    else  // Cuda
+    } else  // Cuda
     {
       index_type span;
       int increment  = 1;
@@ -466,7 +441,6 @@ private:
             "threads per block - choose smaller tile dims");
       }
     }
-#endif
   }
 };
 
