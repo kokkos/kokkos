@@ -622,7 +622,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
  private:
   using RP = Policy;
-  using array_index_type = typename Policy::array_index_type;
   using index_type = typename Policy::index_type;
   using LaunchBounds = typename Policy::launch_bounds;
 
@@ -1201,7 +1200,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   typedef Kokkos::MDRangePolicy<Traits...> Policy;
 
  private:
-  typedef typename Policy::array_index_type array_index_type;
   typedef typename Policy::index_type index_type;
 
   typedef typename Policy::work_tag WorkTag;

@@ -1286,7 +1286,6 @@ struct apply_impl<6, RP, Functor, Tag> {
 template <typename RP, typename Functor, typename Tag>
 struct DeviceIterateTile {
   using index_type       = typename RP::index_type;
-  using array_index_type = typename RP::array_index_type;
   using point_type       = typename RP::point_type;
 
   struct VoidDummy {};
@@ -1305,7 +1304,7 @@ struct DeviceIterateTile {
   inline __device__ void operator()(void) const { this->apply(); }
 
   inline void execute() const {
-    const array_index_type maxblocks =
+    const index_type maxblocks =
         65535;  // not true for blockIdx.x for newer archs
     if (RP::rank == 2) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], 1);

@@ -174,7 +174,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   enum { rank = static_cast<int>(iteration_pattern::rank) };
 
   using index_type       = typename traits::index_type;
-  using array_index_type = typename std::make_signed<index_type>::type;
   using execution_space  = typename traits::execution_space;
   using point_type =
       Kokkos::Array<Impl::_ignore_narrowing_index_wrapper<index_type>, rank>;

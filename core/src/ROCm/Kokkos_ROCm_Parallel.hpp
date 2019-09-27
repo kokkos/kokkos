@@ -731,7 +731,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
  private:
   typedef Kokkos::MDRangePolicy<Traits...> Policy;
   using RP = Policy;
-  typedef typename Policy::array_index_type array_index_type;
   typedef typename Policy::index_type index_type;
   typedef typename Policy::launch_bounds LaunchBounds;
 
@@ -748,7 +747,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   inline void execute() const {
-    const array_index_type maxblocks = static_cast<array_index_type>(
+    const auto maxblocks = static_cast<index_type>(
         Kokkos::Impl::ROCmTraits::UpperBoundExtentCount);
     if (RP::rank == 2) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], 1);
@@ -948,7 +947,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
  private:
   typedef Kokkos::MDRangePolicy<Traits...> Policy;
   using RP = Policy;
-  typedef typename Policy::array_index_type array_index_type;
   typedef typename Policy::index_type index_type;
   typedef typename Policy::work_tag WorkTag;
   typedef typename Policy::member_type Member;
