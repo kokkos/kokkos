@@ -292,10 +292,6 @@ ELSE()
     ${NAME}
     PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
   )
-  target_link_libraries(
-    ${NAME}
-    PUBLIC ${KOKKOS_LINK_OPTIONS}
-  )
 ENDIF()
 ENDFUNCTION()
 
