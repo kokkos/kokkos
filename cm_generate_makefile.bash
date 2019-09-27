@@ -325,7 +325,7 @@ if [[ ${COMPILER} == *clang* ]]; then
    gcc_path=$(which g++ | awk --field-separator='/bin/g++' '{printf $1}' )
    KOKKOS_CXXFLAGS="${KOKKOS_CXXFLAGS} --gcc-toolchain=${gcc_path}"
 
-   if [ ${CUDA_PATH} != "" ]; then
+   if [ ! "${CUDA_PATH}" == "" ]; then
       KOKKOS_CXXFLAGS="${KOKKOS_CXXFLAGS} --cuda-path=${CUDA_PATH}"
    fi 
 fi
