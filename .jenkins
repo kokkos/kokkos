@@ -33,7 +33,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make VERBOSE=1 -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -64,7 +64,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make VERBOSE=1 -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -98,7 +98,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make VERBOSE=1 -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -131,7 +131,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make VERBOSE=1 -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
