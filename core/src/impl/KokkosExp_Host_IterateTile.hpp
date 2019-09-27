@@ -1542,7 +1542,7 @@ struct HostIterateTile<
     RP, Functor, Tag, ValueType,
     typename std::enable_if<is_void_type<ValueType>::value>::type> {
   using index_type = typename RP::index_type;
-  using point_type = typename RP::point_type;
+  using point_type = typename RP::_point_type;
 
   using value_type = ValueType;
 
@@ -1953,7 +1953,7 @@ struct HostIterateTile<
     typename std::enable_if<!is_void_type<ValueType>::value &&
                             !is_type_array<ValueType>::value>::type> {
   using index_type = typename RP::index_type;
-  using point_type = typename RP::point_type;
+  using point_type = typename RP::_point_type;
 
   using value_type = ValueType;
 
@@ -2376,7 +2376,7 @@ struct HostIterateTile<
     typename std::enable_if<!is_void_type<ValueType>::value &&
                             is_type_array<ValueType>::value>::type> {
   using index_type = typename RP::index_type;
-  using point_type = typename RP::point_type;
+  using point_type = typename RP::_point_type;
 
   using value_type =
       typename is_type_array<ValueType>::value_type;  // strip away the

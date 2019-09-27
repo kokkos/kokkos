@@ -63,6 +63,46 @@
 #endif
 
 namespace Kokkos {
+namespace Impl {
+
+// Workaround for narrowing conversion warnings
+template <class IndexType>
+struct _ignore_narrowing_index_wrapper {
+  IndexType value;
+
+  template <class T,
+            int = typename std::enable_if<
+                std::is_convertible<T, IndexType>::value, int>::type{0}>
+  /* intentionally implicit */
+  KOKKOS_FORCEINLINE_FUNCTION _ignore_narrowing_index_wrapper(
+      T arg_value) noexcept
+      : value(arg_value) {}
+
+  // workaround for Cuda linker bug??!?
+  KOKKOS_INLINE_FUNCTION _ignore_narrowing_index_wrapper() noexcept
+      : value(IndexType{}) {}
+  KOKKOS_INLINE_FUNCTION _ignore_narrowing_index_wrapper(
+      _ignore_narrowing_index_wrapper const&) noexcept = default;
+  KOKKOS_INLINE_FUNCTION _ignore_narrowing_index_wrapper(
+      _ignore_narrowing_index_wrapper&&) noexcept = default;
+
+  KOKKOS_INLINE_FUNCTION _ignore_narrowing_index_wrapper& operator=(
+      _ignore_narrowing_index_wrapper const&) noexcept = default;
+  KOKKOS_INLINE_FUNCTION _ignore_narrowing_index_wrapper& operator=(
+      _ignore_narrowing_index_wrapper&&) noexcept = default;
+
+  KOKKOS_INLINE_FUNCTION ~_ignore_narrowing_index_wrapper() noexcept = default;
+
+  KOKKOS_INLINE_FUNCTION operator IndexType() noexcept { return value; }
+  KOKKOS_INLINE_FUNCTION operator IndexType const() const noexcept {
+    return value;
+  }
+};
+
+}  // end namespace Impl
+}  // end namespace Kokkos
+
+namespace Kokkos {
 
 // ------------------------------------------------------------------ //
 // Moved to Kokkos_Layout.hpp for more general accessibility
@@ -136,19 +176,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   using index_type       = typename traits::index_type;
   using array_index_type = typename std::make_signed<index_type>::type;
   using execution_space  = typename traits::execution_space;
-
-  // If point_type or tile_type is not templated on a signed integral type (if
-  // it is unsigned), then if user passes in intializer_list of
-  // runtime-determined values of signed integral type that are not a constant
-  // expression will receive a compiler error due to an invalid case for
-  // implicit conversion - "conversion from integer or unscoped enumeration type
-  // to integer type that cannot represent all values of the original, except
-  // where source is a constant expression whose value can be stored exactly in
-  // the target type"  This would require the user to either pass a matching
-  // index_type parameter as template parameter to the MDRangePolicy or
-  // static_cast the individual values
-  using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
-  using tile_type  = Kokkos::Array<array_index_type, rank>;
+  using point_type =
+      Kokkos::Array<Impl::_ignore_narrowing_index_wrapper<index_type>, rank>;
+  using tile_type = point_type;
 
   static constexpr int outer_direction = static_cast<int>(
       (iteration_pattern::outer_direction != Iterate::Default)
@@ -165,6 +195,27 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   // </editor-fold> end Public member types and constexpr data members }}}2
   //----------------------------------------------------------------------------
+
+ private:
+  //------------------------------------------------------------------------------
+  // <editor-fold desc="Private member types"> {{{2
+
+  // If point_type or tile_type is not templated on a signed integral type (if
+  // it is unsigned), then if user passes in intializer_list of
+  // runtime-determined values of signed integral type that are not a constant
+  // expression will receive a compiler error due to an invalid case for
+  // implicit conversion - "conversion from integer or unscoped enumeration type
+  // to integer type that cannot represent all values of the original, except
+  // where source is a constant expression whose value can be stored exactly in
+  // the target type"  This would require the user to either pass a matching
+  // index_type parameter as template parameter to the MDRangePolicy or
+  // static_cast the individual values
+
+  // TODO this doesn't need to be replicated for every MDRangePolicy
+  //      specialization; consider moving it to a free function or something
+
+  // </editor-fold> end Private member types }}}2
+  //------------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
   // <editor-fold desc="Friends"> {{{2
@@ -204,15 +255,19 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   static_assert(!std::is_same<typename traits::iteration_pattern, void>::value,
                 "Kokkos Error: MD iteration pattern not defined");
 
+ public:
  private:
   //----------------------------------------------------------------------------
   // <editor-fold desc="Private data members"> {{{2
 
+  using _point_type = Kokkos::Array<index_type, rank>;
+  using _tile_type  = _point_type;
+
   execution_space m_space;
-  point_type m_lower;
-  point_type m_upper;
-  tile_type m_tile;
-  point_type m_tile_end;
+  _point_type m_lower;
+  _point_type m_upper;
+  _tile_type m_tile;
+  _point_type m_tile_end;
   index_type m_num_tiles;
   index_type m_prod_tile_dims;
 
@@ -223,41 +278,21 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
-  template <typename LT, typename UT, typename TT = array_index_type>
-  MDRangePolicy(std::array<LT, rank> const& lower,
-                std::array<UT, rank> const& upper,
-                std::initializer_list<TT> const& tile = {})
-      : m_space() {
-    init(lower, upper, tile);
-  }
-
-  template <typename LT, typename UT, typename TT = array_index_type>
-  MDRangePolicy(const execution_space& work_space,
-                std::array<LT, rank> const& lower,
-                std::array<UT, rank> const& upper,
-                std::initializer_list<TT> const& tile = {})
-      : m_space(work_space) {
-    init(lower, upper, tile);
-  }
-
   MDRangePolicy(point_type const& lower, point_type const& upper,
-                tile_type const& tile = tile_type{})
-      : m_space(),
-        m_lower(lower),
-        m_upper(upper),
-        m_tile(tile),
-        m_num_tiles(1),
-        m_prod_tile_dims(1) {
-    init();
+                tile_type const& tile = {
+                    /* workaround for nvcc compiler/linker bug */ 0})
+      : MDRangePolicy(execution_space{}, lower, upper, tile) {
+    /* forwarding ctor, must be empty */
   }
 
-  MDRangePolicy(const typename traits::execution_space& work_space,
-                point_type const& lower, point_type const& upper,
-                tile_type const& tile = tile_type{}) noexcept
+  MDRangePolicy(execution_space const& work_space, point_type const& lower,
+                point_type const& upper,
+                tile_type const& tile = {
+                    /* workaround for nvcc compiler/linker bug */ 0})
       : m_space(work_space),
-        m_lower(lower),
-        m_upper(upper),
-        m_tile(tile),
+        m_lower(_get_narrowed_values(lower)),
+        m_upper(_get_narrowed_values(upper)),
+        m_tile(_get_narrowed_values(tile)),
         m_num_tiles(1),
         m_prod_tile_dims(1) {
     init();
@@ -281,11 +316,22 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   }
 
  private:
+  // TODO this doesn't need to be replicated for every MDRangePolicy
+  //      specialization; consider moving it to a free function or something
+  static _point_type _get_narrowed_values(point_type const& a) noexcept {
+    // We don't have access to std::integer_sequence, so we have to do this
+    _point_type rv = {/* workaround for nvcc compiler/linker bug */ 0};
+    for (int i = 0; i < rank; ++i) {
+      // TODO should be a safe narrowing_cast template like in GSL
+      rv[i] = static_cast<index_type>(a[i].value);
+    }
+    return rv;
+  }
+
   void init() {
     // Host
-    if (!std::is_same<typename traits::execution_space, Kokkos::Cuda>::value ||
-        !std::is_same<typename traits::execution_space,
-                      Kokkos::Experimental::ROCm>::value) {
+    if (!std::is_same<execution_space, Kokkos::Cuda>::value ||
+        !std::is_same<execution_space, Kokkos::Experimental::ROCm>::value) {
       index_type span;
       for (int i = 0; i < rank; ++i) {
         span = m_upper[i] - m_lower[i];
@@ -349,95 +395,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
             " ROCm"
 #endif
             " ExecSpace Error: MDRange tile dims exceed maximum number of "
-            "threads per block - choose smaller tile dims");
-      }
-    }
-  }
-
-  template <typename LT, typename UT, typename TT = array_index_type>
-  void init(std::initializer_list<LT> const& lower,
-            std::initializer_list<UT> const& upper,
-            std::initializer_list<TT> const& tile = {}) {
-    if (static_cast<int>(m_lower.size()) != rank ||
-        static_cast<int>(m_upper.size()) != rank)
-      Kokkos::abort(
-          "MDRangePolicy: Constructor initializer lists have wrong size");
-
-    for (auto i = 0; i < rank; ++i) {
-      m_lower[i] = static_cast<array_index_type>(lower.begin()[i]);
-      m_upper[i] = static_cast<array_index_type>(upper.begin()[i]);
-      if (static_cast<int>(tile.size()) == rank)
-        m_tile[i] = static_cast<array_index_type>(tile.begin()[i]);
-      else
-        m_tile[i] = 0;
-    }
-
-    m_num_tiles      = 1;
-    m_prod_tile_dims = 1;
-
-    // Host
-    if (!std::is_same<typename traits::execution_space, Kokkos::Cuda>::value ||
-        !std::is_same<typename traits::execution_space,
-                      Kokkos::Experimental::ROCm>::value) {
-      index_type span;
-      for (int i = 0; i < rank; ++i) {
-        span = m_upper[i] - m_lower[i];
-        if (m_tile[i] <= 0) {
-          if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
-              ((int)inner_direction == (int)Left && (i > 0))) {
-            m_tile[i] = 2;
-          } else {
-            m_tile[i] = (span == 0 ? 1 : span);
-          }
-        }
-        m_tile_end[i] =
-            static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
-        m_num_tiles *= m_tile_end[i];
-        m_prod_tile_dims *= m_tile[i];
-      }
-    } else  // Cuda
-    {
-      index_type span;
-      int increment  = 1;
-      int rank_start = 0;
-      int rank_end   = rank;
-      if ((int)inner_direction == (int)Right) {
-        increment  = -1;
-        rank_start = rank - 1;
-        rank_end   = -1;
-      }
-      for (int i = rank_start; i != rank_end; i += increment) {
-        span = m_upper[i] - m_lower[i];
-        if (m_tile[i] <= 0) {
-          // TODO: determine what is a good default tile size for cuda
-          // may be rank dependent
-          if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
-              ((int)inner_direction == (int)Left && (i > 0))) {
-            if (m_prod_tile_dims < 256) {
-              m_tile[i] = 2;
-            } else {
-              m_tile[i] = 1;
-            }
-          } else {
-            m_tile[i] = 16;
-          }
-        }
-        m_tile_end[i] =
-            static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
-        m_num_tiles *= m_tile_end[i];
-        m_prod_tile_dims *= m_tile[i];
-      }
-      // Match Cuda restriction for ParallelReduce; 1024,1024,64
-      // max per dim (Kepler), but product num_threads < 1024
-      if (m_prod_tile_dims > 1024) {
-        printf(" Tile dimensions exceed Cuda limits\n");
-        Kokkos::abort(
-#if defined(KOKKOS_ENABLE_CUDA)
-            " Cuda"
-#elif defined(KOKKOS_ENABLE_ROCM)
-            " ROCm"
-#endif
-            "ExecSpace Error: MDRange tile dims exceed maximum number of "
             "threads per block - choose smaller tile dims");
       }
     }
