@@ -323,7 +323,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   void init() {
     // Host
-    if (!std::is_same<execution_space, Kokkos::Cuda>::value ||
+    if (!std::is_same<execution_space, Kokkos::Cuda>::value &&
         !std::is_same<execution_space, Kokkos::Experimental::ROCm>::value) {
       index_type span;
       for (int i = 0; i < rank; ++i) {
