@@ -53,7 +53,9 @@
 #include <Kokkos_Parallel.hpp>
 
 #if defined(__CUDACC__) && defined(KOKKOS_ENABLE_CUDA)
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
 #include <Cuda/KokkosExp_Cuda_IterateTile.hpp>
+#endif
 #include <Cuda/KokkosExp_Cuda_IterateTile_Refactor.hpp>
 #endif
 
@@ -175,6 +177,17 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   using index_type       = typename traits::index_type;
   using execution_space  = typename traits::execution_space;
+
+  // If point_type or tile_type don't usethis magic non-narrowing
+  // wrapper type, then if user passes in braced-init-list of
+  // runtime-determined values of signed integral type that are not a constant
+  // expression will receive a compiler error due to an invalid case for
+  // implicit conversion - "conversion from integer or unscoped enumeration type
+  // to integer type that cannot represent all values of the original, except
+  // where source is a constant expression whose value can be stored exactly in
+  // the target type"  This would require the user to either pass a matching
+  // index_type parameter as template parameter to the MDRangePolicy or
+  // static_cast the individual values
   using point_type =
       Kokkos::Array<Impl::_ignore_narrowing_index_wrapper<index_type>, rank>;
   using tile_type = point_type;
@@ -196,25 +209,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   //----------------------------------------------------------------------------
 
  private:
-  //------------------------------------------------------------------------------
-  // <editor-fold desc="Private member types"> {{{2
-
-  // If point_type or tile_type is not templated on a signed integral type (if
-  // it is unsigned), then if user passes in intializer_list of
-  // runtime-determined values of signed integral type that are not a constant
-  // expression will receive a compiler error due to an invalid case for
-  // implicit conversion - "conversion from integer or unscoped enumeration type
-  // to integer type that cannot represent all values of the original, except
-  // where source is a constant expression whose value can be stored exactly in
-  // the target type"  This would require the user to either pass a matching
-  // index_type parameter as template parameter to the MDRangePolicy or
-  // static_cast the individual values
-
-  // TODO this doesn't need to be replicated for every MDRangePolicy
-  //      specialization; consider moving it to a free function or something
-
-  // </editor-fold> end Private member types }}}2
-  //------------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
   // <editor-fold desc="Friends"> {{{2
