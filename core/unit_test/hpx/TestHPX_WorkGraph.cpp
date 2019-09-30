@@ -41,5 +41,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestWorkGraph.hpp>
+#include <hpx/TestHPX_Category.hpp>
+#include <TestWorkGraph.hpp>

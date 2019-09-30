@@ -47,7 +47,7 @@
 //----------------------------------------------------------------------------
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_TASKDAG )
+#if defined(KOKKOS_ENABLE_TASKDAG)
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_TaskScheduler_fwd.hpp>
@@ -70,28 +70,22 @@ namespace Impl {
 
 template <class TeamMember, class Scheduler>
 class TaskTeamMemberAdapter : public TeamMember {
-private:
-
+ private:
   Scheduler m_scheduler;
 
-public:
-
+ public:
   //----------------------------------------
 
   // Forward everything but the Scheduler to the constructor of the TeamMember
   // type that we're adapting
   template <typename... Args>
-  KOKKOS_INLINE_FUNCTION
-  explicit TaskTeamMemberAdapter(
-    typename std::enable_if<
-      std::is_constructible<TeamMember, Args...>::value,
-      Scheduler
-    >::type arg_scheduler,
-    Args&&... args
-  ) // TODO @tasking @minor DSH noexcept specification
-    : TeamMember(std::forward<Args>(args)...),
-      m_scheduler(std::move(arg_scheduler).get_team_scheduler(this->league_rank()))
-  { }
+  KOKKOS_INLINE_FUNCTION explicit TaskTeamMemberAdapter(
+      typename std::enable_if<std::is_constructible<TeamMember, Args...>::value,
+                              Scheduler>::type arg_scheduler,
+      Args&&... args)  // TODO @tasking @minor DSH noexcept specification
+      : TeamMember(std::forward<Args>(args)...),
+        m_scheduler(
+            std::move(arg_scheduler).get_team_scheduler(this->league_rank())) {}
 
   // (rule of 6 constructors)
 
@@ -121,15 +115,13 @@ public:
   Scheduler& scheduler() noexcept { return m_scheduler; }
 
   //----------------------------------------
-
 };
 
-} // end namespace Impl
-} // namespace Kokkos
+}  // end namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_TASKTEAMMEMBER_HPP */
-

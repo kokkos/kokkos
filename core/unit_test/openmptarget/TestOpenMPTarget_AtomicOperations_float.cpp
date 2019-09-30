@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<openmptarget/TestOpenMPTarget_Category.hpp>
-#include<TestAtomicOperations_float.hpp>
-
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
+#include <TestAtomicOperations_float.hpp>

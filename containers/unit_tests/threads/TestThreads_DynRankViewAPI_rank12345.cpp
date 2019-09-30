@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<threads/TestThreads_Category.hpp>
-#include<TestDynViewAPI_rank12345.hpp>
-
+#include <threads/TestThreads_Category.hpp>
+#include <TestDynViewAPI_rank12345.hpp>

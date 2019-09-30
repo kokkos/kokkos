@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_HPX
 
@@ -56,41 +55,41 @@
 namespace Test {
 
 class hpx : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
+ protected:
+  static void SetUpTestCase() {
     std::cout << std::setprecision(5) << std::scientific;
   }
 
-  static void TearDownTestCase()
-  {
-  }
+  static void TearDownTestCase() {}
 };
 
-#define HPX_RANDOM_XORSHIFT64( num_draws )                                \
-  TEST_F( hpx, Random_XorShift64 ) {   \
-      Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Experimental::HPX> >(num_draws); \
+#define HPX_RANDOM_XORSHIFT64(num_draws)                             \
+  TEST_F(hpx, Random_XorShift64) {                                   \
+    Impl::test_random<                                               \
+        Kokkos::Random_XorShift64_Pool<Kokkos::Experimental::HPX> >( \
+        num_draws);                                                  \
   }
 
-#define HPX_RANDOM_XORSHIFT1024( num_draws )                                \
-  TEST_F( hpx, Random_XorShift1024 ) {   \
-      Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Experimental::HPX> >(num_draws); \
+#define HPX_RANDOM_XORSHIFT1024(num_draws)                             \
+  TEST_F(hpx, Random_XorShift1024) {                                   \
+    Impl::test_random<                                                 \
+        Kokkos::Random_XorShift1024_Pool<Kokkos::Experimental::HPX> >( \
+        num_draws);                                                    \
   }
 
-#define HPX_SORT_UNSIGNED( size )                                \
-  TEST_F( hpx, SortUnsigned ) {   \
-      Impl::test_sort< Kokkos::Experimental::HPX, unsigned >(size); \
+#define HPX_SORT_UNSIGNED(size)                                 \
+  TEST_F(hpx, SortUnsigned) {                                   \
+    Impl::test_sort<Kokkos::Experimental::HPX, unsigned>(size); \
   }
 
-HPX_RANDOM_XORSHIFT64( 10240000 )
-HPX_RANDOM_XORSHIFT1024( 10130144 )
+HPX_RANDOM_XORSHIFT64(10240000)
+HPX_RANDOM_XORSHIFT1024(10130144)
 HPX_SORT_UNSIGNED(171)
 
 #undef HPX_RANDOM_XORSHIFT64
 #undef HPX_RANDOM_XORSHIFT1024
 #undef HPX_SORT_UNSIGNED
-} // namespace test
+}  // namespace Test
 #else
 void KOKKOS_ALGORITHMS_UNITTESTS_TESTHPX_PREVENT_LINK_ERROR() {}
 #endif
-

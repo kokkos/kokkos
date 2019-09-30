@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -50,139 +50,129 @@
 
 #include <SparseLinearSystem.hpp>
 
-#if defined( KOKKOS_ENABLE_CUDA )
+#if defined(KOKKOS_ENABLE_CUDA)
 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Impl {
 
-CudaSparseSingleton & CudaSparseSingleton::singleton()
-{ static CudaSparseSingleton s ; return s ; }
+CudaSparseSingleton& CudaSparseSingleton::singleton() {
+  static CudaSparseSingleton s;
+  return s;
+}
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 
-void test_cuda_query( comm::Machine machine )
-{
-  const size_t comm_rank = comm::rank( machine );
+void test_cuda_query(comm::Machine machine) {
+  const size_t comm_rank = comm::rank(machine);
   std::cout << "P" << comm_rank
-            << ": Cuda device_count = "
-            << Kokkos::Cuda::detect_device_count()
-            << std::endl ;
+            << ": Cuda device_count = " << Kokkos::Cuda::detect_device_count()
+            << std::endl;
 }
 
 //----------------------------------------------------------------------------
 
-void test_cuda_fixture( comm::Machine machine ,
-                        size_t nx , size_t ny , size_t nz )
-{
-  const size_t comm_rank = comm::rank( machine );
-  const size_t comm_size = comm::size( machine );
+void test_cuda_fixture(comm::Machine machine, size_t nx, size_t ny, size_t nz) {
+  const size_t comm_rank = comm::rank(machine);
+  const size_t comm_size = comm::size(machine);
   const size_t dev_count = Kokkos::Cuda::detect_device_count();
   const size_t dev_rank =
-    dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0 ;
-  const size_t gang_count = 0 ;
+      dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0;
+  const size_t gang_count = 0;
 
   Kokkos::InitArguments args;
   args.device_id = dev_rank;
   Kokkos::initialize(args);
 
-  test_box_fixture<Kokkos::Cuda>( machine , gang_count , nx , ny , nz );
+  test_box_fixture<Kokkos::Cuda>(machine, gang_count, nx, ny, nz);
   Kokkos::finalize();
 }
 
 //----------------------------------------------------------------------------
 
-void test_cuda_implicit( comm::Machine machine , 
-                         size_t elem_count_begin ,
-                         size_t elem_count_end ,
-                         size_t count_run )
-{
-  const size_t comm_rank = comm::rank( machine );
-  const size_t comm_size = comm::size( machine );
+void test_cuda_implicit(comm::Machine machine, size_t elem_count_begin,
+                        size_t elem_count_end, size_t count_run) {
+  const size_t comm_rank = comm::rank(machine);
+  const size_t comm_size = comm::size(machine);
   const size_t dev_count = Kokkos::Cuda::detect_device_count();
   const size_t dev_rank =
-    dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0 ;
-  const size_t gang_count = 0 ;
+      dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0;
+  const size_t gang_count = 0;
 
   Kokkos::InitArguments args;
   args.device_id = dev_rank;
   Kokkos::initialize(args);
-  HybridFEM::Implicit::driver<double,Kokkos::Cuda>( "Cuda" , machine , gang_count , elem_count_begin , elem_count_end , count_run );
+  HybridFEM::Implicit::driver<double, Kokkos::Cuda>(
+      "Cuda", machine, gang_count, elem_count_begin, elem_count_end, count_run);
   Kokkos::finalize();
 }
 
 //----------------------------------------------------------------------------
 
-void test_cuda_explicit( comm::Machine machine , 
-                         size_t elem_count_begin ,
-                         size_t elem_count_end ,
-                         size_t count_run )
-{
-  const size_t comm_rank = comm::rank( machine );
-  const size_t comm_size = comm::size( machine );
+void test_cuda_explicit(comm::Machine machine, size_t elem_count_begin,
+                        size_t elem_count_end, size_t count_run) {
+  const size_t comm_rank = comm::rank(machine);
+  const size_t comm_size = comm::size(machine);
   const size_t dev_count = Kokkos::Cuda::detect_device_count();
   const size_t dev_rank =
-    dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0 ;
-  const size_t gang_count = 0 ;
+      dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0;
+  const size_t gang_count = 0;
 
   Kokkos::InitArguments args;
   args.device_id = dev_rank;
   Kokkos::initialize(args);
-  Explicit::driver<double,Kokkos::Cuda>( "Cuda" , machine , gang_count , elem_count_begin , elem_count_end , count_run );
+  Explicit::driver<double, Kokkos::Cuda>(
+      "Cuda", machine, gang_count, elem_count_begin, elem_count_end, count_run);
   Kokkos::finalize();
 }
 
 //----------------------------------------------------------------------------
 
-void test_cuda_nonlinear( comm::Machine machine , 
-                          size_t elem_count_begin ,
-                          size_t elem_count_end ,
-                          size_t count_run )
-{
-  const size_t comm_rank = comm::rank( machine );
-  const size_t comm_size = comm::size( machine );
+void test_cuda_nonlinear(comm::Machine machine, size_t elem_count_begin,
+                         size_t elem_count_end, size_t count_run) {
+  const size_t comm_rank = comm::rank(machine);
+  const size_t comm_size = comm::size(machine);
   const size_t dev_count = Kokkos::Cuda::detect_device_count();
   const size_t dev_rank =
-    dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0 ;
-  const size_t gang_count = 0 ;
+      dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0;
+  const size_t gang_count = 0;
 
   Kokkos::InitArguments args;
   args.device_id = dev_rank;
   Kokkos::initialize(args);
 
-  typedef Kokkos::Cuda device ;
-  typedef FixtureElementHex8 hex8 ;
-  HybridFEM::Nonlinear::driver<double,device,hex8>( "Cuda" , machine , gang_count , elem_count_begin , elem_count_end , count_run );
+  typedef Kokkos::Cuda device;
+  typedef FixtureElementHex8 hex8;
+  HybridFEM::Nonlinear::driver<double, device, hex8>(
+      "Cuda", machine, gang_count, elem_count_begin, elem_count_end, count_run);
   Kokkos::finalize();
 }
 
-void test_cuda_nonlinear_quadratic( comm::Machine machine , 
-                                    size_t elem_count_begin ,
-                                    size_t elem_count_end ,
-                                    size_t count_run )
-{
-  const size_t comm_rank = comm::rank( machine );
-  const size_t comm_size = comm::size( machine );
+void test_cuda_nonlinear_quadratic(comm::Machine machine,
+                                   size_t elem_count_begin,
+                                   size_t elem_count_end, size_t count_run) {
+  const size_t comm_rank = comm::rank(machine);
+  const size_t comm_size = comm::size(machine);
   const size_t dev_count = Kokkos::Cuda::detect_device_count();
   const size_t dev_rank =
-    dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0 ;
-  const size_t gang_count = 0 ;
+      dev_count && dev_count <= comm_size ? comm_rank % dev_count : 0;
+  const size_t gang_count = 0;
 
   Kokkos::InitArguments args;
   args.device_id = dev_rank;
   Kokkos::initialize(args);
 
-  typedef Kokkos::Cuda device ;
-  typedef FixtureElementHex27 hex27 ;
-  HybridFEM::Nonlinear::driver<double,device,hex27>( "Cuda" , machine , gang_count , elem_count_begin , elem_count_end , count_run );
+  typedef Kokkos::Cuda device;
+  typedef FixtureElementHex27 hex27;
+  HybridFEM::Nonlinear::driver<double, device, hex27>(
+      "Cuda", machine, gang_count, elem_count_begin, elem_count_end, count_run);
   Kokkos::finalize();
 }
 
 //----------------------------------------------------------------------------
 
-#endif  /* #if defined( KOKKOS_ENABLE_CUDA ) */
-
+#endif /* #if defined( KOKKOS_ENABLE_CUDA ) */

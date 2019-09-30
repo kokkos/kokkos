@@ -49,28 +49,22 @@
 #include <Kokkos_Core.hpp>
 
 namespace Test {
-TEST_F( TEST_CATEGORY, init )
-{
-   ;
-}
+TEST_F(TEST_CATEGORY, init) { ; }
 
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 
-template<class ExecSpace>
-void test_dispatch () {
+template <class ExecSpace>
+void test_dispatch() {
   const int repeat = 100;
-  for ( int i = 0; i < repeat; ++i ) {
-    for ( int j = 0; j < repeat; ++j ) {
-      Kokkos::parallel_for( Kokkos::RangePolicy< TEST_EXECSPACE >( 0, j )
-                          , KOKKOS_LAMBDA( int ) {} );
+  for (int i = 0; i < repeat; ++i) {
+    for (int j = 0; j < repeat; ++j) {
+      Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, j),
+                           KOKKOS_LAMBDA(int){});
     }
   }
 }
 
-TEST_F( TEST_CATEGORY, dispatch )
-{
-  test_dispatch<TEST_EXECSPACE>();
-}
+TEST_F(TEST_CATEGORY, dispatch) { test_dispatch<TEST_EXECSPACE>(); }
 #endif
 
-}
+}  // namespace Test

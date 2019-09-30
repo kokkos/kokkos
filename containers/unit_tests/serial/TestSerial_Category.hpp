@@ -49,15 +49,13 @@
 namespace Test {
 
 class serial : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {
-  }
+ protected:
+  static void SetUpTestCase() {}
 
-  static void TearDownTestCase() {
-  }
+  static void TearDownTestCase() {}
 };
 
-} // namespace Test
+}  // namespace Test
 
 #define TEST_CATEGORY serial
 #define TEST_EXECSPACE Kokkos::Serial

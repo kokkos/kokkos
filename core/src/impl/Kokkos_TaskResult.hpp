@@ -47,7 +47,7 @@
 #define KOKKOS_IMPL_TASKRESULT_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_TASKDAG )
+#if defined(KOKKOS_ENABLE_TASKDAG)
 
 #include <Kokkos_TaskScheduler_fwd.hpp>
 #include <Kokkos_Core_fwd.hpp>
@@ -65,78 +65,71 @@
 namespace Kokkos {
 namespace Impl {
 
-template< typename ResultType >
+template <typename ResultType>
 struct TaskResult {
-
   enum : int32_t { size = sizeof(ResultType) };
 
-  using reference_type = ResultType & ;
+  using reference_type = ResultType&;
 
   template <class CountType>
-  KOKKOS_INLINE_FUNCTION static
-  ResultType * ptr( PoolAllocatedObjectBase<CountType>* task )
-  {
-    return reinterpret_cast< ResultType * >
-    ( reinterpret_cast< char * >(task) + task->get_allocation_size() - sizeof(ResultType) );
+  KOKKOS_INLINE_FUNCTION static ResultType* ptr(
+      PoolAllocatedObjectBase<CountType>* task) {
+    return reinterpret_cast<ResultType*>(reinterpret_cast<char*>(task) +
+                                         task->get_allocation_size() -
+                                         sizeof(ResultType));
   }
 
-  KOKKOS_INLINE_FUNCTION static
-  ResultType * ptr( TaskBase* task )
-    {
-      return reinterpret_cast< ResultType * >
-        ( reinterpret_cast< char * >(task) + task->m_alloc_size - sizeof(ResultType) );
-    }
+  KOKKOS_INLINE_FUNCTION static ResultType* ptr(TaskBase* task) {
+    return reinterpret_cast<ResultType*>(reinterpret_cast<char*>(task) +
+                                         task->m_alloc_size -
+                                         sizeof(ResultType));
+  }
 
-  KOKKOS_INLINE_FUNCTION static
-  reference_type get( TaskBase* task )
-    { return *ptr( task ); }
+  KOKKOS_INLINE_FUNCTION static reference_type get(TaskBase* task) {
+    return *ptr(task);
+  }
 
   template <class TaskQueueTraits>
-  KOKKOS_INLINE_FUNCTION static
-  reference_type get( TaskNode<TaskQueueTraits>* task )
-  { return *ptr( task ); }
+  KOKKOS_INLINE_FUNCTION static reference_type get(
+      TaskNode<TaskQueueTraits>* task) {
+    return *ptr(task);
+  }
 
-  KOKKOS_INLINE_FUNCTION static
-  void destroy( TaskBase* task )
-    { get(task).~ResultType(); }
+  KOKKOS_INLINE_FUNCTION static void destroy(TaskBase* task) {
+    get(task).~ResultType();
+  }
 
-
-  //template <class TaskQueueTraits>
-  //KOKKOS_INLINE_FUNCTION static
-  //void destroy( TaskNode<TaskQueueTraits>* task )
+  // template <class TaskQueueTraits>
+  // KOKKOS_INLINE_FUNCTION static
+  // void destroy( TaskNode<TaskQueueTraits>* task )
   //{ get(task).~ResultType(); }
 };
 
-template<>
-struct TaskResult< void > {
-
+template <>
+struct TaskResult<void> {
   enum : int32_t { size = 0 };
 
-  using reference_type = void ;
+  using reference_type = void;
 
   template <class TaskQueueTraits>
-  KOKKOS_INLINE_FUNCTION static
-  void* ptr( TaskNode<TaskQueueTraits>* task )
-  { return nullptr; }
+  KOKKOS_INLINE_FUNCTION static void* ptr(TaskNode<TaskQueueTraits>* task) {
+    return nullptr;
+  }
 
-  KOKKOS_INLINE_FUNCTION static
-  void * ptr( TaskBase* ) { return (void*) nullptr ; }
+  KOKKOS_INLINE_FUNCTION static void* ptr(TaskBase*) { return (void*)nullptr; }
 
   template <class TaskQueueTraits>
-  KOKKOS_INLINE_FUNCTION static
-  reference_type get( TaskNode<TaskQueueTraits>* task )
-  { /* Should never be called */ }
+  KOKKOS_INLINE_FUNCTION static reference_type get(
+      TaskNode<TaskQueueTraits>* task) { /* Should never be called */
+  }
 
-  KOKKOS_INLINE_FUNCTION static
-  reference_type get( TaskBase* ) {}
+  KOKKOS_INLINE_FUNCTION static reference_type get(TaskBase*) {}
 
-  KOKKOS_INLINE_FUNCTION static
-  void destroy( TaskBase* task )
-    { }
+  KOKKOS_INLINE_FUNCTION static void destroy(TaskBase* task) {}
 
-  //template <class TaskQueueTraits>
-  //KOKKOS_INLINE_FUNCTION static
-  //void destroy( TaskNode<TaskQueueTraits>* task )
+  // template <class TaskQueueTraits>
+  // KOKKOS_INLINE_FUNCTION static
+  // void destroy( TaskNode<TaskQueueTraits>* task )
   //{ }
 };
 
@@ -148,4 +141,3 @@ struct TaskResult< void > {
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_IMPL_TASKRESULT_HPP */
-

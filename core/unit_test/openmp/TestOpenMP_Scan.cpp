@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<openmp/TestOpenMP_Category.hpp>
-#include<TestScan.hpp>
-
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestScan.hpp>

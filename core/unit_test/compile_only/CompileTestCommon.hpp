@@ -41,21 +41,20 @@
 //@HEADER
 */
 
-
 #ifndef KOKKOS_COMPILE_TEST_COMMON_HPP
 #define KOKKOS_COMPILE_TEST_COMMON_HPP
-
 
 #define KOKKOS_PP_STRINGIFY_IMPL(x) #x
 #define KOKKOS_PP_STRINGIFY(x) KOKKOS_PP_STRINGIFY_IMPL(x)
 
-#define KOKKOS_PP_CAT_IMPL(x, y) x ## y
+#define KOKKOS_PP_CAT_IMPL(x, y) x##y
 #define KOKKOS_PP_CAT(x, y) KOKKOS_PP_CAT_IMPL(x, y)
 
-#define KOKKOS_STATIC_TEST(...) \
-  static_assert(__VA_ARGS__, "Kokkos compile time test failed at "  __FILE__ ":" KOKKOS_PP_STRINGIFY(__LINE__))
+#define KOKKOS_STATIC_TEST(...)                                             \
+  static_assert(__VA_ARGS__, "Kokkos compile time test failed at " __FILE__ \
+                             ":" KOKKOS_PP_STRINGIFY(__LINE__))
 
 // All tests need a main so that they'll link
-int main() { }
+int main() {}
 
-#endif // KOKKOS_COMPILE_TEST_COMMON_HPP
+#endif  // KOKKOS_COMPILE_TEST_COMMON_HPP
