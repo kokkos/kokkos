@@ -43,7 +43,7 @@
 
 #include <TestDynViewAPI.hpp>
 namespace Test {
-TEST_F(TEST_CATEGORY, dyn_rank_view_api_generic) {
+TEST(TEST_CATEGORY, dyn_rank_view_api_generic) {
   TestDynViewAPI<double, TEST_EXECSPACE>::run_tests();
 }
 }  // namespace Test

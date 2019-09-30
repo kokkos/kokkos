@@ -57,14 +57,6 @@
 
 namespace Test {
 
-class rocm : public ::testing::Test {
- protected:
-  static void SetUpTestCase() {
-    std::cout << std::setprecision(5) << std::scientific;
-  }
-  static void TearDownTestCase() {}
-};
-
 void rocm_test_random_xorshift64(int num_draws) {
   Impl::test_random<
       Kokkos::Random_XorShift64_Pool<Kokkos::Experimental::ROCm> >(num_draws);
@@ -76,15 +68,13 @@ void rocm_test_random_xorshift1024(int num_draws) {
 }
 
 #define ROCM_RANDOM_XORSHIFT64(num_draws) \
-  TEST_F(rocm, Random_XorShift64) { rocm_test_random_xorshift64(num_draws); }
+  TEST(rocm, Random_XorShift64) { rocm_test_random_xorshift64(num_draws); }
 
-#define ROCM_RANDOM_XORSHIFT1024(num_draws)   \
-  TEST_F(rocm, Random_XorShift1024) {         \
-    rocm_test_random_xorshift1024(num_draws); \
-  }
+#define ROCM_RANDOM_XORSHIFT1024(num_draws) \
+  TEST(rocm, Random_XorShift1024) { rocm_test_random_xorshift1024(num_draws); }
 
 #define ROCM_SORT_UNSIGNED(size)                                 \
-  TEST_F(rocm, SortUnsigned) {                                   \
+  TEST(rocm, SortUnsigned) {                                     \
     Impl::test_sort<Kokkos::Experimental::ROCm, unsigned>(size); \
   }
 

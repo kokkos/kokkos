@@ -101,7 +101,7 @@
 #include <Kokkos_Atomic.hpp>
 
 #if (defined(KOKKOS_ENABLE_ASM) || defined(KOKKOS_ENABLE_TM)) && \
-    defined(KOKKOS_ENABLE_ISA_X86_64)
+    defined(KOKKOS_ENABLE_ISA_X86_64) && !defined(KOKKOS_COMPILER_PGI)
 #include <immintrin.h>
 #endif
 
@@ -452,7 +452,8 @@ void init_lock_array_host_space() {
 }
 
 bool lock_address_host_space(void *ptr) {
-#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM)
+#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM) && \
+    !defined(KOKKOS_COMPILER_PGI)
   const unsigned status = _xbegin();
 
   if (_XBEGIN_STARTED == status) {
@@ -477,13 +478,15 @@ bool lock_address_host_space(void *ptr) {
                                               HOST_SPACE_ATOMIC_MASK) ^
                                              HOST_SPACE_ATOMIC_XOR_MASK],
                     0, 1);
-#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM)
+#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM) && \
+    !defined(KOKKOS_COMPILER_PGI)
   }
 #endif
 }
 
 void unlock_address_host_space(void *ptr) {
-#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM)
+#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM) && \
+    !defined(KOKKOS_COMPILER_PGI)
   const unsigned status = _xbegin();
 
   if (_XBEGIN_STARTED == status) {
@@ -495,7 +498,8 @@ void unlock_address_host_space(void *ptr) {
         &HOST_SPACE_ATOMIC_LOCKS[((size_t(ptr) >> 2) & HOST_SPACE_ATOMIC_MASK) ^
                                  HOST_SPACE_ATOMIC_XOR_MASK],
         0);
-#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM)
+#if defined(KOKKOS_ENABLE_ISA_X86_64) && defined(KOKKOS_ENABLE_TM) && \
+    !defined(KOKKOS_COMPILER_PGI)
   }
 #endif
 }

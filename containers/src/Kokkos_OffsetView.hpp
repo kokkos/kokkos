@@ -30,7 +30,7 @@ struct is_offset_view<OffsetView<D, P...> > : public std::true_type {};
 template <class D, class... P>
 struct is_offset_view<const OffsetView<D, P...> > : public std::true_type {};
 
-#define KOKKOS_INVALID_OFFSET int64_t(0)
+#define KOKKOS_INVALID_OFFSET int64_t(0x7FFFFFFFFFFFFFFFLL)
 #define KOKKOS_INVALID_INDEX_RANGE \
   { KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET }
 
@@ -144,7 +144,7 @@ void runtime_check_rank_host(const size_t rank_dynamic, const size_t rank,
 
   size_t numOffsets = 0;
   for (size_t i = 0; i < minIndices.size(); ++i) {
-    if (minIndices.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+    if (minIndices.begin()[i] != KOKKOS_INVALID_OFFSET) numOffsets++;
   }
   if (numOffsets != rank_dynamic) {
     message += "The number of offsets provided ( " +
@@ -167,7 +167,7 @@ void runtime_check_rank_device(const size_t rank_dynamic, const size_t rank,
   }
   size_t numOffsets = 0;
   for (size_t i = 0; i < minIndices.size(); ++i) {
-    if (minIndices.begin()[i] != -KOKKOS_INVALID_OFFSET) numOffsets++;
+    if (minIndices.begin()[i] != KOKKOS_INVALID_OFFSET) numOffsets++;
   }
   if (numOffsets != rank) {
     Kokkos::abort(
@@ -201,7 +201,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
       typename iType,
       typename std::enable_if<std::is_integral<iType>::value, iType>::type = 0>
   KOKKOS_INLINE_FUNCTION int64_t begin(const iType local_dimension) const {
-    return local_dimension < Rank ? m_begins[local_dimension] : 0;
+    return local_dimension < Rank ? m_begins[local_dimension]
+                                  : KOKKOS_INVALID_OFFSET;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -808,7 +809,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
 
   KOKKOS_INLINE_FUNCTION
   OffsetView() : m_track(), m_map() {
-    for (size_t i = 0; i < Rank; ++i) m_begins[i] = KOKKOS_INVALID_INDEX;
+    for (size_t i = 0; i < Rank; ++i) m_begins[i] = KOKKOS_INVALID_OFFSET;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -922,6 +923,226 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     static_assert(Mapping::is_assignable,
                   "Incompatible OffsetView copy construction");
     Mapping::assign(m_map, rhs.m_map, rhs.m_track);  // swb what about assign?
+  }
+
+ private:
+  enum class subtraction_failure {
+    none,
+    negative,
+    overflow,
+  };
+
+  // Subtraction should return a non-negative number and not overflow
+  KOKKOS_INLINE_FUNCTION static subtraction_failure check_subtraction(
+      int64_t lhs, int64_t rhs) {
+    if (lhs < rhs) return subtraction_failure::negative;
+
+    if (static_cast<uint64_t>(-1) / static_cast<uint64_t>(2) <
+        static_cast<uint64_t>(lhs) - static_cast<uint64_t>(rhs))
+      return subtraction_failure::overflow;
+
+    return subtraction_failure::none;
+  }
+
+  // Need a way to get at an element from both begins_type (aka Kokkos::Array
+  // which doesn't have iterators) and index_list_type (aka
+  // std::initializer_list which doesn't have .data() or operator[]).
+  // Returns by value
+  KOKKOS_INLINE_FUNCTION
+  static int64_t at(const begins_type& a, size_t pos) { return a[pos]; }
+
+  KOKKOS_INLINE_FUNCTION
+  static int64_t at(index_list_type a, size_t pos) {
+    return *(a.begin() + pos);
+  }
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  // Check that begins < ends for all elements
+  // B, E can be begins_type and/or index_list_type
+  template <typename B, typename E>
+  KOKKOS_INLINE_FUNCTION static subtraction_failure
+  runtime_check_begins_ends_host(const B& begins, const E& ends) {
+    std::string message;
+    if (begins.size() != Rank)
+      message +=
+          "begins.size() "
+          "(" +
+          std::to_string(begins.size()) +
+          ")"
+          " != Rank "
+          "(" +
+          std::to_string(Rank) +
+          ")"
+          "\n";
+
+    if (ends.size() != Rank)
+      message +=
+          "ends.size() "
+          "(" +
+          std::to_string(begins.size()) +
+          ")"
+          " != Rank "
+          "(" +
+          std::to_string(Rank) +
+          ")"
+          "\n";
+
+    // If there are no errors so far, then rank == Rank
+    // Otherwise, check as much as possible
+    size_t rank = begins.size() < ends.size() ? begins.size() : ends.size();
+    for (size_t i = 0; i != rank; ++i) {
+      subtraction_failure sf = check_subtraction(at(ends, i), at(begins, i));
+      if (sf != subtraction_failure::none) {
+        message +=
+            "("
+            "ends[" +
+            std::to_string(i) +
+            "]"
+            " "
+            "(" +
+            std::to_string(at(ends, i)) +
+            ")"
+            " - "
+            "begins[" +
+            std::to_string(i) +
+            "]"
+            " "
+            "(" +
+            std::to_string(at(begins, i)) +
+            ")"
+            ")";
+        switch (sf) {
+          case subtraction_failure::negative:
+            message += " must be non-negative\n";
+            break;
+          case subtraction_failure::overflow: message += " overflows\n"; break;
+          default: break;
+        }
+      }
+    }
+
+    if (!message.empty()) {
+      message =
+          "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView\n" +
+          message;
+      Kokkos::Impl::throw_runtime_exception(message);
+    }
+
+    return subtraction_failure::none;
+  }
+#endif  // KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+
+  // Check the begins < ends for all elements
+  template <typename B, typename E>
+  KOKKOS_INLINE_FUNCTION static subtraction_failure
+  runtime_check_begins_ends_device(const B& begins, const E& ends) {
+    if (begins.size() != Rank)
+      Kokkos::abort(
+          "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
+          "OffsetView: begins has bad Rank");
+    if (ends.size() != Rank)
+      Kokkos::abort(
+          "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
+          "OffsetView: ends has bad Rank");
+
+    for (size_t i = 0; i != begins.size(); ++i) {
+      switch (check_subtraction(at(ends, i), at(begins, i))) {
+        case subtraction_failure::negative:
+          Kokkos::abort(
+              "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
+              "OffsetView: bad range");
+          break;
+        case subtraction_failure::overflow:
+          Kokkos::abort(
+              "Kokkos::Experimental::OffsetView ERROR: for unmanaged "
+              "OffsetView: range overflows");
+          break;
+        default: break;
+      }
+    }
+
+    return subtraction_failure::none;
+  }
+
+  // Constructor around unmanaged data after checking begins < ends for all
+  // elements
+  // Each of B, E can be begins_type and/or index_list_type
+  // Precondition: begins.size() == ends.size() == m_begins.size() == Rank
+  template <typename B, typename E>
+  KOKKOS_INLINE_FUNCTION OffsetView(const pointer_type& p, const B& begins_,
+                                    const E& ends_,
+                                    subtraction_failure)
+      : m_track()  // no tracking
+        ,
+        m_map(Kokkos::Impl::ViewCtorProp<pointer_type>(p),
+              typename traits::array_layout(
+                  Rank > 0 ? at(ends_, 0) - at(begins_, 0) : 0,
+                  Rank > 1 ? at(ends_, 1) - at(begins_, 1) : 0,
+                  Rank > 2 ? at(ends_, 2) - at(begins_, 2) : 0,
+                  Rank > 3 ? at(ends_, 3) - at(begins_, 3) : 0,
+                  Rank > 4 ? at(ends_, 4) - at(begins_, 4) : 0,
+                  Rank > 5 ? at(ends_, 5) - at(begins_, 5) : 0,
+                  Rank > 6 ? at(ends_, 6) - at(begins_, 6) : 0,
+                  Rank > 7 ? at(ends_, 7) - at(begins_, 7) : 0)) {
+    for (size_t i = 0; i != m_begins.size(); ++i) {
+      m_begins[i] = at(begins_, i);
+    };
+  }
+
+ public:
+  // Constructor around unmanaged data
+  // Four overloads, as both begins and ends can be either
+  // begins_type or index_list_type
+  KOKKOS_INLINE_FUNCTION
+  OffsetView(const pointer_type& p, const begins_type& begins_,
+             const begins_type& ends_)
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_host(begins_, ends_))
+#else
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_device(begins_, ends_))
+#endif
+  {
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  OffsetView(const pointer_type& p, const begins_type& begins_,
+             index_list_type ends_)
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_host(begins_, ends_))
+#else
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_device(begins_, ends_))
+#endif
+  {
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  OffsetView(const pointer_type& p, index_list_type begins_,
+             const begins_type& ends_)
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_host(begins_, ends_))
+#else
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_device(begins_, ends_))
+#endif
+  {
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  OffsetView(const pointer_type& p, index_list_type begins_,
+             index_list_type ends_)
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_host(begins_, ends_))
+#else
+      : OffsetView(p, begins_, ends_,
+                   runtime_check_begins_ends_device(begins_, ends_))
+#endif
+  {
   }
 
   //----------------------------------------

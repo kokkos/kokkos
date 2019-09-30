@@ -63,7 +63,7 @@
 #    Source:        https://code.google.com/p/qthreads
 #
 
-TRIBITS_TPL_FIND_INCLUDE_DIRS_AND_LIBRARIES( QTHREADS
+KOKKOS_TPL_FIND_INCLUDE_DIRS_AND_LIBRARIES( QTHREADS
   REQUIRED_HEADERS qthread.h
   REQUIRED_LIBS_NAMES "qthread"
   )

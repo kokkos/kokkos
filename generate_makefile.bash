@@ -232,7 +232,6 @@ fi
 KOKKOS_SRC_PATH=${KOKKOS_PATH}
 
 KOKKOS_SETTINGS="KOKKOS_SRC_PATH=${KOKKOS_SRC_PATH}"
-#KOKKOS_SETTINGS="KOKKOS_PATH=${KOKKOS_PATH}"
 
 # The double [[  ]] in the elif branch is not a typo
 if [ ${#COMPILER} -gt 0 ]; then
@@ -318,18 +317,8 @@ fi
 
 KOKKOS_SETTINGS_NO_KOKKOS_PATH="${KOKKOS_SETTINGS}"
 
-KOKKOS_TEST_INSTALL_PATH="${PWD}/install"
-if [ ${#PREFIX} -gt 0 ]; then
-  KOKKOS_INSTALL_PATH="${PREFIX}"
-else
-  KOKKOS_INSTALL_PATH=${KOKKOS_TEST_INSTALL_PATH}
-fi
 
-mkdir -p install
 gen_makefile=Makefile.kokkos
-echo "#Makefile to satisfy existence of target kokkos-clean before installing the library" > install/${gen_makefile}
-echo "kokkos-clean:" >> install/${gen_makefile}
-echo "" >> install/${gen_makefile}
 mkdir -p core
 mkdir -p core/unit_test
 mkdir -p core/perf_test
@@ -345,10 +334,6 @@ mkdir -p example/feint
 mkdir -p example/fenl
 mkdir -p example/make_buildlink
 mkdir -p example/tutorial
-
-if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
-  mkdir -p example/ichol
-fi
 
 KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_PATH}"
 
@@ -408,8 +393,6 @@ echo "" >> algorithms/unit_tests/Makefile
 echo "clean:" >> algorithms/unit_tests/Makefile
 echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/algorithms/unit_tests/Makefile ${KOKKOS_SETTINGS} clean" >> algorithms/unit_tests/Makefile
 
-KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_TEST_INSTALL_PATH}"
-
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/fixture/Makefile
 echo "" >> example/fixture/Makefile
 echo "all:" >> example/fixture/Makefile
@@ -465,42 +448,11 @@ echo "" >> example/tutorial/Makefile
 echo "clean:" >> example/tutorial/Makefile
 echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/tutorial/Makefile KOKKOS_SETTINGS='${KOKKOS_SETTINGS}' KOKKOS_PATH=${KOKKOS_PATH} clean" >> example/tutorial/Makefile
 
-if [ ${#KOKKOS_ENABLE_EXAMPLE_ICHOL} -gt 0 ]; then
-echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > example/ichol/Makefile
-echo "" >> example/ichol/Makefile
-echo "all:" >> example/ichol/Makefile
-echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS}" >> example/ichol/Makefile
-echo "" >> example/ichol/Makefile
-echo "test: all" >> example/ichol/Makefile
-echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} test" >> example/ichol/Makefile
-echo "" >> example/ichol/Makefile
-echo "clean:" >> example/ichol/Makefile
-echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/example/ichol/Makefile ${KOKKOS_SETTINGS} clean" >> example/ichol/Makefile
-fi
-
-KOKKOS_SETTINGS="${KOKKOS_SETTINGS_NO_KOKKOS_PATH} KOKKOS_PATH=${KOKKOS_PATH}"
-
 # Generate top level directory makefile.
 echo "Generating Makefiles with options " ${KOKKOS_SETTINGS}
 echo "KOKKOS_SETTINGS=${KOKKOS_SETTINGS}" > Makefile
 echo "" >> Makefile
-echo "kokkoslib:" >> Makefile
-echo -e "\tcd core; \\" >> Makefile
-echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} build-lib" >> Makefile
-echo "" >> Makefile
-echo "install: kokkoslib" >> Makefile
-echo -e "\tcd core; \\" >> Makefile
-echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_INSTALL_PATH} install" >> Makefile
-echo "" >> Makefile
-echo "kokkoslib-test:" >> Makefile
-echo -e "\tcd core; \\" >> Makefile
-echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} build-lib" >> Makefile
-echo "" >> Makefile
-echo "install-test: kokkoslib-test" >> Makefile
-echo -e "\tcd core; \\" >> Makefile
-echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} PREFIX=${KOKKOS_TEST_INSTALL_PATH} install" >> Makefile
-echo "" >> Makefile
-echo "build-test: install-test" >> Makefile
+echo "build-test:" >> Makefile
 echo -e "\t\$(MAKE) -C core/unit_test" >> Makefile
 echo -e "\t\$(MAKE) -C core/perf_test" >> Makefile
 echo -e "\t\$(MAKE) -C containers/unit_tests" >> Makefile
@@ -548,6 +500,4 @@ echo -e "\t\$(MAKE) -C example/fenl clean" >> Makefile
 echo -e "\t\$(MAKE) -C example/make_buildlink clean" >> Makefile
 echo -e "\t\$(MAKE) -C example/tutorial clean" >> Makefile
 fi
-echo -e "\tcd core; \\" >> Makefile
-echo -e "\t\$(MAKE) -f ${KOKKOS_PATH}/core/src/Makefile ${KOKKOS_SETTINGS} clean" >> Makefile
 

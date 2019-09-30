@@ -20,13 +20,20 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --compiler=/usr/local/bin/clang++ --with-cuda --with-cuda-options=enable_lambda'
-                    }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/clang++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=clang++ \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -44,13 +51,20 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda'
-                    }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -68,13 +82,22 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda,rdc,force_uvm'
-                    }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_OPENMP=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ENABLE_CUDA_UVM=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -92,13 +115,22 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70--with-cuda --with-cuda-options=enable_lambda --debug'
-                    }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEBUG=ON \
+                                -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {

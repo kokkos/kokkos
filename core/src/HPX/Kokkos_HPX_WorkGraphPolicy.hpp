@@ -44,8 +44,10 @@
 #ifndef KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 #define KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 
+#include <HPX/Kokkos_HPX_ChunkedRoundRobinExecutor.hpp>
+
 #include <hpx/apply.hpp>
-#include <hpx/lcos/local/counting_semaphore.hpp>
+#include <hpx/lcos/local/latch.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -83,12 +85,13 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
     const int num_worker_threads = Kokkos::Experimental::HPX::concurrency();
 
     using hpx::apply;
-    using hpx::lcos::local::counting_semaphore;
+    using hpx::lcos::local::latch;
 
-    counting_semaphore sem(0);
+    latch num_tasks_remaining(num_worker_threads);
+    ChunkedRoundRobinExecutor exec(num_worker_threads);
 
     for (int thread = 0; thread < num_worker_threads; ++thread) {
-      apply([this, &sem]() {
+      apply(exec, [this, &num_tasks_remaining]() {
         std::int32_t w = m_policy.pop_work();
         while (w != Policy::COMPLETED_TOKEN) {
           if (w != Policy::END_TOKEN) {
@@ -99,11 +102,11 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
           w = m_policy.pop_work();
         }
 
-        sem.signal(1);
+        num_tasks_remaining.count_down(1);
       });
     }
 
-    sem.wait(num_worker_threads);
+    num_tasks_remaining.wait();
   }
 
   inline ParallelFor(const FunctorType &arg_functor, const Policy &arg_policy)

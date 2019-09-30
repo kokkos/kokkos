@@ -1444,7 +1444,7 @@ inline void deep_copy(
         ViewTypeFlat;
 
     ViewTypeFlat dst_flat(dst.data(), dst.size());
-    if (dst.span() < std::numeric_limits<int>::max()) {
+    if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
       Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight,
                              typename ViewType::execution_space,
                              ViewTypeFlat::Rank, int>(dst_flat, value);
@@ -1485,7 +1485,7 @@ inline void deep_copy(
   typedef typename std::conditional<
       ViewType::Rank == 0, typename ViewType::uniform_runtime_type,
       typename ViewType::uniform_runtime_nomemspace_type>::type ViewTypeUniform;
-  if (dst.span() > std::numeric_limits<int>::max()) {
+  if (dst.span() > static_cast<size_t>(std::numeric_limits<int>::max())) {
     if (iterate == Kokkos::Iterate::Right)
       Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutRight,
                              typename ViewType::execution_space, ViewType::Rank,
@@ -2889,6 +2889,104 @@ resize(Kokkos::View<T, P...>& v, const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
   // has enough space.
 
   view_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
+
+  Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
+
+  v = v_resized;
+}
+
+/** \brief  Resize a view with copying old data to new data at the corresponding
+ * indices. */
+template <class I, class T, class... P>
+inline typename std::enable_if<
+    std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                 Kokkos::LayoutLeft>::value ||
+    std::is_same<typename Kokkos::View<T, P...>::array_layout,
+                 Kokkos::LayoutRight>::value>::type
+resize(const I& arg_prop, Kokkos::View<T, P...>& v,
+       const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+       const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+       const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+       const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+       const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+       const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+       const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+       const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+  typedef Kokkos::View<T, P...> view_type;
+
+  static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
+                "Can only resize managed views");
+
+  // Fix #904 by checking dimensions before actually resizing.
+  //
+  // Rank is known at compile time, so hopefully the compiler will
+  // remove branches that are compile-time false.  The upcoming "if
+  // constexpr" language feature would make this certain.
+  if (view_type::Rank == 1 && n0 == static_cast<size_t>(v.extent(0))) {
+    return;
+  }
+  if (view_type::Rank == 2 && n0 == static_cast<size_t>(v.extent(0)) &&
+      n1 == static_cast<size_t>(v.extent(1))) {
+    return;
+  }
+  if (view_type::Rank == 3 && n0 == static_cast<size_t>(v.extent(0)) &&
+      n1 == static_cast<size_t>(v.extent(1)) &&
+      n2 == static_cast<size_t>(v.extent(2))) {
+    return;
+  }
+  if (view_type::Rank == 4 && n0 == static_cast<size_t>(v.extent(0)) &&
+      n1 == static_cast<size_t>(v.extent(1)) &&
+      n2 == static_cast<size_t>(v.extent(2)) &&
+      n3 == static_cast<size_t>(v.extent(3))) {
+    return;
+  }
+  if (view_type::Rank == 5 && n0 == static_cast<size_t>(v.extent(0)) &&
+      n1 == static_cast<size_t>(v.extent(1)) &&
+      n2 == static_cast<size_t>(v.extent(2)) &&
+      n3 == static_cast<size_t>(v.extent(3)) &&
+      n4 == static_cast<size_t>(v.extent(4))) {
+    return;
+  }
+  if (view_type::Rank == 6 && n0 == static_cast<size_t>(v.extent(0)) &&
+      n1 == static_cast<size_t>(v.extent(1)) &&
+      n2 == static_cast<size_t>(v.extent(2)) &&
+      n3 == static_cast<size_t>(v.extent(3)) &&
+      n4 == static_cast<size_t>(v.extent(4)) &&
+      n5 == static_cast<size_t>(v.extent(5))) {
+    return;
+  }
+  if (view_type::Rank == 7 && n0 == static_cast<size_t>(v.extent(0)) &&
+      n1 == static_cast<size_t>(v.extent(1)) &&
+      n2 == static_cast<size_t>(v.extent(2)) &&
+      n3 == static_cast<size_t>(v.extent(3)) &&
+      n4 == static_cast<size_t>(v.extent(4)) &&
+      n5 == static_cast<size_t>(v.extent(5)) &&
+      n6 == static_cast<size_t>(v.extent(6))) {
+    return;
+  }
+  if (view_type::Rank == 8 && n0 == static_cast<size_t>(v.extent(0)) &&
+      n1 == static_cast<size_t>(v.extent(1)) &&
+      n2 == static_cast<size_t>(v.extent(2)) &&
+      n3 == static_cast<size_t>(v.extent(3)) &&
+      n4 == static_cast<size_t>(v.extent(4)) &&
+      n5 == static_cast<size_t>(v.extent(5)) &&
+      n6 == static_cast<size_t>(v.extent(6)) &&
+      n7 == static_cast<size_t>(v.extent(7))) {
+    return;
+  }
+  // If Kokkos ever supports Views of rank > 8, the above code won't
+  // be incorrect, because avoiding reallocation in resize() is just
+  // an optimization.
+
+  // TODO (mfh 27 Jun 2017) If the old View has enough space but just
+  // different dimensions (e.g., if the product of the dimensions,
+  // including extra space for alignment, will not change), then
+  // consider just reusing storage.  For now, Kokkos always
+  // reallocates if any of the dimensions change, even if the old View
+  // has enough space.
+
+  view_type v_resized(view_alloc(v.label(), std::forward<const I>(arg_prop)),
+                      n0, n1, n2, n3, n4, n5, n6, n7);
 
   Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
 

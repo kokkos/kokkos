@@ -91,6 +91,9 @@ optimization_applied=0
 # Check if we have -std=c++X  or --std=c++X already
 stdcxx_applied=0
 
+# KOKKOS_CMAKE_CXX_STANDARD is a variable CMake defines 
+# based on the C++ standard requested in the CMake configure
+
 # Run nvcc a second time to generate dependencies if needed
 depfile_separate=0
 depfile_output_arg=""
@@ -133,7 +136,11 @@ do
     if [ $optimization_applied -eq 1 ]; then
        echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-O*), only the first is used because nvcc can only accept a single optimization setting."
     else
-       shared_args="$shared_args $1"
+       if [ "$1" = "-O" ]; then
+         shared_args="$shared_args -O2"
+       else
+         shared_args="$shared_args $1"
+       fi
        optimization_applied=1
     fi
     ;;
@@ -171,7 +178,7 @@ do
     shift
     ;;
   #Handle known nvcc args
-  --dryrun|--verbose|--keep|--keep-dir*|-G|--relocatable-device-code*|-lineinfo|-expt-extended-lambda|--resource-usage|-Xptxas*)
+  --dryrun|--verbose|--keep|--keep-dir*|-G|--relocatable-device-code*|-lineinfo|-expt-extended-lambda|--resource-usage|-Xptxas*|--fmad*)
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
@@ -179,7 +186,7 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument
-  -rdc|-maxrregcount|--default-stream)
+  -rdc|-maxrregcount|--default-stream|-Xnvlink|--fmad)
     cuda_args="$cuda_args $1 $2"
     shift
     ;;
@@ -187,7 +194,30 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle c++11
-  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++1y|-std=c++1y|--std=c++17|-std=c++17|--std=c++1z|-std=c++1z)
+  --std=c++1y|-std=c++1y|--std=c++1z|-std=c++1z|--std=gnu++1y|-std=gnu++1y|--std=gnu++1z|-std=gnu++1z)
+    if [ $stdcxx_applied -eq 1 ]; then
+       echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
+    else
+       if [ ! -z "${KOKKOS_CMAKE_CXX_STANDARD}" ]; then
+         echo "nvcc_wrapper does not accept intermediate standard flag $1, but I will use -std=c++${KOKKOS_CMAKE_CXX_STANDARD} instead"
+         shared_args="$shared_args -std=c++${KOKKOS_CMAKE_CXX_STANDARD}"
+       else
+	echo "nvcc_wrapper has been given intermediate standard flag $1 - nvcc only accepts full standard flags like -std=c++11"
+	exit 1
+       fi
+       stdcxx_applied=1
+    fi
+    ;;
+  -std=gnu*)
+    if [ $stdcxx_applied -eq 1 ]; then
+       echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
+    else
+       stdFlag=${1/gnu/c}
+       echo "nvcc_wrapper has been given GNU extension standard flag $1 - reverting flag to $stdFlag"
+       shared_args="$shared_args $stdFlag"
+    fi
+  ;;
+  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++17|-std=c++17)
     if [ $stdcxx_applied -eq 1 ]; then
        echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
     else
@@ -307,16 +337,6 @@ do
 
   shift
 done
-
-#Check if nvcc exists
-if [ $host_only -ne 1 ]; then
-  var=$(which nvcc )
-  if [ $? -gt 0 ]; then
-    echo "Could not find nvcc in PATH"
-    exit $?
-  fi
-fi
-
 
 # Only print host compiler version
 if [ $get_host_version -eq 1 ]; then

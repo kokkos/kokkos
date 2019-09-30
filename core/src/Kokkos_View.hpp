@@ -239,7 +239,8 @@ struct ViewTraits<
 
   typedef typename Space::execution_space execution_space;
   typedef typename Space::memory_space memory_space;
-  typedef typename Kokkos::Impl::HostMirror<Space>::Space HostMirrorSpace;
+  typedef typename Kokkos::Impl::HostMirror<Space>::Space::memory_space
+      HostMirrorSpace;
   typedef typename execution_space::array_layout array_layout;
   typedef typename ViewTraits<void, Prop...>::memory_traits memory_traits;
   typedef typename ViewTraits<void, Prop...>::specialize specialize;

@@ -206,7 +206,7 @@ struct TestViewCtorProp_EmbeddedDim {
 
 }  // namespace
 
-TEST_F(TEST_CATEGORY, viewctorprop_embedded_dim) {
+TEST(TEST_CATEGORY, viewctorprop_embedded_dim) {
   TestViewCtorProp_EmbeddedDim<TEST_EXECSPACE>::test_vcpt(2, 3);
 }
 }  // namespace Test

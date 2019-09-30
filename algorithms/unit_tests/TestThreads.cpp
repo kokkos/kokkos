@@ -56,29 +56,20 @@
 
 namespace Test {
 
-class threads : public ::testing::Test {
- protected:
-  static void SetUpTestCase() {
-    std::cout << std::setprecision(5) << std::scientific;
-  }
-
-  static void TearDownTestCase() {}
-};
-
 #define THREADS_RANDOM_XORSHIFT64(num_draws)                             \
-  TEST_F(threads, Random_XorShift64) {                                   \
+  TEST(threads, Random_XorShift64) {                                     \
     Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Threads> >( \
         num_draws);                                                      \
   }
 
 #define THREADS_RANDOM_XORSHIFT1024(num_draws)                             \
-  TEST_F(threads, Random_XorShift1024) {                                   \
+  TEST(threads, Random_XorShift1024) {                                     \
     Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Threads> >( \
         num_draws);                                                        \
   }
 
 #define THREADS_SORT_UNSIGNED(size)                 \
-  TEST_F(threads, SortUnsigned) {                   \
+  TEST(threads, SortUnsigned) {                     \
     Impl::test_sort<Kokkos::Threads, double>(size); \
   }
 

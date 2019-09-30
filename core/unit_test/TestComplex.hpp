@@ -43,6 +43,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <cstdio>
+#include <sstream>
 
 namespace Test {
 
@@ -331,8 +332,27 @@ struct TestComplexSpecialFunctions {
   }
 };
 
+void testComplexIO() {
+  Kokkos::complex<double> z = {3.14, 1.41};
+  std::stringstream ss;
+  ss << z;
+  ASSERT_EQ(ss.str(), "(3.14,1.41)");
+
+  ss.str("1 (2) (3,4)");
+  ss.clear();
+  ss >> z;
+  ASSERT_EQ(z, (Kokkos::complex<double>{1, 0}));
+  ss >> z;
+  ASSERT_EQ(z, (Kokkos::complex<double>{2, 0}));
+  ss >> z;
+  ASSERT_EQ(z, (Kokkos::complex<double>{3, 4}));
+}
+
 TEST_F(TEST_CATEGORY, complex_special_funtions) {
   TestComplexSpecialFunctions<TEST_EXECSPACE> test;
   test.testit();
 }
+
+TEST_F(TEST_CATEGORY, complex_io) { testComplexIO(); }
+
 }  // namespace Test
