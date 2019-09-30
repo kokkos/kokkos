@@ -247,7 +247,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   static_assert(!std::is_same<typename traits::iteration_pattern, void>::value,
                 "Kokkos Error: MD iteration pattern not defined");
 
- public:
  private:
   //----------------------------------------------------------------------------
   // <editor-fold desc="Private data members"> {{{2
