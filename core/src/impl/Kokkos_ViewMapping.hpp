@@ -51,6 +51,8 @@
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_Extents.hpp>
+#include <Kokkos_Get.hpp>
+
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_ViewCtor.hpp>
@@ -497,8 +499,8 @@ struct SubviewExtents {
                                        const ViewDimension<DimArgs...>& dim,
                                        const std::pair<T, T>& val,
                                        Args... args) {
-    const size_t b = static_cast<size_t>(val.first);
-    const size_t e = static_cast<size_t>(val.second);
+    const size_t b = static_cast<size_t>(Kokkos::get<0>(val));
+    const size_t e = static_cast<size_t>(Kokkos::get<1>(val));
 
     m_begin[domain_rank] = b;
     m_length[range_rank] = e - b;
@@ -518,8 +520,8 @@ struct SubviewExtents {
                                        const ViewDimension<DimArgs...>& dim,
                                        const Kokkos::pair<T, T>& val,
                                        Args... args) {
-    const size_t b = static_cast<size_t>(val.first);
-    const size_t e = static_cast<size_t>(val.second);
+    const size_t b = static_cast<size_t>(Kokkos::get<0>(val));
+    const size_t e = static_cast<size_t>(Kokkos::get<1>(val));
 
     m_begin[domain_rank] = b;
     m_length[range_rank] = e - b;
@@ -594,8 +596,8 @@ struct SubviewExtents {
     const int n = std::min(
         buf_len, snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
                           static_cast<unsigned long>(dim.extent(domain_rank)),
-                          static_cast<unsigned long>(val.second),
-                          static_cast<unsigned long>(val.first),
+                          static_cast<unsigned long>(Kokkos::get<1>(val)),
+                          static_cast<unsigned long>(Kokkos::get<0>(val)),
                           int(sizeof...(Args) ? ',' : ')')));
 
     error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);
@@ -610,8 +612,8 @@ struct SubviewExtents {
     const int n = std::min(
         buf_len, snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
                           static_cast<unsigned long>(dim.extent(domain_rank)),
-                          static_cast<unsigned long>(val.second),
-                          static_cast<unsigned long>(val.first),
+                          static_cast<unsigned long>(Kokkos::get<1>(val)),
+                          static_cast<unsigned long>(Kokkos::get<0>(val)),
                           int(sizeof...(Args) ? ',' : ')')));
 
     error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);
