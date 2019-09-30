@@ -74,6 +74,7 @@ script:
           ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}}
   - make VERBOSE=1 -j2
   - make test CTEST_OUTPUT_ON_FAILURE=1
+  - make install DESTDIR=${PWD}/install && rm -rf ${PWD}/install/usr/local && rmdir ${PWD}/install/usr
   - popd
 
 after_success:
