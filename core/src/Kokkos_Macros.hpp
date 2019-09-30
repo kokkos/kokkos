@@ -167,6 +167,14 @@
 
 #endif  // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
 
+#if defined(KOKKOS_ENABLE_HIP)
+
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
+
+#define KOKKOS_LAMBDA [=] __host__ __device__
+#endif  // #if defined(KOKKOS_ENABLE_HIP)
+
 //----------------------------------------------------------------------------
 // Mapping compiler built-ins to KOKKOS_COMPILER_*** macros
 
@@ -265,13 +273,9 @@
 
 #if defined(KOKKOS_ENABLE_HIP)
 
-#include <hip/hip_runtime.h>
-#include <hip/hip_runtime_api.h>
-
 #define KOKKOS_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
 #define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
 #define KOKKOS_FUNCTION __device__ __host__
-#define KOKKOS_LAMBDA [=] __host__ __device__
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
 #endif
