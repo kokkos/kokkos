@@ -175,8 +175,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   enum { rank = static_cast<int>(iteration_pattern::rank) };
 
-  using index_type       = typename traits::index_type;
-  using execution_space  = typename traits::execution_space;
+  using index_type      = typename traits::index_type;
+  using execution_space = typename traits::execution_space;
 
   // If point_type or tile_type don't usethis magic non-narrowing
   // wrapper type, then if user passes in braced-init-list of
@@ -209,7 +209,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   //----------------------------------------------------------------------------
 
  private:
-
   //----------------------------------------------------------------------------
   // <editor-fold desc="Friends"> {{{2
 

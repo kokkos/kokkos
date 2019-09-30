@@ -1285,8 +1285,8 @@ struct apply_impl<6, RP, Functor, Tag> {
 
 template <typename RP, typename Functor, typename Tag>
 struct DeviceIterateTile {
-  using index_type       = typename RP::index_type;
-  using point_type       = typename RP::point_type;
+  using index_type = typename RP::index_type;
+  using point_type = typename RP::point_type;
 
   struct VoidDummy {};
   typedef typename std::conditional<std::is_same<Tag, void>::value, VoidDummy,

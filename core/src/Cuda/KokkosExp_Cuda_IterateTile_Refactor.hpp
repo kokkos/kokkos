@@ -79,16 +79,19 @@ _tag_invoke(Functor const& f, Args&&... args) {
   f(Tag{}, (Args &&) args...);
 }
 
-template <class Tag, class Functor, class T, size_t N, size_t... Idxs, class... Args>
-__device__ __inline__ void
-_tag_invoke_array_helper(Functor const& f, T(& vals)[N], integer_sequence<size_t, Idxs...>, Args&&... args) {
-  _tag_invoke<Tag>(f, vals[Idxs]..., (Args&&)args...);
+template <class Tag, class Functor, class T, size_t N, size_t... Idxs,
+          class... Args>
+__device__ __inline__ void _tag_invoke_array_helper(
+    Functor const& f, T (&vals)[N], integer_sequence<size_t, Idxs...>,
+    Args&&... args) {
+  _tag_invoke<Tag>(f, vals[Idxs]..., (Args &&) args...);
 }
 
 template <class Tag, class Functor, class T, size_t N, class... Args>
-__device__ __inline__ void
-_tag_invoke_array(Functor const& f, T(& vals)[N], Args&&... args) {
-  _tag_invoke_array_helper<Tag>(f, vals, make_index_sequence<N>{}, (Args &&) args...);
+__device__ __inline__ void _tag_invoke_array(Functor const& f, T (&vals)[N],
+                                             Args&&... args) {
+  _tag_invoke_array_helper<Tag>(f, vals, make_index_sequence<N>{},
+                                (Args &&) args...);
 }
 
 namespace Refactor {
@@ -783,7 +786,7 @@ using value_type_storage_t =
 //    functor
 
 template <int N, typename RP, typename Functor, typename Tag,
-    typename ValueType, typename Enable = void>
+          typename ValueType, typename Enable = void>
 struct DeviceIterateTile {
   using index_type         = typename RP::index_type;
   using value_type_storage = value_type_storage_t<ValueType>;
