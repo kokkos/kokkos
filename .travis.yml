@@ -32,9 +32,9 @@ env:
   - 
   - BACKEND="OPENMP"
   - BACKEND="PTHREAD"
-  - CMAKE_BUILD_TYPE=Debug
-  - CMAKE_BUILD_TYPE=Debug BACKEND="OPENMP"
-  - CMAKE_BUILD_TYPE=Debug BACKEND="PTHREAD"
+  - CMAKE_BUILD_TYPE=Debug COVERAGE=yes
+  - CMAKE_BUILD_TYPE=Debug BACKEND="OPENMP" COVERAGE=yes
+  - CMAKE_BUILD_TYPE=Debug BACKEND="PTHREAD" COVERAGE=yes
   - CMAKE_BUILD_TYPE=Release
   - CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
   - CMAKE_BUILD_TYPE=Release BACKEND="PTHREAD"
@@ -53,6 +53,7 @@ before_script:
       export PATH=/usr/local/opt/ccache/libexec:$PATH;
     fi
   - ccache -z
+  - if [[ ${COVERAGE} ]]; then export CXX="${CXX} --coverage"; fi
 
 script:
   - export OMP_NUM_THREADS=2
@@ -73,6 +74,15 @@ script:
           ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}}
   - make VERBOSE=1 -j2
   - make test CTEST_OUTPUT_ON_FAILURE=1
+  - popd
 
 after_success:
   - ccache -s
+ - if [[ ${COVERAGE} ]]; then
+     mkdir -p $HOME/.local/bin && wget -O $HOME/.local/bin/codecov https://codecov.io/bash && chmod +x $HOME/.local/bin/codecov;
+     pushd build &&
+     if [[ ${CC} = clang* ]]; then
+       codecov -x "llvm-cov gcov" -F "${CC}";
+     else
+       codecov -x gcov -F "${CC}";
+     fi
