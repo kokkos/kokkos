@@ -79,11 +79,12 @@ script:
 
 after_success:
   - ccache -s
- - if [[ ${COVERAGE} ]]; then
-     mkdir -p $HOME/.local/bin && wget -O $HOME/.local/bin/codecov https://codecov.io/bash && chmod +x $HOME/.local/bin/codecov;
-     pushd build &&
-     if [[ ${CC} = clang* ]]; then
-       codecov -x "llvm-cov gcov" -F "${CC}";
-     else
-       codecov -x gcov -F "${CC}";
-     fi
+  - if [[ ${COVERAGE} ]]; then
+      mkdir -p $HOME/.local/bin && wget -O $HOME/.local/bin/codecov https://codecov.io/bash && chmod +x $HOME/.local/bin/codecov;
+      pushd build &&
+      if [[ ${CC} = clang* ]]; then
+        codecov -x "llvm-cov gcov" -F "${CC}";
+      else
+        codecov -x gcov -F "${CC}";
+      fi;
+    fi
