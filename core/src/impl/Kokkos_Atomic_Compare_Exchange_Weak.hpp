@@ -225,7 +225,7 @@ bool atomic_compare_exchange_weak(
 
 // GCC native CAS supports int, long, unsigned int, unsigned long.
 // Intel native CAS support int and long with the same interface as GCC.
-#if !defined(KOKKOS_ENABLE_ROCM_ATOMICS)
+#if !defined(KOKKOS_ENABLE_ROCM_ATOMICS) || !defined(KOKKOS_ENABLE_HIP_ATOMICS)
 #if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
