@@ -67,9 +67,9 @@ script:
       export CCACHE_CPP2=yes;
     fi
   - mkdir build
-  - cd build
+  - pushd build
   - cmake ..
-          ${BACKEND:+-DKokks_ENABLE_${BACKEND}=On}
+          ${BACKEND:+-DKokkos_ENABLE_${BACKEND}=On}
           -DKokkos_ENABLE_TESTS=On
           ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}}
   - make VERBOSE=1 -j2
