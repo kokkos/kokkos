@@ -20,7 +20,7 @@ stages:
 jobs:
     include:
         - stage: canary
-          env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
+          env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP" CXXFLAGS="-Werror"
           os: linux
 
 branches:
