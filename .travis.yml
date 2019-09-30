@@ -72,7 +72,7 @@ script:
           -DKokkos_ENABLE_TESTS=On
           ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}}
   - make VERBOSE=1 -j2
-  - make test
+  - make test CTEST_OUTPUT_ON_FAILURE=1
 
 after_success:
   - ccache -s
