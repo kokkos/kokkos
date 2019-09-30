@@ -23,6 +23,11 @@ jobs:
           env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
           os: linux
 
+branches:
+  only:
+  - master
+  - develop
+
 env:
   - 
   - BACKEND="OPENMP"
