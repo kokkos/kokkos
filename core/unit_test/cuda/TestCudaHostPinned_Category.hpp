@@ -59,7 +59,7 @@ class cuda_hostpinned : public ::testing::Test {
 
 #define TEST_CATEGORY cuda_hostpinned
 //#define TEST_EXECSPACE
-//Kokkos::Device<Kokkos::Cuda,Kokkos::CudaHostPinnedSpace>
+// Kokkos::Device<Kokkos::Cuda,Kokkos::CudaHostPinnedSpace>
 #define TEST_EXECSPACE Kokkos::CudaHostPinnedSpace
 
 #endif

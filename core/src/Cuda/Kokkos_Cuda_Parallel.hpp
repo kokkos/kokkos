@@ -144,8 +144,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
               cuda_single_inter_block_reduce_scan_shmem<
                   false, FunctorType, typename traits::work_tag>(functor, n)
           /* for team   reduce */
-          +
-          (n + 2) * sizeof(double)
+          + (n + 2) * sizeof(double)
           /* for team   shared */
           + Impl::FunctorTeamShmemSize<FunctorType>::value(functor, n);
 
@@ -955,7 +954,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     UseShflReduction = false
   };  //((sizeof(value_type)>2*sizeof(double)) && ValueTraits::StaticValueSize)
       //};
-  // Some crutch to do function overloading
+      // Some crutch to do function overloading
  private:
   typedef double DummyShflReductionType;
   typedef int DummySHMEMReductionType;

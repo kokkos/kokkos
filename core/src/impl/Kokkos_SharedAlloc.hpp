@@ -244,7 +244,7 @@ class SharedAllocationRecord
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     return new SharedAllocationRecord(arg_space, arg_label, arg_alloc);
 #else
-    return (SharedAllocationRecord *)0;
+    return (SharedAllocationRecord*)0;
 #endif
   }
 };
