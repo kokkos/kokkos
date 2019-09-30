@@ -59,183 +59,178 @@
 
 namespace Kokkos {
 
-/*Template functions to get equidistributed random numbers from a generator for
-  a specific Scalar type
+// clang-format off
+  /*Template functions to get equidistributed random numbers from a generator for a specific Scalar type
 
-     template<class Generator,Scalar>
-     struct rand{
+       template<class Generator,Scalar>
+       struct rand{
 
-       //Max value returned by draw(Generator& gen)
-       KOKKOS_INLINE_FUNCTION
-       static Scalar max();
+         //Max value returned by draw(Generator& gen)
+         KOKKOS_INLINE_FUNCTION
+         static Scalar max();
 
-       //Returns a value between zero and max()
-       KOKKOS_INLINE_FUNCTION
-       static Scalar draw(Generator& gen);
+         //Returns a value between zero and max()
+         KOKKOS_INLINE_FUNCTION
+         static Scalar draw(Generator& gen);
 
-       //Returns a value between zero and range()
-       //Note: for floating point values range can be larger than max()
-       KOKKOS_INLINE_FUNCTION
-       static Scalar draw(Generator& gen, const Scalar& range){}
+         //Returns a value between zero and range()
+         //Note: for floating point values range can be larger than max()
+         KOKKOS_INLINE_FUNCTION
+         static Scalar draw(Generator& gen, const Scalar& range){}
 
-       //Return value between start and end
-       KOKKOS_INLINE_FUNCTION
-       static Scalar draw(Generator& gen, const Scalar& start, const Scalar&
-  end);
-    };
+         //Return value between start and end
+         KOKKOS_INLINE_FUNCTION
+         static Scalar draw(Generator& gen, const Scalar& start, const Scalar& end);
+      };
 
-  The Random number generators themselves have two components a state-pool and
-  the actual generator A state-pool manages a number of generators, so that each
-  active thread is able to grep its own. This allows the generation of random
-  numbers which are independent between threads. Note that in contrast to CuRand
-  none of the functions of the pool (or the generator) are collectives, i.e. all
-  functions can be called inside conditionals.
+    The Random number generators themselves have two components a state-pool and the actual generator
+    A state-pool manages a number of generators, so that each active thread is able to grep its own.
+    This allows the generation of random numbers which are independent between threads. Note that
+    in contrast to CuRand none of the functions of the pool (or the generator) are collectives,
+    i.e. all functions can be called inside conditionals.
 
-  template<class Device>
-  class Pool {
-   public:
-    //The Kokkos device type
-    typedef Device device_type;
-    //The actual generator type
-    typedef Generator<Device> generator_type;
+    template<class Device>
+    class Pool {
+     public:
+      //The Kokkos device type
+      typedef Device device_type;
+      //The actual generator type
+      typedef Generator<Device> generator_type;
 
-    //Default constructor: does not initialize a pool
-    Pool();
+      //Default constructor: does not initialize a pool
+      Pool();
 
-    //Initializing constructor: calls init(seed,Device_Specific_Number);
-    Pool(unsigned int seed);
+      //Initializing constructor: calls init(seed,Device_Specific_Number);
+      Pool(unsigned int seed);
 
-    //Intialize Pool with seed as a starting seed with a pool_size of num_states
-    //The Random_XorShift64 generator is used in serial to initialize all
-  states,
-    //thus the intialization process is platform independent and deterministic.
-    void init(unsigned int seed, int num_states);
+      //Intialize Pool with seed as a starting seed with a pool_size of num_states
+      //The Random_XorShift64 generator is used in serial to initialize all states,
+      //thus the intialization process is platform independent and deterministic.
+      void init(unsigned int seed, int num_states);
 
-    //Get a generator. This will lock one of the states, guaranteeing that each
-  thread
-    //will have its private generator. Note: on Cuda getting a state involves
-  atomics,
-    //and is thus not deterministic!
-    generator_type get_state();
+      //Get a generator. This will lock one of the states, guaranteeing that each thread
+      //will have its private generator. Note: on Cuda getting a state involves atomics,
+      //and is thus not deterministic!
+      generator_type get_state();
 
-    //Give a state back to the pool. This unlocks the state, and writes the
-  modified
-    //state of the generator back to the pool.
-    void free_state(generator_type gen);
+      //Give a state back to the pool. This unlocks the state, and writes the modified
+      //state of the generator back to the pool.
+      void free_state(generator_type gen);
 
-  }
+    }
 
-  template<class Device>
-  class Generator {
-   public:
-   //The Kokkos device type
-  typedef DeviceType device_type;
+    template<class Device>
+    class Generator {
+     public:
+     //The Kokkos device type
+    typedef DeviceType device_type;
 
-  //Max return values of respective [X]rand[S]() functions
-  enum {MAX_URAND = 0xffffffffU};
-  enum {MAX_URAND64 = 0xffffffffffffffffULL-1};
-  enum {MAX_RAND = static_cast<int>(0xffffffffU/2)};
-  enum {MAX_RAND64 = static_cast<int64_t>(0xffffffffffffffffULL/2-1)};
+    //Max return values of respective [X]rand[S]() functions
+    enum {MAX_URAND = 0xffffffffU};
+    enum {MAX_URAND64 = 0xffffffffffffffffULL-1};
+    enum {MAX_RAND = static_cast<int>(0xffffffffU/2)};
+    enum {MAX_RAND64 = static_cast<int64_t>(0xffffffffffffffffULL/2-1)};
 
 
-  //Init with a state and the idx with respect to pool. Note: in serial the
-  //Generator can be used by just giving it the necessary state arguments
-  KOKKOS_INLINE_FUNCTION
-  Generator (STATE_ARGUMENTS, int state_idx = 0);
+    //Init with a state and the idx with respect to pool. Note: in serial the
+    //Generator can be used by just giving it the necessary state arguments
+    KOKKOS_INLINE_FUNCTION
+    Generator (STATE_ARGUMENTS, int state_idx = 0);
 
-  //Draw a equidistributed uint32_t in the range (0,MAX_URAND]
-  KOKKOS_INLINE_FUNCTION
-  uint32_t urand();
+    //Draw a equidistributed uint32_t in the range (0,MAX_URAND]
+    KOKKOS_INLINE_FUNCTION
+    uint32_t urand();
 
-  //Draw a equidistributed uint64_t in the range (0,MAX_URAND64]
-  KOKKOS_INLINE_FUNCTION
-  uint64_t urand64();
+    //Draw a equidistributed uint64_t in the range (0,MAX_URAND64]
+    KOKKOS_INLINE_FUNCTION
+    uint64_t urand64();
 
-  //Draw a equidistributed uint32_t in the range (0,range]
-  KOKKOS_INLINE_FUNCTION
-  uint32_t urand(const uint32_t& range);
+    //Draw a equidistributed uint32_t in the range (0,range]
+    KOKKOS_INLINE_FUNCTION
+    uint32_t urand(const uint32_t& range);
 
-  //Draw a equidistributed uint32_t in the range (start,end]
-  KOKKOS_INLINE_FUNCTION
-  uint32_t urand(const uint32_t& start, const uint32_t& end );
+    //Draw a equidistributed uint32_t in the range (start,end]
+    KOKKOS_INLINE_FUNCTION
+    uint32_t urand(const uint32_t& start, const uint32_t& end );
 
-  //Draw a equidistributed uint64_t in the range (0,range]
-  KOKKOS_INLINE_FUNCTION
-  uint64_t urand64(const uint64_t& range);
+    //Draw a equidistributed uint64_t in the range (0,range]
+    KOKKOS_INLINE_FUNCTION
+    uint64_t urand64(const uint64_t& range);
 
-  //Draw a equidistributed uint64_t in the range (start,end]
-  KOKKOS_INLINE_FUNCTION
-  uint64_t urand64(const uint64_t& start, const uint64_t& end );
+    //Draw a equidistributed uint64_t in the range (start,end]
+    KOKKOS_INLINE_FUNCTION
+    uint64_t urand64(const uint64_t& start, const uint64_t& end );
 
-  //Draw a equidistributed int in the range (0,MAX_RAND]
-  KOKKOS_INLINE_FUNCTION
-  int rand();
+    //Draw a equidistributed int in the range (0,MAX_RAND]
+    KOKKOS_INLINE_FUNCTION
+    int rand();
 
-  //Draw a equidistributed int in the range (0,range]
-  KOKKOS_INLINE_FUNCTION
-  int rand(const int& range);
+    //Draw a equidistributed int in the range (0,range]
+    KOKKOS_INLINE_FUNCTION
+    int rand(const int& range);
 
-  //Draw a equidistributed int in the range (start,end]
-  KOKKOS_INLINE_FUNCTION
-  int rand(const int& start, const int& end );
+    //Draw a equidistributed int in the range (start,end]
+    KOKKOS_INLINE_FUNCTION
+    int rand(const int& start, const int& end );
 
-  //Draw a equidistributed int64_t in the range (0,MAX_RAND64]
-  KOKKOS_INLINE_FUNCTION
-  int64_t rand64();
+    //Draw a equidistributed int64_t in the range (0,MAX_RAND64]
+    KOKKOS_INLINE_FUNCTION
+    int64_t rand64();
 
-  //Draw a equidistributed int64_t in the range (0,range]
-  KOKKOS_INLINE_FUNCTION
-  int64_t rand64(const int64_t& range);
+    //Draw a equidistributed int64_t in the range (0,range]
+    KOKKOS_INLINE_FUNCTION
+    int64_t rand64(const int64_t& range);
 
-  //Draw a equidistributed int64_t in the range (start,end]
-  KOKKOS_INLINE_FUNCTION
-  int64_t rand64(const int64_t& start, const int64_t& end );
+    //Draw a equidistributed int64_t in the range (start,end]
+    KOKKOS_INLINE_FUNCTION
+    int64_t rand64(const int64_t& start, const int64_t& end );
 
-  //Draw a equidistributed float in the range (0,1.0]
-  KOKKOS_INLINE_FUNCTION
-  float frand();
+    //Draw a equidistributed float in the range (0,1.0]
+    KOKKOS_INLINE_FUNCTION
+    float frand();
 
-  //Draw a equidistributed float in the range (0,range]
-  KOKKOS_INLINE_FUNCTION
-  float frand(const float& range);
+    //Draw a equidistributed float in the range (0,range]
+    KOKKOS_INLINE_FUNCTION
+    float frand(const float& range);
 
-  //Draw a equidistributed float in the range (start,end]
-  KOKKOS_INLINE_FUNCTION
-  float frand(const float& start, const float& end );
+    //Draw a equidistributed float in the range (start,end]
+    KOKKOS_INLINE_FUNCTION
+    float frand(const float& start, const float& end );
 
-  //Draw a equidistributed double in the range (0,1.0]
-  KOKKOS_INLINE_FUNCTION
-  double drand();
+    //Draw a equidistributed double in the range (0,1.0]
+    KOKKOS_INLINE_FUNCTION
+    double drand();
 
-  //Draw a equidistributed double in the range (0,range]
-  KOKKOS_INLINE_FUNCTION
-  double drand(const double& range);
+    //Draw a equidistributed double in the range (0,range]
+    KOKKOS_INLINE_FUNCTION
+    double drand(const double& range);
 
-  //Draw a equidistributed double in the range (start,end]
-  KOKKOS_INLINE_FUNCTION
-  double drand(const double& start, const double& end );
+    //Draw a equidistributed double in the range (start,end]
+    KOKKOS_INLINE_FUNCTION
+    double drand(const double& start, const double& end );
 
-  //Draw a standard normal distributed double
-  KOKKOS_INLINE_FUNCTION
-  double normal() ;
+    //Draw a standard normal distributed double
+    KOKKOS_INLINE_FUNCTION
+    double normal() ;
 
-  //Draw a normal distributed double with given mean and standard deviation
-  KOKKOS_INLINE_FUNCTION
-  double normal(const double& mean, const double& std_dev=1.0);
-  }
+    //Draw a normal distributed double with given mean and standard deviation
+    KOKKOS_INLINE_FUNCTION
+    double normal(const double& mean, const double& std_dev=1.0);
+    }
 
-  //Additional Functions:
+    //Additional Functions:
 
-  //Fills view with random numbers in the range (0,range]
-  template<class ViewType, class PoolType>
-  void fill_random(ViewType view, PoolType pool, ViewType::value_type range);
+    //Fills view with random numbers in the range (0,range]
+    template<class ViewType, class PoolType>
+    void fill_random(ViewType view, PoolType pool, ViewType::value_type range);
 
-  //Fills view with random numbers in the range (start,end]
-  template<class ViewType, class PoolType>
-  void fill_random(ViewType view, PoolType pool,
-                   ViewType::value_type start, ViewType::value_type end);
+    //Fills view with random numbers in the range (start,end]
+    template<class ViewType, class PoolType>
+    void fill_random(ViewType view, PoolType pool,
+                     ViewType::value_type start, ViewType::value_type end);
 
 */
+// clang-format on
 
 template <class Generator, class Scalar>
 struct rand;

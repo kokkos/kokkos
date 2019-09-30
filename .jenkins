@@ -106,6 +106,20 @@ pipeline {
                         }
                     }
                 }
+                stage("Clang-Format") {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.clang'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull'
+                            label 'nvidia-docker || docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    steps {
+                        sh './scripts/docker/check_format_cpp.sh'
+                    }
+                }
             }
         }
     }
