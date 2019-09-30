@@ -174,7 +174,7 @@ void traceback_callstack(std::ostream &msg) {
 namespace Kokkos {
 namespace Impl {
 
-void traceback_callstack(std::ostream& msg) {
+void traceback_callstack(std::ostream &msg) {
   msg << std::endl << "Traceback functionality not available" << std::endl;
 }
 

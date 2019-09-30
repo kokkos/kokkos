@@ -142,7 +142,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   using index_type       = typename traits::index_type;
   using array_index_type = long;
   using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
-  using tile_type = Kokkos::Array<array_index_type, rank>;
+  using tile_type  = Kokkos::Array<array_index_type, rank>;
   // If point_type or tile_type is not templated on a signed integral type (if
   // it is unsigned), then if user passes in intializer_list of
   // runtime-determined values of signed integral type that are not const will

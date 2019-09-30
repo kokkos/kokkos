@@ -188,8 +188,8 @@ struct VerifyExecutionCanAccessMemorySpace<
 #include <Qthreads/Kokkos_QthreadsExec.hpp>
 #include <Qthreads/Kokkos_Qthreads_Parallel.hpp>
 //#include <Qthreads/Kokkos_Qthreads_Task.hpp> // Uncomment when Tasking
-//working. #include <Qthreads/Kokkos_Qthreads_TaskQueue.hpp> // Uncomment when
-//Tasking working.
+// working. #include <Qthreads/Kokkos_Qthreads_TaskQueue.hpp> // Uncomment when
+// Tasking working.
 
 #endif  // #define KOKKOS_ENABLE_QTHREADS
 #endif  // #define KOKKOS_QTHREADS_HPP

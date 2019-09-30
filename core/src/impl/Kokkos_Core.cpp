@@ -102,7 +102,8 @@ void initialize_internal(const InitArguments& args) {
     auto local_rank_str = std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
     if (!local_rank_str)
       local_rank_str = std::getenv("MV2_COMM_WORLD_LOCAL_RANK");  // MVAPICH2
-    if (!local_rank_str) local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
+    if (!local_rank_str)
+      local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
     if (local_rank_str) {
       auto local_rank = std::atoi(local_rank_str);
       use_gpu         = local_rank % ndevices;
