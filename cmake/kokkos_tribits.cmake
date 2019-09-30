@@ -280,6 +280,10 @@ FUNCTION(KOKKOS_LINK_TPLS LIBRARY_NAME)
     TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PUBLIC ${HPX_INCLUDE_DIRS})
   ENDIF()
 
+  IF (KOKKOS_ENABLE_PTHREAD)
+    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PRIVATE Threads::Threads)
+  ENDIF()
+
   IF (KOKKOS_ENABLE_HWLOC)
     #this is really annoying that I have to do this
     #if CMake links statically, it will not link in hwloc which causes undefined refs downstream
