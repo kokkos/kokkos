@@ -72,7 +72,7 @@ pipeline {
                         }
                     }
                 }
-                stage("CUDA-10.1-NVCC") {
+                stage("CUDA-10.1-NVCC-RDC") {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
