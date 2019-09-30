@@ -13,10 +13,26 @@ compiler:
 cache:
   - ccache
 
+stages:
+  - canary
+  - test
+
+jobs:
+    include:
+        - stage: canary
+          env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
+          os: linux
+
 env:
   - 
   - BACKEND="OPENMP"
   - BACKEND="PTHREAD"
+  - CMAKE_BUILD_TYPE=Debug
+  - CMAKE_BUILD_TYPE=Debug BACKEND="OPENMP"
+  - CMAKE_BUILD_TYPE=Debug BACKEND="PTHREAD"
+  - CMAKE_BUILD_TYPE=Release
+  - CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
+  - CMAKE_BUILD_TYPE=Release BACKEND="PTHREAD"
 
 # Apple GCC is just an alias to AppleClang
 matrix:
@@ -46,8 +62,11 @@ script:
     fi
   - mkdir build
   - cd build
-  - cmake .. ${BACKEND:+-DKokks_ENABLE_${BACKEND}=On} -DKokkos_ENABLE_TESTS=On 
-  - make
+  - cmake ..
+          ${BACKEND:+-DKokks_ENABLE_${BACKEND}=On}
+          -DKokkos_ENABLE_TESTS=On
+          ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}}
+  - make VERBOSE=1 -j2
   - make test
 
 after_success:
