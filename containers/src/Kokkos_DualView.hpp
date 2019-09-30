@@ -865,4 +865,27 @@ void deep_copy(
 
 }  // namespace Kokkos
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+
+//
+// Non-member resize and realloc
+//
+
+template <class... Properties, class... Args>
+void resize(DualView<Properties...> dv, Args&&... args) noexcept(
+    noexcept(dv.resize(std::forward<Args>(args)...))) {
+  std::move(dv).resize(std::forward<Args>(args)...);
+}
+
+template <class... Properties, class... Args>
+void realloc(DualView<Properties...> dv, Args&&... args) noexcept(
+    noexcept(dv.realloc(std::forward<Args>(args)...))) {
+  std::move(dv).realloc(std::forward<Args>(args)...);
+}
+
+}  // end namespace Kokkos
+
 #endif
