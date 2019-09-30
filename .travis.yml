@@ -54,6 +54,7 @@ before_script:
     fi
   - ccache -z
   - if [[ ${COVERAGE} ]]; then export CXX="${CXX} --coverage"; fi
+  - if [[ ! ${CMAKE_BUILD_TYPE} ]]; then export CXXFLAGS="${CXXFLAGS} -O2"; fi
 
 script:
   - export OMP_NUM_THREADS=2
