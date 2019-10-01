@@ -127,7 +127,7 @@ struct _get_impl {
 // We can't use a Niebloid here because it requires variable templates
 // This will have some warnings in the std::get case
 template <size_t I, class T>
-KOKKOS_INLINE_FUNCTION constexpr get(T&& val) const
+KOKKOS_INLINE_FUNCTION constexpr auto get(T&& val) const
     noexcept(noexcept(Impl::_get_impl_ignore_adl::_get_impl<I>{}((T &&) val)))
         ->decltype(Impl::_get_impl_ignore_adl::_get_impl<I>{}((T &&) val)) {
   return Impl::_get_impl_ignore_adl::_get_impl<I>{}((T &&) val);
