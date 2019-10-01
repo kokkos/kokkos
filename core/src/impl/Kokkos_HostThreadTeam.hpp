@@ -592,7 +592,7 @@ class HostThreadTeamMember {
   template <typename ReducerType>
   KOKKOS_IMPL_THREAD_SANITIZER_IGNORE  // TODO stop having to ignore here,
                                        // maybe?
-                                           KOKKOS_INLINE_FUNCTION
+      KOKKOS_INLINE_FUNCTION
       typename std::enable_if<is_reducer<ReducerType>::value>::type
       team_reduce(ReducerType const& reducer,
                   typename ReducerType::value_type contribution) const noexcept
