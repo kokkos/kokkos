@@ -203,8 +203,7 @@ void OpenMP::partition_master(F const& f, int num_partitions,
       void* ptr = nullptr;
       try {
         ptr = space.allocate(sizeof(Exec));
-      }
-      catch(Experimental::RawMemoryAllocationFailure const& failure) {
+      } catch (Experimental::RawMemoryAllocationFailure const& failure) {
         // For now, just rethrow the error message the existing way
         Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
       }

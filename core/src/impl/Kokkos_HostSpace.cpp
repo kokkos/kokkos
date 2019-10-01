@@ -354,7 +354,7 @@ SharedAllocationHeader *_do_allocation(Kokkos::HostSpace const &space,
     std::cerr.flush();
     Kokkos::Impl::throw_runtime_exception("Memory allocation failure");
   }
-  return nullptr; // unreachable
+  return nullptr;  // unreachable
 }
 
 SharedAllocationRecord<Kokkos::HostSpace, void>::SharedAllocationRecord(

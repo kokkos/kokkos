@@ -89,8 +89,8 @@ HostThreadTeamDataSingleton::HostThreadTeamDataSingleton()
   }
 
   HostThreadTeamData::scratch_assign(
-      ptr, alloc_bytes, num_pool_reduce_bytes,
-      num_team_reduce_bytes, num_team_shared_bytes, num_thread_local_bytes);
+      ptr, alloc_bytes, num_pool_reduce_bytes, num_team_reduce_bytes,
+      num_team_shared_bytes, num_thread_local_bytes);
 }
 
 HostThreadTeamDataSingleton::~HostThreadTeamDataSingleton() {
