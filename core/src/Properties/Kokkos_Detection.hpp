@@ -98,7 +98,7 @@ struct _detector<Default, void_t<Op<Args...>>, Op, Args...> {
 
 #define KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, params, params_no_intro, ...) \
   template <KOKKOS_PP_REMOVE_PARENS(params)>                                   \
-  using name = __VA_ARGS__
+  using name = __VA_ARGS__;
 
 #else
 
