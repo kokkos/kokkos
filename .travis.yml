@@ -39,11 +39,22 @@ env:
   - CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
 #  - CMAKE_BUILD_TYPE=Release BACKEND="PTHREAD"
 
-# Apple GCC is just an alias to AppleClang
 matrix:
   exclude:
+# Apple GCC is just an alias to AppleClang
     - os: osx
       compiler: gcc
+# Apple Clang doesn't support OpenMP
+    - os: osx
+      compiler: clang
+      env: CMAKE_BUILD_TYPE=Debug BACKEND="OPENMP" COVERAGE=yes
+    - os: osx
+      compiler: clang
+      env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
+# We do this as canary
+    - os: linux
+      compiler: gcc
+      env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
 
 before_script:
   - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
