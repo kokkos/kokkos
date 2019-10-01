@@ -253,7 +253,7 @@ template <class A, class B>
 struct ViewDimensionJoin;
 
 template <size_t... A, size_t... B>
-struct ViewDimensionJoin<ViewDimension<A...>, ViewDimension<B...> > {
+struct ViewDimensionJoin<ViewDimension<A...>, ViewDimension<B...>> {
   typedef ViewDimension<A..., B...> type;
 };
 
@@ -264,7 +264,7 @@ struct ViewDimensionAssignable;
 
 template <size_t... DstArgs, size_t... SrcArgs>
 struct ViewDimensionAssignable<ViewDimension<DstArgs...>,
-                               ViewDimension<SrcArgs...> > {
+                               ViewDimension<SrcArgs...>> {
   typedef ViewDimension<DstArgs...> dst;
   typedef ViewDimension<SrcArgs...> src;
 
@@ -322,26 +322,28 @@ struct ALL_t {
 namespace Kokkos {
 namespace Impl {
 
-template <class T>
-struct is_integral_extent_type {
-  enum { value = std::is_same<T, Kokkos::Impl::ALL_t>::value ? 1 : 0 };
-};
+// This actually means "is the type an extent that is not an integer".  Probably
+// we could come up with a better name for that...
+template <class T, class Enable = void>
+struct is_integral_extent_type : std::false_type {};
 
-template <class iType>
-struct is_integral_extent_type<std::pair<iType, iType> > {
-  enum { value = std::is_integral<iType>::value ? 1 : 0 };
-};
+template <>
+struct is_integral_extent_type<Kokkos::Impl::ALL_t> : std::true_type {};
 
-template <class iType>
-struct is_integral_extent_type<Kokkos::pair<iType, iType> > {
-  enum { value = std::is_integral<iType>::value ? 1 : 0 };
-};
+template <class PairLike>
+struct is_integral_extent_type<
+    PairLike, typename std::enable_if<has_kokkos_get<PairLike, 0>::value &&
+                                      has_kokkos_get<PairLike, 1>::value>::type>
+    : std::integral_constant<
+        bool, std::is_integral<typename std::remove_reference<
+            kokkos_get_result_t<PairLike, 0>>::type>::value &&
+              std::is_integral<typename std::remove_reference<
+                  kokkos_get_result_t<PairLike, 1>>::type>::value> {};
 
 // Assuming '2 == initializer_list<iType>::size()'
 template <class iType>
-struct is_integral_extent_type<std::initializer_list<iType> > {
-  enum { value = std::is_integral<iType>::value ? 1 : 0 };
-};
+struct is_integral_extent_type<std::initializer_list<iType> >
+    : std::is_integral<iType> { };
 
 template <unsigned I, class... Args>
 struct is_integral_extent {
@@ -452,6 +454,11 @@ struct SubviewExtents {
   // RangeRank=1
   enum { InternalRangeRank = RangeRank ? RangeRank : +1u };
 
+  template <class T>
+  using _is_pairlike_slice =
+      std::integral_constant<bool, has_kokkos_get<T, 0>::value &&
+                                       has_kokkos_get<T, 1>::value>;
+
   size_t m_begin[DomainRank];
   size_t m_length[InternalRangeRank];
   unsigned m_index[InternalRangeRank];
@@ -463,11 +470,12 @@ struct SubviewExtents {
   }
 
   template <class T, size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
-                                       unsigned range_rank,
-                                       const ViewDimension<DimArgs...>& dim,
-                                       const T& val, Args... args) {
-    const size_t v = static_cast<size_t>(val);
+  KOKKOS_FORCEINLINE_FUNCTION
+      typename std::enable_if<std::is_convertible<T const&, size_t>::value,
+                              bool>::type
+      set(unsigned domain_rank, unsigned range_rank,
+          const ViewDimension<DimArgs...>& dim, const T& val, Args... args) {
+    auto v = static_cast<size_t>(val);
 
     m_begin[domain_rank] = v;
 
@@ -492,36 +500,17 @@ struct SubviewExtents {
     return set(domain_rank + 1, range_rank + 1, dim, args...);
   }
 
-  // std::pair range
-  template <class T, size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
-                                       unsigned range_rank,
-                                       const ViewDimension<DimArgs...>& dim,
-                                       const std::pair<T, T>& val,
-                                       Args... args) {
-    const size_t b = static_cast<size_t>(Kokkos::get<0>(val));
-    const size_t e = static_cast<size_t>(Kokkos::get<1>(val));
-
-    m_begin[domain_rank] = b;
-    m_length[range_rank] = e - b;
-    m_index[range_rank]  = domain_rank;
-
-    return set(domain_rank + 1, range_rank + 1, dim, args...)
-#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-           && (e <= b + dim.extent(domain_rank))
-#endif
-        ;
-  }
-
-  // Kokkos::pair range
-  template <class T, size_t... DimArgs, class... Args>
-  KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
-                                       unsigned range_rank,
-                                       const ViewDimension<DimArgs...>& dim,
-                                       const Kokkos::pair<T, T>& val,
-                                       Args... args) {
-    const size_t b = static_cast<size_t>(Kokkos::get<0>(val));
-    const size_t e = static_cast<size_t>(Kokkos::get<1>(val));
+  // PairLike range
+  template <class PairLike, size_t... DimArgs, class... Args>
+  KOKKOS_FORCEINLINE_FUNCTION
+      typename std::enable_if<has_kokkos_get<PairLike const&, 0>::value &&
+                                  has_kokkos_get<PairLike const&, 1>::value,
+                              bool>::type
+      set(unsigned domain_rank, unsigned range_rank,
+          const ViewDimension<DimArgs...>& dim, PairLike const& val,
+          Args... args) {
+    auto b = static_cast<size_t>(Kokkos::get<0>(val));
+    auto e = static_cast<size_t>(Kokkos::get<1>(val));
 
     m_begin[domain_rank] = b;
     m_length[range_rank] = e - b;
@@ -727,18 +716,18 @@ template <class T, class Dim>
 struct ViewDataType;
 
 template <class T>
-struct ViewDataType<T, ViewDimension<> > {
+struct ViewDataType<T, ViewDimension<>> {
   typedef T type;
 };
 
 template <class T, size_t... Args>
-struct ViewDataType<T, ViewDimension<0, Args...> > {
-  typedef typename ViewDataType<T*, ViewDimension<Args...> >::type type;
+struct ViewDataType<T, ViewDimension<0, Args...>> {
+  typedef typename ViewDataType<T*, ViewDimension<Args...>>::type type;
 };
 
 template <class T, size_t N, size_t... Args>
-struct ViewDataType<T, ViewDimension<N, Args...> > {
-  typedef typename ViewDataType<T, ViewDimension<Args...> >::type type[N];
+struct ViewDataType<T, ViewDimension<N, Args...>> {
+  typedef typename ViewDataType<T, ViewDimension<Args...>>::type type[N];
 };
 
 /**\brief  Analysis of View data type.
@@ -3494,7 +3483,7 @@ struct SubViewDataTypeImpl;
 
 /* base case */
 template <class ValueType>
-struct SubViewDataTypeImpl<void, ValueType, Experimental::Extents<> > {
+struct SubViewDataTypeImpl<void, ValueType, Experimental::Extents<>> {
   using type = ValueType;
 };
 

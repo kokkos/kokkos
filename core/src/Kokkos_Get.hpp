@@ -53,84 +53,133 @@ namespace Kokkos {
 //==============================================================================
 // <editor-fold desc="get Niebloid implementation details"> {{{1
 
+// Needs to be outside of namespace Kokkos to avoid detecting the get Niebloid
+// in namespace Kokkos
 namespace Impl {
-namespace _get_impl_ignore_adl {
+namespace _get_impl_disable_adl {
+
+//------------------------------------------------------------------------------
 
 // Poison-pill overload
 template <class T, size_t I>
 void get(T&&) = delete;
 
-KOKKOS_DECLARE_DETECTION_ARCHETYPE(_has_adl_free_function_get_archetype,
-                                   (class T, class IType), (T, IType),
-                                   decltype(get<IType::value>(declval<T>())));
+//------------------------------------------------------------------------------
+
+KOKKOS_DECLARE_DETECTION_ARCHETYPE(
+    _has_adl_free_function_get_archetype, (class T, class IType), (T, IType),
+    decltype(get<IType::value>(Kokkos::Impl::declval<T>())));
 template <class T, size_t I>
 using has_adl_free_function_get =
     Kokkos::Impl::is_detected<_has_adl_free_function_get_archetype, T,
                               std::integral_constant<size_t, I>>;
+template <class T, size_t I>
+using adl_free_function_get_result_t =
+    Kokkos::Impl::detected_t<_has_adl_free_function_get_archetype, T,
+                             std::integral_constant<size_t, I>>;
+
+//------------------------------------------------------------------------------
 
 KOKKOS_DECLARE_DETECTION_ARCHETYPE(
     _has_std_get_archetype, (class T, class IType), (T, IType),
-    decltype(std::get<IType::value>(declval<T>())));
+    decltype(std::get<IType::value>(Kokkos::Impl::declval<T>())));
 template <class T, size_t I>
 using has_std_get =
     Kokkos::Impl::is_detected<_has_std_get_archetype, T,
                               std::integral_constant<size_t, I>>;
 
+template <class T, size_t I>
+using std_get_result_t =
+    Kokkos::Impl::detected_t<_has_std_get_archetype, T,
+                             std::integral_constant<size_t, I>>;
+
+//------------------------------------------------------------------------------
+
 KOKKOS_DECLARE_DETECTION_ARCHETYPE(
     _has_intrusive_get_archetype, (class T, class IType), (T, IType),
-    decltype(declval<T>().template get<IType::value>()));
+    decltype(Kokkos::Impl::declval<T>().template get<IType::value>()));
 
 template <class T, size_t I>
 using has_intrusive_get =
     Kokkos::Impl::is_detected<_has_intrusive_get_archetype, T,
                               std::integral_constant<size_t, I>>;
 
+template <class T, size_t I>
+using intrusive_get_result_t =
+    Kokkos::Impl::detected_t<_has_intrusive_get_archetype, T,
+                             std::integral_constant<size_t, I>>;
+
+//------------------------------------------------------------------------------
+
 template <size_t I>
-struct _get_impl {
-  template <class T, class = typename std::enable_if<
-                         has_intrusive_get<T, I>::value>::type>
-  KOKKOS_INLINE_FUNCTION constexpr auto operator()(T&& val) const
-      noexcept(noexcept(((T &&) val).template get<I>()))
-          -> decltype(((T &&) val).template get<I>()) {
+struct _get_niebloid {
+  template <class T>
+  KOKKOS_INLINE_FUNCTION constexpr
+      typename std::enable_if<has_intrusive_get<T, I>::value,
+                              intrusive_get_result_t<T, I>>::type
+      operator()(T&& val) const
+      noexcept(noexcept(((T &&) val).template get<I>())) {
     return ((T &&) val).template get<I>();
   }
-  template <class T, class = typename std::enable_if<
-                         !has_intrusive_get<T, I>::value &&
-                         has_adl_free_function_get<T, I>::value>::type>
-  KOKKOS_INLINE_FUNCTION constexpr auto operator()(T&& val) const
-      noexcept(noexcept(get<I>((T &&) val))) -> decltype(get<I>((T &&) val)) {
+
+  // If there's no member function, try to find the free function with ADL.
+  // For now, let's try assuming this is device-marked, and require that
+  // std::get *does not* work (since it would have to be device-marked)
+  template <class T>
+  KOKKOS_INLINE_FUNCTION constexpr
+      typename std::enable_if<!has_intrusive_get<T, I>::value &&
+                                  has_adl_free_function_get<T, I>::value &&
+                                  !has_std_get<T, I>::value,
+                              adl_free_function_get_result_t<T, I>>::type
+      operator()(T&& val) const noexcept(noexcept(get<I>((T &&) val))) {
     return get<I>((T &&) val);
   }
 
-  // Last resort, try std::get, and drop the KOKKOS_INLINE_FUNCTION
-  template <class T, class = typename std::enable_if<
-                         !has_intrusive_get<T, I>::value &&
-                         !has_adl_free_function_get<T, I>::value &&
-                         has_std_get<T, I>::value>::type>
-  constexpr auto operator()(T&& val) const
-      noexcept(noexcept(std::get<I>((T &&) val)))
-          -> decltype(std::get<I>((T &&) val)) {
+  // Last resort, try std::get, and drop the KOKKOS_INLINE_FUNCTION, since
+  // it's not device-marked.  The ADL free function version will *also* work for
+  // things like std::pair in namespace std, but since those won't be
+  // device-marked, we should use the one here without device markings instead.
+  template <class T>
+  constexpr inline typename std::enable_if<!has_intrusive_get<T, I>::value &&
+                                               has_std_get<T, I>::value,
+                                           std_get_result_t<T, I>>::type
+  operator()(T&& val) const noexcept(noexcept(std::get<I>((T &&) val))) {
     return std::get<I>((T &&) val);
   }
 };
 
-}  // namespace _get_impl_ignore_adl
-}  // end namespace Impl
+//------------------------------------------------------------------------------
+
+}  // namespace _get_impl_disable_adl
+}  // namespace Impl
 
 // </editor-fold> end get Niebloid implementation details }}}1
 //==============================================================================
+
 /**
  *  std::get drop-in replacement, except that it's device marked and doesn't
  *  participate in ADL.
  */
 #if defined(KOKKOS_ENABLE_CXX11)
 // We can't use a Niebloid here because it requires variable templates
-// This will have some warnings in the std::get case
+template <size_t I, class T,
+          class = typename std::enable_if<
+              Impl::_get_impl_disable_adl::has_intrusive_get<T, I>::value ||
+              !Impl::_get_impl_disable_adl::has_std_get<T, I>::value>::type>
+KOKKOS_INLINE_FUNCTION constexpr auto get(T&& val) noexcept(
+    noexcept(Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val)))
+    -> decltype(Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val)) {
+  return Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val);
+}
+// Non-device-marked "overload" that goes through std::get
 template <size_t I, class T>
-KOKKOS_INLINE_FUNCTION constexpr auto get(T&& val) const
-    noexcept(noexcept(Impl::_get_impl_ignore_adl::_get_impl<I>{}((T &&) val)))
-        ->decltype(Impl::_get_impl_ignore_adl::_get_impl<I>{}((T &&) val)) {
-  return Impl::_get_impl_ignore_adl::_get_impl<I>{}((T &&) val);
+constexpr typename std::enable_if<
+    !Impl::_get_impl_disable_adl::has_intrusive_get<T, I>::value &&
+        Impl::_get_impl_disable_adl::has_std_get<T, I>::value,
+    Impl::_get_impl_disable_adl::std_get_result_t<T, I>>::type
+get(T&& val) noexcept(
+    noexcept(Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val))) {
+  return Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val);
 }
 #elif defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || \
     defined(KOKKOS_ENABLE_CXX20)
@@ -138,10 +187,31 @@ template <size_t I>
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 inline
 #endif
-    constexpr Impl::_get_impl_ignore_adl::_get_impl<I>
+    constexpr Impl::_get_impl_disable_adl::_get_niebloid<I>
         get = {};
 #endif
 
+//==============================================================================
+// <editor-fold desc="A trait for the availability of Kokkos::get"> {{{1
+
+namespace Impl {
+
+KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+    _has_kokkos_get_archetype, T, IType,
+    decltype(Kokkos::get<IType::value>(declval<T>())));
+
+template <class T, size_t I>
+using has_kokkos_get = is_detected<_has_kokkos_get_archetype, T,
+                                   std::integral_constant<size_t, I>>;
+
+template <class T, size_t I>
+using kokkos_get_result_t =
+    detected_t<_has_kokkos_get_archetype, T, std::integral_constant<size_t, I>>;
+
+}  // end namespace Impl
+
+// </editor-fold> end A trait for the availability of Kokkos::get }}}1
+//==============================================================================
 }  // end namespace Kokkos
 
 #endif  // KOKKOS_CORE_GET_HPP
