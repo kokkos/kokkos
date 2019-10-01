@@ -352,6 +352,7 @@ SharedAllocationHeader *_do_allocation(Kokkos::HostSpace const &space,
               << " failed with the following error:  ";
     failure.print_error_message(std::cerr);
     std::cerr.flush();
+    Kokkos::Impl::throw_runtime_exception("Memory allocation failure");
   }
   return nullptr; // unreachable
 }
