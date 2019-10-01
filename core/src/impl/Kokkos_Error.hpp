@@ -110,6 +110,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 
   ~RawMemoryAllocationFailure() noexcept override = default;
 
+  KOKKOS_ATTRIBUTE_NODISCARD
   const char *what() const noexcept override {
     if (m_failure_mode == FailureMode::OutOfMemoryError) {
       return "Memory allocation error: out of memory";
@@ -120,14 +121,23 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     return nullptr;  // unreachable
   }
 
-  constexpr size_t attempted_size() const noexcept { return m_attempted_size; }
-  constexpr size_t attempted_alignment() const noexcept {
+  KOKKOS_ATTRIBUTE_NODISCARD
+  KOKKOS_CONSTEXPR_14 size_t attempted_size() const noexcept {
+    return m_attempted_size;
+  }
+  KOKKOS_ATTRIBUTE_NODISCARD
+  KOKKOS_CONSTEXPR_14 size_t attempted_alignment() const noexcept {
     return m_attempted_alignment;
   }
-  constexpr AllocationMechanism allocation_mechanism() const noexcept {
+  KOKKOS_ATTRIBUTE_NODISCARD
+  KOKKOS_CONSTEXPR_14 AllocationMechanism allocation_mechanism() const
+      noexcept {
     return m_mechanism;
   }
-  constexpr FailureMode failure_mode() const noexcept { return m_failure_mode; }
+  KOKKOS_ATTRIBUTE_NODISCARD
+  KOKKOS_CONSTEXPR_14 FailureMode failure_mode() const noexcept {
+    return m_failure_mode;
+  }
 
   void print_error_message(std::ostream &o) const;
   std::string get_error_message() const;
