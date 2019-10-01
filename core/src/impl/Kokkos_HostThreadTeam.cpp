@@ -118,11 +118,11 @@ void HostThreadTeamData::disband_pool() {
   m_team_rendezvous_step = 0;
   // Disopose of the records for the intel inspector associated with the pool
   // rendevous
-  KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(
+  KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_DESTROY(
       (int *)(m_pool_scratch + m_pool_rendezvous) + 32 / sizeof(int));
-  KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(
+  KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_DESTROY(
       (int *)(m_pool_scratch + m_pool_rendezvous) + 64 / sizeof(int));
-  KOKKOS_INTEL_INSPECTOR_SYNC_DESTROY(
+  KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_DESTROY(
       (int *)(m_pool_scratch + m_pool_rendezvous) + 96 / sizeof(int));
 }
 

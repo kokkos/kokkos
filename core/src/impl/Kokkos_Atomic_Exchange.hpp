@@ -251,7 +251,7 @@ inline T atomic_exchange(
 //----------------------------------------------------------------------------
 
 template <typename T>
-KOKKOS_THREAD_SANITIZER_IGNORE inline T atomic_exchange(
+KOKKOS_IMPL_THREAD_SANITIZER_IGNORE inline T atomic_exchange(
     volatile T* const dest,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
 #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
