@@ -49,43 +49,25 @@
 #include <type_traits>
 
 KOKKOS_STATIC_TEST(
-    Kokkos::Impl::has_kokkos_get<std::pair<int, char>, 0>::value
-);
+    Kokkos::Impl::has_kokkos_get<std::pair<int, char>, 0>::value);
 KOKKOS_STATIC_TEST(
-    Kokkos::Impl::has_kokkos_get<std::pair<int, char>, 1>::value
-);
+    Kokkos::Impl::has_kokkos_get<std::pair<int, char>, 1>::value);
+KOKKOS_STATIC_TEST(Kokkos::Impl::has_kokkos_get<std::pair<int, int>, 0>::value);
+KOKKOS_STATIC_TEST(Kokkos::Impl::has_kokkos_get<std::pair<int, int>, 1>::value);
 KOKKOS_STATIC_TEST(
-    Kokkos::Impl::has_kokkos_get<std::pair<int, int>, 0>::value
-);
+    Kokkos::Impl::has_kokkos_get<Kokkos::pair<int, int>, 0>::value);
 KOKKOS_STATIC_TEST(
-    Kokkos::Impl::has_kokkos_get<std::pair<int, int>, 1>::value
-);
-KOKKOS_STATIC_TEST(
-    Kokkos::Impl::has_kokkos_get<Kokkos::pair<int, int>, 0>::value
-);
-KOKKOS_STATIC_TEST(
-    Kokkos::Impl::has_kokkos_get<Kokkos::pair<int, int>, 1>::value
-);
+    Kokkos::Impl::has_kokkos_get<Kokkos::pair<int, int>, 1>::value);
 
 KOKKOS_STATIC_TEST(
     std::is_same<
-      Kokkos::Impl::kokkos_get_result_t<std::pair<int, char> const&, 0>,
-          int const&
-          >::value
-);
+        Kokkos::Impl::kokkos_get_result_t<std::pair<int, char> const&, 0>,
+        int const&>::value);
 KOKKOS_STATIC_TEST(
     std::is_same<
         Kokkos::Impl::kokkos_get_result_t<std::pair<int, char> const&, 1>,
-        char const&
-    >::value
-);
+        char const&>::value);
 
-KOKKOS_STATIC_TEST(
-    Kokkos::Impl::has_kokkos_get<std::array<int, 4>, 0>::value
-);
-KOKKOS_STATIC_TEST(
-    Kokkos::Impl::has_kokkos_get<std::array<int, 4>, 3>::value
-);
-KOKKOS_STATIC_TEST(
-    !Kokkos::Impl::has_kokkos_get<double, 42>::value
-);
+KOKKOS_STATIC_TEST(Kokkos::Impl::has_kokkos_get<std::array<int, 4>, 0>::value);
+KOKKOS_STATIC_TEST(Kokkos::Impl::has_kokkos_get<std::array<int, 4>, 3>::value);
+KOKKOS_STATIC_TEST(!Kokkos::Impl::has_kokkos_get<double, 42>::value);

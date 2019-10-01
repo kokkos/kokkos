@@ -335,15 +335,15 @@ struct is_integral_extent_type<
     PairLike, typename std::enable_if<has_kokkos_get<PairLike, 0>::value &&
                                       has_kokkos_get<PairLike, 1>::value>::type>
     : std::integral_constant<
-        bool, std::is_integral<typename std::remove_reference<
-            kokkos_get_result_t<PairLike, 0>>::type>::value &&
-              std::is_integral<typename std::remove_reference<
-                  kokkos_get_result_t<PairLike, 1>>::type>::value> {};
+          bool, std::is_integral<typename std::remove_reference<
+                    kokkos_get_result_t<PairLike, 0>>::type>::value &&
+                    std::is_integral<typename std::remove_reference<
+                        kokkos_get_result_t<PairLike, 1>>::type>::value> {};
 
 // Assuming '2 == initializer_list<iType>::size()'
 template <class iType>
-struct is_integral_extent_type<std::initializer_list<iType> >
-    : std::is_integral<iType> { };
+struct is_integral_extent_type<std::initializer_list<iType>>
+    : std::is_integral<iType> {};
 
 template <unsigned I, class... Args>
 struct is_integral_extent {
