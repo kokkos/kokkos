@@ -72,6 +72,9 @@ using void_t = void;
 template <class T>
 KOKKOS_FUNCTION decltype(Kokkos::Impl::_declval<T>(0)) declval() noexcept;
 
+// A type to return from is_detected when detection fails.  Delete everything
+// in order to maximize the probability that use of a is_detected result type
+// will lead to a compilation error.
 struct nonesuch {
   nonesuch()                = delete;
   ~nonesuch()               = delete;
