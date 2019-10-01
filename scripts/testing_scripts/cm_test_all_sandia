@@ -788,14 +788,12 @@ single_build_and_test() {
   if [[ "$build_type" = *debug* ]]; then
     local extra_args="$extra_args --debug"
     local cxxflags="-g $compiler_warning_flags"
-    local ldflags="-g"
   else
     local cxxflags="$OPT_FLAG $compiler_warning_flags"
-    local ldflags="${OPT_FLAG}"
   fi
 
   local cxxflags="${cxxflags} ${CXX_FLAGS_EXTRA}"
-  local ldflags="${ldflags} ${LD_FLAGS_EXTRA}"
+  local ldflags="${LD_FLAGS_EXTRA}"
 
   local cxx_standard="${CXX_STANDARD}"
 
