@@ -291,7 +291,7 @@ ELSE()
   target_compile_options(
     ${NAME}
     PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
-     )  
+  )  
   target_link_libraries(
     ${NAME}
     PUBLIC kokkos
