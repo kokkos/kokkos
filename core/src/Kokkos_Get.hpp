@@ -117,7 +117,6 @@ struct _get_impl {
 }  // namespace _get_impl_ignore_adl
 }  // end namespace Impl
 
-
 // </editor-fold> end get Niebloid implementation details }}}1
 //==============================================================================
 /**
@@ -133,12 +132,14 @@ KOKKOS_INLINE_FUNCTION constexpr get(T&& val) const
         ->decltype(Impl::_get_impl_ignore_adl::_get_impl<I>{}((T &&) val)) {
   return Impl::_get_impl_ignore_adl::_get_impl<I>{}((T &&) val);
 }
-#elif defined(KOKKOS_ENABLE_CXX14) ||  defined(KOKKOS_ENABLE_CXX17) ||  defined(KOKKOS_ENABLE_CXX20)
+#elif defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || \
+    defined(KOKKOS_ENABLE_CXX20)
 template <size_t I>
-#if defined(KOKKOS_ENABLE_CXX17) ||  defined(KOKKOS_ENABLE_CXX20)
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 inline
 #endif
-constexpr Impl::_get_impl_ignore_adl::_get_impl<I> get = { };
+    constexpr Impl::_get_impl_ignore_adl::_get_impl<I>
+        get = {};
 #endif
 
 }  // end namespace Kokkos

@@ -159,41 +159,58 @@ struct pair {
   }
 
   template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  constexpr
-  typename std::enable_if<I==0, T1 const&>::type get() const noexcept { return first; }
+  KOKKOS_INLINE_FUNCTION constexpr
+      typename std::enable_if<I == 0, T1 const&>::type
+      get() const noexcept {
+    return first;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION constexpr
+      typename std::enable_if<I == 1, T2 const&>::type
+      get() const noexcept {
+    return second;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION KOKKOS_CONSTEXPR_14
+      typename std::enable_if<I == 0, T1&>::type
+      get() noexcept {
+    return first;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION KOKKOS_CONSTEXPR_14
+      typename std::enable_if<I == 1, T2&>::type
+      get() noexcept {
+    return second;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
+  get() volatile noexcept {
+    return first;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 volatile&>::type
+  get() volatile noexcept {
+    return second;
+  }
 
   template <size_t I>
   KOKKOS_INLINE_FUNCTION
-  constexpr
-  typename std::enable_if<I==1, T2 const&>::type get() const noexcept { return second; }
+      typename std::enable_if<I == 0, T1 const volatile&>::type
+      get() const volatile noexcept {
+    return first;
+  }
 
   template <size_t I>
   KOKKOS_INLINE_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  typename std::enable_if<I==0, T1&>::type get() noexcept { return first; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  typename std::enable_if<I==1, T2&>::type get() noexcept { return second; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1 volatile&>::type get() volatile noexcept { return first; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==1, T2 volatile&>::type get() volatile noexcept { return second; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1 const volatile&>::type get() const volatile noexcept { return first; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==1, T2 const volatile&>::type get() const volatile noexcept { return second; }
-
+      typename std::enable_if<I == 1, T2 const volatile&>::type
+      get() const volatile noexcept {
+    return second;
+  }
 };
 
 template <class T1, class T2>
@@ -253,23 +270,30 @@ struct pair<T1&, T2&> {
   }
 
   template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  constexpr
-  typename std::enable_if<I==0, T1 const&>::type get() const noexcept { return first; }
+  KOKKOS_INLINE_FUNCTION constexpr
+      typename std::enable_if<I == 0, T1 const&>::type
+      get() const noexcept {
+    return first;
+  }
 
   template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  constexpr
-  typename std::enable_if<I==1, T2 const&>::type get() const noexcept { return second; }
+  KOKKOS_INLINE_FUNCTION constexpr
+      typename std::enable_if<I == 1, T2 const&>::type
+      get() const noexcept {
+    return second;
+  }
 
   template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1 volatile&>::type get() const volatile noexcept { return first; }
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
+  get() const volatile noexcept {
+    return first;
+  }
 
   template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==1, T2 volatile&>::type get() const volatile noexcept { return second; }
-
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 volatile&>::type
+  get() const volatile noexcept {
+    return second;
+  }
 };
 
 template <class T1, class T2>
@@ -329,30 +353,42 @@ struct pair<T1, T2&> {
   }
 
   template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  constexpr
-  typename std::enable_if<I==0, T1 const&>::type get() const noexcept { return first; }
+  KOKKOS_INLINE_FUNCTION constexpr
+      typename std::enable_if<I == 0, T1 const&>::type
+      get() const noexcept {
+    return first;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2&>::type get() const
+      noexcept {
+    return second;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type
+  get() noexcept {
+    return first;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
+  get() volatile noexcept {
+    return first;
+  }
 
   template <size_t I>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==1, T2&>::type get() const noexcept { return second; }
+      typename std::enable_if<I == 0, T1 const volatile&>::type
+      get() const volatile noexcept {
+    return first;
+  }
 
   template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1&>::type get() noexcept { return first; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1 volatile&>::type get() volatile noexcept { return first; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1 const volatile&>::type get() const volatile noexcept { return first; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==1, T2&>::type get() const volatile noexcept { return second; }
-
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2&>::type get() const
+      volatile noexcept {
+    return second;
+  }
 };
 
 template <class T1, class T2>
@@ -412,29 +448,41 @@ struct pair<T1&, T2> {
   }
 
   template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1&>::type get() const noexcept { return first; }
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type get() const
+      noexcept {
+    return first;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 const&>::type get()
+      const noexcept {
+    return second;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2&>::type
+  get() noexcept {
+    return second;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 volatile&>::type
+  get() volatile noexcept {
+    return second;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type get() const
+      volatile noexcept {
+    return first;
+  }
 
   template <size_t I>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==1, T2 const&>::type get() const noexcept { return second; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==1, T2&>::type get() noexcept { return second; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==1, T2 volatile&>::type get() volatile noexcept { return second; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1&>::type get() const volatile noexcept { return first; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==1, T2 const volatile&>::type get() const volatile noexcept { return second; }
-
+      typename std::enable_if<I == 1, T2 const volatile&>::type
+      get() const volatile noexcept {
+    return second;
+  }
 };
 
 //! Equality operator for Kokkos::pair.
@@ -571,21 +619,29 @@ struct pair<T1, void> {
   }
 
   template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1&>::type get() noexcept { return first; }
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type
+  get() noexcept {
+    return first;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 const&>::type get()
+      const noexcept {
+    return first;
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
+  get() volatile noexcept {
+    return first;
+  }
 
   template <size_t I>
   KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1 const&>::type get() const noexcept { return first; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1 volatile&>::type get() volatile noexcept { return first; }
-
-  template <size_t I>
-  KOKKOS_INLINE_FUNCTION
-  typename std::enable_if<I==0, T1 const volatile&>::type get() const volatile noexcept { return first; }
-
+      typename std::enable_if<I == 0, T1 const volatile&>::type
+      get() const volatile noexcept {
+    return first;
+  }
 };
 
 //
