@@ -47,6 +47,9 @@ matrix:
 # Apple Clang doesn't support OpenMP
     - os: osx
       compiler: clang
+      env: BACKEND="OPENMP"
+    - os: osx
+      compiler: clang
       env: CMAKE_BUILD_TYPE=Debug BACKEND="OPENMP" COVERAGE=yes
     - os: osx
       compiler: clang
