@@ -72,7 +72,7 @@ pipeline {
                         }
                     }
                 }
-                stage("CUDA-10.1-NVCC") {
+                stage("CUDA-10.1-NVCC-RDC") {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
@@ -95,6 +95,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
+                                -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
