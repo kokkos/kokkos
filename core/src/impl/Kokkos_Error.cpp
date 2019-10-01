@@ -93,6 +93,37 @@ std::string human_memory_size(size_t arg_bytes) {
 }
 
 }  // namespace Impl
+
+void Experimental::RawMemoryAllocationFailure::print_error_message(
+    std::ostream &o) const {
+  o << "Allocation of size " << Impl::human_memory_size(m_attempted_size);
+  o << " failed";
+  switch (m_failure_mode) {
+    case FailureMode::OutOfMemoryError:
+      o << ", likely due to insufficient memory.";
+      break;
+    case FailureMode::AllocationNotAligned:
+      o << " because the allocation was improperly aligned.";
+  }
+  o << "  (The allocation mechanism was ";
+  switch (m_mechanism) {
+    case AllocationMechanism::StdMalloc: o << "standard malloc()."; break;
+    case AllocationMechanism::PosixMemAlign: o << "posix_memalign()."; break;
+    case AllocationMechanism::PosixMMap: o << "POSIX mmap()."; break;
+    case AllocationMechanism::IntelMMAlloc:
+      o << "the Intel _mm_malloc() intrinsic.";
+      break;
+  }
+  o << ")" << std::endl;
+}
+
+std::string Experimental::RawMemoryAllocationFailure::get_error_message()
+    const {
+  std::ostringstream out;
+  print_error_message(out);
+  return out.str();
+}
+
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

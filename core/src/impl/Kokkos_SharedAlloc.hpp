@@ -87,7 +87,7 @@ class SharedAllocationRecord<void, void> {
   template <class, class>
   friend class SharedAllocationRecord;
 
-  typedef void (*function_type)(SharedAllocationRecord<void, void>*);
+  using function_type = void (*)(SharedAllocationRecord<void, void>*);
 
   SharedAllocationHeader* const m_alloc_ptr;
   size_t const m_alloc_size;
@@ -134,9 +134,9 @@ class SharedAllocationRecord<void, void> {
   virtual ~SharedAllocationRecord() {}
 
   SharedAllocationRecord()
-      : m_alloc_ptr(0),
+      : m_alloc_ptr(nullptr),
         m_alloc_size(0),
-        m_dealloc(0)
+        m_dealloc(nullptr)
 #ifdef KOKKOS_DEBUG
         ,
         m_root(this),

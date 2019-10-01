@@ -216,7 +216,13 @@ void OpenMPExec::resize_thread_data(size_t pool_reduce_bytes,
         space.deallocate(m_pool[rank], old_alloc_bytes);
       }
 
-      void *const ptr = space.allocate(alloc_bytes);
+      void *ptr = nullptr;
+      try {
+        ptr = space.allocate(alloc_bytes);
+      } catch (Experimental::RawMemoryAllocationFailure const &f) {
+        // For now, just rethrow the error message the existing way
+        Kokkos::Impl::throw_runtime_exception(f.get_error_message());
+      }
 
       m_pool[rank] = new (ptr) HostThreadTeamData();
 
@@ -342,7 +348,13 @@ void OpenMP::impl_initialize(int thread_count)
       Impl::SharedAllocationRecord<void, void>::tracking_enable();
     }
 
-    void *const ptr = space.allocate(sizeof(Impl::OpenMPExec));
+    void *ptr = nullptr;
+    try {
+      ptr = space.allocate(sizeof(Impl::OpenMPExec));
+    } catch (Experimental::RawMemoryAllocationFailure const &f) {
+      // For now, just rethrow the error message the existing way
+      Kokkos::Impl::throw_runtime_exception(f.get_error_message());
+    }
 
     Impl::t_openmp_instance =
         new (ptr) Impl::OpenMPExec(Impl::g_openmp_hardware_max_threads);
