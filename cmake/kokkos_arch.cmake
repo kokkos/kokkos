@@ -30,7 +30,9 @@ FUNCTION(ARCH_FLAGS)
   FOREACH(COMP ${COMPILERS})
     IF (COMPILER STREQUAL "${COMP}")
       IF (PARSE_${COMPILER})
-        SET(FLAGS ${PARSE_${COMPILER}})
+        IF (NOT "${PARSE_${COMPILER}}" STREQUAL "NO-VALUE-SPECIFIED")
+           SET(FLAGS ${PARSE_${COMPILER}})
+        ENDIF()
       ELSEIF(PARSE_DEFAULT)
         SET(FLAGS ${PARSE_DEFAULT})
       ENDIF()
@@ -140,7 +142,7 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
     ${COMMON_WARNINGS})
 
   ARCH_FLAGS(
-    PGI ""
+    PGI NO-VALUE-SPECIFIED
     GNU     ${GNU_WARNINGS}
     DEFAULT ${COMMON_WARNINGS}
   )
@@ -186,7 +188,7 @@ IF(KOKKOS_ENABLE_OPENMP)
     Clang      -fopenmp=libomp
     PGI        -mp
     NVIDIA     -Xcompiler -fopenmp
-    Cray       ""
+    Cray       NO-VALUE-SPECIFIED
     XL         -qsmp=omp
     DEFAULT    -fopenmp 
   )
@@ -194,16 +196,16 @@ ENDIF()
 
 IF (KOKKOS_ARCH_ARMV80)
   ARCH_FLAGS(
-    Cray ""
-    PGI  ""
+    Cray NO-VALUE-SPECIFIED
+    PGI  NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a
   )
 ENDIF()
 
 IF (KOKKOS_ARCH_ARMV81)
   ARCH_FLAGS(
-    Cray ""
-    PGI  ""
+    Cray NO-VALUE-SPECIFIED
+    PGI  NO-VALUE-SPECIFIED
     DEFAULT -march=armv8.1-a
   )
 ENDIF()
@@ -211,8 +213,8 @@ ENDIF()
 IF (KOKKOS_ARCH_ARMV8_THUNDERX)
   SET(KOKKOS_ARCH_ARMV80 ON) #Not a cache variable
   ARCH_FLAGS(
-    Cray ""
-    PGI  ""
+    Cray NO-VALUE-SPECIFIED
+    PGI  NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a -mtune=thunderx
   )
 ENDIF()
@@ -220,8 +222,8 @@ ENDIF()
 IF (KOKKOS_ARCH_ARMV8_THUNDERX2)
   SET(KOKKOS_ARCH_ARMV81 ON) #Not a cache variable
   ARCH_FLAGS(
-    Cray ""
-    PGI  ""
+    Cray NO-VALUE-SPECIFIED
+    PGI  NO-VALUE-SPECIFIED
     DEFAULT -march=thunderx2t99 -mtune=thunderx2t99
   )
 ENDIF()
@@ -239,7 +241,7 @@ IF (KOKKOS_ARCH_WSM)
   ARCH_FLAGS(
     Intel   -xSSE4.2
     PGI     -tp=nehalem
-    Cray    ""
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -msse4.2
   )
   SET(KOKKOS_ARCH_SSE42 ON)
@@ -250,7 +252,7 @@ IF (KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
   ARCH_FLAGS(
     Intel   -mavx
     PGI     -tp=sandybridge
-    Cray    ""
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -mavx
   )
 ENDIF()
@@ -260,7 +262,7 @@ IF (KOKKOS_ARCH_HSW)
   ARCH_FLAGS(
     Intel   -xCORE-AVX2
     PGI     -tp=haswell
-    Cray    ""
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=core-avx2 -mtune=core-avx2
   )
 ENDIF()
@@ -270,7 +272,7 @@ IF (KOKKOS_ARCH_BDW)
   ARCH_FLAGS(
     Intel   -xCORE-AVX2
     PGI     -tp=haswell
-    Cray    ""
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=core-avx2 -mtune=core-avx2 -mrtm
   )
 ENDIF()
@@ -288,8 +290,8 @@ IF (KOKKOS_ARCH_KNL)
   SET(KOKKOS_ARCH_AVX512MIC ON) #not a cache variable
   ARCH_FLAGS(
     Intel   -xMIC-AVX512
-    PGI     ""
-    Cray    ""
+    PGI     NO-VALUE-SPECIFIED
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=knl -mtune=knl
   )
 ENDIF()
@@ -306,8 +308,8 @@ IF (KOKKOS_ARCH_SKX)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   ARCH_FLAGS(
     Intel   -xCORE-AVX512
-    PGI     ""
-    Cray    ""
+    PGI     NO-VALUE-SPECIFIED
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
   )
 ENDIF()
@@ -322,7 +324,7 @@ ENDIF()
 
 IF (KOKKOS_ARCH_POWER7)
   ARCH_FLAGS(
-    PGI     ""
+    PGI     NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power7 -mtune=power7
   )
   SET(KOKKOS_USE_ISA_POWERPCBE ON)
@@ -330,16 +332,16 @@ ENDIF()
 
 IF (KOKKOS_ARCH_POWER8)
   ARCH_FLAGS(
-    PGI     ""
-    NVIDIA  ""
+    PGI     NO-VALUE-SPECIFIED
+    NVIDIA  NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power8 -mtune=power8
   )
 ENDIF()
 
 IF (KOKKOS_ARCH_POWER9)
   ARCH_FLAGS(
-    PGI     ""
-    NVIDIA  ""
+    PGI     NO-VALUE-SPECIFIED
+    NVIDIA  NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power9 -mtune=power9
   )
 ENDIF()

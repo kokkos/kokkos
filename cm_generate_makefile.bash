@@ -158,7 +158,7 @@ display_help_text() {
 
 }
 
-KOKKOS_DO_EXAMPLES=ON
+KOKKOS_DO_EXAMPLES=OFF
 
 while [[ $# > 0 ]]
 do
@@ -303,9 +303,18 @@ else
 fi
 
 if [ ! -e ${KOKKOS_PATH}/CMakeLists.txt ]; then
-   echo "Kokkos PATH does not appear to be set properly. please specify in ENV or cmd line arguements"   
-   display_help_text
-   exit 0
+   if [ "${KOKKOS_PATH}" == "" ]; then
+      CM_SCRIPT=`realpath $0`
+      KOKKOS_PATH=`dirname $CM_SCRIPT`
+      if [ ! -e ${KOKKOS_PATH}/CMakeLists.txt ]; then
+         echo "${KOKKOS_PATH} repository appears to not be complete.  please verify and try again"
+         exit 0
+      fi
+   else
+      echo "KOKKOS_PATH does not appear to be set properly. please specify in location of CMakeLists.txt"   
+      display_help_text
+      exit 0
+   fi
 fi
 
 get_kokkos_device_list
