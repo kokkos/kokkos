@@ -41,6 +41,9 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_HIP_ATOMIC_HPP
+#define KOKKOS_HIP_ATOMIC_HPP
+
 #ifdef KOKKOS_ENABLE_HIP_ATOMICS
 namespace Kokkos {
 // HIP can do:
@@ -538,4 +541,6 @@ unsigned long long int atomic_fetch_and(
   return atomicAnd(const_cast<unsigned long long int *>(dest), val);
 }
 }  // namespace Kokkos
+#endif
+
 #endif
