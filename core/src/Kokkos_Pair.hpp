@@ -647,6 +647,7 @@ struct pair<T1, void> {
 //
 // Specialization of relational operators for Kokkos::pair<T1,void>.
 //
+// TODO make these hidden friends to reduce compilation time
 
 template <class T1>
 KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator==(
@@ -683,17 +684,6 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator>=(
     const pair<T1, void>& lhs, const pair<T1, void>& rhs) {
   return !(lhs < rhs);
 }
-
-namespace Impl {
-
-template <class T>
-struct is_pair_like : std::false_type {};
-template <class T, class U>
-struct is_pair_like<Kokkos::pair<T, U>> : std::true_type {};
-template <class T, class U>
-struct is_pair_like<std::pair<T, U>> : std::true_type {};
-
-}  // end namespace Impl
 
 }  // namespace Kokkos
 

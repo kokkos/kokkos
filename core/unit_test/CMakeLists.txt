@@ -495,5 +495,16 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   SOURCES UnitTestMain.cpp  TestHostBarrier.cpp
 )
 
+KOKKOS_ADD_COMPILE_TEST(
+  CompileTest_Detection
+  INCLUDE_CORE
+  SOURCES compile_only/CompileTestDetection.cpp
+)
+
+KOKKOS_ADD_COMPILE_TEST(
+  CompileTest_KokkosGet
+  INCLUDE_CORE
+  SOURCES compile_only/CompileTestKokkosGet.cpp
+)
 
 

@@ -322,6 +322,14 @@ struct ALL_t {
 namespace Kokkos {
 namespace Impl {
 
+// TODO: Has tuple_size and tuple_size == 2
+// Using inheritance instead of type aliases gives better compile-time error
+// messages in clang.  (Elsewhere it makes no difference).
+template <class T>
+struct is_pairlike_slice
+    : std::integral_constant<bool, has_kokkos_get<T, 0>::value &&
+                                       has_kokkos_get<T, 1>::value> {};
+
 // This actually means "is the type an extent that is not an integer".  Probably
 // we could come up with a better name for that...
 template <class T, class Enable = void>
@@ -332,8 +340,7 @@ struct is_integral_extent_type<Kokkos::Impl::ALL_t> : std::true_type {};
 
 template <class PairLike>
 struct is_integral_extent_type<
-    PairLike, typename std::enable_if<has_kokkos_get<PairLike, 0>::value &&
-                                      has_kokkos_get<PairLike, 1>::value>::type>
+    PairLike, typename std::enable_if<is_pairlike_slice<PairLike>::value>::type>
     : std::integral_constant<
           bool, std::is_integral<typename std::remove_reference<
                     kokkos_get_result_t<PairLike, 0>>::type>::value &&
@@ -454,11 +461,6 @@ struct SubviewExtents {
   // RangeRank=1
   enum { InternalRangeRank = RangeRank ? RangeRank : +1u };
 
-  template <class T>
-  using _is_pairlike_slice =
-      std::integral_constant<bool, has_kokkos_get<T, 0>::value &&
-                                       has_kokkos_get<T, 1>::value>;
-
   size_t m_begin[DomainRank];
   size_t m_length[InternalRangeRank];
   unsigned m_index[InternalRangeRank];
@@ -503,9 +505,7 @@ struct SubviewExtents {
   // PairLike range
   template <class PairLike, size_t... DimArgs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION
-      typename std::enable_if<has_kokkos_get<PairLike const&, 0>::value &&
-                                  has_kokkos_get<PairLike const&, 1>::value,
-                              bool>::type
+      typename std::enable_if<is_pairlike_slice<PairLike>::value, bool>::type
       set(unsigned domain_rank, unsigned range_rank,
           const ViewDimension<DimArgs...>& dim, PairLike const& val,
           Args... args) {
@@ -553,9 +553,9 @@ struct SubviewExtents {
              const ViewDimension<DimArgs...>&) const {}
 
   template <class T, size_t... DimArgs, class... Args>
-  void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
-             const ViewDimension<DimArgs...>& dim, const T& val,
-             Args... args) const {
+  typename std::enable_if<std::is_integral<T>::value>::type error(
+      char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
+      const ViewDimension<DimArgs...>& dim, const T& val, Args... args) const {
     const int n = std::min(
         buf_len,
         snprintf(buf, buf_len, " %lu < %lu %c", static_cast<unsigned long>(val),
@@ -565,7 +565,7 @@ struct SubviewExtents {
     error(buf + n, buf_len - n, domain_rank + 1, range_rank, dim, args...);
   }
 
-  // std::pair range
+  // all range
   template <size_t... DimArgs, class... Args>
   void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
              const ViewDimension<DimArgs...>& dim, const Kokkos::Impl::ALL_t,
@@ -576,27 +576,12 @@ struct SubviewExtents {
     error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);
   }
 
-  // std::pair range
-  template <class T, size_t... DimArgs, class... Args>
-  void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
-             const ViewDimension<DimArgs...>& dim, const std::pair<T, T>& val,
-             Args... args) const {
-    // d <= e - b
-    const int n = std::min(
-        buf_len, snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
-                          static_cast<unsigned long>(dim.extent(domain_rank)),
-                          static_cast<unsigned long>(Kokkos::get<1>(val)),
-                          static_cast<unsigned long>(Kokkos::get<0>(val)),
-                          int(sizeof...(Args) ? ',' : ')')));
-
-    error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);
-  }
-
-  // Kokkos::pair range
-  template <class T, size_t... DimArgs, class... Args>
-  void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
-             const ViewDimension<DimArgs...>& dim,
-             const Kokkos::pair<T, T>& val, Args... args) const {
+  // Pair-like range
+  template <class PairLike, size_t... DimArgs, class... Args>
+  typename std::enable_if<is_pairlike_slice<PairLike>::value>::type error(
+      char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
+      const ViewDimension<DimArgs...>& dim, const PairLike& val,
+      Args... args) const {
     // d <= e - b
     const int n = std::min(
         buf_len, snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
@@ -3492,7 +3477,7 @@ template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class Integral,
           class... Args>
 struct SubViewDataTypeImpl<
     typename std::enable_if<
-        std::is_integral<typename std::decay<Integral>::type>::value>::type,
+        std::is_integral<typename std::remove_cv<typename std::remove_reference<Integral>::type>::type>::value>::type,
     ValueType, Experimental::Extents<Ext, Exts...>, Integral, Args...>
     : SubViewDataTypeImpl<void, ValueType, Experimental::Extents<Exts...>,
                           Args...> {};
@@ -3511,7 +3496,7 @@ struct SubViewDataTypeImpl<void, ValueType, Experimental::Extents<Ext, Exts...>,
 template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class PairLike,
           class... Args>
 struct SubViewDataTypeImpl<
-    typename std::enable_if<is_pair_like<PairLike>::value>::type, ValueType,
+    typename std::enable_if<is_pairlike_slice<PairLike>::value>::type, ValueType,
     Experimental::Extents<Ext, Exts...>, PairLike, Args...>
     : SubViewDataTypeImpl<
           void, typename make_all_extents_into_pointers<ValueType>::type*,
