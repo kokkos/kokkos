@@ -302,7 +302,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   // </editor-fold> end Constructors, destructor, and assignment }}}2
   //----------------------------------------------------------------------------
 
-  KOKKOS_INLINE_FUNCTION const execution_space& space() const {
+  KOKKOS_INLINE_FUNCTION const execution_space& space() const noexcept {
     return m_space;
   }
 
