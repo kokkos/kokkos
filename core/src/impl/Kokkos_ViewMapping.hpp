@@ -329,6 +329,12 @@ template <class T>
 struct is_pairlike_slice
     : std::integral_constant<bool, has_kokkos_get<T, 0>::value &&
                                        has_kokkos_get<T, 1>::value> {};
+template <class T>
+struct is_device_supported_pairlike_slice
+    : std::integral_constant<bool,
+                             has_device_supported_kokkos_get<T, 0>::value &&
+                                 has_device_supported_kokkos_get<T, 1>::value> {
+};
 
 // This actually means "is the type an extent that is not an integer".  Probably
 // we could come up with a better name for that...
@@ -355,14 +361,27 @@ struct is_integral_extent_type<std::initializer_list<iType>>
 template <unsigned I, class... Args>
 struct is_integral_extent {
   // get_type is void when sizeof...(Args) <= I
-  typedef typename std::remove_cv<typename std::remove_reference<
-      typename Kokkos::Impl::get_type<I, Args...>::type>::type>::type type;
+  using type = typename std::remove_cv<typename std::remove_reference<
+      typename Kokkos::Impl::get_type<I, Args...>::type>::type>::type;
 
   enum { value = is_integral_extent_type<type>::value };
 
   static_assert(value || std::is_integral<type>::value ||
                     std::is_same<type, void>::value,
                 "subview argument must be either integral or integral extent");
+};
+
+template <unsigned I, class... Args>
+struct is_device_supported_slice {
+  // get_type is void when sizeof...(Args) <= I
+  using type = typename std::remove_cv<typename std::remove_reference<
+      typename Kokkos::Impl::get_type<I, Args...>::type>::type>::type;
+
+  static constexpr auto value =
+      (is_integral_extent_type<type>::value || std::is_integral<type>::value ||
+       std::is_void<type>::value) &&
+      !(is_pairlike_slice<type>::value &&
+        !is_device_supported_pairlike_slice<type>::value);
 };
 
 // Rules for subview arguments and layouts matching
@@ -465,18 +484,47 @@ struct SubviewExtents {
   size_t m_length[InternalRangeRank];
   unsigned m_index[InternalRangeRank];
 
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="set() overloads for constructing the offsets, etc"> {{{2
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="set() recursive base case (end of slices)"> {{{3
+
   template <size_t... DimArgs>
   KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned, unsigned,
                                        const ViewDimension<DimArgs...>&) {
     return true;
   }
 
+  // This is a bit of a maintanance nightmare, but I can't currently come up
+  // with a better way of doing this.  You get __host__ functino called from
+  // __host__ __device__ function warnings if *any* of your slices don't support
+  // __device__ (like std::pair, for instance), and since the overloads call
+  // each other, we have to either duplicate code or be okay with warnings in
+  // code that's perfectly reasonable.  I think in the balance we'd prefer the
+  // latter, and the duplication here doesn't seem worth going crazy with
+  // something like preprocessor macros to handle this.
+  // All of the `set_non_device()` functions below should be identical to the
+  // corresponding `set()` functions, and should be maintained this way
+  template <size_t... DimArgs>
+  inline bool set_non_device(unsigned, unsigned, const ViewDimension<DimArgs...>&) {
+    return true;
+  }
+
+  // </editor-fold> end set() recursive base case (end of slices) }}}3
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="set() integral type slice"> {{{3
+
+  // Integral type
   template <class T, size_t... DimArgs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION
       typename std::enable_if<std::is_convertible<T const&, size_t>::value,
                               bool>::type
       set(unsigned domain_rank, unsigned range_rank,
           const ViewDimension<DimArgs...>& dim, const T& val, Args... args) {
+    //--------------------------------------
     auto v = static_cast<size_t>(val);
 
     m_begin[domain_rank] = v;
@@ -486,7 +534,35 @@ struct SubviewExtents {
            && (v < dim.extent(domain_rank))
 #endif
         ;
+    //--------------------------------------
   }
+
+  // Integral type, non-device_version (see comment above)
+  template <class T, size_t... DimArgs, class... Args>
+  inline typename std::enable_if<std::is_convertible<T const&, size_t>::value,
+                                 bool>::type
+  set_non_device(unsigned domain_rank, unsigned range_rank,
+                 const ViewDimension<DimArgs...>& dim, const T& val,
+                 Args... args) {
+    //--------------------------------------
+    // NOTE: same code as set()
+    auto v = static_cast<size_t>(val);
+
+    m_begin[domain_rank] = v;
+
+    return set_non_device(domain_rank + 1, range_rank, dim, args...)
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+           && (v < dim.extent(domain_rank))
+#endif
+        ;
+    //--------------------------------------
+  }
+
+  // </editor-fold> end integral type slice }}}3
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="set() Kokkos::ALL slice"> {{{3
 
   // ALL_t
   template <size_t... DimArgs, class... Args>
@@ -495,20 +571,44 @@ struct SubviewExtents {
                                        const ViewDimension<DimArgs...>& dim,
                                        const Kokkos::Impl::ALL_t,
                                        Args... args) {
+    //--------------------------------------
     m_begin[domain_rank] = 0;
     m_length[range_rank] = dim.extent(domain_rank);
     m_index[range_rank]  = domain_rank;
 
     return set(domain_rank + 1, range_rank + 1, dim, args...);
+    //--------------------------------------
   }
 
-  // PairLike range
+  // ALL_t, non-device-supported version
+  template <size_t... DimArgs, class... Args>
+  inline bool set_non_device(unsigned domain_rank, unsigned range_rank,
+                      const ViewDimension<DimArgs...>& dim,
+                      const Kokkos::Impl::ALL_t, Args... args) {
+    //--------------------------------------
+    // NOTE: same code as set()
+    m_begin[domain_rank] = 0;
+    m_length[range_rank] = dim.extent(domain_rank);
+    m_index[range_rank]  = domain_rank;
+
+    return set_non_device(domain_rank + 1, range_rank + 1, dim, args...);
+    //--------------------------------------
+  }
+
+  // </editor-fold> end Kokkos::ALL slice }}}3
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="set() Pair-like slice"> {{{3
+
+  // PairLike range, using std::get or other non-device-supported mechanism
   template <class PairLike, size_t... DimArgs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION
       typename std::enable_if<is_pairlike_slice<PairLike>::value, bool>::type
       set(unsigned domain_rank, unsigned range_rank,
           const ViewDimension<DimArgs...>& dim, PairLike const& val,
           Args... args) {
+    //--------------------------------------
     auto b = static_cast<size_t>(Kokkos::get<0>(val));
     auto e = static_cast<size_t>(Kokkos::get<1>(val));
 
@@ -521,15 +621,46 @@ struct SubviewExtents {
            && (e <= b + dim.extent(domain_rank))
 #endif
         ;
+    //--------------------------------------
   }
 
-  // { begin , end } range
+  // PairLike range with device-marked get() function
+  template <class PairLike, size_t... DimArgs, class... Args>
+  inline typename std::enable_if<is_pairlike_slice<PairLike>::value, bool>::type
+  set_non_device(unsigned domain_rank, unsigned range_rank,
+                 const ViewDimension<DimArgs...>& dim, PairLike const& val,
+                 Args... args) {
+    //--------------------------------------
+    // NOTE: same code as set()!!!
+    auto b = static_cast<size_t>(Kokkos::get<0>(val));
+    auto e = static_cast<size_t>(Kokkos::get<1>(val));
+
+    m_begin[domain_rank] = b;
+    m_length[range_rank] = e - b;
+    m_index[range_rank]  = domain_rank;
+
+    return set_non_device(domain_rank + 1, range_rank + 1, dim, args...)
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+           && (e <= b + dim.extent(domain_rank))
+#endif
+        ;
+    //--------------------------------------
+  }
+
+  // </editor-fold> end Pair-like slice }}}3
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="set() initializer_list overloads"> {{{3
+
   template <class T, size_t... DimArgs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION bool set(unsigned domain_rank,
                                        unsigned range_rank,
                                        const ViewDimension<DimArgs...>& dim,
                                        const std::initializer_list<T>& val,
                                        Args... args) {
+    //--------------------------------------
+    // NOTE: same code as set()!!!
     const size_t b = static_cast<size_t>(val.begin()[0]);
     const size_t e = static_cast<size_t>(val.begin()[1]);
 
@@ -542,9 +673,42 @@ struct SubviewExtents {
            && (val.size() == 2) && (e <= b + dim.extent(domain_rank))
 #endif
         ;
+    //--------------------------------------
   }
 
-  //------------------------------
+  template <class T, size_t... DimArgs, class... Args>
+  inline bool set_non_device(unsigned domain_rank, unsigned range_rank,
+                             const ViewDimension<DimArgs...>& dim,
+                             const std::initializer_list<T>& val,
+                             Args... args) {
+    //--------------------------------------
+    // NOTE: same code as set()!!!
+    const size_t b = static_cast<size_t>(val.begin()[0]);
+    const size_t e = static_cast<size_t>(val.begin()[1]);
+
+    m_begin[domain_rank] = b;
+    m_length[range_rank] = e - b;
+    m_index[range_rank]  = domain_rank;
+
+    return set_non_device(domain_rank + 1, range_rank + 1, dim, args...)
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+           && (val.size() == 2) && (e <= b + dim.extent(domain_rank))
+#endif
+        ;
+    //--------------------------------------
+  }
+
+  // </editor-fold> end initializer_list overloads }}}3
+  //----------------------------------------------------------------------------
+
+  // </editor-fold> end set() overloads for constructing the offsets, etc }}}2
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="error() overloads (for bounds checking)"> {{{2
+
+  // TODO we'd probably have to do the same thing here as we did with set() to
+  //      remove __device__ warnings.
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
 
@@ -640,10 +804,12 @@ struct SubviewExtents {
 
 #endif
 
- public:
+  // </editor-fold> end error() overloads (for bounds checking) }}}2
+  //----------------------------------------------------------------------------
+
   template <size_t... DimArgs, class... Args>
-  KOKKOS_INLINE_FUNCTION SubviewExtents(const ViewDimension<DimArgs...>& dim,
-                                        Args... args) {
+  KOKKOS_FORCEINLINE_FUNCTION void init_common(const ViewDimension<DimArgs...>&,
+                                               Args...) noexcept {
     static_assert(DomainRank == sizeof...(DimArgs), "");
     static_assert(DomainRank == sizeof...(Args), "");
 
@@ -664,9 +830,51 @@ struct SubviewExtents {
       m_length[0] = 0;
       m_index[0]  = ~0u;
     }
+  }
 
+ public:
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="Ctors"> {{{2
+
+  template <size_t... DimArgs, class... Args,
+            typename std::enable_if<
+                is_device_supported_slice<0, Args...>::value &&
+                    is_device_supported_slice<1, Args...>::value &&
+                    is_device_supported_slice<2, Args...>::value &&
+                    is_device_supported_slice<3, Args...>::value &&
+                    is_device_supported_slice<4, Args...>::value &&
+                    is_device_supported_slice<5, Args...>::value &&
+                    is_device_supported_slice<6, Args...>::value &&
+                    is_device_supported_slice<7, Args...>::value &&
+                    is_device_supported_slice<8, Args...>::value,
+                int>::type = 0>
+  KOKKOS_INLINE_FUNCTION SubviewExtents(const ViewDimension<DimArgs...>& dim,
+                                        Args... args) {
+    init_common(dim, args...);
     if (!set(0, 0, dim, args...)) error(dim, args...);
   }
+
+  // Non-device "overload" of the constructor above
+  template <size_t... DimArgs, class... Args,
+            typename std::enable_if<
+                !is_device_supported_slice<0, Args...>::value ||
+                    !is_device_supported_slice<1, Args...>::value ||
+                    !is_device_supported_slice<2, Args...>::value ||
+                    !is_device_supported_slice<3, Args...>::value ||
+                    !is_device_supported_slice<4, Args...>::value ||
+                    !is_device_supported_slice<5, Args...>::value ||
+                    !is_device_supported_slice<6, Args...>::value ||
+                    !is_device_supported_slice<7, Args...>::value ||
+                    !is_device_supported_slice<8, Args...>::value,
+                int>::type = 0>
+  inline SubviewExtents(const ViewDimension<DimArgs...>& dim, Args... args) {
+    init_common(dim, args...);
+    if (!set_non_device(0, 0, dim, args...)) error(dim, args...);
+  }
+
+  // </editor-fold> end Ctors }}}2
+  //----------------------------------------------------------------------------
 
   template <typename iType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr size_t domain_offset(
@@ -3476,8 +3684,8 @@ struct SubViewDataTypeImpl<void, ValueType, Experimental::Extents<>> {
 template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class Integral,
           class... Args>
 struct SubViewDataTypeImpl<
-    typename std::enable_if<
-        std::is_integral<typename std::remove_cv<typename std::remove_reference<Integral>::type>::type>::value>::type,
+    typename std::enable_if<std::is_integral<typename std::remove_cv<
+        typename std::remove_reference<Integral>::type>::type>::value>::type,
     ValueType, Experimental::Extents<Ext, Exts...>, Integral, Args...>
     : SubViewDataTypeImpl<void, ValueType, Experimental::Extents<Exts...>,
                           Args...> {};
@@ -3496,8 +3704,8 @@ struct SubViewDataTypeImpl<void, ValueType, Experimental::Extents<Ext, Exts...>,
 template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class PairLike,
           class... Args>
 struct SubViewDataTypeImpl<
-    typename std::enable_if<is_pairlike_slice<PairLike>::value>::type, ValueType,
-    Experimental::Extents<Ext, Exts...>, PairLike, Args...>
+    typename std::enable_if<is_pairlike_slice<PairLike>::value>::type,
+    ValueType, Experimental::Extents<Ext, Exts...>, PairLike, Args...>
     : SubViewDataTypeImpl<
           void, typename make_all_extents_into_pointers<ValueType>::type*,
           Experimental::Extents<Exts...>, Args...> {};
@@ -3591,17 +3799,6 @@ struct ViewMapping<
                                typename Kokkos::Impl::ParseViewExtents<
                                    typename SrcTraits::data_type>::type,
                                Args...>::type;
-  // typedef typename std::conditional< rank == 0 , value_type ,
-  //        typename std::conditional< rank == 1 , value_type * ,
-  //        typename std::conditional< rank == 2 , value_type ** ,
-  //        typename std::conditional< rank == 3 , value_type *** ,
-  //        typename std::conditional< rank == 4 , value_type **** ,
-  //        typename std::conditional< rank == 5 , value_type ***** ,
-  //        typename std::conditional< rank == 6 , value_type ****** ,
-  //        typename std::conditional< rank == 7 , value_type ******* ,
-  //                                               value_type ********
-  //        >::type >::type >::type >::type >::type >::type >::type >::type
-  //   data_type ;
 
  public:
   typedef Kokkos::ViewTraits<data_type, array_layout,

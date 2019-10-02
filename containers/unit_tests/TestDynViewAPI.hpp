@@ -1431,7 +1431,7 @@ class TestDynViewAPI {
     //  Send a std::pair as argument to a rank
     sdView dssp = Kokkos::subdynrankview(
         d7, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
-        Kokkos::ALL(), Kokkos::ALL(), std::pair<unsigned, unsigned>(1, 2));
+        Kokkos::ALL(), Kokkos::ALL(), Kokkos::pair<unsigned, unsigned>(1, 2));
     ASSERT_EQ(dssp.rank(), 7);
 
     //  Send a kokkos::pair as argument to a rank; take default layout as input
@@ -1623,11 +1623,11 @@ class TestDynViewAPI {
     svector_type rv2 = Kokkos::subdynrankview(mv_right, 1, Kokkos::ALL());
     svector_type rv3 = Kokkos::subdynrankview(mv_right, 2, Kokkos::ALL());
 
-    smultivector_type mv1 = Kokkos::subdynrankview(mv, std::make_pair(1, 998),
-                                                   std::make_pair(2, 5));
+    smultivector_type mv1 = Kokkos::subdynrankview(mv, Kokkos::make_pair(1, 998),
+                                                   Kokkos::make_pair(2, 5));
 
     smultivector_type mvr1 = Kokkos::subdynrankview(
-        mv_right, std::make_pair(1, 998), std::make_pair(2, 5));
+        mv_right, Kokkos::make_pair(1, 998), Kokkos::make_pair(2, 5));
 
     const_svector_type cv1 = Kokkos::subdynrankview(mv, Kokkos::ALL(), 0);
     const_svector_type cv2 = Kokkos::subdynrankview(mv, Kokkos::ALL(), 1);
