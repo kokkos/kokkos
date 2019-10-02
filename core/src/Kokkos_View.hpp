@@ -2213,6 +2213,7 @@ using Subview =
                                        ,
                                        typename V::traits, Args...>::type;
 
+// TODO multi-version this based on device-compatibility of the slice types?
 template <class D, class... P, class... Args>
 KOKKOS_INLINE_FUNCTION
     typename Kokkos::Impl::ViewMapping<void /* deduce subview type from source
@@ -2229,6 +2230,7 @@ KOKKOS_INLINE_FUNCTION
       ViewTraits<D, P...>, Args...>::type(src, args...);
 }
 
+// TODO multi-version this based on device-compatibility of the slice types?
 template <class MemoryTraits, class D, class... P, class... Args>
 KOKKOS_INLINE_FUNCTION typename Kokkos::Impl::ViewMapping<
     void /* deduce subview type from source view traits */

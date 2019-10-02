@@ -1623,6 +1623,7 @@ using Subdynrankview =
     typename Kokkos::Impl::ViewMapping<Kokkos::Impl::DynRankSubviewTag, V,
                                        Args...>::ret_type;
 
+// TODO multiversion this for non-device-compatible slice types
 template <class D, class... P, class... Args>
 KOKKOS_INLINE_FUNCTION Subdynrankview<ViewTraits<D*******, P...>, Args...>
 subdynrankview(const Kokkos::DynRankView<D, P...>& src, Args... args) {
@@ -1642,6 +1643,7 @@ subdynrankview(const Kokkos::DynRankView<D, P...>& src, Args... args) {
 }
 
 // Wrapper to allow subview function name
+// TODO multiversion this for non-device-compatible slice types
 template <class D, class... P, class... Args>
 KOKKOS_INLINE_FUNCTION Subdynrankview<ViewTraits<D*******, P...>, Args...>
 subview(const Kokkos::DynRankView<D, P...>& src, Args... args) {
