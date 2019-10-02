@@ -290,7 +290,7 @@ ELSE()
   ADD_LIBRARY(${NAME} ${PARSE_SOURCES})
   target_link_libraries(
     ${NAME}
-    PUBLIC ${KOKKOS_LINK_OPTIONS}
+    PUBLIC kokkos
   )
 ENDIF()
 ENDFUNCTION()
