@@ -133,6 +133,9 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_COMPILER_WARNINGS
     * Whether to print all compiler warnings
     * BOOL Default: OFF
+* Kokkos_ENABLE_CUDA_CONSTEXPR
+    * Whether to activate experimental relaxed constexpr functions
+    * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_LAMBDA
     * Whether to activate experimental lambda features
     * BOOL Default: OFF
