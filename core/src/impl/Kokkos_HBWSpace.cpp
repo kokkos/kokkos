@@ -55,6 +55,7 @@
 
 #include <Kokkos_HBWSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_MemorySpace.hpp>
 #include <Kokkos_Atomic.hpp>
 #ifdef KOKKOS_ENABLE_HBWSPACE
 #include <memkind.h>
@@ -192,29 +193,6 @@ SharedAllocationRecord<Kokkos::Experimental::HBWSpace,
                      SharedAllocationRecord<void, void>::m_alloc_size);
 }
 
-// TODO un-copy-pasta this when we un-copy-pasta the rest of HBWSpace
-SharedAllocationHeader *_do_allocation(Kokkos::HostSpace const &space,
-                                       std::string const &label,
-                                       size_t alloc_size) {
-  try {
-    return reinterpret_cast<SharedAllocationHeader *>(
-        space.allocate(alloc_size));
-  } catch (Experimental::RawMemoryAllocationFailure const &failure) {
-    if (failure.failure_mode() == Experimental::RawMemoryAllocationFailure::
-                                      FailureMode::AllocationNotAligned) {
-      // TODO: delete the misaligned memory
-    }
-
-    std::cerr << "Kokkos failed to allocate memory for label \"" << label
-              << "\".  Allocation using MemorySpace named \"" << space.name()
-              << " failed with the following error:  ";
-    failure.print_error_message(std::cerr);
-    std::cerr.flush();
-    Kokkos::Impl::throw_runtime_exception("Memory allocation failure");
-  }
-  return nullptr;  // unreachable
-}
-
 SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::
     SharedAllocationRecord(
         const Kokkos::Experimental::HBWSpace &arg_space,
@@ -227,11 +205,9 @@ SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::
           &SharedAllocationRecord<Kokkos::Experimental::HBWSpace,
                                   void>::s_root_record,
 #endif
-          _do_allocation(arg_space, arg_label,
-                         sizeof(SharedAllocationHeader) +
-                             arg_alloc_size) sizeof(SharedAllocationHeader) +
-              arg_alloc_size,
-          arg_dealloc),
+          Impl::checked_allocation_with_header(arg_space, arg_label,
+                                               arg_alloc_size),
+          sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {

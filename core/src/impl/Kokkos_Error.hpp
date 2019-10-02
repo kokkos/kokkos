@@ -72,12 +72,20 @@ namespace Experimental {
 
 class RawMemoryAllocationFailure : public std::bad_alloc {
  public:
-  enum class FailureMode { OutOfMemoryError, AllocationNotAligned };
+  enum class FailureMode {
+    OutOfMemoryError,
+    AllocationNotAligned,
+    MaximumCudaUVMAllocationsExceeded,
+    Unknown
+  };
   enum class AllocationMechanism {
     StdMalloc,
     PosixMemAlign,
     PosixMMap,
-    IntelMMAlloc
+    IntelMMAlloc,
+    CudaMalloc,
+    CudaMallocManaged,
+    CudaHostAlloc
   };
 
  private:
@@ -143,6 +151,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
   KOKKOS_ATTRIBUTE_NODISCARD
   std::string get_error_message() const;
 };
+
 
 }  // end namespace Experimental
 

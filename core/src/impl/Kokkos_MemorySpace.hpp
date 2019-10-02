@@ -3,7 +3,7 @@
 // ************************************************************************
 //
 //                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//              Copyright (2019) Sandia Corporation
 //
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
@@ -41,63 +41,50 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_CUDA_ERROR_HPP
-#define KOKKOS_CUDA_ERROR_HPP
+/** @file Kokkos_MemorySpace.hpp
+ *
+ *  Operations common to memory space instances, or at least default
+ *  implementations thereof.
+ */
+
+#ifndef KOKKOS_IMPL_MEMORYSPACE_HPP
+#define KOKKOS_IMPL_MEMORYSPACE_HPP
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_CUDA
-
+#include <impl/Kokkos_SharedAlloc.hpp>
 #include <impl/Kokkos_Error.hpp>
+
+#include <string>
+#include <iostream>
 
 namespace Kokkos {
 namespace Impl {
 
-void cuda_device_synchronize();
-
-void cuda_internal_error_throw(cudaError e, const char* name,
-                               const char* file = NULL, const int line = 0);
-
-inline void cuda_internal_safe_call(cudaError e, const char* name,
-                                    const char* file = NULL,
-                                    const int line   = 0) {
-  if (cudaSuccess != e) {
-    cuda_internal_error_throw(e, name, file, line);
+template <class MemorySpace>
+SharedAllocationHeader *checked_allocation_with_header(MemorySpace const &space,
+                                                  std::string const &label,
+                                                  size_t alloc_size) {
+  try {
+    return reinterpret_cast<SharedAllocationHeader *>(
+        space.allocate(alloc_size + sizeof(SharedAllocationHeader)));
+  } catch (Kokkos::Experimental::RawMemoryAllocationFailure const &failure) {
+    std::cerr << "Kokkos failed to allocate memory for label \"" << label
+              << "\".  Allocation using MemorySpace named \"" << space.name()
+              << " failed with the following error:  ";
+    failure.print_error_message(std::cerr);
+    if (failure.failure_mode() == Kokkos::Experimental::RawMemoryAllocationFailure::
+                                      FailureMode::AllocationNotAligned) {
+      // TODO: delete the misaligned memory?
+      std::cerr << "Warning: Allocation failed due to misalignment; memory may "
+                   "be leaked." << std::endl;
+    }
+    std::cerr.flush();
+    Kokkos::Impl::throw_runtime_exception("Memory allocation failure");
   }
+  return nullptr;  // unreachable
 }
 
-#define CUDA_SAFE_CALL(call) \
-  Kokkos::Impl::cuda_internal_safe_call(call, #call, __FILE__, __LINE__)
+}  // end namespace Impl
+}  // end namespace Kokkos
 
-}  // namespace Impl
-
-namespace Experimental {
-
-class CudaRawMemoryAllocationFailure : public RawMemoryAllocationFailure {
- private:
-  using base_t = RawMemoryAllocationFailure;
-
-  FailureMode get_failure_mode(cudaError_t error_code) {
-    switch (error_code) {
-      case cudaErrorMemoryAllocation: return FailureMode::OutOfMemoryError;
-      // TODO handle cudaErrorNotSupported for cudaMallocManaged
-      default: return FailureMode::Unknown;
-    }
-  }
-
- public:
-
-  using base_t::base_t;
-
-  CudaRawMemoryAllocationFailure(size_t arg_attempted_size,
-                                 cudaError_t arg_error_code,
-                                 AllocationMechanism arg_mechanism) noexcept
-      : base_t(arg_attempted_size, /* CudaSpace doesn't handle alignment? */ 1,
-               get_failure_mode(arg_error_code), arg_mechanism) {}
-};
-
-}  // end namespace Experimental
-
-}  // namespace Kokkos
-
-#endif  // KOKKOS_ENABLE_CUDA
-#endif  // KOKKOS_CUDA_ERROR_HPP
+#endif  // KOKKOS_IMPL_MEMORYSPACE_HPP

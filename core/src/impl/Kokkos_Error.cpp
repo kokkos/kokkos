@@ -104,6 +104,13 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
       break;
     case FailureMode::AllocationNotAligned:
       o << " because the allocation was improperly aligned.";
+      break;
+    case FailureMode::MaximumCudaUVMAllocationsExceeded:
+      o << " because the maximum Cuda UVM allocations was exceeded.";
+      break;
+    case FailureMode::Unknown:
+      o << " because of an unknown error.";
+      break;
   }
   o << "  (The allocation mechanism was ";
   switch (m_mechanism) {
@@ -113,6 +120,11 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
     case AllocationMechanism::IntelMMAlloc:
       o << "the Intel _mm_malloc() intrinsic.";
       break;
+    case AllocationMechanism::CudaMalloc: o << "cudaMalloc()."; break;
+    case AllocationMechanism::CudaMallocManaged:
+      o << "cudaMallocManaged().";
+      break;
+    case AllocationMechanism::CudaHostAlloc: o << "cudaHostAlloc()."; break;
   }
   o << ")" << std::endl;
 }
