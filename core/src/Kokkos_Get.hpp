@@ -66,7 +66,7 @@ void get(T&&) = delete;
 
 //------------------------------------------------------------------------------
 
-KOKKOS_DECLARE_DETECTION_ARCHETYPE(
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
     _has_adl_free_function_get_archetype, (class T, class IType), (T, IType),
     decltype(get<IType::value>(Kokkos::Impl::declval<T>())));
 template <class T, size_t I>
@@ -80,7 +80,7 @@ using adl_free_function_get_result_t =
 
 //------------------------------------------------------------------------------
 
-KOKKOS_DECLARE_DETECTION_ARCHETYPE(
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
     _has_std_get_archetype, (class T, class IType), (T, IType),
     decltype(std::get<IType::value>(Kokkos::Impl::declval<T>())));
 template <class T, size_t I>
@@ -95,7 +95,7 @@ using std_get_result_t =
 
 //------------------------------------------------------------------------------
 
-KOKKOS_DECLARE_DETECTION_ARCHETYPE(
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
     _has_intrusive_get_archetype, (class T, class IType), (T, IType),
     decltype(Kokkos::Impl::declval<T>().template get<IType::value>()));
 
@@ -196,7 +196,7 @@ inline
 
 namespace Impl {
 
-KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
     _has_kokkos_get_archetype, T, IType,
     decltype(Kokkos::get<IType::value>(declval<T>())));
 

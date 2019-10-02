@@ -105,8 +105,8 @@ using namespace Kokkos::Impl;
 
 // template <class T>
 // using _my_member_type_archetype = typename T::my_member_type;
-KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(_my_member_type_archetype, T,
-                                          typename T::my_member_type);
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_1PARAM(_my_member_type_archetype, T,
+                                               typename T::my_member_type);
 
 KOKKOS_STATIC_TEST(is_detected<_my_member_type_archetype, MyTestCase1>::value);
 
@@ -124,13 +124,13 @@ KOKKOS_STATIC_TEST(
 
 // template <class T>
 // using _my_method_archetype_1 = decltype(T{}.my_method());
-KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(_my_method_archetype_1, T,
-                                          decltype(T{}.my_method()));
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_1PARAM(_my_method_archetype_1, T,
+                                               decltype(T{}.my_method()));
 
 // template <class T>
 // using _my_method_archetype_2 = decltype(declval<T>().my_method());
-KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(_my_method_archetype_2, T,
-                                          decltype(declval<T>().my_method()));
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+    _my_method_archetype_2, T, decltype(declval<T>().my_method()));
 
 KOKKOS_STATIC_TEST(is_detected<_my_method_archetype_1, MyTestCase1>::value);
 
@@ -160,14 +160,14 @@ struct OuterClass {
   // template <class T>
   // using _inner_method_archetype =
   // decltype(declval<T>().my_method_with_overloads(declval<U>()));
-  KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+  KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_1PARAM(
       _inner_method_archetype, T,
       decltype(declval<T>().my_method_with_overloads(declval<U>())));
 
   // template <class T, class UProtected>
   // using _inner_method_reversed_archetype_protected =
   // decltype(declval<UProtected>().my_method_with_overloads(declval<T>()));
-  KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+  KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
       _inner_method_reversed_archetype_protected, T, UProtected,
       decltype(declval<UProtected>().my_method_with_overloads(declval<T>())));
 
@@ -185,7 +185,7 @@ struct OuterClass {
   //    declval<detected_t<_inner_method_archetype, T>>()
   //  )
   //);
-  KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(
+  KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_1PARAM(
       _overload_nested_dependent_type_archetype, T,
       decltype(declval<T>().my_method_with_overloads(
           declval<detected_t<_inner_method_archetype, T>>())));
@@ -228,21 +228,21 @@ typename std::enable_if<std::is_convertible<T, A>::value, C>::type
 // template <class... Ts>
 // using _free_function_archetype =
 // decltype(my_free_function(declval<Ts>()...));
-KOKKOS_DECLARE_DETECTION_ARCHETYPE(
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
     _free_function_archetype, (class... Ts), (Ts...),
     decltype(my_free_function(declval<Ts>()...)));
 
 // template <class... Ts>
 // using _free_function_overload_archetype =
 // decltype(my_overloaded_free_function(declval<Ts>()...));
-KOKKOS_DECLARE_DETECTION_ARCHETYPE(
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
     _free_function_overload_archetype, (class... Ts), (Ts...),
     decltype(my_overloaded_free_function(declval<Ts>()...)));
 
 // template <class T, class U>
 // using _free_function_overload_archetype_workaround =
 // decltype(my_overloaded_free_function(declval<T>(), declval<U>()));
-KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
     _free_function_overload_archetype_workaround, T, U,
     decltype(my_overloaded_free_function(declval<T>(), declval<U>())));
 

@@ -68,8 +68,9 @@
 #include <Kokkos_Core_fwd.hpp>
 
 // TODO move this to somewhere more general
-#define KOKKOS_PP_REMOVE_PARENS_IMPL(...) __VA_ARGS__
-#define KOKKOS_PP_REMOVE_PARENS(...) KOKKOS_PP_REMOVE_PARENS_IMPL __VA_ARGS__
+#define KOKKOS_IMPL_PP_REMOVE_PARENS_IMPL(...) __VA_ARGS__
+#define KOKKOS_IMPL_PP_REMOVE_PARENS(...) \
+  KOKKOS_IMPL_PP_REMOVE_PARENS_IMPL __VA_ARGS__
 
 namespace Kokkos {
 namespace Impl {
@@ -117,8 +118,9 @@ struct _detector<Default, void_t<Op<Args...>>, Op, Args...> {
   using type                  = Op<Args...>;
 };
 
-#define KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, params, params_no_intro, ...) \
-  template <KOKKOS_PP_REMOVE_PARENS(params)>                                   \
+#define KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(name, params, params_no_intro, \
+                                                ...)                           \
+  template <KOKKOS_IMPL_PP_REMOVE_PARENS(params)>                              \
   using name = __VA_ARGS__;
 
 #else
@@ -138,23 +140,24 @@ struct detector_workaround_impl {
 
 }  // end namespace _detection_impl
 
-#define KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, params, params_no_intro, ...) \
+#define KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(name, params, params_no_intro, \
+                                                ...)                           \
   template <class Default, class _k__always_void,                              \
-            KOKKOS_PP_REMOVE_PARENS(params)>                                   \
+            KOKKOS_IMPL_PP_REMOVE_PARENS(params)>                              \
   struct name##__impl {                                                        \
     static constexpr bool value = false;                                       \
     using type                  = Default;                                     \
   };                                                                           \
-  template <class Default, KOKKOS_PP_REMOVE_PARENS(params)>                    \
+  template <class Default, KOKKOS_IMPL_PP_REMOVE_PARENS(params)>               \
   struct name##__impl<Default, ::Kokkos::Impl::void_t<__VA_ARGS__>,            \
-                      KOKKOS_PP_REMOVE_PARENS(params_no_intro)> {              \
+                      KOKKOS_IMPL_PP_REMOVE_PARENS(params_no_intro)> {         \
     static constexpr bool value = true;                                        \
     using type                  = __VA_ARGS__;                                 \
   };                                                                           \
   template <class Default, class _always_void,                                 \
-            KOKKOS_PP_REMOVE_PARENS(params)>                                   \
+            KOKKOS_IMPL_PP_REMOVE_PARENS(params)>                              \
   using name = name##__impl<Default, _always_void,                             \
-                            KOKKOS_PP_REMOVE_PARENS(params_no_intro)>
+                            KOKKOS_IMPL_PP_REMOVE_PARENS(params_no_intro)>
 
 template <class Default, class _always_void, template <class...> class Op,
           class... Args>
@@ -163,12 +166,14 @@ using _detector =
 
 #endif
 
-#define KOKKOS_DECLARE_DETECTION_ARCHETYPE_1PARAM(name, param, ...) \
-  KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, (class param), (param), __VA_ARGS__)
+#define KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_1PARAM(name, param, ...) \
+  KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(name, (class param), (param),  \
+                                          __VA_ARGS__)
 
-#define KOKKOS_DECLARE_DETECTION_ARCHETYPE_2PARAMS(name, param1, param2, ...) \
-  KOKKOS_DECLARE_DETECTION_ARCHETYPE(name, (class param1, class param2),      \
-                                     (param1, param2), __VA_ARGS__)
+#define KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_2PARAMS(name, param1, param2, \
+                                                        ...)                  \
+  KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(name, (class param1, class param2), \
+                                          (param1, param2), __VA_ARGS__)
 
 template <template <class...> class Op, class... Args>
 using is_detected = _detector<nonesuch, void, Op, Args...>;
