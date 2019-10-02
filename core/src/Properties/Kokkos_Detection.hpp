@@ -44,6 +44,20 @@
 /**
  *  Kokkos detection idiom implementation.
  *
+ *  If you're unfamiliar with the detection idiom, it may be helpful to read
+ *  about the idiom in general rather than reading the code here directly.
+ *  A few recommended articles:
+ *
+ *    - https://blog.tartanllama.xyz/detection-idiom/
+ *    - https://people.eecs.berkeley.edu/~brock/blog/detection_idiom.php
+ *    - https://en.cppreference.com/w/cpp/experimental/is_detected
+ *    - https://www.youtube.com/watch?v=a0FliKwcwXE
+ *    - https://www.youtube.com/watch?v=U3jGdnRL3KI
+ *    - http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4436.pdf
+ *
+ *  The macro-based versions of the idiom are to incorporate bug workarounds
+ *  for various compilers.
+ *
  *  @todo change the macros in this file over to real detection idiom
  *        once we drop support for compilers that don't work with it
  */
@@ -66,8 +80,12 @@ KOKKOS_FUNCTION T&& _declval(int) noexcept;
 template <class T>
 KOKKOS_FUNCTION T _declval(long) noexcept;
 
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+using std::void_t;
+#else
 template <class T>
 using void_t = void;
+#endif
 
 template <class T>
 KOKKOS_FUNCTION decltype(Kokkos::Impl::_declval<T>(0)) declval() noexcept;
