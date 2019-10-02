@@ -135,7 +135,7 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
     * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_LAMBDA
     * Whether to activate experimental lambda features
-    * BOOL Default: ON
+    * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_LDG_INTRINSIC
     * Whether to use CUDA LDG intrinsics
     * BOOL Default: OFF
