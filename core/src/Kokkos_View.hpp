@@ -2257,7 +2257,13 @@ using Subview =
 
 template <class D, class... P, class... Args>
 KOKKOS_INLINE_FUNCTION typename std::enable_if<
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
     Impl::are_all_device_supported_slices<Args...>::value,
+#elif defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+    true,
+#else
+#error "Kokkos multiversioning macros misconfigured"  // typo protection
+#endif
     typename Kokkos::Impl::ViewMapping<void /* deduce subview type from source
                                                view traits */
                                        ,
@@ -2273,6 +2279,7 @@ subview(const View<D, P...>& src, Args... args) {
       ViewTraits<D, P...>, Args...>::type(src, args...);
 }
 
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 // NOTE: This is the same as above, but without device markings, so that it
 //       can work with non-device-marked slice types like std::pair without
 //       generating a whole bunch of warnings.  See discussion in SubviewExtents
@@ -2292,6 +2299,9 @@ subview(const View<D, P...>& src, Args... args) {
       ,
       ViewTraits<D, P...>, Args...>::type(src, args...);
 }
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING) // typo protection
+#error "Kokkos multiversioning macros misconfigured"
+#endif
 
 //----------------------------------------------------------------------------
 
