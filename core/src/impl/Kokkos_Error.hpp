@@ -75,6 +75,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
   enum class FailureMode {
     OutOfMemoryError,
     AllocationNotAligned,
+    InvalidAllocationSize,
     MaximumCudaUVMAllocationsExceeded,
     Unknown
   };
@@ -150,8 +151,9 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
   void print_error_message(std::ostream &o) const;
   KOKKOS_ATTRIBUTE_NODISCARD
   std::string get_error_message() const;
-};
 
+  virtual void append_additional_error_information(std::ostream &o) const {}
+};
 
 }  // end namespace Experimental
 

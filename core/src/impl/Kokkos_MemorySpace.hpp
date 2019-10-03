@@ -72,7 +72,7 @@ SharedAllocationHeader *checked_allocation_with_header(MemorySpace const &space,
     auto generate_failure_message = [&](std::ostream &o) {
       o << "Kokkos failed to allocate memory for label \"" << label
         << "\".  Allocation using MemorySpace named \"" << space.name()
-        << " failed with the following error:  ";
+        << "\" failed with the following error:  ";
       failure.print_error_message(o);
       if (failure.failure_mode() ==
           Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode::

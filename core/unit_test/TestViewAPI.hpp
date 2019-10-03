@@ -1457,8 +1457,18 @@ class TestViewAPI {
       //      appropriate Kokkos error here
       std::string msg = error.what();
       ASSERT_PRED_FORMAT2(::testing::IsSubstring, "hello_world_failure", msg);
-      ASSERT_PRED_FORMAT2(::testing::IsSubstring, "insufficient memory", msg);
-      ASSERT_PRED_FORMAT2(::testing::IsSubstring, typename device::memory_space{}.name(), msg);
+      ASSERT_PRED_FORMAT2(::testing::IsSubstring,
+                          typename device::memory_space{}.name(), msg);
+      // Can't figure out how to make assertions either/or, so we'll just use
+      // an if statement here for now.  Test failure message will be a bit
+      // misleading, but developers should figure out what's going on pretty
+      // quickly.
+      if (msg.find("is not a valid size") != std::string::npos) {
+        ASSERT_PRED_FORMAT2(::testing::IsSubstring, "is not a valid size", msg);
+      } else {
+        // Otherwise, there has to be some sort of "insufficient memory" error
+        ASSERT_PRED_FORMAT2(::testing::IsSubstring, "insufficient memory", msg);
+      }
     }
   }
 };
