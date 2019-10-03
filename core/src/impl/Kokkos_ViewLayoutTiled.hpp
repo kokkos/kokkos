@@ -1142,216 +1142,88 @@ struct ViewMapping<
 
 namespace Kokkos {
 
-// Rank 2
-template <typename T, Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
+namespace Impl {
+
+namespace _tile_subview_helpers {
+
+//==============================================================================
+// <editor-fold desc="_compose_array (makes T[1][2][3] from <T, 1, 2, 3>)"> {{{1
+
+template <size_t NToUse, class T, std::size_t... Is>
+struct _compose_array;
+
+template <size_t NToUse, class T, std::size_t I, std::size_t... Is>
+struct _compose_array<NToUse, T, I, Is...> {
+  using type = typename _compose_array<NToUse - 1, T, Is...>::type[I];
+};
+
+template <class T, size_t I, std::size_t... Is>
+struct _compose_array<0, T, I, Is...> {
+  using type = T;
+};
+
+template <class T>
+struct _compose_array<0, T> {
+  using type = T;
+};
+
+// </editor-fold> end _compose_array (makes T[1][2][3] from <T, 1, 2, 3>) }}}1
+//==============================================================================
+
+template <class T>
+struct _element_type {
+ private:
+  using stripped_type =
+      typename std::remove_pointer<typename std::remove_extent<
+          typename std::remove_cv<T>::type>::type>::type;
+  template <class U>
+  struct _identity {
+    using type = U;
+  };
+
+ public:
+  using type =
+      typename std::conditional<std::is_same<T, stripped_type>::value,
+                                _identity<T>,
+                                _element_type<stripped_type> >::type::type;
+};
+
+}  // end namespace _tile_subview_helpers
+}  // end namespace Impl
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+// Rank N
+template <typename U, Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
           unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4,
-          unsigned N5, unsigned N6, unsigned N7, class... P>
+          unsigned N5, unsigned N6, unsigned N7, class... P, class... Tiles>
 KOKKOS_INLINE_FUNCTION Kokkos::View<
-    T[N0][N1],
+    typename Impl::_tile_subview_helpers::_compose_array<
+        sizeof...(Tiles),
+        typename Impl::_tile_subview_helpers::_element_type<U>::type, N0, N1,
+        N2, N3, N4, N5, N6, N7>::type,
     typename std::conditional<(InnerP == Kokkos::Iterate::Left),
                               Kokkos::LayoutLeft, Kokkos::LayoutRight>::type,
     P...>
 tile_subview(const Kokkos::View<
-                 T**,
+                 U,
                  Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2,
                                                    N3, N4, N5, N6, N7, true>,
                  P...>& src,
-             const size_t i_tile0, const size_t i_tile1) {
+             Tiles const... i_tiles) {
   // Force the specialized ViewMapping for extracting a tile
   // by using the first subview argument as the layout.
-  typedef
-      typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                                Kokkos::LayoutLeft, Kokkos::LayoutRight>::type
-          array_layout;
-  typedef Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2, N3, N4,
-                                            N5, N6, N7, true>
-      SrcLayout;
+  using src_view_type =
+      Kokkos::View<U,
+                   Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2,
+                                                     N3, N4, N5, N6, N7, true>,
+                   P...>;
+  using src_layout = typename src_view_type::array_layout;
+  static_assert(sizeof...(i_tiles) == src_view_type::rank,
+                "Mismatched tile/array size");
 
-  return Kokkos::View<T[N0][N1], array_layout, P...>(src, SrcLayout(), i_tile0,
-                                                     i_tile1);
-}
-
-// Rank 3
-template <typename T, Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
-          unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4,
-          unsigned N5, unsigned N6, unsigned N7, class... P>
-KOKKOS_INLINE_FUNCTION Kokkos::View<
-    T[N0][N1][N2],
-    typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                              Kokkos::LayoutLeft, Kokkos::LayoutRight>::type,
-    P...>
-tile_subview(const Kokkos::View<
-                 T***,
-                 Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2,
-                                                   N3, N4, N5, N6, N7, true>,
-                 P...>& src,
-             const size_t i_tile0, const size_t i_tile1, const size_t i_tile2) {
-  // Force the specialized ViewMapping for extracting a tile
-  // by using the first subview argument as the layout.
-  typedef
-      typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                                Kokkos::LayoutLeft, Kokkos::LayoutRight>::type
-          array_layout;
-  typedef Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2, N3, N4,
-                                            N5, N6, N7, true>
-      SrcLayout;
-
-  return Kokkos::View<T[N0][N1][N2], array_layout, P...>(
-      src, SrcLayout(), i_tile0, i_tile1, i_tile2);
-}
-
-// Rank 4
-template <typename T, Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
-          unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4,
-          unsigned N5, unsigned N6, unsigned N7, class... P>
-KOKKOS_INLINE_FUNCTION Kokkos::View<
-    T[N0][N1][N2][N3],
-    typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                              Kokkos::LayoutLeft, Kokkos::LayoutRight>::type,
-    P...>
-tile_subview(const Kokkos::View<
-                 T****,
-                 Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2,
-                                                   N3, N4, N5, N6, N7, true>,
-                 P...>& src,
-             const size_t i_tile0, const size_t i_tile1, const size_t i_tile2,
-             const size_t i_tile3) {
-  // Force the specialized ViewMapping for extracting a tile
-  // by using the first subview argument as the layout.
-  typedef
-      typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                                Kokkos::LayoutLeft, Kokkos::LayoutRight>::type
-          array_layout;
-  typedef Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2, N3, N4,
-                                            N5, N6, N7, true>
-      SrcLayout;
-
-  return Kokkos::View<T[N0][N1][N2][N3], array_layout, P...>(
-      src, SrcLayout(), i_tile0, i_tile1, i_tile2, i_tile3);
-}
-
-// Rank 5
-template <typename T, Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
-          unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4,
-          unsigned N5, unsigned N6, unsigned N7, class... P>
-KOKKOS_INLINE_FUNCTION Kokkos::View<
-    T[N0][N1][N2][N3][N4],
-    typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                              Kokkos::LayoutLeft, Kokkos::LayoutRight>::type,
-    P...>
-tile_subview(const Kokkos::View<
-                 T*****,
-                 Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2,
-                                                   N3, N4, N5, N6, N7, true>,
-                 P...>& src,
-             const size_t i_tile0, const size_t i_tile1, const size_t i_tile2,
-             const size_t i_tile3, const size_t i_tile4) {
-  // Force the specialized ViewMapping for extracting a tile
-  // by using the first subview argument as the layout.
-  typedef
-      typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                                Kokkos::LayoutLeft, Kokkos::LayoutRight>::type
-          array_layout;
-  typedef Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2, N3, N4,
-                                            N5, N6, N7, true>
-      SrcLayout;
-
-  return Kokkos::View<T[N0][N1][N2][N3][N4], array_layout, P...>(
-      src, SrcLayout(), i_tile0, i_tile1, i_tile2, i_tile3, i_tile4);
-}
-
-// Rank 6
-template <typename T, Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
-          unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4,
-          unsigned N5, unsigned N6, unsigned N7, class... P>
-KOKKOS_INLINE_FUNCTION Kokkos::View<
-    T[N0][N1][N2][N3][N4][N5],
-    typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                              Kokkos::LayoutLeft, Kokkos::LayoutRight>::type,
-    P...>
-tile_subview(const Kokkos::View<
-                 T******,
-                 Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2,
-                                                   N3, N4, N5, N6, N7, true>,
-                 P...>& src,
-             const size_t i_tile0, const size_t i_tile1, const size_t i_tile2,
-             const size_t i_tile3, const size_t i_tile4, const size_t i_tile5) {
-  // Force the specialized ViewMapping for extracting a tile
-  // by using the first subview argument as the layout.
-  typedef
-      typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                                Kokkos::LayoutLeft, Kokkos::LayoutRight>::type
-          array_layout;
-  typedef Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2, N3, N4,
-                                            N5, N6, N7, true>
-      SrcLayout;
-
-  return Kokkos::View<T[N0][N1][N2][N3][N4][N5], array_layout, P...>(
-      src, SrcLayout(), i_tile0, i_tile1, i_tile2, i_tile3, i_tile4, i_tile5);
-}
-
-// Rank 7
-template <typename T, Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
-          unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4,
-          unsigned N5, unsigned N6, unsigned N7, class... P>
-KOKKOS_INLINE_FUNCTION Kokkos::View<
-    T[N0][N1][N2][N3][N4][N5][N6],
-    typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                              Kokkos::LayoutLeft, Kokkos::LayoutRight>::type,
-    P...>
-tile_subview(const Kokkos::View<
-                 T*******,
-                 Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2,
-                                                   N3, N4, N5, N6, N7, true>,
-                 P...>& src,
-             const size_t i_tile0, const size_t i_tile1, const size_t i_tile2,
-             const size_t i_tile3, const size_t i_tile4, const size_t i_tile5,
-             const size_t i_tile6) {
-  // Force the specialized ViewMapping for extracting a tile
-  // by using the first subview argument as the layout.
-  typedef
-      typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                                Kokkos::LayoutLeft, Kokkos::LayoutRight>::type
-          array_layout;
-  typedef Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2, N3, N4,
-                                            N5, N6, N7, true>
-      SrcLayout;
-
-  return Kokkos::View<T[N0][N1][N2][N3][N4][N5][N6], array_layout, P...>(
-      src, SrcLayout(), i_tile0, i_tile1, i_tile2, i_tile3, i_tile4, i_tile5,
-      i_tile6);
-}
-
-// Rank 8
-template <typename T, Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
-          unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4,
-          unsigned N5, unsigned N6, unsigned N7, class... P>
-KOKKOS_INLINE_FUNCTION Kokkos::View<
-    T[N0][N1][N2][N3][N4][N5][N6][N7],
-    typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                              Kokkos::LayoutLeft, Kokkos::LayoutRight>::type,
-    P...>
-tile_subview(const Kokkos::View<
-                 T********,
-                 Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2,
-                                                   N3, N4, N5, N6, N7, true>,
-                 P...>& src,
-             const size_t i_tile0, const size_t i_tile1, const size_t i_tile2,
-             const size_t i_tile3, const size_t i_tile4, const size_t i_tile5,
-             const size_t i_tile6, const size_t i_tile7) {
-  // Force the specialized ViewMapping for extracting a tile
-  // by using the first subview argument as the layout.
-  typedef
-      typename std::conditional<(InnerP == Kokkos::Iterate::Left),
-                                Kokkos::LayoutLeft, Kokkos::LayoutRight>::type
-          array_layout;
-  typedef Kokkos::Experimental::LayoutTiled<OuterP, InnerP, N0, N1, N2, N3, N4,
-                                            N5, N6, N7, true>
-      SrcLayout;
-
-  return Kokkos::View<T[N0][N1][N2][N3][N4][N5][N6][N7], array_layout, P...>(
-      src, SrcLayout(), i_tile0, i_tile1, i_tile2, i_tile3, i_tile4, i_tile5,
-      i_tile6, i_tile7);
+  return { src, src_layout(), i_tiles... };
 }
 
 } /* namespace Kokkos */
