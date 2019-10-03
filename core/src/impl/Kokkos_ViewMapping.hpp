@@ -371,6 +371,7 @@ struct is_integral_extent {
                 "subview argument must be either integral or integral extent");
 };
 
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 template <unsigned I, class... Args>
 struct is_device_supported_slice {
   // get_type is void when sizeof...(Args) <= I
@@ -397,6 +398,9 @@ struct are_all_device_supported_slices
                                  is_device_supported_slice<7, Args...>::value &&
                                  is_device_supported_slice<8, Args...>::value> {
 };
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+#error "Kokkos multiversioning macros misconfigured"
+#endif
 
 // Rules for subview arguments and layouts matching
 
@@ -498,6 +502,17 @@ struct SubviewExtents {
   size_t m_length[InternalRangeRank];
   unsigned m_index[InternalRangeRank];
 
+  // This is a bit of a maintanance nightmare, but I can't currently come up
+  // with a better way of doing this.  You get __host__ function called from
+  // __host__ __device__ function warnings if *any* of your slices don't support
+  // __device__ (like std::pair, for instance), and since the overloads call
+  // each other, we have to either duplicate code or be okay with warnings in
+  // code that's perfectly reasonable.  I think in the balance we'd prefer the
+  // latter, and the duplication here doesn't seem worth going crazy with
+  // something like preprocessor macros to handle this.
+  // All of the `set_non_device()` functions below should be identical to the
+  // corresponding `set()` functions, and should be maintained this way
+
   //----------------------------------------------------------------------------
   // <editor-fold desc="set() overloads for constructing the offsets, etc"> {{{2
 
@@ -510,21 +525,13 @@ struct SubviewExtents {
     return true;
   }
 
-  // This is a bit of a maintanance nightmare, but I can't currently come up
-  // with a better way of doing this.  You get __host__ functino called from
-  // __host__ __device__ function warnings if *any* of your slices don't support
-  // __device__ (like std::pair, for instance), and since the overloads call
-  // each other, we have to either duplicate code or be okay with warnings in
-  // code that's perfectly reasonable.  I think in the balance we'd prefer the
-  // latter, and the duplication here doesn't seem worth going crazy with
-  // something like preprocessor macros to handle this.
-  // All of the `set_non_device()` functions below should be identical to the
-  // corresponding `set()` functions, and should be maintained this way
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
   template <size_t... DimArgs>
   inline bool set_non_device(unsigned, unsigned,
                              const ViewDimension<DimArgs...>&) {
     return true;
   }
+#endif  // KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 
   // </editor-fold> end set() recursive base case (end of slices) }}}3
   //----------------------------------------------------------------------------
@@ -552,6 +559,7 @@ struct SubviewExtents {
     //--------------------------------------
   }
 
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
   // Integral type, non-device_version (see comment above)
   template <class T, size_t... DimArgs, class... Args>
   inline typename std::enable_if<std::is_convertible<T const&, size_t>::value,
@@ -572,6 +580,7 @@ struct SubviewExtents {
         ;
     //--------------------------------------
   }
+#endif  // KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 
   // </editor-fold> end integral type slice }}}3
   //----------------------------------------------------------------------------
@@ -595,6 +604,7 @@ struct SubviewExtents {
     //--------------------------------------
   }
 
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
   // ALL_t, non-device-supported version
   template <size_t... DimArgs, class... Args>
   inline bool set_non_device(unsigned domain_rank, unsigned range_rank,
@@ -609,6 +619,7 @@ struct SubviewExtents {
     return set_non_device(domain_rank + 1, range_rank + 1, dim, args...);
     //--------------------------------------
   }
+#endif  // KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 
   // </editor-fold> end Kokkos::ALL slice }}}3
   //----------------------------------------------------------------------------
@@ -616,7 +627,7 @@ struct SubviewExtents {
   //----------------------------------------------------------------------------
   // <editor-fold desc="set() Pair-like slice"> {{{3
 
-  // PairLike range, using std::get or other non-device-supported mechanism
+  // PairLike range
   template <class PairLike, size_t... DimArgs, class... Args>
   KOKKOS_FORCEINLINE_FUNCTION
       typename std::enable_if<is_pairlike_slice<PairLike>::value, bool>::type
@@ -639,7 +650,8 @@ struct SubviewExtents {
     //--------------------------------------
   }
 
-  // PairLike range with device-marked get() function
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+  // PairLike range using std::get or other non-device-supported mechanism
   template <class PairLike, size_t... DimArgs, class... Args>
   inline typename std::enable_if<is_pairlike_slice<PairLike>::value, bool>::type
   set_non_device(unsigned domain_rank, unsigned range_rank,
@@ -661,6 +673,7 @@ struct SubviewExtents {
         ;
     //--------------------------------------
   }
+#endif  // KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 
   // </editor-fold> end Pair-like slice }}}3
   //----------------------------------------------------------------------------
@@ -676,8 +689,8 @@ struct SubviewExtents {
                                        Args... args) {
     //--------------------------------------
     // NOTE: same code as set()!!!
-    const size_t b = static_cast<size_t>(val.begin()[0]);
-    const size_t e = static_cast<size_t>(val.begin()[1]);
+    const auto b = static_cast<size_t>(val.begin()[0]);
+    const auto e = static_cast<size_t>(val.begin()[1]);
 
     m_begin[domain_rank] = b;
     m_length[range_rank] = e - b;
@@ -691,6 +704,7 @@ struct SubviewExtents {
     //--------------------------------------
   }
 
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
   template <class T, size_t... DimArgs, class... Args>
   inline bool set_non_device(unsigned domain_rank, unsigned range_rank,
                              const ViewDimension<DimArgs...>& dim,
@@ -698,8 +712,8 @@ struct SubviewExtents {
                              Args... args) {
     //--------------------------------------
     // NOTE: same code as set()!!!
-    const size_t b = static_cast<size_t>(val.begin()[0]);
-    const size_t e = static_cast<size_t>(val.begin()[1]);
+    const auto b = static_cast<size_t>(val.begin()[0]);
+    const auto e = static_cast<size_t>(val.begin()[1]);
 
     m_begin[domain_rank] = b;
     m_length[range_rank] = e - b;
@@ -712,6 +726,7 @@ struct SubviewExtents {
         ;
     //--------------------------------------
   }
+#endif  // KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 
   // </editor-fold> end initializer_list overloads }}}3
   //----------------------------------------------------------------------------
@@ -851,23 +866,34 @@ struct SubviewExtents {
   //----------------------------------------------------------------------------
   // <editor-fold desc="Ctors"> {{{2
 
-  template <size_t... DimArgs, class... Args,
-            typename std::enable_if<are_all_device_supported_slices<Args...>::value,
-                int>::type = 0>
+  template <size_t... DimArgs, class... Args
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+            ,
+            typename std::enable_if<
+                are_all_device_supported_slices<Args...>::value, int>::type = 0
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+#error "Kokkos multiversioning macros misconfigured"
+#endif
+            >
   KOKKOS_INLINE_FUNCTION SubviewExtents(const ViewDimension<DimArgs...>& dim,
                                         Args... args) {
     init_common(dim, args...);
     if (!set(0, 0, dim, args...)) error(dim, args...);
   }
 
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
   // Non-device "overload" of the constructor above
-  template <size_t... DimArgs, class... Args,
-            typename std::enable_if<!are_all_device_supported_slices<Args...>::value,
-                int>::type = 0>
+  template <
+      size_t... DimArgs, class... Args,
+      typename std::enable_if<!are_all_device_supported_slices<Args...>::value,
+                              int>::type = 0>
   inline SubviewExtents(const ViewDimension<DimArgs...>& dim, Args... args) {
     init_common(dim, args...);
     if (!set_non_device(0, 0, dim, args...)) error(dim, args...);
   }
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)  // typo protection
+#error "Kokkos multiversioning macros misconfigured"
+#endif
 
   // </editor-fold> end Ctors }}}2
   //----------------------------------------------------------------------------
@@ -3405,40 +3431,30 @@ class ViewMapping<
   };
 #endif
 
-  enum {
-    is_assignable_value_type =
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::value_type>::value ||
-        std::is_same<typename DstTraits::value_type,
-                     typename SrcTraits::const_value_type>::value
-  };
+  enum {is_assignable_value_type =
+            std::is_same<typename DstTraits::value_type,
+                         typename SrcTraits::value_type>::value ||
+            std::is_same<typename DstTraits::value_type,
+                         typename SrcTraits::const_value_type>::value};
 
-  enum {
-    is_assignable_dimension =
-        ViewDimensionAssignable<typename DstTraits::dimension,
-                                typename SrcTraits::dimension>::value
-  };
+  enum {is_assignable_dimension =
+            ViewDimensionAssignable<typename DstTraits::dimension,
+                                    typename SrcTraits::dimension>::value};
 
-  enum {
-    is_assignable_layout =
-        std::is_same<typename DstTraits::array_layout,
-                     typename SrcTraits::array_layout>::value ||
-        std::is_same<typename DstTraits::array_layout,
-                     Kokkos::LayoutStride>::value ||
-        (DstTraits::dimension::rank == 0) ||
-        (DstTraits::dimension::rank == 1 &&
-         DstTraits::dimension::rank_dynamic == 1)
-  };
+  enum {is_assignable_layout =
+            std::is_same<typename DstTraits::array_layout,
+                         typename SrcTraits::array_layout>::value ||
+            std::is_same<typename DstTraits::array_layout,
+                         Kokkos::LayoutStride>::value ||
+            (DstTraits::dimension::rank == 0) ||
+            (DstTraits::dimension::rank == 1 &&
+             DstTraits::dimension::rank_dynamic == 1)};
 
  public:
-  enum {
-    is_assignable_data_type =
-        is_assignable_value_type && is_assignable_dimension
-  };
-  enum {
-    is_assignable = is_assignable_space && is_assignable_value_type &&
-                    is_assignable_dimension && is_assignable_layout
-  };
+  enum {is_assignable_data_type =
+            is_assignable_value_type && is_assignable_dimension};
+  enum {is_assignable = is_assignable_space && is_assignable_value_type &&
+                        is_assignable_dimension && is_assignable_layout};
 
   typedef Kokkos::Impl::SharedAllocationTracker TrackType;
   typedef ViewMapping<DstTraits, void> DstType;
@@ -3507,7 +3523,7 @@ class ViewMapping<
     dst.m_impl_handle = Kokkos::Impl::ViewDataHandle<DstTraits>::assign(
         src.m_impl_handle, src_track);
   }
-};
+};  // namespace Impl
 
 //----------------------------------------------------------------------------
 // Create new specialization for SrcType of LayoutStride. Runtime check for
@@ -3822,16 +3838,26 @@ struct ViewMapping<
   // The presumed type is 'ViewMapping< traits_type , void >'
   // However, a compatible ViewMapping is acceptable.
   template <class DstTraits>
-  KOKKOS_INLINE_FUNCTION static void assign(
-      ViewMapping<DstTraits, void>& dst,
-      ViewMapping<SrcTraits, void> const& src, Args... args) {
+  KOKKOS_INLINE_FUNCTION static
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+      typename std::enable_if<
+          !std::is_void<DstTraits>::value && // to make this enable_if dependent
+          are_all_device_supported_slices<Args...>::value>::type
+#elif defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+      void
+#else
+#error "Kokkos multiversioning macros misconfigured"  // typo protection
+#endif
+      assign(ViewMapping<DstTraits, void>& dst,
+             ViewMapping<SrcTraits, void> const& src, Args... args) {
+    //--------------------------------------
     static_assert(ViewMapping<DstTraits, traits_type, void>::is_assignable,
                   "Subview destination type must be compatible with subview "
                   "derived type");
 
-    typedef ViewMapping<DstTraits, void> DstType;
+    using DstType = ViewMapping<DstTraits, void>;
 
-    typedef typename DstType::offset_type dst_offset_type;
+    using dst_offset_type = typename DstType::offset_type;
 
     const SubviewExtents<SrcTraits::rank, rank> extents(src.m_impl_offset.m_dim,
                                                         args...);
@@ -3844,7 +3870,41 @@ struct ViewMapping<
                           extents.domain_offset(2), extents.domain_offset(3),
                           extents.domain_offset(4), extents.domain_offset(5),
                           extents.domain_offset(6), extents.domain_offset(7)));
+    //--------------------------------------
   }
+
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+  template <class DstTraits>
+  inline static typename std::enable_if<
+      !std::is_void<DstTraits>::value && // to make this enable_if dependent
+      !are_all_device_supported_slices<Args...>::value>::type
+  assign(ViewMapping<DstTraits, void>& dst,
+         ViewMapping<SrcTraits, void> const& src, Args... args) {
+    //--------------------------------------
+    static_assert(ViewMapping<DstTraits, traits_type, void>::is_assignable,
+                  "Subview destination type must be compatible with subview "
+                  "derived type");
+
+    using DstType = ViewMapping<DstTraits, void>;
+
+    using dst_offset_type = typename DstType::offset_type;
+
+    const SubviewExtents<SrcTraits::rank, rank> extents(src.m_impl_offset.m_dim,
+                                                        args...);
+
+    dst.m_impl_offset = dst_offset_type(src.m_impl_offset, extents);
+
+    dst.m_impl_handle = ViewDataHandle<DstTraits>::assign(
+        src.m_impl_handle,
+        src.m_impl_offset(extents.domain_offset(0), extents.domain_offset(1),
+                          extents.domain_offset(2), extents.domain_offset(3),
+                          extents.domain_offset(4), extents.domain_offset(5),
+                          extents.domain_offset(6), extents.domain_offset(7)));
+    //--------------------------------------
+  }
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+#error "Kokkos multiversioning macros misconfigured"  // typo protection
+#endif
 };
 
 //----------------------------------------------------------------------------

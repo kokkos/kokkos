@@ -1789,21 +1789,25 @@ class View : public ViewTraits<DataType, Properties...> {
   // Compatible subview constructor
   // may assign unmanaged from managed.
 
-  // TODO decide whether we should multiversion this to get rid of a warning when
-  //      some slices of the subview are not device-compatible
-  template <class RT, class... RP, class Arg0, class... Args>
+  template <class RT, class... RP, class Arg0, class... Args
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+            ,
+            typename std::enable_if<
+                Impl::are_all_device_supported_slices<Arg0, Args...>::value,
+                int>::type = 0
+#endif // KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+            >
   KOKKOS_INLINE_FUNCTION View(const View<RT, RP...>& src_view, const Arg0 arg0,
                               Args... args)
       : m_track(src_view.m_track, traits::is_managed), m_map() {
-    typedef View<RT, RP...> SrcType;
+    //----------------------------
+    using SrcType = View<RT, RP...>;
 
-    typedef Kokkos::Impl::ViewMapping<void /* deduce destination view type from
-                                              source view traits */
-                                      ,
-                                      typename SrcType::traits, Arg0, Args...>
-        Mapping;
+    // `void` means deduce destination view type from source view traits
+    using Mapping = Kokkos::Impl::ViewMapping<void, typename SrcType::traits,
+                                              Arg0, Args...>;
 
-    typedef typename Mapping::type DstType;
+    using DstType = typename Mapping::type;
 
     static_assert(
         Kokkos::Impl::ViewMapping<traits, typename DstType::traits,
@@ -1811,7 +1815,39 @@ class View : public ViewTraits<DataType, Properties...> {
         "Subview construction requires compatible view and subview arguments");
 
     Mapping::assign(m_map, src_view.m_map, arg0, args...);
+    //----------------------------
   }
+
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+  // NOTE: This is the same as above, but without device markings, so that it
+  //       can work with non-device-marked slice types like std::pair without
+  //       generating a whole bunch of warnings.  See discussion in SubviewExtents
+  template <class RT, class... RP, class Arg0, class... Args,
+            typename std::enable_if<
+                !Impl::are_all_device_supported_slices<Arg0, Args...>::value,
+                int>::type = 0
+            >
+  inline View(const View<RT, RP...>& src_view, const Arg0 arg0,
+                              Args... args)
+      : m_track(src_view.m_track, traits::is_managed), m_map() {
+    //----------------------------
+    using SrcType = View<RT, RP...>;
+
+    // `void` means deduce destination view type from source view traits
+    using Mapping = Kokkos::Impl::ViewMapping<void, typename SrcType::traits,
+                                              Arg0, Args...>;
+
+    using DstType = typename Mapping::type;
+
+    static_assert(
+        Kokkos::Impl::ViewMapping<traits, typename DstType::traits,
+                                  typename traits::specialize>::is_assignable,
+        "Subview construction requires compatible view and subview arguments");
+
+    Mapping::assign(m_map, src_view.m_map, arg0, args...);
+    //----------------------------
+  }
+#endif //  KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 
   //----------------------------------------
   // Allocation tracking properties
@@ -2257,7 +2293,13 @@ subview(const View<D, P...>& src, Args... args) {
 
 template <class MemoryTraits, class D, class... P, class... Args>
 KOKKOS_INLINE_FUNCTION typename std::enable_if<
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
     Impl::are_all_device_supported_slices<Args...>::value,
+#elif defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+    true,
+#else
+#error "Kokkos multiversioning macros misconfigured"  // typo protection
+#endif
     typename Kokkos::Impl::ViewMapping<
         void /* deduce subview type from
                 source view traits */
@@ -2274,10 +2316,12 @@ subview(const View<D, P...>& src, Args... args) {
       Args...>::template apply<MemoryTraits>::type(src, args...);
 }
 
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 // NOTE: This is the same as above, but without device markings, so that it
 //       can work with non-device-marked slice types like std::pair without
 //       generating a whole bunch of warnings.  See discussion in SubviewExtents
 template <class MemoryTraits, class D, class... P, class... Args>
+inline
 typename std::enable_if<
     !Impl::are_all_device_supported_slices<Args...>::value,
     typename Kokkos::Impl::ViewMapping<
@@ -2295,6 +2339,9 @@ subview(const View<D, P...>& src, Args... args) {
       ViewTraits<D, P...>,
       Args...>::template apply<MemoryTraits>::type(src, args...);
 }
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING) // typo protection
+#error "Kokkos multiversioning macros misconfigured"
+#endif
 
 } /* namespace Kokkos */
 

@@ -601,4 +601,20 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
+// Enable/disable multiversioning of certain function templates in Kokkos for
+// device compatibility purposes.  This can be explicitly disabled, or it will
+// be implicitly disabled if not building a device backend (currently only
+// Cuda and ROCm)
+#ifndef KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM)
+#define KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+#define KOKKOS_IMPL_ONLY_WITH_DEVICE_MULTIVERSIONING(...) __VA_ARGS__
+#endif
+#endif
+#ifndef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+#define KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING
+#define KOKKOS_IMPL_ONLY_WITH_DEVICE_MULTIVERSIONING(...)
+#endif
+
+
 #endif  // #ifndef KOKKOS_MACROS_HPP

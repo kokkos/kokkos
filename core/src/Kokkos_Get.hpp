@@ -208,6 +208,7 @@ template <class T, size_t I>
 using kokkos_get_result_t =
     detected_t<_has_kokkos_get_archetype, T, std::integral_constant<size_t, I>>;
 
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 // Consider things that use std::get only to be not device supported.  Assume
 // that anything else is user error (missing KOKKOS_INLINE_FUNCTION somewhere)
 // and should result in the usual warnings.  This isn't a perfect assumption,
@@ -217,6 +218,9 @@ using has_device_supported_kokkos_get = std::integral_constant<
     bool, has_kokkos_get<T, I>::value &&
               (Impl::_get_impl_disable_adl::has_intrusive_get<T, I>::value ||
                !Impl::_get_impl_disable_adl::has_std_get<T, I>::value)>;
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING) // typo protection
+#error "Kokkos multiversioning macros misconfigured"
+#endif
 
 }  // end namespace Impl
 
