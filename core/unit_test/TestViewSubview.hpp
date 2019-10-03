@@ -254,7 +254,7 @@ void test_1d_strided_assignment_impl(bool a, bool b, bool c, bool d, int n,
 
     if (b && n > 13) {
       Kokkos::View<double*, LD, Space> l1db =
-          Kokkos::subview(l2d, std::pair<unsigned, unsigned>(2, 13), row);
+          Kokkos::subview(l2d, Kokkos::pair<unsigned, unsigned>(2, 13), row);
       ASSERT_TRUE(&l1db(0) == &l2d(2, row));
       ASSERT_TRUE(&l1db(1) == &l2d(3, row));
     }
@@ -270,7 +270,7 @@ void test_1d_strided_assignment_impl(bool a, bool b, bool c, bool d, int n,
 
     if (d && m > 13) {
       Kokkos::View<double*, LD, Space> l1dd =
-          Kokkos::subview(l2d, col, std::pair<unsigned, unsigned>(2, 13));
+          Kokkos::subview(l2d, col, Kokkos::pair<unsigned, unsigned>(2, 13));
       ASSERT_TRUE(&l1dd(0) == &l2d(col, 2));
       ASSERT_TRUE(&l1dd(1) == &l2d(col, 3));
     }

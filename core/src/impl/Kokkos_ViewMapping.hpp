@@ -384,6 +384,20 @@ struct is_device_supported_slice {
         !is_device_supported_pairlike_slice<type>::value);
 };
 
+template <class... Args>
+struct are_all_device_supported_slices
+    : std::integral_constant<bool,
+                             is_device_supported_slice<0, Args...>::value &&
+                                 is_device_supported_slice<1, Args...>::value &&
+                                 is_device_supported_slice<2, Args...>::value &&
+                                 is_device_supported_slice<3, Args...>::value &&
+                                 is_device_supported_slice<4, Args...>::value &&
+                                 is_device_supported_slice<5, Args...>::value &&
+                                 is_device_supported_slice<6, Args...>::value &&
+                                 is_device_supported_slice<7, Args...>::value &&
+                                 is_device_supported_slice<8, Args...>::value> {
+};
+
 // Rules for subview arguments and layouts matching
 
 template <class LayoutDest, class LayoutSrc, int RankDest, int RankSrc,
@@ -507,7 +521,8 @@ struct SubviewExtents {
   // All of the `set_non_device()` functions below should be identical to the
   // corresponding `set()` functions, and should be maintained this way
   template <size_t... DimArgs>
-  inline bool set_non_device(unsigned, unsigned, const ViewDimension<DimArgs...>&) {
+  inline bool set_non_device(unsigned, unsigned,
+                             const ViewDimension<DimArgs...>&) {
     return true;
   }
 
@@ -583,8 +598,8 @@ struct SubviewExtents {
   // ALL_t, non-device-supported version
   template <size_t... DimArgs, class... Args>
   inline bool set_non_device(unsigned domain_rank, unsigned range_rank,
-                      const ViewDimension<DimArgs...>& dim,
-                      const Kokkos::Impl::ALL_t, Args... args) {
+                             const ViewDimension<DimArgs...>& dim,
+                             const Kokkos::Impl::ALL_t, Args... args) {
     //--------------------------------------
     // NOTE: same code as set()
     m_begin[domain_rank] = 0;
@@ -833,21 +848,11 @@ struct SubviewExtents {
   }
 
  public:
-
   //----------------------------------------------------------------------------
   // <editor-fold desc="Ctors"> {{{2
 
   template <size_t... DimArgs, class... Args,
-            typename std::enable_if<
-                is_device_supported_slice<0, Args...>::value &&
-                    is_device_supported_slice<1, Args...>::value &&
-                    is_device_supported_slice<2, Args...>::value &&
-                    is_device_supported_slice<3, Args...>::value &&
-                    is_device_supported_slice<4, Args...>::value &&
-                    is_device_supported_slice<5, Args...>::value &&
-                    is_device_supported_slice<6, Args...>::value &&
-                    is_device_supported_slice<7, Args...>::value &&
-                    is_device_supported_slice<8, Args...>::value,
+            typename std::enable_if<are_all_device_supported_slices<Args...>::value,
                 int>::type = 0>
   KOKKOS_INLINE_FUNCTION SubviewExtents(const ViewDimension<DimArgs...>& dim,
                                         Args... args) {
@@ -857,16 +862,7 @@ struct SubviewExtents {
 
   // Non-device "overload" of the constructor above
   template <size_t... DimArgs, class... Args,
-            typename std::enable_if<
-                !is_device_supported_slice<0, Args...>::value ||
-                    !is_device_supported_slice<1, Args...>::value ||
-                    !is_device_supported_slice<2, Args...>::value ||
-                    !is_device_supported_slice<3, Args...>::value ||
-                    !is_device_supported_slice<4, Args...>::value ||
-                    !is_device_supported_slice<5, Args...>::value ||
-                    !is_device_supported_slice<6, Args...>::value ||
-                    !is_device_supported_slice<7, Args...>::value ||
-                    !is_device_supported_slice<8, Args...>::value,
+            typename std::enable_if<!are_all_device_supported_slices<Args...>::value,
                 int>::type = 0>
   inline SubviewExtents(const ViewDimension<DimArgs...>& dim, Args... args) {
     init_common(dim, args...);

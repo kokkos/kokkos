@@ -1789,6 +1789,8 @@ class View : public ViewTraits<DataType, Properties...> {
   // Compatible subview constructor
   // may assign unmanaged from managed.
 
+  // TODO decide whether we should multiversion this to get rid of a warning when
+  //      some slices of the subview are not device-compatible
   template <class RT, class... RP, class Arg0, class... Args>
   KOKKOS_INLINE_FUNCTION View(const View<RT, RP...>& src_view, const Arg0 arg0,
                               Args... args)
@@ -2213,14 +2215,15 @@ using Subview =
                                        ,
                                        typename V::traits, Args...>::type;
 
-// TODO multi-version this based on device-compatibility of the slice types?
 template <class D, class... P, class... Args>
-KOKKOS_INLINE_FUNCTION
+KOKKOS_INLINE_FUNCTION typename std::enable_if<
+    Impl::are_all_device_supported_slices<Args...>::value,
     typename Kokkos::Impl::ViewMapping<void /* deduce subview type from source
                                                view traits */
                                        ,
-                                       ViewTraits<D, P...>, Args...>::type
-    subview(const View<D, P...>& src, Args... args) {
+                                       ViewTraits<D, P...>,
+                                       Args...>::type>::type
+subview(const View<D, P...>& src, Args... args) {
   static_assert(View<D, P...>::Rank == sizeof...(Args),
                 "subview requires one argument for each source View rank");
 
@@ -2230,12 +2233,58 @@ KOKKOS_INLINE_FUNCTION
       ViewTraits<D, P...>, Args...>::type(src, args...);
 }
 
-// TODO multi-version this based on device-compatibility of the slice types?
+// NOTE: This is the same as above, but without device markings, so that it
+//       can work with non-device-marked slice types like std::pair without
+//       generating a whole bunch of warnings.  See discussion in SubviewExtents
+template <class D, class... P, class... Args>
+typename std::enable_if<!Impl::are_all_device_supported_slices<Args...>::value,
+                        typename Kokkos::Impl::ViewMapping<
+                            void /* deduce subview type from source
+                                        view traits */
+                            ,
+                            ViewTraits<D, P...>, Args...>::type>::type
+subview(const View<D, P...>& src, Args... args) {
+  static_assert(View<D, P...>::Rank == sizeof...(Args),
+                "subview requires one argument for each source View rank");
+
+  return typename Kokkos::Impl::ViewMapping<
+      void /* deduce subview type from source view traits */
+      ,
+      ViewTraits<D, P...>, Args...>::type(src, args...);
+}
+
+//----------------------------------------------------------------------------
+
 template <class MemoryTraits, class D, class... P, class... Args>
-KOKKOS_INLINE_FUNCTION typename Kokkos::Impl::ViewMapping<
-    void /* deduce subview type from source view traits */
-    ,
-    ViewTraits<D, P...>, Args...>::template apply<MemoryTraits>::type
+KOKKOS_INLINE_FUNCTION typename std::enable_if<
+    Impl::are_all_device_supported_slices<Args...>::value,
+    typename Kokkos::Impl::ViewMapping<
+        void /* deduce subview type from
+                source view traits */
+        ,
+        ViewTraits<D, P...>, Args...>::template apply<MemoryTraits>::type>::type
+subview(const View<D, P...>& src, Args... args) {
+  static_assert(View<D, P...>::Rank == sizeof...(Args),
+                "subview requires one argument for each source View rank");
+
+  return typename Kokkos::Impl::ViewMapping<
+      void /* deduce subview type from source view traits */
+      ,
+      ViewTraits<D, P...>,
+      Args...>::template apply<MemoryTraits>::type(src, args...);
+}
+
+// NOTE: This is the same as above, but without device markings, so that it
+//       can work with non-device-marked slice types like std::pair without
+//       generating a whole bunch of warnings.  See discussion in SubviewExtents
+template <class MemoryTraits, class D, class... P, class... Args>
+typename std::enable_if<
+    !Impl::are_all_device_supported_slices<Args...>::value,
+    typename Kokkos::Impl::ViewMapping<
+        void /* deduce subview type from
+                source view traits */
+        ,
+        ViewTraits<D, P...>, Args...>::template apply<MemoryTraits>::type>::type
 subview(const View<D, P...>& src, Args... args) {
   static_assert(View<D, P...>::Rank == sizeof...(Args),
                 "subview requires one argument for each source View rank");
