@@ -1224,7 +1224,7 @@ tile_subview(const Kokkos::View<
   static_assert(sizeof...(i_tiles) == src_view_type::rank,
                 "Mismatched tile/array size");
 
-  return { src, src_layout(), i_tiles... };
+  return { src, src_layout(), static_cast<size_t>(i_tiles)... };
 }
 
 } /* namespace Kokkos */
