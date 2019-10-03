@@ -27,7 +27,7 @@ KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 
 KOKKOS_OPTION(SEPARATE_LIBS  OFF BOOL "whether to build libkokkos or libkokkoscontainers, etc")
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
-KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to enable unified virtual memory (UVM) for CUDA")
+KOKKOS_ENABLE_OPTION(CUDA_DEFAULT_UM             OFF "Whether to use unified memory (UM) for CUDA by default")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
 KOKKOS_ENABLE_OPTION(HPX_ASYNC_DISPATCH   OFF "Whether HPX supports asynchronous dispath")
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build serial  backend")
@@ -47,7 +47,7 @@ KOKKOS_ENABLE_OPTION(COMPILER_WARNINGS    OFF "Whether to print all compiler war
 KOKKOS_ENABLE_OPTION(PROFILING            ON  "Whether to create bindings for profiling tools")
 KOKKOS_ENABLE_OPTION(PROFILING_LOAD_PRINT OFF "Whether to print information about which profiling tools got loaded")
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
-KOKKOS_ENABLE_OPTION(DEPRECATED_CODE          OFF "Whether to enable deprecated code")
+KOKKOS_ENABLE_OPTION(DEPRECATED_CODE          ON "Whether to enable deprecated code")
 KOKKOS_ENABLE_OPTION(EXPLICIT_INSTANTIATION   OFF 
   "Whether to explicitly instantiate certain types to lower future compile times")
 SET(KOKKOS_ENABLE_ETI ${KOKKOS_ENABLE_EXPLICIT_INSTANTIATION} CACHE INTERNAL "eti")
@@ -76,8 +76,13 @@ FUNCTION(check_device_specific_options)
   ENDIF()
 ENDFUNCTION()
 
-CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE CUDA OPTIONS CUDA_UVM CUDA_RELOCATABLE_DEVICE_CODE CUDA_LAMBDA CUDA_LDG_INTRINSIC)
+CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE CUDA OPTIONS CUDA_DEFAULT_UM CUDA_RELOCATABLE_DEVICE_CODE CUDA_LAMBDA CUDA_LDG_INTRINSIC)
 CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE HPX OPTIONS HPX_ASYNC_DISPATCH)
+
+IF (KOKKOS_ENABLE_CUDA_DEFAULT_UM)
+#Set the old variable for the Kokkos config header for now
+  SET(KOKKOS_ENABLE_CUDA_UVM ON)
+ENDIF()
 
 # Needed due to change from deprecated name to new header define name
 IF (KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)

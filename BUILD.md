@@ -36,7 +36,7 @@ There are numerous device backends, options, and architecture-specific optimizat
 cmake ${srcdir} \
  -DCMAKE_CXX_COMPILER=g++ \
  -DCMAKE_INSTALL_PREFIX=${my_install_folder} \
- -DKokkos_ENABLE_OpenMP=On 
+ -DKokkos_ENABLE_OPENMP=On
 ```` 
 which activates the OpenMP backend. All of the options controlling device backends, options, architectures, and third-party libraries (TPLs) are given below.
 
@@ -114,12 +114,6 @@ Device backends can be enabled by specifiying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_PTHREAD
     * Whether to build Pthread backend
     * BOOL Default: OFF
-* Kokkos_ENABLE_QTHREAD
-    * Whether to enable the QTHREAD library
-    * BOOL Default: OFF
-* Kokkos_ENABLE_ROCM
-    * Whether to build AMD ROCm backend
-    * BOOL Default: OFF
 * Kokkos_ENABLE_SERIAL
     * Whether to build serial  backend
     * BOOL Default: ON
@@ -142,8 +136,8 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
     * Whether to enable relocatable device code (RDC) for CUDA
     * BOOL Default: OFF
-* Kokkos_ENABLE_CUDA_UVM
-    * Whether to enable unified virtual memory (UVM) for CUDA
+* Kokkos_ENABLE_CUDA_DEFAULT_UM
+    * Whether to use unified memory (UM) by default for CUDA
     * BOOL Default: OFF
 * Kokkos_ENABLE_DEBUG
     * Whether to activate extra debug features - may increase compiletimes
@@ -156,9 +150,9 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
     * BOOL Default: OFF
 * Kokkos_ENABLE_DEPRECATED_CODE
     * Whether to enable deprecated code
-    * BOOL Default: OFF
+    * BOOL Default: ON
 * Kokkos_ENABLE_EXAMPLES
-    * Whether to build OpenMP  backend
+    * Whether to enable building examples
     * BOOL Default: OFF
 * Kokkos_ENABLE_EXPLICIT_INSTANTIATION
     * Whether to explicitly instantiate certain types to lower futurecompile times
@@ -178,7 +172,7 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
 
 ## Other Options
 * Kokkos_CXX_STANDARD
-    * The C++ standard for Kokkos to use: c++11, c++14, or c++17. This should be given in CMake style as 11, 14, or 17.
+    * The C++ standard for Kokkos to use: c++11, c++14, c++17, or c++20. This should be given in CMake style as 11, 14, 17, or 20.
     * STRING Default: 11 
 * Kokkos_SEPARATE_LIBS
     * whether to build libkokkos or libkokkoscontainers, etc
@@ -213,9 +207,6 @@ The following options control activating and locating varial options TPLs.
     * PATH Default: 
 * Kokkos_MEMKIND_DIR
     * Location of MEMKIND library
-    * PATH Default: 
-* Kokkos_QTHREAD_DIR
-    * Location of QTHREAD library
     * PATH Default: 
 
 ## Architecture Keywords
