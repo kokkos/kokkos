@@ -1198,7 +1198,8 @@ struct _element_type {
 template <typename U, Kokkos::Iterate OuterP, Kokkos::Iterate InnerP,
           unsigned N0, unsigned N1, unsigned N2, unsigned N3, unsigned N4,
           unsigned N5, unsigned N6, unsigned N7, class... P, class... Tiles>
-KOKKOS_INLINE_FUNCTION Kokkos::View<
+KOKKOS_INLINE_FUNCTION
+Kokkos::View<
     typename Impl::_tile_subview_helpers::_compose_array<
         sizeof...(Tiles),
         typename Impl::_tile_subview_helpers::_element_type<U>::type, N0, N1,

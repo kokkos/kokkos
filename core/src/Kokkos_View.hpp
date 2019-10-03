@@ -1793,7 +1793,9 @@ class View : public ViewTraits<DataType, Properties...> {
 #ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
             ,
             typename std::enable_if<
-                Impl::are_all_device_supported_slices<Arg0, Args...>::value,
+                (Impl::are_all_device_supported_slices<Args...>::value
+                  && (Impl::is_device_supported_slice<0, Arg0>::value || is_array_layout<Arg0>::value)
+                ),
                 int>::type = 0
 #endif // KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
             >
@@ -1824,7 +1826,9 @@ class View : public ViewTraits<DataType, Properties...> {
   //       generating a whole bunch of warnings.  See discussion in SubviewExtents
   template <class RT, class... RP, class Arg0, class... Args,
             typename std::enable_if<
-                !Impl::are_all_device_supported_slices<Arg0, Args...>::value,
+                !(Impl::are_all_device_supported_slices<Args...>::value
+                && (Impl::is_device_supported_slice<0, Arg0>::value || is_array_layout<Arg0>::value)
+                ),
                 int>::type = 0
             >
   inline View(const View<RT, RP...>& src_view, const Arg0 arg0,

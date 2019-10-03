@@ -379,7 +379,7 @@ struct is_device_supported_slice {
       typename Kokkos::Impl::get_type<I, Args...>::type>::type>::type;
 
   static constexpr auto value =
-      (is_integral_extent_type<type>::value || std::is_integral<type>::value ||
+      (is_integral_extent_type<type>::value || std::is_convertible<type, size_t>::value ||
        std::is_void<type>::value) &&
       !(is_pairlike_slice<type>::value &&
         !is_device_supported_pairlike_slice<type>::value);
