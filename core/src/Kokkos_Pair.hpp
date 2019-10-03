@@ -687,4 +687,13 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator>=(
 
 }  // namespace Kokkos
 
+namespace std {
+template <class T, class U>
+struct tuple_size<Kokkos::pair<T, U>> : std::integral_constant<size_t, 2> {};
+template <class T, class U>
+struct tuple_element<0, Kokkos::pair<T, U>> { using type = T; };
+template <class T, class U>
+struct tuple_element<1, Kokkos::pair<T, U>> { using type = U; };
+} // namespace std
+
 #endif  // KOKKOS_PAIR_HPP

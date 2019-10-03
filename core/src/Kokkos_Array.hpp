@@ -52,6 +52,7 @@
 #include <limits>
 #include <cstddef>
 #include <string>
+#include <tuple>
 
 namespace Kokkos {
 
@@ -106,7 +107,7 @@ struct ArrayBoundsCheck<Integral, false> {
 
 #endif  // !defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
 
-/**\brief  Derived from the C++17 'std::array'.
+/**\brief  Derived from the C++11 'std::array'.
  *         Dropping the iterator interface.
  */
 template <class T = void, size_t N = KOKKOS_INVALID_INDEX, class Proxy = void>
@@ -156,6 +157,72 @@ struct Array {
   }
   KOKKOS_INLINE_FUNCTION const_pointer data() const {
     return &m_internal_implementation_private_member_data[0];
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<(I <= N),
+                              typename std::add_lvalue_reference<T>::type>::type
+      get() & {
+    return m_internal_implementation_private_member_data[I];
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<(I <= N),
+                              typename std::add_lvalue_reference<
+                                  typename std::add_const<T>::type>::type>::type
+      get() const& {
+    return m_internal_implementation_private_member_data[I];
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+      (I <= N), typename std::add_lvalue_reference<
+                    typename std::add_volatile<T>::type>::type>::type
+  get() volatile& {
+    return m_internal_implementation_private_member_data[I];
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+      (I <= N), typename std::add_lvalue_reference<typename std::add_const<
+                    typename std::add_volatile<T>::type>::type>::type>::type
+  get() const volatile& {
+    return m_internal_implementation_private_member_data[I];
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<(I <= N),
+                              typename std::add_rvalue_reference<T>::type>::type
+      get() && {
+    return m_internal_implementation_private_member_data[I];
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<(I <= N),
+                              typename std::add_rvalue_reference<
+                                  typename std::add_const<T>::type>::type>::type
+      get() const&& {
+    return m_internal_implementation_private_member_data[I];
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+      (I <= N), typename std::add_rvalue_reference<
+                    typename std::add_volatile<T>::type>::type>::type
+  get() volatile&& {
+    return m_internal_implementation_private_member_data[I];
+  }
+
+  template <size_t I>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+      (I <= N), typename std::add_rvalue_reference<typename std::add_const<
+                    typename std::add_volatile<T>::type>::type>::type>::type
+  get() const volatile&& {
+    return m_internal_implementation_private_member_data[I];
   }
 
 #ifdef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
@@ -386,5 +453,12 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
 };
 
 }  // namespace Kokkos
+
+namespace std {
+template <class T, size_t N>
+struct tuple_size<Kokkos::Array<T, N>> : std::integral_constant<size_t, N> {};
+template <class T, size_t N, size_t I>
+struct tuple_element<I, Kokkos::Array<T, N>> { using type = T; };
+} // namespace std
 
 #endif /* #ifndef KOKKOS_ARRAY_HPP */

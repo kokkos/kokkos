@@ -712,6 +712,7 @@ void test_right_1() {
     test_right_1_pairlike<Space, std::array<int, 2>>(x8);
     test_right_1_pairlike<Space, std::array<long, 2>>(x8);
     test_right_1_pairlike<Space, std::tuple<int, int>>(x8);
+    test_right_1_pairlike<Space, Kokkos::Array<int, 2>>(x8);
   }
 }
 
