@@ -197,7 +197,7 @@ struct Array {
       typename std::enable_if<(I <= N),
                               typename std::add_rvalue_reference<T>::type>::type
       get() && {
-    return m_internal_implementation_private_member_data[I];
+    return std::move(m_internal_implementation_private_member_data[I]);
   }
 
   template <size_t I>
@@ -206,7 +206,7 @@ struct Array {
                               typename std::add_rvalue_reference<
                                   typename std::add_const<T>::type>::type>::type
       get() const&& {
-    return m_internal_implementation_private_member_data[I];
+    return std::move(m_internal_implementation_private_member_data[I]);
   }
 
   template <size_t I>
@@ -214,7 +214,7 @@ struct Array {
       (I <= N), typename std::add_rvalue_reference<
                     typename std::add_volatile<T>::type>::type>::type
   get() volatile&& {
-    return m_internal_implementation_private_member_data[I];
+    return std::move(m_internal_implementation_private_member_data[I]);
   }
 
   template <size_t I>
@@ -222,7 +222,7 @@ struct Array {
       (I <= N), typename std::add_rvalue_reference<typename std::add_const<
                     typename std::add_volatile<T>::type>::type>::type>::type
   get() const volatile&& {
-    return m_internal_implementation_private_member_data[I];
+    return std::move(m_internal_implementation_private_member_data[I]);
   }
 
 #ifdef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
