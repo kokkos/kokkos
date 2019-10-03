@@ -181,9 +181,9 @@ void *CudaSpace::allocate(const size_t arg_alloc_size) const {
 
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
-    cudaGetLastError(); // This is the only way to clear the last error, which
-                        // we should do here since we're turning it into an
-                        // exception here
+    cudaGetLastError();  // This is the only way to clear the last error, which
+                         // we should do here since we're turning it into an
+                         // exception here
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -211,9 +211,9 @@ void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
     auto error_code =
         cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
     if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
-      cudaGetLastError(); // This is the only way to clear the last error, which
-                          // we should do here since we're turning it into an
-                          // exception here
+      cudaGetLastError();  // This is the only way to clear the last error,
+                           // which we should do here since we're turning it
+                           // into an exception here
       throw Experimental::CudaRawMemoryAllocationFailure(
           arg_alloc_size, error_code,
           Experimental::RawMemoryAllocationFailure::AllocationMechanism::
@@ -230,9 +230,9 @@ void *CudaHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
 
   auto error_code = cudaHostAlloc(&ptr, arg_alloc_size, cudaHostAllocDefault);
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
-    cudaGetLastError(); // This is the only way to clear the last error, which
-                        // we should do here since we're turning it into an
-                        // exception here
+    cudaGetLastError();  // This is the only way to clear the last error, which
+                         // we should do here since we're turning it into an
+                         // exception here
     throw Experimental::CudaRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         Experimental::RawMemoryAllocationFailure::AllocationMechanism::
