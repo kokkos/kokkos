@@ -47,6 +47,9 @@
 #include <Kokkos_Pair.hpp>
 
 #include <type_traits>
+#include <array>
+#include <utility>
+#include <tuple>
 
 KOKKOS_STATIC_TEST(
     Kokkos::Impl::has_kokkos_get<std::pair<int, char>, 0>::value);
