@@ -356,9 +356,9 @@ struct ViewTraits {
 
   typedef typename MemorySpace::size_type size_type;
 
-  enum { is_hostspace = std::is_same<MemorySpace, HostSpace>::value };
-  enum { is_managed = MemoryTraits::is_unmanaged == 0 };
-  enum { is_random_access = MemoryTraits::is_random_access == 1 };
+  enum : bool { is_hostspace = std::is_same<MemorySpace, HostSpace>::value };
+  enum : bool { is_managed = !MemoryTraits::is_unmanaged };
+  enum : bool { is_random_access = MemoryTraits::is_random_access };
 
   //------------------------------------
 };
