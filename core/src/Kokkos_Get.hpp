@@ -69,10 +69,13 @@ void get(T&&) = delete;
 KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
     _has_adl_free_function_get_archetype, (class T, class IType), (T, IType),
     decltype(get<IType::value>(Kokkos::Impl::declval<T>())));
+
+// Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
+
 template <class T, size_t I>
-using has_adl_free_function_get =
-    Kokkos::Impl::is_detected<_has_adl_free_function_get_archetype, T,
-                              std::integral_constant<size_t, I>>;
+struct has_adl_free_function_get
+    : Kokkos::Impl::is_detected<_has_adl_free_function_get_archetype, T,
+                                std::integral_constant<size_t, I>> {};
 template <class T, size_t I>
 using adl_free_function_get_result_t =
     Kokkos::Impl::detected_t<_has_adl_free_function_get_archetype, T,
@@ -83,10 +86,13 @@ using adl_free_function_get_result_t =
 KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
     _has_std_get_archetype, (class T, class IType), (T, IType),
     decltype(std::get<IType::value>(Kokkos::Impl::declval<T>())));
+
+// Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
+
 template <class T, size_t I>
-using has_std_get =
-    Kokkos::Impl::is_detected<_has_std_get_archetype, T,
-                              std::integral_constant<size_t, I>>;
+struct has_std_get
+    : Kokkos::Impl::is_detected<_has_std_get_archetype, T,
+                                std::integral_constant<size_t, I>> {};
 
 template <class T, size_t I>
 using std_get_result_t =
@@ -99,10 +105,12 @@ KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
     _has_intrusive_get_archetype, (class T, class IType), (T, IType),
     decltype(Kokkos::Impl::declval<T>().template get<IType::value>()));
 
+// Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
+
 template <class T, size_t I>
-using has_intrusive_get =
-    Kokkos::Impl::is_detected<_has_intrusive_get_archetype, T,
-                              std::integral_constant<size_t, I>>;
+struct has_intrusive_get
+    : Kokkos::Impl::is_detected<_has_intrusive_get_archetype, T,
+                                std::integral_constant<size_t, I>> {};
 
 template <class T, size_t I>
 using intrusive_get_result_t =
@@ -200,9 +208,11 @@ KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
     _has_kokkos_get_archetype, T, IType,
     decltype(Kokkos::get<IType::value>(declval<T>())));
 
+// Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
+
 template <class T, size_t I>
-using has_kokkos_get = is_detected<_has_kokkos_get_archetype, T,
-                                   std::integral_constant<size_t, I>>;
+struct has_kokkos_get : is_detected<_has_kokkos_get_archetype, T,
+                                   std::integral_constant<size_t, I>> {};
 
 template <class T, size_t I>
 using kokkos_get_result_t =
@@ -218,7 +228,7 @@ using has_device_supported_kokkos_get = std::integral_constant<
     bool, has_kokkos_get<T, I>::value &&
               (Impl::_get_impl_disable_adl::has_intrusive_get<T, I>::value ||
                !Impl::_get_impl_disable_adl::has_std_get<T, I>::value)>;
-#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING) // typo protection
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)  // typo protection
 #error "Kokkos multiversioning macros misconfigured"
 #endif
 

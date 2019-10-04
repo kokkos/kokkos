@@ -366,7 +366,7 @@ struct is_integral_extent {
 
   enum { value = is_integral_extent_type<type>::value };
 
-  static_assert(value || std::is_integral<type>::value ||
+  static_assert(value || std::is_integral<type>::value || is_array_layout<type>::value ||
                     std::is_same<type, void>::value,
                 "subview argument must be either integral or integral extent");
 };
