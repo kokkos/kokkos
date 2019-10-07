@@ -78,22 +78,31 @@ class alignas(2 * sizeof(RealType)) complex {
   KOKKOS_INLINE_FUNCTION
   complex& operator=(const complex&) noexcept = default;
 
+  /// \brief Conversion constructor from compatible RType
+  template <class RType,
+            typename std::enable_if<std::is_convertible<RType, RealType>::value,
+                                    int>::type = 0>
+  KOKKOS_INLINE_FUNCTION complex(const complex<RType>& other) noexcept
+      // Intentionally do the conversions implicitly here so that users get
+      // any warnings about narrowing, etc., that they would expect to get
+      // otherwise.
+      : re_(other.real()), im_(other.imag()) {}
+
   /// \brief Conversion constructor from std::complex.
   ///
   /// This constructor cannot be called in a CUDA device function,
   /// because std::complex's methods and nonmember functions are not
   /// marked as CUDA device functions.
-  template <class RType>
   KOKKOS_INLINE_FUNCTION
-  // We can use this aspect of the standard to avoid calling non-device-marked
-  // functions `std::real` and `std::imag`: "For any object z of type
-  // complex<T>, reinterpret_cast<T(&)[2]>(z)[0] is the real part of z and
-  // reinterpret_cast<T(&)[2]>(z)[1] is the imaginary part of z."
-  // Now we don't have to provide a whole bunch of the overloads of things
-  // taking either Kokkos::complex or std::complex
-  complex(const std::complex<RType>& src) noexcept
-      : re_(reinterpret_cast<const RType (&)[2]>(src)[0]),
-        im_(reinterpret_cast<const RType (&)[2]>(src)[1]) {}
+  complex(const std::complex<RealType>& src) noexcept
+      // We can use this aspect of the standard to avoid calling
+      // non-device-marked functions `std::real` and `std::imag`: "For any
+      // object z of type complex<T>, reinterpret_cast<T(&)[2]>(z)[0] is the
+      // real part of z and reinterpret_cast<T(&)[2]>(z)[1] is the imaginary
+      // part of z." Now we don't have to provide a whole bunch of the overloads
+      // of things taking either Kokkos::complex or std::complex
+      : re_(reinterpret_cast<const RealType (&)[2]>(src)[0]),
+        im_(reinterpret_cast<const RealType (&)[2]>(src)[1]) {}
 
   /// \brief Conversion operator to std::complex.
   ///
@@ -107,32 +116,15 @@ class alignas(2 * sizeof(RealType)) complex {
 
   /// \brief Constructor that takes just the real part, and sets the
   ///   imaginary part to zero.
-  template <class RType>
-  KOKKOS_INLINE_FUNCTION complex(const RType& val) noexcept
-      : re_(val), im_(static_cast<RType>(0)) {}
+  KOKKOS_INLINE_FUNCTION complex(const RealType& val) noexcept
+      : re_(val), im_(static_cast<RealType>(0)) {}
 
-  // BUG HCC WORKAROUND
+  //! Constructor that takes the real and imaginary parts.
   KOKKOS_INLINE_FUNCTION
   complex(const RealType& re, const RealType& im) noexcept : re_(re), im_(im) {}
 
-  //! Constructor that takes the real and imaginary parts.
-  template <class RealType1, class RealType2>
-  KOKKOS_INLINE_FUNCTION complex(const RealType1& re,
-                                 const RealType2& im) noexcept
-      : re_(re), im_(im) {}
-
-  //! Assignment operator.
-  template <class RType>
-  KOKKOS_INLINE_FUNCTION complex& operator=(
-      const complex<RType>& src) noexcept {
-    re_ = src.re_;
-    im_ = src.im_;
-    return *this;
-  }
-
   //! Assignment operator (from a real number).
-  template <class RType>
-  KOKKOS_INLINE_FUNCTION complex& operator=(const RType& val) noexcept {
+  KOKKOS_INLINE_FUNCTION complex& operator=(const RealType& val) noexcept {
     re_ = val;
     im_ = RealType(0);
     return *this;
@@ -143,8 +135,7 @@ class alignas(2 * sizeof(RealType)) complex {
   /// This constructor cannot be called in a CUDA device function,
   /// because std::complex's methods and nonmember functions are not
   /// marked as CUDA device functions.
-  template <class RType>
-  complex& operator=(const std::complex<RType>& src) noexcept {
+  complex& operator=(const std::complex<RealType>& src) noexcept {
     *this = complex(src);
     return *this;
   }
@@ -175,49 +166,34 @@ class alignas(2 * sizeof(RealType)) complex {
   KOKKOS_CONSTEXPR_14
   void real(RealType v) noexcept { re_ = v; }
 
-  template <typename RType>
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator+=(
-      const complex<RType>& src) noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const complex<RealType>& src) noexcept {
     re_ += src.re_;
     im_ += src.im_;
     return *this;
   }
 
-  template <typename RType>
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator+=(
-      const RType& src) noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const RealType& src) noexcept {
     re_ += src;
     return *this;
   }
 
-  template <typename RType>
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator-=(
-      const complex<RType>& src) noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const complex<RealType>& src) noexcept {
     re_ -= src.re_;
     im_ -= src.im_;
     return *this;
   }
 
-  template <typename RType>
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator-=(
-      const RType& src) noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const RealType& src) noexcept {
     re_ -= src;
     return *this;
   }
 
-  template <typename RType>
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator*=(
-      const complex<RType>& src) noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const complex<RealType>& src) noexcept {
     const RealType realPart = re_ * src.re_ - im_ * src.im_;
     const RealType imagPart = re_ * src.im_ + im_ * src.re_;
     re_                     = realPart;
@@ -225,23 +201,16 @@ class alignas(2 * sizeof(RealType)) complex {
     return *this;
   }
 
-  template <typename RType>
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator*=(
-      const RType& src) noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const RealType& src) noexcept {
     re_ *= src;
     im_ *= src;
     return *this;
   }
 
-  template <typename RType>
   // Conditional noexcept, just in case RType throws on divide-by-zero
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator/=(
-      const complex<RType>& y) noexcept(noexcept(RealType{} / RealType{})) {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
-
+      const complex<RealType>& y) noexcept(noexcept(RealType{} / RealType{})) {
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
@@ -293,12 +262,8 @@ class alignas(2 * sizeof(RealType)) complex {
     return *this;
   }
 
-  template <typename RType>
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator/=(
-      const RType& src) noexcept(noexcept(RealType{} / RType{})) {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
-
+      const RealType& src) noexcept(noexcept(RealType{} / RealType{})) {
     re_ /= src;
     im_ /= src;
     return *this;
@@ -313,40 +278,23 @@ class alignas(2 * sizeof(RealType)) complex {
     return a.real() == b.real() && a.imag() == b.imag();
   }
 
-  template <typename RType>
-  friend KOKKOS_INLINE_FUNCTION constexpr bool operator==(
-      const complex& a, const complex<RType>& b) noexcept {
-    //----------------------------------------//
-    using common_type = typename std::common_type<RealType, RType>::type;
-    return common_type(a.real()) == common_type(b.real()) &&
-           common_type(a.imag()) == common_type(b.imag());
+  friend inline bool operator==(const complex& a,
+                                const std::complex<RealType>& b) noexcept {
+    return a.real() == b.real() && a.imag() == b.imag();
   }
 
-  template <typename RType>
-  friend constexpr bool operator==(const complex& a,
-                                   const std::complex<RType>& b) noexcept {
-    using common_type = typename std::common_type<RealType, RType>::type;
-    return common_type(a.real()) == common_type(b.real()) &&
-           common_type(a.imag()) == common_type(b.imag());
-  }
-
-  template <typename RType>
-  friend constexpr bool operator==(const std::complex<RType>& a,
-                                   const complex& b) noexcept {
+  friend inline bool operator==(const std::complex<RealType>& a,
+                                const complex& b) noexcept {
     return b == a;
   }
 
-  template <typename RType>
   friend KOKKOS_INLINE_FUNCTION bool operator==(const complex& a,
-                                                const RType b) noexcept {
-    using common_type = typename std::common_type<RealType, RType>::type;
-    return (common_type(a.real()) == common_type(b)) &&
-           (common_type(a.imag()) == common_type(0));
+                                                const RealType& b) noexcept {
+    return a.real() == b && a.imag() == RealType{0};
   }
 
-  template <typename RType>
-  friend KOKKOS_INLINE_FUNCTION bool operator==(const RType& a,
-                                                const complex b) noexcept {
+  friend KOKKOS_FORCEINLINE_FUNCTION bool operator==(const RealType& a,
+                                                     const complex b) noexcept {
     return b == a;
   }
 
@@ -355,41 +303,23 @@ class alignas(2 * sizeof(RealType)) complex {
     return a.real() != b.real() || a.imag() != b.imag();
   }
 
-  template <typename RType>
-  friend KOKKOS_INLINE_FUNCTION bool operator!=(
-      const complex& a, const complex<RType>& b) noexcept {
-    //----------------------------------------//
-    using common_type = typename std::common_type<RealType, RType>::type;
-    return common_type(a.real()) != common_type(b.real()) ||
-           common_type(a.imag()) != common_type(b.imag());
-  }
-
-  template <typename RType>
   friend inline constexpr bool operator!=(
       const complex& a, const std::complex<RealType>& b) noexcept {
-    //----------------------------------------//
-    using common_type = typename std::common_type<RealType, RType>::type;
-    return common_type(a.real()) != common_type(b.real()) ||
-           common_type(a.imag()) != common_type(b.imag());
+    return a.real() != b.real() || a.imag() != b.imag();
   }
 
-  template <typename RType>
   friend inline bool operator!=(const std::complex<RealType>& a,
                                 const complex& b) {
     return b != a;
   }
 
-  template <typename RType>
   friend KOKKOS_INLINE_FUNCTION bool operator!=(const complex& a,
-                                                const RType& b) noexcept {
-    using common_type = typename std::common_type<RealType, RType>::type;
-    return (common_type(a.real()) != common_type(b)) ||
-           (common_type(a.imag()) != common_type(0));
+                                                const RealType& b) noexcept {
+    return a.real() != b || a.imag() != RealType{0};
   }
 
-  template <typename RType>
   friend KOKKOS_FORCEINLINE_FUNCTION bool operator!=(
-      const RType& a, const complex& b) noexcept {
+      const RealType& a, const complex& b) noexcept {
     //----------------------------------------//
     return a != b;
   }
@@ -400,8 +330,13 @@ class alignas(2 * sizeof(RealType)) complex {
   //---------------------------------------------------------------------------
 
   //! Copy constructor from volatile.
-  template <class RType>
+  template <class RType,
+            typename std::enable_if<std::is_convertible<RType, RealType>::value,
+                                    int>::type = 0>
   KOKKOS_INLINE_FUNCTION complex(const volatile complex<RType>& src) noexcept
+      // Intentionally do the conversions implicitly here so that users get
+      // any warnings about narrowing, etc., that they would expect to get
+      // otherwise.
       : re_(src.re_), im_(src.im_) {}
 
   /// \brief Assignment operator, for volatile <tt>*this</tt> and
@@ -413,38 +348,57 @@ class alignas(2 * sizeof(RealType)) complex {
   /// complex& </tt>.  See Kokkos Issue #177 for the
   /// explanation.  In practice, this means that you should not chain
   /// assignments with volatile lvalues.
-  template <class RType>
   KOKKOS_INLINE_FUNCTION void operator=(
-      const complex<RType>& src) volatile noexcept {
+      const complex<RealType>& src) volatile noexcept {
     re_ = src.re_;
     im_ = src.im_;
     // We deliberately do not return anything here.  See explanation
     // in public documentation above.
   }
 
-  //! Assignment operator.
-  template <class RType>
+  //! Assignment operator, volatile LHS and volatile RHS
+  // TODO Should this return void like the other volatile assignment operators?
   KOKKOS_INLINE_FUNCTION volatile complex& operator=(
-      const volatile complex<RType>& src) volatile noexcept {
+      const volatile complex<RealType>& src) volatile noexcept {
     re_ = src.re_;
     im_ = src.im_;
     return *this;
   }
 
-  //! Assignment operator.
-  template <class RType>
+  //! Assignment operator, volatile RHS and non-volatile LHS
   KOKKOS_INLINE_FUNCTION complex& operator=(
-      const volatile complex<RType>& src) noexcept {
+      const volatile complex<RealType>& src) noexcept {
     re_ = src.re_;
     im_ = src.im_;
     return *this;
   }
 
-  //! Assignment operator (from a real number).
-  template <class RType>
-  KOKKOS_INLINE_FUNCTION void operator=(const RType& val) volatile noexcept {
+  // Mirroring the behavior of the assignment operators from complex RHS in the
+  // RealType RHS versions.
+
+  //! Assignment operator (from a volatile real number).
+  KOKKOS_INLINE_FUNCTION void operator=(const volatile RealType& val) noexcept {
     re_ = val;
     im_ = RealType(0);
+    // We deliberately do not return anything here.  See explanation
+    // in public documentation above.
+  }
+
+  //! Assignment operator volatile LHS and non-volatile RHS
+  KOKKOS_INLINE_FUNCTION complex& operator=(
+      const RealType& val) volatile noexcept {
+    re_ = val;
+    im_ = RealType(0);
+    return *this;
+  }
+
+  //! Assignment operator volatile LHS and volatile RHS
+  // TODO Should this return void like the other volatile assignment operators?
+  KOKKOS_INLINE_FUNCTION complex& operator=(
+      const volatile RealType& val) volatile noexcept {
+    re_ = val;
+    im_ = RealType(0);
+    return *this;
   }
 
   //! The imaginary part of this complex number (volatile overload).
@@ -463,28 +417,19 @@ class alignas(2 * sizeof(RealType)) complex {
   KOKKOS_INLINE_FUNCTION
   RealType real() const volatile noexcept { return re_; }
 
-  template <typename RType>
   KOKKOS_INLINE_FUNCTION void operator+=(
-      const volatile complex<RType>& src) volatile noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const volatile complex<RealType>& src) volatile noexcept {
     re_ += src.re_;
     im_ += src.im_;
   }
 
-  template <typename RType>
   KOKKOS_INLINE_FUNCTION void operator+=(
-      const volatile RType& src) volatile noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const volatile RealType& src) volatile noexcept {
     re_ += src;
   }
 
-  template <typename RType>
   KOKKOS_INLINE_FUNCTION void operator*=(
-      const volatile complex<RType>& src) volatile noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const volatile complex<RealType>& src) volatile noexcept {
     const RealType realPart = re_ * src.re_ - im_ * src.im_;
     const RealType imagPart = re_ * src.im_ + im_ * src.re_;
 
@@ -492,14 +437,13 @@ class alignas(2 * sizeof(RealType)) complex {
     im_ = imagPart;
   }
 
-  template <typename RType>
   KOKKOS_INLINE_FUNCTION void operator*=(
-      const volatile RType& src) volatile noexcept {
-    static_assert(std::is_convertible<RType, RealType>::value,
-                  "RType must be convertible to RealType");
+      const volatile RealType& src) volatile noexcept {
     re_ *= src;
     im_ *= src;
   }
+
+  // TODO DSH 2019-10-7 why are there no volatile /= and friends?
 };
 
 //! Binary + operator for complex complex.
