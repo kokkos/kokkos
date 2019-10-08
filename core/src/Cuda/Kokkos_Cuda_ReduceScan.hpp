@@ -68,6 +68,40 @@ namespace Impl {
  *   (c) blockDim.z == 1
  */
 
+// TODO generalize this for use elsewhere
+//template <class FunctorType, class Tag = void, class Enable = void>
+//struct _reduction_helper {
+//  using pointer_type =
+//      typename FunctorValueTraits<FunctorType, Tag>::pointer_type;
+//  using reference_type =
+//    typename FunctorValueTraits<FunctorType, Tag>::reference_type;
+//  using value_type = typename FunctorValueTraits<FunctorType, Tag>::value_type;
+//
+//  KOKKOS_INLINE_FUNCTION
+//  static void join(FunctorType const&, reference_type result, reference_type val)
+//  noexcept(noexcept(join(result, val)))
+//  {
+//    reducer.join(result, val);
+//  }
+//
+//};
+//
+//template <class ReducerType>
+//struct _reduction_helper<
+//    ReducerType, void,
+//    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type> {
+//  using pointer_type = typename ReducerType::value_type*;
+//  using reference_type = typename ReducerType::value_type&;
+//  using value_type = typename ReducerType::value_type;
+//
+//  KOKKOS_INLINE_FUNCTION
+//  static void join(ReducerType const& reducer, reference_type result, reference_type val)
+//    noexcept(noexcept(reducer.join(result, val)))
+//  {
+//    reducer.join(result, val);
+//  }
+//};
+
 //==============================================================================
 // <editor-fold desc="cuda_intra_warp_reduction"> {{{1
 
@@ -92,10 +126,10 @@ __device__ inline
 
 template <class ReducerType>
 __device__ inline
-typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-cuda_intra_warp_reduction(const ReducerType& reducer,
-                          typename ReducerType::value_type& result,
-                          const uint32_t max_active_thread = blockDim.y) {
+    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+    cuda_intra_warp_reduction(const ReducerType& reducer,
+                              typename ReducerType::value_type& result,
+                              const uint32_t max_active_thread = blockDim.y) {
   typedef typename ReducerType::value_type ValueType;
 
   unsigned int shift = 1;
@@ -152,35 +186,35 @@ __device__ inline
 
 template <class ReducerType>
 __device__ inline
-typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-cuda_inter_warp_reduction(const ReducerType& reducer,
-                          typename ReducerType::value_type value,
-                          const int max_active_thread = blockDim.y) {
+    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+    cuda_inter_warp_reduction(const ReducerType& reducer,
+                              typename ReducerType::value_type value,
+                              const int max_active_thread = blockDim.y) {
   typedef typename ReducerType::value_type ValueType;
 
-#define STEP_WIDTH 4
+  constexpr int step_width = 4;
   // Depending on the ValueType _shared__ memory must be aligned up to 8byte
   // boundaries The reason not to use ValueType directly is that for types with
   // constructors it could lead to race conditions
-  __shared__ double sh_result[(sizeof(ValueType) + 7) / 8 * STEP_WIDTH];
+  __shared__ double sh_result[(sizeof(ValueType) + 7) / 8 * step_width];
   ValueType* result = (ValueType*)&sh_result;
   const int step    = 32 / blockDim.x;
-  int shift         = STEP_WIDTH;
+  int shift         = step_width;
   const int id      = threadIdx.y % step == 0 ? threadIdx.y / step : 65000;
-  if (id < STEP_WIDTH) {
+  if (id < step_width) {
     result[id] = value;
   }
   __syncthreads();
   while (shift <= max_active_thread / step) {
-    if (shift <= id && shift + STEP_WIDTH > id && threadIdx.x == 0) {
-      reducer.join(result[id % STEP_WIDTH], value);
+    if (shift <= id && shift + step_width > id && threadIdx.x == 0) {
+      reducer.join(result[id % step_width], value);
     }
     __syncthreads();
-    shift += STEP_WIDTH;
+    shift += step_width;
   }
 
   value = result[0];
-  for (int i = 1; (i * step < max_active_thread) && i < STEP_WIDTH; i++)
+  for (int i = 1; (i * step < max_active_thread) && i < step_width; i++)
     reducer.join(value, result[i]);
 
   reducer.reference() = value;
@@ -189,35 +223,33 @@ cuda_inter_warp_reduction(const ReducerType& reducer,
 // </editor-fold> end cuda_inter_warp_reduction }}}1
 //==============================================================================
 
-
 //==============================================================================
 // <editor-fold desc="cuda_intra_block_reduction"> {{{1
 
 template <class ValueType, class JoinOp>
 __device__ inline
-    typename std::enable_if<!Kokkos::is_reducer<ValueType>::value>::type
+void
     cuda_intra_block_reduction(ValueType& value, const JoinOp& join,
                                const int max_active_thread = blockDim.y) {
   cuda_intra_warp_reduction(value, join, max_active_thread);
   cuda_inter_warp_reduction(value, join, max_active_thread);
 }
 
-
 template <class ReducerType>
 __device__ inline
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    cuda_intra_block_reduction(const ReducerType& reducer,
-                               typename ReducerType::value_type value,
-                               const int max_active_thread = blockDim.y) {
+typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+cuda_intra_block_reduction(const ReducerType& reducer,
+                           typename ReducerType::value_type value,
+                           const int max_active_thread = blockDim.y) {
   cuda_intra_warp_reduction(reducer, value, max_active_thread);
   cuda_inter_warp_reduction(reducer, value, max_active_thread);
 }
 
 template <class ReducerType>
 __device__ inline
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    cuda_intra_block_reduction(const ReducerType& reducer,
-                               const int max_active_thread = blockDim.y) {
+typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+cuda_intra_block_reduction(const ReducerType& reducer,
+                           const int max_active_thread = blockDim.y) {
   cuda_intra_block_reduction(reducer, reducer.reference(), max_active_thread);
 }
 
@@ -239,7 +271,7 @@ __device__ bool cuda_inter_block_reduction(
   typedef typename FunctorValueTraits<FunctorType, ArgTag>::pointer_type
       pointer_type;
   typedef
-  typename FunctorValueTraits<FunctorType, ArgTag>::value_type value_type;
+      typename FunctorValueTraits<FunctorType, ArgTag>::value_type value_type;
 
   // Do the intra-block reduction with shfl operations and static shared memory
   cuda_intra_block_reduction(value, join, max_active_thread);
@@ -331,118 +363,6 @@ __device__ bool cuda_inter_block_reduction(
 #endif
     }
   }
-  // The last block has in its thread=0 the global reduction value through
-  // "value"
-  return last_block;
-#else
-  return true;
-#endif
-}
-
-template <class ReducerType>
-__device__ inline
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value, bool>::type
-    cuda_inter_block_reduction(const ReducerType& reducer,
-                               Cuda::size_type* const m_scratch_space,
-                               Cuda::size_type* const m_scratch_flags,
-                               const int max_active_thread = blockDim.y) {
-#ifdef __CUDA_ARCH__
-  typedef typename ReducerType::value_type* pointer_type;
-  typedef typename ReducerType::value_type value_type;
-
-  // Do the intra-block reduction with shfl operations and static shared memory
-  cuda_intra_block_reduction(reducer, max_active_thread);
-
-  value_type value = reducer.reference();
-
-  const int id = threadIdx.y * blockDim.x + threadIdx.x;
-
-  // One thread in the block writes block result to global scratch_memory
-  if (id == 0) {
-    pointer_type global = ((pointer_type)m_scratch_space) + blockIdx.x;
-    *global             = value;
-  }
-
-  // One warp of last block performs inter block reduction through loading the
-  // block values from global scratch_memory
-  bool last_block = false;
-
-  __syncthreads();
-  if (id < 32) {
-    Cuda::size_type count;
-
-    // Figure out whether this is the last block
-    if (id == 0) count = Kokkos::atomic_fetch_add(m_scratch_flags, 1);
-    count = Kokkos::shfl(count, 0, 32);
-
-    // Last block does the inter block reduction
-    if (count == gridDim.x - 1) {
-      // set flag back to zero
-      if (id == 0) *m_scratch_flags = 0;
-      last_block = true;
-      reducer.init(value);
-
-      pointer_type const volatile global = (pointer_type)m_scratch_space;
-
-      // Reduce all global values with splitting work over threads in one warp
-      const int step_size =
-          blockDim.x * blockDim.y < 32 ? blockDim.x * blockDim.y : 32;
-      for (int i = id; i < (int)gridDim.x; i += step_size) {
-        value_type tmp = global[i];
-        reducer.join(value, tmp);
-      }
-
-      // Perform shfl reductions within the warp only join if contribution is
-      // valid (allows gridDim.x non power of two and <32)
-      if (int(blockDim.x * blockDim.y) > 1) {
-        value_type tmp = Kokkos::shfl_down(value, 1, 32);
-        if (id + 1 < int(gridDim.x)) reducer.join(value, tmp);
-      }
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-      unsigned int mask = KOKKOS_IMPL_CUDA_ACTIVEMASK;
-      int active        = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
-#else
-      int active = KOKKOS_IMPL_CUDA_BALLOT(1);
-#endif
-      if (int(blockDim.x * blockDim.y) > 2) {
-        value_type tmp = Kokkos::shfl_down(value, 2, 32);
-        if (id + 2 < int(gridDim.x)) reducer.join(value, tmp);
-      }
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
-#else
-      active += KOKKOS_IMPL_CUDA_BALLOT(1);
-#endif
-      if (int(blockDim.x * blockDim.y) > 4) {
-        value_type tmp = Kokkos::shfl_down(value, 4, 32);
-        if (id + 4 < int(gridDim.x)) reducer.join(value, tmp);
-      }
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
-#else
-      active += KOKKOS_IMPL_CUDA_BALLOT(1);
-#endif
-      if (int(blockDim.x * blockDim.y) > 8) {
-        value_type tmp = Kokkos::shfl_down(value, 8, 32);
-        if (id + 8 < int(gridDim.x)) reducer.join(value, tmp);
-      }
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
-#else
-      active += KOKKOS_IMPL_CUDA_BALLOT(1);
-#endif
-      if (int(blockDim.x * blockDim.y) > 16) {
-        value_type tmp = Kokkos::shfl_down(value, 16, 32);
-        if (id + 16 < int(gridDim.x)) reducer.join(value, tmp);
-      }
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-      active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
-#else
-      active += KOKKOS_IMPL_CUDA_BALLOT(1);
-#endif
-    }
-  }
-
   // The last block has in its thread=0 the global reduction value through
   // "value"
   return last_block;
