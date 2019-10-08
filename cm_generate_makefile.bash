@@ -304,7 +304,7 @@ fi
 
 if [ ! -e ${KOKKOS_PATH}/CMakeLists.txt ]; then
    if [ "${KOKKOS_PATH}" == "" ]; then
-      CM_SCRIPT=`realpath $0`
+      CM_SCRIPT=$0
       KOKKOS_PATH=`dirname $CM_SCRIPT`
       if [ ! -e ${KOKKOS_PATH}/CMakeLists.txt ]; then
          echo "${KOKKOS_PATH} repository appears to not be complete.  please verify and try again"
