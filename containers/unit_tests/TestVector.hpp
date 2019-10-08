@@ -53,6 +53,70 @@ namespace Test {
 namespace Impl {
 
 template <typename Scalar, class Device>
+struct test_vector_insert {
+  typedef Scalar scalar_type;
+  typedef Device execution_space;
+
+  template <typename Vector>
+  void run_test(Vector& a) {
+    int n = a.size();
+
+    auto it = a.begin();
+    it += 15;
+    ASSERT_EQ(*it, scalar_type(1));
+
+    a.insert(it, scalar_type(3));
+    ASSERT_EQ(a.size(), n + 1);
+
+    it = a.begin();
+    it += 17;
+    a.insert(it, 5, scalar_type(5));
+    ASSERT_EQ(a.size(), n + 6);
+
+    Vector b(7, 9);
+    it = a.begin();
+    it += 27;
+    a.insert(it, b.begin(), b.end());
+    ASSERT_EQ(a.size(), n + 13);
+  }
+
+  template <typename Vector>
+  void check_test(Vector& a) {
+    for (int i = 0; i < a.size(); i++) {
+      if (i == 15)
+        ASSERT_EQ(a[i], scalar_type(3));
+      else if ((i > 16 && i < 22))
+        ASSERT_EQ(a[i], scalar_type(5));
+      else if ((i > 26 && i < 34))
+        ASSERT_EQ(a[i], scalar_type(9));
+      else
+        ASSERT_EQ(a[i], scalar_type(1));
+    }
+  }
+
+  test_vector_insert(unsigned int size) {
+    {
+      std::vector<Scalar> a(size, scalar_type(1));
+      run_test(a);
+      check_test(a);
+    }
+    {
+      Kokkos::vector<Scalar, Device> a(size, scalar_type(1));
+      a.sync_device();
+      run_test(a);
+      a.sync_host();
+      check_test(a);
+    }
+    {
+      Kokkos::vector<Scalar, Device> a(size, scalar_type(1));
+      a.sync_host();
+      run_test(a);
+      check_test(a);
+    }
+  }
+};
+
+template <typename Scalar, class Device>
 struct test_vector_combinations {
   typedef test_vector_combinations<Scalar, Device> self_type;
 
@@ -114,6 +178,10 @@ void test_vector_combinations(unsigned int size) {
 TEST(TEST_CATEGORY, vector_combination) {
   test_vector_combinations<int, TEST_EXECSPACE>(10);
   test_vector_combinations<int, TEST_EXECSPACE>(3057);
+}
+
+TEST(TEST_CATEGORY, vector_insert) {
+  Impl::test_vector_insert<int, TEST_EXECSPACE>(3057);
 }
 
 }  // namespace Test
