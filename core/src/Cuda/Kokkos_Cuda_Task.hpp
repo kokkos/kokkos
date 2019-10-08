@@ -618,7 +618,7 @@ class TaskExec<Kokkos::Cuda, Scheduler> {
       // WarpSize = blockDim.X * blockDim.y
       // thread_id < blockDim.y
       ValueType tmp(val);  // input might not be register variable
-      cuda_shfl(val, tmp, blockDim.x * thread_id, WarpSize);
+      Impl::in_place_shfl(val, tmp, blockDim.x * thread_id, WarpSize);
     }
   }
 
