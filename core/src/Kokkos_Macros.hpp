@@ -455,7 +455,7 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #endif
 
 #if !defined(KOKKOS_IMPL_FORCEINLINE)
-define KOKKOS_IMPL_FORCEINLINE inline
+    define KOKKOS_IMPL_FORCEINLINE inline
 #endif
 
 #if !defined(KOKKOS_INLINE_FUNCTION)

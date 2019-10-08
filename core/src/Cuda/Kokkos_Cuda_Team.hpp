@@ -174,7 +174,8 @@ class CudaTeamMember {
       val = *((ValueType*)m_team_reduce);
     } else {               // team <= warp
       ValueType tmp(val);  // input might not be a register variable
-      Impl::in_place_shfl(val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y);
+      Impl::in_place_shfl(val, tmp, blockDim.x * thread_id,
+                          blockDim.x * blockDim.y);
     }
 #endif
   }
@@ -195,7 +196,8 @@ class CudaTeamMember {
       val = *((ValueType*)m_team_reduce);
     } else {               // team <= warp
       ValueType tmp(val);  // input might not be a register variable
-      Impl::in_place_shfl(val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y);
+      Impl::in_place_shfl(val, tmp, blockDim.x * thread_id,
+                          blockDim.x * blockDim.y);
     }
 #endif
   }
@@ -372,7 +374,8 @@ class CudaTeamMember {
       value_type tmp(reducer.reference());
 
       for (int i = CudaTraits::WarpSize; (int)blockDim.x <= (i >>= 1);) {
-        Impl::in_place_shfl_down(reducer.reference(), tmp, i, CudaTraits::WarpSize);
+        Impl::in_place_shfl_down(reducer.reference(), tmp, i,
+                                 CudaTraits::WarpSize);
 
         // Root of each vector lane reduces "thread" contribution
         if (0 == threadIdx.x && wx < i) {

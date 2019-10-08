@@ -56,10 +56,9 @@ namespace Impl {
 // Include all lanes
 constexpr unsigned shfl_all_mask = 0xffffffff;
 
-} // end namespace Impl
+}  // end namespace Impl
 
 namespace Impl {
-
 
 //----------------------------------------------------------------------------
 // Shuffle operations require input to be a register (stack) variable
