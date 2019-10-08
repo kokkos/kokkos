@@ -68,6 +68,9 @@ namespace Impl {
  *   (c) blockDim.z == 1
  */
 
+//==============================================================================
+// <editor-fold desc="cuda_intra_warp_reduction"> {{{1
+
 template <class ValueType, class JoinOp>
 __device__ inline
     typename std::enable_if<!Kokkos::is_reducer<ValueType>::value>::type
@@ -87,11 +90,74 @@ __device__ inline
   result = shfl(result, 0, 32);
 }
 
+template <class ReducerType>
+__device__ inline
+typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+cuda_intra_warp_reduction(const ReducerType& reducer,
+                          typename ReducerType::value_type& result,
+                          const uint32_t max_active_thread = blockDim.y) {
+  typedef typename ReducerType::value_type ValueType;
+
+  unsigned int shift = 1;
+
+  // Reduce over values from threads with different threadIdx.y
+  while (blockDim.x * shift < 32) {
+    const ValueType tmp = shfl_down(result, blockDim.x * shift, 32u);
+    // Only join if upper thread is active (this allows non power of two for
+    // blockDim.y
+    if (threadIdx.y + shift < max_active_thread) reducer.join(result, tmp);
+    shift *= 2;
+  }
+
+  result              = shfl(result, 0, 32);
+  reducer.reference() = result;
+}
+
+// </editor-fold> end cuda_intra_warp_reduction }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="cuda_inter_warp_reduction"> {{{1
+
 template <class ValueType, class JoinOp>
 __device__ inline
     typename std::enable_if<!Kokkos::is_reducer<ValueType>::value>::type
     cuda_inter_warp_reduction(ValueType& value, const JoinOp& join,
                               const int max_active_thread = blockDim.y) {
+  constexpr int step_width = 4;
+  // Depending on the ValueType _shared__ memory must be aligned up to 8byte
+  // boundaries The reason not to use ValueType directly is that for types with
+  // constructors it could lead to race conditions
+  __shared__ double sh_result[(sizeof(ValueType) + 7) / 8 * step_width];
+  ValueType* result = (ValueType*)&sh_result;
+  const int step    = 32 / blockDim.x;
+  int shift         = step_width;
+  const int id      = threadIdx.y % step == 0 ? threadIdx.y / step : 65000;
+  if (id < step_width) {
+    result[id] = value;
+  }
+  __syncthreads();
+  while (shift <= max_active_thread / step) {
+    if (shift <= id && shift + step_width > id && threadIdx.x == 0) {
+      join(result[id % step_width], value);
+    }
+    __syncthreads();
+    shift += step_width;
+  }
+
+  value = result[0];
+  for (int i = 1; (i * step < max_active_thread) && i < step_width; i++)
+    join(value, result[i]);
+}
+
+template <class ReducerType>
+__device__ inline
+typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+cuda_inter_warp_reduction(const ReducerType& reducer,
+                          typename ReducerType::value_type value,
+                          const int max_active_thread = blockDim.y) {
+  typedef typename ReducerType::value_type ValueType;
+
 #define STEP_WIDTH 4
   // Depending on the ValueType _shared__ memory must be aligned up to 8byte
   // boundaries The reason not to use ValueType directly is that for types with
@@ -107,7 +173,7 @@ __device__ inline
   __syncthreads();
   while (shift <= max_active_thread / step) {
     if (shift <= id && shift + STEP_WIDTH > id && threadIdx.x == 0) {
-      join(result[id % STEP_WIDTH], value);
+      reducer.join(result[id % STEP_WIDTH], value);
     }
     __syncthreads();
     shift += STEP_WIDTH;
@@ -115,8 +181,17 @@ __device__ inline
 
   value = result[0];
   for (int i = 1; (i * step < max_active_thread) && i < STEP_WIDTH; i++)
-    join(value, result[i]);
+    reducer.join(value, result[i]);
+
+  reducer.reference() = value;
 }
+
+// </editor-fold> end cuda_inter_warp_reduction }}}1
+//==============================================================================
+
+
+//==============================================================================
+// <editor-fold desc="cuda_intra_block_reduction"> {{{1
 
 template <class ValueType, class JoinOp>
 __device__ inline
@@ -126,6 +201,31 @@ __device__ inline
   cuda_intra_warp_reduction(value, join, max_active_thread);
   cuda_inter_warp_reduction(value, join, max_active_thread);
 }
+
+
+template <class ReducerType>
+__device__ inline
+    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+    cuda_intra_block_reduction(const ReducerType& reducer,
+                               typename ReducerType::value_type value,
+                               const int max_active_thread = blockDim.y) {
+  cuda_intra_warp_reduction(reducer, value, max_active_thread);
+  cuda_inter_warp_reduction(reducer, value, max_active_thread);
+}
+
+template <class ReducerType>
+__device__ inline
+    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+    cuda_intra_block_reduction(const ReducerType& reducer,
+                               const int max_active_thread = blockDim.y) {
+  cuda_intra_block_reduction(reducer, reducer.reference(), max_active_thread);
+}
+
+// </editor-fold> end cuda_intra_block_reduction }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="cuda_inter_block_reduction"> {{{1
 
 template <class FunctorType, class JoinOp, class ArgTag = void>
 __device__ bool cuda_inter_block_reduction(
@@ -139,7 +239,7 @@ __device__ bool cuda_inter_block_reduction(
   typedef typename FunctorValueTraits<FunctorType, ArgTag>::pointer_type
       pointer_type;
   typedef
-      typename FunctorValueTraits<FunctorType, ArgTag>::value_type value_type;
+  typename FunctorValueTraits<FunctorType, ArgTag>::value_type value_type;
 
   // Do the intra-block reduction with shfl operations and static shared memory
   cuda_intra_block_reduction(value, join, max_active_thread);
@@ -237,83 +337,6 @@ __device__ bool cuda_inter_block_reduction(
 #else
   return true;
 #endif
-}
-
-template <class ReducerType>
-__device__ inline
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    cuda_intra_warp_reduction(const ReducerType& reducer,
-                              typename ReducerType::value_type& result,
-                              const uint32_t max_active_thread = blockDim.y) {
-  typedef typename ReducerType::value_type ValueType;
-
-  unsigned int shift = 1;
-
-  // Reduce over values from threads with different threadIdx.y
-  while (blockDim.x * shift < 32) {
-    const ValueType tmp = shfl_down(result, blockDim.x * shift, 32u);
-    // Only join if upper thread is active (this allows non power of two for
-    // blockDim.y
-    if (threadIdx.y + shift < max_active_thread) reducer.join(result, tmp);
-    shift *= 2;
-  }
-
-  result              = shfl(result, 0, 32);
-  reducer.reference() = result;
-}
-
-template <class ReducerType>
-__device__ inline
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    cuda_inter_warp_reduction(const ReducerType& reducer,
-                              typename ReducerType::value_type value,
-                              const int max_active_thread = blockDim.y) {
-  typedef typename ReducerType::value_type ValueType;
-
-#define STEP_WIDTH 4
-  // Depending on the ValueType _shared__ memory must be aligned up to 8byte
-  // boundaries The reason not to use ValueType directly is that for types with
-  // constructors it could lead to race conditions
-  __shared__ double sh_result[(sizeof(ValueType) + 7) / 8 * STEP_WIDTH];
-  ValueType* result = (ValueType*)&sh_result;
-  const int step    = 32 / blockDim.x;
-  int shift         = STEP_WIDTH;
-  const int id      = threadIdx.y % step == 0 ? threadIdx.y / step : 65000;
-  if (id < STEP_WIDTH) {
-    result[id] = value;
-  }
-  __syncthreads();
-  while (shift <= max_active_thread / step) {
-    if (shift <= id && shift + STEP_WIDTH > id && threadIdx.x == 0) {
-      reducer.join(result[id % STEP_WIDTH], value);
-    }
-    __syncthreads();
-    shift += STEP_WIDTH;
-  }
-
-  value = result[0];
-  for (int i = 1; (i * step < max_active_thread) && i < STEP_WIDTH; i++)
-    reducer.join(value, result[i]);
-
-  reducer.reference() = value;
-}
-
-template <class ReducerType>
-__device__ inline
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    cuda_intra_block_reduction(const ReducerType& reducer,
-                               typename ReducerType::value_type value,
-                               const int max_active_thread = blockDim.y) {
-  cuda_intra_warp_reduction(reducer, value, max_active_thread);
-  cuda_inter_warp_reduction(reducer, value, max_active_thread);
-}
-
-template <class ReducerType>
-__device__ inline
-    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-    cuda_intra_block_reduction(const ReducerType& reducer,
-                               const int max_active_thread = blockDim.y) {
-  cuda_intra_block_reduction(reducer, reducer.reference(), max_active_thread);
 }
 
 template <class ReducerType>
@@ -427,6 +450,9 @@ __device__ inline
   return true;
 #endif
 }
+
+// </editor-fold> end cuda_inter_block_reduction }}}1
+//==============================================================================
 
 template <class FunctorType, class ArgTag, bool DoScan, bool UseShfl>
 struct CudaReductionsFunctor;
