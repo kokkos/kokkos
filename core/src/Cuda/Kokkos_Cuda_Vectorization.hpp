@@ -50,10 +50,16 @@
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 
 namespace Kokkos {
+
 namespace Impl {
 
 // Include all lanes
 constexpr unsigned shfl_all_mask = 0xffffffff;
+
+} // end namespace Impl
+
+namespace Impl {
+
 
 //----------------------------------------------------------------------------
 // Shuffle operations require input to be a register (stack) variable
@@ -175,12 +181,6 @@ __device__ KOKKOS_IMPL_FORCEINLINE void in_place_shfl_down(
 }
 
 }  // namespace Impl
-}  // namespace Kokkos
-
-namespace Kokkos {
-
-#ifdef __CUDA_ARCH__
-#if (__CUDA_ARCH__ >= 300)
 
 template <class T>
 // requires default_constructible<T> && _assignable_from_bits<T>
@@ -208,56 +208,6 @@ __device__ inline T shfl_up(const T& val, int delta, int width,
   Impl::in_place_shfl_up(rv, val, delta, width, mask);
   return rv;
 }
-
-#else   // (__CUDA_ARCH__ < 300)
-template <typename Scalar>
-KOKKOS_INLINE_FUNCTION Scalar shfl(const Scalar& val, int srcLane, int width,
-                                   unsigned mask = Impl::shfl_all_mask) {
-  if (width > 1)
-    Kokkos::abort("Error: calling shfl from a device with CC<3.0.");
-  return val;
-}
-
-template <typename Scalar>
-KOKKOS_INLINE_FUNCTION Scalar shfl_down(const Scalar& val, int delta, int width,
-                                        unsigned mask = Impl::shfl_all_mask) {
-  if (width > 1)
-    Kokkos::abort("Error: calling shfl_down from a device with CC<3.0.");
-  return val;
-}
-
-template <typename Scalar>
-KOKKOS_INLINE_FUNCTION Scalar shfl_up(const Scalar& val, int delta, int width,
-                                      unsigned mask = Impl::shfl_all_mask) {
-  if (width > 1)
-    Kokkos::abort("Error: calling shfl_down from a device with CC<3.0.");
-  return val;
-}
-#endif  // (__CUDA_ARCH__ < 300)
-#else   // !defined( __CUDA_ARCH__ )
-template <typename Scalar>
-inline Scalar shfl(const Scalar& val, int srcLane, int width,
-                   unsigned mask = Impl::shfl_all_mask) {
-  if (width > 1) Kokkos::abort("Error: calling shfl outside __CUDA_ARCH__.");
-  return val;
-}
-
-template <typename Scalar>
-inline Scalar shfl_down(const Scalar& val, int delta, int width,
-                        unsigned mask = Impl::shfl_all_mask) {
-  if (width > 1)
-    Kokkos::abort("Error: calling shfl_down outside __CUDA_ARCH__.");
-  return val;
-}
-
-template <typename Scalar>
-inline Scalar shfl_up(const Scalar& val, int delta, int width,
-                      unsigned mask = Impl::shfl_all_mask) {
-  if (width > 1)
-    Kokkos::abort("Error: calling shfl_down outside __CUDA_ARCH__.");
-  return val;
-}
-#endif  // !defined( __CUDA_ARCH__ )
 
 }  // end namespace Kokkos
 
