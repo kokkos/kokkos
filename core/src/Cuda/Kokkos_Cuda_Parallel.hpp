@@ -1039,51 +1039,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
   }
 
-  /*  __device__ inline
-     void run(const DummyShflReductionType&) const
-     {
-       value_type value;
-       ValueInit::init( ReducerConditional::select(m_functor , m_reducer) ,
-     &value);
-       // Number of blocks is bounded so that the reduction can be limited to
-     two passes.
-       // Each thread block is given an approximately equal amount of work to
-     perform.
-       // Accumulate the values for this block.
-       // The accumulation ordering does not match the final pass, but is
-     arithmatically equivalent.
-
-       const WorkRange range( m_policy , blockIdx.x , gridDim.x );
-
-       for ( Member iwork = range.begin() + threadIdx.y , iwork_end =
-     range.end() ; iwork < iwork_end ; iwork += blockDim.y ) { this-> template
-     exec_range< WorkTag >( iwork , value );
-       }
-
-       pointer_type const result = (pointer_type) (m_unified_space ?
-     m_unified_space : m_scratch_space) ;
-
-       int max_active_thread = range.end()-range.begin() < blockDim.y ?
-     range.end() - range.begin():blockDim.y;
-
-       max_active_thread = (max_active_thread ==
-     0)?blockDim.y:max_active_thread;
-
-      value_type init;
-      ValueInit::init( ReducerConditional::select(m_functor , m_reducer) ,
-     &init);
-       if(Impl::cuda_inter_block_reduction<ReducerTypeFwd,ValueJoin,WorkTagFwd>
-              (value,init,ValueJoin(ReducerConditional::select(m_functor ,
-     m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
-         const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
-         if(id==0) {
-           Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final(
-     ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
-           *result = value;
-         }
-       }
-     }*/
-
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;
@@ -1324,49 +1279,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     }
   }
 
-  /*  __device__ inline
-     void run(const DummyShflReductionType&) const
-     {
-
-       value_type value;
-       ValueInit::init( ReducerConditional::select(m_functor , m_reducer) ,
-     &value);
-       // Number of blocks is bounded so that the reduction can be limited to
-     two passes.
-       // Each thread block is given an approximately equal amount of work to
-     perform.
-       // Accumulate the values for this block.
-       // The accumulation ordering does not match the final pass, but is
-     arithmatically equivalent.
-
-       const Member work_part =
-         ( ( m_policy.m_num_tiles + ( gridDim.x - 1 ) ) / gridDim.x ); //portion
-     of tiles handled by each block
-
-       this-> exec_range( value );
-
-       pointer_type const result = (pointer_type) (m_unified_space ?
-     m_unified_space : m_scratch_space) ;
-
-       int max_active_thread = work_part < blockDim.y ? work_part:blockDim.y;
-       max_active_thread = (max_active_thread ==
-     0)?blockDim.y:max_active_thread;
-
-       value_type init;
-       ValueInit::init( ReducerConditional::select(m_functor , m_reducer) ,
-     &init);
-       if(Impl::cuda_inter_block_reduction<ReducerTypeFwd,ValueJoin,WorkTagFwd>
-           (value,init,ValueJoin(ReducerConditional::select(m_functor ,
-     m_reducer)),m_scratch_space,result,m_scratch_flags,max_active_thread)) {
-         const unsigned id = threadIdx.y*blockDim.x + threadIdx.x;
-         if(id==0) {
-           Kokkos::Impl::FunctorFinal< ReducerTypeFwd , WorkTagFwd >::final(
-     ReducerConditional::select(m_functor , m_reducer) , (void*) &value );
-           *result = value;
-         }
-       }
-     }
-  */
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = CudaTraits::WarpSize * 8;

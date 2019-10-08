@@ -234,24 +234,6 @@ void cuda_intra_block_reduction(ValueType&& value, JoinOp&& join,
   cuda_inter_warp_reduction(value, join, max_active_thread);
 }
 
-//template <class ReducerType>
-//__device__ inline
-//typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-//cuda_intra_block_reduction(const ReducerType& reducer,
-//                           typename ReducerType::value_type value,
-//                           const int max_active_thread = blockDim.y) {
-//  cuda_intra_warp_reduction(reducer, value, max_active_thread);
-//  cuda_inter_warp_reduction(reducer, value, max_active_thread);
-//}
-//
-//template <class ReducerType>
-//__device__ inline
-//typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
-//cuda_intra_block_reduction(const ReducerType& reducer,
-//                           const int max_active_thread = blockDim.y) {
-//  cuda_intra_block_reduction(reducer, reducer.reference(), max_active_thread);
-//}
-
 // </editor-fold> end cuda_intra_block_reduction }}}1
 //==============================================================================
 
