@@ -147,6 +147,72 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
 
   void clear() { _size = 0; }
 
+  void insert(const_iterator it, const value_type& val) { insert(it, 1, val); }
+
+  void insert(const_iterator it, size_type count, const value_type& val) {
+    DV::sync_host();
+    DV::modify_host();
+    if (it < begin() || it >= end())
+      Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
+
+    ptrdiff_t start = it - begin();
+    auto org_size   = size();
+    resize(size() + count);
+    auto org_view =
+        subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(start, org_size));
+    auto new_view = subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(
+                                            start + count, org_size + count));
+
+    for (ptrdiff_t i = org_view.extent(0) - 1; i >= 0; i--) {
+      new_view(i) = org_view(i);
+    }
+
+    for (ptrdiff_t i = start; i < start + count; i++) DV::h_view(i) = val;
+  }
+
+ private:
+  template <class T>
+  struct impl_is_input_iterator
+      : /* TODO replace this */ std::integral_constant<
+            bool, !std::is_convertible<T, size_type>::value> {};
+
+ public:
+  // TODO: can use detection idiom to generate better error message here later
+  template <typename InputIterator>
+  void insert(
+      iterator it, InputIterator b,
+      typename std::conditional<impl_is_input_iterator<InputIterator>::value,
+                                InputIterator, void>::type e) {
+    DV::sync_host();
+    DV::modify_host();
+    if (it < begin() || it >= end())
+      Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
+
+    ptrdiff_t count = 0;
+    InputIterator c = b;
+    while (c < e) {
+      count++;
+      c++;
+    }
+    ptrdiff_t start = it - begin();
+    auto org_size   = size();
+    resize(size() + count);
+    auto org_view =
+        subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(start, org_size));
+    auto new_view = subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(
+                                            start + count, org_size + count));
+
+    for (ptrdiff_t i = org_view.extent(0) - 1; i >= 0; i--) {
+      new_view(i) = org_view(i);
+    }
+
+    while (b < e) {
+      *it = *b;
+      it++;
+      b++;
+    }
+  }
+
   size_type size() const { return _size; }
   size_type max_size() const { return 2000000000; }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
