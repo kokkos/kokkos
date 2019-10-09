@@ -22,6 +22,29 @@ ENDFOREACH()
 
 include(FindPackageHandleStandardArgs)
 
+FUNCTION(TARGET_LINK_KOKKOS TARGET)
+  CMAKE_PARSE_ARGUMENTS(
+    PARSE
+    "PRIVATE;PUBLIC;INTERFACE"
+    ""
+    ""
+    ${ARGN}
+  )
+
+  SET(LINK_TYPE)
+  IF (PARSE_PRIVATE)
+    SET(LINK_TYPE PRIVATE)
+  ELSEIF(PARSE_PUBLIC)
+    SET(LINK_TYPE PUBLIC)
+  ELSEIF(PARSE_INTERFACE)
+    SET(LINK_TYPE INTERFACE)
+  ENDIF()
+
+  FOREACH(LIB ${Kokkos_LIBRARIES})
+    TARGET_LINK_LIBRARIES(${TARGET} ${LINK_TYPE} ${LIB})
+  ENDFOREACH()
+ENDFUNCTION()
+
 #   This function makes sure that Kokkos was built with the requested backends
 #   and target architectures and generates a fatal error if it was not.
 #
