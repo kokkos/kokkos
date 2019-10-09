@@ -7,7 +7,8 @@ applications targeting all major HPC platforms. For that purpose it provides
 abstractions for both parallel execution of code and data management.
 Kokkos is designed to target complex node architectures with N-level memory
 hierarchies and multiple types of execution resources. It currently can use
-OpenMP, Pthreads and CUDA as backend programming models with several other backends in development.
+CUDA, HPX, OpenMP and Pthreads as backend programming models with several other
+backends in development.
 
 Kokkos Core is part of the Kokkos C++ Performance Portability Programming EcoSystem,
 which also provides math kernels (https://github.com/kokkos/kokkos-kernels), as well as 
@@ -56,6 +57,7 @@ For specifics see the LICENSE file contained in the repository or distribution.
 * GCC 4.8.4
 * GCC 4.9.3
 * GCC 5.1.0
+* GCC 5.4.0
 * GCC 5.5.0
 * GCC 6.1.0
 * GCC 7.2.0
@@ -73,12 +75,14 @@ For specifics see the LICENSE file contained in the repository or distribution.
 * Clang 4.0.0
 * Clang 6.0.0 for CUDA (CUDA Toolkit 9.0)
 * Clang 7.0.0 for CUDA (CUDA Toolkit 9.1)
+* Clang 8.0.0 for CUDA (CUDA Toolkit 9.2)
 * PGI 18.7
 * NVCC 7.5 for CUDA (with gcc 4.8.4)
 * NVCC 8.0.44 for CUDA (with gcc 5.3.0)
 * NVCC 9.1 for CUDA (with gcc 6.1.0)
 * NVCC 9.2 for CUDA (with gcc 7.2.0)
 * NVCC 10.0 for CUDA (with gcc 7.4.0)
+* NVCC 10.1 for CUDA (with gcc 7.4.0)
 
 ### Primary tested compilers on Power 8 are:
 * GCC 6.4.0 (OpenMP,Serial)
