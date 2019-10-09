@@ -446,8 +446,8 @@ template <
     // Constraints to avoid participation in oparator==() for every possible RHS
     typename std::enable_if<std::is_convertible<RealType1, RealType2>::value,
                             int>::type = 0>
-KOKKOS_INLINE_FUNCTION bool operator==(
-    RealType1 const& x, std::complex<RealType2> const& y) noexcept {
+KOKKOS_INLINE_FUNCTION bool operator==(RealType1 const& x,
+                                       complex<RealType2> const& y) noexcept {
   using common_type = typename std::common_type<RealType1, RealType2>::type;
   return common_type(x) == common_type(y.real()) &&
          common_type(0) == common_type(y.imag());
@@ -499,8 +499,8 @@ template <
     // Constraints to avoid participation in oparator==() for every possible RHS
     typename std::enable_if<std::is_convertible<RealType1, RealType2>::value,
                             int>::type = 0>
-KOKKOS_INLINE_FUNCTION bool operator!=(
-    RealType1 const& x, std::complex<RealType2> const& y) noexcept {
+KOKKOS_INLINE_FUNCTION bool operator!=(RealType1 const& x,
+                                       complex<RealType2> const& y) noexcept {
   using common_type = typename std::common_type<RealType1, RealType2>::type;
   return common_type(x) != common_type(y.real()) ||
          common_type(0) != common_type(y.imag());
