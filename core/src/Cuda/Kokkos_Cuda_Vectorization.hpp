@@ -82,7 +82,7 @@ struct in_place_shfl_op {
              unsigned mask = shfl_all_mask) const noexcept {
     //------------------------------------------------
     reinterpret_cast<int&>(out) = self().do_shfl_op(
-        mask, *reinterpret_cast<int const*>(&in), lane_or_delta, width);
+        mask, reinterpret_cast<int const&>(in), lane_or_delta, width);
     //------------------------------------------------
   }
 
