@@ -1688,8 +1688,8 @@ template <
 
     typename std::enable_if<
         !Impl::are_all_device_supported_slices<Args...>::value, int>::type = 0>
-Subdynrankview<ViewTraits<D*******, P...>, Args...>
-subdynrankview(const Kokkos::DynRankView<D, P...>& src, Args... args) {
+Subdynrankview<ViewTraits<D*******, P...>, Args...> subdynrankview(
+    const Kokkos::DynRankView<D, P...>& src, Args... args) {
   if (src.rank() > sizeof...(Args))  // allow sizeof...(Args) >= src.rank(),
                                      // ignore the remaining args
   {
@@ -1709,12 +1709,33 @@ subdynrankview(const Kokkos::DynRankView<D, P...>& src, Args... args) {
 #endif
 
 // Wrapper to allow subview function name
-// TODO multiversion this for non-device-compatible slice types
-template <class D, class... P, class... Args>
+template <
+    class D, class... P, class... Args
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+    ,
+    typename std::enable_if<
+        Impl::are_all_device_supported_slices<Args...>::value, int>::type = 0
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+#error "Kokkos multiversioning macros misconfigured"
+#endif
+    >
 KOKKOS_INLINE_FUNCTION Subdynrankview<ViewTraits<D*******, P...>, Args...>
 subview(const Kokkos::DynRankView<D, P...>& src, Args... args) {
   return subdynrankview(src, args...);
 }
+
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+template <
+    class D, class... P, class... Args,
+    typename std::enable_if<
+        !Impl::are_all_device_supported_slices<Args...>::value, int>::type = 0>
+inline Subdynrankview<ViewTraits<D*******, P...>, Args...> subview(
+    const Kokkos::DynRankView<D, P...>& src, Args... args) {
+  return subdynrankview(src, args...);
+}
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+#error "Kokkos multiversioning macros misconfigured"
+#endif
 
 }  // namespace Kokkos
 
