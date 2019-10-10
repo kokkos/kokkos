@@ -114,7 +114,7 @@ struct in_place_shfl_op {
     lo       = self().do_shfl_op(mask, lo, lane_or_delta, width);
     hi       = self().do_shfl_op(mask, hi, lane_or_delta, width);
     auto tmp = __hiloint2double(hi, lo);
-    out      = *(reinterpret_cast<const Scalar*>(&tmp));
+    out      = reinterpret_cast<Scalar&>(tmp);
     //------------------------------------------------
   }
 #endif
