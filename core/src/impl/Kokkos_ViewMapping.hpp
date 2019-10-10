@@ -329,12 +329,16 @@ template <class T>
 struct is_pairlike_slice
     : std::integral_constant<bool, has_kokkos_get<T, 0>::value &&
                                        has_kokkos_get<T, 1>::value> {};
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 template <class T>
 struct is_device_supported_pairlike_slice
     : std::integral_constant<bool,
                              has_device_supported_kokkos_get<T, 0>::value &&
                                  has_device_supported_kokkos_get<T, 1>::value> {
 };
+#elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+#error "Kokkos multiversioning macros misconfigured"
+#endif
 
 // This actually means "is the type an extent that is not an integer".  Probably
 // we could come up with a better name for that...
