@@ -453,7 +453,7 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
             : ((1 << width) - 1)
                   << ((threadIdx.y * blockDim.x + threadIdx.x) / width) * width;
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
-      Scalar tmp = Impl::shfl_down(value, delta, width, mask);
+      Scalar tmp = Kokkos::shfl_down(value, delta, width, mask);
       ValueJoin::join(functor, &value, &tmp);
     }
 
