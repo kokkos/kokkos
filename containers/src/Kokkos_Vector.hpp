@@ -170,7 +170,8 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
       new_view(i) = org_view(i);
     }
 
-    for (ptrdiff_t i = start; i < start + count; i++) DV::h_view(i) = val;
+    for (ptrdiff_t i = start; i < start + (ptrdiff_t)count; i++)
+      DV::h_view(i) = val;
     return begin() + start;
   }
 
