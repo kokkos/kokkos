@@ -64,42 +64,61 @@ namespace _get_impl_disable_adl {
 template <class T, size_t I>
 void get(T&&) = delete;
 
+template <class T, size_t I>
+void impl_device_supported_get(T&&) = delete;
+
 //------------------------------------------------------------------------------
+// Detection boilerplate for the ADL free function `get`
+
+// This is the version that interacts with structured bindings (as the second
+// option). We will not assume that this is device-marked for now.  Users
+// can opt in explicitly with an impl_device_supported_get() that delegates
+// to get()
 
 KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
-    _has_adl_free_function_get_archetype, (class T, class IType), (T, IType),
-    decltype(get<IType::value>(Kokkos::Impl::declval<T>())));
+    _has_adl_get_archetype, (class T, class IType), (T, IType),
+    decltype(get<IType::value>(Impl::declval<T>())));
 
 // Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
 
 template <class T, size_t I>
-struct has_adl_free_function_get
-    : Kokkos::Impl::is_detected<_has_adl_free_function_get_archetype, T,
+struct has_adl_get
+    : Kokkos::Impl::is_detected<_has_adl_get_archetype, T,
                                 std::integral_constant<size_t, I>> {};
 template <class T, size_t I>
-using adl_free_function_get_result_t =
-    Kokkos::Impl::detected_t<_has_adl_free_function_get_archetype, T,
+using adl_get_result_t =
+    Kokkos::Impl::detected_t<_has_adl_get_archetype, T,
                              std::integral_constant<size_t, I>>;
 
 //------------------------------------------------------------------------------
+// Detection boilerplate for the ADL free function `impl_device_supported_get`
+
+// This is the version explicitly opts in to device support. Name subject to
+// change.
 
 KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
-    _has_std_get_archetype, (class T, class IType), (T, IType),
-    decltype(std::get<IType::value>(Kokkos::Impl::declval<T>())));
+    _has_adl_impl_device_supported_get_archetype, (class T, class IType),
+    (T, IType),
+    decltype(impl_device_supported_get<IType::value>(Impl::declval<T>())));
 
 // Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
 
 template <class T, size_t I>
-struct has_std_get
-    : Kokkos::Impl::is_detected<_has_std_get_archetype, T,
+struct has_adl_impl_device_supported_get
+    : Kokkos::Impl::is_detected<_has_adl_impl_device_supported_get_archetype, T,
                                 std::integral_constant<size_t, I>> {};
-
 template <class T, size_t I>
-using std_get_result_t =
-    Kokkos::Impl::detected_t<_has_std_get_archetype, T,
+using adl_impl_device_supported_get_result_t =
+    Kokkos::Impl::detected_t<_has_adl_impl_device_supported_get_archetype, T,
                              std::integral_constant<size_t, I>>;
 
 //------------------------------------------------------------------------------
+// Detection boilerplate for intrusive `get`
+
+// This is the version that interacts with structured bindings (as the first
+// option). We will not assume that this is device-marked for now.  Users
+// can opt in explicitly with an impl_device_supported_get() that delegates
+// to get()
 
 KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
     _has_intrusive_get_archetype, (class T, class IType), (T, IType),
@@ -118,41 +137,97 @@ using intrusive_get_result_t =
                              std::integral_constant<size_t, I>>;
 
 //------------------------------------------------------------------------------
+// Detection boilerplate for intrusive `impl_device_supported_get`
 
+// This is the version that interacts with structured bindings (as the first
+// option). We will not assume that this is device-marked for now.  Users
+// can opt in explicitly with an impl_device_supported_get() that delegates
+// to get()
+
+KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
+    _has_intrusive_impl_device_supported_get_archetype, (class T, class IType),
+    (T, IType),
+    decltype(Kokkos::Impl::declval<T>()
+                 .template impl_device_supported_get<IType::value>()));
+
+// Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
+
+template <class T, size_t I>
+struct has_intrusive_impl_device_supported_get
+    : Kokkos::Impl::is_detected<
+          _has_intrusive_impl_device_supported_get_archetype, T,
+          std::integral_constant<size_t, I>> {};
+
+template <class T, size_t I>
+using intrusive_impl_device_supported_get_result_t =
+    Kokkos::Impl::detected_t<_has_intrusive_impl_device_supported_get_archetype,
+                             T, std::integral_constant<size_t, I>>;
+
+//------------------------------------------------------------------------------
+
+/** \internal
+ *
+ * The Niebloid for Kokkos::Experimental::get first checks for
+ * device-supported (e.g., __host__ __device__ marked in CUDA) `get`-like
+ * functionality named by `impl_device_supported_get`, first checking for
+ * an intrusive member function then via ADL, then checks for the functionality
+ * via the name `get` (intrusive then ADL also).
+ *
+ * For now, at least, device-support is explicitly opt in, and code pathways
+ * that go through the (less prefered) `get` name lookup will *not* be marked
+ * with KOKKOS_INLINE_FUNCTION to avoid warnings.
+ *
+ *  \endinternal
+ */
 template <size_t I>
 struct _get_niebloid {
+  // Member trait for determining whether the Niebloid is device-supported for
+  // the given argument type T.
   template <class T>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<has_intrusive_get<T, I>::value,
-                              intrusive_get_result_t<T, I>>::type
-      operator()(T&& val) const
+  struct is_device_supported
+      : std::integral_constant<
+            bool, has_intrusive_impl_device_supported_get<T, I>::value ||
+                      has_adl_impl_device_supported_get<T, I>::value> {};
+
+  // Prefered option: device supported, intrusive
+  template <class T>
+  KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<
+      has_intrusive_impl_device_supported_get<T&&, I>::value>::type
+  operator()(T&& val) const
+      noexcept(noexcept(((T &&) val).template impl_device_supported_get<I>())) {
+    return ((T &&) val).template impl_device_supported_get<I>();
+  }
+
+  // Second most-prefered option: device supported, ADL
+  template <class T>
+  KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<
+      is_device_supported<T&&>::value &&
+      !has_intrusive_impl_device_supported_get<T&&, I>::value>::type
+  operator()(T&& val) const
+      noexcept(noexcept(impl_device_supported_get<I>((T &&) val))) {
+    return impl_device_supported_get<I>((T &&) val);
+  }
+
+  // No device-supported opt-in, check the non-device-supported name; prefer
+  // intrusive `get` over non-intrusive.
+  template <class T>
+  inline constexpr typename std::enable_if<
+      !is_device_supported<T&&>::value &&
+      has_intrusive_get<T&&, I>::value>::type
+  operator()(T&& val) const
       noexcept(noexcept(((T &&) val).template get<I>())) {
     return ((T &&) val).template get<I>();
   }
 
-  // If there's no member function, try to find the free function with ADL.
-  // For now, let's try assuming this is device-marked, and require that
-  // std::get *does not* work (since it would have to be device-marked)
+  // last option: non-intrusive ADL `get`
   template <class T>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<!has_intrusive_get<T, I>::value &&
-                                  has_adl_free_function_get<T, I>::value &&
-                                  !has_std_get<T, I>::value,
-                              adl_free_function_get_result_t<T, I>>::type
-      operator()(T&& val) const noexcept(noexcept(get<I>((T &&) val))) {
+  inline constexpr typename std::enable_if<
+      !is_device_supported<T&&>::value &&
+      !has_intrusive_get<T&&, I>::value &&
+          has_adl_get<T&&, I>::value>::type
+  operator()(T&& val) const
+    noexcept(noexcept(get<I>((T &&) val))) {
     return get<I>((T &&) val);
-  }
-
-  // Last resort, try std::get, and drop the KOKKOS_INLINE_FUNCTION, since
-  // it's not device-marked.  The ADL free function version will *also* work for
-  // things like std::pair in namespace std, but since those won't be
-  // device-marked, we should use the one here without device markings instead.
-  template <class T>
-  constexpr inline typename std::enable_if<!has_intrusive_get<T, I>::value &&
-                                               has_std_get<T, I>::value,
-                                           std_get_result_t<T, I>>::type
-  operator()(T&& val) const noexcept(noexcept(std::get<I>((T &&) val))) {
-    return std::get<I>((T &&) val);
   }
 };
 
@@ -212,7 +287,7 @@ KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
 
 template <class T, size_t I>
 struct has_kokkos_get : is_detected<_has_kokkos_get_archetype, T,
-                                   std::integral_constant<size_t, I>> {};
+                                    std::integral_constant<size_t, I>> {};
 
 template <class T, size_t I>
 using kokkos_get_result_t =
