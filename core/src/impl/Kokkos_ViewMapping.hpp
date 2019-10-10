@@ -635,8 +635,8 @@ struct SubviewExtents {
           const ViewDimension<DimArgs...>& dim, PairLike const& val,
           Args... args) {
     //--------------------------------------
-    auto b = static_cast<size_t>(Kokkos::get<0>(val));
-    auto e = static_cast<size_t>(Kokkos::get<1>(val));
+    auto b = static_cast<size_t>(Kokkos::Experimental::get<0>(val));
+    auto e = static_cast<size_t>(Kokkos::Experimental::get<1>(val));
 
     m_begin[domain_rank] = b;
     m_length[range_rank] = e - b;
@@ -659,8 +659,8 @@ struct SubviewExtents {
                  Args... args) {
     //--------------------------------------
     // NOTE: same code as set()!!!
-    auto b = static_cast<size_t>(Kokkos::get<0>(val));
-    auto e = static_cast<size_t>(Kokkos::get<1>(val));
+    auto b = static_cast<size_t>(Kokkos::Experimental::get<0>(val));
+    auto e = static_cast<size_t>(Kokkos::Experimental::get<1>(val));
 
     m_begin[domain_rank] = b;
     m_length[range_rank] = e - b;
@@ -780,8 +780,8 @@ struct SubviewExtents {
     const int n = std::min(
         buf_len, snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
                           static_cast<unsigned long>(dim.extent(domain_rank)),
-                          static_cast<unsigned long>(Kokkos::get<1>(val)),
-                          static_cast<unsigned long>(Kokkos::get<0>(val)),
+                          static_cast<unsigned long>(Kokkos::Experimental::get<1>(val)),
+                          static_cast<unsigned long>(Kokkos::Experimental::get<0>(val)),
                           int(sizeof...(Args) ? ',' : ')')));
 
     error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);

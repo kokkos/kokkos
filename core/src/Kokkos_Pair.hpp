@@ -52,6 +52,7 @@
 #include <utility>
 
 namespace Kokkos {
+
 /// \struct pair
 /// \brief Replacement for std::pair that works on CUDA devices.
 ///
@@ -157,60 +158,6 @@ struct pair {
   std::pair<T1, T2> to_std_pair() const {
     return std::make_pair(first, second);
   }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<I == 0, T1 const&>::type
-      get() const noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<I == 1, T2 const&>::type
-      get() const noexcept {
-    return second;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION KOKKOS_CONSTEXPR_14
-      typename std::enable_if<I == 0, T1&>::type
-      get() noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION KOKKOS_CONSTEXPR_14
-      typename std::enable_if<I == 1, T2&>::type
-      get() noexcept {
-    return second;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
-  get() volatile noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 volatile&>::type
-  get() volatile noexcept {
-    return second;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<I == 0, T1 const volatile&>::type
-      get() const volatile noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<I == 1, T2 const volatile&>::type
-      get() const volatile noexcept {
-    return second;
-  }
 };
 
 template <class T1, class T2>
@@ -267,32 +214,6 @@ struct pair<T1&, T2&> {
   ///   ambiguous definitions.
   std::pair<T1, T2> to_std_pair() const {
     return std::make_pair(first, second);
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<I == 0, T1 const&>::type
-      get() const noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<I == 1, T2 const&>::type
-      get() const noexcept {
-    return second;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
-  get() const volatile noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 volatile&>::type
-  get() const volatile noexcept {
-    return second;
   }
 };
 
@@ -352,43 +273,6 @@ struct pair<T1, T2&> {
     return std::make_pair(first, second);
   }
 
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<I == 0, T1 const&>::type
-      get() const noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2&>::type get() const
-      noexcept {
-    return second;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type
-  get() noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
-  get() volatile noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<I == 0, T1 const volatile&>::type
-      get() const volatile noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2&>::type get() const
-      volatile noexcept {
-    return second;
-  }
 };
 
 template <class T1, class T2>
@@ -447,42 +331,6 @@ struct pair<T1&, T2> {
     return std::make_pair(first, second);
   }
 
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type get() const
-      noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 const&>::type get()
-      const noexcept {
-    return second;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2&>::type
-  get() noexcept {
-    return second;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 volatile&>::type
-  get() volatile noexcept {
-    return second;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type get() const
-      volatile noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<I == 1, T2 const volatile&>::type
-      get() const volatile noexcept {
-    return second;
-  }
 };
 
 //! Equality operator for Kokkos::pair.
@@ -617,31 +465,6 @@ struct pair<T1, void> {
     first = p.first;
     return *this;
   }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type
-  get() noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 const&>::type get()
-      const noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
-  get() volatile noexcept {
-    return first;
-  }
-
-  template <std::size_t I>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<I == 0, T1 const volatile&>::type
-      get() const volatile noexcept {
-    return first;
-  }
 };
 
 //
@@ -685,15 +508,412 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator>=(
   return !(lhs < rhs);
 }
 
+//==============================================================================
+// <editor-fold desc="Opt-in to device-supported Kokkos::get"> {{{1
+
+// It'd be really nice to use perfect forwarding for this! But the impact
+// of deducing the parameter + SFINAE on whether the type is a pair<T1, T2> is
+// probably significant enough that this will have to do for now.
+
+/* In case we ever try to get rid of all of this copy-pasta, the generic version
+ * of all of this would look something like:
+ *
+ *   template <std::size_t I, class KokkosPair>
+ *   KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if_t<
+ *       I == 0 &&
+ *       Impl::is_kokkos_pair<typename std::remove_reference<
+ *           typename std::remove_cv<KokkosPair>::type>::type>::value>::type
+ *   impl_device_supported_get(KokkosPair&& p) noexcept {
+ *     using first_type = typename std::remove_reference<
+ *         typename std::remove_cv<KokkosPair>::type>::type::first_type;
+ *     return static_cast<Impl::propagate_cvref_t<KokkosPair&&, first_type>>(
+ *         p.first);
+ *   }
+ *
+ * where propagate_cvref_t and is_kokkos_pair need to be implemented to do the
+ * obvious things.
+ */
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 0, T1 const&>::type
+    impl_device_supported_get(pair<T1, T2> const& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 1, T2 const&>::type
+    impl_device_supported_get(pair<T1, T2> const& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1, T2>& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1, T2>& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 0, T1 volatile&>::type
+    impl_device_supported_get(pair<T1, T2> volatile& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 1, T2 volatile&>::type
+    impl_device_supported_get(pair<T1, T2> volatile& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 0, T1 const volatile&>::type
+    impl_device_supported_get(pair<T1, T2> const volatile& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 1, T2 const volatile&>::type
+    impl_device_supported_get(pair<T1, T2> const volatile& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 0, T1 const&&>::type
+    impl_device_supported_get(pair<T1, T2> const&& p) noexcept {
+  return (T1 const&&)p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 1, T2 const&&>::type
+    impl_device_supported_get(pair<T1, T2> const&& p) noexcept {
+  return (T2 const&&)p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 0, T1&&>::type
+impl_device_supported_get(pair<T1, T2>&& p) noexcept {
+  return (T1 &&) p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&&>::type
+impl_device_supported_get(pair<T1, T2>&& p) noexcept {
+  return (T2 &&) p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 0, T1 volatile&&>::type
+    impl_device_supported_get(pair<T1, T2> volatile&& p) noexcept {
+  return (T1 volatile &&) p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 1, T2 volatile&&>::type
+    impl_device_supported_get(pair<T1, T2> volatile&& p) noexcept {
+  return (T2 volatile &&) p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 0, T1 const volatile&&>::type
+    impl_device_supported_get(pair<T1, T2> const volatile&& p) noexcept {
+  return (T1 const volatile&&)p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 1, T2 const volatile&&>::type
+    impl_device_supported_get(pair<T1, T2> const volatile&& p) noexcept {
+  return (T2 const volatile&&)p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1&, T2&> const& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1&, T2&> const& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1&, T2&> const volatile& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1&, T2&> const volatile& p) noexcept {
+  return p.second;
+}
+
+// Get on temporary of a std::pair<T1&, T2&> of references should return
+// references, not temporaries of the referred type.
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1&, T2&> const&& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1&, T2&> const&& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1&, T2&> const volatile&& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1&, T2&> const volatile&& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 0, T1 const&>::type
+    impl_device_supported_get(pair<T1, T2&> const& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1, T2&> const& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1, T2&>& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
+impl_device_supported_get(pair<T1, T2&> volatile& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 const volatile&>::type
+impl_device_supported_get(pair<T1, T2&> const volatile& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1, T2&> const volatile& p) noexcept {
+  return p.second;
+}
+
+// Get on temporary of a std::pair<T1, T2&> of references should return
+// references, not temporaries of the referred type.
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 0, T1 const&&>::type
+    impl_device_supported_get(pair<T1, T2&> const&& p) noexcept {
+  return (T1 const&&)p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1, T2&> const&& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 0, T1&&>::type
+impl_device_supported_get(pair<T1, T2&>&& p) noexcept {
+  return (T1 &&) p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&&>::type
+impl_device_supported_get(pair<T1, T2&> volatile&& p) noexcept {
+  return (T1 volatile &&) p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<I == 0, T1 const volatile&&>::type
+    impl_device_supported_get(pair<T1, T2&> const volatile&& p) noexcept {
+  return (T1 const volatile&&)p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1, T2&> const volatile&& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1&, T2> const& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 1, T2 const&>::type
+    impl_device_supported_get(pair<T1&, T2> const& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&>::type
+impl_device_supported_get(pair<T1&, T2>& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 volatile&>::type
+impl_device_supported_get(pair<T1&, T2> volatile& p) noexcept {
+  return p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1&, T2> const volatile& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 const volatile&>::type
+impl_device_supported_get(pair<T1&, T2> const volatile& p) noexcept {
+  return p.second;
+}
+
+// Get on temporary of a std::pair<T1&, T2> of references should return
+// references, not temporaries of the referred type.
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1&, T2> const&& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr
+    typename std::enable_if<I == 1, T2 const&&>::type
+    impl_device_supported_get(pair<T1&, T2> const&& p) noexcept {
+  return (T2 const&&)p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<I == 1, T2&&>::type
+impl_device_supported_get(pair<T1&, T2>&& p) noexcept {
+  return (T2 &&) p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 1, T2 volatile&&>::type
+impl_device_supported_get(pair<T1&, T2> volatile&& p) noexcept {
+  return (T2 volatile &&) p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1&, T2> const volatile&& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<I == 1, T2 const volatile&&>::type
+    impl_device_supported_get(pair<T1&, T2> const volatile&& p) noexcept {
+  return (T2 const volatile&&)p.second;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&>::type
+impl_device_supported_get(pair<T1, void>& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 const&>::type
+impl_device_supported_get(pair<T1, void> const& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&>::type
+impl_device_supported_get(pair<T1, void> volatile& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 const volatile&>::type
+impl_device_supported_get(pair<T1, void> const volatile& p) noexcept {
+  return p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1&&>::type
+impl_device_supported_get(pair<T1, void>&& p) noexcept {
+  return (T1 &&) p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 const&&>::type
+impl_device_supported_get(pair<T1, void> const&& p) noexcept {
+  return (T1 const&&)p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<I == 0, T1 volatile&&>::type
+impl_device_supported_get(pair<T1, void> volatile&& p) noexcept {
+  return (T1 volatile &&) p.first;
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<I == 0, T1 const volatile&&>::type
+    impl_device_supported_get(pair<T1, void> const volatile&& p) noexcept {
+  return (T1 const volatile&&)p.first;
+}
+
+// </editor-fold> end Opt-in to device supported Kokkos::get }}}1
+//==============================================================================
+
 }  // namespace Kokkos
 
 namespace std {
 template <class T, class U>
 struct tuple_size<Kokkos::pair<T, U>> : std::integral_constant<size_t, 2> {};
 template <class T, class U>
-struct tuple_element<0, Kokkos::pair<T, U>> { using type = T; };
+struct tuple_element<0, Kokkos::pair<T, U>> {
+  using type = T;
+};
 template <class T, class U>
-struct tuple_element<1, Kokkos::pair<T, U>> { using type = U; };
-} // namespace std
+struct tuple_element<1, Kokkos::pair<T, U>> {
+  using type = U;
+};
+}  // namespace std
 
 #endif  // KOKKOS_PAIR_HPP

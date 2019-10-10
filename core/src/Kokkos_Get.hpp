@@ -61,10 +61,10 @@ namespace _get_impl_disable_adl {
 //------------------------------------------------------------------------------
 
 // Poison-pill overload
-template <class T, size_t I>
+template <size_t I, class T>
 void get(T&&) = delete;
 
-template <class T, size_t I>
+template <size_t I, class T>
 void impl_device_supported_get(T&&) = delete;
 
 //------------------------------------------------------------------------------
@@ -192,7 +192,8 @@ struct _get_niebloid {
   // Prefered option: device supported, intrusive
   template <class T>
   KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<
-      has_intrusive_impl_device_supported_get<T&&, I>::value>::type
+      has_intrusive_impl_device_supported_get<T&&, I>::value,
+      intrusive_impl_device_supported_get_result_t<T&&, I>>::type
   operator()(T&& val) const
       noexcept(noexcept(((T &&) val).template impl_device_supported_get<I>())) {
     return ((T &&) val).template impl_device_supported_get<I>();
@@ -202,7 +203,8 @@ struct _get_niebloid {
   template <class T>
   KOKKOS_INLINE_FUNCTION constexpr typename std::enable_if<
       is_device_supported<T&&>::value &&
-      !has_intrusive_impl_device_supported_get<T&&, I>::value>::type
+          !has_intrusive_impl_device_supported_get<T&&, I>::value,
+      adl_impl_device_supported_get_result_t<T&&, I>>::type
   operator()(T&& val) const
       noexcept(noexcept(impl_device_supported_get<I>((T &&) val))) {
     return impl_device_supported_get<I>((T &&) val);
@@ -211,22 +213,21 @@ struct _get_niebloid {
   // No device-supported opt-in, check the non-device-supported name; prefer
   // intrusive `get` over non-intrusive.
   template <class T>
-  inline constexpr typename std::enable_if<
-      !is_device_supported<T&&>::value &&
-      has_intrusive_get<T&&, I>::value>::type
-  operator()(T&& val) const
-      noexcept(noexcept(((T &&) val).template get<I>())) {
+  inline constexpr typename std::enable_if<!is_device_supported<T&&>::value &&
+                                               has_intrusive_get<T&&, I>::value,
+                                           intrusive_get_result_t<T&&, I>>::type
+  operator()(T&& val) const noexcept(noexcept(((T &&) val).template get<I>())) {
     return ((T &&) val).template get<I>();
   }
 
   // last option: non-intrusive ADL `get`
   template <class T>
-  inline constexpr typename std::enable_if<
-      !is_device_supported<T&&>::value &&
-      !has_intrusive_get<T&&, I>::value &&
-          has_adl_get<T&&, I>::value>::type
-  operator()(T&& val) const
-    noexcept(noexcept(get<I>((T &&) val))) {
+  inline constexpr
+      typename std::enable_if<!is_device_supported<T&&>::value &&
+                                  !has_intrusive_get<T&&, I>::value &&
+                                  has_adl_get<T&&, I>::value,
+                              adl_get_result_t<T&&, I>>::type
+      operator()(T&& val) const noexcept(noexcept(get<I>((T &&) val))) {
     return get<I>((T &&) val);
   }
 };
@@ -239,30 +240,36 @@ struct _get_niebloid {
 // </editor-fold> end get Niebloid implementation details }}}1
 //==============================================================================
 
+namespace Experimental {
+
 /**
  *  std::get drop-in replacement, except that it's device marked and doesn't
  *  participate in ADL.
  */
 #if defined(KOKKOS_ENABLE_CXX11)
 // We can't use a Niebloid here because it requires variable templates
-template <size_t I, class T,
-          class = typename std::enable_if<
-              Impl::_get_impl_disable_adl::has_intrusive_get<T, I>::value ||
-              !Impl::_get_impl_disable_adl::has_std_get<T, I>::value>::type>
-KOKKOS_INLINE_FUNCTION constexpr auto get(T&& val) noexcept(
-    noexcept(Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val)))
-    -> decltype(Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val)) {
-  return Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val);
+template <
+    size_t I, class T,
+    typename std::enable_if<Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<
+                                I>::template is_device_supported<T&&>::value,
+                            int>::type = 0>
+KOKKOS_INLINE_FUNCTION constexpr auto get(T&& val) noexcept(noexcept(
+    Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val)))
+    -> decltype(
+        Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val)) {
+  return Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val);
 }
 // Non-device-marked "overload" that goes through std::get
-template <size_t I, class T>
-constexpr typename std::enable_if<
-    !Impl::_get_impl_disable_adl::has_intrusive_get<T, I>::value &&
-        Impl::_get_impl_disable_adl::has_std_get<T, I>::value,
-    Impl::_get_impl_disable_adl::std_get_result_t<T, I>>::type
-get(T&& val) noexcept(
-    noexcept(Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val))) {
-  return Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val);
+template <
+    size_t I, class T,
+    typename std::enable_if<!Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<
+                                I>::template is_device_supported<T&&>::value,
+                            int>::type = 0>
+inline constexpr auto get(T&& val) noexcept(noexcept(
+    Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val)))
+    -> decltype(
+        Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val)) {
+  return Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<I>{}((T &&) val);
 }
 #elif defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || \
     defined(KOKKOS_ENABLE_CXX20)
@@ -270,18 +277,20 @@ template <size_t I>
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 inline
 #endif
-    constexpr Impl::_get_impl_disable_adl::_get_niebloid<I>
+    constexpr Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<I>
         get = {};
 #endif
 
+}  // end namespace Experimental
+
 //==============================================================================
-// <editor-fold desc="A trait for the availability of Kokkos::get"> {{{1
+// <editor-fold desc="A trait for usability of Kokkos::Experimental::get"> {{{1
 
 namespace Impl {
 
 KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
     _has_kokkos_get_archetype, T, IType,
-    decltype(Kokkos::get<IType::value>(declval<T>())));
+    decltype(Kokkos::Experimental::get<IType::value>(declval<T>())));
 
 // Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
 
@@ -299,10 +308,9 @@ using kokkos_get_result_t =
 // and should result in the usual warnings.  This isn't a perfect assumption,
 // but it's a reasonable working one.
 template <class T, size_t I>
-using has_device_supported_kokkos_get = std::integral_constant<
-    bool, has_kokkos_get<T, I>::value &&
-              (Impl::_get_impl_disable_adl::has_intrusive_get<T, I>::value ||
-               !Impl::_get_impl_disable_adl::has_std_get<T, I>::value)>;
+using has_device_supported_kokkos_get =
+    typename _get_impl_disable_adl::_get_niebloid<
+        I>::template is_device_supported<T>;
 #elif !defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)  // typo protection
 #error "Kokkos multiversioning macros misconfigured"
 #endif

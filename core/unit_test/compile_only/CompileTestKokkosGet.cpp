@@ -51,6 +51,12 @@
 #include <utility>
 #include <tuple>
 
+KOKKOS_STATIC_TEST(std::is_same<decltype(Kokkos::impl_device_supported_get<0>(
+                                    std::declval<Kokkos::pair<int, char>&>())),
+                                int&>::value);
+KOKKOS_STATIC_TEST(
+    Kokkos::Impl::_get_impl_disable_adl::has_adl_impl_device_supported_get<
+        Kokkos::pair<int, char>&, 0>::value);
 KOKKOS_STATIC_TEST(
     Kokkos::Impl::has_kokkos_get<std::pair<int, char>, 0>::value);
 KOKKOS_STATIC_TEST(
@@ -70,6 +76,9 @@ KOKKOS_STATIC_TEST(
     std::is_same<
         Kokkos::Impl::kokkos_get_result_t<std::pair<int, char> const&, 1>,
         char const&>::value);
+KOKKOS_STATIC_TEST(
+    std::is_same<Kokkos::Impl::kokkos_get_result_t<std::pair<int, char>, 1>,
+                 char&&>::value);
 
 KOKKOS_STATIC_TEST(Kokkos::Impl::has_kokkos_get<std::array<int, 4>, 0>::value);
 KOKKOS_STATIC_TEST(Kokkos::Impl::has_kokkos_get<std::array<int, 4>, 3>::value);

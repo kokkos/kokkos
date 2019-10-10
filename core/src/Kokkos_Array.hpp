@@ -452,13 +452,94 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
       : m_elem(arg_ptr), m_size(arg_size), m_stride(arg_stride) {}
 };
 
+//==============================================================================
+// <editor-fold desc="Opt-in to device-supported Kokkos::get"> {{{1
+
+template <size_t I, class T, std::size_t N>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<(I <= N),
+                            typename std::add_lvalue_reference<T>::type>::type
+    impl_device_supported_get(Kokkos::Array<T, N>& a) {
+  return a.m_internal_implementation_private_member_data[I];
+}
+
+template <size_t I, class T, std::size_t N>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<(I <= N),
+                            typename std::add_lvalue_reference<
+                                typename std::add_const<T>::type>::type>::type
+    impl_device_supported_get(Kokkos::Array<T, N> const& a) {
+  return a.m_internal_implementation_private_member_data[I];
+}
+
+template <size_t I, class T, std::size_t N>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<
+    (I <= N), typename std::add_lvalue_reference<typename std::add_const<
+                  typename std::add_volatile<T>>::type>::type>::type
+impl_device_supported_get(Kokkos::Array<T, N> const volatile& a) {
+  return a.m_internal_implementation_private_member_data[I];
+}
+
+template <size_t I, class T, std::size_t N>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<
+    (I <= N), typename std::add_lvalue_reference<
+                  typename std::add_volatile<T>::type>::type>::type
+impl_device_supported_get(Kokkos::Array<T, N> volatile& a) {
+  return a.m_internal_implementation_private_member_data[I];
+}
+
+template <size_t I, class T, std::size_t N>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<(I <= N),
+                            typename std::add_rvalue_reference<T>::type>::type
+    impl_device_supported_get(Kokkos::Array<T, N>&& a) {
+  return static_cast<typename std::add_rvalue_reference<T>::type>(
+      a.m_internal_implementation_private_member_data[I]);
+}
+
+template <size_t I, class T, std::size_t N>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<(I <= N),
+                            typename std::add_rvalue_reference<
+                                typename std::add_const<T>::type>::type>::type
+    impl_device_supported_get(Kokkos::Array<T, N> const&& a) {
+  return static_cast<typename std::add_rvalue_reference<
+      typename std::add_const<T>::type>::type>(
+      a.m_internal_implementation_private_member_data[I]);
+}
+
+template <size_t I, class T, std::size_t N>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<
+    (I <= N), typename std::add_rvalue_reference<typename std::add_const<
+                  typename std::add_volatile<T>::type>::type>::type>::type
+impl_device_supported_get(Kokkos::Array<T, N> const volatile&& a) {
+  return static_cast<typename std::add_rvalue_reference<typename std::add_const<
+      typename std::add_volatile<T>::type>::type>::type>(
+      a.m_internal_implementation_private_member_data[I]);
+}
+
+template <size_t I, class T, std::size_t N>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<
+    (I <= N), typename std::add_rvalue_reference<
+                  typename std::add_volatile<T>::type>::type>::type
+impl_device_supported_get(Kokkos::Array<T, N> volatile&& a) {
+  return static_cast<typename std::add_rvalue_reference<
+      typename std::add_volatile<T>::type>::type>(
+      a.m_internal_implementation_private_member_data[I]);
+}
+
+// </editor-fold> end Opt-in to device supported Kokkos::get }}}1
+//==============================================================================
+
 }  // namespace Kokkos
 
 namespace std {
 template <class T, size_t N>
 struct tuple_size<Kokkos::Array<T, N>> : std::integral_constant<size_t, N> {};
 template <class T, size_t N, size_t I>
-struct tuple_element<I, Kokkos::Array<T, N>> { using type = T; };
-} // namespace std
+struct tuple_element<I, Kokkos::Array<T, N>> {
+  using type = T;
+};
+}  // namespace std
 
 #endif /* #ifndef KOKKOS_ARRAY_HPP */
