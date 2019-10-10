@@ -626,11 +626,11 @@ void test_right_0() {
 
     Kokkos::View<int****, Kokkos::LayoutStride, Space> sx5 =
         Kokkos::subview(x_static_8, 0, Kokkos::pair<int, int>(0, 2) /* of [3] */
-            ,
+                        ,
                         1, std::pair<int, size_t>(1, 3) /* of [5] */
-            ,
+                        ,
                         1, std::array<int, 2>{0, 2} /* of [3] */
-            ,
+                        ,
                         2, std::tuple<int, long>(2, 4) /* of [5] */
         );
 

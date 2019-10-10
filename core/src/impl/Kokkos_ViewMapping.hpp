@@ -370,7 +370,8 @@ struct is_integral_extent {
 
   enum { value = is_integral_extent_type<type>::value };
 
-  static_assert(value || std::is_integral<type>::value || is_array_layout<type>::value ||
+  static_assert(value || std::is_integral<type>::value ||
+                    is_array_layout<type>::value ||
                     std::is_same<type, void>::value,
                 "subview argument must be either integral or integral extent");
 };
@@ -383,8 +384,8 @@ struct is_device_supported_slice {
       typename Kokkos::Impl::get_type<I, Args...>::type>::type>::type;
 
   static constexpr auto value =
-      (is_integral_extent_type<type>::value || std::is_convertible<type, size_t>::value ||
-       std::is_void<type>::value) &&
+      (is_integral_extent_type<type>::value ||
+       std::is_convertible<type, size_t>::value || std::is_void<type>::value) &&
       !(is_pairlike_slice<type>::value &&
         !is_device_supported_pairlike_slice<type>::value);
 };
@@ -782,11 +783,12 @@ struct SubviewExtents {
       Args... args) const {
     // d <= e - b
     const int n = std::min(
-        buf_len, snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
-                          static_cast<unsigned long>(dim.extent(domain_rank)),
-                          static_cast<unsigned long>(Kokkos::Experimental::get<1>(val)),
-                          static_cast<unsigned long>(Kokkos::Experimental::get<0>(val)),
-                          int(sizeof...(Args) ? ',' : ')')));
+        buf_len,
+        snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
+                 static_cast<unsigned long>(dim.extent(domain_rank)),
+                 static_cast<unsigned long>(Kokkos::Experimental::get<1>(val)),
+                 static_cast<unsigned long>(Kokkos::Experimental::get<0>(val)),
+                 int(sizeof...(Args) ? ',' : ')')));
 
     error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);
   }
@@ -3845,7 +3847,8 @@ struct ViewMapping<
   KOKKOS_INLINE_FUNCTION static
 #ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
       typename std::enable_if<
-          !std::is_void<DstTraits>::value && // to make this enable_if dependent
+          !std::is_void<DstTraits>::value &&  // to make this enable_if
+                                              // dependent
           are_all_device_supported_slices<Args...>::value>::type
 #elif defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
       void
@@ -3880,7 +3883,7 @@ struct ViewMapping<
 #ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
   template <class DstTraits>
   inline static typename std::enable_if<
-      !std::is_void<DstTraits>::value && // to make this enable_if dependent
+      !std::is_void<DstTraits>::value &&  // to make this enable_if dependent
       !are_all_device_supported_slices<Args...>::value>::type
   assign(ViewMapping<DstTraits, void>& dst,
          ViewMapping<SrcTraits, void> const& src, Args... args) {

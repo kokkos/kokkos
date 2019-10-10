@@ -68,7 +68,6 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 
-
 namespace Kokkos {
 namespace Impl {
 

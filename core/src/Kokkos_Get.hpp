@@ -300,8 +300,8 @@ struct has_kokkos_get : is_detected<_has_kokkos_get_archetype, T,
                                     std::integral_constant<std::size_t, I>> {};
 
 template <class T, std::size_t I>
-using kokkos_get_result_t =
-    detected_t<_has_kokkos_get_archetype, T, std::integral_constant<std::size_t, I>>;
+using kokkos_get_result_t = detected_t<_has_kokkos_get_archetype, T,
+                                       std::integral_constant<std::size_t, I>>;
 
 #ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 // Consider things that use std::get only to be not device supported.  Assume

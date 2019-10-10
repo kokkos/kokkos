@@ -272,7 +272,6 @@ struct pair<T1, T2&> {
   std::pair<T1, T2> to_std_pair() const {
     return std::make_pair(first, second);
   }
-
 };
 
 template <class T1, class T2>
@@ -330,7 +329,6 @@ struct pair<T1&, T2> {
   std::pair<T1, T2> to_std_pair() const {
     return std::make_pair(first, second);
   }
-
 };
 
 //! Equality operator for Kokkos::pair.
