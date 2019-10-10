@@ -239,6 +239,7 @@ do
       ;;
     --cxxflags*)
       KOKKOS_CXXFLAGS="${key#*=}"
+      KOKKOS_CXXFLAGS=${KOKKOS_CXXFLAGS//,/ }
       ;;
     --cxxstandard*)
       KOKKOS_CXX_STANDARD="${key#*=}"
