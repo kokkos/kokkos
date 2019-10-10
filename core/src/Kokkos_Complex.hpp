@@ -83,8 +83,8 @@ class alignas(2 * sizeof(RealType)) complex {
             typename std::enable_if<std::is_convertible<RType, RealType>::value,
                                     int>::type = 0>
   KOKKOS_INLINE_FUNCTION complex(const complex<RType>& other) noexcept
-      // Intentionally do the conversions implicitly here so that users get
-      // any warnings about narrowing, etc., that they would expect to get
+      // Intentionally do the conversions implicitly here so that users don't
+      // get any warnings about narrowing, etc., that they would expect to get
       // otherwise.
       : re_(other.real()), im_(other.imag()) {}
 
@@ -279,8 +279,8 @@ class alignas(2 * sizeof(RealType)) complex {
             typename std::enable_if<std::is_convertible<RType, RealType>::value,
                                     int>::type = 0>
   KOKKOS_INLINE_FUNCTION complex(const volatile complex<RType>& src) noexcept
-      // Intentionally do the conversions implicitly here so that users get
-      // any warnings about narrowing, etc., that they would expect to get
+      // Intentionally do the conversions implicitly here so that users don't
+      // get any warnings about narrowing, etc., that they would expect to get
       // otherwise.
       : re_(src.re_), im_(src.im_) {}
 
