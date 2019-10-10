@@ -1953,6 +1953,7 @@ struct
 template <class Space, class Layout>
 struct TestSubviewStaticSizes {
   Kokkos::View<int * [10][5][2], Layout, Space> a;
+  Kokkos::View<int[6][7][8], Layout, Space> b;
 
   KOKKOS_INLINE_FUNCTION
   int operator()() const noexcept {
@@ -2011,11 +2012,30 @@ struct TestSubviewStaticSizes {
         /*  actual  */ typename get_view_type<decltype(sub_a_8)>::type>::type
         test_8 = 0;
 
+    auto sub_b = Kokkos::subview(b, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
+    typename static_expect_same<
+        /* expected */ int[6][7][8],
+        /*  actual  */ typename get_view_type<decltype(sub_b)>::type>::type
+        test_9 = 0;
+
+    auto sub_b_2 = Kokkos::subview(b, 0, Kokkos::ALL, Kokkos::ALL);
+    typename static_expect_same<
+        /* expected */ int[7][8],
+        /*  actual  */ typename get_view_type<decltype(sub_b_2)>::type>::type
+        test_10 = 0;
+
+    auto sub_b_3 =
+        Kokkos::subview(b, Kokkos::make_pair(2, 3), Kokkos::ALL, Kokkos::ALL);
+    typename static_expect_same<
+        /* expected */ int * [7][8],
+        /*  actual  */ typename get_view_type<decltype(sub_b_3)>::type>::type
+        test_11 = 0;
+
     return test_1 + test_2 + test_3 + test_4 + test_5 + test_sub + test_7 +
-           test_8;
+           test_8 + test_9 + test_10 + test_11;
   }
 
-  TestSubviewStaticSizes() : a(Kokkos::view_alloc(), 20) {}
+  TestSubviewStaticSizes() : a(Kokkos::view_alloc(), 20), b() {}
 };
 
 template <class Space>
