@@ -188,10 +188,14 @@ FUNCTION(KOKKOS_ADD_COMPILE_TEST TEST_NAME)
     "SOURCES"
     ${ARGN})
   IF(KOKKOS_HAS_TRILINOS)
+
     KOKKOS_ADD_EXECUTABLE_AND_TEST(${TEST_NAME} SOURCES ${PARSE_SOURCES} ${PARSE_UNPARSED_ARGUMENTS})
   ELSE()
     SET(EXE_NAME ${PACKAGE_NAME}_${TEST_NAME})
-    IF(PARSE_LINK_KOKKOS)
+    # The compile tests fail to link if we don't link them as normal when using CUDA.
+    # Not linking to Kokkos works fine everywhere else, but we need to special-case
+    # CUDA here.
+    IF(PARSE_LINK_KOKKOS OR KOKKOS_ENABLE_CUDA)
       KOKKOS_ADD_TEST_EXECUTABLE(${EXE_NAME}
         SOURCES ${PARSE_SOURCES}
         ${PARSE_UNPARSED_ARGUMENTS}
