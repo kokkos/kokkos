@@ -56,10 +56,6 @@ namespace Impl {
 // Include all lanes
 constexpr unsigned shfl_all_mask = 0xffffffff;
 
-}  // end namespace Impl
-
-namespace Impl {
-
 //----------------------------------------------------------------------------
 // Shuffle operations require input to be a register (stack) variable
 
@@ -70,7 +66,7 @@ namespace Impl {
 template <class Derived>
 struct in_place_shfl_op {
   // CRTP boilerplate
-  __device__ __inline__ const Derived& self() const noexcept {
+  __device__ KOKKOS_IMPL_FORCEINLINE const Derived& self() const noexcept {
     return *static_cast<Derived const*>(this);
   }
 
