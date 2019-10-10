@@ -227,6 +227,12 @@
 #define KOKKOS_COMPILER_INTEL __ECC
 #endif
 
+#ifdef KOKKOS_COMPILER_INTEL
+#if KOKKOS_COMPILER_INTEL >= 1800
+#define KOKKOS_COMPILER_SUPPORTS_DETECTION_IDIOM
+#endif
+#endif
+
 // CRAY compiler for host code
 #if defined(_CRAYC)
 #define KOKKOS_COMPILER_CRAYC _CRAYC
@@ -246,6 +252,9 @@
 #if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL)
 #define KOKKOS_COMPILER_CLANG \
   __clang_major__ * 100 + __clang_minor__ * 10 + __clang_patchlevel__
+#if KOKKOS_COMPILER_CLANG >= 350
+#define KOKKOS_COMPILER_SUPPORTS_DETECTION_IDIOM 1
+#endif
 #endif
 
 #if !defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL) && defined(__GNUC__)
@@ -254,6 +263,9 @@
 
 #if (472 > KOKKOS_COMPILER_GNU)
 #error "Compiling with GCC version earlier than 4.7.2 is not supported."
+#endif
+#if KOKKOS_COMPILER_GNU >= 484
+#define KOKKOS_COMPILER_SUPPORTS_DETECTION_IDIOM
 #endif
 #endif
 

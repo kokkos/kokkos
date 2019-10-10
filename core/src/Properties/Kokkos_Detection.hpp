@@ -80,6 +80,13 @@ KOKKOS_FUNCTION T _declval(long) noexcept;
 
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 using std::void_t;
+#elif defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU < 500
+template <class T>
+struct void_t_impl {
+  using type = void;
+};
+template <class T>
+using void_t = typename void_t_impl<T>::type;
 #else
 template <class T>
 using void_t = void;
@@ -118,7 +125,7 @@ struct _detector<Default, void_t<Op<Args...>>, Op, Args...> {
 #define KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(name, params, params_no_intro, \
                                                 ...)                           \
   template <KOKKOS_IMPL_PP_REMOVE_PARENS(params)>                              \
-  using name = __VA_ARGS__;
+  using name = __VA_ARGS__
 
 #else
 
