@@ -212,8 +212,7 @@ ENDMACRO()
 
 MACRO(KOKKOS_MAKE_LIBKOKKOS)
   ADD_LIBRARY(kokkos INTERFACE)
-  TARGET_LINK_LIBRARIES(kokkos INTERFACE kokkoscore kokkoscontainers)
-  TARGET_LINK_LIBRARIES(kokkos INTERFACE kokkosalgorithms)
+  TARGET_LINK_LIBRARIES(kokkos INTERFACE kokkoscore kokkoscontainers kokkosalgorithms)
   KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(kokkos)
 ENDMACRO()
 
