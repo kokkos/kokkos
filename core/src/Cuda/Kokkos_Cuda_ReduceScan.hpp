@@ -308,9 +308,9 @@ __device__ bool cuda_inter_block_reduction(
       // penalty.
       int active = 0;
       for (unsigned d = 1; d < CudaTraits::WarpSize; d <<= 1U) {
-        if (int(blockDim.x * blockDim.y) > d) {
+        if (unsigned(blockDim.x * blockDim.y) > d) {
           value_type tmp = Kokkos::shfl_down(value, d, CudaTraits::WarpSize);
-          if (id + d < int(gridDim.x)) join(value, tmp);
+          if (unsigned(id) + d < unsigned(gridDim.x)) join(value, tmp);
         }
         active += KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
       }
