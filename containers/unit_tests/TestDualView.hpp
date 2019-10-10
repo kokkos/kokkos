@@ -80,8 +80,8 @@ struct test_dualview_combinations {
     a.h_view(6, 1) = 4;
     a.h_view(7, 2) = 5;
     a.template modify<typename ViewType::host_mirror_space>();
-    ViewType b = Kokkos::subview(a, Kokkos::pair<unsigned int, unsigned int>(6, 9),
-                                 Kokkos::pair<unsigned int, unsigned int>(0, 1));
+    ViewType b = Kokkos::subview(a, std::pair<unsigned int, unsigned int>(6, 9),
+                                 std::pair<unsigned int, unsigned int>(0, 1));
     a.template sync<typename ViewType::execution_space>();
     b.template modify<typename ViewType::execution_space>();
 
