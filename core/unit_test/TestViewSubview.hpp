@@ -2004,7 +2004,15 @@ struct TestSubviewStaticSizes {
         /*  actual  */ typename get_view_type<decltype(sub_a_7)>::type>::type
         test_7 = 0;
 
-    return test_1 + test_2 + test_3 + test_4 + test_5 + test_sub + test_7;
+    auto sub_a_8 =
+        Kokkos::subview(a, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
+    typename static_expect_same<
+        /* expected */ int * [10][5][2],
+        /*  actual  */ typename get_view_type<decltype(sub_a_8)>::type>::type
+        test_8 = 0;
+
+    return test_1 + test_2 + test_3 + test_4 + test_5 + test_sub + test_7 +
+           test_8;
   }
 
   TestSubviewStaticSizes() : a(Kokkos::view_alloc(), 20) {}
