@@ -147,15 +147,18 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
 
   void clear() { _size = 0; }
 
-  void insert(const_iterator it, const value_type& val) { insert(it, 1, val); }
+  iterator insert(iterator it, const value_type& val) {
+    return insert(it, 1, val);
+  }
 
-  void insert(const_iterator it, size_type count, const value_type& val) {
+  iterator insert(iterator it, size_type count, const value_type& val) {
     DV::sync_host();
     DV::modify_host();
-    if (it < begin() || it >= end())
+    if (it < begin() || it > end())
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
+    if (count == 0) return it;
 
-    ptrdiff_t start = it - begin();
+    ptrdiff_t start = std::distance(begin(), it);
     auto org_size   = size();
     resize(size() + count);
     auto org_view =
@@ -168,6 +171,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     }
 
     for (ptrdiff_t i = start; i < start + count; i++) DV::h_view(i) = val;
+    return begin() + start;
   }
 
  private:
@@ -179,24 +183,21 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
  public:
   // TODO: can use detection idiom to generate better error message here later
   template <typename InputIterator>
-  void insert(
-      iterator it, InputIterator b,
-      typename std::conditional<impl_is_input_iterator<InputIterator>::value,
-                                InputIterator, void>::type e) {
+  typename std::enable_if<impl_is_input_iterator<InputIterator>::value,
+                          iterator>::type
+  insert(iterator it, InputIterator b, InputIterator e) {
     DV::sync_host();
     DV::modify_host();
-    if (it < begin() || it >= end())
+    if (it < begin() || it > end())
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
 
-    ptrdiff_t count = 0;
-    InputIterator c = b;
-    while (c < e) {
-      count++;
-      c++;
-    }
+    ptrdiff_t count = std::distance(b, e);
+    if (count == 0) return it;
+
     ptrdiff_t start = it - begin();
     auto org_size   = size();
     resize(size() + count);
+    it = begin() + start;
     auto org_view =
         subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(start, org_size));
     auto new_view = subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(
@@ -211,6 +212,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
       it++;
       b++;
     }
+    return begin() + start;
   }
 
   size_type size() const { return _size; }

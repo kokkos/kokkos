@@ -65,29 +65,46 @@ struct test_vector_insert {
     it += 15;
     ASSERT_EQ(*it, scalar_type(1));
 
-    a.insert(it, scalar_type(3));
+    auto it_return = a.insert(it, scalar_type(3));
     ASSERT_EQ(a.size(), n + 1);
+    ASSERT_EQ(std::distance(it_return, a.begin() + 15), 0);
 
     it = a.begin();
     it += 17;
-    a.insert(it, 5, scalar_type(5));
-    ASSERT_EQ(a.size(), n + 6);
+    it_return = a.insert(it, n + 5, scalar_type(5));
+    ASSERT_EQ(a.size(), n + 1 + n + 5);
+    ASSERT_EQ(std::distance(it_return, a.begin() + 17), 0);
 
-    Vector b(7, 9);
+    Vector b;
+    b.insert(b.begin(), 7, 9);
+    ASSERT_EQ(b.size(), 7);
+
     it = a.begin();
-    it += 27;
-    a.insert(it, b.begin(), b.end());
-    ASSERT_EQ(a.size(), n + 13);
+    it += 27 + n;
+    it_return = a.insert(it, b.begin(), b.end());
+    ASSERT_EQ(a.size(), n + 1 + n + 5 + 7);
+    ASSERT_EQ(std::distance(it_return, a.begin() + 27 + n), 0);
+
+    // Testing insert at end via all three function interfaces
+    a.insert(a.end(), 11);
+    a.insert(a.end(), 2, 12);
+    a.insert(a.end(), b.begin(), b.end());
   }
 
   template <typename Vector>
-  void check_test(Vector& a) {
+  void check_test(Vector& a, int n) {
     for (int i = 0; i < a.size(); i++) {
       if (i == 15)
         ASSERT_EQ(a[i], scalar_type(3));
-      else if ((i > 16 && i < 22))
+      else if ((i > 16 && i < 16 + 6 + n))
         ASSERT_EQ(a[i], scalar_type(5));
-      else if ((i > 26 && i < 34))
+      else if ((i > 26 + n && i < 34 + n))
+        ASSERT_EQ(a[i], scalar_type(9));
+      else if ((i == a.size() - 10))
+        ASSERT_EQ(a[i], scalar_type(11));
+      else if ((i == a.size() - 9) || (i == a.size() - 8))
+        ASSERT_EQ(a[i], scalar_type(12));
+      else if ((i > a.size() - 8))
         ASSERT_EQ(a[i], scalar_type(9));
       else
         ASSERT_EQ(a[i], scalar_type(1));
@@ -98,20 +115,20 @@ struct test_vector_insert {
     {
       std::vector<Scalar> a(size, scalar_type(1));
       run_test(a);
-      check_test(a);
+      check_test(a, size);
     }
     {
       Kokkos::vector<Scalar, Device> a(size, scalar_type(1));
       a.sync_device();
       run_test(a);
       a.sync_host();
-      check_test(a);
+      check_test(a, size);
     }
     {
       Kokkos::vector<Scalar, Device> a(size, scalar_type(1));
       a.sync_host();
       run_test(a);
-      check_test(a);
+      check_test(a, size);
     }
   }
 };
