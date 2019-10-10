@@ -47,6 +47,7 @@
 #include <Properties/Kokkos_Detection.hpp>
 
 #include <utility>  // std::get
+#include <cstdint>
 
 namespace Kokkos {
 
@@ -61,10 +62,10 @@ namespace _get_impl_disable_adl {
 //------------------------------------------------------------------------------
 
 // Poison-pill overload
-template <size_t I, class T>
+template <std::size_t I, class T>
 void get(T&&) = delete;
 
-template <size_t I, class T>
+template <std::size_t I, class T>
 void impl_device_supported_get(T&&) = delete;
 
 //------------------------------------------------------------------------------
@@ -81,14 +82,14 @@ KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
 
 // Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
 
-template <class T, size_t I>
+template <class T, std::size_t I>
 struct has_adl_get
     : Kokkos::Impl::is_detected<_has_adl_get_archetype, T,
-                                std::integral_constant<size_t, I>> {};
-template <class T, size_t I>
+                                std::integral_constant<std::size_t, I>> {};
+template <class T, std::size_t I>
 using adl_get_result_t =
     Kokkos::Impl::detected_t<_has_adl_get_archetype, T,
-                             std::integral_constant<size_t, I>>;
+                             std::integral_constant<std::size_t, I>>;
 
 //------------------------------------------------------------------------------
 // Detection boilerplate for the ADL free function `impl_device_supported_get`
@@ -103,14 +104,14 @@ KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
 
 // Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
 
-template <class T, size_t I>
+template <class T, std::size_t I>
 struct has_adl_impl_device_supported_get
     : Kokkos::Impl::is_detected<_has_adl_impl_device_supported_get_archetype, T,
-                                std::integral_constant<size_t, I>> {};
-template <class T, size_t I>
+                                std::integral_constant<std::size_t, I>> {};
+template <class T, std::size_t I>
 using adl_impl_device_supported_get_result_t =
     Kokkos::Impl::detected_t<_has_adl_impl_device_supported_get_archetype, T,
-                             std::integral_constant<size_t, I>>;
+                             std::integral_constant<std::size_t, I>>;
 
 //------------------------------------------------------------------------------
 // Detection boilerplate for intrusive `get`
@@ -126,15 +127,15 @@ KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
 
 // Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
 
-template <class T, size_t I>
+template <class T, std::size_t I>
 struct has_intrusive_get
     : Kokkos::Impl::is_detected<_has_intrusive_get_archetype, T,
-                                std::integral_constant<size_t, I>> {};
+                                std::integral_constant<std::size_t, I>> {};
 
-template <class T, size_t I>
+template <class T, std::size_t I>
 using intrusive_get_result_t =
     Kokkos::Impl::detected_t<_has_intrusive_get_archetype, T,
-                             std::integral_constant<size_t, I>>;
+                             std::integral_constant<std::size_t, I>>;
 
 //------------------------------------------------------------------------------
 // Detection boilerplate for intrusive `impl_device_supported_get`
@@ -152,16 +153,16 @@ KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE(
 
 // Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
 
-template <class T, size_t I>
+template <class T, std::size_t I>
 struct has_intrusive_impl_device_supported_get
     : Kokkos::Impl::is_detected<
           _has_intrusive_impl_device_supported_get_archetype, T,
-          std::integral_constant<size_t, I>> {};
+          std::integral_constant<std::size_t, I>> {};
 
-template <class T, size_t I>
+template <class T, std::size_t I>
 using intrusive_impl_device_supported_get_result_t =
     Kokkos::Impl::detected_t<_has_intrusive_impl_device_supported_get_archetype,
-                             T, std::integral_constant<size_t, I>>;
+                             T, std::integral_constant<std::size_t, I>>;
 
 //------------------------------------------------------------------------------
 
@@ -179,7 +180,7 @@ using intrusive_impl_device_supported_get_result_t =
  *
  *  \endinternal
  */
-template <size_t I>
+template <std::size_t I>
 struct _get_niebloid {
   // Member trait for determining whether the Niebloid is device-supported for
   // the given argument type T.
@@ -249,7 +250,7 @@ namespace Experimental {
 #if defined(KOKKOS_ENABLE_CXX11)
 // We can't use a Niebloid here because it requires variable templates
 template <
-    size_t I, class T,
+    std::size_t I, class T,
     typename std::enable_if<Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<
                                 I>::template is_device_supported<T&&>::value,
                             int>::type = 0>
@@ -261,7 +262,7 @@ KOKKOS_INLINE_FUNCTION constexpr auto get(T&& val) noexcept(noexcept(
 }
 // Non-device-marked "overload" that goes through std::get
 template <
-    size_t I, class T,
+    std::size_t I, class T,
     typename std::enable_if<!Kokkos::Impl::_get_impl_disable_adl::_get_niebloid<
                                 I>::template is_device_supported<T&&>::value,
                             int>::type = 0>
@@ -273,7 +274,7 @@ inline constexpr auto get(T&& val) noexcept(noexcept(
 }
 #elif defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || \
     defined(KOKKOS_ENABLE_CXX20)
-template <size_t I>
+template <std::size_t I>
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 inline
 #endif
@@ -294,20 +295,20 @@ KOKKOS_IMPL_DECLARE_DETECTION_ARCHETYPE_2PARAMS(
 
 // Workaround for bug in Cuda <= 9.1: use inheritance instead of alias templates
 
-template <class T, size_t I>
+template <class T, std::size_t I>
 struct has_kokkos_get : is_detected<_has_kokkos_get_archetype, T,
-                                    std::integral_constant<size_t, I>> {};
+                                    std::integral_constant<std::size_t, I>> {};
 
-template <class T, size_t I>
+template <class T, std::size_t I>
 using kokkos_get_result_t =
-    detected_t<_has_kokkos_get_archetype, T, std::integral_constant<size_t, I>>;
+    detected_t<_has_kokkos_get_archetype, T, std::integral_constant<std::size_t, I>>;
 
 #ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
 // Consider things that use std::get only to be not device supported.  Assume
 // that anything else is user error (missing KOKKOS_INLINE_FUNCTION somewhere)
 // and should result in the usual warnings.  This isn't a perfect assumption,
 // but it's a reasonable working one.
-template <class T, size_t I>
+template <class T, std::size_t I>
 using has_device_supported_kokkos_get =
     typename _get_impl_disable_adl::_get_niebloid<
         I>::template is_device_supported<T>;
