@@ -1156,14 +1156,24 @@ struct TestTeamBroadcast {
     value_type parUpdate = 0;
     value_type value     = tid * 3 + 1;
 
+    // setValue is used to determine if the update should be
+    // performed at the bottom.  The thread id must match the
+    // thread id used to broadcast the value.  It is the
+    // thread id that matches the league rank mod team size
+    // this way each league rank will use a different thread id
+    // which is likely not 0
+    bool setValue = ((lid % ts) == tid);
+
+    // broadcast boolean and value to team from source thread
     teamMember.team_broadcast(value, lid % ts);
+    teamMember.team_broadcast(setValue, lid % ts);
 
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(teamMember, ts),
         [&](const int j, value_type &teamUpdate) { teamUpdate += value; },
         parUpdate);
 
-    if (teamMember.team_rank() == 0) update += parUpdate;
+    if (teamMember.team_rank() == 0 && setValue) update += parUpdate;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1176,7 +1186,18 @@ struct TestTeamBroadcast {
     value_type parUpdate = 0;
     value_type value     = tid * 3 + 1;
 
+    // setValue is used to determine if the update should be
+    // performed at the bottom.  The thread id must match the
+    // thread id used to broadcast the value.  It is the
+    // thread id that matches the league rank mod team size
+    // this way each league rank will use a different thread id
+    // which is likely not 0. Note the logic is switched from
+    // above because the functor switches it back.
+    bool setValue = ((lid % ts) != tid);
+
     teamMember.team_broadcast([&](value_type &var) { var *= 2; }, value,
+                              lid % ts);
+    teamMember.team_broadcast([&](bool &bVar) { bVar = !bVar; }, setValue,
                               lid % ts);
 
     Kokkos::parallel_reduce(
@@ -1184,7 +1205,7 @@ struct TestTeamBroadcast {
         [&](const int j, value_type &teamUpdate) { teamUpdate += value; },
         parUpdate);
 
-    if (teamMember.team_rank() == 0) update += parUpdate;
+    if (teamMember.team_rank() == 0 && setValue) update += parUpdate;
   }
 
   static void test_teambroadcast(const size_t league_size) {

@@ -161,8 +161,35 @@ class CudaTeamMember {
   //--------------------------------------------------------------------------
 
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& val,
-                                             const int& thread_id) const {
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<(sizeof(ValueType) < 4), void>::type
+      team_broadcast(ValueType& val, const int& thread_id) const {
+    using conv_type = uint32_t;
+#ifdef __CUDA_ARCH__
+    if (1 == blockDim.z) {  // team == block
+      __syncthreads();
+      // Wait for shared data write until all threads arrive here
+      if (threadIdx.x == 0u && threadIdx.y == (uint32_t)thread_id) {
+        conv_type cv                 = val;
+        *((conv_type*)m_team_reduce) = cv;
+      }
+      __syncthreads();  // Wait for shared data read until root thread writes
+      conv_type cv = *((conv_type*)m_team_reduce);
+      val          = (ValueType)cv;
+    } else {               // team <= warp
+      conv_type tmp(val);  // input might not be a register variable
+      conv_type res;
+      Impl::in_place_shfl(res, tmp, blockDim.x * thread_id,
+                          blockDim.x * blockDim.y);
+      val = (ValueType)res;
+    }
+#endif
+  }
+
+  template <class ValueType>
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<(sizeof(ValueType) >= 4), void>::type
+      team_broadcast(ValueType& val, const int& thread_id) const {
 #ifdef __CUDA_ARCH__
     if (1 == blockDim.z) {  // team == block
       __syncthreads();
@@ -181,8 +208,39 @@ class CudaTeamMember {
   }
 
   template <class Closure, class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(Closure const& f, ValueType& val,
-                                             const int& thread_id) const {
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<(sizeof(ValueType) < 4), void>::type
+      team_broadcast(Closure const& f, ValueType& val,
+                     const int& thread_id) const {
+    using conv_type = uint32_t;
+#ifdef __CUDA_ARCH__
+    f(val);
+
+    if (1 == blockDim.z) {  // team == block
+      __syncthreads();
+      // Wait for shared data write until all threads arrive here
+      if (threadIdx.x == 0u && threadIdx.y == (uint32_t)thread_id) {
+        conv_type cv                 = val;
+        *((conv_type*)m_team_reduce) = cv;
+      }
+      __syncthreads();  // Wait for shared data read until root thread writes
+      conv_type cv = *((conv_type*)m_team_reduce);
+      val          = (ValueType)cv;
+    } else {               // team <= warp
+      conv_type tmp(val);  // input might not be a register variable
+      conv_type res;
+      Impl::in_place_shfl(res, tmp, blockDim.x * thread_id,
+                          blockDim.x * blockDim.y);
+      val = (ValueType)res;
+    }
+#endif
+  }
+
+  template <class Closure, class ValueType>
+  KOKKOS_INLINE_FUNCTION
+      typename std::enable_if<(sizeof(ValueType) >= 4), void>::type
+      team_broadcast(Closure const& f, ValueType& val,
+                     const int& thread_id) const {
 #ifdef __CUDA_ARCH__
     f(val);
 
