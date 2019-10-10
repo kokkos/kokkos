@@ -93,7 +93,7 @@ struct test_vector_insert {
 
   template <typename Vector>
   void check_test(Vector& a, int n) {
-    for (int i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); i++) {
       if (i == 15)
         ASSERT_EQ(a[i], scalar_type(3));
       else if ((i > 16 && i < 16 + 6 + n))
