@@ -601,6 +601,19 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
+//==============================================================================
+// <editor-fold desc="Preprocessor helper functions"> {{{1
+
+#define KOKKOS_IMPL_PP_REMOVE_PARENS_IMPL(...) __VA_ARGS__
+#define KOKKOS_IMPL_PP_REMOVE_PARENS(...) \
+  KOKKOS_IMPL_PP_REMOVE_PARENS_IMPL __VA_ARGS__
+
+// </editor-fold> end Preprocessor helper functions }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="Multiversioning of host/device functions"> {{{1
+
 // Enable/disable multiversioning of certain function templates in Kokkos for
 // device compatibility purposes.  This can be explicitly disabled, or it will
 // be implicitly disabled if not building a device backend (currently only
@@ -616,5 +629,48 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #define KOKKOS_IMPL_ONLY_WITH_DEVICE_MULTIVERSIONING(...)
 #endif
 
+/** \internal
+ * For cases where copy-pasting the body would be an unreasonable
+ * maintainability burden, it's worth using a macro that allows us to write the
+ * body of the function template only once. It's used by putting the template
+ * parameter declaration in parens, then the condition for device support in
+ * parenthesis, and then the rest of the function signature and body in the rest
+ * of the arguments. For example:
+ *
+ *   KOKKOS_IMPL_MULTIVERSIONED_TEMPLATE(
+ *     (typename T, typename U, typename... Args),
+ *     (is_device_supported_foo<T>::value),
+ *     constexpr void foo(T&& t, U const& u, Args... args) noexcept {
+ *       do_stuff();
+ *     }
+ *   )
+ *
+ *
+ *   \note: Putting the first two arguments in parenthesis keeps the
+ *          preprocessor from thinking they're separate arguments.
+ *
+ **/
+#ifdef KOKKOS_IMPL_ENABLE_DEVICE_MULTIVERSIONING
+#define KOKKOS_IMPL_MULTIVERSIONED_TEMPLATE(                              \
+    tparams_in_parens, device_supported_condition_in_parens, ...)         \
+  template <KOKKOS_IMPL_PP_REMOVE_PARENS(tparams_in_parens),              \
+            typename std::enable_if<device_supported_condition_in_parens, \
+                                    int>::type = 0>                       \
+  KOKKOS_INLINE_FUNCTION __VA_ARGS__ template <                           \
+      KOKKOS_IMPL_PP_REMOVE_PARENS(tparams_in_parens),                    \
+      typename std::enable_if<!device_supported_condition_in_parens,      \
+                              long>::type = 1>                            \
+  inline __VA_ARGS__
+#elif defined(KOKKOS_IMPL_DISABLE_DEVICE_MULTIVERSIONING)
+#define KOKKOS_IMPL_MULTIVERSIONED_TEMPLATE(                      \
+    tparams_in_parens, device_supported_condition_in_parens, ...) \
+  template <KOKKOS_IMPL_PP_REMOVE_PARENS(tparams_in_parens)>      \
+  KOKKOS_INLINE_FUNCTION __VA_ARGS__
+#else
+#error "Kokkos multiversioning macros misconfigured"
+#endif
+
+// </editor-fold> end Multiversioning of host/device functions }}}1
+//==============================================================================
 
 #endif  // #ifndef KOKKOS_MACROS_HPP

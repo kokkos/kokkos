@@ -65,12 +65,9 @@
 #ifndef KOKKOS_PROPERTIES_DETECTION_HPP
 #define KOKKOS_PROPERTIES_DETECTION_HPP
 
+#include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 
-// TODO move this to somewhere more general
-#define KOKKOS_IMPL_PP_REMOVE_PARENS_IMPL(...) __VA_ARGS__
-#define KOKKOS_IMPL_PP_REMOVE_PARENS(...) \
-  KOKKOS_IMPL_PP_REMOVE_PARENS_IMPL __VA_ARGS__
 
 namespace Kokkos {
 namespace Impl {
