@@ -113,6 +113,6 @@ void view_nested_view() {
   ASSERT_EQ(0, host_tracking(0));
 }
 
-TEST_F(TEST_CATEGORY, view_nested_view) { view_nested_view<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, view_nested_view) { view_nested_view<TEST_EXECSPACE>(); }
 
 }  // namespace Test

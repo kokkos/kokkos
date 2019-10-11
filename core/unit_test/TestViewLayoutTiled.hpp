@@ -1757,7 +1757,7 @@ struct TestViewLayoutTiled {
 
 }  // namespace
 
-TEST_F(TEST_CATEGORY, view_layouttiled) {
+TEST(TEST_CATEGORY, view_layouttiled) {
   // These two examples are iterating by tile, then within a tile - not by
   // extents If N# is not a power of two, but want to iterate by tile then
   // within a tile, need to check that mapped index is within extent
@@ -1765,7 +1765,7 @@ TEST_F(TEST_CATEGORY, view_layouttiled) {
   TestViewLayoutTiled<TEST_EXECSPACE>::test_view_layout_tiled_3d(4, 12, 16);
   TestViewLayoutTiled<TEST_EXECSPACE>::test_view_layout_tiled_4d(4, 12, 16, 12);
 }
-TEST_F(TEST_CATEGORY, view_layouttiled_subtile) {
+TEST(TEST_CATEGORY, view_layouttiled_subtile) {
   // These two examples are iterating by tile, then within a tile - not by
   // extents If N# is not a power of two, but want to iterate by tile then
   // within a tile, need to check that mapped index is within extent

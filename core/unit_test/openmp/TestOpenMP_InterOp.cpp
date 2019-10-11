@@ -49,7 +49,7 @@ namespace Test {
 
 // Test whether allocations survive Kokkos initialize/finalize if done via Raw
 // Cuda.
-TEST_F(openmp, raw_openmp_interop) {
+TEST(openmp, raw_openmp_interop) {
   int count = 0;
   int num_threads, concurrency;
 #pragma omp parallel

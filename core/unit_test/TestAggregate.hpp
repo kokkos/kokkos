@@ -139,7 +139,7 @@ void TestViewAggregate() {
   }
 }
 
-TEST_F(TEST_CATEGORY, view_aggregate) { TestViewAggregate<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, view_aggregate) { TestViewAggregate<TEST_EXECSPACE>(); }
 
 }  // namespace Test
 

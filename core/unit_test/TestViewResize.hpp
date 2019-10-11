@@ -48,7 +48,7 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, view_resize) {
+TEST(TEST_CATEGORY, view_resize) {
   typedef TEST_EXECSPACE ExecSpace;
   TestViewResize::testResize<ExecSpace>();
 }

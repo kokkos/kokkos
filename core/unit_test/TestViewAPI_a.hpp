@@ -45,7 +45,7 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, view_api_a) {
+TEST(TEST_CATEGORY, view_api_a) {
   TestViewAPI<double, TEST_EXECSPACE>::run_test();
 }
 

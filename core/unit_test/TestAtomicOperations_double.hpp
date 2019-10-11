@@ -44,7 +44,7 @@
 #include <TestAtomicOperations.hpp>
 
 namespace Test {
-TEST_F(TEST_CATEGORY, atomic_operations_double) {
+TEST(TEST_CATEGORY, atomic_operations_double) {
   const int start = 1;  // Avoid zero for division.
   const int end   = 11;
   for (int i = start; i < end; ++i) {

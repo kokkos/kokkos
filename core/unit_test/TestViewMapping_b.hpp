@@ -125,7 +125,7 @@ struct TestViewMappingAtomic {
   }
 };
 
-TEST_F(TEST_CATEGORY, view_mapping_atomic) {
+TEST(TEST_CATEGORY, view_mapping_atomic) {
   TestViewMappingAtomic<TEST_EXECSPACE> f;
   f.run();
 }
@@ -175,7 +175,7 @@ void test_view_mapping_class_value() {
   ExecSpace().fence();
 }
 
-TEST_F(TEST_CATEGORY, view_mapping_class_value) {
+TEST(TEST_CATEGORY, view_mapping_class_value) {
   test_view_mapping_class_value<TEST_EXECSPACE>();
 }
 
@@ -185,7 +185,7 @@ TEST_F(TEST_CATEGORY, view_mapping_class_value) {
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, view_mapping_assignable) {
+TEST(TEST_CATEGORY, view_mapping_assignable) {
   typedef TEST_EXECSPACE exec_space;
 
   {  // Assignment of rank-0 Left = Right

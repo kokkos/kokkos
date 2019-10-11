@@ -302,19 +302,12 @@ void test_initstruct_args(const Kokkos::InitArguments& args) {
 
 }  // namespace Impl
 
-class defaultdevicetypeinit : public ::testing::Test {
- protected:
-  static void SetUpTestCase() {}
-
-  static void TearDownTestCase() {}
-};
-
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_01
-TEST_F(defaultdevicetypeinit, no_args) { Impl::test_no_arguments(); }
+TEST(defaultdevicetypeinit, no_args) { Impl::test_no_arguments(); }
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_02
-TEST_F(defaultdevicetypeinit, commandline_args_empty) {
+TEST(defaultdevicetypeinit, commandline_args_empty) {
   Kokkos::InitArguments argstruct;
   int nargs = 0;
   char** args =
@@ -329,7 +322,7 @@ TEST_F(defaultdevicetypeinit, commandline_args_empty) {
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_03
-TEST_F(defaultdevicetypeinit, commandline_args_other) {
+TEST(defaultdevicetypeinit, commandline_args_other) {
   Kokkos::InitArguments argstruct;
   int nargs = 0;
   char** args =
@@ -344,7 +337,7 @@ TEST_F(defaultdevicetypeinit, commandline_args_other) {
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_04
-TEST_F(defaultdevicetypeinit, commandline_args_nthreads) {
+TEST(defaultdevicetypeinit, commandline_args_nthreads) {
   Kokkos::InitArguments argstruct;
   int nargs = 0;
   char** args =
@@ -359,7 +352,7 @@ TEST_F(defaultdevicetypeinit, commandline_args_nthreads) {
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_05
-TEST_F(defaultdevicetypeinit, commandline_args_nthreads_numa) {
+TEST(defaultdevicetypeinit, commandline_args_nthreads_numa) {
   Kokkos::InitArguments argstruct;
   int nargs = 0;
   char** args =
@@ -374,7 +367,7 @@ TEST_F(defaultdevicetypeinit, commandline_args_nthreads_numa) {
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_06
-TEST_F(defaultdevicetypeinit, commandline_args_nthreads_numa_device) {
+TEST(defaultdevicetypeinit, commandline_args_nthreads_numa_device) {
   Kokkos::InitArguments argstruct;
   int nargs = 0;
   char** args =
@@ -389,7 +382,7 @@ TEST_F(defaultdevicetypeinit, commandline_args_nthreads_numa_device) {
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_07
-TEST_F(defaultdevicetypeinit, commandline_args_nthreads_device) {
+TEST(defaultdevicetypeinit, commandline_args_nthreads_device) {
   Kokkos::InitArguments argstruct;
   int nargs = 0;
   char** args =
@@ -404,7 +397,7 @@ TEST_F(defaultdevicetypeinit, commandline_args_nthreads_device) {
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_08
-TEST_F(defaultdevicetypeinit, commandline_args_numa_device) {
+TEST(defaultdevicetypeinit, commandline_args_numa_device) {
   Kokkos::InitArguments argstruct;
   int nargs = 0;
   char** args =
@@ -419,7 +412,7 @@ TEST_F(defaultdevicetypeinit, commandline_args_numa_device) {
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_09
-TEST_F(defaultdevicetypeinit, commandline_args_device) {
+TEST(defaultdevicetypeinit, commandline_args_device) {
   Kokkos::InitArguments argstruct;
   int nargs = 0;
   char** args =
@@ -434,7 +427,7 @@ TEST_F(defaultdevicetypeinit, commandline_args_device) {
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_10
-TEST_F(defaultdevicetypeinit, commandline_args_nthreads_numa_device_other) {
+TEST(defaultdevicetypeinit, commandline_args_nthreads_numa_device_other) {
   Kokkos::InitArguments argstruct;
   int nargs = 0;
   char** args =
@@ -449,42 +442,42 @@ TEST_F(defaultdevicetypeinit, commandline_args_nthreads_numa_device_other) {
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_11
-TEST_F(defaultdevicetypeinit, initstruct_default) {
+TEST(defaultdevicetypeinit, initstruct_default) {
   Kokkos::InitArguments args;
   Impl::test_initstruct_args(args);
 }
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_12
-TEST_F(defaultdevicetypeinit, initstruct_nthreads) {
+TEST(defaultdevicetypeinit, initstruct_nthreads) {
   Kokkos::InitArguments args = Impl::init_initstruct(true, false, false);
   Impl::test_initstruct_args(args);
 }
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_13
-TEST_F(defaultdevicetypeinit, initstruct_nthreads_numa) {
+TEST(defaultdevicetypeinit, initstruct_nthreads_numa) {
   Kokkos::InitArguments args = Impl::init_initstruct(true, true, false);
   Impl::test_initstruct_args(args);
 }
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_14
-TEST_F(defaultdevicetypeinit, initstruct_device) {
+TEST(defaultdevicetypeinit, initstruct_device) {
   Kokkos::InitArguments args = Impl::init_initstruct(false, false, true);
   Impl::test_initstruct_args(args);
 }
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_15
-TEST_F(defaultdevicetypeinit, initstruct_nthreads_device) {
+TEST(defaultdevicetypeinit, initstruct_nthreads_device) {
   Kokkos::InitArguments args = Impl::init_initstruct(true, false, true);
   Impl::test_initstruct_args(args);
 }
 #endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_16
-TEST_F(defaultdevicetypeinit, initstruct_nthreads_numa_device) {
+TEST(defaultdevicetypeinit, initstruct_nthreads_numa_device) {
   Kokkos::InitArguments args = Impl::init_initstruct(true, true, true);
   Impl::test_initstruct_args(args);
 }

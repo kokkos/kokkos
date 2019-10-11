@@ -49,7 +49,7 @@
 #include <Kokkos_Core.hpp>
 
 namespace Test {
-TEST_F(TEST_CATEGORY, init) { ; }
+TEST(TEST_CATEGORY, init) { ; }
 
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 
@@ -64,7 +64,7 @@ void test_dispatch() {
   }
 }
 
-TEST_F(TEST_CATEGORY, dispatch) { test_dispatch<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, dispatch) { test_dispatch<TEST_EXECSPACE>(); }
 #endif
 
 }  // namespace Test

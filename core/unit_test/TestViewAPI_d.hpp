@@ -45,7 +45,7 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, view_api_d) {
+TEST(TEST_CATEGORY, view_api_d) {
   TestViewAPI<double, TEST_EXECSPACE>::run_test_const();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_subview();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_subview_strided();

@@ -134,7 +134,7 @@ struct TestScan {
   }
 };
 
-TEST_F(TEST_CATEGORY, scan) {
+TEST(TEST_CATEGORY, scan) {
   TestScan<TEST_EXECSPACE>::test_range(1, 1000);
   TestScan<TEST_EXECSPACE>(0);
   TestScan<TEST_EXECSPACE>(100000);

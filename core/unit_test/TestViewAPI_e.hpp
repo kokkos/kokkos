@@ -50,7 +50,7 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, view_remap) {
+TEST(TEST_CATEGORY, view_remap) {
   enum { N0 = 3, N1 = 2, N2 = 8, N3 = 9 };
 
 #ifdef KOKKOS_ENABLE_CUDA
@@ -111,7 +111,7 @@ TEST_F(TEST_CATEGORY, view_remap) {
         }
 }
 
-TEST_F(TEST_CATEGORY, view_mirror_nonconst) {
+TEST(TEST_CATEGORY, view_mirror_nonconst) {
   Kokkos::View<int*, TEST_EXECSPACE> d_view("d_view", 10);
   Kokkos::View<const int*, TEST_EXECSPACE> d_view_const = d_view;
   auto h_view = Kokkos::create_mirror(d_view_const);
@@ -157,7 +157,7 @@ void test_stride(Extents... extents) {
   test_left_stride<DataType>(extents...);
 }
 
-TEST_F(TEST_CATEGORY, view_stride_method) {
+TEST(TEST_CATEGORY, view_stride_method) {
   test_stride<double[3]>();
   test_stride<double*>(3);
   test_stride<double[3][7][13]>();
@@ -198,7 +198,7 @@ inline void test_anonymous_space() {
 #endif
 }
 
-TEST_F(TEST_CATEGORY, anonymous_space) { test_anonymous_space(); }
+TEST(TEST_CATEGORY, anonymous_space) { test_anonymous_space(); }
 
 template <class ExecSpace>
 struct TestViewOverloadResolution {
@@ -235,7 +235,7 @@ struct TestViewOverloadResolution {
   }
 };
 
-TEST_F(TEST_CATEGORY, view_overload_resolution) {
+TEST(TEST_CATEGORY, view_overload_resolution) {
   TestViewOverloadResolution<TEST_EXECSPACE>::test_function_overload();
 }
 }  // namespace Test

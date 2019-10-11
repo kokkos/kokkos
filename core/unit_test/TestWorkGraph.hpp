@@ -157,7 +157,7 @@ struct TestWorkGraph {
 
 }  // anonymous namespace
 
-TEST_F(TEST_CATEGORY, workgraph_fib) {
+TEST(TEST_CATEGORY, workgraph_fib) {
   int limit = 27;
   for (int i = 0; i < limit; ++i) {
     TestWorkGraph<TEST_EXECSPACE> f(i);

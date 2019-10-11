@@ -124,7 +124,7 @@ struct TestComplexConstruction {
   }
 };
 
-TEST_F(TEST_CATEGORY, complex_construction) {
+TEST(TEST_CATEGORY, complex_construction) {
   TestComplexConstruction<TEST_EXECSPACE> test;
   test.testit();
 }
@@ -274,7 +274,7 @@ struct TestComplexBasicMath {
   }
 };
 
-TEST_F(TEST_CATEGORY, complex_basic_math) {
+TEST(TEST_CATEGORY, complex_basic_math) {
   TestComplexBasicMath<TEST_EXECSPACE> test;
   test.testit();
 }
@@ -348,11 +348,11 @@ void testComplexIO() {
   ASSERT_EQ(z, (Kokkos::complex<double>{3, 4}));
 }
 
-TEST_F(TEST_CATEGORY, complex_special_funtions) {
+TEST(TEST_CATEGORY, complex_special_funtions) {
   TestComplexSpecialFunctions<TEST_EXECSPACE> test;
   test.testit();
 }
 
-TEST_F(TEST_CATEGORY, complex_io) { testComplexIO(); }
+TEST(TEST_CATEGORY, complex_io) { testComplexIO(); }
 
 }  // namespace Test

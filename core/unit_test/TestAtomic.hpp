@@ -491,7 +491,7 @@ bool Loop(int loop, int test) {
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, atomics) {
+TEST(TEST_CATEGORY, atomics) {
   const int loop_count = 1e4;
 
   ASSERT_TRUE((TestAtomic::Loop<int, TEST_EXECSPACE>(loop_count, 1)));

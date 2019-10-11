@@ -44,7 +44,7 @@
 #include <TestReducers.hpp>
 
 namespace Test {
-TEST_F(TEST_CATEGORY, reducers_complex_double) {
+TEST(TEST_CATEGORY, reducers_complex_double) {
   TestReducers<Kokkos::complex<double>, TEST_EXECSPACE>::execute_basic();
 }
 
