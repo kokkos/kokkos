@@ -152,12 +152,16 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   }
 
   iterator insert(iterator it, size_type count, const value_type& val) {
+    if ((_size == 0) && (it == begin())) {
+      resize(count, val);
+      DV::sync_host();
+      return begin();
+    }
     DV::sync_host();
     DV::modify_host();
     if (it < begin() || it > end())
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
     if (count == 0) return it;
-
     ptrdiff_t start = std::distance(begin(), it);
     auto org_size   = size();
     resize(size() + count);
@@ -187,13 +191,17 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   typename std::enable_if<impl_is_input_iterator<InputIterator>::value,
                           iterator>::type
   insert(iterator it, InputIterator b, InputIterator e) {
+    ptrdiff_t count = std::distance(b, e);
+    if (count == 0) return it;
+
+    if ((_size == 0) && (it == begin())) {
+      resize(count);
+      it = begin();
+    }
     DV::sync_host();
     DV::modify_host();
     if (it < begin() || it > end())
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
-
-    ptrdiff_t count = std::distance(b, e);
-    if (count == 0) return it;
 
     ptrdiff_t start = it - begin();
     auto org_size   = size();
@@ -224,9 +232,11 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   size_type span() const { return DV::span(); }
   bool empty() const { return _size == 0; }
 
-  iterator begin() const { return &DV::h_view(0); }
+  iterator begin() const { return DV::h_view.data(); }
 
-  iterator end() const { return &DV::h_view(_size); }
+  iterator end() const {
+    return _size > 0 ? DV::h_view.data() + _size : DV::h_view.data();
+  }
 
   reference front() { return DV::h_view(0); }
 

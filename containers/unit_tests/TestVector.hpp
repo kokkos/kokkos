@@ -78,6 +78,7 @@ struct test_vector_insert {
     Vector b;
     b.insert(b.begin(), 7, 9);
     ASSERT_EQ(b.size(), 7);
+    ASSERT_EQ(b[0], scalar_type(9));
 
     it = a.begin();
     it += 27 + n;
