@@ -934,7 +934,7 @@ void impl_test_local_deepcopy_rangepolicy_rank_7(const int N) {
 
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 #if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
-TEST_F(TEST_CATEGORY, local_deepcopy_teampolicy_layoutleft) {
+TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutleft) {
   typedef TEST_EXECSPACE ExecSpace;
   typedef Kokkos::View<double********, Kokkos::LayoutLeft, ExecSpace> ViewType;
 
@@ -961,7 +961,7 @@ TEST_F(TEST_CATEGORY, local_deepcopy_teampolicy_layoutleft) {
   }
 }
 //-------------------------------------------------------------------------------------------------------------
-TEST_F(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutleft) {
+TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutleft) {
   typedef TEST_EXECSPACE ExecSpace;
   typedef Kokkos::View<double********, Kokkos::LayoutLeft, ExecSpace> ViewType;
 
@@ -988,7 +988,7 @@ TEST_F(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutleft) {
   }
 }
 //-------------------------------------------------------------------------------------------------------------
-TEST_F(TEST_CATEGORY, local_deepcopy_teampolicy_layoutright) {
+TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutright) {
   typedef TEST_EXECSPACE ExecSpace;
   typedef Kokkos::View<double********, Kokkos::LayoutRight, ExecSpace> ViewType;
 
@@ -1015,7 +1015,7 @@ TEST_F(TEST_CATEGORY, local_deepcopy_teampolicy_layoutright) {
   }
 }
 //-------------------------------------------------------------------------------------------------------------
-TEST_F(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutright) {
+TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutright) {
   typedef TEST_EXECSPACE ExecSpace;
   typedef Kokkos::View<double********, Kokkos::LayoutRight, ExecSpace> ViewType;
 

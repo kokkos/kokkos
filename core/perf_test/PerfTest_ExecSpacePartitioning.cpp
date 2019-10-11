@@ -127,7 +127,7 @@ struct FunctorTeamReduce {
   }
 };
 
-TEST_F(default_exec, overlap_range_policy) {
+TEST(default_exec, overlap_range_policy) {
   int N = 2000;
   int M = 10000;
   int R = 10;
@@ -288,7 +288,7 @@ TEST_F(default_exec, overlap_range_policy) {
   SpaceInstance<TEST_EXECSPACE>::destroy(space2);
 }
 
-TEST_F(default_exec, overlap_mdrange_policy) {
+TEST(default_exec, overlap_mdrange_policy) {
   int N = 200;
   int M = 10000;
   int R = 10;
@@ -467,7 +467,7 @@ TEST_F(default_exec, overlap_mdrange_policy) {
   SpaceInstance<TEST_EXECSPACE>::destroy(space1);
 }
 
-TEST_F(default_exec, overlap_team_policy) {
+TEST(default_exec, overlap_team_policy) {
   int N = 20;
   int M = 1000000;
   int R = 10;

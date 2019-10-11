@@ -142,7 +142,7 @@ TEST(TEST_CATEGORY, scan) {
   TEST_EXECSPACE().fence();
 }
 
-/*TEST_F( TEST_CATEGORY, scan_small )
+/*TEST( TEST_CATEGORY, scan_small )
 {
   typedef TestScan< TEST_EXECSPACE, Kokkos::Impl::ThreadsExecUseScanSmall >
 TestScanFunctor;

@@ -108,13 +108,13 @@ struct TeamPolicyFunctor {
 
 }  // namespace
 
-TEST_F(TEST_CATEGORY, reduce_device_view_range_policy) {
+TEST(TEST_CATEGORY, reduce_device_view_range_policy) {
   int N = 1000 * 1024 * 1024;
   test_reduce_device_view(N, Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
                           RangePolicyFunctor());
 }
 
-TEST_F(TEST_CATEGORY, reduce_device_view_mdrange_policy) {
+TEST(TEST_CATEGORY, reduce_device_view_mdrange_policy) {
   int N = 1000 * 1024 * 1024;
   test_reduce_device_view(
       N,
@@ -123,7 +123,7 @@ TEST_F(TEST_CATEGORY, reduce_device_view_mdrange_policy) {
       MDRangePolicyFunctor());
 }
 
-TEST_F(TEST_CATEGORY, reduce_device_view_team_policy) {
+TEST(TEST_CATEGORY, reduce_device_view_team_policy) {
   int N = 1000 * 1024 * 1024;
   test_reduce_device_view(
       N, Kokkos::TeamPolicy<TEST_EXECSPACE>(1000 * 1024, Kokkos::AUTO),
