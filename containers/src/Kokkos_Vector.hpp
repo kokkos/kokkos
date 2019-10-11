@@ -64,10 +64,10 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   typedef const Scalar& const_reference;
   typedef Scalar* iterator;
   typedef const Scalar* const_iterator;
+  typedef size_t size_type;
 
  private:
   size_t _size;
-  typedef size_t size_type;
   float _extra_storage;
   typedef DualView<Scalar*, LayoutLeft, Arg1Type> DV;
 
