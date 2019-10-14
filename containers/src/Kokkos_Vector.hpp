@@ -194,18 +194,20 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     ptrdiff_t count = std::distance(b, e);
     if (count == 0) return it;
 
-    if ((_size == 0) && (it == begin())) {
-      resize(count);
-      it = begin();
-    }
     DV::sync_host();
     DV::modify_host();
     if (it < begin() || it > end())
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
 
+    bool resized = false;
+    if ((_size == 0) && (it == begin())) {
+      resize(count);
+      it      = begin();
+      resized = true;
+    }
     ptrdiff_t start = it - begin();
     auto org_size   = size();
-    resize(size() + count);
+    if (!resized) resize(size() + count);
     it = begin() + start;
     auto org_view =
         subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(start, org_size));
