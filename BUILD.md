@@ -182,11 +182,15 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
     * STRING Default: 11
 
 ## Third-party Libraries (TPLs)
-The following options control activating and locating varial options TPLs.
+The following options control activating and locating various TPLs.
 
 * Kokkos_CUDA_DIR
-    * Location of CUDA library
+* CUDA_ROOT
+    * Location of CUDA install prefix
     * PATH Default:
+* Kokkos_ENABLE_HPX
+    * Whether to enable the HPX library
+    * BOOL Default: OFF
 * Kokkos_ENABLE_HWLOC
     * Whether to enable the HWLOC library
     * BOOL Default: Off
@@ -196,17 +200,35 @@ The following options control activating and locating varial options TPLs.
 * Kokkos_ENABLE_MEMKIND
     * Whether to enable the MEMKIND library
     * BOOL Default: Off
-* Kokkos_HPX_DIR
-    * Location of HPX library
+* Kokkos_ENABLE_LIBDL
+    * Whether to enable the LIBDL library
+    * BOOL Default: On
+* Kokkos_ENABLE_LIBRT
+    * Whether to enable the LIBRT library
+    * BOOL Default: Off
+* HPX_DIR
+* HPX_ROOT
+    * Location of HPX prefix (ROOT) or CMake config (LIBRARY)
     * PATH Default:
 * Kokkos_HWLOC_DIR
-    * Location of HWLOC library
+* HWLOC_ROOT
+    * Location of HWLOC install prefix
     * PATH Default:
 * Kokkos_LIBNUMA_DIR
-    * Location of LIBNUMA library
+* LIBNUMA_ROOT
+    * Location of LIBNUMA install prefix
     * PATH Default:
 * Kokkos_MEMKIND_DIR
-    * Location of MEMKIND library
+* MEMKIND_ROOT
+    * Location of MEMKIND install prefix
+    * PATH Default:
+* Kokkos_LIBDL_DIR
+* LIBDL_ROOT
+    * Location of LIBDL install prefix
+    * PATH Default:
+* Kokkos_LIBRT_DIR
+* LIBRT_ROOT
+    * Location of LIBRT install prefix
     * PATH Default:
 
 ## Architecture Keywords
