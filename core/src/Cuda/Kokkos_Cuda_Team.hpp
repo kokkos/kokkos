@@ -174,7 +174,8 @@ class CudaTeamMember {
       val = *((ValueType*)m_team_reduce);
     } else {               // team <= warp
       ValueType tmp(val);  // input might not be a register variable
-      cuda_shfl(val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y);
+      Impl::in_place_shfl(val, tmp, blockDim.x * thread_id,
+                          blockDim.x * blockDim.y);
     }
 #endif
   }
@@ -195,7 +196,8 @@ class CudaTeamMember {
       val = *((ValueType*)m_team_reduce);
     } else {               // team <= warp
       ValueType tmp(val);  // input might not be a register variable
-      cuda_shfl(val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y);
+      Impl::in_place_shfl(val, tmp, blockDim.x * thread_id,
+                          blockDim.x * blockDim.y);
     }
 #endif
   }
@@ -313,7 +315,7 @@ class CudaTeamMember {
                   << ((threadIdx.y % (32 / blockDim.x)) * blockDim.x);
 
     for (int i = blockDim.x; (i >>= 1);) {
-      cuda_shfl_down(tmp2, tmp, i, blockDim.x, mask);
+      Impl::in_place_shfl_down(tmp2, tmp, i, blockDim.x, mask);
       if ((int)threadIdx.x < i) {
         reducer.join(tmp, tmp2);
       }
@@ -324,7 +326,7 @@ class CudaTeamMember {
     // because floating point summation is not associative
     // and thus different threads could have different results.
 
-    cuda_shfl(tmp2, tmp, 0, blockDim.x, mask);
+    Impl::in_place_shfl(tmp2, tmp, 0, blockDim.x, mask);
     value               = tmp2;
     reducer.reference() = tmp2;
 #endif
@@ -372,7 +374,8 @@ class CudaTeamMember {
       value_type tmp(reducer.reference());
 
       for (int i = CudaTraits::WarpSize; (int)blockDim.x <= (i >>= 1);) {
-        cuda_shfl_down(reducer.reference(), tmp, i, CudaTraits::WarpSize);
+        Impl::in_place_shfl_down(reducer.reference(), tmp, i,
+                                 CudaTraits::WarpSize);
 
         // Root of each vector lane reduces "thread" contribution
         if (0 == threadIdx.x && wx < i) {
@@ -953,7 +956,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 
     for (int j = 1; j < (int)blockDim.x; j <<= 1) {
       value_type tmp = 0;
-      Impl::cuda_shfl_up(tmp, sval, j, blockDim.x, active_mask);
+      Impl::in_place_shfl_up(tmp, sval, j, blockDim.x, active_mask);
       if (j <= (int)threadIdx.x) {
         sval += tmp;
       }
@@ -966,7 +969,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     if (i < loop_boundaries.end) closure(i, val, true);
 
     // Accumulate the last value in the inclusive scan:
-    Impl::cuda_shfl(sval, sval, mask, blockDim.x, active_mask);
+    Impl::in_place_shfl(sval, sval, mask, blockDim.x, active_mask);
 
     accum += sval;
   }
@@ -1022,7 +1025,7 @@ KOKKOS_INLINE_FUNCTION void single(
                       ? 0xffffffff
                       : ((1 << blockDim.x) - 1)
                             << ((threadIdx.y % (32 / blockDim.x)) * blockDim.x);
-  Impl::cuda_shfl(val, val, 0, blockDim.x, mask);
+  Impl::in_place_shfl(val, val, 0, blockDim.x, mask);
 #endif
 }
 
