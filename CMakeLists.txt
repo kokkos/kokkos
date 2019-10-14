@@ -80,6 +80,18 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   ENDIF()
 ENDIF()
 
+IF (NOT CMAKE_SIZEOF_VOID_P)
+  STRING(FIND ${CMAKE_CXX_COMPILER} nvcc_wrapper FIND_IDX)
+  IF (NOT FIND_IDX STREQUAL -1)
+    MESSAGE(FATAL_ERROR "Kokkos did not configure correctly and failed to validate compiler. The most likely cause is CUDA linkage using nvcc_wrapper. Please ensure your CUDA environment is correctly configured.")
+  ELSE()
+    MESSAGE(FATAL_ERROR "Kokkos did not configure correctly and failed to validate compiler. The most likely cause is linkage errors during CMake compiler validation. Please consult the CMake error log shown below for the exact error during compiler validation")
+  ENDIF()
+ELSEIF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+  MESSAGE(FATAL_ERROR "Kokkos assumes a 64-bit build; i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead")
+ENDIF()
+
+
 set(Kokkos_VERSION_MAJOR 3)
 set(Kokkos_VERSION_MINOR 0)
 set(Kokkos_VERSION_PATCH 0)
@@ -121,10 +133,6 @@ OPTION(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 # Workaround for building position independent code.
 IF(BUILD_SHARED_LIBS)
   SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
-ENDIF()
-
-IF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-  MESSAGE(FATAL_ERROR "Kokkos assumes a 64-bit build; i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead")
 ENDIF()
 
 SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkos Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms)
