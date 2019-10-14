@@ -114,7 +114,13 @@ void serial_resize_thread_team_data(size_t pool_reduce_bytes,
         HostThreadTeamData::scratch_size(pool_reduce_bytes, team_reduce_bytes,
                                          team_shared_bytes, thread_local_bytes);
 
-    void* const ptr = space.allocate(alloc_bytes);
+    void* ptr = nullptr;
+    try {
+      ptr = space.allocate(alloc_bytes);
+    } catch (Experimental::RawMemoryAllocationFailure const& failure) {
+      // For now, just rethrow the error message the existing way
+      Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
+    }
 
     g_serial_thread_team_data.scratch_assign(
         ((char*)ptr), alloc_bytes, pool_reduce_bytes, team_reduce_bytes,

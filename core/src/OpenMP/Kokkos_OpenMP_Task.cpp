@@ -75,9 +75,31 @@ HostThreadTeamDataSingleton::HostThreadTeamDataSingleton()
       num_pool_reduce_bytes, num_team_reduce_bytes, num_team_shared_bytes,
       num_thread_local_bytes);
 
+  void* ptr = nullptr;
+  try {
+    ptr = space.allocate(alloc_bytes);
+  }
+#if !(defined(__NVCC__) && defined(KOKKOS_ENABLE_OPENMP))
+  catch (Experimental::RawMemoryAllocationFailure const& f) {
+    // For now, just rethrow the error message with a note
+    // Note that this could, in turn, trigger an out of memory exception,
+    // but it's pretty unlikely, so we won't worry about it for now.
+    // TODO reasonable error message when `std::string` causes OOM error
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("Failure to allocate scratch memory:  ") +
+        f.get_error_message());
+  }
+#else
+  // For some reason, NVCC with OpenMP chokes on custom exception classes
+  catch (std::bad_alloc const& failure) {
+    // For now, just rethrow the error message the existing way
+    Kokkos::Impl::throw_runtime_exception(failure.what());
+  }
+#endif
+
   HostThreadTeamData::scratch_assign(
-      space.allocate(alloc_bytes), alloc_bytes, num_pool_reduce_bytes,
-      num_team_reduce_bytes, num_team_shared_bytes, num_thread_local_bytes);
+      ptr, alloc_bytes, num_pool_reduce_bytes, num_team_reduce_bytes,
+      num_team_shared_bytes, num_thread_local_bytes);
 }
 
 HostThreadTeamDataSingleton::~HostThreadTeamDataSingleton() {
