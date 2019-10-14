@@ -24,7 +24,7 @@ KOKKOS_TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
-foreach(Tag Threads;Serial;OpenMP;Cuda)
+foreach(Tag Threads;Serial;OpenMP;Cuda;HPX)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
     set(DEVICE "PTHREAD")
@@ -139,66 +139,9 @@ IF(Kokkos_ENABLE_HPX)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HPX
     SOURCES
-      UnitTestMainInit.cpp
-      hpx/TestHPX_AtomicOperations_int.cpp
-      hpx/TestHPX_AtomicOperations_unsignedint.cpp
-      hpx/TestHPX_AtomicOperations_longint.cpp
-      hpx/TestHPX_AtomicOperations_unsignedlongint.cpp
-      hpx/TestHPX_AtomicOperations_longlongint.cpp
-      hpx/TestHPX_AtomicOperations_double.cpp
-      hpx/TestHPX_AtomicOperations_float.cpp
-      hpx/TestHPX_AtomicViews.cpp
-      hpx/TestHPX_Atomics.cpp
-      hpx/TestHPX_Complex.cpp
-      hpx/TestHPX_Init.cpp
-      hpx/TestHPX_MDRange_a.cpp
-      hpx/TestHPX_MDRange_b.cpp
-      hpx/TestHPX_MDRange_c.cpp
-      hpx/TestHPX_MDRange_d.cpp
-      hpx/TestHPX_MDRange_e.cpp
-      hpx/TestHPX_Other.cpp
-      hpx/TestHPX_RangePolicy.cpp
-      hpx/TestHPX_Reductions.cpp
-      hpx/TestHPX_Reducers_a.cpp
-      hpx/TestHPX_Reducers_b.cpp
-      hpx/TestHPX_Reducers_c.cpp
-      hpx/TestHPX_Reducers_d.cpp
-      hpx/TestHPX_Scan.cpp
-      hpx/TestHPX_SharedAlloc.cpp
-      hpx/TestHPX_SubView_a.cpp
-      hpx/TestHPX_SubView_b.cpp
-      hpx/TestHPX_SubView_c01.cpp
-      hpx/TestHPX_SubView_c02.cpp
-      hpx/TestHPX_SubView_c03.cpp
-      hpx/TestHPX_SubView_c04.cpp
-      hpx/TestHPX_SubView_c05.cpp
-      hpx/TestHPX_SubView_c06.cpp
-      hpx/TestHPX_SubView_c07.cpp
-      hpx/TestHPX_SubView_c08.cpp
-      hpx/TestHPX_SubView_c09.cpp
-      hpx/TestHPX_SubView_c10.cpp
-      hpx/TestHPX_SubView_c11.cpp
-      hpx/TestHPX_SubView_c12.cpp
-      hpx/TestHPX_SubView_c13.cpp
+      ${HPX_SOURCES}
       hpx/TestHPX_Task.cpp
-      hpx/TestHPX_Team.cpp
-      hpx/TestHPX_TeamReductionScan.cpp
-      hpx/TestHPX_TeamScratch.cpp
-      hpx/TestHPX_TeamVectorRange.cpp
-      hpx/TestHPX_View_64bit.cpp
-      hpx/TestHPX_ViewAPI_a.cpp
-      hpx/TestHPX_ViewAPI_b.cpp
-      hpx/TestHPX_ViewAPI_c.cpp
-      hpx/TestHPX_ViewAPI_d.cpp
-      hpx/TestHPX_ViewAPI_e.cpp
-      hpx/TestHPX_ViewMapping_a.cpp
-      hpx/TestHPX_ViewMapping_b.cpp
-      hpx/TestHPX_ViewMapping_subview.cpp
-      hpx/TestHPX_ViewOfClass.cpp
-      hpx/TestHPX_Crs.cpp
-      hpx/TestHPX_WorkGraph.cpp
       hpx/TestHPX_UniqueToken.cpp
-      hpx/TestHPX_ViewResize.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HPXInterOp

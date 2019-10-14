@@ -566,6 +566,11 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
            team_size_ * m_thread_scratch_size[level];
   }
 
+  inline static int scratch_size_max(int level) {
+    return (level == 0 ? 1024 * 32 :  // Roughly L1 size
+                20 * 1024 * 1024);    // Limit to keep compatibility with CUDA
+  }
+
  public:
   template <class ExecSpace, class... OtherProperties>
   friend class TeamPolicyInternal;
