@@ -225,6 +225,7 @@ IF(Kokkos_ENABLE_OPENMP)
       openmp/TestOpenMP_Task.cpp
       openmp/TestOpenMP_Team.cpp
       openmp/TestOpenMP_TeamReductionScan.cpp
+      openmp/TestOpenMP_TeamScratch.cpp
       openmp/TestOpenMP_TeamTeamSize.cpp
       openmp/TestOpenMP_TeamVectorRange.cpp
       openmp/TestOpenMP_View_64bit.cpp
