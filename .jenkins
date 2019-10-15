@@ -152,6 +152,11 @@ pipeline {
                             label 'docker'
                         }
                     }
+                    environment {
+                        OMP_NUM_THREADS = 8
+                        OMP_PLACES = 'threads'
+                        OMP_PROC_BIND = 'spread'
+                    }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
@@ -159,6 +164,7 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_OPENMP=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
