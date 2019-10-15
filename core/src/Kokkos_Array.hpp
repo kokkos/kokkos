@@ -467,6 +467,16 @@ impl_device_supported_get(Kokkos::Array<T, N> volatile&& a) {
 
 }  // namespace Kokkos
 
+// tuple_* things are inconsistently defined as struct/class inside of the std library
+// So no matter whether we define our specialization as class or struct we get a warning
+#ifdef KOKKOS_COMPILER_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#endif
+#ifdef KOKKOS_COMPILER_GCC
+#pragma gcc diagnostic push
+#pragma gcc diagnostic ignored "-Wmismatched-tags"
+#endif
 namespace std {
 template <class T, size_t N>
 struct tuple_size<Kokkos::Array<T, N>> : std::integral_constant<size_t, N> {};
@@ -475,5 +485,11 @@ struct tuple_element<I, Kokkos::Array<T, N>> {
   using type = T;
 };
 }  // namespace std
+#ifdef KOKKOS_COMPILER_CLANG
+#pragma clang diagnostic pop
+#endif
+#ifdef KOKKOS_COMPILER_GCC
+#pragma gcc diagnostic pop
+#endif
 
 #endif /* #ifndef KOKKOS_ARRAY_HPP */
