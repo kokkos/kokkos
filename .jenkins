@@ -143,6 +143,26 @@ pipeline {
                         }
                     }
                 }
+                stage('GCC-4.8.4') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.gcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull'
+                            label 'docker'
+                        }
+                    }
+                    steps {
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
+                    }
+                }
                 stage('Clang-Format') {
                     agent {
                         dockerfile {
