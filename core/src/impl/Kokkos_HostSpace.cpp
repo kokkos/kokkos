@@ -43,6 +43,8 @@
 
 #include <algorithm>
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_MemorySpace.hpp>
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #endif
@@ -172,7 +174,7 @@ void *HostSpace::allocate(const size_t arg_alloc_size) const {
   constexpr uintptr_t alignment      = Kokkos::Impl::MEMORY_ALIGNMENT;
   constexpr uintptr_t alignment_mask = alignment - 1;
 
-  void *ptr = 0;
+  void *ptr = nullptr;
 
   if (arg_alloc_size) {
     if (m_alloc_mech == STD_MALLOC) {
@@ -182,7 +184,7 @@ void *HostSpace::allocate(const size_t arg_alloc_size) const {
       void *alloc_ptr = malloc(size_padded);
 
       if (alloc_ptr) {
-        uintptr_t address = reinterpret_cast<uintptr_t>(alloc_ptr);
+        auto address = reinterpret_cast<uintptr_t>(alloc_ptr);
 
         // offset enough to record the alloc_ptr
         address += sizeof(void *);
@@ -237,27 +239,37 @@ void *HostSpace::allocate(const size_t arg_alloc_size) const {
 #endif
   }
 
-  if ((ptr == 0) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
+  if ((ptr == nullptr) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
-    std::ostringstream msg;
-    msg << "Kokkos::HostSpace::allocate[ ";
+    Experimental::RawMemoryAllocationFailure::FailureMode failure_mode =
+        Experimental::RawMemoryAllocationFailure::FailureMode::
+            AllocationNotAligned;
+    if (ptr == nullptr) {
+      failure_mode = Experimental::RawMemoryAllocationFailure::FailureMode::
+          OutOfMemoryError;
+    }
+
+    Experimental::RawMemoryAllocationFailure::AllocationMechanism alloc_mec =
+        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+            StdMalloc;
     switch (m_alloc_mech) {
-      case STD_MALLOC: msg << "STD_MALLOC"; break;
-      case POSIX_MEMALIGN: msg << "POSIX_MEMALIGN"; break;
-      case POSIX_MMAP: msg << "POSIX_MMAP"; break;
-      case INTEL_MM_ALLOC: msg << "INTEL_MM_ALLOC"; break;
-    }
-    msg << " ]( " << arg_alloc_size << " ) FAILED";
-    if (ptr == NULL) {
-      msg << " NULL";
-    } else {
-      msg << " NOT ALIGNED " << ptr;
+      case STD_MALLOC: break;  // default
+      case POSIX_MEMALIGN:
+        alloc_mec = Experimental::RawMemoryAllocationFailure::
+            AllocationMechanism::PosixMemAlign;
+        break;
+      case POSIX_MMAP:
+        alloc_mec = Experimental::RawMemoryAllocationFailure::
+            AllocationMechanism::PosixMMap;
+        break;
+      case INTEL_MM_ALLOC:
+        alloc_mec = Experimental::RawMemoryAllocationFailure::
+            AllocationMechanism::IntelMMAlloc;
+        break;
     }
 
-    std::cerr << msg.str() << std::endl;
-    std::cerr.flush();
-
-    Kokkos::Impl::throw_runtime_exception(msg.str());
+    throw Kokkos::Experimental::RawMemoryAllocationFailure(
+        arg_alloc_size, alignment, failure_mode, alloc_mec);
   }
 
   return ptr;
@@ -324,6 +336,28 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::~SharedAllocationRecord() {
                      SharedAllocationRecord<void, void>::m_alloc_size);
 }
 
+SharedAllocationHeader *_do_allocation(Kokkos::HostSpace const &space,
+                                       std::string const &label,
+                                       size_t alloc_size) {
+  try {
+    return reinterpret_cast<SharedAllocationHeader *>(
+        space.allocate(alloc_size));
+  } catch (Experimental::RawMemoryAllocationFailure const &failure) {
+    if (failure.failure_mode() == Experimental::RawMemoryAllocationFailure::
+                                      FailureMode::AllocationNotAligned) {
+      // TODO: delete the misaligned memory
+    }
+
+    std::cerr << "Kokkos failed to allocate memory for label \"" << label
+              << "\".  Allocation using MemorySpace named \"" << space.name()
+              << " failed with the following error:  ";
+    failure.print_error_message(std::cerr);
+    std::cerr.flush();
+    Kokkos::Impl::throw_runtime_exception("Memory allocation failure");
+  }
+  return nullptr;  // unreachable
+}
+
 SharedAllocationRecord<Kokkos::HostSpace, void>::SharedAllocationRecord(
     const Kokkos::HostSpace &arg_space, const std::string &arg_label,
     const size_t arg_alloc_size,
@@ -334,8 +368,8 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::SharedAllocationRecord(
 #ifdef KOKKOS_DEBUG
           &SharedAllocationRecord<Kokkos::HostSpace, void>::s_root_record,
 #endif
-          reinterpret_cast<SharedAllocationHeader *>(arg_space.allocate(
-              sizeof(SharedAllocationHeader) + arg_alloc_size)),
+          Impl::checked_allocation_with_header(arg_space, arg_label,
+                                               arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -361,7 +395,7 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::SharedAllocationRecord(
 void *SharedAllocationRecord<Kokkos::HostSpace, void>::allocate_tracked(
     const Kokkos::HostSpace &arg_space, const std::string &arg_alloc_label,
     const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void *)0;
+  if (!arg_alloc_size) return (void *)nullptr;
 
   SharedAllocationRecord *const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);

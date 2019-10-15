@@ -286,6 +286,7 @@
 // Compiling Cuda code to 'ptx'
 
 #define KOKKOS_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
+#define KOKKOS_IMPL_FORCEINLINE __forceinline__
 #define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
 #define KOKKOS_FUNCTION __device__ __host__
 #if defined(KOKKOS_COMPILER_NVCC)
@@ -352,6 +353,7 @@
 #if !defined(KOKKOS_FORCEINLINE_FUNCTION)
 #if !defined(_WIN32)
 #define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
 #else
 #define KOKKOS_FORCEINLINE_FUNCTION inline
 #endif
@@ -402,6 +404,7 @@
 
 #if !defined(KOKKOS_FORCEINLINE_FUNCTION)
 #define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
 #endif
 
 #if !defined(KOKKOS_IMPL_ALIGN_PTR)
@@ -426,6 +429,7 @@
 
 #if !defined(KOKKOS_FORCEINLINE_FUNCTION)
 #define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
 #endif
 
 #define KOKKOS_RESTRICT __restrict__
@@ -460,6 +464,10 @@
 
 #if !defined(KOKKOS_FORCEINLINE_FUNCTION)
 define KOKKOS_FORCEINLINE_FUNCTION inline
+#endif
+
+#if !defined(KOKKOS_IMPL_FORCEINLINE)
+    define KOKKOS_IMPL_FORCEINLINE inline
 #endif
 
 #if !defined(KOKKOS_INLINE_FUNCTION)
@@ -684,5 +692,11 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 
 // </editor-fold> end Multiversioning of host/device functions }}}1
 //==============================================================================
+
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+#define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
+#else
+#define KOKKOS_ATTRIBUTE_NODISCARD
+#endif
 
 #endif  // #ifndef KOKKOS_MACROS_HPP

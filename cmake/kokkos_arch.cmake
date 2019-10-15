@@ -30,7 +30,9 @@ FUNCTION(ARCH_FLAGS)
   FOREACH(COMP ${COMPILERS})
     IF (COMPILER STREQUAL "${COMP}")
       IF (PARSE_${COMPILER})
-        SET(FLAGS ${PARSE_${COMPILER}})
+        IF (NOT "${PARSE_${COMPILER}}" STREQUAL "NO-VALUE-SPECIFIED")
+           SET(FLAGS ${PARSE_${COMPILER}})
+        ENDIF()
       ELSEIF(PARSE_DEFAULT)
         SET(FLAGS ${PARSE_DEFAULT})
       ENDIF()
@@ -140,7 +142,7 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
     ${COMMON_WARNINGS})
 
   ARCH_FLAGS(
-    PGI ""
+    PGI NO-VALUE-SPECIFIED
     GNU     ${GNU_WARNINGS}
     DEFAULT ${COMMON_WARNINGS}
   )
@@ -154,6 +156,12 @@ GLOBAL_SET(KOKKOS_CUDA_OPTIONS "")
 IF (KOKKOS_ENABLE_CUDA_LAMBDA)
   IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
     GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-expt-extended-lambda")
+  ENDIF()
+ENDIF()
+
+IF (KOKKOS_ENABLE_CUDA_CONSTEXPR)
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+    GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "-expt-relaxed-constexpr")
   ENDIF()
 ENDIF()
 
@@ -186,7 +194,7 @@ IF(KOKKOS_ENABLE_OPENMP)
     Clang      -fopenmp=libomp
     PGI        -mp
     NVIDIA     -Xcompiler -fopenmp
-    Cray       ""
+    Cray       NO-VALUE-SPECIFIED
     XL         -qsmp=omp
     DEFAULT    -fopenmp 
   )
@@ -194,16 +202,16 @@ ENDIF()
 
 IF (KOKKOS_ARCH_ARMV80)
   ARCH_FLAGS(
-    Cray ""
-    PGI  ""
+    Cray NO-VALUE-SPECIFIED
+    PGI  NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a
   )
 ENDIF()
 
 IF (KOKKOS_ARCH_ARMV81)
   ARCH_FLAGS(
-    Cray ""
-    PGI  ""
+    Cray NO-VALUE-SPECIFIED
+    PGI  NO-VALUE-SPECIFIED
     DEFAULT -march=armv8.1-a
   )
 ENDIF()
@@ -211,8 +219,8 @@ ENDIF()
 IF (KOKKOS_ARCH_ARMV8_THUNDERX)
   SET(KOKKOS_ARCH_ARMV80 ON) #Not a cache variable
   ARCH_FLAGS(
-    Cray ""
-    PGI  ""
+    Cray NO-VALUE-SPECIFIED
+    PGI  NO-VALUE-SPECIFIED
     DEFAULT -march=armv8-a -mtune=thunderx
   )
 ENDIF()
@@ -220,8 +228,8 @@ ENDIF()
 IF (KOKKOS_ARCH_ARMV8_THUNDERX2)
   SET(KOKKOS_ARCH_ARMV81 ON) #Not a cache variable
   ARCH_FLAGS(
-    Cray ""
-    PGI  ""
+    Cray NO-VALUE-SPECIFIED
+    PGI  NO-VALUE-SPECIFIED
     DEFAULT -march=thunderx2t99 -mtune=thunderx2t99
   )
 ENDIF()
@@ -239,7 +247,7 @@ IF (KOKKOS_ARCH_WSM)
   ARCH_FLAGS(
     Intel   -xSSE4.2
     PGI     -tp=nehalem
-    Cray    ""
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -msse4.2
   )
   SET(KOKKOS_ARCH_SSE42 ON)
@@ -250,7 +258,7 @@ IF (KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
   ARCH_FLAGS(
     Intel   -mavx
     PGI     -tp=sandybridge
-    Cray    ""
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -mavx
   )
 ENDIF()
@@ -260,7 +268,7 @@ IF (KOKKOS_ARCH_HSW)
   ARCH_FLAGS(
     Intel   -xCORE-AVX2
     PGI     -tp=haswell
-    Cray    ""
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=core-avx2 -mtune=core-avx2
   )
 ENDIF()
@@ -270,7 +278,7 @@ IF (KOKKOS_ARCH_BDW)
   ARCH_FLAGS(
     Intel   -xCORE-AVX2
     PGI     -tp=haswell
-    Cray    ""
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=core-avx2 -mtune=core-avx2 -mrtm
   )
 ENDIF()
@@ -288,8 +296,8 @@ IF (KOKKOS_ARCH_KNL)
   SET(KOKKOS_ARCH_AVX512MIC ON) #not a cache variable
   ARCH_FLAGS(
     Intel   -xMIC-AVX512
-    PGI     ""
-    Cray    ""
+    PGI     NO-VALUE-SPECIFIED
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=knl -mtune=knl
   )
 ENDIF()
@@ -306,8 +314,8 @@ IF (KOKKOS_ARCH_SKX)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   ARCH_FLAGS(
     Intel   -xCORE-AVX512
-    PGI     ""
-    Cray    ""
+    PGI     NO-VALUE-SPECIFIED
+    Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
   )
 ENDIF()
@@ -322,7 +330,7 @@ ENDIF()
 
 IF (KOKKOS_ARCH_POWER7)
   ARCH_FLAGS(
-    PGI     ""
+    PGI     NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power7 -mtune=power7
   )
   SET(KOKKOS_USE_ISA_POWERPCBE ON)
@@ -330,16 +338,16 @@ ENDIF()
 
 IF (KOKKOS_ARCH_POWER8)
   ARCH_FLAGS(
-    PGI     ""
-    NVIDIA  ""
+    PGI     NO-VALUE-SPECIFIED
+    NVIDIA  NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power8 -mtune=power8
   )
 ENDIF()
 
 IF (KOKKOS_ARCH_POWER9)
   ARCH_FLAGS(
-    PGI     ""
-    NVIDIA  ""
+    PGI     NO-VALUE-SPECIFIED
+    NVIDIA  NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power9 -mtune=power9
   )
 ENDIF()
@@ -387,10 +395,14 @@ IF(KOKKOS_ARCH_${ARCH})
     MESSAGE(FATAL_ERROR "Multiple GPU architectures given! Already have ${CUDA_ARCH_ALREADY_SPECIFIED}, but trying to add ${ARCH}. If you are re-running CMake, try clearing the cache and running again.")
   ENDIF()
   SET(CUDA_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
-  GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "${CUDA_ARCH_FLAG}=${FLAG}")
   IF (NOT KOKKOS_ENABLE_CUDA)
     MESSAGE(WARNING "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA is OFF. Option will be ignored.")
     UNSET(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
+  ELSE()
+    GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS "${CUDA_ARCH_FLAG}=${FLAG}")
+    IF(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+       GLOBAL_APPEND(KOKKOS_LINK_OPTIONS "${CUDA_ARCH_FLAG}=${FLAG}")
+    ENDIF()
   ENDIF()
 ENDIF()
 ENDFUNCTION()
@@ -408,10 +420,6 @@ CHECK_CUDA_ARCH(PASCAL61  sm_61)
 CHECK_CUDA_ARCH(VOLTA70  sm_70)
 CHECK_CUDA_ARCH(VOLTA72  sm_72)
 CHECK_CUDA_ARCH(TURING75  sm_75)
-
-IF (KOKKOS_ENABLE_CUDA)
-  SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_VERSION_MAJOR}${KOKKOS_VERSION_MINOR}")
-ENDIF()
 
 #CMake verbose is kind of pointless
 #Let's just always print things

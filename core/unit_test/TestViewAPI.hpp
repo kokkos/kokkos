@@ -1447,6 +1447,30 @@ class TestViewAPI {
     typename multivector_type::const_type cmvX(cmv);
     typename const_multivector_type::const_type ccmvX(cmv);
   }
+
+  static void run_test_error() {
+    auto alloc_size = std::numeric_limits<size_t>::max() - 42;
+    try {
+      auto should_always_fail = dView1("hello_world_failure", alloc_size);
+    } catch (std::runtime_error const &error) {
+      // TODO once we remove the conversion to std::runtime_error, catch the
+      //      appropriate Kokkos error here
+      std::string msg = error.what();
+      ASSERT_PRED_FORMAT2(::testing::IsSubstring, "hello_world_failure", msg);
+      ASSERT_PRED_FORMAT2(::testing::IsSubstring,
+                          typename device::memory_space{}.name(), msg);
+      // Can't figure out how to make assertions either/or, so we'll just use
+      // an if statement here for now.  Test failure message will be a bit
+      // misleading, but developers should figure out what's going on pretty
+      // quickly.
+      if (msg.find("is not a valid size") != std::string::npos) {
+        ASSERT_PRED_FORMAT2(::testing::IsSubstring, "is not a valid size", msg);
+      } else {
+        // Otherwise, there has to be some sort of "insufficient memory" error
+        ASSERT_PRED_FORMAT2(::testing::IsSubstring, "insufficient memory", msg);
+      }
+    }
+  }
 };
 
 }  // namespace Test

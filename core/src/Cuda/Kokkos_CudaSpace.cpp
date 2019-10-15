@@ -57,6 +57,7 @@
 
 //#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_MemorySpace.hpp>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -172,16 +173,27 @@ CudaUVMSpace::CudaUVMSpace() : m_device(Kokkos::Cuda().cuda_device()) {}
 
 CudaHostPinnedSpace::CudaHostPinnedSpace() {}
 
+//==============================================================================
+// <editor-fold desc="allocate()"> {{{1
+
 void *CudaSpace::allocate(const size_t arg_alloc_size) const {
-  void *ptr = NULL;
+  void *ptr = nullptr;
 
-  CUDA_SAFE_CALL(cudaMalloc(&ptr, arg_alloc_size));
-
+  auto error_code = cudaMalloc(&ptr, arg_alloc_size);
+  if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
+    cudaGetLastError();  // This is the only way to clear the last error, which
+                         // we should do here since we're turning it into an
+                         // exception here
+    throw Experimental::CudaRawMemoryAllocationFailure(
+        arg_alloc_size, error_code,
+        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+            CudaMalloc);
+  }
   return ptr;
 }
 
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
-  void *ptr = NULL;
+  void *ptr = nullptr;
 
   enum { max_uvm_allocations = 65536 };
 
@@ -190,13 +202,23 @@ void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
     Kokkos::Impl::num_uvm_allocations++;
 
     if (Kokkos::Impl::num_uvm_allocations.load() > max_uvm_allocations) {
-      Kokkos::Impl::throw_runtime_exception(
-          "CudaUVM error: The maximum limit of UVM allocations exceeded "
-          "(currently 65536).");
+      throw Experimental::CudaRawMemoryAllocationFailure(
+          arg_alloc_size, 1,
+          Experimental::RawMemoryAllocationFailure::FailureMode::
+              MaximumCudaUVMAllocationsExceeded);
     }
 
-    CUDA_SAFE_CALL(
-        cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal));
+    auto error_code =
+        cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
+    if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
+      cudaGetLastError();  // This is the only way to clear the last error,
+                           // which we should do here since we're turning it
+                           // into an exception here
+      throw Experimental::CudaRawMemoryAllocationFailure(
+          arg_alloc_size, error_code,
+          Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+              CudaMallocManaged);
+    }
   }
   Cuda::impl_static_fence();
 
@@ -204,12 +226,24 @@ void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
 }
 
 void *CudaHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
-  void *ptr = NULL;
+  void *ptr = nullptr;
 
-  CUDA_SAFE_CALL(cudaHostAlloc(&ptr, arg_alloc_size, cudaHostAllocDefault));
+  auto error_code = cudaHostAlloc(&ptr, arg_alloc_size, cudaHostAllocDefault);
+  if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
+    cudaGetLastError();  // This is the only way to clear the last error, which
+                         // we should do here since we're turning it into an
+                         // exception here
+    throw Experimental::CudaRawMemoryAllocationFailure(
+        arg_alloc_size, error_code,
+        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+            CudaHostAlloc);
+  }
 
   return ptr;
 }
+
+// </editor-fold> end allocate() }}}1
+//==============================================================================
 
 void CudaSpace::deallocate(void *const arg_alloc_ptr,
                            const size_t /* arg_alloc_size */) const {
@@ -300,6 +334,9 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::attach_texture_object(
   return tex_obj;
 }
 
+//==============================================================================
+// <editor-fold desc="SharedAllocationRecord::get_label()"> {{{1
+
 std::string SharedAllocationRecord<Kokkos::CudaSpace, void>::get_label() const {
   SharedAllocationHeader header;
 
@@ -318,6 +355,12 @@ std::string
 SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::get_label() const {
   return std::string(RecordBase::head()->m_label);
 }
+
+// </editor-fold> end SharedAllocationRecord::get_label() }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="SharedAllocationRecord allocate()"> {{{1
 
 SharedAllocationRecord<Kokkos::CudaSpace, void>
     *SharedAllocationRecord<Kokkos::CudaSpace, void>::allocate(
@@ -340,6 +383,12 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
   return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
 }
 
+// </editor-fold> end SharedAllocationRecord allocate() }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="SharedAllocationRecord deallocate"> {{{1
+
 void SharedAllocationRecord<Kokkos::CudaSpace, void>::deallocate(
     SharedAllocationRecord<void, void> *arg_rec) {
   delete static_cast<SharedAllocationRecord *>(arg_rec);
@@ -354,6 +403,12 @@ void SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::deallocate(
     SharedAllocationRecord<void, void> *arg_rec) {
   delete static_cast<SharedAllocationRecord *>(arg_rec);
 }
+
+// </editor-fold> end SharedAllocationRecord deallocate }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="SharedAllocationRecord destructors"> {{{1
 
 SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -400,6 +455,12 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
                      SharedAllocationRecord<void, void>::m_alloc_size);
 }
 
+// </editor-fold> end SharedAllocationRecord destructors }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="SharedAllocationRecord constructors"> {{{1
+
 SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
     const Kokkos::CudaSpace &arg_space, const std::string &arg_label,
     const size_t arg_alloc_size,
@@ -410,8 +471,8 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
 #ifdef KOKKOS_DEBUG
           &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
 #endif
-          reinterpret_cast<SharedAllocationHeader *>(arg_space.allocate(
-              sizeof(SharedAllocationHeader) + arg_alloc_size)),
+          Impl::checked_allocation_with_header(arg_space, arg_label,
+                                               arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_tex_obj(0),
       m_space(arg_space) {
@@ -448,8 +509,8 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
 #ifdef KOKKOS_DEBUG
           &SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::s_root_record,
 #endif
-          reinterpret_cast<SharedAllocationHeader *>(arg_space.allocate(
-              sizeof(SharedAllocationHeader) + arg_alloc_size)),
+          Impl::checked_allocation_with_header(arg_space, arg_label,
+                                               arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_tex_obj(0),
       m_space(arg_space) {
@@ -484,8 +545,8 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
           &SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
                                   void>::s_root_record,
 #endif
-          reinterpret_cast<SharedAllocationHeader *>(arg_space.allocate(
-              sizeof(SharedAllocationHeader) + arg_alloc_size)),
+          Impl::checked_allocation_with_header(arg_space, arg_label,
+                                               arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -495,7 +556,7 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
         arg_alloc_size);
   }
 #endif
-  // Fill in the Header information, directly accessible via UVM
+  // Fill in the Header information, directly accessible on the host
 
   RecordBase::m_alloc_ptr->m_record = this;
 
@@ -506,7 +567,11 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
       ->m_label[SharedAllocationHeader::maximum_label_length - 1] = (char)0;
 }
 
-//----------------------------------------------------------------------------
+// </editor-fold> end SharedAllocationRecord constructors }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="SharedAllocationRecored::(re|de|)allocate_tracked"> {{{1
 
 void *SharedAllocationRecord<Kokkos::CudaSpace, void>::allocate_tracked(
     const Kokkos::CudaSpace &arg_space, const std::string &arg_alloc_label,
@@ -622,7 +687,11 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::reallocate_tracked(
   return r_new->data();
 }
 
-//----------------------------------------------------------------------------
+// </editor-fold> end SharedAllocationRecored::(re|de|)allocate_tracked }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="SharedAllocationRecord::get_record()"> {{{1
 
 SharedAllocationRecord<Kokkos::CudaSpace, void> *
 SharedAllocationRecord<Kokkos::CudaSpace, void>::get_record(void *alloc_ptr) {
@@ -687,6 +756,12 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
 
   return static_cast<RecordCuda *>(h->m_record);
 }
+
+// </editor-fold> end SharedAllocationRecord::get_record() }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="SharedAllocationRecord::print_records()"> {{{1
 
 // Iterate records to print orphaned memory ...
 void SharedAllocationRecord<Kokkos::CudaSpace, void>::print_records(
@@ -784,6 +859,9 @@ void SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::print_records(
       "KOKKOS_DEBUG enabled");
 #endif
 }
+
+// </editor-fold> end SharedAllocationRecord::print_records() }}}1
+//==============================================================================
 
 void *cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
   static void *ptr                 = NULL;

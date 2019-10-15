@@ -8,7 +8,6 @@ INCLUDE("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
 
 # These are IMPORTED targets created by KokkosTargets.cmake
 SET(Kokkos_LIBRARY_DIRS    @INSTALL_LIB_DIR@)
-SET(Kokkos_SEPARATE_LIBS   @KOKKOS_SEPARATE_LIBS@)
 SET(Kokkos_LIBRARIES       @KOKKOS_EXT_LIBRARIES@)
 
 SET(Kokkos_DEVICES                      @KOKKOS_ENABLED_DEVICES@)

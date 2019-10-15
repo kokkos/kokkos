@@ -158,7 +158,7 @@ display_help_text() {
 
 }
 
-KOKKOS_DO_EXAMPLES=ON
+KOKKOS_DO_EXAMPLES=OFF
 
 while [[ $# > 0 ]]
 do
@@ -239,6 +239,7 @@ do
       ;;
     --cxxflags*)
       KOKKOS_CXXFLAGS="${key#*=}"
+      KOKKOS_CXXFLAGS=${KOKKOS_CXXFLAGS//,/ }
       ;;
     --cxxstandard*)
       KOKKOS_CXX_STANDARD="${key#*=}"
@@ -303,9 +304,18 @@ else
 fi
 
 if [ ! -e ${KOKKOS_PATH}/CMakeLists.txt ]; then
-   echo "Kokkos PATH does not appear to be set properly. please specify in ENV or cmd line arguements"   
-   display_help_text
-   exit 0
+   if [ "${KOKKOS_PATH}" == "" ]; then
+      CM_SCRIPT=$0
+      KOKKOS_PATH=`dirname $CM_SCRIPT`
+      if [ ! -e ${KOKKOS_PATH}/CMakeLists.txt ]; then
+         echo "${KOKKOS_PATH} repository appears to not be complete.  please verify and try again"
+         exit 0
+      fi
+   else
+      echo "KOKKOS_PATH does not appear to be set properly. please specify in location of CMakeLists.txt"   
+      display_help_text
+      exit 0
+   fi
 fi
 
 get_kokkos_device_list
@@ -320,6 +330,15 @@ if [[ ${KOKKOS_DEVICE_CMD} == *Kokkos_ENABLE_HPX* ]]; then
       KOKKOS_CXX_STANDARD=14
    fi
 fi
+
+if [[ ${COMPILER} == *clang* ]]; then
+   gcc_path=$(which g++ | awk --field-separator='/bin/g++' '{printf $1}' )
+   KOKKOS_CXXFLAGS="${KOKKOS_CXXFLAGS} --gcc-toolchain=${gcc_path}"
+
+   if [ ! "${CUDA_PATH}" == "" ]; then
+      KOKKOS_CXXFLAGS="${KOKKOS_CXXFLAGS} --cuda-path=${CUDA_PATH}"
+   fi 
+fi
  
-echo cmake $COMPILER_CMD  -DKokkos_CXX_FLAGS="${KOKKOS_CXXFLAGS}" -DKokkos_LINK_FLAGS="${KOKKOS_LDFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CUDA_DIR=${CUDA_PATH} -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_PATH} 
-cmake $COMPILER_CMD  -DKokkos_CXX_FLAGS="${KOKKOS_CXXFLAGS//\"}" -DKokkos_LINK_FLAGS="${KOKKOS_LDFLAGS//\"}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CUDA_DIR=${CUDA_PATH} -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_PATH} 
+echo cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_PATH} 
+cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS//\"}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS//\"}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_PATH} 

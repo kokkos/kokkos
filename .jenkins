@@ -27,6 +27,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
+                                -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -58,6 +59,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -72,7 +74,7 @@ pipeline {
                         }
                     }
                 }
-                stage("CUDA-10.1-NVCC") {
+                stage("CUDA-10.1-NVCC-RDC") {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
@@ -89,12 +91,14 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
+                                -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
@@ -122,6 +126,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEBUG=ON \
                                 -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \

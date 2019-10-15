@@ -138,8 +138,6 @@ FUNCTION(KOKKOS_ADD_EXECUTABLE EXE_NAME)
     IF (PARSE_TESTONLYLIBS)
       TARGET_LINK_LIBRARIES(${EXE_NAME} ${PARSE_TESTONLYLIBS})
     ENDIF()
-    #just link to a single lib kokkos now
-    TARGET_LINK_LIBRARIES(${EXE_NAME} kokkos)
     VERIFY_EMPTY(KOKKOS_ADD_EXECUTABLE ${PARSE_UNPARSED_ARGUMENTS})
   endif()
 ENDFUNCTION()
@@ -227,9 +225,9 @@ FUNCTION(KOKKOS_ADD_COMPILE_TEST TEST_NAME)
 ENDFUNCTION()
 
 MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
+ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_devices.cmake)
  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_options.cmake)
- INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_test_cxx_std.cmake)
  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
  IF (NOT KOKKOS_HAS_TRILINOS)
@@ -259,47 +257,6 @@ MACRO(KOKKOS_PACKAGE_POSTPROCESS)
   if (KOKKOS_HAS_TRILINOS)
     TRIBITS_PACKAGE_POSTPROCESS()
   endif()
-ENDMACRO()
-
-MACRO(KOKKOS_MAKE_LIBKOKKOS)
-  IF (KOKKOS_SEPARATE_LIBS)
-    MESSAGE(FATAL_ERROR "Internal error: should not make single libkokkos with -DKOKKOS_SEPARATE_LIBS=On")
-  ENDIF()
-  IF(${CMAKE_VERSION} VERSION_LESS "3.12" OR MSVC)
-    #we are not able to set properties directly on object libraries yet
-    #so we have had to delay kokkos_link_options until here
-    #and do a bunch of other annoying work 
-    ADD_LIBRARY(kokkos ${KOKKOS_SOURCE_DIR}/core/src/dummy.cpp 
-      $<TARGET_OBJECTS:kokkoscore>
-      $<TARGET_OBJECTS:kokkoscontainers>
-    )
-    TARGET_LINK_LIBRARIES(kokkos PUBLIC ${KOKKOS_LINK_OPTIONS})
-    #still need the header-only library
-    TARGET_LINK_LIBRARIES(kokkos PUBLIC kokkosalgorithms)
-    KOKKOS_LINK_TPLS(kokkos)
-    #these properties do not work transitively correctly so we
-    #need some verbose hackery to make it work
-    GET_TARGET_PROPERTY(CORE_DIRS kokkoscore       INTERFACE_INCLUDE_DIRECTORIES)
-    GET_TARGET_PROPERTY(CTRS_DIRS kokkoscontainers INTERFACE_INCLUDE_DIRECTORIES)
-    TARGET_INCLUDE_DIRECTORIES(kokkos PUBLIC ${CORE_DIRS})
-    TARGET_INCLUDE_DIRECTORIES(kokkos PUBLIC ${CTRS_DIRS})
-
-    GET_TARGET_PROPERTY(CORE_FLAGS kokkoscore       INTERFACE_COMPILE_OPTIONS)
-    GET_TARGET_PROPERTY(CTRS_FLAGS kokkoscontainers INTERFACE_COMPILE_OPTIONS)
-    TARGET_COMPILE_OPTIONS(kokkos PUBLIC ${CORE_FLAGS})
-    TARGET_COMPILE_OPTIONS(kokkos PUBLIC ${CTRS_FLAGS})
-
-    GET_TARGET_PROPERTY(CORE_FEATURES kokkoscore       INTERFACE_COMPILE_FEATURES)
-    GET_TARGET_PROPERTY(CTRS_FEATURES kokkoscontainers INTERFACE_COMPILE_FEATURES)
-    TARGET_COMPILE_FEATURES(kokkos PUBLIC ${CORE_FEATURES})
-    TARGET_COMPILE_FEATURES(kokkos PUBLIC ${CTRS_FEATURES})
-  ELSE()
-    ADD_LIBRARY(kokkos ${KOKKOS_SOURCE_DIR}/core/src/dummy.cpp)
-    TARGET_LINK_LIBRARIES(kokkos PUBLIC kokkoscore kokkoscontainers)
-    TARGET_LINK_LIBRARIES(kokkos PUBLIC kokkosalgorithms)
-  ENDIF()
-  SET_TARGET_PROPERTIES(kokkos PROPERTIES VERSION ${Kokkos_VERSION})
-  KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(kokkos)
 ENDMACRO()
 
 FUNCTION(KOKKOS_LINK_TPLS LIBRARY_NAME)
@@ -379,49 +336,22 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     LIST(REMOVE_DUPLICATES PARSE_SOURCES)
   ENDIF()
 
-  IF (KOKKOS_SEPARATE_LIBS)
-    ADD_LIBRARY(
-      ${LIBRARY_NAME}
-      ${PARSE_HEADERS}
-      ${PARSE_SOURCES}
+  ADD_LIBRARY(
+    ${LIBRARY_NAME}
+    ${PARSE_HEADERS}
+    ${PARSE_SOURCES}
+  )
+  KOKKOS_LINK_TPLS(${LIBRARY_NAME})
+  IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13")
+    #great, this works the "right" way
+    TARGET_LINK_OPTIONS(
+      ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
     )
-    KOKKOS_LINK_TPLS(${LIBRARY_NAME})
-    IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13")
-      #great, this works the "right" way
-      TARGET_LINK_OPTIONS(
-        ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
-      )
-    ELSE()
-      #well, have to do it the wrong way for now
-      TARGET_LINK_LIBRARIES(
-        ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
-      )
-    ENDIF()
   ELSE()
-    ADD_LIBRARY(
-      ${LIBRARY_NAME}
-      OBJECT
-      ${PARSE_HEADERS}
-      ${PARSE_SOURCES}
+    #well, have to do it the wrong way for now
+    TARGET_LINK_LIBRARIES(
+      ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
     )
-    IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13")
-      #great, this works the "right" way
-      TARGET_LINK_OPTIONS(
-        ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
-      )
-      #I can go ahead and link the TPLs here
-      KOKKOS_LINK_TPLS(${LIBRARY_NAME})
-    ELSEIF(${CMAKE_VERSION} VERSION_LESS "3.12" OR MSVC)
-      #nothing works yet for object libraries
-      #we will need to hack this later for libkokkos
-      #I also can't link the TPLs here - also must be delayed
-    ELSE()
-      TARGET_LINK_LIBRARIES(
-        ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
-      )
-      #I can go ahead and link the TPLs here
-      KOKKOS_LINK_TPLS(${LIBRARY_NAME})
-    ENDIF()
   ENDIF()
 
   TARGET_COMPILE_OPTIONS(
@@ -481,14 +411,7 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     TARGET_COMPILE_OPTIONS(${LIBRARY_NAME} PUBLIC ${KOKKOS_CXX_STANDARD_FLAG})
   ENDIF()
 
-  IF (KOKKOS_SEPARATE_LIBS OR ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12")
-    #Even if separate libs and these are object libraries
-    #We still need to install them for transitive flags and deps
-    KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(${LIBRARY_NAME})
-  ELSE()
-    #this is an object library and cmake <3.12 doesn't do this correctly
-    #so.... do nothing
-  ENDIF()
+  KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(${LIBRARY_NAME})
 
   INSTALL(
     FILES  ${PARSE_HEADERS}

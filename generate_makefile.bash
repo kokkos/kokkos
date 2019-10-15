@@ -197,7 +197,7 @@ do
       echo "                                disable_profiling = do not compile with profiling hooks"
       echo "                                "
       echo "--with-cuda-options=[OPT]:    Additional options to CUDA:"
-      echo "                                force_uvm, use_ldg, enable_lambda, rdc"
+      echo "                                force_uvm, use_ldg, enable_lambda, rdc, enable_constexpr"
       echo "--with-hpx-options=[OPT]:     Additional options to HPX:"
       echo "                                enable_async_dispatch"
       echo "--gcc-toolchain=/Path/To/GccRoot:  Set the gcc toolchain to use with clang (e.g. /usr)" 

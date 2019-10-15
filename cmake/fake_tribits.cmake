@@ -246,22 +246,7 @@ ELSE()
   ELSE()
     SET(LINK_TYPE PUBLIC)
   ENDIF()
-  IF (KOKKOS_SEPARATE_LIBS) 
-    #these are real libraries (not object libraries)
-    TARGET_LINK_LIBRARIES(${TARGET} ${LINK_TYPE} ${DEPLIB})
-  ELSE()
-    IF(${CMAKE_VERSION} VERSION_LESS "3.12" OR MSVC)
-      #we are not able to set properties directly on object libraries yet
-      #so we have to propagate properties in a super annoying way
-      GET_TARGET_PROPERTY(DIRS ${DEPLIB}  INTERFACE_INCLUDE_DIRECTORIES)
-      GET_TARGET_PROPERTY(FLAGS ${DEPLIB} INTERFACE_COMPILE_OPTIONS)
-      TARGET_INCLUDE_DIRECTORIES(${TARGET} ${LINK_TYPE} ${DIRS})
-      TARGET_COMPILE_OPTIONS(${TARGET} ${LINK_TYPE} ${FLAGS})
-    ELSE()
-      #we can do this the right way
-      TARGET_LINK_LIBRARIES(${TARGET} ${LINK_TYPE} ${DEPLIB})
-    ENDIF()
-  ENDIF()
+  TARGET_LINK_LIBRARIES(${TARGET} ${LINK_TYPE} ${DEPLIB})
   VERIFY_EMPTY(KOKKOS_LINK_INTERNAL_LIBRARY ${PARSE_UNPARSED_ARGUMENTS})
 ENDIF()
 ENDFUNCTION()
@@ -288,13 +273,9 @@ ELSE()
     LIST(REMOVE_DUPLICATES PARSE_SOURCES)
   ENDIF()
   ADD_LIBRARY(${NAME} ${PARSE_SOURCES})
-  target_compile_options(
-    ${NAME}
-    PUBLIC $<$<COMPILE_LANGUAGE:CXX>:${KOKKOS_CXX_FLAGS}>
-  )
   target_link_libraries(
     ${NAME}
-    PUBLIC ${KOKKOS_LINK_OPTIONS}
+    PUBLIC kokkos
   )
 ENDIF()
 ENDFUNCTION()

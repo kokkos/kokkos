@@ -47,6 +47,10 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
+#include <impl/Kokkos_Error.hpp>
+
+#include <iostream>
+
 namespace Kokkos {
 namespace Impl {
 
@@ -67,6 +71,44 @@ inline void cuda_internal_safe_call(cudaError e, const char* name,
   Kokkos::Impl::cuda_internal_safe_call(call, #call, __FILE__, __LINE__)
 
 }  // namespace Impl
+
+namespace Experimental {
+
+class CudaRawMemoryAllocationFailure : public RawMemoryAllocationFailure {
+ private:
+  using base_t = RawMemoryAllocationFailure;
+
+  cudaError_t m_error_code = cudaSuccess;
+
+  static FailureMode get_failure_mode(cudaError_t error_code) {
+    switch (error_code) {
+      case cudaErrorMemoryAllocation: return FailureMode::OutOfMemoryError;
+      case cudaErrorInvalidValue: return FailureMode::InvalidAllocationSize;
+      // TODO handle cudaErrorNotSupported for cudaMallocManaged
+      default: return FailureMode::Unknown;
+    }
+  }
+
+ public:
+  using base_t::base_t;
+
+  CudaRawMemoryAllocationFailure(size_t arg_attempted_size,
+                                 cudaError_t arg_error_code,
+                                 AllocationMechanism arg_mechanism) noexcept
+      : base_t(arg_attempted_size, /* CudaSpace doesn't handle alignment? */ 1,
+               get_failure_mode(arg_error_code), arg_mechanism),
+        m_error_code(arg_error_code) {}
+
+  void append_additional_error_information(std::ostream& o) const override {
+    if (m_error_code != cudaSuccess) {
+      o << "  The Cuda allocation returned the error code \"\""
+        << cudaGetErrorName(m_error_code) << "\".";
+    }
+  }
+};
+
+}  // end namespace Experimental
+
 }  // namespace Kokkos
 
 #endif  // KOKKOS_ENABLE_CUDA
