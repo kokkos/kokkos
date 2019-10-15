@@ -609,19 +609,9 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
-#if defined(__has_cpp_attribute)
-#if __has_cpp_attribute(nodiscard)
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
-#endif
-#endif
-#ifndef KOKKOS_ATTRIBUTE_NODISCARD
-// C++17 should have it no matter what
-#if KOKKOS_ENABLE_CXX17
-#define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
-#endif
-#endif
-#ifndef KOKKOS_ATTRIBUTE_NODISCARD
-// Otherwise, not yet available
+#else
 #define KOKKOS_ATTRIBUTE_NODISCARD
 #endif
 
