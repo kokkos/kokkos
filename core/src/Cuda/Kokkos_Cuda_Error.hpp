@@ -90,7 +90,20 @@ class CudaRawMemoryAllocationFailure : public RawMemoryAllocationFailure {
   }
 
  public:
-  using base_t::base_t;
+  // using base_t::base_t;
+  // would trigger
+  //
+  // error: cannot determine the exception specification of the default
+  // constructor due to a circular dependency
+  //
+  // using NVCC 9.1 and gcc 7.4
+  CudaRawMemoryAllocationFailure(
+      size_t arg_attempted_size, size_t arg_attempted_alignment,
+      FailureMode arg_failure_mode = FailureMode::OutOfMemoryError,
+      AllocationMechanism arg_mechanism =
+          AllocationMechanism::StdMalloc) noexcept
+      : base_t(arg_attempted_size, arg_attempted_alignment, arg_failure_mode,
+               arg_mechanism) {}
 
   CudaRawMemoryAllocationFailure(size_t arg_attempted_size,
                                  cudaError_t arg_error_code,
