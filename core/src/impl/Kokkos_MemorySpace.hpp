@@ -85,7 +85,7 @@ SharedAllocationHeader *checked_allocation_with_header(MemorySpace const &space,
       o.flush();
     };
     try {
-      auto sstr = std::ostringstream{};
+      std::ostringstream sstr;
       generate_failure_message(sstr);
       Kokkos::Impl::throw_runtime_exception(sstr.str());
     } catch (std::bad_alloc const &) {
