@@ -103,7 +103,7 @@ class HIP {
   //@{
 
   KOKKOS_INLINE_FUNCTION static int in_parallel() {
-#if defined(__HCC_ACCELERATOR__)
+#if defined(__HIP_ARCH__)
     return true;
 #else
     return false;
@@ -131,8 +131,8 @@ class HIP {
    */
   struct SelectDevice {
     int hip_device_id;
-    SelectDevice() : hip_device_id(1) {}
-    explicit SelectDevice(int id) : hip_device_id(id + 1) {}
+    SelectDevice() : hip_device_id(0) {}
+    explicit SelectDevice(int id) : hip_device_id(id) {}
   };
 
   int hip_device() const;
