@@ -66,7 +66,7 @@
 #include <serial/TestSerial_Category.hpp>
 #endif
 #endif
-#include <TestReduceDeviceView.hpp>
+#include <TestStackTrace.hpp>
 
 int main(int argc, char *argv[]) {
   Kokkos::initialize(argc, argv);

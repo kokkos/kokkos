@@ -25,13 +25,22 @@ std::string demangle(const std::string& name) {
 #ifndef KOKKOS_IMPL_ENABLE_CXXABI
   return name;
 #else
-  std::string s;
+  size_t found_end = name.find_first_of("+)",0,2);
+  if(found_end == std::string::npos){
+    found_end=name.size();
+  }
+  size_t found_parenthesis = name.find_first_of("(");
+  size_t start = found_parenthesis+1;
+  if(found_parenthesis == std::string::npos)
+    start=0;
 
-  if (name.length() != 0) {
+  std::string s = name.substr(start,found_end-start);
+
+  if (s.length() != 0) {
     int status          = 0;
     char* output_buffer = nullptr;
-    size_t* length      = nullptr;
-    char* d = abi::__cxa_demangle(name.c_str(), output_buffer, length, &status);
+    size_t length      = s.length();
+    char* d = abi::__cxa_demangle(s.c_str(), output_buffer, &length, &status);
     if (d != nullptr) {
       s = d;
       free(d);
