@@ -44,6 +44,10 @@
 #ifndef KOKKOS_HIP_KERNEL_LAUNCH_HPP
 #define KOKKOS_HIP_KERNEL_LAUNCH_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#if defined(KOKKOS_ENABLE_HIP) && defined(__HIPCC__)
+
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <Kokkos_HIP.hpp>
@@ -195,5 +199,7 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
+
+#endif
 
 #endif
