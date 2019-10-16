@@ -275,6 +275,7 @@ IF(Kokkos_ENABLE_HPX)
       hpx/TestHPX_Task.cpp
       hpx/TestHPX_Team.cpp
       hpx/TestHPX_TeamReductionScan.cpp
+      hpx/TestHPX_TeamScratch.cpp
       hpx/TestHPX_ViewAPI_a.cpp
       hpx/TestHPX_ViewAPI_b.cpp
       hpx/TestHPX_ViewAPI_c.cpp
