@@ -1125,7 +1125,7 @@ struct ViewOffset<
       const ViewOffset<DimRHS, Kokkos::LayoutLeft, void>&,
       const SubviewExtents<DimRHS::rank, dimension_type::rank>& sub)
       : m_dim(sub.range_extent(0), 0, 0, 0, 0, 0, 0, 0) {
-    static_assert((0 == dimension_type::rank) ||
+    static_assert((0 == dimension_type::rank_dynamic) ||
                       (1 == dimension_type::rank &&
                        1 == dimension_type::rank_dynamic && 1 <= DimRHS::rank),
                   "ViewOffset subview construction requires compatible rank");
