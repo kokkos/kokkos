@@ -44,8 +44,11 @@
 #ifndef KOKKO_HIP_PARALLEL_RANGE_HPP
 #define KOKKO_HIP_PARALLEL_RANGE_HPP
 
-#include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 #include <Kokkos_Parallel.hpp>
+
+#if defined(KOKKOS_ENABLE_HIP) && defined(__HIPCC__)
+
+#include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -54,12 +57,12 @@ template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                   Kokkos::Experimental::HIP> {
  public:
-  typedef Kokkos::RangePolicy<Traits...> Policy;
+  using Policy = Kokkos::RangePolicy<Traits...>;
 
  private:
-  typedef typename Policy::member_type Member;
-  typedef typename Policy::work_tag WorkTag;
-  typedef typename Policy::launch_bounds LaunchBounds;
+  using Member       = typename Policy::member_type;
+  using WorkTag      = typename Policy::work_tag;
+  using LaunchBounds = typename Policy::launch_bounds;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -82,7 +85,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
  public:
-  typedef FunctorType functor_type;
+  using functor_type = FunctorType;
 
   inline __device__ void operator()(void) const {
     const Member work_stride = blockDim.y * gridDim.x;
@@ -116,5 +119,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
 }  // namespace Impl
 }  // namespace Kokkos
+
+#endif
 
 #endif
