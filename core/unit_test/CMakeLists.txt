@@ -104,23 +104,23 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX)
   )
 endforeach()
 
-IF(Kokkos_ENABLE_SERIAL)
+if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial
     SOURCES
     ${Serial_SOURCES}
     serial/TestSerial_Task.cpp
   )
-ENDIF()
+endif()
 
-IF(Kokkos_ENABLE_PTHREAD)
+if(Kokkos_ENABLE_PTHREAD)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Threads
     SOURCES ${Threads_SOURCES}
   )
-ENDIF()
+endif()
 
-IF(Kokkos_ENABLE_OPENMP)
+if(Kokkos_ENABLE_OPENMP)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMP
     SOURCES
@@ -133,9 +133,9 @@ IF(Kokkos_ENABLE_OPENMP)
       UnitTestMain.cpp
       openmp/TestOpenMP_InterOp.cpp
   )
-ENDIF()
+endif()
 
-IF(Kokkos_ENABLE_HPX)
+if(Kokkos_ENABLE_HPX)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HPX
     SOURCES
@@ -148,9 +148,9 @@ IF(Kokkos_ENABLE_HPX)
       UnitTestMain.cpp
       hpx/TestHPX_InterOp.cpp
   )
-ENDIF()
+endif()
 
-IF(Kokkos_ENABLE_QTHREADS)
+if(Kokkos_ENABLE_QTHREADS)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Qthreads
     SOURCES
@@ -187,9 +187,9 @@ IF(Kokkos_ENABLE_QTHREADS)
       qthreads/TestQthreads_ViewAPI_d.cpp
       qthreads/TestQthreads_ViewAPI_e.cpp
   )
-ENDIF()
+endif()
 
-IF(Kokkos_ENABLE_CUDA)
+if(Kokkos_ENABLE_CUDA)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Cuda
     SOURCES
@@ -228,7 +228,7 @@ IF(Kokkos_ENABLE_CUDA)
       UnitTestMain.cpp
       cuda/TestCuda_InterOp_Streams.cpp
   )
-ENDIF()
+endif()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
