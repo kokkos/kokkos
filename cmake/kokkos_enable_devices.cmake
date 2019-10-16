@@ -24,8 +24,6 @@ IF (KOKKOS_ENABLE_PTHREAD)
   #patch the naming here
   SET(KOKKOS_ENABLE_THREADS ON)
 ENDIF()
-KOKKOS_DEVICE_OPTION(ROCM          OFF DEVICE "Whether to build AMD ROCm backend")
-KOKKOS_DEVICE_OPTION(HPX           OFF DEVICE "Whether to build HPX backend")
 
 IF(Trilinos_ENABLE_Kokkos AND Trilinos_ENABLE_OpenMP)
   SET(OMP_DEFAULT ON)
@@ -55,4 +53,4 @@ IF (NOT KOKKOS_HAS_HOST)
   SET(KOKKOS_ENABLE_SERIAL ON)
 ENDIF()
 
-KOKKOS_DEVICE_OPTION(HPX OFF HOST "Whether to build HPX backend")
+KOKKOS_DEVICE_OPTION(HPX OFF HOST "Whether to build HPX backend (experimental)")
