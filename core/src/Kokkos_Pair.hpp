@@ -901,8 +901,9 @@ KOKKOS_INLINE_FUNCTION
 
 }  // namespace Kokkos
 
-// tuple_* things are inconsistently defined as struct/class inside of the std library
-// So no matter whether we define our specialization as class or struct we get a warning
+// tuple_* things are inconsistently defined as struct/class inside of the std
+// library So no matter whether we define our specialization as class or struct
+// we get a warning
 #ifdef KOKKOS_COMPILER_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmismatched-tags"
