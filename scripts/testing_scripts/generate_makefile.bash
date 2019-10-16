@@ -12,9 +12,6 @@ do
     --kokkos-path*)
       KOKKOS_PATH="${key#*=}"
       ;;
-    --qthreads-path*)
-      QTHREADS_PATH="${key#*=}"
-      ;;
     --hpx-path*)
       HPX_PATH="${key#*=}"
       ;;
@@ -34,9 +31,6 @@ do
       KOKKOS_DEVICES="${KOKKOS_DEVICES},Cuda"
       CUDA_PATH="${key#*=}"
       ;;
-    --with-rocm)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},ROCm"
-      ;;
     --with-openmp)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},OpenMP"
       ;;
@@ -45,12 +39,6 @@ do
       ;;
     --with-serial)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"
-      ;;
-    --with-qthreads*)
-      KOKKOS_DEVICES="${KOKKOS_DEVICES},Qthreads"
-      if [ -z "$QTHREADS_PATH" ]; then
-        QTHREADS_PATH="${key#*=}"
-      fi
       ;;
     --with-hpx-options*)
       KOKKOS_HPX_OPT="${key#*=}"
@@ -128,15 +116,12 @@ do
       echo "Kokkos configure options:"
       echo ""
       echo "--kokkos-path=/Path/To/Kokkos:        Path to the Kokkos root directory."
-      echo "--qthreads-path=/Path/To/Qthreads:    Path to Qthreads install directory."
-      echo "                                        Overrides path given by --with-qthreads."
       echo "--prefix=/Install/Path:               Path to install the Kokkos library."
       echo ""
       echo "--with-cuda[=/Path/To/Cuda]:          Enable Cuda and set path to Cuda Toolkit."
       echo "--with-openmp:                        Enable OpenMP backend."
       echo "--with-pthread:                       Enable Pthreads backend."
       echo "--with-serial:                        Enable Serial backend."
-      echo "--with-qthreads[=/Path/To/Qthreads]:  Enable Qthreads backend."
       echo "--with-devices:                       Explicitly add a set of backends."
       echo ""
       echo "--arch=[OPT]:  Set target architectures. Options are:"
