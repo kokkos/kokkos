@@ -10,7 +10,6 @@
 #cmakedefine KOKKOS_ENABLE_OPENMP
 #cmakedefine KOKKOS_ENABLE_THREADS
 #cmakedefine KOKKOS_ENABLE_CUDA
-#cmakedefine KOKKOS_ENABLE_ROCM
 #cmakedefine KOKKOS_ENABLE_HPX
 #cmakedefine KOKKOS_ENABLE_HWLOC
 #cmakedefine KOKKOS_ENABLE_MEMKIND
@@ -92,4 +91,3 @@
 #cmakedefine KOKKOS_ARCH_FIJI
 #cmakedefine KOKKOS_ARCH_VEGA
 #cmakedefine KOKKOS_ARCH_GFX901
-#cmakedefine KOKKOS_ARCH_ROCM @KOKKOS_ARCH_ROCM@
