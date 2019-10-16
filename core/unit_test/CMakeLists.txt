@@ -47,6 +47,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX)
       ${dir}/Test${Tag}_AtomicViews.cpp
       ${dir}/Test${Tag}_Atomics.cpp
       ${dir}/Test${Tag}_Complex.cpp
+      ${dir}/Test${Tag}_Crs.cpp
       ${dir}/Test${Tag}_DeepCopyAlignment.cpp
       ${dir}/Test${Tag}_FunctorAnalysis.cpp
       ${dir}/Test${Tag}_Init.cpp
@@ -86,6 +87,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX)
       ${dir}/Test${Tag}_TeamScratch.cpp
       ${dir}/Test${Tag}_TeamTeamSize.cpp
       ${dir}/Test${Tag}_TeamVectorRange.cpp
+      ${dir}/Test${Tag}_UniqueToken.cpp
       ${dir}/Test${Tag}_ViewAPI_a.cpp
       ${dir}/Test${Tag}_ViewAPI_b.cpp
       ${dir}/Test${Tag}_ViewAPI_c.cpp
@@ -96,7 +98,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX)
       ${dir}/Test${Tag}_ViewMapping_b.cpp
       ${dir}/Test${Tag}_ViewMapping_subview.cpp
       ${dir}/Test${Tag}_ViewOfClass.cpp
-      ${dir}/Test${Tag}_Crs.cpp
       ${dir}/Test${Tag}_WorkGraph.cpp
       ${dir}/Test${Tag}_View_64bit.cpp
       ${dir}/Test${Tag}_ViewResize.cpp
@@ -125,7 +126,6 @@ IF(Kokkos_ENABLE_OPENMP)
     SOURCES
     ${OpenMP_SOURCES}
     openmp/TestOpenMP_Task.cpp
-    openmp/TestOpenMP_UniqueToken.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMPInterOp
@@ -141,7 +141,6 @@ IF(Kokkos_ENABLE_HPX)
     SOURCES
       ${HPX_SOURCES}
       hpx/TestHPX_Task.cpp
-      hpx/TestHPX_UniqueToken.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HPXInterOp
@@ -216,7 +215,6 @@ IF(Kokkos_ENABLE_CUDA)
       cuda/TestCudaUVM_ViewMapping_b.cpp
       cuda/TestCudaUVM_ViewMapping_subview.cpp
       cuda/TestCuda_Spaces.cpp
-      cuda/TestCuda_UniqueToken.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_CudaInterOpInit
