@@ -49,7 +49,6 @@
 /* only compile this file if HIP is enabled for Kokkos */
 #ifdef KOKKOS_ENABLE_HIP
 
-//#include <HIP/Kokkos_HIP_Internal.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <Kokkos_HIP.hpp>
 #include <Kokkos_HIP_Space.hpp>
@@ -65,14 +64,43 @@
 #include <string>
 #include <vector>
 
-// KOKKOS_INLINE_FUNCTION
-// Kokkos::Impl::HIPLockArraysStruct kokkos_impl_hip_lock_arrays ;
-
 namespace Kokkos {
 namespace Experimental {
+namespace {
+class HIPInternalDevices {
+ public:
+  enum { MAXIMUM_DEVICE_COUNT = 64 };
+  struct hipDeviceProp_t m_hipProp[MAXIMUM_DEVICE_COUNT];
+  int m_hipDevCount;
+
+  HIPInternalDevices();
+
+  static HIPInternalDevices const &singleton();
+};
+
+HIPInternalDevices::HIPInternalDevices() {
+  HIP_SAFE_CALL(hipGetDeviceCount(&m_hipDevCount));
+
+  if (m_hipDevCount > MAXIMUM_DEVICE_COUNT) {
+    Kokkos::abort(
+        "Sorry, you have more GPUs per node than we thought anybody would ever "
+        "have. Please report this to github.com/kokkos/kokkos.");
+  }
+  for (int i = 0; i < m_hipDevCount; ++i) {
+    HIP_SAFE_CALL(hipGetDeviceProperties(m_hipProp + i, i));
+  }
+}
+
+const HIPInternalDevices &HIPInternalDevices::singleton() {
+  static HIPInternalDevices self;
+  return self;
+}
+}  // namespace
+
 namespace Impl {
 
-int HIPInternal::was_finalized = 0;
+int HIPInternal::was_initialized = 0;
+int HIPInternal::was_finalized   = 0;
 //----------------------------------------------------------------------------
 
 void HIPInternal::print_configuration(std::ostream &s) const {
@@ -112,8 +140,9 @@ HIPInternal::~HIPInternal() {
   m_hipDev            = -1;
   m_hipArch           = -1;
   m_multiProcCount    = 0;
-  m_maxWorkgroup      = 0;
+  m_maxWarpCount      = 0;
   m_maxSharedWords    = 0;
+  m_maxShmemPerBlock  = 0;
   m_scratchSpaceCount = 0;
   m_scratchFlagsCount = 0;
   m_scratchSpace      = 0;
@@ -137,7 +166,6 @@ HIPInternal &HIPInternal::singleton() {
 }
 
 void HIPInternal::initialize(int hip_device_id) {
-  printf("Initialize HIP\n");
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
 
@@ -152,70 +180,56 @@ void HIPInternal::initialize(int hip_device_id) {
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 
-  // const HIPInternalDevices & dev_info = HIPInternalDevices::singleton();
+  const HIPInternalDevices &dev_info = HIPInternalDevices::singleton();
 
   const bool ok_init = 0 == m_scratchSpace || 0 == m_scratchFlags;
 
-  // const bool ok_id   = 1 <= hip_device_id &&
-  //                          hip_device_id < dev_info.m_hipDevCount ;
   // Need at least a GPU device
+  const bool ok_id =
+      0 <= hip_device_id && hip_device_id < dev_info.m_hipDevCount;
 
-  // const bool ok_dev = ok_id &&
-  //  ( 1 <= dev_info.m_hipProp[ hip_device_id ].major &&
-  //    0 <= dev_info.m_hipProp[ hip_device_id ].minor );
-  const bool ok_dev = true;
-  if (ok_init && ok_dev) {
-    // const struct hipDeviceProp & hipProp =
-    //  dev_info.m_hipProp[ hip_device_id ];
+  if (ok_init && ok_id) {
+    const struct hipDeviceProp_t &hipProp = dev_info.m_hipProp[hip_device_id];
 
     m_hipDev = hip_device_id;
 
     hipSetDevice(m_hipDev);
-    // Kokkos::Impl::hip_device_synchronize();
 
+    // TODO for now always uses default stream
     m_stream = 0;
-    /*
-        // Query what compute capability architecture a kernel executes:
-        m_hipArch = hip_kernel_arch();
-        if ( m_hipArch != hipProp.major * 100 + hipProp.minor * 10 ) {
-          std::cerr << "Kokkos::Experimental::HIP::initialize WARNING: running
-       kernels compiled for compute capability "
-                    << ( m_hipArch / 100 ) << "." << ( ( m_hipArch % 100 ) / 10
-       )
-                    << " on device with compute capability "
-                    << hipProp.major << "." << hipProp.minor
-                    << " , this will likely reduce potential performance."
-                    << std::endl ;
-        }
-    */
+
     // number of multiprocessors
-
-    //    m_multiProcCount = hipProp.multiProcessorCount ;
-
-    //----------------------------------
-    // Maximum number of wavefronts,
-    // at most one workgroup per thread in a workgroup for reduction.
-
-    //    m_maxSharedWords = hipProp.sharedMemPerWavefront/ WordSize ;
+    m_multiProcCount = hipProp.multiProcessorCount;
 
     //----------------------------------
-    // Maximum number of Workgroups:
+    // Maximum number of warps,
+    // at most one warp per thread in a warp for reduction.
+    m_maxWarpCount = hipProp.maxThreadsPerBlock / Impl::HIPTraits::WarpSize;
+    if (HIPTraits::WarpSize < m_maxWarpCount) {
+      m_maxWarpCount = Impl::HIPTraits::WarpSize;
+    }
+    m_maxSharedWords = hipProp.sharedMemPerBlock / WordSize;
 
-    //    m_maxWorkgroup = 5*hipProp.multiProcessorCount;  //TODO: confirm usage
-    //    and value
+    //----------------------------------
+    // Maximum number of blocks
+    m_maxBlock = hipProp.maxGridSize[0];
+
+    m_shmemPerSM         = hipProp.maxSharedMemoryPerMultiProcessor;
+    m_maxShmemPerBlock   = hipProp.sharedMemPerBlock;
+    m_maxThreadsPerSM    = hipProp.maxThreadsPerMultiProcessor;
+    m_maxThreadsPerBlock = hipProp.maxThreadsPerBlock;
 
     //----------------------------------
     // Multiblock reduction uses scratch flags for counters
     // and scratch space for partial reduction values.
     // Allocate some initial space.  This will grow as needed.
+    {
+      const unsigned reduce_block_count =
+          m_maxWarpCount * Impl::HIPTraits::WarpSize;
 
-    /*   {
-         const unsigned reduce_block_count = m_maxWorkgroup *
-       Impl::HIPTraits::WorkgroupSize ;
-
-         (void) scratch_flags( reduce_block_count * 2  * sizeof(size_type) );
-         (void) scratch_space( reduce_block_count * 16 * sizeof(size_type) );
-       }*/
+      (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
+      (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
+    }
     //----------------------------------
   } else {
     std::ostringstream msg;
@@ -225,20 +239,10 @@ void HIPInternal::initialize(int hip_device_id) {
     if (!ok_init) {
       msg << " : Already initialized";
     }
-    /*
-    if ( ! ok_id ) {
+    if (!ok_id) {
       msg << " : Device identifier out of range "
-          << "[0.." << (dev_info.m_hipDevCount-1) << "]" ;
+          << "[0.." << dev_info.m_hipDevCount - 1 << "]";
     }
-    else if ( ! ok_dev ) {
-      msg << " : Device " ;
-      msg << dev_info.m_hipProp[ hip_device_id ].major ;
-      msg << "." ;
-      msg << dev_info.m_hipProp[ hip_device_id ].minor ;
-      msg << " Need at least a GPU" ;
-      msg << std::endl;
-    }
-    */
     Kokkos::Impl::throw_runtime_exception(msg.str());
   }
 
@@ -255,56 +259,54 @@ void HIPInternal::initialize(int hip_device_id) {
 
 //----------------------------------------------------------------------------
 
-// typedef Kokkos::Experimental::HIP::size_type ScratchGrain[
-// Impl::HIPTraits::WorkgroupSize ] ; enum { sizeScratchGrain =
-// sizeof(ScratchGrain) };
-
-Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
-    const Kokkos::Experimental::HIP::size_type size) {
-  /*  if ( verify_is_initialized("scratch_flags") && m_scratchFlagsCount *
-    sizeScratchGrain < size ) {
-
-
-      m_scratchFlagsCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
-
-      typedef Kokkos::Impl::SharedAllocationRecord<
-    Kokkos::Experimental::HIPSpace , void > Record ;
-
-      Record * const r = Record::allocate( Kokkos::Experimental::HIPSpace()
-                                         , "InternalScratchFlags"
-                                         , ( sizeScratchGrain  *
-    m_scratchFlagsCount ) );
-
-      Record::increment( r );
-
-      m_scratchFlags = reinterpret_cast<size_type *>( r->data() );
-
-      hipMemset( m_scratchFlags , 0 , m_scratchFlagsCount * sizeScratchGrain );
-    }
-  */
-  return m_scratchFlags;
-}
+typedef Kokkos::Experimental::HIP::size_type
+    ScratchGrain[Impl::HIPTraits::WarpSize];
+enum { sizeScratchGrain = sizeof(ScratchGrain) };
 
 Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
     const Kokkos::Experimental::HIP::size_type size) {
-  /*  if ( verify_is_initialized("scratch_space") && m_scratchSpaceCount *
-    sizeScratchGrain < size ) {
+  if (verify_is_initialized("scratch_space") &&
+      m_scratchSpaceCount * sizeScratchGrain < size) {
+    m_scratchSpaceCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
-      m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
+    typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
+                                                 void>
+        Record;
 
-       typedef Kokkos::Impl::SharedAllocationRecord<
-    Kokkos::Experimental::HIPSpace , void > Record ;
+    static Record *const r = Record::allocate(
+        Kokkos::Experimental::HIPSpace(), "InternalScratchSpace",
+        (sizeScratchGrain * m_scratchSpaceCount));
 
-       static Record * const r = Record::allocate(
-    Kokkos::Experimental::HIPSpace() , "InternalScratchSpace" , (
-    sizeScratchGrain  * m_scratchSpaceCount ) );
+    Record::increment(r);
 
-       Record::increment( r );
+    m_scratchSpace = reinterpret_cast<size_type *>(r->data());
+  }
 
-       m_scratchSpace = reinterpret_cast<size_type *>( r->data() );
-    }
-  */
   return m_scratchSpace;
+}
+
+Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
+    const Kokkos::Experimental::HIP::size_type size) {
+  if (verify_is_initialized("scratch_flags") &&
+      m_scratchFlagsCount * sizeScratchGrain < size) {
+    m_scratchFlagsCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
+
+    typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
+                                                 void>
+        Record;
+
+    Record *const r = Record::allocate(
+        Kokkos::Experimental::HIPSpace(), "InternalScratchFlags",
+        (sizeScratchGrain * m_scratchFlagsCount));
+
+    Record::increment(r);
+
+    m_scratchFlags = reinterpret_cast<size_type *>(r->data());
+
+    hipMemset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain);
+  }
+
+  return m_scratchFlags;
 }
 
 //----------------------------------------------------------------------------
@@ -313,10 +315,6 @@ void HIPInternal::finalize() {
   HIP().fence();
   was_finalized = 1;
   if (0 != m_scratchSpace || 0 != m_scratchFlags) {
-    //    atomic_lock_array_hip_space_ptr(false);
-    //    scratch_lock_array_hip_space_ptr(false);
-    //    threadid_lock_array_hip_space_ptr(false);
-
     typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>
         RecordHIP;
     typedef Kokkos::Impl::SharedAllocationRecord<
@@ -327,9 +325,12 @@ void HIPInternal::finalize() {
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
 
     m_hipDev            = -1;
+    m_hipArch           = -1;
     m_multiProcCount    = 0;
-    m_maxWorkgroup      = 0;
+    m_maxWarpCount      = 0;
+    m_maxBlock          = 0;
     m_maxSharedWords    = 0;
+    m_maxShmemPerBlock  = 0;
     m_scratchSpaceCount = 0;
     m_scratchFlagsCount = 0;
     m_scratchSpace      = 0;
@@ -344,7 +345,7 @@ Kokkos::Experimental::HIP::size_type hip_internal_cu_count() {
 }
 
 Kokkos::Experimental::HIP::size_type hip_internal_maximum_extent_size() {
-  return HIPInternal::singleton().m_maxWorkgroup;
+  return HIPInternal::singleton().m_maxWarpCount;
 }
 
 Kokkos::Experimental::HIP::size_type hip_internal_maximum_shared_words() {
@@ -462,4 +463,3 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 }  // namespace Kokkos
 
 #endif  // KOKKOS_ENABLE_HIP
-//----------------------------------------------------------------------------

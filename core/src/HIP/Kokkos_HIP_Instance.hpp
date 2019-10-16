@@ -51,6 +51,16 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+struct HIPTraits {
+  enum { WarpSize = 64 };
+
+  enum { ConstantMemoryUsage = 0x008000 /* 32k bytes */ };
+};
+
+//----------------------------------------------------------------------------
+HIP::size_type *hip_internal_scratch_space(const HIP::size_type size);
+HIP::size_type *hip_internal_scratch_flags(const HIP::size_type size);
+
 //----------------------------------------------------------------------------
 
 class HIPInternal {
@@ -64,8 +74,13 @@ class HIPInternal {
   int m_hipDev;
   int m_hipArch;
   unsigned m_multiProcCount;
-  unsigned m_maxWorkgroup;
+  unsigned m_maxWarpCount;
+  unsigned m_maxBlock;
   unsigned m_maxSharedWords;
+  int m_shmemPerSM;
+  int m_maxShmemPerBlock;
+  int m_maxThreadsPerSM;
+  int m_maxThreadsPerBlock;
   size_type m_scratchSpaceCount;
   size_type m_scratchFlagsCount;
   size_type *m_scratchSpace;
@@ -73,6 +88,7 @@ class HIPInternal {
 
   hipStream_t m_stream;
 
+  static int was_initialized;
   static int was_finalized;
 
   static HIPInternal &singleton();
@@ -94,8 +110,13 @@ class HIPInternal {
       : m_hipDev(-1),
         m_hipArch(-1),
         m_multiProcCount(0),
-        m_maxWorkgroup(0),
+        m_maxWarpCount(0),
+        m_maxBlock(0),
         m_maxSharedWords(0),
+        m_shmemPerSM(0),
+        m_maxShmemPerBlock(0),
+        m_maxThreadsPerSM(0),
+        m_maxThreadsPerBlock(0),
         m_scratchSpaceCount(0),
         m_scratchFlagsCount(0),
         m_scratchSpace(0),
