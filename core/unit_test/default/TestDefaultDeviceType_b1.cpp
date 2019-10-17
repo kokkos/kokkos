@@ -52,7 +52,7 @@
 
 namespace Test {
 
-TEST_F(defaultdevicetype, reduce_instantiation_b1) {
+TEST(defaultdevicetype, reduce_instantiation_b1) {
   TestReduceCombinatoricalInstantiation<>::execute_b1();
 }
 

@@ -100,7 +100,7 @@ void test_reduction_deduction() {
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, reduction_deduction) {
+TEST(TEST_CATEGORY, reduction_deduction) {
   TestCXX11::test_reduction_deduction<TEST_EXECSPACE>();
 }
 }  // namespace Test

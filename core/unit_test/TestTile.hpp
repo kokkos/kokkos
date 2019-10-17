@@ -148,7 +148,7 @@ void test(const size_t dim0, const size_t dim1) {
 }  // namespace TestTile
 
 namespace Test {
-TEST_F(TEST_CATEGORY, tile_layout) {
+TEST(TEST_CATEGORY, tile_layout) {
   TestTile::test<TEST_EXECSPACE, 1, 1>(1, 1);
   TestTile::test<TEST_EXECSPACE, 1, 1>(2, 3);
   TestTile::test<TEST_EXECSPACE, 1, 1>(9, 10);

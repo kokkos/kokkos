@@ -134,7 +134,7 @@ struct TestScan {
   }
 };
 
-TEST_F(TEST_CATEGORY, scan) {
+TEST(TEST_CATEGORY, scan) {
   TestScan<TEST_EXECSPACE>::test_range(1, 1000);
   TestScan<TEST_EXECSPACE>(0);
   TestScan<TEST_EXECSPACE>(100000);
@@ -142,7 +142,7 @@ TEST_F(TEST_CATEGORY, scan) {
   TEST_EXECSPACE().fence();
 }
 
-/*TEST_F( TEST_CATEGORY, scan_small )
+/*TEST( TEST_CATEGORY, scan_small )
 {
   typedef TestScan< TEST_EXECSPACE, Kokkos::Impl::ThreadsExecUseScanSmall >
 TestScanFunctor;

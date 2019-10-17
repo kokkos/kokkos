@@ -140,7 +140,7 @@ void test_functor_analysis() {
   //------------------------------
 }
 
-TEST_F(TEST_CATEGORY, functor_analysis) {
+TEST(TEST_CATEGORY, functor_analysis) {
   test_functor_analysis<TEST_EXECSPACE>();
 }
 

@@ -201,7 +201,7 @@ struct TestViewMappingSubview {
   }
 };
 
-TEST_F(TEST_CATEGORY, view_mapping_subview) {
+TEST(TEST_CATEGORY, view_mapping_subview) {
   TestViewMappingSubview<TEST_EXECSPACE> f;
   f.run();
 }

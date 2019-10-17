@@ -283,7 +283,7 @@ void run_test_hexgrad(int exp_beg, int exp_end, int num_trials,
   }
 }
 
-TEST_F(default_exec, hexgrad) {
+TEST(default_exec, hexgrad) {
   int exp_beg    = 10;
   int exp_end    = 20;
   int num_trials = 5;

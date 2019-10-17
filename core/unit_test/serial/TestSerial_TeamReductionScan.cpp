@@ -46,7 +46,7 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, team_scan) {
+TEST(TEST_CATEGORY, team_scan) {
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(10);
@@ -55,7 +55,7 @@ TEST_F(TEST_CATEGORY, team_scan) {
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(10000);
 }
 
-TEST_F(TEST_CATEGORY, team_long_reduce) {
+TEST(TEST_CATEGORY, team_long_reduce) {
   TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
   TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
   TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(3);
@@ -66,7 +66,7 @@ TEST_F(TEST_CATEGORY, team_long_reduce) {
       100000);
 }
 
-TEST_F(TEST_CATEGORY, team_double_reduce) {
+TEST(TEST_CATEGORY, team_double_reduce) {
   TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
   TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
   TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(3);

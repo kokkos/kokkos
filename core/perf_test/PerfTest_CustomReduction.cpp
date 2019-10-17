@@ -123,7 +123,7 @@ void custom_reduction_test(int N, int R, int num_trials) {
          max);
 }
 
-TEST_F(default_exec, custom_reduction) {
+TEST(default_exec, custom_reduction) {
   int N          = 100000;
   int R          = 1000;
   int num_trials = 1;

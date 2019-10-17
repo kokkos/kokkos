@@ -1424,7 +1424,7 @@ bool AtomicViewsTestNonIntegralType(const int length, int test) {
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, atomic_views_integral) {
+TEST(TEST_CATEGORY, atomic_views_integral) {
   const long length = 1000000;
   {
     // Integral Types.
@@ -1455,7 +1455,7 @@ TEST_F(TEST_CATEGORY, atomic_views_integral) {
   }
 }
 
-TEST_F(TEST_CATEGORY, atomic_views_nonintegral) {
+TEST(TEST_CATEGORY, atomic_views_nonintegral) {
   const long length = 1000000;
   {
     // Non-Integral Types.
@@ -1474,7 +1474,7 @@ TEST_F(TEST_CATEGORY, atomic_views_nonintegral) {
   }
 }
 
-TEST_F(TEST_CATEGORY, atomic_view_api) {
+TEST(TEST_CATEGORY, atomic_view_api) {
   TestAtomicViews::TestAtomicViewAPI<int, TEST_EXECSPACE>();
 }
 }  // namespace Test

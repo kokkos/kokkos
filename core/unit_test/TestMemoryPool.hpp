@@ -562,7 +562,7 @@ void test_memory_pool_huge() {
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, memory_pool) {
+TEST(TEST_CATEGORY, memory_pool) {
   TestMemoryPool::test_host_memory_pool_defaults<>();
   TestMemoryPool::test_host_memory_pool_stats<>();
   TestMemoryPool::test_memory_pool_v2<TEST_EXECSPACE>(false, false);
