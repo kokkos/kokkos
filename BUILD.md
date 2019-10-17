@@ -19,7 +19,7 @@ target_link_libraries(myTarget Kokkos::kokkos)
 ````
 That's it! There is no checking Kokkos preprocessor, compiler, or linker flags.
 Kokkos propagates all the necesssary flags to your project.
-This means not only is linking to Kokkos easy, but Kokkos itself can actually configure compiler and linker flags for *your* 
+This means not only is linking to Kokkos easy, but Kokkos itself can actually configure compiler and linker flags for *your*
 project. If building in-tree, there is no `find_package` and you link with `target_link_libraries(kokkos)`.
 
 
@@ -36,8 +36,8 @@ There are numerous device backends, options, and architecture-specific optimizat
 cmake ${srcdir} \
  -DCMAKE_CXX_COMPILER=g++ \
  -DCMAKE_INSTALL_PREFIX=${my_install_folder} \
- -DKokkos_ENABLE_OpenMP=On 
-```` 
+ -DKokkos_ENABLE_OPENMP=On
+````
 which activates the OpenMP backend. All of the options controlling device backends, options, architectures, and third-party libraries (TPLs) are given below.
 
 ## Spack
@@ -66,7 +66,7 @@ spack info kokkos
 
 #### Spack Development
 Spack currently installs packages to a location determined by a unique hash. This hash name is not really "human readable".
-Generally, Spack usage should never really require you to reference the computer-generated unique install folder. 
+Generally, Spack usage should never really require you to reference the computer-generated unique install folder.
 If you must know, you can locate Spack Kokkos installations with:
 ````
 spack find -p kokkos ...
@@ -76,7 +76,7 @@ where `...` is the unique spec identifying the particular Kokkos configuration a
 A better way to use Spack for doing Kokkos development is the DIY feature of Spack.
 If you wish to develop Kokkos itself, go to the Kokkos source folder:
 ````
-spack diy -u cmake kokkos@diy ... 
+spack diy -u cmake kokkos@diy ...
 ````
 where `...` is a Spack spec identifying the exact Kokkos configuration.
 This then creates a `spack-build` directory where you can run `make`.
@@ -108,17 +108,14 @@ Device backends can be enabled by specifiying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_CUDA
     * Whether to build CUDA backend
     * BOOL Default: OFF
-* Kokkos_ENABLE_OpenMP
+* Kokkos_ENABLE_HPX
+    * Whether to build HPX backend (experimental)
+    * BOOL Default: OFF
+* Kokkos_ENABLE_OPENMP
     * Whether to build OpenMP backend
     * BOOL Default: OFF
 * Kokkos_ENABLE_PTHREAD
     * Whether to build Pthread backend
-    * BOOL Default: OFF
-* Kokkos_ENABLE_QTHREAD
-    * Whether to enable the QTHREAD library
-    * BOOL Default: OFF
-* Kokkos_ENABLE_ROCM
-    * Whether to build AMD ROCm backend
     * BOOL Default: OFF
 * Kokkos_ENABLE_SERIAL
     * Whether to build serial  backend
@@ -146,10 +143,10 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
     * Whether to enable relocatable device code (RDC) for CUDA
     * BOOL Default: OFF
 * Kokkos_ENABLE_CUDA_UVM
-    * Whether to enable unified virtual memory (UVM) for CUDA
+    * Whether to use unified memory (UM) by default for CUDA
     * BOOL Default: OFF
 * Kokkos_ENABLE_DEBUG
-    * Whether to activate extra debug features - may increase compiletimes
+    * Whether to activate extra debug features - may increase compile times
     * BOOL Default: OFF
 * Kokkos_ENABLE_DEBUG_BOUNDS_CHECK
     * Whether to use bounds checking - will increase runtime
@@ -161,14 +158,17 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
     * Whether to enable deprecated code
     * BOOL Default: OFF
 * Kokkos_ENABLE_EXAMPLES
-    * Whether to build OpenMP  backend
+    * Whether to enable building examples
     * BOOL Default: OFF
 * Kokkos_ENABLE_EXPLICIT_INSTANTIATION
-    * Whether to explicitly instantiate certain types to lower futurecompile times
+    * Whether to explicitly instantiate certain types to lower future compile times
     * BOOL Default: OFF
 * Kokkos_ENABLE_HPX_ASYNC_DISPATCH
-    * Whether HPX supports asynchronous dispath
+    * Whether HPX supports asynchronous dispatch
     * BOOL Default: OFF
+* Kokkos_ENABLE_LARGE_MEM_TESTS
+    * Whether to perform extra large memory tests
+    * BOOL_Default: OFF
 * Kokkos_ENABLE_PROFILING
     * Whether to create bindings for profiling tools
     * BOOL Default: ON
@@ -181,21 +181,15 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
 
 ## Other Options
 * Kokkos_CXX_STANDARD
-    * The C++ standard for Kokkos to use: c++11, c++14, or c++17. This should be given in CMake style as 11, 14, or 17.
-    * STRING Default: 11 
-* Kokkos_SEPARATE_LIBS
-    * whether to build libkokkos or libkokkoscontainers, etc
-    * BOOL Default: OFF
+    * The C++ standard for Kokkos to use: c++11, c++14, c++17, or c++20. This should be given in CMake style as 11, 14, 17, or 20.
+    * STRING Default: 11
 
 ## Third-party Libraries (TPLs)
 The following options control activating and locating varial options TPLs.
 
 * Kokkos_CUDA_DIR
     * Location of CUDA library
-    * PATH Default: 
-* Kokkos_ENABLE_HPX
-    * Whether to enable the HPX library
-    * BOOL Default: OFF
+    * PATH Default:
 * Kokkos_ENABLE_HWLOC
     * Whether to enable the HWLOC library
     * BOOL Default: Off
@@ -207,19 +201,16 @@ The following options control activating and locating varial options TPLs.
     * BOOL Default: Off
 * Kokkos_HPX_DIR
     * Location of HPX library
-    * PATH Default: 
+    * PATH Default:
 * Kokkos_HWLOC_DIR
     * Location of HWLOC library
-    * PATH Default: 
+    * PATH Default:
 * Kokkos_LIBNUMA_DIR
     * Location of LIBNUMA library
-    * PATH Default: 
+    * PATH Default:
 * Kokkos_MEMKIND_DIR
     * Location of MEMKIND library
-    * PATH Default: 
-* Kokkos_QTHREAD_DIR
-    * Location of QTHREAD library
-    * PATH Default: 
+    * PATH Default:
 
 ## Architecture Keywords
 Architecture-specific optimizations can be enabled by specifiying `-DKokkos_ARCH_X`.
@@ -263,9 +254,6 @@ Architecture-specific optimizations can be enabled by specifiying `-DKokkos_ARCH
 * Kokkos_ARCH_KAVERI
     * Whether to optimize for the KAVERI architecture
     * BOOL Default: OFF
-* Kokkos_ARCH_KEPLER
-    * Whether to optimize for the KEPLER architecture
-    * BOOL Default: OFF
 * Kokkos_ARCH_KEPLER30
     * Whether to optimize for the KEPLER30 architecture
     * BOOL Default: OFF
@@ -284,9 +272,6 @@ Architecture-specific optimizations can be enabled by specifiying `-DKokkos_ARCH
 * Kokkos_ARCH_KNL
     * Whether to optimize for the KNL architecture
     * BOOL Default: OFF
-* Kokkos_ARCH_MAXWELL
-    * Whether to optimize for the MAXWELL architecture
-    * BOOL Default: OFF
 * Kokkos_ARCH_MAXWELL50
     * Whether to optimize for the MAXWELL50 architecture
     * BOOL Default: OFF
@@ -296,9 +281,6 @@ Architecture-specific optimizations can be enabled by specifiying `-DKokkos_ARCH
 * Kokkos_ARCH_MAXWELL53
     * Whether to optimize for the MAXWELL53 architecture
     * BOOL Default: OFF
-* Kokkos_ARCH_NONE
-    * optimize for architecture NONE
-    * BOOL Default: ON
 * Kokkos_ARCH_PASCAL60
     * Whether to optimize for the PASCAL60 architecture
     * BOOL Default: OFF
