@@ -51,6 +51,15 @@
 #include <algorithm>
 #include <atomic>
 
+// The purpose of the following variable is to allow a state-based choice
+// for executing kernels serially on the GPU. For now this is considered
+// an experimental debugging capability - with the potential to work around
+// some CUDA issues.
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+bool kokkos_impl_cuda_use_serial_execution_v = false;
+#define KOKKOS_IMPL_DEFINED_CUDA_USE_SERIAL_EXECUTION_V
+#endif
+
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Cuda.hpp>
 #include <Kokkos_CudaSpace.hpp>

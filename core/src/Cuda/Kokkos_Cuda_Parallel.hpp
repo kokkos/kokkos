@@ -69,6 +69,25 @@
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+#ifndef KOKKOS_IMPL_DEFINED_CUDA_USE_SERIAL_SCAN_V
+extern bool kokkos_impl_cuda_use_serial_execution_v;
+#endif
+
+namespace Kokkos {
+namespace Experimental {
+
+inline bool& cuda_use_serial_execution() {
+  return kokkos_impl_cuda_use_serial_execution_v;
+}
+inline void cuda_set_serial_execution(bool val) {
+  kokkos_impl_cuda_use_serial_execution_v = val;
+}
+
+}  // namespace Experimental
+}  // namespace Kokkos
+#endif
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -598,12 +617,18 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
             m_policy.space().impl_internal_space_instance(), attr, m_functor, 1,
             0, 0);
-    const dim3 block(1, block_size, 1);
-    const dim3 grid(
+    dim3 block(1, block_size, 1);
+    dim3 grid(
         std::min(
             typename Policy::index_type((nwork + block.y - 1) / block.y),
             typename Policy::index_type(cuda_internal_maximum_grid_count())),
         1, 1);
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+    if (Kokkos::Experimental::cuda_use_serial_execution()) {
+      block = dim3(1, 1, 1);
+      grid  = dim3(1, 1, 1);
+    }
+#endif
 
     CudaParallelLaunch<ParallelFor, LaunchBounds>(
         *this, grid, block, 0, m_policy.space().impl_internal_space_instance(),
@@ -825,8 +850,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   inline void execute() const {
     const int64_t shmem_size_total = m_shmem_begin + m_shmem_size;
-    const dim3 grid(int(m_league_size), 1, 1);
+    dim3 grid(int(m_league_size), 1, 1);
     const dim3 block(int(m_vector_size), int(m_team_size), 1);
+
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+    if (Kokkos::Experimental::cuda_use_serial_execution()) {
+      grid = dim3(1, 1, 1);
+    }
+#endif
 
     CudaParallelLaunch<ParallelFor, LaunchBounds>(
         *this, grid, block, shmem_size_total,
@@ -1120,10 +1151,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                 m_functor, m_reducer)));
 
       // REQUIRED ( 1 , N , 1 )
-      const dim3 block(1, block_size, 1);
+      dim3 block(1, block_size, 1);
       // Required grid.x <= block.y
-      const dim3 grid(
-          std::min(int(block.y), int((nwork + block.y - 1) / block.y)), 1, 1);
+      dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)), 1,
+                1);
 
       const int shmem =
           UseShflReduction
@@ -1131,6 +1162,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               : cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
                                                           WorkTag>(m_functor,
                                                                    block.y);
+
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+      if (Kokkos::Experimental::cuda_use_serial_execution()) {
+        block = dim3(1, 1, 1);
+        grid  = dim3(1, 1, 1);
+      }
+#endif
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem,
@@ -1724,9 +1762,16 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
                                 m_functor, m_reducer)));
 
-      const dim3 block(m_vector_size, m_team_size, 1);
-      const dim3 grid(block_count, 1, 1);
+      dim3 block(m_vector_size, m_team_size, 1);
+      dim3 grid(block_count, 1, 1);
       const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
+
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+      if (Kokkos::Experimental::cuda_use_serial_execution()) {
+        block = dim3(1, 1, 1);
+        grid  = dim3(1, 1, 1);
+      }
+#endif
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem_size_total,
@@ -1995,6 +2040,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
   size_type m_final;
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+  bool m_run_serial;
+#endif
 
   template <class TagType>
   __device__ inline
@@ -2134,11 +2182,26 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   //----------------------------------------
 
   __device__ inline void operator()(void) const {
-    if (!m_final) {
-      initial();
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+    if (m_run_serial) {
+      typename ValueTraits::value_type value;
+      ValueInit::init(m_functor, (void*)&value);
+      const WorkRange range(m_policy, blockIdx.x, gridDim.x);
+
+      for (typename Policy::member_type iwork_base = range.begin();
+           iwork_base < range.end(); iwork_base++) {
+        this->template exec_range<WorkTag>(iwork_base, value, true);
+      }
     } else {
-      final();
+#endif
+      if (!m_final) {
+        initial();
+      } else {
+        final();
+      }
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     }
+#endif
   }
 
   // Determine block size constrained by shared memory:
@@ -2188,16 +2251,24 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
 
-      const dim3 grid(grid_x, 1, 1);
-      const dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
+      dim3 grid(grid_x, 1, 1);
+      dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
       const int shmem = ValueTraits::value_size(m_functor) * (block_size + 2);
 
-      m_final = false;
-      CudaParallelLaunch<ParallelScan, LaunchBounds>(
-          *this, grid, block, shmem,
-          m_policy.space().impl_internal_space_instance(),
-          false);  // copy to device and execute
-
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+      if (m_run_serial) {
+        block = dim3(1, 1, 1);
+        grid  = dim3(1, 1, 1);
+      } else {
+#endif
+        m_final = false;
+        CudaParallelLaunch<ParallelScan, LaunchBounds>(
+            *this, grid, block, shmem,
+            m_policy.space().impl_internal_space_instance(),
+            false);  // copy to device and execute
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+      }
+#endif
       m_final = true;
       CudaParallelLaunch<ParallelScan, LaunchBounds>(
           *this, grid, block, shmem,
@@ -2211,7 +2282,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         m_policy(arg_policy),
         m_scratch_space(0),
         m_scratch_flags(0),
-        m_final(false) {}
+        m_final(false)
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+        ,
+        m_run_serial(Kokkos::Experimental::cuda_use_serial_execution())
+#endif
+  {
+  }
 };
 
 //----------------------------------------------------------------------------
@@ -2250,6 +2327,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   size_type* m_scratch_flags;
   size_type m_final;
   ReturnType& m_returnvalue;
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+  bool m_run_serial;
+#endif
 
   template <class TagType>
   __device__ inline
@@ -2391,11 +2471,27 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 
   __device__ inline void operator()(void) const {
-    if (!m_final) {
-      initial();
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+    if (m_run_serial) {
+      typename ValueTraits::value_type value;
+      ValueInit::init(m_functor, (void*)&value);
+      const WorkRange range(m_policy, blockIdx.x, gridDim.x);
+
+      for (typename Policy::member_type iwork_base = range.begin();
+           iwork_base < range.end(); iwork_base++) {
+        this->template exec_range<WorkTag>(iwork_base, value, true);
+      }
+      *((typename ValueTraits::value_type*)m_scratch_space) = value;
     } else {
-      final();
+#endif
+      if (!m_final) {
+        initial();
+      } else {
+        final();
+      }
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     }
+#endif
   }
 
   // Determine block size constrained by shared memory:
@@ -2445,16 +2541,25 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
 
-      const dim3 grid(grid_x, 1, 1);
-      const dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
+      dim3 grid(grid_x, 1, 1);
+      dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
       const int shmem = ValueTraits::value_size(m_functor) * (block_size + 2);
 
-      m_final = false;
-      CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
-          *this, grid, block, shmem,
-          m_policy.space().impl_internal_space_instance(),
-          false);  // copy to device and execute
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+      if (m_run_serial) {
+        block = dim3(1, 1, 1);
+        grid  = dim3(1, 1, 1);
+      } else {
+#endif
 
+        m_final = false;
+        CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
+            *this, grid, block, shmem,
+            m_policy.space().impl_internal_space_instance(),
+            false);  // copy to device and execute
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+      }
+#endif
       m_final = true;
       CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
           *this, grid, block, shmem,
@@ -2462,9 +2567,14 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
           false);  // copy to device and execute
 
       const int size = ValueTraits::value_size(m_functor);
-      DeepCopy<HostSpace, CudaSpace>(
-          &m_returnvalue, m_scratch_space + (grid_x - 1) * size / sizeof(int),
-          size);
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+      if (m_run_serial)
+        DeepCopy<HostSpace, CudaSpace>(&m_returnvalue, m_scratch_space, size);
+      else
+#endif
+        DeepCopy<HostSpace, CudaSpace>(
+            &m_returnvalue, m_scratch_space + (grid_x - 1) * size / sizeof(int),
+            size);
     }
   }
 
@@ -2475,7 +2585,13 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         m_scratch_space(0),
         m_scratch_flags(0),
         m_final(false),
-        m_returnvalue(arg_returnvalue) {}
+        m_returnvalue(arg_returnvalue)
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+        ,
+        m_run_serial(Kokkos::Experimental::cuda_use_serial_execution())
+#endif
+  {
+  }
 };
 
 }  // namespace Impl
