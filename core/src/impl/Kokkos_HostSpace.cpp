@@ -41,6 +41,7 @@
 //@HEADER
 */
 
+#include <cstdio>
 #include <algorithm>
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Error.hpp>
