@@ -236,23 +236,11 @@ Architecture-specific optimizations can be enabled by specifiying `-DKokkos_ARCH
 * Kokkos_ARCH_BGQ
     * Whether to optimize for the BGQ architecture
     * BOOL Default: OFF
-* Kokkos_ARCH_CARRIZO
-    * Whether to optimize for the CARRIZO architecture
-    * BOOL Default: OFF
 * Kokkos_ARCH_EPYC
     * Whether to optimize for the EPYC architecture
     * BOOL Default: OFF
-* Kokkos_ARCH_FIJI
-    * Whether to optimize for the FIJI architecture
-    * BOOL Default: OFF
-* Kokkos_ARCH_GFX901
-    * Whether to optimize for the GFX901 architecture
-    * BOOL Default: OFF
 * Kokkos_ARCH_HSW
     * Whether to optimize for the HSW architecture
-    * BOOL Default: OFF
-* Kokkos_ARCH_KAVERI
-    * Whether to optimize for the KAVERI architecture
     * BOOL Default: OFF
 * Kokkos_ARCH_KEPLER30
     * Whether to optimize for the KEPLER30 architecture
@@ -296,9 +284,6 @@ Architecture-specific optimizations can be enabled by specifiying `-DKokkos_ARCH
 * Kokkos_ARCH_POWER9
     * Whether to optimize for the POWER9 architecture
     * BOOL Default: OFF
-* Kokkos_ARCH_RYZEN
-    * Whether to optimize for the RYZEN architecture
-    * BOOL Default: OFF
 * Kokkos_ARCH_SKX
     * Whether to optimize for the SKX architecture
     * BOOL Default: OFF
@@ -307,9 +292,6 @@ Architecture-specific optimizations can be enabled by specifiying `-DKokkos_ARCH
     * BOOL Default: OFF
 * Kokkos_ARCH_TURING75
     * Whether to optimize for the TURING75 architecture
-    * BOOL Default: OFF
-* Kokkos_ARCH_VEGA
-    * Whether to optimize for the VEGA architecture
     * BOOL Default: OFF
 * Kokkos_ARCH_VOLTA70
     * Whether to optimize for the VOLTA70 architecture

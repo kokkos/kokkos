@@ -86,8 +86,3 @@
 #cmakedefine KOKKOS_ARCH_VOLTA72
 #cmakedefine KOKKOS_ARCH_TURING75
 #cmakedefine KOKKOS_ARCH_AMD_EPYC
-#cmakedefine KOKKOS_ARCH_KAVERI
-#cmakedefine KOKKOS_ARCH_CARRIZO
-#cmakedefine KOKKOS_ARCH_FIJI
-#cmakedefine KOKKOS_ARCH_VEGA
-#cmakedefine KOKKOS_ARCH_GFX901
