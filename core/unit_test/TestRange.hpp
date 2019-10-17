@@ -345,7 +345,7 @@ struct TestRange {
 
 }  // namespace
 
-TEST_F(TEST_CATEGORY, range_for) {
+TEST(TEST_CATEGORY, range_for) {
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
     f.test_for();
@@ -374,7 +374,7 @@ TEST_F(TEST_CATEGORY, range_for) {
   }
 }
 
-TEST_F(TEST_CATEGORY, range_reduce) {
+TEST(TEST_CATEGORY, range_reduce) {
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
     f.test_reduce();
@@ -404,7 +404,7 @@ TEST_F(TEST_CATEGORY, range_reduce) {
 }
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
-TEST_F(TEST_CATEGORY, range_scan) {
+TEST(TEST_CATEGORY, range_scan) {
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
     f.test_scan();

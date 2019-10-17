@@ -875,7 +875,7 @@ class TestTeamPolicyConstruction {
   }
 };
 
-TEST_F(TEST_CATEGORY, policy_construction) {
+TEST(TEST_CATEGORY, policy_construction) {
   TestRangePolicyConstruction<TEST_EXECSPACE>();
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
 }

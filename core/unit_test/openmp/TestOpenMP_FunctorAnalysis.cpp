@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -41,19 +42,5 @@
 //@HEADER
 */
 
-#include <TestAtomicOperations.hpp>
-
-namespace Test {
-TEST(TEST_CATEGORY, atomic_operations_complexfloat) {
-  const int start = 1;  // Avoid zero for division.
-  const int end   = 11;
-  for (int i = start; i < end; ++i) {
-    ASSERT_TRUE(
-        (TestAtomicOperations::MulAtomicTest<Kokkos::complex<float>,
-                                             TEST_EXECSPACE>(start, end - i)));
-    ASSERT_TRUE(
-        (TestAtomicOperations::DivAtomicTest<Kokkos::complex<float>,
-                                             TEST_EXECSPACE>(start, end - i)));
-  }
-}
-}  // namespace Test
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestFunctorAnalysis.hpp>

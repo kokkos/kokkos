@@ -127,7 +127,7 @@ void test_64bit() {
 }
 
 #ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS
-TEST_F(TEST_CATEGORY, view_64bit) { test_64bit<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, view_64bit) { test_64bit<TEST_EXECSPACE>(); }
 #endif
 
 }  // namespace Test

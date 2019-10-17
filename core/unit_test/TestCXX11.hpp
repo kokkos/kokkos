@@ -367,7 +367,7 @@ bool Test(int test) {
 }  // namespace TestCXX11
 
 namespace Test {
-TEST_F(TEST_CATEGORY, cxx11) {
+TEST(TEST_CATEGORY, cxx11) {
   if (std::is_same<Kokkos::DefaultExecutionSpace, TEST_EXECSPACE>::value) {
     ASSERT_TRUE((TestCXX11::Test<TEST_EXECSPACE>(1)));
     ASSERT_TRUE((TestCXX11::Test<TEST_EXECSPACE>(2)));

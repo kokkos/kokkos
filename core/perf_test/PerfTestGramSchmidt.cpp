@@ -234,7 +234,7 @@ void run_test_gramschmidt(int exp_beg, int exp_end, int num_trials,
   }
 }
 
-TEST_F(default_exec, gramschmidt) {
+TEST(default_exec, gramschmidt) {
   int exp_beg    = 10;
   int exp_end    = 20;
   int num_trials = 5;

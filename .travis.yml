@@ -88,7 +88,7 @@ script:
           -DKokkos_ENABLE_TESTS=On
           ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}} &&
     make VERBOSE=1 -j2 &&
-    travis_wait make test CTEST_OUTPUT_ON_FAILURE=1 &&
+    travis_wait 60 make test CTEST_OUTPUT_ON_FAILURE=1 &&
     make install DESTDIR=${PWD}/install && rm -rf ${PWD}/install/usr/local && rmdir ${PWD}/install/usr &&
     popd
 

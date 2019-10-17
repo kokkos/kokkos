@@ -150,13 +150,13 @@ struct TestViewCopy {
 
 }  // namespace
 
-TEST_F(TEST_CATEGORY, view_copy_tests) {
+TEST(TEST_CATEGORY, view_copy_tests) {
   // Only include this file to be compiled with CudaUVM and CudaHostPinned
   TestViewCopy<TEST_EXECSPACE>::test_view_copy(4, 2, 3);
   TestViewCopy<TEST_EXECSPACE>::test_view_copy(4, 2, 0);
 }
 
-TEST_F(TEST_CATEGORY, view_copy_degenerated) {
+TEST(TEST_CATEGORY, view_copy_degenerated) {
   // Only include this file to be compiled with CudaUVM and CudaHostPinned
   Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v_um_def_1;
   Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v_um_1(

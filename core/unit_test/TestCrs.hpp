@@ -200,7 +200,7 @@ void test_constructor(std::int32_t nrows) {
 
 }  // anonymous namespace
 
-TEST_F(TEST_CATEGORY, crs_count_fill) {
+TEST(TEST_CATEGORY, crs_count_fill) {
   test_count_fill<TEST_EXECSPACE>(0);
   test_count_fill<TEST_EXECSPACE>(1);
   test_count_fill<TEST_EXECSPACE>(2);
@@ -211,7 +211,7 @@ TEST_F(TEST_CATEGORY, crs_count_fill) {
   test_count_fill<TEST_EXECSPACE>(10000);
 }
 
-TEST_F(TEST_CATEGORY, crs_copy_constructor) {
+TEST(TEST_CATEGORY, crs_copy_constructor) {
   test_constructor<TEST_EXECSPACE>(0);
   test_constructor<TEST_EXECSPACE>(1);
   test_constructor<TEST_EXECSPACE>(2);

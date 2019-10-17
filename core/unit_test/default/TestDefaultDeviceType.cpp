@@ -50,7 +50,7 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, host_space_access) {
+TEST(TEST_CATEGORY, host_space_access) {
   typedef Kokkos::HostSpace::execution_space host_exec_space;
   typedef Kokkos::Device<host_exec_space, Kokkos::HostSpace> device_space;
   typedef Kokkos::Impl::HostMirror<Kokkos::DefaultExecutionSpace>::Space

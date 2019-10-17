@@ -139,7 +139,7 @@ struct FunctorTeamReduce {
 }  // namespace
 
 // Test Interoperability with Cuda Streams
-TEST_F(cuda, raw_cuda_streams) {
+TEST(cuda, raw_cuda_streams) {
   cudaStream_t stream;
   cudaStreamCreate(&stream);
   Kokkos::InitArguments arguments{-1, -1, -1, false};

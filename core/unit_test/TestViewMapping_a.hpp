@@ -1090,7 +1090,7 @@ void test_view_mapping() {
   }
 }
 
-TEST_F(TEST_CATEGORY, view_mapping) { test_view_mapping<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, view_mapping) { test_view_mapping<TEST_EXECSPACE>(); }
 /*--------------------------------------------------------------------------*/
 
 template <class ViewType>
@@ -1335,11 +1335,11 @@ void test_view_mapping_operator() {
   }
 }
 
-TEST_F(TEST_CATEGORY, view_mapping_operator) {
+TEST(TEST_CATEGORY, view_mapping_operator) {
   test_view_mapping_operator<TEST_EXECSPACE>();
 }
 
-TEST_F(TEST_CATEGORY, static_extent) {
+TEST(TEST_CATEGORY, static_extent) {
   using T = Kokkos::View<double * [2][3]>;
   ASSERT_EQ(T::static_extent(1), 2);
   ASSERT_EQ(T::static_extent(2), 3);

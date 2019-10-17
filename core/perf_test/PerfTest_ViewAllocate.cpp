@@ -149,7 +149,7 @@ void run_allocateview_tests(int N, int R) {
          size / 1024 / time8);
 }
 
-TEST_F(default_exec, ViewCreate) {
+TEST(default_exec, ViewCreate) {
   printf("Create View Performance for LayoutLeft:\n");
   run_allocateview_tests<Kokkos::LayoutLeft>(10, 1);
   printf("Create View Performance for LayoutRight:\n");

@@ -44,7 +44,7 @@
 #include <PerfTest_ViewFill.hpp>
 
 namespace Test {
-TEST_F(default_exec, ViewFill_Rank6) {
+TEST(default_exec, ViewFill_Rank6) {
   printf("ViewFill Performance for LayoutLeft:\n");
   run_fillview_tests6<Kokkos::LayoutLeft>(10, 1);
   printf("ViewFill Performance for LayoutRight:\n");

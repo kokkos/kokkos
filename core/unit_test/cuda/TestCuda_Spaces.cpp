@@ -54,7 +54,7 @@ __global__ void test_cuda_spaces_int_value(int *ptr) {
   }
 }
 
-TEST_F(cuda, space_access) {
+TEST(cuda, space_access) {
   static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                                 Kokkos::HostSpace>::assignable,
                 "");
@@ -256,7 +256,7 @@ TEST_F(cuda, space_access) {
       "");
 }
 
-TEST_F(cuda, uvm) {
+TEST(cuda, uvm) {
   if (Kokkos::CudaUVMSpace::available()) {
     int *uvm_ptr = (int *)Kokkos::kokkos_malloc<Kokkos::CudaUVMSpace>(
         "uvm_ptr", sizeof(int));
@@ -277,7 +277,7 @@ TEST_F(cuda, uvm) {
  * The issue verified with this unit test appears to no longer be an
  * problem.  Refer to github issue 1880 for more details
  *
-TEST_F( cuda, uvm_num_allocs )
+TEST( cuda, uvm_num_allocs )
 {
   // The max number of UVM allocations allowed is 65536.
   #define MAX_NUM_ALLOCS 65536
@@ -376,7 +376,7 @@ struct TestViewCudaAccessible {
   }
 };
 
-TEST_F(cuda, impl_view_accessible) {
+TEST(cuda, impl_view_accessible) {
   TestViewCudaAccessible<Kokkos::CudaSpace, Kokkos::Cuda>::run();
 
   TestViewCudaAccessible<Kokkos::CudaUVMSpace, Kokkos::Cuda>::run();
@@ -431,7 +431,7 @@ struct TestViewCudaTexture {
   }
 };
 
-TEST_F(cuda, impl_view_texture) {
+TEST(cuda, impl_view_texture) {
   TestViewCudaTexture<Kokkos::CudaSpace>::run();
   TestViewCudaTexture<Kokkos::CudaUVMSpace>::run();
 }

@@ -55,7 +55,7 @@ __global__ void offset(int* p) {
 
 // Test whether allocations survive Kokkos initialize/finalize if done via Raw
 // Cuda.
-TEST_F(cuda, raw_cuda_interop) {
+TEST(cuda, raw_cuda_interop) {
   int* p;
   cudaMalloc(&p, sizeof(int) * 100);
   Kokkos::InitArguments arguments{-1, -1, -1, false};

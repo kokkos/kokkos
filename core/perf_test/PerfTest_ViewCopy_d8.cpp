@@ -43,7 +43,7 @@
 
 #include <PerfTest_ViewCopy.hpp>
 namespace Test {
-TEST_F(default_exec, ViewDeepCopy_RightLeft_Rank8) {
+TEST(default_exec, ViewDeepCopy_RightLeft_Rank8) {
   printf("DeepCopy Performance for LayoutRight to LayoutLeft:\n");
   run_deepcopyview_tests8<Kokkos::LayoutRight, Kokkos::LayoutLeft>(10, 1);
 }

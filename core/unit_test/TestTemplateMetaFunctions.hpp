@@ -208,7 +208,7 @@ void TestTemplateMetaFunctions() {
 }  // namespace
 
 namespace Test {
-TEST_F(TEST_CATEGORY, template_meta_functions) {
+TEST(TEST_CATEGORY, template_meta_functions) {
   TestTemplateMetaFunctions<int, TEST_EXECSPACE>();
 }
 }  // namespace Test
