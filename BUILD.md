@@ -163,9 +163,6 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_EXAMPLES
     * Whether to build OpenMP  backend
     * BOOL Default: OFF
-* Kokkos_ENABLE_EXPLICIT_INSTANTIATION
-    * Whether to explicitly instantiate certain types to lower futurecompile times
-    * BOOL Default: OFF
 * Kokkos_ENABLE_HPX_ASYNC_DISPATCH
     * Whether HPX supports asynchronous dispath
     * BOOL Default: OFF
