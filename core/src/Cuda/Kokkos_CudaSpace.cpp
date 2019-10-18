@@ -51,15 +51,6 @@
 #include <algorithm>
 #include <atomic>
 
-// The purpose of the following variable is to allow a state-based choice
-// for executing kernels serially on the GPU. For now this is considered
-// an experimental debugging capability - with the potential to work around
-// some CUDA issues.
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-bool kokkos_impl_cuda_use_serial_execution_v = false;
-#define KOKKOS_IMPL_DEFINED_CUDA_USE_SERIAL_EXECUTION_V
-#endif
-
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Cuda.hpp>
 #include <Kokkos_CudaSpace.hpp>
@@ -144,6 +135,22 @@ void CudaSpace::access_error() {
       "non-Cuda space");
   Kokkos::Impl::throw_runtime_exception(msg);
 }
+
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+void CudaSpace::cuda_set_serial_execution(bool val) {
+  CudaSpace::kokkos_impl_cuda_use_serial_execution_v = val;
+}
+bool &CudaSpace::cuda_use_serial_execution() {
+  return CudaSpace::kokkos_impl_cuda_use_serial_execution_v;
+}
+
+extern "C" void kokkos_impl_cuda_set_serial_execution(bool val) {
+  CudaSpace::cuda_set_serial_execution(val);
+}
+extern "C" bool &kokkos_impl_use_serial_execution() {
+  return CudaSpace::cuda_use_serial_execution();
+}
+#endif
 
 void CudaSpace::access_error(const void *const) {
   const std::string msg(
