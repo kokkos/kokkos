@@ -57,7 +57,6 @@
 
 #include <Cuda/Kokkos_Cuda_abort.hpp>
 
-
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
@@ -184,7 +183,7 @@ class CudaUVMSpace {
   static constexpr const char* name() { return m_name; }
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-  inline static bool& cuda_pin_um_to_host();
+  inline static bool cuda_pin_um_to_host();
   inline static void cuda_set_pin_um_to_host(bool val);
 #endif
   /*--------------------------------*/
@@ -193,7 +192,7 @@ class CudaUVMSpace {
   int m_device;  ///< Which Cuda device
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-  static  bool kokkos_impl_cuda_pin_um_to_host_v;
+  static bool kokkos_impl_cuda_pin_um_to_host_v;
 #endif
   static constexpr const char* m_name = "CudaUVM";
 };
