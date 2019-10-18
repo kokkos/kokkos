@@ -160,9 +160,6 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_EXAMPLES
     * Whether to enable building examples
     * BOOL Default: OFF
-* Kokkos_ENABLE_EXPLICIT_INSTANTIATION
-    * Whether to explicitly instantiate certain types to lower future compile times
-    * BOOL Default: OFF
 * Kokkos_ENABLE_HPX_ASYNC_DISPATCH
     * Whether HPX supports asynchronous dispatch
     * BOOL Default: OFF
