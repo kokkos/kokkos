@@ -136,22 +136,6 @@ void CudaSpace::access_error() {
   Kokkos::Impl::throw_runtime_exception(msg);
 }
 
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-void CudaSpace::cuda_set_serial_execution(bool val) {
-  CudaSpace::kokkos_impl_cuda_use_serial_execution_v = val;
-}
-bool &CudaSpace::cuda_use_serial_execution() {
-  return CudaSpace::kokkos_impl_cuda_use_serial_execution_v;
-}
-
-extern "C" void kokkos_impl_cuda_set_serial_execution(bool val) {
-  CudaSpace::cuda_set_serial_execution(val);
-}
-extern "C" bool &kokkos_impl_use_serial_execution() {
-  return CudaSpace::cuda_use_serial_execution();
-}
-#endif
-
 void CudaSpace::access_error(const void *const) {
   const std::string msg(
       "Kokkos::CudaSpace::access_error attempt to execute Cuda function from "
