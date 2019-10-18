@@ -57,22 +57,6 @@
 
 #include <Cuda/Kokkos_Cuda_abort.hpp>
 
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-#ifndef KOKKOS_IMPL_DEFINED_CUDA_PIN_UM_TO_HOST_V
-extern bool kokkos_impl_cuda_pin_um_to_host_v;
-#endif
-
-namespace Kokkos {
-namespace Experimental {
-
-inline bool& cuda_pin_um_to_host() { return kokkos_impl_cuda_pin_um_to_host_v; }
-inline void cuda_set_pin_um_to_host(bool val) {
-  kokkos_impl_cuda_pin_um_to_host_v = val;
-}
-
-}  // namespace Experimental
-}  // namespace Kokkos
-#endif
 
 /*--------------------------------------------------------------------------*/
 
@@ -199,11 +183,18 @@ class CudaUVMSpace {
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
+  inline static bool& cuda_pin_um_to_host();
+  inline static void cuda_set_pin_um_to_host(bool val);
+#endif
   /*--------------------------------*/
 
  private:
   int m_device;  ///< Which Cuda device
 
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
+  static  bool kokkos_impl_cuda_pin_um_to_host_v;
+#endif
   static constexpr const char* m_name = "CudaUVM";
 };
 
