@@ -69,11 +69,13 @@ struct CopyFunctor {
 };
 
 TEST(cuda, debug_pin_um_to_host) {
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
   double time_cuda_space;
   double time_cuda_host_pinned_space;
   double time_cuda_uvm_space_not_pinned_1;
   double time_cuda_uvm_space_pinned;
   double time_cuda_uvm_space_not_pinned_2;
+#endif
   int N = 10000000;
   int R = 100;
   {
