@@ -115,15 +115,15 @@ bool cuda_launch_blocking() {
 void CudaInternal::cuda_set_serial_execution(bool val) {
   CudaInternal::kokkos_impl_cuda_use_serial_execution_v = val;
 }
-bool &CudaInternal::cuda_use_serial_execution() {
+bool CudaInternal::cuda_use_serial_execution() {
   return CudaInternal::kokkos_impl_cuda_use_serial_execution_v;
 }
 
 extern "C" void kokkos_impl_cuda_set_serial_execution(bool val) {
-  Impl::CudaInternal::cuda_set_serial_execution(val);
+  Kokkos::Impl::CudaInternal::cuda_set_serial_execution(val);
 }
-extern "C" bool &kokkos_impl_use_serial_execution() {
-  return Impl::CudaInternal::cuda_use_serial_execution();
+extern "C" bool kokkos_impl_use_serial_execution() {
+  return Kokkos::Impl::CudaInternal::cuda_use_serial_execution();
 }
 #endif
 

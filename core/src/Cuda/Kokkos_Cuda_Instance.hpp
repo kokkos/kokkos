@@ -120,8 +120,8 @@ class CudaInternal {
   void print_configuration(std::ostream&) const;
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-  static inline bool& cuda_use_serial_execution();
-  static inline void cuda_set_serial_execution(bool);
+  static bool cuda_use_serial_execution();
+  static void cuda_set_serial_execution(bool);
 #endif
 
   void fence() const;
