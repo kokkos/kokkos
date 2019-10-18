@@ -51,6 +51,15 @@
 #include <algorithm>
 #include <atomic>
 
+// The purpose of the following variable is to allow a state-based choice
+// for pinning UVM allocations to the CPU. For now this is considered
+// an experimental debugging capability - with the potential to work around
+// some CUDA issues.
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
+bool kokkos_impl_cuda_pin_um_to_host_v = false;
+#define KOKKOS_IMPL_DEFINED_CUDA_PIN_UM_TO_HOST_V
+#endif
+
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Cuda.hpp>
 #include <Kokkos_CudaSpace.hpp>
@@ -210,6 +219,13 @@ void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
 
     auto error_code =
         cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
+
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
+    if (Kokkos::Experimental::cuda_pin_um_to_host())
+      cudaMemAdvise(ptr, arg_alloc_size, cudaMemAdviseSetPreferredLocation,
+                    cudaCpuDeviceId);
+#endif
+
     if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
       cudaGetLastError();  // This is the only way to clear the last error,
                            // which we should do here since we're turning it

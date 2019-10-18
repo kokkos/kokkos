@@ -77,7 +77,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA += TestCuda_UniqueToken.o
     OBJ_CUDA += TestCuda_LocalDeepCopy.o
     OBJ_CUDA += TestCuda_DebugSerialExecution.o
-
+    OBJ_CUDA += TestCuda_DebugPinUVMSpace.o
+  
     TARGETS += KokkosCore_UnitTest_Cuda
     TARGETS += KokkosCore_UnitTest_CudaInterOpInit
     TARGETS += KokkosCore_UnitTest_CudaInterOpStreams

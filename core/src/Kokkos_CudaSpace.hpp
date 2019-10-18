@@ -57,6 +57,23 @@
 
 #include <Cuda/Kokkos_Cuda_abort.hpp>
 
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
+#ifndef KOKKOS_IMPL_DEFINED_CUDA_PIN_UM_TO_HOST_V
+extern bool kokkos_impl_cuda_pin_um_to_host_v;
+#endif
+
+namespace Kokkos {
+namespace Experimental {
+
+inline bool& cuda_pin_um_to_host() { return kokkos_impl_cuda_pin_um_to_host_v; }
+inline void cuda_set_pin_um_to_host(bool val) {
+  kokkos_impl_cuda_pin_um_to_host_v = val;
+}
+
+}  // namespace Experimental
+}  // namespace Kokkos
+#endif
+
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
