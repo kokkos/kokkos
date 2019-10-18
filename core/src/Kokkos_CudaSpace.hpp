@@ -182,17 +182,17 @@ class CudaUVMSpace {
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-  inline static bool cuda_pin_um_to_host();
-  inline static void cuda_set_pin_um_to_host(bool val);
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+  inline static bool cuda_pin_uvm_to_host();
+  inline static void cuda_set_pin_uvm_to_host(bool val);
 #endif
   /*--------------------------------*/
 
  private:
   int m_device;  ///< Which Cuda device
 
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-  static bool kokkos_impl_cuda_pin_um_to_host_v;
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+  static bool kokkos_impl_cuda_pin_uvm_to_host_v;
 #endif
   static constexpr const char* m_name = "CudaUVM";
 };

@@ -55,9 +55,9 @@
 // for pinning UVM allocations to the CPU. For now this is considered
 // an experimental debugging capability - with the potential to work around
 // some CUDA issues.
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-bool kokkos_impl_cuda_pin_um_to_host_v = false;
-#define KOKKOS_IMPL_DEFINED_CUDA_PIN_UM_TO_HOST_V
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+bool kokkos_impl_cuda_pin_uvm_to_host_v = false;
+#define KOKKOS_IMPL_DEFINED_CUDA_PIN_UVM_TO_HOST_V
 #endif
 
 #include <Kokkos_Core.hpp>
@@ -168,19 +168,19 @@ bool CudaUVMSpace::available() {
 int CudaUVMSpace::number_of_allocations() {
   return Kokkos::Impl::num_uvm_allocations.load();
 }
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-bool CudaUVMSpace::cuda_pin_um_to_host() {
-  return CudaUVMSpace::kokkos_impl_cuda_pin_um_to_host_v;
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+bool CudaUVMSpace::cuda_pin_uvm_to_host() {
+  return CudaUVMSpace::kokkos_impl_cuda_pin_uvm_to_host_v;
 }
-void CudaUVMSpace::cuda_set_pin_um_to_host(bool val) {
-  CudaUVMSpace::kokkos_impl_cuda_pin_um_to_host_v = val;
+void CudaUVMSpace::cuda_set_pin_uvm_to_host(bool val) {
+  CudaUVMSpace::kokkos_impl_cuda_pin_uvm_to_host_v = val;
 }
 
-extern "C" bool cuda_pin_um_to_host() {
-  return CudaUVMSpace::cuda_pin_um_to_host();
+extern "C" bool cuda_pin_uvm_to_host() {
+  return CudaUVMSpace::cuda_pin_uvm_to_host();
 }
-extern "C" void cuda_set_pin_um_to_host(bool val) {
-  CudaUVMSpace::cuda_set_pin_um_to_host(val);
+extern "C" void cuda_set_pin_uvm_to_host(bool val) {
+  CudaUVMSpace::cuda_set_pin_uvm_to_host(val);
 }
 #endif
 
@@ -235,8 +235,8 @@ void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
     auto error_code =
         cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
 
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-    if (Kokkos::CudaUVMSpace::cuda_pin_um_to_host())
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+    if (Kokkos::CudaUVMSpace::cuda_pin_uvm_to_host())
       cudaMemAdvise(ptr, arg_alloc_size, cudaMemAdviseSetPreferredLocation,
                     cudaCpuDeviceId);
 #endif
