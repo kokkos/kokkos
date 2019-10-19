@@ -152,7 +152,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   }
 
   iterator insert(iterator it, size_type count, const value_type& val) {
-    if ((_size == 0) && (it == begin())) {
+    if ((size() == 0) && (it == begin())) {
       resize(count, val);
       DV::sync_host();
       return begin();
@@ -165,17 +165,11 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     ptrdiff_t start = std::distance(begin(), it);
     auto org_size   = size();
     resize(size() + count);
-    auto org_view =
-        subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(start, org_size));
-    auto new_view = subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(
-                                            start + count, org_size + count));
 
-    for (ptrdiff_t i = org_view.extent(0) - 1; i >= 0; i--) {
-      new_view(i) = org_view(i);
-    }
+    std::copy_backward(begin() + start, begin() + org_size,
+                       begin() + org_size + count);
+    std::fill_n(begin() + start, count, val);
 
-    for (ptrdiff_t i = start; i < start + (ptrdiff_t)count; i++)
-      DV::h_view(i) = val;
     return begin() + start;
   }
 
@@ -200,29 +194,20 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
 
     bool resized = false;
-    if ((_size == 0) && (it == begin())) {
+    if ((size() == 0) && (it == begin())) {
       resize(count);
       it      = begin();
       resized = true;
     }
-    ptrdiff_t start = it - begin();
+    ptrdiff_t start = std::distance(begin(), it);
     auto org_size   = size();
     if (!resized) resize(size() + count);
     it = begin() + start;
-    auto org_view =
-        subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(start, org_size));
-    auto new_view = subview(DV::h_view, pair<ptrdiff_t, ptrdiff_t>(
-                                            start + count, org_size + count));
 
-    for (ptrdiff_t i = org_view.extent(0) - 1; i >= 0; i--) {
-      new_view(i) = org_view(i);
-    }
+    std::copy_backward(begin() + start, begin() + org_size,
+                       begin() + org_size + count);
+    std::copy(b, e, it);
 
-    while (b < e) {
-      *it = *b;
-      it++;
-      b++;
-    }
     return begin() + start;
   }
 
