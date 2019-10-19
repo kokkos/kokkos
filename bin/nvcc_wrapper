@@ -392,6 +392,9 @@ if [ $first_xcompiler_arg -eq 0 ]; then
   nvcc_command="$nvcc_command -Xcompiler $xcompiler_args"
 fi
 
+#Replace all commas in xcompiler_args with a space for the host only command
+xcompiler_args=${xcompiler_args//,/" "}
+
 #Compose host only command
 host_command="$host_compiler $shared_args $host_only_args $compile_arg $output_arg $xcompiler_args $host_linker_args $shared_versioned_libraries_host"
 
