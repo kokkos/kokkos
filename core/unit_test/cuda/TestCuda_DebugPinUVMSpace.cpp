@@ -91,12 +91,12 @@ TEST(cuda, debug_pin_um_to_host) {
   }
   {
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
-    Kokkos::Experimental::kokkos_impl_cuda_set_pin_uvm_to_host(true);
+    kokkos_impl_cuda_set_pin_uvm_to_host(true);
 #endif
     CopyFunctor<Kokkos::View<int*, Kokkos::CudaUVMSpace>> f(N);
     time_cuda_uvm_space_pinned = f.time_copy(R);
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
-    Kokkos::Experimental::kokkos_impl_cuda_set_pin_uvm_to_host(false);
+    kokkos_impl_cuda_set_pin_uvm_to_host(false);
 #endif
   }
   {

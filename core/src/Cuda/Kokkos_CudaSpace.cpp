@@ -172,19 +172,18 @@ bool CudaUVMSpace::cuda_pin_uvm_to_host() {
 void CudaUVMSpace::cuda_set_pin_uvm_to_host(bool val) {
   CudaUVMSpace::kokkos_impl_cuda_pin_uvm_to_host_v = val;
 }
+#endif
+}  // namespace Kokkos
 
-namespace Experimental {
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
 bool kokkos_impl_cuda_pin_uvm_to_host() {
-  return CudaUVMSpace::cuda_pin_uvm_to_host();
+  return Kokkos::CudaUVMSpace::cuda_pin_uvm_to_host();
 }
 
 void kokkos_impl_cuda_set_pin_uvm_to_host(bool val) {
-  CudaUVMSpace::cuda_set_pin_uvm_to_host(val);
+  Kokkos::CudaUVMSpace::cuda_set_pin_uvm_to_host(val);
 }
-}  // namespace Experimental
 #endif
-
-}  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/

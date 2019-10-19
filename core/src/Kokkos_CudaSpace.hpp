@@ -57,14 +57,10 @@
 
 #include <Cuda/Kokkos_Cuda_abort.hpp>
 
-namespace Kokkos {
-namespace Experimental {
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
 extern "C" bool kokkos_impl_cuda_pin_uvm_to_host();
 extern "C" void kokkos_impl_cuda_set_pin_uvm_to_host(bool);
 #endif
-}  // namespace Experimental
-}  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 
