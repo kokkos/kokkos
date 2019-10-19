@@ -69,7 +69,7 @@ struct CopyFunctor {
 };
 
 TEST(cuda, debug_pin_um_to_host) {
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
   double time_cuda_space;
   double time_cuda_host_pinned_space;
   double time_cuda_uvm_space_not_pinned_1;
@@ -91,23 +91,28 @@ TEST(cuda, debug_pin_um_to_host) {
     time_cuda_uvm_space_not_pinned_1 = f.time_copy(R);
   }
   {
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-    Kokkos::Experimental::cuda_set_pin_um_to_host(true);
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+    Kokkos::Experimental::kokkos_impl_cuda_set_pin_uvm_to_host(true);
 #endif
     CopyFunctor<Kokkos::View<int*, Kokkos::CudaUVMSpace>> f(N);
     time_cuda_uvm_space_pinned = f.time_copy(R);
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
-    Kokkos::Experimental::cuda_set_pin_um_to_host(false);
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+    Kokkos::Experimental::kokkos_impl_cuda_set_pin_uvm_to_host(false);
 #endif
   }
   {
     CopyFunctor<Kokkos::View<int*, Kokkos::CudaUVMSpace>> f(N);
     time_cuda_uvm_space_not_pinned_2 = f.time_copy(R);
   }
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UM_TO_HOST
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
   ASSERT_TRUE(time_cuda_uvm_space_not_pinned_1 < time_cuda_space * 1.25);
   ASSERT_TRUE(time_cuda_uvm_space_not_pinned_2 < time_cuda_space * 1.25);
   ASSERT_TRUE(time_cuda_uvm_space_pinned > time_cuda_space * 2.0);
+  ASSERT_TRUE(time_cuda_host_pinned_space > time_cuda_space * 2.0);
+#else
+  ASSERT_TRUE(time_cuda_uvm_space_not_pinned_1 < time_cuda_space * 1.25);
+  ASSERT_TRUE(time_cuda_uvm_space_not_pinned_2 < time_cuda_space * 1.25);
+  ASSERT_TRUE(time_cuda_uvm_space_pinned < time_cuda_space * 1.25);
   ASSERT_TRUE(time_cuda_host_pinned_space > time_cuda_space * 2.0);
 #endif
 }

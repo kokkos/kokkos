@@ -51,15 +51,6 @@
 #include <algorithm>
 #include <atomic>
 
-// The purpose of the following variable is to allow a state-based choice
-// for pinning UVM allocations to the CPU. For now this is considered
-// an experimental debugging capability - with the potential to work around
-// some CUDA issues.
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
-bool kokkos_impl_cuda_pin_uvm_to_host_v = false;
-#define KOKKOS_IMPL_DEFINED_CUDA_PIN_UVM_TO_HOST_V
-#endif
-
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Cuda.hpp>
 #include <Kokkos_CudaSpace.hpp>
@@ -169,6 +160,12 @@ int CudaUVMSpace::number_of_allocations() {
   return Kokkos::Impl::num_uvm_allocations.load();
 }
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+// The purpose of the following variable is to allow a state-based choice
+// for pinning UVM allocations to the CPU. For now this is considered
+// an experimental debugging capability - with the potential to work around
+// some CUDA issues.
+bool CudaUVMSpace::kokkos_impl_cuda_pin_uvm_to_host_v = false;
+
 bool CudaUVMSpace::cuda_pin_uvm_to_host() {
   return CudaUVMSpace::kokkos_impl_cuda_pin_uvm_to_host_v;
 }
@@ -176,12 +173,15 @@ void CudaUVMSpace::cuda_set_pin_uvm_to_host(bool val) {
   CudaUVMSpace::kokkos_impl_cuda_pin_uvm_to_host_v = val;
 }
 
-extern "C" bool cuda_pin_uvm_to_host() {
+namespace Experimental {
+bool kokkos_impl_cuda_pin_uvm_to_host() {
   return CudaUVMSpace::cuda_pin_uvm_to_host();
 }
-extern "C" void cuda_set_pin_uvm_to_host(bool val) {
+
+void kokkos_impl_cuda_set_pin_uvm_to_host(bool val) {
   CudaUVMSpace::cuda_set_pin_uvm_to_host(val);
 }
+}  // namespace Experimental
 #endif
 
 }  // namespace Kokkos
