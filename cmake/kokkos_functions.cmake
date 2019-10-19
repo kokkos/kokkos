@@ -130,6 +130,28 @@ MACRO(kokkos_export_imported_tpl NAME)
 ENDMACRO()
 
 
+#
+# @MACRO: KOKKOS_IMPORT_TPL()
+#
+# Function that checks if a third-party library (TPL) has been enabled and calls `find_package`
+# to create an imported target encapsulating all the flags and libraries
+# needed to use the TPL
+#
+# Usage::
+#
+#   KOKKOS_IMPORT_TPL(
+#     <NAME>
+#     NO_EXPORT
+#     INTERFACE
+#
+#   ``NO_EXPORT``
+#
+#     If specified, this TPL will not be added to KokkosConfig.cmake as an export
+#
+#   ``INTERFACE``
+#
+#     If specified, this TPL will build an INTERFACE library rather than an
+#     IMPORTED target
 MACRO(kokkos_import_tpl NAME)
   CMAKE_PARSE_ARGUMENTS(TPL
    "NO_EXPORT;INTERFACE"
@@ -175,6 +197,51 @@ MACRO(kokkos_import_cmake_tpl MODULE_NAME)
   ENDIF()
 ENDMACRO()
 
+#
+# @MACRO: KOKKOS_CREATE_IMPORTED_TPL()
+#
+# Function that creates an imported target encapsulating all the flags
+# and libraries needed to use the TPL
+#
+# Usage::
+#
+#   KOKKOS_CREATE_IMPORTED_TPL(
+#     <NAME>
+#     INTERFACE
+#     LIBRARY <path_to_librarY>
+#     LINK_LIBRARIES <lib1> <lib2> ...
+#     COMPILE_OPTIONS <opt1> <opt2> ...
+#     LINK_OPTIONS <opt1> <opt2> ...
+#
+#   ``INTERFACE``
+#
+#     If specified, this TPL will build an INTERFACE library rather than an
+#     IMPORTED target
+#
+#   ``LIBRARY <path_to_library>``
+#
+#     If specified, this gives the IMPORTED_LOCATION of the library.
+#
+#   ``LINK_LIBRARIES <lib1> <lib2> ...``
+#
+#     If specified, this gives a list of dependent libraries that also
+#     need to be linked against. Each entry can be a library path or
+#     the name of a valid CMake target.
+#
+#   ``INCLUDES <path1> <path2> ...``
+#
+#     If specified, this gives a list of directories that must be added
+#     to the include path for using this library.
+#
+#   ``COMPILE_OPTIONS <opt1> <opt2> ...``
+#
+#     If specified, this gives a list of compiler flags that must be used
+#     for using this library.
+#
+#   ``LINK_OPTIONS <opt1> <opt2> ...``
+#
+#     If specified, this gives a list of linker flags that must be used
+#     for using this library.
 MACRO(kokkos_create_imported_tpl NAME)
   CMAKE_PARSE_ARGUMENTS(TPL
    "INTERFACE"
@@ -231,6 +298,54 @@ MACRO(kokkos_create_imported_tpl NAME)
   ENDIF()
 ENDMACRO()
 
+#
+# @MACRO: KOKKOS_FIND_IMPORTED
+#
+# Function that finds all libraries and headers needed for the tpl
+# and creates an imported target encapsulating all the flags and libraries
+#
+# Usage::
+#
+#   KOKKOS_FIND_IMPORTED(
+#     <NAME>
+#     INTERFACE
+#     LIBRARY <path_to_librarY>
+#     LINK_LIBRARIES <lib1> <lib2> ...
+#     COMPILE_OPTIONS <opt1> <opt2> ...
+#     LINK_OPTIONS <opt1> <opt2> ...
+#
+#   ``INTERFACE``
+#
+#     If specified, this TPL will build an INTERFACE library rather than an
+#     IMPORTED target
+#
+#   ``LIBRARY <name>``
+#
+#     If specified, this gives the name of the library to look for
+#
+#   ``IMPORTED_NAME <name>``
+#
+#     If specified, this gives the name of the target to build.
+#     Defaults to Kokkos::<NAME>
+#
+#   ``LIBRARY_PATHS <path1> <path2> ...``
+#
+#     If specified, this gives a list of paths to search for the library
+#     If not given, <NAME>_ROOT/lib and <NAME>_ROOT/lib64 will be searched.
+#
+#   ``HEADER_PATHS <path1> <path2> ...``
+#
+#     If specified, this gives a list of paths to search for the headers
+#     If not given, <NAME>_ROOT/include and <NAME>_ROOT/include will be searched.
+#
+#   ``HEADERS <name1> <name2> ...``
+#
+#     If specified, this gives a list of headers to find for the package
+#
+#   ``LIBRARIES <name1> <name2> ...``
+#
+#     If specified, this gives a list of libraries to find for the package
+#
 MACRO(kokkos_find_imported NAME)
   CMAKE_PARSE_ARGUMENTS(TPL
    "INTERFACE"
@@ -314,6 +429,34 @@ MACRO(kokkos_find_imported NAME)
     LINK_LIBRARIES "${${NAME}_LIBRARIES}")
 ENDMACRO(kokkos_find_imported)
 
+#
+# @MACRO: KOKKOS_LINK_TPL()
+#
+# Function that checks if a third-party library (TPL) has been enabled and
+# calls target_link_libraries on the given target
+#
+# Usage::
+#
+#   KOKKOS_LINK_TPL(
+#     <TARGET>
+#     PUBLIC
+#     PRIVATE
+#     INTERFACE
+#     IMPORTED_NAME  <name>
+#     <TPL_NAME>
+#
+#   Checks if Kokkos_ENABLE_<TPL_NAME>=ON and if so links the library
+#
+#   ``PUBLIC/PRIVATE/INTERFACE``
+#
+#     Specifies the linkage mode. One of these arguments should be given.
+#     This will then invoke target_link_libraries(<TARGET> PUBLIC/PRIVATE/INTERFACE <TPL_NAME>)
+#
+#   ``IMPORTED_NAME <name>``
+#
+#     If specified, this gives the exact name of the target to link against
+#     target_link_libraries(<TARGET> <IMPORTED_NAME>)
+#
 FUNCTION(kokkos_link_tpl TARGET)
   CMAKE_PARSE_ARGUMENTS(TPL
    "PUBLIC;PRIVATE;INTERFACE"
