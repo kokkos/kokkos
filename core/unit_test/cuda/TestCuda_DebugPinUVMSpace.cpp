@@ -103,17 +103,28 @@ TEST(cuda, debug_pin_um_to_host) {
     CopyFunctor<Kokkos::View<int*, Kokkos::CudaUVMSpace>> f(N);
     time_cuda_uvm_space_not_pinned_2 = f.time_copy(R);
   }
+  bool uvm_approx_cuda_1 =
+      time_cuda_uvm_space_not_pinned_1 < time_cuda_space * 2.0;
+  bool uvm_approx_cuda_2 =
+      time_cuda_uvm_space_not_pinned_2 < time_cuda_space * 2.0;
+  bool pinned_slower_cuda = time_cuda_host_pinned_space > time_cuda_space * 2.0;
+  bool uvm_pinned_slower_cuda =
+      time_cuda_uvm_space_pinned > time_cuda_space * 2.0;
+
+  bool passed = uvm_approx_cuda_1 && uvm_approx_cuda_2 && pinned_slower_cuda &&
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
-  ASSERT_TRUE(time_cuda_uvm_space_not_pinned_1 < time_cuda_space * 1.25);
-  ASSERT_TRUE(time_cuda_uvm_space_not_pinned_2 < time_cuda_space * 1.25);
-  ASSERT_TRUE(time_cuda_uvm_space_pinned > time_cuda_space * 2.0);
-  ASSERT_TRUE(time_cuda_host_pinned_space > time_cuda_space * 2.0);
+                uvm_pinned_slower_cuda;
 #else
-  ASSERT_TRUE(time_cuda_uvm_space_not_pinned_1 < time_cuda_space * 1.25);
-  ASSERT_TRUE(time_cuda_uvm_space_not_pinned_2 < time_cuda_space * 1.25);
-  ASSERT_TRUE(time_cuda_uvm_space_pinned < time_cuda_space * 1.25);
-  ASSERT_TRUE(time_cuda_host_pinned_space > time_cuda_space * 2.0);
+                !uvm_pinned_slower_cuda;
 #endif
+  if (!passed)
+    printf(
+        "Time CudaSpace: %lf CudaUVMSpace_1: %lf CudaUVMSpace_2: %lf "
+        "CudaPinnedHostSpace: %lf CudaUVMSpace_Pinned: %lf\n",
+        time_cuda_space, time_cuda_uvm_space_not_pinned_1,
+        time_cuda_uvm_space_not_pinned_2, time_cuda_host_pinned_space,
+        time_cuda_uvm_space_pinned);
+  ASSERT_TRUE(passed);
 }
 
 }  // namespace Test
