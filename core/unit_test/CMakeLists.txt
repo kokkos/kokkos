@@ -457,6 +457,7 @@ IF(Kokkos_ENABLE_CUDA)
       cuda/TestCuda_WorkGraph.cpp
       cuda/TestCuda_UniqueToken.cpp
       cuda/TestCuda_ViewResize.cpp
+      cuda/TestCuda_DebugSerialExecution.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_CudaInterOpInit

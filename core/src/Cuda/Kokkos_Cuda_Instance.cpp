@@ -66,6 +66,30 @@
 #include <sstream>
 #include <string>
 
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+namespace Kokkos {
+namespace Impl {
+
+bool CudaInternal::kokkos_impl_cuda_use_serial_execution_v = false;
+
+void CudaInternal::cuda_set_serial_execution(bool val) {
+  CudaInternal::kokkos_impl_cuda_use_serial_execution_v = val;
+}
+bool CudaInternal::cuda_use_serial_execution() {
+  return CudaInternal::kokkos_impl_cuda_use_serial_execution_v;
+}
+
+}  // namespace Impl
+}  // namespace Kokkos
+
+void kokkos_impl_cuda_set_serial_execution(bool val) {
+  Kokkos::Impl::CudaInternal::cuda_set_serial_execution(val);
+}
+bool kokkos_impl_cuda_use_serial_execution() {
+  return Kokkos::Impl::CudaInternal::cuda_use_serial_execution();
+}
+#endif
+
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 
 __device__ __constant__ unsigned long kokkos_impl_cuda_constant_memory_buffer
@@ -110,22 +134,6 @@ bool cuda_launch_blocking() {
 #endif
 
 }  // namespace
-
-#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-void CudaInternal::cuda_set_serial_execution(bool val) {
-  CudaInternal::kokkos_impl_cuda_use_serial_execution_v = val;
-}
-bool CudaInternal::cuda_use_serial_execution() {
-  return CudaInternal::kokkos_impl_cuda_use_serial_execution_v;
-}
-
-extern "C" void kokkos_impl_cuda_set_serial_execution(bool val) {
-  Kokkos::Impl::CudaInternal::cuda_set_serial_execution(val);
-}
-extern "C" bool kokkos_impl_use_serial_execution() {
-  return Kokkos::Impl::CudaInternal::cuda_use_serial_execution();
-}
-#endif
 
 void cuda_device_synchronize() { CUDA_SAFE_CALL(cudaDeviceSynchronize()); }
 

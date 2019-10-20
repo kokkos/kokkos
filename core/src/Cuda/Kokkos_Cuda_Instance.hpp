@@ -3,6 +3,13 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+// These functions fulfill the purpose of allowing to work around
+// a suspected system software issue, or to check for race conditions.
+// They are not currently a fully officially supported capability.
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
+extern "C" void kokkos_impl_cuda_set_serial_execution(bool);
+extern "C" bool kokkos_impl_cuda_use_serial_execution();
+#endif
 
 namespace Kokkos {
 namespace Impl {
