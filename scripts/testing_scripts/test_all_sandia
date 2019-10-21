@@ -237,8 +237,6 @@ elif [ "$MACHINE" = "kokkos-dev" ]; then
   source /projects/sems/modulefiles/utils/sems-modules-init.sh
 
   BASE_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  CUDA_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.8.4,kokkos-hwloc/1.10.1/base"
-  CUDA8_MODULE_LIST="sems-env,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG=""
@@ -250,7 +248,6 @@ elif [ "$MACHINE" = "kokkos-dev" ]; then
                "gcc/7.3.0 $BASE_MODULE_LIST "Serial" g++ $GCC_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST "OpenMP" icpc $INTEL_WARNING_FLAGS"
                "clang/4.0.1 $BASE_MODULE_LIST "Pthread_Serial" clang++ $CLANG_WARNING_FLAGS"
-               "cuda/8.0.44 $CUDA8_MODULE_LIST "Cuda_OpenMP" $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
@@ -267,8 +264,6 @@ elif [ "$MACHINE" = "kokkos-dev" ]; then
                "clang/3.8.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.9.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/4.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "cuda/7.5.18 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/8.0.44 $CUDA8_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   fi
 elif [ "$MACHINE" = "white" ]; then
