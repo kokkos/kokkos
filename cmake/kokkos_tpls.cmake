@@ -48,7 +48,7 @@ KOKKOS_IMPORT_TPL(LIBDL)
 KOKKOS_IMPORT_TPL(MEMKIND)
 KOKKOS_IMPORT_TPL(PTHREAD INTERFACE)
 
-#Convert list to newlines (which CMake doesn't always like in cache varibles)
+#Convert list to newlines (which CMake doesn't always like in cache variables)
 STRING(REPLACE ";" "\n" KOKKOS_TPL_EXPORT_TEMP "${KOKKOS_TPL_EXPORTS}")
 #Convert to a regular variable
 UNSET(KOKKOS_TPL_EXPORTS CACHE)

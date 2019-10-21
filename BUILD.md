@@ -182,12 +182,7 @@ Options can be enabled by specifiying `-DKokkos_ENABLE_X`.
     * STRING Default: 11
 
 ## Third-party Libraries (TPLs)
-The following options control activating and locating various TPLs.
-
-* Kokkos_CUDA_DIR
-* CUDA_ROOT
-    * Location of CUDA install prefix
-    * PATH Default:
+The following options control enabling TPLs:
 * Kokkos_ENABLE_HPX
     * Whether to enable the HPX library
     * BOOL Default: OFF
@@ -206,29 +201,30 @@ The following options control activating and locating various TPLs.
 * Kokkos_ENABLE_LIBRT
     * Whether to enable the LIBRT library
     * BOOL Default: Off
-* HPX_DIR
-* HPX_ROOT
-    * Location of HPX prefix (ROOT) or CMake config (LIBRARY)
+
+The following options control finding and configuring non-CMake TPLs:
+* Kokkos_CUDA_DIR or CUDA_ROOT
+    * Location of CUDA install prefix for libraries
     * PATH Default:
-* Kokkos_HWLOC_DIR
-* HWLOC_ROOT
+* Kokkos_HWLOC_DIR or HWLOC_ROOT
     * Location of HWLOC install prefix
     * PATH Default:
-* Kokkos_LIBNUMA_DIR
-* LIBNUMA_ROOT
+* Kokkos_LIBNUMA_DIR or LIBNUMA_ROOT
     * Location of LIBNUMA install prefix
     * PATH Default:
-* Kokkos_MEMKIND_DIR
-* MEMKIND_ROOT
+* Kokkos_MEMKIND_DIR or MEMKIND_ROOT
     * Location of MEMKIND install prefix
     * PATH Default:
-* Kokkos_LIBDL_DIR
-* LIBDL_ROOT
+* Kokkos_LIBDL_DIR or LIBDL_ROOT
     * Location of LIBDL install prefix
     * PATH Default:
-* Kokkos_LIBRT_DIR
-* LIBRT_ROOT
+* Kokkos_LIBRT_DIR or LIBRT_ROOT
     * Location of LIBRT install prefix
+    * PATH Default:
+
+The following options control `find_package` paths for CMake-based TPLs:
+* HPX_DIR or HPX_ROOT
+    * Location of HPX prefix (ROOT) or CMake config file (DIR)
     * PATH Default:
 
 ## Architecture Keywords

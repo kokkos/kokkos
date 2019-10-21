@@ -2,8 +2,12 @@
 
 # Developing Kokkos
 
-This document contains build instructions for developers.
-For build system details for users, refer to the [build instructions](BUILD.md).
+This document contains a build system overview for developers with information on adding new CMake options that could influence
+* Header configuration macros
+* Optional features
+* Third-partly libraries
+* Compiler and linker flags
+For build system details for users, refer to the [build instructions](../BUILD.md).
 
 ## Build System
 

@@ -65,13 +65,25 @@ FUNCTION(kokkos_append_config_line LINE)
 ENDFUNCTION()
 
 MACRO(kokkos_export_cmake_tpl NAME)
+  #CMake TPLs are located with a call to find_package
+  #find_package locates XConfig.cmake files through
+  #X_DIR or X_ROOT variables set prior to calling find_package
+
+  #If Kokkos was configured to find the TPL through a _DIR variable
+  #make sure thar DIR variable is available to downstream packages
   IF (DEFINED ${NAME}_DIR)
+    #The downstream project may override the TPL location that Kokkos used
+    #Check if the downstream project chose its own TPL location
+    #If not, make the Kokkos found location available
     KOKKOS_APPEND_CONFIG_LINE("IF(NOT DEFINED ${NAME}_DIR)")
     KOKKOS_APPEND_CONFIG_LINE("  SET(${NAME}_DIR  ${${NAME}_DIR})")
     KOKKOS_APPEND_CONFIG_LINE("ENDIF()")
   ENDIF()
 
   IF (DEFINED ${NAME}_ROOT)
+    #The downstream project may override the TPL location that Kokkos used
+    #Check if the downstream project chose its own TPL location
+    #If not, make the Kokkos found location available
     KOKKOS_APPEND_CONFIG_LINE("IF(NOT DEFINED ${NAME}_ROOT)")
     KOKKOS_APPEND_CONFIG_LINE("  SET(${NAME}_ROOT  ${${NAME}_ROOT})")
     KOKKOS_APPEND_CONFIG_LINE("ENDIF()")
@@ -164,6 +176,10 @@ MACRO(kokkos_import_tpl NAME)
     SET(TPL_IMPORTED_NAME Kokkos::${NAME})
   ENDIF()
 
+  # Even though this policy gets set in the top-level CMakeLists.txt,
+  # I have still been getting errors about ROOT variables being ignored
+  # I'm not sure if this is a scope issue - but make sure
+  # the policy is set before we do any find_package calls
   IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0") 
     CMAKE_POLICY(SET CMP0074 NEW)
   ENDIF()
