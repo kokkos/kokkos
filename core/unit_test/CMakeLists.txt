@@ -274,28 +274,28 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     ALWAYS_FAIL_ON_ZERO_RETURN
 )
 
-TRIBITS_ADD_EXECUTABLE( StackTraceTestExec
+KOKKOS_ADD_TEST_EXECUTABLE( StackTraceTestExec
   SOURCES TestStackTrace.cpp
   TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
 )
 
-TRIBITS_ADD_TEST(
-  StackTraceTestExec
-  NAME UnitTest_StackTrace
-  COMM serial mpi
-  NUM_MPI_PROCS 1
-  FAIL_REGULAR_EXPRESSION "FAILED"
-)
+KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
+                 EXE  StackTraceTestExec 
+                 CMD_ARGS --gtest_filter=*normal
+                 FAIL_REGULAR_EXPRESSION "FAILED"
+               )
 
-TRIBITS_ADD_ADVANCED_TEST( UnitTest_StackTrace_terminate
-  TEST_0
-    EXEC StackTraceTestExec
-    ARGS "terminate"
-    NUM_MPI_PROCS 1
-    PASS_REGULAR_EXPRESSION
-      "I am the custom std::terminate handler."
-    ALWAYS_FAIL_ON_ZERO_RETURN
-)
+if (CMAKE_CXX_FLAGS MATCHES "rdynamic")
+   SET(STACKTRACE_TEST_FILTER "rdynamic")
+else()
+   SET(STACKTRACE_TEST_FILTER "terminate")
+endif()
+
+KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_terminate
+                 EXE  StackTraceTestExec
+                 CMD_ARGS --gtest_filter=*${STACKTRACE_TEST_FILTER}
+                 FAIL_REGULAR_EXPRESSION "FAILED"
+               )
 
 foreach(INITTESTS_NUM RANGE 1 16)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(

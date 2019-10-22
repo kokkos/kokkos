@@ -84,3 +84,6 @@ void my_fancy_handler() {
 
 
 }  // namespace Test
+
+#include <TestStackTrace.hpp>
+#include "UnitTestMainInit.cpp"
