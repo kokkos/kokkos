@@ -33,10 +33,8 @@ ELSE()
   SET(KOKKOS_HAS_TRILINOS OFF)
 ENDIF()
 
-IF (NOT KOKKOS_HAS_TRILINOS)
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_preamble.cmake)
-ENDIF()
-
+INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_functions.cmake)
+INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_pick_cxx_std.cmake)
 
 SET(KOKKOS_ENABLED_OPTIONS)      #exported in config file
 SET(KOKKOS_ENABLED_DEVICES)      #exported in config file
@@ -197,12 +195,15 @@ KOKKOS_PACKAGE_DEF()
 KOKKOS_EXCLUDE_AUTOTOOLS_FILES()
 KOKKOS_PACKAGE_POSTPROCESS()
 
+#We are ready to configure the header
+CONFIGURE_FILE(cmake/KokkosCore_config.h.in KokkosCore_config.h @ONLY)
+
 IF (NOT KOKKOS_HAS_TRILINOS)
   ADD_LIBRARY(kokkos INTERFACE)
   TARGET_LINK_LIBRARIES(kokkos INTERFACE kokkoscore kokkoscontainers kokkosalgorithms)
   KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(kokkos)
-  include(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 ENDIF()
+INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 
 # nvcc_wrapper is Kokkos' wrapper for NVIDIA's NVCC CUDA compiler.
 # Kokkos needs nvcc_wrapper in order to build.  Other libraries and
