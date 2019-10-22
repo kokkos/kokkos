@@ -131,22 +131,18 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
   }
 
   KOKKOS_ATTRIBUTE_NODISCARD
-  KOKKOS_CONSTEXPR_14 size_t attempted_size() const noexcept {
-    return m_attempted_size;
-  }
+  size_t attempted_size() const noexcept { return m_attempted_size; }
+
   KOKKOS_ATTRIBUTE_NODISCARD
-  KOKKOS_CONSTEXPR_14 size_t attempted_alignment() const noexcept {
-    return m_attempted_alignment;
-  }
+  size_t attempted_alignment() const noexcept { return m_attempted_alignment; }
+
   KOKKOS_ATTRIBUTE_NODISCARD
-  KOKKOS_CONSTEXPR_14 AllocationMechanism allocation_mechanism() const
-      noexcept {
+  AllocationMechanism allocation_mechanism() const noexcept {
     return m_mechanism;
   }
+
   KOKKOS_ATTRIBUTE_NODISCARD
-  KOKKOS_CONSTEXPR_14 FailureMode failure_mode() const noexcept {
-    return m_failure_mode;
-  }
+  FailureMode failure_mode() const noexcept { return m_failure_mode; }
 
   void print_error_message(std::ostream &o) const;
   KOKKOS_ATTRIBUTE_NODISCARD
