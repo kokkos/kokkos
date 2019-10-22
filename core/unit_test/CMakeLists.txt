@@ -215,6 +215,7 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCudaUVM_ViewMapping_b.cpp
       cuda/TestCudaUVM_ViewMapping_subview.cpp
       cuda/TestCuda_Spaces.cpp
+      cuda/TestCuda_DebugSerialExecution.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_CudaInterOpInit
