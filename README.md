@@ -77,8 +77,6 @@ For specifics see the LICENSE file contained in the repository or distribution.
 * Clang 7.0.0 for CUDA (CUDA Toolkit 9.1)
 * Clang 8.0.0 for CUDA (CUDA Toolkit 9.2)
 * PGI 18.7
-* NVCC 7.5 for CUDA (with gcc 4.8.4)
-* NVCC 8.0.44 for CUDA (with gcc 5.3.0)
 * NVCC 9.1 for CUDA (with gcc 6.1.0)
 * NVCC 9.2 for CUDA (with gcc 7.2.0)
 * NVCC 10.0 for CUDA (with gcc 7.4.0)
