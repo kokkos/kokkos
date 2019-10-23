@@ -717,7 +717,8 @@ void initialize(int& narg, char* arg[]) {
     errno = 0;
     if (env_ndevices_str != nullptr && env_rdevices_str != nullptr) {
       Impl::throw_runtime_exception(
-          "Error: cannot specify KOKKOS_NUM_DEVICES and KOKKOS_RAND_DEVICES. "
+          "Error: cannot specify both KOKKOS_NUM_DEVICES and "
+          "KOKKOS_RAND_DEVICES. "
           "Raised by Kokkos::initialize(int narg, char* argc[]).");
     }
     int rdevices = -1;
@@ -778,9 +779,8 @@ void initialize(int& narg, char* arg[]) {
     if (rdevices > 0) {
       if (skip_device > 0 && rdevices == 1)
         Impl::throw_runtime_exception(
-            "Error: cannot KOKKOS_SKIP_DEVICE the only "
-            "KOKKOS_RAND_DEVICE.Raised by Kokkos::initialize(int narg, char* "
-            "argc[]).");
+            "Error: cannot KOKKOS_SKIP_DEVICE the only KOKKOS_RAND_DEVICE. "
+            "Raised by Kokkos::initialize(int narg, char* argc[]).");
 
       std::srand(getpid());
       while (device < 0) {
