@@ -159,8 +159,31 @@ bool CudaUVMSpace::available() {
 int CudaUVMSpace::number_of_allocations() {
   return Kokkos::Impl::num_uvm_allocations.load();
 }
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+// The purpose of the following variable is to allow a state-based choice
+// for pinning UVM allocations to the CPU. For now this is considered
+// an experimental debugging capability - with the potential to work around
+// some CUDA issues.
+bool CudaUVMSpace::kokkos_impl_cuda_pin_uvm_to_host_v = false;
 
+bool CudaUVMSpace::cuda_pin_uvm_to_host() {
+  return CudaUVMSpace::kokkos_impl_cuda_pin_uvm_to_host_v;
+}
+void CudaUVMSpace::cuda_set_pin_uvm_to_host(bool val) {
+  CudaUVMSpace::kokkos_impl_cuda_pin_uvm_to_host_v = val;
+}
+#endif
 }  // namespace Kokkos
+
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+bool kokkos_impl_cuda_pin_uvm_to_host() {
+  return Kokkos::CudaUVMSpace::cuda_pin_uvm_to_host();
+}
+
+void kokkos_impl_cuda_set_pin_uvm_to_host(bool val) {
+  Kokkos::CudaUVMSpace::cuda_set_pin_uvm_to_host(val);
+}
+#endif
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -210,6 +233,13 @@ void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
 
     auto error_code =
         cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
+
+#ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
+    if (Kokkos::CudaUVMSpace::cuda_pin_uvm_to_host())
+      cudaMemAdvise(ptr, arg_alloc_size, cudaMemAdviseSetPreferredLocation,
+                    cudaCpuDeviceId);
+#endif
+
     if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
       cudaGetLastError();  // This is the only way to clear the last error,
                            // which we should do here since we're turning it
