@@ -60,7 +60,7 @@ FUNCTION(KOKKOS_CFG_DEPENDS SUCCESSOR PRECURSOR)
 ENDFUNCTION()
 
 
-list(APPEND CMAKE_MODULE_PATH cmake/Modules)
+LIST(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
@@ -69,7 +69,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   IF (Spack_WORKAROUND) 
     #if we are explicitly using Spack for development,
     #nuke the Spack compiler
-    SEt(SPACK_CXX $ENV{SPACK_CXX})
+    SET(SPACK_CXX $ENV{SPACK_CXX})
     IF(SPACK_CXX)
       SET(CMAKE_CXX_COMPILER ${SPACK_CXX} CACHE STRING "the C++ compiler" FORCE)
       SET(ENV{CXX} ${SPACK_CXX})
@@ -105,17 +105,24 @@ ENDIF()
 # Load either the real TriBITS or a TriBITS wrapper 
 # for certain utility functions that are universal (like GLOBAL_SET)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
+
+# These are the variables we will append to as we go
+# I really wish these were regular variables
+# but scoping issues can make it difficult
 GLOBAL_SET(KOKKOS_COMPILE_OPTIONS)
 GLOBAL_SET(KOKKOS_LINK_OPTIONS)
 GLOBAL_SET(KOKKOS_CUDA_OPTIONS)
 GLOBAL_SET(KOKKOS_CUDAFE_OPTIONS)
 GLOBAL_SET(KOKKOS_XCOMPILER_OPTIONS)
-
+# We need to append text here for making sure TPLs
+# we import are available for an installed Kokkos
+GLOBAL_SET(KOKKOS_TPL_EXPORTS)
 
 # Include a set of Kokkos-specific wrapper functions that
 # will either call raw CMake or TriBITS
 # These are functions like KOKKOS_INCLUDE_DIRECTORIES
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
+
 
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES

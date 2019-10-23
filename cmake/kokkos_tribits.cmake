@@ -113,14 +113,6 @@ MACRO(KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL LIBRARY_NAME)
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   )
 
-  INSTALL(
-    TARGETS ${LIBRARY_NAME}
-    EXPORT KokkosDeprecatedTargets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  )
-
   VERIFY_EMPTY(KOKKOS_ADD_LIBRARY ${PARSE_UNPARSED_ARGUMENTS})
 ENDMACRO()
 
@@ -210,69 +202,6 @@ MACRO(KOKKOS_PACKAGE_POSTPROCESS)
   endif()
 ENDMACRO()
 
-FUNCTION(KOKKOS_LINK_TPLS LIBRARY_NAME)
-  IF (KOKKOS_ENABLE_CUDA)
-    IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-       SET(LIB_cuda "-lcuda -lcudart")
-       find_library( cuda_lib_ NAMES libcuda cuda HINTS ${KOKKOS_CUDA_DIR}/lib64 ENV LD_LIBRARY_PATH ENV PATH )
-       find_library( cudart_lib_ NAMES libcudart cudart HINTS ${KOKKOS_CUDA_DIR}/lib64 ENV LD_LIBRARY_PATH ENV PATH )
-       if (cuda_lib_)
-          TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC ${cuda_lib_})
-       else()
-          MESSAGE(SEND_ERROR "libcuda is required but could not be found. Make sure to include it in your LD_LIBRARY_PATH.")
-       endif()
-       if (cudart_lib_)
-          TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC ${cudart_lib_})
-       else()
-         MESSAGE(SEND_ERROR "libcudart is required but could not be found. Make sure to include it in your LD_LIBRARY_PATH.")
-       endif()
-    else()
-       SET(LIB_cuda "-lcuda")
-       TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC cuda)
-    endif()
-  ENDIF()
-
-  IF (KOKKOS_ENABLE_HPX)
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC ${HPX_LIBRARIES})
-    TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PUBLIC ${HPX_INCLUDE_DIRS})
-  ENDIF()
-
-  IF (KOKKOS_ENABLE_HWLOC)
-    #this is really annoying that I have to do this
-    #if CMake links statically, it will not link in hwloc which causes undefined refs downstream
-    #even though hwloc is really "private" and doesn't need to be public I have to link publicly
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC Kokkos::hwloc)
-    #what I don't want is the headers to be propagated downstream
-    TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${HWLOC_INCLUDE_DIR})
-  ENDIF()
-  
-  IF (KOKKOS_ENABLE_LIBNUMA)
-    #this is really annoying that I have to do this
-    #if CMake links statically, it will not link in hwloc which causes undefined refs downstream
-    #even though hwloc is really "private" and doesn't need to be public I have to link publicly
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC Kokkos::libnuma)
-    #what I don't want is the headers to be propagated downstream
-    TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${LIBNUMA_INCLUDE_DIR})
-  ENDIF()
-
-  IF (KOKKOS_ENABLE_LIBRT)
-    #this is really annoying that I have to do this
-    #if CMake links statically, it will not link in librt which causes undefined refs downstream
-    #even though librt is really "private" and doesn't need to be public I have to link publicly
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PRIVATE Kokkos::librt)
-    #what I don't want is the headers to be propagated downstream
-    TARGET_INCLUDE_DIRECTORIES(${LIBRARY_NAME} PRIVATE ${LIBRT_INCLUDE_DIR})
-  ENDIF()
-
-  IF (KOKKOS_ENABLE_MEMKIND)
-    TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PRIVATE Kokkos::memkind)
-  ENDIF()
-
-  #dlfcn.h is in header files and needs to propagate
-  TARGET_LINK_LIBRARIES(${LIBRARY_NAME} PUBLIC Kokkos::libdl)
-
-ENDFUNCTION()
-
 FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
   CMAKE_PARSE_ARGUMENTS(PARSE 
     "STATIC;SHARED"
@@ -292,7 +221,6 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     ${PARSE_HEADERS}
     ${PARSE_SOURCES}
   )
-  KOKKOS_LINK_TPLS(${LIBRARY_NAME})
   IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13")
     #great, this works the "right" way
     TARGET_LINK_OPTIONS(

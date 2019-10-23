@@ -324,9 +324,11 @@ MACRO(SET_GLOBAL_REPLACE SUBSTR VARNAME)
   GLOBAL_SET(${VARNAME} ${TEMP})
 ENDMACRO()
 
-MACRO(GLOBAL_APPEND VARNAME)
+FUNCTION(GLOBAL_APPEND VARNAME)
+  #We make this a function since we are setting variables
+  #and want to use scope to avoid overwriting local variables
   SET(TEMP ${${VARNAME}})
   LIST(APPEND TEMP ${ARGN})
   GLOBAL_SET(${VARNAME} ${TEMP})
-ENDMACRO()
+ENDFUNCTION()
 
