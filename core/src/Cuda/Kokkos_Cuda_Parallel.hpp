@@ -209,9 +209,10 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     p2 /= 2;
     return p2 / vector_length();
   }
-  
+
   template <class FunctorType, class ReducerType>
-  int team_size_max(const FunctorType& f, const ReducerType& r, const ParallelReduceTag&) const {
+  int team_size_max(const FunctorType& f, const ReducerType& r,
+                    const ParallelReduceTag&) const {
     typedef Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                                  ReducerType>
         closure_type;
@@ -238,7 +239,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     p2 /= 2;
     return p2 / vector_length();
   }
-
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   template <class FunctorType>
@@ -306,7 +306,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     p2 /= 2;
     return p2 / vector_length();
   }
-  
+
   template <class FunctorType, class ReducerType>
   int team_size_recommended(const FunctorType& f, const ReducerType&,
                             const ParallelReduceTag&) const {
@@ -2030,7 +2030,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }
     if (int(m_team_size) >
-        arg_policy.team_size_max(m_functor,m_reducer, ParallelReduceTag())) {
+        arg_policy.team_size_max(m_functor, m_reducer, ParallelReduceTag())) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too "
                       "large team size."));
