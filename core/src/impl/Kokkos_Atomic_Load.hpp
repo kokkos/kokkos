@@ -91,7 +91,12 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _atomic_load(
             ((!(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
                 sizeof(T) == 8) &&
               std::is_default_constructible<T>::value &&
-              std::is_trivially_copyable<T>::value) ||
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+              std::is_trivially_copyable<T>::value
+#else
+              true
+#endif
+              ) ||
              ((sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
                sizeof(T) == 8) &&
               std::is_floating_point<T>::value)),
@@ -126,7 +131,12 @@ template <class T>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _relaxed_atomic_load_impl(
     T* ptr, typename std::enable_if<!(sizeof(T) == 1 || sizeof(T) == 2 ||
                                       sizeof(T) == 4 || sizeof(T) == 8) &&
-                                        !std::is_trivially_copyable<T>::value,
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+                                        !std::is_trivially_copyable<T>::value
+#else
+                                        false
+#endif
+                                    ,
                                     void const**>::type = nullptr) {
   return Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, ptr, *ptr);
 }
@@ -137,7 +147,12 @@ _atomic_load(T* ptr, memory_order_seq_cst_t,
              typename std::enable_if<(!(sizeof(T) == 1 || sizeof(T) == 2 ||
                                         sizeof(T) == 4 || sizeof(T) == 8) &&
                                       std::is_default_constructible<T>::value &&
-                                      !std::is_trivially_copyable<T>::value) ||
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+                                      !std::is_trivially_copyable<T>::value
+#else
+                                      false
+#endif
+                                      ) ||
                                          ((sizeof(T) == 1 || sizeof(T) == 2 ||
                                            sizeof(T) == 4 || sizeof(T) == 8) &&
                                           !(std::is_integral<T>::value ||
@@ -157,7 +172,12 @@ _atomic_load(T* ptr, memory_order_acquire_t,
              typename std::enable_if<(!(sizeof(T) == 1 || sizeof(T) == 2 ||
                                         sizeof(T) == 4 || sizeof(T) == 8) &&
                                       std::is_default_constructible<T>::value &&
-                                      !std::is_trivially_copyable<T>::value) ||
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+                                      !std::is_trivially_copyable<T>::value
+#else
+                                      false
+#endif
+                                      ) ||
                                          ((sizeof(T) == 1 || sizeof(T) == 2 ||
                                            sizeof(T) == 4 || sizeof(T) == 8) &&
                                           !(std::is_integral<T>::value ||
@@ -176,7 +196,12 @@ _atomic_load(T* ptr, memory_order_relaxed_t,
              typename std::enable_if<(!(sizeof(T) == 1 || sizeof(T) == 2 ||
                                         sizeof(T) == 4 || sizeof(T) == 8) &&
                                       std::is_default_constructible<T>::value &&
-                                      !std::is_trivially_copyable<T>::value) ||
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+                                      !std::is_trivially_copyable<T>::value
+#else
+                                      false
+#endif
+                                      ) ||
                                          ((sizeof(T) == 1 || sizeof(T) == 2 ||
                                            sizeof(T) == 4 || sizeof(T) == 8) &&
                                           !(std::is_integral<T>::value ||

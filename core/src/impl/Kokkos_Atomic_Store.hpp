@@ -90,7 +90,12 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH void _atomic_store(
             ((!(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
                 sizeof(T) == 8) &&
               std::is_default_constructible<T>::value &&
-              std::is_trivially_copyable<T>::value) ||
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+              std::is_trivially_copyable<T>::value
+#else
+              true
+#endif
+              ) ||
              ((sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
                sizeof(T) == 8) &&
               std::is_floating_point<T>::value)),

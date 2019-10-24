@@ -427,6 +427,11 @@
      defined(__x86_64__) || defined(__PPC64__))
 #define KOKKOS_ENABLE_ASM 1
 #endif
+
+#if KOKKOS_COMPILER_GNU < 490
+#define KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG 1
+#endif
+
 #endif
 
 //----------------------------------------------------------------------------
