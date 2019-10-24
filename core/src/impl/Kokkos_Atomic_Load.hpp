@@ -54,6 +54,8 @@
 #include <Cuda/Kokkos_Cuda_Atomic_Intrinsics.hpp>
 #endif
 
+#include <type_traits>
+
 namespace Kokkos {
 namespace Impl {
 
