@@ -521,10 +521,10 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
     )
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("cuda/10.0 $CUDA_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.1 $CUDA_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "clang/8.0 $CLANG_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
-               "clang/8.0 $CLANG_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
+    COMPILERS=("cuda/10.0 $NVCC_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/10.1 $NVCC_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
+               "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
                "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/4.9.3 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
