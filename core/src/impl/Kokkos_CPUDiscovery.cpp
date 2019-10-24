@@ -60,8 +60,6 @@ namespace Impl {
 // Philip Willoughby
 
 int processors_per_node() {
-  int nprocs     = -1;
-  int nprocs_max = -1;
 #ifdef _WIN32
 #ifndef _SC_NPROCESSORS_ONLN
   SYSTEM_INFO info;
@@ -71,6 +69,8 @@ int processors_per_node() {
 #endif
 #endif
 #ifdef _SC_NPROCESSORS_ONLN
+  int nprocs     = -1;
+  int nprocs_max = -1;
   nprocs = sysconf(_SC_NPROCESSORS_ONLN);
   if (nprocs < 1) {
     return -1;
