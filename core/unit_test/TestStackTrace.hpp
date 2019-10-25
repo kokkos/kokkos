@@ -61,52 +61,54 @@ void stacktrace_test_f4();
 void my_fancy_handler();
 
 int test_stacktrace(bool bTerminate) {
-  
   bool success = true;
 
   stacktrace_test_f1(std::cout);
 
-  // TODO figure out whether stacktraces give function names at all (i.e. did we compile with -rdynamic)
+  // TODO figure out whether stacktraces give function names at all (i.e. did we
+  // compile with -rdynamic)
   {
     std::stringstream sstream;
     Kokkos::Impl::print_saved_stacktrace(sstream);
-    
-    std::string f1output = sstream.str();
-    auto found_pos_f0 = f1output.find("stacktrace_test_f0");
-    bool not_found_f0 = (found_pos_f0==std::string::npos);
-    auto found_pos_f1 = f1output.find("stacktrace_test_f1");
-    bool found_f1 = !(found_pos_f1==std::string::npos);
-    auto found_pos_f2 = f1output.find("stacktrace_test_f2");
-    bool not_found_f2 = (found_pos_f2==std::string::npos);
-    auto found_pos_f3 = f1output.find("stacktrace_test_f3");
-    bool not_found_f3 = (found_pos_f3==std::string::npos);
-    auto found_pos_f4 = f1output.find("stacktrace_test_f4");
-    bool not_found_f4 = (found_pos_f4==std::string::npos);
 
-    bool found = not_found_f0 && found_f1 && not_found_f2 && not_found_f3 && not_found_f4;
-    if(!found) printf("Problem A\n");
-    //ASSERT_TRUE(found);
+    std::string f1output = sstream.str();
+    auto found_pos_f0    = f1output.find("stacktrace_test_f0");
+    bool not_found_f0    = (found_pos_f0 == std::string::npos);
+    auto found_pos_f1    = f1output.find("stacktrace_test_f1");
+    bool found_f1        = !(found_pos_f1 == std::string::npos);
+    auto found_pos_f2    = f1output.find("stacktrace_test_f2");
+    bool not_found_f2    = (found_pos_f2 == std::string::npos);
+    auto found_pos_f3    = f1output.find("stacktrace_test_f3");
+    bool not_found_f3    = (found_pos_f3 == std::string::npos);
+    auto found_pos_f4    = f1output.find("stacktrace_test_f4");
+    bool not_found_f4    = (found_pos_f4 == std::string::npos);
+
+    bool found = not_found_f0 && found_f1 && not_found_f2 && not_found_f3 &&
+                 not_found_f4;
+    if (!found) printf("Problem A\n");
+    // ASSERT_TRUE(found);
   }
 
   {
     std::stringstream sstream;
     Kokkos::Impl::print_demangled_saved_stacktrace(sstream);
-    
-    std::string f1output = sstream.str();
-    auto found_pos_f0 = f1output.find("stacktrace_test_f0");
-    bool not_found_f0 = (found_pos_f0==std::string::npos);
-    auto found_pos_f1 = f1output.find("Test::stacktrace_test_f1");
-    bool found_f1 = !(found_pos_f1==std::string::npos);
-    auto found_pos_f2 = f1output.find("stacktrace_test_f2");
-    bool not_found_f2 = (found_pos_f2==std::string::npos);
-    auto found_pos_f3 = f1output.find("stacktrace_test_f3");
-    bool not_found_f3 = (found_pos_f3==std::string::npos);
-    auto found_pos_f4 = f1output.find("stacktrace_test_f4");
-    bool not_found_f4 = (found_pos_f4==std::string::npos);
 
-    bool found = not_found_f0 && found_f1 && not_found_f2 && not_found_f3 && not_found_f4;
-    if(!found) printf("Problem B\n");
-    //ASSERT_TRUE(found);
+    std::string f1output = sstream.str();
+    auto found_pos_f0    = f1output.find("stacktrace_test_f0");
+    bool not_found_f0    = (found_pos_f0 == std::string::npos);
+    auto found_pos_f1    = f1output.find("Test::stacktrace_test_f1");
+    bool found_f1        = !(found_pos_f1 == std::string::npos);
+    auto found_pos_f2    = f1output.find("stacktrace_test_f2");
+    bool not_found_f2    = (found_pos_f2 == std::string::npos);
+    auto found_pos_f3    = f1output.find("stacktrace_test_f3");
+    bool not_found_f3    = (found_pos_f3 == std::string::npos);
+    auto found_pos_f4    = f1output.find("stacktrace_test_f4");
+    bool not_found_f4    = (found_pos_f4 == std::string::npos);
+
+    bool found = not_found_f0 && found_f1 && not_found_f2 && not_found_f3 &&
+                 not_found_f4;
+    if (!found) printf("Problem B\n");
+    // ASSERT_TRUE(found);
   }
 
   stacktrace_test_f3(std::cout, 4);
@@ -117,34 +119,36 @@ int test_stacktrace(bool bTerminate) {
   {
     std::stringstream sstream;
     Kokkos::Impl::print_saved_stacktrace(sstream);
-    
+
     std::string output = sstream.str();
-    auto found_pos_f1 = output.find("stacktrace_test_f1");
-    auto found_pos_f3 = output.find("stacktrace_test_f3");
-    
+    auto found_pos_f1  = output.find("stacktrace_test_f1");
+    auto found_pos_f3  = output.find("stacktrace_test_f3");
+
     // TODO make sure stacktrace_test_f2/4 don't show up
     // TODO make sure stacktrace_test_f3 shows up 5 times
-    bool found = !(found_pos_f1==std::string::npos) && !(found_pos_f3==std::string::npos);
-    if(!found) {
+    bool found = !(found_pos_f1 == std::string::npos) &&
+                 !(found_pos_f3 == std::string::npos);
+    if (!found) {
       printf("Problem C\n");
       Kokkos::Impl::print_saved_stacktrace(std::cout);
     }
-    //ASSERT_TRUE(found);
+    // ASSERT_TRUE(found);
   }
 
   {
     std::stringstream sstream;
     Kokkos::Impl::print_demangled_saved_stacktrace(sstream);
-    
+
     std::string output = sstream.str();
-    auto found_pos_f1 = output.find("Test::stacktrace_test_f1");
-    auto found_pos_f3 = output.find("Test::stacktrace_test_f3");
-    
+    auto found_pos_f1  = output.find("Test::stacktrace_test_f1");
+    auto found_pos_f3  = output.find("Test::stacktrace_test_f3");
+
     // TODO make sure stacktrace_test_f2/4 don't show up
     // TODO make sure stacktrace_test_f3 shows up 5 times
-    bool found = !(found_pos_f1==std::string::npos) && !(found_pos_f3==std::string::npos);
-    if(!found) printf("Problem D\n");
-    //ASSERT_TRUE(found);
+    bool found = !(found_pos_f1 == std::string::npos) &&
+                 !(found_pos_f3 == std::string::npos);
+    if (!found) printf("Problem D\n");
+    // ASSERT_TRUE(found);
   }
 
   std::cout << "Test setting std::terminate handler that prints "
@@ -157,14 +161,12 @@ int test_stacktrace(bool bTerminate) {
 
   // TODO test that this prints "Oh noes!" and the correct stacktrace.
   if (bTerminate) {
-     std::terminate();
+    std::terminate();
   }
   return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-TEST(defaultdevicetype, stacktrace_normal) {
-  test_stacktrace(false);
-}
+TEST(defaultdevicetype, stacktrace_normal) { test_stacktrace(false); }
 
 TEST(defaultdevicetype, stacktrace_terminate) {
   ASSERT_DEATH({ test_stacktrace(true); },
@@ -172,8 +174,7 @@ TEST(defaultdevicetype, stacktrace_terminate) {
 }
 
 TEST(defaultdevicetype, stacktrace_rdynamic) {
-  ASSERT_DEATH({ test_stacktrace(true); },
-               "Kokkos::Impl::save_stacktrace()");
+  ASSERT_DEATH({ test_stacktrace(true); }, "Kokkos::Impl::save_stacktrace()");
 }
 
 }  // namespace Test

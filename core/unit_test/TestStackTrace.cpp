@@ -81,8 +81,6 @@ void my_fancy_handler() {
   std::abort();
 }
 
-
-
 }  // namespace Test
 
 #include <TestStackTrace.hpp>

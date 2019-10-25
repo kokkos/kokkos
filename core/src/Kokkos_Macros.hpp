@@ -615,11 +615,9 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #define KOKKOS_ATTRIBUTE_NODISCARD
 #endif
 
-#if defined(KOKKOS_COMPILER_GNU) || \
-    defined(KOKKOS_COMPILER_CLANG) || \
-    defined(KOKKOS_COMPILER_INTEL) || \
-    defined(KOKKOS_COMPILER_PGI) || \
-    defined(KOKKOS_COMPILER_XL) 
+#if defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) || \
+    defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI) || \
+    defined(KOKKOS_COMPILER_XL)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
 #define KOKKOS_IMPL_ENABLE_CXXABI
 #endif
