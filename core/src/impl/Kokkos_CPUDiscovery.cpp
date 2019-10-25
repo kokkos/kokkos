@@ -69,13 +69,11 @@ int processors_per_node() {
 #endif
 #endif
 #ifdef _SC_NPROCESSORS_ONLN
-  int nprocs     = -1;
-  int nprocs_max = -1;
-  nprocs = sysconf(_SC_NPROCESSORS_ONLN);
+  int const nprocs = sysconf(_SC_NPROCESSORS_ONLN);
   if (nprocs < 1) {
     return -1;
   }
-  nprocs_max = sysconf(_SC_NPROCESSORS_CONF);
+  int const nprocs_max = sysconf(_SC_NPROCESSORS_CONF);
   if (nprocs_max < 1) {
     return -1;
   }
