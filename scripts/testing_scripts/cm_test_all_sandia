@@ -707,8 +707,9 @@ setup_env() {
     module list 2>&1 | grep "$mod" >& /dev/null || return 1
   done
 
-  if [ -e ./update_lib.sh ]; then
-     source ./update_lib.sh $MACHINE
+  if [ -e ${CM_ALL_SCRIPT_PATH}/update_lib.sh ]; then
+     echo calling ${CM_ALL_SCRIPT_PATH}/update_lib.sh $MACHINE
+     source ${CM_ALL_SCRIPT_PATH}/update_lib.sh $MACHINE
   fi
   return 0
 }
@@ -895,6 +896,10 @@ wait_summarize_and_exit() {
 #
 # Main.
 #
+
+CM_ALL_SCRIPT=$0
+CM_ALL_SCRIPT_PATH=`pwd`
+CM_ALL_SCRIPT_PATH=${CM_ALL_SCRIPT_PATH}/`dirname $CM_ALL_SCRIPT`
 
 ROOT_DIR=$(get_test_root_dir)
 mkdir -p $ROOT_DIR
