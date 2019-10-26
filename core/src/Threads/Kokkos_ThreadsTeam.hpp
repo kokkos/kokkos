@@ -677,6 +677,11 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
     return pool_size < max_host_team_size ? pool_size : max_host_team_size;
   }
+  template <class FunctorType, class ReducerType>
+  inline int team_size_max(const FunctorType& f, const ReducerType&,
+                           const ParallelReduceTag& t) const {
+    return team_size_max(f, t);
+  }
   template <class FunctorType>
   int team_size_recommended(const FunctorType&, const ParallelForTag&) const {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
@@ -693,6 +698,11 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 #else
     return traits::execution_space::impl_thread_pool_size(2);
 #endif
+  }
+  template <class FunctorType, class ReducerType>
+  inline int team_size_recommended(const FunctorType& f, const ReducerType&,
+                                   const ParallelReduceTag& t) const {
+    return team_size_recommended(f, t);
   }
 
   inline static int vector_length_max() {

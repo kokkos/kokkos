@@ -306,12 +306,22 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
   int team_size_max(const FunctorType&, const ParallelReduceTag&) const {
     return 1;
   }
+  template <class FunctorType, class ReducerType>
+  int team_size_max(const FunctorType&, const ReducerType&,
+                    const ParallelReduceTag&) const {
+    return 1;
+  }
   template <class FunctorType>
   int team_size_recommended(const FunctorType&, const ParallelForTag&) const {
     return 1;
   }
   template <class FunctorType>
   int team_size_recommended(const FunctorType&,
+                            const ParallelReduceTag&) const {
+    return 1;
+  }
+  template <class FunctorType, class ReducerType>
+  int team_size_recommended(const FunctorType&, const ReducerType&,
                             const ParallelReduceTag&) const {
     return 1;
   }
