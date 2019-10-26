@@ -187,7 +187,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     typedef Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                                  reducer_type>
         closure_type;
-    return internal_team_size_max<closure_type>(f);
+    return internal_team_size_max<FunctorType, closure_type>(f);
   }
 
   template <class FunctorType, class ReducerType>
@@ -196,7 +196,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     typedef Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                                  ReducerType>
         closure_type;
-    return internal_team_size_max<closure_type>(f);
+    return internal_team_size_max<FunctorType, closure_type>(f);
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
@@ -243,7 +243,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     typedef Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                                  reducer_type>
         closure_type;
-    return team_size_recommeded_impl<closure_type>(f);
+    return internal_team_size_recommended<FunctorType, closure_type>(f);
   }
 
   template <class FunctorType, class ReducerType>
@@ -252,7 +252,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     typedef Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                                  ReducerType>
         closure_type;
-    return team_size_recommeded_impl<closure_type>(f);
+    return internal_team_size_recommended<FunctorType, closure_type>(f);
   }
 
   inline static int vector_length_max() { return Impl::CudaTraits::WarpSize; }
@@ -511,7 +511,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 #endif
 
   template <class FunctorType, class ClosureType>
-  int internal_team_size_max<closure_type>(const FunctorType& f) {
+  int internal_team_size_max(const FunctorType& f) const {
+    using closure_type = ClosureType;
     typedef Impl::FunctorValueTraits<FunctorType, typename traits::work_tag>
         functor_value_traits;
 
@@ -537,7 +538,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   }
 
   template <class FunctorType, class ClosureType>
-  int internal_team_size_recommended<closure_type>(const FunctorType& f) {
+  int internal_team_size_recommended(const FunctorType& f) const {
+    using closure_type = ClosureType;
     typedef Impl::FunctorValueTraits<FunctorType, typename traits::work_tag>
         functor_value_traits;
 
