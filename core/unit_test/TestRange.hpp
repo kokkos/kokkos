@@ -256,7 +256,7 @@ struct TestRange {
       Kokkos::View<int *, ExecSpace> a("A", N);
 
       Kokkos::parallel_for(
-          policy_t(0, N), KOKKOS_CLASS_LAMBDA(const int &i) {
+          policy_t(0, N), KOKKOS_LAMBDA(const int &i) {
             for (int k = 0; k < (i < N / 2 ? 1 : 10000); k++) {
               a(i)++;
             }
@@ -270,7 +270,7 @@ struct TestRange {
       int error = 0;
       Kokkos::parallel_reduce(
           Kokkos::RangePolicy<ExecSpace>(0, N),
-          KOKKOS_CLASS_LAMBDA(const int &i, int &lsum) {
+          KOKKOS_LAMBDA(const int &i, int &lsum) {
             lsum += (a(i) != (i < N / 2 ? 1 : 10000));
           },
           error);
@@ -300,7 +300,7 @@ struct TestRange {
       int sum = 0;
       Kokkos::parallel_reduce(
           policy_t(0, N),
-          KOKKOS_CLASS_LAMBDA(const int &i, int &lsum) {
+          KOKKOS_LAMBDA(const int &i, int &lsum) {
             for (int k = 0; k < (i < N / 2 ? 1 : 10000); k++) {
               a(i)++;
             }
@@ -317,7 +317,7 @@ struct TestRange {
       int error = 0;
       Kokkos::parallel_reduce(
           Kokkos::RangePolicy<ExecSpace>(0, N),
-          KOKKOS_CLASS_LAMBDA(const int &i, int &lsum) {
+          KOKKOS_LAMBDA(const int &i, int &lsum) {
             lsum += (a(i) != (i < N / 2 ? 1 : 10000));
           },
           error);
