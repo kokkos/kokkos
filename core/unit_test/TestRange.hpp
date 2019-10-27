@@ -245,6 +245,7 @@ struct TestRange {
   }
 
   void test_dynamic_policy() {
+    auto const N_no_implicit_capture = N;
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 #if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
     typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
@@ -256,8 +257,9 @@ struct TestRange {
       Kokkos::View<int *, ExecSpace> a("A", N);
 
       Kokkos::parallel_for(
-          policy_t(0, N), KOKKOS_CLASS_LAMBDA(const int &i) {
-            for (int k = 0; k < (i < N / 2 ? 1 : 10000); k++) {
+          policy_t(0, N), KOKKOS_LAMBDA(const int &i) {
+            for (int k = 0; k < (i < N_no_implicit_capture / 2 ? 1 : 10000);
+                 k++) {
               a(i)++;
             }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
@@ -270,8 +272,8 @@ struct TestRange {
       int error = 0;
       Kokkos::parallel_reduce(
           Kokkos::RangePolicy<ExecSpace>(0, N),
-          KOKKOS_CLASS_LAMBDA(const int &i, int &lsum) {
-            lsum += (a(i) != (i < N / 2 ? 1 : 10000));
+          KOKKOS_LAMBDA(const int &i, int &lsum) {
+            lsum += (a(i) != (i < N_no_implicit_capture / 2 ? 1 : 10000));
           },
           error);
       ASSERT_EQ(error, 0);
@@ -300,8 +302,9 @@ struct TestRange {
       int sum = 0;
       Kokkos::parallel_reduce(
           policy_t(0, N),
-          KOKKOS_CLASS_LAMBDA(const int &i, int &lsum) {
-            for (int k = 0; k < (i < N / 2 ? 1 : 10000); k++) {
+          KOKKOS_LAMBDA(const int &i, int &lsum) {
+            for (int k = 0; k < (i < N_no_implicit_capture / 2 ? 1 : 10000);
+                 k++) {
               a(i)++;
             }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
@@ -317,8 +320,8 @@ struct TestRange {
       int error = 0;
       Kokkos::parallel_reduce(
           Kokkos::RangePolicy<ExecSpace>(0, N),
-          KOKKOS_CLASS_LAMBDA(const int &i, int &lsum) {
-            lsum += (a(i) != (i < N / 2 ? 1 : 10000));
+          KOKKOS_LAMBDA(const int &i, int &lsum) {
+            lsum += (a(i) != (i < N_no_implicit_capture / 2 ? 1 : 10000));
           },
           error);
       ASSERT_EQ(error, 0);
