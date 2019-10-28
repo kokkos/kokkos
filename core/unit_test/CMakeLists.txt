@@ -276,7 +276,6 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
 
 KOKKOS_ADD_TEST_EXECUTABLE( StackTraceTestExec
   SOURCES TestStackTrace.cpp
-  TESTONLYLIBS kokkos_gtest ${TEST_LINK_TARGETS}
 )
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
