@@ -189,8 +189,17 @@ KOKKOS_IMPL_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     KOKKOS_INLINE_FUNCTION U() {}
   } oldval, assume, newval;
 
+  // Technically the correct thing to do here is to associate an entry in the
+  // suppression table with this store operation, but adding an individual entry
+  // to the suppression table for an address range is much more expensive (and,
+  // it appears, buggier in Intel's sanitizer) than suppressing all threading
+  // errors. Also, there's no clear place to clean up that entry, so for a
+  // long-running program it would run out of memory in the suppression table.
+  // If we did want to use the suppression table, this is what it would look
+  // like:
   // KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
   // sizeof(T));
+  // Instead, just use total suppression for now
   KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
   oldval.t = *dest;
 
@@ -200,9 +209,15 @@ KOKKOS_IMPL_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
                                                assume.i, newval.i);
   } while (assume.i != oldval.i);
-  KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+  // Here's where the suppression table entry's range would end, but we can't
+  // delete the entry here because other threads need to know that this address
+  // is part of the error suppression.
+  // If we did want to use the suppression table, this is what it would look
+  // like:
   // KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
   // sizeof(T));
+  // Instead, just use total suppression for now
+  KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
 
   return newval.t;
 }
