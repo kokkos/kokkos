@@ -186,6 +186,131 @@ struct test_dual_view_deep_copy {
   }
 };
 
+template <typename Scalar, class Device>
+struct test_dualview_resize {
+  typedef Scalar scalar_type;
+  typedef Device execution_space;
+
+  template <typename ViewType>
+  void run_me() {
+    const unsigned int n      = 10;
+    const unsigned int m      = 5;
+    const unsigned int factor = 2;
+
+    ViewType a("A", n, m);
+    Kokkos::deep_copy(a.d_view, 1);
+
+    /* Covers case "Resize on Device" */
+    a.modify_device();
+    Kokkos::resize(a, factor * n, factor * m);
+    ASSERT_EQ(a.extent(0), n * factor);
+    ASSERT_EQ(a.extent(1), m * factor);
+
+    Kokkos::deep_copy(a.d_view, 1);
+    a.sync_host();
+
+    // Check device view is initialized as expected
+    scalar_type a_d_sum = 0;
+    // Execute on the execution_space associated with t_dev's memory space
+    typedef typename ViewType::t_dev::memory_space::execution_space
+        t_dev_exec_space;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
+        SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
+        a_d_sum);
+
+    // Check host view is synced as expected
+    scalar_type a_h_sum = 0;
+    for (size_t i = 0; i < a.h_view.extent(0); ++i)
+      for (size_t j = 0; j < a.h_view.extent(1); ++j) {
+        a_h_sum += a.h_view(i, j);
+      }
+
+    // Check
+    ASSERT_EQ(a_h_sum, a_d_sum);
+    ASSERT_EQ(a_h_sum, a.extent(0) * a.extent(1));
+
+    /* Covers case "Realloc on Device" */
+    a.modify_host();
+
+    Kokkos::resize(a, n / factor, m / factor);
+    ASSERT_EQ(a.extent(0), n / factor);
+    ASSERT_EQ(a.extent(1), m / factor);
+
+    a.sync_device();
+
+    // Check device view is initialized as expected
+    a_d_sum = 0;
+    // Execute on the execution_space associated with t_dev's memory space
+    typedef typename ViewType::t_dev::memory_space::execution_space
+        t_dev_exec_space;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
+        SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
+        a_d_sum);
+
+    // Check host view is synced as expected
+    a_h_sum = 0;
+    for (size_t i = 0; i < a.h_view.extent(0); ++i)
+      for (size_t j = 0; j < a.h_view.extent(1); ++j) {
+        a_h_sum += a.h_view(i, j);
+      }
+
+    // Check
+    ASSERT_EQ(a_h_sum, a.extent(0) * a.extent(1));
+    ASSERT_EQ(a_h_sum, a_d_sum);
+
+  }  // end run_me
+
+  test_dualview_resize() {
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >();
+  }
+};
+
+template <typename Scalar, class Device>
+struct test_dualview_realloc {
+  typedef Scalar scalar_type;
+  typedef Device execution_space;
+
+  template <typename ViewType>
+  void run_me() {
+    const unsigned int n = 10;
+    const unsigned int m = 5;
+
+    ViewType a("A", n, m);
+    Kokkos::realloc(a, n, m);
+
+    Kokkos::deep_copy(a.d_view, 1);
+    a.modify_device();
+    a.sync_host();
+
+    // Check device view is initialized as expected
+    scalar_type a_d_sum = 0;
+    // Execute on the execution_space associated with t_dev's memory space
+    typedef typename ViewType::t_dev::memory_space::execution_space
+        t_dev_exec_space;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
+        SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
+        a_d_sum);
+
+    // Check host view is synced as expected
+    scalar_type a_h_sum = 0;
+    for (size_t i = 0; i < a.h_view.extent(0); ++i)
+      for (size_t j = 0; j < a.h_view.extent(1); ++j) {
+        a_h_sum += a.h_view(i, j);
+      }
+
+    // Check
+    ASSERT_EQ(a_h_sum, a.extent(0) * a.extent(1));
+    ASSERT_EQ(a_h_sum, a_d_sum);
+  }  // end run_me
+
+  test_dualview_realloc() {
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >();
+  }
+};
+
 }  // namespace Impl
 
 template <typename Scalar, typename Device>
@@ -199,6 +324,16 @@ void test_dualview_deep_copy() {
   Impl::test_dual_view_deep_copy<Scalar, Device>();
 }
 
+template <typename Scalar, typename Device>
+void test_dualview_realloc() {
+  Impl::test_dualview_realloc<Scalar, Device>();
+}
+
+template <typename Scalar, typename Device>
+void test_dualview_resize() {
+  Impl::test_dualview_resize<Scalar, Device>();
+}
+
 TEST(TEST_CATEGORY, dualview_combination) {
   test_dualview_combinations<int, TEST_EXECSPACE>(10);
 }
@@ -208,6 +343,14 @@ TEST(TEST_CATEGORY, dualview_deep_copy) {
   test_dualview_deep_copy<double, TEST_EXECSPACE>();
 }
 
+TEST(TEST_CATEGORY, dualview_realloc) {
+  test_dualview_realloc<int, TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY, dualview_resize) {
+  test_dualview_resize<int, TEST_EXECSPACE>();
+}
+
 }  // namespace Test
 
-#endif  // KOKKOS_TEST_UNORDERED_MAP_HPP
+#endif  // KOKKOS_TEST_DUALVIEW_HPP
