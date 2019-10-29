@@ -38,15 +38,29 @@ KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test
 TEST_TARGETS =
 TARGETS =
 
+KOKKOS_INTERNAL_HAS_OPTIMIZATIONS := $(call kokkos_has_string,$(KOKKOS_CXXFLAGS),O3)
+ifneq ($(KOKKOS_INTERNAL_HAS_OPTIMIZATIONS), 1)
+   KOKKOS_INTERNAL_HAS_OPTIMIZATIONS := $(call kokkos_has_string,$(KOKKOS_CXXFLAGS),O2)
+   ifneq ($(KOKKOS_INTERNAL_HAS_OPTIMIZATIONS), 1)
+      KOKKOS_INTERNAL_HAS_OPTIMIZATIONS := $(call kokkos_has_string,$(CXXFLAGS),O3)
+      ifneq ($(KOKKOS_INTERNAL_HAS_OPTIMIZATIONS), 1)
+         KOKKOS_INTERNAL_HAS_OPTIMIZATIONS := $(call kokkos_has_string,$(CXXFLAGS),O2)
+      endif
+   endif
+endif
 KOKKOS_INTERNAL_USE_RDYNAMIC := $(call kokkos_has_string,$(KOKKOS_CXXFLAGS),rdynamic)
 ifneq ($(KOKKOS_INTERNAL_USE_RDYNAMIC), 1)
    KOKKOS_INTERNAL_USE_RDYNAMIC := $(call kokkos_has_string,$(CXXFLAGS),rdynamic)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_RDYNAMIC),1) 
-   STACK_TRACE_TERMINATE_FILTER := --gtest_filter=*rdynamic
+   ifneq ($(KOKKOS_INTERNAL_HAS_OPTIMIZATIONS),1) 
+      STACK_TRACE_TERMINATE_FILTER :=_dynamic
+   else
+      STACK_TRACE_TERMINATE_FILTER :=
+   endif
 else
-   STACK_TRACE_TERMINATE_FILTER := --gtest_filter=*terminate
+   STACK_TRACE_TERMINATE_FILTER :=
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
@@ -508,10 +522,10 @@ test-push-finalize-hook-terminate: KokkosCore_UnitTest_PushFinalizeHook_terminat
 	./KokkosCore_UnitTest_PushFinalizeHook_terminate
 	
 test-stack-trace: KokkosCore_UnitTest_StackTraceTestExec
-	./KokkosCore_UnitTest_StackTraceTestExec --gtest_filter=*normal
+	./KokkosCore_UnitTest_StackTraceTestExec --gtest_filter=*normal$(STACK_TRACE_TERMINATE_FILTER)
 
 test-stack-trace-terminate: KokkosCore_UnitTest_StackTraceTestExec
-	./KokkosCore_UnitTest_StackTraceTestExec $(STACK_TRACE_TERMINATE_FILTER)
+	./KokkosCore_UnitTest_StackTraceTestExec --gtest_filter=*terminate$(STACK_TRACE_TERMINATE_FILTER)
 
 
 ${INITTESTS_TEST_TARGETS}: test-default-init-%: KokkosCore_UnitTest_DefaultDeviceTypeInit_%
