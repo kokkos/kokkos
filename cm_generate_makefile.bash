@@ -20,7 +20,6 @@ get_kokkos_device_list() {
   PARSE_DEVICES_LST=$(echo $KOKKOS_DEVICES | tr "," "\n")
   for DEVICE_ in $PARSE_DEVICES_LST
   do 
-     echo parsing $DEVICE_
      if [[ "$OSTYPE" == "darwin"* ]]; then
         UC_DEVICE=$(echo $DEVICE_ | tr "[:lower:]" "[:upper:]")
      else
@@ -75,7 +74,7 @@ get_kokkos_option_list() {
   for OPT_ in $PARSE_OPTIONS_LST
   do 
      if [[ "$OSTYPE" == "darwin"* ]]; then
-        UC_OPT=`echo $OPT_ | tr ][:lower:]' '[:upper:]'`
+        UC_OPT_=$(echo $OPT_ | tr "[:lower:]" "[:upper:]")
      else
         UC_OPT_=${OPT_^^}
      fi
