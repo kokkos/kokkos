@@ -20,11 +20,7 @@ get_kokkos_device_list() {
   PARSE_DEVICES_LST=$(echo $KOKKOS_DEVICES | tr "," "\n")
   for DEVICE_ in $PARSE_DEVICES_LST
   do 
-     if [[ "$OSTYPE" == "darwin"* ]]; then
-        UC_DEVICE=$(echo $DEVICE_ | tr "[:lower:]" "[:upper:]")
-     else
-        UC_DEVICE=${DEVICE_^^}
-     fi
+     UC_DEVICE=$(echo $DEVICE_ | tr "[:lower:]" "[:upper:]")
      KOKKOS_DEVICE_CMD="-DKokkos_ENABLE_${UC_DEVICE}=ON ${KOKKOS_DEVICE_CMD}"
   done
 }
@@ -34,11 +30,7 @@ get_kokkos_arch_list() {
   PARSE_ARCH_LST=$(echo $KOKKOS_ARCH | tr "," "\n")
   for ARCH_ in $PARSE_ARCH_LST
   do 
-     if [[ "$OSTYPE" == "darwin"* ]]; then
-        UC_ARCH=$(echo $ARCH_ | tr "[:lower:]" "[:upper:]")
-     else
-        UC_ARCH=${ARCH_^^}
-     fi
+     UC_ARCH=$(echo $ARCH_ | tr "[:lower:]" "[:upper:]")
      KOKKOS_ARCH_CMD="-DKokkos_ARCH_${UC_ARCH}=ON ${KOKKOS_ARCH_CMD}"
   done
 }
@@ -73,11 +65,7 @@ get_kokkos_option_list() {
   PARSE_OPTIONS_LST=$(echo $KOKKOS_OPTIONS | tr "," "\n")
   for OPT_ in $PARSE_OPTIONS_LST
   do 
-     if [[ "$OSTYPE" == "darwin"* ]]; then
-        UC_OPT_=$(echo $OPT_ | tr "[:lower:]" "[:upper:]")
-     else
-        UC_OPT_=${OPT_^^}
-     fi
+     UC_OPT_=$(echo $OPT_ | tr "[:lower:]" "[:upper:]")
      if [[ "$UC_OPT_" == *DISABLE* ]]; then
         FLIP_OPT_=${UC_OPT_/DISABLE/ENABLE}
         KOKKOS_OPTION_CMD="-DKokkos_${FLIP_OPT_}=OFF ${KOKKOS_OPTION_CMD}"
