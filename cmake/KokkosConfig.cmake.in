@@ -23,8 +23,12 @@ SET(Kokkos_ARCH                         @KOKKOS_ENABLED_ARCH_LIST@)
 
 # These are needed by KokkosKernels
 FOREACH(DEV ${Kokkos_DEVICES})
-SET(Kokkos_ENABLE_${DEV} ON)
+  SET(Kokkos_ENABLE_${DEV} ON)
 ENDFOREACH()
+
+IF(NOT Kokkos_FIND_QUIETLY)
+  MESSAGE(STATUS "Enabled Kokkos devices: ${Kokkos_DEVICES}")
+ENDIF()
 
 include(FindPackageHandleStandardArgs)
 
