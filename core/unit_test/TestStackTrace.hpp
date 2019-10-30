@@ -60,7 +60,7 @@ void stacktrace_test_f4();
 
 void my_fancy_handler();
 
-void test_stacktrace(bool bTerminate, bool bDynamic) {
+void test_stacktrace(bool bTerminate, bool bDynamic, bool bCustom = true) {
   stacktrace_test_f1(std::cout);
 
   // TODO figure out whether stacktraces give function names at all (i.e. did
@@ -136,8 +136,12 @@ void test_stacktrace(bool bTerminate, bool bDynamic) {
             << std::endl;
 
   stacktrace_test_f4();
-  Kokkos::Impl::set_kokkos_terminate_handler();  // just test syntax
-  Kokkos::Impl::set_kokkos_terminate_handler(my_fancy_handler);
+
+  if (bCustom) {
+    Kokkos::Impl::set_kokkos_terminate_handler(my_fancy_handler);
+  } else {
+    Kokkos::Impl::set_kokkos_terminate_handler();
+  }
 
   // TODO test that this prints "Oh noes!" and the correct stacktrace.
   if (bTerminate) {
@@ -159,6 +163,16 @@ TEST(defaultdevicetype, stacktrace_terminate) {
 TEST(defaultdevicetype, stacktrace_terminate_dynamic) {
   ASSERT_DEATH({ test_stacktrace(true, true); },
                "I am the custom std::terminate handler.");
+}
+
+TEST(defaultdevicetype, stacktrace_generic_term) {
+  ASSERT_DEATH({ test_stacktrace(true, false, false); },
+               "Kokkos observes that std::terminate has been called");
+}
+
+TEST(defaultdevicetype, stacktrace_generic_term_dynamic) {
+  ASSERT_DEATH({ test_stacktrace(true, true, false); },
+               "Kokkos observes that std::terminate has been called");
 }
 
 }  // namespace Test

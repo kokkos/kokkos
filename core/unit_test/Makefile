@@ -403,6 +403,7 @@ TEST_TARGETS += test-push-finalize-hook-terminate
 TARGETS += KokkosCore_UnitTest_StackTraceTestExec
 TEST_TARGETS += test-stack-trace
 TEST_TARGETS += test-stack-trace-terminate
+TEST_TARGETS += test-stack-trace-generic-term
 
 NUM_INITTESTS = 16
 INITTESTS_NUMBERS := $(shell seq 1 ${NUM_INITTESTS})
@@ -526,6 +527,9 @@ test-stack-trace: KokkosCore_UnitTest_StackTraceTestExec
 
 test-stack-trace-terminate: KokkosCore_UnitTest_StackTraceTestExec
 	./KokkosCore_UnitTest_StackTraceTestExec --gtest_filter=*terminate$(STACK_TRACE_TERMINATE_FILTER)
+
+test-stack-trace-generic-term: KokkosCore_UnitTest_StackTraceTestExec
+	./KokkosCore_UnitTest_StackTraceTestExec --gtest_filter=*generic_term$(STACK_TRACE_TERMINATE_FILTER)
 
 
 ${INITTESTS_TEST_TARGETS}: test-default-init-%: KokkosCore_UnitTest_DefaultDeviceTypeInit_%

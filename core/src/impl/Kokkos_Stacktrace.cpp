@@ -214,7 +214,7 @@ void print_demangled_saved_stacktrace(std::ostream& out) {
   demangle_and_print_traceback(out, Stacktrace::lines());
 }
 
-std::function<void()> user_terminate_handler_post_;
+std::function<void()> user_terminate_handler_post_ = nullptr;
 
 void kokkos_terminate_handler() {
   using std::cerr;
@@ -227,7 +227,7 @@ void kokkos_terminate_handler() {
        << endl;
   print_demangled_saved_stacktrace(std::cerr);
 
-  if (user_terminate_handler_post_) {
+  if (user_terminate_handler_post_ != nullptr) {
     user_terminate_handler_post_();
   } else {
     std::abort();
@@ -235,7 +235,8 @@ void kokkos_terminate_handler() {
 }
 
 void set_kokkos_terminate_handler() {
-  user_terminate_handler_post_ = std::abort;
+  user_terminate_handler_post_ = nullptr;
+  std::set_terminate(kokkos_terminate_handler);
 }
 
 void set_kokkos_terminate_handler(std::function<void()> user_post) {

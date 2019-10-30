@@ -278,7 +278,8 @@ KOKKOS_ADD_TEST_EXECUTABLE( StackTraceTestExec
   SOURCES TestStackTrace.cpp
 )
 
-if ( (CMAKE_CXX_FLAGS MATCHES "rdynamic") AND
+if ( ( (CMAKE_CXX_FLAGS MATCHES "rdynamic") OR 
+       (CMAKE_EXE_LINKER_FLAGS MATCHES "export-dynamic") ) AND
      (NOT CMAKE_CXX_FLAGS MATCHES "O2") AND
      (NOT CMAKE_CXX_FLAGS MATCHES "O3") )
   SET(STACKTRACE_TEST_FILTER "_dynamic")
@@ -296,6 +297,12 @@ KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_terminate
                  EXE  StackTraceTestExec
                  CMD_ARGS --gtest_filter=*terminate${STACKTRACE_TEST_FILTER}
+                 FAIL_REGULAR_EXPRESSION "FAILED"
+               )
+
+KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_generic_term
+                 EXE  StackTraceTestExec
+                 CMD_ARGS --gtest_filter=*generic_term${STACKTRACE_TEST_FILTER}
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
 
