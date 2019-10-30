@@ -875,13 +875,13 @@ namespace Kokkos {
 //
 
 template <class... Properties, class... Args>
-void resize(DualView<Properties...> dv, Args&&... args) noexcept(
+void resize(DualView<Properties...>& dv, Args&&... args) noexcept(
     noexcept(dv.resize(std::forward<Args>(args)...))) {
   std::move(dv).resize(std::forward<Args>(args)...);
 }
 
 template <class... Properties, class... Args>
-void realloc(DualView<Properties...> dv, Args&&... args) noexcept(
+void realloc(DualView<Properties...>& dv, Args&&... args) noexcept(
     noexcept(dv.realloc(std::forward<Args>(args)...))) {
   std::move(dv).realloc(std::forward<Args>(args)...);
 }
