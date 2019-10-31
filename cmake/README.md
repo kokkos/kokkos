@@ -152,6 +152,30 @@ If CMake, our lives are greatly simplified. We simply use `find_package` to loca
 It is up to the Kokkos developers to "convert" the library into a CMake target as if it had been installed as a valid modern CMake target with properties.  
 There are helper functions for simplifying the process of importing TPLs in Kokkos, but we walk through the process in detail to clearly illustrate the steps involved.
 
+#### TPL Search Order
+
+There are several options for where CMake could try to find a TPL.
+If there are multiple installations of the same TPL on the system,
+the search order is critical for making sure the correct TPL is found.
+There are 3 possibilities that could be used:
+
+1. Default system paths like /usr
+1. User-provided paths through options `<NAME>_ROOT` and `Kokkos_<NAME>_DIR`
+1. Additional paths not in the CMake default list or provided by the user that Kokkos decides to add. For example, Kokkos may query `nvcc` or `LD_LIBRARY_PATH` for where to find CUDA libraries.
+
+The following is the search order that Kokkos follows. Note: This differs from the default search order used by CMake `find_library` and `find_header`. CMake prefers default system paths over user-provided paths.
+For Kokkos (and package managers in general), it is better to prefer user-provided paths since this usually indicates a specific version we want.
+
+1. `<NAME>_ROOT`
+1. `Kokkos_<NAME>_DIR`
+1.  Paths added by Kokkos CMake logic
+1.  Default system paths (if allowed)
+
+Default system paths are allowed in two cases. First, none of the other options are given so the only place to look is system paths. Second, if explicitly given permission, configure will look in system paths.
+The rationale for this logic is that if you specify a custom location, you usually *only* want to look in that location.
+If you do not find the TPL where you expect it, you should error out rather than grab another random match.
+
+
 #### Finding TPLs
 
 If finding a TPL that is not a modern CMake project, refer to the `FindHWLOC.cmake` file in `cmake/Modules` for an example.

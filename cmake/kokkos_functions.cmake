@@ -315,6 +315,171 @@ MACRO(kokkos_create_imported_tpl NAME)
 ENDMACRO()
 
 #
+# @MACRO: KOKKOS_FIND_HEADER
+#
+# Function that finds a particular header. This searches custom paths
+# or default system paths depending on options. In constrast to CMake
+# default, custom paths are prioritized over system paths. The searched
+# order is:
+# 1. <NAME>_ROOT variable
+# 2. Kokkos_<NAME>_DIR variable
+# 3. Locations in the PATHS option
+# 4. Default system paths, if allowed.
+#
+# Default system paths are allowed if none of options (1)-(3) are specified
+# or if default paths are specifically allowed via ALLOW_SYSTEM_PATH_FALLBACK
+#
+# Usage::
+#
+#   KOKKOS_FIND_HEADER(
+#     <VAR_NAME>
+#     <HEADER>
+#     <TPL_NAME>
+#    [ALLOW_SYSTEM_PATH_FALLBACK]
+#    [PATHS path1 [path2 ...]]
+#   )
+#
+#   ``<VAR_NAME>``
+#
+#   The variable to define with the success or failure of the find
+#
+#   ``<HEADER>``
+#
+#   The name of the header to find
+#
+#   ``<TPL_NAME>``
+#
+#   The name of the TPL the header corresponds to
+#
+#   ``[ALLOW_SYSTEM_PATH_FALLBACK]``
+#
+#   If custom paths are given and the header is not found
+#   should we be allowed to search default system paths
+#   or error out if not found in given paths
+#
+#   ``[PATHS path1 [path2 ...]]``
+#
+#   Custom paths to search for the header
+#
+MACRO(kokkos_find_header VAR_NAME HEADER TPL_NAME)
+  CMAKE_PARSE_ARGUMENTS(TPL
+   "ALLOW_SYSTEM_PATH_FALLBACK"
+   ""
+   "PATHS"
+   ${ARGN})
+
+  SET(${HEADER}_FOUND FALSE)
+  SET(HAVE_CUSTOM_PATHS FALSE)
+  IF(NOT ${HEADER}_FOUND AND DEFINED ${TPL_NAME}_ROOT)
+    #ONLY look in the root directory
+    FIND_PATH(${VAR_NAME} ${HEADER} PATHS ${${TPL_NAME}_ROOT}/include NO_DEFAULT_PATH)
+    SET(HAVE_CUSTOM_PATHS TRUE)
+  ENDIF()
+
+  IF(NOT ${HEADER}_FOUND AND DEFINED KOKKOS_${TPL_NAME}_DIR)
+    #ONLY look in the root directory
+    FIND_PATH(${VAR_NAME} ${HEADER} PATHS ${KOKKOS_${TPL_NAME}_DIR}/include NO_DEFAULT_PATH)
+    SET(HAVE_CUSTOM_PATHS TRUE)
+  ENDIF()
+
+  IF (NOT ${HEADER}_FOUND AND TPL_PATHS)
+    #we got custom paths
+    #ONLY look in these paths and nowhere else
+    FIND_PATH(${VAR_NAME} ${HEADER} PATHS ${TPL_PATHS} NO_DEFAULT_PATH)
+    SET(HAVE_CUSTOM_PATHS TRUE)
+  ENDIF()
+
+  IF (NOT HAVE_CUSTOM_PATHS OR TPL_ALLOW_SYSTEM_PATH_FALLBACK)
+    #Now go ahead and look in system paths
+    IF (NOT ${HEADER}_FOUND)
+      FIND_PATH(${VAR_NAME} ${HEADER})
+    ENDIF()
+  ENDIF()
+ENDMACRO()
+
+#
+# @MACRO: KOKKOS_FIND_LIBRARY
+#
+# Function that find a particular library. This searches custom paths
+# or default system paths depending on options. In constrast to CMake
+# default, custom paths are prioritized over system paths. The search
+# order is:
+# 1. <NAME>_ROOT variable
+# 2. Kokkos_<NAME>_DIR variable
+# 3. Locations in the PATHS option
+# 4. Default system paths, if allowed.
+#
+# Default system paths are allowed if none of options (1)-(3) are specified
+# or if default paths are specifically allowed via ALLOW_SYSTEM_PATH_FALLBACK
+#
+# Usage::
+#
+#   KOKKOS_FIND_LIBRARY(
+#     <VAR_NAME>
+#     <HEADER>
+#     <TPL_NAME>
+#    [ALLOW_SYSTEM_PATH_FALLBACK]
+#    [PATHS path1 [path2 ...]]
+#   )
+#
+#   ``<VAR_NAME>``
+#
+#   The variable to define with the success or failure of the find
+#
+#   ``<LIBRARY>``
+#
+#   The name of the library to find (NOT prefixed with -l)
+#
+#   ``<TPL_NAME>``
+#
+#   The name of the TPL the library corresponds to
+#
+#   ``ALLOW_SYSTEM_PATH_FALLBACK``
+#
+#   If custom paths are given and the library is not found
+#   should we be allowed to search default system paths
+#   or error out if not found in given paths
+#
+#   ``PATHS``
+#
+#   Custom paths to search for the library
+#
+MACRO(kokkos_find_library VAR_NAME LIB TPL_NAME)
+  CMAKE_PARSE_ARGUMENTS(TPL
+   "ALLOW_SYSTEM_PATH_FALLBACK"
+   ""
+   "PATHS"
+   ${ARGN})
+
+  SET(${LIB}_FOUND FALSE)
+  SET(HAVE_CUSTOM_PATHS FALSE)
+  IF(NOT ${LIB}_FOUND AND DEFINED ${TPL_NAME}_ROOT)
+    FIND_LIBRARY(${VAR_NAME} ${LIB} PATHS ${${TPL_NAME}_ROOT}/lib ${${TPL_NAME}_ROOT}/lib64 NO_DEFAULT_PATH)
+    SET(HAVE_CUSTOM_PATHS TRUE)
+  ENDIF()
+
+  IF(NOT ${LIB}_FOUND AND DEFINED KOKKOS_${TPL_NAME}_DIR)
+    #we got root paths, only look in these paths and nowhere else
+    FIND_LIBRARY(${VAR_NAME} ${LIB} PATHS ${KOKKOS_${TPL_NAME}_DIR}/lib ${KOKKOS_${TPL_NAME}_DIR}/lib64 NO_DEFAULT_PATH)
+    SET(HAVE_CUSTOM_PATHS TRUE)
+  ENDIF()
+
+  IF (NOT ${LIB}_FOUND AND TPL_PATHS)
+    #we got custom paths, only look in these paths and nowhere else
+    FIND_LIBRARY(${VAR_NAME} ${LIB} PATHS ${TPL_PATHS} NO_DEFAULT_PATH)
+    SET(HAVE_CUSTOM_PATHS TRUE)
+  ENDIF()
+
+
+  IF (NOT HAVE_CUSTOM_PATHS OR TPL_ALLOW_SYSTEM_PATH_FALLBACK)
+    IF (NOT ${LIB}_FOUND)
+      #Now go ahead and look in system paths
+      FIND_LIBRARY(${VAR_NAME} ${LIB})
+    ENDIF()
+  ENDIF()
+ENDMACRO()
+
+#
 # @MACRO: KOKKOS_FIND_IMPORTED
 #
 # Function that finds all libraries and headers needed for the tpl
@@ -325,6 +490,7 @@ ENDMACRO()
 #   KOKKOS_FIND_IMPORTED(
 #     <NAME>
 #     INTERFACE
+#     ALLOW_SYSTEM_PATH_FALLBACK
 #     LIBRARY <path_to_librarY>
 #     LINK_LIBRARIES <lib1> <lib2> ...
 #     COMPILE_OPTIONS <opt1> <opt2> ...
@@ -335,9 +501,21 @@ ENDMACRO()
 #     If specified, this TPL will build an INTERFACE library rather than an
 #     IMPORTED target
 #
+#   ``ALLOW_SYSTEM_PATH_FALLBACK"
+#
+#     If custom paths are given and the library is not found
+#     should we be allowed to search default system paths
+#     or error out if not found in given paths.
+#
 #   ``LIBRARY <name>``
 #
 #     If specified, this gives the name of the library to look for
+#
+#   ``MODULE_NAME <name>``
+#
+#     If specified, the name of the enclosing module passed to
+#     FIND_PACKAGE(<MODULE_NAME>). Defaults to TPL${NAME} if not
+#     given.
 #
 #   ``IMPORTED_NAME <name>``
 #
@@ -364,10 +542,20 @@ ENDMACRO()
 #
 MACRO(kokkos_find_imported NAME)
   CMAKE_PARSE_ARGUMENTS(TPL
-   "INTERFACE"
-   "HEADER;LIBRARY;IMPORTED_NAME"
+   "INTERFACE;ALLOW_SYSTEM_PATH_FALLBACK"
+   "HEADER;LIBRARY;IMPORTED_NAME;MODULE_NAME"
    "HEADER_PATHS;LIBRARY_PATHS;HEADERS;LIBRARIES"
    ${ARGN})
+
+  IF(NOT TPL_MODULE_NAME)
+    SET(TPL_MODULE_NAME TPL${NAME})
+  ENDIF()
+
+  IF (TPL_ALLOW_SYSTEM_PATH_FALLBACK)
+    SET(ALLOW_PATH_FALLBACK_OPT ALLOW_SYSTEM_PATH_FALLBACK)
+  ELSE()
+    SET(ALLOW_PATH_FALLBACK_OPT)
+  ENDIF()
 
   IF (NOT TPL_IMPORTED_NAME)
     IF (TPL_INTERFACE)
@@ -379,19 +567,11 @@ MACRO(kokkos_find_imported NAME)
 
   SET(${NAME}_INCLUDE_DIRS)
   IF (TPL_HEADER)
-    IF(TPL_HEADER_PATHS)
-      FIND_PATH(${NAME}_INCLUDE_DIRS ${TPL_HEADER} PATHS ${TPL_HEADER_PATHS})
-    ELSE()
-      FIND_PATH(${NAME}_INCLUDE_DIRS ${TPL_HEADER} PATHS ${${NAME}_ROOT}/include ${KOKKOS_${NAME}_DIR}/include)
-    ENDIF()
+    KOKKOS_FIND_HEADER(${NAME}_INCLUDE_DIRS ${TPL_HEADER} ${NAME} ${ALLOW_PATH_FALLBACK_OPT} PATHS ${TPL_HEADER_PATHS})
   ENDIF()
 
   FOREACH(HEADER ${TPL_HEADERS})
-    IF(TPL_HEADER_PATHS)
-      FIND_LIBRARY(HEADER_FIND_TEMP ${HEADER} PATHS ${TPL_HEADER_PATHS})
-    ELSE()
-      FIND_LIBRARY(HEADER_FIND_TEMP ${HEADER} PATHS ${${NAME}_ROOT}/lib ${KOKKOS_${NAME}_DIR}/lib)
-    ENDIF()
+    KOKKOS_FIND_HEADER(HEADER_FIND_TEMP ${HEADER} ${NAME} ${ALLOW_PATH_FALLBACK_OPT} PATHS ${TPL_HEADER_PATHS})
     IF(HEADER_FIND_TEMP)
       LIST(APPEND ${NAME}_INCLUDE_DIRS ${HEADER_FIND_TEMP})
     ENDIF()
@@ -399,50 +579,48 @@ MACRO(kokkos_find_imported NAME)
 
   SET(${NAME}_LIBRARY)
   IF(TPL_LIBRARY)
-    IF(TPL_LIBRARY_PATHS)
-      FIND_LIBRARY(${NAME}_LIBRARY ${TPL_LIBRARY} PATHS ${TPL_LIBRARY_PATHS})
-    ELSE()
-      FIND_LIBRARY(${NAME}_LIBRARY ${TPL_LIBRARY} PATHS ${${NAME}_ROOT}/lib ${KOKKOS_${NAME}_DIR}/lib)
-    ENDIF()
+    KOKKOS_FIND_LIBRARY(${NAME}_LIBRARY ${TPL_LIBRARY} ${NAME} ${ALLOW_PATH_FALLBACK_OPT} PATHS ${TPL_LIBRARY_PATHS})
   ENDIF()
 
-  SET(${NAME}_LIBRARIES)
+  SET(${NAME}_FOUND_LIBRARIES)
   FOREACH(LIB ${TPL_LIBRARIES})
-    IF(TPL_LIBRARY_PATHS)
-      FIND_LIBRARY(${LIB}_LOCATION ${LIB} PATHS ${TPL_LIBRARY_PATHS})
-    ELSE()
-      FIND_LIBRARY(${LIB}_LOCATION ${LIB} PATHS ${${NAME}_ROOT}/lib ${KOKKOS_${NAME}_DIR}/lib)
-    ENDIF()
+    KOKKOS_FIND_LIBRARY(${LIB}_LOCATION ${LIB} ${NAME} ${ALLOW_PATH_FALLBACK_OPT} PATHS ${TPL_LIBRARY_PATHS})
     IF(${LIB}_LOCATION)
-      LIST(APPEND ${NAME}_LIBRARIES ${${LIB}_LOCATION})
+      LIST(APPEND ${NAME}_FOUND_LIBRARIES ${${LIB}_LOCATION})
     ELSE()
-      SET(${NAME}_LIBRARIES ${${LIB}_LOCATION}) 
+      SET(${NAME}_FOUND_LIBRARIES ${${LIB}_LOCATION}) 
       BREAK()
     ENDIF()
   ENDFOREACH()
 
   INCLUDE(FindPackageHandleStandardArgs)
+  #Collect all the variables we need to be valid for
+  #find_package to have succeeded
+  SET(TPL_VARS_NEEDED)
   IF (TPL_LIBRARY)
-    FIND_PACKAGE_HANDLE_STANDARD_ARGS(${NAME} DEFAULT_MSG ${NAME}_LIBRARY)
+    LIST(APPEND TPL_VARS_NEEDED ${NAME}_LIBRARY)
   ENDIF()
   IF(TPL_HEADER)
-    FIND_PACKAGE_HANDLE_STANDARD_ARGS(${NAME} DEFAULT_MSG ${NAME}_INCLUDE_DIRS)
+    LIST(APPEND TPL_VARS_NEEDED ${NAME}_INCLUDE_DIRS)
   ENDIF()
   IF(TPL_LIBRARIES)
-    FIND_PACKAGE_HANDLE_STANDARD_ARGS(${NAME} DEFAULT_MSG ${NAME}_LIBRARIES)
+    LIST(APPEND TPL_VARS_NEEDED ${NAME}_FOUND_LIBRARIES)
   ENDIF()
+  FIND_PACKAGE_HANDLE_STANDARD_ARGS(${TPL_MODULE_NAME} REQUIRED_VARS ${TPL_VARS_NEEDED})
 
-  MARK_AS_ADVANCED(${NAME}_INCLUDE_DIRS ${NAME}_LIBRARIES ${NAME}_LIBRARY)
+  MARK_AS_ADVANCED(${NAME}_INCLUDE_DIRS ${NAME}_FOUND_LIBRARIES ${NAME}_LIBRARY)
 
-  SET(IMPORT_TYPE)
-  IF (TPL_INTERFACE)
-    SET(IMPORT_TYPE "INTERFACE")
+  IF (${TPL_MODULE_NAME}_FOUND)
+    SET(IMPORT_TYPE)
+    IF (TPL_INTERFACE)
+      SET(IMPORT_TYPE "INTERFACE")
+    ENDIF()
+    KOKKOS_CREATE_IMPORTED_TPL(${TPL_IMPORTED_NAME}
+      ${IMPORT_TYPE}
+      INCLUDES "${${NAME}_INCLUDE_DIRS}"
+      LIBRARY  "${${NAME}_LIBRARY}"
+      LINK_LIBRARIES "${${NAME}_FOUND_LIBRARIES}")
   ENDIF()
-  KOKKOS_CREATE_IMPORTED_TPL(${TPL_IMPORTED_NAME}
-    ${IMPORT_TYPE}
-    INCLUDES "${${NAME}_INCLUDE_DIRS}"
-    LIBRARY  "${${NAME}_LIBRARY}"
-    LINK_LIBRARIES "${${NAME}_LIBRARIES}")
 ENDMACRO(kokkos_find_imported)
 
 #
