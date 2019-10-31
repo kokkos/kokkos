@@ -306,6 +306,9 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
     OBJ_SERIAL = UnitTestMainInit.o gtest-all.o
+    OBJ_SERIAL += TestSerial_Incremental_01_ExecutionSpace.o
+    OBJ_SERIAL += TestSerial_Incremental_02_MemorySpace.o
+    OBJ_SERIAL += TestSerial_Incremental_03_ParallelFor.o
     OBJ_SERIAL += TestSerial_Init.o
     OBJ_SERIAL += TestSerial_SharedAlloc.o
     OBJ_SERIAL += TestSerial_RangePolicy.o
@@ -382,7 +385,7 @@ TEST_TARGETS += ${INITTESTS_TEST_TARGETS}
 
 KokkosCore_UnitTest_Cuda: $(OBJ_CUDA) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_CUDA) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Cuda
-	
+
 KokkosCore_UnitTest_CudaInterOpInit: UnitTestMain.o gtest-all.o TestCuda_InterOp_Init.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestCuda_InterOp_Init.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_CudaInterOpInit
 KokkosCore_UnitTest_CudaInterOpStreams: UnitTestMain.o gtest-all.o TestCuda_InterOp_Streams.o $(KOKKOS_LINK_DEPENDS)
