@@ -30,6 +30,16 @@ IF(NOT Kokkos_FIND_QUIETLY)
   MESSAGE(STATUS "Enabled Kokkos devices: ${Kokkos_DEVICES}")
 ENDIF()
 
+IF (Kokkos_ENABLE_CUDA AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14.0")
+  #If we are building CUDA, we have tricked CMake because we declare a CXX project
+  #If the default C++ standard for a given compiler matches the requested
+  #standard, then CMake just omits the -std flag in later versions of CMake
+  #This breaks CUDA compilation (CUDA compiler can have a different default
+  #-std then the underlying host compiler by itself). Setting this variable
+  #forces CMake to always add the -std flag even if it thinks it doesn't need it
+  SET(CMAKE_CXX_STANDARD_DEFAULT 98 CACHE INTERNAL "" FORCE)
+ENDIF()
+
 include(FindPackageHandleStandardArgs)
 
 #   This function makes sure that Kokkos was built with the requested backends
