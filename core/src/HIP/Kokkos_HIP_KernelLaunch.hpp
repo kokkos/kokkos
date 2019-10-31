@@ -52,9 +52,36 @@
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <Kokkos_HIP.hpp>
 
+// TODO cannot use global variable on the device with ROCm 2.9
+//__device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
+//    [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
+//     sizeof(unsigned long)];
+
+namespace Kokkos {
+namespace Experimental {
+template <typename T>
+inline __device__ T *kokkos_impl_hip_shared_memory() {
+  extern __shared__ HIPSpace::size_type sh[];
+  return (T *)sh;
+}
+}  // namespace Experimental
+}  // namespace Kokkos
+
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
+
+template <typename DriverType>
+__global__ static void hip_parallel_launch_constant_memory() {
+  __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
+      [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
+       sizeof(unsigned long)];
+
+  const DriverType &driver = *(reinterpret_cast<const DriverType *>(
+      kokkos_impl_hip_constant_memory_buffer));
+
+  driver();
+}
 
 template <class DriverType>
 __global__ static void hip_parallel_launch_local_memory(
