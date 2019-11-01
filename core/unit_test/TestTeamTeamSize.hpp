@@ -172,4 +172,51 @@ TEST(TEST_CATEGORY, team_policy_max_recommended) {
       max_scratch_size / 2);
 }
 
+template <typename TeamHandleType, typename ReducerValueType>
+struct PrintFunctor1 {
+  KOKKOS_INLINE_FUNCTION void operator()(const TeamHandleType& team,
+                                         ReducerValueType&) const {
+    printf("Test %i %i\n", (int)team.league_rank(), (int)team.team_rank());
+  }
+};
+
+template <typename TeamHandleType, typename ReducerValueType>
+struct PrintFunctor2 {
+  KOKKOS_INLINE_FUNCTION void operator()(const TeamHandleType& team,
+                                         ReducerValueType& teamVal) const {
+    printf("Test %i %i\n", (int)team.league_rank(), (int)team.team_rank());
+    teamVal += 1;
+  }
+};
+
+TEST(TEST_CATEGORY, team_policy_max_scalar_without_plus_equal_k) {
+  using ExecSpace           = Kokkos::DefaultExecutionSpace;
+  using ReducerType         = Kokkos::MinMax<double, Kokkos::HostSpace>;
+  using ReducerValueType    = typename ReducerType::value_type;
+  using DynamicScheduleType = Kokkos::Schedule<Kokkos::Dynamic>;
+  using TeamPolicyType = Kokkos::TeamPolicy<ExecSpace, DynamicScheduleType>;
+  using TeamHandleType = typename TeamPolicyType::member_type;
+
+  static constexpr int num_teams = 17;
+  ReducerValueType val;
+  ReducerType reducer(val);
+
+  TeamPolicyType p(num_teams, Kokkos::AUTO);
+  PrintFunctor1<TeamHandleType, ReducerValueType> f1;
+  const int max_team_size =
+      p.team_size_max(f1, reducer, Kokkos::ParallelReduceTag());
+
+  const int recommended_team_size =
+      p.team_size_recommended(f1, reducer, Kokkos::ParallelReduceTag());
+
+  printf("Max TeamSize: %i Recommended TeamSize: %i\n", max_team_size,
+         recommended_team_size);
+
+  Kokkos::parallel_reduce(p, f1, reducer);
+  double sum;
+  Kokkos::parallel_reduce(TeamPolicyType(num_teams, Kokkos::AUTO),
+                          PrintFunctor2<TeamHandleType, double>{}, sum);
+  printf("Sum: %lf\n", sum);
+}
+
 }  // namespace Test
