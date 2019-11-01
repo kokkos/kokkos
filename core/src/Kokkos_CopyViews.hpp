@@ -2639,7 +2639,7 @@ inline void deep_copy(
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
         dst.data(), Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace().name()),
-        "(none)", &value, sizeof(DT));
+        "(none)", &value, dst.span() * sizeof(typename dst_traits::value_type));
   }
 #endif
   ExecSpace().fence();
