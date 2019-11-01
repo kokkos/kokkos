@@ -394,6 +394,28 @@ union SharedAllocationTracker {
     return *this;
   }
 
+  /** \brief  Copy assignment without the carry bits logic
+   *         This assumes that externally defined tracking is explicitly enabled
+   */
+  KOKKOS_FORCEINLINE_FUNCTION
+  void assign_direct(const SharedAllocationTracker& rhs) {
+    KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+    m_record_bits = rhs.m_record_bits;
+    KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
+  }
+
+  /** \brief  Copy assignment without the initial decrement
+   *         This assumes that current m_record_bits is DO_NOT_DEREF_FLAG
+   *         and externally defined tracking is explicitly disabled */
+  KOKKOS_FORCEINLINE_FUNCTION
+  void assign_force_disable(const SharedAllocationTracker& rhs) {
+    KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+    m_record_bits = rhs.m_record_bits | DO_NOT_DEREF_FLAG;
+  }
+
+  KOKKOS_FORCEINLINE_FUNCTION
+  bool tracking_enabled() { return (!(m_record_bits & DO_NOT_DEREF_FLAG)); }
+
   /** \brief  Copy assignment may disable tracking */
   KOKKOS_FORCEINLINE_FUNCTION
   void assign(const SharedAllocationTracker& rhs, const bool enable_tracking) {
