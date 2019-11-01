@@ -447,6 +447,7 @@ elif [ "$MACHINE" = "apollo" ]; then
   CLANG7_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,sems-gcc/6.1.0,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.1"
   NVCC_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
   HPX_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,hpx/1.2.1,sems-gcc/6.1.0,binutils"
+  HPX3_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,compilers/hpx/1.3.0,sems-gcc/6.1.0,binutils"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_OpenMP"
   BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_Pthread"
@@ -460,7 +461,7 @@ elif [ "$MACHINE" = "apollo" ]; then
                "clang/3.9.0 $BASE_MODULE_LIST "Pthread_Serial" clang++ $CLANG_WARNING_FLAGS"
                "clang/6.0 $CLANG_MODULE_LIST "Cuda_Pthread,OpenMP" clang++ $CUDA_WARNING_FLAGS"
                "cuda/9.1 $CUDA_MODULE_LIST "Cuda_OpenMP" $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "hpx/1.2.1 $HPX_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
+               "hpx/1.3.0 $HPX3_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
     )
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
@@ -479,6 +480,7 @@ elif [ "$MACHINE" = "apollo" ]; then
                "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "hpx/1.2.1 $HPX_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
+               "hpx/1.3.0 $HPX3_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
     )
   fi
 

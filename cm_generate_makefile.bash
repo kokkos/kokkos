@@ -284,11 +284,6 @@ do
   shift
 done
 
-if [ "$KOKKOS_CXX_STANDARD" == "" ]; then
-    STANDARD_CMD=
-else
-    STANDARD_CMD=-DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD}
-fi
 
 if [ "$COMPILER" == "" ]; then
     COMPILER_CMD=
@@ -318,10 +313,16 @@ get_kokkos_cuda_option_list
 
 ## if HPX is enabled, we need to enforce cxx standard = 14
 if [[ ${KOKKOS_DEVICE_CMD} == *Kokkos_ENABLE_HPX* ]]; then
-   if [ ${#KOKKOS_CXX_STANDARD} -lt 14 ]; then
+   if [ "${KOKKOS_CXX_STANDARD}" == "" ] || [ ${#KOKKOS_CXX_STANDARD} -lt 14 ]; then
       echo CXX Standard must be 14 or higher for HPX to work.
       KOKKOS_CXX_STANDARD=14
    fi
+fi
+
+if [ "$KOKKOS_CXX_STANDARD" == "" ]; then
+    STANDARD_CMD=
+else
+    STANDARD_CMD=-DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD}
 fi
 
 if [[ ${COMPILER} == *clang* ]]; then
