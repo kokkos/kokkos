@@ -1702,6 +1702,11 @@ inline void deep_copy(
     }
 #endif
     Kokkos::fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
   }
 
