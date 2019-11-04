@@ -67,7 +67,8 @@ struct TestIncrMemorySpace_malloc {
 };
 
 TEST_F(TEST_CATEGORY, incr_02_memspace_free) {
-  TestIncrMemorySpace_malloc<TEST_EXECSPACE> test;
+  typedef typename TEST_EXECSPACE::memory_space memory_space;
+  TestIncrMemorySpace_malloc<memory_space> test;
   test.testit_free();
 }
 
