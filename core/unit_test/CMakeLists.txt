@@ -24,6 +24,7 @@ KOKKOS_TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
+
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
@@ -293,5 +294,61 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   SOURCES UnitTestMain.cpp  TestHostBarrier.cpp
 )
 
+FUNCTION (TEST_FEATURE_IMPLEMENTED CURRENT_FEATURE FEATURE_LIST)
+  SET ( FEATURE_IMPLEMENTED OFF PARENT_SCOPE )
+  FOREACH ( IMPLEMENTED_FEATURE ${FEATURE_LIST})
+    message( STATUS "OUT:${IMPLEMENTED_FEATURE}, ${CURRENT_FEATURE}" )
+    if(CURRENT_FEATURE STREQUAL ${IMPLEMENTED_FEATURE} )
+      set (FEATURE_IMPLEMENTED ON PARENT_SCOPE )
+    endif()
+  ENDFOREACH()
+ENDFUNCTION()
 
 
+FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST BACK_END_NAME)
+
+  # Iterate over incremental tests in directory
+    # Call here the bash script to get the file list in the test directory
+    # OUTPUT: List of test file names
+  SET( INCREMENTAL_FILE_LIST ExecSpaceCompilation.hpp )
+  SET( ${BACK_END_NAME}_SOURCES UnitTestMainInit.cpp )
+
+  foreach (CURRENT_FILE_NAME ${INCREMENTAL_FILE_LIST})
+    string (REPLACE ".hpp" "" CURRENT_TEST_NAME ${CURRENT_FILE_NAME})
+
+    message( STATUS "OUT:${CURRENT_TEST_NAME}" )
+    # From each test get list of dependencies 
+      # Run a bash script to get the list of dependencies for this test
+      # OUTPUT: List of Kokkos features required to run the test
+    SET( CURRENT_REQUIRED_FEATURE_LIST "ExecSpaceDef" )
+
+    # Cross-reference list of dependencies with selected feature list > matching feature test files are added to test applications
+    FOREACH ( CURRENT_FEATURE ${CURRENT_REQUIRED_FEATURE_LIST})
+      TEST_FEATURE_IMPLEMENTED ( ${CURRENT_FEATURE} ${Kokkos_${BACK_END_NAME}_FEATURE_LIST})
+      if (FEATURE_IMPLEMENTED) 
+        CONFIGURE_FILE (IncrementalTest.cpp.in ${CMAKE_BINARY_DIR}/core/unit_test/generated/${CURRENT_TEST_NAME}.cpp )
+        SET(${BACK_END_NAME}_SOURCES ${${BACK_END_NAME}_SOURCES}; ${CMAKE_BINARY_DIR}/core/unit_test/generated/${CURRENT_TEST_NAME}.cpp)
+        message( STATUS "OUT:${${BACK_END_NAME}_SOURCES}" )
+      endif()
+    ENDFOREACH()
+  ENDFOREACH()
+
+  STRING(TOUPPER ${BACK_END_NAME} UC_BACK_END_NAME)
+
+  KOKKOS_OPTION (
+    ENABLE_${UC_BACK_END_NAME} ON BOOLEAN "ENABLE ${UC_BACK_END_NAME}"
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    IncrementalTest_${BACK_END_NAME}
+    SOURCES
+    ${${BACK_END_NAME}_SOURCES}
+  )
+
+  #SET(EXE_NAME ${PACKAGE_NAME}_${ROOT_NAME})
+  TARGET_INCLUDE_DIRECTORIES( ${PACKAGE_NAME}_IncrementalTest_${BACK_END_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/incremental )
+
+ENDFUNCTION()
+
+#KOKKOS_ADD_INCREMENTAL_TEST ( OpenMPTarget )
+KOKKOS_ADD_INCREMENTAL_TEST ( OpenMP )
