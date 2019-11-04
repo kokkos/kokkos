@@ -308,6 +308,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
     OBJ_SERIAL = UnitTestMainInit.o gtest-all.o
     OBJ_SERIAL += TestSerial_Incremental_01_ExecutionSpace.o
     OBJ_SERIAL += TestSerial_Incremental_02a_MemorySpace.o
+    OBJ_SERIAL += TestSerial_Incremental_02b_MemorySpace.o
     OBJ_SERIAL += TestSerial_Init.o
     OBJ_SERIAL += TestSerial_SharedAlloc.o
     OBJ_SERIAL += TestSerial_RangePolicy.o
