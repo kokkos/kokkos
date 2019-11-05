@@ -12,9 +12,6 @@ INCLUDE(CMakeFindDependencyMacro)
 
 INCLUDE("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
 
-# These are IMPORTED targets created by KokkosTargets.cmake
-SET(Kokkos_LIBRARIES       @KOKKOS_EXT_LIBRARIES@)
-
 SET(Kokkos_DEVICES @KOKKOS_ENABLED_DEVICES@)
 SET(Kokkos_OPTIONS @KOKKOS_ENABLED_OPTIONS@)
 SET(Kokkos_TPLS @KOKKOS_ENABLED_TPLS@)
