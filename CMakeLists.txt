@@ -40,6 +40,7 @@ ENDIF()
 
 SET(KOKKOS_ENABLED_OPTIONS)      #exported in config file
 SET(KOKKOS_ENABLED_DEVICES)      #exported in config file
+SET(KOKKOS_ENABLED_TPLS)         #exported in config file
 SET(KOKKOS_ENABLED_ARCH_LIST)    #exported in config file
 
 #These are helper flags used for sanity checks during config
