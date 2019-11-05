@@ -49,23 +49,55 @@ namespace Test {
 
 // Test construction and assignment
 
-template <class MemSpace>
-struct TestIncrMemorySpace_malloc {
+template <class MemSpaceD, class MemSpaceH>
+struct TestIncrMemorySpace_deepcopy {
 
+  using dataType = double;
   const int num_elements = 10;
+  const double value = 0.5;
 
-  void testit_malloc() {
-    int *data = (int*) Kokkos::kokkos_malloc<MemSpace>("data", num_elements*sizeof(int));
-    ASSERT_FALSE(data == nullptr);
-    Kokkos::kokkos_free<MemSpace>(data);
+  int compare_equal_host(dataType *HostData)
+  {
+    int error = 0;
+    for(int i = 0; i < num_elements; ++i)
+    {
+      if(HostData[i] != 0.5) error++;
+    }
+
+    return error;
   }
 
+
+  void testit_DtoH() {
+
+    //Allocate memory on Device space
+    dataType *DeviceData = (dataType*) Kokkos::kokkos_malloc<MemSpaceD>("DeviceData", num_elements*sizeof(dataType));
+    ASSERT_FALSE(DeviceData == nullptr);
+
+    //Allocate memory on Host space
+    dataType *HostData = (dataType*) Kokkos::kokkos_malloc<MemSpaceH>("HostData", num_elements*sizeof(dataType));
+    ASSERT_FALSE(HostData == nullptr);
+
+    for(int i = 0; i < num_elements; ++i)
+    {
+      DeviceData[i] = value;
+      HostData[i] = 0.0;
+    }
+
+    //Copy from device to host
+    Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH> (HostData, DeviceData, num_elements*sizeof(dataType));
+
+    // Check if all data has been copied correctly back to the host;
+    int sumError = compare_equal_host(HostData);
+    ASSERT_EQ(sumError, 0);
+  }
 };
 
-TEST_F(TEST_CATEGORY, incr_02a_memspace_malloc) {
+TEST_F(TEST_CATEGORY, incr_02_memspace_deepcopy_DtoH) {
   typedef typename TEST_EXECSPACE::memory_space memory_space;
-  TestIncrMemorySpace_malloc<memory_space> test;
-  test.testit_malloc();
+  typedef typename TEST_EXECSPACE::memory_space host_space;
+  TestIncrMemorySpace_deepcopy<memory_space,host_space> test;
+  test.testit_DtoH();
 }
 
 }  // namespace Test

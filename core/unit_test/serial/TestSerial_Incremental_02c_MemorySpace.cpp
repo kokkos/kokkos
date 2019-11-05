@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -41,31 +42,5 @@
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
-#include <cstdio>
-#include <sstream>
-
-namespace Test {
-
-// Test construction and assignment
-
-template <class MemSpace>
-struct TestIncrMemorySpace_malloc {
-
-  const int num_elements = 10;
-
-  void testit_malloc() {
-    int *data = (int*) Kokkos::kokkos_malloc<MemSpace>("data", num_elements*sizeof(int));
-    ASSERT_FALSE(data == nullptr);
-    Kokkos::kokkos_free<MemSpace>(data);
-  }
-
-};
-
-TEST_F(TEST_CATEGORY, incr_02a_memspace_malloc) {
-  typedef typename TEST_EXECSPACE::memory_space memory_space;
-  TestIncrMemorySpace_malloc<memory_space> test;
-  test.testit_malloc();
-}
-
-}  // namespace Test
+#include <serial/TestSerial_Category.hpp>
+#include <incremental_testing/Test02c_MemorySpace.hpp>
