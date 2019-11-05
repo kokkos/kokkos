@@ -2,7 +2,6 @@
 @PACKAGE_INIT@
 
 GET_FILENAME_COMPONENT(Kokkos_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-SET(Kokkos_INCLUDE_DIRS "@CONF_INCLUDE_DIRS@")
 
 #Find dependencies
 INCLUDE(CMakeFindDependencyMacro)
@@ -14,7 +13,6 @@ INCLUDE(CMakeFindDependencyMacro)
 INCLUDE("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
 
 # These are IMPORTED targets created by KokkosTargets.cmake
-SET(Kokkos_LIBRARY_DIRS    @INSTALL_LIB_DIR@)
 SET(Kokkos_LIBRARIES       @KOKKOS_EXT_LIBRARIES@)
 
 SET(Kokkos_DEVICES @KOKKOS_ENABLED_DEVICES@)
