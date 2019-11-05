@@ -46,14 +46,19 @@ include(FindPackageHandleStandardArgs)
 #   and target architectures and generates a fatal error if it was not.
 #
 #   kokkos_check(
-#     [DEVICES <devices>...] # Set of backends (e.g. "OpenMP" and/or "Cuda")
-#     [ARCH <archs>...]      # Target architectures (e.g. "Power9" and/or "Volta70")
-#     [OPTIONS <options>...] # Optional settings (e.g. "PROFILING")
-#     [TPLS <tpls>...]       # Third party libraries
+#     [DEVICES <devices>...]   # Set of backends (e.g. "OpenMP" and/or "Cuda")
+#     [ARCH <archs>...]        # Target architectures (e.g. "Power9" and/or "Volta70")
+#     [OPTIONS <options>...]   # Optional settings (e.g. "PROFILING")
+#     [TPLS <tpls>...]         # Third party libraries
+#     [RETURN_VALUE <result>]  # Set a variable that indicates the result of the
+#                              # check instead of a fatal error
 #   )
 function(kokkos_check)
   set(ALLOWED_ARGS DEVICES ARCH OPTIONS TPLS)
-  cmake_parse_arguments(KOKKOS_CHECK "" "" "${ALLOWED_ARGS}" ${ARGN})
+  cmake_parse_arguments(KOKKOS_CHECK "" "RETURN_VALUE" "${ALLOWED_ARGS}" ${ARGN})
+  foreach(_arg ${KOKKOS_CHECK_UNPARSED_ARGUMENTS})
+    message(SEND_ERROR "Argument '${_arg}' passed to kokkos_check() was not recognized")
+  endforeach()
   # Get the list of keywords that were actually passed to the function.
   set(REQUESTED_ARGS)
   foreach(arg ${ALLOWED_ARGS})
@@ -84,8 +89,10 @@ function(kokkos_check)
       set(KOKKOS_CHECK_SUCCESS FALSE)
     endif()
   endforeach()
-  if(NOT KOKKOS_CHECK_SUCCESS)
+  if(NOT KOKKOS_CHECK_SUCCESS AND NOT KOKKOS_CHECK_RETURN_VALUE)
     message(FATAL_ERROR "Kokkos does NOT provide all backends and/or architectures requested")
+  else()
+    set(${KOKKOS_CHECK_RETURN_VALUE} ${KOKKOS_CHECK_SUCCESS} PARENT_SCOPE)
   endif()
 endfunction()
 
