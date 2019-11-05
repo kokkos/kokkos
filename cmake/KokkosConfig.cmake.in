@@ -17,9 +17,9 @@ INCLUDE("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
 SET(Kokkos_LIBRARY_DIRS    @INSTALL_LIB_DIR@)
 SET(Kokkos_LIBRARIES       @KOKKOS_EXT_LIBRARIES@)
 
-SET(Kokkos_DEVICES                      @KOKKOS_ENABLED_DEVICES@)
-SET(Kokkos_OPTIONS                      @KOKKOS_ENABLED_OPTIONS@)
-SET(Kokkos_ARCH                         @KOKKOS_ENABLED_ARCH_LIST@)
+SET(Kokkos_DEVICES @KOKKOS_ENABLED_DEVICES@)
+SET(Kokkos_OPTIONS @KOKKOS_ENABLED_OPTIONS@)
+SET(Kokkos_ARCH @KOKKOS_ENABLED_ARCH_LIST@)
 
 # These are needed by KokkosKernels
 FOREACH(DEV ${Kokkos_DEVICES})
