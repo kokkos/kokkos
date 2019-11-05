@@ -1,8 +1,6 @@
 # Compute paths
 @PACKAGE_INIT@
 
-GET_FILENAME_COMPONENT(Kokkos_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-
 #Find dependencies
 INCLUDE(CMakeFindDependencyMacro)
 
@@ -10,7 +8,9 @@ INCLUDE(CMakeFindDependencyMacro)
 #the Kokkos targets depend in some way on the TPL imports
 @KOKKOS_TPL_EXPORTS@
 
+GET_FILENAME_COMPONENT(Kokkos_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 INCLUDE("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
+UNSET(Kokkos_CMAKE_DIR)
 
 SET(Kokkos_DEVICES @KOKKOS_ENABLED_DEVICES@)
 SET(Kokkos_OPTIONS @KOKKOS_ENABLED_OPTIONS@)
