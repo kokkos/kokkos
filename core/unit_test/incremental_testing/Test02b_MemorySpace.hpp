@@ -50,7 +50,7 @@ namespace Test {
 // Test construction and assignment
 
 template <class MemSpace>
-struct TestIncrMemorySpace_malloc {
+struct TestIncrMemorySpace_free {
 
   const int N = 100000;
   const int M = 100000;
@@ -63,12 +63,11 @@ struct TestIncrMemorySpace_malloc {
       Kokkos::kokkos_free<MemSpace>(data);
     }
   }
-
 };
 
 TEST_F(TEST_CATEGORY, incr_02_memspace_free) {
   typedef typename TEST_EXECSPACE::memory_space memory_space;
-  TestIncrMemorySpace_malloc<memory_space> test;
+  TestIncrMemorySpace_free<memory_space> test;
   test.testit_free();
 }
 
