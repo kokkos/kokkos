@@ -81,16 +81,6 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   ENDIF()
 ENDIF()
 
-IF (Kokkos_ENABLE_CUDA AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14.0")
-  #If we are building CUDA, we have tricked CMake because we declare a CXX project
-  #If the default C++ standard for a given compiler matches the requested
-  #standard, then CMake just omits the -std flag in later versions of CMake
-  #This breaks CUDA compilation (CUDA compiler can have a different default
-  #-std then the underlying host compiler by itself). Setting this variable
-  #forces CMake to always add the -std flag even if it thinks it doesn't need it
-  GLOBAL_SET(CMAKE_CXX_STANDARD_DEFAULT 98)
-ENDIF()
-
 IF (NOT CMAKE_SIZEOF_VOID_P)
   STRING(FIND ${CMAKE_CXX_COMPILER} nvcc_wrapper FIND_IDX)
   IF (NOT FIND_IDX STREQUAL -1)
@@ -116,6 +106,16 @@ ENDIF()
 # Load either the real TriBITS or a TriBITS wrapper 
 # for certain utility functions that are universal (like GLOBAL_SET)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
+
+IF (Kokkos_ENABLE_CUDA AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14.0")
+  #If we are building CUDA, we have tricked CMake because we declare a CXX project
+  #If the default C++ standard for a given compiler matches the requested
+  #standard, then CMake just omits the -std flag in later versions of CMake
+  #This breaks CUDA compilation (CUDA compiler can have a different default
+  #-std then the underlying host compiler by itself). Setting this variable
+  #forces CMake to always add the -std flag even if it thinks it doesn't need it
+  GLOBAL_SET(CMAKE_CXX_STANDARD_DEFAULT 98)
+ENDIF()
 
 # These are the variables we will append to as we go
 # I really wish these were regular variables
