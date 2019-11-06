@@ -44,6 +44,9 @@
 #include <Kokkos_Core.hpp>
 #include <cstdio>
 #include <sstream>
+#include <type_traits>
+#include <gtest/gtest.h>
+
 
 namespace Test {
 
@@ -65,7 +68,7 @@ struct TestIncrMemorySpace_free {
   }
 };
 
-TEST_F(TEST_CATEGORY, incr_02_memspace_free) {
+TEST(TEST_CATEGORY, incr_02b_memspace_free) {
   typedef typename TEST_EXECSPACE::memory_space memory_space;
   TestIncrMemorySpace_free<memory_space> test;
   test.testit_free();
