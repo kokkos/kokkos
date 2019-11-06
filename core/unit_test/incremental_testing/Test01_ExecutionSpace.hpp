@@ -44,6 +44,8 @@
 #include <Kokkos_Core.hpp>
 #include <cstdio>
 #include <sstream>
+#include <type_traits>
+#include <gtest/gtest.h>
 
 namespace Test {
 
