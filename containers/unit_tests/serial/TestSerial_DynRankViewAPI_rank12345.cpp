@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<serial/TestSerial_Category.hpp>
-#include<TestDynViewAPI_rank12345.hpp>
-
+#include <serial/TestSerial_Category.hpp>
+#include <TestDynViewAPI_rank12345.hpp>

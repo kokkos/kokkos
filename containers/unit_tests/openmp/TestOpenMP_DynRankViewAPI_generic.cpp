@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<openmp/TestOpenMP_Category.hpp>
-#include<TestDynViewAPI_generic.hpp>
-
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestDynViewAPI_generic.hpp>

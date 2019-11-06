@@ -44,6 +44,8 @@
 #include <Kokkos_Core.hpp>
 #include <cstdio>
 #include <sstream>
+#include <type_traits>
+#include <gtest/gtest.h>
 
 namespace Test {
 
@@ -75,25 +77,32 @@ struct TestIncrMemorySpace_deepcopy {
     ASSERT_FALSE(DeviceData == nullptr);
 
     //Allocate memory on Host space
-    dataType *HostData = (dataType*) Kokkos::kokkos_malloc<MemSpaceH>("HostData", num_elements*sizeof(dataType));
-    ASSERT_FALSE(HostData == nullptr);
+    dataType *HostData_send = (dataType*) Kokkos::kokkos_malloc<MemSpaceH>("HostData", num_elements*sizeof(dataType));
+    ASSERT_FALSE(HostData_send == nullptr);
+
+    //Allocate memory on Host space
+    dataType *HostData_recv = (dataType*) Kokkos::kokkos_malloc<MemSpaceH>("HostData", num_elements*sizeof(dataType));
+    ASSERT_FALSE(HostData_recv == nullptr);
 
     for(int i = 0; i < num_elements; ++i)
     {
-      DeviceData[i] = value;
-      HostData[i] = 0.0;
+      HostData_send[i] = value;
+      HostData_recv[i] = 0.0;
     }
 
-    //Copy from device to host
-    Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH> (HostData, DeviceData, num_elements*sizeof(dataType));
+    //Copy first from Host_send to Device
+    Kokkos::Impl::DeepCopy<MemSpaceH, MemSpaceD> (DeviceData, HostData_send, num_elements*sizeof(dataType));
+
+    //Copy first from Host_send to Device
+    Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH> (HostData_recv, DeviceData, num_elements*sizeof(dataType));
 
     // Check if all data has been copied correctly back to the host;
-    int sumError = compare_equal_host(HostData);
+    int sumError = compare_equal_host(HostData_recv);
     ASSERT_EQ(sumError, 0);
   }
 };
 
-TEST_F(TEST_CATEGORY, incr_02_memspace_deepcopy_DtoH) {
+TEST(TEST_CATEGORY, incr_02c_memspace_deepcopy_DtoH) {
   typedef typename TEST_EXECSPACE::memory_space memory_space;
   typedef typename TEST_EXECSPACE::memory_space host_space;
   TestIncrMemorySpace_deepcopy<memory_space,host_space> test;

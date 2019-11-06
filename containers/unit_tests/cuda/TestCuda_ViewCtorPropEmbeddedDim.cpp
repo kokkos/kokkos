@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<cuda/TestCuda_Category.hpp>
-#include<TestViewCtorPropEmbeddedDim.hpp>
-
+#include <cuda/TestCuda_Category.hpp>
+#include <TestViewCtorPropEmbeddedDim.hpp>

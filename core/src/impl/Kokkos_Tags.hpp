@@ -61,29 +61,34 @@
  *   struct Foo { using array_layout = void; };
  *   have_array_layout<Foo>::value == 1;
  */
-#define KOKKOS_IMPL_HAS_TYPE( TYPE ) \
-template <typename T> struct have_ ## TYPE { \
-private: \
-  template <typename U, typename = void > struct X : std::false_type {}; \
-  template <typename U> struct X<U,typename std::conditional<true,void,typename X:: TYPE >::type > : std::true_type {}; \
-public: \
-  typedef typename X<T>::type type ; \
-  enum : bool { value = type::value }; \
-};
+#define KOKKOS_IMPL_HAS_TYPE(TYPE)                                             \
+  template <typename T>                                                        \
+  struct have_##TYPE {                                                         \
+   private:                                                                    \
+    template <typename U, typename = void>                                     \
+    struct X : std::false_type {};                                             \
+    template <typename U>                                                      \
+    struct X<U, typename std::conditional<true, void, typename X::TYPE>::type> \
+        : std::true_type {};                                                   \
+                                                                               \
+   public:                                                                     \
+    typedef typename X<T>::type type;                                          \
+    enum : bool { value = type::value };                                       \
+  };
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-namespace Kokkos { namespace Impl {
+namespace Kokkos {
+namespace Impl {
 
 template <typename T>
-using is_void = std::is_same<void,T>;
+using is_void = std::is_same<void, T>;
 
-}} // namespace Kokkos::Impl
-
+}
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
 #endif
-

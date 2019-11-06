@@ -57,53 +57,44 @@ namespace Kokkos {
 namespace Impl {
 
 KOKKOS_FORCEINLINE_FUNCTION
-unsigned rotate_right( unsigned i, int r )
-{
-  enum { size = static_cast<int>( sizeof(unsigned) * CHAR_BIT ) };
-  return r ? ( ( i >> r ) | ( i << ( size - r ) ) ) : i ;
+unsigned rotate_right(unsigned i, int r) {
+  enum { size = static_cast<int>(sizeof(unsigned) * CHAR_BIT) };
+  return r ? ((i >> r) | (i << (size - r))) : i;
 }
 
-template < typename Bitset >
-struct BitsetCount
-{
-  typedef Bitset                                                  bitset_type;
-  typedef typename bitset_type::execution_space::execution_space  execution_space;
-  typedef typename bitset_type::size_type                         size_type;
-  typedef size_type                                               value_type;
+template <typename Bitset>
+struct BitsetCount {
+  typedef Bitset bitset_type;
+  typedef
+      typename bitset_type::execution_space::execution_space execution_space;
+  typedef typename bitset_type::size_type size_type;
+  typedef size_type value_type;
 
   bitset_type m_bitset;
 
-  BitsetCount( bitset_type const& bitset )
-    : m_bitset(bitset)
-  {}
+  BitsetCount(bitset_type const& bitset) : m_bitset(bitset) {}
 
-  size_type apply() const
-  {
+  size_type apply() const {
     size_type count = 0u;
-    parallel_reduce( m_bitset.m_blocks.extent(0), *this, count );
+    parallel_reduce(m_bitset.m_blocks.extent(0), *this, count);
     return count;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void init( value_type & count ) const
-  {
-    count = 0u;
-  }
+  void init(value_type& count) const { count = 0u; }
 
   KOKKOS_INLINE_FUNCTION
-  void join( volatile value_type & count, const volatile size_type & incr ) const
-  {
+  void join(volatile value_type& count, const volatile size_type& incr) const {
     count += incr;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( size_type i, value_type & count ) const
-  {
-    count += bit_count( m_bitset.m_blocks[i] );
+  void operator()(size_type i, value_type& count) const {
+    count += bit_count(m_bitset.m_blocks[i]);
   }
 };
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
-#endif // KOKKOS_BITSET_IMPL_HPP
+#endif  // KOKKOS_BITSET_IMPL_HPP

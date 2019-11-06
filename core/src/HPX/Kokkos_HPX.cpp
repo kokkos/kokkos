@@ -41,7 +41,6 @@
 //@HEADER
 */
 
-
 #include <Kokkos_Macros.hpp>
 
 #ifdef KOKKOS_ENABLE_HPX
@@ -80,8 +79,8 @@ void HPX::impl_initialize(int thread_count) {
         "--hpx:attach-debugger=exception",
 #endif
     };
-    int argc_hpx = 1;
-    char name[] = "kokkos_hpx";
+    int argc_hpx     = 1;
+    char name[]      = "kokkos_hpx";
     char *argv_hpx[] = {name, nullptr};
     hpx::start(nullptr, argc_hpx, argv_hpx, config);
 
@@ -107,8 +106,8 @@ void HPX::impl_initialize() {
         "--hpx:attach-debugger=exception",
 #endif
     };
-    int argc_hpx = 1;
-    char name[] = "kokkos_hpx";
+    int argc_hpx     = 1;
+    char name[]      = "kokkos_hpx";
     char *argv_hpx[] = {name, nullptr};
     hpx::start(nullptr, argc_hpx, argv_hpx, config);
 
@@ -138,15 +137,16 @@ void HPX::impl_finalize() {
       hpx::apply([]() { hpx::finalize(); });
       hpx::stop();
     } else {
-      Kokkos::abort("Kokkos::Experimental::HPX::impl_finalize: Kokkos started "
-                    "HPX but something else already stopped HPX\n");
+      Kokkos::abort(
+          "Kokkos::Experimental::HPX::impl_finalize: Kokkos started "
+          "HPX but something else already stopped HPX\n");
     }
   }
 }
 
-} // namespace Experimental
-} // namespace Kokkos
+}  // namespace Experimental
+}  // namespace Kokkos
 
 #else
 void KOKKOS_CORE_SRC_IMPL_HPX_PREVENT_LINK_ERROR() {}
-#endif //#ifdef KOKKOS_ENABLE_HPX
+#endif  //#ifdef KOKKOS_ENABLE_HPX

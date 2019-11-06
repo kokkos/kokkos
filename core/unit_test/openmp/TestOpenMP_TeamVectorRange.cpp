@@ -42,7 +42,5 @@
 //@HEADER
 */
 
-#include<openmp/TestOpenMP_Category.hpp>
-#include<TestTeamVectorRange.hpp>
-
-
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestTeamVectorRange.hpp>

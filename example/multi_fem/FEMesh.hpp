@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -61,21 +61,20 @@ namespace HybridFEM {
 //----------------------------------------------------------------------------
 /** \brief  Finite element mesh fixture for hybrid parallel performance tests.
  */
-template< typename CoordScalarType , unsigned ElemNodeCount , class Device >
+template <typename CoordScalarType, unsigned ElemNodeCount, class Device>
 struct FEMesh {
+  typedef typename Device::size_type size_type;
 
-  typedef typename Device::size_type size_type ;
+  static const size_type element_node_count = ElemNodeCount;
 
-  static const size_type element_node_count = ElemNodeCount ;
+  typedef Kokkos::View<CoordScalarType * [3], Device> node_coords_type;
+  typedef Kokkos::View<size_type * [ElemNodeCount], Device> elem_node_ids_type;
+  typedef Kokkos::StaticCrsGraph<size_type[2], Device> node_elem_ids_type;
 
-  typedef Kokkos::View< CoordScalarType*[3] , Device >       node_coords_type ;
-  typedef Kokkos::View< size_type*[ElemNodeCount], Device >  elem_node_ids_type ;
-  typedef Kokkos::StaticCrsGraph< size_type[2] ,  Device >   node_elem_ids_type ;
-
-  node_coords_type         node_coords ;
-  elem_node_ids_type       elem_node_ids ;
-  node_elem_ids_type       node_elem_ids ;
-  Kokkos::ParallelDataMap  parallel_data_map ;
+  node_coords_type node_coords;
+  elem_node_ids_type elem_node_ids;
+  node_elem_ids_type node_elem_ids;
+  Kokkos::ParallelDataMap parallel_data_map;
 };
 
 //----------------------------------------------------------------------------
@@ -83,4 +82,3 @@ struct FEMesh {
 } /* namespace HybridFEM */
 
 #endif /* #ifndef KOKKOS_FEMESH_HPP */
-

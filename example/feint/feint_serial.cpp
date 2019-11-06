@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -50,18 +50,15 @@
 namespace Kokkos {
 namespace Example {
 
-template void feint<Kokkos::Serial,false>(
-  const unsigned global_elem_nx ,
-  const unsigned global_elem_ny ,
-  const unsigned global_elem_nz );
+template void feint<Kokkos::Serial, false>(const unsigned global_elem_nx,
+                                           const unsigned global_elem_ny,
+                                           const unsigned global_elem_nz);
 
-template void feint<Kokkos::Serial,true>(
-  const unsigned global_elem_nx ,
-  const unsigned global_elem_ny ,
-  const unsigned global_elem_nz );
+template void feint<Kokkos::Serial, true>(const unsigned global_elem_nx,
+                                          const unsigned global_elem_ny,
+                                          const unsigned global_elem_nz);
 
 } /* namespace Example */
 } /* namespace Kokkos */
 
 #endif
-

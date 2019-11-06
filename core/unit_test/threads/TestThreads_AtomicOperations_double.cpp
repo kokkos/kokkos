@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<threads/TestThreads_Category.hpp>
-#include<TestAtomicOperations_double.hpp>
-
+#include <threads/TestThreads_Category.hpp>
+#include <TestAtomicOperations_double.hpp>

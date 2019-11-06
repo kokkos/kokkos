@@ -70,7 +70,7 @@
 //#include <TestAggregate.hpp>
 //#include <TestCompilerMacros.hpp>
 
-//TODO enable task scheduler tests for openmptarget
+// TODO enable task scheduler tests for openmptarget
 //#include <TestTaskScheduler.hpp>
 
 //#include <TestMemoryPool.hpp>
@@ -84,28 +84,26 @@
 namespace Test {
 
 class openmptarget : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
-    const unsigned numa_count       = Kokkos::hwloc::get_available_numa_count();
-    const unsigned cores_per_numa   = Kokkos::hwloc::get_available_cores_per_numa();
-    const unsigned openmptarget_per_core = Kokkos::hwloc::get_available_openmptarget_per_core();
+ protected:
+  static void SetUpTestCase() {
+    const unsigned numa_count = Kokkos::hwloc::get_available_numa_count();
+    const unsigned cores_per_numa =
+        Kokkos::hwloc::get_available_cores_per_numa();
+    const unsigned openmptarget_per_core =
+        Kokkos::hwloc::get_available_openmptarget_per_core();
 
     unsigned openmptarget_count = 0;
 
-    openmptarget_count = std::max( 1u, numa_count )
-                  * std::max( 2u, cores_per_numa * openmptarget_per_core );
+    openmptarget_count = std::max(1u, numa_count) *
+                         std::max(2u, cores_per_numa * openmptarget_per_core);
 
-    Kokkos::OpenMPTarget::initialize( openmptarget_count );
-    Kokkos::print_configuration( std::cout, true /* detailed */ );
+    Kokkos::OpenMPTarget::initialize(openmptarget_count);
+    Kokkos::print_configuration(std::cout, true /* detailed */);
   }
 
-  static void TearDownTestCase()
-  {
-    Kokkos::OpenMPTarget::finalize();
-  }
+  static void TearDownTestCase() { Kokkos::OpenMPTarget::finalize(); }
 };
 
-} // namespace Test
+}  // namespace Test
 
 #endif

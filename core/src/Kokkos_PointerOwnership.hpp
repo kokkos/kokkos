@@ -63,12 +63,9 @@ using OwningRawPtr = T*;
 template <class T>
 using ObservingRawPtr = T*;
 
-} // end namespace Kokkos
+}  // end namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
-
 
 #endif /* #ifndef KOKKOS_IMPL_POINTEROWNERSHIP_HPP */
-

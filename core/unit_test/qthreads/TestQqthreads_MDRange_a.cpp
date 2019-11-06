@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<qthreads/TestQqthreads_Category.hpp>
-#include<TestMDRange_a.hpp>
-
+#include <qthreads/TestQqthreads_Category.hpp>
+#include <TestMDRange_a.hpp>

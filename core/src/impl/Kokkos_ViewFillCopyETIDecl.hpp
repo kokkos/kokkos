@@ -47,51 +47,93 @@
 namespace Kokkos {
 namespace Impl {
 
-#define KOKKOS_IMPL_VIEWCOPY_ETI_DECL(DATATYPE,LAYOUTA,LAYOUTB,EXECSPACE,ITYPE) \
-  extern template struct ViewCopy<Kokkos::View<DATATYPE,LAYOUTA,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                  Kokkos::View<const DATATYPE,LAYOUTB,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                  Kokkos::LayoutLeft,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>; \
-  extern template struct ViewCopy<Kokkos::View<DATATYPE,LAYOUTA,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                  Kokkos::View<const DATATYPE,LAYOUTB,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                  Kokkos::LayoutRight,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>;
+#define KOKKOS_IMPL_VIEWCOPY_ETI_DECL(DATATYPE, LAYOUTA, LAYOUTB, EXECSPACE, \
+                                      ITYPE)                                 \
+  extern template struct ViewCopy<                                           \
+      Kokkos::View<DATATYPE, LAYOUTA,                                        \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::View<const DATATYPE, LAYOUTB,                                  \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::LayoutLeft, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE,    \
+      true>;                                                                 \
+  extern template struct ViewCopy<                                           \
+      Kokkos::View<DATATYPE, LAYOUTA,                                        \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::View<const DATATYPE, LAYOUTB,                                  \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::LayoutRight, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE,   \
+      true>;
 
-#define KOKKOS_IMPL_VIEWFILL_ETI_DECL(DATATYPE,LAYOUT,EXECSPACE,ITYPE) \
-  extern template struct ViewFill<Kokkos::View<DATATYPE,LAYOUT,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                                  Kokkos::LayoutLeft,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>; \
-  extern template struct ViewFill<Kokkos::View<DATATYPE,LAYOUT,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                                  Kokkos::LayoutRight,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>;
+#define KOKKOS_IMPL_VIEWFILL_ETI_DECL(DATATYPE, LAYOUT, EXECSPACE, ITYPE)  \
+  extern template struct ViewFill<                                         \
+      Kokkos::View<DATATYPE, LAYOUT,                                       \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,      \
+                   Kokkos::MemoryTraits<0>>,                               \
+      Kokkos::LayoutLeft, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE,  \
+      true>;                                                               \
+  extern template struct ViewFill<                                         \
+      Kokkos::View<DATATYPE, LAYOUT,                                       \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,      \
+                   Kokkos::MemoryTraits<0>>,                               \
+      Kokkos::LayoutRight, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE, \
+      true>;
 
-#define KOKKOS_IMPL_VIEWCOPY_ETI_INST(DATATYPE,LAYOUTA,LAYOUTB,EXECSPACE,ITYPE) \
-  template struct ViewCopy<Kokkos::View<DATATYPE,LAYOUTA,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                  Kokkos::View<const DATATYPE,LAYOUTB,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                  Kokkos::LayoutLeft,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>; \
-  template struct ViewCopy<Kokkos::View<DATATYPE,LAYOUTA,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                  Kokkos::View<const DATATYPE,LAYOUTB,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                  Kokkos::LayoutRight,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>;
+#define KOKKOS_IMPL_VIEWCOPY_ETI_INST(DATATYPE, LAYOUTA, LAYOUTB, EXECSPACE, \
+                                      ITYPE)                                 \
+  template struct ViewCopy<                                                  \
+      Kokkos::View<DATATYPE, LAYOUTA,                                        \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::View<const DATATYPE, LAYOUTB,                                  \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::LayoutLeft, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE,    \
+      true>;                                                                 \
+  template struct ViewCopy<                                                  \
+      Kokkos::View<DATATYPE, LAYOUTA,                                        \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::View<const DATATYPE, LAYOUTB,                                  \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::LayoutRight, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE,   \
+      true>;
 
-#define KOKKOS_IMPL_VIEWFILL_ETI_INST(DATATYPE,LAYOUT,EXECSPACE,ITYPE) \
-  template struct ViewFill<Kokkos::View<DATATYPE,LAYOUT,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                                  Kokkos::LayoutLeft,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>; \
-  template struct ViewFill<Kokkos::View<DATATYPE,LAYOUT,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                                  Kokkos::LayoutRight,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE,true>;
+#define KOKKOS_IMPL_VIEWFILL_ETI_INST(DATATYPE, LAYOUT, EXECSPACE, ITYPE)  \
+  template struct ViewFill<                                                \
+      Kokkos::View<DATATYPE, LAYOUT,                                       \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,      \
+                   Kokkos::MemoryTraits<0>>,                               \
+      Kokkos::LayoutLeft, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE,  \
+      true>;                                                               \
+  template struct ViewFill<                                                \
+      Kokkos::View<DATATYPE, LAYOUT,                                       \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,      \
+                   Kokkos::MemoryTraits<0>>,                               \
+      Kokkos::LayoutRight, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE, \
+      true>;
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos
 #ifdef KOKKOS_ENABLE_ETI
 #ifdef KOKKOS_ENABLE_Serial
-#include<Serial/Kokkos_Serial_ViewCopyETIDecl.hpp>
+#include <Serial/Kokkos_Serial_ViewCopyETIDecl.hpp>
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
-#include<OpenMP/Kokkos_OpenMP_ViewCopyETIDecl.hpp>
+#include <OpenMP/Kokkos_OpenMP_ViewCopyETIDecl.hpp>
 #endif
 #ifdef KOKKOS_ENABLE_THREADS
-#include<Threads/Kokkos_Threads_ViewCopyETIDecl.hpp>
+#include <Threads/Kokkos_Threads_ViewCopyETIDecl.hpp>
 #endif
 #ifdef KOKKOS_ENABLE_CUDA
-#include<Cuda/Kokkos_Cuda_ViewCopyETIDecl.hpp>
+#include <Cuda/Kokkos_Cuda_ViewCopyETIDecl.hpp>
 #endif
 #ifdef KOKKOS_ENABLE_ROCM
-#include<ROCm/Kokkos_ROCm_ViewCopyETIDecl.hpp>
+#include <ROCm/Kokkos_ROCm_ViewCopyETIDecl.hpp>
 #endif
 #endif
 #endif

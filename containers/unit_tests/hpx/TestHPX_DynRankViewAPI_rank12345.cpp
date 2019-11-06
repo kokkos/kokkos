@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestDynViewAPI_rank12345.hpp>
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestDynViewAPI_rank12345.hpp>

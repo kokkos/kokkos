@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestAtomicOperations_unsignedint.hpp>
-
+#include <rocm/TestROCm_Category.hpp>
+#include <TestAtomicOperations_unsignedint.hpp>

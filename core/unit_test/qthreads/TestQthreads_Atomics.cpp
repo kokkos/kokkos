@@ -45,8 +45,7 @@
 
 namespace Test {
 
-TEST_F( qthreads, atomics )
-{
+TEST_F(qthreads, atomics) {
 #if 0
   const int loop_count = 1e4;
 
@@ -88,8 +87,7 @@ TEST_F( qthreads, atomics )
 #endif
 }
 
-TEST_F( qthreads, atomic_operations )
-{
+TEST_F(qthreads, atomic_operations) {
 #if 0
   const int start = 1; // Avoid zero for division.
   const int end = 11;
@@ -169,8 +167,7 @@ TEST_F( qthreads, atomic_operations )
 #endif
 }
 
-TEST_F( qthreads, atomic_views_integral )
-{
+TEST_F(qthreads, atomic_views_integral) {
 #if 0
   const long length = 1000000;
 
@@ -188,8 +185,7 @@ TEST_F( qthreads, atomic_views_integral )
 #endif
 }
 
-TEST_F( qthreads, atomic_views_nonintegral )
-{
+TEST_F(qthreads, atomic_views_nonintegral) {
 #if 0
   const long length = 1000000;
 
@@ -203,11 +199,10 @@ TEST_F( qthreads, atomic_views_nonintegral )
 #endif
 }
 
-TEST_F( qthreads, atomic_view_api )
-{
+TEST_F(qthreads, atomic_view_api) {
 #if 0
   TestAtomicViews::TestAtomicViewAPI< int, Kokkos::Qthreads >();
 #endif
 }
 
-} // namespace Test
+}  // namespace Test

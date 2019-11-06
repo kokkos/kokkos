@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<serial/TestSerial_Category.hpp>
-#include<TestErrorReporter.hpp>
-
+#include <serial/TestSerial_Category.hpp>
+#include <TestErrorReporter.hpp>

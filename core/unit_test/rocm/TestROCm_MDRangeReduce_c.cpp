@@ -42,13 +42,12 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestMDRange.hpp>
+#include <rocm/TestROCm_Category.hpp>
+#include <TestMDRange.hpp>
 namespace Test {
 
-TEST_F( TEST_CATEGORY , mdrange_2d_reduce ) {
-  TestMDRange_2D< TEST_EXECSPACE >::test_reduce2( 100, 100 );
+TEST_F(TEST_CATEGORY, mdrange_2d_reduce) {
+  TestMDRange_2D<TEST_EXECSPACE>::test_reduce2(100, 100);
 }
 
-}
-
+}  // namespace Test

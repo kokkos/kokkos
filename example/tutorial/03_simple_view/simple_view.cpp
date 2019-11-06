@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -66,7 +66,7 @@
 //
 // The first dimension of the View is the dimension over which it is
 // efficient for Kokkos to parallelize.
-typedef Kokkos::View<double*[3]> view_type;
+typedef Kokkos::View<double * [3]> view_type;
 
 // parallel_for functor that fills the View given to its constructor.
 // The View must already have been allocated.
@@ -78,20 +78,18 @@ struct InitView {
   // operator= only do shallow copies.  Thus, you can pass View
   // objects around by "value"; they won't do a deep copy unless you
   // explicitly ask for a deep copy.
-  InitView (view_type a_) :
-    a (a_)
-  {}
+  InitView(view_type a_) : a(a_) {}
 
   // Fill the View with some data.  The parallel_for loop will iterate
   // over the View's first dimension N.
   KOKKOS_INLINE_FUNCTION
-  void operator () (const int i) const {
+  void operator()(const int i) const {
     // Acesss the View just like a Fortran array.  The layout depends
     // on the View's memory space, so don't rely on the View's
     // physical memory layout unless you know what you're doing.
-    a(i,0) = 1.0*i;
-    a(i,1) = 1.0*i*i;
-    a(i,2) = 1.0*i*i*i;
+    a(i, 0) = 1.0 * i;
+    a(i, 1) = 1.0 * i * i;
+    a(i, 2) = 1.0 * i * i * i;
   }
 };
 
@@ -100,20 +98,20 @@ struct ReduceFunctor {
   view_type a;
 
   // Constructor takes View by "value"; this does a shallow copy.
-  ReduceFunctor (view_type a_) : a (a_) {}
+  ReduceFunctor(view_type a_) : a(a_) {}
 
   // If you write a functor to do a reduction, you must specify the
   // type of the reduction result via a public 'value_type' typedef.
   typedef double value_type;
 
   KOKKOS_INLINE_FUNCTION
-  void operator() (int i, double &lsum) const {
-    lsum += a(i,0)*a(i,1)/(a(i,2)+0.1);
+  void operator()(int i, double& lsum) const {
+    lsum += a(i, 0) * a(i, 1) / (a(i, 2) + 0.1);
   }
 };
 
-int main (int argc, char* argv[]) {
-  Kokkos::initialize (argc, argv);
+int main(int argc, char* argv[]) {
+  Kokkos::initialize(argc, argv);
   {
     const int N = 10;
 
@@ -132,13 +130,12 @@ int main (int argc, char* argv[]) {
     //
     // The string "A" is just the label; it only matters for debugging.
     // Different Views may have the same label.
-    view_type a ("A", N);
+    view_type a("A", N);
 
-    Kokkos::parallel_for (N, InitView (a));
+    Kokkos::parallel_for(N, InitView(a));
     double sum = 0;
-    Kokkos::parallel_reduce (N, ReduceFunctor (a), sum);
-    printf ("Result: %f\n", sum);
-  } // use this scope to ensure the lifetime of "A" ends before finalize
-  Kokkos::finalize ();
+    Kokkos::parallel_reduce(N, ReduceFunctor(a), sum);
+    printf("Result: %f\n", sum);
+  }  // use this scope to ensure the lifetime of "A" ends before finalize
+  Kokkos::finalize();
 }
-

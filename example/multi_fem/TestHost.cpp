@@ -1,12 +1,12 @@
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -35,7 +35,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 
@@ -63,80 +63,70 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-void test_host_fixture( comm::Machine machine ,
-                        size_t gang_count ,
-                        size_t gang_worker_count ,
-                        size_t nx , size_t ny , size_t nz )
-{
+void test_host_fixture(comm::Machine machine, size_t gang_count,
+                       size_t gang_worker_count, size_t nx, size_t ny,
+                       size_t nz) {
   Kokkos::InitArguments args(gang_count * gang_worker_count);
-  Kokkos::initialize( args );
-  test_box_fixture<Kokkos::HostSpace::execution_space>( machine , gang_count , nx , ny , nz );
+  Kokkos::initialize(args);
+  test_box_fixture<Kokkos::HostSpace::execution_space>(machine, gang_count, nx,
+                                                       ny, nz);
   Kokkos::finalize();
 }
 
 //----------------------------------------------------------------------------
 
-void test_host_implicit( comm::Machine machine ,
-                         size_t gang_count ,
-                         size_t gang_worker_count ,
-                         size_t elem_count_begin ,
-                         size_t elem_count_end ,
-                         size_t count_run )
-{
+void test_host_implicit(comm::Machine machine, size_t gang_count,
+                        size_t gang_worker_count, size_t elem_count_begin,
+                        size_t elem_count_end, size_t count_run) {
   Kokkos::InitArguments args(gang_count * gang_worker_count);
-  Kokkos::initialize( args );
-  HybridFEM::Implicit::driver<double,Kokkos::HostSpace::execution_space>( "Threads" , machine , gang_count , elem_count_begin , elem_count_end , count_run );
+  Kokkos::initialize(args);
+  HybridFEM::Implicit::driver<double, Kokkos::HostSpace::execution_space>(
+      "Threads", machine, gang_count, elem_count_begin, elem_count_end,
+      count_run);
   Kokkos::finalize();
 }
 
 //----------------------------------------------------------------------------
 
-void test_host_explicit( comm::Machine machine ,
-                         size_t gang_count ,
-                         size_t gang_worker_count ,
-                         size_t elem_count_begin ,
-                         size_t elem_count_end ,
-                         size_t count_run )
-{
+void test_host_explicit(comm::Machine machine, size_t gang_count,
+                        size_t gang_worker_count, size_t elem_count_begin,
+                        size_t elem_count_end, size_t count_run) {
   Kokkos::InitArguments args(gang_count * gang_worker_count);
-  Kokkos::initialize( args );
-  Explicit::driver<double,Kokkos::HostSpace::execution_space>( "Threads" , machine , gang_count , elem_count_begin , elem_count_end , count_run );
+  Kokkos::initialize(args);
+  Explicit::driver<double, Kokkos::HostSpace::execution_space>(
+      "Threads", machine, gang_count, elem_count_begin, elem_count_end,
+      count_run);
   Kokkos::finalize();
 }
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-void test_host_nonlinear( comm::Machine machine ,
-                          size_t gang_count ,
-                          size_t gang_worker_count ,
-                          size_t elem_count_begin ,
-                          size_t elem_count_end ,
-                          size_t count_run )
-{
+void test_host_nonlinear(comm::Machine machine, size_t gang_count,
+                         size_t gang_worker_count, size_t elem_count_begin,
+                         size_t elem_count_end, size_t count_run) {
   Kokkos::InitArguments args(gang_count * gang_worker_count);
-  Kokkos::initialize( args );
-  typedef FixtureElementHex8 hex8 ;
-  typedef Kokkos::HostSpace::execution_space             device ;
-  HybridFEM::Nonlinear::driver<double,device,hex8>( "Threads" , machine , gang_count , elem_count_begin , elem_count_end , count_run );
+  Kokkos::initialize(args);
+  typedef FixtureElementHex8 hex8;
+  typedef Kokkos::HostSpace::execution_space device;
+  HybridFEM::Nonlinear::driver<double, device, hex8>(
+      "Threads", machine, gang_count, elem_count_begin, elem_count_end,
+      count_run);
   Kokkos::finalize();
 }
 
-void test_host_nonlinear_quadratic( comm::Machine machine ,
-                                    size_t gang_count ,
-                                    size_t gang_worker_count ,
-                                    size_t elem_count_begin ,
-                                    size_t elem_count_end ,
-                                    size_t count_run )
-{
+void test_host_nonlinear_quadratic(comm::Machine machine, size_t gang_count,
+                                   size_t gang_worker_count,
+                                   size_t elem_count_begin,
+                                   size_t elem_count_end, size_t count_run) {
   Kokkos::InitArguments args(gang_count * gang_worker_count);
-  Kokkos::initialize( args );
-  typedef FixtureElementHex27 hex27 ;
-  typedef Kokkos::HostSpace::execution_space              device ;
-  HybridFEM::Nonlinear::driver<double,device,hex27>( "Threads" , machine , gang_count , elem_count_begin , elem_count_end , count_run );
+  Kokkos::initialize(args);
+  typedef FixtureElementHex27 hex27;
+  typedef Kokkos::HostSpace::execution_space device;
+  HybridFEM::Nonlinear::driver<double, device, hex27>(
+      "Threads", machine, gang_count, elem_count_begin, elem_count_end,
+      count_run);
   Kokkos::finalize();
 }
 
 //----------------------------------------------------------------------------
-
-

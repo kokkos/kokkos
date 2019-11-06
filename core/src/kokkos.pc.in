@@ -57,14 +57,13 @@
 # pkg_check_modules(KOKKOS IMPORTED_TARGET kokkos)
 # target_link_libraries(<lib> PkgConfig::KOKKOS)
 
-prefix=@CMAKE_INSTALL_PREFIX@
-libdir=${prefix}/lib
-includedir=${prefix}/include
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
 
 Name: kokkos
 Description: Kokkos C++ Performance Portability Programming EcoSystem
 URL: https://github.com/kokkos
-Version:
+Version: @Kokkos_VERSION@
 Requires:
 Libs: -L${libdir} -lkokkos @KOKKOS_EXTRA_LIBS_LIST@ @KOKKOS_LINK_FLAGS@
 Libs.private: -lm

@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -44,7 +44,7 @@
 #ifndef SPARSELINEARSYSTEM_CUDA_HPP
 #define SPARSELINEARSYSTEM_CUDA_HPP
 
-#if defined( BUILD_FROM_CU_FILE )
+#if defined(BUILD_FROM_CU_FILE)
 
 #include <cusparse_v2.h>
 #include <Kokkos_Core.hpp>
@@ -52,106 +52,77 @@
 namespace Kokkos {
 namespace Impl {
 
-
 struct CudaSparseSingleton {
-  cusparseHandle_t   handle;
+  cusparseHandle_t handle;
   cusparseMatDescr_t descra;
 
-  CudaSparseSingleton()
-  {
-    cusparseCreate( & handle );
-    cusparseCreateMatDescr( & descra );
-    cusparseSetMatType(       descra , CUSPARSE_MATRIX_TYPE_GENERAL );
-    cusparseSetMatIndexBase(  descra , CUSPARSE_INDEX_BASE_ZERO );
+  CudaSparseSingleton() {
+    cusparseCreate(&handle);
+    cusparseCreateMatDescr(&descra);
+    cusparseSetMatType(descra, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(descra, CUSPARSE_INDEX_BASE_ZERO);
   }
 
-  static CudaSparseSingleton & singleton();
-
+  static CudaSparseSingleton& singleton();
 };
 
-CudaSparseSingleton & CudaSparseSingleton::singleton()
-{ static CudaSparseSingleton s ; return s ; }
+CudaSparseSingleton& CudaSparseSingleton::singleton() {
+  static CudaSparseSingleton s;
+  return s;
+}
 
+template <>
+struct Multiply<CrsMatrix<double, Cuda>, View<double*, Cuda>,
+                View<double*, Cuda> > {
+  typedef Cuda execution_space;
+  typedef execution_space::size_type size_type;
+  typedef double scalar_type;
+  typedef View<scalar_type*, execution_space> vector_type;
+  typedef CrsMatrix<scalar_type, execution_space> matrix_type;
 
-template<>
-struct Multiply< CrsMatrix<double,Cuda> ,
-                 View<double*,Cuda > ,
-                 View<double*,Cuda > >
-{
-  typedef Cuda                                      execution_space ;
-  typedef execution_space::size_type                    size_type ;
-  typedef double                                    scalar_type ;
-  typedef View< scalar_type* , execution_space >        vector_type ;
-  typedef CrsMatrix< scalar_type , execution_space >    matrix_type ;
+ public:
+  Multiply(const matrix_type& A, const size_type nrow, const size_type ncol,
+           const vector_type& x, const vector_type& y) {
+    CudaSparseSingleton& s  = CudaSparseSingleton::singleton();
+    const scalar_type alpha = 1, beta = 0;
 
-public:
+    cusparseStatus_t status = cusparseDcsrmv(
+        s.handle, CUSPARSE_OPERATION_NON_TRANSPOSE, nrow, ncol,
+        A.coefficients.dimension_0(), &alpha, s.descra,
+        A.coefficients.ptr_on_device(), A.graph.row_map.ptr_on_device(),
+        A.graph.entries.ptr_on_device(), x.ptr_on_device(), &beta,
+        y.ptr_on_device());
 
-  Multiply( const matrix_type & A ,
-            const size_type nrow ,
-            const size_type ncol ,
-            const vector_type & x ,
-            const vector_type & y )
-  {
-    CudaSparseSingleton & s = CudaSparseSingleton::singleton();
-    const scalar_type alpha = 1 , beta = 0 ;
-
-    cusparseStatus_t status =
-      cusparseDcsrmv( s.handle ,
-                      CUSPARSE_OPERATION_NON_TRANSPOSE ,
-                      nrow , ncol , A.coefficients.dimension_0() ,
-                      &alpha ,
-                      s.descra ,
-                      A.coefficients.ptr_on_device() ,
-                      A.graph.row_map.ptr_on_device() ,
-                      A.graph.entries.ptr_on_device() ,
-                      x.ptr_on_device() ,
-                      &beta ,
-                      y.ptr_on_device() );
-
-    if ( CUSPARSE_STATUS_SUCCESS != status ) {
-      throw std::runtime_error( std::string("ERROR - cusparseDcsrmv " ) );
+    if (CUSPARSE_STATUS_SUCCESS != status) {
+      throw std::runtime_error(std::string("ERROR - cusparseDcsrmv "));
     }
   }
 };
 
+template <>
+struct Multiply<CrsMatrix<float, Cuda>, View<float*, Cuda>,
+                View<float*, Cuda> > {
+  typedef Cuda execution_space;
+  typedef execution_space::size_type size_type;
+  typedef float scalar_type;
+  typedef View<scalar_type*, execution_space> vector_type;
+  typedef CrsMatrix<scalar_type, execution_space> matrix_type;
 
-template<>
-struct Multiply< CrsMatrix<float,Cuda> ,
-                 View<float*,Cuda > ,
-                 View<float*,Cuda > >
-{
-  typedef Cuda                                      execution_space ;
-  typedef execution_space::size_type                    size_type ;
-  typedef float                                     scalar_type ;
-  typedef View< scalar_type* , execution_space >        vector_type ;
-  typedef CrsMatrix< scalar_type , execution_space >    matrix_type ;
+ public:
+  Multiply(const matrix_type& A, const size_type nrow, const size_type ncol,
+           const vector_type& x, const vector_type& y) {
+    CudaSparseSingleton& s  = CudaSparseSingleton::singleton();
+    const scalar_type alpha = 1, beta = 0;
 
-public:
+    cusparseStatus_t status = cusparseScsrmv(
+        s.handle, CUSPARSE_OPERATION_NON_TRANSPOSE, nrow, ncol,
+        A.coefficients.dimension_0(), &alpha, s.descra,
+        A.coefficients.ptr_on_device(), A.graph.row_map.ptr_on_device(),
+        A.graph.entries.ptr_on_device(), x.ptr_on_device(), &beta,
+        y.ptr_on_device());
 
-  Multiply( const matrix_type & A ,
-            const size_type nrow ,
-            const size_type ncol ,
-            const vector_type & x ,
-            const vector_type & y )
-  {
-    CudaSparseSingleton & s = CudaSparseSingleton::singleton();
-    const scalar_type alpha = 1 , beta = 0 ;
-
-    cusparseStatus_t status =
-      cusparseScsrmv( s.handle ,
-                      CUSPARSE_OPERATION_NON_TRANSPOSE ,
-                      nrow , ncol , A.coefficients.dimension_0() ,
-                      &alpha ,
-                      s.descra ,
-                      A.coefficients.ptr_on_device() ,
-                      A.graph.row_map.ptr_on_device() ,
-                      A.graph.entries.ptr_on_device() ,
-                      x.ptr_on_device() ,
-                      &beta ,
-                      y.ptr_on_device() );
-
-    if ( CUSPARSE_STATUS_SUCCESS != status ) {
-      throw std::runtime_error( std::string("ERROR - cusparseDcsrmv " ) );
+    if (CUSPARSE_STATUS_SUCCESS != status) {
+      throw std::runtime_error(std::string("ERROR - cusparseDcsrmv "));
     }
   }
 };
@@ -161,4 +132,3 @@ public:
 
 #endif /* #if defined( __CUDACC__ ) */
 #endif /* #ifndef SPARSELINEARSYSTEM_CUDA_HPP */
-

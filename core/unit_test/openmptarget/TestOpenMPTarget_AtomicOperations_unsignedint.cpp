@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<openmptarget/TestOpenMPTarget_Category.hpp>
-#include<TestAtomicOperations_unsignedint.hpp>
-
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
+#include <TestAtomicOperations_unsignedint.hpp>

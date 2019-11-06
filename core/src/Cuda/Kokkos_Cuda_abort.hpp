@@ -47,7 +47,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 #include <Kokkos_Macros.hpp>
-#if defined( __CUDACC__ ) && defined( KOKKOS_ENABLE_CUDA )
+#if defined(__CUDACC__) && defined(KOKKOS_ENABLE_CUDA)
 
 #include <cuda.h>
 
@@ -55,35 +55,26 @@ extern "C" {
 /*  Cuda runtime function, declared in <crt/device_runtime.h>
  *  Requires capability 2.x or better.
  */
-extern __device__ void __assertfail(
-  const void  *message,
-  const void  *file,
-  unsigned int line,
-  const void  *function,
-  size_t       charsize);
+extern __device__ void __assertfail(const void *message, const void *file,
+                                    unsigned int line, const void *function,
+                                    size_t charsize);
 }
 
 namespace Kokkos {
 namespace Impl {
 
-__device__ inline
-void cuda_abort( const char * const message )
-{
+__device__ inline void cuda_abort(const char *const message) {
 #ifndef __APPLE__
-  const char empty[] = "" ;
+  const char empty[] = "";
 
-  __assertfail( (const void *) message ,
-                (const void *) empty ,
-                (unsigned int) 0 ,
-                (const void *) empty ,
-                sizeof(char) );
+  __assertfail((const void *)message, (const void *)empty, (unsigned int)0,
+               (const void *)empty, sizeof(char));
 #endif
 }
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 #else
 void KOKKOS_CORE_SRC_CUDA_ABORT_PREVENT_LINK_ERROR() {}
 #endif /* #if defined(__CUDACC__) && defined( KOKKOS_ENABLE_CUDA ) */
 #endif /* #ifndef KOKKOS_CUDA_ABORT_HPP */
-

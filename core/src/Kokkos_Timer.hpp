@@ -51,33 +51,27 @@ namespace Kokkos {
 /** \brief  Time since construction */
 
 class Timer {
-private:
+ private:
   std::chrono::high_resolution_clock::time_point m_old;
-  Timer( const Timer & );
-  Timer & operator = ( const Timer & );
-public:
+  Timer(const Timer&);
+  Timer& operator=(const Timer&);
 
-  inline
-  void reset() {
-    m_old = std::chrono::high_resolution_clock::now();
-  }
+ public:
+  inline void reset() { m_old = std::chrono::high_resolution_clock::now(); }
 
-  inline
-  ~Timer() {}
+  inline ~Timer() {}
 
-  inline
-  Timer() { reset(); }
+  inline Timer() { reset(); }
 
-  inline
-  double seconds() const
-  {
+  inline double seconds() const {
     std::chrono::high_resolution_clock::time_point m_new =
         std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::duration<double>>(m_new - m_old).count();
+    return std::chrono::duration_cast<std::chrono::duration<double>>(m_new -
+                                                                     m_old)
+        .count();
   }
 };
 
-} // namespace Kokkos
+}  // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_TIMER_HPP */
-

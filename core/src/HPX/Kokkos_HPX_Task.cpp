@@ -57,9 +57,9 @@ namespace Impl {
 template class TaskQueue<Kokkos::Experimental::HPX,
                          Kokkos::Experimental::HPX::memory_space>;
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
 #else
 void KOKKOS_CORE_SRC_IMPL_HPX_TASK_PREVENT_LINK_ERROR() {}
-#endif // #if defined( KOKKOS_ENABLE_HPX ) && defined( KOKKOS_ENABLE_TASKDAG )
+#endif  // #if defined( KOKKOS_ENABLE_HPX ) && defined( KOKKOS_ENABLE_TASKDAG )

@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<openmp/TestOpenMP_Category.hpp>
-#include<TestAtomicOperations_int.hpp>
-
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestAtomicOperations_int.hpp>
