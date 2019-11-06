@@ -50,6 +50,7 @@
 #include <cstdlib>
 #include <stack>
 #include <cerrno>
+#include <unistd.h>
 
 //----------------------------------------------------------------------------
 
@@ -710,25 +711,49 @@ void initialize(int& narg, char* arg[]) {
     else
       device = env_device;
   }
+  auto env_rdevices_str = std::getenv("KOKKOS_RAND_DEVICES");
   auto env_ndevices_str = std::getenv("KOKKOS_NUM_DEVICES");
-  if (env_ndevices_str != nullptr) {
-    errno             = 0;
-    auto env_ndevices = std::strtol(env_ndevices_str, &endptr, 10);
-    if (endptr == env_ndevices_str)
+  if (env_ndevices_str != nullptr || env_rdevices_str != nullptr) {
+    errno = 0;
+    if (env_ndevices_str != nullptr && env_rdevices_str != nullptr) {
       Impl::throw_runtime_exception(
-          "Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
-    if (errno == ERANGE)
-      Impl::throw_runtime_exception(
-          "Error: KOKKOS_NUM_DEVICES out of range of representable values by "
-          "an integer. Raised by Kokkos::initialize(int narg, char* argc[]).");
-    if ((ndevices != -1) && (env_ndevices != ndevices))
-      Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-ndevices and "
-          "KOKKOS_NUM_DEVICES if both are set. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
-    else
-      ndevices = env_ndevices;
+          "Error: cannot specify both KOKKOS_NUM_DEVICES and "
+          "KOKKOS_RAND_DEVICES. "
+          "Raised by Kokkos::initialize(int narg, char* argc[]).");
+    }
+    int rdevices = -1;
+    if (env_ndevices_str != nullptr) {
+      auto env_ndevices = std::strtol(env_ndevices_str, &endptr, 10);
+      if (endptr == env_ndevices_str)
+        Impl::throw_runtime_exception(
+            "Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by "
+            "Kokkos::initialize(int narg, char* argc[]).");
+      if (errno == ERANGE)
+        Impl::throw_runtime_exception(
+            "Error: KOKKOS_NUM_DEVICES out of range of representable values by "
+            "an integer. Raised by Kokkos::initialize(int narg, char* "
+            "argc[]).");
+      if ((ndevices != -1) && (env_ndevices != ndevices))
+        Impl::throw_runtime_exception(
+            "Error: expecting a match between --kokkos-ndevices and "
+            "KOKKOS_NUM_DEVICES if both are set. Raised by "
+            "Kokkos::initialize(int narg, char* argc[]).");
+      else
+        ndevices = env_ndevices;
+    } else {  // you set KOKKOS_RAND_DEVICES
+      auto env_rdevices = std::strtol(env_rdevices_str, &endptr, 10);
+      if (endptr == env_ndevices_str)
+        Impl::throw_runtime_exception(
+            "Error: cannot convert KOKKOS_RAND_DEVICES to an integer. Raised "
+            "by Kokkos::initialize(int narg, char* argc[]).");
+      if (errno == ERANGE)
+        Impl::throw_runtime_exception(
+            "Error: KOKKOS_RAND_DEVICES out of range of representable values "
+            "by an integer. Raised by Kokkos::initialize(int narg, char* "
+            "argc[]).");
+      else
+        rdevices = env_rdevices;
+    }
     // Skip device
     auto env_skip_device_str = std::getenv("KOKKOS_SKIP_DEVICE");
     if (env_skip_device_str != nullptr) {
@@ -750,6 +775,18 @@ void initialize(int& narg, char* arg[]) {
             "Kokkos::initialize(int narg, char* argc[]).");
       else
         skip_device = env_skip_device;
+    }
+    if (rdevices > 0) {
+      if (skip_device > 0 && rdevices == 1)
+        Impl::throw_runtime_exception(
+            "Error: cannot KOKKOS_SKIP_DEVICE the only KOKKOS_RAND_DEVICE. "
+            "Raised by Kokkos::initialize(int narg, char* argc[]).");
+
+      std::srand(getpid());
+      while (device < 0) {
+        int test_device = std::rand() % rdevices;
+        if (test_device != skip_device) device = test_device;
+      }
     }
   }
   char* env_disablewarnings_str = std::getenv("KOKKOS_DISABLE_WARNINGS");

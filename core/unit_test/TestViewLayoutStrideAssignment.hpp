@@ -52,7 +52,7 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, view_layoutstride_left_to_layoutleft_assignment) {
+TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutleft_assignment) {
   typedef TEST_EXECSPACE exec_space;
 
   auto t = time(0);
@@ -334,7 +334,7 @@ TEST_F(TEST_CATEGORY, view_layoutstride_left_to_layoutleft_assignment) {
   }
 }
 
-TEST_F(TEST_CATEGORY, view_layoutstride_right_to_layoutright_assignment) {
+TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutright_assignment) {
   typedef TEST_EXECSPACE exec_space;
 
   auto t = time(0);
@@ -616,7 +616,9 @@ TEST_F(TEST_CATEGORY, view_layoutstride_right_to_layoutright_assignment) {
   }
 }
 
-TEST_F(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignment) {
+#define DECLARE_DEATH_TEST(NAME) NAME##DeathTest
+TEST(DECLARE_DEATH_TEST(TEST_CATEGORY),
+     view_layoutstride_right_to_layoutleft_assignment) {
   typedef TEST_EXECSPACE exec_space;
 
   auto t = time(0);
@@ -767,7 +769,7 @@ TEST_F(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignment) {
   }
 }
 
-TEST_F(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignment) {
+TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignment) {
   typedef TEST_EXECSPACE exec_space;
 
   auto t = time(0);

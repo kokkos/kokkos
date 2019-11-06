@@ -20,7 +20,8 @@ get_kokkos_device_list() {
   PARSE_DEVICES_LST=$(echo $KOKKOS_DEVICES | tr "," "\n")
   for DEVICE_ in $PARSE_DEVICES_LST
   do 
-     KOKKOS_DEVICE_CMD="-DKokkos_ENABLE_${DEVICE_^^}=ON ${KOKKOS_DEVICE_CMD}"
+     UC_DEVICE=$(echo $DEVICE_ | tr "[:lower:]" "[:upper:]")
+     KOKKOS_DEVICE_CMD="-DKokkos_ENABLE_${UC_DEVICE}=ON ${KOKKOS_DEVICE_CMD}"
   done
 }
 
@@ -29,7 +30,8 @@ get_kokkos_arch_list() {
   PARSE_ARCH_LST=$(echo $KOKKOS_ARCH | tr "," "\n")
   for ARCH_ in $PARSE_ARCH_LST
   do 
-     KOKKOS_ARCH_CMD="-DKokkos_ARCH_${ARCH_^^}=ON ${KOKKOS_ARCH_CMD}"
+     UC_ARCH=$(echo $ARCH_ | tr "[:lower:]" "[:upper:]")
+     KOKKOS_ARCH_CMD="-DKokkos_ARCH_${UC_ARCH}=ON ${KOKKOS_ARCH_CMD}"
   done
 }
 
@@ -63,7 +65,7 @@ get_kokkos_option_list() {
   PARSE_OPTIONS_LST=$(echo $KOKKOS_OPTIONS | tr "," "\n")
   for OPT_ in $PARSE_OPTIONS_LST
   do 
-     UC_OPT_=${OPT_^^}
+     UC_OPT_=$(echo $OPT_ | tr "[:lower:]" "[:upper:]")
      if [[ "$UC_OPT_" == *DISABLE* ]]; then
         FLIP_OPT_=${UC_OPT_/DISABLE/ENABLE}
         KOKKOS_OPTION_CMD="-DKokkos_${FLIP_OPT_}=OFF ${KOKKOS_OPTION_CMD}"
@@ -80,15 +82,12 @@ display_help_text() {
       echo "Kokkos configure options:"
       echo ""
       echo "--kokkos-path=/Path/To/Kokkos:        Path to the Kokkos root directory."
-      echo "--qthreads-path=/Path/To/Qthreads:    Path to Qthreads install directory."
-      echo "                                        Overrides path given by --with-qthreads."
       echo "--prefix=/Install/Path:               Path to install the Kokkos library."
       echo ""
       echo "--with-cuda[=/Path/To/Cuda]:          Enable Cuda and set path to Cuda Toolkit."
       echo "--with-openmp:                        Enable OpenMP backend."
       echo "--with-pthread:                       Enable Pthreads backend."
       echo "--with-serial:                        Enable Serial backend."
-      echo "--with-qthreads[=/Path/To/Qthreads]:  Enable Qthreads backend."
       echo "--with-devices:                       Explicitly add a set of backends."
       echo ""
       echo "--arch=[OPT]:  Set target architectures. Options are:"
@@ -168,9 +167,6 @@ do
     --kokkos-path*)
       KOKKOS_PATH="${key#*=}"
       ;;
-    --qthreads-path*)
-      QTHREADS_PATH="${key#*=}"
-      ;;
     --hpx-path*)
       HPX_PATH="${key#*=}"
       ;;
@@ -190,9 +186,6 @@ do
       update_kokkos_devices Cuda
       CUDA_PATH="${key#*=}"
       ;;
-    --with-rocm)
-      update_kokkos_devices ROCm
-      ;;
     --with-openmp)
       update_kokkos_devices OpenMP
       ;;
@@ -201,12 +194,6 @@ do
       ;;
     --with-serial)
       update_kokkos_devices Serial
-      ;;
-    --with-qthreads*)
-      update_kokkos_devices Qthreads
-      if [ -z "$QTHREADS_PATH" ]; then
-        QTHREADS_PATH="${key#*=}"
-      fi
       ;;
     --with-hpx-options*)
       KOKKOS_HPX_OPT="${key#*=}"
@@ -297,10 +284,11 @@ do
   shift
 done
 
+
 if [ "$COMPILER" == "" ]; then
     COMPILER_CMD=
 else
-    COMPILER_CMD='-DCMAKE_CXX_COMPILER=$COMPILER'
+    COMPILER_CMD=-DCMAKE_CXX_COMPILER=$COMPILER
 fi
 
 if [ ! -e ${KOKKOS_PATH}/CMakeLists.txt ]; then
@@ -325,10 +313,16 @@ get_kokkos_cuda_option_list
 
 ## if HPX is enabled, we need to enforce cxx standard = 14
 if [[ ${KOKKOS_DEVICE_CMD} == *Kokkos_ENABLE_HPX* ]]; then
-   if [ ${#KOKKOS_CXX_STANDARD} -lt 14 ]; then
+   if [ "${KOKKOS_CXX_STANDARD}" == "" ] || [ ${#KOKKOS_CXX_STANDARD} -lt 14 ]; then
       echo CXX Standard must be 14 or higher for HPX to work.
       KOKKOS_CXX_STANDARD=14
    fi
+fi
+
+if [ "$KOKKOS_CXX_STANDARD" == "" ]; then
+    STANDARD_CMD=
+else
+    STANDARD_CMD=-DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD}
 fi
 
 if [[ ${COMPILER} == *clang* ]]; then
@@ -340,5 +334,5 @@ if [[ ${COMPILER} == *clang* ]]; then
    fi 
 fi
  
-echo cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_PATH} 
-cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS//\"}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS//\"}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_CXX_COMPILER=${COMPILER} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF -DKokkos_CXX_STANDARD=${KOKKOS_CXX_STANDARD} ${KOKKOS_PATH} 
+echo cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_PATH} 
+cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS//\"}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS//\"}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_PATH} 

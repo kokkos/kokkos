@@ -46,7 +46,7 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, view_test_unmanaged_subview_reset) {
+TEST(TEST_CATEGORY, view_test_unmanaged_subview_reset) {
   TestViewSubview::test_unmanaged_subview_reset<TEST_EXECSPACE>();
 }
 

@@ -64,10 +64,10 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   typedef const Scalar& const_reference;
   typedef Scalar* iterator;
   typedef const Scalar* const_iterator;
+  typedef size_t size_type;
 
  private:
   size_t _size;
-  typedef size_t size_type;
   float _extra_storage;
   typedef DualView<Scalar*, LayoutLeft, Arg1Type> DV;
 
@@ -147,6 +147,70 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
 
   void clear() { _size = 0; }
 
+  iterator insert(iterator it, const value_type& val) {
+    return insert(it, 1, val);
+  }
+
+  iterator insert(iterator it, size_type count, const value_type& val) {
+    if ((size() == 0) && (it == begin())) {
+      resize(count, val);
+      DV::sync_host();
+      return begin();
+    }
+    DV::sync_host();
+    DV::modify_host();
+    if (it < begin() || it > end())
+      Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
+    if (count == 0) return it;
+    ptrdiff_t start = std::distance(begin(), it);
+    auto org_size   = size();
+    resize(size() + count);
+
+    std::copy_backward(begin() + start, begin() + org_size,
+                       begin() + org_size + count);
+    std::fill_n(begin() + start, count, val);
+
+    return begin() + start;
+  }
+
+ private:
+  template <class T>
+  struct impl_is_input_iterator
+      : /* TODO replace this */ std::integral_constant<
+            bool, !std::is_convertible<T, size_type>::value> {};
+
+ public:
+  // TODO: can use detection idiom to generate better error message here later
+  template <typename InputIterator>
+  typename std::enable_if<impl_is_input_iterator<InputIterator>::value,
+                          iterator>::type
+  insert(iterator it, InputIterator b, InputIterator e) {
+    ptrdiff_t count = std::distance(b, e);
+    if (count == 0) return it;
+
+    DV::sync_host();
+    DV::modify_host();
+    if (it < begin() || it > end())
+      Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
+
+    bool resized = false;
+    if ((size() == 0) && (it == begin())) {
+      resize(count);
+      it      = begin();
+      resized = true;
+    }
+    ptrdiff_t start = std::distance(begin(), it);
+    auto org_size   = size();
+    if (!resized) resize(size() + count);
+    it = begin() + start;
+
+    std::copy_backward(begin() + start, begin() + org_size,
+                       begin() + org_size + count);
+    std::copy(b, e, it);
+
+    return begin() + start;
+  }
+
   size_type size() const { return _size; }
   size_type max_size() const { return 2000000000; }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
@@ -155,9 +219,11 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   size_type span() const { return DV::span(); }
   bool empty() const { return _size == 0; }
 
-  iterator begin() const { return &DV::h_view(0); }
+  iterator begin() const { return DV::h_view.data(); }
 
-  iterator end() const { return &DV::h_view(_size); }
+  iterator end() const {
+    return _size > 0 ? DV::h_view.data() + _size : DV::h_view.data();
+  }
 
   reference front() { return DV::h_view(0); }
 

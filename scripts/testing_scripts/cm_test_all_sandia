@@ -28,8 +28,8 @@ print_help() {
   echo "--build-list=BUILD,BUILD,BUILD..."
   echo "    Provide a comma-separated list of builds instead of running all builds"
   echo "    Valid items:"
-  echo "      OpenMP, Pthread, Qthreads, Serial, OpenMP_Serial, Pthread_Serial"
-  echo "      Qthreads_Serial, Cuda_OpenMP, Cuda_Pthread, Cuda_Serial"
+  echo "      OpenMP, Pthread, Serial, OpenMP_Serial, Pthread_Serial"
+  echo "      Cuda_OpenMP, Cuda_Pthread, Cuda_Serial"
   echo ""
 
   echo "ARGS: list of expressions matching compilers to test"
@@ -138,7 +138,6 @@ PGI_WARNING_FLAGS=""
 DEBUG=False
 ARGS=""
 CUSTOM_BUILD_LIST=""
-QTHREADS_PATH=""
 DRYRUN=False
 BUILD_ONLY=False
 declare -i NUM_JOBS_TO_RUN_IN_PARALLEL=1
@@ -165,9 +164,6 @@ do
   case $key in
     --kokkos-path*)
       KOKKOS_PATH="${key#*=}"
-      ;;
-    --qthreads-path*)
-      QTHREADS_PATH="${key#*=}"
       ;;
     --build-list*)
       CUSTOM_BUILD_LIST="${key#*=}"
@@ -295,8 +291,6 @@ elif [ "$MACHINE" = "kokkos-dev" ]; then
 
   module load sems-cmake/3.12.2
   BASE_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  CUDA_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.8.4,kokkos-hwloc/1.10.1/base"
-  CUDA8_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
   CUDA9_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0,kokkos-hwloc/1.10.1/base"
   CLANG7_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-cuda/9.2"
 
@@ -329,8 +323,6 @@ elif [ "$MACHINE" = "kokkos-dev" ]; then
                "clang/3.9.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/4.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/7.0.1 $CLANG7_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "cuda/7.5.18 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/8.0.44 $CUDA8_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/9.2 $CUDA9_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   fi
@@ -448,13 +440,14 @@ elif [ "$MACHINE" = "apollo" ]; then
 
   BASE_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
   CUDA_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/4.8.4,kokkos-hwloc/1.10.1/base"
-  CUDA8_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
+  CUDA9_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,kokkos-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
   CUDA10_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0,kokkos-hwloc/1.10.1/base"
 
   CLANG_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.0.69"
   CLANG7_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,sems-gcc/6.1.0,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/9.1"
   NVCC_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
   HPX_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,hpx/1.2.1,sems-gcc/6.1.0,binutils"
+  HPX3_MODULE_LIST="sems-env,sems-cmake/3.12.2,kokkos-env,compilers/hpx/1.3.0,sems-gcc/6.1.0,binutils"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_OpenMP"
   BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_Pthread"
@@ -468,11 +461,11 @@ elif [ "$MACHINE" = "apollo" ]; then
                "clang/3.9.0 $BASE_MODULE_LIST "Pthread_Serial" clang++ $CLANG_WARNING_FLAGS"
                "clang/6.0 $CLANG_MODULE_LIST "Cuda_Pthread,OpenMP" clang++ $CUDA_WARNING_FLAGS"
                "cuda/9.1 $CUDA_MODULE_LIST "Cuda_OpenMP" $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "hpx/1.2.1 $HPX_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
+               "hpx/1.3.0 $HPX3_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
     )
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("cuda/9.1 $CUDA8_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+    COMPILERS=("cuda/9.1 $CUDA9_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/10.0 $CUDA10_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "clang/6.0 $CLANG_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
                "clang/7.0 $CLANG7_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
@@ -487,6 +480,7 @@ elif [ "$MACHINE" = "apollo" ]; then
                "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "hpx/1.2.1 $HPX_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
+               "hpx/1.3.0 $HPX3_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
     )
   fi
 
@@ -529,10 +523,10 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
     )
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("cuda/10.0 $CUDA_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "cuda/10.1 $CUDA_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
-               "clang/8.0 $CLANG_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
-               "clang/8.0 $CLANG_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
+    COMPILERS=("cuda/10.0 $NVCC_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/10.1 $NVCC_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
+               "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
                "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/4.9.3 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -618,33 +612,6 @@ if [ "$COMPILERS_TO_TEST" == "" ]; then
    echo "-----------------------------------------------"
    print_help
    exit 0
-fi
-
-# Check if Qthreads build requested.
-HAVE_QTHREADS_BUILD="False"
-if [ -n "$CUSTOM_BUILD_LIST" ]; then
-  if [[ "$CUSTOM_BUILD_LIST" = *Qthreads* ]]; then
-    HAVE_QTHREADS_BUILD="True"
-  fi
-else
-  for COMPILER_DATA in "${COMPILERS[@]}"; do
-    ARR=($COMPILER_DATA)
-    BUILD_LIST=${ARR[2]}
-    if [[ "$BUILD_LIST" = *Qthreads* ]]; then
-      HAVE_QTHREADS_BUILD="True"
-    fi
-  done
-fi
-
-# Ensure Qthreads path is set if Qthreads build is requested.
-if [ "$HAVE_QTHREADS_BUILD" = "True" ]; then
-  if [ -z "$QTHREADS_PATH" ]; then
-    echo "Need to supply Qthreads path (--qthreads-path) when testing Qthreads backend." >&2
-    exit 1
-  else
-    # Strip trailing slashes from path.
-    QTHREADS_PATH=$(echo $QTHREADS_PATH | sed 's/\/*$//')
-  fi
 fi
 
 #
@@ -742,8 +709,9 @@ setup_env() {
     module list 2>&1 | grep "$mod" >& /dev/null || return 1
   done
 
-  if [ -e ./update_lib.sh ]; then
-     source ./update_lib.sh $MACHINE
+  if [ -e ${CM_ALL_SCRIPT_PATH}/update_lib.sh ]; then
+     echo calling ${CM_ALL_SCRIPT_PATH}/update_lib.sh $MACHINE
+     source ${CM_ALL_SCRIPT_PATH}/update_lib.sh $MACHINE
   fi
   return 0
 }
@@ -771,14 +739,6 @@ single_build_and_test() {
 
   if [[ "$build_type" = hwloc* ]]; then
     local extra_args="$extra_args --with-hwloc=$(dirname $(dirname $(which hwloc-info)))"
-  fi
-
-  if [[ "$build" = *Qthreads* ]]; then
-    if [[ "$build_type" = hwloc* ]]; then
-      local extra_args="$extra_args --qthreads-path=${QTHREADS_PATH}_hwloc"
-    else
-      local extra_args="$extra_args --qthreads-path=$QTHREADS_PATH"
-    fi
   fi
 
   if [[ "$OPT_FLAG" = "" ]]; then
@@ -938,6 +898,10 @@ wait_summarize_and_exit() {
 #
 # Main.
 #
+
+CM_ALL_SCRIPT=$0
+CM_ALL_SCRIPT_PATH=`pwd`
+CM_ALL_SCRIPT_PATH=${CM_ALL_SCRIPT_PATH}/`dirname $CM_ALL_SCRIPT`
 
 ROOT_DIR=$(get_test_root_dir)
 mkdir -p $ROOT_DIR

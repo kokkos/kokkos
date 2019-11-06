@@ -40,6 +40,7 @@ ENDIF()
 
 SET(KOKKOS_ENABLED_OPTIONS)      #exported in config file
 SET(KOKKOS_ENABLED_DEVICES)      #exported in config file
+SET(KOKKOS_ENABLED_TPLS)         #exported in config file
 SET(KOKKOS_ENABLED_ARCH_LIST)    #exported in config file
 
 #These are helper flags used for sanity checks during config
@@ -60,7 +61,7 @@ FUNCTION(KOKKOS_CFG_DEPENDS SUCCESSOR PRECURSOR)
 ENDFUNCTION()
 
 
-list(APPEND CMAKE_MODULE_PATH cmake/Modules)
+LIST(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
@@ -69,7 +70,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   IF (Spack_WORKAROUND) 
     #if we are explicitly using Spack for development,
     #nuke the Spack compiler
-    SEt(SPACK_CXX $ENV{SPACK_CXX})
+    SET(SPACK_CXX $ENV{SPACK_CXX})
     IF(SPACK_CXX)
       SET(CMAKE_CXX_COMPILER ${SPACK_CXX} CACHE STRING "the C++ compiler" FORCE)
       SET(ENV{CXX} ${SPACK_CXX})
@@ -79,6 +80,28 @@ IF(NOT KOKKOS_HAS_TRILINOS)
     PROJECT(Kokkos CXX)
   ENDIF()
 ENDIF()
+
+IF (Kokkos_ENABLE_CUDA AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14.0")
+  #If we are building CUDA, we have tricked CMake because we declare a CXX project
+  #If the default C++ standard for a given compiler matches the requested
+  #standard, then CMake just omits the -std flag in later versions of CMake
+  #This breaks CUDA compilation (CUDA compiler can have a different default
+  #-std then the underlying host compiler by itself). Setting this variable
+  #forces CMake to always add the -std flag even if it thinks it doesn't need it
+  GLOBAL_SET(CMAKE_CXX_STANDARD_DEFAULT 98)
+ENDIF()
+
+IF (NOT CMAKE_SIZEOF_VOID_P)
+  STRING(FIND ${CMAKE_CXX_COMPILER} nvcc_wrapper FIND_IDX)
+  IF (NOT FIND_IDX STREQUAL -1)
+    MESSAGE(FATAL_ERROR "Kokkos did not configure correctly and failed to validate compiler. The most likely cause is CUDA linkage using nvcc_wrapper. Please ensure your CUDA environment is correctly configured.")
+  ELSE()
+    MESSAGE(FATAL_ERROR "Kokkos did not configure correctly and failed to validate compiler. The most likely cause is linkage errors during CMake compiler validation. Please consult the CMake error log shown below for the exact error during compiler validation")
+  ENDIF()
+ELSEIF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+  MESSAGE(FATAL_ERROR "Kokkos assumes a 64-bit build; i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead")
+ENDIF()
+
 
 set(Kokkos_VERSION_MAJOR 3)
 set(Kokkos_VERSION_MINOR 0)
@@ -93,17 +116,24 @@ ENDIF()
 # Load either the real TriBITS or a TriBITS wrapper 
 # for certain utility functions that are universal (like GLOBAL_SET)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
+
+# These are the variables we will append to as we go
+# I really wish these were regular variables
+# but scoping issues can make it difficult
 GLOBAL_SET(KOKKOS_COMPILE_OPTIONS)
 GLOBAL_SET(KOKKOS_LINK_OPTIONS)
 GLOBAL_SET(KOKKOS_CUDA_OPTIONS)
 GLOBAL_SET(KOKKOS_CUDAFE_OPTIONS)
 GLOBAL_SET(KOKKOS_XCOMPILER_OPTIONS)
-
+# We need to append text here for making sure TPLs
+# we import are available for an installed Kokkos
+GLOBAL_SET(KOKKOS_TPL_EXPORTS)
 
 # Include a set of Kokkos-specific wrapper functions that
 # will either call raw CMake or TriBITS
 # These are functions like KOKKOS_INCLUDE_DIRECTORIES
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
+
 
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES
@@ -123,17 +153,8 @@ IF(BUILD_SHARED_LIBS)
   SET(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ENDIF()
 
-IF (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-  MESSAGE(FATAL_ERROR "Kokkos assumes a 64-bit build; i.e., 8-byte pointers, but found ${CMAKE_SIZEOF_VOID_P}-byte pointers instead")
-ENDIF()
-
-IF(Kokkos_SEPARATE_LIBS)
- SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms)
- SET(KOKKOS_INT_LIBRARIES kokkoscore kokkoscontainers kokkosalgorithms)
-ELSE()
- SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkos)
- SET(KOKKOS_INT_LIBRARIES kokkos)
-ENDIF()
+SET(KOKKOS_EXT_LIBRARIES Kokkos::kokkos Kokkos::kokkoscore Kokkos::kokkoscontainers Kokkos::kokkosalgorithms)
+SET(KOKKOS_INT_LIBRARIES kokkos kokkoscore kokkoscontainers kokkosalgorithms)
 SET_PROPERTY(GLOBAL PROPERTY KOKKOS_INT_LIBRARIES ${KOKKOS_INT_LIBRARIES})
 
 GET_DIRECTORY_PROPERTY(HAS_PARENT PARENT_DIRECTORY)
@@ -177,9 +198,9 @@ KOKKOS_EXCLUDE_AUTOTOOLS_FILES()
 KOKKOS_PACKAGE_POSTPROCESS()
 
 IF (NOT KOKKOS_HAS_TRILINOS)
-  IF (NOT KOKKOS_SEPARATE_LIBS)
-    KOKKOS_MAKE_LIBKOKKOS()
-  ENDIF()
+  ADD_LIBRARY(kokkos INTERFACE)
+  TARGET_LINK_LIBRARIES(kokkos INTERFACE kokkoscore kokkoscontainers kokkosalgorithms)
+  KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(kokkos)
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 ENDIF()
 
@@ -202,29 +223,3 @@ IF (HAS_PARENT)
     SET_PROPERTY(GLOBAL PROPERTY Kokkos_ENABLE_${DEV} ON)
   ENDFOREACH()
 ENDIF()
-
-
-FUNCTION(TARGET_LINK_KOKKOS TARGET)
-  CMAKE_PARSE_ARGUMENTS(
-    PARSE
-    "PRIVATE;PUBLIC;INTERFACE"
-    ""
-    ""
-    ${ARGN}
-  )
-
-  SET(LINK_TYPE)
-  IF (PARSE_PRIVATE)
-    SET(LINK_TYPE PRIVATE)
-  ELSEIF(PARSE_PUBLIC)
-    SET(LINK_TYPE PUBLIC)
-  ELSEIF(PARSE_INTERFACE)
-    SET(LINK_TYPE INTERFACE)
-  ENDIF()
-
-  GET_PROPERTY(KOKKOS_LIBRARIES GLOBAL PROPERTY KOKKOS_INT_LIBRARIES)
-
-  FOREACH(LIB ${KOKKOS_LIBRARIES})
-    TARGET_LINK_LIBRARIES(${TARGET} ${LINK_TYPE} ${LIB})
-  ENDFOREACH()
-ENDFUNCTION()

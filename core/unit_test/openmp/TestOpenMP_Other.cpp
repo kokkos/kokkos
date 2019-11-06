@@ -56,7 +56,7 @@
 
 namespace Test {
 
-TEST_F(openmp, partition_master) {
+TEST(openmp, partition_master) {
   using Mutex = Kokkos::Experimental::MasterLock<Kokkos::OpenMP>;
 
   Mutex mtx;

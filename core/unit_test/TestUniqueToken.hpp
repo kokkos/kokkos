@@ -128,6 +128,6 @@ class TestUniqueToken {
   }
 };
 
-TEST_F(TEST_CATEGORY, unique_token) { TestUniqueToken<TEST_EXECSPACE>::run(); }
+TEST(TEST_CATEGORY, unique_token) { TestUniqueToken<TEST_EXECSPACE>::run(); }
 
 }  // namespace Test

@@ -110,7 +110,7 @@ bool Test() {
 }  // namespace TestCompilerMacros
 
 namespace Test {
-TEST_F(TEST_CATEGORY, compiler_macros) {
+TEST(TEST_CATEGORY, compiler_macros) {
   ASSERT_TRUE((TestCompilerMacros::Test<TEST_EXECSPACE>()));
 }
 }  // namespace Test

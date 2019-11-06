@@ -245,6 +245,7 @@ struct TestRange {
   }
 
   void test_dynamic_policy() {
+    auto const N_no_implicit_capture = N;
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 #if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
     typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
@@ -257,7 +258,8 @@ struct TestRange {
 
       Kokkos::parallel_for(
           policy_t(0, N), KOKKOS_LAMBDA(const int &i) {
-            for (int k = 0; k < (i < N / 2 ? 1 : 10000); k++) {
+            for (int k = 0; k < (i < N_no_implicit_capture / 2 ? 1 : 10000);
+                 k++) {
               a(i)++;
             }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
@@ -271,7 +273,7 @@ struct TestRange {
       Kokkos::parallel_reduce(
           Kokkos::RangePolicy<ExecSpace>(0, N),
           KOKKOS_LAMBDA(const int &i, int &lsum) {
-            lsum += (a(i) != (i < N / 2 ? 1 : 10000));
+            lsum += (a(i) != (i < N_no_implicit_capture / 2 ? 1 : 10000));
           },
           error);
       ASSERT_EQ(error, 0);
@@ -301,7 +303,8 @@ struct TestRange {
       Kokkos::parallel_reduce(
           policy_t(0, N),
           KOKKOS_LAMBDA(const int &i, int &lsum) {
-            for (int k = 0; k < (i < N / 2 ? 1 : 10000); k++) {
+            for (int k = 0; k < (i < N_no_implicit_capture / 2 ? 1 : 10000);
+                 k++) {
               a(i)++;
             }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
@@ -318,7 +321,7 @@ struct TestRange {
       Kokkos::parallel_reduce(
           Kokkos::RangePolicy<ExecSpace>(0, N),
           KOKKOS_LAMBDA(const int &i, int &lsum) {
-            lsum += (a(i) != (i < N / 2 ? 1 : 10000));
+            lsum += (a(i) != (i < N_no_implicit_capture / 2 ? 1 : 10000));
           },
           error);
       ASSERT_EQ(error, 0);
@@ -345,7 +348,7 @@ struct TestRange {
 
 }  // namespace
 
-TEST_F(TEST_CATEGORY, range_for) {
+TEST(TEST_CATEGORY, range_for) {
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
     f.test_for();
@@ -374,7 +377,7 @@ TEST_F(TEST_CATEGORY, range_for) {
   }
 }
 
-TEST_F(TEST_CATEGORY, range_reduce) {
+TEST(TEST_CATEGORY, range_reduce) {
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
     f.test_reduce();
@@ -404,7 +407,7 @@ TEST_F(TEST_CATEGORY, range_reduce) {
 }
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
-TEST_F(TEST_CATEGORY, range_scan) {
+TEST(TEST_CATEGORY, range_scan) {
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
     f.test_scan();

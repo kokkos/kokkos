@@ -1422,8 +1422,25 @@ inline void deep_copy(
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* = 0) {
   typedef View<DT, DP...> ViewType;
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::beginDeepCopy(
+        Kokkos::Profiling::SpaceHandle(
+            typename ViewType::memory_space().name()),
+        dst.label(), dst.data(),
+        Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace().name()), "Scalar",
+        &value, dst.span() * sizeof(typename ViewType::value_type));
+  }
+#endif
+
   if (dst.data() == NULL) {
     Kokkos::fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
   }
 
@@ -1453,6 +1470,11 @@ inline void deep_copy(
                              typename ViewType::execution_space,
                              ViewTypeFlat::Rank, int64_t>(dst_flat, value);
     Kokkos::fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
   }
 
@@ -1505,6 +1527,12 @@ inline void deep_copy(
                              int>(dst, value);
   }
   Kokkos::fence();
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endDeepCopy();
+  }
+#endif
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -1514,18 +1542,39 @@ inline void deep_copy(
     const View<ST, SP...>& src,
     typename std::enable_if<std::is_same<
         typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
-  static_assert(ViewTraits<ST, SP...>::rank == 0,
+  typedef ViewTraits<ST, SP...> src_traits;
+  typedef typename src_traits::memory_space src_memory_space;
+
+  static_assert(src_traits::rank == 0,
                 "ERROR: Non-rank-zero view in deep_copy( value , View )");
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::beginDeepCopy(
+        Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace().name()), "Scalar",
+        &dst, Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        src.label(), src.data(),
+        src.span() * sizeof(typename src_traits::value_type));
+  }
+#endif
 
   if (src.data() == NULL) {
     Kokkos::fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
   }
 
-  typedef ViewTraits<ST, SP...> src_traits;
-  typedef typename src_traits::memory_space src_memory_space;
   Kokkos::Impl::DeepCopy<HostSpace, src_memory_space>(&dst, src.data(),
                                                       sizeof(ST));
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endDeepCopy();
+  }
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -1538,16 +1587,6 @@ inline void deep_copy(
         std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
         (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
          unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>::type* = 0) {
-  static_assert(
-      std::is_same<typename ViewTraits<DT, DP...>::value_type,
-                   typename ViewTraits<ST, SP...>::non_const_value_type>::value,
-      "deep_copy requires matching non-const destination type");
-
-  if (dst.data() == NULL && src.data() == NULL) {
-    Kokkos::fence();
-    return;
-  }
-
   typedef View<DT, DP...> dst_type;
   typedef View<ST, SP...> src_type;
 
@@ -1555,12 +1594,41 @@ inline void deep_copy(
   typedef typename dst_type::memory_space dst_memory_space;
   typedef typename src_type::memory_space src_memory_space;
 
+  static_assert(std::is_same<typename dst_type::value_type,
+                             typename src_type::non_const_value_type>::value,
+                "deep_copy requires matching non-const destination type");
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::beginDeepCopy(
+        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
+        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        src.label(), src.data(),
+        src.span() * sizeof(typename dst_type::value_type));
+  }
+#endif
+
+  if (dst.data() == NULL && src.data() == NULL) {
+    Kokkos::fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
+    return;
+  }
+
   Kokkos::fence();
   if (dst.data() != src.data()) {
     Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
         dst.data(), src.data(), sizeof(value_type));
     Kokkos::fence();
   }
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endDeepCopy();
+  }
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -1577,6 +1645,12 @@ inline void deep_copy(
          unsigned(ViewTraits<ST, SP...>::rank) != 0))>::type* = 0) {
   typedef View<DT, DP...> dst_type;
   typedef View<ST, SP...> src_type;
+  typedef typename dst_type::execution_space dst_execution_space;
+  typedef typename src_type::execution_space src_execution_space;
+  typedef typename dst_type::memory_space dst_memory_space;
+  typedef typename src_type::memory_space src_memory_space;
+  typedef typename dst_type::value_type dst_value_type;
+  typedef typename src_type::value_type src_value_type;
 
   static_assert(std::is_same<typename dst_type::value_type,
                              typename dst_type::non_const_value_type>::value,
@@ -1585,12 +1659,16 @@ inline void deep_copy(
   static_assert((unsigned(dst_type::rank) == unsigned(src_type::rank)),
                 "deep_copy requires Views of equal rank");
 
-  typedef typename dst_type::execution_space dst_execution_space;
-  typedef typename src_type::execution_space src_execution_space;
-  typedef typename dst_type::memory_space dst_memory_space;
-  typedef typename src_type::memory_space src_memory_space;
-  typedef typename dst_type::value_type dst_value_type;
-  typedef typename src_type::value_type src_value_type;
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::beginDeepCopy(
+        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
+        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        src.label(), src.data(),
+        src.span() * sizeof(typename dst_type::value_type));
+  }
+#endif
+
   if (dst.data() == NULL || src.data() == NULL) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     // do nothing
@@ -1624,6 +1702,11 @@ inline void deep_copy(
     }
 #endif
     Kokkos::fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
   }
 
@@ -1648,6 +1731,11 @@ inline void deep_copy(
       ((std::ptrdiff_t)dst_end == (std::ptrdiff_t)src_end) &&
       (dst.span_is_contiguous() && src.span_is_contiguous())) {
     Kokkos::fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
   }
 
@@ -1691,6 +1779,11 @@ inline void deep_copy(
           "deep_copy given views that would require a temporary allocation");
     }
     Kokkos::fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
 #else
     std::string message(
@@ -1745,6 +1838,11 @@ inline void deep_copy(
     Impl::view_copy(dst, src);
     Kokkos::fence();
   }
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endDeepCopy();
+  }
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -2531,16 +2629,29 @@ inline void deep_copy(
         Kokkos::Impl::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<DT, DP...>::specialize,
                      void>::value>::type* = 0) {
-  static_assert(
-      std::is_same<typename ViewTraits<DT, DP...>::non_const_value_type,
-                   typename ViewTraits<DT, DP...>::value_type>::value,
-      "deep_copy requires non-const type");
-
+  typedef ViewTraits<DT, DP...> dst_traits;
+  typedef typename dst_traits::memory_space dst_memory_space;
+  static_assert(std::is_same<typename dst_traits::non_const_value_type,
+                             typename dst_traits::value_type>::value,
+                "deep_copy requires non-const type");
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::beginDeepCopy(
+        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
+        dst.data(), Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace().name()),
+        "(none)", &value, dst.span() * sizeof(typename dst_traits::value_type));
+  }
+#endif
   ExecSpace().fence();
   typedef
       typename View<DT, DP...>::uniform_runtime_nomemspace_type ViewTypeUniform;
   Kokkos::Impl::ViewFill<ViewTypeUniform>(dst, value);
   ExecSpace().fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endDeepCopy();
+  }
+#endif
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -2553,18 +2664,36 @@ inline void deep_copy(
         Kokkos::Impl::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize,
                      void>::value>::type* = 0) {
-  static_assert(ViewTraits<ST, SP...>::rank == 0,
+  typedef ViewTraits<ST, SP...> src_traits;
+  typedef typename src_traits::memory_space src_memory_space;
+  static_assert(src_traits::rank == 0,
                 "ERROR: Non-rank-zero view in deep_copy( value , View )");
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::beginDeepCopy(
+        Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace().name()), "(none)",
+        &dst, Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        src.label(), src.data(), sizeof(ST));
+  }
+#endif
 
   if (src.data() == NULL) {
     exec_space.fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
   }
 
-  typedef ViewTraits<ST, SP...> src_traits;
-  typedef typename src_traits::memory_space src_memory_space;
   Kokkos::Impl::DeepCopy<HostSpace, src_memory_space, ExecSpace>(
       exec_space, &dst, src.data(), sizeof(ST));
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endDeepCopy();
+  }
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -2579,28 +2708,46 @@ inline void deep_copy(
         std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
         (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
          unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>::type* = 0) {
-  static_assert(
-      std::is_same<typename ViewTraits<DT, DP...>::value_type,
-                   typename ViewTraits<ST, SP...>::non_const_value_type>::value,
-      "deep_copy requires matching non-const destination type");
+  typedef ViewTraits<ST, SP...> src_traits;
+  typedef ViewTraits<DT, DP...> dst_traits;
 
-  typedef View<DT, DP...> dst_type;
-  typedef View<ST, SP...> src_type;
+  typedef typename src_traits::memory_space src_memory_space;
+  typedef typename dst_traits::memory_space dst_memory_space;
+  static_assert(std::is_same<typename dst_traits::value_type,
+                             typename src_traits::non_const_value_type>::value,
+                "deep_copy requires matching non-const destination type");
 
-  typedef typename dst_type::value_type value_type;
-  typedef typename dst_type::memory_space dst_memory_space;
-  typedef typename src_type::memory_space src_memory_space;
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::beginDeepCopy(
+        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
+        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        src.label(), src.data(), sizeof(DT));
+  }
+#endif
+
   if (dst.data() == NULL && src.data() == NULL) {
     exec_space.fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
   }
 
   exec_space.fence();
   if (dst.data() != src.data()) {
     Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space, ExecSpace>(
-        exec_space, dst.data(), src.data(), sizeof(value_type));
+        exec_space, dst.data(), src.data(),
+        sizeof(typename dst_traits::value_type));
   }
   exec_space.fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endDeepCopy();
+  }
+#endif
 }
 
 //----------------------------------------------------------------------------
@@ -2633,6 +2780,15 @@ inline void deep_copy(
   typedef typename src_type::memory_space src_memory_space;
   typedef typename dst_type::value_type dst_value_type;
   typedef typename src_type::value_type src_value_type;
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::beginDeepCopy(
+        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
+        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        src.label(), src.data(), dst.span() * sizeof(dst_value_type));
+  }
+#endif
 
   if (dst.data() == NULL || src.data() == NULL) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
@@ -2667,6 +2823,11 @@ inline void deep_copy(
     }
 #endif
     exec_space.fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
   }
 
@@ -2736,6 +2897,11 @@ inline void deep_copy(
           "deep_copy given views that would require a temporary allocation");
     }
     exec_space.fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
     return;
 #else
     std::string message(
@@ -2790,6 +2956,11 @@ inline void deep_copy(
     Impl::view_copy(dst, src);
     exec_space.fence();
   }
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::endDeepCopy();
+  }
+#endif
 }
 
 } /* namespace Kokkos */

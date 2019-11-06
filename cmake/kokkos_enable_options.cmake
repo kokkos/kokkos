@@ -25,13 +25,12 @@ KOKKOS_CFG_DEPENDS(OPTIONS DEVICES)
 # Put a check in just in case people are using this option
 KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 
-KOKKOS_OPTION(SEPARATE_LIBS  OFF BOOL "whether to build libkokkos or libkokkoscontainers, etc")
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
-KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to enable unified virtual memory (UVM) for CUDA")
+KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
-KOKKOS_ENABLE_OPTION(HPX_ASYNC_DISPATCH   OFF "Whether HPX supports asynchronous dispath")
-KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build serial  backend")
-KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build OpenMP  backend")
+KOKKOS_ENABLE_OPTION(HPX_ASYNC_DISPATCH   OFF "Whether HPX supports asynchronous dispatch")
+KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
+KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build the examples")
 STRING(TOUPPER "${CMAKE_BUILD_TYPE}" UPPERCASE_CMAKE_BUILD_TYPE)
 IF(UPPERCASE_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
   KOKKOS_ENABLE_OPTION(DEBUG                ON "Whether to activate extra debug features - may increase compile times")
@@ -48,9 +47,6 @@ KOKKOS_ENABLE_OPTION(PROFILING            ON  "Whether to create bindings for pr
 KOKKOS_ENABLE_OPTION(PROFILING_LOAD_PRINT OFF "Whether to print information about which profiling tools got loaded")
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE          OFF "Whether to enable deprecated code")
-KOKKOS_ENABLE_OPTION(EXPLICIT_INSTANTIATION   OFF 
-  "Whether to explicitly instantiate certain types to lower future compile times")
-SET(KOKKOS_ENABLE_ETI ${KOKKOS_ENABLE_EXPLICIT_INSTANTIATION} CACHE INTERNAL "eti")
 
 IF (KOKKOS_ENABLE_CUDA)
   SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_COMPILER_VERSION_MAJOR}${KOKKOS_COMPILER_VERSION_MINOR}")

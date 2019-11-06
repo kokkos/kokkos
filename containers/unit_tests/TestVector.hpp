@@ -53,6 +53,125 @@ namespace Test {
 namespace Impl {
 
 template <typename Scalar, class Device>
+struct test_vector_insert {
+  typedef Scalar scalar_type;
+  typedef Device execution_space;
+
+  template <typename Vector>
+  void run_test(Vector& a) {
+    int n = a.size();
+
+    auto it = a.begin();
+    it += 15;
+    ASSERT_EQ(*it, scalar_type(1));
+
+    auto it_return = a.insert(it, scalar_type(3));
+    ASSERT_EQ(a.size(), n + 1);
+    ASSERT_EQ(std::distance(it_return, a.begin() + 15), 0);
+
+    it = a.begin();
+    it += 17;
+// Looks like some std::vector implementations do not have the restriction
+// right on the overload taking three iterators, and thus the following call
+// will hit that overload and then fail to compile.
+#if defined(KOKKOS_COMPILER_INTEL) && (1700 > KOKKOS_COMPILER_INTEL)
+// And at least GCC 4.8.4 doesn't implement vector insert correct for C++11
+// Return type is void ...
+#if (__GNUC__ < 5)
+    a.insert(it, typename Vector::size_type(n + 5), scalar_type(5));
+    it_return = a.begin() + 17;
+#else
+    it_return = a.insert(it, typename Vector::size_type(n + 5), scalar_type(5));
+#endif
+#else
+#if (__GNUC__ < 5)
+    a.insert(it, n + 5, scalar_type(5));
+    it_return = a.begin() + 17;
+#else
+    it_return = a.insert(it, n + 5, scalar_type(5));
+#endif
+#endif
+
+    ASSERT_EQ(a.size(), n + 1 + n + 5);
+    ASSERT_EQ(std::distance(it_return, a.begin() + 17), 0);
+
+    Vector b;
+
+// Looks like some std::vector implementations do not have the restriction
+// right on the overload taking three iterators, and thus the following call
+// will hit that overload and then fail to compile.
+#if defined(KOKKOS_COMPILER_INTEL) && (1700 > KOKKOS_COMPILER_INTEL)
+    b.insert(b.begin(), typename Vector::size_type(7), 9);
+#else
+    b.insert(b.begin(), 7, 9);
+#endif
+    ASSERT_EQ(b.size(), 7);
+    ASSERT_EQ(b[0], scalar_type(9));
+
+    it = a.begin();
+    it += 27 + n;
+#if (__GNUC__ < 5)
+    a.insert(it, b.begin(), b.end());
+    it_return = a.begin() + (27 + n);
+#else
+    it_return = a.insert(it, b.begin(), b.end());
+#endif
+    ASSERT_EQ(a.size(), n + 1 + n + 5 + 7);
+    ASSERT_EQ(std::distance(it_return, a.begin() + 27 + n), 0);
+
+    // Testing insert at end via all three function interfaces
+    a.insert(a.end(), 11);
+#if defined(KOKKOS_COMPILER_INTEL) && (1700 > KOKKOS_COMPILER_INTEL)
+    a.insert(a.end(), typename Vector::size_type(2), 12);
+#else
+    a.insert(a.end(), 2, 12);
+#endif
+    a.insert(a.end(), b.begin(), b.end());
+  }
+
+  template <typename Vector>
+  void check_test(Vector& a, int n) {
+    for (int i = 0; i < (int)a.size(); i++) {
+      if (i == 15)
+        ASSERT_EQ(a[i], scalar_type(3));
+      else if (i > 16 && i < 16 + 6 + n)
+        ASSERT_EQ(a[i], scalar_type(5));
+      else if (i > 26 + n && i < 34 + n)
+        ASSERT_EQ(a[i], scalar_type(9));
+      else if (i == (int)a.size() - 10)
+        ASSERT_EQ(a[i], scalar_type(11));
+      else if ((i == (int)a.size() - 9) || (i == (int)a.size() - 8))
+        ASSERT_EQ(a[i], scalar_type(12));
+      else if (i > (int)a.size() - 8)
+        ASSERT_EQ(a[i], scalar_type(9));
+      else
+        ASSERT_EQ(a[i], scalar_type(1));
+    }
+  }
+
+  test_vector_insert(unsigned int size) {
+    {
+      std::vector<Scalar> a(size, scalar_type(1));
+      run_test(a);
+      check_test(a, size);
+    }
+    {
+      Kokkos::vector<Scalar, Device> a(size, scalar_type(1));
+      a.sync_device();
+      run_test(a);
+      a.sync_host();
+      check_test(a, size);
+    }
+    {
+      Kokkos::vector<Scalar, Device> a(size, scalar_type(1));
+      a.sync_host();
+      run_test(a);
+      check_test(a, size);
+    }
+  }
+};
+
+template <typename Scalar, class Device>
 struct test_vector_combinations {
   typedef test_vector_combinations<Scalar, Device> self_type;
 
@@ -114,6 +233,10 @@ void test_vector_combinations(unsigned int size) {
 TEST(TEST_CATEGORY, vector_combination) {
   test_vector_combinations<int, TEST_EXECSPACE>(10);
   test_vector_combinations<int, TEST_EXECSPACE>(3057);
+}
+
+TEST(TEST_CATEGORY, vector_insert) {
+  Impl::test_vector_insert<int, TEST_EXECSPACE>(3057);
 }
 
 }  // namespace Test

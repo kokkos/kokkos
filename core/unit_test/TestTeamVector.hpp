@@ -1010,7 +1010,7 @@ class TestTripleNestedReduce {
 #endif
 
 #if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
-TEST_F(TEST_CATEGORY, team_vector) {
+TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(2)));
@@ -1027,7 +1027,7 @@ TEST_F(TEST_CATEGORY, team_vector) {
 #endif
 
 #if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
-TEST_F(TEST_CATEGORY, triple_nested_parallelism) {
+TEST(TEST_CATEGORY, triple_nested_parallelism) {
 // With KOKKOS_DEBUG enabled, the functor uses too many registers to run
 // with a team size of 32 on GPUs, 16 is the max possible (at least on a K80
 // GPU) See https://github.com/kokkos/kokkos/issues/1513

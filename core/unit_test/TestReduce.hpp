@@ -434,27 +434,27 @@ class TestReduceDynamicView {
 
 }  // namespace
 
-TEST_F(TEST_CATEGORY, long_reduce) {
+TEST(TEST_CATEGORY, long_reduce) {
   TestReduce<long, TEST_EXECSPACE>(0);
   TestReduce<long, TEST_EXECSPACE>(1000000);
 }
 
-TEST_F(TEST_CATEGORY, double_reduce) {
+TEST(TEST_CATEGORY, double_reduce) {
   TestReduce<double, TEST_EXECSPACE>(0);
   TestReduce<double, TEST_EXECSPACE>(1000000);
 }
 
-TEST_F(TEST_CATEGORY, long_reduce_dynamic) {
+TEST(TEST_CATEGORY, long_reduce_dynamic) {
   TestReduceDynamic<long, TEST_EXECSPACE>(0);
   TestReduceDynamic<long, TEST_EXECSPACE>(1000000);
 }
 
-TEST_F(TEST_CATEGORY, double_reduce_dynamic) {
+TEST(TEST_CATEGORY, double_reduce_dynamic) {
   TestReduceDynamic<double, TEST_EXECSPACE>(0);
   TestReduceDynamic<double, TEST_EXECSPACE>(1000000);
 }
 
-TEST_F(TEST_CATEGORY, long_reduce_dynamic_view) {
+TEST(TEST_CATEGORY, long_reduce_dynamic_view) {
   TestReduceDynamicView<long, TEST_EXECSPACE>(0);
   TestReduceDynamicView<long, TEST_EXECSPACE>(1000000);
 }

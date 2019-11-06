@@ -200,7 +200,14 @@ void OpenMP::partition_master(F const& f, int num_partitions,
 
 #pragma omp parallel num_threads(num_partitions)
     {
-      void* const ptr = space.allocate(sizeof(Exec));
+      void* ptr = nullptr;
+      try {
+        ptr = space.allocate(sizeof(Exec));
+      } catch (
+          Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
+        // For now, just rethrow the error message the existing way
+        Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
+      }
 
       Impl::t_openmp_instance = new (ptr) Exec(partition_size);
 

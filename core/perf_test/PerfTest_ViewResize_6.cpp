@@ -45,7 +45,7 @@
 
 namespace Test {
 
-TEST_F(default_exec, ViewResize_Rank6) {
+TEST(default_exec, ViewResize_Rank6) {
   printf("Resize View Performance for LayoutLeft:\n");
   run_resizeview_tests6<Kokkos::LayoutLeft>(10, 1);
   printf("Resize View Performance for LayoutRight:\n");

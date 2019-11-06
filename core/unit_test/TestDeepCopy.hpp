@@ -196,7 +196,7 @@ struct TestDeepCopy {
 };
 }  // namespace Impl
 
-TEST_F(TEST_CATEGORY, deep_copy_alignment) {
+TEST(TEST_CATEGORY, deep_copy_alignment) {
   {
     Impl::TestDeepCopy<TEST_EXECSPACE::memory_space,
                        TEST_EXECSPACE::memory_space>::run_test(100000);
