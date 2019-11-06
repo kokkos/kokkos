@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestDynViewAPI_generic.hpp>
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestDynViewAPI_generic.hpp>

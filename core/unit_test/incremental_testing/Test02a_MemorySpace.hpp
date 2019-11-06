@@ -47,7 +47,7 @@
 
 namespace Test {
 
-// Test construction and assignment
+// Test kokkos_malloc
 
 template <class MemSpace>
 struct TestIncrMemorySpace_malloc {
@@ -62,7 +62,7 @@ struct TestIncrMemorySpace_malloc {
 
 };
 
-TEST_F(TEST_CATEGORY, incr_02a_memspace_malloc) {
+TEST(TEST_CATEGORY, incr_02a_memspace_malloc) {
   typedef typename TEST_EXECSPACE::memory_space memory_space;
   TestIncrMemorySpace_malloc<memory_space> test;
   test.testit_malloc();

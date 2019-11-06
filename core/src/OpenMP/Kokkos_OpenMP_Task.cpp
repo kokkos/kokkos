@@ -42,7 +42,7 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_OPENMP ) && defined( KOKKOS_ENABLE_TASKDAG )
+#if defined(KOKKOS_ENABLE_OPENMP) && defined(KOKKOS_ENABLE_TASKDAG)
 
 #include <Kokkos_Core.hpp>
 
@@ -57,50 +57,53 @@
 namespace Kokkos {
 namespace Impl {
 
-template class TaskQueue< Kokkos::OpenMP, typename Kokkos::OpenMP::memory_space > ;
+template class TaskQueue<Kokkos::OpenMP, typename Kokkos::OpenMP::memory_space>;
 
-HostThreadTeamData& HostThreadTeamDataSingleton::singleton()
-{
+HostThreadTeamData& HostThreadTeamDataSingleton::singleton() {
   static HostThreadTeamDataSingleton s;
   return s;
 }
 
 HostThreadTeamDataSingleton::HostThreadTeamDataSingleton()
-  : HostThreadTeamData()
-{
-  Kokkos::OpenMP::memory_space space ;
-  const size_t num_pool_reduce_bytes  =   32 ;
-  const size_t num_team_reduce_bytes  =   32 ;
-  const size_t num_team_shared_bytes  = 1024 ;
-  const size_t num_thread_local_bytes = 1024 ;
-  const size_t alloc_bytes =
-    HostThreadTeamData::scratch_size( num_pool_reduce_bytes
-      , num_team_reduce_bytes
-      , num_team_shared_bytes
-      , num_thread_local_bytes );
+    : HostThreadTeamData() {
+  Kokkos::OpenMP::memory_space space;
+  const size_t num_pool_reduce_bytes  = 32;
+  const size_t num_team_reduce_bytes  = 32;
+  const size_t num_team_shared_bytes  = 1024;
+  const size_t num_thread_local_bytes = 1024;
+  const size_t alloc_bytes            = HostThreadTeamData::scratch_size(
+      num_pool_reduce_bytes, num_team_reduce_bytes, num_team_shared_bytes,
+      num_thread_local_bytes);
 
-  HostThreadTeamData::scratch_assign
-    ( space.allocate( alloc_bytes )
-      , alloc_bytes
-      , num_pool_reduce_bytes
-      , num_team_reduce_bytes
-      , num_team_shared_bytes
-      , num_thread_local_bytes );
+  void* ptr = nullptr;
+  try {
+    ptr = space.allocate(alloc_bytes);
+  } catch (Kokkos::Experimental::RawMemoryAllocationFailure const& f) {
+    // For now, just rethrow the error message with a note
+    // Note that this could, in turn, trigger an out of memory exception,
+    // but it's pretty unlikely, so we won't worry about it for now.
+    // TODO reasonable error message when `std::string` causes OOM error
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("Failure to allocate scratch memory:  ") +
+        f.get_error_message());
+  }
+
+  HostThreadTeamData::scratch_assign(
+      ptr, alloc_bytes, num_pool_reduce_bytes, num_team_reduce_bytes,
+      num_team_shared_bytes, num_thread_local_bytes);
 }
 
-HostThreadTeamDataSingleton::~HostThreadTeamDataSingleton()
-{
-  Kokkos::OpenMP::memory_space space ;
-  space.deallocate(
-    HostThreadTeamData::scratch_buffer(),
-    static_cast<size_t>(HostThreadTeamData::scratch_bytes())
-  );
+HostThreadTeamDataSingleton::~HostThreadTeamDataSingleton() {
+  Kokkos::OpenMP::memory_space space;
+  space.deallocate(HostThreadTeamData::scratch_buffer(),
+                   static_cast<size_t>(HostThreadTeamData::scratch_bytes()));
 }
 
-}} /* namespace Kokkos::Impl */
+}  // namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 #else
 void KOKKOS_CORE_SRC_OPENMP_KOKKOS_OPENMP_TASK_PREVENT_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_OPENMP ) && defined( KOKKOS_ENABLE_TASKDAG ) */
-
+#endif /* #if defined( KOKKOS_ENABLE_OPENMP ) && defined( \
+          KOKKOS_ENABLE_TASKDAG ) */

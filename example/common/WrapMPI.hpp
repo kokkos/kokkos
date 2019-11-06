@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -47,57 +47,56 @@
 #include <Kokkos_Macros.hpp>
 #include <string>
 
-#if defined( KOKKOS_ENABLE_MPI )
+#if defined(KOKKOS_ENABLE_MPI)
 
 #include <mpi.h>
 
 namespace Kokkos {
 namespace Example {
 
-inline
-double all_reduce( double value , MPI_Comm comm )
-{
-  double local = value ;
-  MPI_Allreduce( & local , & value , 1 , MPI_DOUBLE , MPI_SUM , comm );
-  return value ;
+inline double all_reduce(double value, MPI_Comm comm) {
+  double local = value;
+  MPI_Allreduce(&local, &value, 1, MPI_DOUBLE, MPI_SUM, comm);
+  return value;
 }
 
-inline
-double all_reduce_max( double value , MPI_Comm comm )
-{
-  double local = value ;
-  MPI_Allreduce( & local , & value , 1 , MPI_DOUBLE , MPI_MAX , comm );
-  return value ;
+inline double all_reduce_max(double value, MPI_Comm comm) {
+  double local = value;
+  MPI_Allreduce(&local, &value, 1, MPI_DOUBLE, MPI_MAX, comm);
+  return value;
 }
 
-} // namespace Example
-} // namespace Kokkos
+}  // namespace Example
+}  // namespace Kokkos
 
-#elif ! defined( KOKKOS_ENABLE_MPI )
+#elif !defined(KOKKOS_ENABLE_MPI)
 
 /* Wrap the the MPI_Comm type and heavily used MPI functions
  * to reduce the number of '#if defined( KOKKOS_ENABLE_MPI )'
  * blocks which have to be sprinkled throughout the examples.
  */
 
-typedef int MPI_Comm ;
+typedef int MPI_Comm;
 
-inline int MPI_Comm_size( MPI_Comm , int * size ) { *size = 1 ; return 0 ; }
-inline int MPI_Comm_rank( MPI_Comm , int * rank ) { *rank = 0 ; return 0 ; }
-inline int MPI_Barrier( MPI_Comm ) { return 0; }
+inline int MPI_Comm_size(MPI_Comm, int* size) {
+  *size = 1;
+  return 0;
+}
+inline int MPI_Comm_rank(MPI_Comm, int* rank) {
+  *rank = 0;
+  return 0;
+}
+inline int MPI_Barrier(MPI_Comm) { return 0; }
 
 namespace Kokkos {
 namespace Example {
 
-inline
-double all_reduce( double value , MPI_Comm ) { return value ; }
+inline double all_reduce(double value, MPI_Comm) { return value; }
 
-inline
-double all_reduce_max( double value , MPI_Comm ) { return value ; }
+inline double all_reduce_max(double value, MPI_Comm) { return value; }
 
-} // namespace Example
-} // namespace Kokkos
+}  // namespace Example
+}  // namespace Kokkos
 
 #endif /* ! defined( KOKKOS_ENABLE_MPI ) */
 #endif /* #ifndef KOKKOS_EXAMPLE_WRAP_MPI */
-

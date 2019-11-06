@@ -41,59 +41,52 @@
 //@HEADER
 */
 
-#include<Kokkos_Core.hpp>
-#include<impl/Kokkos_Timer.hpp>
+#include <Kokkos_Core.hpp>
+#include <impl/Kokkos_Timer.hpp>
 
-template<class Scalar, int Unroll,int Stride>
+template <class Scalar, int Unroll, int Stride>
 struct Run {
-static void run(int N, int K, int R, int F, int T, int S);
+  static void run(int N, int K, int R, int F, int T, int S);
 };
 
-template<class Scalar, int Stride>
+template <class Scalar, int Stride>
 struct RunStride {
-static void run_1(int N, int K, int R, int F, int T, int S);
-static void run_2(int N, int K, int R, int F, int T, int S);
-static void run_3(int N, int K, int R, int F, int T, int S);
-static void run_4(int N, int K, int R, int F, int T, int S);
-static void run_5(int N, int K, int R, int F, int T, int S);
-static void run_6(int N, int K, int R, int F, int T, int S);
-static void run_7(int N, int K, int R, int F, int T, int S);
-static void run_8(int N, int K, int R, int F, int T, int S);
-static void run(int N, int K, int R, int U, int F, int T, int S);
+  static void run_1(int N, int K, int R, int F, int T, int S);
+  static void run_2(int N, int K, int R, int F, int T, int S);
+  static void run_3(int N, int K, int R, int F, int T, int S);
+  static void run_4(int N, int K, int R, int F, int T, int S);
+  static void run_5(int N, int K, int R, int F, int T, int S);
+  static void run_6(int N, int K, int R, int F, int T, int S);
+  static void run_7(int N, int K, int R, int F, int T, int S);
+  static void run_8(int N, int K, int R, int F, int T, int S);
+  static void run(int N, int K, int R, int U, int F, int T, int S);
 };
 
 #define STRIDE 1
-#include<bench_stride.hpp>
+#include <bench_stride.hpp>
 #undef STRIDE
 #define STRIDE 2
-#include<bench_stride.hpp>
+#include <bench_stride.hpp>
 #undef STRIDE
 #define STRIDE 4
-#include<bench_stride.hpp>
+#include <bench_stride.hpp>
 #undef STRIDE
 #define STRIDE 8
-#include<bench_stride.hpp>
+#include <bench_stride.hpp>
 #undef STRIDE
 #define STRIDE 16
-#include<bench_stride.hpp>
+#include <bench_stride.hpp>
 #undef STRIDE
 #define STRIDE 32
-#include<bench_stride.hpp>
+#include <bench_stride.hpp>
 #undef STRIDE
 
-template<class Scalar>
+template <class Scalar>
 void run_stride_unroll(int N, int K, int R, int D, int U, int F, int T, int S) {
- if(D == 1)
-   RunStride<Scalar,1>::run(N,K,R,U,F,T,S);
- if(D == 2)
-   RunStride<Scalar,2>::run(N,K,R,U,F,T,S);
- if(D == 4)
-   RunStride<Scalar,4>::run(N,K,R,U,F,T,S);
- if(D == 8)
-   RunStride<Scalar,8>::run(N,K,R,U,F,T,S);
- if(D == 16)
-   RunStride<Scalar,16>::run(N,K,R,U,F,T,S);
- if(D == 32)
-   RunStride<Scalar,32>::run(N,K,R,U,F,T,S);
+  if (D == 1) RunStride<Scalar, 1>::run(N, K, R, U, F, T, S);
+  if (D == 2) RunStride<Scalar, 2>::run(N, K, R, U, F, T, S);
+  if (D == 4) RunStride<Scalar, 4>::run(N, K, R, U, F, T, S);
+  if (D == 8) RunStride<Scalar, 8>::run(N, K, R, U, F, T, S);
+  if (D == 16) RunStride<Scalar, 16>::run(N, K, R, U, F, T, S);
+  if (D == 32) RunStride<Scalar, 32>::run(N, K, R, U, F, T, S);
 }
-

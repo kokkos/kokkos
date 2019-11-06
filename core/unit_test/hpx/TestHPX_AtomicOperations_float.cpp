@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestAtomicOperations_float.hpp>
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestAtomicOperations_float.hpp>

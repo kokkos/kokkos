@@ -46,19 +46,6 @@
 
 #include <gtest/gtest.h>
 
-namespace Test {
-
-class openmp : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {
-  }
-
-  static void TearDownTestCase() {
-  }
-};
-
-} // namespace Test
-
 #define TEST_CATEGORY openmp
 #define TEST_EXECSPACE Kokkos::OpenMP
 

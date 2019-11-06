@@ -47,114 +47,151 @@
 namespace Test {
 
 KOKKOS_INLINE_FUNCTION
-void test_abort()
-{
-  Kokkos::abort( "test_abort" );
-}
+void test_abort() { Kokkos::abort("test_abort"); }
 
 KOKKOS_INLINE_FUNCTION
-void test_rocm_spaces_int_value( int * ptr )
-{
-  if ( *ptr == 42 ) { *ptr = 2 * 42; }
+void test_rocm_spaces_int_value(int *ptr) {
+  if (*ptr == 42) {
+    *ptr = 2 * 42;
+  }
 }
 
-TEST_F( rocm, space_access )
-{
-  static_assert(
-    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace, Kokkos::HostSpace >::assignable, "" );
+TEST_F(rocm, space_access) {
+  static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
+                                                Kokkos::HostSpace>::assignable,
+                "");
+
+  static_assert(Kokkos::Impl::MemorySpaceAccess<
+                    Kokkos::HostSpace,
+                    Kokkos::Experimental::ROCmHostPinnedSpace>::assignable,
+                "");
 
   static_assert(
-    Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace, Kokkos::Experimental::ROCmHostPinnedSpace >::assignable, "" );
+      !Kokkos::Impl::MemorySpaceAccess<
+          Kokkos::HostSpace, Kokkos::Experimental::ROCmSpace>::assignable,
+      "");
 
   static_assert(
-    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace, Kokkos::Experimental::ROCmSpace >::assignable, "" );
+      !Kokkos::Impl::MemorySpaceAccess<
+          Kokkos::HostSpace, Kokkos::Experimental::ROCmSpace>::accessible,
+      "");
+
+  //--------------------------------------
+
+  static_assert(Kokkos::Impl::MemorySpaceAccess<
+                    Kokkos::Experimental::ROCmSpace,
+                    Kokkos::Experimental::ROCmSpace>::assignable,
+                "");
+
+  static_assert(!Kokkos::Impl::MemorySpaceAccess<
+                    Kokkos::Experimental::ROCmSpace,
+                    Kokkos::Experimental::ROCmHostPinnedSpace>::assignable,
+                "");
+
+  static_assert(Kokkos::Impl::MemorySpaceAccess<
+                    Kokkos::Experimental::ROCmSpace,
+                    Kokkos::Experimental::ROCmHostPinnedSpace>::accessible,
+                "");
 
   static_assert(
-    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::HostSpace, Kokkos::Experimental::ROCmSpace >::accessible, "" );
+      !Kokkos::Impl::MemorySpaceAccess<Kokkos::Experimental::ROCmSpace,
+                                       Kokkos::HostSpace>::assignable,
+      "");
+
+  static_assert(
+      !Kokkos::Impl::MemorySpaceAccess<Kokkos::Experimental::ROCmSpace,
+                                       Kokkos::HostSpace>::accessible,
+      "");
+
+  //--------------------------------------
+
+  static_assert(Kokkos::Impl::MemorySpaceAccess<
+                    Kokkos::Experimental::ROCmHostPinnedSpace,
+                    Kokkos::Experimental::ROCmHostPinnedSpace>::assignable,
+                "");
+
+  static_assert(!Kokkos::Impl::MemorySpaceAccess<
+                    Kokkos::Experimental::ROCmHostPinnedSpace,
+                    Kokkos::HostSpace>::assignable,
+                "");
+
+  static_assert(
+      Kokkos::Impl::MemorySpaceAccess<Kokkos::Experimental::ROCmHostPinnedSpace,
+                                      Kokkos::HostSpace>::accessible,
+      "");
+
+  static_assert(!Kokkos::Impl::MemorySpaceAccess<
+                    Kokkos::Experimental::ROCmHostPinnedSpace,
+                    Kokkos::Experimental::ROCmSpace>::assignable,
+                "");
+
+  static_assert(!Kokkos::Impl::MemorySpaceAccess<
+                    Kokkos::Experimental::ROCmHostPinnedSpace,
+                    Kokkos::Experimental::ROCmSpace>::accessible,
+                "");
 
   //--------------------------------------
 
   static_assert(
-    Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmSpace, Kokkos::Experimental::ROCmSpace >::assignable, "" );
+      !Kokkos::Impl::SpaceAccessibility<Kokkos::Experimental::ROCm,
+                                        Kokkos::HostSpace>::accessible,
+      "");
+
+  static_assert(Kokkos::Impl::SpaceAccessibility<
+                    Kokkos::Experimental::ROCm,
+                    Kokkos::Experimental::ROCmSpace>::accessible,
+                "");
+
+  static_assert(Kokkos::Impl::SpaceAccessibility<
+                    Kokkos::Experimental::ROCm,
+                    Kokkos::Experimental::ROCmHostPinnedSpace>::accessible,
+                "");
 
   static_assert(
-    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmSpace, Kokkos::Experimental::ROCmHostPinnedSpace >::assignable, "" );
+      !Kokkos::Impl::SpaceAccessibility<
+          Kokkos::HostSpace, Kokkos::Experimental::ROCmSpace>::accessible,
+      "");
+
+  static_assert(Kokkos::Impl::SpaceAccessibility<
+                    Kokkos::HostSpace,
+                    Kokkos::Experimental::ROCmHostPinnedSpace>::accessible,
+                "");
 
   static_assert(
-    Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmSpace, Kokkos::Experimental::ROCmHostPinnedSpace >::accessible, "" );
+      std::is_same<
+          Kokkos::Impl::HostMirror<Kokkos::Experimental::ROCmSpace>::Space,
+          Kokkos::HostSpace>::value,
+      "");
 
   static_assert(
-    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmSpace, Kokkos::HostSpace >::assignable, "" );
+      std::is_same<Kokkos::Impl::HostMirror<
+                       Kokkos::Experimental::ROCmHostPinnedSpace>::Space,
+                   Kokkos::Experimental::ROCmHostPinnedSpace>::value,
+      "");
+
+  static_assert(Kokkos::Impl::SpaceAccessibility<
+                    Kokkos::Impl::HostMirror<Kokkos::Experimental::ROCm>::Space,
+                    Kokkos::HostSpace>::accessible,
+                "");
 
   static_assert(
-    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmSpace, Kokkos::HostSpace >::accessible, "" );
+      Kokkos::Impl::SpaceAccessibility<
+          Kokkos::Impl::HostMirror<Kokkos::Experimental::ROCmSpace>::Space,
+          Kokkos::HostSpace>::accessible,
+      "");
 
-  //--------------------------------------
-
-  static_assert(
-    Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmHostPinnedSpace, Kokkos::Experimental::ROCmHostPinnedSpace >::assignable, "" );
-
-  static_assert(
-    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmHostPinnedSpace, Kokkos::HostSpace >::assignable, "" );
-
-  static_assert(
-    Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmHostPinnedSpace, Kokkos::HostSpace >::accessible, "" );
-
-  static_assert(
-    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmHostPinnedSpace, Kokkos::Experimental::ROCmSpace >::assignable, "" );
-
-  static_assert(
-    ! Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::ROCmHostPinnedSpace, Kokkos::Experimental::ROCmSpace >::accessible, "" );
-
-  //--------------------------------------
-
-  static_assert(
-    ! Kokkos::Impl::SpaceAccessibility< Kokkos::Experimental::ROCm, Kokkos::HostSpace >::accessible, "" );
-
-  static_assert(
-    Kokkos::Impl::SpaceAccessibility< Kokkos::Experimental::ROCm, Kokkos::Experimental::ROCmSpace >::accessible, "" );
-
-  static_assert(
-    Kokkos::Impl::SpaceAccessibility< Kokkos::Experimental::ROCm, Kokkos::Experimental::ROCmHostPinnedSpace >::accessible, "" );
-
-  static_assert(
-    ! Kokkos::Impl::SpaceAccessibility< Kokkos::HostSpace, Kokkos::Experimental::ROCmSpace >::accessible, "" );
-
-  static_assert(
-    Kokkos::Impl::SpaceAccessibility< Kokkos::HostSpace, Kokkos::Experimental::ROCmHostPinnedSpace >::accessible, "" );
-
-  static_assert(
-    std::is_same< Kokkos::Impl::HostMirror< Kokkos::Experimental::ROCmSpace >::Space
-                , Kokkos::HostSpace >::value, "" );
-
-  static_assert(
-    std::is_same< Kokkos::Impl::HostMirror< Kokkos::Experimental::ROCmHostPinnedSpace >::Space
-                , Kokkos::Experimental::ROCmHostPinnedSpace >::value, "" );
-
-  static_assert(
-    Kokkos::Impl::SpaceAccessibility
-      < Kokkos::Impl::HostMirror< Kokkos::Experimental::ROCm >::Space
-      , Kokkos::HostSpace
-      >::accessible, "" );
-
-  static_assert(
-    Kokkos::Impl::SpaceAccessibility
-      < Kokkos::Impl::HostMirror< Kokkos::Experimental::ROCmSpace >::Space
-      , Kokkos::HostSpace
-      >::accessible, "" );
-
-  static_assert(
-    Kokkos::Impl::SpaceAccessibility
-      < Kokkos::Impl::HostMirror< Kokkos::Experimental::ROCmHostPinnedSpace >::Space
-      , Kokkos::HostSpace
-      >::accessible, "" );
+  static_assert(Kokkos::Impl::SpaceAccessibility<
+                    Kokkos::Impl::HostMirror<
+                        Kokkos::Experimental::ROCmHostPinnedSpace>::Space,
+                    Kokkos::HostSpace>::accessible,
+                "");
 }
 
-template< class MemSpace, class ExecSpace >
+template <class MemSpace, class ExecSpace>
 struct TestViewROCmAccessible {
   enum { N = 1000 };
 
-  using V = Kokkos::View< double*, MemSpace >;
+  using V = Kokkos::View<double *, MemSpace>;
 
   V m_base;
 
@@ -162,35 +199,38 @@ struct TestViewROCmAccessible {
   struct TagTest {};
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( const TagInit &, const int i ) const { m_base[i] = i + 1; }
+  void operator()(const TagInit &, const int i) const { m_base[i] = i + 1; }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( const TagTest &, const int i, long & error_count ) const
-  { if ( m_base[i] != i + 1 ) ++error_count; }
+  void operator()(const TagTest &, const int i, long &error_count) const {
+    if (m_base[i] != i + 1) ++error_count;
+  }
 
-  TestViewROCmAccessible()
-    : m_base( "base", N )
-    {}
+  TestViewROCmAccessible() : m_base("base", N) {}
 
-  static void run()
-  {
+  static void run() {
     TestViewROCmAccessible self;
-    Kokkos::parallel_for( Kokkos::RangePolicy< typename MemSpace::execution_space, TagInit >( 0, N ), self );
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<typename MemSpace::execution_space, TagInit>(0, N),
+        self);
     typename MemSpace::execution_space().fence();
 
     // Next access is a different execution space, must complete prior kernel.
     long error_count = -1;
-    Kokkos::parallel_reduce( Kokkos::RangePolicy< ExecSpace, TagTest >( 0, N ), self, error_count );
-    EXPECT_EQ( error_count, 0 );
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace, TagTest>(0, N), self,
+                            error_count);
+    EXPECT_EQ(error_count, 0);
   }
 };
 
-TEST_F( rocm, impl_view_accessible )
-{
-  TestViewROCmAccessible< Kokkos::Experimental::ROCmSpace, Kokkos::Experimental::ROCm >::run();
+TEST_F(rocm, impl_view_accessible) {
+  TestViewROCmAccessible<Kokkos::Experimental::ROCmSpace,
+                         Kokkos::Experimental::ROCm>::run();
 
-  TestViewROCmAccessible< Kokkos::Experimental::ROCmHostPinnedSpace, Kokkos::Experimental::ROCm >::run();
-  TestViewROCmAccessible< Kokkos::Experimental::ROCmHostPinnedSpace, Kokkos::HostSpace::execution_space >::run();
+  TestViewROCmAccessible<Kokkos::Experimental::ROCmHostPinnedSpace,
+                         Kokkos::Experimental::ROCm>::run();
+  TestViewROCmAccessible<Kokkos::Experimental::ROCmHostPinnedSpace,
+                         Kokkos::HostSpace::execution_space>::run();
 }
 
-} // namespace Test
+}  // namespace Test

@@ -53,59 +53,51 @@ namespace Kokkos {
 namespace Profiling {
 
 class ProfilingSection {
+ public:
+  ProfilingSection(const std::string& sectionName) : secName(sectionName) {
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::createProfileSection(secName, &secID);
+    }
+#else
+    secID = 0;
+#endif
+  }
 
-public:
-	ProfilingSection(const std::string& sectionName) :
-		secName(sectionName) {
+  void start() {
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::startSection(secID);
+    }
+#endif
+  }
 
-		#if defined( KOKKOS_ENABLE_PROFILING )
-			if(Kokkos::Profiling::profileLibraryLoaded()) {
-				Kokkos::Profiling::createProfileSection(secName, &secID);
-			}
-		#else
-			secID = 0;
-		#endif
-	}
-	
-	void start() {
-		#if defined( KOKKOS_ENABLE_PROFILING )
-			if(Kokkos::Profiling::profileLibraryLoaded()) {
-				Kokkos::Profiling::startSection(secID);
-			}
-		#endif
-	}
-	
-	void stop() {
-		#if defined( KOKKOS_ENABLE_PROFILING )
-			if(Kokkos::Profiling::profileLibraryLoaded()) {
-				Kokkos::Profiling::stopSection(secID);
-			}
-		#endif
-	}
-	
-	~ProfilingSection() {
-		#if defined( KOKKOS_ENABLE_PROFILING )
-			if(Kokkos::Profiling::profileLibraryLoaded()) {
-				Kokkos::Profiling::destroyProfileSection(secID);
-			}
-		#endif
-	}
-	
-	std::string getName() {
-		return secName;
-	}
-	
-	uint32_t getSectionID() {
-		return secID;
-	}
-	
-protected:
-	const std::string secName;
-	uint32_t secID;
+  void stop() {
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::stopSection(secID);
+    }
+#endif
+  }
 
+  ~ProfilingSection() {
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::destroyProfileSection(secID);
+    }
+#endif
+  }
+
+  std::string getName() { return secName; }
+
+  uint32_t getSectionID() { return secID; }
+
+ protected:
+  const std::string secName;
+  uint32_t secID;
 };
 
-}
-}
+}  // namespace Profiling
+}  // namespace Kokkos
 
 #endif

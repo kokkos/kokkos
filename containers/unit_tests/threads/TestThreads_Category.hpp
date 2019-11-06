@@ -44,21 +44,6 @@
 #ifndef KOKKOS_TEST_THREADS_HPP
 #define KOKKOS_TEST_THREADS_HPP
 
-#include <gtest/gtest.h>
-
-namespace Test {
-
-class threads : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {
-  }
-
-  static void TearDownTestCase() {
-  }
-};
-
-} // namespace Test
-
 #define TEST_CATEGORY threads
 #define TEST_EXECSPACE Kokkos::Threads
 

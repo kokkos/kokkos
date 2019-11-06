@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<qthreads/TestQqthreads_Category.hpp>
-#include<TestAtomicOperations_longlongint.hpp>
-
+#include <qthreads/TestQqthreads_Category.hpp>
+#include <TestAtomicOperations_longlongint.hpp>

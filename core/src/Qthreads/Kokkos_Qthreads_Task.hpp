@@ -45,7 +45,7 @@
 #define KOKKOS_IMPL_QTHREADS_TASK_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_QTHREADS ) && defined( KOKKOS_ENABLE_TASKPOLICY )
+#if defined(KOKKOS_ENABLE_QTHREADS) && defined(KOKKOS_ENABLE_TASKPOLICY)
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -53,98 +53,90 @@
 namespace Kokkos {
 namespace Impl {
 
-template<>
-class TaskQueueSpecialization< Kokkos::Qthreads >
-{
-public:
-
-  using execution_space = Kokkos::Qthreads ;
-  using queue_type      = Kokkos::Impl::TaskQueue< execution_space > ;
-  using task_base_type  = Kokkos::Impl::TaskBase< execution_space, void, void > ;
+template <>
+class TaskQueueSpecialization<Kokkos::Qthreads> {
+ public:
+  using execution_space = Kokkos::Qthreads;
+  using queue_type      = Kokkos::Impl::TaskQueue<execution_space>;
+  using task_base_type  = Kokkos::Impl::TaskBase<execution_space, void, void>;
 
   // Must specify memory space
-  using memory_space = Kokkos::HostSpace ;
+  using memory_space = Kokkos::HostSpace;
 
-  static
-  void iff_single_thread_recursive_execute( queue_type * const );
+  static void iff_single_thread_recursive_execute(queue_type* const);
 
   // Must provide task queue execution function
-  static void execute( queue_type * const );
+  static void execute(queue_type* const);
 
   // Must provide mechanism to set function pointer in
   // execution space from the host process.
-  template< typename FunctorType >
-  static
-  void proc_set_apply( task_base_type::function_type * ptr )
-    {
-      using TaskType = TaskBase< execution_space,
-                                 typename FunctorType::value_type,
-                                 FunctorType
-                               > ;
-       *ptr = TaskType::apply ;
-    }
+  template <typename FunctorType>
+  static void proc_set_apply(task_base_type::function_type* ptr) {
+    using TaskType = TaskBase<execution_space, typename FunctorType::value_type,
+                              FunctorType>;
+    *ptr           = TaskType::apply;
+  }
 };
 
-extern template class TaskQueue< Kokkos::Qthreads > ;
+extern template class TaskQueue<Kokkos::Qthreads>;
 
 //----------------------------------------------------------------------------
 
-template<>
-class TaskExec< Kokkos::Qthreads >
-{
-private:
+template <>
+class TaskExec<Kokkos::Qthreads> {
+ private:
+  TaskExec(TaskExec&&)      = delete;
+  TaskExec(TaskExec const&) = delete;
+  TaskExec& operator=(TaskExec&&) = delete;
+  TaskExec& operator=(TaskExec const&) = delete;
 
-  TaskExec( TaskExec && ) = delete ;
-  TaskExec( TaskExec const & ) = delete ;
-  TaskExec & operator = ( TaskExec && ) = delete ;
-  TaskExec & operator = ( TaskExec const & ) = delete ;
+  using PoolExec = Kokkos::Impl::QthreadsExec;
 
+  friend class Kokkos::Impl::TaskQueue<Kokkos::Qthreads>;
+  friend class Kokkos::Impl::TaskQueueSpecialization<Kokkos::Qthreads>;
 
-  using PoolExec = Kokkos::Impl::QthreadsExec ;
-
-  friend class Kokkos::Impl::TaskQueue< Kokkos::Qthreads > ;
-  friend class Kokkos::Impl::TaskQueueSpecialization< Kokkos::Qthreads > ;
-
-  PoolExec * const m_self_exec ;  ///< This thread's thread pool data structure
-  PoolExec * const m_team_exec ;  ///< Team thread's thread pool data structure
-  int64_t          m_sync_mask ;
-  int64_t mutable  m_sync_value ;
-  int     mutable  m_sync_step ;
-  int              m_group_rank ; ///< Which "team" subset of thread pool
-  int              m_team_rank ;  ///< Which thread within a team
-  int              m_team_size ;
+  PoolExec* const m_self_exec;  ///< This thread's thread pool data structure
+  PoolExec* const m_team_exec;  ///< Team thread's thread pool data structure
+  int64_t m_sync_mask;
+  int64_t mutable m_sync_value;
+  int mutable m_sync_step;
+  int m_group_rank;  ///< Which "team" subset of thread pool
+  int m_team_rank;   ///< Which thread within a team
+  int m_team_size;
 
   TaskExec();
-  TaskExec( PoolExec & arg_exec, int arg_team_size );
+  TaskExec(PoolExec& arg_exec, int arg_team_size);
 
-public:
+ public:
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+  void* team_shared() const {
+    return m_team_exec ? m_team_exec->scratch_thread() : (void*)0;
+  }
 
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-  void * team_shared() const
-    { return m_team_exec ? m_team_exec->scratch_thread() : (void*) 0 ; }
-
-  int team_shared_size() const
-    { return m_team_exec ? m_team_exec->scratch_thread_size() : 0 ; }
+  int team_shared_size() const {
+    return m_team_exec ? m_team_exec->scratch_thread_size() : 0;
+  }
 
   /**\brief  Whole team enters this function call
    *         before any teeam member returns from
    *         this function call.
    */
-  void team_barrier() const ;
+  void team_barrier() const;
 #else
   KOKKOS_INLINE_FUNCTION void team_barrier() const {}
-  KOKKOS_INLINE_FUNCTION void * team_shared() const { return 0 ; }
-  KOKKOS_INLINE_FUNCTION int team_shared_size() const { return 0 ; }
+  KOKKOS_INLINE_FUNCTION void* team_shared() const { return 0; }
+  KOKKOS_INLINE_FUNCTION int team_shared_size() const { return 0; }
 #endif
 
   KOKKOS_INLINE_FUNCTION
-  int team_rank() const { return m_team_rank ; }
+  int team_rank() const { return m_team_rank; }
 
   KOKKOS_INLINE_FUNCTION
-  int team_size() const { return m_team_size ; }
+  int team_size() const { return m_team_size; }
 };
 
-}} /* namespace Kokkos::Impl */
+}  // namespace Impl
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -154,4 +146,3 @@ public:
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKPOLICY ) */
 #endif /* #ifndef KOKKOS_IMPL_QTHREADS_TASK_HPP */
-

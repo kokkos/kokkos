@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestAtomicOperations_unsignedint.hpp>
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestAtomicOperations_unsignedint.hpp>

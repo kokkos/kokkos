@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestScan.hpp>
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestScan.hpp>

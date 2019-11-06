@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestAtomicOperations_longint.hpp>
-
+#include <rocm/TestROCm_Category.hpp>
+#include <TestAtomicOperations_longint.hpp>

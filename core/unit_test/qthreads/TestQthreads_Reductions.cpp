@@ -45,24 +45,21 @@
 
 namespace Test {
 
-TEST_F( qthreads, long_reduce )
-{
+TEST_F(qthreads, long_reduce) {
 #if 0
   TestReduce< long, Kokkos::Qthreads >( 0 );
   TestReduce< long, Kokkos::Qthreads >( 1000000 );
 #endif
 }
 
-TEST_F( qthreads, double_reduce )
-{
+TEST_F(qthreads, double_reduce) {
 #if 0
   TestReduce< double, Kokkos::Qthreads >( 0 );
   TestReduce< double, Kokkos::Qthreads >( 1000000 );
 #endif
 }
 
-TEST_F( qthreads, reducers )
-{
+TEST_F(qthreads, reducers) {
 #if 0
   TestReducers< int, Kokkos::Qthreads >::execute_integer();
   TestReducers< size_t, Kokkos::Qthreads >::execute_integer();
@@ -71,32 +68,28 @@ TEST_F( qthreads, reducers )
 #endif
 }
 
-TEST_F( qthreads, long_reduce_dynamic )
-{
+TEST_F(qthreads, long_reduce_dynamic) {
 #if 0
   TestReduceDynamic< long, Kokkos::Qthreads >( 0 );
   TestReduceDynamic< long, Kokkos::Qthreads >( 1000000 );
 #endif
 }
 
-TEST_F( qthreads, double_reduce_dynamic )
-{
+TEST_F(qthreads, double_reduce_dynamic) {
 #if 0
   TestReduceDynamic< double, Kokkos::Qthreads >( 0 );
   TestReduceDynamic< double, Kokkos::Qthreads >( 1000000 );
 #endif
 }
 
-TEST_F( qthreads, long_reduce_dynamic_view )
-{
+TEST_F(qthreads, long_reduce_dynamic_view) {
 #if 0
   TestReduceDynamicView< long, Kokkos::Qthreads >( 0 );
   TestReduceDynamicView< long, Kokkos::Qthreads >( 1000000 );
 #endif
 }
 
-TEST_F( qthreads, scan )
-{
+TEST_F(qthreads, scan) {
 #if 0
   TestScan< Kokkos::Qthreads >::test_range( 1, 1000 );
   TestScan< Kokkos::Qthreads >( 0 );
@@ -106,8 +99,7 @@ TEST_F( qthreads, scan )
 #endif
 }
 
-TEST_F( qthreads, scan_small )
-{
+TEST_F(qthreads, scan_small) {
 #if 0
   typedef TestScan< Kokkos::Qthreads, Kokkos::Impl::QthreadsExecUseScanSmall > TestScanFunctor;
 
@@ -122,8 +114,7 @@ TEST_F( qthreads, scan_small )
 #endif
 }
 
-TEST_F( qthreads, team_scan )
-{
+TEST_F(qthreads, team_scan) {
 #if 0
   TestScanTeam< Kokkos::Qthreads, Kokkos::Schedule<Kokkos::Static> >( 0 );
   TestScanTeam< Kokkos::Qthreads, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
@@ -134,8 +125,7 @@ TEST_F( qthreads, team_scan )
 #endif
 }
 
-TEST_F( qthreads, team_long_reduce )
-{
+TEST_F(qthreads, team_long_reduce) {
 #if 0
   TestReduceTeam< long, Kokkos::Qthreads, Kokkos::Schedule<Kokkos::Static> >( 0 );
   TestReduceTeam< long, Kokkos::Qthreads, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
@@ -146,8 +136,7 @@ TEST_F( qthreads, team_long_reduce )
 #endif
 }
 
-TEST_F( qthreads, team_double_reduce )
-{
+TEST_F(qthreads, team_double_reduce) {
 #if 0
   TestReduceTeam< double, Kokkos::Qthreads, Kokkos::Schedule<Kokkos::Static> >( 0 );
   TestReduceTeam< double, Kokkos::Qthreads, Kokkos::Schedule<Kokkos::Dynamic> >( 0 );
@@ -158,11 +147,10 @@ TEST_F( qthreads, team_double_reduce )
 #endif
 }
 
-TEST_F( qthreads, reduction_deduction )
-{
+TEST_F(qthreads, reduction_deduction) {
 #if 0
   TestCXX11::test_reduction_deduction< Kokkos::Qthreads >();
 #endif
 }
 
-} // namespace Test
+}  // namespace Test

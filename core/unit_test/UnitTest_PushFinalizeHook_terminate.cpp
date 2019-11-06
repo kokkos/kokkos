@@ -50,30 +50,28 @@
 // throws but does not catch an exception, make sure that
 // Kokkos::finalize calls std::terminate.
 
-namespace { // (anonymous)
+namespace {  // (anonymous)
 
 // If you change this, change CMakeLists.txt in this directory too!
 // I verified that changing this string makes the test fail.
-const char my_terminate_str[] = "PASSED: I am the custom std::terminate handler.";
+const char my_terminate_str[] =
+    "PASSED: I am the custom std::terminate handler.";
 
 // Tell compilers not to complain that this function doesn't return.
-[[ noreturn ]] void my_terminate_handler ()
-{
+[[noreturn]] void my_terminate_handler() {
   std::cerr << my_terminate_str << std::endl;
-  std::abort(); // terminate handlers normally would end by calling this
+  std::abort();  // terminate handlers normally would end by calling this
 }
 
-} // namespace (anonymous)
+}  // namespace
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   // If std::terminate is called, it will call my_terminate_handler.
-  std::set_terminate (my_terminate_handler);
+  std::set_terminate(my_terminate_handler);
 
   Kokkos::initialize(argc, argv);
-  Kokkos::push_finalize_hook([] {
-      throw std::runtime_error ("I am an uncaught exception!");
-    });
+  Kokkos::push_finalize_hook(
+      [] { throw std::runtime_error("I am an uncaught exception!"); });
 
   // This should call std::terminate, which in turn will call
   // my_terminate_handler above.  That will print the message that
