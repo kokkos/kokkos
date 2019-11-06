@@ -46,43 +46,42 @@
 
 #include <Kokkos_Macros.hpp>
 
-namespace Kokkos { namespace Experimental {
+namespace Kokkos {
+namespace Experimental {
 
-enum class UniqueTokenScope : int
-{
-  Instance,
-  Global
-};
+enum class UniqueTokenScope : int { Instance, Global };
 
-/// \brief class to generate unique ids base on the required amount of concurrency
+/// \brief class to generate unique ids base on the required amount of
+/// concurrency
 ///
 /// This object should behave like a ref-counted object, so that when the last
 /// instance is destroy resources are free if needed
-template <typename ExecutionSpace, UniqueTokenScope = UniqueTokenScope::Instance >
-class UniqueToken
-{
-public:
+template <typename ExecutionSpace,
+          UniqueTokenScope = UniqueTokenScope::Instance>
+class UniqueToken {
+ public:
   using execution_space = ExecutionSpace;
   using size_type       = typename execution_space::size_type;
 
   /// \brief create object size for concurrency on the given instance
   ///
   /// This object should not be shared between instances
-  UniqueToken( execution_space const& = execution_space() );
+  UniqueToken(execution_space const& = execution_space());
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
-  size_type size() const ;
+  size_type size() const;
 
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
-  size_type acquire() const ;
+  size_type acquire() const;
 
   /// \brief release a value acquired by generate
   KOKKOS_INLINE_FUNCTION
-  void release( size_type ) const ;
+  void release(size_type) const;
 };
 
-}} // namespace Kokkos::Experimental
+}  // namespace Experimental
+}  // namespace Kokkos
 
-#endif //KOKKOS_UNIQUE_TOKEN_HPP
+#endif  // KOKKOS_UNIQUE_TOKEN_HPP

@@ -1,0 +1,11 @@
+coverage:
+  precision: 1
+  round: down
+  range: "70...100"
+ignore:
+  - tpls/
+  - algorithms/unit_tests
+  - core/perf_test/
+  - core/unit_test/
+  - containers/performance_tests
+  - containers/unit_tests

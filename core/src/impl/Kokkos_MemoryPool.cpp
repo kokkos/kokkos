@@ -53,73 +53,57 @@ namespace Impl {
 
 /* Verify size constraints:
  *   min_block_alloc_size <= max_block_alloc_size
- *   max_block_alloc_size <= min_superblock_size 
+ *   max_block_alloc_size <= min_superblock_size
  *   min_superblock_size  <= max_superblock_size
  *   min_superblock_size  <= min_total_alloc_size
- *   min_superblock_size  <= min_block_alloc_size * 
+ *   min_superblock_size  <= min_block_alloc_size *
  *                           max_block_per_superblock
  */
-void memory_pool_bounds_verification
-  ( size_t min_block_alloc_size
-  , size_t max_block_alloc_size
-  , size_t min_superblock_size
-  , size_t max_superblock_size
-  , size_t max_block_per_superblock
-  , size_t min_total_alloc_size
-  )
-{
-  const size_t max_superblock =
-    min_block_alloc_size * max_block_per_superblock ;
+void memory_pool_bounds_verification(size_t min_block_alloc_size,
+                                     size_t max_block_alloc_size,
+                                     size_t min_superblock_size,
+                                     size_t max_superblock_size,
+                                     size_t max_block_per_superblock,
+                                     size_t min_total_alloc_size) {
+  const size_t max_superblock = min_block_alloc_size * max_block_per_superblock;
 
-  if ( ( size_t(max_superblock_size) < min_superblock_size ) ||
-       ( min_total_alloc_size < min_superblock_size ) ||
-       ( max_superblock       < min_superblock_size ) ||
-       ( min_superblock_size  < max_block_alloc_size ) ||
-       ( max_block_alloc_size < min_block_alloc_size ) ) {
+  if ((size_t(max_superblock_size) < min_superblock_size) ||
+      (min_total_alloc_size < min_superblock_size) ||
+      (max_superblock < min_superblock_size) ||
+      (min_superblock_size < max_block_alloc_size) ||
+      (max_block_alloc_size < min_block_alloc_size)) {
+    std::ostringstream msg;
 
-    std::ostringstream msg ;
+    msg << "Kokkos::MemoryPool size constraint violation";
 
-    msg << "Kokkos::MemoryPool size constraint violation" ;
-
-    if ( size_t(max_superblock_size) < min_superblock_size ) {
-      msg << " : max_superblock_size("
-          << max_superblock_size
-          << ") < min_superblock_size("
-          << min_superblock_size << ")" ;
+    if (size_t(max_superblock_size) < min_superblock_size) {
+      msg << " : max_superblock_size(" << max_superblock_size
+          << ") < min_superblock_size(" << min_superblock_size << ")";
     }
 
-    if ( min_total_alloc_size < min_superblock_size ) {
-      msg << " : min_total_alloc_size("
-          << min_total_alloc_size
-          << ") < min_superblock_size("
-          << min_superblock_size << ")" ;
+    if (min_total_alloc_size < min_superblock_size) {
+      msg << " : min_total_alloc_size(" << min_total_alloc_size
+          << ") < min_superblock_size(" << min_superblock_size << ")";
     }
 
-    if ( max_superblock < min_superblock_size ) {
-      msg << " : max_superblock("
-          << max_superblock
-          << ") < min_superblock_size("
-          << min_superblock_size << ")" ;
+    if (max_superblock < min_superblock_size) {
+      msg << " : max_superblock(" << max_superblock
+          << ") < min_superblock_size(" << min_superblock_size << ")";
     }
 
-    if ( min_superblock_size < max_block_alloc_size ) {
-      msg << " : min_superblock_size("
-          << min_superblock_size
-          << ") < max_block_alloc_size("
-          << max_block_alloc_size << ")" ;
+    if (min_superblock_size < max_block_alloc_size) {
+      msg << " : min_superblock_size(" << min_superblock_size
+          << ") < max_block_alloc_size(" << max_block_alloc_size << ")";
     }
 
-    if ( max_block_alloc_size < min_block_alloc_size ) {
-      msg << " : max_block_alloc_size("
-          << max_block_alloc_size
-          << ") < min_block_alloc_size("
-          << min_block_alloc_size << ")" ;
+    if (max_block_alloc_size < min_block_alloc_size) {
+      msg << " : max_block_alloc_size(" << max_block_alloc_size
+          << ") < min_block_alloc_size(" << min_block_alloc_size << ")";
     }
 
-    Kokkos::Impl::throw_runtime_exception( msg.str() );
+    Kokkos::Impl::throw_runtime_exception(msg.str());
   }
 }
 
-}
-}
-
+}  // namespace Impl
+}  // namespace Kokkos

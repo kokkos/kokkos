@@ -43,4 +43,3 @@
 */
 
 #include <serial/TestSerial_Category.hpp>
-#include <incremental_testing/Test01_ExecutionSpace.hpp>

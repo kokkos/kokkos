@@ -53,37 +53,31 @@ namespace Example {
 namespace FENL {
 
 struct Perf {
-  size_t global_elem_count ;
-  size_t global_node_count ;
-  size_t newton_iter_count ;
-  size_t cg_iter_count ;
-  double map_ratio ;
-  double fill_node_set ;
-  double scan_node_count ;
-  double fill_graph_entries ;
-  double sort_graph_entries ;
-  double fill_element_graph ;
-  double create_sparse_matrix ;
-  double fill_time ;
-  double bc_time ;
-  double matvec_time ;
-  double cg_time ;
-  double newton_residual ;
-  double error_max ;
-
+  size_t global_elem_count;
+  size_t global_node_count;
+  size_t newton_iter_count;
+  size_t cg_iter_count;
+  double map_ratio;
+  double fill_node_set;
+  double scan_node_count;
+  double fill_graph_entries;
+  double sort_graph_entries;
+  double fill_element_graph;
+  double create_sparse_matrix;
+  double fill_time;
+  double bc_time;
+  double matvec_time;
+  double cg_time;
+  double newton_residual;
+  double error_max;
 };
 
-template < class Device , BoxElemPart::ElemOrder ElemOrder >
-Perf fenl(
-  MPI_Comm comm ,
-  const int use_print ,
-  const int use_trials ,
-  const int use_atomic ,
-  const int global_elems[] );
+template <class Device, BoxElemPart::ElemOrder ElemOrder>
+Perf fenl(MPI_Comm comm, const int use_print, const int use_trials,
+          const int use_atomic, const int global_elems[]);
 
 } /* namespace FENL */
 } /* namespace Example */
 } /* namespace Kokkos */
 
 #endif /* #ifndef KOKKOS_EXAMPLE_FENL_HPP */
-

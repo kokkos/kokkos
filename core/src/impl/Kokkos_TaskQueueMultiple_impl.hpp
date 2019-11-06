@@ -45,7 +45,7 @@
 #define KOKKOS_IMPL_TASKQUEUEMULTIPLE_IMPL_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_TASKDAG )
+#if defined(KOKKOS_ENABLE_TASKDAG)
 
 #include <impl/Kokkos_TaskQueueMultiple.hpp>
 
@@ -55,9 +55,11 @@ namespace Kokkos {
 namespace Impl {
 
 template <class ExecSpace, class MemorySpace>
-void TaskQueueMultiple<ExecSpace, MemorySpace>::Destroy::destroy_shared_allocation() {
+void TaskQueueMultiple<ExecSpace,
+                       MemorySpace>::Destroy::destroy_shared_allocation() {
 // KOKKOS WORKAROUND for CUDA 10.1 with GCC 7.3.0
-#if(KOKKOS_COMPILER_CUDA_VERSION==101) && defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_GNU>=730)
+#if (KOKKOS_COMPILER_CUDA_VERSION == 101) && defined(KOKKOS_COMPILER_NVCC) && \
+    (KOKKOS_COMPILER_GNU >= 730)
   (*m_queue).get_team_queue(0).~TaskQueueMultiple();
 #else
   m_queue->get_team_queue(0).~TaskQueueMultiple();
@@ -69,4 +71,3 @@ void TaskQueueMultiple<ExecSpace, MemorySpace>::Destroy::destroy_shared_allocati
 
 #endif /* #if defined( KOKKOS_ENABLE_TASKDAG ) */
 #endif /* #ifndef KOKKOS_IMPL_TASKQUEUEMULTIPLE_IMPL_HPP */
-

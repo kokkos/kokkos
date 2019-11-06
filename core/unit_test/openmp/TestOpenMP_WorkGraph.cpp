@@ -41,5 +41,5 @@
 //@HEADER
 */
 
-#include<openmp/TestOpenMP_Category.hpp>
-#include<TestWorkGraph.hpp>
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestWorkGraph.hpp>

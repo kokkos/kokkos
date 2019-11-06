@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<hpx/TestHPX_Category.hpp>
-#include<TestUniqueToken.hpp>
-
+#include <hpx/TestHPX_Category.hpp>
+#include <TestUniqueToken.hpp>

@@ -99,6 +99,10 @@ depfile_target_arg=""
 # Option to remove duplicate libraries and object files
 remove_duplicate_link_files=0
 
+function warn_std_flag() {
+  echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
+}
+
 #echo "Arguments: $# $@"
 
 while [ $# -gt 0 ]
@@ -133,7 +137,11 @@ do
     if [ $optimization_applied -eq 1 ]; then
        echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-O*), only the first is used because nvcc can only accept a single optimization setting."
     else
-       shared_args="$shared_args $1"
+       if [ "$1" = "-O" ]; then
+         shared_args="$shared_args -O2"
+       else
+         shared_args="$shared_args $1"
+       fi
        optimization_applied=1
     fi
     ;;
@@ -171,7 +179,7 @@ do
     shift
     ;;
   #Handle known nvcc args
-  --dryrun|--verbose|--keep|--keep-dir*|-G|--relocatable-device-code*|-lineinfo|-expt-extended-lambda|--resource-usage|-Xptxas*)
+  --dryrun|--verbose|--keep|--keep-dir*|-G|--relocatable-device-code*|-lineinfo|-expt-extended-lambda|--resource-usage|-Xptxas*|--fmad*)
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
@@ -179,7 +187,7 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument
-  -rdc|-maxrregcount|--default-stream)
+  -rdc|-maxrregcount|--default-stream|-Xnvlink|--fmad)
     cuda_args="$cuda_args $1 $2"
     shift
     ;;
@@ -187,9 +195,30 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle c++11
-  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++1y|-std=c++1y|--std=c++17|-std=c++17|--std=c++1z|-std=c++1z)
+  --std=c++1y|-std=c++1y|--std=c++1z|-std=c++1z|--std=gnu++1y|-std=gnu++1y|--std=gnu++1z|-std=gnu++1z)
     if [ $stdcxx_applied -eq 1 ]; then
-       echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
+       warn_std_flag
+    else
+       # this is hopefully just occurring in a downstream project during CMake feature tests
+       # we really have no choice here but to accept the flag and "promote" to the corresponding C++ standard
+       echo "nvcc_wrapper does not accept intermediate standard flag $1, but I will use -std=c++14 instead. It is undefined behavior to use this flag. This should only be occurring during CMake configuration."
+       shared_args="$shared_args -std=c++14"
+       stdcxx_applied=1
+    fi
+    ;;
+  -std=gnu*)
+    if [ $stdcxx_applied -eq 1 ]; then
+       warn_std_flag
+    else
+       stdFlag=${1/gnu/c}
+       echo "nvcc_wrapper has been given GNU extension standard flag $1 - reverting flag to $stdFlag"
+       shared_args="$shared_args $stdFlag"
+       stdcxx_applied=1
+    fi
+  ;;
+  --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++17|-std=c++17)
+    if [ $stdcxx_applied -eq 1 ]; then
+       warn_std_flag
     else
        shared_args="$shared_args $1"
        stdcxx_applied=1
@@ -308,16 +337,6 @@ do
   shift
 done
 
-#Check if nvcc exists
-if [ $host_only -ne 1 ]; then
-  var=$(which nvcc )
-  if [ $? -gt 0 ]; then
-    echo "Could not find nvcc in PATH"
-    exit $?
-  fi
-fi
-
-
 # Only print host compiler version
 if [ $get_host_version -eq 1 ]; then
   $host_compiler --version
@@ -371,6 +390,9 @@ nvcc_command="nvcc $cuda_args $shared_args $xlinker_args $shared_versioned_libra
 if [ $first_xcompiler_arg -eq 0 ]; then
   nvcc_command="$nvcc_command -Xcompiler $xcompiler_args"
 fi
+
+#Replace all commas in xcompiler_args with a space for the host only command
+xcompiler_args=${xcompiler_args//,/" "}
 
 #Compose host only command
 host_command="$host_compiler $shared_args $host_only_args $compile_arg $output_arg $xcompiler_args $host_linker_args $shared_versioned_libraries_host"

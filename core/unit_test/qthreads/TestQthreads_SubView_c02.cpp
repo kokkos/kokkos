@@ -45,11 +45,10 @@
 
 namespace Test {
 
-TEST_F( qthreads, view_subview_1d_assign_atomic )
-{
+TEST_F(qthreads, view_subview_1d_assign_atomic) {
 #if 0
   TestViewSubview::test_1d_assign< Kokkos::Qthreads, Kokkos::MemoryTraits<Kokkos::Atomic> >();
 #endif
 }
 
-} // namespace Test
+}  // namespace Test

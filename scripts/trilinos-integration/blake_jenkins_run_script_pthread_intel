@@ -43,7 +43,7 @@ export JENKINS_DO_SHARED=ON
 export QUEUE=blake
 
 
-module load python
+module load python/2.7.13
 
 
 export KOKKOS_PATH=${PWD}/kokkos

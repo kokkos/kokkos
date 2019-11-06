@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -47,14 +47,12 @@
 namespace Kokkos {
 namespace Example {
 
-template < class Device , bool UseAtomic >
-void feint(
-  const unsigned global_elem_nx = 100 ,
-  const unsigned global_elem_ny = 115 ,
-  const unsigned global_elem_nz = 130 );
+template <class Device, bool UseAtomic>
+void feint(const unsigned global_elem_nx = 100,
+           const unsigned global_elem_ny = 115,
+           const unsigned global_elem_nz = 130);
 
 } /* namespace Example */
 } /* namespace Kokkos */
 
 #endif /* #ifndef KOKKOS_EXAMPLE_FEINT_FWD_HPP */
-

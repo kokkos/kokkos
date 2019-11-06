@@ -41,10 +41,9 @@
 //@HEADER
 */
 
-#include<TestDynViewAPI.hpp>
+#include <TestDynViewAPI.hpp>
 namespace Test {
-TEST_F( TEST_CATEGORY , dyn_rank_view_api_operator_rank67) {
-  TestDynViewAPI< double , TEST_EXECSPACE >::run_operator_test_rank67();
+TEST(TEST_CATEGORY, dyn_rank_view_api_operator_rank67) {
+  TestDynViewAPI<double, TEST_EXECSPACE>::run_operator_test_rank67();
 }
-}
-
+}  // namespace Test

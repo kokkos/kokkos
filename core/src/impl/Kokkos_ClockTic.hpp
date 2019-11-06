@@ -64,47 +64,46 @@ namespace Impl {
  *  having different index-seed values.
  */
 KOKKOS_FORCEINLINE_FUNCTION
-uint64_t clock_tic(void) noexcept
-{
-#if defined( __CUDA_ARCH__ )
+uint64_t clock_tic(void) noexcept {
+#if defined(__CUDA_ARCH__)
 
   // Return value of 64-bit hi-res clock register.
 
   return clock64();
 
 #elif defined(__HCC_ACCELERATOR__)
-    // Get clock register
-    return hc::__clock_u64();
+  // Get clock register
+  return hc::__clock_u64();
 
-#elif defined( __i386__ ) || defined( __x86_64 )
+#elif defined(__i386__) || defined(__x86_64)
 
   // Return value of 64-bit hi-res clock register.
 
   unsigned a = 0, d = 0;
 
-  __asm__ volatile( "rdtsc" : "=a" (a), "=d" (d) );
+  __asm__ volatile("rdtsc" : "=a"(a), "=d"(d));
 
-  return ( (uint64_t) a ) | ( ( (uint64_t) d ) << 32 );
+  return ((uint64_t)a) | (((uint64_t)d) << 32);
 
-#elif defined( __powerpc )     || defined( __powerpc__ ) || \
-      defined( __powerpc64__ ) || defined( __POWERPC__ ) || \
-      defined( __ppc__ )       || defined( __ppc64__ )
+#elif defined(__powerpc) || defined(__powerpc__) || defined(__powerpc64__) || \
+    defined(__POWERPC__) || defined(__ppc__) || defined(__ppc64__)
 
   unsigned int cycles = 0;
 
-  asm volatile( "mftb %0" : "=r" (cycles) );
+  asm volatile("mftb %0" : "=r"(cycles));
 
-  return (uint64_t) cycles;
+  return (uint64_t)cycles;
 
 #else
 
-  return (uint64_t)
-    std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  return (uint64_t)std::chrono::high_resolution_clock::now()
+      .time_since_epoch()
+      .count();
 
 #endif
 }
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
-#endif // KOKKOS_CLOCKTIC_HPP
+#endif  // KOKKOS_CLOCKTIC_HPP

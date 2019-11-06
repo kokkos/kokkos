@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestDynViewAPI_rank67.hpp>
-
+#include <rocm/TestROCm_Category.hpp>
+#include <TestDynViewAPI_rank67.hpp>

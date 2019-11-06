@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -84,12 +84,10 @@ struct hello_world {
   // (as well as on the host).  If not building with CUDA, the macro
   // is unnecessary but harmless.
   KOKKOS_INLINE_FUNCTION
-  void operator() (const int i) const {
-    printf ("Hello from i = %i\n", i);
-  }
+  void operator()(const int i) const { printf("Hello from i = %i\n", i); }
 };
 
-int main (int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
   // You must call initialize() before you may call Kokkos.
   //
   // With no arguments, this initializes the default execution space
@@ -97,13 +95,13 @@ int main (int argc, char* argv[]) {
   // parameters.  You may also pass in argc and argv, analogously to
   // MPI_Init().  It reads and removes command-line arguments that
   // start with "--kokkos-".
-  Kokkos::initialize (argc, argv);
+  Kokkos::initialize(argc, argv);
 
   // Print the name of Kokkos' default execution space.  We're using
   // typeid here, so the name might get a bit mangled by the linker,
   // but you should still be able to figure out what it is.
-  printf ("Hello World on Kokkos execution space %s\n",
-          typeid (Kokkos::DefaultExecutionSpace).name ());
+  printf("Hello World on Kokkos execution space %s\n",
+         typeid(Kokkos::DefaultExecutionSpace).name());
 
   // Run the above functor on the default Kokkos execution space in
   // parallel, with a parallel for loop count of 15.
@@ -122,9 +120,8 @@ int main (int argc, char* argv[]) {
   //
   // You may notice that the printed numbers do not print out in
   // order.  Parallel for loops may execute in any order.
-  Kokkos::parallel_for ("HelloWorld",15, hello_world ());
+  Kokkos::parallel_for("HelloWorld", 15, hello_world());
 
   // You must call finalize() after you are done using Kokkos.
-  Kokkos::finalize ();
+  Kokkos::finalize();
 }
-

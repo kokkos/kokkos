@@ -42,74 +42,62 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ATOMIC_HPP ) && ! defined( KOKKOS_ATOMIC_ASSEMBLY_HPP )
+#if defined(KOKKOS_ATOMIC_HPP) && !defined(KOKKOS_ATOMIC_ASSEMBLY_HPP)
 #define KOKKOS_ATOMIC_ASSEMBLY_HPP
 namespace Kokkos {
 
 namespace Impl {
-  struct cas128_t
-  {
-    uint64_t lower;
-    uint64_t upper;
+struct cas128_t {
+  uint64_t lower;
+  uint64_t upper;
 
-    KOKKOS_INLINE_FUNCTION
-    cas128_t () {
-      lower = 0;
-      upper = 0;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    cas128_t (const cas128_t& a) {
-      lower = a.lower;
-      upper = a.upper;
-    }
-    KOKKOS_INLINE_FUNCTION
-    cas128_t (volatile cas128_t* a) {
-      lower = a->lower;
-      upper = a->upper;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    bool operator != (const cas128_t& a) const {
-      return (lower != a.lower) || upper!=a.upper;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator = (const cas128_t& a) {
-      lower = a.lower;
-      upper = a.upper;
-    }
-    KOKKOS_INLINE_FUNCTION
-    void operator = (const cas128_t& a) volatile {
-      lower = a.lower;
-      upper = a.upper;
-    }
+  KOKKOS_INLINE_FUNCTION
+  cas128_t() {
+    lower = 0;
+    upper = 0;
   }
-  __attribute__ (( __aligned__( 16 ) ));
 
-
-  #if defined( KOKKOS_ENABLE_ASM ) && defined ( KOKKOS_ENABLE_ISA_X86_64 )
-  inline cas128_t cas128( volatile cas128_t * ptr, cas128_t cmp,  cas128_t swap )
-  {
-      bool swapped = false;
-      __asm__ __volatile__
-      (
-       "lock cmpxchg16b %1\n\t"
-       "setz %0"
-       : "=q" ( swapped )
-       , "+m" ( *ptr )
-       , "+d" ( cmp.upper )
-       , "+a" ( cmp.lower )
-       : "c" ( swap.upper )
-       , "b" ( swap.lower )
-       , "q" ( swapped )
-     );
-      return cmp;
+  KOKKOS_INLINE_FUNCTION
+  cas128_t(const cas128_t& a) {
+    lower = a.lower;
+    upper = a.upper;
   }
-  #endif
+  KOKKOS_INLINE_FUNCTION
+  cas128_t(volatile cas128_t* a) {
+    lower = a->lower;
+    upper = a->upper;
+  }
 
-}
-}
+  KOKKOS_INLINE_FUNCTION
+  bool operator!=(const cas128_t& a) const {
+    return (lower != a.lower) || upper != a.upper;
+  }
 
+  KOKKOS_INLINE_FUNCTION
+  void operator=(const cas128_t& a) {
+    lower = a.lower;
+    upper = a.upper;
+  }
+  KOKKOS_INLINE_FUNCTION
+  void operator=(const cas128_t& a) volatile {
+    lower = a.lower;
+    upper = a.upper;
+  }
+} __attribute__((__aligned__(16)));
+
+#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
+inline cas128_t cas128(volatile cas128_t* ptr, cas128_t cmp, cas128_t swap) {
+  bool swapped = false;
+  __asm__ __volatile__(
+      "lock cmpxchg16b %1\n\t"
+      "setz %0"
+      : "=q"(swapped), "+m"(*ptr), "+d"(cmp.upper), "+a"(cmp.lower)
+      : "c"(swap.upper), "b"(swap.lower), "q"(swapped));
+  return cmp;
+}
 #endif
 
+}  // namespace Impl
+}  // namespace Kokkos
+
+#endif

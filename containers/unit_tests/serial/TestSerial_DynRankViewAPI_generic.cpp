@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<serial/TestSerial_Category.hpp>
-#include<TestDynViewAPI_generic.hpp>
-
+#include <serial/TestSerial_Category.hpp>
+#include <TestDynViewAPI_generic.hpp>

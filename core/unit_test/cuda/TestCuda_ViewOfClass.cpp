@@ -43,4 +43,3 @@
 
 #include <cuda/TestCuda_Category.hpp>
 #include <TestViewOfClass.hpp>
-

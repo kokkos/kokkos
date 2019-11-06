@@ -46,19 +46,6 @@
 
 #include <gtest/gtest.h>
 
-namespace Test {
-
-class cuda : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {
-  }
-
-  static void TearDownTestCase() {
-  }
-};
-
-} // namespace Test
-
 #define TEST_CATEGORY cuda
 #define TEST_EXECSPACE Kokkos::Cuda
 

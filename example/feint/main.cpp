@@ -46,15 +46,15 @@
 
 #include <feint_fwd.hpp>
 
-int main(int argc, char* argv[])
-{
-  Kokkos::initialize(argc,argv);
+int main(int argc, char* argv[]) {
+  Kokkos::initialize(argc, argv);
   {
-    std::cout << "feint< " << Kokkos::DefaultExecutionSpace::name() << " , NotUsingAtomic >" << std::endl ;
-    Kokkos::Example::feint< Kokkos::DefaultExecutionSpace , false >();
-    std::cout << "feint< " << Kokkos::DefaultExecutionSpace::name() << " , UsingAtomic >" << std::endl ;
-    Kokkos::Example::feint< Kokkos::DefaultExecutionSpace , true >();
+    std::cout << "feint< " << Kokkos::DefaultExecutionSpace::name()
+              << " , NotUsingAtomic >" << std::endl;
+    Kokkos::Example::feint<Kokkos::DefaultExecutionSpace, false>();
+    std::cout << "feint< " << Kokkos::DefaultExecutionSpace::name()
+              << " , UsingAtomic >" << std::endl;
+    Kokkos::Example::feint<Kokkos::DefaultExecutionSpace, true>();
   }
   Kokkos::finalize();
 }
-

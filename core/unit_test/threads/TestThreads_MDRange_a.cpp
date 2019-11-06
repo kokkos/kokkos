@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<threads/TestThreads_Category.hpp>
-#include<TestMDRange_a.hpp>
-
+#include <threads/TestThreads_Category.hpp>
+#include <TestMDRange_a.hpp>

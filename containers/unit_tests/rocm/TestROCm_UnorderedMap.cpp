@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<rocm/TestROCm_Category.hpp>
-#include<TestUnorderedMap.hpp>
-
+#include <rocm/TestROCm_Category.hpp>
+#include <TestUnorderedMap.hpp>

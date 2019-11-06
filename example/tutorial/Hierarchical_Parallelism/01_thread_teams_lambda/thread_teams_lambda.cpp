@@ -53,17 +53,17 @@
 // some reasonable bound, which eventually depends upon the hardware
 // and programming model implementation).
 
-int main (int narg, char* args[]) {
+int main(int narg, char* args[]) {
   using Kokkos::parallel_reduce;
-  typedef Kokkos::TeamPolicy<>               team_policy;
-  typedef typename team_policy::member_type  team_member;
+  typedef Kokkos::TeamPolicy<> team_policy;
+  typedef typename team_policy::member_type team_member;
 
-  Kokkos::initialize (narg, args);
+  Kokkos::initialize(narg, args);
 
   // Set up a policy that launches 12 teams, with the maximum number
   // of threads per team.
 
-  const team_policy policy (12, Kokkos::AUTO);
+  const team_policy policy(12, Kokkos::AUTO);
 
   // This is a reduction with a team policy.  The team policy changes
   // the first argument of the lambda.  Rather than an integer index
@@ -77,21 +77,23 @@ int main (int narg, char* args[]) {
   // region."  That is, every team member is active and will execute
   // the body of the lambda.
   int sum = 0;
-  // We also need to protect the usage of a lambda against compiling
-  // with a backend which doesn't support it (i.e. Cuda 6.5/7.0).
-  #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-  parallel_reduce (policy, KOKKOS_LAMBDA (const team_member& thread, int& lsum) {
-      lsum += 1;
-      // TeamPolicy<>::member_type provides functions to query the
-      // multidimensional index of a thread, as well as the number of
-      // thread teams and the size of each team.
-      printf ("Hello World: %i %i // %i %i\n", thread.league_rank (),
-              thread.team_rank (), thread.league_size (), thread.team_size ());
-    }, sum);
-  #endif
+// We also need to protect the usage of a lambda against compiling
+// with a backend which doesn't support it (i.e. Cuda 6.5/7.0).
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  parallel_reduce(
+      policy,
+      KOKKOS_LAMBDA(const team_member& thread, int& lsum) {
+        lsum += 1;
+        // TeamPolicy<>::member_type provides functions to query the
+        // multidimensional index of a thread, as well as the number of
+        // thread teams and the size of each team.
+        printf("Hello World: %i %i // %i %i\n", thread.league_rank(),
+               thread.team_rank(), thread.league_size(), thread.team_size());
+      },
+      sum);
+#endif
   // The result will be 12*team_policy::team_size_max([=]{})
-  printf ("Result %i\n",sum);
+  printf("Result %i\n", sum);
 
-  Kokkos::finalize ();
+  Kokkos::finalize();
 }
-

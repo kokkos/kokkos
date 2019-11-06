@@ -43,25 +43,22 @@
 
 #include <Kokkos_Core.hpp>
 
-#if defined( KOKKOS_ENABLE_THREADS )
+#if defined(KOKKOS_ENABLE_THREADS)
 
 #include <feint.hpp>
 
 namespace Kokkos {
 namespace Example {
 
-template void feint< Kokkos::Threads ,false>(
-  const unsigned global_elem_nx ,
-  const unsigned global_elem_ny ,
-  const unsigned global_elem_nz );
+template void feint<Kokkos::Threads, false>(const unsigned global_elem_nx,
+                                            const unsigned global_elem_ny,
+                                            const unsigned global_elem_nz);
 
-template void feint< Kokkos::Threads ,true>(
-  const unsigned global_elem_nx ,
-  const unsigned global_elem_ny ,
-  const unsigned global_elem_nz );
+template void feint<Kokkos::Threads, true>(const unsigned global_elem_nx,
+                                           const unsigned global_elem_ny,
+                                           const unsigned global_elem_nz);
 
 } /* namespace Example */
 } /* namespace Kokkos */
 
 #endif /* #if defined( KOKKOS_ENABLE_THREADS ) */
-

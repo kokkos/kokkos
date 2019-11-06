@@ -46,19 +46,6 @@
 
 #include <gtest/gtest.h>
 
-namespace Test {
-
-class rocm_hostpinned : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {
-  }
-
-  static void TearDownTestCase() {
-  }
-};
-
-} // namespace Test
-
 #define TEST_CATEGORY rocm_hostpinned
 #define TEST_EXECSPACE Kokkos::Experimental::ROCmHostPinnedSpace
 

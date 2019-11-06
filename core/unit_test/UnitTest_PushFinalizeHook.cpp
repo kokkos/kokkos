@@ -47,7 +47,7 @@
 #include <sstream>
 #include <Kokkos_Core.hpp>
 
-namespace { // (anonymous)
+namespace {  // (anonymous)
 
 // Output for the finalize hooks.  Use this to make sure that all the
 // hooks ran, and that they ran in the correct order.
@@ -58,7 +58,7 @@ const char hook2str[] = "Yea verily, I am Hook 2.";
 const char hook3str[] = "Indeed, I am Hook 3.";
 const char hook4str[] = "Last but not least, I am Hook 4.";
 
-} // namespace (anonymous)
+}  // namespace
 
 // Don't just have all the hooks print the same thing except for a
 // number.  Have them print different things, so we can detect
@@ -73,62 +73,52 @@ const char hook4str[] = "Last but not least, I am Hook 4.";
 //    unfortunately like to call "functor," even though this word
 //    means something different in other languages.
 
-void hook1 () {
-  hookOutput << hook1str << std::endl;
-}
+void hook1() { hookOutput << hook1str << std::endl; }
 
 struct Hook4 {
-  void operator () () const {
-    hookOutput << hook4str << std::endl;
-  }
+  void operator()() const { hookOutput << hook4str << std::endl; }
 };
 
-int main( int argc, char *argv[] ) {
+int main(int argc, char* argv[]) {
   using std::cout;
   using std::endl;
 
-  const std::string expectedOutput ([] {
-      std::ostringstream os;
-      os << hook4str << endl
-         << hook3str << endl
-         << hook2str << endl
-         << hook1str << endl;
-      return os.str();
-    }());
+  const std::string expectedOutput([] {
+    std::ostringstream os;
+    os << hook4str << endl
+       << hook3str << endl
+       << hook2str << endl
+       << hook1str << endl;
+    return os.str();
+  }());
 
   Kokkos::initialize(argc, argv);
 
-  Kokkos::push_finalize_hook(hook1); // plain old function
-  Kokkos::push_finalize_hook ([] {
-      hookOutput << hook2str << endl;
-    }); // lambda
-  std::function<void()> hook3 = [] {
-    hookOutput << hook3str << endl;
-  };
-  Kokkos::push_finalize_hook(hook3); // actual std::function
+  Kokkos::push_finalize_hook(hook1);  // plain old function
+  Kokkos::push_finalize_hook([] { hookOutput << hook2str << endl; });  // lambda
+  std::function<void()> hook3 = [] { hookOutput << hook3str << endl; };
+  Kokkos::push_finalize_hook(hook3);  // actual std::function
   Hook4 hook4;
-  Kokkos::push_finalize_hook(hook4); // function object instance
+  Kokkos::push_finalize_hook(hook4);  // function object instance
 
   // This should invoke the finalize hooks in reverse order.
   // Furthermore, it should not throw an exception.
   try {
     Kokkos::finalize();
-  }
-  catch (std::exception& e) {
+  } catch (std::exception& e) {
     cout << "FAILED: Kokkos::finalize threw an exception: " << e.what() << endl;
     return EXIT_FAILURE;
-  }
-  catch (...) {
+  } catch (...) {
     cout << "FAILED: Kokkos::finalize threw an exception whose base class "
-      "is not std::exception." << endl;
+            "is not std::exception."
+         << endl;
     return EXIT_FAILURE;
   }
 
   const bool success = (hookOutput.str() == expectedOutput);
   if (success) {
     cout << "SUCCESS" << endl;
-  }
-  else {
+  } else {
     cout << "FAILED:" << endl
          << "  Expected output:" << endl
          << expectedOutput << endl

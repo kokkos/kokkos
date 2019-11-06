@@ -45,8 +45,7 @@
 
 namespace Test {
 
-TEST_F( qthreads, view_subview_layoutleft_to_layoutleft )
-{
+TEST_F(qthreads, view_subview_layoutleft_to_layoutleft) {
 #if 0
   TestViewSubview::test_layoutleft_to_layoutleft< Kokkos::Qthreads >();
   TestViewSubview::test_layoutleft_to_layoutleft< Kokkos::Qthreads, Kokkos::MemoryTraits<Kokkos::Atomic> >();
@@ -54,8 +53,7 @@ TEST_F( qthreads, view_subview_layoutleft_to_layoutleft )
 #endif
 }
 
-TEST_F( qthreads, view_subview_layoutright_to_layoutright )
-{
+TEST_F(qthreads, view_subview_layoutright_to_layoutright) {
 #if 0
   TestViewSubview::test_layoutright_to_layoutright< Kokkos::Qthreads >();
   TestViewSubview::test_layoutright_to_layoutright< Kokkos::Qthreads, Kokkos::MemoryTraits<Kokkos::Atomic> >();
@@ -63,4 +61,4 @@ TEST_F( qthreads, view_subview_layoutright_to_layoutright )
 #endif
 }
 
-} // namespace Test
+}  // namespace Test
