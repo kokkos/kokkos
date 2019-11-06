@@ -78,7 +78,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA += TestCuda_LocalDeepCopy.o
     OBJ_CUDA += TestCuda_DebugSerialExecution.o
     OBJ_CUDA += TestCuda_DebugPinUVMSpace.o
-  
+
     TARGETS += KokkosCore_UnitTest_Cuda
     TARGETS += KokkosCore_UnitTest_CudaInterOpInit
     TARGETS += KokkosCore_UnitTest_CudaInterOpStreams
@@ -308,9 +308,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
     OBJ_SERIAL = UnitTestMainInit.o gtest-all.o
-    OBJ_SERIAL += TestSerial_Incremental_01_ExecutionSpace.o
-    OBJ_SERIAL += TestSerial_Incremental_02_MemorySpace.o
-    OBJ_SERIAL += TestSerial_Incremental_03_ParallelFor.o
     OBJ_SERIAL += TestSerial_Init.o
     OBJ_SERIAL += TestSerial_SharedAlloc.o
     OBJ_SERIAL += TestSerial_RangePolicy.o
