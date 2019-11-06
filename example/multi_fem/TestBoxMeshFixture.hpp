@@ -57,73 +57,69 @@
 
 namespace TestFEMesh {
 
-template< class ViewType >
-struct VerifyUnpack  ;
+template <class ViewType>
+struct VerifyUnpack;
 
-template< typename DeviceType, typename T >
-struct VerifyUnpack< Kokkos::View< T*[3] , DeviceType > >
-{
-  typedef DeviceType     execution_space ;
-  typedef typename execution_space::size_type  size_type ;
-  typedef size_type               value_type ;
+template <typename DeviceType, typename T>
+struct VerifyUnpack<Kokkos::View<T * [3], DeviceType> > {
+  typedef DeviceType execution_space;
+  typedef typename execution_space::size_type size_type;
+  typedef size_type value_type;
 
-  typedef Kokkos::View< T* ,    execution_space > buffer_type ;
-  typedef Kokkos::View< T*[3] , execution_space > array_type ;
+  typedef Kokkos::View<T*, execution_space> buffer_type;
+  typedef Kokkos::View<T * [3], execution_space> array_type;
 
-private:
+ private:
+  array_type node_coords;
+  buffer_type buffer;
+  size_type node_begin;
 
-  array_type  node_coords ;
-  buffer_type buffer ;
-  size_type   node_begin ;
-
-public:
+ public:
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& update) { update = 0; }
 
   KOKKOS_INLINE_FUNCTION
-  static void init( value_type & update )
-  { update = 0 ; }
+  static void join(volatile value_type& update,
+                   const volatile value_type& source) {
+    update += source;
+  }
 
   KOKKOS_INLINE_FUNCTION
-  static void join( volatile value_type & update ,
-                    const volatile value_type & source )
-  { update += source ; }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()( const size_type i , value_type & update ) const
-  {
-    const size_type node_id = i + node_begin ;
-    const size_type k = i * 3 ;
+  void operator()(const size_type i, value_type& update) const {
+    const size_type node_id = i + node_begin;
+    const size_type k       = i * 3;
 
     const long xb = buffer[k];
-    const long yb = buffer[k+1];
-    const long zb = buffer[k+2];
-    const long xn = node_coords(node_id,0);
-    const long yn = node_coords(node_id,1);
-    const long zn = node_coords(node_id,2);
+    const long yb = buffer[k + 1];
+    const long zb = buffer[k + 2];
+    const long xn = node_coords(node_id, 0);
+    const long yn = node_coords(node_id, 1);
+    const long zn = node_coords(node_id, 2);
 
-    if ( xb != xn || yb != yn || zb != zn ) {
-      printf("TestFEMesh::VerifyUnpack failed at %d : node %d : { %ld %ld %ld } != { %ld %ld %ld }\n",
-             (int)i,(int)node_id, xb,yb,zb, xn, yn, zn );
-      ++update ;
+    if (xb != xn || yb != yn || zb != zn) {
+      printf(
+          "TestFEMesh::VerifyUnpack failed at %d : node %d : { %ld %ld %ld } "
+          "!= { %ld %ld %ld }\n",
+          (int)i, (int)node_id, xb, yb, zb, xn, yn, zn);
+      ++update;
     }
   }
 
-  static inline
-  size_type unpack( const array_type  & arg_node_coords ,
-                    const size_type     arg_node_begin ,
-                    const size_type     arg_node_count ,
-                    const buffer_type & arg_buffer )
-  {
-    VerifyUnpack op ;
-    op.node_coords = arg_node_coords ;
-    op.buffer      = arg_buffer ;
-    op.node_begin  = arg_node_begin ;
-    size_type count = 0 ;
-    Kokkos::parallel_reduce( arg_node_count , op , count );
-    return count ;
+  static inline size_type unpack(const array_type& arg_node_coords,
+                                 const size_type arg_node_begin,
+                                 const size_type arg_node_count,
+                                 const buffer_type& arg_buffer) {
+    VerifyUnpack op;
+    op.node_coords  = arg_node_coords;
+    op.buffer       = arg_buffer;
+    op.node_begin   = arg_node_begin;
+    size_type count = 0;
+    Kokkos::parallel_reduce(arg_node_count, op, count);
+    return count;
   }
 };
 
-}
+}  // namespace TestFEMesh
 
 //----------------------------------------------------------------------------
 
@@ -131,35 +127,31 @@ public:
 
 namespace TestFEMesh {
 
-template< typename coordinate_scalar_type ,
-          unsigned ElemNodeCount ,
-          class Device >
-void verify_parallel(
-  const HybridFEM::FEMesh< coordinate_scalar_type ,
-                           ElemNodeCount ,
-                           Device > & mesh )
-{
-  typedef HybridFEM::FEMesh< coordinate_scalar_type, ElemNodeCount, Device > femesh_type ;
-  typedef typename femesh_type::node_coords_type node_coords_type ;
+template <typename coordinate_scalar_type, unsigned ElemNodeCount, class Device>
+void verify_parallel(const HybridFEM::FEMesh<coordinate_scalar_type,
+                                             ElemNodeCount, Device>& mesh) {
+  typedef HybridFEM::FEMesh<coordinate_scalar_type, ElemNodeCount, Device>
+      femesh_type;
+  typedef typename femesh_type::node_coords_type node_coords_type;
 
-  comm::Machine machine = mesh.parallel_data_map.machine ;
+  comm::Machine machine = mesh.parallel_data_map.machine;
 
   // Communicate node coordinates to verify communication and setup.
 
-  const size_t chunk_size = 3 ;
+  const size_t chunk_size = 3;
 
-  Kokkos::AsyncExchange< coordinate_scalar_type, Device, Kokkos::ParallelDataMap >
-    exchange( mesh.parallel_data_map , chunk_size );
+  Kokkos::AsyncExchange<coordinate_scalar_type, Device, Kokkos::ParallelDataMap>
+      exchange(mesh.parallel_data_map, chunk_size);
 
-  const size_t send_begin = mesh.parallel_data_map.count_interior ;
-  const size_t send_count = mesh.parallel_data_map.count_send ;
+  const size_t send_begin = mesh.parallel_data_map.count_interior;
+  const size_t send_count = mesh.parallel_data_map.count_send;
 
-  const size_t recv_begin = mesh.parallel_data_map.count_owned ;
-  const size_t recv_count = mesh.parallel_data_map.count_receive ;
+  const size_t recv_begin = mesh.parallel_data_map.count_owned;
+  const size_t recv_count = mesh.parallel_data_map.count_receive;
 
-  typedef Kokkos::PackArray< node_coords_type > pack_type ;
+  typedef Kokkos::PackArray<node_coords_type> pack_type;
 
-  pack_type::pack( exchange.buffer(), send_begin, send_count, mesh.node_coords );
+  pack_type::pack(exchange.buffer(), send_begin, send_count, mesh.node_coords);
 
   exchange.setup();
 
@@ -167,76 +159,63 @@ void verify_parallel(
 
   exchange.send_receive();
 
-  unsigned long local[3] ;
-  local[0] = mesh.parallel_data_map.count_owned ;
-  local[1] = mesh.parallel_data_map.count_receive ;
-  local[2] = TestFEMesh::VerifyUnpack< node_coords_type >::unpack( mesh.node_coords, recv_begin, recv_count, exchange.buffer() );
+  unsigned long local[3];
+  local[0] = mesh.parallel_data_map.count_owned;
+  local[1] = mesh.parallel_data_map.count_receive;
+  local[2] = TestFEMesh::VerifyUnpack<node_coords_type>::unpack(
+      mesh.node_coords, recv_begin, recv_count, exchange.buffer());
 
-  unsigned long global[3] = { 0 , 0 , 0 };
+  unsigned long global[3] = {0, 0, 0};
 
-  MPI_Allreduce( local , global ,
-                 3 , MPI_UNSIGNED_LONG , MPI_SUM , machine.mpi_comm );
+  MPI_Allreduce(local, global, 3, MPI_UNSIGNED_LONG, MPI_SUM, machine.mpi_comm);
 
-  if ( 0 == comm::rank( machine ) ) {
-    std::cout << ( global[2] ? "FAILED" : "PASSED" )
+  if (0 == comm::rank(machine)) {
+    std::cout << (global[2] ? "FAILED" : "PASSED")
               << ": TestFEMesh::verify_parallel "
-              << "NP(" << comm::size( machine )
-              << ") total_node(" << global[0]
-              << ") verified_nodes(" << global[1]
-              << ") failed_nodes(" << global[2]
-              << ")" << std::endl ;
+              << "NP(" << comm::size(machine) << ") total_node(" << global[0]
+              << ") verified_nodes(" << global[1] << ") failed_nodes("
+              << global[2] << ")" << std::endl;
   }
 }
 
-} // namespace TestFEMesh
+}  // namespace TestFEMesh
 
 #else /* ! #ifdef KOKKOS_ENABLE_MPI */
 
 namespace TestFEMesh {
 
-template< typename coordinate_scalar_type ,
-          unsigned ElemNodeCount ,
-          class Device >
+template <typename coordinate_scalar_type, unsigned ElemNodeCount, class Device>
 void verify_parallel(
-  const HybridFEM::FEMesh< coordinate_scalar_type ,
-                           ElemNodeCount ,
-                           Device > & )
-{}
+    const HybridFEM::FEMesh<coordinate_scalar_type, ElemNodeCount, Device>&) {}
 
-} // namespace TestFEMesh
+}  // namespace TestFEMesh
 
 #endif /* ! #ifdef KOKKOS_ENABLE_MPI */
 
 //----------------------------------------------------------------------------
 
-template< class Device >
-void test_box_fixture( comm::Machine machine ,
-                       const size_t gang_count ,
-                       const size_t nodes_nx ,
-                       const size_t nodes_ny ,
-                       const size_t nodes_nz )
-{
-  typedef long                coordinate_scalar_type ;
-  typedef FixtureElementHex8  fixture_element_type ;
+template <class Device>
+void test_box_fixture(comm::Machine machine, const size_t gang_count,
+                      const size_t nodes_nx, const size_t nodes_ny,
+                      const size_t nodes_nz) {
+  typedef long coordinate_scalar_type;
+  typedef FixtureElementHex8 fixture_element_type;
 
-  typedef BoxMeshFixture< coordinate_scalar_type ,
-                          Device ,
-                          fixture_element_type > fixture_type ;
+  typedef BoxMeshFixture<coordinate_scalar_type, Device, fixture_element_type>
+      fixture_type;
 
-  typedef typename fixture_type::FEMeshType  mesh_type ;
+  typedef typename fixture_type::FEMeshType mesh_type;
 
-  const size_t proc_count = comm::size( machine );
-  const size_t proc_local = comm::rank( machine ) ;
+  const size_t proc_count = comm::size(machine);
+  const size_t proc_local = comm::rank(machine);
 
   mesh_type mesh =
-    fixture_type::create( proc_count , proc_local , gang_count ,
-                          nodes_nx - 1 , nodes_ny - 1 , nodes_nz - 1 );
+      fixture_type::create(proc_count, proc_local, gang_count, nodes_nx - 1,
+                           nodes_ny - 1, nodes_nz - 1);
 
-  mesh.parallel_data_map.machine = machine ;
+  mesh.parallel_data_map.machine = machine;
 
-  TestFEMesh::verify_parallel( mesh );
+  TestFEMesh::verify_parallel(mesh);
 }
 
 #endif /* #ifndef TESTFEMESHBOXFIXTURE_HPP */
-
-

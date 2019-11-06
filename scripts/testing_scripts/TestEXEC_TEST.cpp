@@ -42,7 +42,5 @@
 //@HEADER
 */
 
-#include<exec/TestEXEC_Category.hpp>
-#include<TestTEST.hpp>
-
-
+#include <exec/TestEXEC_Category.hpp>
+#include <TestTEST.hpp>

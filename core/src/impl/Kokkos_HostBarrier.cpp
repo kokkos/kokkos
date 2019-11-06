@@ -48,63 +48,60 @@
 
 #include <impl/Kokkos_HostBarrier.hpp>
 
-#if !defined( _WIN32 )
-  #include <sched.h>
-  #include <time.h>
+#if !defined(_WIN32)
+#include <sched.h>
+#include <time.h>
 #else
-  #include <process.h>
-  #include <winsock2.h>
-  #include <windows.h>
+#include <process.h>
+#include <winsock2.h>
+#include <windows.h>
 #endif
 
-namespace Kokkos { namespace Impl {
+namespace Kokkos {
+namespace Impl {
 
-void HostBarrier::impl_backoff_wait_until_equal( int * ptr
-                                               , const int v
-                                               , const bool active_wait
-                                               ) noexcept
-{
-  #if !defined( _WIN32 )
-  timespec req ;
-  req.tv_sec  = 0 ;
+void HostBarrier::impl_backoff_wait_until_equal(
+    int* ptr, const int v, const bool active_wait) noexcept {
+#if !defined(_WIN32)
+  timespec req;
+  req.tv_sec     = 0;
   unsigned count = 0u;
 
-  while (!test_equal( ptr, v )) {
+  while (!test_equal(ptr, v)) {
     const int c = ::Kokkos::log2(++count);
-    if ( !active_wait || c > log2_iterations_till_sleep) {
-      req.tv_nsec = c < 16 ? 256*c : 4096;
-      nanosleep( &req, nullptr );
-    }
-    else if (c > log2_iterations_till_yield) {
+    if (!active_wait || c > log2_iterations_till_sleep) {
+      req.tv_nsec = c < 16 ? 256 * c : 4096;
+      nanosleep(&req, nullptr);
+    } else if (c > log2_iterations_till_yield) {
       sched_yield();
     }
-    #if defined( KOKKOS_ENABLE_ASM )
-    #if   defined( __PPC64__ )
-    for (int j=0; j<num_nops; ++j) {
-      asm volatile( "nop\n" );
+#if defined(KOKKOS_ENABLE_ASM)
+#if defined(__PPC64__)
+    for (int j = 0; j < num_nops; ++j) {
+      asm volatile("nop\n");
     }
-    asm volatile( "or 27, 27, 27" ::: "memory" );
-    #elif defined( __amd64 )  || defined( __amd64__ ) || \
-          defined( __x86_64 ) || defined( __x86_64__ )
-    for (int j=0; j<num_nops; ++j) {
-      asm volatile( "nop\n" );
+    asm volatile("or 27, 27, 27" ::: "memory");
+#elif defined(__amd64) || defined(__amd64__) || defined(__x86_64) || \
+    defined(__x86_64__)
+    for (int j = 0; j < num_nops; ++j) {
+      asm volatile("nop\n");
     }
-    asm volatile( "pause\n":::"memory" );
-    #endif
-    #endif
+    asm volatile("pause\n" ::: "memory");
+#endif
+#endif
   }
-  #else // _WIN32
+#else  // _WIN32
   while (!try_wait()) {
-    #if defined( KOKKOS_ENABLE_ASM )
-    for (int j=0; j<num_nops; ++j) {
-      __asm__ __volatile__( "nop\n" );
+#if defined(KOKKOS_ENABLE_ASM)
+    for (int j = 0; j < num_nops; ++j) {
+      __asm__ __volatile__("nop\n");
     }
-    __asm__ __volatile__( "pause\n":::"memory" );
-    #endif
+    __asm__ __volatile__("pause\n" ::: "memory");
+#endif
   }
-  #endif
-  //printf("W: %d\n", count);
+#endif
+  // printf("W: %d\n", count);
 }
 
-}} // namespace Kokkos::Impl
-
+}  // namespace Impl
+}  // namespace Kokkos

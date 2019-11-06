@@ -45,18 +45,17 @@
 
 #include <Kokkos_Core.hpp>
 
-#if !defined( KOKKOS_ENABLE_CUDA ) || defined( __CUDACC__ )
+#if !defined(KOKKOS_ENABLE_CUDA) || defined(__CUDACC__)
 
 #include <default/TestDefaultDeviceType_Category.hpp>
 #include <TestReduceCombinatorical.hpp>
 
 namespace Test {
 
-TEST_F( defaultdevicetype, reduce_instantiation_b2 )
-{
+TEST(defaultdevicetype, reduce_instantiation_b2) {
   TestReduceCombinatoricalInstantiation<>::execute_b2();
 }
 
-} // namespace Test
+}  // namespace Test
 
 #endif

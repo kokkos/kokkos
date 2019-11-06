@@ -26,6 +26,7 @@ supported compilers. Those machines are:
     white
     bowman
     waterman
+    ride
 
   1.1. Clone kokkos develop branch (or just switch to it)
 
@@ -74,16 +75,16 @@ Step 2:
        a) serial, openmp, and cuda via the testing scripts in kokkos-kernels/scripts/trilinos-integration (automates the process)
        b) various ATDM-supported builds via Trilinos configuration scripts located in kokkos{-kernels}/scripts/trilinos-integration/ATDM_configurations (not yet automated)
        
-       Run scripts for white (openmp and cuda) and blake (seral) that are provided in kokkos{-kernels}/scripts/trilinos-integration. 
+       Run scripts for automated testing on white (openmp and cuda) and blake (seral) that are provided in kokkos{-kernels}/scripts/trilinos-integration. 
        These scripts load their own modules/environment, so don't require preparation. You can run all four at the same time, use separate directories for each.
 
          mkdir serial
          cd serial
          nohup KOKKOSKERNELS_PATH/scripts/trilinos-integration/blake_jenkins_run_script_serial_intel &
 
-       Use scripts to configure Trilinos for waterman (cuda, cuda-debug, cuda-rdc) that are provided in kokkos-kernels/scripts/trilinos-integration/ATDM_configurations. 
+       Use scripts to configure Trilinos for waterman (cuda, cuda-debug) and ride (cuda-rdc) that are provided in kokkos-kernels/scripts/trilinos-integration/ATDM_configurations. 
 
-       These scripts load their own modules/environment, so don't require preparation of the system environment. You can run all them all at the same time, use separate directories for each. Instructions for compute node allocation, building, and testing are included in the scripts.
+       These scripts load their own modules/environment, so don't require preparation of the system environment. You can run them all at the same time, just use separate directories for each. Instructions for compute node allocation, building, and testing are included in the scripts.
 
        The Trilinos configuration scripts include an override of the kokkos and kokkos-kernels packages; this requires that a symbolic link for each be created in the Trilinos base directory:
 
@@ -109,12 +110,12 @@ Step 4: This step should be run on kokkos-dev
 
   4.1. If you don't have a GitHub token already, generate one for yourself (this will give you TOKEN):
 
-       https://github.com/settings/tokens
+         https://github.com/settings/tokens
 
   4.2. Get a clean copy of the kokkos and kokkos-kernels develop branches
 
-       git clone -b develop git@github.com:kokkos/kokkos.git
-       git clone -b develop git@github.com:kokkos/kokkos-kernels.git
+         git clone -b develop git@github.com:kokkos/kokkos.git
+         git clone -b develop git@github.com:kokkos/kokkos-kernels.git
 
   4.3. If you haven't already, install Ruby and the "github_changelog_generator" "gem"
        The github_changelog_generator is here: https://github.com/skywinder/github-changelog-generator
@@ -123,16 +124,17 @@ Step 4: This step should be run on kokkos-dev
        Follow the usual configure,make,make install process: https://www.ruby-lang.org/en/documentation/installation/#building-from-source
        Note that you will likely have to install to a non-default location with "./configure --prefix=/path"
 
-  4.4. Generate the initial changelog. Use the most recent tag as OLDTAG (`git tag -l` can show you all tags). The NEWTAG is the new version number, e.g. "2.04.00".
+  4.4. Generate the initial changelog(s). Use the most recent tag as OLDTAG (`git tag -l` can show you all tags). The NEWTAG is the new version number, e.g. "2.04.00".
+
        RUN THIS OUTSIDE THE KOKKOS SOURCE TREE!
 
        NOTE: You likely need to set an HTTPS proxy in order for this script to work:
 
-       export https_proxy=http://wwwproxy.sandia.gov:80
+         export https_proxy=http://wwwproxy.sandia.gov:80
 
-       github_changelog_generator kokkos/kokkos --token TOKEN --no-pull-requests --include-labels 'InDevelop' --exclude-labels 'question,DevelopOnly' --enhancement-labels 'enhancement,Feature Request' --future-release 'NEWTAG' --between-tags 'NEWTAG,OLDTAG'
+         github_changelog_generator kokkos/kokkos --token TOKEN --no-pull-requests --include-labels 'InDevelop' --exclude-labels 'question,DevelopOnly' --enhancement-labels 'enhancement,Feature Request' --future-release 'NEWTAG' --between-tags 'NEWTAG,OLDTAG'
 
-       github_changelog_generator kokkos/kokkos-kernels --token TOKEN --no-pull-requests --include-labels 'InDevelop' --exclude-labels 'question,DevelopOnly' --enhancement-labels 'enhancement,Feature Request' --future-release 'NEWTAG' --between-tags 'NEWTAG,OLDTAG'
+         github_changelog_generator kokkos/kokkos-kernels --token TOKEN --no-pull-requests --include-labels 'InDevelop' --exclude-labels 'question,DevelopOnly' --enhancement-labels 'enhancement,Feature Request' --future-release 'NEWTAG' --between-tags 'NEWTAG,OLDTAG'
 
   4.5. Manually cleanup and commit the change log.
        (Copy the new section from the generated CHANGELOG.md to the corresponding KOKKOS_PATH/CHANGELOG.md or KOKKOSKERNELS_PATH/CHANGELOG.md)
@@ -205,16 +207,16 @@ Step 5: This step can be done on any SEMS machine (e.g. kokkos-dev).
 
   5.1. Clone the Trilinos corresponding branch (or just switch to it)
 
-        git clone -b kokkos-promotion git@github.com:trilinos/Trilinos.git
-        TRILINOS_PATH=$PWD/Trilinos
+         git clone -b kokkos-promotion git@github.com:trilinos/Trilinos.git
+         TRILINOS_PATH=$PWD/Trilinos
 
   5.2. Snapshot Kokkos into Trilinos - this requires python/2.7.9 and that both Trilinos and Kokkos be clean - no untracked or modified files. Run the following outside of the Kokkos and Trilinos source trees. 
 
       * Use the master branch of Kokkos for this.
 
-        module load sems-python/2.7.9
-        python $KOKKOS_PATH/scripts/snapshot.py $KOKKOS_PATH $TRILINOS_PATH/packages
-        python $KOKKOS_PATH/scripts/snapshot.py $KOKKOSKERNELS_PATH $TRILINOS_PATH/packages
+         module load sems-python/2.7.9
+         python $KOKKOS_PATH/scripts/snapshot.py $KOKKOS_PATH $TRILINOS_PATH/packages
+         python $KOKKOS_PATH/scripts/snapshot.py $KOKKOSKERNELS_PATH $TRILINOS_PATH/packages
 
        If snapshotting kokkos-kernels, use the snapshot.py in kokkos.
 
@@ -244,21 +246,21 @@ Step 5: This step can be done on any SEMS machine (e.g. kokkos-dev).
 Step 6: Push Kokkos + KokkosKernels master and develop branches to respective GitHub repos (requires Owner permission).
       
   6.1. Master branch:
-       cd KOKKOS_PATH
+       cd $KOKKOS_PATH
        git checkout master
        git push --follow-tags origin master 
 
-       cd KOKKOSKERNELS_PATH
+       cd $KOKKOSKERNELS_PATH
        git checkout master
        git push --follow-tags origin master 
 
   6.2. Develop branch: First merge (--no-ff) master back into develop
-       cd KOKKOS_PATH
+       cd $KOKKOS_PATH
        git checkout develop
        git merge --no-ff master
        git push origin develop 
 
-       cd KOKKOSKERNELS_PATH
+       cd $KOKKOSKERNELS_PATH
        git checkout develop
        git merge --no-ff master
        git push origin develop 

@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<openmp/TestOpenMP_Category.hpp>
-#include<TestUniqueToken.hpp>
-
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestUniqueToken.hpp>

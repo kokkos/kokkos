@@ -42,6 +42,5 @@
 //@HEADER
 */
 
-#include<threads/TestThreads_Category.hpp>
-#include<TestComplex.hpp>
-
+#include <threads/TestThreads_Category.hpp>
+#include <TestComplex.hpp>

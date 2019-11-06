@@ -43,4 +43,3 @@
 
 #include <hpx/TestHPX_Category.hpp>
 #include <TestViewOfClass.hpp>
-

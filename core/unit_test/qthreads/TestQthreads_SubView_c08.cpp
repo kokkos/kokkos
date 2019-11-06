@@ -45,11 +45,10 @@
 
 namespace Test {
 
-TEST_F( qthreads, view_subview_3d_from_5d_left_atomic )
-{
+TEST_F(qthreads, view_subview_3d_from_5d_left_atomic) {
 #if 0
   TestViewSubview::test_3d_subview_5d_left< Kokkos::Qthreads, Kokkos::MemoryTraits<Kokkos::Atomic> >();
 #endif
 }
 
-} // namespace Test
+}  // namespace Test

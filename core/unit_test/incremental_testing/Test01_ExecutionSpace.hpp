@@ -77,12 +77,12 @@ struct TestIncrExecSpace {
   }
 };
 
-TEST_F(TEST_CATEGORY, incr_01_execspace_typedef) {
+TEST(TEST_CATEGORY, incr_01_execspace_typedef) {
   TestIncrExecSpaceTypedef<TEST_EXECSPACE> test;
   test.testit();
 }
 
-TEST_F(TEST_CATEGORY, incr_01_execspace) {
+TEST(TEST_CATEGORY, incr_01_execspace) {
   ASSERT_TRUE(Kokkos::is_execution_space<TEST_EXECSPACE>::value);
   ASSERT_FALSE(Kokkos::is_execution_space<TestIncrExecSpaceTypedef<TEST_EXECSPACE>>::value);
 }

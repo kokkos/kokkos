@@ -42,7 +42,5 @@
 //@HEADER
 */
 
-#include<cuda/TestCuda_Category.hpp>
-#include<TestTeamVectorRange.hpp>
-
-
+#include <cuda/TestCuda_Category.hpp>
+#include <TestTeamVectorRange.hpp>
