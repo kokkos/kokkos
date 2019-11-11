@@ -83,8 +83,9 @@ struct TestComplexConstruction {
     ASSERT_FLOAT_EQ(h_results(8).real(), double(8));
     ASSERT_FLOAT_EQ(h_results(8).imag(), 0.0);
 
-#ifndef KOKKOS_ENABLE_ROCM  // Copy construction conversion between
-                            // Kokkos::complex and std::complex doesn't compile
+    // Copy construction conversion between
+    // Kokkos::complex and std::complex doesn't compile
+#ifndef KOKKOS_ENABLE_HIP
     Kokkos::complex<double> a(1.5, 2.5), b(3.25, 5.25), r_kk;
     std::complex<double> sa(a), sb(3.25, 5.25), r;
     r    = a;
