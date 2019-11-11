@@ -45,7 +45,7 @@
 #include <cstdio>
 #include <sstream>
 
-/// @Kokkos_Feature_Required: ExecSpaceDef; 
+/// @Kokkos_Feature_Level_Required:10 
 
 namespace Test {
 

@@ -294,12 +294,10 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   SOURCES UnitTestMain.cpp  TestHostBarrier.cpp
 )
 
-FUNCTION (TEST_FEATURE_IMPLEMENTED CURRENT_FEATURE FEATURE_LIST)
-  SET ( FEATURE_IMPLEMENTED OFF PARENT_SCOPE )
-  FOREACH ( IMPLEMENTED_FEATURE ${FEATURE_LIST})
-    message( STATUS "OUT:${IMPLEMENTED_FEATURE}, ${CURRENT_FEATURE}" )
-    if(CURRENT_FEATURE STREQUAL ${IMPLEMENTED_FEATURE} )
-      set (FEATURE_IMPLEMENTED ON PARENT_SCOPE )
+FUNCTION (TEST_EXCLUDED CURRENT_TEST TEST_EXCLUDE_LIST)
+  FOREACH ( EXCLUDED_TEST ${TEST_EXCLUDE_LIST})
+    if(CURRENT_TEST STREQUAL ${EXCLUDED_TEST} )
+      SET (TEST_IMPLEMENTED OFF PARENT_SCOPE )
     endif()
   ENDFOREACH()
 ENDFUNCTION()
@@ -315,22 +313,24 @@ FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST BACK_END_NAME)
   foreach (CURRENT_FILE_PATH ${INCREMENTAL_FILE_LIST})
     get_filename_component( CURRENT_FILE_NAME ${CURRENT_FILE_PATH} NAME )
     string (REPLACE ".hpp" "" CURRENT_TEST_NAME ${CURRENT_FILE_NAME})
-
     message( STATUS "OUT:${CURRENT_TEST_NAME}" )
-    # From each test get list of dependencies 
-      # Run a bash script to get the list of dependencies for this test
-      # OUTPUT: List of Kokkos features required to run the test
-    SET( CURRENT_REQUIRED_FEATURE_LIST "ExecSpaceDef" )
+    SET ( TEST_IMPLEMENTED ON )
+    if (Kokkos_${BACK_END_NAME}_EXCLUDE_TESTS)
+       TEST_EXCLUDED( ${CURRENT_TEST_NAME} ${Kokkos_${BACK_END_NAME}_EXCLUDE_TESTS} )
+    endif()
+    if ( TEST_IMPLEMENTED ) 
+       file( STRINGS ${CURRENT_FILE_PATH} CURRENT_REQUIRED_FEATURE_LINE REGEX "Kokkos_Feature_Level_Required" ) 
+       # From each test get level implementation required
+       STRING( REGEX REPLACE ".*Kokkos_Feature_Level_Required:" "" CURRENT_REQUIRED_FEATURE_LEVEL ${CURRENT_REQUIRED_FEATURE_LINE} )
+       MESSAGE( STATUS "current feature level: ${CURRENT_REQUIRED_FEATURE_LEVEL}")
 
-    # Cross-reference list of dependencies with selected feature list > matching feature test files are added to test applications
-    FOREACH ( CURRENT_FEATURE ${CURRENT_REQUIRED_FEATURE_LIST})
-      TEST_FEATURE_IMPLEMENTED ( ${CURRENT_FEATURE} ${Kokkos_${BACK_END_NAME}_FEATURE_LIST})
-      if (FEATURE_IMPLEMENTED) 
-        CONFIGURE_FILE (IncrementalTest.cpp.in ${CMAKE_BINARY_DIR}/core/unit_test/generated/${CURRENT_TEST_NAME}.cpp )
-        SET(${BACK_END_NAME}_SOURCES ${${BACK_END_NAME}_SOURCES}; ${CMAKE_BINARY_DIR}/core/unit_test/generated/${CURRENT_TEST_NAME}.cpp)
-        message( STATUS "OUT:${${BACK_END_NAME}_SOURCES}" )
-      endif()
-    ENDFOREACH()
+       # Cross-reference list of dependencies with selected feature list > matching feature test files are added to test applications
+       if (Kokkos_${BACK_END_NAME}_FEATURE_LEVEL GREATER_EQUAL CURRENT_REQUIRED_FEATURE_LEVEL) 
+          CONFIGURE_FILE (IncrementalTest.cpp.in ${CMAKE_BINARY_DIR}/core/unit_test/generated/${CURRENT_TEST_NAME}.cpp )
+          SET(${BACK_END_NAME}_SOURCES ${${BACK_END_NAME}_SOURCES}; ${CMAKE_BINARY_DIR}/core/unit_test/generated/${CURRENT_TEST_NAME}.cpp)
+          message( STATUS "OUT:${${BACK_END_NAME}_SOURCES}" )
+       endif()
+     endif()
   ENDFOREACH()
 
   STRING(TOUPPER ${BACK_END_NAME} UC_BACK_END_NAME)
