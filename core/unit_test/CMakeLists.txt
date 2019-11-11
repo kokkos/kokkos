@@ -307,13 +307,13 @@ ENDFUNCTION()
 
 FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST BACK_END_NAME)
 
+  # Add unit test main
+  SET(${BACK_END_NAME}_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMainInit.cpp)
+  
   # Iterate over incremental tests in directory
-    # Call here the bash script to get the file list in the test directory
-    # OUTPUT: List of test file names
-  SET( INCREMENTAL_FILE_LIST ExecSpaceCompilation.hpp )
-  SET( ${BACK_END_NAME}_SOURCES UnitTestMainInit.cpp )
-
-  foreach (CURRENT_FILE_NAME ${INCREMENTAL_FILE_LIST})
+  APPEND_GLOB(INCREMENTAL_FILE_LIST ${CMAKE_CURRENT_SOURCE_DIR}/incremental/*.hpp)
+  foreach (CURRENT_FILE_PATH ${INCREMENTAL_FILE_LIST})
+    get_filename_component( CURRENT_FILE_NAME ${CURRENT_FILE_PATH} NAME )
     string (REPLACE ".hpp" "" CURRENT_TEST_NAME ${CURRENT_FILE_NAME})
 
     message( STATUS "OUT:${CURRENT_TEST_NAME}" )
