@@ -49,31 +49,34 @@
 
 namespace Test {
 
-// Test construction and assignment
+// Unit test for Execution Space
+// Test - testing for memory_space, execution_space, scratch space and
+// array_layout of an execution space
 
 template <class ExecSpace>
 struct TestIncrExecSpaceTypedef {
-
   void testit() {
     bool passed = true;
-    passed &= !std::is_same<void,typename ExecSpace::memory_space>::value;
-    passed &=  std::is_same<ExecSpace,typename ExecSpace::execution_space>::value;
-    passed &= !std::is_same<void,typename ExecSpace::scratch_memory_space>::value;
-    passed &= !std::is_same<void,typename ExecSpace::array_layout>::value;
+    passed &=
+        (!std::is_same<void, typename ExecSpace::memory_space>::value) &&
+        std::is_same<ExecSpace, typename ExecSpace::execution_space>::value &&
+        !std::is_same<void, typename ExecSpace::scratch_memory_space>::value &&
+        !std::is_same<void, typename ExecSpace::array_layout>::value;
     ASSERT_TRUE(passed);
   }
 };
 
 template <class ExecSpace>
 struct TestIncrExecSpace {
-
   void testit() {
     bool passed = true;
     typedef typename ExecSpace::device_type device_type;
     typedef typename device_type::memory_space memory_space;
     typedef typename device_type::execution_space execution_space;
 
-    passed &= std::is_same<device_type, Kokkos::Device<execution_space, memory_space>>::value;
+    passed &=
+        std::is_same<device_type,
+                     Kokkos::Device<execution_space, memory_space>>::value;
 
     ASSERT_TRUE(passed);
   }
@@ -86,6 +89,7 @@ TEST(TEST_CATEGORY, incr_01_execspace_typedef) {
 
 TEST(TEST_CATEGORY, incr_01_execspace) {
   ASSERT_TRUE(Kokkos::is_execution_space<TEST_EXECSPACE>::value);
-  ASSERT_FALSE(Kokkos::is_execution_space<TestIncrExecSpaceTypedef<TEST_EXECSPACE>>::value);
+  ASSERT_FALSE(Kokkos::is_execution_space<
+               TestIncrExecSpaceTypedef<TEST_EXECSPACE>>::value);
 }
 }  // namespace Test
