@@ -51,7 +51,6 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdint>
-#include <cassert>
 
 #include <utility>
 #include <Kokkos_Parallel.hpp>
@@ -521,15 +520,15 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     cudaFuncAttributes attr =
         CudaParallelLaunch<closure_type, typename traits::launch_bounds>::
             get_cuda_func_attributes();
-    const int block_size =
-        block_size_callable(space().impl_internal_space_instance(), attr, f,
-                            (size_t)vector_length(),
-                            (size_t)team_scratch_size(0) + 2 * sizeof(double),
-                            (size_t)thread_scratch_size(0) + sizeof(double) +
-                                ((functor_value_traits::StaticValueSize != 0)
-                                     ? 0
-                                     : functor_value_traits::value_size(f)));
-    assert(block_size > 0);
+    const int block_size = std::forward<BlockSizeCallable>(block_size_callable)(
+        space().impl_internal_space_instance(), attr, f,
+        (size_t)vector_length(),
+        (size_t)team_scratch_size(0) + 2 * sizeof(double),
+        (size_t)thread_scratch_size(0) + sizeof(double) +
+            ((functor_value_traits::StaticValueSize != 0)
+                 ? 0
+                 : functor_value_traits::value_size(f)));
+    KOKKOS_ASSERT(block_size > 0);
 
     // Currently we require Power-of-2 team size for reductions.
     int p2 = 1;
