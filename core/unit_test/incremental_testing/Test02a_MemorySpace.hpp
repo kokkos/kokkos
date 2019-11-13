@@ -49,19 +49,18 @@
 
 namespace Test {
 
-// Test kokkos_malloc
+// Unit test for Kokkos Malloc
 
 template <class MemSpace>
 struct TestIncrMemorySpace_malloc {
-
   const int num_elements = 10;
 
   void testit_malloc() {
-    int *data = (int*) Kokkos::kokkos_malloc<MemSpace>("data", num_elements*sizeof(int));
+    int *data = (int *)Kokkos::kokkos_malloc<MemSpace>(
+        "data", num_elements * sizeof(int));
     ASSERT_FALSE(data == nullptr);
     Kokkos::kokkos_free<MemSpace>(data);
   }
-
 };
 
 TEST(TEST_CATEGORY, incr_02a_memspace_malloc) {
