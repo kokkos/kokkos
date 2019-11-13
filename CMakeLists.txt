@@ -199,6 +199,9 @@ KOKKOS_PACKAGE_POSTPROCESS()
 
 IF (NOT KOKKOS_HAS_TRILINOS)
   ADD_LIBRARY(kokkos INTERFACE)
+  #Make sure in-tree projects can reference this as Kokkos::
+  #to match the installed target names
+  ADD_LIBRARY(Kokkos::kokkos ALIAS kokkos)
   TARGET_LINK_LIBRARIES(kokkos INTERFACE kokkoscore kokkoscontainers kokkosalgorithms)
   KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(kokkos)
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
