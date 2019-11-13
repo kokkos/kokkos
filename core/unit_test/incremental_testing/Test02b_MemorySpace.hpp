@@ -47,21 +47,22 @@
 #include <type_traits>
 #include <gtest/gtest.h>
 
-
 namespace Test {
 
-// Test construction and assignment
+// Unit test for kokkos_free
+// We constantly allocate and de-allocate memory.
+// If the kokkos_free does not free the memory, we will exceed the available
+// space
 
 template <class MemSpace>
 struct TestIncrMemorySpace_free {
-
   const int N = 100000;
   const int M = 100000;
 
   void testit_free() {
-    for(int i = 0; i < N; ++i)
-    {
-      double *data = (double*) Kokkos::kokkos_malloc<MemSpace>("data", M*sizeof(double));
+    for (int i = 0; i < N; ++i) {
+      double *data =
+          (double *)Kokkos::kokkos_malloc<MemSpace>("data", M * sizeof(double));
       ASSERT_FALSE(data == nullptr);
       Kokkos::kokkos_free<MemSpace>(data);
     }
