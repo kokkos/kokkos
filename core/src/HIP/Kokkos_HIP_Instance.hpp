@@ -52,9 +52,10 @@ namespace Experimental {
 namespace Impl {
 
 struct HIPTraits {
-  enum { WarpSize = 64 };
+  static int constexpr WarpSize       = 64;
+  static int constexpr WarpIndexShift = 6; /* WarpSize == 1 << WarpShift*/
 
-  enum { ConstantMemoryUsage = 0x008000 /* 32k bytes */ };
+  static int constexpr ConstantMemoryUsage = 0x008000; /* 32k bytes */
 };
 
 //----------------------------------------------------------------------------
