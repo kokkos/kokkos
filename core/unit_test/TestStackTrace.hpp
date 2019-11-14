@@ -156,8 +156,6 @@ void test_stacktrace(bool bTerminate, bool bCustom = true) {
 
 TEST(defaultdevicetype, stacktrace_normal) { test_stacktrace(false); }
 
-TEST(defaultdevicetype, stacktrace_normal_dynamic) { test_stacktrace(false); }
-
 #define DECLARE_DEATH_TEST(NAME) NAME##DeathTest
 
 TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_terminate) {
@@ -165,17 +163,7 @@ TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_terminate) {
                "I am the custom std::terminate handler.");
 }
 
-TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_terminate_dynamic) {
-  ASSERT_DEATH({ test_stacktrace(true); },
-               "I am the custom std::terminate handler.");
-}
-
 TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_generic_term) {
-  ASSERT_DEATH({ test_stacktrace(true, false); },
-               "Kokkos observes that std::terminate has been called");
-}
-
-TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_generic_term_dynamic) {
   ASSERT_DEATH({ test_stacktrace(true, false); },
                "Kokkos observes that std::terminate has been called");
 }
