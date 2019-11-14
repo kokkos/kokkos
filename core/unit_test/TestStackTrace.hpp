@@ -68,9 +68,8 @@ void test_stacktrace(bool bTerminate, bool bCustom = true) {
     Kokkos::Impl::print_saved_stacktrace(sstream);
     std::string foutput = sstream.str();
 
-    auto first_empty = foutput.find("() [0x");
-    auto first_entry = foutput.find(") [0x");
-    bDynamic         = first_empty > first_entry;
+    bDynamic = std::string::npos != foutput.find("stacktrace");
+
     if (bDynamic) {
       printf("test_f1: %s \n", foutput.c_str());
       ASSERT_TRUE(std::string::npos != foutput.find("stacktrace_test_f1"));
