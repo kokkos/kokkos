@@ -48,12 +48,5 @@
 
 namespace Test {
 
-void my_fancy_handler() {
-  std::cerr << "I am the custom std::terminate handler." << std::endl;
-  std::abort();
-}
-
+void stacktrace_test_f4() { Kokkos::Impl::save_stacktrace(); }
 }  // namespace Test
-
-#include <TestStackTrace.hpp>
-#include "UnitTestMainInit.cpp"

@@ -48,12 +48,6 @@
 
 namespace Test {
 
-void my_fancy_handler() {
-  std::cerr << "I am the custom std::terminate handler." << std::endl;
-  std::abort();
-}
+void stacktrace_test_f0(std::ostream& out) { out << "Top of f0" << std::endl; }
 
 }  // namespace Test
-
-#include <TestStackTrace.hpp>
-#include "UnitTestMainInit.cpp"

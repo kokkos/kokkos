@@ -274,8 +274,15 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     ALWAYS_FAIL_ON_ZERO_RETURN
 )
 
-KOKKOS_ADD_TEST_EXECUTABLE( StackTraceTestExec
-  SOURCES TestStackTrace.cpp
+KOKKOS_ADD_TEST_EXECUTABLE(
+  StackTraceTestExec
+  SOURCES
+    TestStackTrace.cpp
+    TestStackTrace_f0.cpp
+    TestStackTrace_f1.cpp
+    TestStackTrace_f2.cpp
+    TestStackTrace_f3.cpp
+    TestStackTrace_f4.cpp
 )
 
 if ( ( (CMAKE_CXX_FLAGS MATCHES "rdynamic") OR 

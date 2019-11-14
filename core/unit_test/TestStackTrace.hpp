@@ -60,17 +60,18 @@ void stacktrace_test_f4();
 
 void my_fancy_handler();
 
-void test_stacktrace(bool bTerminate, bool bDynamic, bool bCustom = true) {
+void test_stacktrace(bool bTerminate, bool bCustom = true) {
   stacktrace_test_f1(std::cout);
-
-  // TODO figure out whether stacktraces give function names at all (i.e. did
-  // we compile with -rdynamic)
+  bool bDynamic = false;
   {
     std::stringstream sstream;
     Kokkos::Impl::print_saved_stacktrace(sstream);
+    std::string foutput = sstream.str();
 
+    auto first_empty = foutput.find("() [0x");
+    auto first_entry = foutput.find(") [0x");
+    bDynamic         = first_empty > first_entry;
     if (bDynamic) {
-      std::string foutput = sstream.str();
       printf("test_f1: %s \n", foutput.c_str());
       ASSERT_TRUE(std::string::npos != foutput.find("stacktrace_test_f1"));
       for (auto x : {"stacktrace_test_f0", "stacktrace_test_f2",
@@ -96,7 +97,11 @@ void test_stacktrace(bool bTerminate, bool bDynamic, bool bCustom = true) {
     }
   }
 
-  stacktrace_test_f3(std::cout, 4);
+  int val = stacktrace_test_f3(std::cout, 4);
+
+  // Don't remove this, otherwise the compiler will optimize away call sequences
+  // via
+  printf("StackTrace f3(std::cout, 4) returned: %i\n", val);
 
   // TODO test by making sure that f3 and f1, but no other functions,
   // appear in the stack trace, and that f3 appears 5 times.
@@ -149,31 +154,29 @@ void test_stacktrace(bool bTerminate, bool bDynamic, bool bCustom = true) {
   }
 }
 
-TEST(defaultdevicetype, stacktrace_normal) { test_stacktrace(false, false); }
+TEST(defaultdevicetype, stacktrace_normal) { test_stacktrace(false); }
 
-TEST(defaultdevicetype, stacktrace_normal_dynamic) {
-  test_stacktrace(false, true);
-}
+TEST(defaultdevicetype, stacktrace_normal_dynamic) { test_stacktrace(false); }
 
 #define DECLARE_DEATH_TEST(NAME) NAME##DeathTest
 
 TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_terminate) {
-  ASSERT_DEATH({ test_stacktrace(true, false); },
+  ASSERT_DEATH({ test_stacktrace(true); },
                "I am the custom std::terminate handler.");
 }
 
 TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_terminate_dynamic) {
-  ASSERT_DEATH({ test_stacktrace(true, true); },
+  ASSERT_DEATH({ test_stacktrace(true); },
                "I am the custom std::terminate handler.");
 }
 
 TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_generic_term) {
-  ASSERT_DEATH({ test_stacktrace(true, false, false); },
+  ASSERT_DEATH({ test_stacktrace(true, false); },
                "Kokkos observes that std::terminate has been called");
 }
 
 TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_generic_term_dynamic) {
-  ASSERT_DEATH({ test_stacktrace(true, true, false); },
+  ASSERT_DEATH({ test_stacktrace(true, false); },
                "Kokkos observes that std::terminate has been called");
 }
 
