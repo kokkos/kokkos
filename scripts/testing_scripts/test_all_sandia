@@ -35,7 +35,7 @@ if [[ "$HOSTNAME" == kokkos-dev-2* ]]; then
   MACHINE=kokkos-dev-2
 fi
 
-if [[ "$HOSTNAME" == mayer\.* ]]; then
+if [[ "$HOSTNAME" == may* ]]; then
   MACHINE=mayer
 #  module load git
 fi
@@ -328,8 +328,8 @@ elif [ "$MACHINE" = "mayer" ]; then
   ARM_MODULE_LIST="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("gnu/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "arm/19.0.0 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
+  COMPILERS=("gnu7/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "arm/19.2 $ARM_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=ARMv8-TX2"
@@ -348,7 +348,7 @@ elif [ "$MACHINE" = "blake" ]; then
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("intel/18.1.163 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
              "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "pgi/17.10.0 $BASE_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
+             "pgi/18.7.0 $BASE_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
   )
   else
   COMPILERS=("intel/18.1.163 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
@@ -357,7 +357,7 @@ elif [ "$MACHINE" = "blake" ]; then
              "gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/8.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "pgi/17.10.0 $BASE_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
+             "pgi/18.7.0 $BASE_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
   )
 
   fi
