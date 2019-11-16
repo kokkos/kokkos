@@ -49,6 +49,8 @@
 #if defined(KOKKOS_ATOMIC_HPP) && !defined(KOKKOS_ATOMIC_FETCH_SUB_HPP)
 #define KOKKOS_ATOMIC_FETCH_SUB_HPP
 
+#include <impl/Kokkos_Atomic_Load.hpp>
+
 #if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 #endif
@@ -225,7 +227,7 @@ inline T atomic_fetch_sub(
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
 
-  oldval.t = *dest;
+  oldval.t = Impl::atomic_load(dest /* relaxed */);
 
   do {
     assume.i = oldval.i;
@@ -252,7 +254,7 @@ inline T atomic_fetch_sub(
     KOKKOS_INLINE_FUNCTION U() {}
   } oldval, assume, newval;
 
-  oldval.t = *dest;
+  oldval.t = Impl::atomic_load(dest /* relaxed */);
 
   do {
     assume.i = oldval.i;

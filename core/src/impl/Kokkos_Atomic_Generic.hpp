@@ -46,6 +46,8 @@
 #define KOKKOS_ATOMIC_GENERIC_HPP
 #include <Kokkos_Macros.hpp>
 
+#include <impl/Kokkos_Atomic_Compare_Exchange_Strong.hpp>
+
 #if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 #endif
@@ -152,7 +154,7 @@ struct RShiftOper {
 };
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
+KOKKOS_IMPL_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<
         sizeof(T) != sizeof(int) && sizeof(T) == sizeof(unsigned long long int),
@@ -176,7 +178,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
+KOKKOS_IMPL_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<
         sizeof(T) != sizeof(int) && sizeof(T) == sizeof(unsigned long long int),
@@ -187,6 +189,18 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     KOKKOS_INLINE_FUNCTION U() {}
   } oldval, assume, newval;
 
+  // Technically the correct thing to do here is to associate an entry in the
+  // suppression table with this store operation, but adding an individual entry
+  // to the suppression table for an address range is much more expensive (and,
+  // it appears, buggier in Intel's sanitizer) than suppressing all threading
+  // errors. Also, there's no clear place to clean up that entry, so for a
+  // long-running program it would run out of memory in the suppression table.
+  // If we did want to use the suppression table, this is what it would look
+  // like:
+  // KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
+  // Instead, just use total suppression for now
+  KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
   oldval.t = *dest;
 
   do {
@@ -195,12 +209,21 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
                                                assume.i, newval.i);
   } while (assume.i != oldval.i);
+  // Here's where the suppression table entry's range would end, but we can't
+  // delete the entry here because other threads need to know that this address
+  // is part of the error suppression.
+  // If we did want to use the suppression table, this is what it would look
+  // like:
+  // KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
+  // Instead, just use total suppression for now
+  KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
 
   return newval.t;
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
+KOKKOS_IMPL_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T>::type
         val) {
@@ -212,17 +235,23 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 
   oldval.t = *dest;
 
+  // KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
+  KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
   do {
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
   } while (assume.i != oldval.i);
+  KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+  // KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
 
   return oldval.t;
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
+KOKKOS_IMPL_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T>::type
         val) {
@@ -232,6 +261,9 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     KOKKOS_INLINE_FUNCTION U() {}
   } oldval, assume, newval;
 
+  // KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
+  KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
   oldval.t = *dest;
 
   do {
@@ -239,12 +271,15 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     newval.t = Oper::apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
   } while (assume.i != oldval.i);
+  KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+  // KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(dest,
+  // sizeof(T));
 
   return newval.t;
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
+KOKKOS_IMPL_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8),
                                      const T>::type val) {
@@ -287,11 +322,13 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
+KOKKOS_IMPL_THREAD_SANITIZER_IGNORE KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     const Oper& op, volatile T* const dest,
     typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
-#if defined(KOKKOS_ENABLE_ASM) && \
-    defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+#if defined(KOKKOS_ENABLE_ASM) &&                                              \
+    defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST) &&                      \
+    0 /* TODO fix the preprocessor conditionals for the 128-bit CAS version of \
+         this */
                                          && (sizeof(T) != 16)
 #endif
                                          ,

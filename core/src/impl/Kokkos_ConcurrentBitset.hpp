@@ -280,7 +280,7 @@ struct concurrent_bitset {
       uint32_t volatile *const buffer, uint32_t const bit,
       uint32_t const state_header = 0 /* optional header */
       ) noexcept {
-    if (state_header != (state_header_mask & *buffer)) {
+    if (state_header != (state_header_mask & Impl::atomic_load(buffer))) {
       return -2;
     }
 
