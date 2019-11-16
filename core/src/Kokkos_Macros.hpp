@@ -428,10 +428,10 @@
 #define KOKKOS_ENABLE_ASM 1
 #endif
 
-#if KOKKOS_COMPILER_GNU < 500
-#define KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG 1
 #endif
 
+#if (__GNUC__ < 5)
+#define KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG 1
 #endif
 
 //----------------------------------------------------------------------------
