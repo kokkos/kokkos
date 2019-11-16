@@ -30,10 +30,6 @@ void print_saved_stacktrace(std::ostream& out);
 void print_demangled_saved_stacktrace(std::ostream& out);
 
 /// \brief Set the std::terminate handler so that it prints the
-///   currently saved stack trace, then calls std::abort.
-void set_kokkos_terminate_handler();
-
-/// \brief Set the std::terminate handler so that it prints the
 ///   currently saved stack trace, then calls user_post.
 ///
 /// This is useful if you want to call, say, MPI_Abort instead of
@@ -41,7 +37,7 @@ void set_kokkos_terminate_handler();
 /// without including their header file, and Kokkos does not depend on
 /// MPI, so there's no way for Kokkos to depend on MPI_Abort in a
 /// portable way.
-void set_kokkos_terminate_handler(std::function<void()> user_post);
+void set_kokkos_terminate_handler(std::function<void()> user_post = nullptr);
 
 }  // namespace Impl
 }  // namespace Kokkos

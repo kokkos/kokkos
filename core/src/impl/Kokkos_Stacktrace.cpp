@@ -124,8 +124,13 @@ void for_each_token(const std::string& s, Callback c) {
 // While we're doing that, figure out the longest column,
 // so we can compute spacing correctly.
 
-std::tuple<bool, size_t, std::vector<size_t>> find_main_column(
-    const std::vector<std::string>& traceback) {
+struct main_column_info {
+  bool found_main;
+  size_t main_col;
+  std::vector<size_t> main_col_lens;
+};
+
+main_column_info find_main_column(const std::vector<std::string>& traceback) {
   bool found_main = false;
   size_t main_col = 0;
   for (auto&& entry : traceback) {
@@ -145,24 +150,24 @@ std::tuple<bool, size_t, std::vector<size_t>> find_main_column(
 
   // Make another pass to get the column lengths.
   // Only demangle the column of functions.
-  std::vector<size_t> max_col_lens;
+  std::vector<size_t> max_col_lengths;
   for (auto&& entry : traceback) {
     size_t col_count = 0;
     for_each_token(entry, [&](const std::string& s, bool) {
       const size_t cur_col_len =
           (found_main && col_count == main_col) ? demangle(s).size() : s.size();
       ++col_count;
-      if (max_col_lens.size() < col_count) {
-        max_col_lens.push_back(cur_col_len);
+      if (max_col_lengths.size() < col_count) {
+        max_col_lengths.push_back(cur_col_len);
       } else {
-        const size_t old_max_len = max_col_lens[col_count - 1];
+        const size_t old_max_len = max_col_lengths[col_count - 1];
         if (old_max_len < cur_col_len) {
-          max_col_lens[col_count - 1] = cur_col_len;
+          max_col_lengths[col_count - 1] = cur_col_len;
         }
       }
     });
   }
-  return std::make_tuple(found_main, main_col, max_col_lens);
+  return main_column_info{found_main, main_col, max_col_lengths};
 }
 
 void demangle_and_print_traceback_entry(
@@ -196,9 +201,8 @@ void demangle_and_print_traceback(std::ostream& out,
                                   const std::vector<std::string>& traceback) {
   const auto result = find_main_column(traceback);
   for (auto&& entry : traceback) {
-    using std::get;
-    demangle_and_print_traceback_entry(out, entry, get<0>(result),
-                                       get<1>(result), get<2>(result));
+    demangle_and_print_traceback_entry(out, entry, result.found_main,
+                                       result.main_col, result.main_col_lens);
     out << std::endl;
   }
 }
@@ -232,11 +236,6 @@ void kokkos_terminate_handler() {
   } else {
     std::abort();
   }
-}
-
-void set_kokkos_terminate_handler() {
-  user_terminate_handler_post_ = nullptr;
-  std::set_terminate(kokkos_terminate_handler);
 }
 
 void set_kokkos_terminate_handler(std::function<void()> user_post) {
