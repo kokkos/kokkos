@@ -52,8 +52,9 @@
 namespace Test {
 
 // Unit test for Execution Space
-// Test - testing for memory_space, execution_space, scratch space and
+// Test1 - testing for memory_space, execution_space, scratch space and
 // array_layout of an execution space
+// Test2 - Test if the is_execution_space evaluation is working correctly
 
 template <class ExecSpace>
 struct TestIncrExecSpaceTypedef {
