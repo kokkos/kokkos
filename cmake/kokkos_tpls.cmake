@@ -29,7 +29,8 @@ SET(PTHREAD_DEFAULT OFF)
 ENDIF()
 KOKKOS_TPL_OPTION(PTHREAD ${PTHREAD_DEFAULT})
 
-# Workaroud for GCC 4.8.4 that need -latomic linker flag
+# Workaround for GCC 4.8.4 that need -latomic linker flag
+# Not declared as KOKKOS_TPL_OPTIONS() on purpose because not meant to be set by users
 IF(KOKKOS_CXX_COMPILER_VERSION VERSION_EQUAL 4.8.4)
   SET(KOKKOS_ENABLE_LIBATOMIC ON)
   SET_PROPERTY(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS TRUE)
