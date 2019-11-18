@@ -24,6 +24,7 @@ KOKKOS_TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
+
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
@@ -293,5 +294,46 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   SOURCES UnitTestMain.cpp  TestHostBarrier.cpp
 )
 
+FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST BACK_END_NAME)
+  KOKKOS_OPTION( ${BACK_END_NAME}_EXCLUDE_TESTS "" STRING "Incremental test exclude list" )
+  KOKKOS_OPTION( ${BACK_END_NAME}_FEATURE_LEVEL "0" STRING "Incremental test implementation level" )
+  # Add unit test main
+  SET(${BACK_END_NAME}_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/UnitTestMainInit.cpp)
 
+  # Iterate over incremental tests in directory
+  APPEND_GLOB(INCREMENTAL_FILE_LIST ${CMAKE_CURRENT_SOURCE_DIR}/incremental/*.hpp)
+  FOREACH (CURRENT_FILE_PATH ${INCREMENTAL_FILE_LIST})
+    GET_FILENAME_COMPONENT( CURRENT_FILE_NAME ${CURRENT_FILE_PATH} NAME )
+    STRING (REPLACE ".hpp" "" CURRENT_TEST_NAME ${CURRENT_FILE_NAME})
+    IF (NOT CURRENT_TEST_NAME IN_LIST Kokkos_${BACK_END_NAME}_EXCLUDE_TESTS)
+       FILE( STRINGS ${CURRENT_FILE_PATH} CURRENT_REQUIRED_FEATURE_LINE REGEX "Kokkos_Feature_Level_Required" ) 
+       # From each test get level implementation required
+       STRING( REGEX REPLACE ".*Kokkos_Feature_Level_Required:" "" CURRENT_REQUIRED_FEATURE_LEVEL ${CURRENT_REQUIRED_FEATURE_LINE} )
 
+       # Cross-reference list of dependencies with selected feature list > matching feature test files are added to test applications
+       IF (Kokkos_${BACK_END_NAME}_FEATURE_LEVEL GREATER_EQUAL CURRENT_REQUIRED_FEATURE_LEVEL) 
+          CONFIGURE_FILE (IncrementalTest.cpp.in ${CMAKE_BINARY_DIR}/core/unit_test/generated/${CURRENT_TEST_NAME}.cpp )
+          SET(${BACK_END_NAME}_SOURCES ${${BACK_END_NAME}_SOURCES}; ${CMAKE_BINARY_DIR}/core/unit_test/generated/${CURRENT_TEST_NAME}.cpp)
+       ENDIF()
+     ENDIF()
+  ENDFOREACH()
+
+  STRING(TOUPPER ${BACK_END_NAME} UC_BACK_END_NAME)
+
+  KOKKOS_OPTION (
+    ENABLE_${UC_BACK_END_NAME} ON BOOLEAN "ENABLE ${UC_BACK_END_NAME}"
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    IncrementalTest_${BACK_END_NAME}
+    SOURCES
+    ${${BACK_END_NAME}_SOURCES}
+  )
+
+  TARGET_INCLUDE_DIRECTORIES( ${PACKAGE_NAME}_IncrementalTest_${BACK_END_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/incremental )
+
+ENDFUNCTION()
+
+FOREACH (BACK_END_NAME ${Kokkos_INCREMENTAL_TEST_BACK_ENDS})
+  KOKKOS_ADD_INCREMENTAL_TEST(  ${BACK_END_NAME} )
+ENDFOREACH()
