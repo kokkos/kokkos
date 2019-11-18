@@ -96,7 +96,7 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _atomic_load(
 #ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
               std::is_trivially_copyable<T>::value
 #else
-              true
+              false
 #endif
               ) ||
              ((sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
@@ -136,7 +136,7 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _relaxed_atomic_load_impl(
 #ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
                                         !std::is_trivially_copyable<T>::value
 #else
-                                        false
+                                        true
 #endif
                                     ,
                                     void const**>::type = nullptr) {
@@ -152,7 +152,7 @@ _atomic_load(T* ptr, memory_order_seq_cst_t,
 #ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
                                       !std::is_trivially_copyable<T>::value
 #else
-                                      false
+                                      true
 #endif
                                       ) ||
                                          ((sizeof(T) == 1 || sizeof(T) == 2 ||
@@ -177,7 +177,7 @@ _atomic_load(T* ptr, memory_order_acquire_t,
 #ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
                                       !std::is_trivially_copyable<T>::value
 #else
-                                      false
+                                      true
 #endif
                                       ) ||
                                          ((sizeof(T) == 1 || sizeof(T) == 2 ||
@@ -201,7 +201,7 @@ _atomic_load(T* ptr, memory_order_relaxed_t,
 #ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
                                       !std::is_trivially_copyable<T>::value
 #else
-                                      false
+                                      true
 #endif
                                       ) ||
                                          ((sizeof(T) == 1 || sizeof(T) == 2 ||
@@ -230,7 +230,7 @@ __device__ __inline__ T _relaxed_atomic_load_impl(
 
 template <class T>
 struct NoOpOper {
-  __device__ __inline__ static constexpr T apply(T const& t,
+  __device__ __inline__ static constexpr T apply(T const volatile& t,
                                                  T const&) noexcept {
     return t;
   }
