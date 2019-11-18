@@ -254,6 +254,12 @@ TEST(cuda, space_access) {
           Kokkos::Impl::HostMirror<Kokkos::CudaHostPinnedSpace>::Space,
           Kokkos::HostSpace>::accessible,
       "");
+#ifdef KOKKOS_ENABLE_CUDA_UVM
+  using uvm_view = Kokkos::View<double *, Kokkos::CudaUVMSpace>;
+  static_assert(std::is_same<uvm_view::HostMirror::execution_space,
+                             Kokkos::DefaultHostExecutionSpace>::value,
+                "Verify HostMirror execution space is really a host space");
+#endif
 }
 
 TEST(cuda, uvm) {
