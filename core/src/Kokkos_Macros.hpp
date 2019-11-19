@@ -634,14 +634,14 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 
 // Intel Inspector annotations are enabled by default in debug mode unless
 // they're explicitly disabled
-/* Don't just enable this by default because it requires extra linker flags
+#if defined(KOKKOS_ENABLE_ITTNOTIFY)
 #if defined(KOKKOS_COMPILER_INTEL) && defined(KOKKOS_ENABLE_DEBUG)
 #if !defined(KOKKOS_DISABLE_INTEL_INSPECTOR_ANNOTATIONS) && \
     !defined(KOKKOS_ENABLE_INTEL_INSPECTOR_ANNOTATIONS)
 #define KOKKOS_ENABLE_INTEL_INSPECTOR_ANNOTATIONS
 #endif
 #endif
- */
+#endif
 
 #ifdef KOKKOS_ENABLE_INTEL_INSPECTOR_ANNOTATIONS
 #if defined(KOKKOS_COMPILER_INTEL)
