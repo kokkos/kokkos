@@ -310,6 +310,8 @@ FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST BACK_END_NAME)
        # From each test get level implementation required
        STRING( REGEX REPLACE ".*Kokkos_Feature_Level_Required:" "" CURRENT_REQUIRED_FEATURE_LEVEL ${CURRENT_REQUIRED_FEATURE_LINE} )
 
+       message( STATUS "${CURRENT_TEST_NAME} " "${BACK_END_NAME} " "${CURRENT_REQUIRED_FEATURE_LEVEL} " "${Kokkos_${BACK_END_NAME}_FEATURE_LEVEL}")
+      
        # Cross-reference list of dependencies with selected feature list > matching feature test files are added to test applications
        IF (Kokkos_${BACK_END_NAME}_FEATURE_LEVEL GREATER_EQUAL CURRENT_REQUIRED_FEATURE_LEVEL) 
           CONFIGURE_FILE (IncrementalTest.cpp.in ${CMAKE_BINARY_DIR}/core/unit_test/generated/${CURRENT_TEST_NAME}.cpp )
@@ -324,6 +326,9 @@ FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST BACK_END_NAME)
     ENABLE_${UC_BACK_END_NAME} ON BOOLEAN "ENABLE ${UC_BACK_END_NAME}"
   )
 
+
+  message( STATUS ">> ${${BACK_END_NAME}_SOURCES}}" )
+  
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     IncrementalTest_${BACK_END_NAME}
     SOURCES
