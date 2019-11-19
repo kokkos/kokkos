@@ -148,7 +148,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
   KOKKOS_ATTRIBUTE_NODISCARD
   std::string get_error_message() const;
 
-  virtual void append_additional_error_information(std::ostream &o) const {}
+  virtual void append_additional_error_information(std::ostream &) const {}
 };
 
 }  // end namespace Experimental

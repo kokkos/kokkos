@@ -219,19 +219,11 @@ void OpenMPExec::resize_thread_data(size_t pool_reduce_bytes,
       void *ptr = nullptr;
       try {
         ptr = space.allocate(alloc_bytes);
-      }
-#ifndef __NVCC__
-      catch (Experimental::RawMemoryAllocationFailure const &failure) {
+      } catch (
+          Kokkos::Experimental::RawMemoryAllocationFailure const &failure) {
         // For now, just rethrow the error message the existing way
         Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
       }
-#else
-      // For some reason, NVCC with OpenMP chokes on custom exception classes
-      catch (std::bad_alloc const &failure) {
-        // For now, just rethrow the error message the existing way
-        Kokkos::Impl::throw_runtime_exception(failure.what());
-      }
-#endif
 
       m_pool[rank] = new (ptr) HostThreadTeamData();
 
@@ -360,7 +352,7 @@ void OpenMP::impl_initialize(int thread_count)
     void *ptr = nullptr;
     try {
       ptr = space.allocate(sizeof(Impl::OpenMPExec));
-    } catch (Experimental::RawMemoryAllocationFailure const &f) {
+    } catch (Kokkos::Experimental::RawMemoryAllocationFailure const &f) {
       // For now, just rethrow the error message the existing way
       Kokkos::Impl::throw_runtime_exception(f.get_error_message());
     }
