@@ -41,17 +41,33 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_@BACK_END_NAME@_@CURRENT_TEST_NAME@
-#define KOKKOS_TEST_@BACK_END_NAME@_@CURRENT_TEST_NAME@
+/// @Kokkos_Feature_Level_Required:2
 
+#include <Kokkos_Core.hpp>
+#include <cstdio>
+#include <sstream>
+#include <type_traits>
 #include <gtest/gtest.h>
 
-#define TEST_CATEGORY @BACK_END_NAME@
-//#define TEST_EXECSPACE Kokkos::Experimental::@BACK_END_NAME@
-#define TEST_EXECSPACE Kokkos::@BACK_END_NAME@
+namespace Test {
+  // Unit test for Kokkos Malloc
 
-#include <@CURRENT_FILE_NAME@>
+  template <class MemSpace>
+  struct TestIncrMemorySpace_malloc {
+    const int num_elements = 10;
 
-#endif
+    void testit_malloc() {
+      int *data = (int *)Kokkos::kokkos_malloc<MemSpace>(
+      "data", num_elements * sizeof(int));
+      ASSERT_FALSE(data == nullptr);
+      Kokkos::kokkos_free<MemSpace>(data);
+    }
+  };
 
-
+  TEST(TEST_CATEGORY, incr_02a_memspace_malloc) {
+    typedef typename TEST_EXECSPACE::memory_space memory_space;
+    TestIncrMemorySpace_malloc<memory_space> test;
+    test.testit_malloc();
+  }
+ 
+}  // namespace Test
