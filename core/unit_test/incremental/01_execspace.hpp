@@ -59,29 +59,29 @@ namespace Test {
 template <class ExecSpace>
 struct TestIncrExecSpaceTypedef {
   void testit() {
-    bool passed = true;
-    passed &=
+    const bool passed =
         (!std::is_same<void, typename ExecSpace::memory_space>::value) &&
         std::is_same<ExecSpace, typename ExecSpace::execution_space>::value &&
         !std::is_same<void, typename ExecSpace::scratch_memory_space>::value &&
         !std::is_same<void, typename ExecSpace::array_layout>::value;
-    ASSERT_TRUE(passed);
+    static_assert(passed == true,
+                  "The memory and execution spaces are defined");
   }
 };
 
 template <class ExecSpace>
 struct TestIncrExecSpace {
   void testit() {
-    bool passed = true;
     typedef typename ExecSpace::device_type device_type;
     typedef typename device_type::memory_space memory_space;
     typedef typename device_type::execution_space execution_space;
 
-    passed &=
+    const bool passed =
         std::is_same<device_type,
                      Kokkos::Device<execution_space, memory_space>>::value;
 
-    ASSERT_TRUE(passed);
+    static_assert(passed == true,
+                  "Checking if the is_execution_space is evaluated correctly");
   }
 };
 
