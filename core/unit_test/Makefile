@@ -38,6 +38,31 @@ KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test
 TEST_TARGETS =
 TARGETS =
 
+KOKKOS_INTERNAL_HAS_OPTIMIZATIONS := $(call kokkos_has_string,$(KOKKOS_CXXFLAGS),O3)
+ifneq ($(KOKKOS_INTERNAL_HAS_OPTIMIZATIONS), 1)
+   KOKKOS_INTERNAL_HAS_OPTIMIZATIONS := $(call kokkos_has_string,$(KOKKOS_CXXFLAGS),O2)
+   ifneq ($(KOKKOS_INTERNAL_HAS_OPTIMIZATIONS), 1)
+      KOKKOS_INTERNAL_HAS_OPTIMIZATIONS := $(call kokkos_has_string,$(CXXFLAGS),O3)
+      ifneq ($(KOKKOS_INTERNAL_HAS_OPTIMIZATIONS), 1)
+         KOKKOS_INTERNAL_HAS_OPTIMIZATIONS := $(call kokkos_has_string,$(CXXFLAGS),O2)
+      endif
+   endif
+endif
+KOKKOS_INTERNAL_USE_RDYNAMIC := $(call kokkos_has_string,$(KOKKOS_CXXFLAGS),rdynamic)
+ifneq ($(KOKKOS_INTERNAL_USE_RDYNAMIC), 1)
+   KOKKOS_INTERNAL_USE_RDYNAMIC := $(call kokkos_has_string,$(CXXFLAGS),rdynamic)
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_RDYNAMIC),1) 
+   ifneq ($(KOKKOS_INTERNAL_HAS_OPTIMIZATIONS),1) 
+      STACK_TRACE_TERMINATE_FILTER :=_dynamic
+   else
+      STACK_TRACE_TERMINATE_FILTER :=
+   endif
+else
+   STACK_TRACE_TERMINATE_FILTER :=
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA = UnitTestMainInit.o gtest-all.o
     OBJ_CUDA += TestCuda_Init.o
@@ -375,6 +400,11 @@ TEST_TARGETS += test-push-finalize-hook
 TARGETS += KokkosCore_UnitTest_PushFinalizeHook_terminate
 TEST_TARGETS += test-push-finalize-hook-terminate
 
+TARGETS += KokkosCore_UnitTest_StackTraceTestExec
+TEST_TARGETS += test-stack-trace
+TEST_TARGETS += test-stack-trace-terminate
+TEST_TARGETS += test-stack-trace-generic-term
+
 NUM_INITTESTS = 16
 INITTESTS_NUMBERS := $(shell seq 1 ${NUM_INITTESTS})
 INITTESTS_TARGETS := $(addprefix KokkosCore_UnitTest_DefaultDeviceTypeInit_,${INITTESTS_NUMBERS})
@@ -442,6 +472,9 @@ KokkosCore_UnitTest_PushFinalizeHook_terminate: $(OBJ_DEFAULT) $(KOKKOS_LINK_DEP
 ${INITTESTS_TARGETS}: KokkosCore_UnitTest_DefaultDeviceTypeInit_%: TestDefaultDeviceTypeInit_%.o UnitTestMain.o gtest-all.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) TestDefaultDeviceTypeInit_$*.o UnitTestMain.o gtest-all.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_DefaultDeviceTypeInit_$*
 
+KokkosCore_UnitTest_StackTraceTestExec: TestStackTrace.o  TestStackTrace_f0.o TestStackTrace_f1.o TestStackTrace_f2.o TestStackTrace_f3.o TestStackTrace_f4.o $(KOKKOS_LINK_DEPENDS) gtest-all.o
+	$(LINK) $(EXTRA_PATH) TestStackTrace.o TestStackTrace_f0.o TestStackTrace_f1.o TestStackTrace_f2.o TestStackTrace_f3.o TestStackTrace_f4.o gtest-all.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_StackTraceTestExec
+
 test-cuda: KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_CudaInterOpInit
@@ -488,6 +521,16 @@ test-push-finalize-hook: KokkosCore_UnitTest_PushFinalizeHook
 
 test-push-finalize-hook-terminate: KokkosCore_UnitTest_PushFinalizeHook_terminate
 	./KokkosCore_UnitTest_PushFinalizeHook_terminate
+	
+test-stack-trace: KokkosCore_UnitTest_StackTraceTestExec
+	./KokkosCore_UnitTest_StackTraceTestExec --gtest_filter=*normal$(STACK_TRACE_TERMINATE_FILTER)
+
+test-stack-trace-terminate: KokkosCore_UnitTest_StackTraceTestExec
+	./KokkosCore_UnitTest_StackTraceTestExec --gtest_filter=*terminate$(STACK_TRACE_TERMINATE_FILTER)
+
+test-stack-trace-generic-term: KokkosCore_UnitTest_StackTraceTestExec
+	./KokkosCore_UnitTest_StackTraceTestExec --gtest_filter=*generic_term$(STACK_TRACE_TERMINATE_FILTER)
+
 
 ${INITTESTS_TEST_TARGETS}: test-default-init-%: KokkosCore_UnitTest_DefaultDeviceTypeInit_%
 	./KokkosCore_UnitTest_DefaultDeviceTypeInit_$*

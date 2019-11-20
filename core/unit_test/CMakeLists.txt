@@ -275,6 +275,33 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     ALWAYS_FAIL_ON_ZERO_RETURN
 )
 
+KOKKOS_ADD_TEST_EXECUTABLE(
+  StackTraceTestExec
+  SOURCES
+    TestStackTrace.cpp
+    TestStackTrace_f0.cpp
+    TestStackTrace_f1.cpp
+    TestStackTrace_f2.cpp
+    TestStackTrace_f3.cpp
+    TestStackTrace_f4.cpp
+)
+
+KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
+                 EXE  StackTraceTestExec 
+                 FAIL_REGULAR_EXPRESSION "FAILED"
+               )
+
+
+KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_terminate
+                 EXE  StackTraceTestExec
+                 FAIL_REGULAR_EXPRESSION "FAILED"
+               )
+
+KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_generic_term
+                 EXE  StackTraceTestExec
+                 FAIL_REGULAR_EXPRESSION "FAILED"
+               )
+
 foreach(INITTESTS_NUM RANGE 1 16)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_DefaultInit_${INITTESTS_NUM}

@@ -54,6 +54,8 @@
 #include <Cuda/Kokkos_Cuda_Atomic_Intrinsics.hpp>
 #endif
 
+#include <type_traits>
+
 namespace Kokkos {
 namespace Impl {
 
@@ -76,7 +78,8 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _atomic_load(
         (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
          sizeof(T) == 8) &&
             std::is_same<typename MemoryOrder::memory_order,
-                         typename std::remove_cv<MemoryOrder>::type>::value,
+                         typename std::remove_cv<MemoryOrder>::type>::value &&
+            (std::is_integral<T>::value || std::is_pointer<T>::value),
         void const**>::type = nullptr) {
   return __atomic_load_n(ptr, MemoryOrder::gnu_constant);
 }
@@ -85,15 +88,130 @@ template <class T, class MemoryOrder>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _atomic_load(
     T* ptr, MemoryOrder,
     typename std::enable_if<
-        !(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
-          sizeof(T) == 8) &&
-            std::is_default_constructible<T>::value &&
-            std::is_same<typename MemoryOrder::memory_order,
-                         typename std::remove_cv<MemoryOrder>::type>::value,
+        std::is_same<typename MemoryOrder::memory_order,
+                     typename std::remove_cv<MemoryOrder>::type>::value &&
+            ((!(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
+                sizeof(T) == 8) &&
+              std::is_default_constructible<T>::value &&
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+              std::is_trivially_copyable<T>::value
+#else
+              false
+#endif
+              ) ||
+             ((sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
+               sizeof(T) == 8) &&
+              std::is_floating_point<T>::value)),
         void const**>::type = nullptr) {
-  T rv{};
+  typename std::remove_volatile<T>::type rv{};
   __atomic_load(ptr, &rv, MemoryOrder::gnu_constant);
   return rv;
+}
+
+template <class T>
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _relaxed_atomic_load_impl(
+    T* ptr, typename std::enable_if<(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                     sizeof(T) == 4 || sizeof(T) == 8) &&
+                                        !(std::is_integral<T>::value ||
+                                          std::is_floating_point<T>::value ||
+                                          std::is_pointer<T>::value),
+                                    void const**>::type = nullptr) {
+  // TODO verify that this doesn't tear for sizeof(T) == 8
+  // TODO figure out if this really needs to be volatile
+  return *(volatile T*)ptr;
+}
+
+template <class T>
+struct NoOpOper {
+  KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH
+  static constexpr T apply(T const volatile& t, T const&) noexcept { return t; }
+  KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH
+  static constexpr T apply(T const& t, T const&) noexcept { return t; }
+};
+
+template <class T>
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T _relaxed_atomic_load_impl(
+    T* ptr, typename std::enable_if<!(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                      sizeof(T) == 4 || sizeof(T) == 8) &&
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+                                        !std::is_trivially_copyable<T>::value
+#else
+                                        true
+#endif
+                                    ,
+                                    void const**>::type = nullptr) {
+  return Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, ptr, *ptr);
+}
+
+template <class T>
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T
+_atomic_load(T* ptr, memory_order_seq_cst_t,
+             typename std::enable_if<(!(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                        sizeof(T) == 4 || sizeof(T) == 8) &&
+                                      std::is_default_constructible<T>::value &&
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+                                      !std::is_trivially_copyable<T>::value
+#else
+                                      true
+#endif
+                                      ) ||
+                                         ((sizeof(T) == 1 || sizeof(T) == 2 ||
+                                           sizeof(T) == 4 || sizeof(T) == 8) &&
+                                          !(std::is_integral<T>::value ||
+                                            std::is_floating_point<T>::value ||
+                                            std::is_pointer<T>::value)),
+
+                                     void const**>::type = nullptr) {
+  Kokkos::memory_fence();
+  T rv = Impl::_relaxed_atomic_load_impl(ptr);
+  Kokkos::memory_fence();
+  return rv;
+}
+
+template <class T>
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T
+_atomic_load(T* ptr, memory_order_acquire_t,
+             typename std::enable_if<(!(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                        sizeof(T) == 4 || sizeof(T) == 8) &&
+                                      std::is_default_constructible<T>::value &&
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+                                      !std::is_trivially_copyable<T>::value
+#else
+                                      true
+#endif
+                                      ) ||
+                                         ((sizeof(T) == 1 || sizeof(T) == 2 ||
+                                           sizeof(T) == 4 || sizeof(T) == 8) &&
+                                          !(std::is_integral<T>::value ||
+                                            std::is_floating_point<T>::value ||
+                                            std::is_pointer<T>::value)),
+
+                                     void const**>::type = nullptr) {
+  T rv = Impl::_relaxed_atomic_load_impl(ptr);
+  Kokkos::memory_fence();
+  return rv;
+}
+
+template <class T>
+KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH T
+_atomic_load(T* ptr, memory_order_relaxed_t,
+             typename std::enable_if<(!(sizeof(T) == 1 || sizeof(T) == 2 ||
+                                        sizeof(T) == 4 || sizeof(T) == 8) &&
+                                      std::is_default_constructible<T>::value &&
+#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
+                                      !std::is_trivially_copyable<T>::value
+#else
+                                      true
+#endif
+                                      ) ||
+                                         ((sizeof(T) == 1 || sizeof(T) == 2 ||
+                                           sizeof(T) == 4 || sizeof(T) == 8) &&
+                                          !(std::is_integral<T>::value ||
+                                            std::is_floating_point<T>::value ||
+                                            std::is_pointer<T>::value)),
+
+                                     void const**>::type = nullptr) {
+  return _relaxed_atomic_load_impl(ptr);
 }
 
 #undef KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH
@@ -112,7 +230,7 @@ __device__ __inline__ T _relaxed_atomic_load_impl(
 
 template <class T>
 struct NoOpOper {
-  __device__ __inline__ static constexpr T apply(T const& t,
+  __device__ __inline__ static constexpr T apply(T const volatile& t,
                                                  T const&) noexcept {
     return t;
   }
@@ -123,10 +241,7 @@ __device__ __inline__ T _relaxed_atomic_load_impl(
     T* ptr, typename std::enable_if<!(sizeof(T) == 1 || sizeof(T) == 2 ||
                                       sizeof(T) == 4 || sizeof(T) == 8),
                                     void const**>::type = nullptr) {
-  T rv{};
-  // TODO remove a copy operation here?
-  Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, &rv, rv);
-  return rv;
+  return Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, ptr, *ptr);
 }
 
 template <class T>

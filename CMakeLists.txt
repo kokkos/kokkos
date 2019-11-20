@@ -40,6 +40,7 @@ ENDIF()
 
 SET(KOKKOS_ENABLED_OPTIONS)      #exported in config file
 SET(KOKKOS_ENABLED_DEVICES)      #exported in config file
+SET(KOKKOS_ENABLED_TPLS)         #exported in config file
 SET(KOKKOS_ENABLED_ARCH_LIST)    #exported in config file
 
 #These are helper flags used for sanity checks during config
@@ -105,6 +106,16 @@ ENDIF()
 # Load either the real TriBITS or a TriBITS wrapper 
 # for certain utility functions that are universal (like GLOBAL_SET)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
+
+IF (Kokkos_ENABLE_CUDA AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14.0")
+  #If we are building CUDA, we have tricked CMake because we declare a CXX project
+  #If the default C++ standard for a given compiler matches the requested
+  #standard, then CMake just omits the -std flag in later versions of CMake
+  #This breaks CUDA compilation (CUDA compiler can have a different default
+  #-std then the underlying host compiler by itself). Setting this variable
+  #forces CMake to always add the -std flag even if it thinks it doesn't need it
+  GLOBAL_SET(CMAKE_CXX_STANDARD_DEFAULT 98)
+ENDIF()
 
 # These are the variables we will append to as we go
 # I really wish these were regular variables
@@ -188,6 +199,9 @@ KOKKOS_PACKAGE_POSTPROCESS()
 
 IF (NOT KOKKOS_HAS_TRILINOS)
   ADD_LIBRARY(kokkos INTERFACE)
+  #Make sure in-tree projects can reference this as Kokkos::
+  #to match the installed target names
+  ADD_LIBRARY(Kokkos::kokkos ALIAS kokkos)
   TARGET_LINK_LIBRARIES(kokkos INTERFACE kokkoscore kokkoscontainers kokkosalgorithms)
   KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(kokkos)
   include(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)

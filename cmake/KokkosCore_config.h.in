@@ -12,7 +12,6 @@
 #cmakedefine KOKKOS_ENABLE_THREADS
 #cmakedefine KOKKOS_ENABLE_CUDA
 #cmakedefine KOKKOS_ENABLE_HPX
-#cmakedefine KOKKOS_ENABLE_HWLOC
 #cmakedefine KOKKOS_ENABLE_MEMKIND
 #cmakedefine KOKKOS_ENABLE_LIBRT
 
@@ -50,6 +49,7 @@
 
 /* TPL Settings */
 #cmakedefine KOKKOS_ENABLE_HWLOC
+#cmakedefine KOKKOS_ENABLE_ITTNOTIFY
 #cmakedefine KOKKOS_USE_LIBRT
 #cmakedefine KOKKOS_ENABLE_HWBSPACE
 
