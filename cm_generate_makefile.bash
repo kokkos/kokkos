@@ -154,7 +154,14 @@ display_help_text() {
       echo "--gcc-toolchain=/Path/To/GccRoot:  Set the gcc toolchain to use with clang (e.g. /usr)" 
       echo "--make-j=[NUM]:               DEPRECATED: call make with appropriate"
       echo "                                -j flag"
-
+      echo "--incremental-testing-options=[CMake variables for incremental testing]"
+      echo "                              Known variables include "
+      echo "                                Kokkos_INCREMENTAL_TEST_BACK_ENDS=[list of backends]"
+      echo "                                Kokkos_[Backend]_FEATURE_LEVEL=[Feature level implemented]"
+      echo "                                Kokkos_[Backend]_EXCLUDE_TESTS=[List of tests to exclude]"
+      echo "                                Kokkos_[Backend]_DEVICE_TYPE=[DEVICE or HOST] default is DEVICE"
+      echo "                              Note: if validating unit test with existing backend, you should also"
+      echo "                                    include Kokkos_ENABLE_[upper case Backend name]=ON   "
 }
 
 KOKKOS_DO_EXAMPLES=OFF
@@ -337,5 +344,5 @@ if [[ ${COMPILER} == *clang* ]]; then
    fi 
 fi
  
-echo cmake $COMPILER_CMD ${INCREMENTAL_FEATURE_COMMAND} -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_PATH} 
-cmake $COMPILER_CMD ${INCREMENTAL_FEATURE_COMMAND} -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS//\"}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS//\"}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_PATH} 
+echo cmake $COMPILER_CMD ${INCREMENTAL_TESTING_OPTIONS} -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_PATH} 
+cmake $COMPILER_CMD ${INCREMENTAL_TESTING_OPTIONS} -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS//\"}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS//\"}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_PATH} 
