@@ -416,6 +416,7 @@ void fence_internal() {
     Kokkos::Serial::impl_static_fence();
   }
 #endif
+  memory_fence();
 }
 
 bool check_arg(char const* arg, char const* expected) {

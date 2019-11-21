@@ -695,6 +695,11 @@ class ScatterView<DataType, Layout, ExecSpace, Op, ScatterNonDuplicated,
   template <typename DT, typename... RP>
   void contribute_into(View<DT, RP...> const& dest) const {
     typedef View<DT, RP...> dest_type;
+    // We need to wait in case the scatterview was used in a different
+    // Execspace instance. We also need a memory fence to make sure
+    // relaxed atomics are visible to the threads used in the reduce
+    // duplicated kernel. Kokkos::fence() now issues a memory_fence()
+    Kokkos::fence();
     static_assert(std::is_same<typename dest_type::array_layout, Layout>::value,
                   "ScatterView contribute destination has different layout");
     static_assert(
