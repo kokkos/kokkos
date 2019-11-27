@@ -209,7 +209,7 @@ inline T atomic_exchange(
     inline U(){};
   } old;
 
-  old.val_T = Impl::atomic_load(dest);
+  old.val_T = Impl::atomic_load((T*)dest);
 
   do {
     assumed = old.val_type;
