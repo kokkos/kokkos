@@ -252,8 +252,7 @@ struct CASFunctor {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const {
-    T old =
-        Kokkos::Impl::atomic_load(&data());  // technically could be acquire?
+    T old = data();
     T newval, assumed;
 
     do {
@@ -273,8 +272,7 @@ struct CASFunctorReduce {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int, int&) const {
-    T old =
-        Kokkos::Impl::atomic_load(&data());  // technically could be acquire?
+    T old = data();
     T newval, assumed;
 
     do {
