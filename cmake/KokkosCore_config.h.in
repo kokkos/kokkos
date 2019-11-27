@@ -48,7 +48,6 @@
 
 /* TPL Settings */
 #cmakedefine KOKKOS_ENABLE_HWLOC
-#cmakedefine KOKKOS_ENABLE_ITTNOTIFY
 #cmakedefine KOKKOS_USE_LIBRT
 #cmakedefine KOKKOS_ENABLE_HWBSPACE
 
