@@ -227,7 +227,7 @@ inline T atomic_fetch_sub(
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
 
-  oldval.t = Impl::atomic_load(dest /* relaxed */);
+  oldval.t = Impl::atomic_load((T*)dest /* relaxed */);
 
   do {
     assume.i = oldval.i;
@@ -254,7 +254,7 @@ inline T atomic_fetch_sub(
     KOKKOS_INLINE_FUNCTION U() {}
   } oldval, assume, newval;
 
-  oldval.t = Impl::atomic_load(dest /* relaxed */);
+  oldval.t = Impl::atomic_load((T*)dest /* relaxed */);
 
   do {
     assume.i = oldval.i;
