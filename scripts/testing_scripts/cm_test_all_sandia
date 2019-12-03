@@ -504,12 +504,13 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
 
   SKIP_HWLOC=True
 
-  BASE_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  GCC91_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>"
-  NVCC_MODULE_LIST="sems-env,kokkos-env,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
+  BASE_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
+  GCC91_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>"
+  NVCC_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
 
-  CLANG_MODULE_LIST="sems-env,kokkos-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0"
-  CLANG8_MODULE_LIST="sems-env,kokkos-env,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
+  CLANG_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0"
+  CLANG8_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
+  PGI_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,sems-gcc/7.3.0,<COMPILER_NAME>/<COMPILER_VERSION>"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_Pthread"
   BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_OpenMP"
@@ -543,6 +544,7 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
                "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/5.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/7.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "pgi/19.4 $PGI_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
     )
   fi
 
