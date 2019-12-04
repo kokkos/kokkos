@@ -1159,4 +1159,13 @@ bool is_initialized() noexcept { return g_is_initialized; }
 
 bool show_warnings() noexcept { return g_show_warnings; }
 
+#ifdef KOKKOS_COMPILER_PGI
+namespace Impl {
+// Bizzarely, an extra jump instruction forces the PGI compiler to not have a
+// bug related to (probably?) empty base optimization and/or aggregate
+// construction.
+void _kokkos_pgi_compiler_bug_workaround() {}
+}  // end namespace Impl
+#endif
+
 }  // namespace Kokkos
