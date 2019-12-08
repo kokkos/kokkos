@@ -41,38 +41,19 @@
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
-#include <cstdio>
-#include <sstream>
-#include <type_traits>
-#include <gtest/gtest.h>
+#include <iostream>
+#include "Kokkos_Core.hpp"
+
+#include <impl/Kokkos_Stacktrace.hpp>
 
 namespace Test {
 
-// Unit test for kokkos_free
-// We constantly allocate and de-allocate memory.
-// If the kokkos_free does not free the memory, we will exceed the available
-// space
+int stacktrace_test_f1(std::ostream& out);
 
-template <class MemSpace>
-struct TestIncrMemorySpace_free {
-  const int N = 100000;
-  const int M = 100000;
-
-  void testit_free() {
-    for (int i = 0; i < N; ++i) {
-      double *data =
-          (double *)Kokkos::kokkos_malloc<MemSpace>("data", M * sizeof(double));
-      ASSERT_FALSE(data == nullptr);
-      Kokkos::kokkos_free<MemSpace>(data);
-    }
-  }
-};
-
-TEST(TEST_CATEGORY, incr_02b_memspace_free) {
-  typedef typename TEST_EXECSPACE::memory_space memory_space;
-  TestIncrMemorySpace_free<memory_space> test;
-  test.testit_free();
+void stacktrace_test_f2(std::ostream& out) {
+  out << "Top of f2" << std::endl;
+  const int result = stacktrace_test_f1(out);
+  out << "f2: f1 returned " << result << std::endl;
 }
 
 }  // namespace Test

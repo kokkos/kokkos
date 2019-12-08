@@ -1,11 +1,15 @@
 #!/bin/bash
 
-if ! [ -x "$(command -v clang-format)" ]; then
-  echo "***   No clang-format program found."
+# If CLANG_FORMAT_EXE exists in the environment,
+# it is used instead of 'clang-format'.
+CLANG_FORMAT_EXECUTABLE=${CLANG_FORMAT_EXE:-clang-format}
+
+if ! [ -x "$(command -v ${CLANG_FORMAT_EXECUTABLE})" ]; then
+  echo "***   ${CLANG_FORMAT_EXECUTABLE} could not be found."
   exit 1
 fi
 
-CLANG_FORMAT_VERSION="$(clang-format --version)"
+CLANG_FORMAT_VERSION="$(${CLANG_FORMAT_EXECUTABLE} --version)"
 CLANG_FORMAT_MAJOR_VERSION=$(echo "${CLANG_FORMAT_VERSION}" | sed 's/^[^0-9]*\([0-9]*\).*$/\1/g')
 CLANG_FORMAT_MINOR_VERSION=$(echo "${CLANG_FORMAT_VERSION}" | sed 's/^[^0-9]*[0-9]*\.\([0-9]*\).*$/\1/g')
 
@@ -15,4 +19,4 @@ if [ "${CLANG_FORMAT_MAJOR_VERSION}" -ne 8 ] || [ "${CLANG_FORMAT_MINOR_VERSION}
   exit 1
 fi
 
-find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i
+find . -name '*.cpp' -o -name '*.hpp' | xargs ${CLANG_FORMAT_EXECUTABLE} -i

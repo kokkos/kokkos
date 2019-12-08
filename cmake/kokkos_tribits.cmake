@@ -298,6 +298,9 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     COMPONENT ${PACKAGE_NAME}
   )
 
+  #In case we are building in-tree, add an alias name
+  #that matches the install Kokkos:: name
+  ADD_LIBRARY(Kokkos::${LIBRARY_NAME} ALIAS ${LIBRARY_NAME})
 ENDFUNCTION()
 
 FUNCTION(KOKKOS_ADD_LIBRARY LIBRARY_NAME)

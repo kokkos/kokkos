@@ -41,38 +41,58 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-#include <cstdlib>
+/// @Kokkos_Feature_Level_Required:1
 
 #include <Kokkos_Core.hpp>
+#include <cstdio>
+#include <sstream>
+#include <type_traits>
+#include <gtest/gtest.h>
 
-#ifdef KOKKOS_ENABLE_ROCM
-#include <rocm/TestROCm_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-#include <cuda/TestCuda_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-#include <openmp/TestOpenMP_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_THREADS
-#include <threads/TestThreads_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_HPX
-#include <hpx/TestHPX_Category.hpp>
-#endif
-#ifndef TEST_EXECSPACE
-#ifdef KOKKOS_ENABLE_SERIAL
-#include <serial/TestSerial_Category.hpp>
-#endif
-#endif
-#include <TestStackTrace.hpp>
+namespace Test {
 
-int main(int argc, char *argv[]) {
-  Kokkos::initialize(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
+// Unit test for Execution Space
+// Test1 - testing for memory_space, execution_space, scratch space and
+// array_layout of an execution space
+// Test2 - Test if the is_execution_space evaluation is working correctly
 
-  int result = RUN_ALL_TESTS();
-  Kokkos::finalize();
-  return result;
+template <class ExecSpace>
+struct TestIncrExecSpaceTypedef {
+  void testit() {
+    const bool passed =
+        (!std::is_same<void, typename ExecSpace::memory_space>::value) &&
+        std::is_same<ExecSpace, typename ExecSpace::execution_space>::value &&
+        !std::is_same<void, typename ExecSpace::scratch_memory_space>::value &&
+        !std::is_same<void, typename ExecSpace::array_layout>::value;
+    static_assert(passed == true,
+                  "The memory and execution spaces are defined");
+  }
+};
+
+template <class ExecSpace>
+struct TestIncrExecSpace {
+  void testit() {
+    typedef typename ExecSpace::device_type device_type;
+    typedef typename device_type::memory_space memory_space;
+    typedef typename device_type::execution_space execution_space;
+
+    const bool passed =
+        std::is_same<device_type,
+                     Kokkos::Device<execution_space, memory_space>>::value;
+
+    static_assert(passed == true,
+                  "Checking if the is_execution_space is evaluated correctly");
+  }
+};
+
+TEST(TEST_CATEGORY, incr_01_execspace_typedef) {
+  TestIncrExecSpaceTypedef<TEST_EXECSPACE> test;
+  test.testit();
 }
+
+TEST(TEST_CATEGORY, incr_01_execspace) {
+  ASSERT_TRUE(Kokkos::is_execution_space<TEST_EXECSPACE>::value);
+  ASSERT_FALSE(Kokkos::is_execution_space<
+               TestIncrExecSpaceTypedef<TEST_EXECSPACE>>::value);
+}
+}  // namespace Test

@@ -525,10 +525,10 @@ template <class>
 struct is_view : public std::false_type {};
 
 template <class D, class... P>
-struct is_view<View<D, P...> > : public std::true_type {};
+struct is_view<View<D, P...>> : public std::true_type {};
 
 template <class D, class... P>
-struct is_view<const View<D, P...> > : public std::true_type {};
+struct is_view<const View<D, P...>> : public std::true_type {};
 
 template <class DataType, class... Properties>
 class View : public ViewTraits<DataType, Properties...> {
@@ -571,7 +571,8 @@ class View : public ViewTraits<DataType, Properties...> {
   /** \brief  Compatible HostMirror view */
   typedef View<typename traits::non_const_data_type,
                typename traits::array_layout,
-               typename traits::host_mirror_space>
+               Device<DefaultHostExecutionSpace,
+                      typename traits::host_mirror_space::memory_space>>
       HostMirror;
 
   /** \brief  Compatible HostMirror view */
