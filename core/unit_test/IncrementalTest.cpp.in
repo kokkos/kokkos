@@ -41,38 +41,17 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_TEST_@BACK_END_NAME@_@CURRENT_TEST_NAME@
+#define KOKKOS_TEST_@BACK_END_NAME@_@CURRENT_TEST_NAME@
+
 #include <gtest/gtest.h>
-#include <cstdlib>
 
-#include <Kokkos_Core.hpp>
+#define TEST_CATEGORY @BACK_END_NAME@
+//#define TEST_EXECSPACE Kokkos::Experimental::@BACK_END_NAME@
+#define TEST_EXECSPACE Kokkos::@BACK_END_NAME@
 
-#ifdef KOKKOS_ENABLE_ROCM
-#include <rocm/TestROCm_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-#include <cuda/TestCuda_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-#include <openmp/TestOpenMP_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_THREADS
-#include <threads/TestThreads_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_HPX
-#include <hpx/TestHPX_Category.hpp>
-#endif
-#ifndef TEST_EXECSPACE
-#ifdef KOKKOS_ENABLE_SERIAL
-#include <serial/TestSerial_Category.hpp>
-#endif
-#endif
-#include <TestStackTrace.hpp>
+#include <@CURRENT_FILE_NAME@>
 
-int main(int argc, char *argv[]) {
-  Kokkos::initialize(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
+#endif
 
-  int result = RUN_ALL_TESTS();
-  Kokkos::finalize();
-  return result;
-}
+

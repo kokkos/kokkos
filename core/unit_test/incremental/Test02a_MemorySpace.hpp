@@ -47,6 +47,8 @@
 #include <type_traits>
 #include <gtest/gtest.h>
 
+/// @Kokkos_Feature_Level_Required:2
+
 namespace Test {
 
 // Unit test for Kokkos Malloc
