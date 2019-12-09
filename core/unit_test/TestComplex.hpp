@@ -355,4 +355,15 @@ TEST(TEST_CATEGORY, complex_special_funtions) {
 
 TEST(TEST_CATEGORY, complex_io) { testComplexIO(); }
 
+TEST(TEST_CATEGORY, complex_trivially_copyable) {
+  using RealType = double;
+
+  // Kokkos::complex<RealType> is trivially copyable when RealType is trivially
+  // copyable
+
+  ASSERT_TRUE(std::is_trivially_copyable<Kokkos::complex<RealType>>::value ||
+              !std::is_trivially_copyable<RealType>::value);
+}
+
 }  // namespace Test
+
