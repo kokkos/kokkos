@@ -194,6 +194,7 @@ if(Kokkos_ENABLE_CUDA)
     UnitTest_Cuda
     SOURCES
       ${Cuda_SOURCES}
+      cuda/TestCuda_Task.cpp
       cuda/TestCudaHostPinned_SharedAlloc.cpp
       cuda/TestCudaHostPinned_ViewCopy.cpp
       cuda/TestCudaHostPinned_ViewAPI_a.cpp
