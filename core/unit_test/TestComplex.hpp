@@ -399,4 +399,3 @@ TEST(TEST_CATEGORY, complex_trivially_copyable) {
 }
 
 }  // namespace Test
-
