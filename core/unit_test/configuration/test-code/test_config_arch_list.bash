@@ -4,7 +4,7 @@ HostArch=(SNB HSW SKX KNL)
 DeviceArch=(Kepler35 Kepler37 Pascal60 Pascal61 Volta70)
 if [ ! -z "$KOKKOS_HOST_ARCH_TEST" ]; then
   export KOKKOS_ARCH_TEST=1
-  HostArch=(WSM SNB HSW SKX WSM AMDAVX ARMv80 ARMv81 BDW KNC KNL BGQ Power7 Power8 Power9 Ryzen EPYC)
+  HostArch=(WSM SNB HSW SKX WSM AMDAVX ARMv80 ARMv81 BDW KNC KNL BGQ Power7 Power8 Power9 Ryzen EPYC ARMv8_ThunderX ARMv8_ThunderX2)
   DeviceArch=()
 fi
 
@@ -23,6 +23,12 @@ for harch in "${HostArch[@]}"
 do
   harch_up=`echo $harch | tr a-z A-Z`
   CMAKE_HARCH="-DKokkos_ARCH_${harch_up}=ON"
+
+  if [ "$harch" == "ARMv8_ThunderX2" ]; then
+    harch="ARMv8-TX2"
+  elif [ "$harch" == "ARMv8_ThunderX" ]; then
+    harch="ARMv8-ThunderX"
+  fi
 
   if [ ! -z "$DeviceArch" ]
   then

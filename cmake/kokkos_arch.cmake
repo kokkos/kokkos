@@ -76,7 +76,7 @@ KOKKOS_ARCH_OPTION(AMDAVX          HOST "AMD chip")
 KOKKOS_ARCH_OPTION(ARMV80          HOST "ARMv8.0 Compatible CPU")
 KOKKOS_ARCH_OPTION(ARMV81          HOST "ARMv8.1 Compatible CPU")
 KOKKOS_ARCH_OPTION(ARMV8_THUNDERX  HOST "ARMv8 Cavium ThunderX CPU")
-KOKKOS_ARCH_OPTION(ARMV8_TX2       HOST "ARMv8 Cavium ThunderX2 CPU")
+KOKKOS_ARCH_OPTION(ARMV8_THUNDERX2 HOST "ARMv8 Cavium ThunderX2 CPU")
 KOKKOS_ARCH_OPTION(WSM             HOST "Intel Westmere CPU")
 KOKKOS_ARCH_OPTION(SNB             HOST "Intel Sandy/Ivy Bridge CPUs")
 KOKKOS_ARCH_OPTION(HSW             HOST "Intel Haswell CPUs")
@@ -224,7 +224,7 @@ IF (KOKKOS_ARCH_ARMV8_THUNDERX2)
   ARCH_FLAGS(
     Cray NO-VALUE-SPECIFIED
     PGI  NO-VALUE-SPECIFIED
-    DEFAULT -march=thunderx2t99 -mtune=thunderx2t99
+    DEFAULT -mcpu=thunderx2t99 -mtune=thunderx2t99
   )
 ENDIF()
 
