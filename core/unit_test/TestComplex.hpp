@@ -363,8 +363,12 @@ TEST(TEST_CATEGORY, complex_trivially_copyable) {
 
 #if defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU < 500
   ASSERT_TRUE(
-      std::has_trivial_copy_constructor<Kokkos::complex<RealType>>::value ||
-      !std::has_trivial_copy_constructor<RealType>::value);
+      (std::has_trivial_copy_constructor<Kokkos::complex<RealType>>::value &&
+       std::has_trivial_copy_assign<Kokkos::complex<RealType>>::value &&
+       std::is_trivially_destructible<Kokkos::complex<RealType>>::value) ||
+      !(std::has_trivial_copy_constructor<RealType>::value &&
+        std::has_trivial_copy_assign<RealType>::value &&
+        std::is_trivially_destructible<RealType>::value));
 #else
   ASSERT_TRUE(std::is_trivially_copyable<Kokkos::complex<RealType>>::value ||
               !std::is_trivially_copyable<RealType>::value);
