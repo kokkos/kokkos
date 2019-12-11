@@ -1,0 +1,33 @@
+
+//----------------------------------------------------------------------------
+// Set the default execution space.
+//
+#cmakedefine KOKKOS_DEVICE_SPACE_ACTIVE
+#cmakedefine KOKKOS_HOSTPARALLEL_SPACE_ACTIVE
+#cmakedefine KOKKOS_SERIAL_SPACE_ACTIVE
+
+/// Define Kokkos::DefaultExecutionSpace as per configuration option
+/// or chosen from the enabled execution spaces in the following order:
+/// Kokkos::Cuda, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP,
+/// Kokkos::Threads, Kokkos::Serial
+
+namespace Kokkos {
+
+#if defined(KOKKOS_DEVICE_SPACE_ACTIVE)
+   typedef @DEVICE_SPACE_NAME@ DefaultExecutionSpace;
+   #if defined(KOKKOS_HOSTPARALLEL_SPACE_ACTIVE)
+      typedef @HOSTPARALLEL_SPACE_NAME@ DefaultHostExecutionSpace;
+   #else
+      typedef Serial DefaultHostExecutionSpace;
+   #endif
+#else
+   #if defined(KOKKOS_HOSTPARALLEL_SPACE_ACTIVE)
+      typedef @HOSTPARALLEL_SPACE_NAME@ DefaultExecutionSpace;
+      typedef @HOSTPARALLEL_SPACE_NAME@ DefaultHostExecutionSpace;
+   #else
+      typedef Serial DefaultHostExecutionSpace;
+      typedef Serial DefaultExecutionSpace;
+   #endif
+#endif
+
+}  // namespace Kokkos

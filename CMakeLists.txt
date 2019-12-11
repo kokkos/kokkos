@@ -221,6 +221,11 @@ KOKKOS_PACKAGE_DEF()
 KOKKOS_EXCLUDE_AUTOTOOLS_FILES()
 KOKKOS_PACKAGE_POSTPROCESS()
 
+
+KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_FwdBackend.h "fwd/Kokkos_Fwd" "Cuda;Serial;OpenMP;HPX;Threads")
+KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_SetupBackend.h "Kokkos_Setup" "Cuda")
+KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_DeclareBackend.h "decl/Kokkos_Declare" "Cuda;Serial;OpenMP;HPX;Threads")
+ 
 #We are ready to configure the header
 CONFIGURE_FILE(cmake/KokkosCore_config.h.in KokkosCore_config.h @ONLY)
 
