@@ -293,8 +293,21 @@ class alignas(2 * sizeof(RealType)) complex {
   /// complex& </tt>.  See Kokkos Issue #177 for the
   /// explanation.  In practice, this means that you should not chain
   /// assignments with volatile lvalues.
-  KOKKOS_INLINE_FUNCTION void operator=(
-      const complex<RealType>& src) volatile noexcept {
+  //
+  // Templated, so as not to be a copy assignment operator (Kokkos issue #2577)
+  // Intended to behave as
+  //    void operator=(const complex&) volatile noexcept
+  //
+  // Use cases:
+  //    complex r;
+  //    const complex cr;
+  //    volatile complex vl;
+  //    vl = r;
+  //    vl = cr;
+  template <class Complex,
+            typename std::enable_if<std::is_same<Complex, complex>::value,
+                                    int>::type = 0>
+  KOKKOS_INLINE_FUNCTION void operator=(const Complex& src) volatile noexcept {
     re_ = src.re_;
     im_ = src.im_;
     // We deliberately do not return anything here.  See explanation
@@ -303,16 +316,45 @@ class alignas(2 * sizeof(RealType)) complex {
 
   //! Assignment operator, volatile LHS and volatile RHS
   // TODO Should this return void like the other volatile assignment operators?
+  //
+  // Templated, so as not to be a copy assignment operator (Kokkos issue #2577)
+  // Intended to behave as
+  //    volatile complex& operator=(const volatile complex&) volatile noexcept
+  //
+  // Use cases:
+  //    volatile complex vr;
+  //    const volatile complex cvr;
+  //    volatile complex vl;
+  //    vl = vr;
+  //    vl = cvr;
+  template <class Complex,
+            typename std::enable_if<std::is_same<Complex, complex>::value,
+                                    int>::type = 0>
   KOKKOS_INLINE_FUNCTION volatile complex& operator=(
-      const volatile complex<RealType>& src) volatile noexcept {
+      const volatile Complex& src) volatile noexcept {
     re_ = src.re_;
     im_ = src.im_;
     return *this;
   }
 
   //! Assignment operator, volatile RHS and non-volatile LHS
+  //
+  // Templated, so as not to be a copy assignment operator (Kokkos issue #2577)
+  // Intended to behave as
+  //    complex& operator=(const volatile complex&) noexcept
+  //
+  // Use cases:
+  //    volatile complex vr;
+  //    const volatile complex cvr;
+  //    complex l;
+  //    l = vr;
+  //    l = cvr;
+  //
+  template <class Complex,
+            typename std::enable_if<std::is_same<Complex, complex>::value,
+                                    int>::type = 0>
   KOKKOS_INLINE_FUNCTION complex& operator=(
-      const volatile complex<RealType>& src) noexcept {
+      const volatile Complex& src) noexcept {
     re_ = src.re_;
     im_ = src.im_;
     return *this;
