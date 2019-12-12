@@ -47,68 +47,28 @@
 #include <type_traits>
 #include <gtest/gtest.h>
 
+/// @Kokkos_Feature_Level_Required:2
+
 namespace Test {
 
-// DeepCopy unit tests
-// We allocate data in the host. Copy it to the device and copy back the data
-// from device back to host We check if the original and copied data are the
-// same to evaluate the deep copies.
+// Unit test for Kokkos Malloc
 
-template <class MemSpaceD, class MemSpaceH>
-struct TestIncrMemorySpace_deepcopy {
-  using dataType         = double;
+template <class MemSpace>
+struct TestIncrMemorySpace_malloc {
   const int num_elements = 10;
-  const double value     = 0.5;
 
-  int compare_equal_host(dataType *HostData_send, dataType *HostData_recv) {
-    int error = 0;
-    for (int i = 0; i < num_elements; ++i) {
-      if (HostData_send[i] != HostData_recv[i]) error++;
-    }
-
-    return error;
-  }
-
-  void testit_DtoH() {
-    // Allocate memory on Device space
-    dataType *DeviceData = (dataType *)Kokkos::kokkos_malloc<MemSpaceD>(
-        "DeviceData", num_elements * sizeof(dataType));
-    ASSERT_FALSE(DeviceData == nullptr);
-
-    // Allocate memory on Host space
-    dataType *HostData_send = (dataType *)Kokkos::kokkos_malloc<MemSpaceH>(
-        "HostData", num_elements * sizeof(dataType));
-    ASSERT_FALSE(HostData_send == nullptr);
-
-    // Allocate memory on Host space
-    dataType *HostData_recv = (dataType *)Kokkos::kokkos_malloc<MemSpaceH>(
-        "HostData", num_elements * sizeof(dataType));
-    ASSERT_FALSE(HostData_recv == nullptr);
-
-    for (int i = 0; i < num_elements; ++i) {
-      HostData_send[i] = value;
-      HostData_recv[i] = 0.0;
-    }
-
-    // Copy first from Host_send to Device
-    Kokkos::Impl::DeepCopy<MemSpaceH, MemSpaceD>(
-        DeviceData, HostData_send, num_elements * sizeof(dataType));
-
-    // Copy first from Host_send to Device
-    Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH>(
-        HostData_recv, DeviceData, num_elements * sizeof(dataType));
-
-    // Check if all data has been copied correctly back to the host;
-    int sumError = compare_equal_host(HostData_send, HostData_recv);
-    ASSERT_EQ(sumError, 0);
+  void testit_malloc() {
+    int *data = (int *)Kokkos::kokkos_malloc<MemSpace>(
+        "data", num_elements * sizeof(int));
+    ASSERT_FALSE(data == nullptr);
+    Kokkos::kokkos_free<MemSpace>(data);
   }
 };
 
-TEST(TEST_CATEGORY, incr_02c_memspace_deepcopy_DtoH) {
+TEST(TEST_CATEGORY, incr_02a_memspace_malloc) {
   typedef typename TEST_EXECSPACE::memory_space memory_space;
-  typedef typename TEST_EXECSPACE::memory_space host_space;
-  TestIncrMemorySpace_deepcopy<memory_space, host_space> test;
-  test.testit_DtoH();
+  TestIncrMemorySpace_malloc<memory_space> test;
+  test.testit_malloc();
 }
 
 }  // namespace Test

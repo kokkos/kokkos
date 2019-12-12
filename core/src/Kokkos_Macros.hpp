@@ -427,6 +427,13 @@
      defined(__x86_64__) || defined(__PPC64__))
 #define KOKKOS_ENABLE_ASM 1
 #endif
+
+#endif
+
+// Every compiler which uses GCC headers from before GCC 5.0 needs this
+// Since they won't have trivially_copyable available
+#if (__GNUC__ < 5)
+#define KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG 1
 #endif
 
 //----------------------------------------------------------------------------
@@ -609,10 +616,115 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #define KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
 #endif
 
+//----------------------------------------------------------------------------
+// Thread sanitizer and intel inspector compiler macros
+
+#ifndef KOKKOS_IMPL_THREAD_SANITIZER_IGNORE
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define KOKKOS_IMPL_THREAD_SANITIZER_IGNORE \
+  __attribute__((no_sanitize("thread")))
+#else
+#define KOKKOS_IMPL_THREAD_SANITIZER_IGNORE
+#endif
+#else
+#define KOKKOS_IMPL_THREAD_SANITIZER_IGNORE
+#endif
+#endif
+
+// Intel Inspector annotations are enabled by default in debug mode unless
+// they're explicitly disabled
+#if defined(KOKKOS_ENABLE_ITTNOTIFY)
+#if defined(KOKKOS_COMPILER_INTEL) && defined(KOKKOS_ENABLE_DEBUG)
+#if !defined(KOKKOS_DISABLE_INTEL_INSPECTOR_ANNOTATIONS) && \
+    !defined(KOKKOS_ENABLE_INTEL_INSPECTOR_ANNOTATIONS)
+#define KOKKOS_ENABLE_INTEL_INSPECTOR_ANNOTATIONS
+#endif
+#endif
+#endif
+
+#ifdef KOKKOS_ENABLE_INTEL_INSPECTOR_ANNOTATIONS
+#if defined(KOKKOS_COMPILER_INTEL)
+#include <ittnotify.h>
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_ACQUIRED
+#define KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_ACQUIRED(...) \
+  __itt_sync_acquired((void*)(__VA_ARGS__))
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_RELEASING
+#define KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_RELEASING(...) \
+  __itt_sync_releasing((void*)(__VA_ARGS__))
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_DESTROY
+#define KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_DESTROY(...) \
+  __itt_sync_releasing((void*)(__VA_ARGS__))
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
+#define KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS \
+  __itt_suppress_push(__itt_suppress_threading_errors);
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+#define KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS \
+  __itt_suppress_pop();
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS
+#define KOKKOS_IMPL_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS(...) \
+  KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS;     \
+  __VA_ARGS__;                                                    \
+  KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS;
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE
+#define KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE( \
+    addr, size)                                                               \
+  __itt_suppress_mark_range(__itt_suppress_range,                             \
+                            __itt_suppress_threading_errors, (void*)(addr),   \
+                            size)
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE
+#define KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE(  \
+    addr, size)                                                              \
+  __itt_suppress_clear_range(__itt_suppress_range,                           \
+                             __itt_suppress_threading_errors, (void*)(addr), \
+                             size)
+#endif
+#endif
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_ACQUIRED
+#define KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_ACQUIRED(...)
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_RELEASING
+#define KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_RELEASING(...)
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_DESTROY
+#define KOKKOS_IMPL_INTEL_INSPECTOR_SYNC_DESTROY(...)
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
+#define KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS
+#define KOKKOS_IMPL_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS(...) __VA_ARGS__
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+#define KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE
+#define KOKKOS_IMPL_INTEL_INSPECTOR_BEGIN_SUPRESS_THREADING_ERRORS_FOR_RANGE( \
+    addr, size)
+#endif
+#ifndef KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE
+#define KOKKOS_IMPL_INTEL_INSPECTOR_END_SUPRESS_THREADING_ERRORS_FOR_RANGE( \
+    addr, size)
+#endif
+
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 #else
 #define KOKKOS_ATTRIBUTE_NODISCARD
+#endif
+
+#if defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) || \
+    defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)
+#define KOKKOS_IMPL_ENABLE_STACKTRACE
+#define KOKKOS_IMPL_ENABLE_CXXABI
 #endif
 
 #endif  // #ifndef KOKKOS_MACROS_HPP

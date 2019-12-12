@@ -41,38 +41,19 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-#include <cstdlib>
+#include <iostream>
+#include "Kokkos_Core.hpp"
 
-#include <Kokkos_Core.hpp>
+#include <impl/Kokkos_Stacktrace.hpp>
 
-#ifdef KOKKOS_ENABLE_ROCM
-#include <rocm/TestROCm_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-#include <cuda/TestCuda_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-#include <openmp/TestOpenMP_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_THREADS
-#include <threads/TestThreads_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_HPX
-#include <hpx/TestHPX_Category.hpp>
-#endif
-#ifndef TEST_EXECSPACE
-#ifdef KOKKOS_ENABLE_SERIAL
-#include <serial/TestSerial_Category.hpp>
-#endif
-#endif
-#include <TestStackTrace.hpp>
+namespace Test {
 
-int main(int argc, char *argv[]) {
-  Kokkos::initialize(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
+int stacktrace_test_f1(std::ostream& out);
 
-  int result = RUN_ALL_TESTS();
-  Kokkos::finalize();
-  return result;
+void stacktrace_test_f2(std::ostream& out) {
+  out << "Top of f2" << std::endl;
+  const int result = stacktrace_test_f1(out);
+  out << "f2: f1 returned " << result << std::endl;
 }
+
+}  // namespace Test

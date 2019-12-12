@@ -145,79 +145,6 @@ std::string Experimental::RawMemoryAllocationFailure::get_error_message()
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if defined(__GNUC__) && defined(ENABLE_TRACEBACK)
-
-/*  This is only known to work with GNU C++
- *  Must be compiled with '-rdynamic'
- *  Must be linked with   '-ldl'
- */
-
-/* Print call stack into an error stream,
- * so one knows in which function the error occured.
- *
- * Code copied from:
- *   http://stupefydeveloper.blogspot.com/2008/10/cc-call-stack.html
- *
- * License on this site:
- *   This blog is licensed under a
- *   Creative Commons Attribution-Share Alike 3.0 Unported License.
- *
- *   http://creativecommons.org/licenses/by-sa/3.0/
- *
- * Modified to output to std::ostream.
- */
-#include <signal.h>
-#include <execinfo.h>
-#include <cxxabi.h>
-#include <dlfcn.h>
-
-#include <cstdlib>
-
-namespace Kokkos {
-namespace Impl {
-
-void traceback_callstack(std::ostream &msg) {
-  using namespace abi;
-
-  enum { MAX_DEPTH = 32 };
-
-  void *trace[MAX_DEPTH];
-  Dl_info dlinfo;
-
-  int status;
-
-  int trace_size = backtrace(trace, MAX_DEPTH);
-
-  msg << std::endl << "Call stack {" << std::endl;
-
-  for (int i = 1; i < trace_size; ++i) {
-    if (!dladdr(trace[i], &dlinfo)) continue;
-
-    const char *symname = dlinfo.dli_sname;
-
-    char *demangled = __cxa_demangle(symname, NULL, 0, &status);
-
-    if (status == 0 && demangled) {
-      symname = demangled;
-    }
-
-    if (symname && *symname != 0) {
-      msg << "  object: " << dlinfo.dli_fname << " function: " << symname
-          << std::endl;
-    }
-
-    if (demangled) {
-      free(demangled);
-    }
-  }
-  msg << "}";
-}
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-#else
-
 namespace Kokkos {
 namespace Impl {
 
@@ -227,5 +154,3 @@ void traceback_callstack(std::ostream &msg) {
 
 }  // namespace Impl
 }  // namespace Kokkos
-
-#endif

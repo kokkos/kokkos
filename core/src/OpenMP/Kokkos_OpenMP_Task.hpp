@@ -322,7 +322,7 @@ class TaskQueueSpecializationConstrained<
 
               // If 0 == m_ready_count then set task = 0
 
-              if (*((volatile int*)&team_queue.m_ready_count) > 0) {
+              if (Impl::atomic_load(&team_queue.m_ready_count) > 0) {
                 task = end;
                 // Attempt to acquire a task
                 // Loop by priority and then type

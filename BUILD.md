@@ -189,6 +189,9 @@ The following options control enabling TPLs:
 * Kokkos_ENABLE_HWLOC
     * Whether to enable the HWLOC library
     * BOOL Default: Off
+* Kokkos_ENABLE_ITTNOTIFY
+    * Whether to enable the ITTNOTIFY library (Intel Inspector)
+    * BOOL Default: OFF
 * Kokkos_ENABLE_LIBNUMA
     * Whether to enable the LIBNUMA library
     * BOOL Default: Off

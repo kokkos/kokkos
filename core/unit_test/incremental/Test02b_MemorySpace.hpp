@@ -41,38 +41,40 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-#include <cstdlib>
+/// @Kokkos_Feature_Level_Required:2
 
 #include <Kokkos_Core.hpp>
+#include <cstdio>
+#include <sstream>
+#include <type_traits>
+#include <gtest/gtest.h>
 
-#ifdef KOKKOS_ENABLE_ROCM
-#include <rocm/TestROCm_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_CUDA
-#include <cuda/TestCuda_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-#include <openmp/TestOpenMP_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_THREADS
-#include <threads/TestThreads_Category.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_HPX
-#include <hpx/TestHPX_Category.hpp>
-#endif
-#ifndef TEST_EXECSPACE
-#ifdef KOKKOS_ENABLE_SERIAL
-#include <serial/TestSerial_Category.hpp>
-#endif
-#endif
-#include <TestStackTrace.hpp>
+namespace Test {
 
-int main(int argc, char *argv[]) {
-  Kokkos::initialize(argc, argv);
-  ::testing::InitGoogleTest(&argc, argv);
+// Unit test for kokkos_free
+// We constantly allocate and de-allocate memory.
+// If the kokkos_free does not free the memory, we will exceed the available
+// space
 
-  int result = RUN_ALL_TESTS();
-  Kokkos::finalize();
-  return result;
+template <class MemSpace>
+struct TestIncrMemorySpace_free {
+  const int N = 100000;
+  const int M = 100000;
+
+  void testit_free() {
+    for (int i = 0; i < N; ++i) {
+      double *data =
+          (double *)Kokkos::kokkos_malloc<MemSpace>("data", M * sizeof(double));
+      ASSERT_FALSE(data == nullptr);
+      Kokkos::kokkos_free<MemSpace>(data);
+    }
+  }
+};
+
+TEST(TEST_CATEGORY, incr_02b_memspace_free) {
+  typedef typename TEST_EXECSPACE::memory_space memory_space;
+  TestIncrMemorySpace_free<memory_space> test;
+  test.testit_free();
 }
+
+}  // namespace Test
