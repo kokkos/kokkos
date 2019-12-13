@@ -361,6 +361,7 @@ TEST(TEST_CATEGORY, complex_trivially_copyable) {
   // Kokkos::complex<RealType> is trivially copyable when RealType is trivially
   // copyable
 
+#if !defined(__ibmxl__)
 #if !defined(__clang__)
 #define KOKKOS_COMPILER_GNU_VERSION \
   __GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__
@@ -384,6 +385,7 @@ TEST(TEST_CATEGORY, complex_trivially_copyable) {
       !(std::has_trivial_copy_constructor<RealType>::value &&
         std::has_trivial_copy_assign<RealType>::value &&
         std::has_trivial_destructor<RealType>::value));
+#endif
 #endif
 }
 
