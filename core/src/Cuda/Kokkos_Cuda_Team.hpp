@@ -164,8 +164,8 @@ class CudaTeamMember {
   KOKKOS_INLINE_FUNCTION
       typename std::enable_if<(sizeof(ValueType) < 4), void>::type
       team_broadcast(ValueType& val, const int& thread_id) const {
-    using conv_type = uint32_t;
 #ifdef __CUDA_ARCH__
+    using conv_type = uint32_t;
     if (1 == blockDim.z) {  // team == block
       __syncthreads();
       // Wait for shared data write until all threads arrive here
@@ -212,8 +212,8 @@ class CudaTeamMember {
       typename std::enable_if<(sizeof(ValueType) < 4), void>::type
       team_broadcast(Closure const& f, ValueType& val,
                      const int& thread_id) const {
-    using conv_type = uint32_t;
 #ifdef __CUDA_ARCH__
+    using conv_type = uint32_t;
     f(val);
 
     if (1 == blockDim.z) {  // team == block
