@@ -94,7 +94,8 @@ struct TestParallel_For
     return error;
   }
 
-  void testit()
+  //A simple parallel for test with functors
+  void simple_test()
   {
     _data = (dataType *)Kokkos::kokkos_malloc<memory_space>("data",_N*sizeof(dataType));
     Kokkos::parallel_for("parallel_for", _N,array<ExecSpace>(_data));
@@ -104,11 +105,29 @@ struct TestParallel_For
     ASSERT_EQ(sumError, 0);
     Kokkos::kokkos_free<memory_space>(_data);
   }
+
+  // A parallel_for test with user defined RangePolicy
+  void range_policy()
+  {
+    typedef typename Kokkos::RangePolicy<ExecSpace> range_policy;
+    _data = (dataType *)Kokkos::kokkos_malloc<memory_space>("data",_N*sizeof(dataType));
+    Kokkos::parallel_for("RangePolicy_ParallelFor",range_policy(0,_N),array<ExecSpace>(_data));
+
+    // Check if all data has been update correctly
+    int sumError = compare_equal(_data);
+    ASSERT_EQ(sumError, 0);
+    Kokkos::kokkos_free<memory_space>(_data);
+  }
 };
 
-TEST(TEST_CATEGORY, incr_03a_parallelFor) {
+TEST(TEST_CATEGORY, incr_03a_simple_parallelFor) {
   TestParallel_For<TEST_EXECSPACE> test;
-  test.testit();
+  test.simple_test();
+}
+
+TEST(TEST_CATEGORY, incr_03b_RangePolicy_parallelFor) {
+  TestParallel_For<TEST_EXECSPACE> test;
+  test.range_policy();
 }
 
 }  // namespace Test
