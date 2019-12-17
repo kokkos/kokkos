@@ -447,106 +447,13 @@ struct ViewTraits {
  * }
  * \endcode
  */
-template <class DataType, class... Properties>
-class View;
-
-namespace Impl {
-
-/*
- * \class ViewTracker
- * \brief template class to wrap the shared allocation tracker
- *
- * \section This class is templated on the View and provides
- * constructors that match the view.  The constructors and assignments
- * from view will externalize the logic needed to enable/disable
- * ref counting to provide a single gate to enable further developments
- * which may hing on the same logic.
- *
- */
-template <class ParentView>
-struct ViewTracker {
-  typedef Kokkos::Impl::SharedAllocationTracker track_type;
-  typedef typename ParentView::traits view_traits;
-
-  track_type m_tracker;
-
-  KOKKOS_INLINE_FUNCTION
-  ViewTracker() = default;
-
-  KOKKOS_INLINE_FUNCTION
-  ViewTracker(const ViewTracker& vt) noexcept
-      : m_tracker(vt.m_tracker, view_traits::is_managed) {}
-
-  KOKKOS_INLINE_FUNCTION
-  ViewTracker(const ParentView& vt) noexcept : m_tracker() {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (view_traits::is_managed &&
-        Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()) {
-      m_tracker.assign_direct(vt.m_track.m_tracker);
-    } else {
-      m_tracker.assign_force_disable(vt.m_track.m_tracker);
-    }
-#else
-    m_tracker.assign_force_disable(vt.m_track.m_tracker);
-#endif
-  }
-
-  template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION ViewTracker(const View<RT, RP...>& vt) noexcept
-      : m_tracker() {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (view_traits::is_managed &&
-        Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()) {
-      m_tracker.assign_direct(vt.impl_view_track().m_tracker);
-    } else {
-      m_tracker.assign_force_disable(vt.impl_view_track().m_tracker);
-    }
-#else
-    m_tracker.assign_force_disable(vt.impl_view_track().m_tracker);
-#endif
-  }
-
-  template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION void assign(const View<RT, RP...>& vt) noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (view_traits::is_managed &&
-        Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()) {
-      m_tracker.assign_direct(vt.impl_view_track().m_tracker);
-    } else {
-      m_tracker.assign_force_disable(vt.impl_view_track().m_tracker);
-    }
-#else
-    m_tracker.assign_force_disable(vt.impl_view_track().m_tracker);
-#endif
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  ViewTracker& operator=(const ViewTracker& rhs) noexcept {
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (view_traits::is_managed &&
-        Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()) {
-      m_tracker.assign_direct(rhs.m_tracker);
-    } else {
-      m_tracker.assign_force_disable(rhs.m_tracker);
-    }
-#else
-    m_tracker.assign_force_disable(rhs.m_tracker);
-#endif
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  ViewTracker(const track_type& tt) noexcept
-      : m_tracker(tt, view_traits::is_managed) {}
-};
-
-}  // namespace Impl
 
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#include <impl/Kokkos_ViewTracker.hpp>
 #include <impl/Kokkos_ViewMapping.hpp>
 #include <impl/Kokkos_ViewArray.hpp>
 
@@ -632,13 +539,14 @@ class View : public ViewTraits<DataType, Properties...> {
   friend class Kokkos::Impl::ViewMapping;
 
  public:
-  typedef ViewTraits<DataType, Properties...> traits;
-  typedef Kokkos::Impl::ViewTracker<View> view_tracker_type;
+  using traits            = ViewTraits<DataType, Properties...>;
+  using view_tracker_type = Kokkos::Impl::ViewTracker<View>;
 
  private:
-  typedef Kokkos::Impl::ViewMapping<traits, typename traits::specialize>
-      map_type;
-  friend view_tracker_type;
+  using map_type =
+      Kokkos::Impl::ViewMapping<traits, typename traits::specialize>;
+  template <typename V>
+  friend struct Kokkos::Impl::ViewTracker;
 
   view_tracker_type m_track;
   map_type m_map;
@@ -884,10 +792,6 @@ class View : public ViewTraits<DataType, Properties...> {
     return m_track.m_tracker;
   }
 
-  KOKKOS_INLINE_FUNCTION
-  const view_tracker_type& impl_view_track() const { return m_track; }
-  //----------------------------------------
-
  private:
   enum {
     is_layout_left =
@@ -1017,7 +921,8 @@ class View : public ViewTraits<DataType, Properties...> {
        !is_default_map),
       reference_type>::type
   operator()(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.reference(i0, i1);
   }
 
@@ -1027,7 +932,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_left && (traits::rank_dynamic == 0)),
       reference_type>::type
   operator()(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i0 + m_map.m_impl_offset.m_dim.N0 * i1];
   }
 
@@ -1037,7 +943,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_left && (traits::rank_dynamic != 0)),
       reference_type>::type
   operator()(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i0 + m_map.m_impl_offset.m_stride * i1];
   }
 
@@ -1047,7 +954,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_right && (traits::rank_dynamic == 0)),
       reference_type>::type
   operator()(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i1 + m_map.m_impl_offset.m_dim.N1 * i0];
   }
 
@@ -1057,7 +965,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_right && (traits::rank_dynamic != 0)),
       reference_type>::type
   operator()(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i1 + m_map.m_impl_offset.m_stride * i0];
   }
 
@@ -1067,7 +976,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_stride),
       reference_type>::type
   operator()(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i0 * m_map.m_impl_offset.m_stride.S0 +
                                i1 * m_map.m_impl_offset.m_stride.S1];
   }
@@ -1081,7 +991,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map),
       reference_type>::type
   operator()(const I0& i0, const I1& i1, const I2& i2, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, args...))
     return m_map.m_impl_handle[m_map.m_impl_offset(i0, i1, i2)];
   }
 
@@ -1091,7 +1002,8 @@ class View : public ViewTraits<DataType, Properties...> {
        !is_default_map),
       reference_type>::type
   operator()(const I0& i0, const I1& i1, const I2& i2, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, args...))
     return m_map.reference(i0, i1, i2);
   }
 
@@ -1105,7 +1017,8 @@ class View : public ViewTraits<DataType, Properties...> {
       reference_type>::type
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, i3, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, i3, args...))
     return m_map.m_impl_handle[m_map.m_impl_offset(i0, i1, i2, i3)];
   }
 
@@ -1116,7 +1029,8 @@ class View : public ViewTraits<DataType, Properties...> {
       reference_type>::type
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, i3, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, i3, args...))
     return m_map.reference(i0, i1, i2, i3);
   }
 
@@ -1441,7 +1355,8 @@ class View : public ViewTraits<DataType, Properties...> {
       reference_type>::type
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, i3, i4))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, i3, i4))
     return m_map.m_impl_handle[m_map.m_impl_offset(i0, i1, i2, i3, i4)];
   }
 
@@ -1452,7 +1367,8 @@ class View : public ViewTraits<DataType, Properties...> {
       reference_type>::type
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, i3, i4))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, i3, i4))
     return m_map.reference(i0, i1, i2, i3, i4);
   }
 
@@ -1467,7 +1383,8 @@ class View : public ViewTraits<DataType, Properties...> {
       reference_type>::type
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4, const I5& i5) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, i3, i4, i5))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, i3, i4, i5))
     return m_map.m_impl_handle[m_map.m_impl_offset(i0, i1, i2, i3, i4, i5)];
   }
 
@@ -1479,7 +1396,8 @@ class View : public ViewTraits<DataType, Properties...> {
       reference_type>::type
   operator()(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
              const I4& i4, const I5& i5) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, i3, i4, i5))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, i3, i4, i5))
     return m_map.reference(i0, i1, i2, i3, i4, i5);
   }
 
@@ -1591,7 +1509,8 @@ class View : public ViewTraits<DataType, Properties...> {
        !is_default_map),
       reference_type>::type
   access(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.reference(i0, i1);
   }
 
@@ -1601,7 +1520,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_left && (traits::rank_dynamic == 0)),
       reference_type>::type
   access(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i0 + m_map.m_impl_offset.m_dim.N0 * i1];
   }
 
@@ -1611,7 +1531,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_left && (traits::rank_dynamic != 0)),
       reference_type>::type
   access(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i0 + m_map.m_impl_offset.m_stride * i1];
   }
 
@@ -1621,7 +1542,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_right && (traits::rank_dynamic == 0)),
       reference_type>::type
   access(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i1 + m_map.m_impl_offset.m_dim.N1 * i0];
   }
 
@@ -1631,7 +1553,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_right && (traits::rank_dynamic != 0)),
       reference_type>::type
   access(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i1 + m_map.m_impl_offset.m_stride * i0];
   }
 
@@ -1641,7 +1564,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map && is_layout_stride),
       reference_type>::type
   access(const I0& i0, const I1& i1, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, args...))
     return m_map.m_impl_handle[i0 * m_map.m_impl_offset.m_stride.S0 +
                                i1 * m_map.m_impl_offset.m_stride.S1];
   }
@@ -1655,7 +1579,8 @@ class View : public ViewTraits<DataType, Properties...> {
        is_default_map),
       reference_type>::type
   access(const I0& i0, const I1& i1, const I2& i2, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, args...))
     return m_map.m_impl_handle[m_map.m_impl_offset(i0, i1, i2)];
   }
 
@@ -1665,7 +1590,8 @@ class View : public ViewTraits<DataType, Properties...> {
        !is_default_map),
       reference_type>::type
   access(const I0& i0, const I1& i1, const I2& i2, Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, args...))
     return m_map.reference(i0, i1, i2);
   }
 
@@ -1679,7 +1605,8 @@ class View : public ViewTraits<DataType, Properties...> {
       reference_type>::type
   access(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
          Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, i3, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, i3, args...))
     return m_map.m_impl_handle[m_map.m_impl_offset(i0, i1, i2, i3)];
   }
 
@@ -1690,7 +1617,8 @@ class View : public ViewTraits<DataType, Properties...> {
       reference_type>::type
   access(const I0& i0, const I1& i1, const I2& i2, const I3& i3,
          Args... args) const {
-    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_track.m_tracker, m_map, i0, i1, i2, i3, args...))
+    KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(
+        (m_track.m_tracker, m_map, i0, i1, i2, i3, args...))
     return m_map.reference(i0, i1, i2, i3);
   }
 
@@ -2163,6 +2091,9 @@ class View : public ViewTraits<DataType, Properties...> {
 
 #endif
   }
+  // Construct view from ViewTracker and map
+  // This should be the preferred method because future extensions may need to
+  // use the ViewTracker class.
   template <class Traits>
   KOKKOS_INLINE_FUNCTION View(
       const view_tracker_type& track,
@@ -2176,6 +2107,9 @@ class View : public ViewTraits<DataType, Properties...> {
     Mapping::assign(m_map, map, track.m_tracker);
   }
 
+  // Construct View from internal shared allocation tracker object and map
+  // This is here for backwards compatibility for classes that derive from
+  // Kokkos::View
   template <class Traits>
   KOKKOS_INLINE_FUNCTION View(
       const typename view_tracker_type::track_type& track,
