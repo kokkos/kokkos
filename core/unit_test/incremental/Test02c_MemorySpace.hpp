@@ -103,7 +103,14 @@ struct TestIncrMemorySpace_deepcopy {
     // Check if all data has been copied correctly back to the host;
     int sumError = compare_equal_host(HostData_send, HostData_recv);
     ASSERT_EQ(sumError, 0);
+
+    //Free the allocated memory
+    Kokkos::kokkos_free<MemSpaceD>(DeviceData);
+    Kokkos::kokkos_free<MemSpaceH>(HostData_send);
+    Kokkos::kokkos_free<MemSpaceH>(HostData_recv);
   }
+
+
 };
 
 TEST(TEST_CATEGORY, incr_02c_memspace_deepcopy_DtoH) {
