@@ -422,6 +422,7 @@ union SharedAllocationTracker {
     m_record_bits = rhs.m_record_bits | DO_NOT_DEREF_FLAG;
   }
 
+  // report if record is tracking or not
   KOKKOS_FORCEINLINE_FUNCTION
   bool tracking_enabled() { return (!(m_record_bits & DO_NOT_DEREF_FLAG)); }
 
