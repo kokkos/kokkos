@@ -154,7 +154,14 @@ display_help_text() {
       echo "--gcc-toolchain=/Path/To/GccRoot:  Set the gcc toolchain to use with clang (e.g. /usr)"
       echo "--make-j=[NUM]:               DEPRECATED: call make with appropriate"
       echo "                                -j flag"
-
+      echo "--incremental-testing-options=[CMake variables for incremental testing]"
+      echo "                              Known variables include "
+      echo "                                Kokkos_INCREMENTAL_TEST_BACK_ENDS=[list of backends]"
+      echo "                                Kokkos_[Backend]_FEATURE_LEVEL=[Feature level implemented]"
+      echo "                                Kokkos_[Backend]_EXCLUDE_TESTS=[List of tests to exclude]"
+      echo "                                Kokkos_[Backend]_DEVICE_TYPE=[DEVICE or HOST] default is DEVICE"
+      echo "                              Note: if validating unit test with existing backend, you should also"
+      echo "                                    include Kokkos_ENABLE_[upper case Backend name]=ON   "
 }
 
 KOKKOS_DO_EXAMPLES=OFF
