@@ -88,7 +88,7 @@ struct TestIncrMemorySpace_deepcopy {
     ASSERT_FALSE(HostData_recv == nullptr);
 
     for (int i = 0; i < num_elements; ++i) {
-      HostData_send[i] = i*value;
+      HostData_send[i] = i * value;
       HostData_recv[i] = 0.0;
     }
 
@@ -104,13 +104,11 @@ struct TestIncrMemorySpace_deepcopy {
     int sumError = compare_equal_host(HostData_send, HostData_recv);
     ASSERT_EQ(sumError, 0);
 
-    //Free the allocated memory
+    // Free the allocated memory
     Kokkos::kokkos_free<MemSpaceD>(DeviceData);
     Kokkos::kokkos_free<MemSpaceH>(HostData_send);
     Kokkos::kokkos_free<MemSpaceH>(HostData_recv);
   }
-
-
 };
 
 TEST(TEST_CATEGORY, incr_02c_memspace_deepcopy_DtoH) {

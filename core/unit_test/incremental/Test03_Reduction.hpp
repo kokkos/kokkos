@@ -51,55 +51,49 @@
 
 namespace Test {
 
-  using dataType         = double;
+using dataType = double;
 
 // Unit Test for Reduction
 
 struct array {
-  const int _N = 10;
-  const double value     = 0.5;
+  const int _N       = 10;
+  const double value = 0.5;
   dataType *_data;
 
-  array(dataType *data)
-    :_data(data)
-  {
-  }
+  array(dataType *data) : _data(data) {}
 
-KOKKOS_INLINE_FUNCTION
-  void operator() (const int i, double &UpdateSum) const
-  {
-    _data[i] = i*value;
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int i, double &UpdateSum) const {
+    _data[i] = i * value;
     UpdateSum += _data[i];
   }
 };
 
 template <class ExecSpace>
-struct TestReduction
-{
-  int _N = 10;
+struct TestReduction {
+  int _N               = 10;
   const dataType value = 0.5;
   dataType *_data;
 
-  //memory_space for the memory allocation
+  // memory_space for the memory allocation
   typedef typename TEST_EXECSPACE::memory_space memory_space;
 
-  //compare and equal
-  int compare_equal(double sum)
-  {
+  // compare and equal
+  int compare_equal(double sum) {
     int sum_local = 0;
-    for(int i = 0; i < _N; ++i)
-      sum_local += i;
+    for (int i = 0; i < _N; ++i) sum_local += i;
 
-    return (sum - (sum_local*value));
+    return (sum - (sum_local * value));
   }
 
   // A reduction
-  void reduction()
-  {
+  void reduction() {
     double sum = 0.0;
     typedef typename Kokkos::RangePolicy<ExecSpace> range_policy;
-    _data = (dataType *)Kokkos::kokkos_malloc<memory_space>("data",_N*sizeof(dataType));
-    Kokkos::parallel_reduce("Reduction",range_policy(0,_N),array(_data), sum);
+    _data = (dataType *)Kokkos::kokkos_malloc<memory_space>(
+        "data", _N * sizeof(dataType));
+    Kokkos::parallel_reduce("Reduction", range_policy(0, _N), array(_data),
+                            sum);
 
     // Check if all data has been update correctly
     int sumError = compare_equal(sum);

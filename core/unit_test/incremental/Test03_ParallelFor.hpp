@@ -51,54 +51,47 @@
 
 namespace Test {
 
-  using dataType         = double;
+using dataType = double;
 
 // parallel-for unit test
-// create an array of double dataType and add a constatnt to all elements of the array in a parallel-for
+// create an array of double dataType and add a constatnt to all elements of the
+// array in a parallel-for
 
 template <class ExecSpace>
 struct array {
-  const int _N = 10;
-  const double value     = 0.5;
+  const int _N       = 10;
+  const double value = 0.5;
   dataType *_data;
   typedef typename TEST_EXECSPACE::memory_space memory_space;
 
-  array(dataType *data)
-    :_data(data)
-  {
-  }
+  array(dataType *data) : _data(data) {}
 
-KOKKOS_INLINE_FUNCTION
-  void operator() (const int i) const
-  {
-    _data[i] = i*value;
-  }
-
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int i) const { _data[i] = i * value; }
 };
 
 template <class ExecSpace>
-struct TestParallel_For
-{
-  int _N = 10;
+struct TestParallel_For {
+  int _N               = 10;
   const dataType value = 0.5;
   dataType *_data;
 
-  //memory_space for the memory allocation
+  // memory_space for the memory allocation
   typedef typename TEST_EXECSPACE::memory_space memory_space;
 
-  int compare_equal(dataType* data) {
+  int compare_equal(dataType *data) {
     int error = 0;
     for (int i = 0; i < _N; ++i) {
-      if ( data[i] != i*value) error++;
+      if (data[i] != i * value) error++;
     }
     return error;
   }
 
-  //A simple parallel for test with functors
-  void simple_test()
-  {
-    _data = (dataType *)Kokkos::kokkos_malloc<memory_space>("data",_N*sizeof(dataType));
-    Kokkos::parallel_for("parallel_for", _N,array<ExecSpace>(_data));
+  // A simple parallel for test with functors
+  void simple_test() {
+    _data = (dataType *)Kokkos::kokkos_malloc<memory_space>(
+        "data", _N * sizeof(dataType));
+    Kokkos::parallel_for("parallel_for", _N, array<ExecSpace>(_data));
 
     // Check if all data has been update correctly
     int sumError = compare_equal(_data);
@@ -107,11 +100,12 @@ struct TestParallel_For
   }
 
   // A parallel_for test with user defined RangePolicy
-  void range_policy()
-  {
+  void range_policy() {
     typedef typename Kokkos::RangePolicy<ExecSpace> range_policy;
-    _data = (dataType *)Kokkos::kokkos_malloc<memory_space>("data",_N*sizeof(dataType));
-    Kokkos::parallel_for("RangePolicy_ParallelFor",range_policy(0,_N),array<ExecSpace>(_data));
+    _data = (dataType *)Kokkos::kokkos_malloc<memory_space>(
+        "data", _N * sizeof(dataType));
+    Kokkos::parallel_for("RangePolicy_ParallelFor", range_policy(0, _N),
+                         array<ExecSpace>(_data));
 
     // Check if all data has been update correctly
     int sumError = compare_equal(_data);
