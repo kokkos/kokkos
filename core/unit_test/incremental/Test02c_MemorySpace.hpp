@@ -88,7 +88,7 @@ struct TestIncrMemorySpace_deepcopy {
     ASSERT_FALSE(HostData_recv == nullptr);
 
     for (int i = 0; i < num_elements; ++i) {
-      HostData_send[i] = value;
+      HostData_send[i] = i*value;
       HostData_recv[i] = 0.0;
     }
 
@@ -96,11 +96,11 @@ struct TestIncrMemorySpace_deepcopy {
     Kokkos::Impl::DeepCopy<MemSpaceH, MemSpaceD>(
         DeviceData, HostData_send, num_elements * sizeof(dataType));
 
-    // Copy first from Host_send to Device
+    // Copy back from Device to Host
     Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH>(
         HostData_recv, DeviceData, num_elements * sizeof(dataType));
 
-    // Check if all data has been copied correctly back to the host;
+    // Check if all data has been copied to and from host to device;
     int sumError = compare_equal_host(HostData_send, HostData_recv);
     ASSERT_EQ(sumError, 0);
 
