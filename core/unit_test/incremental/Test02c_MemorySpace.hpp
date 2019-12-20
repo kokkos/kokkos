@@ -56,11 +56,14 @@ namespace Test {
 // from device back to host We check if the original and copied data are the
 // same to evaluate the deep copies.
 
-template <class MemSpaceD, class MemSpaceH>
+template <class ExecSpace>
 struct TestIncrMemorySpace_deepcopy {
   using dataType         = double;
   const int num_elements = 10;
   const double value     = 0.5;
+
+  typedef typename ExecSpace::memory_space MemSpaceD;
+  typedef Kokkos::HostSpace MemSpaceH;
 
   int compare_equal_host(dataType *HostData_send, dataType *HostData_recv) {
     int error = 0;
@@ -107,9 +110,7 @@ struct TestIncrMemorySpace_deepcopy {
 };
 
 TEST(TEST_CATEGORY, incr_02c_memspace_deepcopy_DtoH) {
-  typedef typename TEST_EXECSPACE::memory_space memory_space;
-  typedef typename TEST_EXECSPACE::memory_space host_space;
-  TestIncrMemorySpace_deepcopy<memory_space, host_space> test;
+  TestIncrMemorySpace_deepcopy<TEST_EXECSPACE> test;
   test.testit_DtoH();
 }
 

@@ -53,21 +53,21 @@ namespace Test {
 
 // Unit test for Kokkos Malloc
 
-template <class MemSpace>
+template <class ExecSpace>
 struct TestIncrMemorySpace_malloc {
   const int num_elements = 10;
+  typedef typename ExecSpace::memory_space memory_space;
 
   void testit_malloc() {
-    int *data = (int *)Kokkos::kokkos_malloc<MemSpace>(
+    int *data = (int *)Kokkos::kokkos_malloc<memory_space>(
         "data", num_elements * sizeof(int));
     ASSERT_FALSE(data == nullptr);
-    Kokkos::kokkos_free<MemSpace>(data);
+    Kokkos::kokkos_free<memory_space>(data);
   }
 };
 
 TEST(TEST_CATEGORY, incr_02a_memspace_malloc) {
-  typedef typename TEST_EXECSPACE::memory_space memory_space;
-  TestIncrMemorySpace_malloc<memory_space> test;
+  TestIncrMemorySpace_malloc<TEST_EXECSPACE> test;
   test.testit_malloc();
 }
 
