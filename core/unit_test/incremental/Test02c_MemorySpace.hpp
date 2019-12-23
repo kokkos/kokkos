@@ -62,13 +62,14 @@ struct TestIncrMemorySpace_deepcopy {
   const int num_elements = 10;
   const double value     = 0.5;
 
-  typedef typename ExecSpace::memory_space MemSpaceD;
-  typedef Kokkos::HostSpace MemSpaceH;
+  // Memory Space for Device and Host data
+  typedef typename ExecSpace::memory_space memSpaceD;
+  typedef Kokkos::HostSpace memSpaceH;
 
-  int compare_equal_host(dataType *HostData_send, dataType *HostData_recv) {
+  int compare_equal_host(dataType *hostData_send, dataType *hostData_recv) {
     int error = 0;
     for (int i = 0; i < num_elements; ++i) {
-      if (HostData_send[i] != HostData_recv[i]) error++;
+      if (hostData_send[i] != hostData_recv[i]) error++;
     }
 
     return error;
@@ -76,35 +77,35 @@ struct TestIncrMemorySpace_deepcopy {
 
   void testit_DtoH() {
     // Allocate memory on Device space
-    dataType *DeviceData = (dataType *)Kokkos::kokkos_malloc<MemSpaceD>(
-        "DeviceData", num_elements * sizeof(dataType));
-    ASSERT_FALSE(DeviceData == nullptr);
+    dataType *deviceData = (dataType *)Kokkos::kokkos_malloc<memSpaceD>(
+        "deviceData", num_elements * sizeof(dataType));
+    ASSERT_FALSE(deviceData == nullptr);
 
     // Allocate memory on Host space
-    dataType *HostData_send = (dataType *)Kokkos::kokkos_malloc<MemSpaceH>(
+    dataType *hostData_send = (dataType *)Kokkos::kokkos_malloc<memSpaceH>(
         "HostData", num_elements * sizeof(dataType));
-    ASSERT_FALSE(HostData_send == nullptr);
+    ASSERT_FALSE(hostData_send == nullptr);
 
     // Allocate memory on Host space
-    dataType *HostData_recv = (dataType *)Kokkos::kokkos_malloc<MemSpaceH>(
+    dataType *hostData_recv = (dataType *)Kokkos::kokkos_malloc<memSpaceH>(
         "HostData", num_elements * sizeof(dataType));
-    ASSERT_FALSE(HostData_recv == nullptr);
+    ASSERT_FALSE(hostData_recv == nullptr);
 
     for (int i = 0; i < num_elements; ++i) {
-      HostData_send[i] = value;
-      HostData_recv[i] = 0.0;
+      hostData_send[i] = value;
+      hostData_recv[i] = 0.0;
     }
 
     // Copy first from Host_send to Device
-    Kokkos::Impl::DeepCopy<MemSpaceH, MemSpaceD>(
-        DeviceData, HostData_send, num_elements * sizeof(dataType));
+    Kokkos::Impl::DeepCopy<memSpaceH, memSpaceD>(
+        deviceData, hostData_send, num_elements * sizeof(dataType));
 
     // Copy first from Host_send to Device
-    Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH>(
-        HostData_recv, DeviceData, num_elements * sizeof(dataType));
+    Kokkos::Impl::DeepCopy<memSpaceD, memSpaceH>(
+        hostData_recv, deviceData, num_elements * sizeof(dataType));
 
     // Check if all data has been copied correctly back to the host;
-    int sumError = compare_equal_host(HostData_send, HostData_recv);
+    int sumError = compare_equal_host(hostData_send, hostData_recv);
     ASSERT_EQ(sumError, 0);
   }
 };

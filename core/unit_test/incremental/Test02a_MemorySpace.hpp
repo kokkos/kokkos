@@ -53,10 +53,10 @@ namespace Test {
 
 // Unit test for Kokkos Malloc
 
-template <class ExecSpace>
+template <class execSpace>
 struct TestIncrMemorySpace_malloc {
   const int num_elements = 10;
-  typedef typename ExecSpace::memory_space memory_space;
+  typedef typename execSpace::memory_space memory_space;
 
   void testit_malloc() {
     int *data = (int *)Kokkos::kokkos_malloc<memory_space>(

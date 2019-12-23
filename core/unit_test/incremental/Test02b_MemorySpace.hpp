@@ -56,24 +56,24 @@ namespace Test {
 // If the kokkos_free does not free the memory, we will exceed the available
 // space
 
-template <class MemSpace>
+template <class execSpace>
 struct TestIncrMemorySpace_free {
   const int N = 100000;
   const int M = 100000;
+  typedef typename execSpace::memory_space memory_space;
 
   void testit_free() {
     for (int i = 0; i < N; ++i) {
-      double *data =
-          (double *)Kokkos::kokkos_malloc<MemSpace>("data", M * sizeof(double));
+      double *data = (double *)Kokkos::kokkos_malloc<memory_space>(
+          "data", M * sizeof(double));
       ASSERT_FALSE(data == nullptr);
-      Kokkos::kokkos_free<MemSpace>(data);
+      Kokkos::kokkos_free<memory_space>(data);
     }
   }
 };
 
 TEST(TEST_CATEGORY, incr_02b_memspace_free) {
-  typedef typename TEST_EXECSPACE::memory_space memory_space;
-  TestIncrMemorySpace_free<memory_space> test;
+  TestIncrMemorySpace_free<TEST_EXECSPACE> test;
   test.testit_free();
 }
 
