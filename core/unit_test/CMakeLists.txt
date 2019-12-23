@@ -59,6 +59,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX)
       ${dir}/Test${Tag}_MDRange_e.cpp
       ${dir}/Test${Tag}_Other.cpp
       ${dir}/Test${Tag}_RangePolicy.cpp
+      ${dir}/Test${Tag}_RangePolicyRequire.cpp
       ${dir}/Test${Tag}_Reductions.cpp
       ${dir}/Test${Tag}_Reducers_a.cpp
       ${dir}/Test${Tag}_Reducers_b.cpp

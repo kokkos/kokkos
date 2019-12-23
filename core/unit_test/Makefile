@@ -67,7 +67,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA = UnitTestMainInit.o gtest-all.o
     OBJ_CUDA += TestCuda_Init.o
     OBJ_CUDA += TestCuda_SharedAlloc.o TestCudaUVM_SharedAlloc.o TestCudaHostPinned_SharedAlloc.o
-    OBJ_CUDA += TestCuda_RangePolicy.o
+    OBJ_CUDA += TestCuda_RangePolicy.o TestCuda_RangePolicyRequire.o
     OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o TestCuda_ViewAPI_e.o
     OBJ_CUDA += TestCuda_DeepCopyAlignment.o
     OBJ_CUDA += TestCuda_ViewMapping_a.o TestCuda_ViewMapping_b.o TestCuda_ViewMapping_subview.o TestCuda_ViewResize.o TestCuda_ViewLayoutStrideAssignment.o
@@ -166,7 +166,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
     OBJ_THREADS = UnitTestMainInit.o gtest-all.o
     OBJ_THREADS += TestThreads_Init.o
     OBJ_THREADS += TestThreads_SharedAlloc.o
-    OBJ_THREADS += TestThreads_RangePolicy.o
+    OBJ_THREADS += TestThreads_RangePolicy.o TestThreads_RangePolicyRequire.o
     OBJ_THREADS += TestThreads_View_64bit.o
     OBJ_THREADS += TestThreads_ViewAPI_a.o TestThreads_ViewAPI_b.o TestThreads_ViewAPI_c.o TestThreads_ViewAPI_d.o TestThreads_ViewAPI_e.o
     OBJ_THREADS += TestThreads_DeepCopyAlignment.o
@@ -201,7 +201,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
     OBJ_OPENMP = UnitTestMainInit.o gtest-all.o
     OBJ_OPENMP += TestOpenMP_Init.o
     OBJ_OPENMP += TestOpenMP_SharedAlloc.o
-    OBJ_OPENMP += TestOpenMP_RangePolicy.o
+    OBJ_OPENMP += TestOpenMP_RangePolicy.o TestOpenMP_RangePolicyRequire.o
     OBJ_OPENMP += TestOpenMP_View_64bit.o
     OBJ_OPENMP += TestOpenMP_ViewAPI_a.o TestOpenMP_ViewAPI_b.o TestOpenMP_ViewAPI_c.o TestOpenMP_ViewAPI_d.o TestOpenMP_ViewAPI_e.o
     OBJ_OPENMP += TestOpenMP_DeepCopyAlignment.o
@@ -296,7 +296,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX = UnitTestMainInit.o gtest-all.o
 	OBJ_HPX += TestHPX_Init.o
 	OBJ_HPX += TestHPX_SharedAlloc.o
-	OBJ_HPX += TestHPX_RangePolicy.o
+	OBJ_HPX += TestHPX_RangePolicy.o TestHPX_RangePolicyRequire.o
 	OBJ_HPX += TestHPX_View_64bit.o
 	OBJ_HPX += TestHPX_ViewAPI_a.o TestHPX_ViewAPI_b.o TestHPX_ViewAPI_c.o TestHPX_ViewAPI_d.o TestHPX_ViewAPI_e.o
 	OBJ_HPX += TestHPX_ViewMapping_a.o TestHPX_ViewMapping_b.o TestHPX_ViewMapping_subview.o TestHPX_ViewResize.o
@@ -335,7 +335,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
     OBJ_SERIAL = UnitTestMainInit.o gtest-all.o
     OBJ_SERIAL += TestSerial_Init.o
     OBJ_SERIAL += TestSerial_SharedAlloc.o
-    OBJ_SERIAL += TestSerial_RangePolicy.o
+    OBJ_SERIAL += TestSerial_RangePolicy.o TestSerial_RangePolicyRequire.o
     OBJ_SERIAL += TestSerial_View_64bit.o
     OBJ_SERIAL += TestSerial_ViewAPI_a.o TestSerial_ViewAPI_b.o TestSerial_ViewAPI_c.o TestSerial_ViewAPI_d.o TestSerial_ViewAPI_e.o
     OBJ_SERIAL += TestSerial_DeepCopyAlignment.o
