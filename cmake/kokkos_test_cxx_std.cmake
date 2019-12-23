@@ -14,12 +14,12 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
     ENDIF()
   ELSEIF(CMAKE_CXX_EXTENSIONS)
     IF(KOKKOS_DONT_ALLOW_EXTENSIONS)
-      MESSAGE(FATAL_ERROR "The chosen configuration does not support CXX extensions flags: ${KOKKOS_DONT_ALLOW_EXTENSIONS}. Must set CMAKE_CXX_EXTENSIONS=OFF to continue") 
+      MESSAGE(FATAL_ERROR "The chosen configuration does not support CXX extensions flags: ${KOKKOS_DONT_ALLOW_EXTENSIONS}. Must set CMAKE_CXX_EXTENSIONS=OFF to continue")
     ELSE()
       GLOBAL_SET(KOKKOS_USE_CXX_EXTENSIONS ON)
     ENDIF()
   ELSE()
-    #For trilinos, we need to make sure downstream projects 
+    #For trilinos, we need to make sure downstream projects
     GLOBAL_SET(KOKKOS_USE_CXX_EXTENSIONS OFF)
   ENDIF()
 
@@ -35,9 +35,18 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
   ENDIF()
 
-  IF(NOT ${FEATURE_NAME} IN_LIST CMAKE_CXX_COMPILE_FEATURES)
-    MESSAGE(FATAL_ERROR "Compiler ${KOKKOS_CXX_COMPILER_ID} should support ${FEATURE_NAME}, but CMake reports feature not supported")
-  ENDIF()
+    IF(NOT ${FEATURE_NAME} IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+          IF (KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA")
+                  MESSAGE(STATUS "nvcc_wrapper does not support TARGET_COMPILE_FEATURES")
+                        GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
+                            ELSE()
+                                    MESSAGE(FATAL_ERROR "Compiler ${KOKKOS_CXX_COMPILER_ID} should support ${FEATURE_NAME}, but CMake reports feature not supported")
+                                        ENDIF()
+                                          ENDIF()
+
+  #  IF(NOT ${FEATURE_NAME} IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+  #    MESSAGE(FATAL_ERROR "Compiler ${KOKKOS_CXX_COMPILER_ID} should support ${FEATURE_NAME}, but CMake reports feature not supported")
+  #  ENDIF()
 ENDFUNCTION()
 
 
