@@ -148,7 +148,7 @@ TEST(TEST_CATEGORY, incr_03a_simple_parallelFor) {
   test.simple_test();
 }
 
-TEST(TEST_CATEGORY, incr_03b_RangePolicy_parallelFor) {
+TEST(TEST_CATEGORY, incr_03a_RangePolicy_parallelFor) {
   TestParallel_For<TEST_EXECSPACE> test;
   test.range_policy();
 }
