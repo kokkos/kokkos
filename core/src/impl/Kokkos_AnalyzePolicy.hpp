@@ -120,6 +120,17 @@ struct SetWorkTag {
                                 typename PolicyBase::work_item_property>;
 };
 
+// Partial specialization to drop void arguments
+template <typename PolicyBase>
+struct SetWorkTag<PolicyBase, void> {
+  using type = PolicyTraitsBase<
+      typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
+      typename PolicyBase::work_tag, typename PolicyBase::index_type,
+      typename PolicyBase::iteration_pattern,
+      typename PolicyBase::launch_bounds,
+      typename PolicyBase::work_item_property>;
+};
+
 template <typename PolicyBase, typename IndexType>
 struct SetIndexType {
   static_assert(is_void<typename PolicyBase::index_type>::value,
