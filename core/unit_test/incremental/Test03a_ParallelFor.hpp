@@ -51,20 +51,16 @@
 
 namespace Test {
 
-using dataType = double;
+using DataType       = double;
+const DataType value = 0.5;
 
 // parallel-for unit test
-// create an array of double dataType and add a constatnt to all elements of the
-// array in a parallel-for
+// create an functor which multiplies the index with a constant double value
 
-template <class ExecSpace>
-struct array {
-  const int num_elements = 10;
-  const double value     = 0.5;
-  dataType *_data;
-  typedef typename TEST_EXECSPACE::memory_space memory_space;
+struct Functor {
+  DataType *_data;
 
-  array(dataType *data) : _data(data) {}
+  Functor(DataType *data) : _data(data) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int i) const { _data[i] = i * value; }
@@ -72,41 +68,36 @@ struct array {
 
 template <class ExecSpace>
 struct TestParallel_For {
-  int num_elements     = 10;
-  const dataType value = 0.5;
-  dataType *DeviceData, *HostData;
+  int num_elements = 10;
+  DataType *DeviceData, *HostData;
 
   // memory_space for the memory allocation
   typedef typename TEST_EXECSPACE::memory_space MemSpaceD;
   typedef Kokkos::HostSpace MemSpaceH;
 
-  int compare_equal(dataType *data) {
-    int error = 0;
+  void compare_equal(DataType *data) {
     for (int i = 0; i < num_elements; ++i) {
-      if (data[i] != i * value) error++;
+      ASSERT_EQ(data[i], i * value);
     }
-    return error;
   }
 
   // A simple parallel for test with functors
   void simple_test() {
     // Allocate Memory for both device and host memory spaces
-    DeviceData = (dataType *)Kokkos::kokkos_malloc<MemSpaceD>(
-        "dataD", num_elements * sizeof(dataType));
-    HostData = (dataType *)Kokkos::kokkos_malloc<MemSpaceH>(
-        "dataH", num_elements * sizeof(dataType));
+    DeviceData = (DataType *)Kokkos::kokkos_malloc<MemSpaceD>(
+        "dataD", num_elements * sizeof(DataType));
+    HostData = (DataType *)Kokkos::kokkos_malloc<MemSpaceH>(
+        "dataH", num_elements * sizeof(DataType));
 
     // parallel-for functor called for num_elements elements
-    Kokkos::parallel_for("parallel_for", num_elements,
-                         array<ExecSpace>(DeviceData));
+    Kokkos::parallel_for("parallel_for", num_elements, Functor(DeviceData));
 
     // Copy the data back to Host memory space
     Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH>(
-        HostData, DeviceData, num_elements * sizeof(dataType));
+        HostData, DeviceData, num_elements * sizeof(DataType));
 
     // Check if all data has been update correctly
-    int sumError = compare_equal(HostData);
-    ASSERT_EQ(sumError, 0);
+    compare_equal(HostData);
 
     // Free the allocated memory
     Kokkos::kokkos_free<MemSpaceD>(DeviceData);
@@ -116,26 +107,31 @@ struct TestParallel_For {
   // A parallel_for test with user defined RangePolicy
   void range_policy() {
     // Create a range policy for the parallel_for
-    typedef typename Kokkos::RangePolicy<ExecSpace> range_policy;
+#if defined(KOKKOS_ENABLE_CUDA)
+    typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Static> >
+        range_policy;
+#else
+    typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
+        range_policy;
+#endif
 
     // Allocate Memory for both device and host memory spaces
-    DeviceData = (dataType *)Kokkos::kokkos_malloc<MemSpaceD>(
-        "dataD", num_elements * sizeof(dataType));
-    HostData = (dataType *)Kokkos::kokkos_malloc<MemSpaceH>(
-        "dataH", num_elements * sizeof(dataType));
+    DeviceData = (DataType *)Kokkos::kokkos_malloc<MemSpaceD>(
+        "dataD", num_elements * sizeof(DataType));
+    HostData = (DataType *)Kokkos::kokkos_malloc<MemSpaceH>(
+        "dataH", num_elements * sizeof(DataType));
 
     // parallel-for functor called for num_elements elements
+    Functor func(DeviceData);
     Kokkos::parallel_for("RangePolicy_ParallelFor",
-                         range_policy(0, num_elements),
-                         array<ExecSpace>(DeviceData));
+                         range_policy(0, num_elements), func);
 
     // Copy the data back to Host memory space
     Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH>(
-        HostData, DeviceData, num_elements * sizeof(dataType));
+        HostData, DeviceData, num_elements * sizeof(DataType));
 
     // Check if all data has been update correctly
-    int sumError = compare_equal(HostData);
-    ASSERT_EQ(sumError, 0);
+    compare_equal(HostData);
 
     // Free the allocated memory
     Kokkos::kokkos_free<MemSpaceD>(DeviceData);
