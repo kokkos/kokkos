@@ -51,16 +51,15 @@
 
 namespace Test {
 
-using dataType = double;
+using DataType     = double;
+const double value = 0.5;
 
 // Unit Test for Reduction
 
-struct array {
-  const int num_elements = 10;
-  const double value     = 0.5;
-  dataType *_data;
+struct Functor {
+  DataType *_data;
 
-  array(dataType *data) : _data(data) {}
+  Functor(DataType *data) : _data(data) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int i, double &UpdateSum) const {
@@ -71,9 +70,8 @@ struct array {
 
 template <class ExecSpace>
 struct TestReduction {
-  int num_elements     = 10;
-  const dataType value = 0.5;
-  dataType *DeviceData, *HostData;
+  int num_elements = 10;
+  DataType *DeviceData, *HostData;
 
   // memory_space for the memory allocation
   // memory_space for the memory allocation
@@ -88,24 +86,30 @@ struct TestReduction {
     return (sum - (sum_local * value));
   }
 
-  // A reduction
   void reduction() {
     double sum = 0.0;
-    typedef typename Kokkos::RangePolicy<ExecSpace> range_policy;
+#if defined(KOKKOS_ENABLE_CUDA)
+    typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Static> >
+        range_policy;
+#else
+    typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
+        range_policy;
+#endif
 
     // Allocate Memory for both device and host memory spaces
-    DeviceData = (dataType *)Kokkos::kokkos_malloc<MemSpaceD>(
-        "dataD", num_elements * sizeof(dataType));
-    HostData = (dataType *)Kokkos::kokkos_malloc<MemSpaceH>(
-        "dataH", num_elements * sizeof(dataType));
+    DeviceData = (DataType *)Kokkos::kokkos_malloc<MemSpaceD>(
+        "dataD", num_elements * sizeof(DataType));
+    HostData = (DataType *)Kokkos::kokkos_malloc<MemSpaceH>(
+        "dataH", num_elements * sizeof(DataType));
 
     // parallel_reduce call
-    Kokkos::parallel_reduce("Reduction", range_policy(0, num_elements),
-                            array(DeviceData), sum);
+    Functor func(DeviceData);
+    Kokkos::parallel_reduce("Reduction", range_policy(0, num_elements), func,
+                            sum);
 
     // Copy the data back to Host memory space
     Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH>(
-        HostData, DeviceData, num_elements * sizeof(dataType));
+        HostData, DeviceData, num_elements * sizeof(DataType));
 
     // Check if all data has been update correctly
     int sumError = compare_equal(sum);
