@@ -391,37 +391,26 @@ MACRO(kokkos_find_header VAR_NAME HEADER TPL_NAME)
   SET(${VAR_NAME} "${VARNAME}-NOTFOUND")
   SET(HAVE_CUSTOM_PATHS FALSE)
 
-  IF(NOT ${VAR_NAME} AND DEFINED ${TPL_NAME}_ROOT)
-    #ONLY look in the root directory
-    FIND_PATH(${VAR_NAME} ${HEADER} PATHS ${${TPL_NAME}_ROOT}/include NO_DEFAULT_PATH)
-    SET(HAVE_CUSTOM_PATHS TRUE)
-  ENDIF()
-
-  IF(NOT ${VAR_NAME} AND DEFINED ENV{${TPL_NAME}_ROOT})
-    #ONLY look in the root directory (via environent variable)
-    FIND_PATH(${VAR_NAME} ${HEADER} PATHS $ENV{${TPL_NAME}_ROOT}/include NO_DEFAULT_PATH)
-    SET(HAVE_CUSTOM_PATHS TRUE)
-  ENDIF()
-
-  IF(NOT ${VAR_NAME} AND DEFINED KOKKOS_${TPL_NAME}_DIR)
-    #ONLY look in the Kokkos_*_DIR directory
-    FIND_PATH(${VAR_NAME} ${HEADER} PATHS ${KOKKOS_${TPL_NAME}_DIR}/include NO_DEFAULT_PATH)
-    SET(HAVE_CUSTOM_PATHS TRUE)
-  ENDIF()
-
-  IF(NOT ${VAR_NAME} AND TPL_PATHS)
-    #we got custom paths
-    #ONLY look in these paths and nowhere else
-    FIND_PATH(${VAR_NAME} ${HEADER} PATHS ${TPL_PATHS} NO_DEFAULT_PATH)
+  IF(DEFINED ${TPL_NAME}_ROOT OR
+     DEFINED ENV{${TPL_NAME}_ROOT} OR
+     DEFINED KOKKOS_${TPL_NAME}_DIR OR
+     TPL_PATHS)
+    FIND_PATH(${VAR_NAME} ${HEADER}
+      PATHS
+        ${${TPL_NAME}_ROOT}
+        $ENV{${TPL_NAME}_ROOT}
+        ${KOKKOS_${TPL_NAME}_DIR}
+        ${TPL_PATHS}
+      PATH_SUFFIXES include
+      NO_DEFAULT_PATH)
     SET(HAVE_CUSTOM_PATHS TRUE)
   ENDIF()
 
   IF(NOT HAVE_CUSTOM_PATHS OR TPL_ALLOW_SYSTEM_PATH_FALLBACK)
-    #Now go ahead and look in system paths
-    IF(NOT ${VAR_NAME})
-      FIND_PATH(${VAR_NAME} ${HEADER})
-    ENDIF()
+    #No-op if ${VAR_NAME} set by previous call
+    FIND_PATH(${VAR_NAME} ${HEADER})
   ENDIF()
+
 ENDMACRO()
 
 #
@@ -479,52 +468,33 @@ MACRO(kokkos_find_library VAR_NAME LIB TPL_NAME)
    "PATHS"
    ${ARGN})
 
-  # Appended to user- and system-provided location candidates.
-  # The "stubs" directory supports cross-compiling CUDA when the
-  # libcuda device driver is not present on the host machine.
+  #Appended to user- and system-provided path candidates.
+  #The "stubs" directory supports cross-compiling CUDA when the
+  #libcuda device driver is not present on the host machine.
   SET(SUFFIXES lib lib64 lib/stubs lib64/stubs)
-  SET(${VAR_NAME} "${VAR_NAME}-NOTFOUND")
+
+  SET(${VAR_NAME} "${VARNAME}-NOTFOUND")
   SET(HAVE_CUSTOM_PATHS FALSE)
 
-  IF(NOT ${VAR_NAME} AND DEFINED ${TPL_NAME}_ROOT)
+  IF(DEFINED ${TPL_NAME}_ROOT OR
+     DEFINED ENV{${TPL_NAME}_ROOT} OR
+     DEFINED KOKKOS_${TPL_NAME}_DIR OR
+     TPL_PATHS)
     FIND_LIBRARY(${VAR_NAME} ${LIB}
-      PATHS ${${TPL_NAME}_ROOT}
-      PATH_SUFFIXES ${SUFFIXES}
-      NO_DEFAULT_PATH)
-    SET(HAVE_CUSTOM_PATHS TRUE)
-  ENDIF()
-
-  IF(NOT ${VAR_NAME} AND DEFINED ENV{${TPL_NAME}_ROOT})
-    FIND_LIBRARY(${VAR_NAME} ${LIB}
-      PATHS $ENV{${TPL_NAME}_ROOT}
-      PATH_SUFFIXES ${SUFFIXES}
-      NO_DEFAULT_PATH)
-    SET(HAVE_CUSTOM_PATHS TRUE)
-  ENDIF()
-
-  IF(NOT ${VAR_NAME} AND DEFINED KOKKOS_${TPL_NAME}_DIR)
-    #we got root paths, only look in these paths and nowhere else
-    FIND_LIBRARY(${VAR_NAME} ${LIB}
-      PATHS ${KOKKOS_${TPL_NAME}_DIR}
-      PATH_SUFFIXES ${SUFFIXES}
-      NO_DEFAULT_PATH)
-    SET(HAVE_CUSTOM_PATHS TRUE)
-  ENDIF()
-
-  IF(NOT ${VAR_NAME} AND TPL_PATHS)
-    #we got custom paths, only look in these paths and nowhere else
-    FIND_LIBRARY(${VAR_NAME} ${LIB}
-      PATHS ${TPL_PATHS}
-      PATH_SUFFIXES ${SUFFIXES}
+      PATHS
+        ${${TPL_NAME}_ROOT}
+        $ENV{${TPL_NAME}_ROOT}
+        ${KOKKOS_${TPL_NAME}_DIR}
+        ${TPL_PATHS}
+      PATH_SUFFIXES
+        ${SUFFIXES}
       NO_DEFAULT_PATH)
     SET(HAVE_CUSTOM_PATHS TRUE)
   ENDIF()
 
   IF(NOT HAVE_CUSTOM_PATHS OR TPL_ALLOW_SYSTEM_PATH_FALLBACK)
-    IF(NOT ${VAR_NAME})
-      #Now go ahead and look in system paths
-      FIND_LIBRARY(${VAR_NAME} ${LIB} PATH_SUFFIXES ${SUFFIXES})
-    ENDIF()
+    #No-op if ${VAR_NAME} set by previous call
+    FIND_LIBRARY(${VAR_NAME} ${LIB} PATH_SUFFIXES ${SUFFIXES})
   ENDIF()
 
 ENDMACRO()
