@@ -42,9 +42,6 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <cstdio>
-#include <sstream>
-#include <type_traits>
 #include <gtest/gtest.h>
 
 /// @Kokkos_Feature_Level_Required:3
@@ -71,7 +68,7 @@ struct Functor {
 template <class ExecSpace>
 struct TestReduction {
   int num_elements = 10;
-  DataType *DeviceData, *HostData;
+  DataType *deviceData, *hostData;
 
   // memory_space for the memory allocation
   // memory_space for the memory allocation
@@ -97,27 +94,27 @@ struct TestReduction {
 #endif
 
     // Allocate Memory for both device and host memory spaces
-    DeviceData = (DataType *)Kokkos::kokkos_malloc<MemSpaceD>(
+    deviceData = (DataType *)Kokkos::kokkos_malloc<MemSpaceD>(
         "dataD", num_elements * sizeof(DataType));
-    HostData = (DataType *)Kokkos::kokkos_malloc<MemSpaceH>(
+    hostData = (DataType *)Kokkos::kokkos_malloc<MemSpaceH>(
         "dataH", num_elements * sizeof(DataType));
 
     // parallel_reduce call
-    Functor func(DeviceData);
+    Functor func(deviceData);
     Kokkos::parallel_reduce("Reduction", range_policy(0, num_elements), func,
                             sum);
 
     // Copy the data back to Host memory space
     Kokkos::Impl::DeepCopy<MemSpaceD, MemSpaceH>(
-        HostData, DeviceData, num_elements * sizeof(DataType));
+        hostData, deviceData, num_elements * sizeof(DataType));
 
     // Check if all data has been update correctly
     int sumError = compare_equal(sum);
     ASSERT_EQ(sumError, 0);
 
     // Free the allocated memory
-    Kokkos::kokkos_free<MemSpaceD>(DeviceData);
-    Kokkos::kokkos_free<MemSpaceH>(HostData);
+    Kokkos::kokkos_free<MemSpaceD>(deviceData);
+    Kokkos::kokkos_free<MemSpaceH>(hostData);
   }
 };
 
