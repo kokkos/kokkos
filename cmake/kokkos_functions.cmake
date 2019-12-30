@@ -62,7 +62,7 @@ FUNCTION(kokkos_option CAMEL_SUFFIX DEFAULT TYPE DOCSTRING)
           UNSET(${opt} CACHE)
         ELSE()
           MESSAGE(FATAL_ERROR "Matching option found for ${CAMEL_NAME} with the wrong case ${opt}. Please delete your CMakeCache.txt and change option to -D${CAMEL_NAME}=${${opt}}. This is now enforced to avoid hard-to-debug CMake cache inconsistencies.")
-	ENDIF()
+        ENDIF()
       ENDIF()
     ENDIF()
   ENDFOREACH()
@@ -341,11 +341,12 @@ ENDMACRO()
 # default, custom paths are prioritized over system paths. The searched
 # order is:
 # 1. <NAME>_ROOT variable
-# 2. Kokkos_<NAME>_DIR variable
-# 3. Locations in the PATHS option
-# 4. Default system paths, if allowed.
+# 2. <NAME>_ROOT environment variable
+# 3. Kokkos_<NAME>_DIR variable
+# 4. Locations in the PATHS option
+# 5. Default system paths, if allowed.
 #
-# Default system paths are allowed if none of options (1)-(3) are specified
+# Default system paths are allowed if none of options (1)-(4) are specified
 # or if default paths are specifically allowed via ALLOW_SYSTEM_PATH_FALLBACK
 #
 # Usage::
@@ -387,30 +388,37 @@ MACRO(kokkos_find_header VAR_NAME HEADER TPL_NAME)
    "PATHS"
    ${ARGN})
 
-  SET(${HEADER}_FOUND FALSE)
+  SET(${VAR_NAME} "${VARNAME}-NOTFOUND")
   SET(HAVE_CUSTOM_PATHS FALSE)
-  IF(NOT ${HEADER}_FOUND AND DEFINED ${TPL_NAME}_ROOT)
+
+  IF(NOT ${VAR_NAME} AND DEFINED ${TPL_NAME}_ROOT)
     #ONLY look in the root directory
     FIND_PATH(${VAR_NAME} ${HEADER} PATHS ${${TPL_NAME}_ROOT}/include NO_DEFAULT_PATH)
     SET(HAVE_CUSTOM_PATHS TRUE)
   ENDIF()
 
-  IF(NOT ${HEADER}_FOUND AND DEFINED KOKKOS_${TPL_NAME}_DIR)
-    #ONLY look in the root directory
+  IF(NOT ${VAR_NAME} AND DEFINED ENV{${TPL_NAME}_ROOT})
+    #ONLY look in the root directory (via environent variable)
+    FIND_PATH(${VAR_NAME} ${HEADER} PATHS $ENV{${TPL_NAME}_ROOT}/include NO_DEFAULT_PATH)
+    SET(HAVE_CUSTOM_PATHS TRUE)
+  ENDIF()
+
+  IF(NOT ${VAR_NAME} AND DEFINED KOKKOS_${TPL_NAME}_DIR)
+    #ONLY look in the Kokkos_*_DIR directory
     FIND_PATH(${VAR_NAME} ${HEADER} PATHS ${KOKKOS_${TPL_NAME}_DIR}/include NO_DEFAULT_PATH)
     SET(HAVE_CUSTOM_PATHS TRUE)
   ENDIF()
 
-  IF (NOT ${HEADER}_FOUND AND TPL_PATHS)
+  IF(NOT ${VAR_NAME} AND TPL_PATHS)
     #we got custom paths
     #ONLY look in these paths and nowhere else
     FIND_PATH(${VAR_NAME} ${HEADER} PATHS ${TPL_PATHS} NO_DEFAULT_PATH)
     SET(HAVE_CUSTOM_PATHS TRUE)
   ENDIF()
 
-  IF (NOT HAVE_CUSTOM_PATHS OR TPL_ALLOW_SYSTEM_PATH_FALLBACK)
+  IF(NOT HAVE_CUSTOM_PATHS OR TPL_ALLOW_SYSTEM_PATH_FALLBACK)
     #Now go ahead and look in system paths
-    IF (NOT ${HEADER}_FOUND)
+    IF(NOT ${VAR_NAME})
       FIND_PATH(${VAR_NAME} ${HEADER})
     ENDIF()
   ENDIF()
@@ -424,9 +432,10 @@ ENDMACRO()
 # default, custom paths are prioritized over system paths. The search
 # order is:
 # 1. <NAME>_ROOT variable
-# 2. Kokkos_<NAME>_DIR variable
-# 3. Locations in the PATHS option
-# 4. Default system paths, if allowed.
+# 2. <NAME>_ROOT environment variable
+# 3. Kokkos_<NAME>_DIR variable
+# 4. Locations in the PATHS option
+# 5. Default system paths, if allowed.
 #
 # Default system paths are allowed if none of options (1)-(3) are specified
 # or if default paths are specifically allowed via ALLOW_SYSTEM_PATH_FALLBACK
@@ -470,32 +479,54 @@ MACRO(kokkos_find_library VAR_NAME LIB TPL_NAME)
    "PATHS"
    ${ARGN})
 
-  SET(${LIB}_FOUND FALSE)
+  # Appended to user- and system-provided location candidates.
+  # The "stubs" directory supports cross-compiling CUDA when the
+  # libcuda device driver is not present on the host machine.
+  SET(SUFFIXES lib lib64 lib/stubs lib64/stubs)
+  SET(${VAR_NAME} "${VAR_NAME}-NOTFOUND")
   SET(HAVE_CUSTOM_PATHS FALSE)
-  IF(NOT ${LIB}_FOUND AND DEFINED ${TPL_NAME}_ROOT)
-    FIND_LIBRARY(${VAR_NAME} ${LIB} PATHS ${${TPL_NAME}_ROOT}/lib ${${TPL_NAME}_ROOT}/lib64 NO_DEFAULT_PATH)
+
+  IF(NOT ${VAR_NAME} AND DEFINED ${TPL_NAME}_ROOT)
+    FIND_LIBRARY(${VAR_NAME} ${LIB}
+      PATHS ${${TPL_NAME}_ROOT}
+      PATH_SUFFIXES ${SUFFIXES}
+      NO_DEFAULT_PATH)
     SET(HAVE_CUSTOM_PATHS TRUE)
   ENDIF()
 
-  IF(NOT ${LIB}_FOUND AND DEFINED KOKKOS_${TPL_NAME}_DIR)
+  IF(NOT ${VAR_NAME} AND DEFINED ENV{${TPL_NAME}_ROOT})
+    FIND_LIBRARY(${VAR_NAME} ${LIB}
+      PATHS $ENV{${TPL_NAME}_ROOT}
+      PATH_SUFFIXES ${SUFFIXES}
+      NO_DEFAULT_PATH)
+    SET(HAVE_CUSTOM_PATHS TRUE)
+  ENDIF()
+
+  IF(NOT ${VAR_NAME} AND DEFINED KOKKOS_${TPL_NAME}_DIR)
     #we got root paths, only look in these paths and nowhere else
-    FIND_LIBRARY(${VAR_NAME} ${LIB} PATHS ${KOKKOS_${TPL_NAME}_DIR}/lib ${KOKKOS_${TPL_NAME}_DIR}/lib64 NO_DEFAULT_PATH)
+    FIND_LIBRARY(${VAR_NAME} ${LIB}
+      PATHS ${KOKKOS_${TPL_NAME}_DIR}
+      PATH_SUFFIXES ${SUFFIXES}
+      NO_DEFAULT_PATH)
     SET(HAVE_CUSTOM_PATHS TRUE)
   ENDIF()
 
-  IF (NOT ${LIB}_FOUND AND TPL_PATHS)
+  IF(NOT ${VAR_NAME} AND TPL_PATHS)
     #we got custom paths, only look in these paths and nowhere else
-    FIND_LIBRARY(${VAR_NAME} ${LIB} PATHS ${TPL_PATHS} NO_DEFAULT_PATH)
+    FIND_LIBRARY(${VAR_NAME} ${LIB}
+      PATHS ${TPL_PATHS}
+      PATH_SUFFIXES ${SUFFIXES}
+      NO_DEFAULT_PATH)
     SET(HAVE_CUSTOM_PATHS TRUE)
   ENDIF()
 
-
-  IF (NOT HAVE_CUSTOM_PATHS OR TPL_ALLOW_SYSTEM_PATH_FALLBACK)
-    IF (NOT ${LIB}_FOUND)
+  IF(NOT HAVE_CUSTOM_PATHS OR TPL_ALLOW_SYSTEM_PATH_FALLBACK)
+    IF(NOT ${VAR_NAME})
       #Now go ahead and look in system paths
-      FIND_LIBRARY(${VAR_NAME} ${LIB})
+      FIND_LIBRARY(${VAR_NAME} ${LIB} PATH_SUFFIXES ${SUFFIXES})
     ENDIF()
   ENDIF()
+
 ENDMACRO()
 
 #
