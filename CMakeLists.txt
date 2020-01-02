@@ -221,11 +221,26 @@ KOKKOS_PACKAGE_DEF()
 KOKKOS_EXCLUDE_AUTOTOOLS_FILES()
 KOKKOS_PACKAGE_POSTPROCESS()
 
-
-KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_FwdBackend.h "fwd/Kokkos_Fwd" "Cuda;Serial;OpenMP;HPX;Threads")
-KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_SetupBackend.h "Kokkos_Setup" "Cuda")
-KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_DeclareBackend.h "decl/Kokkos_Declare" "Cuda;Serial;OpenMP;HPX;Threads")
+SET(FWD_BACKEND_LIST ${KOKKOS_ENABLED_DEVICES})
+LIST(APPEND FWD_BACKEND_LIST HBWSpace)
+MESSAGE(STATUS "Kokkos Devices: ${KOKKOS_ENABLED_DEVICES}, Kokkos Backends: ${FWD_BACKEND_LIST}")
+KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_FwdBackend.hpp "fwd/Kokkos_Fwd" "${FWD_BACKEND_LIST}")
+KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_SetupBackend.hpp "Kokkos_Setup" "${DEVICE_SETUP_LIST}")
+KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_DeclareBackend.hpp "decl/Kokkos_Declare" "${KOKKOS_ENABLED_DEVICES}")
  
+IF (_DEVICE_PARALLEL)
+   SET(KOKKOS_DEVICE_SPACE_ACTIVE ON)
+ELSE()
+   SET(KOKKOS_DEVICE_SPACE_ACTIVE OFF)
+ENDIF()
+
+IF (_HOST_PARALLEL)
+   SET(KOKKOS_HOSTPARALLEL_SPACE_ACTIVE ON)
+ELSE()
+   SET(KOKKOS_HOSTPARALLEL_SPACE_ACTIVE OFF)
+ENDIF()
+CONFIGURE_FILE(cmake/Kokkos_Set_Default_Spaces.hpp.in Kokkos_Set_Default_Spaces.hpp @ONLY)
+
 #We are ready to configure the header
 CONFIGURE_FILE(cmake/KokkosCore_config.h.in KokkosCore_config.h @ONLY)
 
