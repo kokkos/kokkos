@@ -120,17 +120,6 @@ struct SetWorkTag {
                                 typename PolicyBase::work_item_property>;
 };
 
-// Partial specialization to drop void arguments
-template <typename PolicyBase>
-struct SetWorkTag<PolicyBase, void> {
-  using type = PolicyTraitsBase<
-      typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
-      typename PolicyBase::work_tag, typename PolicyBase::index_type,
-      typename PolicyBase::iteration_pattern,
-      typename PolicyBase::launch_bounds,
-      typename PolicyBase::work_item_property>;
-};
-
 template <typename PolicyBase, typename IndexType>
 struct SetIndexType {
   static_assert(is_void<typename PolicyBase::index_type>::value,
@@ -190,8 +179,11 @@ struct AnalyzePolicy<Base, T, Traits...>
                                       Experimental::is_work_item_property<
                                           T>::value,
                                       SetWorkItemProperty<Base, T>,
-                                      SetWorkTag<Base, T> >::type>::type>::
-                              type>::type>::type>::type>::type::type,
+                                      typename std::conditional<
+                                          !std::is_void<T>::value,
+                                          SetWorkTag<Base, T>, Base>::type>::
+                                      type>::type>::type>::type>::type>::type>::
+              type::type,
           Traits...> {};
 
 template <typename Base>
