@@ -45,6 +45,10 @@
 
 #include <Kokkos_Core.hpp>
 
+// This file is largely duplicating TestRange.hpp but it applies
+// Kokkos::Experimental require at every place where a parallel
+// operation is executed.
+
 namespace Test {
 
 namespace {
