@@ -91,6 +91,8 @@ class AnonymousSpace;
 template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
+#include <KokkosCore_Config_FwdBackend.hpp>
+
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
