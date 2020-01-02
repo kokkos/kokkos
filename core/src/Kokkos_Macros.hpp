@@ -113,7 +113,7 @@
 
 #define KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 
-#include <KokkosCore_Config_Backend.h>
+#include <KokkosCore_Config_SetupBackend.hpp>
 
 //----------------------------------------------------------------------------
 // Mapping compiler built-ins to KOKKOS_COMPILER_*** macros
