@@ -45,6 +45,7 @@
 #include <gtest/gtest.h>
 
 /// @Kokkos_Feature_Level_Required:3
+// Unit test for reduction of native data type
 
 namespace Test {
 
