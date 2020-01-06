@@ -181,6 +181,10 @@ ENDIF()
 
 
 
+KOKKOS_OPTION(CODE_EXTENSIONS_PATH "" STRING "Code Extensions Path-Directories of all TPL Code extensions")
+FOREACH (EXT_PATH ${Kokkos_CODE_EXTENSIONS_PATH})
+  INCLUDE(${EXT_PATH}/CMakeLists.txt)  
+ENDFOREACH()
 #------------------------------------------------------------------------------
 #
 # A) Forward declare the package so that certain options are also defined for
@@ -233,29 +237,7 @@ KOKKOS_PROCESS_SUBPACKAGES()
 KOKKOS_PACKAGE_DEF()
 KOKKOS_EXCLUDE_AUTOTOOLS_FILES()
 KOKKOS_PACKAGE_POSTPROCESS()
-
-SET(FWD_BACKEND_LIST ${KOKKOS_ENABLED_DEVICES})
-LIST(APPEND FWD_BACKEND_LIST HBWSpace)
-MESSAGE(STATUS "Kokkos Devices: ${KOKKOS_ENABLED_DEVICES}, Kokkos Backends: ${FWD_BACKEND_LIST}")
-KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_FwdBackend.hpp "fwd/Kokkos_Fwd" "${FWD_BACKEND_LIST}")
-KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_SetupBackend.hpp "Kokkos_Setup" "${DEVICE_SETUP_LIST}")
-KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_DeclareBackend.hpp "decl/Kokkos_Declare" "${KOKKOS_ENABLED_DEVICES}")
- 
-IF (_DEVICE_PARALLEL)
-   SET(KOKKOS_DEVICE_SPACE_ACTIVE ON)
-ELSE()
-   SET(KOKKOS_DEVICE_SPACE_ACTIVE OFF)
-ENDIF()
-
-IF (_HOST_PARALLEL)
-   SET(KOKKOS_HOSTPARALLEL_SPACE_ACTIVE ON)
-ELSE()
-   SET(KOKKOS_HOSTPARALLEL_SPACE_ACTIVE OFF)
-ENDIF()
-CONFIGURE_FILE(cmake/Kokkos_Set_Default_Spaces.hpp.in Kokkos_Set_Default_Spaces.hpp @ONLY)
-
-#We are ready to configure the header
-CONFIGURE_FILE(cmake/KokkosCore_config.h.in KokkosCore_config.h @ONLY)
+KOKKOS_CONFIGURE_CORE()
 
 IF (NOT KOKKOS_HAS_TRILINOS)
   ADD_LIBRARY(kokkos INTERFACE)
@@ -272,8 +254,7 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 # executables also need nvcc_wrapper.  Thus, we need to install it.
 # If the argument of DESTINATION is a relative path, CMake computes it
 # as relative to ${CMAKE_INSTALL_PATH}.
-INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION ${CMAKE_INSTALL_BINDIR})
-INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_config.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+KOKKOS_INSTALL_FILES()
 
 
 #  Finally - if we are a subproject - make sure the enabled devices are visible
