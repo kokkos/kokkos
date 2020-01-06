@@ -96,11 +96,6 @@ struct Device;
 
 #include <Kokkos_Set_Default_Spaces.hpp>
 
-//----------------------------------------------------------------------------
-// Detect the active execution space and define its memory space.
-// This is used to verify whether a running kernel can access
-// a given memory space.
-
 namespace Kokkos {
 
 namespace Impl {
