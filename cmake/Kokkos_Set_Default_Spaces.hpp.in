@@ -29,4 +29,25 @@ namespace Kokkos {
    #endif
 #endif
 
+namespace Impl {
+
+//----------------------------------------------------------------------------
+// Detect the active execution space and define its memory space.
+// This is used to verify whether a running kernel can access
+// a given memory space.
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
+    defined(KOKKOS_ENABLE_CUDA)
+typedef Kokkos::CudaSpace ActiveExecutionMemorySpace;
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP) && \
+    defined(KOKKOS_ENABLE_HIP)
+typedef Kokkos::HIPSpace ActiveExecutionMemorySpace;
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+typedef Kokkos::HostSpace ActiveExecutionMemorySpace;
+#else
+typedef void ActiveExecutionMemorySpace;
+#endif
+
+
+}  // namespace Impl
+
 }  // namespace Kokkos
