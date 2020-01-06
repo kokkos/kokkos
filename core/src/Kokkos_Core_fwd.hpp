@@ -151,11 +151,6 @@ typedef Serial DefaultHostExecutionSpace;
 #include <Kokkos_Set_Default_Spaces.hpp>
 >>>>>>> add initial CMake function to build dynamic headers for fwd, declare and setup
 
-//----------------------------------------------------------------------------
-// Detect the active execution space and define its memory space.
-// This is used to verify whether a running kernel can access
-// a given memory space.
-
 namespace Kokkos {
 
 namespace Impl {
