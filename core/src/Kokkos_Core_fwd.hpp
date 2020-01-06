@@ -96,26 +96,14 @@ struct Device;
 
 #include <Kokkos_Set_Default_Spaces.hpp>
 
-//----------------------------------------------------------------------------
-// Detect the active execution space and define its memory space.
-// This is used to verify whether a running kernel can access
-// a given memory space.
-
 namespace Kokkos {
 
 namespace Impl {
 
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
-    defined(KOKKOS_ENABLE_CUDA)
-typedef Kokkos::CudaSpace ActiveExecutionMemorySpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU)
-typedef Kokkos::HostSpace ActiveExecutionMemorySpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-typedef Kokkos::HostSpace ActiveExecutionMemorySpace;
-#else
-typedef void ActiveExecutionMemorySpace;
-#endif
-
+//----------------------------------------------------------------------------
+// Detect the active execution space and define its memory space.
+// This is used to verify whether a running kernel can access
+// a given memory space.
 template <class ActiveSpace, class MemorySpace>
 struct VerifyExecutionCanAccessMemorySpace {
   enum { value = 0 };
