@@ -129,6 +129,10 @@ if(Kokkos_ENABLE_HIP)
   list(REMOVE_ITEM Serial_SOURCES serial/TestSerial_ViewLayoutStrideAssignment.cpp)
 endif()
 
+FOREACH (EXT_PATH ${Kokkos_CODE_EXTENSIONS_PATH})
+  INCLUDE(${EXT_PATH}/core/unit_tests/CMakeLists.txt)  
+ENDFOREACH()
+
 if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial
