@@ -179,8 +179,11 @@ struct AnalyzePolicy<Base, T, Traits...>
                                       Experimental::is_work_item_property<
                                           T>::value,
                                       SetWorkItemProperty<Base, T>,
-                                      SetWorkTag<Base, T> >::type>::type>::
-                              type>::type>::type>::type>::type::type,
+                                      typename std::conditional<
+                                          !std::is_void<T>::value,
+                                          SetWorkTag<Base, T>, Base>::type>::
+                                      type>::type>::type>::type>::type>::type>::
+              type::type,
           Traits...> {};
 
 template <typename Base>

@@ -9,7 +9,6 @@ ifndef KOKKOS_PATH
 endif
 
 SRC = $(wildcard $(MAKEFILE_PATH)*.cpp)
-SRC += $(MAKEFILE_PATH)/../TestStackTrace.cpp
 HEADERS = $(wildcard $(MAKEFILE_PATH)*.hpp)
 HEADERS = $(wildcard $(MAKEFILE_PATH)/../*.hpp)
 
