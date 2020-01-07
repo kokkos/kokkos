@@ -451,11 +451,11 @@
 // Define function marking macros if compiler specific macros are undefined:
 
 #if !defined(KOKKOS_FORCEINLINE_FUNCTION)
-define KOKKOS_FORCEINLINE_FUNCTION inline
+#define KOKKOS_FORCEINLINE_FUNCTION inline
 #endif
 
 #if !defined(KOKKOS_IMPL_FORCEINLINE)
-    define KOKKOS_IMPL_FORCEINLINE inline
+#define KOKKOS_IMPL_FORCEINLINE inline
 #endif
 
 #if !defined(KOKKOS_INLINE_FUNCTION)
