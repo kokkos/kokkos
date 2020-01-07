@@ -2749,10 +2749,10 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
   ValueType* ptr;
   size_t n;
 
-  template <class _always_void = void>
-  KOKKOS_INLINE_FUNCTION
-      typename std::enable_if<std::is_void<_always_void>::value>::type
-      operator()(ConstructTag const&, const size_t i) const {
+  template <class _ValueType = ValueType>
+  KOKKOS_INLINE_FUNCTION typename std::enable_if<
+      std::is_default_constructible<_ValueType>::value>::type
+  operator()(ConstructTag const&, const size_t i) const {
     new (ptr + i) ValueType();
   }
 
@@ -2772,9 +2772,10 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
                    size_t const arg_n)
       : space(arg_space), ptr(arg_ptr), n(arg_n) {}
 
-  template <class _always_void = void>
-  typename std::enable_if<std::is_void<_always_void>::value>::type
-  execute_construct() {
+  template <class _ValueType = ValueType>
+  typename std::enable_if<
+      std::is_default_constructible<_ValueType>::value>::type
+  construct_shared_allocation() {
     if (!space.in_parallel()) {
 #if defined(KOKKOS_ENABLE_PROFILING)
       uint64_t kpID = 0;
@@ -2797,7 +2798,7 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
     }
   }
 
-  void execute_destroy() {
+  void destroy_shared_allocation() {
     if (!space.in_parallel()) {
 #if defined(KOKKOS_ENABLE_PROFILING)
       uint64_t kpID = 0;
@@ -2819,14 +2820,6 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
       for (size_t i = 0; i < n; ++i) operator()(DestroyTag{}, i);
     }
   }
-
-  template <class _always_void = void>
-  typename std::enable_if<std::is_void<_always_void>::value>::type
-  construct_shared_allocation() {
-    execute_construct();
-  }
-
-  void destroy_shared_allocation() { execute_destroy(); }
 };
 
 template <class ExecSpace, class ValueType>
