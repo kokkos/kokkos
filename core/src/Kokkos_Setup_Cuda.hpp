@@ -76,7 +76,6 @@
 #endif
 #endif
 
-
 #endif  // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
 
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -92,4 +91,4 @@
 #define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
 #endif
 
-#endif // KOKKOS_ENABLE_CUDA
+#endif  // KOKKOS_ENABLE_CUDA
