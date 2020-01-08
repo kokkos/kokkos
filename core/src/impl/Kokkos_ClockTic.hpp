@@ -76,7 +76,8 @@ uint64_t clock_tic(void) noexcept {
   return hc::__clock_u64();
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
   return (uint64_t)std::chrono::high_resolution_clock::now()
-      .time_since_epoch().count();
+      .time_since_epoch()
+      .count();
 #elif defined(__i386__) || defined(__x86_64)
 
   // Return value of 64-bit hi-res clock register.

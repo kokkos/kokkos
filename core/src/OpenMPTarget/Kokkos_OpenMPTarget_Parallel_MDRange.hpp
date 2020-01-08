@@ -77,183 +77,181 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const int64_t end   = m_policy.m_num_tiles;
     FunctorType functor(m_functor);
     Policy policy = m_policy;
-    #pragma omp target teams distribute map(to : functor) num_teams(end-begin)
+#pragma omp target teams distribute map(to : functor) num_teams(end - begin)
     {
-      for(ptrdiff_t tile_idx = begin; tile_idx<end; tile_idx++) {
-        #pragma omp parallel
+      for (ptrdiff_t tile_idx = begin; tile_idx < end; tile_idx++) {
+#pragma omp parallel
         {
           typename Policy::point_type offset;
           if (Policy::outer_direction == Policy::Left) {
             for (int i = 0; i < Policy::rank; ++i) {
-              offset[i] =
-                  (tile_idx % policy.m_tile_end[i]) * policy.m_tile[i] + policy.m_lower[i];
+              offset[i] = (tile_idx % policy.m_tile_end[i]) * policy.m_tile[i] +
+                          policy.m_lower[i];
               tile_idx /= policy.m_tile_end[i];
             }
           } else {
             for (int i = Policy::rank - 1; i >= 0; --i) {
-              offset[i] =
-                  (tile_idx % policy.m_tile_end[i]) * policy.m_tile[i] + policy.m_lower[i];
+              offset[i] = (tile_idx % policy.m_tile_end[i]) * policy.m_tile[i] +
+                          policy.m_lower[i];
               tile_idx /= policy.m_tile_end[i];
             }
           }
-          execute_tile<Policy::rank>(offset,functor,policy);
+          execute_tile<Policy::rank>(offset, functor, policy);
         }
       }
     }
   }
 
   template <int Rank>
-    inline typename std::enable_if<Rank==1>::type
-    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) const {
-      const ptrdiff_t begin_0 = offset[0];
-      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
-      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
-      #pragma omp for
-      for(ptrdiff_t i0=begin_0; i0<end_0; i0++) {
-        functor(i0);
-      }
+  inline typename std::enable_if<Rank == 1>::type execute_tile(
+      typename Policy::point_type offset, const FunctorType& functor,
+      const Policy& policy) const {
+    const ptrdiff_t begin_0 = offset[0];
+    ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
+    end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
+#pragma omp for
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+      functor(i0);
     }
+  }
 
   template <int Rank>
-    inline typename std::enable_if<Rank==2>::type
-    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) const {
-      const ptrdiff_t begin_0 = offset[0];
-      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
-      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
+  inline typename std::enable_if<Rank == 2>::type execute_tile(
+      typename Policy::point_type offset, const FunctorType& functor,
+      const Policy& policy) const {
+    const ptrdiff_t begin_0 = offset[0];
+    ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
+    end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
 
-      const ptrdiff_t begin_1 = offset[1];
-      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
-      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
+    const ptrdiff_t begin_1 = offset[1];
+    ptrdiff_t end_1         = begin_1 + policy.m_tile[1];
+    end_1 = end_1 < policy.m_upper[1] ? end_1 : policy.m_upper[1];
 
-      #pragma omp for collapse(2)
-      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
-        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
-          functor(i0,i1);
-
-    }
-
-  template <int Rank>
-    inline typename std::enable_if<Rank==3>::type
-    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) const {
-      const ptrdiff_t begin_0 = offset[0];
-      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
-      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
-
-      const ptrdiff_t begin_1 = offset[1];
-      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
-      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
-
-      const ptrdiff_t begin_2 = offset[2];
-      ptrdiff_t end_2 = begin_2 + policy.m_tile[2];
-      end_2 = end_2<policy.m_upper[2]?end_2:policy.m_upper[2];
-
-      #pragma omp for collapse(3)
-      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
-        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
-          for(ptrdiff_t i2=begin_2; i2<end_2; i2++)
-            functor(i0,i1,i2);
-
-    }
-
+#pragma omp for collapse(2)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) functor(i0, i1);
+  }
 
   template <int Rank>
-    inline typename std::enable_if<Rank==4>::type
-    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) const {
-      const ptrdiff_t begin_0 = offset[0];
-      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
-      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
+  inline typename std::enable_if<Rank == 3>::type execute_tile(
+      typename Policy::point_type offset, const FunctorType& functor,
+      const Policy& policy) const {
+    const ptrdiff_t begin_0 = offset[0];
+    ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
+    end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
 
-      const ptrdiff_t begin_1 = offset[1];
-      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
-      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
+    const ptrdiff_t begin_1 = offset[1];
+    ptrdiff_t end_1         = begin_1 + policy.m_tile[1];
+    end_1 = end_1 < policy.m_upper[1] ? end_1 : policy.m_upper[1];
 
-      const ptrdiff_t begin_2 = offset[2];
-      ptrdiff_t end_2 = begin_2 + policy.m_tile[2];
-      end_2 = end_2<policy.m_upper[2]?end_2:policy.m_upper[2];
+    const ptrdiff_t begin_2 = offset[2];
+    ptrdiff_t end_2         = begin_2 + policy.m_tile[2];
+    end_2 = end_2 < policy.m_upper[2] ? end_2 : policy.m_upper[2];
 
-      const ptrdiff_t begin_3 = offset[3];
-      ptrdiff_t end_3 = begin_3 + policy.m_tile[3];
-      end_3 = end_3<policy.m_upper[3]?end_3:policy.m_upper[3];
-
-      #pragma omp for collapse(4)
-      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
-        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
-          for(ptrdiff_t i2=begin_2; i2<end_2; i2++)
-            for(ptrdiff_t i3=begin_3; i3<end_3; i3++)
-              functor(i0,i1,i2,i3);
-
-    }
+#pragma omp for collapse(3)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) functor(i0, i1, i2);
+  }
 
   template <int Rank>
-    inline typename std::enable_if<Rank==5>::type
-    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) const {
-      const ptrdiff_t begin_0 = offset[0];
-      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
-      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
+  inline typename std::enable_if<Rank == 4>::type execute_tile(
+      typename Policy::point_type offset, const FunctorType& functor,
+      const Policy& policy) const {
+    const ptrdiff_t begin_0 = offset[0];
+    ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
+    end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
 
-      const ptrdiff_t begin_1 = offset[1];
-      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
-      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
+    const ptrdiff_t begin_1 = offset[1];
+    ptrdiff_t end_1         = begin_1 + policy.m_tile[1];
+    end_1 = end_1 < policy.m_upper[1] ? end_1 : policy.m_upper[1];
 
-      const ptrdiff_t begin_2 = offset[2];
-      ptrdiff_t end_2 = begin_2 + policy.m_tile[2];
-      end_2 = end_2<policy.m_upper[2]?end_2:policy.m_upper[2];
+    const ptrdiff_t begin_2 = offset[2];
+    ptrdiff_t end_2         = begin_2 + policy.m_tile[2];
+    end_2 = end_2 < policy.m_upper[2] ? end_2 : policy.m_upper[2];
 
-      const ptrdiff_t begin_3 = offset[3];
-      ptrdiff_t end_3 = begin_3 + policy.m_tile[3];
-      end_3 = end_3<policy.m_upper[3]?end_3:policy.m_upper[3];
+    const ptrdiff_t begin_3 = offset[3];
+    ptrdiff_t end_3         = begin_3 + policy.m_tile[3];
+    end_3 = end_3 < policy.m_upper[3] ? end_3 : policy.m_upper[3];
 
-      const ptrdiff_t begin_4 = offset[4];
-      ptrdiff_t end_4 = begin_4 + policy.m_tile[4];
-      end_4 = end_4<policy.m_upper[4]?end_4:policy.m_upper[4];
-
-      #pragma omp for collapse(5)
-      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
-        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
-          for(ptrdiff_t i2=begin_2; i2<end_2; i2++)
-            for(ptrdiff_t i3=begin_3; i3<end_3; i3++)
-              for(ptrdiff_t i4=begin_4; i4<end_4; i4++)
-                functor(i0,i1,i2,i3,i4);
-
-    }
+#pragma omp for collapse(4)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++)
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++)
+            functor(i0, i1, i2, i3);
+  }
 
   template <int Rank>
-    inline typename std::enable_if<Rank==6>::type
-    execute_tile(typename Policy::point_type offset, const FunctorType& functor, const Policy& policy) const {
-      const ptrdiff_t begin_0 = offset[0];
-      ptrdiff_t end_0 = begin_0 + policy.m_tile[0];
-      end_0 = end_0<policy.m_upper[0]?end_0:policy.m_upper[0];
+  inline typename std::enable_if<Rank == 5>::type execute_tile(
+      typename Policy::point_type offset, const FunctorType& functor,
+      const Policy& policy) const {
+    const ptrdiff_t begin_0 = offset[0];
+    ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
+    end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
 
-      const ptrdiff_t begin_1 = offset[1];
-      ptrdiff_t end_1 = begin_1 + policy.m_tile[1];
-      end_1 = end_1<policy.m_upper[1]?end_1:policy.m_upper[1];
+    const ptrdiff_t begin_1 = offset[1];
+    ptrdiff_t end_1         = begin_1 + policy.m_tile[1];
+    end_1 = end_1 < policy.m_upper[1] ? end_1 : policy.m_upper[1];
 
-      const ptrdiff_t begin_2 = offset[2];
-      ptrdiff_t end_2 = begin_2 + policy.m_tile[2];
-      end_2 = end_2<policy.m_upper[2]?end_2:policy.m_upper[2];
+    const ptrdiff_t begin_2 = offset[2];
+    ptrdiff_t end_2         = begin_2 + policy.m_tile[2];
+    end_2 = end_2 < policy.m_upper[2] ? end_2 : policy.m_upper[2];
 
-      const ptrdiff_t begin_3 = offset[3];
-      ptrdiff_t end_3 = begin_3 + policy.m_tile[3];
-      end_3 = end_3<policy.m_upper[3]?end_3:policy.m_upper[3];
+    const ptrdiff_t begin_3 = offset[3];
+    ptrdiff_t end_3         = begin_3 + policy.m_tile[3];
+    end_3 = end_3 < policy.m_upper[3] ? end_3 : policy.m_upper[3];
 
-      const ptrdiff_t begin_4 = offset[4];
-      ptrdiff_t end_4 = begin_4 + policy.m_tile[4];
-      end_4 = end_4<policy.m_upper[4]?end_4:policy.m_upper[4];
+    const ptrdiff_t begin_4 = offset[4];
+    ptrdiff_t end_4         = begin_4 + policy.m_tile[4];
+    end_4 = end_4 < policy.m_upper[4] ? end_4 : policy.m_upper[4];
 
-      const ptrdiff_t begin_5 = offset[5];
-      ptrdiff_t end_5 = begin_5 + policy.m_tile[5];
-      end_5 = end_5<policy.m_upper[5]?end_5:policy.m_upper[5];
+#pragma omp for collapse(5)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++)
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++)
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++)
+              functor(i0, i1, i2, i3, i4);
+  }
 
-      #pragma omp for collapse(6)
-      for(ptrdiff_t i0=begin_0; i0<end_0; i0++)
-        for(ptrdiff_t i1=begin_1; i1<end_1; i1++)
-          for(ptrdiff_t i2=begin_2; i2<end_2; i2++)
-            for(ptrdiff_t i3=begin_3; i3<end_3; i3++)
-              for(ptrdiff_t i4=begin_4; i4<end_4; i4++)
-                for(ptrdiff_t i5=begin_5; i5<end_5; i5++)
-                  functor(i0,i1,i2,i3,i4,i5);
+  template <int Rank>
+  inline typename std::enable_if<Rank == 6>::type execute_tile(
+      typename Policy::point_type offset, const FunctorType& functor,
+      const Policy& policy) const {
+    const ptrdiff_t begin_0 = offset[0];
+    ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
+    end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
 
-    }
+    const ptrdiff_t begin_1 = offset[1];
+    ptrdiff_t end_1         = begin_1 + policy.m_tile[1];
+    end_1 = end_1 < policy.m_upper[1] ? end_1 : policy.m_upper[1];
+
+    const ptrdiff_t begin_2 = offset[2];
+    ptrdiff_t end_2         = begin_2 + policy.m_tile[2];
+    end_2 = end_2 < policy.m_upper[2] ? end_2 : policy.m_upper[2];
+
+    const ptrdiff_t begin_3 = offset[3];
+    ptrdiff_t end_3         = begin_3 + policy.m_tile[3];
+    end_3 = end_3 < policy.m_upper[3] ? end_3 : policy.m_upper[3];
+
+    const ptrdiff_t begin_4 = offset[4];
+    ptrdiff_t end_4         = begin_4 + policy.m_tile[4];
+    end_4 = end_4 < policy.m_upper[4] ? end_4 : policy.m_upper[4];
+
+    const ptrdiff_t begin_5 = offset[5];
+    ptrdiff_t end_5         = begin_5 + policy.m_tile[5];
+    end_5 = end_5 < policy.m_upper[5] ? end_5 : policy.m_upper[5];
+
+#pragma omp for collapse(6)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++)
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++)
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++)
+              for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++)
+                functor(i0, i1, i2, i3, i4, i5);
+  }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
@@ -270,7 +268,8 @@ namespace Impl {
 
 template <class FunctorType, class ReducerType, class PointerType,
           class ValueType, class... PolicyArgs>
-struct ParallelReduceSpecialize<FunctorType, Kokkos::MDRangePolicy<PolicyArgs...>,
+struct ParallelReduceSpecialize<FunctorType,
+                                Kokkos::MDRangePolicy<PolicyArgs...>,
                                 ReducerType, PointerType, ValueType, 0, 0> {
   typedef Kokkos::RangePolicy<PolicyArgs...> PolicyType;
   template <class TagType>
@@ -451,7 +450,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
 }  // namespace Impl
 }  // namespace Kokkos
-
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
