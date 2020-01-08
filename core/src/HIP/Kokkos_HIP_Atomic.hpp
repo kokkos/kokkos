@@ -259,7 +259,6 @@ unsigned long long atomic_fetch_add(volatile unsigned long long *dest,
 // int64_t atomic_fetch_add(volatile int64_t* dest, const int64_t& val) {
 //   return atomicAdd(const_cast<int64_t*>(dest),val);
 // }
-/*
   KOKKOS_INLINE_FUNCTION
   char atomic_fetch_add(volatile char * dest, const char& val) {
     unsigned int oldval,newval,assume;
@@ -268,7 +267,7 @@ unsigned long long atomic_fetch_add(volatile unsigned long long *dest,
     do {
       assume = oldval ;
       newval = assume&0x7fffff00 + ((assume&0xff)+val)&0xff ;
-      oldval = hc::atomic_compare_exchange_unsigned((unsigned int*)dest,
+      oldval = atomicCAS((unsigned int*)dest,
   assume,newval); } while ( assume != oldval );
 
     return oldval ;
@@ -283,7 +282,7 @@ unsigned long long atomic_fetch_add(volatile unsigned long long *dest,
     do {
       assume = oldval ;
       newval = assume&0x7fff0000 + ((assume&0xffff)+val)&0xffff ;
-      oldval = hc::atomic_compare_exchange_unsigned((unsigned int*)dest,
+      oldval = atomicCAS((unsigned int*)dest,
   assume,newval); } while ( assume != oldval );
 
     return oldval ;
@@ -291,10 +290,10 @@ unsigned long long atomic_fetch_add(volatile unsigned long long *dest,
 
   KOKKOS_INLINE_FUNCTION
   long long atomic_fetch_add(volatile long long * dest, const long long& val) {
-    return (long long)hc::atomic_fetch_add((uint64_t*)dest, (const
-  uint64_t&)val);
+    return atomicAdd((unsigned long long *)(dest), val);
   }
 
+/*
 template <class T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_add(
     volatile T *dest,
