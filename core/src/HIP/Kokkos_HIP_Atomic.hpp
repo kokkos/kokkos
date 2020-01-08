@@ -504,16 +504,16 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
   return (T)oldval & 0xffff;
 }
 
-KOKKOS_INLINE_FUNCTION
-int atomic_fetch_or(volatile int *const dest, int const val) {
-  return atomicOr(const_cast<int *>(dest), val);
-}
+//KOKKOS_INLINE_FUNCTION
+//int atomic_fetch_or(volatile int *const dest, int const val) {
+//  return atomicOr(const_cast<int *>(dest), val);
+//}
 
-KOKKOS_INLINE_FUNCTION
-unsigned int atomic_fetch_or(volatile unsigned int *const dest,
-                             unsigned int const val) {
-  return atomicOr(const_cast<unsigned int *>(dest), val);
-}
+//KOKKOS_INLINE_FUNCTION
+//unsigned int atomic_fetch_or(volatile unsigned int *const dest,
+//                             unsigned int const val) {
+//  return atomicOr(const_cast<unsigned int *>(dest), val);
+//}
 
 KOKKOS_INLINE_FUNCTION
 unsigned long long int atomic_fetch_or(
@@ -522,16 +522,16 @@ unsigned long long int atomic_fetch_or(
   return atomicOr(const_cast<unsigned long long int *>(dest), val);
 }
 
-KOKKOS_INLINE_FUNCTION
-int atomic_fetch_and(volatile int *const dest, int const val) {
-  return atomicAnd(const_cast<int *>(dest), val);
-}
+//KOKKOS_INLINE_FUNCTION
+//int atomic_fetch_and(volatile int *const dest, int const val) {
+//  return atomicAnd(const_cast<int *>(dest), val);
+//}
 
-KOKKOS_INLINE_FUNCTION
-unsigned int atomic_fetch_and(volatile unsigned int *const dest,
-                              unsigned int const val) {
-  return atomicAnd(const_cast<unsigned int *>(dest), val);
-}
+//KOKKOS_INLINE_FUNCTION
+//unsigned int atomic_fetch_and(volatile unsigned int *const dest,
+//                              unsigned int const val) {
+//  return atomicAnd(const_cast<unsigned int *>(dest), val);
+//}
 
 KOKKOS_INLINE_FUNCTION
 unsigned long long int atomic_fetch_and(
