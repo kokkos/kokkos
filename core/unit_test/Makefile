@@ -242,11 +242,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
     OBJ_OPENMPTARGET += TestOpenMPTarget_Init.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_SharedAlloc.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_RangePolicy.o
-    OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o TestOpenMPTarget_ViewAPI_b.o TestOpenMPTarget_ViewAPI_c.o TestOpenMPTarget_ViewAPI_d.o TestOpenMPTarget_ViewAPI_e.o #Some commented out code
+    OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o TestOpenMPTarget_ViewAPI_b.o TestOpenMPTarget_ViewAPI_c.o TestOpenMPTarget_ViewAPI_d.o  #Some commented out code
+    #OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_e.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_DeepCopyAlignment.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_a.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_b.o
-    OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_subview.o
+    #OBJ_OPENMPTARGET += TestOpenMPTarget_ViewMapping_subview.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_ViewOfClass.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_a.o TestOpenMPTarget_SubView_b.o
     #The following subview tests need something like UVM:
@@ -255,12 +256,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
     #OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_c07.o TestOpenMPTarget_SubView_c08.o TestOpenMPTarget_SubView_c09.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_SubView_c10.o TestOpenMPTarget_SubView_c11.o TestOpenMPTarget_SubView_c12.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_Reductions.o # Need custom reductions
-    #OBJ_OPENMPTARGET += TestOpenMPTarget_Reducers_a.o TestOpenMPTarget_Reducers_b.o TestOpenMPTarget_Reducers_c.o TestOpenMPTarget_Reducers_d.o
+    OBJ_OPENMPTARGET += TestOpenMPTarget_Reducers_a.o TestOpenMPTarget_Reducers_b.o TestOpenMPTarget_Reducers_c.o TestOpenMPTarget_Reducers_d.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_Scan.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_Complex.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations_int.o TestOpenMPTarget_AtomicOperations_unsignedint.o TestOpenMPTarget_AtomicOperations_longint.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations_unsignedlongint.o TestOpenMPTarget_AtomicOperations_longlongint.o TestOpenMPTarget_AtomicOperations_double.o TestOpenMPTarget_AtomicOperations_float.o
-    OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations_complexfloat.o TestOpenMPTarget_AtomicOperations_complexdouble.o
+    #OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations_complexfloat.o 
+    #OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations_complexdouble.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicViews.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_Atomics.o # Commented Out Arbitrary Type Atomics
     #OBJ_OPENMPTARGET += TestOpenMPTarget_Team.o # There is still a static function in this

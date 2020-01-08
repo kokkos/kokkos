@@ -340,19 +340,39 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   //----------------------------------------
 
   template <class FunctorType>
-  inline static int team_size_max(const FunctorType&) {
-    return 1024;
+  inline static int team_size_max(const FunctorType&, const ParallelForTag&) {
+    return 256;
   }
 
   template <class FunctorType>
-  inline static int team_size_recommended(const FunctorType&) {
+  inline static int team_size_max(const FunctorType&,
+                                  const ParallelReduceTag&) {
+    return 256;
+  }
+
+  template <class FunctorType, class ReducerType>
+  inline static int team_size_max(const FunctorType&, const ReducerType&,
+                                  const ParallelReduceTag&) {
     return 256;
   }
 
   template <class FunctorType>
   inline static int team_size_recommended(const FunctorType&,
-                                          const int& vector_length) {
-    return 256 / vector_length;
+                                          const ParallelForTag&) {
+    return 128;
+  }
+
+  template <class FunctorType>
+  inline static int team_size_recommended(const FunctorType&,
+                                          const ParallelReduceTag&) {
+    return 128;
+  }
+
+  template <class FunctorType, class ReducerType>
+  inline static int team_size_recommended(const FunctorType&,
+                                          const ReducerType&,
+                                          const ParallelReduceTag&) {
+    return 128;
   }
 
   //----------------------------------------
@@ -539,8 +559,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
  private:
   /** \brief finalize chunk_size if it was set to AUTO*/
   inline void set_auto_chunk_size() {
-    int concurrency =
-        traits::execution_space::thread_pool_size(0) / m_team_alloc;
+    int concurrency = 2048 * 128;
+
     if (concurrency == 0) concurrency = 1;
 
     if (m_chunk_size > 0) {

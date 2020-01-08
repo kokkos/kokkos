@@ -1065,7 +1065,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   inline void execute() const {
-    ParForSpecialize::execute(m_functor, m_policy, m_result_ptr);
+    // ParForSpecialize::execute(m_functor, m_policy, m_result_ptr);
   }
 
   template <class ViewType>
