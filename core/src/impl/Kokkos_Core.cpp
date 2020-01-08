@@ -200,15 +200,7 @@ void initialize_internal(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
   if (Impl::is_same<Kokkos::Experimental::OpenMPTarget,
                     Kokkos::DefaultExecutionSpace>::value) {
-    if (num_threads > 0) {
-      if (use_numa > 0) {
-        Kokkos::Experimental::OpenMPTarget::initialize(num_threads, use_numa);
-      } else {
-        Kokkos::Experimental::OpenMPTarget::initialize(num_threads);
-      }
-    } else {
-      Kokkos::Experimental::OpenMPTarget::initialize();
-    }
+    Kokkos::Experimental::OpenMPTarget().impl_initialize();
     // std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized"
     // << std::endl ;
   } else {
@@ -270,7 +262,6 @@ void finalize_internal(const bool all_spaces = false) {
   while (!finalize_hooks.empty()) {
     auto f = finalize_hooks.top();
     try {
-      f();
     } catch (...) {
       std::cerr << "Kokkos::finalize: A finalize hook (set via "
                    "Kokkos::push_finalize_hook) threw an exception that it did "
@@ -323,8 +314,8 @@ void finalize_internal(const bool all_spaces = false) {
   if (std::is_same<Kokkos::Experimental::OpenMPTarget,
                    Kokkos::DefaultExecutionSpace>::value ||
       all_spaces) {
-    if (Kokkos::Experimental::OpenMPTarget::is_initialized())
-      Kokkos::Experimental::OpenMPTarget::finalize();
+    if (Kokkos::Experimental::OpenMPTarget().impl_is_initialized())
+      Kokkos::Experimental::OpenMPTarget().impl_finalize();
   }
 #endif
 
