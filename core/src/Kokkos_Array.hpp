@@ -216,17 +216,10 @@ struct Array<T, 0, Proxy> {
   KOKKOS_INLINE_FUNCTION pointer data() { return pointer(0); }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return const_pointer(0); }
 
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  KOKKOS_INLINE_FUNCTION ~Array() {}
-  KOKKOS_INLINE_FUNCTION Array() {}
-  KOKKOS_INLINE_FUNCTION Array(const Array&) {}
-  KOKKOS_INLINE_FUNCTION Array& operator=(const Array&) {}
-#else
-  KOKKOS_INLINE_FUNCTION ~Array()            = default;
-  KOKKOS_INLINE_FUNCTION Array()             = default;
-  KOKKOS_INLINE_FUNCTION Array(const Array&) = default;
-  KOKKOS_INLINE_FUNCTION Array& operator=(const Array&) = default;
-#endif
+  KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
+  KOKKOS_DEFAULTED_FUNCTION Array()             = default;
+  KOKKOS_DEFAULTED_FUNCTION Array(const Array&) = default;
+  KOKKOS_DEFAULTED_FUNCTION Array& operator=(const Array&) = default;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.
@@ -280,13 +273,9 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
   KOKKOS_INLINE_FUNCTION pointer data() { return m_elem; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return m_elem; }
 
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  KOKKOS_INLINE_FUNCTION ~Array() {}
-#else
-  KOKKOS_INLINE_FUNCTION ~Array()                       = default;
-#endif
-  Array()                 = delete;
-  Array(const Array& rhs) = delete;
+  KOKKOS_DEFAULTED_FUNCTION ~Array() = default;
+  Array()                            = delete;
+  Array(const Array& rhs)            = delete;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.
@@ -353,13 +342,9 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
   KOKKOS_INLINE_FUNCTION pointer data() { return m_elem; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return m_elem; }
 
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  KOKKOS_INLINE_FUNCTION ~Array() {}
-#else
-  KOKKOS_INLINE_FUNCTION ~Array()                       = default;
-#endif
-  Array()             = delete;
-  Array(const Array&) = delete;
+  KOKKOS_DEFAULTED_FUNCTION ~Array() = default;
+  Array()                            = delete;
+  Array(const Array&)                = delete;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.

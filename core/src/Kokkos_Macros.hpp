@@ -169,12 +169,6 @@
 #undef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 #endif  // !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
 
-#if (9000 <= CUDA_VERSION) && (CUDA_VERSION < 10000)
-// CUDA 9 introduced an incorrect warning,
-// see https://github.com/kokkos/kokkos/issues/1470
-#define KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-#endif
-
 #if (10000 > CUDA_VERSION)
 #define KOKKOS_ENABLE_PRE_CUDA_10_DEPRECATION_API
 #endif
@@ -282,7 +276,12 @@
 #else
 #define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
 #endif
-#endif  // #if defined( __CUDA_ARCH__ )
+#if (CUDA_VERSION < 10000)
+#define KOKKOS_DEFAULTED_FUNCTION __host__ __device__ inline
+#else
+#define KOKKOS_DEFAULTED_FUNCTION inline
+#endif
+#endif
 
 #if defined(KOKKOS_ENABLE_ROCM) && defined(__HCC__)
 
@@ -290,6 +289,7 @@
 #define KOKKOS_INLINE_FUNCTION __attribute__((amp, cpu)) inline
 #define KOKKOS_FUNCTION __attribute__((amp, cpu))
 #define KOKKOS_LAMBDA [=] __attribute__((amp, cpu))
+#define KOKKOS_DEFAULTED_FUNCTION __attribute__((amp, cpu)) inline
 #endif
 
 #if defined(_OPENMP)
@@ -468,6 +468,10 @@
 
 #if !defined(KOKKOS_INLINE_FUNCTION_DELETED)
 #define KOKKOS_INLINE_FUNCTION_DELETED inline
+#endif
+
+#if !defined(KOKKOS_DEFAULTED_FUNCTION)
+#define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
 //----------------------------------------------------------------------------
 // Define empty macro for restrict if necessary:
