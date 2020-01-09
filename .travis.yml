@@ -68,7 +68,15 @@ before_script:
       export PATH=/usr/local/opt/ccache/libexec:$PATH;
     fi
   - ccache -z
-  - if [[ ${COVERAGE} ]]; then export CXX="${CXX} --coverage"; fi
+  - if [[ ${COVERAGE} ]]; then
+      if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
+         if [[ ${CXX} != clang++ ]]; then
+           export CXX="${CXX} --coverage";
+         fi
+      else
+        export CXX="${CXX} --coverage";
+      fi
+    fi
   - if [[ ! ${CMAKE_BUILD_TYPE} ]]; then export CXXFLAGS="${CXXFLAGS} -O2"; fi
 
 script:
