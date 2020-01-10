@@ -1,7 +1,7 @@
 # From CMake 3.10 documentation
 
 #This can run at any time
-KOKKOS_OPTION(CXX_STANDARD "" STRING "The C++ standard for Kokkos to use: 11, 14, or 17. In some cases, intermediate standards 1Y, 1Z, or 2A are also supported.")
+KOKKOS_OPTION(CXX_STANDARD "" STRING "The C++ standard for Kokkos to use: 11, 14, or 17. If not given, defaults to CMAKE_CXX_STANDARD. If CMAKE_CXX_STANDARD also not given, defaults to 11.")
 
 # Set CXX standard flags
 SET(KOKKOS_ENABLE_CXX11 OFF)

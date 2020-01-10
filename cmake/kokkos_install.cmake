@@ -1,3 +1,7 @@
+# In case we need it for irreparably bad build systems
+# Export CXXFLAGS in a variable
+GET_TARGET_PROPERTY(KOKKOS_COMPILE_OPTIONS_LIST kokkoscore INTERFACE_COMPILE_OPTIONS)
+LIST(APPEND KOKKOS_COMPILE_OPTIONS_LIST ${CMAKE_CXX${KOKKOS_CXX_STANDARD}_STANDARD_COMPILE_OPTION})
 IF (NOT KOKKOS_HAS_TRILINOS)
   INCLUDE(GNUInstallDirs)
 
@@ -31,7 +35,7 @@ IF (NOT KOKKOS_HAS_TRILINOS)
 ELSE()
   CONFIGURE_FILE(cmake/KokkosConfigCommon.cmake.in ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake @ONLY)
   file(READ ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake KOKKOS_CONFIG_COMMON)
-  file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/KokkosConfig_install.cmake" ${KOKKOS_CONFIG_COMMON})
+  file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/KokkosConfig_install.cmake" "${KOKKOS_CONFIG_COMMON}")
 ENDIF()
 
 # build and install pkgconfig file

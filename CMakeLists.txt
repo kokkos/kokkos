@@ -174,7 +174,14 @@ ENDIF()
 #
 # A) Forward declare the package so that certain options are also defined for
 # subpackages
-#
+
+## This corrects the old behavior of ProjectCompilerPostConfig.cmake
+# It sets the CMAKE_CXX_FLAGS globally
+# We must do this before KOKKOS_PACKAGE_DECL
+IF (KOKKOS_HAS_TRILINOS)
+  # The only flag we should propagate to parent scope is the C++ standard flag
+  SET(CMAKE_CXX_FLAGS "${TRILINOS_TOPLEVEL_CXX_FLAGS} ${CMAKE_CXX${KOKKOS_CXX_STANDARD}_STANDARD_COMPILE_OPTION}" PARENT_SCOPE)
+ENDIF()
 
 KOKKOS_PACKAGE_DECL()
 

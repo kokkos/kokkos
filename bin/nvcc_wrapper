@@ -87,9 +87,11 @@ temp_dir=${TMPDIR:-/tmp}
 
 # Check if we have an optimization argument already
 optimization_applied=0
+optflag=""
 
 # Check if we have -std=c++X  or --std=c++X already
 stdcxx_applied=0
+stdflag=""
 
 # Run nvcc a second time to generate dependencies if needed
 depfile_separate=0
@@ -100,7 +102,7 @@ depfile_target_arg=""
 remove_duplicate_link_files=0
 
 function warn_std_flag() {
-  echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
+  echo "nvcc_wrapper - *warning* you have set multiple standard flags (-std=c++1* or --std=c++1*), only the first is used because nvcc can only accept a single std setting"
 }
 
 #echo "Arguments: $# $@"
@@ -134,14 +136,17 @@ do
     ;;
    # Ensure we only have one optimization flag because NVCC doesn't allow muliple
   -O*)
+    given_optflag=$1
+    if [ "$1" = "-O" ]; then
+      given_optflag="-O2"
+    fi
     if [ $optimization_applied -eq 1 ]; then
+      if [ "$optflag" != "$given_optflag" ]; then
        echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-O*), only the first is used because nvcc can only accept a single optimization setting."
+      fi
     else
-       if [ "$1" = "-O" ]; then
-         shared_args="$shared_args -O2"
-       else
-         shared_args="$shared_args $1"
-       fi
+       shared_args="$shared_args $given_optflag"
+       optflag=$given_optflag
        optimization_applied=1
     fi
     ;;
@@ -197,7 +202,9 @@ do
   #Handle c++11
   --std=c++1y|-std=c++1y|--std=c++1z|-std=c++1z|--std=gnu++1y|-std=gnu++1y|--std=gnu++1z|-std=gnu++1z)
     if [ $stdcxx_applied -eq 1 ]; then
-       warn_std_flag
+       if [ "$stdflag" != "$1" ]; then
+         warn_std_flag
+       fi
     else
        # this is hopefully just occurring in a downstream project during CMake feature tests
        # we really have no choice here but to accept the flag and "promote" to the corresponding C++ standard
@@ -218,10 +225,13 @@ do
   ;;
   --std=c++11|-std=c++11|--std=c++14|-std=c++14|--std=c++17|-std=c++17)
     if [ $stdcxx_applied -eq 1 ]; then
-       warn_std_flag
+       if [ "$stdflag" != "$1" ]; then
+         warn_std_flag
+       fi
     else
        shared_args="$shared_args $1"
        stdcxx_applied=1
+       stdflag=$1
     fi
     ;;
 
