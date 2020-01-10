@@ -13,8 +13,8 @@ SET(SOURCES
   PerfTestMain.cpp
   PerfTestGramSchmidt.cpp
   PerfTestHexGrad.cpp
-  PerfTest_CustomReduction.cpp
-  PerfTest_ExecSpacePartitioning.cpp
+#  PerfTest_CustomReduction.cpp
+#  PerfTest_ExecSpacePartitioning.cpp
   PerfTest_ViewCopy_a123.cpp
   PerfTest_ViewCopy_b123.cpp
   PerfTest_ViewCopy_c123.cpp
