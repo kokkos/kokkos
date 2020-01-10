@@ -305,10 +305,18 @@ ENDFUNCTION()
 FUNCTION(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
   IF (KOKKOS_HAS_TRILINOS)
     TRIBITS_ADD_LIBRARY(${LIBRARY_NAME} ${ARGN})
-     #Stolen from Tribits - it can add prefixes
+    #Stolen from Tribits - it can add prefixes
     SET(TRIBITS_LIBRARY_NAME_PREFIX "${${PROJECT_NAME}_LIBRARY_NAME_PREFIX}")
     SET(TRIBITS_LIBRARY_NAME ${TRIBITS_LIBRARY_NAME_PREFIX}${LIBRARY_NAME})
-    KOKKOS_SET_LIBRARY_PROPERTIES(${TRIBITS_LIBRARY_NAME} PLAIN_STYLE)
+    #Tribits has way too much techinical debt and baggage to even
+    #allow PUBLIC target_compile_options to be used. It forces C++ flags on projects
+    #as a giant blob of space-separated strings. We end up with duplicated
+    #flags between the flags implicitly forced on Kokkos-dependent and those Kokkos
+    #has in its public INTERFACE_COMPILE_OPTIONS.
+    #These do NOT get de-deduplicated because Tribits
+    #creates flags as a giant monolithic space-separated string
+    #Do not set any transitive properties and keep everything working as before
+    #KOKKOS_SET_LIBRARY_PROPERTIES(${TRIBITS_LIBRARY_NAME} PLAIN_STYLE)
   ELSE()
     KOKKOS_INTERNAL_ADD_LIBRARY(
       ${LIBRARY_NAME} ${ARGN})
