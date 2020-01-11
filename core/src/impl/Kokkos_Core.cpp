@@ -887,12 +887,18 @@ void print_configuration(std::ostream& out, const bool detail) {
 #else
   msg << "no" << std::endl;
 #endif
-  msg << "  KOKKOS_ENABLE_SERIAL: ";
-#ifdef KOKKOS_ENABLE_SERIAL
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
+    msg << "  KOKKOS_ENABLE_SERIAL: ";
+  #ifdef KOKKOS_ENABLE_SERIAL
+    msg << "yes" << std::endl;
+  #else
+    msg << "no" << std::endl;
+  #endif
+      msg << "  KOKKOS_ENABLE_SYCL: ";
+    #ifdef KOKKOS_ENABLE_SYCL
+      msg << "yes" << std::endl;
+    #else
+      msg << "no" << std::endl;
+    #endif
 
   msg << "Default Device:" << std::endl;
   msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA: ";
@@ -919,12 +925,18 @@ void print_configuration(std::ostream& out, const bool detail) {
 #else
   msg << "no" << std::endl;
 #endif
-  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL: ";
-#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
+    msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL: ";
+  #ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL
+    msg << "yes" << std::endl;
+  #else
+    msg << "no" << std::endl;
+  #endif
+      msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL: ";
+    #ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
+      msg << "yes" << std::endl;
+    #else
+      msg << "no" << std::endl;
+    #endif
 
   msg << "Atomics:" << std::endl;
   msg << "  KOKKOS_ENABLE_CUDA_ATOMICS: ";
