@@ -91,7 +91,7 @@ public:
 
   typedef ScratchMemorySpace< SYCL > scratch_memory_space ;
 
-  ~SYCL() {}
+    ~SYCL() = default;
   SYCL();
 //  explicit SYCL( const int instance_id );
 
@@ -122,7 +122,7 @@ public:
 
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
   static void impl_static_fence() ;
-  void fence();
+  void fence() const;
 
 
   /// \brief Print configuration information to the given output stream.

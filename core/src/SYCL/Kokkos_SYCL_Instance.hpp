@@ -2,6 +2,7 @@
 
 #ifndef KOKKOS_SYCL_INSTANCE_HPP_
 #define KOKKOS_SYCL_INSTANCE_HPP_
+//#define __SYCL_DEVICE_ONLY__ 1  //NLIBER
 #include<Kokkos_SYCL.hpp>
 #include <CL/sycl.hpp>
 namespace Kokkos {
@@ -47,6 +48,7 @@ public:
   void finalize();
 
   void print_configuration( std::ostream & ) const ;
+  void print_configuration( std::ostream &, const bool ) const ;
 
 
   ~SYCLInternal();

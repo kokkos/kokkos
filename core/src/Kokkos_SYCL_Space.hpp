@@ -53,6 +53,7 @@
 #include <string>
 
 #include <Kokkos_HostSpace.hpp>
+#include <cassert>  //NLIBER
 
 /*--------------------------------------------------------------------------*/
 
@@ -113,7 +114,7 @@ namespace Impl {
 /// where the hash value is derived from the address of the
 /// object for which an atomic operation is performed.
 /// This function initializes the locks to zero (unset).
-void init_lock_arrays_rocm_space();
+void init_lock_arrays_sycl_space();
 
 /// \brief Retrieve the pointer to the lock array for arbitrary size atomics.
 ///
@@ -122,7 +123,7 @@ void init_lock_arrays_rocm_space();
 /// object for which an atomic operation is performed.
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
-int* atomic_lock_array_rocm_space_ptr(bool deallocate = false);
+int* atomic_lock_array_sycl_space_ptr(bool deallocate = false);
 
 /// \brief Retrieve the pointer to the scratch array for team and thread private global memory.
 ///
@@ -130,7 +131,7 @@ int* atomic_lock_array_rocm_space_ptr(bool deallocate = false);
 /// global memory are aquired via locks.
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
-int* scratch_lock_array_rocm_space_ptr(bool deallocate = false);
+int* scratch_lock_array_sycl_space_ptr(bool deallocate = false);
 
 /// \brief Retrieve the pointer to the scratch array for unique identifiers.
 ///
@@ -138,13 +139,38 @@ int* scratch_lock_array_rocm_space_ptr(bool deallocate = false);
 /// are provided via locks.
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
-int* threadid_lock_array_rocm_space_ptr(bool deallocate = false);
+int* threadid_lock_array_sycl_space_ptr(bool deallocate = false);
 }
 } // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+namespace Kokkos {
+namespace Experimental {
+
+class SYCLHostUSMSpace
+{
+public:
+    typedef HostSpace::execution_space execution_space;
+    typedef SYCLHostUSMSpace memory_space;
+    typedef Kokkos::Device<execution_space, memory_space> device_type;
+    typedef unsigned int size_type;
+
+    SYCLHostUSMSpace();
+
+    void* allocate(const size_t arg_alloc_size) const;
+    void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+
+    static constexpr const char* name() { return m_name; }
+
+private:
+  static constexpr const char* m_name = "SYCLHostUSM";
+  int m_device;
+};
+
+
+}}
 
 namespace Kokkos {
 namespace Experimental {
@@ -186,11 +212,85 @@ private:
 
   /*--------------------------------*/
 };
+
 } // namespace Experimental
 } // namespace Kokkos
 
-/*--------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
+namespace Kokkos {
+namespace Impl {
+
+static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::Experimental::SYCLSpace , Kokkos::Experimental::SYCLSpace >::assignable , "" );
+
+template<>
+struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::Experimental::SYCLHostUSMSpace> {
+    enum { assignable = false };
+    enum { accessible = true };
+    enum { deepcopy   = false };
+};
+
+template<>
+struct MemorySpaceAccess<Kokkos::Experimental::SYCLHostUSMSpace, Kokkos::HostSpace> {
+    enum { assignable = false };
+    enum { accessible = true };
+    enum { deepcopy   = false };
+};
+
+template<>
+struct SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>
+: SharedAllocationRecord<void, void>
+{
+    SharedAllocationRecord(const SharedAllocationRecord&) = delete;
+    SharedAllocationRecord(SharedAllocationRecord&&) = delete;
+    SharedAllocationRecord& operator=(SharedAllocationRecord&&) = delete;
+    SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
+    
+    static void deallocate(SharedAllocationRecord<void, void>*);
+    
+    #ifdef KOKKOS_DEBUG
+      static SharedAllocationRecord<void, void> s_root_record;
+    #endif
+
+    const Kokkos::Experimental::SYCLHostUSMSpace m_space;
+    
+protected:
+    ~SharedAllocationRecord();
+    
+    SharedAllocationRecord(
+        const Kokkos::Experimental::SYCLHostUSMSpace& space,
+        const std::string& label,
+        const size_t size,
+        const SharedAllocationRecord<void, void>::function_type dealloc = &deallocate);
+    
+public:
+    std::string get_label() const;
+    
+    static SharedAllocationRecord* allocate(
+        const Kokkos::Experimental::SYCLHostUSMSpace& space,
+        const std::string& label,
+        const size_t size);
+
+    static void* allocate_tracked(
+        const Kokkos::Experimental::SYCLHostUSMSpace& arg_space,
+        const std::string& label,
+        const size_t size);
+
+    static void* reallocate_tracked(void* const ptr,
+                                    const size_t size);
+
+    static void deallocate_tracked(void* const ptr);
+
+    static SharedAllocationRecord* get_record(void* ptr);
+
+    static void print_records(std::ostream&,
+                              const Kokkos::Experimental::SYCLHostUSMSpace&,
+                              bool detail = false);
+
+};
+
+} // namespace Impl
+} // namespace Kokkos
+
+/*--------------------------------------------------------------------------*/ /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
 namespace Impl {
