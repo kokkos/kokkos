@@ -87,6 +87,7 @@ display_help_text() {
       echo ""
       echo "--with-cuda[=/Path/To/Cuda]:          Enable Cuda and set path to Cuda Toolkit."
       echo "--with-openmp:                        Enable OpenMP backend."
+      echo "--with-sycl:                          Enable SYCL backend."
       echo "--with-pthread:                       Enable Pthreads backend."
       echo "--with-serial:                        Enable Serial backend."
       echo "--with-devices:                       Explicitly add a set of backends."
@@ -192,6 +193,9 @@ do
       ;;
     --with-openmp)
       update_kokkos_devices OpenMP
+      ;;
+      --with-sycl)
+      update_kokkos_devices SYCL
       ;;
     --with-pthread)
       update_kokkos_devices Pthread
@@ -352,6 +356,14 @@ if [[ ${KOKKOS_DEVICE_CMD} == *Kokkos_ENABLE_HPX* ]]; then
    if [ "${KOKKOS_CXX_STANDARD}" == "" ] || [ ${#KOKKOS_CXX_STANDARD} -lt 14 ]; then
       echo CXX Standard must be 14 or higher for HPX to work.
       KOKKOS_CXX_STANDARD=14
+   fi
+fi
+
+## if SYCL is enabled, we need to enforce cxx standard = 17
+if [[ ${KOKKOS_DEVICE_CMD} == *Kokkos_ENABLE_SYCL* ]]; then
+   if [ "${KOKKOS_CXX_STANDARD}" == "" ] || [ ${#KOKKOS_CXX_STANDARD} -lt 17 ]; then
+      echo CXX Standard must be 17 or higher for SYCL to work.
+      KOKKOS_CXX_STANDARD=17
    fi
 fi
 
