@@ -46,6 +46,9 @@ do
     --with-serial)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},Serial"
       ;;
+    --with-sycl)
+      KOKKOS_DEVICES="${KOKKOS_DEVICES},SyCL"
+      ;;
     --with-qthreads*)
       KOKKOS_DEVICES="${KOKKOS_DEVICES},Qthreads"
       if [ -z "$QTHREADS_PATH" ]; then
