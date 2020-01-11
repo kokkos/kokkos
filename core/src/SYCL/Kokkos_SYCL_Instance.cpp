@@ -100,6 +100,12 @@ void SYCLInternal::print_configuration( std::ostream & s ) const
 
 //----------------------------------------------------------------------------
 
+//----------------------------------------------------------------------------
+void SYCLInternal::print_configuration( std::ostream & s, const bool ) const
+{ print_configuration(s); }
+
+//----------------------------------------------------------------------------
+
 SYCLInternal::~SYCLInternal()
 {
   if ( m_scratchSpace ||
@@ -422,14 +428,14 @@ SYCL::SYCL()
 //  : m_device( Impl::SYCLInternal::singleton().m_syclDev )
 //{}
 
-void SYCL::print_configuration( std::ostream & s , const bool )
-{ Impl::SYCLInternal::singleton().print_configuration( s ); }
+void SYCL::print_configuration( std::ostream & s , const bool detail)
+{ Impl::SYCLInternal::singleton().print_configuration( s, detail ); }
 
 bool SYCL::sleep() { return false ; }
 
 bool SYCL::wake() { return true ; }
 
-void SYCL::fence()
+void SYCL::fence() const
 {
   m_space_instance->m_queue->wait();
   //SYCL_SAFE_CALL( syclDeviceSynchronize() );

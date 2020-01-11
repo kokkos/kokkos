@@ -196,8 +196,195 @@ void Experimental::SYCLHostPinnedSpace::deallocate( void * const arg_alloc_ptr ,
   //syclHostFree(arg_alloc_ptr); 
 }
 
+SYCLHostUSMSpace::SYCLHostUSMSpace()
+    : m_device( SYCL().sycl_device() )
+{
+}
+
+void* SYCLHostUSMSpace::allocate(const size_t arg_alloc_size) const
+{
+    const cl::sycl::queue& queue = *SYCL().impl_internal_space_instance()->m_queue;
+    void* const hostPtr = cl::sycl::malloc_host(arg_alloc_size, queue);
+    return hostPtr;
+}
+
+void SYCLHostUSMSpace::deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const
+{
+    const cl::sycl::queue& queue = *SYCL().impl_internal_space_instance()->m_queue;
+    cl::sycl::free(arg_alloc_ptr, queue);
+}
+
 } // namespace Experimental
 } // namespace Kokkos
+
+namespace Kokkos {
+namespace Impl {
+
+#ifdef KOKKOS_DEBUG
+SharedAllocationRecord<void, void> SharedAllocationRecord<
+    Kokkos::Experimental::SYCLHostUSMSpace, void>::s_root_record;
+#endif
+
+std::string SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::get_label() const {
+    return std::string(m_alloc_ptr->m_label);
+}
+
+SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>*
+SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::allocate(
+    const Kokkos::Experimental::SYCLHostUSMSpace& space,
+    const std::string& label,
+    const size_t size)
+{
+  return new SharedAllocationRecord(space, label, size);
+}
+
+void SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::deallocate(
+    SharedAllocationRecord<void, void>* rec) {
+  delete static_cast<SharedAllocationRecord*>(rec);
+}
+
+SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::~SharedAllocationRecord() {
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    SharedAllocationHeader header;
+#ifdef  NLIBER
+    Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLHostUSMSpace, HostSpace>(
+        &header, SharedAllocationRecord<void, void>::m_alloc_ptr, sizeof(SharedAllocationHeader));
+#else
+      assert(false);
+#endif
+
+    Kokkos::Profiling::deallocateData(
+        Kokkos::Profiling::SpaceHandle(Kokkos::Experimental::SYCLHostUSMSpace::name()),
+        header.m_label, data(), size());
+  }
+#endif
+
+  m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
+                     SharedAllocationRecord<void, void>::m_alloc_size);
+}
+
+SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::
+    SharedAllocationRecord(
+        const Kokkos::Experimental::SYCLHostUSMSpace& space,
+        const std::string& label,
+        const size_t size,
+        const SharedAllocationRecord<void, void>::function_type dealloc)
+    // Pass through allocated [ SharedAllocationHeader , user_memory ]
+    // Pass through deallocation function
+    : SharedAllocationRecord<void, void>(
+#ifdef KOKKOS_DEBUG
+          &SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace,
+                                  void>::s_root_record,
+#endif
+          reinterpret_cast<SharedAllocationHeader*>(space.allocate(
+              sizeof(SharedAllocationHeader) + size)),
+          sizeof(SharedAllocationHeader) + size, dealloc),
+      m_space(space) {
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    Kokkos::Profiling::allocateData(
+        Kokkos::Profiling::SpaceHandle(space.name()), label, data(),
+        size);
+  }
+#endif
+
+  SharedAllocationHeader header;
+
+  // Fill in the Header information
+  header.m_record = static_cast<SharedAllocationRecord<void, void>*>(this);
+
+  strncpy(header.m_label, label.c_str(),
+          SharedAllocationHeader::maximum_label_length);
+  // Set last element zero, in case c_str is too long
+  header.m_label[SharedAllocationHeader::maximum_label_length - 1] = (char)0;
+
+  memcpy(m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+
+}
+
+void* SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::
+    allocate_tracked(const Kokkos::Experimental::SYCLHostUSMSpace& space,
+                     const std::string& label,
+                     const size_t size) {
+  if (!size) return nullptr;
+
+  SharedAllocationRecord* const r =
+      allocate(space, label, size);
+
+  SharedAllocationRecord<void, void>::increment(r);
+
+  return r->data();
+}
+
+void SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace,
+                            void>::deallocate_tracked(void* const ptr) {
+  if (ptr != 0) {
+    SharedAllocationRecord* const r = get_record(ptr);
+
+    SharedAllocationRecord<void, void>::decrement(r);
+  }
+}
+
+void* SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::
+    reallocate_tracked(void* const ptr,
+                       const size_t size) {
+  SharedAllocationRecord* const r_old = get_record(ptr);
+  SharedAllocationRecord* const r_new =
+      allocate(r_old->m_space, r_old->get_label(), size);
+
+#if NLIBER
+  Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLHostUSMSpace,
+                         Kokkos::Experimental::SYCLHostUSMSpace>(
+      r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
+#else
+        assert(false);
+#endif
+
+  SharedAllocationRecord<void, void>::increment(r_new);
+  SharedAllocationRecord<void, void>::decrement(r_old);
+
+  return r_new->data();
+}
+
+SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>*
+SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::get_record(
+    void* alloc_ptr) {
+  using Header     = SharedAllocationHeader;
+  using RecordBase = SharedAllocationRecord<void, void>;
+  using RecordROCm =
+      SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>;
+
+  // Copy the header from the allocation
+  Header head;
+
+  Header const* const head_rocm =
+      alloc_ptr ? Header::get_header(alloc_ptr) : (Header*)0;
+
+#if NLIBER
+  if (alloc_ptr) {
+    Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::SYCLHostUSMSpace>(
+        &head, head_rocm, sizeof(SharedAllocationHeader));
+  }
+#else
+    assert(false);
+#endif
+
+  RecordROCm* const record =
+      alloc_ptr ? static_cast<RecordROCm*>(head.m_record) : (RecordROCm*)0;
+
+  if (!alloc_ptr || record->m_alloc_ptr != head_rocm) {
+    Kokkos::Impl::throw_runtime_exception(std::string(
+        "Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::ROCmSpace "
+        ", void >::get_record ERROR"));
+  }
+
+  return record;
+}
+
+} // Experimental namespace
+} // Kokkos namespace
+
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -222,7 +409,6 @@ SharedAllocationRecord< Kokkos::Experimental::SYCLSpace , void >::get_label() co
 
   return std::string( header.m_label );
 }
-
 std::string
 SharedAllocationRecord< Kokkos::Experimental::SYCLHostPinnedSpace , void >::get_label() const
 {
@@ -419,6 +605,7 @@ reallocate_tracked( void * const arg_alloc_ptr
   return r_new->data();
 }
 
+
 //----------------------------------------------------------------------------
 
 SharedAllocationRecord< Kokkos::Experimental::SYCLSpace , void > *
@@ -536,6 +723,7 @@ print_records( std::ostream & s , const Kokkos::Experimental::SYCLSpace & space 
 namespace Kokkos {
 namespace {
 
+#ifdef  NLIBER
 void* sycl_resize_scratch_space(size_t bytes, bool force_shrink) {
   static void* ptr = NULL;
   static size_t current_size = 0;
@@ -554,6 +742,7 @@ void* sycl_resize_scratch_space(size_t bytes, bool force_shrink) {
   }
   return ptr;
 }
+#endif /* NLIBER */
 
 }
 }
