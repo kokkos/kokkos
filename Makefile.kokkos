@@ -123,6 +123,7 @@ KOKKOS_INTERNAL_COMPILER_CLANG       := $(call kokkos_has_string,$(KOKKOS_CXX_VE
 KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Apple LLVM)
 KOKKOS_INTERNAL_COMPILER_HCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),HCC)
 KOKKOS_INTERNAL_COMPILER_COMPUTEPP   := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Codeplay)
+KOKKOS_INTERNAL_COMPILER_DPCPP       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),DPC)
 
 # Check Host Compiler if using NVCC through nvcc_wrapper
 ifeq ($(KOKKOS_INTERNAL_COMPILER_NVCC), 1)
@@ -144,6 +145,10 @@ ifeq ($(KOKKOS_INTERNAL_COMPILER_COMPUTEPP), 1)
   ifeq ($(COMPUTEPP_PATH),)
     COMPUTEPP_PATH = $(KOKKOS_INTERNAL_COMPUTEPP_PATH:/bin/compute++=)
   endif
+  KOKKOS_INTERNAL_COMPILER_CLANG = 1
+endif
+
+ifeq ($(KOKKOS_INTERNAL_COMPILER_DPCPP), 1)
   KOKKOS_INTERNAL_COMPILER_CLANG = 1
 endif
 
@@ -1216,7 +1221,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
     KOKKOS_LIBS     += -lComputeCpp -lOpenCL
   endif
 
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_DPCPP), 1)
     KOKKOS_CPPFLAGS += -fsycl -fsycl-unnamed-lambda -DSYCL_JUST_DONT_NAME_KERNELS
     KOKKOS_LDFLAGS += -fsycl
     KOKKOS_LIBS  += -lOpenCL -lsycl
