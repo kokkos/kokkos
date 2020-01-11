@@ -30,3 +30,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
   KOKKOS_HEADERS_ROCM += $(wildcard $(KOKKOS_PATH)/core/src/ROCm/*.hpp)
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
+  KOKKOS_HEADERS_SYCL += $(wildcard $(KOKKOS_PATH)/core/src/SYCL/*.hpp)
+endif
+
