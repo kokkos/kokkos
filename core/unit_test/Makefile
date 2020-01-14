@@ -298,6 +298,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
 	OBJ_HIP += TestHIP_Init.o
 	OBJ_HIP += TestHIP_Reducers_a.o TestHIP_Reducers_b.o TestHIP_Reducers_c.o TestHIP_Reducers_d.o
 	OBJ_HIP += TestHIP_Reductions.o
+	OBJ_HIP += TestHIP_MDRange_a.o TestHIP_MDRange_b.o TestHIP_MDRange_c.o TestHIP_MDRange_d.o TestHIP_MDRange_e.o
 
 	TARGETS += KokkosCore_UnitTest_HIP
 
