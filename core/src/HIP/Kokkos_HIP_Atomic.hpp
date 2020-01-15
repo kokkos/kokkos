@@ -243,7 +243,7 @@ int atomic_fetch_add(volatile int *dest, const int &val) {
 }
 
 KOKKOS_INLINE_FUNCTION
-unsigned int atomic_fetch_add(unsigned int *dest, const unsigned int &val) {
+unsigned int atomic_fetch_add(volatile unsigned int *dest, const unsigned int &val) {
   return atomicAdd(const_cast<unsigned int *>(dest), val);
 }
 
