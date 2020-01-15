@@ -522,7 +522,6 @@ struct TestSharedTeam {
 namespace Test {
 
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-#if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
 template <class MemorySpace, class ExecSpace, class ScheduleType>
 struct TestLambdaSharedTeam {
   TestLambdaSharedTeam() { run(); }
@@ -599,7 +598,6 @@ struct TestLambdaSharedTeam {
     ASSERT_EQ(error_count, 0);
   }
 };
-#endif
 #endif
 
 }  // namespace Test
@@ -1007,7 +1005,6 @@ struct ClassWithShmemSizeFunction {
 template <class ExecSpace, class ScheduleType>
 void test_team_mulit_level_scratch_test_lambda() {
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-#if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
   Kokkos::View<int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> > errors;
   Kokkos::View<int, ExecSpace> d_errors("Errors");
   errors = d_errors;
@@ -1068,7 +1065,6 @@ void test_team_mulit_level_scratch_test_lambda() {
       },
       error);
   ASSERT_EQ(error, 0);
-#endif
 #endif
 }
 

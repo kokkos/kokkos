@@ -55,8 +55,8 @@
 
 # Check for CUDA support
 
-IF (NOT TPL_ENABLE_CUDA OR CUDA_VERSION VERSION_LESS "4.1")
-  MESSAGE(FATAL_ERROR "\nCUSPARSE: did not find acceptable version of CUDA libraries (4.1 or greater)")
+IF (NOT TPL_ENABLE_CUDA)
+  MESSAGE(FATAL_ERROR "\nCUSPARSE requires CUDA")
 ELSE()
   IF(CMAKE_VERSION VERSION_LESS "2.8.8")
     # FindCUDA before CMake 2.8.8 does not find cusparse library; therefore, we must

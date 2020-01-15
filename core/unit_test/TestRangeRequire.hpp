@@ -273,7 +273,6 @@ struct TestRangeRequire {
   void test_dynamic_policy() {
     auto const N_no_implicit_capture = N;
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-#if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
     typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
         policy_t;
 
@@ -367,7 +366,6 @@ struct TestRangeRequire {
         //}
       }
     }
-#endif
 #endif
   }
 };
