@@ -328,7 +328,8 @@ FUNCTION(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
     #has in its public INTERFACE_COMPILE_OPTIONS.
     #These do NOT get de-deduplicated because Tribits
     #creates flags as a giant monolithic space-separated string
-    KOKKOS_SET_LIBRARY_PROPERTIES(${TRIBITS_LIBRARY_NAME} PLAIN_STYLE PRIVATE)
+    #Do not set any transitive properties and keep everything working as before
+    #KOKKOS_SET_LIBRARY_PROPERTIES(${TRIBITS_LIBRARY_NAME} PLAIN_STYLE PRIVATE)
   ELSE()
     KOKKOS_INTERNAL_ADD_LIBRARY(
       ${LIBRARY_NAME} ${ARGN})

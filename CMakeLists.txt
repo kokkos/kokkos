@@ -174,7 +174,24 @@ ENDIF()
 #
 # A) Forward declare the package so that certain options are also defined for
 # subpackages
-#
+
+## This restores the old behavior of ProjectCompilerPostConfig.cmake
+# It sets the CMAKE_CXX_FLAGS globally to those used by Kokkos
+# We must do this before KOKKOS_PACKAGE_DECL
+IF (KOKKOS_HAS_TRILINOS)
+  # Overwrite the old flags at the top-level
+  # Because Tribits doesn't use lists, it uses spaces for the list of CXX flags
+  # we have to match the annoying behavior
+  STRING(REPLACE ";" " " KOKKOSCORE_COMPILE_OPTIONS "${KOKKOS_COMPILE_OPTIONS}")
+  STRING(REPLACE ";" " " KOKKOSCORE_CUDA_OPTIONS    "${KOKKOS_CUDA_OPTIONS}")
+  FOREACH(CUDAFE_FLAG ${KOKKOS_CUDAFE_OPTIONS})
+    SET(KOKKOSCORE_CUDAFE_OPTIONS "${KOKKOSCORE_CUDAFE_OPTIONS} -Xcudafe ${CUDAFE_FLAG}")
+  ENDFOREACH()
+  SET(KOKKOSCORE_CXX_FLAGS "${KOKKOSCORE_COMPILE_OPTIONS} ${CMAKE_CXX${KOKKOS_CXX_STANDARD}_STANDARD_COMPILE_OPTION} ${KOKKOSCORE_CUDA_OPTIONS} ${KOKKOSCORE_CUDAFE_OPTIONS}")
+  # Both parent scope and this package
+  SET(CMAKE_CXX_FLAGS "${TRILINOS_TOPLEVEL_CXX_FLAGS} ${KOKKOSCORE_CXX_FLAGS}" PARENT_SCOPE)
+  SET(CMAKE_CXX_FLAGS "${TRILINOS_TOPLEVEL_CXX_FLAGS} ${KOKKOSCORE_CXX_FLAGS}")
+ENDIF()
 
 KOKKOS_PACKAGE_DECL()
 
@@ -226,20 +243,4 @@ IF (HAS_PARENT)
     SET(Kokkos_ENABLE_${DEV} ON PARENT_SCOPE)
     SET_PROPERTY(GLOBAL PROPERTY Kokkos_ENABLE_${DEV} ON)
   ENDFOREACH()
-ENDIF()
-
-# This restores the old behavior of ProjectCompilerPostConfig.cmake
-# It sets the CMAKE_CXX_FLAGS globally to those used by Kokkos
-# If we are in Trilinos and we have been given an arch
-IF (KOKKOS_HAS_TRILINOS)
-  # Overwrite the old flags at the top-level
-  # Because Tribits doesn't use lists, it uses spaces for the list of CXX flags
-  # we have to match the annoying behavior
-  STRING(REPLACE ";" " " KOKKOSCORE_COMPILE_OPTIONS "${KOKKOS_COMPILE_OPTIONS}")
-  STRING(REPLACE ";" " " KOKKOSCORE_CUDA_OPTIONS    "${KOKKOS_CUDA_OPTIONS}")
-  FOREACH(CUDAFE_FLAG ${KOKKOS_CUDAFE_OPTIONS})
-    SET(KOKKOSCORE_CUDAFE_OPTIONS "${KOKKOSCORE_CUDAFE_OPTIONS} -Xcudafe ${CUDAFE_FLAG}")
-  ENDFOREACH()
-  SET(KOKKOSCORE_CXX_FLAGS "${KOKKOSCORE_COMPILE_OPTIONS} ${CMAKE_CXX${KOKKOS_CXX_STANDARD}_STANDARD_COMPILE_OPTION} ${KOKKOSCORE_CUDA_OPTIONS} ${KOKKOSCORE_CUDAFE_OPTIONS}")
-  SET(CMAKE_CXX_FLAGS "${TRILINOS_TOPLEVEL_CXX_FLAGS} ${KOKKOSCORE_CXX_FLAGS}" PARENT_SCOPE)
 ENDIF()
