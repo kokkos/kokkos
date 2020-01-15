@@ -392,7 +392,7 @@ CHECK_CUDA_ARCH(VOLTA72  sm_72)
 CHECK_CUDA_ARCH(TURING75  sm_75)
 
 IF(KOKKOS_ENABLE_CUDA AND NOT CUDA_ARCH_ALREADY_SPECIFIED)
-  MESSAGE(SEND_ERROR "CUDA enabled but no NVIDIA GPU architecture currently enabled")
+  MESSAGE(SEND_ERROR "CUDA enabled but no NVIDIA GPU architecture currently enabled.  Please give one -DKokkos_ARCH_{..}=ON' to enable an NVIDIA GPU architecture.")
 ENDIF()
 
 #CMake verbose is kind of pointless
