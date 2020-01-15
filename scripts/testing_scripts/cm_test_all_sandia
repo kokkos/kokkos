@@ -21,6 +21,7 @@ print_help() {
   echo "--build-only: Just do builds, don't run anything"
   echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
   echo "--cxxflags-extra=FLAGS: Extra flags to be added to CXX_FLAGS"
+  echo "--cxxstandard=OPT: c++11 (default), c++14, c++17, c++1y, c++1z, c++2a"
   echo "--ldflags-extra=FLAGS: Extra flags to be added to LD_FLAGS"
   echo "--arch=ARCHITECTURE: overwrite architecture flags"
   echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"
@@ -537,7 +538,8 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
                "gcc/6.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/7.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/8.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/9.1 $GCC91_MODULE_LIST "OpenMP,Serial" g++ $GCC_WARNING_FLAGS"
+               "gcc/9.1 $GCC91_MODULE_LIST "$GCC_BUILD_LIST" g++ $GCC_WARNING_FLAGS"
+               "gcc/9.2.0 $BASE_MODULE_LIST "$GCC_BUILD_LIST" g++ $GCC_WARNING_FLAGS"
                "intel/15.0.2 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/16.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
@@ -546,6 +548,7 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
                "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/5.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/7.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/9.0.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "pgi/19.4 $PGI_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
     )
   fi
