@@ -106,7 +106,7 @@ struct _parse_impl<
 template <class T, ptrdiff_t... ExtentSpec>
 struct _parse_impl<T*, Experimental::Extents<ExtentSpec...>,
                    typename std::enable_if<
-                       not _all_remaining_extents_dynamic<T>::value>::type> {
+                       ! _all_remaining_extents_dynamic<T>::value>::type> {
   using _next = Kokkos::Experimental::AppendExtent<
       typename _parse_impl<T, Experimental::Extents<ExtentSpec...>, void>::type,
       Experimental::dynamic_extent>;

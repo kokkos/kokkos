@@ -365,7 +365,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_mod(volatile T* const dest, const T val) {
   return Impl::atomic_fetch_oper(Impl::ModOper<T, const T>(), dest, val);
 }
 
-#if !defined(KOKKOS_ENABLE_SERIAL_ATOMICS)
+#if !defined(KOKKOS_ENABLE_SERIAL_ATOMICS) && !defined(_WIN32)
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_and(volatile T* const dest, const T val) {
