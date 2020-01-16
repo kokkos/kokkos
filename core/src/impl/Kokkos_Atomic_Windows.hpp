@@ -52,6 +52,8 @@
 #include <winsock2.h>
 #include <windows.h>
 
+#undef VOID
+
 namespace Kokkos {
 namespace Impl {
 #ifdef _MSC_VER
@@ -216,7 +218,7 @@ void atomic_assign(volatile T* const dest, const T val) {
 }
 
 template <typename T>
-T atomic_increment(volatile T* const dest) {
+void atomic_increment(volatile T* const dest) {
   T oldval = *dest;
   T assume;
   do {
@@ -227,7 +229,7 @@ T atomic_increment(volatile T* const dest) {
 }
 
 template <typename T>
-T atomic_decrement(volatile T* const dest) {
+void atomic_decrement(volatile T* const dest) {
   T oldval = *dest;
   T assume;
   do {
