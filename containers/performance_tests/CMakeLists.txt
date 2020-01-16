@@ -5,7 +5,7 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/../src )
 
 IF(Kokkos_ENABLE_CUDA)
    SET(SOURCES
-     TestMain.cpp 
+     TestMain.cpp
      TestCuda.cpp
      )
 
@@ -20,7 +20,7 @@ ENDIF()
 
 IF(Kokkos_ENABLE_PTHREAD)
    SET(SOURCES
-     TestMain.cpp 
+     TestMain.cpp
      TestThreads.cpp
    )
    KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_Threads
@@ -34,7 +34,7 @@ ENDIF()
 
 IF(Kokkos_ENABLE_OPENMP)
    SET(SOURCES
-     TestMain.cpp 
+     TestMain.cpp
      TestOpenMP.cpp
    )
    KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_OpenMP
@@ -48,7 +48,7 @@ ENDIF()
 
 IF(Kokkos_ENABLE_HPX)
    SET(SOURCES
-     TestMain.cpp 
+     TestMain.cpp
      TestHPX.cpp
    )
    KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_HPX

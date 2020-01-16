@@ -6,7 +6,7 @@ SET(SOURCES "")
 FILE(GLOB SOURCES *.cpp )
 
 KOKKOS_ADD_EXECUTABLE(
-  md_skeleton 
+  md_skeleton
   SOURCES ${SOURCES}
 )
 

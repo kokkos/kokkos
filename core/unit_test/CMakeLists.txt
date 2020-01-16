@@ -288,7 +288,7 @@ KOKKOS_ADD_TEST_EXECUTABLE(
 )
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
-                 EXE  StackTraceTestExec 
+                 EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
 
