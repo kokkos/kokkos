@@ -71,8 +71,11 @@ error_code=0
 dry_run=0
 
 # Skip NVCC compilation and use host compiler directly
-host_only=0
+host_only=1
 host_only_args=""
+
+bad_std_flag=""
+bad_nvcc_std=0
 
 # Just run version on host compiler
 get_host_version=0
@@ -115,6 +118,9 @@ do
   #run host compilation only
   --host-only)
     host_only=1
+    ;;
+  --device)
+    host_only=0
     ;;
   #get the host version only
   --host-version)
@@ -194,28 +200,48 @@ do
   -rdc=*|-maxrregcount*|--maxrregcount*)
     cuda_args="$cuda_args $1"
     ;;
-  #Handle unsupported standard flags
-  --std=c++1y|-std=c++1y|--std=c++1z|-std=c++1z|--std=gnu++1y|-std=gnu++1y|--std=gnu++1z|-std=gnu++1z|--std=c++2a|-std=c++2a|--std=c++17|-std=c++17)
-    fallback_std_flag="-std=c++14"
-    # this is hopefully just occurring in a downstream project during CMake feature tests
-    # we really have no choice here but to accept the flag and change  to an accepted C++ standard
-    echo "nvcc_wrapper does not accept standard flags $1 since partial standard flags and standards after C++14 are not supported. nvcc_wrapper will use $fallback_std_flag instead. It is undefined behavior to use this flag. This should only be occurring during CMake configuration."
-    if [ -n "$std_flag" ]; then
-       warn_std_flag
-       shared_args=${shared_args/ $std_flag/}
+  #Handle c++11
+  --std=c++1y|-std=c++1y|--std=c++1z|-std=c++1z|--std=gnu++1y|-std=gnu++1y|--std=gnu++1z|-std=gnu++1z|--std=c++17|-std=c++17|--std=c++2a|-std=c++2a|--std=gnu++17|-std=gnu++17)
+    if [ $host_only -eq 1 ]; then
+      #accept the flag as is for host compiler
+      if [ -n "$std_flag" ]; then
+         warn_std_flag
+         shared_args=${shared_args/ $std_flag/}
+      fi
+      std_flag=$1
+      shared_args="$shared_args $std_flag"
+    else
+      #nope, not okay, we are in nvcc mode
+      bad_std_flag=$1
+      bad_nvcc_std=1
+      if [ -n "$std_flag" ]; then
+         warn_std_flag
+         shared_args=${shared_args/ $std_flag/}
+      fi
+      std_flag=$1
+      shared_args="$shared_args $std_flag"
     fi
-    std_flag=$fallback_std_flag
-    shared_args="$shared_args $std_flag"
     ;;
   -std=gnu*)
-    corrected_std_flag=${1/gnu/c}
-    echo "nvcc_wrapper has been given GNU extension standard flag $1 - reverting flag to $corrected_std_flag"
-    if [ -n "$std_flag" ]; then
-       warn_std_flag
-       shared_args=${shared_args/ $std_flag/}
+    if [ $host_only -eq 1 ]; then
+      #accept this flag if it is just going to the host compiler
+      if [ -n "$std_flag" ]; then
+         warn_std_flag
+         shared_args=${shared_args/ $std_flag/}
+      fi
+      std_flag=$1
+      shared_args="$shared_args $std_flag"
+    else
+      #this flag is not going to work for nvcc mode
+      corrected_std_flag=${1/gnu/c}
+      echo "nvcc_wrapper has been given GNU extension standard flag $1 - reverting flag to $corrected_std_flag"
+      if [ -n "$std_flag" ]; then
+         warn_std_flag
+         shared_args=${shared_args/ $std_flag/}
+      fi
+      std_flag=$corrected_std_flag
+      shared_args="$shared_args $std_flag"
     fi
-    std_flag=$corrected_std_flag
-    shared_args="$shared_args $std_flag"
   ;;
   --std=c++11|-std=c++11|--std=c++14|-std=c++14)
     if [ -n "$std_flag" ]; then
@@ -341,6 +367,10 @@ do
 
   shift
 done
+
+if [ $host_only -eq 0 -a $bad_nvcc_std -eq 1 ]; then
+  echo "nvcc_wrapper cannot compile for device with unsupported standard $bad_std_flag"
+fi
 
 # Only print host compiler version
 if [ $get_host_version -eq 1 ]; then
