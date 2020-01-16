@@ -213,28 +213,6 @@ void atomic_assign(volatile T* const dest, const T val) {
   atomic_fetch_exchange(dest, val);
 }
 
-template <typename T>
-void atomic_increment(volatile T* const dest) {
-  T oldval = *dest;
-  T assume;
-  do {
-    assume   = oldval;
-    T newval = assume++;
-    oldval   = atomic_compare_exchange(dest, assume, newval);
-  } while (assume != oldval);
-}
-
-template <typename T>
-void atomic_decrement(volatile T* const dest) {
-  T oldval = *dest;
-  T assume;
-  do {
-    assume   = oldval;
-    T newval = assume--;
-    oldval   = atomic_compare_exchange(dest, assume, newval);
-  } while (assume != oldval);
-}
-
 }  // namespace Kokkos
 #endif
 #endif
