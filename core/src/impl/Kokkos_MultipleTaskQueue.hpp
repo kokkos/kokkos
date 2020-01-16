@@ -125,7 +125,7 @@ struct MultipleTaskQueueTeamEntry {
   KOKKOS_INLINE_FUNCTION OptionalRef<task_base_type> _pop_failed_insertion(
       int priority, TaskType type,
       typename std::enable_if<
-          task_queue_traits::ready_queue_insertion_may_fail and
+          task_queue_traits::ready_queue_insertion_may_fail &&
               std::is_void<_always_void>::value,
           void*>::type = nullptr) {
     auto* rv_ptr = m_failed_heads[priority][(int)type];
