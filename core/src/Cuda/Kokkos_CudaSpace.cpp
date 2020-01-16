@@ -146,7 +146,7 @@ void CudaSpace::access_error(const void *const) {
 /*--------------------------------------------------------------------------*/
 
 bool CudaUVMSpace::available() {
-#if defined(CUDA_VERSION) && (6000 <= CUDA_VERSION) && !defined(__APPLE__)
+#if defined(CUDA_VERSION) && !defined(__APPLE__)
   enum { UVM_available = true };
 #else
   enum { UVM_available = false };

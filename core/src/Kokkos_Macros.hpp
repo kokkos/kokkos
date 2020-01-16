@@ -130,36 +130,16 @@
 #error "#include <cuda.h> did not define CUDA_VERSION."
 #endif
 
-#if (CUDA_VERSION < 7000)
-// CUDA supports C++11 in device code starting with version 7.0.
-// This includes auto type and device code internal lambdas.
-#error "Cuda version 7.0 or greater required."
-#endif
-
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 300)
 // Compiling with CUDA compiler for device code.
 #error "Cuda device capability >= 3.0 is required."
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA_LAMBDA
-#if (CUDA_VERSION < 7050)
-// CUDA supports C++11 lambdas generated in host code to be given
-// to the device starting with version 7.5. But the release candidate (7.5.6)
-// still identifies as 7.0.
-#error "Cuda version 7.5 or greater required for host-to-device Lambda support."
-#endif
-
-#if (CUDA_VERSION < 8000) && defined(__NVCC__)
-#define KOKKOS_LAMBDA [=] __device__
-#if defined(KOKKOS_INTERNAL_ENABLE_NON_CUDA_BACKEND)
-#undef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-#endif
-#else
 #define KOKKOS_LAMBDA [=] __host__ __device__
 
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
-#endif
 #endif
 
 #if defined(__NVCC__)
@@ -560,25 +540,18 @@
 #endif
 
 //----------------------------------------------------------------------------
-// If compiling with CUDA then must be using CUDA 8 or better
-// and use relocateable device code to enable the task policy.
-// nvcc relocatable device code option: --relocatable-device-code=true
+// If compiling with CUDA, we must use relocateable device code
+// to enable the task policy.
 
-#if (defined(KOKKOS_ENABLE_CUDA))
-#if (8000 <= CUDA_VERSION) && \
+#if !defined(KOKKOS_ENABLE_CUDA) || \
     defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
-#define KOKKOS_ENABLE_TASKDAG
-#endif
-#else
 #define KOKKOS_ENABLE_TASKDAG
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
-#if (9000 <= CUDA_VERSION)
 #define KOKKOS_IMPL_CUDA_VERSION_9_WORKAROUND
 #if (__CUDA_ARCH__)
 #define KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-#endif
 #endif
 #endif
 

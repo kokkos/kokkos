@@ -113,7 +113,6 @@ struct TestViewLayoutTiled {
 
   static void test_view_layout_tiled_2d(const int N0, const int N1) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-#if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
     const int FT = T0 * T1;
 
     const int NT0 = int(std::ceil(N0 / T0));
@@ -382,13 +381,11 @@ struct TestViewLayoutTiled {
       ASSERT_EQ(counter_inc, long(0));
     }  // end scope
 #endif
-#endif
   }  // end test_view_layout_tiled_2d
 
   static void test_view_layout_tiled_3d(const int N0, const int N1,
                                         const int N2) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-#if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
 
     const int FT = T0 * T1 * T2;
 
@@ -680,13 +677,11 @@ struct TestViewLayoutTiled {
       ASSERT_EQ(counter_inc, long(0));
     }  // end scope
 #endif
-#endif
   }  // end test_view_layout_tiled_3d
 
   static void test_view_layout_tiled_4d(const int N0, const int N1,
                                         const int N2, const int N3) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-#if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
     const int FT = T0 * T1 * T2 * T3;
 
     const int NT0 = int(std::ceil(N0 / T0));
@@ -1026,7 +1021,6 @@ struct TestViewLayoutTiled {
       ASSERT_EQ(counter_subview, long(0));
       ASSERT_EQ(counter_inc, long(0));
     }  // end scope
-#endif
 #endif
   }  // end test_view_layout_tiled_4d
 
