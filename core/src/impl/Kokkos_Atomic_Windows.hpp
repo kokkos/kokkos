@@ -109,16 +109,17 @@ KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
     typename std::enable_if<sizeof(T) == sizeof(Impl::cas128_t), const T&>::type
         val) {
+  T compare_and_result(compare);
   union U {
     Impl::cas128_t i;
     T t;
-    KOKKOS_INLINE_FUNCTION U() {}
-  } tmp, newval;
+    KOKKOS_INLINE_FUNCTION U(){};
+  } newval;
   newval.t = val;
   _InterlockedCompareExchange128((LONGLONG*)dest, newval.i.upper,
-                                 newval.i.lower, ((LONGLONG*)&compare));
-  tmp.t = dest;
-  return tmp.t;
+                                 newval.i.lower,
+                                 ((LONGLONG*)&compare_and_result));
+  return compare_and_result;
 }
 
 template <typename T>
