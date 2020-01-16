@@ -144,7 +144,7 @@ struct MultipleTaskQueueTeamEntry {
   KOKKOS_INLINE_FUNCTION OptionalRef<task_base_type> _pop_failed_insertion(
       int priority, TaskType type,
       typename std::enable_if<
-          not task_queue_traits::ready_queue_insertion_may_fail and
+          ! task_queue_traits::ready_queue_insertion_may_fail &&
               std::is_void<_always_void>::value,
           void*>::type = nullptr) {
     return OptionalRef<task_base_type>{nullptr};
@@ -203,7 +203,7 @@ struct MultipleTaskQueueTeamEntry {
   KOKKOS_INLINE_FUNCTION void do_handle_failed_insertion(
       runnable_task_base_type&& task,
       typename std::enable_if<
-          task_queue_traits::ready_queue_insertion_may_fail and
+          task_queue_traits::ready_queue_insertion_may_fail &&
               std::is_void<_always_void>::value,
           void*>::type = nullptr) {
     // failed insertions, if they happen, must be from the only thread that
@@ -219,7 +219,7 @@ struct MultipleTaskQueueTeamEntry {
   KOKKOS_INLINE_FUNCTION void do_handle_failed_insertion(
       runnable_task_base_type&& task,
       typename std::enable_if<
-          not task_queue_traits::ready_queue_insertion_may_fail and
+          ! task_queue_traits::ready_queue_insertion_may_fail &&
               std::is_void<_always_void>::value,
           void*>::type = nullptr) {
     Kokkos::abort("should be unreachable!");
@@ -229,7 +229,7 @@ struct MultipleTaskQueueTeamEntry {
   KOKKOS_INLINE_FUNCTION void flush_failed_insertions(
       int priority, int task_type,
       typename std::enable_if<
-          task_queue_traits::ready_queue_insertion_may_fail and
+          task_queue_traits::ready_queue_insertion_may_fail &&
               std::is_void<_always_void>::value,  // just to make this dependent
                                                   // on template parameter
           int>::type = 0) {
@@ -258,7 +258,7 @@ struct MultipleTaskQueueTeamEntry {
   KOKKOS_INLINE_FUNCTION void flush_failed_insertions(
       int, int,
       typename std::enable_if<
-          not task_queue_traits::ready_queue_insertion_may_fail and
+          ! task_queue_traits::ready_queue_insertion_may_fail &&
               std::is_void<_always_void>::value,  // just to make this dependent
                                                   // on template parameter
           int>::type = 0) {}
