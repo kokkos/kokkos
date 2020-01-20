@@ -61,21 +61,21 @@ struct OpenMPTargetReducerWrapper {
   typedef typename Reducer::value_type value_type;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(value_type& dest, const value_type& src) {
+  static void join(value_type&, const value_type&) {
     printf(
         "Using a generic unknown Reducer for the OpenMPTarget backend is not "
         "implemented.");
   }
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& dest, const volatile value_type& src) {
+  static void join(volatile value_type&, const volatile value_type&) {
     printf(
         "Using a generic unknown Reducer for the OpenMPTarget backend is not "
         "implemented.");
   }
 
   KOKKOS_INLINE_FUNCTION
-  static void init(value_type& val) {
+  static void init(value_type&) {
     printf(
         "Using a generic unknown Reducer for the OpenMPTarget backend is not "
         "implemented.");
@@ -353,7 +353,6 @@ struct OpenMPTargetReducerWrapper<MinMax<Scalar, Space>> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type& val) {
     val.max_val = reduction_identity<scalar_type>::max();
-    ;
     val.min_val = reduction_identity<scalar_type>::min();
   }
 };
@@ -396,7 +395,6 @@ struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type& val) {
     val.max_val = reduction_identity<scalar_type>::max();
-    ;
     val.min_val = reduction_identity<scalar_type>::min();
     val.max_loc = reduction_identity<index_type>::min();
     val.min_loc = reduction_identity<index_type>::min();
@@ -598,12 +596,12 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
 
     ValueType result = ValueType();
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
-#pragma omp target teams distribute parallel for num_teams(512) map(to   \
-                                                                    : f) \
-    map(tofrom                                                           \
-        : result) reduction(custom                                       \
-                            : result)
+
+// clang-format off
+#pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
+    map(tofrom: result) reduction(custom: result)
     for (int i = begin; i < end; i++) f(i, result);
+// clang-format on
 
     *result_ptr = result;
   }
@@ -625,12 +623,11 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
     ValueType result = ValueType();
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
 
-#pragma omp target teams distribute parallel for num_teams(512) map(to   \
-                                                                    : f) \
-    map(tofrom                                                           \
-        : result) reduction(custom                                       \
-                            : result)
+// clang-format off
+#pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
+    map(tofrom: result) reduction(custom: result)
     for (int i = begin; i < end; i++) f(TagType(), i, result);
+//clang format on
 
     *result_ptr = result;
   }

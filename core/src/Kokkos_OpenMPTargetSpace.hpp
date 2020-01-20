@@ -127,10 +127,9 @@ class OpenMPTargetSpace {
   /**\brief  Deallocate untracked memory in the space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
 
-  static constexpr const char* name() { return m_name; }
+  static constexpr const char* name() { return "OpenMPTargetSpace"; }
 
  private:
-  static constexpr const char* m_name = "OpenMPTargetSpace";
 
   friend class Kokkos::Impl::SharedAllocationRecord<
       Kokkos::Experimental::OpenMPTargetSpace, void>;

@@ -60,16 +60,8 @@ namespace {
 KOKKOS_INLINE_FUNCTION
 int kokkos_omp_in_parallel();
 
-// int kokkos_omp_in_critical_region = (
-// Kokkos::HostSpace::register_in_parallel( kokkos_omp_in_parallel ) , 0 );
-
 KOKKOS_INLINE_FUNCTION
 int kokkos_omp_in_parallel() {
-  /*#ifndef __CUDA_ARCH__
-    return omp_in_parallel() && ! kokkos_omp_in_critical_region ;
-  #else
-    return 0;
-  #endif*/
   return omp_in_parallel();
 }
 
@@ -81,14 +73,6 @@ bool s_using_hwloc = false;
 
 namespace Kokkos {
 namespace Impl {
-
-// int OpenMPTargetExec::m_map_rank[ OpenMPTargetExec::MAX_THREAD_COUNT ] = { 0
-// };
-
-// int OpenMPTargetExec::m_pool_topo[ 4 ] = { 0 };
-
-// OpenMPTargetExec * OpenMPTargetExec::m_pool[
-// OpenMPTargetExec::MAX_THREAD_COUNT ] = { 0 };
 
 void OpenMPTargetExec::verify_is_process(const char* const label) {
   if (omp_in_parallel()) {
