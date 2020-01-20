@@ -42,4 +42,5 @@
 */
 
 #include <openmptarget/TestOpenMPTarget_Category.hpp>
-#include <TestAtomicOperations_complexdouble.hpp>
+//KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
+//#include <TestAtomicOperations_complexdouble.hpp>

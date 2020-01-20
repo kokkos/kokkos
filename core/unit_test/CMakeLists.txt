@@ -24,7 +24,7 @@ KOKKOS_TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
-foreach(Tag Threads;Serial;OpenMP;Cuda;HPX)
+foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
     set(DEVICE "PTHREAD")
@@ -148,6 +148,14 @@ if(Kokkos_ENABLE_HPX)
     SOURCES
       UnitTestMain.cpp
       hpx/TestHPX_InterOp.cpp
+  )
+endif()
+
+if(Kokkos_ENABLE_OPENMPTARGET)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPTarget
+    SOURCES
+    ${OpenMPTarget_SOURCES}
   )
 endif()
 

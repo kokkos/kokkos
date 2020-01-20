@@ -338,7 +338,7 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     SET(CLANG_CUDA_ARCH sm_70)
   ENDIF()
   COMPILER_SPECIFIC_FLAGS(
-    Clang -march=${CLANG_CUDA_ARCH}
+    Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH}
   )
 ENDIF()
 

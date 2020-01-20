@@ -42,6 +42,8 @@
 */
 
 #include <openmptarget/TestOpenMPTarget_Category.hpp>
+//KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
+/*
 #include <TestTeam.hpp>
 
 namespace Test {
@@ -77,3 +79,4 @@ TEST(TEST_CATEGORY, multi_level_scratch) {
 }
 
 }  // namespace Test
+*/
