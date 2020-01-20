@@ -303,8 +303,8 @@ IF(KOKKOS_ARCH_${ARCH})
     MESSAGE(FATAL_ERROR "Multiple GPU architectures given! Already have ${CUDA_ARCH_ALREADY_SPECIFIED}, but trying to add ${ARCH}. If you are re-running CMake, try clearing the cache and running again.")
   ENDIF()
   SET(CUDA_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
-  IF (NOT KOKKOS_ENABLE_CUDA)
-    MESSAGE(WARNING "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA is OFF. Option will be ignored.")
+  IF (NOT KOKKOS_ENABLE_CUDA AND NOT KOKKOS_ENABLE_OPENMPTARGET)
+    MESSAGE(WARNING "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA and Kokkos_ENABLE_OPENMPTARGET are OFF. Option will be ignored.")
     UNSET(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
   ELSE()
     SET(KOKKOS_CUDA_ARCH_FLAG ${FLAG} PARENT_SCOPE)
@@ -345,11 +345,24 @@ ENDIF()
 #CMake verbose is kind of pointless
 #Let's just always print things
 MESSAGE(STATUS "Execution Spaces:")
-IF(KOKKOS_ENABLE_CUDA)
-  MESSAGE(STATUS "  Device Parallel: CUDA")
-ELSE()
-  MESSAGE(STATUS "  Device Parallel: NONE")
+
+FOREACH (_BACKEND CUDA OPENMPTARGET)
+  IF(KOKKOS_ENABLE_${_BACKEND})
+    IF(_DEVICE_PARALLEL)
+      MESSAGE(FATAL_ERROR "Multiple device parallel execution spaces are not allowed! "
+                          "Trying to enable execution space ${_BACKEND}, "
+                          "but execution space ${_DEVICE_PARALLEL} is already enabled. "
+                          "Remove the CMakeCache.txt file and re-configure.")
+    ENDIF()
+    SET(_DEVICE_PARALLEL ${_BACKEND})
+  ENDIF()
+ENDFOREACH()
+IF(NOT _DEVICE_PARALLEL)
+  SET(_DEVICE_PARALLEL "NONE")
 ENDIF()
+MESSAGE(STATUS "    Device Parallel: ${_DEVICE_PARALLEL}")
+UNSET(_DEVICE_PARALLEL)
+
 
 FOREACH (_BACKEND OPENMP PTHREAD HPX)
   IF(KOKKOS_ENABLE_${_BACKEND})
