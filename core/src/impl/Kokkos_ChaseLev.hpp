@@ -47,8 +47,7 @@
 #define KOKKOS_IMPL_LOCKFREEDEQUE_HPP
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_TASKDAG  // Note: implies CUDA_VERSION >= 8000 if using
-                              // CUDA
+#ifdef KOKKOS_ENABLE_TASKDAG
 
 #include <Kokkos_Core_fwd.hpp>
 
