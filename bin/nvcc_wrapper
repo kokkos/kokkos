@@ -100,7 +100,7 @@ depfile_target_arg=""
 remove_duplicate_link_files=0
 
 function warn_std_flag() {
-  echo "nvcc_wrapper - *warning* you have set multiple optimization flags (-std=c++1* or --std=c++1*), only the last is used because nvcc can only accept a single std setting"
+  echo "nvcc_wrapper - *warning* you have set multiple standard flags (-std=c++1* or --std=c++1*), only the last is used because nvcc can only accept a single std setting"
 }
 
 #echo "Arguments: $# $@"
