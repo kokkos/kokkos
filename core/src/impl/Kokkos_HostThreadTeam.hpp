@@ -53,8 +53,8 @@
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostBarrier.hpp>
 
-#include <limits>  // std::numeric_limits
-#include <algorithm> // std::max
+#include <limits>     // std::numeric_limits
+#include <algorithm>  // std::max
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
