@@ -155,7 +155,7 @@ __device__ bool cuda_inter_block_reduction(
   // One warp of last block performs inter block reduction through loading the
   // block values from global scratch_memory
   bool last_block = false;
-
+  __threadfence();
   __syncthreads();
   if (id < 32) {
     Cuda::size_type count;
@@ -344,6 +344,7 @@ __device__ inline
   // block values from global scratch_memory
   bool last_block = false;
 
+  __threadfence();
   __syncthreads();
   if (id < 32) {
     Cuda::size_type count;
@@ -513,10 +514,10 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
     scalar_intra_block_reduction(functor, value, true,
                                  my_global_team_buffer_element, shared_elements,
                                  shared_team_buffer_elements);
+    __threadfence();
     __syncthreads();
     unsigned int num_teams_done = 0;
     if (threadIdx.x + threadIdx.y == 0) {
-      __threadfence();
       num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
     }
     bool is_last_block = false;
@@ -614,11 +615,11 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     scalar_intra_block_reduction(functor, value, true,
                                  my_global_team_buffer_element, shared_elements,
                                  shared_team_buffer_elements);
+    __threadfence();
     __syncthreads();
 
     unsigned int num_teams_done = 0;
     if (threadIdx.x + threadIdx.y == 0) {
-      __threadfence();
       num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
     }
     bool is_last_block = false;
@@ -878,6 +879,7 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
       global[i] = shared[i];
     }
   }
+  __threadfence();
 
   // Contributing blocks note that their contribution has been completed via an
   // atomic-increment flag If this block is not the last block to contribute to
