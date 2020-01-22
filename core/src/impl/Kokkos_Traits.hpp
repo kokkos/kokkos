@@ -240,27 +240,6 @@ struct remove_extent<T[N]> {
 };
 
 //----------------------------------------------------------------------------
-// C++11 Other type generators:
-
-template <bool, class T, class F>
-struct condition {
-  typedef F type;
-};
-
-template <class T, class F>
-struct condition<true, T, F> {
-  typedef T type;
-};
-
-template <bool, class = void>
-struct enable_if;
-
-template <class T>
-struct enable_if<true, T> {
-  typedef T type;
-};
-
-//----------------------------------------------------------------------------
 
 }  // namespace Impl
 }  // namespace Kokkos

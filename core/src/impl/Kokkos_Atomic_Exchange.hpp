@@ -83,8 +83,7 @@ __inline__ __device__ unsigned long long int atomic_exchange(
 template <typename T>
 __inline__ __device__ T atomic_exchange(
     volatile T* const dest,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T&>::type
-        val) {
+    typename std::enable_if<sizeof(T) == sizeof(int), const T&>::type val) {
   // int tmp = __ullAtomicExch( (int*) dest , *((int*)&val) );
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
@@ -97,9 +96,9 @@ __inline__ __device__ T atomic_exchange(
 template <typename T>
 __inline__ __device__ T atomic_exchange(
     volatile T* const dest,
-    typename Kokkos::Impl::enable_if<
-        sizeof(T) != sizeof(int) && sizeof(T) == sizeof(unsigned long long int),
-        const T&>::type val) {
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) == sizeof(unsigned long long int),
+                            const T&>::type val) {
   typedef unsigned long long int type;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -112,10 +111,10 @@ __inline__ __device__ T atomic_exchange(
 }
 
 template <typename T>
-__inline__ __device__ T atomic_exchange(
-    volatile T* const dest,
-    typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8),
-                                     const T>::type& val) {
+__inline__ __device__ T
+atomic_exchange(volatile T* const dest,
+                typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8),
+                                        const T>::type& val) {
   T return_val;
   // This is a way to (hopefully) avoid dead lock in a warp
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -151,8 +150,7 @@ __inline__ __device__ T atomic_exchange(
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T* const dest,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T&>::type
-        val) {
+    typename std::enable_if<sizeof(T) == sizeof(int), const T&>::type val) {
   // (void) __ullAtomicExch( (int*) dest , *((int*)&val) );
   (void)atomicExch(((int*)dest), *((int*)&val));
 }
@@ -160,9 +158,9 @@ __inline__ __device__ void atomic_assign(
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T* const dest,
-    typename Kokkos::Impl::enable_if<
-        sizeof(T) != sizeof(int) && sizeof(T) == sizeof(unsigned long long int),
-        const T&>::type val) {
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) == sizeof(unsigned long long int),
+                            const T&>::type val) {
   typedef unsigned long long int type;
   // (void) __ullAtomicExch( (type*) dest , *((type*)&val) );
   (void)atomicExch(((type*)dest), *((type*)&val));
@@ -171,9 +169,9 @@ __inline__ __device__ void atomic_assign(
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T* const dest,
-    typename Kokkos::Impl::enable_if<
-        sizeof(T) != sizeof(int) && sizeof(T) != sizeof(unsigned long long int),
-        const T&>::type val) {
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) != sizeof(unsigned long long int),
+                            const T&>::type val) {
   (void)atomic_exchange(dest, val);
 }
 
@@ -186,11 +184,10 @@ __inline__ __device__ void atomic_assign(
 #if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
 template <typename T>
-inline T atomic_exchange(
-    volatile T* const dest,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int) ||
-                                         sizeof(T) == sizeof(long),
-                                     const T&>::type val) {
+inline T atomic_exchange(volatile T* const dest,
+                         typename std::enable_if<sizeof(T) == sizeof(int) ||
+                                                     sizeof(T) == sizeof(long),
+                                                 const T&>::type val) {
   typedef typename Kokkos::Impl::if_c<sizeof(T) == sizeof(int), int, long>::type
       type;
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -222,8 +219,8 @@ inline T atomic_exchange(
 template <typename T>
 inline T atomic_exchange(
     volatile T* const dest,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(Impl::cas128_t),
-                                     const T&>::type val) {
+    typename std::enable_if<sizeof(T) == sizeof(Impl::cas128_t), const T&>::type
+        val) {
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
@@ -251,12 +248,12 @@ inline T atomic_exchange(
 template <typename T>
 inline T atomic_exchange(
     volatile T* const dest,
-    typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
+    typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
 #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
-                                         && (sizeof(T) != 16)
+                                && (sizeof(T) != 16)
 #endif
-                                         ,
-                                     const T>::type& val) {
+                                ,
+                            const T>::type& val) {
   while (!Impl::lock_address_host_space((void*)dest))
     ;
   T return_val = *dest;
@@ -279,11 +276,10 @@ inline T atomic_exchange(
 }
 
 template <typename T>
-inline void atomic_assign(
-    volatile T* const dest,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int) ||
-                                         sizeof(T) == sizeof(long),
-                                     const T&>::type val) {
+inline void atomic_assign(volatile T* const dest,
+                          typename std::enable_if<sizeof(T) == sizeof(int) ||
+                                                      sizeof(T) == sizeof(long),
+                                                  const T&>::type val) {
   typedef typename Kokkos::Impl::if_c<sizeof(T) == sizeof(int), int, long>::type
       type;
 
@@ -314,8 +310,8 @@ inline void atomic_assign(
 template <typename T>
 inline void atomic_assign(
     volatile T* const dest,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(Impl::cas128_t),
-                                     const T&>::type val) {
+    typename std::enable_if<sizeof(T) == sizeof(Impl::cas128_t), const T&>::type
+        val) {
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
@@ -338,12 +334,12 @@ inline void atomic_assign(
 template <typename T>
 inline void atomic_assign(
     volatile T* const dest,
-    typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
+    typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
 #if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
-                                         && (sizeof(T) != 16)
+                                && (sizeof(T) != 16)
 #endif
-                                         ,
-                                     const T>::type& val) {
+                                ,
+                            const T>::type& val) {
   while (!Impl::lock_address_host_space((void*)dest))
     ;
   // This is likely an aggregate type with a defined

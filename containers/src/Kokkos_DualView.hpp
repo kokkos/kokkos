@@ -469,7 +469,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   ///   as modified, by calling the modify() method with the
   ///   appropriate template parameter.
   template <class Device>
-  void sync(const typename Impl::enable_if<
+  void sync(const typename std::enable_if<
                 (std::is_same<typename traits::data_type,
                               typename traits::non_const_data_type>::value) ||
                     (std::is_same<Device, int>::value),
@@ -498,7 +498,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   template <class Device>
-  void sync(const typename Impl::enable_if<
+  void sync(const typename std::enable_if<
                 (!std::is_same<typename traits::data_type,
                                typename traits::non_const_data_type>::value) ||
                     (std::is_same<Device, int>::value),

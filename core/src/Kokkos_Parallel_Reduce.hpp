@@ -975,7 +975,7 @@ template <class PolicyType, class FunctorType, class ReturnType>
 inline void parallel_reduce(
     const std::string& label, const PolicyType& policy,
     const FunctorType& functor, ReturnType& return_value,
-    typename Impl::enable_if<
+    typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* = 0) {
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       label, policy, functor, return_value);
@@ -986,7 +986,7 @@ template <class PolicyType, class FunctorType, class ReturnType>
 inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
     ReturnType& return_value,
-    typename Impl::enable_if<
+    typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* = 0) {
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       "", policy, functor, return_value);
@@ -1020,7 +1020,7 @@ template <class PolicyType, class FunctorType, class ReturnType>
 inline void parallel_reduce(
     const std::string& label, const PolicyType& policy,
     const FunctorType& functor, const ReturnType& return_value,
-    typename Impl::enable_if<
+    typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* = 0) {
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
@@ -1032,7 +1032,7 @@ template <class PolicyType, class FunctorType, class ReturnType>
 inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
     const ReturnType& return_value,
-    typename Impl::enable_if<
+    typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* = 0) {
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
@@ -1069,7 +1069,7 @@ template <class PolicyType, class FunctorType>
 inline void parallel_reduce(
     const std::string& label, const PolicyType& policy,
     const FunctorType& functor,
-    typename Impl::enable_if<
+    typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* = 0) {
   typedef Kokkos::Impl::FunctorValueTraits<FunctorType, void> ValueTraits;
   typedef typename Kokkos::Impl::if_c<
@@ -1093,7 +1093,7 @@ inline void parallel_reduce(
 template <class PolicyType, class FunctorType>
 inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
-    typename Impl::enable_if<
+    typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* = 0) {
   typedef Kokkos::Impl::FunctorValueTraits<FunctorType, void> ValueTraits;
   typedef typename Kokkos::Impl::if_c<
