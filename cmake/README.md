@@ -67,7 +67,7 @@ Note that all of these use `PUBLIC`! Almost every Kokkos flag is not private to 
 
 
 ### Compiler Features and Compiler Options
-Compiler options are flags like `-fopenmp` that do not need to be "resolved." 
+Compiler options are flags like `-fopenmp` that do not need to be "resolved."
 The flag is either on or off.
 Compiler features are more fine-grained and require conflicting requests to be resolved.
 Suppose I have
@@ -145,11 +145,11 @@ If Kokkos depends on, e.g. `hwloc` the downstream project will also need to link
 There are three stages in adding a new third-party library (TPL):
 * Finding: find the desired library on the system and verify the installation is correct
 * Importing: create a CMake target, if necessary, that is compatible with `target_link_libraries`. This is mostly relevant for TPLs not installed with CMake.
-* Exporting: make the desired library visible to downstream projects 
+* Exporting: make the desired library visible to downstream projects
 
 TPLs are somewhat complicated by whether the library was installed with CMake or some other build system.
 If CMake, our lives are greatly simplified. We simply use `find_package` to locate the installed CMake project then call `target_link_libraries(kokkoscore PUBLIC/PRIVATE TPL)`. For libaries not installed with CMake, the process is a bit more complex.
-It is up to the Kokkos developers to "convert" the library into a CMake target as if it had been installed as a valid modern CMake target with properties.  
+It is up to the Kokkos developers to "convert" the library into a CMake target as if it had been installed as a valid modern CMake target with properties.
 There are helper functions for simplifying the process of importing TPLs in Kokkos, but we walk through the process in detail to clearly illustrate the steps involved.
 
 #### TPL Search Order

@@ -2,7 +2,7 @@
 # We want to determine if options are given with the wrong case
 # In order to detect which arguments are given to compare against
 # the list of valid arguments, at the beginning here we need to
-# form a list of all the given variables. If it begins with any 
+# form a list of all the given variables. If it begins with any
 # case of KoKkOS, we add it to the list.
 
 
@@ -65,7 +65,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
   set(CMAKE_DISABLE_SOURCE_CHANGES ON)
   set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
-  IF (Spack_WORKAROUND) 
+  IF (Spack_WORKAROUND)
     #if we are explicitly using Spack for development,
     #nuke the Spack compiler
     SET(SPACK_CXX $ENV{SPACK_CXX})
@@ -96,12 +96,12 @@ set(Kokkos_VERSION_MINOR 0)
 set(Kokkos_VERSION_PATCH 0)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 
-IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0") 
+IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
   MESSAGE(STATUS "Setting policy CMP0074 to use <Package>_ROOT variables")
   CMAKE_POLICY(SET CMP0074 NEW)
 ENDIF()
 
-# Load either the real TriBITS or a TriBITS wrapper 
+# Load either the real TriBITS or a TriBITS wrapper
 # for certain utility functions that are universal (like GLOBAL_SET)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
 
@@ -221,7 +221,7 @@ INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_config.h" DESTINATION ${CM
 IF (HAS_PARENT)
   FOREACH(DEV Kokkos_ENABLED_DEVICES)
     #I would much rather not make these cache variables or global properties, but I can't
-    #make any guarantees on whether PARENT_SCOPE is good enough to make 
+    #make any guarantees on whether PARENT_SCOPE is good enough to make
     #these variables visible where I need them
     SET(Kokkos_ENABLE_${DEV} ON PARENT_SCOPE)
     SET_PROPERTY(GLOBAL PROPERTY Kokkos_ENABLE_${DEV} ON)

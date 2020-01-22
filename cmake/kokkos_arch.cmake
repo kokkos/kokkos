@@ -108,7 +108,7 @@ IF (KOKKOS_ENABLE_CUDA)
  IF (KOKKOS_ARCH_KEPLER30 OR KOKKOS_ARCH_KEPLER32 OR KOKKOS_ARCH_KEPLER35 OR KOKKOS_ARCH_KEPLER37)
    SET(KOKKOS_ARCH_KEPLER ON)
  ENDIF()
- 
+
  #Regardless of version, make sure we define the general architecture name
  IF (KOKKOS_ARCH_MAXWELL50 OR KOKKOS_ARCH_MAXWELL52 OR KOKKOS_ARCH_MAXWELL53)
    SET(KOKKOS_ARCH_MAXWELL ON)
@@ -129,7 +129,7 @@ ENDIF()
 
 IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
   SET(COMMON_WARNINGS
-    "-Wall" "-Wshadow" "-pedantic" 
+    "-Wall" "-Wshadow" "-pedantic"
     "-Wsign-compare" "-Wtype-limits" "-Wuninitialized")
 
   SET(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers"
@@ -176,7 +176,7 @@ IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
   ENDIF()
   UNSET(_UPPERCASE_CMAKE_BUILD_TYPE)
   IF (KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 9.0 AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 10.0)
-    GLOBAL_APPEND(KOKKOS_CUDAFE_OPTIONS --diag_suppress=esa_on_defaulted_function_ignored) 
+    GLOBAL_APPEND(KOKKOS_CUDAFE_OPTIONS --diag_suppress=esa_on_defaulted_function_ignored)
   ENDIF()
 ENDIF()
 
@@ -190,7 +190,7 @@ IF(KOKKOS_ENABLE_OPENMP)
     NVIDIA     -Xcompiler -fopenmp
     Cray       NO-VALUE-SPECIFIED
     XL         -qsmp=omp
-    DEFAULT    -fopenmp 
+    DEFAULT    -fopenmp
   )
 ENDIF()
 
