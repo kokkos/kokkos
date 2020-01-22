@@ -47,6 +47,7 @@
 #include <gtest/gtest.h>
 
 #define TEST_CATEGORY rocm_hostpinned
+#define TEST_CATEGORY_DEATH rocm_hostpinned_DeathTest
 #define TEST_EXECSPACE Kokkos::Experimental::ROCmHostPinnedSpace
 
 #endif
