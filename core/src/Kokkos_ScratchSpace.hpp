@@ -67,6 +67,9 @@ class ScratchMemorySpace {
   // must be a power of two
   enum { ALIGN = 8 };
 
+  /**\brief Return Name of the MemorySpace */
+  static constexpr const char* name() { return m_name; }
+
  private:
   mutable char* m_iter_L0;
   char* m_end_L0;
@@ -81,6 +84,7 @@ class ScratchMemorySpace {
   ScratchMemorySpace& operator=(const ScratchMemorySpace&);
 
   enum { MASK = ALIGN - 1 };  // Alignment used by View::shmem_size
+  static constexpr const char* m_name = "ScratchMemory";
 
  public:
   //! Tag this class as a memory space
