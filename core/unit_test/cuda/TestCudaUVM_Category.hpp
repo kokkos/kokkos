@@ -47,6 +47,7 @@
 #include <gtest/gtest.h>
 
 #define TEST_CATEGORY cuda_uvm
+#define TEST_CATEGORY_DEATH cuda_uvm_DeathTest
 #define TEST_EXECSPACE Kokkos::CudaUVMSpace
 
 #endif

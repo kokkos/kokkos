@@ -47,6 +47,7 @@
 #include <gtest/gtest.h>
 
 #define TEST_CATEGORY openmptarget
+#define TEST_CATEGORY_DEATH openmptarget_DeathTest
 #define TEST_EXECSPACE Kokkos::Experimental::OpenMPTarget
 
 #endif
