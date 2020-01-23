@@ -63,7 +63,7 @@ struct ReduceFunctorHasInit {
 template <class FunctorType>
 struct ReduceFunctorHasInit<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::init)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::init)>::type> {
   enum { value = true };
 };
 
@@ -75,7 +75,7 @@ struct ReduceFunctorHasJoin {
 template <class FunctorType>
 struct ReduceFunctorHasJoin<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::join)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::join)>::type> {
   enum { value = true };
 };
 
@@ -87,7 +87,7 @@ struct ReduceFunctorHasFinal {
 template <class FunctorType>
 struct ReduceFunctorHasFinal<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::final)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::final)>::type> {
   enum { value = true };
 };
 
@@ -99,7 +99,7 @@ struct ReduceFunctorHasShmemSize {
 template <class FunctorType>
 struct ReduceFunctorHasShmemSize<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::team_shmem_size)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::team_shmem_size)>::type> {
   enum { value = true };
 };
 
@@ -201,8 +201,8 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   // Number of values if single value
   template <class F>
   KOKKOS_FORCEINLINE_FUNCTION static
-      typename Impl::enable_if<std::is_same<F, FunctorType>::value && !IsArray,
-                               unsigned>::type
+      typename std::enable_if<std::is_same<F, FunctorType>::value && !IsArray,
+                              unsigned>::type
       value_count(const F&) {
     return 1;
   }
@@ -212,8 +212,8 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   // be an array.
   template <class F>
   KOKKOS_FORCEINLINE_FUNCTION static
-      typename Impl::enable_if<std::is_same<F, FunctorType>::value && IsArray,
-                               unsigned>::type
+      typename std::enable_if<std::is_same<F, FunctorType>::value && IsArray,
+                              unsigned>::type
       value_count(const F& f) {
     return f.value_count;
   }

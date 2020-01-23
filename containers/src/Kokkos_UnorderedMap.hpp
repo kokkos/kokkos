@@ -688,7 +688,7 @@ class UnorderedMap {
   template <typename SKey, typename SValue>
   UnorderedMap(
       UnorderedMap<SKey, SValue, Device, Hasher, EqualTo> const &src,
-      typename Impl::enable_if<
+      typename std::enable_if<
           Impl::UnorderedMapCanAssign<declared_key_type, declared_value_type,
                                       SKey, SValue>::value,
           int>::type = 0)
@@ -704,7 +704,7 @@ class UnorderedMap {
         m_scalars(src.m_scalars) {}
 
   template <typename SKey, typename SValue>
-  typename Impl::enable_if<
+  typename std::enable_if<
       Impl::UnorderedMapCanAssign<declared_key_type, declared_value_type, SKey,
                                   SValue>::value,
       declared_map_type &>::type
@@ -723,7 +723,7 @@ class UnorderedMap {
   }
 
   template <typename SKey, typename SValue, typename SDevice>
-  typename Impl::enable_if<
+  typename std::enable_if<
       std::is_same<typename Impl::remove_const<SKey>::type, key_type>::value &&
       std::is_same<typename Impl::remove_const<SValue>::type,
                    value_type>::value>::type
