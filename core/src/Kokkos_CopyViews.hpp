@@ -1434,7 +1434,7 @@ inline void deep_copy(
   }
 #endif
 
-  if (dst.data() == NULL) {
+  if (dst.data() == nullptr) {
     Kokkos::fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -1558,7 +1558,7 @@ inline void deep_copy(
   }
 #endif
 
-  if (src.data() == NULL) {
+  if (src.data() == nullptr) {
     Kokkos::fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -1608,7 +1608,7 @@ inline void deep_copy(
   }
 #endif
 
-  if (dst.data() == NULL && src.data() == NULL) {
+  if (dst.data() == nullptr && src.data() == nullptr) {
     Kokkos::fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -1669,7 +1669,7 @@ inline void deep_copy(
   }
 #endif
 
-  if (dst.data() == NULL || src.data() == NULL) {
+  if (dst.data() == nullptr || src.data() == nullptr) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     // do nothing
 #else
@@ -2677,7 +2677,7 @@ inline void deep_copy(
   }
 #endif
 
-  if (src.data() == NULL) {
+  if (src.data() == nullptr) {
     exec_space.fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -2726,7 +2726,7 @@ inline void deep_copy(
   }
 #endif
 
-  if (dst.data() == NULL && src.data() == NULL) {
+  if (dst.data() == nullptr && src.data() == nullptr) {
     exec_space.fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -2790,7 +2790,7 @@ inline void deep_copy(
   }
 #endif
 
-  if (dst.data() == NULL || src.data() == NULL) {
+  if (dst.data() == nullptr || src.data() == nullptr) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     // do nothing
 #else

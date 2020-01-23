@@ -161,10 +161,10 @@ void test_host_memory_pool_stats() {
   // Aborts because exceeds max block size:
   // void * p2048 = pool.allocate(2048);
 
-  ASSERT_NE(p0064, (void*)0);
-  ASSERT_NE(p0128, (void*)0);
-  ASSERT_NE(p0256, (void*)0);
-  ASSERT_NE(p1024, (void*)0);
+  ASSERT_NE(p0064, nullptr);
+  ASSERT_NE(p0128, nullptr);
+  ASSERT_NE(p0256, nullptr);
+  ASSERT_NE(p1024, nullptr);
 
   pool.deallocate(p0064, 64);
   pool.deallocate(p0128, 128);

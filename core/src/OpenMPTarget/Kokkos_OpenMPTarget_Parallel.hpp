@@ -282,7 +282,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       const ViewType& arg_result_view,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = NULL)
+                              void*>::type = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -671,7 +671,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const ViewType& arg_result,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = NULL)
+                              void*>::type = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),

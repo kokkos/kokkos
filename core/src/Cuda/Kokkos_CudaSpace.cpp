@@ -359,7 +359,8 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::attach_texture_object(
   resDesc.res.linear.sizeInBytes = alloc_size;
   resDesc.res.linear.devPtr      = alloc_ptr;
 
-  CUDA_SAFE_CALL(cudaCreateTextureObject(&tex_obj, &resDesc, &texDesc, NULL));
+  CUDA_SAFE_CALL(
+      cudaCreateTextureObject(&tex_obj, &resDesc, &texDesc, nullptr));
 
   return tex_obj;
 }
@@ -894,7 +895,7 @@ void SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::print_records(
 //==============================================================================
 
 void *cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
-  static void *ptr                 = NULL;
+  static void *ptr                 = nullptr;
   static std::int64_t current_size = 0;
   if (current_size == 0) {
     current_size = bytes;
