@@ -33,7 +33,7 @@ ENDIF()
 KOKKOS_DEVICE_OPTION(OPENMP ${OMP_DEFAULT} HOST "Whether to build OpenMP backend")
 IF(KOKKOS_ENABLE_OPENMP)
   IF (KOKKOS_CXX_COMPILER_ID STREQUAL AppleClang)
-    MESSAGE(FATAL_ERROR "Apple Clang does not support OpenMP. Use native Clang instead")
+    MESSAGE(FATAL_ERROR "Apple Clang does not support OpenMP. Use LLVM Clang instead")
   ENDIF()
   COMPILER_SPECIFIC_FLAGS(
     Clang      -fopenmp=libomp
@@ -48,9 +48,9 @@ ENDIF()
 KOKKOS_DEVICE_OPTION(OPENMPTARGET OFF DEVICE "Whether to build the OpenMP target backend")
 IF (KOKKOS_ENABLE_OPENMPTARGET)
   COMPILER_SPECIFIC_FLAGS(
-    Clang      -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp -fopenmp=libomp
+    Clang      -fopenmp -fopenmp=libomp
     XL         -qsmp=omp -qoffload -qnoeh
-    DEFAULT    -fopenmp -foffload=nvptx-none
+    DEFAULT    -fopenmp
   )
   COMPILER_SPECIFIC_DEFS(
     XL    KOKKOS_IBM_XL_OMP45_WORKAROUND

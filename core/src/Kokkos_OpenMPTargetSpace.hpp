@@ -130,7 +130,6 @@ class OpenMPTargetSpace {
   static constexpr const char* name() { return "OpenMPTargetSpace"; }
 
  private:
-
   friend class Kokkos::Impl::SharedAllocationRecord<
       Kokkos::Experimental::OpenMPTargetSpace, void>;
 };

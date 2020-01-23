@@ -42,5 +42,4 @@
 */
 
 #include <openmptarget/TestOpenMPTarget_Category.hpp>
-//KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
-//#include <TestViewOfClass.hpp>
+#include <TestViewOfClass.hpp>

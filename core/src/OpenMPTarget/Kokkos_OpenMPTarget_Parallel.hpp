@@ -315,7 +315,6 @@ struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type& val) {
     val.val = reduction_identity<scalar_type>::max();
-    ;
     val.loc = reduction_identity<index_type>::min();
   }
 };
@@ -601,7 +600,7 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
 #pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
     map(tofrom: result) reduction(custom: result)
     for (int i = begin; i < end; i++) f(i, result);
-// clang-format on
+    // clang-format on
 
     *result_ptr = result;
   }

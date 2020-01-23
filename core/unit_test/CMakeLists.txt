@@ -105,6 +105,24 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget)
   )
 endforeach()
 
+if(Kokkos_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM OpenMPTarget_SOURCES
+    openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
+    openmptarget/TestOpenMPTarget_MDRange_a.cpp
+    openmptarget/TestOpenMPTarget_MDRange_b.cpp
+    openmptarget/TestOpenMPTarget_MDRange_c.cpp
+    openmptarget/TestOpenMPTarget_MDRange_d.cpp
+    openmptarget/TestOpenMPTarget_MDRange_e.cpp
+    openmptarget/TestOpenMPTarget_Other.cpp
+    openmptarget/TestOpenMPTarget_Scan.cpp
+    openmptarget/TestOpenMPTarget_Team.cpp
+    openmptarget/TestOpenMPTarget_TeamScratch.cpp
+    openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
+    openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
+    openmptarget/TestOpenMPTarget_ViewOfClass.cpp
+  )
+endif()
+
 if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial
