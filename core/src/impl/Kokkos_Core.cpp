@@ -262,6 +262,7 @@ void finalize_internal(const bool all_spaces = false) {
   while (!finalize_hooks.empty()) {
     auto f = finalize_hooks.top();
     try {
+      f();
     } catch (...) {
       std::cerr << "Kokkos::finalize: A finalize hook (set via "
                    "Kokkos::push_finalize_hook) threw an exception that it did "
