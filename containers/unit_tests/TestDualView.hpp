@@ -230,7 +230,7 @@ struct test_dualview_resize {
     ASSERT_EQ(a_h_sum, a_d_sum);
     ASSERT_EQ(a_h_sum, a.extent(0) * a.extent(1));
 
-    /* Covers case "Realloc on Device" */
+    /* Covers case "Resize on Host" */
     a.modify_host();
 
     Kokkos::resize(a, n / factor, m / factor);
