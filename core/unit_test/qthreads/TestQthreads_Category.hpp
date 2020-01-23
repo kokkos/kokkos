@@ -47,6 +47,7 @@
 #include <gtest/gtest.h>
 
 #define TEST_CATEGORY qthreads
+#define TEST_CATEGORY_DEATH qthreads_DeathTest
 #define TEST_EXECSPACE Kokkos::Qthreads
 
 #endif
