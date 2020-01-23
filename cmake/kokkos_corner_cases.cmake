@@ -11,7 +11,7 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_ENABLE_OPENMP)
   #also - this is easier to use than CMakeCheckCXXSourceCompiles
   TRY_COMPILE(CLANG_HAS_OMP
     ${KOKKOS_TOP_BUILD_DIR}/corner_cases
-    ${KOKKOS_SOURCE_DIR}/cmake/compile_tests/clang_omp.cpp 
+    ${KOKKOS_SOURCE_DIR}/cmake/compile_tests/clang_omp.cpp
     COMPILE_DEFINITIONS -fopenmp=libomp
     LINK_LIBRARIES -fopenmp=libomp
   )

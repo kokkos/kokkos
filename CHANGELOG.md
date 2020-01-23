@@ -174,7 +174,7 @@
 ## [2.6.00](https://github.com/kokkos/kokkos/tree/2.6.00) (2018-03-07)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/2.5.00...2.6.00)
 
-**Part of the Kokkos C++ Performance Portability Programming EcoSystem 2.6**      
+**Part of the Kokkos C++ Performance Portability Programming EcoSystem 2.6**
 
 **Implemented enhancements:**
 
@@ -218,7 +218,7 @@
 ## [2.5.00](https://github.com/kokkos/kokkos/tree/2.5.00) (2017-12-15)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/2.04.11...2.5.00)
 
-**Part of the Kokkos C++ Performance Portability Programming EcoSystem 2.5**      
+**Part of the Kokkos C++ Performance Portability Programming EcoSystem 2.5**
 
 **Implemented enhancements:**
 

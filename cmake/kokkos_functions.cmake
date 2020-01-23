@@ -3,9 +3,9 @@
 #   kokkos_option
 
 # Validate options are given with correct case and define an internal
-# upper-case version for use within 
+# upper-case version for use within
 
-# 
+#
 #
 # @FUNCTION: kokkos_deprecated_list
 #
@@ -125,7 +125,7 @@ MACRO(kokkos_export_imported_tpl NAME)
       KOKKOS_APPEND_CONFIG_LINE("IF(NOT TARGET ${NAME})")
       KOKKOS_APPEND_CONFIG_LINE("ADD_LIBRARY(${NAME} UNKNOWN IMPORTED)")
       KOKKOS_APPEND_CONFIG_LINE("SET_TARGET_PROPERTIES(${NAME} PROPERTIES")
-      
+
       GET_TARGET_PROPERTY(TPL_LIBRARY ${NAME} IMPORTED_LOCATION)
       IF(TPL_LIBRARY)
         KOKKOS_APPEND_CONFIG_LINE("IMPORTED_LOCATION ${TPL_LIBRARY}")
@@ -198,7 +198,7 @@ MACRO(kokkos_import_tpl NAME)
   # I have still been getting errors about ROOT variables being ignored
   # I'm not sure if this is a scope issue - but make sure
   # the policy is set before we do any find_package calls
-  IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0") 
+  IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
     CMAKE_POLICY(SET CMP0074 NEW)
   ENDIF()
 
@@ -607,7 +607,7 @@ MACRO(kokkos_find_imported NAME)
     IF(${LIB}_LOCATION)
       LIST(APPEND ${NAME}_FOUND_LIBRARIES ${${LIB}_LOCATION})
     ELSE()
-      SET(${NAME}_FOUND_LIBRARIES ${${LIB}_LOCATION}) 
+      SET(${NAME}_FOUND_LIBRARIES ${${LIB}_LOCATION})
       BREAK()
     ENDIF()
   ENDFOREACH()

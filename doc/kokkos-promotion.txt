@@ -71,18 +71,18 @@ supported compilers. Those machines are:
 // -------------------------------------------------------------------------------- //
 
 Step 2:
-  2.1. Build and test Trilinos with the following configurations: 
+  2.1. Build and test Trilinos with the following configurations:
        a) serial, openmp, and cuda via the testing scripts in kokkos-kernels/scripts/trilinos-integration (automates the process)
        b) various ATDM-supported builds via Trilinos configuration scripts located in kokkos{-kernels}/scripts/trilinos-integration/ATDM_configurations (not yet automated)
-       
-       Run scripts for automated testing on white (openmp and cuda) and blake (seral) that are provided in kokkos{-kernels}/scripts/trilinos-integration. 
+
+       Run scripts for automated testing on white (openmp and cuda) and blake (seral) that are provided in kokkos{-kernels}/scripts/trilinos-integration.
        These scripts load their own modules/environment, so don't require preparation. You can run all four at the same time, use separate directories for each.
 
          mkdir serial
          cd serial
          nohup KOKKOSKERNELS_PATH/scripts/trilinos-integration/blake_jenkins_run_script_serial_intel &
 
-       Use scripts to configure Trilinos for waterman (cuda, cuda-debug) and ride (cuda-rdc) that are provided in kokkos-kernels/scripts/trilinos-integration/ATDM_configurations. 
+       Use scripts to configure Trilinos for waterman (cuda, cuda-debug) and ride (cuda-rdc) that are provided in kokkos-kernels/scripts/trilinos-integration/ATDM_configurations.
 
        These scripts load their own modules/environment, so don't require preparation of the system environment. You can run them all at the same time, just use separate directories for each. Instructions for compute node allocation, building, and testing are included in the scripts.
 
@@ -97,12 +97,12 @@ Step 2:
 // -------------------------------------------------------------------------------- //
 
 Step 3: Close all issues labeled "InDevelop"
-      
+
        Use the GitHub web interface: https://github.com/kokkos/kokkos/issues?q=is%3Aopen+is%3Aissue+label%3AInDevelop
-       Select all with checkbox in upper left, "Mark as closed" 
+       Select all with checkbox in upper left, "Mark as closed"
 
        Use the GitHub web interface: https://github.com/kokkos/kokkos-kernels/issues?q=is%3Aopen+is%3Aissue+label%3AInDevelop
-       Select all with checkbox in upper left, "Mark as closed" 
+       Select all with checkbox in upper left, "Mark as closed"
 
 // -------------------------------------------------------------------------------- //
 
@@ -183,7 +183,7 @@ Step 4: This step should be run on kokkos-dev
        # Append to scripts/master_history.txt:
 
        tag:  2.03.13    date: 07:27:2017    master: da314444    develop: 29ccb58a
-       
+
        git commit --amend -a
 
        Keep the merge commit as described in 4.6
@@ -210,7 +210,7 @@ Step 5: This step can be done on any SEMS machine (e.g. kokkos-dev).
          git clone -b kokkos-promotion git@github.com:trilinos/Trilinos.git
          TRILINOS_PATH=$PWD/Trilinos
 
-  5.2. Snapshot Kokkos into Trilinos - this requires python/2.7.9 and that both Trilinos and Kokkos be clean - no untracked or modified files. Run the following outside of the Kokkos and Trilinos source trees. 
+  5.2. Snapshot Kokkos into Trilinos - this requires python/2.7.9 and that both Trilinos and Kokkos be clean - no untracked or modified files. Run the following outside of the Kokkos and Trilinos source trees.
 
       * Use the master branch of Kokkos for this.
 
@@ -244,24 +244,24 @@ Step 5: This step can be done on any SEMS machine (e.g. kokkos-dev).
 // -------------------------------------------------------------------------------- //
 
 Step 6: Push Kokkos + KokkosKernels master and develop branches to respective GitHub repos (requires Owner permission).
-      
+
   6.1. Master branch:
        cd $KOKKOS_PATH
        git checkout master
-       git push --follow-tags origin master 
+       git push --follow-tags origin master
 
        cd $KOKKOSKERNELS_PATH
        git checkout master
-       git push --follow-tags origin master 
+       git push --follow-tags origin master
 
   6.2. Develop branch: First merge (--no-ff) master back into develop
        cd $KOKKOS_PATH
        git checkout develop
        git merge --no-ff master
-       git push origin develop 
+       git push origin develop
 
        cd $KOKKOSKERNELS_PATH
        git checkout develop
        git merge --no-ff master
-       git push origin develop 
+       git push origin develop
 
