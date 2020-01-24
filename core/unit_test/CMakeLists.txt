@@ -246,6 +246,21 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_Reducers_b.cpp
       hip/TestHIP_Reducers_c.cpp
       hip/TestHIP_Reducers_d.cpp
+      hip/TestHIP_MDRange_a.cpp
+      hip/TestHIP_MDRange_b.cpp
+      hip/TestHIP_MDRange_c.cpp
+      hip/TestHIP_MDRange_d.cpp
+      hip/TestHIP_MDRange_e.cpp
+      hip/TestHIP_Spaces.cpp
+      hip/TestHIPHostPinned_ViewCopy.cpp
+      hip/TestHIPHostPinned_ViewAPI_a.cpp
+      hip/TestHIPHostPinned_ViewAPI_b.cpp
+      hip/TestHIPHostPinned_ViewAPI_c.cpp
+      hip/TestHIPHostPinned_ViewAPI_d.cpp
+      hip/TestHIPHostPinned_ViewAPI_e.cpp
+      hip/TestHIPHostPinned_ViewMapping_a.cpp
+      hip/TestHIPHostPinned_ViewMapping_b.cpp
+      hip/TestHIPHostPinned_ViewMapping_subview.cpp
       hip/TestHIP_AtomicOperations_int.cpp
       hip/TestHIP_AtomicOperations_unsignedint.cpp
       hip/TestHIP_AtomicOperations_longlongint.cpp
