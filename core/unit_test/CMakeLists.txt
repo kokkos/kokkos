@@ -286,6 +286,7 @@ KOKKOS_ADD_TEST_EXECUTABLE(
     TestStackTrace_f4.cpp
 )
 
+if(NOT BUILD_SHARED_LIBS)
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
                  EXE  StackTraceTestExec 
                  FAIL_REGULAR_EXPRESSION "FAILED"
@@ -301,6 +302,7 @@ KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_generic_term
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
+endif()
 
 foreach(INITTESTS_NUM RANGE 1 16)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
