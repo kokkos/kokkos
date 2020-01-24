@@ -104,13 +104,13 @@ struct ReduceFunctorHasShmemSize<
 };
 
 template <class FunctorType, class ArgTag, class Enable = void>
-struct FunctorDeclaresValueType : public Impl::false_type {};
+struct FunctorDeclaresValueType : public std::false_type {};
 
 template <class FunctorType, class ArgTag>
 struct FunctorDeclaresValueType<
     FunctorType, ArgTag,
     typename Impl::enable_if_type<typename FunctorType::value_type>::type>
-    : public Impl::true_type {};
+    : public std::true_type {};
 
 template <class FunctorType,
           bool Enable = (FunctorDeclaresValueType<FunctorType, void>::value) ||
@@ -173,7 +173,7 @@ struct FunctorValueTraits<void, ArgTag, false> {
 template <class FunctorType, class ArgTag>
 struct FunctorValueTraits<FunctorType, ArgTag,
                           true /* == exists FunctorType::value_type */> {
-  typedef typename Impl::remove_extent<typename FunctorType::value_type>::type
+  typedef typename std::remove_extent<typename FunctorType::value_type>::type
       value_type;
   typedef FunctorType functor_type;
 
@@ -184,7 +184,7 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   /* this cast to bool is needed for correctness by NVCC */
   enum : bool {
     IsArray = static_cast<bool>(
-        Impl::is_array<typename FunctorType::value_type>::value)
+        std::is_array<typename FunctorType::value_type>::value)
   };
 
   // If not an array then what is the sizeof(value_type)
