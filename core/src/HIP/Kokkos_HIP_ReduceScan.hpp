@@ -377,7 +377,7 @@ __device__ bool hip_single_inter_block_reduce_scan2(
     n_done = 1 + atomicInc(global_flags, block_count - 1);
   }
   __syncthreads();
-  bool const is_last_block = (n_done == block_count);
+  bool const is_last_block = (n_done == static_cast<int>(block_count));
 
   if (is_last_block) {
     size_type const b = (static_cast<long long int>(block_count) *
