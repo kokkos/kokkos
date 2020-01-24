@@ -154,19 +154,6 @@ struct enable_if_type {
 };
 
 //----------------------------------------------------------------------------
-
-template <bool B>
-struct bool_ : public integral_constant<bool, B> {};
-
-template <unsigned I>
-struct unsigned_ : public integral_constant<unsigned, I> {};
-
-template <int I>
-struct int_ : public integral_constant<int, I> {};
-
-typedef bool_<true> true_;
-typedef bool_<false> false_;
-//----------------------------------------------------------------------------
 // if_
 
 template <bool Cond, typename TrueType, typename FalseType>
