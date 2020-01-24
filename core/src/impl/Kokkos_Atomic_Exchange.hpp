@@ -423,7 +423,7 @@ __inline__ __device__ T atomic_exchange(
     typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
   int tmp = atomicExch(reinterpret_cast<int *>(const_cast<T *>(dest)),
                        *reinterpret_cast<int *>(const_cast<T *>(&val)));
-  return static_cast<T &>(tmp);
+  return reinterpret_cast<T &>(tmp);
 }
 
 template <typename T>
@@ -434,9 +434,9 @@ __inline__ __device__ T atomic_exchange(
                             const T &>::type val) {
   typedef unsigned long long int type;
 
-  type tmp = atomicExch(reinterpret_cast<type *>(static_cast<T *>(dest)),
-                        *reinterpret_cast<type *>(static_cast<T *>(&val)));
-  return static_cast<T &>(tmp);
+  type tmp = atomicExch(reinterpret_cast<type *>(const_cast<T *>(dest)),
+                        *reinterpret_cast<type *>(const_cast<T *>(&val)));
+  return reinterpret_cast<T &>(tmp);
 }
 
 /** \brief  Atomic exchange for any type with compatible size */
