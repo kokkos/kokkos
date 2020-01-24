@@ -443,8 +443,7 @@ __inline__ __device__ T atomic_exchange(
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T *const dest,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T &>::type
-        val) {
+    typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
   atomicExch(reinterpret_cast<int *>(const_cast<T *>(dest)),
              *reinterpret_cast<int *>(const_cast<T *>(&val)));
 }
@@ -452,9 +451,9 @@ __inline__ __device__ void atomic_assign(
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T *const dest,
-    typename Kokkos::Impl::enable_if<
-        sizeof(T) != sizeof(int) && sizeof(T) == sizeof(unsigned long long int),
-        const T &>::type val) {
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) == sizeof(unsigned long long int),
+                            const T &>::type val) {
   typedef unsigned long long int type;
   atomicExch(reinterpret_cast<type *>(const_cast<T *>(dest)),
              *reinterpret_cast<type *>(const_cast<T *>(&val)));
@@ -463,9 +462,9 @@ __inline__ __device__ void atomic_assign(
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T *const dest,
-    typename Kokkos::Impl::enable_if<
-        sizeof(T) != sizeof(int) && sizeof(T) != sizeof(unsigned long long int),
-        const T &>::type val) {
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) != sizeof(unsigned long long int),
+                            const T &>::type val) {
   atomic_exchange(dest, val);
 }
 
