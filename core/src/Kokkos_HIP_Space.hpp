@@ -477,7 +477,7 @@ struct VerifyExecutionCanAccessMemorySpace<
 /** Running in HIPSpace attempting to access an unknown space: error */
 template <class OtherSpace>
 struct VerifyExecutionCanAccessMemorySpace<
-    typename enable_if<
+    typename std::enable_if<
         !is_same<Kokkos::Experimental::HIPSpace, OtherSpace>::value,
         Kokkos::Experimental::HIPSpace>::type,
     OtherSpace> {
