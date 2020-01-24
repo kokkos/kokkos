@@ -286,12 +286,14 @@ KOKKOS_ADD_TEST_EXECUTABLE(
     TestStackTrace_f3.cpp
     TestStackTrace_f4.cpp
 )
+# We need -rdynamic on GNU platforms for the stacktrace functionality
+# to work correctly with shared libraries
+SET_PROPERTY(TARGET StackTraceTestExec PROPERTY ENABLE_EXPORTS 1)
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
-
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_terminate
                  EXE  StackTraceTestExec
