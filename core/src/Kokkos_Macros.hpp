@@ -169,6 +169,8 @@
 
 #if defined(KOKKOS_ENABLE_HIP)
 
+#define KOKKOS_IMPL_HIP_CLANG_WORKAROUND
+
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
 

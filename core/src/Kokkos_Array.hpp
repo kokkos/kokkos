@@ -158,7 +158,7 @@ struct Array {
     return &m_internal_implementation_private_member_data[0];
   }
 
-#ifdef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
+#ifdef KOKKOS_IMPL_HIP_CLANG_WORKAROUND
   // Do not default unless move and move-assignment are also defined
   KOKKOS_INLINE_FUNCTION
   ~Array()            = default;
