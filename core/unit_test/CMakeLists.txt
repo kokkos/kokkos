@@ -35,37 +35,37 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP)
 
   SET(${Tag}_SOURCES
       UnitTestMainInit.cpp
-#      ${dir}/Test${Tag}_AtomicOperations_int.cpp
-#      ${dir}/Test${Tag}_AtomicOperations_unsignedint.cpp
-#      ${dir}/Test${Tag}_AtomicOperations_longint.cpp
-#      ${dir}/Test${Tag}_AtomicOperations_unsignedlongint.cpp
-#      ${dir}/Test${Tag}_AtomicOperations_longlongint.cpp
-#      ${dir}/Test${Tag}_AtomicOperations_double.cpp
-#      ${dir}/Test${Tag}_AtomicOperations_float.cpp
-#      ${dir}/Test${Tag}_AtomicOperations_complexdouble.cpp
-#      ${dir}/Test${Tag}_AtomicOperations_complexfloat.cpp
-#      ${dir}/Test${Tag}_AtomicViews.cpp
-#      ${dir}/Test${Tag}_Atomics.cpp
-#      ${dir}/Test${Tag}_Complex.cpp
+      ${dir}/Test${Tag}_AtomicOperations_int.cpp
+      ${dir}/Test${Tag}_AtomicOperations_unsignedint.cpp
+      ${dir}/Test${Tag}_AtomicOperations_longint.cpp
+      ${dir}/Test${Tag}_AtomicOperations_unsignedlongint.cpp
+      ${dir}/Test${Tag}_AtomicOperations_longlongint.cpp
+      ${dir}/Test${Tag}_AtomicOperations_double.cpp
+      ${dir}/Test${Tag}_AtomicOperations_float.cpp
+      ${dir}/Test${Tag}_AtomicOperations_complexdouble.cpp
+      ${dir}/Test${Tag}_AtomicOperations_complexfloat.cpp
+      ${dir}/Test${Tag}_AtomicViews.cpp
+      ${dir}/Test${Tag}_Atomics.cpp
+      ${dir}/Test${Tag}_Complex.cpp
       ${dir}/Test${Tag}_Crs.cpp
       ${dir}/Test${Tag}_DeepCopyAlignment.cpp
       ${dir}/Test${Tag}_FunctorAnalysis.cpp
       ${dir}/Test${Tag}_Init.cpp
       ${dir}/Test${Tag}_LocalDeepCopy.cpp
-#      ${dir}/Test${Tag}_MDRange_a.cpp
-#      ${dir}/Test${Tag}_MDRange_b.cpp
-#      ${dir}/Test${Tag}_MDRange_c.cpp
-#      ${dir}/Test${Tag}_MDRange_d.cpp
-#      ${dir}/Test${Tag}_MDRange_e.cpp
-#      ${dir}/Test${Tag}_Other.cpp
-#      ${dir}/Test${Tag}_RangePolicy.cpp
-#      ${dir}/Test${Tag}_RangePolicyRequire.cpp
-#      ${dir}/Test${Tag}_Reductions.cpp
+      ${dir}/Test${Tag}_MDRange_a.cpp
+      ${dir}/Test${Tag}_MDRange_b.cpp
+      ${dir}/Test${Tag}_MDRange_c.cpp
+      ${dir}/Test${Tag}_MDRange_d.cpp
+      ${dir}/Test${Tag}_MDRange_e.cpp
+      ${dir}/Test${Tag}_Other.cpp
+      ${dir}/Test${Tag}_RangePolicy.cpp
+      ${dir}/Test${Tag}_RangePolicyRequire.cpp
+      ${dir}/Test${Tag}_Reductions.cpp
       ${dir}/Test${Tag}_Reducers_a.cpp
       ${dir}/Test${Tag}_Reducers_b.cpp
       ${dir}/Test${Tag}_Reducers_c.cpp
       ${dir}/Test${Tag}_Reducers_d.cpp
-#      ${dir}/Test${Tag}_Reductions_DeviceView.cpp
+      ${dir}/Test${Tag}_Reductions_DeviceView.cpp
       ${dir}/Test${Tag}_Scan.cpp
       ${dir}/Test${Tag}_SharedAlloc.cpp
       ${dir}/Test${Tag}_SubView_a.cpp
@@ -86,7 +86,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP)
       ${dir}/Test${Tag}_Team.cpp
       ${dir}/Test${Tag}_TeamReductionScan.cpp
       ${dir}/Test${Tag}_TeamScratch.cpp
-#      ${dir}/Test${Tag}_TeamTeamSize.cpp
+      ${dir}/Test${Tag}_TeamTeamSize.cpp
       ${dir}/Test${Tag}_TeamVectorRange.cpp
       ${dir}/Test${Tag}_UniqueToken.cpp
       ${dir}/Test${Tag}_ViewAPI_a.cpp
@@ -94,12 +94,14 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP)
       ${dir}/Test${Tag}_ViewAPI_c.cpp
       ${dir}/Test${Tag}_ViewAPI_d.cpp
       ${dir}/Test${Tag}_ViewAPI_e.cpp
-      ${dir}/Test${Tag}_ViewLayoutStrideAssignment.cpp
-#      ${dir}/Test${Tag}_ViewMapping_a.cpp
-#      ${dir}/Test${Tag}_ViewMapping_b.cpp
+# FIXME Linktime error: undefined reference to
+# Kokkos::Impl::ViewDimensin<0ul, ...>(unsigned int, ...)
+#      ${dir}/Test${Tag}_ViewLayoutStrideAssignment.cpp
+      ${dir}/Test${Tag}_ViewMapping_a.cpp
+      ${dir}/Test${Tag}_ViewMapping_b.cpp
       ${dir}/Test${Tag}_ViewMapping_subview.cpp
       ${dir}/Test${Tag}_ViewOfClass.cpp
-#      ${dir}/Test${Tag}_WorkGraph.cpp
+      ${dir}/Test${Tag}_WorkGraph.cpp
       ${dir}/Test${Tag}_View_64bit.cpp
       ${dir}/Test${Tag}_ViewResize.cpp
   )
