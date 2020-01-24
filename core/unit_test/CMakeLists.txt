@@ -246,6 +246,9 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_Reducers_b.cpp
       hip/TestHIP_Reducers_c.cpp
       hip/TestHIP_Reducers_d.cpp
+      hip/TestHIP_AtomicOperations_int.cpp
+      hip/TestHIP_AtomicOperations_unsignedint.cpp
+      hip/TestHIP_AtomicOperations_longlongint.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIP
