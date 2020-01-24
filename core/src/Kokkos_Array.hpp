@@ -172,7 +172,7 @@ struct Array {
 
   KOKKOS_INLINE_FUNCTION
   Array(const std::initializer_list<T>& vals) {
-    for (int i = 0; i < N; i++) {
+    for (size_t i = 0; i < N; i++) {
       m_internal_implementation_private_member_data[i] = vals.begin()[i];
     }
   }
