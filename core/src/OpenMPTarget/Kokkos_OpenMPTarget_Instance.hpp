@@ -6,7 +6,7 @@ namespace Impl {
 
 class OpenMPTargetInternal {
  private:
-  OpenMPTargetInternal();
+  OpenMPTargetInternal()                            = default;
   OpenMPTargetInternal(const OpenMPTargetInternal&) = default;
   OpenMPTargetInternal& operator=(const OpenMPTargetInternal&) = default;
 
@@ -33,7 +33,7 @@ class OpenMPTargetInternal {
   static OpenMPTargetInternal* impl_singleton();
 
  private:
-  bool m_is_initialized;
+  bool m_is_initialized = false;
 };
 }  // Namespace Impl
 }  // Namespace Experimental

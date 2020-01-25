@@ -3,7 +3,6 @@
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
-OpenMPTargetInternal::OpenMPTargetInternal() : m_is_initialized(false) {}
 void OpenMPTargetInternal::fence() {}
 int OpenMPTargetInternal::concurrency() { return 128000; }
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
@@ -26,7 +25,6 @@ OpenMPTargetInternal* OpenMPTargetInternal::impl_singleton() {
 
 OpenMPTarget::OpenMPTarget()
     : m_space_instance(Impl::OpenMPTargetInternal::impl_singleton()) {}
-OpenMPTarget::~OpenMPTarget() {}
 
 const char* OpenMPTarget::name() {
   return Impl::OpenMPTargetInternal::impl_singleton()->name();

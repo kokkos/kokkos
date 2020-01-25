@@ -113,7 +113,6 @@ class OpenMPTarget {
   }
 
   OpenMPTarget();
-  ~OpenMPTarget();
 
  private:
   Impl::OpenMPTargetInternal* m_space_instance;
