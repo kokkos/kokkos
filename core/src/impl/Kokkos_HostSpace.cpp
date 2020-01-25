@@ -397,7 +397,7 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::SharedAllocationRecord(
 void *SharedAllocationRecord<Kokkos::HostSpace, void>::allocate_tracked(
     const Kokkos::HostSpace &arg_space, const std::string &arg_alloc_label,
     const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void *)nullptr;
+  if (!arg_alloc_size) return nullptr;
 
   SharedAllocationRecord *const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);
@@ -437,10 +437,9 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::get_record(void *alloc_ptr) {
   typedef SharedAllocationRecord<Kokkos::HostSpace, void> RecordHost;
 
   SharedAllocationHeader const *const head =
-      alloc_ptr ? Header::get_header(alloc_ptr)
-                : (SharedAllocationHeader *)nullptr;
+      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
   RecordHost *const record =
-      head ? static_cast<RecordHost *>(head->m_record) : (RecordHost *)nullptr;
+      head ? static_cast<RecordHost *>(head->m_record) : nullptr;
 
   if (!alloc_ptr || record->m_alloc_ptr != head) {
     Kokkos::Impl::throw_runtime_exception(

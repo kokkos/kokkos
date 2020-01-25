@@ -180,7 +180,7 @@ KOKKOS_FUNCTION bool TaskQueue<ExecSpace, MemorySpace>::push_task(
          task->m_priority, task->m_ref_count);
 #endif
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
 
   task_root_type *volatile &next = task->m_next;
@@ -253,7 +253,7 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
     //
     // If queue is locked then just read by guaranteeing the CAS will fail.
 
-    if (lock == task) task = 0;
+    if (lock == task) task = nullptr;
 
     task_root_type *const x = task;
 
@@ -333,7 +333,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_runnable(
          task->m_priority, task->m_ref_count);
 #endif
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
   task_root_type *const end  = (task_root_type *)task_root_type::EndTag;
 
@@ -381,16 +381,16 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_runnable(
   // If we don't have a dependency, or if pushing onto the wait queue of that
   // dependency failed (since the only time that queue should be locked is when
   // the task is transitioning to complete??!?)
-  const bool is_ready = (0 == dep) || (!push_task(&dep->m_wait, task));
+  const bool is_ready = (nullptr == dep) || (!push_task(&dep->m_wait, task));
 
-  if ((0 != dep) && respawn) {
+  if ((nullptr != dep) && respawn) {
     // Reference count for dep was incremented when
     // respawn assigned dependency to task->m_next
     // so that if dep completed prior to the
     // above push_task dep would not be destroyed.
     // dep reference count can now be decremented,
     // which may deallocate the task.
-    TaskQueue::assign(&dep, (task_root_type *)0);
+    TaskQueue::assign(&dep, nullptr);
   }
 
   if (is_ready) {
@@ -451,7 +451,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_aggregate(
          task->m_ref_count);
 #endif
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
   task_root_type *const end  = (task_root_type *)task_root_type::EndTag;
 
@@ -550,7 +550,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::reschedule(
   //   task is in Executing-Respawn state
   //   task->m_next == 0 (no dependence)
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
 
   if (lock != Kokkos::atomic_exchange(&task->m_next, zero)) {
@@ -566,7 +566,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::complete(
   // Complete a runnable task that has finished executing
   // or a when_all task when all of its dependeneces are complete.
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
   task_root_type *const end  = (task_root_type *)task_root_type::EndTag;
 
@@ -623,7 +623,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::complete(
         task_root_type volatile &vx = *x;
 
         task_root_type *const next = vx.m_next;
-        vx.m_next                  = 0;
+        vx.m_next                  = nullptr;
 
         Kokkos::memory_fence();
 

@@ -1758,7 +1758,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const View<RT, RP...>& rhs,
       typename std::enable_if<Kokkos::Impl::ViewMapping<
           traits, typename View<RT, RP...>::traits,
-          typename traits::specialize>::is_assignable_data_type>::type* = 0)
+          typename traits::specialize>::is_assignable_data_type>::type* =
+          nullptr)
       : m_track(rhs.m_track, traits::is_managed), m_map() {
     typedef typename View<RT, RP...>::traits SrcTraits;
     typedef Kokkos::Impl::ViewMapping<traits, SrcTraits,
