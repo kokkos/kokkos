@@ -131,20 +131,6 @@ IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
   ENDIF()
 ENDIF()
 
-IF(KOKKOS_ENABLE_OPENMP)
-  IF (KOKKOS_CXX_COMPILER_ID STREQUAL AppleClang)
-    MESSAGE(FATAL_ERROR "Apple Clang does not support OpenMP. Use native Clang instead")
-  ENDIF()
-  COMPILER_SPECIFIC_FLAGS(
-    Clang      -fopenmp=libomp
-    PGI        -mp
-    NVIDIA     -Xcompiler -fopenmp
-    Cray       NO-VALUE-SPECIFIED
-    XL         -qsmp=omp
-    DEFAULT    -fopenmp
-  )
-ENDIF()
-
 IF (KOKKOS_ARCH_ARMV80)
   COMPILER_SPECIFIC_FLAGS(
     Cray NO-VALUE-SPECIFIED
