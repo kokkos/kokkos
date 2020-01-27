@@ -13,6 +13,7 @@ SET(SOURCES
   PerfTestMain.cpp
   PerfTestGramSchmidt.cpp
   PerfTestHexGrad.cpp
+# FIXME requires TeamPolicy
 #  PerfTest_CustomReduction.cpp
 #  PerfTest_ExecSpacePartitioning.cpp
   PerfTest_ViewCopy_a123.cpp
