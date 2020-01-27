@@ -356,7 +356,7 @@ __device__ bool hip_single_inter_block_reduce_scan2(
     size_type* const shared = shared_data + word_count.value * BlockSizeMask;
     size_type* const global = global_data + word_count.value * block_id;
 
-    for (int i = hipThreadIdx_y; i < word_count.value; i += hipBlockDim_y) {
+    for (size_t i = hipThreadIdx_y; i < word_count.value; i += hipBlockDim_y) {
       global[i] = shared[i];
     }
   }
