@@ -83,6 +83,7 @@ KOKKOS_INTERNAL_USE_PTHREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Pthre
 KOKKOS_INTERNAL_USE_QTHREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Qthreads)
 KOKKOS_INTERNAL_USE_HPX := $(call kokkos_has_string,$(KOKKOS_DEVICES),HPX)
 KOKKOS_INTERNAL_USE_SERIAL := $(call kokkos_has_string,$(KOKKOS_DEVICES),Serial)
+KOKKOS_INTERNAL_USE_SICM := $(call kokkos_has_string,$(KOKKOS_DEVICES),SICM)
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
   ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
@@ -472,6 +473,10 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_SERIAL")
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_SICM), 1)
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_SICM")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_TM), 1)
@@ -1272,6 +1277,16 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
     endif
   endif
   KOKKOS_TPL_LIBRARY_NAMES += hpx
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_SICM), 1)
+  KOKKOS_CXXFLAGS += $(shell pkg-config --cflags sicm)
+  KOKKOS_CXXLDFLAGS += $(shell pkg-config --libs sicm)
+  KOKKOS_LDFLAGS += $(shell pkg-config --libs sicm)
+else
+  # Don't include SICMSpace if not using SICM.
+  KOKKOS_SRC := $(filter-out $(KOKKOS_PATH)/core/src/impl/Kokkos_SICMSpace.cpp,$(KOKKOS_SRC))
+  KOKKOS_HEADERS := $(filter-out $(KOKKOS_PATH)/core/src/Kokkos_SICMSpace.hpp,$(KOKKOS_HEADERS))
 endif
 
 # Explicitly set the GCC Toolchain for Clang.

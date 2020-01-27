@@ -51,7 +51,11 @@
 
 #include <cstddef>
 #include <iosfwd>
+#ifdef KOKKOS_ENABLE_SICM
+#include <Kokkos_SICMSpace.hpp>
+#else
 #include <Kokkos_HostSpace.hpp>
+#endif
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
@@ -76,7 +80,11 @@ class Threads {
   //@{
   //! Tag this class as a kokkos execution space
   typedef Threads execution_space;
+  #ifdef KOKKOS_ENABLE_SICM
+  typedef Kokkos::Experimental::SICMSpace memory_space;
+  #else
   typedef Kokkos::HostSpace memory_space;
+  #endif
 
   //! This execution space preferred device_type
   typedef Kokkos::Device<execution_space, memory_space> device_type;

@@ -55,7 +55,11 @@
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
+#ifdef KOKKOS_ENABLE_SICM
+#include <Kokkos_SICMSpace.hpp>
+#else
 #include <Kokkos_HostSpace.hpp>
+#endif
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_Tags.hpp>
@@ -92,7 +96,11 @@ class Serial {
   //! The size_type typedef best suited for this device.
   typedef HostSpace::size_type size_type;
   //! This device's preferred memory space.
-  typedef HostSpace memory_space;
+  #ifdef KOKKOS_ENABLE_SICM
+  typedef Kokkos::Experimental::SICMSpace memory_space;
+  #else
+  typedef Kokkos::HostSpace memory_space;
+  #endif
   //! This execution space preferred device_type
   typedef Kokkos::Device<execution_space, memory_space> device_type;
 

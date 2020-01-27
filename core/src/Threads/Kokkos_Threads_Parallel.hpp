@@ -500,7 +500,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   "Kokkos::Threads reduce result must be a View");
 
     static_assert(
-        std::is_same<typename HostViewType::memory_space, HostSpace>::value,
+        std::is_same<typename HostViewType::memory_space, HostSpace>::value
+        #ifdef KOKKOS_ENABLE_SICM
+        || std::is_same<typename HostViewType::memory_space, Experimental::SICMSpace>::value
+        #endif
+        ,
         "Kokkos::Threads reduce result must be a View in HostSpace");
   }
 
@@ -659,7 +663,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                   "Kokkos::Threads reduce result must be a View");
 
     static_assert(
-        std::is_same<typename HostViewType::memory_space, HostSpace>::value,
+        std::is_same<typename HostViewType::memory_space, HostSpace>::value
+        #ifdef KOKKOS_ENABLE_SICM
+        || std::is_same<typename HostViewType::memory_space, Experimental::SICMSpace>::value
+        #endif
+        ,
         "Kokkos::Threads reduce result must be a View in HostSpace");
   }
 

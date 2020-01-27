@@ -144,6 +144,12 @@ class HIP;       ///< Execution space for HIP GPU
 }  // namespace Experimental
 #endif
 
+#if defined(KOKKOS_ENABLE_SICM)
+namespace Experimental {
+class SICMSpace;  ///< Memory space for main process and CPU execution spaces using SICM
+}  // namespace Experimental
+#endif
+
 template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
