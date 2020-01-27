@@ -326,7 +326,7 @@ class BinSort {
                    Kokkos::RangePolicy<execution_space>(0, len), functor);
     }
 
-    Kokkos::fence();
+    execution_space().fence();
   }
 
   template <class ValuesViewType>
