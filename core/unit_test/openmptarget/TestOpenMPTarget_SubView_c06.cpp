@@ -46,7 +46,7 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, view_subview_2d_from_3d_randomaccess) {
+TEST(TEST_CATEGORY, view_subview_2d_from_3d_randomaccess) {
   TestViewSubview::test_2d_subview_3d<
       TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::RandomAccess> >();
 }
