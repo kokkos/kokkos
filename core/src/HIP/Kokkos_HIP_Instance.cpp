@@ -317,9 +317,6 @@ void HIPInternal::finalize() {
   if (0 != m_scratchSpace || 0 != m_scratchFlags) {
     typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>
         RecordHIP;
-    typedef Kokkos::Impl::SharedAllocationRecord<
-        Kokkos::Experimental::HIPHostPinnedSpace>
-        RecordHost;
 
     RecordHIP::decrement(RecordHIP::get_record(m_scratchFlags));
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
