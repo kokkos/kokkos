@@ -46,12 +46,12 @@
 
 namespace Test {
 
-TEST_F(TEST_CATEGORY, team_shared_request) {
+TEST(TEST_CATEGORY, team_shared_request) {
   TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
   TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
 }
 
-TEST_F(TEST_CATEGORY, team_scratch_request) {
+TEST(TEST_CATEGORY, team_scratch_request) {
   TestScratchTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
   TestScratchTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
 }
@@ -65,9 +65,9 @@ TEST_F(TEST_CATEGORY, team_lambda_shared_request) {
 }
 #endif
 
-TEST_F(TEST_CATEGORY, shmem_size) { TestShmemSize<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, shmem_size) { TestShmemSize<TEST_EXECSPACE>(); }
 
-TEST_F(TEST_CATEGORY, multi_level_scratch) {
+TEST(TEST_CATEGORY, multi_level_scratch) {
   TestMultiLevelScratchTeam<TEST_EXECSPACE,
                             Kokkos::Schedule<Kokkos::Static> >();
   TestMultiLevelScratchTeam<TEST_EXECSPACE,
