@@ -413,8 +413,7 @@ void* SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>*
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::get_record(
     void* alloc_ptr) {
-  using Header     = SharedAllocationHeader;
-  using RecordBase = SharedAllocationRecord<void, void>;
+  using Header = SharedAllocationHeader;
   using RecordHIP =
       SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>;
 
