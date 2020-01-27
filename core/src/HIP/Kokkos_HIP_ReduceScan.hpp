@@ -430,7 +430,7 @@ __device__ bool hip_single_inter_block_reduce_scan(
     ::Kokkos::Experimental::HIP::size_type* const global_data,
     ::Kokkos::Experimental::HIP::size_type* const global_flags) {
   using ValueTraits = FunctorValueTraits<FunctorType, ArgTag>;
-  if (!DoScan && ValueTraits::StaticValueSize)
+  if (!DoScan && /*FIXME*/ (bool)ValueTraits::StaticValueSize)
     // TODO For now we don't use shuffle
     // return Kokkos::Impl::HIPReductionsFunctor<
     //    FunctorType, ArgTag, false, (ValueTraits::StaticValueSize > 16)>::
