@@ -502,7 +502,7 @@ inline void parallel_scan(
     Kokkos::Profiling::endParallelScan(kpID);
   }
 #endif
-  Kokkos::fence();
+  policy.space().fence();
 }
 
 template <class FunctorType, class ReturnType>
@@ -534,7 +534,7 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
     Kokkos::Profiling::endParallelScan(kpID);
   }
 #endif
-  Kokkos::fence();
+  execution_space().fence();
 }
 
 template <class ExecutionPolicy, class FunctorType, class ReturnType>
