@@ -94,9 +94,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP)
       ${dir}/Test${Tag}_ViewAPI_c.cpp
       ${dir}/Test${Tag}_ViewAPI_d.cpp
       ${dir}/Test${Tag}_ViewAPI_e.cpp
-# FIXME Linktime error: undefined reference to
-# Kokkos::Impl::ViewDimensin<0ul, ...>(unsigned int, ...)
-#      ${dir}/Test${Tag}_ViewLayoutStrideAssignment.cpp
+      ${dir}/Test${Tag}_ViewLayoutStrideAssignment.cpp
       ${dir}/Test${Tag}_ViewMapping_a.cpp
       ${dir}/Test${Tag}_ViewMapping_b.cpp
       ${dir}/Test${Tag}_ViewMapping_subview.cpp
@@ -237,7 +235,9 @@ if(Kokkos_ENABLE_CUDA)
 endif()
 
 if(Kokkos_ENABLE_HIP)
-  # FIXME
+# FIXME Linktime error: undefined reference to
+# Kokkos::Impl::ViewDimensin<0ul, ...>(unsigned int, ...)
+  list(REMOVE_ITEM Serial_SOURCES serial/TestSerial_ViewLayoutStrideAssignment.cpp)
   set(HIP_SOURCES
       UnitTestMainInit.cpp
       hip/TestHIP_Init.cpp
