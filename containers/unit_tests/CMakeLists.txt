@@ -17,17 +17,17 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda)
       UnitTest_${Tag}
       SOURCES
         UnitTestMain.cpp
-#        ${dir}/Test${Tag}_BitSet.cpp
+        ${dir}/Test${Tag}_BitSet.cpp
         ${dir}/Test${Tag}_DualView.cpp
         ${dir}/Test${Tag}_DynamicView.cpp
         ${dir}/Test${Tag}_DynRankViewAPI_generic.cpp
         ${dir}/Test${Tag}_DynRankViewAPI_rank12345.cpp
         ${dir}/Test${Tag}_DynRankViewAPI_rank67.cpp
         ${dir}/Test${Tag}_ErrorReporter.cpp
-#        ${dir}/Test${Tag}_OffsetView.cpp
-#        ${dir}/Test${Tag}_ScatterView.cpp
+        ${dir}/Test${Tag}_OffsetView.cpp
+        ${dir}/Test${Tag}_ScatterView.cpp
         ${dir}/Test${Tag}_StaticCrsGraph.cpp
-#        ${dir}/Test${Tag}_UnorderedMap.cpp
+        ${dir}/Test${Tag}_UnorderedMap.cpp
         ${dir}/Test${Tag}_Vector.cpp
         ${dir}/Test${Tag}_ViewCtorPropEmbeddedDim.cpp
       )
