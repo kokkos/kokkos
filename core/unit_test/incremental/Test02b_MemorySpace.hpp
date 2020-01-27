@@ -42,31 +42,33 @@
 */
 
 /// @Kokkos_Feature_Level_Required:2
+// Unit test for Kokkos free.
+// We constantly allocate and free the memory.
+// If the kokkos_free does not free the allocated memory,
+// we will exceed the available space.
 
 #include <Kokkos_Core.hpp>
-#include <cstdio>
-#include <sstream>
-#include <type_traits>
 #include <gtest/gtest.h>
 
 namespace Test {
 
-// Unit test for kokkos_free
-// We constantly allocate and de-allocate memory.
-// If the kokkos_free does not free the memory, we will exceed the available
-// space
+using value_type = double;
 
-template <class execSpace>
+// Allocate M number of value_type elements N number of times.
+const int N = 100000;
+const int M = 100000;
+
+template <class ExecSpace>
 struct TestIncrMemorySpace_free {
-  const int N = 100000;
-  const int M = 100000;
-  typedef typename execSpace::memory_space memory_space;
+  using memory_space = typename ExecSpace::memory_space;
 
-  void testit_free() {
+  void test_free() {
     for (int i = 0; i < N; ++i) {
-      double *data = (double *)Kokkos::kokkos_malloc<memory_space>(
-          "data", M * sizeof(double));
-      ASSERT_FALSE(data == nullptr);
+      auto *data = static_cast<value_type *>(
+          Kokkos::kokkos_malloc<memory_space>("data", M * sizeof(value_type)));
+
+      ASSERT_NE(data, nullptr);
+
       Kokkos::kokkos_free<memory_space>(data);
     }
   }
@@ -74,7 +76,7 @@ struct TestIncrMemorySpace_free {
 
 TEST(TEST_CATEGORY, incr_02b_memspace_free) {
   TestIncrMemorySpace_free<TEST_EXECSPACE> test;
-  test.testit_free();
+  test.test_free();
 }
 
 }  // namespace Test
