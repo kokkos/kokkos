@@ -45,10 +45,10 @@ IF(Kokkos_ENABLE_HPX)
 ENDIF()
 
 IF(Kokkos_ENABLE_SERIAL)
-# FIXME
-#  LIST( APPEND SOURCES
+  LIST( APPEND SOURCES
+# FIXME sqrt(complex)
 #    TestSerial.cpp
-#  )
+  )
 ENDIF()
 
 IF(Kokkos_ENABLE_PTHREAD)
