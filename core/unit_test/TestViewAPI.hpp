@@ -1449,6 +1449,11 @@ class TestViewAPI {
   }
 
   static void run_test_error() {
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    if (std::is_same<typename dView1::memory_space,
+                     Kokkos::Experimental::OpenMPTargetSpace>::value)
+      return;
+#endif
     auto alloc_size = std::numeric_limits<size_t>::max() - 42;
     try {
       auto should_always_fail = dView1("hello_world_failure", alloc_size);

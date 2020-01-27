@@ -24,7 +24,7 @@ KOKKOS_TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
-foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP)
+foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
     set(DEVICE "PTHREAD")
@@ -107,6 +107,24 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP)
   )
 endforeach()
 
+if(Kokkos_ENABLE_OPENMPTARGET)
+  list(REMOVE_ITEM OpenMPTarget_SOURCES
+    openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
+    openmptarget/TestOpenMPTarget_MDRange_a.cpp
+    openmptarget/TestOpenMPTarget_MDRange_b.cpp
+    openmptarget/TestOpenMPTarget_MDRange_c.cpp
+    openmptarget/TestOpenMPTarget_MDRange_d.cpp
+    openmptarget/TestOpenMPTarget_MDRange_e.cpp
+    openmptarget/TestOpenMPTarget_Other.cpp
+    openmptarget/TestOpenMPTarget_Scan.cpp
+    openmptarget/TestOpenMPTarget_Team.cpp
+    openmptarget/TestOpenMPTarget_TeamScratch.cpp
+    openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
+    openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
+    openmptarget/TestOpenMPTarget_ViewOfClass.cpp
+  )
+endif()
+
 if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial
@@ -150,6 +168,14 @@ if(Kokkos_ENABLE_HPX)
     SOURCES
       UnitTestMain.cpp
       hpx/TestHPX_InterOp.cpp
+  )
+endif()
+
+if(Kokkos_ENABLE_OPENMPTARGET)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPTarget
+    SOURCES
+    ${OpenMPTarget_SOURCES}
   )
 endif()
 
@@ -325,12 +351,14 @@ KOKKOS_ADD_TEST_EXECUTABLE(
     TestStackTrace_f3.cpp
     TestStackTrace_f4.cpp
 )
+# We need -rdynamic on GNU platforms for the stacktrace functionality
+# to work correctly with shared libraries
+SET_PROPERTY(TARGET StackTraceTestExec PROPERTY ENABLE_EXPORTS 1)
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
-
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_terminate
                  EXE  StackTraceTestExec
