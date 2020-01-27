@@ -269,26 +269,46 @@ if(Kokkos_ENABLE_HIP)
     UnitTest_HIP
     SOURCES
       ${HIP_SOURCES}
-)
+  )
 endif()
+
+SET(DEFAULT_DEVICE_SOURCES
+  UnitTestMainInit.cpp
+  default/TestDefaultDeviceType.cpp
+  default/TestDefaultDeviceType_a1.cpp
+  default/TestDefaultDeviceType_b1.cpp
+  default/TestDefaultDeviceType_c1.cpp
+  default/TestDefaultDeviceType_a2.cpp
+  default/TestDefaultDeviceType_b2.cpp
+  default/TestDefaultDeviceType_c2.cpp
+  default/TestDefaultDeviceType_a3.cpp
+  default/TestDefaultDeviceType_b3.cpp
+  default/TestDefaultDeviceType_c3.cpp
+  default/TestDefaultDeviceType_d.cpp
+  default/TestDefaultDeviceTypeResize.cpp
+)
+
+IF(Kokkos_ENABLE_HIP)
+  # FIXME
+  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES
+    default/TestDefaultDeviceType_a1.cpp
+    default/TestDefaultDeviceType_b1.cpp
+    default/TestDefaultDeviceType_c1.cpp
+    default/TestDefaultDeviceType_a2.cpp
+    default/TestDefaultDeviceType_b2.cpp
+    default/TestDefaultDeviceType_c2.cpp
+    default/TestDefaultDeviceType_a3.cpp
+    default/TestDefaultDeviceType_b3.cpp
+    default/TestDefaultDeviceType_c3.cpp
+    default/TestDefaultDeviceType_d.cpp
+    # NOTE the one below compiles but fails
+    default/TestDefaultDeviceTypeResize.cpp
+  )
+ENDIF()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
-  SOURCES
-    UnitTestMainInit.cpp
-    default/TestDefaultDeviceType.cpp
-#    default/TestDefaultDeviceType_a1.cpp
-#    default/TestDefaultDeviceType_b1.cpp
-#    default/TestDefaultDeviceType_c1.cpp
-#    default/TestDefaultDeviceType_a2.cpp
-#    default/TestDefaultDeviceType_b2.cpp
-#    default/TestDefaultDeviceType_c2.cpp
-#    default/TestDefaultDeviceType_a3.cpp
-#    default/TestDefaultDeviceType_b3.cpp
-#    default/TestDefaultDeviceType_c3.cpp
-#    default/TestDefaultDeviceType_d.cpp
-# NOTE the one below compiles but fails
-#    default/TestDefaultDeviceTypeResize.cpp
+  SOURCES ${DEFAULT_DEVICE_SOURCES}
 )
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
