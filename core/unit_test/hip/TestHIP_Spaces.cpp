@@ -54,7 +54,7 @@ __global__ void test_hip_spaces_int_value(int *ptr) {
   }
 }
 
-TEST_F(hip, space_access) {
+TEST(hip, space_access) {
   static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                                 Kokkos::HostSpace>::assignable,
                 "");
@@ -219,7 +219,7 @@ struct TestViewHIPAccessible {
   }
 };
 
-TEST_F(hip, impl_view_accessible) {
+TEST(hip, impl_view_accessible) {
   TestViewHIPAccessible<Kokkos::Experimental::HIPSpace,
                         Kokkos::Experimental::HIP>::run();
 
