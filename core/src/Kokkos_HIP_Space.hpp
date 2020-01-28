@@ -86,7 +86,7 @@ class HIPSpace {
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
 
   /**\brief Return Name of the MemorySpace */
-  static constexpr const char* name() { return m_name; };
+  static constexpr const char* name() { return "HIP"; }
 
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access HIPSpace */
@@ -96,7 +96,6 @@ class HIPSpace {
  private:
   int m_device;  ///< Which HIP device
 
-  static constexpr const char* m_name = "HIP";
   friend class Kokkos::Impl::SharedAllocationRecord<
       Kokkos::Experimental::HIPSpace, void>;
 };
