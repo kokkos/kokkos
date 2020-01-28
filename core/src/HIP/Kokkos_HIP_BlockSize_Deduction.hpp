@@ -57,6 +57,10 @@ namespace Impl {
 template <typename DriverType, typename LaunchBounds, bool Large>
 struct HIPGetMaxBlockSize;
 
+// FIXME_HIP In CUDA we have a variant which gets the functor attributes and
+// then uses information from that to figure out what to do instead of calling
+// repeatedly the occupancy function from the runtime.
+
 template <typename DriverType, typename LaunchBounds>
 int hip_get_max_block_size(typename DriverType::functor_type const &f,
                            size_t const vector_length,
