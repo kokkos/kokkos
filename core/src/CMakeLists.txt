@@ -67,6 +67,12 @@ ELSE()
   LIST(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/impl/Kokkos_Serial_task.cpp)
 ENDIF()
 
+IF (KOKKOS_ENABLE_SICM)
+  SET(KOKKOS_CORE_SRCS ${KOKKOS_CORE_SRCS} ${CMAKE_CURRENT_SOURCE_DIR}/impl/Kokkos_SICMSpace.cpp)
+ELSE()
+  LIST(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/impl/Kokkos_SICMSpace.cpp)
+ENDIF()
+
 KOKKOS_ADD_LIBRARY(
   kokkoscore
   SOURCES ${KOKKOS_CORE_SRCS}
@@ -87,3 +93,10 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC HPX)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBDL)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBRT)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC PTHREAD)
+
+IF(KOKKOS_ENABLE_SICM)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(SICM REQUIRED sicm)
+  target_include_directories(kokkoscore PUBLIC "${SICM_INCLUDE_DIRS}")
+  target_link_libraries(kokkoscore PUBLIC "${SICM_LDFLAGS}")
+ENDIF()

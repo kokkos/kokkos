@@ -15,6 +15,7 @@
 #cmakedefine KOKKOS_ENABLE_HPX
 #cmakedefine KOKKOS_ENABLE_MEMKIND
 #cmakedefine KOKKOS_ENABLE_LIBRT
+#cmakedefine KOKKOS_ENABLE_SICM
 
 #ifndef __CUDA_ARCH__
 #cmakedefine KOKKOS_ENABLE_TM
