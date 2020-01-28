@@ -79,10 +79,10 @@ class HIPSpace {
   HIPSpace& operator=(const HIPSpace& rhs) = default;
   ~HIPSpace()                              = default;
 
-  /**\brief  Allocate untracked memory in the rocm space */
+  /**\brief  Allocate untracked memory in the hip space */
   void* allocate(const size_t arg_alloc_size) const;
 
-  /**\brief  Deallocate untracked memory in the rocm space */
+  /**\brief  Deallocate untracked memory in the hip space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
 
   /**\brief Return Name of the MemorySpace */
@@ -110,7 +110,7 @@ namespace Impl {
 /// where the hash value is derived from the address of the
 /// object for which an atomic operation is performed.
 /// This function initializes the locks to zero (unset).
-void init_lock_arrays_rocm_space();
+void init_lock_arrays_hip_space();
 
 /// \brief Retrieve the pointer to the lock array for arbitrary size atomics.
 ///
@@ -119,7 +119,7 @@ void init_lock_arrays_rocm_space();
 /// object for which an atomic operation is performed.
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
-int* atomic_lock_array_rocm_space_ptr(bool deallocate = false);
+int* atomic_lock_array_hip_space_ptr(bool deallocate = false);
 
 /// \brief Retrieve the pointer to the scratch array for team and thread private
 /// global memory.
@@ -128,7 +128,7 @@ int* atomic_lock_array_rocm_space_ptr(bool deallocate = false);
 /// global memory are aquired via locks.
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
-int* scratch_lock_array_rocm_space_ptr(bool deallocate = false);
+int* scratch_lock_array_hip_space_ptr(bool deallocate = false);
 
 /// \brief Retrieve the pointer to the scratch array for unique identifiers.
 ///
@@ -136,7 +136,7 @@ int* scratch_lock_array_rocm_space_ptr(bool deallocate = false);
 /// are provided via locks.
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
-int* threadid_lock_array_rocm_space_ptr(bool deallocate = false);
+int* threadid_lock_array_hip_space_ptr(bool deallocate = false);
 }  // namespace Impl
 }  // namespace Kokkos
 
