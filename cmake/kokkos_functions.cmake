@@ -791,7 +791,7 @@ FUNCTION(COMPILER_SPECIFIC_LIBS)
 ENDFUNCTION(COMPILER_SPECIFIC_LIBS)
 
 ## KOKKOS_CONFIG_HEADER - parse the data list which is a list of backend names
-##                        and create output config header file...used for 
+##                        and create output config header file...used for
 ##                        creating dynamic include files based on enabled backends
 ##
 FUNCTION(KOKKOS_CONFIG_HEADER SRC_FILE TARGET_FILE HEADER_PREFIX DATA_LIST)
