@@ -187,8 +187,7 @@ void* HIPSpace::allocate(const size_t arg_alloc_size) const {
   return ptr;
 }
 
-void* Experimental::HIPHostPinnedSpace::allocate(
-    const size_t arg_alloc_size) const {
+void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
   void* ptr = NULL;
   hipHostMalloc(&ptr, arg_alloc_size);
   return ptr;
@@ -199,8 +198,8 @@ void HIPSpace::deallocate(void* const arg_alloc_ptr,
   hipFree(arg_alloc_ptr);
 }
 
-void Experimental::HIPHostPinnedSpace::deallocate(
-    void* const arg_alloc_ptr, const size_t /* arg_alloc_size */) const {
+void HIPHostPinnedSpace::deallocate(void* const arg_alloc_ptr,
+                                    const size_t /* arg_alloc_size */) const {
   hipHostFree(arg_alloc_ptr);
 }
 
