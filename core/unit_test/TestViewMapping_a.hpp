@@ -1077,8 +1077,8 @@ void test_view_mapping() {
 
     int errors = 0;
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<host_exec_space>(0, 10), KOKKOS_LAMBDA(int, int &e)
-{
+        Kokkos::RangePolicy<host_exec_space>(0, 10),
+        KOKKOS_LAMBDA(int, int& e) {
           // an unmanaged copy.  When the parallel dispatch accepts a move for
           // the lambda, this count should become 1.
 
@@ -1086,7 +1086,8 @@ void test_view_mapping() {
           V x = a;
           if (a.use_count() != 2) ++e;
           if (x.use_count() != 2) ++e;
-        }, errors);
+        },
+        errors);
     ASSERT_EQ(errors, 0);
 #endif  // #if !defined( KOKKOS_ENABLE_CUDA_LAMBDA )
   }
