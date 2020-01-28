@@ -46,17 +46,6 @@
 
 #include <gtest/gtest.h>
 
-namespace Test {
-
-class hip_hostpinned : public ::testing::Test {
- protected:
-  static void SetUpTestCase() {}
-
-  static void TearDownTestCase() {}
-};
-
-}  // namespace Test
-
 #define TEST_CATEGORY hip_hostpinned
 #define TEST_EXECSPACE Kokkos::Experimental::HIPHostPinnedSpace
 
