@@ -325,8 +325,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
           &SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                                   void>::s_root_record,
 #endif
-          reinterpret_cast<SharedAllocationHeader*>(arg_space.allocate(
-              sizeof(SharedAllocationHeader) + arg_alloc_size)),
+          Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                       arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -364,8 +364,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
           &SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
                                   void>::s_root_record,
 #endif
-          reinterpret_cast<SharedAllocationHeader*>(arg_space.allocate(
-              sizeof(SharedAllocationHeader) + arg_alloc_size)),
+          Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                       arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
 #if defined(KOKKOS_ENABLE_PROFILING)
