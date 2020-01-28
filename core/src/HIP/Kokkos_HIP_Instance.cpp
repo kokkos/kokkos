@@ -372,11 +372,8 @@ namespace Experimental {
 //{ return Impl::HIPInternalDevices::singleton().m_hipDevCount ; }
 
 int HIP::concurrency() {
-#if defined(KOKKOS_ARCH_KAVERI)
-  return 8 * 64 * 40;  // 20480 kaveri
-#else
+  // FIXME_HIP
   return 32 * 8 * 40;  // 81920 fiji and hawaii
-#endif
 }
 int HIP::impl_is_initialized() {
   return Impl::HIPInternal::singleton().is_initialized();
