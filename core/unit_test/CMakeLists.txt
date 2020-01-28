@@ -317,7 +317,7 @@ KOKKOS_ADD_TEST_EXECUTABLE(
 SET_PROPERTY(TARGET ${PACKAGE_NAME}_StackTraceTestExec PROPERTY ENABLE_EXPORTS ON)
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
-                 EXE  StackTraceTestExec
+                 EXE  ${PACKAGE_NAME}_StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
 
