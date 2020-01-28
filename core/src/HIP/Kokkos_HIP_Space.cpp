@@ -57,6 +57,7 @@
 #include <Kokkos_HIP_Space.hpp>
 
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_MemorySpace.hpp>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -182,14 +183,34 @@ HIPSpace::HIPSpace() : m_device(HIP().hip_device()) {}
 HIPHostPinnedSpace::HIPHostPinnedSpace() {}
 
 void* HIPSpace::allocate(const size_t arg_alloc_size) const {
-  void* ptr = NULL;
-  hipMalloc(&ptr, arg_alloc_size);
+  void* ptr = nullptr;
+
+  auto const error_code = hipMalloc(&ptr, arg_alloc_size);
+  if (error_code != hipSuccess) {
+    hipGetLastError();  // This is the only way to clear the last error, which
+                        // we should do here since we're turning it into an
+                        // exception here
+    throw HIPRawMemoryAllocationFailure(
+        arg_alloc_size, error_code,
+        RawMemoryAllocationFailure::AllocationMechanism::HIPMalloc);
+  }
+
   return ptr;
 }
 
 void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
-  void* ptr = NULL;
-  hipHostMalloc(&ptr, arg_alloc_size);
+  void* ptr = nullptr;
+
+  auto const error_code = hipHostMalloc(&ptr, arg_alloc_size);
+  if (error_code != hipSuccess) {
+    hipGetLastError();  // This is the only way to clear the last error, which
+                        // we should do here since we're turning it into an
+                        // exception here
+    throw HIPRawMemoryAllocationFailure(
+        arg_alloc_size, error_code,
+        RawMemoryAllocationFailure::AllocationMechanism::HIPHostMalloc);
+  }
+
   return ptr;
 }
 
