@@ -124,7 +124,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
 endif()
 
 FOREACH (EXT_PATH ${Kokkos_CODE_EXTENSIONS_PATH})
-  INCLUDE(${EXT_PATH}/core/unit_tests/CMakeLists.txt)  
+  INCLUDE(${EXT_PATH}/core/unit_tests/CMakeLists.txt)
 ENDFOREACH()
 
 if(Kokkos_ENABLE_SERIAL)

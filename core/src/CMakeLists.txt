@@ -64,7 +64,7 @@ ELSE()
 ENDIF()
 
 FOREACH (EXT_PATH ${Kokkos_CODE_EXTENSIONS_PATH})
-  INCLUDE(${EXT_PATH}/core/src/CMakeLists.txt)  
+  INCLUDE(${EXT_PATH}/core/src/CMakeLists.txt)
 ENDFOREACH()
 
 KOKKOS_ADD_LIBRARY(
@@ -94,6 +94,6 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBRT)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC PTHREAD)
 
 FOREACH (EXT_PATH ${Kokkos_CODE_EXTENSIONS_PATH})
-  INCLUDE(${EXT_PATH}/cmake/LinkCoreTPL.cmake)  
+  INCLUDE(${EXT_PATH}/cmake/LinkCoreTPL.cmake)
 ENDFOREACH()
 

@@ -210,7 +210,7 @@ MACRO(KOKKOS_CONFIGURE_CORE)
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_FwdBackend.hpp "fwd/Kokkos_Fwd" "${FWD_BACKEND_LIST}")
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_SetupBackend.hpp "Kokkos_Setup" "${DEVICE_SETUP_LIST}")
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_DeclareBackend.hpp "decl/Kokkos_Declare" "${FWD_BACKEND_LIST}")
- 
+
    IF (_DEVICE_PARALLEL)
       SET(KOKKOS_DEVICE_SPACE_ACTIVE ON)
    ELSE()
