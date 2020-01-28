@@ -444,7 +444,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   tmp := $(call kokkos_append_header,'\#define KOKKOS_ENABLE_HIP')
-  tmp := $(call kokkos_append_header,'\#define KOKKOS_IMPL_HIP_CLANG_WORKAROUND 1')
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
