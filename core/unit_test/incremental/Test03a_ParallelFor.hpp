@@ -137,15 +137,9 @@ struct TestParallel_For {
     // host and device memory spaces.
     init();
 
-    // Creates a range policy that uses static schedule for Cuda and dynamic
-    // schedule for other memory spaces.
-#if defined(KOKKOS_ENABLE_CUDA)
-    typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Static> >
-        range_policy;
-#else
+    // Creates a range policy that uses dynamic scheduling.
     typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
         range_policy;
-#endif
 
     // parallel-for functor with range-policy from 0 to num_elements iterations.
     Kokkos::parallel_for("RangePolicy_ParallelFor",
