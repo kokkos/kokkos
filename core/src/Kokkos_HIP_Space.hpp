@@ -173,10 +173,7 @@ class HIPHostPinnedSpace {
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
 
   /**\brief Return Name of the MemorySpace */
-  static constexpr const char* name() { return m_name; };
-
- private:
-  static constexpr const char* m_name = "HIPHostPinned";
+  static constexpr const char* name() { return "HIPHostPinned"; }
 
   /*--------------------------------*/
 };
