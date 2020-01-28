@@ -661,7 +661,7 @@ class Random_XorShift64 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     using std::sqrt;
 #endif
     double S = 2.0;
@@ -903,7 +903,7 @@ class Random_XorShift1024 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     using std::sqrt;
 #endif
     double S = 2.0;
@@ -1160,7 +1160,7 @@ class Random_XorShift1024<Kokkos::Cuda> {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     using std::sqrt;
 #endif
     double S = 2.0;
@@ -1398,7 +1398,7 @@ class Random_XorShift1024<Kokkos::Experimental::ROCm> {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     using std::sqrt;
 #endif
     double S = 2.0;

@@ -85,7 +85,7 @@ struct TestComplexConstruction {
 
     // Copy construction conversion between
     // Kokkos::complex and std::complex doesn't compile
-#ifndef KOKKOS_ENABLE_HIP
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     Kokkos::complex<double> a(1.5, 2.5), b(3.25, 5.25), r_kk;
     std::complex<double> sa(a), sb(3.25, 5.25), r;
     r    = a;
