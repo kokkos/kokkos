@@ -432,10 +432,6 @@ void HIP::print_configuration(std::ostream &s, const bool) {
   Impl::HIPInternal::singleton().print_configuration(s);
 }
 
-bool HIP::sleep() { return false; }
-
-bool HIP::wake() { return true; }
-
 void HIP::fence() const { HIP_SAFE_CALL(hipDeviceSynchronize()); }
 
 int HIP::hip_device() const { return impl_internal_space_instance()->m_hipDev; }
