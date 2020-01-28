@@ -316,17 +316,7 @@ KOKKOS_ADD_TEST_EXECUTABLE(
 # to work correctly with shared libraries
 SET_PROPERTY(TARGET ${PACKAGE_NAME}_StackTraceTestExec PROPERTY ENABLE_EXPORTS ON)
 
-KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
-                 EXE  StackTraceTestExec
-                 FAIL_REGULAR_EXPRESSION "FAILED"
-               )
-
-KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_terminate
-                 EXE  StackTraceTestExec
-                 FAIL_REGULAR_EXPRESSION "FAILED"
-               )
-
-KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_generic_term
+KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
