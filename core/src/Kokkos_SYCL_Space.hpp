@@ -177,6 +177,7 @@ namespace Experimental {
 /** \brief  Host memory that is accessible to SYCL execution space
  *          through SYCL's host-pinned memory allocation.
  */
+//TODO NLIBER remove SYCLHostPinnedSpace
 class SYCLHostPinnedSpace {
 public:
 
@@ -426,6 +427,73 @@ struct DeepCopy< HostSpace , Kokkos::Experimental::SYCLSpace , ExecutionSpace >
   }
 };
 
+//========================
+template<> struct DeepCopy< Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCL>
+{
+  DeepCopy( void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::SYCL & , void * dst , const void * src , size_t );
+};
+
+template<> struct DeepCopy< Kokkos::Experimental::SYCLHostUSMSpace , HostSpace , Kokkos::Experimental::SYCL >
+{
+  DeepCopy( void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::SYCL & , void * dst , const void * src , size_t );
+};
+
+template<> struct DeepCopy< HostSpace , Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCL >
+{
+  DeepCopy( void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::SYCL & , void * dst , const void * src , size_t );
+};
+
+template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCLHostUSMSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  { (void) DeepCopy< Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCL >( dst , src , n ); }
+
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+//    exec.fence();
+//    hc::completion_future fut = DeepCopyAsyncSYCL (dst,src,n);
+//    fut.wait();
+//    DeepCopy (dst,src,n);
+  }
+};
+
+template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::SYCLHostUSMSpace , HostSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  { (void) DeepCopy< Kokkos::Experimental::SYCLHostUSMSpace , HostSpace , Kokkos::Experimental::SYCL>( dst , src , n ); }
+
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+    exec.fence();
+    DeepCopy (dst,src,n);
+  }
+};
+
+template<class ExecutionSpace>
+struct DeepCopy< HostSpace , Kokkos::Experimental::SYCLHostUSMSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  { (void) DeepCopy< HostSpace , Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCL >( dst , src , n ); }
+
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+    exec.fence();
+    DeepCopy (dst,src,n);
+  }
+};
+
+
+//========================
+
 template<> struct DeepCopy< Kokkos::Experimental::SYCLHostPinnedSpace , Kokkos::Experimental::SYCLHostPinnedSpace , Kokkos::Experimental::SYCL>
 {
   DeepCopy( void * dst , const void * src , size_t );
@@ -586,6 +654,7 @@ struct VerifyExecutionCanAccessMemorySpace< Kokkos::HostSpace , Kokkos::Experime
   KOKKOS_INLINE_FUNCTION static void verify( void ) {}
   KOKKOS_INLINE_FUNCTION static void verify( const void * ) {}
 };
+
 } // namespace Impl
 } // namespace Kokkos
 
