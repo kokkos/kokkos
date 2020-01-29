@@ -2756,7 +2756,6 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
     new (ptr + i) ValueType();
   }
 
-  template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION void operator()(DestroyTag const&,
                                          const size_t i) const {
     (ptr + i)->~ValueType();  // KOKKOS_IMPL_CUDA_CLANG_WORKAROUND this line
