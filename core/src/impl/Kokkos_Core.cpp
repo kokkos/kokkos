@@ -539,7 +539,7 @@ void initialize(int& narg, char* arg[]) {
 
       char* num1      = strchr(arg[iarg], '=') + 1;
       char* num2      = strpbrk(num1, ",");
-      int num1_len    = num2 == NULL ? strlen(num1) : num2 - num1;
+      int num1_len    = num2 == nullptr ? strlen(num1) : num2 - num1;
       char* num1_only = new char[num1_len + 1];
       strncpy(num1_only, num1, num1_len);
       num1_only[num1_len] = 0;
@@ -555,7 +555,7 @@ void initialize(int& narg, char* arg[]) {
         ndevices = atoi(num1_only);
       delete[] num1_only;
 
-      if (num2 != NULL) {
+      if (num2 != nullptr) {
         if ((!Impl::is_unsigned_int(num2 + 1)) || (strlen(num2) == 1))
           Impl::throw_runtime_exception(
               "Error: expecting an integer number after command line argument "

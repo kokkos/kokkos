@@ -395,7 +395,7 @@ class StaticCrsGraph {
     const data_type count = static_cast<data_type>(row_map(i + 1) - start);
 
     if (count == 0) {
-      return GraphRowViewConst<StaticCrsGraph>(NULL, 1, 0);
+      return GraphRowViewConst<StaticCrsGraph>(nullptr, 1, 0);
     } else {
       return GraphRowViewConst<StaticCrsGraph>(entries, 1, count, start);
     }

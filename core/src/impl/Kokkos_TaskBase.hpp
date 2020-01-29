@@ -206,7 +206,7 @@ class TaskBase {
       Kokkos::abort("TaskScheduler ERROR: resetting task dependence");
     }
 
-    if (0 != dep) {
+    if (nullptr != dep) {
       // The future may be destroyed upon returning from this call
       // so increment reference count to track this assignment.
       Kokkos::atomic_increment(&(dep->m_ref_count));

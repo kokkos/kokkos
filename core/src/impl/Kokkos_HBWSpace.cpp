@@ -135,8 +135,8 @@ void *HBWSpace::allocate(const size_t arg_alloc_size) const {
       case STD_MALLOC: msg << "STD_MALLOC"; break;
     }
     msg << " ]( " << arg_alloc_size << " ) FAILED";
-    if (ptr == NULL) {
-      msg << " NULL";
+    if (ptr == nullptr) {
+      msg << " nullptr";
     } else {
       msg << " NOT ALIGNED " << ptr;
     }

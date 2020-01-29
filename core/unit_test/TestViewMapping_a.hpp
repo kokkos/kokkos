@@ -899,7 +899,7 @@ void test_view_mapping() {
     ASSERT_TRUE(offset.span_is_contiguous());
 
     Kokkos::Impl::ViewMapping<traits_t, void> v(
-        Kokkos::Impl::ViewCtorProp<int*>((int*)0), stride);
+        Kokkos::Impl::ViewCtorProp<int*>(nullptr), stride);
   }
 
   {

@@ -88,14 +88,14 @@ void OpenMPTargetExec::verify_initialized(const char* const label) {
   }
 }
 
-void* OpenMPTargetExec::m_scratch_ptr    = NULL;
+void* OpenMPTargetExec::m_scratch_ptr    = nullptr;
 int64_t OpenMPTargetExec::m_scratch_size = 0;
 
 void OpenMPTargetExec::clear_scratch() {
   Kokkos::Experimental::OpenMPTargetSpace space;
   space.deallocate(m_scratch_ptr, m_scratch_size);
-  m_scratch_ptr  = NULL;
-  m_scratch_size = NULL;
+  m_scratch_ptr  = nullptr;
+  m_scratch_size = nullptr;
 }
 
 void* OpenMPTargetExec::get_scratch_ptr() { return m_scratch_ptr; }

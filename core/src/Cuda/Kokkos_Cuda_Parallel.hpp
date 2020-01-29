@@ -894,10 +894,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
-    m_scratch_ptr[0] = NULL;
+    m_scratch_ptr[0] = nullptr;
     m_scratch_ptr[1] =
         m_team_size <= 0
-            ? NULL
+            ? nullptr
             : cuda_resize_scratch_space(
                   static_cast<ptrdiff_t>(m_scratch_size[1]) *
                   static_cast<ptrdiff_t>(Cuda::concurrency() /
@@ -1206,7 +1206,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ViewType& arg_result,
                  typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = NULL)
+                                         void*>::type = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -1498,7 +1498,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ViewType& arg_result,
                  typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = NULL)
+                                         void*>::type = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -1809,7 +1809,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ViewType& arg_result,
                  typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = NULL)
+                                         void*>::type = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -1823,7 +1823,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_team_begin(0),
         m_shmem_begin(0),
         m_shmem_size(0),
-        m_scratch_ptr{NULL, NULL},
+        m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.vector_length()) {
@@ -1860,7 +1860,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
     m_scratch_ptr[1] =
         m_team_size <= 0
-            ? NULL
+            ? nullptr
             : cuda_resize_scratch_space(
                   static_cast<std::int64_t>(m_scratch_size[1]) *
                   (static_cast<std::int64_t>(Cuda::concurrency() /
@@ -1922,7 +1922,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_team_begin(0),
         m_shmem_begin(0),
         m_shmem_size(0),
-        m_scratch_ptr{NULL, NULL},
+        m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.vector_length()) {
@@ -1959,7 +1959,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
     m_scratch_ptr[1] =
         m_team_size <= 0
-            ? NULL
+            ? nullptr
             : cuda_resize_scratch_space(
                   static_cast<ptrdiff_t>(m_scratch_size[1]) *
                   static_cast<ptrdiff_t>(Cuda::concurrency() /
