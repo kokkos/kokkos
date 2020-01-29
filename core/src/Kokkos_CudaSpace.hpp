@@ -639,7 +639,7 @@ struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
 /** Running in CudaSpace attempting to access an unknown space: error */
 template <class OtherSpace>
 struct VerifyExecutionCanAccessMemorySpace<
-    typename std::enable_if<!is_same<Kokkos::CudaSpace, OtherSpace>::value,
+    typename std::enable_if<!std::is_same<Kokkos::CudaSpace, OtherSpace>::value,
                             Kokkos::CudaSpace>::type,
     OtherSpace> {
   enum { value = false };

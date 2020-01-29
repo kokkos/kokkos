@@ -771,7 +771,7 @@ struct ParallelReduceReturnValue<
 
 template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
-    typename std::enable_if<(is_array<ReturnType>::value ||
+    typename std::enable_if<(std::is_array<ReturnType>::value ||
                              std::is_pointer<ReturnType>::value)>::type,
     ReturnType, FunctorType> {
   typedef Kokkos::View<typename std::remove_const<ReturnType>::type,
@@ -787,7 +787,7 @@ struct ParallelReduceReturnValue<
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     return return_type(return_val, functor.value_count);
 #else
-    if (is_array<ReturnType>::value)
+    if (std::is_array<ReturnType>::value)
       return return_type(return_val);
     else
       return return_type(return_val, functor.value_count);
