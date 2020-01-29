@@ -1877,8 +1877,8 @@ class View : public ViewTraits<DataType, Properties...> {
     // If allocating in CudaUVMSpace must fence before and after
     // the allocation to protect against possible concurrent access
     // on the CPU and the GPU.
-    // Fence using the trait's executon space (which will be Kokkos::Cuda)
-    // to avoid incomplete type errors from usng Kokkos::Cuda directly.
+    // Fence using the trait's execution space (which will be Kokkos::Cuda)
+    // to avoid incomplete type errors from using Kokkos::Cuda directly.
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
       typename traits::device_type::memory_space::execution_space().fence();

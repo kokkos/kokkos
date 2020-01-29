@@ -256,6 +256,11 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
   //! Execution space of this execution policy:
   typedef Kokkos::Serial execution_space;
 
+  const typename traits::execution_space& space() const {
+    static typename traits::execution_space m_space;
+    return m_space;
+  }
+
   TeamPolicyInternal& operator=(const TeamPolicyInternal& p) {
     m_league_size            = p.m_league_size;
     m_team_scratch_size[0]   = p.m_team_scratch_size[0];

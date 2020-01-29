@@ -1772,7 +1772,7 @@ struct DynRankViewRemap {
     const Kokkos::Impl::ParallelFor<DynRankViewRemap, Policy> closure(
         *this, Policy(0, n0));
     closure.execute();
-    // Kokkos::fence(); // ??
+    // ExecSpace().fence(); // ??
   }
 
   KOKKOS_INLINE_FUNCTION
