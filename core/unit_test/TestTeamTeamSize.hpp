@@ -190,7 +190,7 @@ struct PrintFunctor2 {
 };
 
 TEST(TEST_CATEGORY, team_policy_max_scalar_without_plus_equal_k) {
-  using ExecSpace           = Kokkos::DefaultExecutionSpace;
+  using ExecSpace           = TEST_EXECSPACE;
   using ReducerType         = Kokkos::MinMax<double, Kokkos::HostSpace>;
   using ReducerValueType    = typename ReducerType::value_type;
   using DynamicScheduleType = Kokkos::Schedule<Kokkos::Dynamic>;

@@ -1075,17 +1075,20 @@ void test_view_mapping() {
     typedef typename Kokkos::Impl::HostMirror<Space>::Space::execution_space
         host_exec_space;
 
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<host_exec_space>(0, 10), KOKKOS_LAMBDA(int) {
-          // 'a' is captured by copy, and the capture mechanism converts 'a' to
+    int errors = 0;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<host_exec_space>(0, 10),
+        KOKKOS_LAMBDA(int, int& e) {
           // an unmanaged copy.  When the parallel dispatch accepts a move for
           // the lambda, this count should become 1.
 
-          ASSERT_EQ(a.use_count(), 2);
+          if (a.use_count() != 2) ++e;
           V x = a;
-          ASSERT_EQ(a.use_count(), 2);
-          ASSERT_EQ(x.use_count(), 2);
-        });
+          if (a.use_count() != 2) ++e;
+          if (x.use_count() != 2) ++e;
+        },
+        errors);
+    ASSERT_EQ(errors, 0);
 #endif  // #if !defined( KOKKOS_ENABLE_CUDA_LAMBDA )
   }
 }

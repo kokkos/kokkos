@@ -101,14 +101,14 @@
 #if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_THREADS) ||  \
     defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_QTHREADS) || \
     defined(KOKKOS_ENABLE_HPX) || defined(KOKKOS_ENABLE_ROCM) ||        \
-    defined(KOKKOS_ENABLE_OPENMPTARGET)
+    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_INTERNAL_ENABLE_NON_CUDA_BACKEND
 #endif
 
 #if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) &&    \
     !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_QTHREADS) && \
     !defined(KOKKOS_ENABLE_HPX) && !defined(KOKKOS_ENABLE_ROCM) &&        \
-    !defined(KOKKOS_ENABLE_OPENMPTARGET)
+    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_INTERNAL_NOT_PARALLEL
 #endif
 
@@ -166,6 +166,16 @@
 #endif
 
 #endif  // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
+
+#if defined(KOKKOS_ENABLE_HIP)
+
+#define KOKKOS_IMPL_HIP_CLANG_WORKAROUND
+
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
+
+#define KOKKOS_LAMBDA [=] __host__ __device__
+#endif  // #if defined(KOKKOS_ENABLE_HIP)
 
 //----------------------------------------------------------------------------
 // Mapping compiler built-ins to KOKKOS_COMPILER_*** macros
@@ -262,6 +272,18 @@
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
 #endif
+
+#if defined(KOKKOS_ENABLE_HIP)
+
+#define KOKKOS_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
+#define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
+#define KOKKOS_DEFAULTED_FUNCTION __device__ __host__ inline
+#define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
+#define KOKKOS_FUNCTION __device__ __host__
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+#define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
+#endif
+#endif  // #if defined( KOKKOS_ENABLE_HIP )
 
 #if defined(KOKKOS_ENABLE_ROCM) && defined(__HCC__)
 
@@ -480,6 +502,7 @@
 // There is zero or one default execution space specified.
 
 #if 1 < ((defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA) ? 1 : 0) +         \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP) ? 1 : 0) +          \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM) ? 1 : 0) +         \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET) ? 1 : 0) + \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP) ? 1 : 0) +       \
@@ -502,6 +525,8 @@
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
 #elif defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
+#elif defined(KOKKOS_ENABLE_HIP)
+#define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
 #elif defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -526,6 +551,10 @@
 #elif defined(__HCC__) && defined(__HCC_ACCELERATOR__) && \
     defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU
+#elif defined(__HIPCC__) &&                                     \
+    (defined(__HCC_ACCELERATOR__) || defined(__CUDA_ARCH__)) && \
+    defined(KOKKOS_ENABLE_HIP)
+#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
 #else
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif
@@ -543,9 +572,14 @@
 // If compiling with CUDA, we must use relocateable device code
 // to enable the task policy.
 
-#if !defined(KOKKOS_ENABLE_CUDA) || \
-    defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
 #define KOKKOS_ENABLE_TASKDAG
+#endif
+#else
+#ifndef KOKKOS_ENABLE_HIP
+#define KOKKOS_ENABLE_TASKDAG
+#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)

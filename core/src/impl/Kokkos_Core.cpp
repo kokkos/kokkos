@@ -93,7 +93,8 @@ void initialize_internal(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
   const int use_numa = args.num_numa;
 #endif
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
+    defined(KOKKOS_ENABLE_HIP)
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
   const int skip_device = args.skip_device;
@@ -245,6 +246,20 @@ void initialize_internal(const InitArguments& args) {
   }
 #endif
 
+#if defined(KOKKOS_ENABLE_HIP)
+  if (std::is_same<Kokkos::Experimental::HIP,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      0 < use_gpu) {
+    if (use_gpu > -1) {
+      Kokkos::Experimental::HIP::impl_initialize(
+          Kokkos::Experimental::HIP::SelectDevice(use_gpu));
+    } else {
+      Kokkos::Experimental::HIP::impl_initialize();
+    }
+    std::cout << "Kokkos::initialize() fyi: HIP enabled and initialized"
+              << std::endl;
+  }
+#endif
 #if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
 #else
@@ -311,6 +326,14 @@ void finalize_internal(const bool all_spaces = false) {
   }
 #endif
 
+#if defined(KOKKOS_ENABLE_HIP)
+  if (std::is_same<Kokkos::Experimental::HIP,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      all_spaces) {
+    if (Kokkos::Experimental::HIP::impl_is_initialized())
+      Kokkos::Experimental::HIP::impl_finalize();
+  }
+#endif
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
   if (std::is_same<Kokkos::Experimental::OpenMPTarget,
                    Kokkos::DefaultExecutionSpace>::value ||
@@ -380,6 +403,13 @@ void fence_internal() {
   if (std::is_same<Kokkos::Experimental::ROCm,
                    Kokkos::DefaultExecutionSpace>::value) {
     Kokkos::Experimental::ROCm().fence();
+  }
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP)
+  if (std::is_same<Kokkos::Experimental::HIP,
+                   Kokkos::DefaultExecutionSpace>::value) {
+    Kokkos::Experimental::HIP().fence();
   }
 #endif
 

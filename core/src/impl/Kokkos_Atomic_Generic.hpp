@@ -281,6 +281,8 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 #endif
   }
   return return_val;
+#elif defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+  return val;
 #endif
 }
 
