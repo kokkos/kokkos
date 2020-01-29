@@ -347,8 +347,9 @@ ENDIF()
 #Let's just always print things
 MESSAGE(STATUS "Execution Spaces:")
 
-FOREACH (_BACKEND CUDA OPENMPTARGET)
-  IF(KOKKOS_ENABLE_${_BACKEND})
+FOREACH (_BACKEND Cuda OpenMPTarget)
+  STRING(TOUPPER ${_BACKEND} UC_BACKEND)
+  IF(KOKKOS_ENABLE_${UC_BACKEND})
     IF(_DEVICE_PARALLEL)
       MESSAGE(FATAL_ERROR "Multiple device parallel execution spaces are not allowed! "
                           "Trying to enable execution space ${_BACKEND}, "
@@ -362,7 +363,6 @@ IF(NOT _DEVICE_PARALLEL)
   SET(_DEVICE_PARALLEL "NONE")
 ENDIF()
 MESSAGE(STATUS "    Device Parallel: ${_DEVICE_PARALLEL}")
-UNSET(_DEVICE_PARALLEL)
 
 
 IF(KOKKOS_ENABLE_PTHREAD)
