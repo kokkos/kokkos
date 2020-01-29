@@ -42,33 +42,38 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <cstdio>
-#include <sstream>
-#include <type_traits>
 #include <gtest/gtest.h>
 
 /// @Kokkos_Feature_Level_Required:2
+// Unit Test for Kokkos malloc.
+// Allocate memory to a pointer and check if the allocation has not returned a
+// null pointer.
 
 namespace Test {
 
-// Unit test for Kokkos Malloc
+using value_type       = double;
+const int num_elements = 10;
 
-template <class MemSpace>
+template <class ExecSpace>
 struct TestIncrMemorySpace_malloc {
-  const int num_elements = 10;
+  using memory_space = typename ExecSpace::memory_space;
 
-  void testit_malloc() {
-    int *data = (int *)Kokkos::kokkos_malloc<MemSpace>(
-        "data", num_elements * sizeof(int));
-    ASSERT_FALSE(data == nullptr);
-    Kokkos::kokkos_free<MemSpace>(data);
+  void test_malloc() {
+    // Allocate memory
+    auto *data = static_cast<value_type *>(Kokkos::kokkos_malloc<memory_space>(
+        "data", num_elements * sizeof(value_type)));
+
+    // Check if the allocated memory has not returned a NULL
+    ASSERT_NE(data, nullptr);
+
+    // Free the allocated memory
+    Kokkos::kokkos_free<memory_space>(data);
   }
 };
 
 TEST(TEST_CATEGORY, incr_02a_memspace_malloc) {
-  typedef typename TEST_EXECSPACE::memory_space memory_space;
-  TestIncrMemorySpace_malloc<memory_space> test;
-  test.testit_malloc();
+  TestIncrMemorySpace_malloc<TEST_EXECSPACE> test;
+  test.test_malloc();
 }
 
 }  // namespace Test
