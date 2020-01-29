@@ -9,7 +9,6 @@
 #define KOKKOS_LAMBDA [=] __host__ __device__
 #endif  // #if defined(KOKKOS_ENABLE_HIP)
 
-
 #if defined(KOKKOS_ENABLE_HIP)
 
 #define KOKKOS_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
