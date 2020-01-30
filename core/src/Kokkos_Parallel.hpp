@@ -157,8 +157,9 @@ template <class ExecPolicy, class FunctorType>
 inline void parallel_for(
     const ExecPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
-    typename Impl::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecPolicy>::value>::type* = 0) {
+    typename std::enable_if<
+        Kokkos::Impl::is_execution_policy<ExecPolicy>::value>::type* =
+        nullptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -402,8 +403,9 @@ template <class ExecutionPolicy, class FunctorType>
 inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
-    typename Impl::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* = 0) {
+    typename std::enable_if<
+        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
+        nullptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -478,8 +480,9 @@ template <class ExecutionPolicy, class FunctorType, class ReturnType>
 inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     ReturnType& return_value, const std::string& str = "",
-    typename Impl::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* = 0) {
+    typename std::enable_if<
+        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
+        nullptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -502,7 +505,7 @@ inline void parallel_scan(
     Kokkos::Profiling::endParallelScan(kpID);
   }
 #endif
-  Kokkos::fence();
+  policy.space().fence();
 }
 
 template <class FunctorType, class ReturnType>
@@ -534,7 +537,7 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
     Kokkos::Profiling::endParallelScan(kpID);
   }
 #endif
-  Kokkos::fence();
+  execution_space().fence();
 }
 
 template <class ExecutionPolicy, class FunctorType, class ReturnType>
@@ -573,7 +576,7 @@ struct FunctorTeamShmemSize {
 template <class FunctorType>
 struct FunctorTeamShmemSize<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::team_shmem_size)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::team_shmem_size)>::type> {
   static inline size_t value(const FunctorType& f, int team_size) {
     return f.team_shmem_size(team_size);
   }
@@ -582,7 +585,7 @@ struct FunctorTeamShmemSize<
 template <class FunctorType>
 struct FunctorTeamShmemSize<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::shmem_size)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::shmem_size)>::type> {
   static inline size_t value(const FunctorType& f, int team_size) {
     return f.shmem_size(team_size);
   }

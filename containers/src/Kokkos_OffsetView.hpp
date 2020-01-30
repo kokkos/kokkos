@@ -1832,7 +1832,8 @@ inline void deep_copy(
     const OffsetView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* = 0) {
+        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
+        nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::non_const_value_type,
                    typename ViewTraits<DT, DP...>::value_type>::value,
@@ -1846,7 +1847,8 @@ template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const OffsetView<DT, DP...>& dst, const OffsetView<ST, SP...>& value,
     typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* = 0) {
+        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
+        nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::value_type,
                    typename ViewTraits<ST, SP...>::non_const_value_type>::value,
@@ -1859,7 +1861,8 @@ template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const OffsetView<DT, DP...>& dst, const View<ST, SP...>& value,
     typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* = 0) {
+        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
+        nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::value_type,
                    typename ViewTraits<ST, SP...>::non_const_value_type>::value,
@@ -1873,7 +1876,8 @@ template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
     const View<DT, DP...>& dst, const OffsetView<ST, SP...>& value,
     typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* = 0) {
+        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
+        nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::value_type,
                    typename ViewTraits<ST, SP...>::non_const_value_type>::value,
@@ -2011,7 +2015,7 @@ create_mirror_view(
          std::is_same<
              typename Kokkos::Experimental::OffsetView<T, P...>::data_type,
              typename Kokkos::Experimental::OffsetView<
-                 T, P...>::HostMirror::data_type>::value)>::type* = 0) {
+                 T, P...>::HostMirror::data_type>::value)>::type* = nullptr) {
   return src;
 }
 

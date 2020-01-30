@@ -48,6 +48,14 @@ SET(SOURCES
   PerfTest_ViewResize_8.cpp
   )
 
+IF(Kokkos_ENABLE_HIP)
+# FIXME requires TeamPolicy
+  LIST(REMOVE_ITEM SOURCES
+    PerfTest_CustomReduction.cpp
+    PerfTest_ExecSpacePartitioning.cpp
+    )
+ENDIF()
+
 # Per #374, we always want to build this test, but we only want to run
 # it as a PERFORMANCE test.  That's why we separate building the test
 # from running the test.

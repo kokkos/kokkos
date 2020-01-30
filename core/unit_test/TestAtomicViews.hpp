@@ -254,11 +254,11 @@ class TestAtomicViewAPI {
     ASSERT_EQ(ax.use_count(), size_t(4));
     ASSERT_EQ(const_ax.use_count(), ax.use_count());
 
-    ASSERT_FALSE(ax.data() == 0);
-    ASSERT_FALSE(const_ax.data() == 0);  // referenceable ptr
-    ASSERT_FALSE(unmanaged_ax.data() == 0);
-    ASSERT_FALSE(unmanaged_ax_from_ptr_dx.data() == 0);
-    ASSERT_FALSE(ay.data() == 0);
+    ASSERT_FALSE(ax.data() == nullptr);
+    ASSERT_FALSE(const_ax.data() == nullptr);  // referenceable ptr
+    ASSERT_FALSE(unmanaged_ax.data() == nullptr);
+    ASSERT_FALSE(unmanaged_ax_from_ptr_dx.data() == nullptr);
+    ASSERT_FALSE(ay.data() == nullptr);
     //    ASSERT_NE( ax, ay );
     //    Above test results in following runtime error from gtest:
     //    Expected: (ax) != (ay), actual: 32-byte object <30-01 D0-A0 D8-7F

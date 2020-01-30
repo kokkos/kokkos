@@ -47,6 +47,7 @@
 #include <gtest/gtest.h>
 
 #define TEST_CATEGORY defaultdevicetype
+#define TEST_CATEGORY_DEATH defaultdevicetype_DeathTest
 #define TEST_EXECSPACE Kokkos::DefaultExecutionSpace
 
 #endif

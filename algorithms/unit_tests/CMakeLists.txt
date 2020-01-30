@@ -23,9 +23,14 @@ KOKKOS_ADD_TEST_LIBRARY(
 KOKKOS_TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
 
 SET(SOURCES
-  UnitTestMain.cpp 
-  TestCuda.cpp
+  UnitTestMain.cpp
+)
+
+IF(Kokkos_ENABLE_CUDA)
+  LIST( APPEND SOURCES
+    TestCuda.cpp
   )
+ENDIF()
 
 IF(Kokkos_ENABLE_OPENMP)
   LIST( APPEND SOURCES
@@ -49,6 +54,11 @@ IF(Kokkos_ENABLE_PTHREAD)
   LIST( APPEND SOURCES
     TestThreads.cpp
   )
+ENDIF()
+
+IF(Kokkos_ENABLE_HIP)
+  # FIXME sqrt(complex)
+  LIST(REMOVE_ITEM SOURCES TestSerial.cpp)
 ENDIF()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(

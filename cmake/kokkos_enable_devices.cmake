@@ -31,6 +31,35 @@ ELSE()
   SET(OMP_DEFAULT OFF)
 ENDIF()
 KOKKOS_DEVICE_OPTION(OPENMP ${OMP_DEFAULT} HOST "Whether to build OpenMP backend")
+IF(KOKKOS_ENABLE_OPENMP)
+  IF (KOKKOS_CXX_COMPILER_ID STREQUAL AppleClang)
+    MESSAGE(FATAL_ERROR "Apple Clang does not support OpenMP. Use LLVM Clang instead")
+  ENDIF()
+  COMPILER_SPECIFIC_FLAGS(
+    Clang      -fopenmp=libomp
+    PGI        -mp
+    NVIDIA     -Xcompiler -fopenmp
+    Cray       NO-VALUE-SPECIFIED
+    XL         -qsmp=omp
+    DEFAULT    -fopenmp
+  )
+ENDIF()
+
+KOKKOS_DEVICE_OPTION(OPENMPTARGET OFF DEVICE "Whether to build the OpenMP target backend")
+IF (KOKKOS_ENABLE_OPENMPTARGET)
+  COMPILER_SPECIFIC_FLAGS(
+    Clang      -fopenmp -fopenmp=libomp
+    XL         -qsmp=omp -qoffload -qnoeh
+    DEFAULT    -fopenmp
+  )
+  COMPILER_SPECIFIC_DEFS(
+    XL    KOKKOS_IBM_XL_OMP45_WORKAROUND
+    Clang KOKKOS_WORKAROUND_OPENMPTARGET_CLANG
+  )
+  COMPILER_SPECIFIC_LIBS(
+    Clang -lopenmptarget
+  )
+ENDIF()
 
 IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
   SET(CUDA_DEFAULT ON)
@@ -43,14 +72,21 @@ IF (KOKKOS_ENABLE_CUDA)
   GLOBAL_SET(KOKKOS_DONT_ALLOW_EXTENSIONS "CUDA enabled")
 ENDIF()
 
-# We want this to default to OFF for cache reasons
-# Someone may later activative OpenMP, at which point SERIAL should be OFF
-# If have default to ON, both serial and OpenMP would both be on which
-# would be behavior inconsistent with -DOpenMP=X...
-KOKKOS_DEVICE_OPTION(SERIAL OFF HOST "Whether to build serial backend")
-# If we have no other hosts, turn serial on
-IF (NOT KOKKOS_HAS_HOST)
-  SET(KOKKOS_ENABLE_SERIAL ON)
+# We want this to default to OFF for cache reasons, but if no
+# host space is given, then activate serial
+IF (KOKKOS_HAS_TRILINOS)
+  #However, Trilinos always wants Serial ON
+  SET(SERIAL_DEFAULT ON)
+ELSEIF (KOKKOS_HAS_HOST)
+  SET(SERIAL_DEFAULT OFF)
+ELSE()
+  SET(SERIAL_DEFAULT ON)
+  IF (NOT DEFINED Kokkos_ENABLE_SERIAL)
+    MESSAGE(STATUS "SERIAL backend is being turned on to ensure there is at least one Host space. To change this, you must enable another host execution space and configure with -DKokkos_ENABLE_SERIAL=OFF or change CMakeCache.txt")
+  ENDIF()
 ENDIF()
+KOKKOS_DEVICE_OPTION(SERIAL ${SERIAL_DEFAULT} HOST "Whether to build serial backend")
 
 KOKKOS_DEVICE_OPTION(HPX OFF HOST "Whether to build HPX backend (experimental)")
+
+KOKKOS_DEVICE_OPTION(HIP OFF DEVICE "Whether to build HIP backend")

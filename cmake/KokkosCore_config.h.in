@@ -8,10 +8,11 @@
 /* Execution Spaces */
 #cmakedefine KOKKOS_ENABLE_SERIAL
 #cmakedefine KOKKOS_ENABLE_OPENMP
+#cmakedefine KOKKOS_ENABLE_OPENMPTARGET
 #cmakedefine KOKKOS_ENABLE_THREADS
 #cmakedefine KOKKOS_ENABLE_CUDA
+#cmakedefine KOKKOS_ENABLE_HIP
 #cmakedefine KOKKOS_ENABLE_HPX
-#cmakedefine KOKKOS_ENABLE_HWLOC
 #cmakedefine KOKKOS_ENABLE_MEMKIND
 #cmakedefine KOKKOS_ENABLE_LIBRT
 
@@ -45,6 +46,7 @@
 #cmakedefine KOKKOS_ENABLE_ETI
 #cmakedefine KOKKOS_ENABLE_LARGE_MEM_TESTS
 #cmakedefine KOKKOS_ENABLE_DUALVIEW_MODIFY_CHECK
+#cmakedefine KOKKOS_ENABLE_COMPLEX_ALIGN
 #cmakedefine KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
 
 /* TPL Settings */
@@ -58,7 +60,9 @@
 
 #cmakedefine KOKKOS_ARCH_SSE42
 #cmakedefine KOKKOS_ARCH_ARMV80
+#cmakedefine KOKKOS_ARCH_ARMV8_THUNDERX
 #cmakedefine KOKKOS_ARCH_ARMV81
+#cmakedefine KOKKOS_ARCH_ARMV8_THUNDERX2
 #cmakedefine KOKKOS_ARCH_AMD_AVX2
 #cmakedefine KOKKOS_ARCH_AVX
 #cmakedefine KOKKOS_ARCH_AVX2

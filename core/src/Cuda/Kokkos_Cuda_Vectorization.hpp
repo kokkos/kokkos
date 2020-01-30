@@ -83,7 +83,7 @@ struct in_place_shfl_op {
   }
 
 // TODO: figure out why 64-bit shfl fails in Clang
-#if (CUDA_VERSION >= 9000) && (!defined(KOKKOS_COMPILER_CLANG))
+#if !defined(KOKKOS_COMPILER_CLANG)
   // sizeof(Scalar) == sizeof(double) case
   // requires _assignable_from_bits<Scalar>
   template <class Scalar>

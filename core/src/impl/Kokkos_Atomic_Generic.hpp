@@ -154,9 +154,9 @@ struct RShiftOper {
 template <class Oper, typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
-    typename Kokkos::Impl::enable_if<
-        sizeof(T) != sizeof(int) && sizeof(T) == sizeof(unsigned long long int),
-        const T>::type val) {
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) == sizeof(unsigned long long int),
+                            const T>::type val) {
   union U {
     unsigned long long int i;
     T t;
@@ -178,9 +178,9 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 template <class Oper, typename T>
 KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     const Oper& op, volatile T* const dest,
-    typename Kokkos::Impl::enable_if<
-        sizeof(T) != sizeof(int) && sizeof(T) == sizeof(unsigned long long int),
-        const T>::type val) {
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) == sizeof(unsigned long long int),
+                            const T>::type val) {
   union U {
     unsigned long long int i;
     T t;
@@ -202,8 +202,7 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
 template <class Oper, typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T>::type
-        val) {
+    typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
   union U {
     int i;
     T t;
@@ -224,8 +223,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 template <class Oper, typename T>
 KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
     const Oper& op, volatile T* const dest,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(int), const T>::type
-        val) {
+    typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
   union U {
     int i;
     T t;
@@ -246,8 +244,8 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
 template <class Oper, typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     const Oper& op, volatile T* const dest,
-    typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8),
-                                     const T>::type val) {
+    typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8), const T>::type
+        val) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   while (!Impl::lock_address_host_space((void*)dest))
     ;
@@ -283,19 +281,21 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 #endif
   }
   return return_val;
+#elif defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+  return val;
 #endif
 }
 
 template <class Oper, typename T>
-KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
-    const Oper& op, volatile T* const dest,
-    typename Kokkos::Impl::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
+KOKKOS_INLINE_FUNCTION T
+atomic_oper_fetch(const Oper& op, volatile T* const dest,
+                  typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
 #if defined(KOKKOS_ENABLE_ASM) && \
     defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-                                         && (sizeof(T) != 16)
+                                              && (sizeof(T) != 16)
 #endif
-                                         ,
-                                     const T>::type& val) {
+                                              ,
+                                          const T>::type& val) {
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   while (!Impl::lock_address_host_space((void*)dest))

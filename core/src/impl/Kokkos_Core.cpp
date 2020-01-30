@@ -93,7 +93,8 @@ void initialize_internal(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
   const int use_numa = args.num_numa;
 #endif
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
+    defined(KOKKOS_ENABLE_HIP)
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
   const int skip_device = args.skip_device;
@@ -200,15 +201,7 @@ void initialize_internal(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
   if (Impl::is_same<Kokkos::Experimental::OpenMPTarget,
                     Kokkos::DefaultExecutionSpace>::value) {
-    if (num_threads > 0) {
-      if (use_numa > 0) {
-        Kokkos::Experimental::OpenMPTarget::initialize(num_threads, use_numa);
-      } else {
-        Kokkos::Experimental::OpenMPTarget::initialize(num_threads);
-      }
-    } else {
-      Kokkos::Experimental::OpenMPTarget::initialize();
-    }
+    Kokkos::Experimental::OpenMPTarget().impl_initialize();
     // std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized"
     // << std::endl ;
   } else {
@@ -253,6 +246,20 @@ void initialize_internal(const InitArguments& args) {
   }
 #endif
 
+#if defined(KOKKOS_ENABLE_HIP)
+  if (std::is_same<Kokkos::Experimental::HIP,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      0 < use_gpu) {
+    if (use_gpu > -1) {
+      Kokkos::Experimental::HIP::impl_initialize(
+          Kokkos::Experimental::HIP::SelectDevice(use_gpu));
+    } else {
+      Kokkos::Experimental::HIP::impl_initialize();
+    }
+    std::cout << "Kokkos::initialize() fyi: HIP enabled and initialized"
+              << std::endl;
+  }
+#endif
 #if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
 #else
@@ -319,12 +326,20 @@ void finalize_internal(const bool all_spaces = false) {
   }
 #endif
 
+#if defined(KOKKOS_ENABLE_HIP)
+  if (std::is_same<Kokkos::Experimental::HIP,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      all_spaces) {
+    if (Kokkos::Experimental::HIP::impl_is_initialized())
+      Kokkos::Experimental::HIP::impl_finalize();
+  }
+#endif
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
   if (std::is_same<Kokkos::Experimental::OpenMPTarget,
                    Kokkos::DefaultExecutionSpace>::value ||
       all_spaces) {
-    if (Kokkos::Experimental::OpenMPTarget::is_initialized())
-      Kokkos::Experimental::OpenMPTarget::finalize();
+    if (Kokkos::Experimental::OpenMPTarget().impl_is_initialized())
+      Kokkos::Experimental::OpenMPTarget().impl_finalize();
   }
 #endif
 
@@ -388,6 +403,13 @@ void fence_internal() {
   if (std::is_same<Kokkos::Experimental::ROCm,
                    Kokkos::DefaultExecutionSpace>::value) {
     Kokkos::Experimental::ROCm().fence();
+  }
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP)
+  if (std::is_same<Kokkos::Experimental::HIP,
+                   Kokkos::DefaultExecutionSpace>::value) {
+    Kokkos::Experimental::HIP().fence();
   }
 #endif
 
@@ -517,7 +539,7 @@ void initialize(int& narg, char* arg[]) {
 
       char* num1      = strchr(arg[iarg], '=') + 1;
       char* num2      = strpbrk(num1, ",");
-      int num1_len    = num2 == NULL ? strlen(num1) : num2 - num1;
+      int num1_len    = num2 == nullptr ? strlen(num1) : num2 - num1;
       char* num1_only = new char[num1_len + 1];
       strncpy(num1_only, num1, num1_len);
       num1_only[num1_len] = 0;
@@ -533,7 +555,7 @@ void initialize(int& narg, char* arg[]) {
         ndevices = atoi(num1_only);
       delete[] num1_only;
 
-      if (num2 != NULL) {
+      if (num2 != nullptr) {
         if ((!Impl::is_unsigned_int(num2 + 1)) || (strlen(num2) == 1))
           Impl::throw_runtime_exception(
               "Error: expecting an integer number after command line argument "
@@ -1158,5 +1180,14 @@ void print_configuration(std::ostream& out, const bool detail) {
 bool is_initialized() noexcept { return g_is_initialized; }
 
 bool show_warnings() noexcept { return g_show_warnings; }
+
+#ifdef KOKKOS_COMPILER_PGI
+namespace Impl {
+// Bizzarely, an extra jump instruction forces the PGI compiler to not have a
+// bug related to (probably?) empty base optimization and/or aggregate
+// construction.
+void _kokkos_pgi_compiler_bug_workaround() {}
+}  // end namespace Impl
+#endif
 
 }  // namespace Kokkos

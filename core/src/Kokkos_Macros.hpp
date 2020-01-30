@@ -101,14 +101,14 @@
 #if defined(KOKKOS_ENABLE_SERIAL) || defined(KOKKOS_ENABLE_THREADS) ||  \
     defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_QTHREADS) || \
     defined(KOKKOS_ENABLE_HPX) || defined(KOKKOS_ENABLE_ROCM) ||        \
-    defined(KOKKOS_ENABLE_OPENMPTARGET)
+    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_INTERNAL_ENABLE_NON_CUDA_BACKEND
 #endif
 
 #if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) &&    \
     !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_QTHREADS) && \
     !defined(KOKKOS_ENABLE_HPX) && !defined(KOKKOS_ENABLE_ROCM) &&        \
-    !defined(KOKKOS_ENABLE_OPENMPTARGET)
+    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_INTERNAL_NOT_PARALLEL
 #endif
 
@@ -130,36 +130,16 @@
 #error "#include <cuda.h> did not define CUDA_VERSION."
 #endif
 
-#if (CUDA_VERSION < 7000)
-// CUDA supports C++11 in device code starting with version 7.0.
-// This includes auto type and device code internal lambdas.
-#error "Cuda version 7.0 or greater required."
-#endif
-
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 300)
 // Compiling with CUDA compiler for device code.
 #error "Cuda device capability >= 3.0 is required."
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA_LAMBDA
-#if (CUDA_VERSION < 7050)
-// CUDA supports C++11 lambdas generated in host code to be given
-// to the device starting with version 7.5. But the release candidate (7.5.6)
-// still identifies as 7.0.
-#error "Cuda version 7.5 or greater required for host-to-device Lambda support."
-#endif
-
-#if (CUDA_VERSION < 8000) && defined(__NVCC__)
-#define KOKKOS_LAMBDA [=] __device__
-#if defined(KOKKOS_INTERNAL_ENABLE_NON_CUDA_BACKEND)
-#undef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-#endif
-#else
 #define KOKKOS_LAMBDA [=] __host__ __device__
 
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
-#endif
 #endif
 
 #if defined(__NVCC__)
@@ -168,12 +148,6 @@
 #else  // !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
 #undef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 #endif  // !defined(KOKKOS_ENABLE_CUDA_LAMBDA)
-
-#if (9000 <= CUDA_VERSION) && (CUDA_VERSION < 10000)
-// CUDA 9 introduced an incorrect warning,
-// see https://github.com/kokkos/kokkos/issues/1470
-#define KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-#endif
 
 #if (10000 > CUDA_VERSION)
 #define KOKKOS_ENABLE_PRE_CUDA_10_DEPRECATION_API
@@ -192,6 +166,16 @@
 #endif
 
 #endif  // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
+
+#if defined(KOKKOS_ENABLE_HIP)
+
+#define KOKKOS_IMPL_HIP_CLANG_WORKAROUND
+
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
+
+#define KOKKOS_LAMBDA [=] __host__ __device__
+#endif  // #if defined(KOKKOS_ENABLE_HIP)
 
 //----------------------------------------------------------------------------
 // Mapping compiler built-ins to KOKKOS_COMPILER_*** macros
@@ -282,7 +266,24 @@
 #else
 #define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
 #endif
-#endif  // #if defined( __CUDA_ARCH__ )
+#if (CUDA_VERSION < 10000)
+#define KOKKOS_DEFAULTED_FUNCTION __host__ __device__ inline
+#else
+#define KOKKOS_DEFAULTED_FUNCTION inline
+#endif
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP)
+
+#define KOKKOS_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
+#define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
+#define KOKKOS_DEFAULTED_FUNCTION __device__ __host__ inline
+#define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
+#define KOKKOS_FUNCTION __device__ __host__
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+#define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
+#endif
+#endif  // #if defined( KOKKOS_ENABLE_HIP )
 
 #if defined(KOKKOS_ENABLE_ROCM) && defined(__HCC__)
 
@@ -290,6 +291,7 @@
 #define KOKKOS_INLINE_FUNCTION __attribute__((amp, cpu)) inline
 #define KOKKOS_FUNCTION __attribute__((amp, cpu))
 #define KOKKOS_LAMBDA [=] __attribute__((amp, cpu))
+#define KOKKOS_DEFAULTED_FUNCTION __attribute__((amp, cpu)) inline
 #endif
 
 #if defined(_OPENMP)
@@ -451,11 +453,11 @@
 // Define function marking macros if compiler specific macros are undefined:
 
 #if !defined(KOKKOS_FORCEINLINE_FUNCTION)
-define KOKKOS_FORCEINLINE_FUNCTION inline
+#define KOKKOS_FORCEINLINE_FUNCTION inline
 #endif
 
 #if !defined(KOKKOS_IMPL_FORCEINLINE)
-    define KOKKOS_IMPL_FORCEINLINE inline
+#define KOKKOS_IMPL_FORCEINLINE inline
 #endif
 
 #if !defined(KOKKOS_INLINE_FUNCTION)
@@ -468,6 +470,10 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 
 #if !defined(KOKKOS_INLINE_FUNCTION_DELETED)
 #define KOKKOS_INLINE_FUNCTION_DELETED inline
+#endif
+
+#if !defined(KOKKOS_DEFAULTED_FUNCTION)
+#define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
 //----------------------------------------------------------------------------
 // Define empty macro for restrict if necessary:
@@ -496,6 +502,7 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 // There is zero or one default execution space specified.
 
 #if 1 < ((defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA) ? 1 : 0) +         \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP) ? 1 : 0) +          \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM) ? 1 : 0) +         \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET) ? 1 : 0) + \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP) ? 1 : 0) +       \
@@ -518,6 +525,8 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
 #elif defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
+#elif defined(KOKKOS_ENABLE_HIP)
+#define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
 #elif defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -542,6 +551,10 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #elif defined(__HCC__) && defined(__HCC_ACCELERATOR__) && \
     defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU
+#elif defined(__HIPCC__) &&                                     \
+    (defined(__HCC_ACCELERATOR__) || defined(__CUDA_ARCH__)) && \
+    defined(KOKKOS_ENABLE_HIP)
+#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
 #else
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif
@@ -556,25 +569,23 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #endif
 
 //----------------------------------------------------------------------------
-// If compiling with CUDA then must be using CUDA 8 or better
-// and use relocateable device code to enable the task policy.
-// nvcc relocatable device code option: --relocatable-device-code=true
+// If compiling with CUDA, we must use relocateable device code
+// to enable the task policy.
 
-#if (defined(KOKKOS_ENABLE_CUDA))
-#if (8000 <= CUDA_VERSION) && \
-    defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
 #define KOKKOS_ENABLE_TASKDAG
 #endif
 #else
+#ifndef KOKKOS_ENABLE_HIP
 #define KOKKOS_ENABLE_TASKDAG
+#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
-#if (9000 <= CUDA_VERSION)
 #define KOKKOS_IMPL_CUDA_VERSION_9_WORKAROUND
 #if (__CUDA_ARCH__)
 #define KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-#endif
 #endif
 #endif
 
@@ -613,6 +624,12 @@ define KOKKOS_FORCEINLINE_FUNCTION inline
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 #else
 #define KOKKOS_ATTRIBUTE_NODISCARD
+#endif
+
+#if defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) || \
+    defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)
+#define KOKKOS_IMPL_ENABLE_STACKTRACE
+#define KOKKOS_IMPL_ENABLE_CXXABI
 #endif
 
 #endif  // #ifndef KOKKOS_MACROS_HPP

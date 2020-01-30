@@ -149,7 +149,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace>::schedule(
         fprintf( stdout,
                  "worker(%d.%d) task 0x%.12lx spawning on shepherd(%d) clone(%d)\n",
                  qthread_shep(),
-                 qthread_worker_local(NULL),
+                 qthread_worker_local(nullptr),
                  reinterpret_cast<unsigned long>(this),
                  spawn_shepherd,
                  m_team_size - 1
@@ -158,7 +158,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace>::schedule(
 #endif
 
         qthread_spawn_cloneable(
-            &task_root_type::qthread_func, task, 0, NULL,
+            &task_root_type::qthread_func, task, 0, nullptr,
             0,  // no depenedences
             0,  // dependences array
             spawn_shepherd,
@@ -166,7 +166,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace>::schedule(
             m_team_size - 1);
       } else {
         qthread_spawn(
-            &task_root_type::qthread_func, task, 0, NULL,
+            &task_root_type::qthread_func, task, 0, nullptr,
             0,  // no depenedences
             0,  // dependences array
             NO_SHEPHERD,
@@ -194,7 +194,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace>::schedule(
   fprintf( stdout,
            "worker(%d.%d) task 0x%.12lx spawning on shepherd(%d) clone(%d)\n",
            qthread_shep(),
-           qthread_worker_local(NULL),
+           qthread_worker_local(nullptr),
            reinterpret_cast<unsigned long>(this),
            spawn_shepherd,
            m_team_size - 1
@@ -203,16 +203,16 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace>::schedule(
 #endif
 
       qthread_spawn_cloneable(
-          &Task::qthread_func, this, 0, NULL, m_dep_size,
+          &Task::qthread_func, this, 0, nullptr, m_dep_size,
           qprecon, /* dependences */
           spawn_shepherd,
           unsigned(QTHREAD_SPAWN_SIMPLE | QTHREAD_SPAWN_LOCAL_PRIORITY),
           m_team_size - 1);
     } else {
       qthread_spawn(
-          &Task::qthread_func,          /* function */
-          this,                         /* function argument */
-          0, NULL, m_dep_size, qprecon, /* dependences */
+          &Task::qthread_func,             /* function */
+          this,                            /* function argument */
+          0, nullptr, m_dep_size, qprecon, /* dependences */
           NO_SHEPHERD,
           QTHREAD_SPAWN_SIMPLE /* allows optimization for non-blocking task */
       );
@@ -355,7 +355,7 @@ aligned_t TaskBase<Kokkos::Qthreads, void, void>::qthread_func(void *arg) {
       fprintf( stdout,
               "worker(%d.%d) task 0x%.12lx executed by member(%d:%d)\n",
               qthread_shep(),
-              qthread_worker_local(NULL),
+              qthread_worker_local(nullptr),
               reinterpret_cast<unsigned long>(task),
               member.team_rank(),
               member.team_size()
@@ -381,7 +381,7 @@ aligned_t TaskBase<Kokkos::Qthreads, void, void>::qthread_func(void *arg) {
 fprintf( stdout
        , "worker(%d.%d) task 0x%.12lx return\n"
        , qthread_shep()
-       , qthread_worker_local(NULL)
+       , qthread_worker_local(nullptr)
        , reinterpret_cast<unsigned long>(task)
        );
 fflush(stdout);

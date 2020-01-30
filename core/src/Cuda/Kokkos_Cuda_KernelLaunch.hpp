@@ -149,7 +149,7 @@ template <class DriverType>
 __global__ static void cuda_parallel_launch_constant_or_global_memory(
     const DriverType* driver_ptr) {
   const DriverType& driver =
-      driver_ptr != NULL
+      driver_ptr != nullptr
           ? *driver_ptr
           : *((const DriverType*)kokkos_impl_cuda_constant_memory_buffer);
 
@@ -161,7 +161,7 @@ __global__
 __launch_bounds__(maxTperB, minBperSM) static void cuda_parallel_launch_constant_or_global_memory(
     const DriverType* driver_ptr) {
   const DriverType& driver =
-      driver_ptr != NULL
+      driver_ptr != nullptr
           ? *driver_ptr
           : *((const DriverType*)kokkos_impl_cuda_constant_memory_buffer);
 
@@ -282,10 +282,10 @@ struct CudaParallelLaunch<
 
   static cudaFuncAttributes get_cuda_func_attributes() {
     cudaFuncAttributes attr;
-    cudaFuncGetAttributes(
+    CUDA_SAFE_CALL(cudaFuncGetAttributes(
         &attr,
         cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
-                                             MinBlocksPerSM>);
+                                             MinBlocksPerSM>));
     return attr;
   }
 };
@@ -338,8 +338,8 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 
   static cudaFuncAttributes get_cuda_func_attributes() {
     cudaFuncAttributes attr;
-    cudaFuncGetAttributes(&attr,
-                          cuda_parallel_launch_constant_memory<DriverType>);
+    CUDA_SAFE_CALL(cudaFuncGetAttributes(
+        &attr, cuda_parallel_launch_constant_memory<DriverType>));
     return attr;
   }
 };
@@ -388,9 +388,9 @@ struct CudaParallelLaunch<
 
   static cudaFuncAttributes get_cuda_func_attributes() {
     cudaFuncAttributes attr;
-    cudaFuncGetAttributes(
+    CUDA_SAFE_CALL(cudaFuncGetAttributes(
         &attr, cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                                 MinBlocksPerSM>);
+                                                 MinBlocksPerSM>));
     return attr;
   }
 };
@@ -435,7 +435,8 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 
   static cudaFuncAttributes get_cuda_func_attributes() {
     cudaFuncAttributes attr;
-    cudaFuncGetAttributes(&attr, cuda_parallel_launch_local_memory<DriverType>);
+    CUDA_SAFE_CALL(cudaFuncGetAttributes(
+        &attr, cuda_parallel_launch_local_memory<DriverType>));
     return attr;
   }
 };
@@ -467,7 +468,7 @@ struct CudaParallelLaunch<
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
-      DriverType* driver_ptr = NULL;
+      DriverType* driver_ptr = nullptr;
       driver_ptr             = reinterpret_cast<DriverType*>(
           cuda_instance->scratch_functor(sizeof(DriverType)));
       cudaMemcpyAsync(driver_ptr, &driver, sizeof(DriverType),
@@ -486,10 +487,10 @@ struct CudaParallelLaunch<
   }
   static cudaFuncAttributes get_cuda_func_attributes() {
     cudaFuncAttributes attr;
-    cudaFuncGetAttributes(
+    CUDA_SAFE_CALL(cudaFuncGetAttributes(
         &attr,
         cuda_parallel_launch_global_memory<DriverType, MaxThreadsPerBlock,
-                                           MinBlocksPerSM>);
+                                           MinBlocksPerSM>));
     return attr;
   }
 };
@@ -518,7 +519,7 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
-      DriverType* driver_ptr = NULL;
+      DriverType* driver_ptr = nullptr;
       driver_ptr             = reinterpret_cast<DriverType*>(
           cuda_instance->scratch_functor(sizeof(DriverType)));
       cudaMemcpyAsync(driver_ptr, &driver, sizeof(DriverType),
@@ -536,8 +537,8 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 
   static cudaFuncAttributes get_cuda_func_attributes() {
     cudaFuncAttributes attr;
-    cudaFuncGetAttributes(&attr,
-                          cuda_parallel_launch_global_memory<DriverType>);
+    CUDA_SAFE_CALL(cudaFuncGetAttributes(
+        &attr, cuda_parallel_launch_global_memory<DriverType>));
     return attr;
   }
 };

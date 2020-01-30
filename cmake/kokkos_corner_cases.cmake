@@ -11,7 +11,7 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_ENABLE_OPENMP)
   #also - this is easier to use than CMakeCheckCXXSourceCompiles
   TRY_COMPILE(CLANG_HAS_OMP
     ${KOKKOS_TOP_BUILD_DIR}/corner_cases
-    ${KOKKOS_SOURCE_DIR}/cmake/compile_tests/clang_omp.cpp 
+    ${KOKKOS_SOURCE_DIR}/cmake/compile_tests/clang_omp.cpp
     COMPILE_DEFINITIONS -fopenmp=libomp
     LINK_LIBRARIES -fopenmp=libomp
   )
@@ -25,7 +25,11 @@ ENDIF()
 
 IF (KOKKOS_CXX_STANDARD STREQUAL 17)
   IF (KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 7)
-    MESSAGE(FATAL_ERROR "You have requested c++17 support for GCC ${KOKKOS_CXX_COMPILER_VERSION}. Although CMake has allowed this and GCC accecpts -std=c++1z/c++17, GCC <= 6 does not properly support *this capture. Please reduce the C++ standard to 14 or upgrade the compiler if you do need 17 support")
+    MESSAGE(FATAL_ERROR "You have requested c++17 support for GCC ${KOKKOS_CXX_COMPILER_VERSION}. Although CMake has allowed this and GCC accepts -std=c++1z/c++17, GCC <= 6 does not properly support *this capture. Please reduce the C++ standard to 14 or upgrade the compiler if you do need 17 support")
+  ENDIF()
+
+  IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+    MESSAGE(FATAL_ERROR "You have requested c++17 support for NVCC. Please reduce the C++ standard to 14. No versions of NVCC currently support 17.")
   ENDIF()
 ENDIF()
 

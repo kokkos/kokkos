@@ -64,9 +64,17 @@ struct TestRange {
   struct VerifyOffsetTag {};
 
   int N;
+#ifndef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
   static const int offset = 13;
+#else
+  int offset;
+#endif
   TestRange(const size_t N_)
-      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_), N(N_) {}
+      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_), N(N_) {
+#ifdef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
+    offset = 13;
+#endif
+  }
 
   void test_for() {
     typename view_type::HostMirror host_flags =
@@ -247,7 +255,6 @@ struct TestRange {
   void test_dynamic_policy() {
     auto const N_no_implicit_capture = N;
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-#if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
     typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
         policy_t;
 
@@ -341,7 +348,6 @@ struct TestRange {
         //}
       }
     }
-#endif
 #endif
   }
 };

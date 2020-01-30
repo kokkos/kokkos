@@ -63,7 +63,7 @@ struct ReduceFunctorHasInit {
 template <class FunctorType>
 struct ReduceFunctorHasInit<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::init)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::init)>::type> {
   enum { value = true };
 };
 
@@ -75,7 +75,7 @@ struct ReduceFunctorHasJoin {
 template <class FunctorType>
 struct ReduceFunctorHasJoin<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::join)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::join)>::type> {
   enum { value = true };
 };
 
@@ -87,7 +87,7 @@ struct ReduceFunctorHasFinal {
 template <class FunctorType>
 struct ReduceFunctorHasFinal<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::final)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::final)>::type> {
   enum { value = true };
 };
 
@@ -99,18 +99,18 @@ struct ReduceFunctorHasShmemSize {
 template <class FunctorType>
 struct ReduceFunctorHasShmemSize<
     FunctorType,
-    typename Impl::enable_if<0 < sizeof(&FunctorType::team_shmem_size)>::type> {
+    typename std::enable_if<0 < sizeof(&FunctorType::team_shmem_size)>::type> {
   enum { value = true };
 };
 
 template <class FunctorType, class ArgTag, class Enable = void>
-struct FunctorDeclaresValueType : public Impl::false_type {};
+struct FunctorDeclaresValueType : public std::false_type {};
 
 template <class FunctorType, class ArgTag>
 struct FunctorDeclaresValueType<
     FunctorType, ArgTag,
     typename Impl::enable_if_type<typename FunctorType::value_type>::type>
-    : public Impl::true_type {};
+    : public std::true_type {};
 
 template <class FunctorType,
           bool Enable = (FunctorDeclaresValueType<FunctorType, void>::value) ||
@@ -173,7 +173,7 @@ struct FunctorValueTraits<void, ArgTag, false> {
 template <class FunctorType, class ArgTag>
 struct FunctorValueTraits<FunctorType, ArgTag,
                           true /* == exists FunctorType::value_type */> {
-  typedef typename Impl::remove_extent<typename FunctorType::value_type>::type
+  typedef typename std::remove_extent<typename FunctorType::value_type>::type
       value_type;
   typedef FunctorType functor_type;
 
@@ -184,7 +184,7 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   /* this cast to bool is needed for correctness by NVCC */
   enum : bool {
     IsArray = static_cast<bool>(
-        Impl::is_array<typename FunctorType::value_type>::value)
+        std::is_array<typename FunctorType::value_type>::value)
   };
 
   // If not an array then what is the sizeof(value_type)
@@ -201,8 +201,8 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   // Number of values if single value
   template <class F>
   KOKKOS_FORCEINLINE_FUNCTION static
-      typename Impl::enable_if<std::is_same<F, FunctorType>::value && !IsArray,
-                               unsigned>::type
+      typename std::enable_if<std::is_same<F, FunctorType>::value && !IsArray,
+                              unsigned>::type
       value_count(const F&) {
     return 1;
   }
@@ -212,8 +212,8 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   // be an array.
   template <class F>
   KOKKOS_FORCEINLINE_FUNCTION static
-      typename Impl::enable_if<std::is_same<F, FunctorType>::value && IsArray,
-                               unsigned>::type
+      typename std::enable_if<std::is_same<F, FunctorType>::value && IsArray,
+                              unsigned>::type
       value_count(const F& f) {
     return f.value_count;
   }

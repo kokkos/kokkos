@@ -266,7 +266,7 @@ void Task::closeout()
 fprintf( stdout
        , "worker(%d.%d) task 0x%.12lx %s\n"
        , qthread_shep()
-       , qthread_worker_local(NULL)
+       , qthread_worker_local(nullptr)
        , reinterpret_cast<unsigned long>(this)
        , ( m_state == RESPAWN ? "respawn" : "complete" )
        );
@@ -330,7 +330,7 @@ aligned_t Task::qthread_func( void * arg )
 fprintf( stdout
        , "worker(%d.%d) task 0x%.12lx executed by member(%d:%d)\n"
        , qthread_shep()
-       , qthread_worker_local(NULL)
+       , qthread_worker_local(nullptr)
        , reinterpret_cast<unsigned long>(task)
        , member.team_rank()
        , member.team_size()
@@ -357,7 +357,7 @@ fflush(stdout);
 fprintf( stdout
        , "worker(%d.%d) task 0x%.12lx return\n"
        , qthread_shep()
-       , qthread_worker_local(NULL)
+       , qthread_worker_local(nullptr)
        , reinterpret_cast<unsigned long>(task)
        );
 fflush(stdout);
@@ -408,7 +408,7 @@ void Task::schedule()
 fprintf( stdout
        , "worker(%d.%d) task 0x%.12lx spawning on shepherd(%d) clone(%d)\n"
        , qthread_shep()
-       , qthread_worker_local(NULL)
+       , qthread_worker_local(nullptr)
        , reinterpret_cast<unsigned long>(this)
        , spawn_shepherd
        , num_worker_per_shepherd - 1
@@ -420,7 +420,7 @@ fflush(stdout);
       ( & Task::qthread_func
       , this
       , 0
-      , NULL
+      , nullptr
       , m_dep_size , qprecon /* dependences */
       , spawn_shepherd
       , unsigned( QTHREAD_SPAWN_SIMPLE | QTHREAD_SPAWN_LOCAL_PRIORITY )
@@ -431,7 +431,7 @@ fflush(stdout);
     qthread_spawn( & Task::qthread_func /* function */
                  , this                 /* function argument */
                  , 0
-                 , NULL
+                 , nullptr
                  , m_dep_size , qprecon /* dependences */
                  , NO_SHEPHERD
                  , QTHREAD_SPAWN_SIMPLE /* allows optimization for non-blocking task */

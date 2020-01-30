@@ -524,10 +524,10 @@ template <class>
 struct is_view : public std::false_type {};
 
 template <class D, class... P>
-struct is_view<View<D, P...> > : public std::true_type {};
+struct is_view<View<D, P...>> : public std::true_type {};
 
 template <class D, class... P>
-struct is_view<const View<D, P...> > : public std::true_type {};
+struct is_view<const View<D, P...>> : public std::true_type {};
 
 template <class DataType, class... Properties>
 class View : public ViewTraits<DataType, Properties...> {
@@ -572,7 +572,8 @@ class View : public ViewTraits<DataType, Properties...> {
   /** \brief  Compatible HostMirror view */
   typedef View<typename traits::non_const_data_type,
                typename traits::array_layout,
-               typename traits::host_mirror_space>
+               Device<DefaultHostExecutionSpace,
+                      typename traits::host_mirror_space::memory_space>>
       HostMirror;
 
   /** \brief  Compatible HostMirror view */
@@ -1780,7 +1781,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const View<RT, RP...>& rhs,
       typename std::enable_if<Kokkos::Impl::ViewMapping<
           traits, typename View<RT, RP...>::traits,
-          typename traits::specialize>::is_assignable_data_type>::type* = 0)
+          typename traits::specialize>::is_assignable_data_type>::type* =
+          nullptr)
       : m_track(rhs), m_map() {
     typedef typename View<RT, RP...>::traits SrcTraits;
     typedef Kokkos::Impl::ViewMapping<traits, SrcTraits,
@@ -1900,8 +1902,8 @@ class View : public ViewTraits<DataType, Properties...> {
     // If allocating in CudaUVMSpace must fence before and after
     // the allocation to protect against possible concurrent access
     // on the CPU and the GPU.
-    // Fence using the trait's executon space (which will be Kokkos::Cuda)
-    // to avoid incomplete type errors from usng Kokkos::Cuda directly.
+    // Fence using the trait's execution space (which will be Kokkos::Cuda)
+    // to avoid incomplete type errors from using Kokkos::Cuda directly.
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
       typename traits::device_type::memory_space::execution_space().fence();

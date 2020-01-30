@@ -1,0 +1,61 @@
+#! /usr/bin/env bash
+
+# $1 is the name of the environment file to source
+# $2 is the path to the Trilinos repo
+# $3 is the path to the Kokkos repo
+# $4 is the path to the Kokkos Kernels repo
+
+ENV_FILE=$1
+TRILINOS_PATH=$2
+KOKKOS_PATH=$3
+KOKKOSKERNELS_PATH=$4
+
+export ENV_FILE=${ENV_FILE}
+export TRILINOS_PATH=${TRILINOS_PATH}
+export KOKKOS_PATH=${KOKKOS_PATH}
+export KOKKOSKERNELS_PATH=${KOKKOSKERNELS_PATH}
+
+
+if [ -z ${ENV_FILE} ] || [ ! -f ${ENV_FILE} ]; then
+  >&2 echo "Must give valid environment file as first argument"
+  exit 1
+fi
+
+if [ -z ${TRILINOS_PATH} ] || [ ! -d ${TRILINOS_PATH} ]; then
+  >&2 echo "Must give valid Trilinos path  as second argument"
+  exit 1
+fi
+
+if [ -z ${KOKKOS_PATH} ] || [ ! -d ${KOKKOS_PATH} ]; then
+  >&2 echo "Must give valid Kokkos path  as third argument"
+  exit 1
+fi
+
+if [ -z ${KOKKOSKERNELS_PATH} ] || [ ! -d ${KOKKOSKERNELS_PATH} ]; then
+  >&2 echo "Must give valid KokkosKernels path  as fourth argument"
+  exit 1
+fi
+
+source ${ENV_FILE}
+
+ln -s ${KOKKOS_PATH} ${TRILINOS_PATH}/kokkos
+ln -s ${KOKKOSKERNELS_PATH} ${TRILINOS_PATH}/kokkos-kernels
+
+stringToHash="$1 $2 $3 $4"
+hash=`cksum <<< "${stringToHash}" | cut -f 1 -d ' '`
+
+testFolder="promotion-test-$hash"
+echo "Running test in folder $testFolder"
+
+rm -rf $testFolder
+mkdir $testFolder
+
+cd $testFolder
+
+${TRILINOS_PATH}/sampleScripts/Sandia-SEMS/configure-testbeds-jenkins \
+  -DKokkos_SOURCE_DIR_OVERRIDE=kokkos \
+  -DKokkosKernels_SOURCE_DIR_OVERRIDE=kokkos-kernels \
+  ${KOKKOS_EXTRA_FLAGS} >& config.out
+
+
+

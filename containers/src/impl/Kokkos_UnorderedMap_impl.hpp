@@ -244,21 +244,22 @@ struct UnorderedMapPrint {
 };
 
 template <typename DKey, typename DValue, typename SKey, typename SValue>
-struct UnorderedMapCanAssign : public false_ {};
+struct UnorderedMapCanAssign : public std::false_type {};
 
 template <typename Key, typename Value>
-struct UnorderedMapCanAssign<Key, Value, Key, Value> : public true_ {};
+struct UnorderedMapCanAssign<Key, Value, Key, Value> : public std::true_type {};
 
 template <typename Key, typename Value>
-struct UnorderedMapCanAssign<const Key, Value, Key, Value> : public true_ {};
+struct UnorderedMapCanAssign<const Key, Value, Key, Value>
+    : public std::true_type {};
 
 template <typename Key, typename Value>
 struct UnorderedMapCanAssign<const Key, const Value, Key, Value>
-    : public true_ {};
+    : public std::true_type {};
 
 template <typename Key, typename Value>
 struct UnorderedMapCanAssign<const Key, const Value, const Key, Value>
-    : public true_ {};
+    : public std::true_type {};
 
 }  // namespace Impl
 }  // namespace Kokkos

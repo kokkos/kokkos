@@ -57,10 +57,10 @@
 #include <Kokkos_OpenMP.hpp>
 #endif
 
-//#if defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
 #include <Kokkos_OpenMPTarget.hpp>
 #include <Kokkos_OpenMPTargetSpace.hpp>
-//#endif
+#endif
 
 #if defined(KOKKOS_ENABLE_QTHREADS)
 #include <Kokkos_Qthreads.hpp>
@@ -81,6 +81,9 @@
 #if defined(KOKKOS_ENABLE_ROCM)
 #include <Kokkos_ROCm.hpp>
 #endif
+#if defined(KOKKOS_ENABLE_HIP)
+#include <Kokkos_HIP.hpp>
+#endif
 
 #include <Kokkos_AnonymousSpace.hpp>
 #include <Kokkos_Pair.hpp>
@@ -92,9 +95,7 @@
 #include <Kokkos_hwloc.hpp>
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_TaskScheduler.hpp>
-
 #include <Kokkos_Complex.hpp>
-
 #include <Kokkos_CopyViews.hpp>
 #include <functional>
 #include <iosfwd>

@@ -116,7 +116,7 @@ struct TaskResult<void> {
     return nullptr;
   }
 
-  KOKKOS_INLINE_FUNCTION static void* ptr(TaskBase*) { return (void*)nullptr; }
+  KOKKOS_INLINE_FUNCTION static void* ptr(TaskBase*) { return nullptr; }
 
   template <class TaskQueueTraits>
   KOKKOS_INLINE_FUNCTION static reference_type get(

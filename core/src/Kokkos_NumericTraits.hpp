@@ -367,7 +367,8 @@ struct reduction_identity<double> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr static double min() { return DBL_MAX; }
 };
 
-#if !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
+#if !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
+    !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
 template <>
 struct reduction_identity<long double> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr static long double sum() {

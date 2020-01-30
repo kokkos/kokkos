@@ -55,29 +55,14 @@
 namespace Kokkos {
 namespace Impl {
 
-// The following function (processors_per_node) is copied from here:
-// https://lists.gnu.org/archive/html/autoconf/2002-08/msg00126.html
-// Philip Willoughby
-
 int processors_per_node() {
-#ifdef _WIN32
-#ifndef _SC_NPROCESSORS_ONLN
-  SYSTEM_INFO info;
-  GetSystemInfo(&info);
-#define sysconf(a) info.dwNumberOfProcessors
-#define _SC_NPROCESSORS_ONLN
-#endif
-#endif
 #ifdef _SC_NPROCESSORS_ONLN
-  int const nprocs = sysconf(_SC_NPROCESSORS_ONLN);
-  if (nprocs < 1) {
+  int const num_procs     = sysconf(_SC_NPROCESSORS_ONLN);
+  int const num_procs_max = sysconf(_SC_NPROCESSORS_CONF);
+  if ((num_procs < 1) || (num_procs_max < 1)) {
     return -1;
   }
-  int const nprocs_max = sysconf(_SC_NPROCESSORS_CONF);
-  if (nprocs_max < 1) {
-    return -1;
-  }
-  return nprocs;
+  return num_procs;
 #else
   return -1;
 #endif

@@ -166,11 +166,7 @@ class TaskBase {
   TaskBase& operator=(TaskBase&&) = delete;
   TaskBase& operator=(const TaskBase&) = delete;
 
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  KOKKOS_INLINE_FUNCTION ~TaskBase(){};
-#else
-  KOKKOS_INLINE_FUNCTION ~TaskBase() = default;
-#endif
+  KOKKOS_DEFAULTED_FUNCTION ~TaskBase() = default;
 
   KOKKOS_INLINE_FUNCTION constexpr TaskBase()
       : m_apply(nullptr),
@@ -210,7 +206,7 @@ class TaskBase {
       Kokkos::abort("TaskScheduler ERROR: resetting task dependence");
     }
 
-    if (0 != dep) {
+    if (nullptr != dep) {
       // The future may be destroyed upon returning from this call
       // so increment reference count to track this assignment.
       Kokkos::atomic_increment(&(dep->m_ref_count));

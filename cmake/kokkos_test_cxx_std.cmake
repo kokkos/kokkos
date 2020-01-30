@@ -14,12 +14,12 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
     ENDIF()
   ELSEIF(CMAKE_CXX_EXTENSIONS)
     IF(KOKKOS_DONT_ALLOW_EXTENSIONS)
-      MESSAGE(FATAL_ERROR "The chosen configuration does not support CXX extensions flags: ${KOKKOS_DONT_ALLOW_EXTENSIONS}. Must set CMAKE_CXX_EXTENSIONS=OFF to continue") 
+      MESSAGE(FATAL_ERROR "The chosen configuration does not support CXX extensions flags: ${KOKKOS_DONT_ALLOW_EXTENSIONS}. Must set CMAKE_CXX_EXTENSIONS=OFF to continue")
     ELSE()
       GLOBAL_SET(KOKKOS_USE_CXX_EXTENSIONS ON)
     ENDIF()
   ELSE()
-    #For trilinos, we need to make sure downstream projects 
+    #For trilinos, we need to make sure downstream projects
     GLOBAL_SET(KOKKOS_USE_CXX_EXTENSIONS OFF)
   ENDIF()
 

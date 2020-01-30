@@ -104,12 +104,12 @@ class Crs {
   /*
    * Default Constructors, operators and destructor
    */
-  KOKKOS_FUNCTION Crs()           = default;
-  KOKKOS_FUNCTION Crs(Crs const&) = default;
-  KOKKOS_FUNCTION Crs(Crs&&)      = default;
-  KOKKOS_FUNCTION Crs& operator=(Crs const&) = default;
-  KOKKOS_FUNCTION Crs& operator=(Crs&&) = default;
-  KOKKOS_FUNCTION ~Crs()                = default;
+  KOKKOS_DEFAULTED_FUNCTION Crs()           = default;
+  KOKKOS_DEFAULTED_FUNCTION Crs(Crs const&) = default;
+  KOKKOS_DEFAULTED_FUNCTION Crs(Crs&&)      = default;
+  KOKKOS_DEFAULTED_FUNCTION Crs& operator=(Crs const&) = default;
+  KOKKOS_DEFAULTED_FUNCTION Crs& operator=(Crs&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION ~Crs()                = default;
 
   /** \brief Assign to a view of the rhs array.
    *         If the old view is the last view

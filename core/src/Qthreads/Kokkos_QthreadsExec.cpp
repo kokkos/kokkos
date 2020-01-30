@@ -85,7 +85,7 @@ int s_number_workers              = 0;
 inline QthreadsExec **worker_exec() {
   return s_exec + s_number_workers -
          (qthread_shep() * s_number_workers_per_shepherd +
-          qthread_worker_local(NULL) + 1);
+          qthread_worker_local(nullptr) + 1);
 }
 
 const int s_base_size = QthreadsExec::align_alloc(sizeof(QthreadsExec));
@@ -298,7 +298,7 @@ aligned_t driver_resize_worker_scratch(void *arg) {
 
 void verify_is_process(const char *const label, bool not_active = false) {
   const bool not_process =
-      0 != qthread_shep() || 0 != qthread_worker_local(NULL);
+      0 != qthread_shep() || 0 != qthread_worker_local(nullptr);
   const bool is_active =
       not_active && (s_active_function || s_active_function_arg);
 
@@ -319,7 +319,7 @@ int QthreadsExec::worker_per_shepherd() {
 
 QthreadsExec::QthreadsExec() {
   const int shepherd_rank        = qthread_shep();
-  const int shepherd_worker_rank = qthread_worker_local(NULL);
+  const int shepherd_worker_rank = qthread_worker_local(nullptr);
   const int worker_rank =
       shepherd_rank * s_number_workers_per_shepherd + shepherd_worker_rank;
 
@@ -382,7 +382,7 @@ void QthreadsExec::resize_worker_scratch(const int reduce_size,
 #if 0
     for ( int jshep = 0; jshep < s_number_shepherds; ++jshep ) {
       for ( int i = jshep != main_shep ? 0 : 1; i < s_number_workers_per_shepherd; ++i ) {
-        qthread_fork_to( driver_resize_worker_scratch, NULL, NULL, jshep );
+        qthread_fork_to( driver_resize_worker_scratch, nullptr, nullptr, jshep );
       }
     }
 #else
@@ -398,9 +398,9 @@ void QthreadsExec::resize_worker_scratch(const int reduce_size,
         const int ret = qthread_fork_clones_to_local_priority(
             driver_resize_worker_scratch  // Function
             ,
-            NULL  // Function data block
+            nullptr  // Function data block
             ,
-            NULL  // Pointer to return value feb
+            nullptr  // Pointer to return value feb
             ,
             jshep  // Shepherd number
             ,
@@ -412,7 +412,7 @@ void QthreadsExec::resize_worker_scratch(const int reduce_size,
     }
 #endif
 
-    driver_resize_worker_scratch(NULL);
+    driver_resize_worker_scratch(nullptr);
 
     // Verify all workers allocated.
 
@@ -454,7 +454,7 @@ void QthreadsExec::exec_all(Qthreads &, QthreadsExecFunctionPointer func,
 #if 0
   for ( int jshep = 0, iwork = 0; jshep < s_number_shepherds; ++jshep ) {
     for ( int i = jshep != main_shep ? 0 : 1; i < s_number_workers_per_shepherd; ++i, ++iwork ) {
-      qthread_fork_to( driver_exec_all, NULL, NULL, jshep );
+      qthread_fork_to( driver_exec_all, nullptr, nullptr, jshep );
     }
   }
 #else
@@ -470,9 +470,9 @@ void QthreadsExec::exec_all(Qthreads &, QthreadsExecFunctionPointer func,
       const int ret = qthread_fork_clones_to_local_priority(
           driver_exec_all  // Function
           ,
-          NULL  // Function data block
+          nullptr  // Function data block
           ,
-          NULL  // Pointer to return value feb
+          nullptr  // Pointer to return value feb
           ,
           jshep  // Shepherd number
           ,
@@ -484,7 +484,7 @@ void QthreadsExec::exec_all(Qthreads &, QthreadsExecFunctionPointer func,
   }
 #endif
 
-  driver_exec_all(NULL);
+  driver_exec_all(nullptr);
 
   s_active_function     = 0;
   s_active_function_arg = 0;

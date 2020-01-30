@@ -55,6 +55,12 @@
 #define KOKKOS_ABORT_MESSAGE_BUFFER_SIZE 2048
 #endif  // ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
 
+// HIP defines a macro abort() when using nvcc, thus we get a collision with the
+// abort function defined here
+#ifdef KOKKOS_ENABLE_HIP
+#undef abort
+#endif
+
 namespace Kokkos {
 namespace Impl {
 
@@ -86,7 +92,9 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     IntelMMAlloc,
     CudaMalloc,
     CudaMallocManaged,
-    CudaHostAlloc
+    CudaHostAlloc,
+    HIPMalloc,
+    HIPHostMalloc
   };
 
  private:
@@ -148,7 +156,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
   KOKKOS_ATTRIBUTE_NODISCARD
   std::string get_error_message() const;
 
-  virtual void append_additional_error_information(std::ostream &o) const {}
+  virtual void append_additional_error_information(std::ostream &) const {}
 };
 
 }  // end namespace Experimental
