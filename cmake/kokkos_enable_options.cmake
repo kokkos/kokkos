@@ -58,6 +58,12 @@ ELSE()
   SET(LAMBDA_DEFAULT OFF)
 ENDIF()
 KOKKOS_ENABLE_OPTION(CUDA_LAMBDA ${LAMBDA_DEFAULT} "Whether to activate experimental lambda features")
+IF (Trilinos_ENABLE_Kokkos)
+  SET(COMPLEX_ALIGN_DEFAULT OFF)
+ELSE()
+  SET(COMPLEX_ALIGN_DEFAULT ON)
+ENDIF()
+KOKKOS_ENABLE_OPTION(COMPLEX_ALIGN ${COMPLEX_ALIGN_DEFAULT}  "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
 KOKKOS_ENABLE_OPTION(CUDA_CONSTEXPR OFF "Whether to activate experimental relaxed constexpr functions")
 
