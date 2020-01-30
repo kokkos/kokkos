@@ -43,9 +43,10 @@
 
 /// @Kokkos_Feature_Level_Required:1
 // Unit test for atomic exchange, atomic add and atomic sub.
-// Atomic exchange test : we interchange value1 with value2 and check for correctness.
-// Atomic add test : we add value2 to value1 and check for correctness.
-// Atomic sub test : we subtract value2 from value1 and check for correctmess.
+// Atomic exchange test : we interchange value1 with value2 and check for
+// correctness. Atomic add test : we add value2 to value1 and check for
+// correctness. Atomic sub test : we subtract value2 from value1 and check for
+// correctmess.
 
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
@@ -55,7 +56,6 @@ using value_type = double;
 namespace Test {
 
 struct TestIncrAtomic {
-
   value_type value1 = 1.5, value2 = 0.5;
 
   void testExchange() {
