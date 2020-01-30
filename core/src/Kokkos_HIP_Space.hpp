@@ -474,7 +474,7 @@ struct VerifyExecutionCanAccessMemorySpace<
 template <class OtherSpace>
 struct VerifyExecutionCanAccessMemorySpace<
     typename std::enable_if<
-        !is_same<Kokkos::Experimental::HIPSpace, OtherSpace>::value,
+        !std::is_same<Kokkos::Experimental::HIPSpace, OtherSpace>::value,
         Kokkos::Experimental::HIPSpace>::type,
     OtherSpace> {
   enum { value = false };
