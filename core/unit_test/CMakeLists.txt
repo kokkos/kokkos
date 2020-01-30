@@ -293,11 +293,21 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_AtomicOperations_int.cpp
       hip/TestHIP_AtomicOperations_unsignedint.cpp
       hip/TestHIP_AtomicOperations_longlongint.cpp
+      hip/TestHIP_DeepCopyAlignment.cpp
+      hip/TestHIP_SubView_a.cpp
+      hip/TestHIP_SubView_b.cpp
+      hip/TestHIP_View_64bit.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIP
     SOURCES
       ${HIP_SOURCES}
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HIPInterOpInit
+    SOURCES
+      UnitTestMain.cpp
+      hip/TestHIP_InterOp_Init.cpp
   )
 endif()
 
