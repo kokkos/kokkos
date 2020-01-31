@@ -77,7 +77,7 @@ struct TestReduction {
   value_type sum = 0.0;
 
   // compare and equal
-  void check_correctness(double sum) {
+  void check_correctness() {
     int sum_local = 0;
     for (int i = 0; i < num_elements; ++i) sum_local += (i + 1);
 
@@ -120,9 +120,7 @@ struct TestReduction {
 
   void check_correctness_and_cleanup() {
     // Check if reduction has produced correct results
-    check_correctness(sum);
-
-    check_correctness_and_cleanup();
+    check_correctness();
 
     // free the allocated memory
     free_mem<d_memspace_type>(deviceData);
@@ -142,6 +140,8 @@ struct TestReduction {
     // iterations
     Kokkos::parallel_reduce("Reduction", range_policy(0, num_elements),
                             ReduceFunctor(deviceData), sum);
+
+    check_correctness_and_cleanup();
   }
 };
 
