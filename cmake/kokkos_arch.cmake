@@ -96,7 +96,7 @@ ENDIF()
 
 #------------------------------- KOKKOS_CUDA_OPTIONS ---------------------------
 #clear anything that might be in the cache
-GLOBAL_SET(KOKKOS_CUDA_OPTIONS "")
+GLOBAL_SET(KOKKOS_CUDA_OPTIONS)
 # Construct the Makefile options
 IF (KOKKOS_ENABLE_CUDA_LAMBDA)
   IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
