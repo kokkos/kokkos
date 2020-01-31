@@ -218,18 +218,9 @@ void *CudaSpace::allocate(const size_t arg_alloc_size) const {
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
   void *ptr = nullptr;
 
-  enum { max_uvm_allocations = 65536 };
-
   Cuda::impl_static_fence();
   if (arg_alloc_size > 0) {
     Kokkos::Impl::num_uvm_allocations++;
-
-    if (Kokkos::Impl::num_uvm_allocations.load() > max_uvm_allocations) {
-      throw Experimental::CudaRawMemoryAllocationFailure(
-          arg_alloc_size, 1,
-          Experimental::RawMemoryAllocationFailure::FailureMode::
-              MaximumCudaUVMAllocationsExceeded);
-    }
 
     auto error_code =
         cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
