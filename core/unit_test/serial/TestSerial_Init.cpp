@@ -42,9 +42,7 @@
 //@HEADER
 */
 
-#include<serial/TestSerial_Category.hpp>
-#include<TestInit.hpp>
-#include<TestCompilerMacros.hpp>
-#include<TestPolicyConstruction.hpp>
-
-
+#include <serial/TestSerial_Category.hpp>
+#include <TestInit.hpp>
+#include <TestCompilerMacros.hpp>
+#include <TestPolicyConstruction.hpp>

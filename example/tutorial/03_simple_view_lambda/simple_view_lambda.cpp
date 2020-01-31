@@ -65,10 +65,10 @@
 //
 // The first dimension of the View is the dimension over which it is
 // efficient for Kokkos to parallelize.
-typedef Kokkos::View<double*[3]> view_type;
+typedef Kokkos::View<double * [3]> view_type;
 
-int main (int argc, char* argv[]) {
-  Kokkos::initialize (argc, argv);
+int main(int argc, char* argv[]) {
+  Kokkos::initialize(argc, argv);
 
   {
     // Allocate the View.  The first dimension is a run-time parameter
@@ -86,37 +86,40 @@ int main (int argc, char* argv[]) {
     //
     // The string "A" is just the label; it only matters for debugging.
     // Different Views may have the same label.
-    view_type a ("A", 10);
+    view_type a("A", 10);
 
-    // Fill the View with some data.  The parallel_for loop will iterate
-    // over the View's first dimension N.
-    //
-    // Note that the View is passed by value into the lambda.  The macro
-    // KOKKOS_LAMBDA includes the "capture by value" clause [=].  This
-    // tells the lambda to "capture all variables in the enclosing scope
-    // by value."  Views have "view semantics"; they behave like
-    // pointers, not like std::vector.  Passing them by value does a
-    // shallow copy.  A deep copy never happens unless you explicitly
-    // ask for one.
-    // We also need to protect the usage of a lambda against compiling
-    // with a backend which doesn't support it (i.e. Cuda 6.5/7.0).
-    #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-    Kokkos::parallel_for (10, KOKKOS_LAMBDA (const int i) {
-      // Acesss the View just like a Fortran array.  The layout depends
-      // on the View's memory space, so don't rely on the View's
-      // physical memory layout unless you know what you're doing.
-      a(i,0) = 1.0*i;
-      a(i,1) = 1.0*i*i;
-      a(i,2) = 1.0*i*i*i;
-    });
+// Fill the View with some data.  The parallel_for loop will iterate
+// over the View's first dimension N.
+//
+// Note that the View is passed by value into the lambda.  The macro
+// KOKKOS_LAMBDA includes the "capture by value" clause [=].  This
+// tells the lambda to "capture all variables in the enclosing scope
+// by value."  Views have "view semantics"; they behave like
+// pointers, not like std::vector.  Passing them by value does a
+// shallow copy.  A deep copy never happens unless you explicitly
+// ask for one.
+// We also need to protect the usage of a lambda against compiling
+// with a backend which doesn't support it (i.e. Cuda 6.5/7.0).
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+    Kokkos::parallel_for(
+        10, KOKKOS_LAMBDA(const int i) {
+          // Acesss the View just like a Fortran array.  The layout depends
+          // on the View's memory space, so don't rely on the View's
+          // physical memory layout unless you know what you're doing.
+          a(i, 0) = 1.0 * i;
+          a(i, 1) = 1.0 * i * i;
+          a(i, 2) = 1.0 * i * i * i;
+        });
     // Reduction functor that reads the View given to its constructor.
     double sum = 0;
-    Kokkos::parallel_reduce (10, KOKKOS_LAMBDA (const int i, double& lsum) {
-      lsum += a(i,0)*a(i,1)/(a(i,2)+0.1);
-    }, sum);
-    printf ("Result: %f\n", sum);
-    #endif
+    Kokkos::parallel_reduce(
+        10,
+        KOKKOS_LAMBDA(const int i, double& lsum) {
+          lsum += a(i, 0) * a(i, 1) / (a(i, 2) + 0.1);
+        },
+        sum);
+    printf("Result: %f\n", sum);
+#endif
   }
-  Kokkos::finalize ();
+  Kokkos::finalize();
 }
-

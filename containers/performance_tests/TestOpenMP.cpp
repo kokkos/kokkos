@@ -42,7 +42,7 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#if defined( KOKKOS_ENABLE_OPENMP )
+#if defined(KOKKOS_ENABLE_OPENMP)
 
 #include <gtest/gtest.h>
 
@@ -61,82 +61,72 @@
 #include <string>
 #include <fstream>
 
-
 namespace Performance {
 
 class openmp : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
+ protected:
+  static void SetUpTestCase() {
     std::cout << std::setprecision(5) << std::scientific;
 
     Kokkos::initialize();
-    Kokkos::OpenMP::print_configuration( std::cout );
+    Kokkos::OpenMP::print_configuration(std::cout);
   }
 
-  static void TearDownTestCase()
-  {
-    Kokkos::finalize();
-  }
+  static void TearDownTestCase() { Kokkos::finalize(); }
 };
 
-TEST_F( openmp, dynrankview_perf )
-{
+TEST_F(openmp, dynrankview_perf) {
   std::cout << "OpenMP" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
-  test_dynrankview_op_perf<Kokkos::OpenMP>( 8192 );
+  test_dynrankview_op_perf<Kokkos::OpenMP>(8192);
 }
 
-TEST_F( openmp, global_2_local)
-{
+TEST_F(openmp, global_2_local) {
   std::cout << "OpenMP" << std::endl;
   std::cout << "size, create, generate, fill, find" << std::endl;
-  for (unsigned i=Performance::begin_id_size; i<=Performance::end_id_size; i *= Performance::id_step)
+  for (unsigned i = Performance::begin_id_size; i <= Performance::end_id_size;
+       i *= Performance::id_step)
     test_global_to_local_ids<Kokkos::OpenMP>(i);
 }
 
-TEST_F( openmp, unordered_map_performance_near)
-{
+TEST_F(openmp, unordered_map_performance_near) {
   unsigned num_openmp = 4;
   if (Kokkos::hwloc::available()) {
     num_openmp = Kokkos::hwloc::get_available_numa_count() *
-                  Kokkos::hwloc::get_available_cores_per_numa() *
-                  Kokkos::hwloc::get_available_threads_per_core();
-
+                 Kokkos::hwloc::get_available_cores_per_numa() *
+                 Kokkos::hwloc::get_available_threads_per_core();
   }
   std::ostringstream base_file_name;
   base_file_name << "openmp-" << num_openmp << "-near";
-  Perf::run_performance_tests<Kokkos::OpenMP,true>(base_file_name.str());
+  Perf::run_performance_tests<Kokkos::OpenMP, true>(base_file_name.str());
 }
 
-TEST_F( openmp, unordered_map_performance_far)
-{
+TEST_F(openmp, unordered_map_performance_far) {
   unsigned num_openmp = 4;
   if (Kokkos::hwloc::available()) {
     num_openmp = Kokkos::hwloc::get_available_numa_count() *
-                  Kokkos::hwloc::get_available_cores_per_numa() *
-                  Kokkos::hwloc::get_available_threads_per_core();
-
+                 Kokkos::hwloc::get_available_cores_per_numa() *
+                 Kokkos::hwloc::get_available_threads_per_core();
   }
   std::ostringstream base_file_name;
   base_file_name << "openmp-" << num_openmp << "-far";
-  Perf::run_performance_tests<Kokkos::OpenMP,false>(base_file_name.str());
+  Perf::run_performance_tests<Kokkos::OpenMP, false>(base_file_name.str());
 }
 
-TEST_F( openmp, scatter_view)
-{
+TEST_F(openmp, scatter_view) {
   std::cout << "ScatterView data-duplicated test:\n";
   Perf::test_scatter_view<Kokkos::OpenMP, Kokkos::LayoutRight,
-    Kokkos::Experimental::ScatterDuplicated,
-    Kokkos::Experimental::ScatterNonAtomic>(10, 1000 * 1000);
-//std::cout << "ScatterView atomics test:\n";
-//Perf::test_scatter_view<Kokkos::OpenMP, Kokkos::LayoutRight,
-//  Kokkos::Experimental::ScatterNonDuplicated,
-//  Kokkos::Experimental::ScatterAtomic>(10, 1000 * 1000);
+                          Kokkos::Experimental::ScatterDuplicated,
+                          Kokkos::Experimental::ScatterNonAtomic>(10,
+                                                                  1000 * 1000);
+  // std::cout << "ScatterView atomics test:\n";
+  // Perf::test_scatter_view<Kokkos::OpenMP, Kokkos::LayoutRight,
+  //  Kokkos::Experimental::ScatterNonDuplicated,
+  //  Kokkos::Experimental::ScatterAtomic>(10, 1000 * 1000);
 }
 
-} // namespace test
+}  // namespace Performance
 #else
-void KOKKOS_CONTAINERS_PERFORMANCE_TESTS_TESTOPENMP_PREVENT_EMPTY_LINK_ERROR() {}
+void KOKKOS_CONTAINERS_PERFORMANCE_TESTS_TESTOPENMP_PREVENT_EMPTY_LINK_ERROR() {
+}
 #endif
-

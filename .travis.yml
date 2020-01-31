@@ -13,19 +13,52 @@ compiler:
 cache:
   - ccache
 
-env:
-  - THREADING="serial"
-  - THREADING="openmp"
-  - THREADING="pthread"
+stages:
+  - canary
+  - test
 
-# Apple GCC does not support OpenMP.  GCC with OpenMP requires Homebrew.
-# Apple Clang does not support OpenMP.  Clang with OpenMP requires Homebrew.
+jobs:
+    include:
+        - stage: canary
+          env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP" CXXFLAGS="-Werror"
+          os: linux
+
+branches:
+  only:
+  - master
+  - develop
+  - /^release/
+
+env:
+  - 
+  - BACKEND="OPENMP"
+#  - BACKEND="PTHREAD"
+  - CMAKE_BUILD_TYPE=Debug COVERAGE=yes
+  - CMAKE_BUILD_TYPE=Debug BACKEND="OPENMP" COVERAGE=yes
+#  - CMAKE_BUILD_TYPE=Debug BACKEND="PTHREAD" COVERAGE=yes
+  - CMAKE_BUILD_TYPE=Release
+  - CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
+#  - CMAKE_BUILD_TYPE=Release BACKEND="PTHREAD"
+
 matrix:
   exclude:
-    - os: osx
-      env: THREADING="openmp"
+# Apple GCC is just an alias to AppleClang
     - os: osx
       compiler: gcc
+# Apple Clang doesn't support OpenMP
+    - os: osx
+      compiler: clang
+      env: BACKEND="OPENMP"
+    - os: osx
+      compiler: clang
+      env: CMAKE_BUILD_TYPE=Debug BACKEND="OPENMP" COVERAGE=yes
+    - os: osx
+      compiler: clang
+      env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
+# We do this as canary
+    - os: linux
+      compiler: gcc
+      env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
 
 before_script:
   - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
@@ -35,24 +68,39 @@ before_script:
       export PATH=/usr/local/opt/ccache/libexec:$PATH;
     fi
   - ccache -z
+  - if [[ ${COVERAGE} ]]; then export CXX="${CXX} --coverage"; fi
+  - if [[ ! ${CMAKE_BUILD_TYPE} ]]; then export CXXFLAGS="${CXXFLAGS} -O2"; fi
 
 script:
   - export OMP_NUM_THREADS=2
   - export OMP_PLACES=threads
   - export OMP_PROC_BIND=spread
-  # LD_LIBRARY_PATH workaround to find clang's libomp: https://github.com/travis-ci/travis-ci/issues/8613 
+  # LD_LIBRARY_PATH workaround to find clang's libomp: https://github.com/travis-ci/travis-ci/issues/8613
   - if [[ ${CC} = clang ]]; then export LD_LIBRARY_PATH=/usr/local/clang/lib${LD_LIBRARY_PATH:+:}$LD_LIBRARY_PATH; fi
   # enable ccache for clang on linux and add CCACHE_CPP2 to avoid 'Argument unused during compilation -I...' warning
   - if [[ ${TRAVIS_OS_NAME} = linux && ${CC} = clang ]]; then
       ln -s /usr/bin/ccache $HOME/bin/clang++;
       export CCACHE_CPP2=yes;
-      GENERATE_OPTS="--gcc-toolchain=/usr";
     fi
-  - mkdir build
-  - cd build
-  - ../generate_makefile.bash --compiler=$CXX --with-$THREADING --with-options=compiler_warnings --cxxflags="-O3 -Werror" ${GENERATE_OPTS}
-  - make
-  - make test
+  - mkdir build &&
+    pushd build &&
+    cmake ..
+          ${BACKEND:+-DKokkos_ENABLE_${BACKEND}=On}
+          -DKokkos_ENABLE_TESTS=On
+          ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}} &&
+    make VERBOSE=1 -j2 &&
+    travis_wait 60 make test CTEST_OUTPUT_ON_FAILURE=1 &&
+    make install DESTDIR=${PWD}/install && rm -rf ${PWD}/install/usr/local && rmdir ${PWD}/install/usr &&
+    popd
 
 after_success:
   - ccache -s
+  - if [[ ${COVERAGE} ]]; then
+      mkdir -p $HOME/.local/bin && wget -O $HOME/.local/bin/codecov https://codecov.io/bash && chmod +x $HOME/.local/bin/codecov;
+      pushd build &&
+      if [[ ${CC} = clang* ]]; then
+        codecov -x "llvm-cov gcov" -F "${CC}";
+      else
+        codecov -x gcov -F "${CC}";
+      fi;
+    fi

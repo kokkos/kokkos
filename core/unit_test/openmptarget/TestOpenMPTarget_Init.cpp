@@ -42,9 +42,7 @@
 //@HEADER
 */
 
-#include<openmptarget/TestOpenMPTarget_Category.hpp>
-#include<TestInit.hpp>
-#include<TestCompilerMacros.hpp>
-#include<TestPolicyConstruction.hpp>
-
-
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
+#include <TestInit.hpp>
+#include <TestCompilerMacros.hpp>
+#include <TestPolicyConstruction.hpp>

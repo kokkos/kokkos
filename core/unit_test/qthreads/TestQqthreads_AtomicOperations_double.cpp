@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<qthreads/TestQqthreads_Category.hpp>
-#include<TestAtomicOperations_double.hpp>
-
+#include <qthreads/TestQqthreads_Category.hpp>
+#include <TestAtomicOperations_double.hpp>

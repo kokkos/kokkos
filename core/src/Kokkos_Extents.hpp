@@ -60,9 +60,7 @@ template <class Exts, ptrdiff_t NewExtent>
 struct PrependExtent;
 
 template <ptrdiff_t... Exts, ptrdiff_t NewExtent>
-struct PrependExtent<
-  Extents<Exts...>, NewExtent
-> {
+struct PrependExtent<Extents<Exts...>, NewExtent> {
   using type = Extents<NewExtent, Exts...>;
 };
 
@@ -70,117 +68,101 @@ template <class Exts, ptrdiff_t NewExtent>
 struct AppendExtent;
 
 template <ptrdiff_t... Exts, ptrdiff_t NewExtent>
-struct AppendExtent<
-  Extents<Exts...>, NewExtent
-> {
+struct AppendExtent<Extents<Exts...>, NewExtent> {
   using type = Extents<Exts..., NewExtent>;
 };
 
-} // end namespace Experimental
+}  // end namespace Experimental
 
 namespace Impl {
 
 namespace _parse_view_extents_impl {
 
 template <class T>
-struct _all_remaining_extents_dynamic : std::true_type { };
+struct _all_remaining_extents_dynamic : std::true_type {};
 
 template <class T>
-struct _all_remaining_extents_dynamic<T*>
-  : _all_remaining_extents_dynamic<T>
-{ };
+struct _all_remaining_extents_dynamic<T*> : _all_remaining_extents_dynamic<T> {
+};
 
 template <class T, unsigned N>
-struct _all_remaining_extents_dynamic<T[N]>
-  : std::false_type
-{ };
+struct _all_remaining_extents_dynamic<T[N]> : std::false_type {};
 
-template <class T, class Result, class=void>
+template <class T, class Result, class = void>
 struct _parse_impl {
   using type = Result;
 };
 
-// We have to treat the case of int**[x] specially, since it *doesn't* go backwards
+// We have to treat the case of int**[x] specially, since it *doesn't* go
+// backwards
 template <class T, ptrdiff_t... ExtentSpec>
 struct _parse_impl<
-  T*, Experimental::Extents<ExtentSpec...>,
-  typename std::enable_if<_all_remaining_extents_dynamic<T>::value>::type
->
-  : _parse_impl<
-      T, Experimental::Extents<Experimental::dynamic_extent, ExtentSpec...>
-    >
-{ };
+    T*, Experimental::Extents<ExtentSpec...>,
+    typename std::enable_if<_all_remaining_extents_dynamic<T>::value>::type>
+    : _parse_impl<T, Experimental::Extents<Experimental::dynamic_extent,
+                                           ExtentSpec...>> {};
 
 // int*(*[x])[y] should still work also (meaning int[][x][][y])
 template <class T, ptrdiff_t... ExtentSpec>
-struct _parse_impl<
-  T*, Experimental::Extents<ExtentSpec...>,
-  typename std::enable_if<not _all_remaining_extents_dynamic<T>::value>::type
->
-{
+struct _parse_impl<T*, Experimental::Extents<ExtentSpec...>,
+                   typename std::enable_if<
+                       not _all_remaining_extents_dynamic<T>::value>::type> {
   using _next = Kokkos::Experimental::AppendExtent<
-    typename _parse_impl<T, Experimental::Extents<ExtentSpec...>, void>::type,
-    Experimental::dynamic_extent
-  >;
+      typename _parse_impl<T, Experimental::Extents<ExtentSpec...>, void>::type,
+      Experimental::dynamic_extent>;
   using type = typename _next::type;
 };
 
 template <class T, ptrdiff_t... ExtentSpec, unsigned N>
-struct _parse_impl<
-  T[N], Experimental::Extents<ExtentSpec...>, void
->
-  : _parse_impl<
-      T, Experimental::Extents<ExtentSpec..., ptrdiff_t(N)> // TODO @pedantic this could be a narrowing cast
-    >
-{ };
+struct _parse_impl<T[N], Experimental::Extents<ExtentSpec...>, void>
+    : _parse_impl<T, Experimental::Extents<ExtentSpec...,
+                                           ptrdiff_t(N)>  // TODO @pedantic this
+                                                          // could be a
+                                                          // narrowing cast
+                  > {};
 
-} // end namespace _parse_view_extents_impl
+}  // end namespace _parse_view_extents_impl
 
 template <class DataType>
 struct ParseViewExtents {
-  using type =
-    typename _parse_view_extents_impl
-      ::_parse_impl<DataType, Experimental::Extents<>>::type;
+  using type = typename _parse_view_extents_impl ::_parse_impl<
+      DataType, Experimental::Extents<>>::type;
 };
 
 template <class ValueType, ptrdiff_t Ext>
-struct ApplyExtent
-{
+struct ApplyExtent {
   using type = ValueType[Ext];
 };
 
 template <class ValueType>
-struct ApplyExtent<ValueType, Experimental::dynamic_extent>
-{
+struct ApplyExtent<ValueType, Experimental::dynamic_extent> {
   using type = ValueType*;
 };
 
 template <class ValueType, unsigned N, ptrdiff_t Ext>
-struct ApplyExtent<ValueType[N], Ext>
-{
+struct ApplyExtent<ValueType[N], Ext> {
   using type = typename ApplyExtent<ValueType, Ext>::type[N];
 };
 
 template <class ValueType, ptrdiff_t Ext>
-struct ApplyExtent<ValueType*, Ext>
-{
-  using type = ValueType*[Ext];
+struct ApplyExtent<ValueType*, Ext> {
+  using type = ValueType * [Ext];
 };
 
 template <class ValueType>
-struct ApplyExtent<ValueType*, Experimental::dynamic_extent>
-{
-  using type = typename ApplyExtent<ValueType, Experimental::dynamic_extent>::type*;
+struct ApplyExtent<ValueType*, Experimental::dynamic_extent> {
+  using type =
+      typename ApplyExtent<ValueType, Experimental::dynamic_extent>::type*;
 };
 
 template <class ValueType, unsigned N>
-struct ApplyExtent<ValueType[N], Experimental::dynamic_extent>
-{
-  using type = typename ApplyExtent<ValueType, Experimental::dynamic_extent>::type[N];
+struct ApplyExtent<ValueType[N], Experimental::dynamic_extent> {
+  using type =
+      typename ApplyExtent<ValueType, Experimental::dynamic_extent>::type[N];
 };
 
-} // end namespace Impl
+}  // end namespace Impl
 
-} // end namespace Kokkos
+}  // end namespace Kokkos
 
-#endif //KOKKOS_KOKKOS_EXTENTS_HPP
+#endif  // KOKKOS_KOKKOS_EXTENTS_HPP

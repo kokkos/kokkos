@@ -1,7 +1,6 @@
 pipeline {
-    agent {
-        label 'docker'
-    }
+    agent none
+
     environment {
         CCACHE_DIR = '/tmp/ccache'
         CCACHE_MAXSIZE = '10G'
@@ -20,13 +19,21 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --compiler=/usr/local/bin/clang++ --with-cuda --with-cuda-options=enable_lambda'
-                    }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/clang++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=clang++ \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -34,7 +41,7 @@ pipeline {
                         }
                     }
                 }
-                stage("CUDA-9.2-NVCC") {
+                stage('CUDA-9.2-NVCC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
@@ -44,13 +51,21 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda'
-                    }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -58,7 +73,7 @@ pipeline {
                         }
                     }
                 }
-                stage("CUDA-10.1-NVCC") {
+                stage('CUDA-10.1-NVCC-RDC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
@@ -68,13 +83,24 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70 --with-cuda --with-cuda-options=enable_lambda,rdc,force_uvm'
-                    }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_OPENMP=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ENABLE_CUDA_UVM=ON \
+                                -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -82,28 +108,78 @@ pipeline {
                         }
                     }
                 }
-                stage("CUDA-10.1-NVCC-DEBUG") {
+                stage('CUDA-10.1-NVCC-DEBUG') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel --build-arg CMAKE_VERSION=3.15.5'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
-                    environment {
-                        OPTIONS = '--with-options=compiler_warnings --arch=Volta70--with-cuda --with-cuda-options=enable_lambda --debug'
-                    }
                     steps {
-                        sh 'ln -s /usr/bin/ccache /usr/local/bin/g++'
                         sh 'ccache --zero-stats'
-                        sh 'rm -rf build && mkdir -p build && cd build && ../generate_makefile.bash $OPTIONS && make test -j8'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEBUG=ON \
+                                -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
                         }
+                    }
+                }
+                stage('GCC-4.8.4') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.gcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull'
+                            label 'docker'
+                        }
+                    }
+                    environment {
+                        OMP_NUM_THREADS = 8
+                        OMP_PLACES = 'threads'
+                        OMP_PROC_BIND = 'spread'
+                    }
+                    steps {
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_OPENMP=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
+                    }
+                }
+                stage('Clang-Format') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.clang'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull'
+                            label 'nvidia-docker || docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    steps {
+                        sh './scripts/docker/check_format_cpp.sh'
                     }
                 }
             }

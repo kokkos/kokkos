@@ -49,19 +49,11 @@
 
 namespace Test {
 
-class hwloc : public ::testing::Test {
-protected:
-  static void SetUpTestCase() {}
-
-  static void TearDownTestCase() {}
-};
-
-TEST_F( hwloc, query )
-{
+TEST(hwloc, query) {
   std::cout << " NUMA[" << Kokkos::hwloc::get_available_numa_count() << "]"
             << " CORE[" << Kokkos::hwloc::get_available_cores_per_numa() << "]"
-            << " PU[" << Kokkos::hwloc::get_available_threads_per_core()  << "]"
+            << " PU[" << Kokkos::hwloc::get_available_threads_per_core() << "]"
             << std::endl;
 }
 
-} // namespace Test
+}  // namespace Test

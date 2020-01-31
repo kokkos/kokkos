@@ -43,5 +43,3 @@
 
 #include <threads/TestThreads_Category.hpp>
 #include <TestTeamTeamSize.hpp>
-
-

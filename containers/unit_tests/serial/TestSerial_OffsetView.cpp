@@ -41,6 +41,5 @@
 //@HEADER
 */
 
-#include<serial/TestSerial_Category.hpp>
-#include<TestOffsetView.hpp>
-
+#include <serial/TestSerial_Category.hpp>
+#include <TestOffsetView.hpp>

@@ -47,63 +47,54 @@
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ... Traits >
-class ParallelFor< FunctorType ,
-                   Kokkos::WorkGraphPolicy< Traits ... > ,
-                   Kokkos::OpenMP
-                 >
-{
-private:
+template <class FunctorType, class... Traits>
+class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
+                  Kokkos::OpenMP> {
+ private:
+  typedef Kokkos::WorkGraphPolicy<Traits...> Policy;
 
-  typedef Kokkos::WorkGraphPolicy< Traits ... > Policy ;
+  Policy m_policy;
+  FunctorType m_functor;
 
-  Policy       m_policy ;
-  FunctorType  m_functor ;
+  template <class TagType>
+  typename std::enable_if<std::is_same<TagType, void>::value>::type exec_one(
+      const std::int32_t w) const noexcept {
+    m_functor(w);
+  }
 
-  template< class TagType >
-  typename std::enable_if< std::is_same< TagType , void >::value >::type
-  exec_one( const std::int32_t w ) const noexcept
-    { m_functor( w ); }
+  template <class TagType>
+  typename std::enable_if<!std::is_same<TagType, void>::value>::type exec_one(
+      const std::int32_t w) const noexcept {
+    const TagType t{};
+    m_functor(t, w);
+  }
 
-  template< class TagType >
-  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  exec_one( const std::int32_t w ) const noexcept
-    { const TagType t{} ; m_functor( t , w ); }
-
-public:
-
-  inline
-  void execute()
-  {
+ public:
+  inline void execute() {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    #pragma omp parallel num_threads(OpenMP::thread_pool_size())
+#pragma omp parallel num_threads(OpenMP::thread_pool_size())
 #else
-    #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
+#pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
 #endif
     {
       // Spin until COMPLETED_TOKEN.
       // END_TOKEN indicates no work is currently available.
 
-      for ( std::int32_t w = Policy::END_TOKEN ;
-            Policy::COMPLETED_TOKEN != ( w = m_policy.pop_work() ) ; ) {
-        if ( Policy::END_TOKEN != w ) {
-          exec_one< typename Policy::work_tag >( w );
+      for (std::int32_t w = Policy::END_TOKEN;
+           Policy::COMPLETED_TOKEN != (w = m_policy.pop_work());) {
+        if (Policy::END_TOKEN != w) {
+          exec_one<typename Policy::work_tag>(w);
           m_policy.completed_work(w);
         }
       }
     }
   }
 
-  inline
-  ParallelFor( const FunctorType & arg_functor
-             , const Policy      & arg_policy )
-    : m_policy( arg_policy )
-    , m_functor( arg_functor )
-  {}
+  inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
+      : m_policy(arg_policy), m_functor(arg_functor) {}
 };
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif /* #define KOKKOS_OPENMP_WORKGRAPHPOLICY_HPP */
-

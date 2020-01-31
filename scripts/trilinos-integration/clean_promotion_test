@@ -1,0 +1,41 @@
+#! /usr/bin/env bash
+
+# $1 is the name of the environment file to source
+# $2 is the path to the Trilinos repo
+
+ENV_FILE=$1
+TRILINOS_PATH=$2
+
+export ENV_FILE=${ENV_FILE}
+export TRILINOS_PATH=${TRILINOS_PATH}
+
+
+if [ -z ${ENV_FILE} ] || [ ! -f ${ENV_FILE} ]; then
+  >&2 echo "Must give valid environment file as first argument"
+  exit 1
+fi
+
+if [ -z ${TRILINOS_PATH} ] || [ ! -d ${TRILINOS_PATH} ]; then
+  >&2 echo "Must give valid Trilinos path  as second argument"
+  exit 1
+fi
+
+
+source ${ENV_FILE}
+
+stringToHash="$1 $2"
+hash=`cksum <<< "${stringToHash}" | cut -f 1 -d ' '`
+
+testFolder="clean-test-$hash"
+echo "Running test in folder $testFolder"
+
+rm -rf $testFolder
+mkdir $testFolder
+
+cd $testFolder
+
+${TRILINOS_PATH}/sampleScripts/Sandia-SEMS/configure-testbeds-jenkins \
+  ${KOKKOS_EXTRA_FLAGS} >& config.out
+
+
+

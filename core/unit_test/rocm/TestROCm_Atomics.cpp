@@ -43,4 +43,3 @@
 
 #include <rocm/TestROCm_Category.hpp>
 #include <TestAtomic.hpp>
-

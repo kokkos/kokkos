@@ -43,4 +43,3 @@
 
 #include <rocm/TestROCmHostPinned_Category.hpp>
 #include <TestViewMapping_subview.hpp>
-

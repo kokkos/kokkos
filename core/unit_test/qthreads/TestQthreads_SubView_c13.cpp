@@ -45,11 +45,10 @@
 
 namespace Test {
 
-TEST_F( qthreads, view_test_unmanaged_subview_reset )
-{
+TEST_F(qthreads, view_test_unmanaged_subview_reset) {
 #if 0
   TestViewSubview::test_unmanaged_subview_reset< TEST_EXECSPACE >();
 #endif
 }
 
-} // namespace Test
+}  // namespace Test

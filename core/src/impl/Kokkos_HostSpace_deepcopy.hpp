@@ -40,15 +40,14 @@
 // ************************************************************************
 //@HEADER
 */
-#include<cstdint>
+#include <cstdint>
 
 namespace Kokkos {
 
 namespace Impl {
 
-void hostspace_parallel_deepcopy(void * dst, const void * src, ptrdiff_t n);
+void hostspace_parallel_deepcopy(void* dst, const void* src, ptrdiff_t n);
 
-} // namespace Impl
+}  // namespace Impl
 
-} // namespace Kokkos
-
+}  // namespace Kokkos

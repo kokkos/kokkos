@@ -46,11 +46,11 @@
 
 namespace Test {
 
-// Test whether allocations survive Kokkos initialize/finalize if done via Raw Cuda.
-TEST_F( hpx, raw_hpx_interop )
-{
-  Kokkos::InitArguments arguments{-1,-1,-1, false};
+// Test whether allocations survive Kokkos initialize/finalize if done via Raw
+// Cuda.
+TEST(hpx, raw_hpx_interop) {
+  Kokkos::InitArguments arguments{-1, -1, -1, false};
   Kokkos::initialize(arguments);
   Kokkos::finalize();
 }
-}
+}  // namespace Test

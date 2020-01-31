@@ -52,49 +52,36 @@
 #include <TestSort.hpp>
 #include <iomanip>
 
-
 //----------------------------------------------------------------------------
-
 
 namespace Test {
 
-class serial : public ::testing::Test {
-protected:
-  static void SetUpTestCase()
-  {
+#define SERIAL_RANDOM_XORSHIFT64(num_draws)                             \
+  TEST(serial, Random_XorShift64) {                                     \
+    Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Serial> >( \
+        num_draws);                                                     \
   }
 
-  static void TearDownTestCase ()
-  {
-  }
-};
-
-#define SERIAL_RANDOM_XORSHIFT64( num_draws )  \
-  TEST_F( serial, Random_XorShift64 ) {                                \
-    Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Serial> >(num_draws); \
+#define SERIAL_RANDOM_XORSHIFT1024(num_draws)                             \
+  TEST(serial, Random_XorShift1024) {                                     \
+    Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Serial> >( \
+        num_draws);                                                       \
   }
 
-#define SERIAL_RANDOM_XORSHIFT1024( num_draws )        \
-  TEST_F( serial, Random_XorShift1024 ) {                              \
-    Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Serial> >(num_draws); \
+#define SERIAL_SORT_UNSIGNED(size)                   \
+  TEST(serial, SortUnsigned) {                       \
+    Impl::test_sort<Kokkos::Serial, unsigned>(size); \
   }
 
-#define SERIAL_SORT_UNSIGNED( size )                                \
-  TEST_F( serial, SortUnsigned ) {   \
-      Impl::test_sort< Kokkos::Serial, unsigned >(size);                                   \
-  }
-
-SERIAL_RANDOM_XORSHIFT64( 10240000 )
-SERIAL_RANDOM_XORSHIFT1024( 10130144 )
+SERIAL_RANDOM_XORSHIFT64(10240000)
+SERIAL_RANDOM_XORSHIFT1024(10130144)
 SERIAL_SORT_UNSIGNED(171)
 
 #undef SERIAL_RANDOM_XORSHIFT64
 #undef SERIAL_RANDOM_XORSHIFT1024
 #undef SERIAL_SORT_UNSIGNED
 
-} // namespace Test
+}  // namespace Test
 #else
 void KOKKOS_ALGORITHMS_UNITTESTS_TESTSERIAL_PREVENT_LINK_ERROR() {}
-#endif // KOKKOS_ENABLE_SERIAL
-
-
+#endif  // KOKKOS_ENABLE_SERIAL

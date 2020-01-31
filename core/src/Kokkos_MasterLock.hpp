@@ -46,7 +46,8 @@
 
 #include <Kokkos_Macros.hpp>
 
-namespace Kokkos { namespace Experimental {
+namespace Kokkos {
+namespace Experimental {
 
 // my be used to coordinate work between master instances
 // SHOULD NOT be used within a parallel algorithm
@@ -67,7 +68,7 @@ namespace Kokkos { namespace Experimental {
 template <typename ExecutionSpace>
 class MasterLock;
 
-}} // namespace Kokkos::Experimental
+}  // namespace Experimental
+}  // namespace Kokkos
 
-#endif //KOKKOS_MASTER_LOCK_HPP
-
+#endif  // KOKKOS_MASTER_LOCK_HPP

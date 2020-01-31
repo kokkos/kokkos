@@ -44,10 +44,10 @@
 #include <PerfTest_ViewFill.hpp>
 
 namespace Test {
-TEST_F( default_exec, ViewFill_Rank45 ) {
+TEST(default_exec, ViewFill_Rank45) {
   printf("ViewFill Performance for LayoutLeft:\n");
-  run_fillview_tests45<Kokkos::LayoutLeft>(10,1);
+  run_fillview_tests45<Kokkos::LayoutLeft>(10, 1);
   printf("ViewFill Performance for LayoutRight:\n");
-  run_fillview_tests45<Kokkos::LayoutRight>(10,1);
+  run_fillview_tests45<Kokkos::LayoutRight>(10, 1);
 }
-}
+}  // namespace Test

@@ -43,4 +43,3 @@
 
 #include <serial/TestSerial_Category.hpp>
 #include <TestViewLayoutStrideAssignment.hpp>
-

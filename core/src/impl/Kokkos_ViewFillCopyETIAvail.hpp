@@ -47,59 +47,78 @@
 namespace Kokkos {
 namespace Impl {
 
-template<class ViewTypeA,class ViewTypeB, class Layout, class ExecSpace, int Rank, typename iType>
+template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
+          int Rank, typename iType>
 struct ViewCopyETIAvail {
-  enum {value=false};
+  enum { value = false };
 };
 
-#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL(DATATYPE,LAYOUTA,LAYOUTB,EXECSPACE,ITYPE) \
-  template<> \
-  struct ViewCopyETIAvail<Kokkos::View<DATATYPE,LAYOUTA,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                          Kokkos::View<const DATATYPE,LAYOUTB,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                          Kokkos::LayoutLeft,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE> { \
-    enum {value=true}; \
-  }; \
-  template<> \
-  struct ViewCopyETIAvail<Kokkos::View<DATATYPE,LAYOUTA,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                          Kokkos::View<const DATATYPE,LAYOUTB,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                          Kokkos::LayoutRight,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE> { \
-    enum {value=true}; \
+#define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL(DATATYPE, LAYOUTA, LAYOUTB, EXECSPACE, \
+                                       ITYPE)                                 \
+  template <>                                                                 \
+  struct ViewCopyETIAvail<                                                    \
+      Kokkos::View<DATATYPE, LAYOUTA,                                         \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,         \
+                   Kokkos::MemoryTraits<0>>,                                  \
+      Kokkos::View<const DATATYPE, LAYOUTB,                                   \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,         \
+                   Kokkos::MemoryTraits<0>>,                                  \
+      Kokkos::LayoutLeft, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE> {   \
+    enum { value = true };                                                    \
+  };                                                                          \
+  template <>                                                                 \
+  struct ViewCopyETIAvail<                                                    \
+      Kokkos::View<DATATYPE, LAYOUTA,                                         \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,         \
+                   Kokkos::MemoryTraits<0>>,                                  \
+      Kokkos::View<const DATATYPE, LAYOUTB,                                   \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,         \
+                   Kokkos::MemoryTraits<0>>,                                  \
+      Kokkos::LayoutRight, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE> {  \
+    enum { value = true };                                                    \
   };
 
-template<class ViewType, class Layout, class ExecSpace, int Rank, typename iType>
+template <class ViewType, class Layout, class ExecSpace, int Rank,
+          typename iType>
 struct ViewFillETIAvail {
-  enum {value=false};
+  enum { value = false };
 };
 
-#define KOKKOS_IMPL_VIEWFILL_ETI_AVAIL(DATATYPE,LAYOUT,EXECSPACE,ITYPE) \
-  template<> \
-  struct ViewFillETIAvail<Kokkos::View<DATATYPE,LAYOUT,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                          Kokkos::LayoutLeft,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE> { \
-    enum {value=true}; \
-  }; \
-  template<> \
-  struct ViewFillETIAvail<Kokkos::View<DATATYPE,LAYOUT,Kokkos::Device<EXECSPACE,Kokkos::AnonymousSpace>,Kokkos::MemoryTraits<0>>, \
-                          Kokkos::LayoutRight,EXECSPACE,Kokkos::View<DATATYPE>::rank,ITYPE> { \
-    enum {value=true}; \
+#define KOKKOS_IMPL_VIEWFILL_ETI_AVAIL(DATATYPE, LAYOUT, EXECSPACE, ITYPE)   \
+  template <>                                                                \
+  struct ViewFillETIAvail<                                                   \
+      Kokkos::View<DATATYPE, LAYOUT,                                         \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::LayoutLeft, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE> {  \
+    enum { value = true };                                                   \
+  };                                                                         \
+  template <>                                                                \
+  struct ViewFillETIAvail<                                                   \
+      Kokkos::View<DATATYPE, LAYOUT,                                         \
+                   Kokkos::Device<EXECSPACE, Kokkos::AnonymousSpace>,        \
+                   Kokkos::MemoryTraits<0>>,                                 \
+      Kokkos::LayoutRight, EXECSPACE, Kokkos::View<DATATYPE>::rank, ITYPE> { \
+    enum { value = true };                                                   \
   };
 
-}
-}
+}  // namespace Impl
+}  // namespace Kokkos
 #ifdef KOKKOS_ENABLE_ETI
 #ifdef KOKKOS_ENABLE_Serial
-#include<Serial/Kokkos_Serial_ViewCopyETIAvail.hpp>
+#include <Serial/Kokkos_Serial_ViewCopyETIAvail.hpp>
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
-#include<OpenMP/Kokkos_OpenMP_ViewCopyETIAvail.hpp>
+#include <OpenMP/Kokkos_OpenMP_ViewCopyETIAvail.hpp>
 #endif
 #ifdef KOKKOS_ENABLE_THREADS
-#include<Threads/Kokkos_Threads_ViewCopyETIAvail.hpp>
+#include <Threads/Kokkos_Threads_ViewCopyETIAvail.hpp>
 #endif
 #ifdef KOKKOS_ENABLE_CUDA
-#include<Cuda/Kokkos_Cuda_ViewCopyETIAvail.hpp>
+#include <Cuda/Kokkos_Cuda_ViewCopyETIAvail.hpp>
 #endif
 #ifdef KOKKOS_ENABLE_ROCM
-#include<ROCm/Kokkos_ROCm_ViewCopyETIAvail.hpp>
+#include <ROCm/Kokkos_ROCm_ViewCopyETIAvail.hpp>
 #endif
 #endif
 
