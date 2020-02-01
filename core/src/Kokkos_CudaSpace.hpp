@@ -165,7 +165,7 @@ class CudaUVMSpace {
 
   /*--------------------------------*/
   /** \brief  CudaUVMSpace specific routine */
-  static int number_of_allocations();
+  KOKKOS_DEPRECATED static int number_of_allocations();
 
   /*--------------------------------*/
 
