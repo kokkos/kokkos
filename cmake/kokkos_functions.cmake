@@ -437,6 +437,7 @@ ENDMACRO()
 #     <TPL_NAME>
 #    [ALLOW_SYSTEM_PATH_FALLBACK]
 #    [PATHS path1 [path2 ...]]
+#    [SUFFIXES suffix1 [suffix2 ...]]
 #   )
 #
 #   ``<VAR_NAME>``
@@ -461,17 +462,21 @@ ENDMACRO()
 #
 #   Custom paths to search for the library
 #
+#   ``SUFFIXES``
+#
+#   Suffixes appended to PATHS when attempting to locate
+#   the library. Defaults to {lib, lib64}.
+#
 MACRO(kokkos_find_library VAR_NAME LIB TPL_NAME)
   CMAKE_PARSE_ARGUMENTS(TPL
    "ALLOW_SYSTEM_PATH_FALLBACK"
    ""
-   "PATHS"
+   "PATHS;SUFFIXES"
    ${ARGN})
 
-  #Appended to user- and system-provided path candidates.
-  #The "stubs" directory supports cross-compiling CUDA when the
-  #libcuda device driver is not present on the host machine.
-  SET(SUFFIXES lib lib64 lib/stubs lib64/stubs)
+  IF(NOT TPL_SUFFIXES)
+    SET(TPL_SUFFIXES lib lib64)
+  ENDIF()
 
   SET(${VAR_NAME} "${VARNAME}-NOTFOUND")
   SET(HAVE_CUSTOM_PATHS FALSE)
@@ -487,14 +492,14 @@ MACRO(kokkos_find_library VAR_NAME LIB TPL_NAME)
         ${KOKKOS_${TPL_NAME}_DIR}
         ${TPL_PATHS}
       PATH_SUFFIXES
-        ${SUFFIXES}
+        ${TPL_SUFFIXES}
       NO_DEFAULT_PATH)
     SET(HAVE_CUSTOM_PATHS TRUE)
   ENDIF()
 
   IF(NOT HAVE_CUSTOM_PATHS OR TPL_ALLOW_SYSTEM_PATH_FALLBACK)
     #No-op if ${VAR_NAME} set by previous call
-    FIND_LIBRARY(${VAR_NAME} ${LIB} PATH_SUFFIXES ${SUFFIXES})
+    FIND_LIBRARY(${VAR_NAME} ${LIB} PATH_SUFFIXES ${TPL_SUFFIXES})
   ENDIF()
 
 ENDMACRO()
@@ -511,25 +516,27 @@ ENDMACRO()
 #     <NAME>
 #     INTERFACE
 #     ALLOW_SYSTEM_PATH_FALLBACK
-#     LIBRARY <path_to_librarY>
-#     LINK_LIBRARIES <lib1> <lib2> ...
-#     COMPILE_OPTIONS <opt1> <opt2> ...
-#     LINK_OPTIONS <opt1> <opt2> ...
+#     MODULE_NAME <name>
+#     IMPORTED_NAME <name>
+#     LIBRARY <name>
+#     LIBRARIES <name1> <name2> ...
+#     LIBRARY_PATHS <path1> <path2> ...
+#     LIBRARY_SUFFIXES <suffix1> <suffix2> ...
+#     HEADER <name>
+#     HEADERS <name1> <name2> ...
+#     HEADER_PATHS <path1> <path2> ...
+#   )
 #
 #   ``INTERFACE``
 #
 #     If specified, this TPL will build an INTERFACE library rather than an
 #     IMPORTED target
 #
-#   ``ALLOW_SYSTEM_PATH_FALLBACK"
+#   ``ALLOW_SYSTEM_PATH_FALLBACK``
 #
 #     If custom paths are given and the library is not found
 #     should we be allowed to search default system paths
 #     or error out if not found in given paths.
-#
-#   ``LIBRARY <name>``
-#
-#     If specified, this gives the name of the library to look for
 #
 #   ``MODULE_NAME <name>``
 #
@@ -542,29 +549,42 @@ ENDMACRO()
 #     If specified, this gives the name of the target to build.
 #     Defaults to Kokkos::<NAME>
 #
+#   ``LIBRARY <name>``
+#
+#     If specified, this gives the name of the library to look for
+#
+#   ``LIBRARIES <name1> <name2> ...``
+#
+#     If specified, this gives a list of libraries to find for the package
+#
 #   ``LIBRARY_PATHS <path1> <path2> ...``
 #
-#     If specified, this gives a list of paths to search for the library
-#     If not given, <NAME>_ROOT/lib and <NAME>_ROOT/lib64 will be searched.
+#     If specified, this gives a list of paths to search for the library.
+#     If not given, <NAME>_ROOT will be searched.
+#
+#   ``LIBRARY_SUFFIXES <suffix1> <suffix2> ...``
+#
+#     Suffixes appended to LIBRARY_PATHS when attempting to locate
+#     libraries. If not given, defaults to {lib, lib64}.
+#
+#   ``HEADER <name>``
+#
+#     If specified, this gives the name of a header to to look for
+#
+#   ``HEADERS <name1> <name2> ...``
+#
+#     If specified, this gives a list of headers to find for the package
 #
 #   ``HEADER_PATHS <path1> <path2> ...``
 #
 #     If specified, this gives a list of paths to search for the headers
 #     If not given, <NAME>_ROOT/include and <NAME>_ROOT/include will be searched.
 #
-#   ``HEADERS <name1> <name2> ...``
-#
-#     If specified, this gives a list of headers to find for the package
-#
-#   ``LIBRARIES <name1> <name2> ...``
-#
-#     If specified, this gives a list of libraries to find for the package
-#
 MACRO(kokkos_find_imported NAME)
   CMAKE_PARSE_ARGUMENTS(TPL
    "INTERFACE;ALLOW_SYSTEM_PATH_FALLBACK"
-   "HEADER;LIBRARY;IMPORTED_NAME;MODULE_NAME"
-   "HEADER_PATHS;LIBRARY_PATHS;HEADERS;LIBRARIES"
+   "IMPORTED_NAME;MODULE_NAME;LIBRARY;HEADER"
+   "LIBRARIES;LIBRARY_PATHS;LIBRARY_SUFFIXES;HEADERS;HEADER_PATHS"
    ${ARGN})
 
   IF(NOT TPL_MODULE_NAME)
@@ -585,6 +605,10 @@ MACRO(kokkos_find_imported NAME)
     ENDIF()
   ENDIF()
 
+  IF (NOT TPL_LIBRARY_SUFFIXES)
+    SET(TPL_LIBRARY_SUFFIXES lib lib64)
+  ENDIF()
+
   SET(${NAME}_INCLUDE_DIRS)
   IF (TPL_HEADER)
     KOKKOS_FIND_HEADER(${NAME}_INCLUDE_DIRS ${TPL_HEADER} ${NAME} ${ALLOW_PATH_FALLBACK_OPT} PATHS ${TPL_HEADER_PATHS})
@@ -599,12 +623,18 @@ MACRO(kokkos_find_imported NAME)
 
   SET(${NAME}_LIBRARY)
   IF(TPL_LIBRARY)
-    KOKKOS_FIND_LIBRARY(${NAME}_LIBRARY ${TPL_LIBRARY} ${NAME} ${ALLOW_PATH_FALLBACK_OPT} PATHS ${TPL_LIBRARY_PATHS})
+    KOKKOS_FIND_LIBRARY(${NAME}_LIBRARY ${TPL_LIBRARY} ${NAME}
+      ${ALLOW_PATH_FALLBACK_OPT}
+      PATHS ${TPL_LIBRARY_PATHS}
+      SUFFIXES ${TPL_LIBRARY_SUFFIXES})
   ENDIF()
 
   SET(${NAME}_FOUND_LIBRARIES)
   FOREACH(LIB ${TPL_LIBRARIES})
-    KOKKOS_FIND_LIBRARY(${LIB}_LOCATION ${LIB} ${NAME} ${ALLOW_PATH_FALLBACK_OPT} PATHS ${TPL_LIBRARY_PATHS})
+    KOKKOS_FIND_LIBRARY(${LIB}_LOCATION ${LIB} ${NAME}
+      ${ALLOW_PATH_FALLBACK_OPT}
+      PATHS ${TPL_LIBRARY_PATHS}
+      SUFFIXES ${TPL_LIBRARY_SUFFIXES})
     IF(${LIB}_LOCATION)
       LIST(APPEND ${NAME}_FOUND_LIBRARIES ${${LIB}_LOCATION})
     ELSE()
