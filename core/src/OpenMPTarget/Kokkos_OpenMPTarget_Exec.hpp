@@ -410,6 +410,10 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
            team_size_ * m_thread_scratch_size[level];
   }
 
+  inline Kokkos::Experimental::OpenMPTarget space() const {
+    return Kokkos::Experimental::OpenMPTarget();
+  }
+
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal(typename traits::execution_space&, int league_size_request,
                      int team_size_request, int vector_length_request = 1)

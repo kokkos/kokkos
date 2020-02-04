@@ -110,14 +110,6 @@ std::string SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
   return std::string("OpenMPTargetAllocation");
 }
 
-SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void> *
-SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::allocate(
-    const Kokkos::Experimental::OpenMPTargetSpace &arg_space,
-    const std::string &arg_label, const size_t arg_alloc_size) {
-  return new SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
-                                    void>(arg_space, arg_label, arg_alloc_size);
-}
-
 void SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
                             void>::deallocate(SharedAllocationRecord<void, void>
                                                   *arg_rec) {

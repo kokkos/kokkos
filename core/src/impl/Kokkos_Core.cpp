@@ -199,8 +199,8 @@ void initialize_internal(const InitArguments& args) {
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
-  if (Impl::is_same<Kokkos::Experimental::OpenMPTarget,
-                    Kokkos::DefaultExecutionSpace>::value) {
+  if (std::is_same<Kokkos::Experimental::OpenMPTarget,
+                   Kokkos::DefaultExecutionSpace>::value) {
     Kokkos::Experimental::OpenMPTarget().impl_initialize();
     // std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized"
     // << std::endl ;

@@ -95,7 +95,7 @@ void OpenMPTargetExec::clear_scratch() {
   Kokkos::Experimental::OpenMPTargetSpace space;
   space.deallocate(m_scratch_ptr, m_scratch_size);
   m_scratch_ptr  = nullptr;
-  m_scratch_size = nullptr;
+  m_scratch_size = 0;
 }
 
 void* OpenMPTargetExec::get_scratch_ptr() { return m_scratch_ptr; }
