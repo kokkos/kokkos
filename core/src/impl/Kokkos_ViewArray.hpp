@@ -337,7 +337,7 @@ class ViewMapping<Traits, Kokkos::Array<> > {
 
   //----------------------------------------
 
-  KOKKOS_INLINE_FUNCTION ~ViewMapping() {}
+  KOKKOS_DEFAULTED_FUNCTION ~ViewMapping() = default;
   KOKKOS_INLINE_FUNCTION ViewMapping()
       : m_impl_handle(), m_impl_offset(), m_stride(0) {}
   KOKKOS_INLINE_FUNCTION ViewMapping(const ViewMapping &rhs)

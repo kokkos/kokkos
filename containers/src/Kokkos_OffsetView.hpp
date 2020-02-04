@@ -804,8 +804,8 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Standard destructor, constructors, and assignment operators
 
-  KOKKOS_INLINE_FUNCTION
-  ~OffsetView() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ~OffsetView() = default;
 
   KOKKOS_INLINE_FUNCTION
   OffsetView() : m_track(), m_map() {

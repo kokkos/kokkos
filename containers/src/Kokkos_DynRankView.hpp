@@ -1064,8 +1064,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Standard constructor, destructor, and assignment operators...
 
-  KOKKOS_INLINE_FUNCTION
-  ~DynRankView() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ~DynRankView() = default;
 
   KOKKOS_INLINE_FUNCTION
   DynRankView() : m_track(), m_map(), m_rank() {}  // Default ctor

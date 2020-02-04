@@ -1721,8 +1721,8 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Standard destructor, constructors, and assignment operators
 
-  KOKKOS_INLINE_FUNCTION
-  ~View() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ~View() = default;
 
   KOKKOS_INLINE_FUNCTION
   View() : m_track(), m_map() {}

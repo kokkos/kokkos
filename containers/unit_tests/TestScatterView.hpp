@@ -341,7 +341,7 @@ struct test_scatter_view_config {
                                               contribution, op>::orig_view_type
       orig_view_def;
 
-  test_scatter_view_config() {}
+  test_scatter_view_config() = default;
 
   void run_test(int n) {
     // Test creation via create_scatter_view

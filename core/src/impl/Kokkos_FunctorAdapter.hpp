@@ -1759,8 +1759,8 @@ template <typename ValueType>
 struct JoinAdd {
   typedef ValueType value_type;
 
-  KOKKOS_INLINE_FUNCTION
-  JoinAdd() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  JoinAdd() = default;
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile value_type& dst, const volatile value_type& src) const {
