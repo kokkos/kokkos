@@ -197,7 +197,7 @@ inline __device__ T atomic_compare_exchange(volatile T *dest, T compare,
     union U {
       int i ;
       float f ;
-      KOKKOS_INLINE_FUNCTION U() {};
+      KOKKOS_INLINE_FUNCTION U() {}
     } idest,icompare,ival;
     idest.f = *dest;
     icompare.f = compare;
@@ -231,7 +231,7 @@ inline __device__ T atomic_compare_exchange(volatile T *dest, T compare,
   std::enable_if<sizeof(T) == sizeof(int64_t), const T&>::type val) { union U {
       uint64_t i ;
       T f ;
-      KOKKOS_INLINE_FUNCTION U() {};
+      KOKKOS_INLINE_FUNCTION U() {}
     } idest,icompare,ival;
     idest.f = *dest;
     icompare.f = compare;
@@ -314,7 +314,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_add(
   union U {
     unsigned int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -339,7 +339,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_add(
   union U {
     uint64_t i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -449,7 +449,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
   union U {
     int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -471,7 +471,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
   union U {
     int64_t i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;

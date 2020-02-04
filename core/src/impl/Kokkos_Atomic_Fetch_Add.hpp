@@ -99,7 +99,7 @@ __inline__ __device__ T atomic_fetch_add(
   union U1 {
     int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U1(){};
+    KOKKOS_INLINE_FUNCTION U1() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -124,7 +124,7 @@ __inline__ __device__ T atomic_fetch_add(
   union U2 {
     unsigned long long int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U2(){};
+    KOKKOS_INLINE_FUNCTION U2() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -241,7 +241,7 @@ inline T atomic_fetch_add(
   union U {
     int i;
     T t;
-    inline U(){};
+    inline U() {}
   } assume, oldval, newval;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -267,7 +267,7 @@ inline T atomic_fetch_add(volatile T* const dest,
   union U {
     long i;
     T t;
-    inline U(){};
+    inline U() {}
   } assume, oldval, newval;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -296,7 +296,7 @@ inline T atomic_fetch_add(
   union U {
     Impl::cas128_t i;
     T t;
-    inline U(){};
+    inline U() {}
   } assume, oldval, newval;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)

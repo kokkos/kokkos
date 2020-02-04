@@ -77,7 +77,7 @@ KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(
   union U {
     LONG i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } tmp;
 
   tmp.i = _InterlockedCompareExchange((LONG*)dest, *((LONG*)&val),
@@ -93,7 +93,7 @@ KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(
   union U {
     LONGLONG i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } tmp;
 
   tmp.i = _InterlockedCompareExchange64((LONGLONG*)dest, *((LONGLONG*)&val),
@@ -109,7 +109,7 @@ KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(
   union U {
     Impl::cas128_t i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } tmp, newval;
   newval.t = val;
   _InterlockedCompareExchange128((LONGLONG*)dest, newval.i.upper,

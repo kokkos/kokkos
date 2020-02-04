@@ -190,7 +190,7 @@ inline T atomic_compare_exchange(
   union U {
     int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } tmp;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -211,7 +211,7 @@ inline T atomic_compare_exchange(
   union U {
     long i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } tmp;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -234,7 +234,7 @@ inline T atomic_compare_exchange(
   union U {
     Impl::cas128_t i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } tmp;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
