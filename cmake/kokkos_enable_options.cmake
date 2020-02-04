@@ -30,7 +30,6 @@ KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
 KOKKOS_ENABLE_OPTION(HPX_ASYNC_DISPATCH   OFF "Whether HPX supports asynchronous dispatch")
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
-KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build the examples")
 STRING(TOUPPER "${CMAKE_BUILD_TYPE}" UPPERCASE_CMAKE_BUILD_TYPE)
 IF(UPPERCASE_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
   KOKKOS_ENABLE_OPTION(DEBUG                ON "Whether to activate extra debug features - may increase compile times")

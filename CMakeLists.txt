@@ -120,14 +120,18 @@ ENDIF()
 # These are the variables we will append to as we go
 # I really wish these were regular variables
 # but scoping issues can make it difficult
-GLOBAL_SET(KOKKOS_COMPILE_OPTIONS)
-GLOBAL_SET(KOKKOS_LINK_OPTIONS)
-GLOBAL_SET(KOKKOS_CUDA_OPTIONS)
-GLOBAL_SET(KOKKOS_CUDAFE_OPTIONS)
-GLOBAL_SET(KOKKOS_XCOMPILER_OPTIONS)
+GLOBAL_RESET(KOKKOS_COMPILE_OPTIONS)
+GLOBAL_RESET(KOKKOS_LINK_OPTIONS)
+GLOBAL_RESET(KOKKOS_CUDA_OPTIONS)
+GLOBAL_RESET(KOKKOS_CUDAFE_OPTIONS)
+GLOBAL_RESET(KOKKOS_XCOMPILER_OPTIONS)
 # We need to append text here for making sure TPLs
 # we import are available for an installed Kokkos
-GLOBAL_SET(KOKKOS_TPL_EXPORTS)
+GLOBAL_RESET(KOKKOS_TPL_EXPORTS)
+# We need these for controlling the exact -std flag
+GLOBAL_RESET(KOKKOS_DONT_ALLOW_EXTENSIONS)
+GLOBAL_RESET(KOKKOS_USE_CXX_EXTENSIONS)
+GLOBAL_RESET(KOKKOS_CXX_STANDARD_FEATURE)
 
 # Include a set of Kokkos-specific wrapper functions that
 # will either call raw CMake or TriBITS
