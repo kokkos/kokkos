@@ -269,7 +269,6 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
       if (Impl::lock_address_cuda_space((void*)dest)) {
         return_val = *dest;
         *dest      = Oper::apply(return_val, val);
-        ;
         Impl::unlock_address_cuda_space((void*)dest);
         done = 1;
       }

@@ -203,9 +203,9 @@ struct AnalyzePolicy<Base> {
   using index_type =
       typename std::conditional<is_void<typename Base::index_type>::value,
                                 IndexType<typename execution_space::size_type>,
-                                typename Base::index_type>::type ::
-          type  // nasty hack to make index_type into an integral_type
-      ;  // instead of the wrapped IndexType<T> for backwards compatibility
+                                typename Base::index_type>::type::type;
+  // nasty hack to make index_type into an integral_type
+  // instead of the wrapped IndexType<T> for backwards compatibility
 
   using iteration_pattern = typename std::conditional<
       is_void<typename Base::iteration_pattern>::value,

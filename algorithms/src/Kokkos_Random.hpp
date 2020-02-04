@@ -750,10 +750,8 @@ class Random_XorShift64_Pool {
   Random_XorShift64<DeviceType> get_state() const {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     const int i = DeviceType::hardware_thread_id();
-    ;
 #else
     const int i = DeviceType::impl_hardware_thread_id();
-    ;
 #endif
     return Random_XorShift64<DeviceType>(state_(i), i);
   }
