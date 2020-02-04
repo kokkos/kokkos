@@ -292,7 +292,6 @@ class TeamPolicyInternal<Kokkos::Experimental::ROCm, Properties...>
   }
   KOKKOS_INLINE_FUNCTION int team_size() const {
     return (m_team_size > 0) ? m_team_size : Impl::get_max_tile_thread();
-    ;
   }
   KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size; }
 

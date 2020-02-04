@@ -482,7 +482,6 @@ struct ScratchRequest {
     level      = level_;
     per_team   = 0;
     per_thread = thread_value.value;
-    ;
   }
 
   inline ScratchRequest(const int& level_, const Impl::PerTeamValue& team_value,
@@ -490,7 +489,6 @@ struct ScratchRequest {
     level      = level_;
     per_team   = team_value.value;
     per_thread = thread_value.value;
-    ;
   }
 
   inline ScratchRequest(const int& level_,
@@ -499,7 +497,6 @@ struct ScratchRequest {
     level      = level_;
     per_team   = team_value.value;
     per_thread = thread_value.value;
-    ;
   }
 };
 

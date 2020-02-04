@@ -348,7 +348,6 @@ class ViewMapping<Traits, Kokkos::Array<> > {
     m_impl_handle = rhs.m_impl_handle;
     m_impl_offset = rhs.m_impl_offset;
     m_stride      = rhs.m_stride;
-    ;
     return *this;
   }
 

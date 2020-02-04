@@ -542,7 +542,6 @@ struct MaxLoc {
   KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
     val.val = reduction_identity<scalar_type>::max();
-    ;
     val.loc = reduction_identity<index_type>::min();
   }
 
@@ -621,7 +620,6 @@ struct MinMax {
   KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
     val.max_val = reduction_identity<scalar_type>::max();
-    ;
     val.min_val = reduction_identity<scalar_type>::min();
   }
 
@@ -710,7 +708,6 @@ struct MinMaxLoc {
   KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
     val.max_val = reduction_identity<scalar_type>::max();
-    ;
     val.min_val = reduction_identity<scalar_type>::min();
     val.max_loc = reduction_identity<index_type>::min();
     val.min_loc = reduction_identity<index_type>::min();
