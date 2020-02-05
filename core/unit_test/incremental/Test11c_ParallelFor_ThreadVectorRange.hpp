@@ -72,7 +72,7 @@ struct Hierarchical_ForLoop_C {
               Kokkos::TeamThreadRange(team, M), [&](const int m) {
                 Kokkos::parallel_for(
                     Kokkos::ThreadVectorRange(team, K),
-                    [&](const int k) { v(n, m, k) = 0xC0FEBABE; });
+                    [&](const int k) { v(n, m, k) = 0xC0FFEE; });
               });
         });
 
@@ -83,7 +83,7 @@ struct Hierarchical_ForLoop_C {
     for (int n = 0; n < N; ++n)
       for (int m = 0; m < M; ++m)
         for (int k = 0; k < K; ++k)
-          check += (v_H(n, m, k) ^ 0xC0FEBABE == 0) ? 0 : 1;
+          check += ((v_H(n, m, k) ^ 0xC0FFEE) == 0) ? 0 : 1;
     ASSERT_EQ(check, 0);
   }
 };

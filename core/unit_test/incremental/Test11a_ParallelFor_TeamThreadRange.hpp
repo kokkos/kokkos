@@ -77,7 +77,7 @@ struct Hierarchical_ForLoop_A {
 
     int check = 0;
     for (int n = 0; n < N; ++n)
-      for (int m = 0; m < M; ++m) check += (v_H(n, m) ^ 0xC0FFEE == 0) ? 0 : 1;
+      for (int m = 0; m < M; ++m) check += ((v_H(n, m) ^ 0xC0FFEE) == 0) ? 0 : 1;
     ASSERT_EQ(check, 0);
   }
 };
