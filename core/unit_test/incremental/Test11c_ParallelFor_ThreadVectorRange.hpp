@@ -49,47 +49,46 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-//Degress of concurrency per nestig level
+// Degress of concurrency per nestig level
 #define N 16
 #define M 16
 #define K 16
 
 namespace Test {
 
-struct Hierarchical_ForLoop_C{
-  void run(){
+struct Hierarchical_ForLoop_C {
+  void run() {
     typedef Kokkos::TeamPolicy<> team_policy;
     typedef Kokkos::TeamPolicy<>::member_type member_type;
-    
-    typedef Kokkos::View<int***> viewDataType;
-    viewDataType v( "Matrix", N, M, K );
-    viewDataType::HostMirror v_H = Kokkos::create_mirror_view( v );
-    
-    Kokkos::parallel_for( "Team", team_policy( N, M ), 
-      KOKKOS_LAMBDA ( const member_type &team) {
-        const int n = team.league_rank();
-        Kokkos::parallel_for( Kokkos::TeamThreadRange( team, M ), 
-          [&] ( const int m ) {
-            Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, K ),
-              [&](const int k) {
-                v( n, m, k ) = 0xC0FEBABE;
+
+    typedef Kokkos::View<int ***> viewDataType;
+    viewDataType v("Matrix", N, M, K);
+    viewDataType::HostMirror v_H = Kokkos::create_mirror_view(v);
+
+    Kokkos::parallel_for(
+        "Team", team_policy(N, M), KOKKOS_LAMBDA(const member_type &team) {
+          const int n = team.league_rank();
+          Kokkos::parallel_for(
+              Kokkos::TeamThreadRange(team, M), [&](const int m) {
+                Kokkos::parallel_for(
+                    Kokkos::ThreadVectorRange(team, K),
+                    [&](const int k) { v(n, m, k) = 0xC0FEBABE; });
               });
-          });
-      });
+        });
 
     Kokkos::fence();
-    Kokkos::deep_copy( v_H, v );
-    
+    Kokkos::deep_copy(v_H, v);
+
     int check = 0;
-    for( int n=0;n<N;++n )
-      for( int m=0;m<M;++m )
-        for( int k=0;k<K;++k )
-          check += ( v_H(n,m,k ) ^ 0xC0FEBABE == 0 ) ? 0 : 1;
+    for (int n = 0; n < N; ++n)
+      for (int m = 0; m < M; ++m)
+        for (int k = 0; k < K; ++k)
+          check += (v_H(n, m, k) ^ 0xC0FEBABE == 0) ? 0 : 1;
     ASSERT_EQ(check, 0);
   }
 };
 
-TEST( TEST_CATEGORY, Hierarchical_ForLoop_C ) {
+TEST(TEST_CATEGORY, Hierarchical_ForLoop_C) {
   Hierarchical_ForLoop_C test;
   test.run();
 }

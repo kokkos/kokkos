@@ -43,13 +43,13 @@
 
 // @Kokkos_Feature_Level_Required:1
 // Unit test for hierarchical parallelism
-// Create concurrent work hierarchically and verify if 
+// Create concurrent work hierarchically and verify if
 // sum of created processing units corresponds to expected value
 
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-//Degress of concurrency per nestig level
+// Degress of concurrency per nestig level
 #define N 16
 #define M 16
 
@@ -57,34 +57,35 @@ using SCALAR_TYPE = int;
 
 namespace Test {
 
-struct Hierarchical_Red_B{
-  void run(){
+struct Hierarchical_Red_B {
+  void run() {
     typedef Kokkos::TeamPolicy<> team_policy;
     typedef Kokkos::TeamPolicy<>::member_type member_type;
 
     SCALAR_TYPE result = 0;
 
-    Kokkos::parallel_reduce( "Team", team_policy( N, M ), 
-      KOKKOS_LAMBDA ( const member_type &team, SCALAR_TYPE &update_1 ) {
-        SCALAR_TYPE result_2 = 0;
+    Kokkos::parallel_reduce(
+        "Team", team_policy(N, M),
+        KOKKOS_LAMBDA(const member_type &team, SCALAR_TYPE &update_1) {
+          SCALAR_TYPE result_2 = 0;
 
-        Kokkos::parallel_reduce( Kokkos::TeamVectorRange( team, M ), 
-          [=] ( const int i, SCALAR_TYPE &update_2 ) {
-            update_2 += 1;
-          }, result_2 );
-        
-        Kokkos::single(Kokkos::PerTeam(team), [&]() { update_1 += result_2; });
-      }, result );
-      
-    ASSERT_EQ( result, N*M );
+          Kokkos::parallel_reduce(
+              Kokkos::TeamVectorRange(team, M),
+              [=](const int i, SCALAR_TYPE &update_2) { update_2 += 1; },
+              result_2);
+
+          Kokkos::single(Kokkos::PerTeam(team),
+                         [&]() { update_1 += result_2; });
+        },
+        result);
+
+    ASSERT_EQ(result, N * M);
   }
 };
 
-
-TEST( TEST_CATEGORY, Hierarchical_Red_B ) {
+TEST(TEST_CATEGORY, Hierarchical_Red_B) {
   Hierarchical_Red_B test;
   test.run();
 }
-
 
 }  // namespace Test

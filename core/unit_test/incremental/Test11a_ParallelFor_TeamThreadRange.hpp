@@ -49,38 +49,35 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-//Degress of concurrency per nestig level
+// Degress of concurrency per nestig level
 #define N 16
 #define M 16
 
 namespace Test {
 
-struct Hierarchical_ForLoop_A{
-  void run(){
+struct Hierarchical_ForLoop_A {
+  void run() {
     typedef Kokkos::TeamPolicy<> team_policy;
     typedef Kokkos::TeamPolicy<>::member_type member_type;
-    
-    typedef Kokkos::View<int**> viewDataType;
-    viewDataType v( "Matrix", N, M );
-    viewDataType::HostMirror v_H = Kokkos::create_mirror_view( v );
-    
-    Kokkos::parallel_for( "Team", team_policy( N, M ), 
-      KOKKOS_LAMBDA ( const member_type &team) {
-        const int n = team.league_rank();
-        
-            Kokkos::parallel_for( Kokkos::TeamThreadRange( team, M ),
-              [&](const int m) {
-                v( n, m ) = 0xC0FFEE;
-              });
-      });
+
+    typedef Kokkos::View<int **> viewDataType;
+    viewDataType v("Matrix", N, M);
+    viewDataType::HostMirror v_H = Kokkos::create_mirror_view(v);
+
+    Kokkos::parallel_for(
+        "Team", team_policy(N, M), KOKKOS_LAMBDA(const member_type &team) {
+          const int n = team.league_rank();
+
+          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, M),
+                               [&](const int m) { v(n, m) = 0xC0FFEE; });
+        });
 
     Kokkos::fence();
-    Kokkos::deep_copy( v_H, v );
+    Kokkos::deep_copy(v_H, v);
 
     int check = 0;
-    for( int n=0;n<N;++n )
-      for( int m=0;m<M;++m )
-          check += ( v_H(n,m ) ^ 0xC0FFEE == 0 ) ? 0 : 1;
+    for (int n = 0; n < N; ++n)
+      for (int m = 0; m < M; ++m) check += (v_H(n, m) ^ 0xC0FFEE == 0) ? 0 : 1;
     ASSERT_EQ(check, 0);
   }
 };
@@ -89,6 +86,5 @@ TEST(TEST_CATEGORY, Hierarchical_ForLoop_A) {
   Hierarchical_ForLoop_A test;
   test.run();
 }
-
 
 }  // namespace Test
