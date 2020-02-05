@@ -1,7 +1,7 @@
 
 IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
    # Note: "stubs" suffix allows CMake to find the dummy
-   # libcuda.so provided by the nVidia CUDA Toolkit for
+   # libcuda.so provided by the NVIDIA CUDA Toolkit for
    # cross-compiling CUDA on a host without a GPU.
    KOKKOS_FIND_IMPORTED(CUDA INTERFACE
     LIBRARIES cudart cuda
