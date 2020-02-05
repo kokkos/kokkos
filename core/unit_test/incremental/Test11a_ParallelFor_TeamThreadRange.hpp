@@ -62,7 +62,6 @@ struct Hierarchical_ForLoop_A {
 
     typedef Kokkos::View<int **> viewDataType;
     viewDataType v("Matrix", N, M);
-    viewDataType::HostMirror v_H = Kokkos::create_mirror_view(v);
 
     Kokkos::parallel_for(
         "Team", team_policy(N, M), KOKKOS_LAMBDA(const member_type &team) {
@@ -73,7 +72,7 @@ struct Hierarchical_ForLoop_A {
         });
 
     Kokkos::fence();
-    Kokkos::deep_copy(v_H, v);
+    auto v_H = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
 
     int check = 0;
     for (int n = 0; n < N; ++n)
