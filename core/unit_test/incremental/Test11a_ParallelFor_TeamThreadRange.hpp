@@ -55,10 +55,11 @@
 
 namespace Test {
 
+template <class ExecSpace>
 struct Hierarchical_ForLoop_A {
   void run() {
     typedef Kokkos::TeamPolicy<> team_policy;
-    typedef Kokkos::TeamPolicy<>::member_type member_type;
+    typedef typename Kokkos::TeamPolicy<>::member_type member_type;
 
     typedef Kokkos::View<int **> viewDataType;
     viewDataType v("Matrix", N, M);
@@ -68,7 +69,7 @@ struct Hierarchical_ForLoop_A {
           const int n = team.league_rank();
 
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, M),
-                               [&](const int m) { v(n, m) = 0xC0FFEE; });
+                               [&](const int m) { v(n, m) = 0xABC; });
         });
 
     Kokkos::fence();
@@ -76,14 +77,13 @@ struct Hierarchical_ForLoop_A {
 
     int check = 0;
     for (int n = 0; n < N; ++n)
-      for (int m = 0; m < M; ++m)
-        check += ((v_H(n, m) ^ 0xC0FFEE) == 0) ? 0 : 1;
+      for (int m = 0; m < M; ++m) check += ((v_H(n, m) ^ 0xABC) == 0) ? 0 : 1;
     ASSERT_EQ(check, 0);
   }
 };
 
 TEST(TEST_CATEGORY, Hierarchical_ForLoop_A) {
-  Hierarchical_ForLoop_A test;
+  Hierarchical_ForLoop_A<TEST_EXECSPACE> test;
   test.run();
 }
 

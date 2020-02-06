@@ -58,10 +58,11 @@ using SCALAR_TYPE = int;
 
 namespace Test {
 
+template <class ExecSpace>
 struct Hierarchical_Red_C {
   void run() {
     typedef Kokkos::TeamPolicy<> team_policy;
-    typedef Kokkos::TeamPolicy<>::member_type member_type;
+    typedef typename Kokkos::TeamPolicy<>::member_type member_type;
 
     SCALAR_TYPE result = 0;
 
@@ -95,7 +96,7 @@ struct Hierarchical_Red_C {
 };
 
 TEST(TEST_CATEGORY, Hierarchical_Red_C) {
-  Hierarchical_Red_C test;
+  Hierarchical_Red_C<TEST_EXECSPACE> test;
   test.run();
 }
 

@@ -56,10 +56,11 @@
 
 namespace Test {
 
+template <class ExecSpace>
 struct Hierarchical_ForLoop_C {
   void run() {
     typedef Kokkos::TeamPolicy<> team_policy;
-    typedef Kokkos::TeamPolicy<>::member_type member_type;
+    typedef typename Kokkos::TeamPolicy<>::member_type member_type;
 
     typedef Kokkos::View<int ***> viewDataType;
     viewDataType v("Matrix", N, M, K);
@@ -69,9 +70,8 @@ struct Hierarchical_ForLoop_C {
           const int n = team.league_rank();
           Kokkos::parallel_for(
               Kokkos::TeamThreadRange(team, M), [&](const int m) {
-                Kokkos::parallel_for(
-                    Kokkos::ThreadVectorRange(team, K),
-                    [&](const int k) { v(n, m, k) = 0xC0FFEE; });
+                Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, K),
+                                     [&](const int k) { v(n, m, k) = 0xABC; });
               });
         });
 
@@ -82,13 +82,13 @@ struct Hierarchical_ForLoop_C {
     for (int n = 0; n < N; ++n)
       for (int m = 0; m < M; ++m)
         for (int k = 0; k < K; ++k)
-          check += ((v_H(n, m, k) ^ 0xC0FFEE) == 0) ? 0 : 1;
+          check += ((v_H(n, m, k) ^ 0xABC) == 0) ? 0 : 1;
     ASSERT_EQ(check, 0);
   }
 };
 
 TEST(TEST_CATEGORY, Hierarchical_ForLoop_C) {
-  Hierarchical_ForLoop_C test;
+  Hierarchical_ForLoop_C<TEST_EXECSPACE> test;
   test.run();
 }
 
