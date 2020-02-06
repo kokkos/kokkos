@@ -60,8 +60,8 @@ namespace Test {
 template <class ExecSpace>
 struct Hierarchical_Red_B {
   void run() {
-    typedef Kokkos::TeamPolicy<> team_policy;
-    typedef typename Kokkos::TeamPolicy<>::member_type member_type;
+    typedef Kokkos::TeamPolicy<ExecSpace> team_policy;
+    typedef typename Kokkos::TeamPolicy<ExecSpace>::member_type member_type;
 
     SCALAR_TYPE result = 0;
 

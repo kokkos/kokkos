@@ -58,10 +58,10 @@ namespace Test {
 template <class ExecSpace>
 struct Hierarchical_ForLoop_A {
   void run() {
-    typedef Kokkos::TeamPolicy<> team_policy;
-    typedef typename Kokkos::TeamPolicy<>::member_type member_type;
+    typedef Kokkos::TeamPolicy<ExecSpace> team_policy;
+    typedef typename Kokkos::TeamPolicy<ExecSpace>::member_type member_type;
 
-    typedef Kokkos::View<int **> viewDataType;
+    typedef Kokkos::View<int **, ExecSpace> viewDataType;
     viewDataType v("Matrix", N, M);
 
     Kokkos::parallel_for(
