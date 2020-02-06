@@ -826,6 +826,7 @@ void initialize(int& narg, char* arg[]) {
 }
 
 void initialize(const InitArguments& arguments) {
+  Impl::parse_environment_variables(arguments);
   Impl::initialize_internal(arguments);
 }
 
