@@ -123,7 +123,7 @@ struct InitArguments {
 
 void initialize(int& narg, char* arg[]);
 
-void initialize(const InitArguments& args = InitArguments());
+void initialize(InitArguments args = InitArguments());
 
 bool is_initialized() noexcept;
 
