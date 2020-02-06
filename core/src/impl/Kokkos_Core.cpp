@@ -560,77 +560,34 @@ void parse_command_line_arguments(int& narg, char* arg[],
       narg--;
     } else if ((strcmp(arg[iarg], "--kokkos-help") == 0) ||
                (strcmp(arg[iarg], "--help") == 0)) {
-      std::cout << std::endl;
-      std::cout << "-----------------------------------------------------------"
-                   "---------------------"
-                << std::endl;
-      std::cout << "-------------Kokkos command line "
-                   "arguments--------------------------------------"
-                << std::endl;
-      std::cout << "-----------------------------------------------------------"
-                   "---------------------"
-                << std::endl;
-      std::cout << "The following arguments exist also without prefix 'kokkos' "
-                   "(e.g. --help)."
-                << std::endl;
-      std::cout << "The prefixed arguments will be removed from the list by "
-                   "Kokkos::initialize(),"
-                << std::endl;
-      std::cout << "the non-prefixed ones are not removed. Prefixed versions "
-                   "take precedence over "
-                << std::endl;
-      std::cout << "non prefixed ones, and the last occurrence of an argument "
-                   "overwrites prior"
-                << std::endl;
-      std::cout << "settings." << std::endl;
-      std::cout << std::endl;
-      std::cout << "--kokkos-help               : print this message"
-                << std::endl;
-      std::cout
-          << "--kokkos-disable-warnings   : disable kokkos warning messages"
-          << std::endl;
-      std::cout
-          << "--kokkos-threads=INT        : specify total number of threads or"
-          << std::endl;
-      std::cout << "                              number of threads per NUMA "
-                   "region if "
-                << std::endl;
-      std::cout << "                              used in conjunction with "
-                   "'--numa' option. "
-                << std::endl;
-      std::cout << "--kokkos-numa=INT           : specify number of NUMA "
-                   "regions used by process."
-                << std::endl;
-      std::cout << "--kokkos-device=INT         : specify device id to be used "
-                   "by Kokkos. "
-                << std::endl;
-      std::cout << "--kokkos-ndevices=INT[,INT] : used when running MPI jobs. "
-                   "Specify number of"
-                << std::endl;
-      std::cout << "                              devices per node to be used. "
-                   "Process to device"
-                << std::endl;
-      std::cout << "                              mapping happens by obtaining "
-                   "the local MPI rank"
-                << std::endl;
-      std::cout << "                              and assigning devices "
-                   "round-robin. The optional"
-                << std::endl;
-      std::cout << "                              second argument allows for "
-                   "an existing device"
-                << std::endl;
-      std::cout << "                              to be ignored. This is most "
-                   "useful on workstations"
-                << std::endl;
-      std::cout << "                              with multiple GPUs of which "
-                   "one is used to drive"
-                << std::endl;
-      std::cout << "                              screen output." << std::endl;
-      std::cout << std::endl;
-      std::cout << "-----------------------------------------------------------"
-                   "---------------------"
-                << std::endl;
-      std::cout << std::endl;
+      std::string const help_message = R"(
+      --------------------------------------------------------------------------------
+      -------------Kokkos command line arguments--------------------------------------
+      --------------------------------------------------------------------------------
+      The following arguments exist also without prefix 'kokkos' (e.g. --help).
+      The prefixed arguments will be removed from the list by Kokkos::initialize(),
+      the non-prefixed ones are not removed. Prefixed versions take precedence over
+      non prefixed ones, and the last occurrence of an argument overwrites prior
+      settings.
+
+      --kokkos-help               : print this message
+      --kokkos-disable-warnings   : disable kokkos warning messages
+      --kokkos-threads=INT        : specify total number of threads or
+                                    number of threads per NUMA region if
+                                    used in conjunction with '--numa' option.
+      --kokkos-numa=INT           : specify number of NUMA regions used by process.
+      --kokkos-device=INT         : specify device id to be used by Kokkos.
+      --kokkos-ndevices=INT[,INT] : used when running MPI jobs. Specify number of
+                                    devices per node to be used. Process to device
+                                    mapping happens by obtaining the local MPI rank
+                                    and assigning devices round-robin. The optional
+                                    second argument allows for an existing device
+                                    to be ignored. This is most useful on workstations
+                                    with multiple GPUs of which one is used to drive
+                                    screen output.
+      --------------------------------------------------------------------------------
+)";
+      std::cout << help_message << std::endl;
 
       // Remove the --kokkos-help argument from the list but leave --ndevices
       if (strcmp(arg[iarg], "--kokkos-help") == 0) {
