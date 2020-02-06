@@ -536,14 +536,13 @@ void parse_command_line_arguments(int& narg, char* arg[],
               "'--kokkos-ndevices=XX,'. Raised by Kokkos::initialize(int narg, "
               "char* argc[]).");
 
-        if ((strncmp(arg[iarg], "--kokkos-ndevices", 17) == 0) ||
-            !kokkos_ndevices_found)
+        if (check_arg(arg[iarg], "--kokkos-ndevices") || !kokkos_ndevices_found)
           skip_device = atoi(num2 + 1);
       }
 
       // Remove the --kokkos-ndevices argument from the list but leave
       // --ndevices
-      if (strncmp(arg[iarg], "--kokkos-ndevices", 17) == 0) {
+      if (check_arg(arg[iarg], "--kokkos-ndevices")) {
         for (int k = iarg; k < narg - 1; k++) {
           arg[k] = arg[k + 1];
         }
@@ -552,14 +551,14 @@ void parse_command_line_arguments(int& narg, char* arg[],
       } else {
         iarg++;
       }
-    } else if (strcmp(arg[iarg], "--kokkos-disable-warnings") == 0) {
+    } else if (check_arg(arg[iarg], "--kokkos-disable-warnings")) {
       disable_warnings = true;
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       narg--;
-    } else if ((strcmp(arg[iarg], "--kokkos-help") == 0) ||
-               (strcmp(arg[iarg], "--help") == 0)) {
+    } else if (check_arg(arg[iarg], "--kokkos-help") ||
+               check_arg(arg[iarg], "--help")) {
       std::string const help_message = R"(
       --------------------------------------------------------------------------------
       -------------Kokkos command line arguments--------------------------------------
@@ -589,8 +588,8 @@ void parse_command_line_arguments(int& narg, char* arg[],
 )";
       std::cout << help_message << std::endl;
 
-      // Remove the --kokkos-help argument from the list but leave --ndevices
-      if (strcmp(arg[iarg], "--kokkos-help") == 0) {
+      // Remove the --kokkos-help argument from the list but leave --help
+      if (check_arg(arg[iarg], "--kokkos-help")) {
         for (int k = iarg; k < narg - 1; k++) {
           arg[k] = arg[k + 1];
         }
