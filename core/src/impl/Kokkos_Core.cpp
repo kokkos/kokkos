@@ -457,22 +457,14 @@ bool check_int_arg(char const* arg, char const* expected, int* value) {
   return true;
 }
 
-}  // namespace
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-
-void initialize(int& narg, char* arg[]) {
-  int num_threads       = -1;
-  int numa              = -1;
-  int device            = -1;
-  int ndevices          = -1;
-  int skip_device       = 9999;
-  bool disable_warnings = false;
+void parse_command_line_arguments(int& narg, char* arg[],
+                                  InitArguments& arguments) {
+  auto& num_threads      = arguments.num_threads;
+  auto& numa             = arguments.num_numa;
+  auto& device           = arguments.device_id;
+  auto& ndevices         = arguments.ndevices;
+  auto& skip_device      = arguments.skip_device;
+  auto& disable_warnings = arguments.disable_warnings;
 
   int kokkos_threads_found  = 0;
   int kokkos_numa_found     = 0;
@@ -652,8 +644,16 @@ void initialize(int& narg, char* arg[]) {
     } else
       iarg++;
   }
+}
 
-  // Read environment variables
+void parse_environment_variables(InitArguments& arguments) {
+  auto& num_threads      = arguments.num_threads;
+  auto& numa             = arguments.num_numa;
+  auto& device           = arguments.device_id;
+  auto& ndevices         = arguments.ndevices;
+  auto& skip_device      = arguments.skip_device;
+  auto& disable_warnings = arguments.disable_warnings;
+
   char* endptr;
   auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
   if (env_num_threads_str != nullptr) {
@@ -807,18 +807,26 @@ void initialize(int& narg, char* arg[]) {
           "KOKKOS_DISABLE_WARNINGS if both are set. Raised by "
           "Kokkos::initialize(int narg, char* argc[]).");
   }
+}
 
+}  // namespace
+
+}  // namespace Impl
+}  // namespace Kokkos
+
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+
+void initialize(int& narg, char* arg[]) {
   InitArguments arguments;
-  arguments.num_threads      = num_threads;
-  arguments.num_numa         = numa;
-  arguments.device_id        = device;
-  arguments.ndevices         = ndevices;
-  arguments.skip_device      = skip_device;
-  arguments.disable_warnings = disable_warnings;
+  Impl::parse_command_line_arguments(narg, arg, arguments);
+  Impl::parse_environment_variables(arguments);
   Impl::initialize_internal(arguments);
 }
 
-void initialize(const InitArguments& arguments) {
+void initialize(InitArguments arguments) {
+  Impl::parse_environment_variables(arguments);
   Impl::initialize_internal(arguments);
 }
 
