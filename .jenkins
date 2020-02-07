@@ -9,29 +9,28 @@ pipeline {
     stages {
         stage('Build') {
             parallel {
-                stage('HIP-3.3-HCC') {
+                stage('OPENMPTARGET-Clang') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.hipcc'
+                            filename 'Dockerfile.openmptarget'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-18.04:3.3'
-                            label 'rocm-docker && vega'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video'
+                            additionalBuildArgs '--pull'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     steps {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
-                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=hipcc \
-                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument -Wno-braced-scalar-init" \
+                                -DCMAKE_CXX_COMPILER=clang++ \
+                                -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
-                                -DKokkos_ENABLE_HIP=ON \
-                                -DKokkos_ENABLE_LIBDL=OFF \
-                                -DKokkos_ENABLE_PROFILING=OFF \
+                                -DKokkos_ENABLE_OPENMPTARGET=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
