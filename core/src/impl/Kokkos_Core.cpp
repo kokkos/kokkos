@@ -500,14 +500,23 @@ void parse_command_line_arguments(int& narg, char* arg[],
     } else if (!kokkos_numa_found &&
                check_int_arg(arg[iarg], "--numa", &numa)) {
       iarg++;
-    } else if (check_int_arg(arg[iarg], "--kokkos-device", &device)) {
+    } else if (check_int_arg(arg[iarg], "--kokkos-device-id", &device) ||
+               check_int_arg(arg[iarg], "--kokkos-device", &device)) {
+      if (check_arg(arg[iarg], "--kokkos-device")) {
+        warn_deprecated_command_line_argument("--kokkos-device",
+                                              "--kokkos-device-id");
+      }
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       kokkos_device_found = 1;
       narg--;
     } else if (!kokkos_device_found &&
-               check_int_arg(arg[iarg], "--device", &device)) {
+               (check_int_arg(arg[iarg], "--device-id", &device) ||
+                check_int_arg(arg[iarg], "--device", &device))) {
+      if (check_arg(arg[iarg], "--device")) {
+        warn_deprecated_command_line_argument("--device", "--device-id");
+      }
       iarg++;
     } else if (check_arg(arg[iarg], "--kokkos-ndevices") ||
                check_arg(arg[iarg], "--ndevices")) {
@@ -583,7 +592,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
                                     number of threads per NUMA region if
                                     used in conjunction with '--numa' option.
       --kokkos-numa=INT           : specify number of NUMA regions used by process.
-      --kokkos-device=INT         : specify device id to be used by Kokkos.
+      --kokkos-device-id=INT      : specify device id to be used by Kokkos.
       --kokkos-ndevices=INT[,INT] : used when running MPI jobs. Specify number of
                                     devices per node to be used. Process to device
                                     mapping happens by obtaining the local MPI rank
