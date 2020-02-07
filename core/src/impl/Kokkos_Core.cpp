@@ -457,6 +457,14 @@ bool check_int_arg(char const* arg, char const* expected, int* value) {
   return true;
 }
 
+void warn_deprecated_command_line_argument(std::string deprecated,
+                                           std::string valid) {
+  std::cerr
+      << "Warning: command line argument '" << deprecated
+      << "' is deprecated. Use '" << valid
+      << "' instead. Raised by Kokkos::initialize(int narg, char* argc[]).";
+}
+
 void parse_command_line_arguments(int& narg, char* arg[],
                                   InitArguments& arguments) {
   auto& num_threads      = arguments.num_threads;
