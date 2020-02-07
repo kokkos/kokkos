@@ -474,39 +474,39 @@ void parse_command_line_arguments(int& narg, char* arg[],
   int iarg = 0;
 
   while (iarg < narg) {
-    if (Impl::check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
+    if (check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       kokkos_threads_found = 1;
       narg--;
     } else if (!kokkos_threads_found &&
-               Impl::check_int_arg(arg[iarg], "--threads", &num_threads)) {
+               check_int_arg(arg[iarg], "--threads", &num_threads)) {
       iarg++;
-    } else if (Impl::check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
+    } else if (check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       kokkos_numa_found = 1;
       narg--;
     } else if (!kokkos_numa_found &&
-               Impl::check_int_arg(arg[iarg], "--numa", &numa)) {
+               check_int_arg(arg[iarg], "--numa", &numa)) {
       iarg++;
-    } else if (Impl::check_int_arg(arg[iarg], "--kokkos-device", &device)) {
+    } else if (check_int_arg(arg[iarg], "--kokkos-device", &device)) {
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       kokkos_device_found = 1;
       narg--;
     } else if (!kokkos_device_found &&
-               Impl::check_int_arg(arg[iarg], "--device", &device)) {
+               check_int_arg(arg[iarg], "--device", &device)) {
       iarg++;
-    } else if (Impl::check_arg(arg[iarg], "--kokkos-ndevices") ||
-               Impl::check_arg(arg[iarg], "--ndevices")) {
+    } else if (check_arg(arg[iarg], "--kokkos-ndevices") ||
+               check_arg(arg[iarg], "--ndevices")) {
       // Find the number of device (expecting --device=XX)
       if (!((strncmp(arg[iarg], "--kokkos-ndevices=", 18) == 0) ||
             (strncmp(arg[iarg], "--ndevices=", 11) == 0)))
-        Impl::throw_runtime_exception(
+        throw_runtime_exception(
             "Error: expecting an '=INT[,INT]' after command line argument "
             "'--ndevices/--kokkos-ndevices'. Raised by Kokkos::initialize(int "
             "narg, char* argc[]).");
@@ -518,8 +518,8 @@ void parse_command_line_arguments(int& narg, char* arg[],
       strncpy(num1_only, num1, num1_len);
       num1_only[num1_len] = 0;
 
-      if (!Impl::is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
-        Impl::throw_runtime_exception(
+      if (!is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
+        throw_runtime_exception(
             "Error: expecting an integer number after command line argument "
             "'--kokkos-ndevices'. Raised by Kokkos::initialize(int narg, char* "
             "argc[]).");
@@ -530,8 +530,8 @@ void parse_command_line_arguments(int& narg, char* arg[],
       delete[] num1_only;
 
       if (num2 != nullptr) {
-        if ((!Impl::is_unsigned_int(num2 + 1)) || (strlen(num2) == 1))
-          Impl::throw_runtime_exception(
+        if ((!is_unsigned_int(num2 + 1)) || (strlen(num2) == 1))
+          throw_runtime_exception(
               "Error: expecting an integer number after command line argument "
               "'--kokkos-ndevices=XX,'. Raised by Kokkos::initialize(int narg, "
               "char* argc[]).");
