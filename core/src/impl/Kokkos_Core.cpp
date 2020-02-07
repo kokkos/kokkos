@@ -518,15 +518,26 @@ void parse_command_line_arguments(int& narg, char* arg[],
         warn_deprecated_command_line_argument("--device", "--device-id");
       }
       iarg++;
-    } else if (check_arg(arg[iarg], "--kokkos-ndevices") ||
+    } else if (check_arg(arg[iarg], "--kokkos-num-devices") ||
+               check_arg(arg[iarg], "--num-devices") ||
+               check_arg(arg[iarg], "--kokkos-ndevices") ||
                check_arg(arg[iarg], "--ndevices")) {
+      if (check_arg(arg[iarg], "--ndevices")) {
+        warn_deprecated_command_line_argument("--ndevices", "--num-devices");
+      }
+      if (check_arg(arg[iarg], "--kokkos-ndevices")) {
+        warn_deprecated_command_line_argument("--kokkos-ndevices",
+                                              "--kokkos-num-devices");
+      }
       // Find the number of device (expecting --device=XX)
-      if (!((strncmp(arg[iarg], "--kokkos-ndevices=", 18) == 0) ||
+      if (!((strncmp(arg[iarg], "--kokkos-num-devices=", 21) == 0) ||
+            (strncmp(arg[iarg], "--num-ndevices=", 14) == 0) ||
+            (strncmp(arg[iarg], "--kokkos-ndevices=", 18) == 0) ||
             (strncmp(arg[iarg], "--ndevices=", 11) == 0)))
         throw_runtime_exception(
             "Error: expecting an '=INT[,INT]' after command line argument "
-            "'--ndevices/--kokkos-ndevices'. Raised by Kokkos::initialize(int "
-            "narg, char* argc[]).");
+            "'--num-devices/--kokkos-num-devices'. Raised by "
+            "Kokkos::initialize(int narg, char* argc[]).");
 
       char* num1      = strchr(arg[iarg], '=') + 1;
       char* num2      = strpbrk(num1, ",");
@@ -538,11 +549,11 @@ void parse_command_line_arguments(int& narg, char* arg[],
       if (!is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
         throw_runtime_exception(
             "Error: expecting an integer number after command line argument "
-            "'--kokkos-ndevices'. Raised by Kokkos::initialize(int narg, char* "
-            "argc[]).");
+            "'--kokkos-numdevices'. Raised by "
+            "Kokkos::initialize(int narg, char* argc[]).");
       }
-      if ((strncmp(arg[iarg], "--kokkos-ndevices", 17) == 0) ||
-          !kokkos_ndevices_found)
+      if (check_arg(arg[iarg], "--kokkos-num-devices") ||
+          check_arg(arg[iarg], "--kokkos-ndevices") || !kokkos_ndevices_found)
         ndevices = atoi(num1_only);
       delete[] num1_only;
 
@@ -550,16 +561,18 @@ void parse_command_line_arguments(int& narg, char* arg[],
         if ((!is_unsigned_int(num2 + 1)) || (strlen(num2) == 1))
           throw_runtime_exception(
               "Error: expecting an integer number after command line argument "
-              "'--kokkos-ndevices=XX,'. Raised by Kokkos::initialize(int narg, "
-              "char* argc[]).");
+              "'--kokkos-num-devices=XX,'. Raised by "
+              "Kokkos::initialize(int narg, char* argc[]).");
 
-        if (check_arg(arg[iarg], "--kokkos-ndevices") || !kokkos_ndevices_found)
+        if (check_arg(arg[iarg], "--kokkos-num-devices") ||
+            check_arg(arg[iarg], "--kokkos-ndevices") || !kokkos_ndevices_found)
           skip_device = atoi(num2 + 1);
       }
 
-      // Remove the --kokkos-ndevices argument from the list but leave
-      // --ndevices
-      if (check_arg(arg[iarg], "--kokkos-ndevices")) {
+      // Remove the --kokkos-num-devices argument from the list but leave
+      // --num-devices
+      if (check_arg(arg[iarg], "--kokkos-num-devices") ||
+          check_arg(arg[iarg], "--kokkos-ndevices")) {
         for (int k = iarg; k < narg - 1; k++) {
           arg[k] = arg[k + 1];
         }
@@ -586,21 +599,21 @@ void parse_command_line_arguments(int& narg, char* arg[],
       non prefixed ones, and the last occurrence of an argument overwrites prior
       settings.
 
-      --kokkos-help               : print this message
-      --kokkos-disable-warnings   : disable kokkos warning messages
-      --kokkos-threads=INT        : specify total number of threads or
-                                    number of threads per NUMA region if
-                                    used in conjunction with '--numa' option.
-      --kokkos-numa=INT           : specify number of NUMA regions used by process.
-      --kokkos-device-id=INT      : specify device id to be used by Kokkos.
-      --kokkos-ndevices=INT[,INT] : used when running MPI jobs. Specify number of
-                                    devices per node to be used. Process to device
-                                    mapping happens by obtaining the local MPI rank
-                                    and assigning devices round-robin. The optional
-                                    second argument allows for an existing device
-                                    to be ignored. This is most useful on workstations
-                                    with multiple GPUs of which one is used to drive
-                                    screen output.
+      --kokkos-help                  : print this message
+      --kokkos-disable-warnings      : disable kokkos warning messages
+      --kokkos-threads=INT           : specify total number of threads or
+                                       number of threads per NUMA region if
+                                       used in conjunction with '--numa' option.
+      --kokkos-numa=INT              : specify number of NUMA regions used by process.
+      --kokkos-device-id=INT         : specify device id to be used by Kokkos.
+      --kokkos-num-devices=INT[,INT] : used when running MPI jobs. Specify number of
+                                       devices per node to be used. Process to device
+                                       mapping happens by obtaining the local MPI rank
+                                       and assigning devices round-robin. The optional
+                                       second argument allows for an existing device
+                                       to be ignored. This is most useful on workstations
+                                       with multiple GPUs of which one is used to drive
+                                       screen output.
       --------------------------------------------------------------------------------
 )";
       std::cout << help_message << std::endl;
