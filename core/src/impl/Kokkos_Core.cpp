@@ -462,7 +462,8 @@ void warn_deprecated_command_line_argument(std::string deprecated,
   std::cerr
       << "Warning: command line argument '" << deprecated
       << "' is deprecated. Use '" << valid
-      << "' instead. Raised by Kokkos::initialize(int narg, char* argc[]).";
+      << "' instead. Raised by Kokkos::initialize(int narg, char* argc[])."
+      << std::endl;
 }
 
 void parse_command_line_arguments(int& narg, char* arg[],
