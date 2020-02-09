@@ -295,25 +295,13 @@ class UnorderedMap {
   //! \name Public member functions
   //@{
 
-  UnorderedMap()
-      : m_bounded_insert(),
-        m_hasher(),
-        m_equal_to(),
-        m_size(),
-        m_available_indexes(),
-        m_hash_lists(),
-        m_next_index(),
-        m_keys(),
-        m_values(),
-        m_scalars() {}
-
   /// \brief Constructor
   ///
   /// \param capacity_hint [in] Initial guess of how many unique keys will be
   /// inserted into the map \param hash [in] Hasher function for \c Key
   /// instances.  The
   ///   default value usually suffices.
-  UnorderedMap(size_type capacity_hint, hasher_type hasher = hasher_type(),
+  UnorderedMap(size_type capacity_hint = 0, hasher_type hasher = hasher_type(),
                equal_to_type equal_to = equal_to_type())
       : m_bounded_insert(true),
         m_hasher(hasher),

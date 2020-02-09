@@ -305,6 +305,18 @@ TEST(TEST_CATEGORY, UnorderedMap_deep_copy) {
   for (int i = 0; i < 2; ++i) test_deep_copy<TEST_EXECSPACE>(10000);
 }
 
+TEST(TEST_CATEGORY, UnorderedMap_valid_empty) {
+  using Key   = int;
+  using Value = int;
+  using Map   = Kokkos::UnorderedMap<Key, Value, TEST_EXECSPACE>;
+
+  Map m{};
+  Map n{};
+  n = Map{m.capacity()};
+  n.rehash(m.capacity());
+  Kokkos::deep_copy(n, m);
+}
+
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_UNORDERED_MAP_HPP
