@@ -186,45 +186,6 @@ if(Kokkos_ENABLE_OPENMPTARGET)
   )
 endif()
 
-if(Kokkos_ENABLE_QTHREADS)
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Qthreads
-    SOURCES
-      UnitTestMainInit.cpp
-      qthreads/TestQthreads_Atomics.cpp
-      qthreads/TestQthreads_Complex.cpp
-      qthreads/TestQthreads_DeepCopyAlignment.cpp
-      qthreads/TestQthreads_Other.cpp
-      qthreads/TestQthreads_Reductions.cpp
-      qthreads/TestQthreads_Reducers_a.cpp
-      qthreads/TestQthreads_Reducers_b.cpp
-      qthreads/TestQthreads_Reducers_c.cpp
-      qthreads/TestQthreads_Reducers_d.cpp
-      qthreads/TestQthreads_SubView_a.cpp
-      qthreads/TestQthreads_SubView_b.cpp
-      qthreads/TestQthreads_SubView_c01.cpp
-      qthreads/TestQthreads_SubView_c02.cpp
-      qthreads/TestQthreads_SubView_c03.cpp
-      qthreads/TestQthreads_SubView_c04.cpp
-      qthreads/TestQthreads_SubView_c05.cpp
-      qthreads/TestQthreads_SubView_c06.cpp
-      qthreads/TestQthreads_SubView_c07.cpp
-      qthreads/TestQthreads_SubView_c08.cpp
-      qthreads/TestQthreads_SubView_c09.cpp
-      qthreads/TestQthreads_SubView_c10.cpp
-      qthreads/TestQthreads_SubView_c11.cpp
-      qthreads/TestQthreads_SubView_c12.cpp
-      qthreads/TestQthreads_SubView_c13.cpp
-      qthreads/TestQthreads_Team.cpp
-      qthreads/TestQthreads_View_64bit.cpp
-      qthreads/TestQthreads_ViewAPI_a.cpp
-      qthreads/TestQthreads_ViewAPI_b.cpp
-      qthreads/TestQthreads_ViewAPI_c.cpp
-      qthreads/TestQthreads_ViewAPI_d.cpp
-      qthreads/TestQthreads_ViewAPI_e.cpp
-  )
-endif()
-
 if(Kokkos_ENABLE_CUDA)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Cuda
