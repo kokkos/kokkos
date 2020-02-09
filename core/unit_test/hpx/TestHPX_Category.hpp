@@ -47,6 +47,7 @@
 #include <gtest/gtest.h>
 
 #define TEST_CATEGORY hpx
+#define TEST_CATEGORY_DEATH hpx_DeathTest
 #define TEST_EXECSPACE Kokkos::Experimental::HPX
 
 #endif

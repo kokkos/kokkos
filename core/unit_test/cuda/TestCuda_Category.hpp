@@ -47,6 +47,7 @@
 #include <gtest/gtest.h>
 
 #define TEST_CATEGORY cuda
+#define TEST_CATEGORY_DEATH cuda_DeathTest
 #define TEST_EXECSPACE Kokkos::Cuda
 
 #endif

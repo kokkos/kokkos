@@ -47,6 +47,7 @@
 #include <gtest/gtest.h>
 
 #define TEST_CATEGORY rocm
+#define TEST_CATEGORY_DEATH rocm_DeathTest
 #define TEST_EXECSPACE Kokkos::Experimental::ROCm
 
 #endif
