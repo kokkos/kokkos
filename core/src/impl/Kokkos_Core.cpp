@@ -590,7 +590,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       narg--;
     } else if (check_arg(arg[iarg], "--kokkos-help") ||
                check_arg(arg[iarg], "--help")) {
-      std::string const help_message = R"(
+      auto const help_message = R"(
       --------------------------------------------------------------------------------
       -------------Kokkos command line arguments--------------------------------------
       --------------------------------------------------------------------------------
