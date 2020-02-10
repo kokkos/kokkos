@@ -49,43 +49,46 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-// Degrees of concurrency per nesting level
-#define N 16
-#define M 16
-
 namespace Test {
-
-typedef int value_type;
-
-template <class ExecSpace>
-struct Functor {
-  typedef Kokkos::TeamPolicy<ExecSpace> TeamPolicy;
-  typedef typename TeamPolicy::member_type member_type;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const member_type& team, value_type& update) const {
-    int m = (int)(team.league_rank() + team.team_rank());
-    team.team_reduce(Kokkos::Max<int>(m));
-    if (m != team.league_rank() + (team.team_size() - 1)) update++;
-  }
-};
 
 template <class ExecSpace>
 struct HierarchicalBasics {
-  typedef Kokkos::TeamPolicy<ExecSpace> TeamPolicy;
-  typedef Test::Functor<ExecSpace> Functor;
+  using policy_t = Kokkos::TeamPolicy<ExecSpace>;
+  using team_t   = typename policy_t::member_type;
 
-  void run() {
-    int error = 0;
-    Kokkos::parallel_reduce("Teams", TeamPolicy(N, M), Functor(), error);
+  void run(const int nP, int nT) {
+    if (nT > ExecSpace::concurrency()) nT = ExecSpace::concurrency();
+
+    Kokkos::View<int **, ExecSpace> v("Array_A", nP, nT);
+    Kokkos::parallel_for(
+        "Teams", policy_t(nP, nT), KOKKOS_LAMBDA(const team_t &team) {
+          const int tR = team.team_rank();
+          const int tS = team.team_size();
+          const int lR = team.league_rank();
+          const int lS = team.league_size();
+          if (lR < lS) {
+            v(lR, tR) = lR * tS + tR;
+          } else {
+            v(lR, tR) = 100000;
+          }
+        });
     Kokkos::fence();
-    ASSERT_EQ(error, 0);
+    auto h_v = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
+
+    size_t check = 0;
+    size_t ref   = nP * nT;
+    for (int i = 0; i < nP; ++i)
+      for (int j = 0; j < nT; ++j) check += h_v(i, j);
+
+    ASSERT_EQ(check, ref * (ref - 1) / 2);
   }
 };
 
 TEST(TEST_CATEGORY, Hierarchical_Basics) {
-  HierarchicalBasics<Kokkos::OpenMP> test;
-  test.run();
+  HierarchicalBasics<TEST_EXECSPACE> test;
+  test.run(1, 4);
+  test.run(8, 16);
+  test.run(11, 13);
 }
 
 }  // namespace Test
