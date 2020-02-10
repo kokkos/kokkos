@@ -48,13 +48,11 @@
 #endif
 
 #include <cstddef>
-#include <cstdlib>
 #include <cstdint>
+#include <cstdlib>
 #include <cstring>
-
 #include <iostream>
 #include <sstream>
-#include <cstring>
 
 #include <Kokkos_SICMSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -66,13 +64,16 @@
 namespace Kokkos {
 namespace Experimental {
 
+static void arena_deleter(sicm_arena * arena)
+{
+    sicm_arena_destroy(*arena);
+    delete arena;
+}
+
 /* Default allocation mechanism */
 SICMSpace::SICMSpace()
-  : arena(nullptr)
-{
-  sicm_init();
-  arena = std::make_shared<sicm_arena>(static_cast<void *>(ARENA_DEFAULT));
-}
+  : arena( new sicm_arena(ARENA_DEFAULT), arena_deleter )
+{}
 
 SICMSpace::SICMSpace( sicm_device_list * devices )
   : SICMSpace()
@@ -80,17 +81,13 @@ SICMSpace::SICMSpace( sicm_device_list * devices )
   if ( devices ) {
     arena = std::shared_ptr <sicm_arena> (
       new sicm_arena(sicm_arena_create(0, static_cast<sicm_arena_flags>(0), devices)),
-      []( sicm_arena * a ) { sicm_arena_destroy(*a); delete a; }
+      arena_deleter
     );
   }
 
   if ( *arena == ARENA_DEFAULT ) {
     Kokkos::Impl::throw_runtime_exception( std::string("Kokkos::Experimental::SICMSpace Failed to create arena") );
   }
-}
-
-SICMSpace::~SICMSpace() {
-  sicm_fini();
 }
 
 void * SICMSpace::allocate( const size_t arg_alloc_size ) const
@@ -112,7 +109,6 @@ void * SICMSpace::allocate( const size_t arg_alloc_size ) const
         << "( " << arg_alloc_size << " ) FAILED: NULL" ;
 
     std::cerr << msg.str() << std::endl ;
-    std::cerr.flush();
 
     Kokkos::Impl::throw_runtime_exception( msg.str() );
   }

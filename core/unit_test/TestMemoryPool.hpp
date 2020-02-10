@@ -53,7 +53,13 @@
 
 namespace TestMemoryPool {
 
-template <typename MemSpace = Kokkos::HostSpace>
+template <typename MemSpace =
+#ifdef KOKKOS_ENABLE_SICM
+          Kokkos::Experimental::SICMSpace
+#else
+          Kokkos::HostSpace
+#endif
+          >
 void test_host_memory_pool_defaults() {
   typedef typename MemSpace::execution_space Space;
   typedef typename Kokkos::MemoryPool<Space> MemPool;
@@ -129,7 +135,13 @@ void test_host_memory_pool_defaults() {
   }
 }
 
-template <typename MemSpace = Kokkos::HostSpace>
+template <typename MemSpace =
+#ifdef KOKKOS_ENABLE_SICM
+          Kokkos::Experimental::SICMSpace
+#else
+          Kokkos::HostSpace
+#endif
+          >
 void test_host_memory_pool_stats() {
   typedef typename MemSpace::execution_space Space;
   typedef typename Kokkos::MemoryPool<Space> MemPool;
@@ -562,15 +574,9 @@ void test_memory_pool_huge() {
 
 namespace Test {
 
-#ifdef KOKKOS_ENABLE_SICM
-typedef Kokkos::Experimental::SICMSpace memory_space;
-#else
-typedef Kokkos::HostSpace memory_space;
-#endif
-
 TEST(TEST_CATEGORY, memory_pool) {
-  TestMemoryPool::test_host_memory_pool_defaults<memory_space>();
-  TestMemoryPool::test_host_memory_pool_stats<memory_space>();
+  TestMemoryPool::test_host_memory_pool_defaults<>();
+  TestMemoryPool::test_host_memory_pool_stats<>();
   TestMemoryPool::test_memory_pool_v2<TEST_EXECSPACE>(false, false);
   TestMemoryPool::test_memory_pool_corners<TEST_EXECSPACE>(false, false);
 #ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS

@@ -58,7 +58,7 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
-#include "impl/Kokkos_HostSpace_deepcopy.hpp"
+#include <impl/Kokkos_HostSpace_deepcopy.hpp>
 
 #include <sicm_low.h>
 
@@ -108,7 +108,7 @@ public:
   SICMSpace( const SICMSpace & rhs ) = default;
   SICMSpace & operator = ( SICMSpace && ) = default;
   SICMSpace & operator = ( const SICMSpace & ) = default;
-  ~SICMSpace();
+  ~SICMSpace() = default;
 
   /**\brief  Allocate untracked memory in the space */
   void * allocate( const size_t arg_alloc_size ) const;
@@ -118,11 +118,10 @@ public:
                  , const size_t arg_alloc_size ) const;
 
   /**\brief Return Name of the MemorySpace */
-  static constexpr const char* name() { return m_name; }
+  static constexpr const char* name() { return "SICM"; }
 
 private:
   std::shared_ptr<sicm_arena> arena;
-  static constexpr const char* m_name = "SICM";
   friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::SICMSpace, void >;
 };
 
@@ -245,8 +244,6 @@ public:
 namespace Kokkos {
 
 namespace Impl {
-
-#define PAR_DEEP_COPY_USE_MEMCPY
 
 template< class ExecutionSpace >
 struct DeepCopy< Experimental::SICMSpace, Experimental::SICMSpace, ExecutionSpace > {
