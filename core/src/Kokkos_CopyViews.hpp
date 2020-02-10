@@ -1427,8 +1427,7 @@ inline void deep_copy(
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
-        Kokkos::Profiling::SpaceHandle(
-            typename ViewType::memory_space().name()),
+        Kokkos::Profiling::SpaceHandle(ViewType::memory_space::name()),
         dst.label(), dst.data(),
         Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace().name()), "Scalar",
         &value, dst.span() * sizeof(typename ViewType::value_type));
@@ -1554,7 +1553,7 @@ inline void deep_copy(
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace().name()), "Scalar",
-        &dst, Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        &dst, Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
         src.label(), src.data(),
         src.span() * sizeof(typename src_traits::value_type));
   }
@@ -1604,8 +1603,8 @@ inline void deep_copy(
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
-        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
-        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        Kokkos::Profiling::SpaceHandle(dst_memory_space::name()), dst.label(),
+        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
         src.label(), src.data(),
         src.span() * sizeof(typename dst_type::value_type));
   }
@@ -1665,8 +1664,8 @@ inline void deep_copy(
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
-        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
-        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        Kokkos::Profiling::SpaceHandle(dst_memory_space::name()), dst.label(),
+        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
         src.label(), src.data(),
         src.span() * sizeof(typename dst_type::value_type));
   }
@@ -2640,7 +2639,7 @@ inline void deep_copy(
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
-        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
+        Kokkos::Profiling::SpaceHandle(dst_memory_space::name()), dst.label(),
         dst.data(), Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace().name()),
         "(none)", &value, dst.span() * sizeof(typename dst_traits::value_type));
   }
@@ -2675,7 +2674,7 @@ inline void deep_copy(
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::SpaceHandle(Kokkos::HostSpace().name()), "(none)",
-        &dst, Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        &dst, Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
         src.label(), src.data(), sizeof(ST));
   }
 #endif
@@ -2723,8 +2722,8 @@ inline void deep_copy(
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
-        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
-        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        Kokkos::Profiling::SpaceHandle(dst_memory_space::name()), dst.label(),
+        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
         src.label(), src.data(), sizeof(DT));
   }
 #endif
@@ -2787,8 +2786,8 @@ inline void deep_copy(
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
-        Kokkos::Profiling::SpaceHandle(dst_memory_space().name()), dst.label(),
-        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space().name()),
+        Kokkos::Profiling::SpaceHandle(dst_memory_space::name()), dst.label(),
+        dst.data(), Kokkos::Profiling::SpaceHandle(src_memory_space::name()),
         src.label(), src.data(), dst.span() * sizeof(dst_value_type));
   }
 #endif
