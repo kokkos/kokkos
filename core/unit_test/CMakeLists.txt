@@ -337,7 +337,7 @@ FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST BACK_END_NAME)
     IF (NOT CURRENT_TEST_NAME IN_LIST Kokkos_${BACK_END_NAME}_EXCLUDE_TESTS)
        SET (CURRENT_TEST_OUTPUT_FILENAME ${CURRENT_TEST_NAME}_${BACK_END_NAME})
        FILE( STRINGS ${CURRENT_FILE_PATH} CURRENT_REQUIRED_FEATURE_LINE REGEX "Kokkos_Feature_Level_Required" ) 
-       if (NOT ${CURRENT_REQUIRED_FEATURE_LINE} STREQUAL "") 
+       IF (NOT ${CURRENT_REQUIRED_FEATURE_LINE} STREQUAL "") 
        # From each test get level implementation required
          STRING( REGEX REPLACE ".*Kokkos_Feature_Level_Required:" "" CURRENT_REQUIRED_FEATURE_LEVEL ${CURRENT_REQUIRED_FEATURE_LINE} )
          # Cross-reference list of dependencies with selected feature list > matching feature test files are added to test applications
