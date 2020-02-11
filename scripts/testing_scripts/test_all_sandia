@@ -253,8 +253,9 @@ if [ "$MACHINE" = "sems" ]; then
   # On rhel7 sems machines gcc/7.3.0, clang/4.0.1, and intel/16.0.3 are missing
   # Remove kokkkos-env module use
 
-  BASE_MODULE_LIST="sems-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  CUDA9_MODULE_LIST="sems-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.2.0"
+  module load sems-cmake/3.12.2
+  BASE_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
+  CUDA9_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.2.0"
   SKIP_HWLOC=True
   # No sems hwloc module
 
