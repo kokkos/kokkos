@@ -287,8 +287,8 @@ void test_offsetview_unmanaged_construction() {
 
   {
     // Constructing an OffsetView directly around our preallocated memory
-    Kokkos::Array<int64_t, 1> begins1{{2}};
-    Kokkos::Array<int64_t, 1> ends1{{3}};
+    Kokkos::Array<int64_t, 1> begins1{2};
+    Kokkos::Array<int64_t, 1> ends1{3};
     Kokkos::Experimental::OffsetView<Scalar*, Device> ov1(&s, begins1, ends1);
 
     // Constructing an OffsetView around an unmanaged View of our preallocated
@@ -302,8 +302,8 @@ void test_offsetview_unmanaged_construction() {
   }
 
   {
-    Kokkos::Array<int64_t, 2> begins2{{-2, -7}};
-    Kokkos::Array<int64_t, 2> ends2{{5, -3}};
+    Kokkos::Array<int64_t, 2> begins2{-2, -7};
+    Kokkos::Array<int64_t, 2> ends2{5, -3};
     Kokkos::Experimental::OffsetView<Scalar**, Device> ov2(&s, begins2, ends2);
 
     Kokkos::View<Scalar**, Device> v2(&s, ends2[0] - begins2[0],
@@ -332,8 +332,8 @@ void test_offsetview_unmanaged_construction() {
   {
     // Test all four public constructor overloads (begins_type x
     // index_list_type)
-    Kokkos::Array<int64_t, 1> begins{{-3}};
-    Kokkos::Array<int64_t, 1> ends{{2}};
+    Kokkos::Array<int64_t, 1> begins{-3};
+    Kokkos::Array<int64_t, 1> ends{2};
 
     Kokkos::Experimental::OffsetView<Scalar*, Device> bb(&s, begins, ends);
     Kokkos::Experimental::OffsetView<Scalar*, Device> bi(&s, begins, {2});
