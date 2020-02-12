@@ -98,10 +98,6 @@ class HBWSpace;  /// Memory space for hbw_malloc from memkind (e.g. for KNL
 class Serial;  ///< Execution space main process on CPU.
 #endif
 
-#if defined(KOKKOS_ENABLE_QTHREADS)
-class Qthreads;  ///< Execution space with Qthreads back-end.
-#endif
-
 #if defined(KOKKOS_ENABLE_HPX)
 namespace Experimental {
 class HPX;  ///< Execution space with HPX back-end.
@@ -171,38 +167,34 @@ typedef Experimental::ROCm DefaultExecutionSpace;
 typedef OpenMP DefaultExecutionSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
 typedef Threads DefaultExecutionSpace;
-//#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
-//  typedef Qthreads DefaultExecutionSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
 typedef Kokkos::Experimental::HPX DefaultExecutionSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
 typedef Serial DefaultExecutionSpace;
 #else
 #error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Qthreads, or Kokkos::Serial."
+    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::HIP, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
 #endif
 
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
 typedef OpenMP DefaultHostExecutionSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
 typedef Threads DefaultHostExecutionSpace;
-//#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
-//  typedef Qthreads DefaultHostExecutionSpace;
+#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
+typedef Kokkos::Experimental::HPX DefaultHostExecutionSpace;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
 typedef Serial DefaultHostExecutionSpace;
 #elif defined(KOKKOS_ENABLE_OPENMP)
 typedef OpenMP DefaultHostExecutionSpace;
 #elif defined(KOKKOS_ENABLE_THREADS)
 typedef Threads DefaultHostExecutionSpace;
-//#elif defined( KOKKOS_ENABLE_QTHREADS )
-//  typedef Qthreads DefaultHostExecutionSpace;
 #elif defined(KOKKOS_ENABLE_HPX)
 typedef Kokkos::Experimental::HPX DefaultHostExecutionSpace;
 #elif defined(KOKKOS_ENABLE_SERIAL)
 typedef Serial DefaultHostExecutionSpace;
 #else
 #error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Qthreads, or Kokkos::Serial."
+    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
 #endif
 
 }  // namespace Kokkos

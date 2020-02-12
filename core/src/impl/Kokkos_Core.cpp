@@ -899,12 +899,6 @@ void print_configuration(std::ostream& out, const bool detail) {
 #else
   msg << "no" << std::endl;
 #endif
-  msg << "  KOKKOS_ENABLE_QTHREADS: ";
-#ifdef KOKKOS_ENABLE_QTHREADS
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
   msg << "  KOKKOS_ENABLE_SERIAL: ";
 #ifdef KOKKOS_ENABLE_SERIAL
   msg << "yes" << std::endl;
@@ -927,12 +921,6 @@ void print_configuration(std::ostream& out, const bool detail) {
 #endif
   msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS: ";
 #ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS: ";
-#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;
@@ -1143,9 +1131,6 @@ void print_configuration(std::ostream& out, const bool detail) {
 #endif
 #if defined(KOKKOS_ENABLE_THREADS)
   Threads::print_configuration(msg, detail);
-#endif
-#ifdef KOKKOS_ENABLE_QTHREADS
-  Qthreads::print_configuration(msg, detail);
 #endif
 #ifdef KOKKOS_ENABLE_SERIAL
   Serial::print_configuration(msg, detail);

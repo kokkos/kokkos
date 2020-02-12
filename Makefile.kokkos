@@ -1,6 +1,6 @@
 # Default settings common options.
 
-# Options: Cuda,HIP,ROCm,OpenMP,Pthread,Qthreads,Serial
+# Options: Cuda,HIP,ROCm,OpenMP,Pthread,Serial
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthread"
 # Options: 
@@ -80,16 +80,13 @@ KOKKOS_INTERNAL_ENABLE_ETI := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_
 # Check for Kokkos Host Execution Spaces one of which must be on.
 KOKKOS_INTERNAL_USE_OPENMP := $(call kokkos_has_string,$(subst OpenMPTarget,,$(KOKKOS_DEVICES)),OpenMP)
 KOKKOS_INTERNAL_USE_PTHREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Pthread)
-KOKKOS_INTERNAL_USE_QTHREADS := $(call kokkos_has_string,$(KOKKOS_DEVICES),Qthreads)
 KOKKOS_INTERNAL_USE_HPX := $(call kokkos_has_string,$(KOKKOS_DEVICES),HPX)
 KOKKOS_INTERNAL_USE_SERIAL := $(call kokkos_has_string,$(KOKKOS_DEVICES),Serial)
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
   ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
-    ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 0)
-      ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
-        KOKKOS_INTERNAL_USE_SERIAL := 1
-      endif
+    ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
+      KOKKOS_INTERNAL_USE_SERIAL := 1
     endif
   endif
 endif
@@ -460,10 +457,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_THREADS")
-endif
-
-ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
-  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_QTHREADS")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
@@ -1229,22 +1222,6 @@ endif
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
   KOKKOS_LIBS += -lpthread
   KOKKOS_TPL_LIBRARY_NAMES += pthread
-endif
-
-ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
-  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Qthreads/*.cpp)
-  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Qthreads/*.hpp)
-  ifneq ($(KOKKOS_CMAKE), yes)
-    ifneq ($(QTHREADS_PATH),)
-      KOKKOS_CPPFLAGS += -I$(QTHREADS_PATH)/include
-      KOKKOS_LIBDIRS += -L$(QTHREADS_PATH)/lib
-      KOKKOS_CXXLDFLAGS += -L$(QTHREADS_PATH)/lib
-      KOKKOS_TPL_INCLUDE_DIRS += $(QTHREADS_PATH)/include
-      KOKKOS_TPL_LIBRARY_DIRS += $(QTHREADS_PATH)/lib64
-    endif
-    KOKKOS_LIBS += -lqthread
-    KOKKOS_TPL_LIBRARY_NAMES += qthread
-  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
