@@ -64,5 +64,6 @@ RUN LLVM_VERSION=9.0.1 && \
       -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
     ../openmp && \
     make -j8 && \
+    make install && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${LLVM_DIR}/bin:$PATH
