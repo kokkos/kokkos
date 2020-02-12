@@ -20,3 +20,6 @@ if [ "${CLANG_FORMAT_MAJOR_VERSION}" -ne 8 ] || [ "${CLANG_FORMAT_MINOR_VERSION}
 fi
 
 find . -name '*.cpp' -o -name '*.hpp' | xargs ${CLANG_FORMAT_EXECUTABLE} -i
+
+# Check that we do not introduce any file with the old copyright
+./scripts/update-copyright
