@@ -62,6 +62,7 @@ RUN LLVM_VERSION=9.0.1 && \
       -DCMAKE_C_COMPILER=$LLVM_DIR/bin/clang \
       -DCMAKE_CXX_COMPILER=$LLVM_DIR/bin/clang++ \
       -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
-    ../openmp && make -j8 && \
+    ../openmp && \
+    make -j8 && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${LLVM_DIR}/bin:$PATH
