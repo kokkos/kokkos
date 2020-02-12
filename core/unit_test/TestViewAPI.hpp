@@ -919,8 +919,6 @@ class TestViewAPI {
       dView4_unmanaged;
   typedef typename dView0::host_mirror_space host;
 
-  TestViewAPI() = default;
-
   static void run_test_view_operator_a() {
     {
       TestViewOperator<T, device> f;

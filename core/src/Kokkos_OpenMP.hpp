@@ -93,9 +93,6 @@ class OpenMP {
   using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<OpenMP>;
 
-  /// \brief Get a handle to the default execution space instance
-  inline OpenMP() noexcept;
-
   /// \brief Print configuration information to the given output stream.
   static void print_configuration(std::ostream&, const bool verbose = false);
 

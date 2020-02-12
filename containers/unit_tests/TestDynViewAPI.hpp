@@ -705,8 +705,6 @@ class TestDynViewAPI {
 
   typedef typename View0::host_mirror_space host_view_space;
 
-  TestDynViewAPI() = default;
-
   static void run_tests() {
     run_test_resize_realloc();
     run_test_mirror();

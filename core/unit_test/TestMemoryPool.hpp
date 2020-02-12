@@ -474,8 +474,6 @@ void test_memory_pool_corners(const bool print_statistics,
 
 template <class DeviceType, class Enable = void>
 struct TestMemoryPoolHuge {
-  TestMemoryPoolHuge() = default;
-
   enum : size_t { num_superblock = 0 };
 
   using value_type = long;

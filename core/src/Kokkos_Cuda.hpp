@@ -198,7 +198,6 @@ class Cuda {
   //--------------------------------------------------
   //! \name  Cuda space instances
 
-  KOKKOS_DEFAULTED_FUNCTION
   ~Cuda() = default;
 
   Cuda();
