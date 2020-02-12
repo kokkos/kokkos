@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
         ccache \
         python3 \
         libelf-dev \
+        gcc-6 g++-6 \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -44,19 +45,21 @@ RUN LLVM_VERSION=9.0.1 && \
     cd llvm-project && \
     mkdir build && cd build && \
     cmake \
-      -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;openmp" \
-      -DCMAKE_INSTALL_PREFIX=$LLVM_DIR \
       -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$LLVM_DIR \
+      -DCMAKE_C_COMPILER=gcc-6 \
+      -DCMAKE_CXX_COMPILER=g++-6 \
+      -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;openmp" \
       -DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_70 \
       -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
     ../llvm && make -j8 && \
     make install && \
     rm -rf ../build/* && \
     cmake \
+      -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=$LLVM_DIR \
       -DCMAKE_C_COMPILER=$LLVM_DIR/bin/clang \
       -DCMAKE_CXX_COMPILER=$LLVM_DIR/bin/clang++ \
-      -DCMAKE_BUILD_TYPE=Release \
       -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
     ../openmp && make -j8 && \
     rm -rf ${SCRATCH_DIR}
