@@ -457,6 +457,15 @@ bool check_int_arg(char const* arg, char const* expected, int* value) {
   return true;
 }
 
+void warn_deprecated_command_line_argument(std::string deprecated,
+                                           std::string valid) {
+  std::cerr
+      << "Warning: command line argument '" << deprecated
+      << "' is deprecated. Use '" << valid
+      << "' instead. Raised by Kokkos::initialize(int narg, char* argc[])."
+      << std::endl;
+}
+
 void parse_command_line_arguments(int& narg, char* arg[],
                                   InitArguments& arguments) {
   auto& num_threads      = arguments.num_threads;
@@ -474,42 +483,62 @@ void parse_command_line_arguments(int& narg, char* arg[],
   int iarg = 0;
 
   while (iarg < narg) {
-    if (Impl::check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
+    if (check_int_arg(arg[iarg], "--kokkos-threads", &num_threads)) {
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       kokkos_threads_found = 1;
       narg--;
     } else if (!kokkos_threads_found &&
-               Impl::check_int_arg(arg[iarg], "--threads", &num_threads)) {
+               check_int_arg(arg[iarg], "--threads", &num_threads)) {
       iarg++;
-    } else if (Impl::check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
+    } else if (check_int_arg(arg[iarg], "--kokkos-numa", &numa)) {
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       kokkos_numa_found = 1;
       narg--;
     } else if (!kokkos_numa_found &&
-               Impl::check_int_arg(arg[iarg], "--numa", &numa)) {
+               check_int_arg(arg[iarg], "--numa", &numa)) {
       iarg++;
-    } else if (Impl::check_int_arg(arg[iarg], "--kokkos-device", &device)) {
+    } else if (check_int_arg(arg[iarg], "--kokkos-device-id", &device) ||
+               check_int_arg(arg[iarg], "--kokkos-device", &device)) {
+      if (check_arg(arg[iarg], "--kokkos-device")) {
+        warn_deprecated_command_line_argument("--kokkos-device",
+                                              "--kokkos-device-id");
+      }
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       kokkos_device_found = 1;
       narg--;
     } else if (!kokkos_device_found &&
-               Impl::check_int_arg(arg[iarg], "--device", &device)) {
+               (check_int_arg(arg[iarg], "--device-id", &device) ||
+                check_int_arg(arg[iarg], "--device", &device))) {
+      if (check_arg(arg[iarg], "--device")) {
+        warn_deprecated_command_line_argument("--device", "--device-id");
+      }
       iarg++;
-    } else if (Impl::check_arg(arg[iarg], "--kokkos-ndevices") ||
-               Impl::check_arg(arg[iarg], "--ndevices")) {
+    } else if (check_arg(arg[iarg], "--kokkos-num-devices") ||
+               check_arg(arg[iarg], "--num-devices") ||
+               check_arg(arg[iarg], "--kokkos-ndevices") ||
+               check_arg(arg[iarg], "--ndevices")) {
+      if (check_arg(arg[iarg], "--ndevices")) {
+        warn_deprecated_command_line_argument("--ndevices", "--num-devices");
+      }
+      if (check_arg(arg[iarg], "--kokkos-ndevices")) {
+        warn_deprecated_command_line_argument("--kokkos-ndevices",
+                                              "--kokkos-num-devices");
+      }
       // Find the number of device (expecting --device=XX)
-      if (!((strncmp(arg[iarg], "--kokkos-ndevices=", 18) == 0) ||
+      if (!((strncmp(arg[iarg], "--kokkos-num-devices=", 21) == 0) ||
+            (strncmp(arg[iarg], "--num-ndevices=", 14) == 0) ||
+            (strncmp(arg[iarg], "--kokkos-ndevices=", 18) == 0) ||
             (strncmp(arg[iarg], "--ndevices=", 11) == 0)))
-        Impl::throw_runtime_exception(
+        throw_runtime_exception(
             "Error: expecting an '=INT[,INT]' after command line argument "
-            "'--ndevices/--kokkos-ndevices'. Raised by Kokkos::initialize(int "
-            "narg, char* argc[]).");
+            "'--num-devices/--kokkos-num-devices'. Raised by "
+            "Kokkos::initialize(int narg, char* argc[]).");
 
       char* num1      = strchr(arg[iarg], '=') + 1;
       char* num2      = strpbrk(num1, ",");
@@ -518,32 +547,33 @@ void parse_command_line_arguments(int& narg, char* arg[],
       strncpy(num1_only, num1, num1_len);
       num1_only[num1_len] = 0;
 
-      if (!Impl::is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
-        Impl::throw_runtime_exception(
+      if (!is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
+        throw_runtime_exception(
             "Error: expecting an integer number after command line argument "
-            "'--kokkos-ndevices'. Raised by Kokkos::initialize(int narg, char* "
-            "argc[]).");
+            "'--kokkos-numdevices'. Raised by "
+            "Kokkos::initialize(int narg, char* argc[]).");
       }
-      if ((strncmp(arg[iarg], "--kokkos-ndevices", 17) == 0) ||
-          !kokkos_ndevices_found)
+      if (check_arg(arg[iarg], "--kokkos-num-devices") ||
+          check_arg(arg[iarg], "--kokkos-ndevices") || !kokkos_ndevices_found)
         ndevices = atoi(num1_only);
       delete[] num1_only;
 
       if (num2 != nullptr) {
-        if ((!Impl::is_unsigned_int(num2 + 1)) || (strlen(num2) == 1))
-          Impl::throw_runtime_exception(
+        if ((!is_unsigned_int(num2 + 1)) || (strlen(num2) == 1))
+          throw_runtime_exception(
               "Error: expecting an integer number after command line argument "
-              "'--kokkos-ndevices=XX,'. Raised by Kokkos::initialize(int narg, "
-              "char* argc[]).");
+              "'--kokkos-num-devices=XX,'. Raised by "
+              "Kokkos::initialize(int narg, char* argc[]).");
 
-        if ((strncmp(arg[iarg], "--kokkos-ndevices", 17) == 0) ||
-            !kokkos_ndevices_found)
+        if (check_arg(arg[iarg], "--kokkos-num-devices") ||
+            check_arg(arg[iarg], "--kokkos-ndevices") || !kokkos_ndevices_found)
           skip_device = atoi(num2 + 1);
       }
 
-      // Remove the --kokkos-ndevices argument from the list but leave
-      // --ndevices
-      if (strncmp(arg[iarg], "--kokkos-ndevices", 17) == 0) {
+      // Remove the --kokkos-num-devices argument from the list but leave
+      // --num-devices
+      if (check_arg(arg[iarg], "--kokkos-num-devices") ||
+          check_arg(arg[iarg], "--kokkos-ndevices")) {
         for (int k = iarg; k < narg - 1; k++) {
           arg[k] = arg[k + 1];
         }
@@ -552,88 +582,45 @@ void parse_command_line_arguments(int& narg, char* arg[],
       } else {
         iarg++;
       }
-    } else if (strcmp(arg[iarg], "--kokkos-disable-warnings") == 0) {
+    } else if (check_arg(arg[iarg], "--kokkos-disable-warnings")) {
       disable_warnings = true;
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
       narg--;
-    } else if ((strcmp(arg[iarg], "--kokkos-help") == 0) ||
-               (strcmp(arg[iarg], "--help") == 0)) {
-      std::cout << std::endl;
-      std::cout << "-----------------------------------------------------------"
-                   "---------------------"
-                << std::endl;
-      std::cout << "-------------Kokkos command line "
-                   "arguments--------------------------------------"
-                << std::endl;
-      std::cout << "-----------------------------------------------------------"
-                   "---------------------"
-                << std::endl;
-      std::cout << "The following arguments exist also without prefix 'kokkos' "
-                   "(e.g. --help)."
-                << std::endl;
-      std::cout << "The prefixed arguments will be removed from the list by "
-                   "Kokkos::initialize(),"
-                << std::endl;
-      std::cout << "the non-prefixed ones are not removed. Prefixed versions "
-                   "take precedence over "
-                << std::endl;
-      std::cout << "non prefixed ones, and the last occurrence of an argument "
-                   "overwrites prior"
-                << std::endl;
-      std::cout << "settings." << std::endl;
-      std::cout << std::endl;
-      std::cout << "--kokkos-help               : print this message"
-                << std::endl;
-      std::cout
-          << "--kokkos-disable-warnings   : disable kokkos warning messages"
-          << std::endl;
-      std::cout
-          << "--kokkos-threads=INT        : specify total number of threads or"
-          << std::endl;
-      std::cout << "                              number of threads per NUMA "
-                   "region if "
-                << std::endl;
-      std::cout << "                              used in conjunction with "
-                   "'--numa' option. "
-                << std::endl;
-      std::cout << "--kokkos-numa=INT           : specify number of NUMA "
-                   "regions used by process."
-                << std::endl;
-      std::cout << "--kokkos-device=INT         : specify device id to be used "
-                   "by Kokkos. "
-                << std::endl;
-      std::cout << "--kokkos-ndevices=INT[,INT] : used when running MPI jobs. "
-                   "Specify number of"
-                << std::endl;
-      std::cout << "                              devices per node to be used. "
-                   "Process to device"
-                << std::endl;
-      std::cout << "                              mapping happens by obtaining "
-                   "the local MPI rank"
-                << std::endl;
-      std::cout << "                              and assigning devices "
-                   "round-robin. The optional"
-                << std::endl;
-      std::cout << "                              second argument allows for "
-                   "an existing device"
-                << std::endl;
-      std::cout << "                              to be ignored. This is most "
-                   "useful on workstations"
-                << std::endl;
-      std::cout << "                              with multiple GPUs of which "
-                   "one is used to drive"
-                << std::endl;
-      std::cout << "                              screen output." << std::endl;
-      std::cout << std::endl;
-      std::cout << "-----------------------------------------------------------"
-                   "---------------------"
-                << std::endl;
-      std::cout << std::endl;
+    } else if (check_arg(arg[iarg], "--kokkos-help") ||
+               check_arg(arg[iarg], "--help")) {
+      auto const help_message = R"(
+      --------------------------------------------------------------------------------
+      -------------Kokkos command line arguments--------------------------------------
+      --------------------------------------------------------------------------------
+      The following arguments exist also without prefix 'kokkos' (e.g. --help).
+      The prefixed arguments will be removed from the list by Kokkos::initialize(),
+      the non-prefixed ones are not removed. Prefixed versions take precedence over
+      non prefixed ones, and the last occurrence of an argument overwrites prior
+      settings.
 
-      // Remove the --kokkos-help argument from the list but leave --ndevices
-      if (strcmp(arg[iarg], "--kokkos-help") == 0) {
+      --kokkos-help                  : print this message
+      --kokkos-disable-warnings      : disable kokkos warning messages
+      --kokkos-threads=INT           : specify total number of threads or
+                                       number of threads per NUMA region if
+                                       used in conjunction with '--numa' option.
+      --kokkos-numa=INT              : specify number of NUMA regions used by process.
+      --kokkos-device-id=INT         : specify device id to be used by Kokkos.
+      --kokkos-num-devices=INT[,INT] : used when running MPI jobs. Specify number of
+                                       devices per node to be used. Process to device
+                                       mapping happens by obtaining the local MPI rank
+                                       and assigning devices round-robin. The optional
+                                       second argument allows for an existing device
+                                       to be ignored. This is most useful on workstations
+                                       with multiple GPUs of which one is used to drive
+                                       screen output.
+      --------------------------------------------------------------------------------
+)";
+      std::cout << help_message << std::endl;
+
+      // Remove the --kokkos-help argument from the list but leave --help
+      if (check_arg(arg[iarg], "--kokkos-help")) {
         for (int k = iarg; k < narg - 1; k++) {
           arg[k] = arg[k + 1];
         }
