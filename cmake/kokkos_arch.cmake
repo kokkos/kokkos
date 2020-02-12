@@ -382,7 +382,7 @@ ENDIF()
 #Let's just always print things
 MESSAGE(STATUS "Execution Spaces:")
 
-FOREACH (_BACKEND Cuda OpenMPTarget HIP)
+FOREACH (_BACKEND Cuda OpenMPTarget HIP ROCm)
   STRING(TOUPPER ${_BACKEND} UC_BACKEND)
   IF(KOKKOS_ENABLE_${UC_BACKEND})
     IF(_DEVICE_PARALLEL)
