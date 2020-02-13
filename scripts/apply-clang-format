@@ -25,3 +25,6 @@ find . -name '*.cpp' -o -name '*.hpp' | xargs ${CLANG_FORMAT_EXECUTABLE} -i
 # that we need to delete manually.
 find . -type f \( -name "*.md" -o -name "*.cc" -o -name "*.h" -o -name "*.txt" -o -name "*.cmake" \) |
   xargs -n 1 -P 10 -I {} bash -c "sed -i -e 's/\s\+$//g' {} && rm -f '{}-e'"
+
+# Check that we do not introduce any file with the old copyright
+./scripts/update-copyright
