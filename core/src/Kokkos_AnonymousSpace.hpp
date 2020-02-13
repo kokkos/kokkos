@@ -82,6 +82,10 @@ namespace Kokkos {
 
 namespace Impl {
 
+template <>
+class SharedAllocationRecord<Kokkos::AnonymousSpace, void>
+    : public SharedAllocationRecord<void, void> {};
+
 template <typename OtherSpace>
 struct MemorySpaceAccess<Kokkos::AnonymousSpace, OtherSpace> {
   enum { assignable = true };

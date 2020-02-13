@@ -208,6 +208,16 @@ class ScratchMemorySpace {
   }
 };
 
+namespace Impl {
+
+// specialize SharedAllocationRecord -- not it is never used so it doen't need
+// an implementation.
+template <class ExecSpace>
+class SharedAllocationRecord<Kokkos::ScratchMemorySpace<ExecSpace>, void>
+    : public SharedAllocationRecord<void, void> {};
+
+}  // namespace Impl
+
 }  // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_SCRATCHSPACE_HPP */

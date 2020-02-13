@@ -249,10 +249,6 @@ class SharedAllocationRecord
   }
 };
 
-template <class MemorySpace>
-class SharedAllocationRecord<MemorySpace, void>
-    : public SharedAllocationRecord<void, void> {};
-
 union SharedAllocationTracker {
  private:
   typedef SharedAllocationRecord<void, void> Record;
