@@ -60,44 +60,58 @@ namespace Test {
 
 template <class ExecSpace>
 struct Hierarchical_Red_C {
-  void run() {
+  void run(const int pN, const int sX, const int sY) {
     typedef Kokkos::TeamPolicy<ExecSpace> team_policy;
     typedef typename Kokkos::TeamPolicy<ExecSpace>::member_type member_type;
 
-    SCALAR_TYPE result = 0;
+    typedef Kokkos::View<SCALAR_TYPE *, ExecSpace> viewDataType;
+    viewDataType v("Vector", pN);
 
-    Kokkos::parallel_reduce(
-        "Team", team_policy(N, M),
-        KOKKOS_LAMBDA(const member_type &team, SCALAR_TYPE &update_1) {
-          SCALAR_TYPE result_2 = 0;
+    Kokkos::parallel_for(
+        "Team", team_policy(pN, Kokkos::AUTO),
+        KOKKOS_LAMBDA(const member_type &team) {
+          const int n     = team.league_rank();
+          SCALAR_TYPE out = 0;
 
           Kokkos::parallel_reduce(
-              Kokkos::TeamThreadRange(team, M),
-              [=](const int i, SCALAR_TYPE &update_2) {
-                SCALAR_TYPE result_3 = 0;
-
+              Kokkos::TeamThreadRange(team, sX),
+              [=](const int i, SCALAR_TYPE &tmp) {
+                SCALAR_TYPE out = 0;
                 Kokkos::parallel_reduce(
-                    Kokkos::ThreadVectorRange(team, K),
-                    [=](const int &k, int &update_3) { update_3 += 1; },
-                    result_3);
+                    Kokkos::ThreadVectorRange(team, sY),
+                    [=](const int k, int &tmp) {
+                      //printf("%i,%i,%i ", i, k, n * v.extent(0) + ts * i + k);
+                      tmp += n * sX * v.extent(0) + sX * i + k;
+                    },
+                    out);
 
-                Kokkos::single(Kokkos::PerThread(team),
-                               [&]() { update_2 = result_3; });
+                Kokkos::single(Kokkos::PerThread(team), [&]() { tmp += out; });
               },
-              result_2);
+              out);
 
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&]() { update_1 += result_2; });
-        },
-        result);
+          Kokkos::single(Kokkos::PerTeam(team), [&]() { v(n) += out; });
+        });
 
-    ASSERT_EQ(result, N * M * K);
+    Kokkos::fence();
+    auto v_H = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
+
+    SCALAR_TYPE check = 0;
+    SCALAR_TYPE ref   = 0;
+    for (int i = 0; i < pN; ++i) {
+      check += v_H(i);
+      for (int j = 0; j < sX; ++j)
+        for (int k = 0; k < sY; ++k)
+          ref += i * sX * pN + sX * j + k;
+    }
+    ASSERT_EQ(check, ref);
   }
 };
 
 TEST(TEST_CATEGORY, Hierarchical_Red_C) {
   Hierarchical_Red_C<TEST_EXECSPACE> test;
-  test.run();
+  test.run(1, 4, 8);
+  test.run(2, 39, 12);
+  test.run(39, 3, 235);
 }
 
 }  // namespace Test

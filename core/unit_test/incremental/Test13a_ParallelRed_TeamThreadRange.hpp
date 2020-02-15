@@ -50,8 +50,6 @@
 #include <Kokkos_Core.hpp>
 
 // Degress of concurrency per nestig level
-#define N 16
-#define M 16
 
 using SCALAR_TYPE = int;
 
@@ -59,34 +57,48 @@ namespace Test {
 
 template <class ExecSpace>
 struct Hierarchical_Red_A {
-  void run() {
+  void run(const int pN, const int sX) {
     typedef Kokkos::TeamPolicy<ExecSpace> team_policy;
     typedef typename Kokkos::TeamPolicy<ExecSpace>::member_type member_type;
 
-    SCALAR_TYPE result = 0;
+    typedef Kokkos::View<SCALAR_TYPE *, ExecSpace> viewDataType;
+    viewDataType v("Vector", pN);
 
-    Kokkos::parallel_reduce(
-        "Team", team_policy(N, M),
-        KOKKOS_LAMBDA(const member_type &team, SCALAR_TYPE &update_1) {
-          SCALAR_TYPE result_2 = 0;
+    Kokkos::parallel_for(
+        "Team", team_policy(pN, Kokkos::AUTO),
+        KOKKOS_LAMBDA(const member_type &team) {
+          const int n     = team.league_rank();
+          SCALAR_TYPE out = 0;
 
           Kokkos::parallel_reduce(
-              Kokkos::TeamThreadRange(team, M),
-              [=](const int i, SCALAR_TYPE &update_2) { update_2 += 1; },
-              result_2);
+              Kokkos::TeamThreadRange(team, sX),
+              [=](const int i, SCALAR_TYPE &tmp) {
+                tmp += n * v.extent(0) + i;
+              },
+              out);
 
-          Kokkos::single(Kokkos::PerTeam(team),
-                         [&]() { update_1 += result_2; });
-        },
-        result);
+          Kokkos::single(Kokkos::PerTeam(team), [&]() { v(n) += out; });
+        });
 
-    ASSERT_EQ(result, N * M);
+    Kokkos::fence();
+    auto v_H = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
+
+    SCALAR_TYPE check = 0;
+    SCALAR_TYPE ref   = 0;
+    for (int i = 0; i < pN; ++i) {
+      check += v_H(i);
+      ref +=
+          (sX + i * pN) * (sX + i * pN - 1) / 2 - ((i * pN) * (i * pN - 1) / 2);
+    }
+    ASSERT_EQ(check, ref);
   }
 };
 
 TEST(TEST_CATEGORY, Hierarchical_Red_A) {
   Hierarchical_Red_A<TEST_EXECSPACE> test;
-  test.run();
+  test.run(4, 16);
+  test.run(2, 39);
+  test.run(39, 3);
 }
 
 }  // namespace Test
