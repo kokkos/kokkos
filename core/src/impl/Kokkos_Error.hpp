@@ -132,7 +132,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
   const char *what() const noexcept override {
     if (m_failure_mode == FailureMode::OutOfMemoryError) {
       return "Memory allocation error: out of memory";
-    } else if (m_failure_mode == FailureMode::OutOfMemoryError) {
+    } else if (m_failure_mode == FailureMode::AllocationNotAligned) {
       return "Memory allocation error: allocation result was under-aligned";
     }
 
