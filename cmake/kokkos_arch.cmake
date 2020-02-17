@@ -357,6 +357,7 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
   IF (CLANG_CUDA_ARCH)
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH} -fopenmp-targets=nvptx64-nvidia-cuda
+      XL -qtgtarch=${KOKKOS_CUDA_ARCH_FLAG}
     )
   ENDIF()
   SET(CLANG_AMDGPU_ARCH ${KOKKOS_AMDGPU_ARCH_FLAG})
