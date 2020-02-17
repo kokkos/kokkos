@@ -63,6 +63,96 @@ std::stack<std::function<void()> > finalize_hooks;
 
 namespace Kokkos {
 namespace Impl {
+
+int get_ctest_gpu(const char* local_rank_str) {
+  auto const* ctest_kokkos_device_type =
+      std::getenv("CTEST_KOKKOS_DEVICE_TYPE");
+  if (!ctest_kokkos_device_type) {
+    return 0;
+  }
+
+  auto const* ctest_resource_group_count_str =
+      std::getenv("CTEST_RESOURCE_GROUP_COUNT");
+  if (!ctest_resource_group_count_str) {
+    return 0;
+  }
+
+  // Make sure rank is within bounds of resource groups specified by CTest
+  auto resource_group_count = std::atoi(ctest_resource_group_count_str);
+  auto local_rank           = std::atoi(local_rank_str);
+  if (local_rank >= resource_group_count) {
+    std::ostringstream ss;
+    ss << "Error: local rank " << local_rank
+       << " is outside the bounds of resource groups provided by CTest. Raised"
+       << " by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  // Get the resource types allocated to this resource group
+  std::ostringstream ctest_resource_group;
+  ctest_resource_group << "CTEST_RESOURCE_GROUP_" << local_rank;
+  std::string ctest_resource_group_name = ctest_resource_group.str();
+  auto const* ctest_resource_group_str =
+      std::getenv(ctest_resource_group_name.c_str());
+  if (!ctest_resource_group_str) {
+    std::ostringstream ss;
+    ss << "Error: " << ctest_resource_group_name << " is not specified. Raised"
+       << " by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  // Look for the device type specified in CTEST_KOKKOS_DEVICE_TYPE
+  bool found_device                        = false;
+  std::string ctest_resource_group_cxx_str = ctest_resource_group_str;
+  std::istringstream instream(ctest_resource_group_cxx_str);
+  while (true) {
+    std::string devName;
+    std::getline(instream, devName, ',');
+    if (devName == ctest_kokkos_device_type) {
+      found_device = true;
+      break;
+    }
+    if (instream.eof() || devName.length() == 0) {
+      break;
+    }
+  }
+
+  if (!found_device) {
+    std::ostringstream ss;
+    ss << "Error: device type '" << ctest_kokkos_device_type
+       << "' not included in " << ctest_resource_group_name
+       << ". Raised by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  // Get the device ID
+  std::string ctest_device_type_upper = ctest_kokkos_device_type;
+  for (auto& c : ctest_device_type_upper) {
+    c = std::toupper(c);
+  }
+  ctest_resource_group << "_" << ctest_device_type_upper;
+
+  std::string ctest_resource_group_id_name = ctest_resource_group.str();
+  auto resource_str = std::getenv(ctest_resource_group_id_name.c_str());
+  if (!resource_str) {
+    std::ostringstream ss;
+    ss << "Error: " << ctest_resource_group_id_name
+       << " is not specified. Raised by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  auto const* comma = std::strchr(resource_str, ',');
+  if (!comma || strncmp(resource_str, "id:", 3)) {
+    std::ostringstream ss;
+    ss << "Error: invalid value of " << ctest_resource_group_id_name << ": '"
+       << resource_str << "'. Raised by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  std::string id(resource_str + 3, comma - resource_str - 3);
+  return std::atoi(id.c_str());
+}
+
 namespace {
 
 bool is_unsigned_int(const char* str) {
@@ -101,19 +191,32 @@ void initialize_internal(const InitArguments& args) {
   const int skip_device = args.skip_device;
   // if the exact device is not set, but ndevices was given, assign round-robin
   // using on-node MPI rank
-  if (use_gpu < 0 && ndevices >= 0) {
-    auto local_rank_str = std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
+  if (use_gpu < 0) {
+    auto const* local_rank_str =
+        std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
     if (!local_rank_str)
       local_rank_str = std::getenv("MV2_COMM_WORLD_LOCAL_RANK");  // MVAPICH2
     if (!local_rank_str)
       local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
-    if (local_rank_str) {
-      auto local_rank = std::atoi(local_rank_str);
-      use_gpu         = local_rank % ndevices;
-    } else {
-      // user only gave us ndevices, but the MPI environment variable wasn't
-      // set. start with GPU 0 at this point
-      use_gpu = 0;
+
+    auto const* ctest_kokkos_device_type =
+        std::getenv("CTEST_KOKKOS_DEVICE_TYPE");  // CTest
+    auto const* ctest_resource_group_count_str =
+        std::getenv("CTEST_RESOURCE_GROUP_COUNT");  // CTest
+    if (ctest_kokkos_device_type && ctest_resource_group_count_str &&
+        local_rank_str) {
+      // Use the device assigned by CTest
+      use_gpu = get_ctest_gpu(local_rank_str);
+    } else if (ndevices >= 0) {
+      // Use the device assigned by the rank
+      if (local_rank_str) {
+        auto local_rank = std::atoi(local_rank_str);
+        use_gpu         = local_rank % ndevices;
+      } else {
+        // user only gave use ndevices, but the MPI environment variable wasn't
+        // set. start with GPU 0 at this point
+        use_gpu = 0;
+      }
     }
     // shift assignments over by one so no one is assigned to "skip_device"
     if (use_gpu >= skip_device) ++use_gpu;

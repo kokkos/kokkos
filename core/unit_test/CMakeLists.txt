@@ -388,5 +388,7 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   SOURCES UnitTestMain.cpp  TestHostBarrier.cpp
 )
 
-
-
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  UnitTest_CTestDevice
+  SOURCES UnitTestMain.cpp  TestCTestDevice.cpp
+)
