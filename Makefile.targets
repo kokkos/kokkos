@@ -86,13 +86,6 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_ETI), 1)
 endif
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_QTHREADS), 1)
-Kokkos_QthreadsExec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/Qthreads/Kokkos_QthreadsExec.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/Qthreads/Kokkos_QthreadsExec.cpp
-Kokkos_Qthreads_Task.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/Qthreads/Kokkos_Qthreads_Task.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/Qthreads/Kokkos_Qthreads_Task.cpp
-endif
-
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 Kokkos_OpenMP_Exec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMP_Exec.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/OpenMP/Kokkos_OpenMP_Exec.cpp

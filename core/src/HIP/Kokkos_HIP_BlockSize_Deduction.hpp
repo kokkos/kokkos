@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -56,6 +57,10 @@ namespace Experimental {
 namespace Impl {
 template <typename DriverType, typename LaunchBounds, bool Large>
 struct HIPGetMaxBlockSize;
+
+// FIXME_HIP In CUDA we have a variant which gets the functor attributes and
+// then uses information from that to figure out what to do instead of calling
+// repeatedly the occupancy function from the runtime.
 
 template <typename DriverType, typename LaunchBounds>
 int hip_get_max_block_size(typename DriverType::functor_type const &f,

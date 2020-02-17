@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -263,7 +264,7 @@ class MemoryPool {
 
   KOKKOS_INLINE_FUNCTION MemoryPool()
       : m_tracker(),
-        m_sb_state_array(0),
+        m_sb_state_array(nullptr),
         m_sb_state_size(0),
         m_sb_size_lg2(0),
         m_max_block_size_lg2(0),
@@ -291,7 +292,7 @@ class MemoryPool {
              const size_t min_total_alloc_size, size_t min_block_alloc_size = 0,
              size_t max_block_alloc_size = 0, size_t min_superblock_size = 0)
       : m_tracker(),
-        m_sb_state_array(0),
+        m_sb_state_array(nullptr),
         m_sb_state_size(0),
         m_sb_size_lg2(0),
         m_max_block_size_lg2(0),
@@ -499,9 +500,9 @@ class MemoryPool {
           "allocation size");
     }
 
-    if (0 == alloc_size) return (void *)0;
+    if (0 == alloc_size) return nullptr;
 
-    void *p = 0;
+    void *p = nullptr;
 
     const uint32_t block_size_lg2 = get_block_size_lg2(alloc_size);
 
@@ -542,7 +543,7 @@ class MemoryPool {
 
     int32_t sb_id = -1;
 
-    volatile uint32_t *sb_state_array = 0;
+    volatile uint32_t *sb_state_array = nullptr;
 
     while (attempt_limit) {
       int32_t hint_sb_id = -1;
@@ -736,7 +737,7 @@ class MemoryPool {
    */
   KOKKOS_INLINE_FUNCTION
   void deallocate(void *p, size_t /* alloc_size */) const noexcept {
-    if (0 == p) return;
+    if (nullptr == p) return;
 
     // Determine which superblock and block
     const ptrdiff_t d =

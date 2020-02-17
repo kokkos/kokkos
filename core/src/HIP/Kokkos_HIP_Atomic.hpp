@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -51,107 +52,73 @@ namespace Kokkos {
 // variants:
 // atomic_exchange/compare_exchange/fetch_add/fetch_sub/fetch_max/fetch_min/fetch_and/fetch_or/fetch_xor/fetch_inc/fetch_dec
 
-/*
-  KOKKOS_INLINE_FUNCTION
-  int atomic_exchange(int* dest, const int& val) {
-    return atomicExchange(dest, val);
-  }
+__inline__ __device__ int atomic_exchange(volatile int *const dest,
+                                          const int val) {
+  return atomicExch(const_cast<int *>(dest), val);
+}
 
-  KOKKOS_INLINE_FUNCTION
-  unsigned int atomic_exchange(unsigned int* dest, const unsigned int& val) {
-    return atomicExchange(dest, val);
-  }
+__inline__ __device__ unsigned int atomic_exchange(
+    volatile unsigned int *const dest, const unsigned int val) {
+  return atomicExch(const_cast<unsigned int *>(dest), val);
+}
 
-  KOKKOS_INLINE_FUNCTION
-  int64_t atomic_exchange(int64_t* dest, const int64_t& val) {
-    return atomicExchange(dest,val);
-  }
+__inline__ __device__ unsigned long long int atomic_exchange(
+    volatile unsigned long long int *const dest,
+    const unsigned long long int val) {
+  return atomicExch(const_cast<unsigned long long *>(dest), val);
+}
 
-  KOKKOS_INLINE_FUNCTION
-  uint64_t atomic_exchange(uint64_t* dest, const uint64_t& val) {
-    return hc::atomic_exchange_uint64(dest, val);
-  }
+/** \brief  Atomic exchange for any type with compatible size */
+template <typename T>
+__inline__ __device__ T atomic_exchange(
+    volatile T *const dest,
+    typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
+  int tmp = atomicExch(reinterpret_cast<int *>(const_cast<T *>(dest)),
+                       *reinterpret_cast<int *>(const_cast<T *>(&val)));
+  return reinterpret_cast<T &>(tmp);
+}
 
-  KOKKOS_INLINE_FUNCTION
-  long long atomic_exchange(long long* dest, const long long& val) {
-    return (long long)hc::atomic_exchange_uint64((uint64_t*)dest, (const
-  uint64_t&)val);
-  }
+template <typename T>
+__inline__ __device__ T atomic_exchange(
+    volatile T *const dest,
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) == sizeof(unsigned long long int),
+                            const T &>::type val) {
+  typedef unsigned long long int type;
 
-  KOKKOS_INLINE_FUNCTION
-  unsigned long long atomic_exchange(unsigned long long* dest, const unsigned
-  long long& val) { return (unsigned long
-  long)hc::atomic_exchange_uint64((uint64_t*)dest, (const uint64_t&)val);
-  }
+  type tmp = atomicExch(reinterpret_cast<type *>(const_cast<T *>(dest)),
+                        *reinterpret_cast<type *>(const_cast<T *>(&val)));
+  return reinterpret_cast<T &>(tmp);
+}
 
-  KOKKOS_INLINE_FUNCTION
-  float atomic_exchange(float* dest, const float& val) {
-    union U {
-      int i ;
-      float f ;
-      KOKKOS_INLINE_FUNCTION U() {};
-    } idest,ival;
-    idest.f = *dest;
-    ival.f = val;
-    idest.i = hc::atomic_exchange_int((int*)dest, ival.i);
-    return idest.f;
-  }
+/** \brief  Atomic exchange for any type with compatible size */
+template <typename T>
+__inline__ __device__ void atomic_assign(
+    volatile T *const dest,
+    typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
+  atomicExch(reinterpret_cast<int *>(const_cast<T *>(dest)),
+             *reinterpret_cast<int *>(const_cast<T *>(&val)));
+}
 
-  KOKKOS_INLINE_FUNCTION
-  double atomic_exchange(double* dest, const double& val) {
-    union U {
-      uint64_t i ;
-      double d ;
-      KOKKOS_INLINE_FUNCTION U() {};
-    } idest,ival;
-    idest.d = *dest;
-    ival.d = val;
-    idest.i = hc::atomic_exchange_uint64((uint64_t*)dest, ival.i);
-    return idest.d;
-  }
+template <typename T>
+__inline__ __device__ void atomic_assign(
+    volatile T *const dest,
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) == sizeof(unsigned long long int),
+                            const T &>::type val) {
+  typedef unsigned long long int type;
+  atomicExch(reinterpret_cast<type *>(const_cast<T *>(dest)),
+             *reinterpret_cast<type *>(const_cast<T *>(&val)));
+}
 
-  KOKKOS_INLINE_FUNCTION
-  int atomic_compare_exchange(int* dest, int compare, const int& val);
-
-  KOKKOS_INLINE_FUNCTION
-  int64_t atomic_compare_exchange(int64_t* dest, int64_t compare, const int64_t&
-  val);
-
-  template<class T>
-  KOKKOS_INLINE_FUNCTION
-  T atomic_exchange(T* dest, typename std::enable_if<sizeof(T) == sizeof(int),
-  const T&>::type val) { union U { int i ; T t ; KOKKOS_INLINE_FUNCTION U() {};
-    } assume , oldval , newval ;
-
-    oldval.t = *dest ;
-    assume.i = oldval.i ;
-    newval.t = val ;
-    atomic_compare_exchange( (int*)(dest) , assume.i, newval.i );
-
-    return oldval.t ;
-  }
-
-  template<class T>
-  KOKKOS_INLINE_FUNCTION
-  T atomic_exchange(T* dest, typename std::enable_if<sizeof(T) != sizeof(int) &&
-  sizeof(T) == sizeof(int64_t), const T&>::type val) { union U { uint64_t i ; T
-  t ; KOKKOS_INLINE_FUNCTION U() {}; } assume , oldval , newval ;
-
-    oldval.t = *dest ;
-
-    assume.i = oldval.i ;
-    newval.t = val ;
-    atomic_compare_exchange( (int64_t*)(dest) , assume.i, newval.i );
-
-    return oldval.t ;
-  }
-
-  template<class T>
-  KOKKOS_INLINE_FUNCTION
-  T atomic_exchange(T* dest, typename std::enable_if<sizeof(T) != sizeof(int) &&
-  sizeof(T) != sizeof(int64_t), const T&>::type val) { return val;
-  }
-*/
+template <typename T>
+__inline__ __device__ void atomic_assign(
+    volatile T *const dest,
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) != sizeof(unsigned long long int),
+                            const T &>::type val) {
+  atomic_exchange(dest, val);
+}
 
 inline __device__ int atomic_exchange(int *dest, const int &val) {
   return atomicExch(dest, val);
@@ -231,7 +198,7 @@ inline __device__ T atomic_compare_exchange(volatile T *dest, T compare,
     union U {
       int i ;
       float f ;
-      KOKKOS_INLINE_FUNCTION U() {};
+      KOKKOS_INLINE_FUNCTION U() {}
     } idest,icompare,ival;
     idest.f = *dest;
     icompare.f = compare;
@@ -265,7 +232,7 @@ inline __device__ T atomic_compare_exchange(volatile T *dest, T compare,
   std::enable_if<sizeof(T) == sizeof(int64_t), const T&>::type val) { union U {
       uint64_t i ;
       T f ;
-      KOKKOS_INLINE_FUNCTION U() {};
+      KOKKOS_INLINE_FUNCTION U() {}
     } idest,icompare,ival;
     idest.f = *dest;
     icompare.f = compare;
@@ -348,7 +315,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_add(
   union U {
     unsigned int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -373,7 +340,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_add(
   union U {
     uint64_t i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -483,7 +450,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
   union U {
     int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -505,7 +472,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
   union U {
     int64_t i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;

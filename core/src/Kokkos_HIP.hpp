@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -109,12 +110,6 @@ class HIP {
     return false;
 #endif
   }
-
-  /** \brief  Set the device in a "sleep" state. */
-  static bool sleep();
-
-  /** \brief Wake the device from the 'sleep' state. A noop for OpenMP. */
-  static bool wake();
 
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
   static void impl_static_fence();

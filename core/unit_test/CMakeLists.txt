@@ -12,8 +12,11 @@ KOKKOS_ADD_TEST_LIBRARY(
   HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
-KOKKOS_TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
-KOKKOS_TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
+#These can be direct, no need for Tribits or Kokkos wrappers
+TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
+TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
+#Gtest minimally requires C++11
+TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_11)
 
 
 #
@@ -183,45 +186,6 @@ if(Kokkos_ENABLE_OPENMPTARGET)
   )
 endif()
 
-if(Kokkos_ENABLE_QTHREADS)
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Qthreads
-    SOURCES
-      UnitTestMainInit.cpp
-      qthreads/TestQthreads_Atomics.cpp
-      qthreads/TestQthreads_Complex.cpp
-      qthreads/TestQthreads_DeepCopyAlignment.cpp
-      qthreads/TestQthreads_Other.cpp
-      qthreads/TestQthreads_Reductions.cpp
-      qthreads/TestQthreads_Reducers_a.cpp
-      qthreads/TestQthreads_Reducers_b.cpp
-      qthreads/TestQthreads_Reducers_c.cpp
-      qthreads/TestQthreads_Reducers_d.cpp
-      qthreads/TestQthreads_SubView_a.cpp
-      qthreads/TestQthreads_SubView_b.cpp
-      qthreads/TestQthreads_SubView_c01.cpp
-      qthreads/TestQthreads_SubView_c02.cpp
-      qthreads/TestQthreads_SubView_c03.cpp
-      qthreads/TestQthreads_SubView_c04.cpp
-      qthreads/TestQthreads_SubView_c05.cpp
-      qthreads/TestQthreads_SubView_c06.cpp
-      qthreads/TestQthreads_SubView_c07.cpp
-      qthreads/TestQthreads_SubView_c08.cpp
-      qthreads/TestQthreads_SubView_c09.cpp
-      qthreads/TestQthreads_SubView_c10.cpp
-      qthreads/TestQthreads_SubView_c11.cpp
-      qthreads/TestQthreads_SubView_c12.cpp
-      qthreads/TestQthreads_SubView_c13.cpp
-      qthreads/TestQthreads_Team.cpp
-      qthreads/TestQthreads_View_64bit.cpp
-      qthreads/TestQthreads_ViewAPI_a.cpp
-      qthreads/TestQthreads_ViewAPI_b.cpp
-      qthreads/TestQthreads_ViewAPI_c.cpp
-      qthreads/TestQthreads_ViewAPI_d.cpp
-      qthreads/TestQthreads_ViewAPI_e.cpp
-  )
-endif()
-
 if(Kokkos_ENABLE_CUDA)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Cuda
@@ -293,11 +257,21 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_AtomicOperations_int.cpp
       hip/TestHIP_AtomicOperations_unsignedint.cpp
       hip/TestHIP_AtomicOperations_longlongint.cpp
+      hip/TestHIP_DeepCopyAlignment.cpp
+      hip/TestHIP_SubView_a.cpp
+      hip/TestHIP_SubView_b.cpp
+      hip/TestHIP_View_64bit.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIP
     SOURCES
       ${HIP_SOURCES}
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HIPInterOpInit
+    SOURCES
+      UnitTestMain.cpp
+      hip/TestHIP_InterOp_Init.cpp
   )
 endif()
 
@@ -376,6 +350,7 @@ KOKKOS_ADD_TEST_EXECUTABLE(
 )
 # We need -rdynamic on GNU platforms for the stacktrace functionality
 # to work correctly with shared libraries
+if(NOT KOKKOS_HAS_TRILINOS)
 SET_PROPERTY(TARGET StackTraceTestExec PROPERTY ENABLE_EXPORTS 1)
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_normal
@@ -392,6 +367,7 @@ KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest_generic_term
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
+endif()
 
 foreach(INITTESTS_NUM RANGE 1 16)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(

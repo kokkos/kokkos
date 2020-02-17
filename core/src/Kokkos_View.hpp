@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -1758,7 +1759,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const View<RT, RP...>& rhs,
       typename std::enable_if<Kokkos::Impl::ViewMapping<
           traits, typename View<RT, RP...>::traits,
-          typename traits::specialize>::is_assignable_data_type>::type* = 0)
+          typename traits::specialize>::is_assignable_data_type>::type* =
+          nullptr)
       : m_track(rhs.m_track, traits::is_managed), m_map() {
     typedef typename View<RT, RP...>::traits SrcTraits;
     typedef Kokkos::Impl::ViewMapping<traits, SrcTraits,
@@ -1877,8 +1879,8 @@ class View : public ViewTraits<DataType, Properties...> {
     // If allocating in CudaUVMSpace must fence before and after
     // the allocation to protect against possible concurrent access
     // on the CPU and the GPU.
-    // Fence using the trait's executon space (which will be Kokkos::Cuda)
-    // to avoid incomplete type errors from usng Kokkos::Cuda directly.
+    // Fence using the trait's execution space (which will be Kokkos::Cuda)
+    // to avoid incomplete type errors from using Kokkos::Cuda directly.
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
       typename traits::device_type::memory_space::execution_space().fence();

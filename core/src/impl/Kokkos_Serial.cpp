@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -191,7 +192,7 @@ void Serial::impl_finalize()
     space.deallocate(Impl::g_serial_thread_team_data.scratch_buffer(),
                      Impl::g_serial_thread_team_data.scratch_bytes());
 
-    Impl::g_serial_thread_team_data.scratch_assign((void*)0, 0, 0, 0, 0, 0);
+    Impl::g_serial_thread_team_data.scratch_assign(nullptr, 0, 0, 0, 0, 0);
   }
 
 #if defined(KOKKOS_ENABLE_PROFILING)

@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -1033,12 +1034,12 @@ class TestViewAPI {
     dView4 dx, dy, dz;
     hView4 hx, hy, hz;
 
-    ASSERT_TRUE(dx.data() == 0);
-    ASSERT_TRUE(dy.data() == 0);
-    ASSERT_TRUE(dz.data() == 0);
-    ASSERT_TRUE(hx.data() == 0);
-    ASSERT_TRUE(hy.data() == 0);
-    ASSERT_TRUE(hz.data() == 0);
+    ASSERT_TRUE(dx.data() == nullptr);
+    ASSERT_TRUE(dy.data() == nullptr);
+    ASSERT_TRUE(dz.data() == nullptr);
+    ASSERT_TRUE(hx.data() == nullptr);
+    ASSERT_TRUE(hy.data() == nullptr);
+    ASSERT_TRUE(hz.data() == nullptr);
     ASSERT_EQ(dx.extent(0), 0u);
     ASSERT_EQ(dy.extent(0), 0u);
     ASSERT_EQ(dz.extent(0), 0u);
@@ -1095,11 +1096,11 @@ class TestViewAPI {
 
     ASSERT_EQ(dx.use_count(), size_t(2));
 
-    ASSERT_FALSE(dx.data() == 0);
-    ASSERT_FALSE(const_dx.data() == 0);
-    ASSERT_FALSE(unmanaged_dx.data() == 0);
-    ASSERT_FALSE(unmanaged_from_ptr_dx.data() == 0);
-    ASSERT_FALSE(dy.data() == 0);
+    ASSERT_FALSE(dx.data() == nullptr);
+    ASSERT_FALSE(const_dx.data() == nullptr);
+    ASSERT_FALSE(unmanaged_dx.data() == nullptr);
+    ASSERT_FALSE(unmanaged_from_ptr_dx.data() == nullptr);
+    ASSERT_FALSE(dy.data() == nullptr);
     ASSERT_NE(dx, dy);
 
     ASSERT_EQ(dx.extent(0), unsigned(N0));
@@ -1232,19 +1233,19 @@ class TestViewAPI {
     ASSERT_NE(dx, dz);
 
     dx = dView4();
-    ASSERT_TRUE(dx.data() == 0);
-    ASSERT_FALSE(dy.data() == 0);
-    ASSERT_FALSE(dz.data() == 0);
+    ASSERT_TRUE(dx.data() == nullptr);
+    ASSERT_FALSE(dy.data() == nullptr);
+    ASSERT_FALSE(dz.data() == nullptr);
 
     dy = dView4();
-    ASSERT_TRUE(dx.data() == 0);
-    ASSERT_TRUE(dy.data() == 0);
-    ASSERT_FALSE(dz.data() == 0);
+    ASSERT_TRUE(dx.data() == nullptr);
+    ASSERT_TRUE(dy.data() == nullptr);
+    ASSERT_FALSE(dz.data() == nullptr);
 
     dz = dView4();
-    ASSERT_TRUE(dx.data() == 0);
-    ASSERT_TRUE(dy.data() == 0);
-    ASSERT_TRUE(dz.data() == 0);
+    ASSERT_TRUE(dx.data() == nullptr);
+    ASSERT_TRUE(dy.data() == nullptr);
+    ASSERT_TRUE(dz.data() == nullptr);
   }
 
   static void run_test_deep_copy_empty() {

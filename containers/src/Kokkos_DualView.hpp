@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -474,7 +475,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                               typename traits::non_const_data_type>::value) ||
                     (std::is_same<Device, int>::value),
                 int>::type& = 0) {
-    if (modified_flags.data() == NULL) return;
+    if (modified_flags.data() == nullptr) return;
 
     int dev = get_device_side<Device>();
 
@@ -503,7 +504,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                                typename traits::non_const_data_type>::value) ||
                     (std::is_same<Device, int>::value),
                 int>::type& = 0) {
-    if (modified_flags.data() == NULL) return;
+    if (modified_flags.data() == nullptr) return;
 
     int dev = get_device_side<Device>();
 
@@ -526,7 +527,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                       typename traits::non_const_data_type>::value)
       Impl::throw_runtime_exception(
           "Calling sync_host on a DualView with a const datatype.");
-    if (modified_flags.data() == NULL) return;
+    if (modified_flags.data() == nullptr) return;
     if (modified_flags(1) > modified_flags(0)) {
       deep_copy(h_view, d_view);
       modified_flags(1) = modified_flags(0) = 0;
@@ -538,7 +539,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                       typename traits::non_const_data_type>::value)
       Impl::throw_runtime_exception(
           "Calling sync_device on a DualView with a const datatype.");
-    if (modified_flags.data() == NULL) return;
+    if (modified_flags.data() == nullptr) return;
     if (modified_flags(0) > modified_flags(1)) {
       deep_copy(d_view, h_view);
       modified_flags(1) = modified_flags(0) = 0;
@@ -547,7 +548,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
 
   template <class Device>
   bool need_sync() const {
-    if (modified_flags.data() == NULL) return false;
+    if (modified_flags.data() == nullptr) return false;
     int dev = get_device_side<Device>();
 
     if (dev == 1) {  // if Device is the same as DualView's device type
@@ -564,12 +565,12 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   inline bool need_sync_host() const {
-    if (modified_flags.data() == NULL) return false;
+    if (modified_flags.data() == nullptr) return false;
     return modified_flags(0) < modified_flags(1);
   }
 
   inline bool need_sync_device() const {
-    if (modified_flags.data() == NULL) return false;
+    if (modified_flags.data() == nullptr) return false;
     return modified_flags(1) < modified_flags(0);
   }
 
@@ -580,7 +581,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   /// data as modified.
   template <class Device>
   void modify() {
-    if (modified_flags.data() == NULL) return;
+    if (modified_flags.data() == nullptr) return;
     int dev = get_device_side<Device>();
 
     if (dev == 1) {  // if Device is the same as DualView's device type
@@ -611,7 +612,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   inline void modify_host() {
-    if (modified_flags.data() != NULL) {
+    if (modified_flags.data() != nullptr) {
       modified_flags(0) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
                                                  : modified_flags(0)) +
@@ -630,7 +631,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   inline void modify_device() {
-    if (modified_flags.data() != NULL) {
+    if (modified_flags.data() != nullptr) {
       modified_flags(1) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
                                                  : modified_flags(0)) +
@@ -649,7 +650,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   inline void clear_sync_state() {
-    if (modified_flags.data() != NULL)
+    if (modified_flags.data() != nullptr)
       modified_flags(1) = modified_flags(0) = 0;
   }
 
@@ -674,7 +675,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     h_view = create_mirror_view(d_view);
 
     /* Reset dirty flags */
-    if (modified_flags.data() == NULL) {
+    if (modified_flags.data() == nullptr) {
       modified_flags = t_modified_flags("DualView::modified_flags");
     } else
       modified_flags(1) = modified_flags(0) = 0;
@@ -692,7 +693,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
               const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
               const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-    if (modified_flags.data() == NULL) {
+    if (modified_flags.data() == nullptr) {
       modified_flags = t_modified_flags("DualView::modified_flags");
     }
     if (modified_flags(1) >= modified_flags(0)) {
@@ -864,5 +865,28 @@ void deep_copy(
 }
 
 }  // namespace Kokkos
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+
+//
+// Non-member resize and realloc
+//
+
+template <class... Properties, class... Args>
+void resize(DualView<Properties...>& dv, Args&&... args) noexcept(
+    noexcept(dv.resize(std::forward<Args>(args)...))) {
+  dv.resize(std::forward<Args>(args)...);
+}
+
+template <class... Properties, class... Args>
+void realloc(DualView<Properties...>& dv, Args&&... args) noexcept(
+    noexcept(dv.realloc(std::forward<Args>(args)...))) {
+  dv.realloc(std::forward<Args>(args)...);
+}
+
+}  // end namespace Kokkos
 
 #endif

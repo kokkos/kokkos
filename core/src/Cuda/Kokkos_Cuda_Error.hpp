@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -57,10 +58,10 @@ namespace Impl {
 void cuda_device_synchronize();
 
 void cuda_internal_error_throw(cudaError e, const char* name,
-                               const char* file = NULL, const int line = 0);
+                               const char* file = nullptr, const int line = 0);
 
 inline void cuda_internal_safe_call(cudaError e, const char* name,
-                                    const char* file = NULL,
+                                    const char* file = nullptr,
                                     const int line   = 0) {
   if (cudaSuccess != e) {
     cuda_internal_error_throw(e, name, file, line);

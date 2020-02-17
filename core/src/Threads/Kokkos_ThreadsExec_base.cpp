@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -86,7 +87,7 @@ void* internal_pthread_driver(void*) {
     std::cerr.flush();
     std::abort();
   }
-  return NULL;
+  return nullptr;
 }
 
 }  // namespace
@@ -104,7 +105,7 @@ bool ThreadsExec::spawn() {
       0 == pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED)) {
     pthread_t pt;
 
-    result = 0 == pthread_create(&pt, &attr, internal_pthread_driver, 0);
+    result = 0 == pthread_create(&pt, &attr, internal_pthread_driver, nullptr);
   }
 
   pthread_attr_destroy(&attr);

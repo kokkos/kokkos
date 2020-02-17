@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -249,7 +250,7 @@ class ViewDataHandle<
   KOKKOS_INLINE_FUNCTION
   static handle_type assign(value_type* arg_data_ptr,
                             track_type const& arg_tracker) {
-    if (arg_data_ptr == NULL) return handle_type();
+    if (arg_data_ptr == nullptr) return handle_type();
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     // Assignment of texture = non-texture requires creation of a texture object

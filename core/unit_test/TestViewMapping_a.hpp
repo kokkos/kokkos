@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -899,7 +900,7 @@ void test_view_mapping() {
     ASSERT_TRUE(offset.span_is_contiguous());
 
     Kokkos::Impl::ViewMapping<traits_t, void> v(
-        Kokkos::Impl::ViewCtorProp<int*>((int*)0), stride);
+        Kokkos::Impl::ViewCtorProp<int*>(nullptr), stride);
   }
 
   {

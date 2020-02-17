@@ -42,6 +42,3 @@ RUN LLVM_VERSION=8.0.0 && \
     rm -rf /root/.gnupg && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${LLVM_DIR}/bin:$PATH
-
-# Workaround to find libcudart
-ENV LD_LIBRARY_PATH=/usr/local/cuda/targets/x86_64-linux/lib:${LD_LIBRARY_PATH}

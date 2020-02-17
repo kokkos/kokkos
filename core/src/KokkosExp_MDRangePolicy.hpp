@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -439,8 +440,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_prod_tile_dims *= m_tile[i];
       }
     }
-#if defined(KOKKOS_ENABLE_CUDA)
-    else  // Cuda
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+    else  // Cuda or HIP
     {
       index_type span;
       int increment  = 1;
@@ -475,13 +476,17 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       if (m_prod_tile_dims >
           1024) {  // Match Cuda restriction for ParallelReduce; 1024,1024,64
                    // max per dim (Kepler), but product num_threads < 1024
+#if defined(KOKKOS_ENABLE_CUDA)
         printf(" Tile dimensions exceed Cuda limits\n");
         Kokkos::abort(
             " Cuda ExecSpace Error: MDRange tile dims exceed maximum number of "
             "threads per block - choose smaller tile dims");
-        // Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error:
-        // MDRange tile dims exceed maximum number of threads per block - choose
-        // smaller tile dims");
+#else
+        printf(" Tile dimensions exceed HIP limits\n");
+        Kokkos::abort(
+            " HIP ExecSpace Error: MDRange tile dims exceed maximum number of "
+            "threads per block - choose smaller tile dims");
+#endif
       }
     }
 #endif
@@ -528,51 +533,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         // Kokkos::Impl::throw_runtime_exception( " Cuda ExecSpace Error:
         // MDRange tile dims exceed maximum number of threads per block - choose
         // smaller tile dims");
-      }
-    }
-#endif
-#if defined(KOKKOS_ENABLE_HIP)
-    else  // HIP
-    {
-      index_type span;
-      int increment  = 1;
-      int rank_start = 0;
-      int rank_end   = rank;
-      if (static_cast<int>(inner_direction) == static_cast<int>(Right)) {
-        increment  = -1;
-        rank_start = rank - 1;
-        rank_end   = -1;
-      }
-      for (int i = rank_start; i != rank_end; i += increment) {
-        span = m_upper[i] - m_lower[i];
-        if (m_tile[i] <= 0) {
-          // TODO: determine what is a good default tile size for HIP
-          // may be rank dependent
-          if ((static_cast<int>(inner_direction) == static_cast<int>(Right) &&
-               (i < rank - 1)) ||
-              (static_cast<int>(inner_direction) == static_cast<int>(Left) &&
-               (i > 0))) {
-            if (m_prod_tile_dims < 256) {
-              m_tile[i] = 2;
-            } else {
-              m_tile[i] = 1;
-            }
-          } else {
-            m_tile[i] = 16;
-          }
-        }
-        m_tile_end[i] =
-            static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
-        m_num_tiles *= m_tile_end[i];
-        m_prod_tile_dims *= m_tile[i];
-      }
-      if (m_prod_tile_dims >
-          1024) {  // Match HIP restriction for ParallelReduce; 1024,1024,1024
-                   // max per dim , but product num_threads < 1024
-        printf(" Tile dimensions exceed HIP limits\n");
-        Kokkos::abort(
-            "HIP ExecSpace Error: MDRange tile dims exceed maximum number of "
-            "threads per block - choose smaller tile dims");
       }
     }
 #endif

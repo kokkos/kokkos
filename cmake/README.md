@@ -166,8 +166,9 @@ There are 3 possibilities that could be used:
 The following is the search order that Kokkos follows. Note: This differs from the default search order used by CMake `find_library` and `find_header`. CMake prefers default system paths over user-provided paths.
 For Kokkos (and package managers in general), it is better to prefer user-provided paths since this usually indicates a specific version we want.
 
-1. `<NAME>_ROOT`
-1. `Kokkos_<NAME>_DIR`
+1. `<NAME>_ROOT` command line option
+1. `<NAME>_ROOT` environment variable
+1. `Kokkos_<NAME>_DIR` command line option
 1.  Paths added by Kokkos CMake logic
 1.  Default system paths (if allowed)
 

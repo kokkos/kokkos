@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -244,12 +245,6 @@
 #endif
 #endif
 
-#ifdef KOKKOS_HAVE_QTHREADS
-#ifndef KOKKOS_ENABLE_QTHREADS
-#define KOKKOS_ENABLE_QTHREADS KOKKOS_HAVE_QTHREADS
-#endif
-#endif
-
 #ifdef KOKKOS_HAVE_SERIAL
 #ifndef KOKKOS_ENABLE_SERIAL
 #define KOKKOS_ENABLE_SERIAL KOKKOS_HAVE_SERIAL
@@ -471,10 +466,6 @@
 
 #if (!defined(KOKKOS_HAVE_PTHREAD)) && defined(KOKKOS_ENABLE_THREADS)
 #define KOKKOS_HAVE_PTHREAD 1
-#endif
-
-#if (!defined(KOKKOS_HAVE_QTHREADS)) && defined(KOKKOS_ENABLE_QTHREADS)
-#define KOKKOS_HAVE_QTHREADS 1
 #endif
 
 #if (!defined(KOKKOS_HAVE_SERIAL)) && defined(KOKKOS_ENABLE_SERIAL)

@@ -271,10 +271,6 @@ ELSE()
     LIST(REMOVE_DUPLICATES PARSE_SOURCES)
   ENDIF()
   ADD_LIBRARY(${NAME} ${PARSE_SOURCES})
-  target_link_libraries(
-    ${NAME}
-    PUBLIC kokkos
-  )
 ENDIF()
 ENDFUNCTION()
 

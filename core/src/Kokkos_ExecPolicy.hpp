@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -482,7 +483,6 @@ struct ScratchRequest {
     level      = level_;
     per_team   = 0;
     per_thread = thread_value.value;
-    ;
   }
 
   inline ScratchRequest(const int& level_, const Impl::PerTeamValue& team_value,
@@ -490,7 +490,6 @@ struct ScratchRequest {
     level      = level_;
     per_team   = team_value.value;
     per_thread = thread_value.value;
-    ;
   }
 
   inline ScratchRequest(const int& level_,
@@ -499,7 +498,6 @@ struct ScratchRequest {
     level      = level_;
     per_team   = team_value.value;
     per_thread = thread_value.value;
-    ;
   }
 };
 

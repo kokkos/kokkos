@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -244,21 +245,22 @@ struct UnorderedMapPrint {
 };
 
 template <typename DKey, typename DValue, typename SKey, typename SValue>
-struct UnorderedMapCanAssign : public false_ {};
+struct UnorderedMapCanAssign : public std::false_type {};
 
 template <typename Key, typename Value>
-struct UnorderedMapCanAssign<Key, Value, Key, Value> : public true_ {};
+struct UnorderedMapCanAssign<Key, Value, Key, Value> : public std::true_type {};
 
 template <typename Key, typename Value>
-struct UnorderedMapCanAssign<const Key, Value, Key, Value> : public true_ {};
+struct UnorderedMapCanAssign<const Key, Value, Key, Value>
+    : public std::true_type {};
 
 template <typename Key, typename Value>
 struct UnorderedMapCanAssign<const Key, const Value, Key, Value>
-    : public true_ {};
+    : public std::true_type {};
 
 template <typename Key, typename Value>
 struct UnorderedMapCanAssign<const Key, const Value, const Key, Value>
-    : public true_ {};
+    : public std::true_type {};
 
 }  // namespace Impl
 }  // namespace Kokkos

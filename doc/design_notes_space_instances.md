@@ -7,7 +7,7 @@
 ## Requirements
 
  * Backwards compatable with existing Kokkos API
- * Support existing Host execution spaces (Serial, Threads, OpenMP, maybe Qthreads)
+ * Support existing Host execution spaces (Serial, Threads, OpenMP)
  * Support DARMA threading model (may require a new Host execution space)
  * Support Uintah threading model, i.e. indepentant worker threadpools working of of shared task queues
 

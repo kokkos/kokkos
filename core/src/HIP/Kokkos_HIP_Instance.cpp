@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -372,11 +373,8 @@ namespace Experimental {
 //{ return Impl::HIPInternalDevices::singleton().m_hipDevCount ; }
 
 int HIP::concurrency() {
-#if defined(KOKKOS_ARCH_KAVERI)
-  return 8 * 64 * 40;  // 20480 kaveri
-#else
+  // FIXME_HIP
   return 32 * 8 * 40;  // 81920 fiji and hawaii
-#endif
 }
 int HIP::impl_is_initialized() {
   return Impl::HIPInternal::singleton().is_initialized();
@@ -431,10 +429,6 @@ HIP::HIP() : m_space_instance(&Impl::HIPInternal::singleton()) {
 void HIP::print_configuration(std::ostream &s, const bool) {
   Impl::HIPInternal::singleton().print_configuration(s);
 }
-
-bool HIP::sleep() { return false; }
-
-bool HIP::wake() { return true; }
 
 void HIP::fence() const { HIP_SAFE_CALL(hipDeviceSynchronize()); }
 

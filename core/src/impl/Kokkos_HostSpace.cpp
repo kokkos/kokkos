@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -220,18 +221,19 @@ void *HostSpace::allocate(const size_t arg_alloc_size) const {
 
       // read write access to private memory
 
-      ptr = mmap(NULL /* address hint, if NULL OS kernel chooses address */
-                 ,
-                 arg_alloc_size /* size in bytes */
-                 ,
-                 prot /* memory protection */
-                 ,
-                 flags /* visibility of updates */
-                 ,
-                 -1 /* file descriptor */
-                 ,
-                 0 /* offset */
-      );
+      ptr =
+          mmap(nullptr /* address hint, if nullptr OS kernel chooses address */
+               ,
+               arg_alloc_size /* size in bytes */
+               ,
+               prot /* memory protection */
+               ,
+               flags /* visibility of updates */
+               ,
+               -1 /* file descriptor */
+               ,
+               0 /* offset */
+          );
 
       /* Associated reallocation:
              ptr = mremap( old_ptr , old_size , new_size , MREMAP_MAYMOVE );
@@ -396,7 +398,7 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::SharedAllocationRecord(
 void *SharedAllocationRecord<Kokkos::HostSpace, void>::allocate_tracked(
     const Kokkos::HostSpace &arg_space, const std::string &arg_alloc_label,
     const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void *)nullptr;
+  if (!arg_alloc_size) return nullptr;
 
   SharedAllocationRecord *const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);
@@ -408,7 +410,7 @@ void *SharedAllocationRecord<Kokkos::HostSpace, void>::allocate_tracked(
 
 void SharedAllocationRecord<Kokkos::HostSpace, void>::deallocate_tracked(
     void *const arg_alloc_ptr) {
-  if (arg_alloc_ptr != 0) {
+  if (arg_alloc_ptr != nullptr) {
     SharedAllocationRecord *const r = get_record(arg_alloc_ptr);
 
     RecordBase::decrement(r);
@@ -436,9 +438,9 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::get_record(void *alloc_ptr) {
   typedef SharedAllocationRecord<Kokkos::HostSpace, void> RecordHost;
 
   SharedAllocationHeader const *const head =
-      alloc_ptr ? Header::get_header(alloc_ptr) : (SharedAllocationHeader *)0;
+      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
   RecordHost *const record =
-      head ? static_cast<RecordHost *>(head->m_record) : (RecordHost *)0;
+      head ? static_cast<RecordHost *>(head->m_record) : nullptr;
 
   if (!alloc_ptr || record->m_alloc_ptr != head) {
     Kokkos::Impl::throw_runtime_exception(

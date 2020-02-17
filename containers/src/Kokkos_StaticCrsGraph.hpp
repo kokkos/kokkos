@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -395,7 +396,7 @@ class StaticCrsGraph {
     const data_type count = static_cast<data_type>(row_map(i + 1) - start);
 
     if (count == 0) {
-      return GraphRowViewConst<StaticCrsGraph>(NULL, 1, 0);
+      return GraphRowViewConst<StaticCrsGraph>(nullptr, 1, 0);
     } else {
       return GraphRowViewConst<StaticCrsGraph>(entries, 1, count, start);
     }
@@ -415,7 +416,7 @@ class StaticCrsGraph {
 
     Kokkos::parallel_for(Kokkos::RangePolicy<execution_space>(0, numRows()),
                          partitioner);
-    Kokkos::fence();
+    typename device_type::execution_space().fence();
 
     row_block_offsets = block_offsets;
   }

@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -1772,7 +1773,7 @@ struct DynRankViewRemap {
     const Kokkos::Impl::ParallelFor<DynRankViewRemap, Policy> closure(
         *this, Policy(0, n0));
     closure.execute();
-    // Kokkos::fence(); // ??
+    // ExecSpace().fence(); // ??
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1805,7 +1806,8 @@ inline void deep_copy(
     const DynRankView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     typename std::enable_if<std::is_same<
-        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* = 0) {
+        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
+        nullptr) {
   static_assert(
       std::is_same<typename ViewTraits<DT, DP...>::non_const_value_type,
                    typename ViewTraits<DT, DP...>::value_type>::value,
@@ -1842,7 +1844,7 @@ inline void deep_copy(
         (std::is_same<typename DstType::traits::specialize, void>::value &&
          std::is_same<typename SrcType::traits::specialize, void>::value &&
          (Kokkos::is_dyn_rank_view<DstType>::value ||
-          Kokkos::is_dyn_rank_view<SrcType>::value))>::type* = 0) {
+          Kokkos::is_dyn_rank_view<SrcType>::value))>::type* = nullptr) {
   static_assert(
       std::is_same<typename DstType::traits::value_type,
                    typename DstType::traits::non_const_value_type>::value,
@@ -2008,7 +2010,7 @@ inline typename DynRankView<T, P...>::HostMirror create_mirror(
     typename std::enable_if<
         std::is_same<typename ViewTraits<T, P...>::specialize, void>::value &&
         !std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
-                      Kokkos::LayoutStride>::value>::type* = 0) {
+                      Kokkos::LayoutStride>::value>::type* = nullptr) {
   typedef DynRankView<T, P...> src_type;
   typedef typename src_type::HostMirror dst_type;
 
@@ -2035,7 +2037,8 @@ template <class Space, class T, class... P>
 typename Impl::MirrorDRVType<Space, T, P...>::view_type create_mirror(
     const Space&, const Kokkos::DynRankView<T, P...>& src,
     typename std::enable_if<std::is_same<
-        typename ViewTraits<T, P...>::specialize, void>::value>::type* = 0) {
+        typename ViewTraits<T, P...>::specialize, void>::value>::type* =
+        nullptr) {
   return typename Impl::MirrorDRVType<Space, T, P...>::view_type(
       src.label(), Impl::reconstructLayout(src.layout(), src.rank()));
 }
@@ -2049,7 +2052,7 @@ inline typename DynRankView<T, P...>::HostMirror create_mirror_view(
              typename DynRankView<T, P...>::HostMirror::memory_space>::value &&
          std::is_same<typename DynRankView<T, P...>::data_type,
                       typename DynRankView<T, P...>::HostMirror::data_type>::
-             value)>::type* = 0) {
+             value)>::type* = nullptr) {
   return src;
 }
 
@@ -2071,7 +2074,8 @@ template <class Space, class T, class... P>
 typename Impl::MirrorDRViewType<Space, T, P...>::view_type create_mirror_view(
     const Space&, const Kokkos::DynRankView<T, P...>& src,
     typename std::enable_if<
-        Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* = 0) {
+        Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* =
+        nullptr) {
   return src;
 }
 
@@ -2093,7 +2097,8 @@ create_mirror_view_and_copy(
     const Space&, const Kokkos::DynRankView<T, P...>& src,
     std::string const& name = "",
     typename std::enable_if<
-        Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* = 0) {
+        Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* =
+        nullptr) {
   (void)name;
   return src;
 }

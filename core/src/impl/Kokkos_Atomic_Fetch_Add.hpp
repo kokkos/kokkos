@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -99,7 +100,7 @@ __inline__ __device__ T atomic_fetch_add(
   union U1 {
     int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U1(){};
+    KOKKOS_INLINE_FUNCTION U1() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -124,7 +125,7 @@ __inline__ __device__ T atomic_fetch_add(
   union U2 {
     unsigned long long int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U2(){};
+    KOKKOS_INLINE_FUNCTION U2() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -241,7 +242,7 @@ inline T atomic_fetch_add(
   union U {
     int i;
     T t;
-    inline U(){};
+    inline U() {}
   } assume, oldval, newval;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -267,7 +268,7 @@ inline T atomic_fetch_add(volatile T* const dest,
   union U {
     long i;
     T t;
-    inline U(){};
+    inline U() {}
   } assume, oldval, newval;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
@@ -296,7 +297,7 @@ inline T atomic_fetch_add(
   union U {
     Impl::cas128_t i;
     T t;
-    inline U(){};
+    inline U() {}
   } assume, oldval, newval;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)

@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -112,7 +113,7 @@ class TaskExec<Kokkos::Experimental::OpenMPTarget> {
  public:
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   void* team_shared() const {
-    return m_team_exec ? m_team_exec->scratch_thread() : (void*)0;
+    return m_team_exec ? m_team_exec->scratch_thread() : nullptr;
   }
 
   int team_shared_size() const {

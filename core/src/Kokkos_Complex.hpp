@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -58,7 +59,11 @@ namespace Kokkos {
 ///   \c float, \c double, and <tt>long double</tt>.  The latter is
 ///   currently forbidden in CUDA device kernels.
 template <class RealType>
-class alignas(2 * sizeof(RealType)) complex {
+class
+#ifdef KOKKOS_ENABLE_COMPLEX_ALIGN
+    alignas(2 * sizeof(RealType))
+#endif
+        complex {
  private:
   RealType re_{};
   RealType im_{};
@@ -214,7 +219,7 @@ class alignas(2 * sizeof(RealType)) complex {
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
-#if !defined(__HIP_DEVICE_COMPILE__)
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
     using std::fabs;
 #endif
     const RealType s = fabs(y.real()) + fabs(y.imag());
@@ -245,7 +250,7 @@ class alignas(2 * sizeof(RealType)) complex {
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
-#if !defined(__HIP_DEVICE_COMPILE__)
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
     using std::fabs;
 #endif
     const RealType s = fabs(y.real()) + fabs(y.imag());
@@ -693,7 +698,8 @@ KOKKOS_INLINE_FUNCTION RealType real(const complex<RealType>& x) noexcept {
 //! Absolute value (magnitude) of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType abs(const complex<RealType>& x) {
-#if !defined(__CUDA_ARCH__) && !defined(__HIP_DEVICE_COMPILE__)
+#if !defined(__CUDA_ARCH__) && \
+    !defined(__HIP_DEVICE_COMPILE__)  // FIXME_CUDA FIXME_HIP
   using std::hypot;
 #endif
   return hypot(x.real(), x.imag());
@@ -704,7 +710,7 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> pow(const complex<RealType>& x,
                                                      const RealType& e) {
   RealType r = abs(x);
-#if !defined(__HIP_DEVICE_COMPILE__)
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
   using std::atan;
   using std::cos;
   using std::pow;
@@ -720,7 +726,7 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sqrt(
     const complex<RealType>& x) {
   RealType r = abs(x);
-#if !defined(__HIP_DEVICE_COMPILE__)
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
   using std::atan;
   using std::cos;
   using std::sin;
@@ -741,7 +747,7 @@ KOKKOS_INLINE_FUNCTION complex<RealType> conj(
 //! Exponential of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION complex<RealType> exp(const complex<RealType>& x) {
-#if !defined(__HIP_DEVICE_COMPILE__)
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
   using std::cos;
   using std::exp;
   using std::sin;
@@ -781,7 +787,7 @@ KOKKOS_INLINE_FUNCTION
   // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
   // If the real part is +/-Inf and the imaginary part is -/+Inf,
   // this won't change the result.
-#if !defined(__HIP_DEVICE_COMPILE__)
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
   using std::fabs;
 #endif
   typedef

@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -158,7 +159,8 @@ inline void parallel_for(
     const ExecPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecPolicy>::value>::type* = 0) {
+        Kokkos::Impl::is_execution_policy<ExecPolicy>::value>::type* =
+        nullptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -403,7 +405,8 @@ inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* = 0) {
+        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
+        nullptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -479,7 +482,8 @@ inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     ReturnType& return_value, const std::string& str = "",
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* = 0) {
+        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
+        nullptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -502,7 +506,7 @@ inline void parallel_scan(
     Kokkos::Profiling::endParallelScan(kpID);
   }
 #endif
-  Kokkos::fence();
+  policy.space().fence();
 }
 
 template <class FunctorType, class ReturnType>
@@ -534,7 +538,7 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
     Kokkos::Profiling::endParallelScan(kpID);
   }
 #endif
-  Kokkos::fence();
+  execution_space().fence();
 }
 
 template <class ExecutionPolicy, class FunctorType, class ReturnType>

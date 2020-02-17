@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -161,10 +162,10 @@ void test_host_memory_pool_stats() {
   // Aborts because exceeds max block size:
   // void * p2048 = pool.allocate(2048);
 
-  ASSERT_NE(p0064, (void*)0);
-  ASSERT_NE(p0128, (void*)0);
-  ASSERT_NE(p0256, (void*)0);
-  ASSERT_NE(p1024, (void*)0);
+  ASSERT_NE(p0064, nullptr);
+  ASSERT_NE(p0128, nullptr);
+  ASSERT_NE(p0256, nullptr);
+  ASSERT_NE(p1024, nullptr);
 
   pool.deallocate(p0064, 64);
   pool.deallocate(p0128, 128);

@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -108,14 +109,6 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
 std::string SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
                                    void>::get_label() const {
   return std::string("OpenMPTargetAllocation");
-}
-
-SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void> *
-SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::allocate(
-    const Kokkos::Experimental::OpenMPTargetSpace &arg_space,
-    const std::string &arg_label, const size_t arg_alloc_size) {
-  return new SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
-                                    void>(arg_space, arg_label, arg_alloc_size);
 }
 
 void SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,

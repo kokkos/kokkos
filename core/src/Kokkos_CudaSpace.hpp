@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -165,7 +166,7 @@ class CudaUVMSpace {
 
   /*--------------------------------*/
   /** \brief  CudaUVMSpace specific routine */
-  static int number_of_allocations();
+  KOKKOS_DEPRECATED static int number_of_allocations();
 
   /*--------------------------------*/
 
@@ -639,7 +640,7 @@ struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
 /** Running in CudaSpace attempting to access an unknown space: error */
 template <class OtherSpace>
 struct VerifyExecutionCanAccessMemorySpace<
-    typename std::enable_if<!is_same<Kokkos::CudaSpace, OtherSpace>::value,
+    typename std::enable_if<!std::is_same<Kokkos::CudaSpace, OtherSpace>::value,
                             Kokkos::CudaSpace>::type,
     OtherSpace> {
   enum { value = false };

@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -88,14 +89,14 @@ void OpenMPTargetExec::verify_initialized(const char* const label) {
   }
 }
 
-void* OpenMPTargetExec::m_scratch_ptr    = NULL;
+void* OpenMPTargetExec::m_scratch_ptr    = nullptr;
 int64_t OpenMPTargetExec::m_scratch_size = 0;
 
 void OpenMPTargetExec::clear_scratch() {
   Kokkos::Experimental::OpenMPTargetSpace space;
   space.deallocate(m_scratch_ptr, m_scratch_size);
-  m_scratch_ptr  = NULL;
-  m_scratch_size = NULL;
+  m_scratch_ptr  = nullptr;
+  m_scratch_size = 0;
 }
 
 void* OpenMPTargetExec::get_scratch_ptr() { return m_scratch_ptr; }

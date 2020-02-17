@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -61,7 +62,8 @@ void HostThreadTeamData::organize_pool(HostThreadTeamData *members[],
 
   // Verify not already a member of a pool:
   for (int rank = 0; rank < size && ok; ++rank) {
-    ok = (nullptr != members[rank]) && (0 == members[rank]->m_pool_scratch);
+    ok = (nullptr != members[rank]) &&
+         (nullptr == members[rank]->m_pool_scratch);
   }
 
   if (ok) {
@@ -105,8 +107,8 @@ void HostThreadTeamData::organize_pool(HostThreadTeamData *members[],
 void HostThreadTeamData::disband_pool() {
   m_work_range.first     = -1;
   m_work_range.second    = -1;
-  m_pool_scratch         = 0;
-  m_team_scratch         = 0;
+  m_pool_scratch         = nullptr;
+  m_team_scratch         = nullptr;
   m_pool_rank            = 0;
   m_pool_size            = 1;
   m_team_base            = 0;
@@ -120,7 +122,7 @@ void HostThreadTeamData::disband_pool() {
 
 int HostThreadTeamData::organize_team(const int team_size) {
   // Pool is initialized
-  const bool ok_pool = 0 != m_pool_scratch;
+  const bool ok_pool = nullptr != m_pool_scratch;
 
   // Team is not set
   const bool ok_team =

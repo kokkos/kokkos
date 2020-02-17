@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -661,7 +662,7 @@ class Random_XorShift64 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     using std::sqrt;
 #endif
     double S = 2.0;
@@ -750,10 +751,8 @@ class Random_XorShift64_Pool {
   Random_XorShift64<DeviceType> get_state() const {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     const int i = DeviceType::hardware_thread_id();
-    ;
 #else
     const int i = DeviceType::impl_hardware_thread_id();
-    ;
 #endif
     return Random_XorShift64<DeviceType>(state_(i), i);
   }
@@ -903,7 +902,7 @@ class Random_XorShift1024 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     using std::sqrt;
 #endif
     double S = 2.0;
@@ -1160,7 +1159,7 @@ class Random_XorShift1024<Kokkos::Cuda> {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     using std::sqrt;
 #endif
     double S = 2.0;
@@ -1398,7 +1397,7 @@ class Random_XorShift1024<Kokkos::Experimental::ROCm> {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     using std::sqrt;
 #endif
     double S = 2.0;

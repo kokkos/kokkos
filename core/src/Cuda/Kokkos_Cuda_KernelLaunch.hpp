@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -149,7 +150,7 @@ template <class DriverType>
 __global__ static void cuda_parallel_launch_constant_or_global_memory(
     const DriverType* driver_ptr) {
   const DriverType& driver =
-      driver_ptr != NULL
+      driver_ptr != nullptr
           ? *driver_ptr
           : *((const DriverType*)kokkos_impl_cuda_constant_memory_buffer);
 
@@ -161,7 +162,7 @@ __global__
 __launch_bounds__(maxTperB, minBperSM) static void cuda_parallel_launch_constant_or_global_memory(
     const DriverType* driver_ptr) {
   const DriverType& driver =
-      driver_ptr != NULL
+      driver_ptr != nullptr
           ? *driver_ptr
           : *((const DriverType*)kokkos_impl_cuda_constant_memory_buffer);
 
@@ -468,7 +469,7 @@ struct CudaParallelLaunch<
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
-      DriverType* driver_ptr = NULL;
+      DriverType* driver_ptr = nullptr;
       driver_ptr             = reinterpret_cast<DriverType*>(
           cuda_instance->scratch_functor(sizeof(DriverType)));
       cudaMemcpyAsync(driver_ptr, &driver, sizeof(DriverType),
@@ -519,7 +520,7 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
 
-      DriverType* driver_ptr = NULL;
+      DriverType* driver_ptr = nullptr;
       driver_ptr             = reinterpret_cast<DriverType*>(
           cuda_instance->scratch_functor(sizeof(DriverType)));
       cudaMemcpyAsync(driver_ptr, &driver, sizeof(DriverType),

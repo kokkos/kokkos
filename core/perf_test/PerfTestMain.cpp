@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -53,13 +54,13 @@ int command_line_num_args(int n = 0) {
   return n_args;
 }
 
-const char* command_line_arg(int k, char** input_args = NULL) {
+const char* command_line_arg(int k, char** input_args = nullptr) {
   static char** args;
-  if (input_args != NULL) args = input_args;
+  if (input_args != nullptr) args = input_args;
   if (command_line_num_args() > k)
     return args[k];
   else
-    return NULL;
+    return nullptr;
 }
 
 }  // namespace Test

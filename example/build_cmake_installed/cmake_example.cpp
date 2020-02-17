@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -56,7 +57,7 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
-  const long n = strtol(argv[1], NULL, 10);
+  const long n = strtol(argv[1], nullptr, 10);
 
   printf("Number of even integers from 0 to %ld\n", n - 1);
 
