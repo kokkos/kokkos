@@ -18,6 +18,7 @@ update_kokkos_devices() {
 get_kokkos_device_list() {
   KOKKOS_DEVICE_CMD=
   PARSE_DEVICES_LST=$(echo $KOKKOS_DEVICES | tr "," "\n")
+  PARSE_DEVICES_LST=$(echo $PARSE_DEVICES_LST | tr "_" "\n")
   for DEVICE_ in $PARSE_DEVICES_LST
   do 
      UC_DEVICE=$(echo $DEVICE_ | tr "[:lower:]" "[:upper:]")
