@@ -85,8 +85,7 @@ struct Hierarchical_Red_B {
     SCALAR_TYPE ref   = 0;
     for (int i = 0; i < pN; ++i) {
       check += v_H(i);
-      ref +=
-          (sX + i * pN) * (sX + i * pN - 1) / 2 - ((i * pN) * (i * pN - 1) / 2);
+      ref += ((sX + i * pN) * (sX + i * pN - 1) - (i * pN * (i * pN - 1))) / 2;
     }
     ASSERT_EQ(check, ref);
   }

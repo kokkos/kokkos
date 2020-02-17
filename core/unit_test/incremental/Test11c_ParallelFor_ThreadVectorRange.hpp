@@ -66,8 +66,8 @@ struct Hierarchical_ForLoop_C {
           const int n  = team.league_rank();
           const int ls = team.league_size();
 
-          const size_t startDim1 = n * (int)(sX / ls);
-          const int modDim1      = n == ls - 1 ? sX % ls : 0;
+          const int startDim1 = n * (int)(sX / ls);
+          const int modDim1   = n == ls - 1 ? sX % ls : 0;
 
           Kokkos::parallel_for(
               Kokkos::TeamThreadRange(team, v.extent(1)), [&](const int m) {

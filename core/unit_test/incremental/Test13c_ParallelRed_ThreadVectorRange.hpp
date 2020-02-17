@@ -49,11 +49,6 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-// Degress of concurrency per nestig level
-#define N 16
-#define M 16
-#define K 16
-
 using SCALAR_TYPE = int;
 
 namespace Test {
@@ -76,16 +71,16 @@ struct Hierarchical_Red_C {
           Kokkos::parallel_reduce(
               Kokkos::TeamThreadRange(team, sX),
               [=](const int i, SCALAR_TYPE &tmp) {
-                SCALAR_TYPE out = 0;
+                SCALAR_TYPE out_inner = 0;
                 Kokkos::parallel_reduce(
                     Kokkos::ThreadVectorRange(team, sY),
-                    [=](const int k, int &tmp) {
-                      //printf("%i,%i,%i ", i, k, n * v.extent(0) + ts * i + k);
-                      tmp += n * sX * v.extent(0) + sX * i + k;
+                    [=](const int k, int &tmp_inner) {
+                      tmp_inner += n * sX * v.extent(0) + sX * i + k;
                     },
-                    out);
+                    out_inner);
 
-                Kokkos::single(Kokkos::PerThread(team), [&]() { tmp += out; });
+                Kokkos::single(Kokkos::PerThread(team),
+                               [&]() { tmp += out_inner; });
               },
               out);
 
@@ -100,8 +95,7 @@ struct Hierarchical_Red_C {
     for (int i = 0; i < pN; ++i) {
       check += v_H(i);
       for (int j = 0; j < sX; ++j)
-        for (int k = 0; k < sY; ++k)
-          ref += i * sX * pN + sX * j + k;
+        for (int k = 0; k < sY; ++k) ref += i * sX * pN + sX * j + k;
     }
     ASSERT_EQ(check, ref);
   }
