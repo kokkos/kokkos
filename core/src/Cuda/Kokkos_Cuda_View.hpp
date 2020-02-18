@@ -84,8 +84,8 @@ struct CudaTextureFetch {
   KOKKOS_INLINE_FUNCTION
   CudaTextureFetch() : m_obj(), m_ptr(), m_offset() {}
 
-  KOKKOS_INLINE_FUNCTION
-  ~CudaTextureFetch() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ~CudaTextureFetch() = default;
 
   KOKKOS_INLINE_FUNCTION
   CudaTextureFetch(const CudaTextureFetch& rhs)
@@ -153,8 +153,8 @@ struct CudaLDGFetch {
   KOKKOS_INLINE_FUNCTION
   CudaLDGFetch() : m_ptr() {}
 
-  KOKKOS_INLINE_FUNCTION
-  ~CudaLDGFetch() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ~CudaLDGFetch() = default;
 
   KOKKOS_INLINE_FUNCTION
   CudaLDGFetch(const CudaLDGFetch& rhs) : m_ptr(rhs.m_ptr) {}

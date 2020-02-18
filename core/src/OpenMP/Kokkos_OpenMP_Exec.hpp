@@ -129,8 +129,6 @@ class OpenMPExec {
 
 namespace Kokkos {
 
-inline OpenMP::OpenMP() noexcept {}
-
 inline
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     bool

@@ -201,7 +201,7 @@ class BinSort {
   bool sort_within_bins;
 
  public:
-  BinSort() {}
+  BinSort() = default;
 
   //----------------------------------------
   // Constructor: takes the keys, the binning_operator and optionally whether to
@@ -446,7 +446,7 @@ struct BinOp3D {
   typename KeyViewType::non_const_value_type range_[3];
   typename KeyViewType::non_const_value_type min_[3];
 
-  BinOp3D() {}
+  BinOp3D() = default;
 
   BinOp3D(int max_bins__[], typename KeyViewType::const_value_type min[],
           typename KeyViewType::const_value_type max[]) {

@@ -358,8 +358,8 @@ class StaticCrsGraph {
   /**  \brief  Destroy this view of the array.
    *           If the last view then allocated memory is deallocated.
    */
-  KOKKOS_INLINE_FUNCTION
-  ~StaticCrsGraph() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ~StaticCrsGraph() = default;
 
   /**  \brief  Return number of rows in the graph
    */

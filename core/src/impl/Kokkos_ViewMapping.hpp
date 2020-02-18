@@ -3069,7 +3069,7 @@ class ViewMapping<
 
   //----------------------------------------
 
-  KOKKOS_INLINE_FUNCTION ~ViewMapping() {}
+  KOKKOS_DEFAULTED_FUNCTION ~ViewMapping() = default;
   KOKKOS_INLINE_FUNCTION ViewMapping() : m_impl_handle(), m_impl_offset() {}
   KOKKOS_INLINE_FUNCTION ViewMapping(const ViewMapping& rhs)
       : m_impl_handle(rhs.m_impl_handle), m_impl_offset(rhs.m_impl_offset) {}

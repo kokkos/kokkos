@@ -78,8 +78,6 @@ void (*volatile s_current_function)(ThreadsExec &, const void *);
 const void *volatile s_current_function_arg = nullptr;
 
 struct Sentinel {
-  Sentinel() {}
-
   ~Sentinel() {
     if (s_thread_pool_size[0] || s_thread_pool_size[1] ||
         s_thread_pool_size[2] || s_current_reduce_size ||

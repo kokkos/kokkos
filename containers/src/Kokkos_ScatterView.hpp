@@ -672,7 +672,7 @@ class ScatterView<DataType, Layout, ExecSpace, Op, ScatterNonDuplicated,
   friend class ScatterAccess<DataType, Op, ExecSpace, Layout,
                              ScatterNonDuplicated, contribution, ScatterAtomic>;
 
-  ScatterView() {}
+  ScatterView() = default;
 
   template <typename RT, typename... RP>
   ScatterView(View<RT, RP...> const& original_view)
@@ -761,8 +761,8 @@ class ScatterAccess<DataType, Op, ExecSpace, Layout, ScatterNonDuplicated,
   KOKKOS_INLINE_FUNCTION
   ScatterAccess(view_type const& view_in) : view(view_in) {}
 
-  KOKKOS_INLINE_FUNCTION
-  ~ScatterAccess() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ~ScatterAccess() = default;
 
   template <typename... Args>
   KOKKOS_FORCEINLINE_FUNCTION value_type operator()(Args... args) const {
@@ -805,7 +805,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, ExecSpace, Op,
   typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, ExecSpace>
       internal_view_type;
 
-  ScatterView() {}
+  ScatterView() = default;
 
   template <typename RT, typename... RP>
   ScatterView(View<RT, RP...> const& original_view)
@@ -957,7 +957,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, ExecSpace, Op,
   typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, ExecSpace>
       internal_view_type;
 
-  ScatterView() {}
+  ScatterView() = default;
 
   template <typename RT, typename... RP>
   ScatterView(View<RT, RP...> const& original_view) : unique_token() {

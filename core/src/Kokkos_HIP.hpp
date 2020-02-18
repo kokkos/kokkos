@@ -89,7 +89,7 @@ class HIP {
 
   using scratch_memory_space = ScratchMemorySpace<HIP>;
 
-  ~HIP() {}
+  ~HIP() = default;
   HIP();
   //  explicit HIP( const int instance_id );
 

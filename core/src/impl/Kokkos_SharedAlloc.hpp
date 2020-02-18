@@ -132,7 +132,7 @@ class SharedAllocationRecord<void, void> {
    */
   static void tracking_enable() { t_tracking_enabled = 1; }
 
-  virtual ~SharedAllocationRecord() {}
+  virtual ~SharedAllocationRecord() = default;
 
   SharedAllocationRecord()
       : m_alloc_ptr(nullptr),
