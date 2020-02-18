@@ -629,4 +629,10 @@
 #define KOKKOS_IMPL_ENABLE_CXXABI
 #endif
 
+// WORKAROUND for AMD aomp which apparently defines CUDA_ARCH when building for
+// AMD GPUs with OpenMP Target ???
+#if defined(__CUDA_ARCH__) && !defined(__CUDACC__) && \
+    !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_CUDA)
+#undef __CUDA_ARCH__
+#endif
 #endif  // #ifndef KOKKOS_MACROS_HPP
