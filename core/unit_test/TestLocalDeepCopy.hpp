@@ -1069,13 +1069,10 @@ struct DeepCopyScratchFunctor {
           auto thread_shview = Kokkos::subview(shview, index, Kokkos::ALL());
           Kokkos::Experimental::local_deep_copy(thread_shview, index);
         });
-    TEST_EXECSPACE().fence();
     Kokkos::Experimental::local_deep_copy(
         team, check_view_1_, Kokkos::subview(shview, Kokkos::ALL(), 0));
-    TEST_EXECSPACE().fence();
 
     Kokkos::Experimental::local_deep_copy(team, shview, 6.);
-    TEST_EXECSPACE().fence();
     Kokkos::Experimental::local_deep_copy(
         team, check_view_2_, Kokkos::subview(shview, Kokkos::ALL(), 0));
   }
