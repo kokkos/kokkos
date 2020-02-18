@@ -1069,12 +1069,15 @@ struct DeepCopyScratchFunctor {
           auto thread_shview = Kokkos::subview(shview, index, Kokkos::ALL());
           Kokkos::Experimental::local_deep_copy(thread_shview, index);
         });
+    TEST_EXECSPACE().fence();
     Kokkos::Experimental::local_deep_copy(
-        check_view_1_, Kokkos::subview(shview, Kokkos::ALL(), 0));
+        team, check_view_1_, Kokkos::subview(shview, Kokkos::ALL(), 0));
+    TEST_EXECSPACE().fence();
 
     Kokkos::Experimental::local_deep_copy(team, shview, 6.);
+    TEST_EXECSPACE().fence();
     Kokkos::Experimental::local_deep_copy(
-        check_view_2_, Kokkos::subview(shview, Kokkos::ALL(), 0));
+        team, check_view_2_, Kokkos::subview(shview, Kokkos::ALL(), 0));
   }
 
   Kokkos::View<double*, TEST_EXECSPACE::memory_space> check_view_1_;
@@ -1086,13 +1089,13 @@ struct DeepCopyScratchFunctor {
 TEST(TEST_CATEGORY, deep_copy_scratch) {
   using TestDeviceTeamPolicy = Kokkos::TeamPolicy<TEST_EXECSPACE>;
 
-  const int N                = 8;
-  const int bytes_per_team   = N * sizeof(double),
-            bytes_per_thread = N * sizeof(double);
+  const int N = 8;
+  const int bytes_per_team =
+      Impl::ShMemView<double**,
+                      TEST_EXECSPACE::scratch_memory_space>::shmem_size(N, 1);
 
   TestDeviceTeamPolicy policy(1, Kokkos::AUTO);
-  auto team_exec = policy.set_scratch_size(1, Kokkos::PerTeam(bytes_per_team),
-                                           Kokkos::PerThread(bytes_per_thread));
+  auto team_exec = policy.set_scratch_size(1, Kokkos::PerTeam(bytes_per_team));
 
   Kokkos::View<double*, TEST_EXECSPACE::memory_space> check_view_1("check_1",
                                                                    N);
