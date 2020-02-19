@@ -163,7 +163,6 @@ class SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
   const Kokkos::Experimental::OpenMPTargetSpace m_space;
 
  protected:
-  ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
   SharedAllocationRecord(

@@ -715,7 +715,6 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
   const Kokkos::CudaSpace m_space;
 
  protected:
-  ~SharedAllocationRecord();
   SharedAllocationRecord() : RecordBase(), m_tex_obj(0), m_space() {}
 
   SharedAllocationRecord(
@@ -788,7 +787,6 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
   const Kokkos::CudaUVMSpace m_space;
 
  protected:
-  ~SharedAllocationRecord();
   SharedAllocationRecord() : RecordBase(), m_tex_obj(0), m_space() {}
 
   SharedAllocationRecord(
@@ -861,7 +859,6 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
   const Kokkos::CudaHostPinnedSpace m_space;
 
  protected:
-  ~SharedAllocationRecord();
   SharedAllocationRecord() : RecordBase(), m_space() {}
 
   SharedAllocationRecord(

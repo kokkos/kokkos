@@ -188,7 +188,6 @@ class SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
   const Kokkos::Experimental::HBWSpace m_space;
 
  protected:
-  ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
   SharedAllocationRecord(

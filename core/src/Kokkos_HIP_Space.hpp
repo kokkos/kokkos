@@ -537,8 +537,6 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
   const Kokkos::Experimental::HIPSpace m_space;
 
  protected:
-  ~SharedAllocationRecord();
-
   SharedAllocationRecord(
       const Kokkos::Experimental::HIPSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
@@ -588,7 +586,6 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
   const Kokkos::Experimental::HIPHostPinnedSpace m_space;
 
  protected:
-  ~SharedAllocationRecord();
   SharedAllocationRecord() : RecordBase(), m_space() {}
 
   SharedAllocationRecord(
