@@ -246,7 +246,7 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
  protected:
   ~SharedAllocationRecord()
 #if defined( \
-    KOKKOS_IMPL_INTEL16_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
+    KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
       noexcept
 #endif
       ;
