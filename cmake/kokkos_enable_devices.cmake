@@ -41,6 +41,9 @@ IF(KOKKOS_ENABLE_OPENMP)
     XL         -qsmp=omp
     DEFAULT    -fopenmp
   )
+  COMPILER_SPECIFIC_LIBS(
+    AppleClang -lomp
+  )
 ENDIF()
 
 KOKKOS_DEVICE_OPTION(OPENMPTARGET OFF DEVICE "Whether to build the OpenMP target backend")
