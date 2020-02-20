@@ -239,9 +239,7 @@ constexpr size_t unpadded_task_base_size = 44 + 2 * sizeof(int16_t);
 constexpr size_t task_base_misalignment =
     unpadded_task_base_size % alignof(void*);
 constexpr size_t task_base_padding_size =
-    task_base_misalignment == 0
-        ? 0
-        : (alignof(void*) - unpadded_task_base_size % alignof(void*));
+    (alignof(void*) - task_base_misalignment) % alignof(void*);
 constexpr size_t expected_task_base_size =
     unpadded_task_base_size + task_base_padding_size;
 
