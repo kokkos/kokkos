@@ -737,6 +737,9 @@ FUNCTION(COMPILER_SPECIFIC_OPTIONS_HELPER)
     ""
     "${COMPILERS}"
     ${ARGN})
+  IF(PARSE_UNPARSED_ARGUMENTS)
+    MESSAGE(SEND_ERROR "'${PARSE_UNPARSED_ARGUMENTS}' argument(s) not recognized when providing compiler specific options")
+  ENDIF()
 
   SET(COMPILER ${KOKKOS_CXX_COMPILER_ID})
 
