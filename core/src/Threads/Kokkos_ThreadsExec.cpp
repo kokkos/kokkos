@@ -550,7 +550,8 @@ int ThreadsExec::is_initialized() { return nullptr != s_threads_exec[0]; }
 void ThreadsExec::initialize(unsigned thread_count, unsigned use_numa_count,
                              unsigned use_cores_per_numa,
                              bool allow_asynchronous_threadpool) {
-  static const Sentinel sentinel;
+  // need to provide an initializer for Intel compilers
+  static const Sentinel sentinel = {};
 
   const bool is_initialized = 0 != s_thread_pool_size[0];
 
