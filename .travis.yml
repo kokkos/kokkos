@@ -48,9 +48,6 @@ matrix:
 # Apple Clang doesn't support OpenMP
     - os: osx
       compiler: clang
-      env: BACKEND="OPENMP"
-    - os: osx
-      compiler: clang
       env: CMAKE_BUILD_TYPE=Debug BACKEND="OPENMP" COVERAGE=yes GTEST_FILTER="-*DeathTest*"
     - os: osx
       compiler: clang
@@ -66,6 +63,7 @@ before_script:
       export HOMEBREW_NO_AUTO_UPDATE=1;
       brew ls --versions ccache   > /dev/null || brew install ccache;
       export PATH=/usr/local/opt/ccache/libexec:$PATH;
+      if [[ ${BACKEND} == "OPENMP" ]]; then brew install libomp; fi
     fi
   - ccache -z
   - if [[ ${COVERAGE} ]]; then export CXX="${CXX} --coverage"; fi
