@@ -244,7 +244,12 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
   const Kokkos::HostSpace m_space;
 
  protected:
-  ~SharedAllocationRecord();
+  ~SharedAllocationRecord()
+#if defined( \
+    KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
+      noexcept
+#endif
+      ;
   SharedAllocationRecord() = default;
 
   SharedAllocationRecord(

@@ -356,6 +356,10 @@
 #endif
 #endif
 
+#if (1800 > KOKKOS_COMPILER_INTEL)
+#define KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION
+#endif
+
 #if defined(__MIC__)
 // Compiling for Xeon Phi
 #endif

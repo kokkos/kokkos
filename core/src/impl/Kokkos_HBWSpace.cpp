@@ -181,7 +181,12 @@ void SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::deallocate(
 }
 
 SharedAllocationRecord<Kokkos::Experimental::HBWSpace,
-                       void>::~SharedAllocationRecord() {
+                       void>::~SharedAllocationRecord()
+#if defined( \
+    KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
+    noexcept
+#endif
+{
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::deallocateData(
