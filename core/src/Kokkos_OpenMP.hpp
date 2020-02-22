@@ -52,10 +52,13 @@
 
 #include <cstddef>
 #include <iosfwd>
-#include <Kokkos_HostSpace.hpp>
 
 #ifdef KOKKOS_ENABLE_HBWSPACE
 #include <Kokkos_HBWSpace.hpp>
+#elif defined( KOKKOS_ENABLE_SICM )
+#include <Kokkos_SICMSpace.hpp>
+#else
+#include <Kokkos_HostSpace.hpp>
 #endif
 
 #include <Kokkos_ScratchSpace.hpp>
@@ -84,6 +87,8 @@ class OpenMP {
   using memory_space =
 #ifdef KOKKOS_ENABLE_HBWSPACE
       Experimental::HBWSpace;
+#elif defined( KOKKOS_ENABLE_SICM )
+    Experimental::SICMSpace;
 #else
       HostSpace;
 #endif

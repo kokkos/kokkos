@@ -54,7 +54,13 @@
 
 namespace TestMemoryPool {
 
-template <typename MemSpace = Kokkos::HostSpace>
+template <typename MemSpace =
+#ifdef KOKKOS_ENABLE_SICM
+          Kokkos::Experimental::SICMSpace
+#else
+          Kokkos::HostSpace
+#endif
+          >
 void test_host_memory_pool_defaults() {
   typedef typename MemSpace::execution_space Space;
   typedef typename Kokkos::MemoryPool<Space> MemPool;
@@ -130,7 +136,13 @@ void test_host_memory_pool_defaults() {
   }
 }
 
-template <typename MemSpace = Kokkos::HostSpace>
+template <typename MemSpace =
+#ifdef KOKKOS_ENABLE_SICM
+          Kokkos::Experimental::SICMSpace
+#else
+          Kokkos::HostSpace
+#endif
+          >
 void test_host_memory_pool_stats() {
   typedef typename MemSpace::execution_space Space;
   typedef typename Kokkos::MemoryPool<Space> MemPool;
