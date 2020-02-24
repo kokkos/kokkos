@@ -935,6 +935,10 @@ void fence() { Impl::fence_internal(); }
 void print_configuration(std::ostream& out, const bool detail) {
   std::ostringstream msg;
 
+  msg << "Kokkos Version:" << std::endl;
+  msg << "  " << KOKKOS_VERSION / 10000 << "." << (KOKKOS_VERSION % 10000) / 100
+      << "." << KOKKOS_VERSION % 100 << std::endl;
+
   msg << "Compiler:" << std::endl;
 #ifdef KOKKOS_COMPILER_APPLECC
   msg << "  KOKKOS_COMPILER_APPLECC: " << KOKKOS_COMPILER_APPLECC << std::endl;
