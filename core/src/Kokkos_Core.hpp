@@ -122,6 +122,14 @@ void initialize(int& narg, char* arg[]);
 
 void initialize(InitArguments args = InitArguments());
 
+namespace Impl {
+
+void pre_initialize(const InitArguments& args);
+
+void post_initialize(const InitArguments& args);
+
+}  // namespace Impl
+
 bool is_initialized() noexcept;
 
 bool show_warnings() noexcept;
