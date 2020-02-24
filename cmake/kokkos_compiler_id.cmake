@@ -5,7 +5,9 @@ SET(KOKKOS_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID})
 SET(KOKKOS_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
 
 # Check if the compiler is nvcc (which really means nvcc_wrapper).
-EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
+# When hipcc is used to cross compile, we need to be able to set the
+# architecture before calling --version
+EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} ${Kokkos_HIP_ARCH_FLAG} --version
                 COMMAND grep nvcc
                 COMMAND wc -l
                 OUTPUT_VARIABLE INTERNAL_HAVE_COMPILER_NVCC
