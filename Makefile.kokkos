@@ -1,5 +1,10 @@
 # Default settings common options.
 
+KOKKOS_VERSION_MAJOR = 3
+KOKKOS_VERSION_MINOR = 0
+KOKKOS_VERSION_PATCH = 0
+KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MINOR)*100+$(KOKKOS_VERSION_PATCH) | bc)
+
 # Options: Cuda,HIP,ROCm,OpenMP,Pthread,Serial
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthread"
@@ -428,6 +433,10 @@ tmp := $(call kokkos_append_header,'\#error "Do not include $(KOKKOS_CONFIG_HEAD
 tmp := $(call kokkos_append_header,'\#else')
 tmp := $(call kokkos_append_header,'\#define KOKKOS_CORE_CONFIG_H')
 tmp := $(call kokkos_append_header,'\#endif')
+
+tmp := $(call kokkos_append_header,"")
+tmp := $(call kokkos_append_header,"\#define KOKKOS_VERSION $(KOKKOS_VERSION)")
+tmp := $(call kokkos_append_header,"")
 	
 tmp := $(call kokkos_append_header,"/* Execution Spaces */")
 
