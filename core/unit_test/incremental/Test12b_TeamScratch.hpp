@@ -49,53 +49,65 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-// Degrees of concurrency per nesting level
-#define N 16
-#define M 16
-
 namespace Test {
 
 template <class ExecSpace>
 struct TeamScratch {
-  void run() {
+  void run(const int pN, const int sX, const int sY) {
     typedef Kokkos::TeamPolicy<ExecSpace> teamPolicy;
     typedef typename Kokkos::TeamPolicy<ExecSpace>::member_type memberType;
-    typedef Kokkos::View<int **, ExecSpace> dataType;
-    typedef Kokkos::View<int *, ExecSpace,
+    typedef Kokkos::View<size_t **, ExecSpace> dataType;
+    dataType v("Matrix", sX, sY);
+
+    typedef Kokkos::View<size_t **, ExecSpace,
                          Kokkos::MemoryTraits<Kokkos::Unmanaged> >
         scratchDataType;
-    int scratchSize = scratchDataType::shmem_size(M);
-
-    dataType v("Matrix", N, M);
+    int scratchSize = scratchDataType::shmem_size(v.extent(0), v.extent(1));
 
     Kokkos::parallel_for(
         "Team",
-        teamPolicy(N, M).set_scratch_size(0, Kokkos::PerTeam(scratchSize)),
+        teamPolicy(pN, Kokkos::AUTO)
+            .set_scratch_size(0, Kokkos::PerTeam(scratchSize)),
         KOKKOS_LAMBDA(const memberType &team) {
           // Allocate and use scratch pad memory
-          scratchDataType v_S(team.team_scratch(0), M);
-          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, M),
-                               [&](const int m) { v_S(m) = 0xABC; });
-          team.team_barrier();
-          // Aggregate contributions
+          scratchDataType v_S(team.team_scratch(0), sX, sY);
           const int n = team.league_rank();
-          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, M),
-                               [&](const int m) { v(n, m) = v_S(m); });
+
+          Kokkos::parallel_for(
+              Kokkos::TeamThreadRange(team, sX), [&](const int m) {
+                Kokkos::parallel_for(
+                    Kokkos::ThreadVectorRange(team, sY), [&](const int k) {
+                      v_S(m, k) = v_S.extent(0) * v_S.extent(1) * n +
+                                  v_S.extent(1) * m + k;
+                    });
+              });
+
+          team.team_barrier();
+
+          // Sum up contributions and reduce by one dimension
+          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, sX),
+                               [&](const int m) {
+                                 for (int i = 0; i < sY; ++i)
+                                   v(n, m) += v_S(m, i);
+                               });
         });
 
     Kokkos::fence();
     auto v_H = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
 
-    int check = 0;
-    for (int n = 0; n < N; ++n)
-      for (int m = 0; m < M; ++m) check += ((v_H(n, m) ^ 0xABC) == 0) ? 0 : 1;
-    ASSERT_EQ(check, 0);
+    size_t check   = 0;
+    const size_t s = pN * sX * sY;
+    for (int n = 0; n < pN; ++n)
+      for (int m = 0; m < sX; ++m) check += v_H(n, m);
+    ASSERT_EQ(check, s * (s - 1) / 2);
   }
 };
 
 TEST(TEST_CATEGORY, TeamScratch) {
   TeamScratch<TEST_EXECSPACE> test;
-  test.run();
+  test.run(1, 4, 4);
+  test.run(4, 7, 10);
+  test.run(14, 277, 321);
 }
 
 }  // namespace Test
