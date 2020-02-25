@@ -54,23 +54,22 @@ namespace Test {
 template <class ExecSpace>
 struct TeamScratch {
   void run(const int pN, const int sX, const int sY) {
-    typedef Kokkos::TeamPolicy<ExecSpace> teamPolicy;
-    typedef typename Kokkos::TeamPolicy<ExecSpace>::member_type memberType;
-    typedef Kokkos::View<size_t **, ExecSpace> dataType;
-    dataType v("Matrix", sX, sY);
+    using policy_t = Kokkos::TeamPolicy<ExecSpace>;
+    using team_t   = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+    using data_t   = Kokkos::View<size_t **, ExecSpace>;
+    data_t v("Matrix", sX, sY);
 
-    typedef Kokkos::View<size_t **, ExecSpace,
-                         Kokkos::MemoryTraits<Kokkos::Unmanaged> >
-        scratchDataType;
-    int scratchSize = scratchDataType::shmem_size(v.extent(0), v.extent(1));
+    using scratch_t = Kokkos::View<size_t **, ExecSpace,
+                                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+    int scratchSize = scratch_t::shmem_size(v.extent(0), v.extent(1));
 
     Kokkos::parallel_for(
         "Team",
-        teamPolicy(pN, Kokkos::AUTO)
+        policy_t(pN, Kokkos::AUTO)
             .set_scratch_size(0, Kokkos::PerTeam(scratchSize)),
-        KOKKOS_LAMBDA(const memberType &team) {
+        KOKKOS_LAMBDA(const team_t &team) {
           // Allocate and use scratch pad memory
-          scratchDataType v_S(team.team_scratch(0), sX, sY);
+          scratch_t v_S(team.team_scratch(0), sX, sY);
           const int n = team.league_rank();
 
           Kokkos::parallel_for(
