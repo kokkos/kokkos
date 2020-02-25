@@ -54,7 +54,6 @@
 #include <unistd.h>
 
 //----------------------------------------------------------------------------
-
 namespace {
 bool g_is_initialized = false;
 bool g_show_warnings  = true;
@@ -164,17 +163,14 @@ bool is_unsigned_int(const char* str) {
   }
   return true;
 }
-void initialize_internal(const InitArguments& args) {
+
+void initialize_backends(const InitArguments& args) {
 // This is an experimental setting
 // For KNL in Flat mode this variable should be set, so that
 // memkind allocates high bandwidth memory correctly.
 #ifdef KOKKOS_ENABLE_HBWSPACE
   setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif
-
-  if (args.disable_warnings) {
-    g_show_warnings = false;
-  }
 
   // Protect declarations, to prevent "unused variable" warnings.
 #if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
@@ -364,6 +360,9 @@ void initialize_internal(const InitArguments& args) {
               << std::endl;
   }
 #endif
+}
+
+void initialize_profiling(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
 #else
@@ -373,6 +372,21 @@ void initialize_internal(const InitArguments& args) {
               << std::endl;
   }
 #endif
+}
+
+void pre_initialize_internal(const InitArguments& args) {
+  if (args.disable_warnings) g_show_warnings = false;
+}
+
+void post_initialize_internal(const InitArguments& args) {
+  initialize_profiling(args);
+}
+
+void initialize_internal(const InitArguments& args) {
+  pre_initialize_internal(args);
+  initialize_backends(args);
+  post_initialize_internal(args);
+
   g_is_initialized = true;
 }
 
@@ -920,6 +934,17 @@ void initialize(InitArguments arguments) {
   Impl::parse_environment_variables(arguments);
   Impl::initialize_internal(arguments);
 }
+
+namespace Impl {
+
+void pre_initialize(const InitArguments& args) {
+  pre_initialize_internal(args);
+}
+
+void post_initialize(const InitArguments& args) {
+  post_initialize_internal(args);
+}
+}  // namespace Impl
 
 void push_finalize_hook(std::function<void()> f) { finalize_hooks.push(f); }
 
