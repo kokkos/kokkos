@@ -192,6 +192,12 @@ if(KOKKOS_CMAKE_VERBOSE)
     message(STATUS "  Device Parallel: None")
   endif()
 
+  if( KOKKOS_ENABLE_SYCL )
+    message(STATUS "  Device Parallel: SYCL" )
+  else()
+    message(STATUS "  Device Parallel: None" )
+  endif()
+
   if(KOKKOS_ENABLE_OPENMP)
     message(STATUS "    Host Parallel: OpenMP")
   elseif(KOKKOS_ENABLE_PTHREAD)
