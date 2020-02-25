@@ -25,9 +25,11 @@ then
   echo 'PATCH Versions do not agree GNU' $GNU_PATCH 'vs CMAKE' $CMAKE_PATCH
 fi
 
-sed -i 's|KOKKOS_VERSION_MAJOR = '$GNU_MAJOR'|KOKKOS_VERSION_MAJOR = '$NEW_MAJOR'|g' Makefile.kokkos
-sed -i 's|KOKKOS_VERSION_MINOR = '$GNU_MINOR'|KOKKOS_VERSION_MINOR = '$NEW_MINOR'|g' Makefile.kokkos
-sed -i 's|KOKKOS_VERSION_PATCH = '$GNU_PATCH'|KOKKOS_VERSION_PATCH = '$NEW_PATCH'|g' Makefile.kokkos
-sed -i 's|Kokkos_VERSION_MAJOR '$GNU_MAJOR')|Kokkos_VERSION_MAJOR '$NEW_MAJOR')|g' CMakeLists.txt
-sed -i 's|Kokkos_VERSION_MINOR '$GNU_MINOR')|Kokkos_VERSION_MINOR '$NEW_MINOR')|g' CMakeLists.txt
-sed -i 's|Kokkos_VERSION_PATCH '$GNU_PATCH')|Kokkos_VERSION_PATCH '$NEW_PATCH')|g' CMakeLists.txt
+sed -i.bak 's|KOKKOS_VERSION_MAJOR = '$GNU_MAJOR'|KOKKOS_VERSION_MAJOR = '$NEW_MAJOR'|g' Makefile.kokkos
+sed -i.bak 's|KOKKOS_VERSION_MINOR = '$GNU_MINOR'|KOKKOS_VERSION_MINOR = '$NEW_MINOR'|g' Makefile.kokkos
+sed -i.bak 's|KOKKOS_VERSION_PATCH = '$GNU_PATCH'|KOKKOS_VERSION_PATCH = '$NEW_PATCH'|g' Makefile.kokkos
+rm Makefile.kokkos.bak
+sed -i.bak 's|Kokkos_VERSION_MAJOR '$GNU_MAJOR')|Kokkos_VERSION_MAJOR '$NEW_MAJOR')|g' CMakeLists.txt
+sed -i.bak 's|Kokkos_VERSION_MINOR '$GNU_MINOR')|Kokkos_VERSION_MINOR '$NEW_MINOR')|g' CMakeLists.txt
+sed -i.bak 's|Kokkos_VERSION_PATCH '$GNU_PATCH')|Kokkos_VERSION_PATCH '$NEW_PATCH')|g' CMakeLists.txt
+rm CMakeLists.txt.bak
