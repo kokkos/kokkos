@@ -160,8 +160,8 @@ struct reduction_identity<long> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr static long prod() {
     return static_cast<long>(1);
   }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long max() { return LLONG_MIN; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long min() { return LLONG_MAX; }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static long max() { return LONG_MIN; }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static long min() { return LONG_MAX; }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static long bor() {
     return static_cast<long>(0x0);
   }
