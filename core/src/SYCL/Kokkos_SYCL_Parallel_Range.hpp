@@ -4,27 +4,22 @@
 namespace Kokkos {
 namespace Impl {
 
-template< class FunctorType , class ... Traits >
-class ParallelFor< FunctorType
+template< typename FunctorType , class ... Traits >
+struct ParallelFor< FunctorType
                  , Kokkos::RangePolicy< Traits ... >
                  , Kokkos::Experimental::SYCL
                  >
 {
-public:
   typedef Kokkos::RangePolicy< Traits ... > Policy;
-private:
-
   typedef typename Policy::member_type  Member ;
   typedef typename Policy::work_tag     WorkTag ;
   typedef typename Policy::launch_bounds LaunchBounds ;
 
-public:
-  const FunctorType  m_functor ;
-  const Policy       m_policy ;
+  FunctorType  m_functor ;
+  Policy       m_policy ;
 
-private:
-  ParallelFor() = delete ;
-  ParallelFor & operator = ( const ParallelFor & ) = delete ;
+//  ParallelFor() = delete ;
+//  ParallelFor& operator=( const ParallelFor & ) = delete ;
 
   template< class TagType >
   typename std::enable_if< std::is_same< TagType , void >::value >::type
@@ -36,26 +31,38 @@ private:
   exec_range( const Member i ) const
     { m_functor( TagType() , i ); }
 
-public:
+//public:
 
   typedef FunctorType functor_type ;
 
   inline
-  void operator()(cl::sycl::item<1> item) const
+  void operator()(cl::sycl::id<1> item) const
     {
-      int id = item.get_linear_id();
-      m_functor(id);
+      int idx = item[0];
+      m_functor(idx);
     }
 
   inline
-  void execute() const
-    {
-      /*#ifdef SYCL_USE_BIND_LAUNCH
-      m_policy.space().impl_internal_space_instance()->m_queue->submit(
-        std::bind(Kokkos::Experimental::Impl::sycl_launch_bind<ParallelFor>,this,std::placeholders::_1));
-      #else      */
-      Kokkos::Experimental::Impl::sycl_launch(*this);
-//      #endif
+  void execute() const {
+      int start = m_policy.begin();
+      int end = m_policy.end();
+      int extent = end - start;
+      std::cerr << "Setting range = " << extent << std::endl;
+      cl::sycl::range<1> dispatch_range(extent);
+
+      cl::sycl::gpu_selector localgpu;
+      cl::sycl::queue local_queue(localgpu);
+// m_policy.space().impl_internal_space_instance()->m_queue->submit([&] (cl::sycl::handler& cgh) {
+		local_queue.submit([&](cl::sycl::handler& cgh){
+			cl::sycl::stream out(4096,1024,cgh);
+          cgh.parallel_for(dispatch_range,
+				  	  [=](cl::sycl::id<1> item) {
+        	  	  	   	   out << item[0] << sycl::endl;
+        	  	  	   	   m_functor( static_cast<const int>(item[0]) );
+          	  });
+	        });
+	 //
+		m_policy.space().impl_internal_space_instance()->m_queue->wait();
     }
 
   ParallelFor( const FunctorType  & arg_functor ,
