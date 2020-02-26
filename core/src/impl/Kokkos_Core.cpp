@@ -362,7 +362,7 @@ void initialize_backends(const InitArguments& args) {
 #endif
 }
 
-void initialize_profiling(const InitArguments& args) {
+void initialize_profiling(const InitArguments&) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
 #else

@@ -1525,7 +1525,7 @@ struct FunctorValueJoin<FunctorType, ArgTag, T&, Enable> {
   KOKKOS_FORCEINLINE_FUNCTION
   FunctorValueJoin(const FunctorType&) {}
 
-  KOKKOS_FORCEINLINE_FUNCTION static void join(const FunctorType& f,
+  KOKKOS_FORCEINLINE_FUNCTION static void join(const FunctorType& /*f*/,
                                                volatile void* const lhs,
                                                const volatile void* const rhs) {
     *((volatile T*)lhs) += *((const volatile T*)rhs);

@@ -1172,7 +1172,8 @@ namespace Kokkos {
 
 template <class FunctorType>
 KOKKOS_INLINE_FUNCTION void single(
-    const Impl::VectorSingleStruct<Impl::ThreadsExecTeamMember>& single_struct,
+    const Impl::VectorSingleStruct<
+        Impl::ThreadsExecTeamMember>& /*single_struct*/,
     const FunctorType& lambda) {
   lambda();
 }
@@ -1186,7 +1187,8 @@ KOKKOS_INLINE_FUNCTION void single(
 
 template <class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION void single(
-    const Impl::VectorSingleStruct<Impl::ThreadsExecTeamMember>& single_struct,
+    const Impl::VectorSingleStruct<
+        Impl::ThreadsExecTeamMember>& /*single_struct*/,
     const FunctorType& lambda, ValueType& val) {
   lambda(val);
 }
