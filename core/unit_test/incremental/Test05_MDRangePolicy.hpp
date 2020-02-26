@@ -53,10 +53,9 @@
 
 namespace Test {
 
-using value_type       = double;
-const int N            = 10;
-const int M            = 10;
-const value_type delta = 0.5;
+using value_type = double;
+const int N      = 10;
+const int M      = 10;
 
 template <class ExecSpace>
 struct TestMDRangePolicy {
@@ -97,8 +96,7 @@ struct TestMDRangePolicy {
   // compare and equal
   void compare_equal_2D() {
     for (int i = 0; i < N; ++i)
-      for (int j = 0; j < M; ++j)
-        ASSERT_EQ(hostDataView_2D(i, j), i * j * delta);
+      for (int j = 0; j < M; ++j) ASSERT_EQ(hostDataView_2D(i, j), i * M + j);
   }
 
   // compare and equal
@@ -106,7 +104,7 @@ struct TestMDRangePolicy {
     for (int i = 0; i < N; ++i)
       for (int j = 0; j < M; ++j)
         for (int k = 0; k < N; ++k)
-          ASSERT_EQ(hostDataView_3D(i, j, k), i * j * k * delta);
+          ASSERT_EQ(hostDataView_3D(i, j, k), i * M * N + j * N + k);
   }
 
   // compare and equal
@@ -115,7 +113,8 @@ struct TestMDRangePolicy {
       for (int j = 0; j < M; ++j)
         for (int k = 0; k < N; ++k)
           for (int l = 0; l < M; ++l)
-            ASSERT_EQ(hostDataView_4D(i, j, k, l), i * j * k * l * delta);
+            ASSERT_EQ(hostDataView_4D(i, j, k, l),
+                      i * M * N * M + j * N * M + k * M + l);
   }
 
   // A 2-D MDRangePolicy
@@ -127,7 +126,7 @@ struct TestMDRangePolicy {
 
     Kokkos::parallel_for(
         mdPolicy_2D, KOKKOS_LAMBDA(const int i, const int j) {
-          deviceDataView_2D(i, j) = i * j * delta;
+          deviceDataView_2D(i, j) = i * M + j;
         });
 
     // Copy data back to host view.
@@ -146,7 +145,7 @@ struct TestMDRangePolicy {
 
     Kokkos::parallel_for(
         mdPolicy_3D, KOKKOS_LAMBDA(const int i, const int j, const int k) {
-          deviceDataView_3D(i, j, k) = i * j * k * delta;
+          deviceDataView_3D(i, j, k) = i * M * N + j * N + k;
         });
 
     // Copy data back to host view.
@@ -166,7 +165,7 @@ struct TestMDRangePolicy {
     Kokkos::parallel_for(
         mdPolicy_4D,
         KOKKOS_LAMBDA(const int i, const int j, const int k, const int l) {
-          deviceDataView_4D(i, j, k, l) = i * j * k * l * delta;
+          deviceDataView_4D(i, j, k, l) = i * M * N * M + j * N * M + k * M + l;
         });
 
     Kokkos::deep_copy(hostDataView_4D, deviceDataView_4D);
