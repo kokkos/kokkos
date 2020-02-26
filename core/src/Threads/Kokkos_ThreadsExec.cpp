@@ -24,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -78,8 +78,6 @@ void (*volatile s_current_function)(ThreadsExec &, const void *);
 const void *volatile s_current_function_arg = nullptr;
 
 struct Sentinel {
-  Sentinel() {}
-
   ~Sentinel() {
     if (s_thread_pool_size[0] || s_thread_pool_size[1] ||
         s_thread_pool_size[2] || s_current_reduce_size ||
@@ -552,7 +550,8 @@ int ThreadsExec::is_initialized() { return nullptr != s_threads_exec[0]; }
 void ThreadsExec::initialize(unsigned thread_count, unsigned use_numa_count,
                              unsigned use_cores_per_numa,
                              bool allow_asynchronous_threadpool) {
-  static const Sentinel sentinel;
+  // need to provide an initializer for Intel compilers
+  static const Sentinel sentinel = {};
 
   const bool is_initialized = 0 != s_thread_pool_size[0];
 

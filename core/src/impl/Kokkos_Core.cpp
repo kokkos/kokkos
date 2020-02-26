@@ -24,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -54,7 +54,6 @@
 #include <unistd.h>
 
 //----------------------------------------------------------------------------
-
 namespace {
 bool g_is_initialized = false;
 bool g_show_warnings  = true;
@@ -63,6 +62,96 @@ std::stack<std::function<void()> > finalize_hooks;
 
 namespace Kokkos {
 namespace Impl {
+
+int get_ctest_gpu(const char* local_rank_str) {
+  auto const* ctest_kokkos_device_type =
+      std::getenv("CTEST_KOKKOS_DEVICE_TYPE");
+  if (!ctest_kokkos_device_type) {
+    return 0;
+  }
+
+  auto const* ctest_resource_group_count_str =
+      std::getenv("CTEST_RESOURCE_GROUP_COUNT");
+  if (!ctest_resource_group_count_str) {
+    return 0;
+  }
+
+  // Make sure rank is within bounds of resource groups specified by CTest
+  auto resource_group_count = std::atoi(ctest_resource_group_count_str);
+  auto local_rank           = std::atoi(local_rank_str);
+  if (local_rank >= resource_group_count) {
+    std::ostringstream ss;
+    ss << "Error: local rank " << local_rank
+       << " is outside the bounds of resource groups provided by CTest. Raised"
+       << " by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  // Get the resource types allocated to this resource group
+  std::ostringstream ctest_resource_group;
+  ctest_resource_group << "CTEST_RESOURCE_GROUP_" << local_rank;
+  std::string ctest_resource_group_name = ctest_resource_group.str();
+  auto const* ctest_resource_group_str =
+      std::getenv(ctest_resource_group_name.c_str());
+  if (!ctest_resource_group_str) {
+    std::ostringstream ss;
+    ss << "Error: " << ctest_resource_group_name << " is not specified. Raised"
+       << " by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  // Look for the device type specified in CTEST_KOKKOS_DEVICE_TYPE
+  bool found_device                        = false;
+  std::string ctest_resource_group_cxx_str = ctest_resource_group_str;
+  std::istringstream instream(ctest_resource_group_cxx_str);
+  while (true) {
+    std::string devName;
+    std::getline(instream, devName, ',');
+    if (devName == ctest_kokkos_device_type) {
+      found_device = true;
+      break;
+    }
+    if (instream.eof() || devName.length() == 0) {
+      break;
+    }
+  }
+
+  if (!found_device) {
+    std::ostringstream ss;
+    ss << "Error: device type '" << ctest_kokkos_device_type
+       << "' not included in " << ctest_resource_group_name
+       << ". Raised by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  // Get the device ID
+  std::string ctest_device_type_upper = ctest_kokkos_device_type;
+  for (auto& c : ctest_device_type_upper) {
+    c = std::toupper(c);
+  }
+  ctest_resource_group << "_" << ctest_device_type_upper;
+
+  std::string ctest_resource_group_id_name = ctest_resource_group.str();
+  auto resource_str = std::getenv(ctest_resource_group_id_name.c_str());
+  if (!resource_str) {
+    std::ostringstream ss;
+    ss << "Error: " << ctest_resource_group_id_name
+       << " is not specified. Raised by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  auto const* comma = std::strchr(resource_str, ',');
+  if (!comma || strncmp(resource_str, "id:", 3)) {
+    std::ostringstream ss;
+    ss << "Error: invalid value of " << ctest_resource_group_id_name << ": '"
+       << resource_str << "'. Raised by Kokkos::Impl::get_ctest_gpu().";
+    throw_runtime_exception(ss.str());
+  }
+
+  std::string id(resource_str + 3, comma - resource_str - 3);
+  return std::atoi(id.c_str());
+}
+
 namespace {
 
 bool is_unsigned_int(const char* str) {
@@ -74,17 +163,14 @@ bool is_unsigned_int(const char* str) {
   }
   return true;
 }
-void initialize_internal(const InitArguments& args) {
+
+void initialize_backends(const InitArguments& args) {
 // This is an experimental setting
 // For KNL in Flat mode this variable should be set, so that
 // memkind allocates high bandwidth memory correctly.
 #ifdef KOKKOS_ENABLE_HBWSPACE
   setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif
-
-  if (args.disable_warnings) {
-    g_show_warnings = false;
-  }
 
   // Protect declarations, to prevent "unused variable" warnings.
 #if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
@@ -101,19 +187,32 @@ void initialize_internal(const InitArguments& args) {
   const int skip_device = args.skip_device;
   // if the exact device is not set, but ndevices was given, assign round-robin
   // using on-node MPI rank
-  if (use_gpu < 0 && ndevices >= 0) {
-    auto local_rank_str = std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
+  if (use_gpu < 0) {
+    auto const* local_rank_str =
+        std::getenv("OMPI_COMM_WORLD_LOCAL_RANK");  // OpenMPI
     if (!local_rank_str)
       local_rank_str = std::getenv("MV2_COMM_WORLD_LOCAL_RANK");  // MVAPICH2
     if (!local_rank_str)
       local_rank_str = std::getenv("SLURM_LOCALID");  // SLURM
-    if (local_rank_str) {
-      auto local_rank = std::atoi(local_rank_str);
-      use_gpu         = local_rank % ndevices;
-    } else {
-      // user only gave us ndevices, but the MPI environment variable wasn't
-      // set. start with GPU 0 at this point
-      use_gpu = 0;
+
+    auto const* ctest_kokkos_device_type =
+        std::getenv("CTEST_KOKKOS_DEVICE_TYPE");  // CTest
+    auto const* ctest_resource_group_count_str =
+        std::getenv("CTEST_RESOURCE_GROUP_COUNT");  // CTest
+    if (ctest_kokkos_device_type && ctest_resource_group_count_str &&
+        local_rank_str) {
+      // Use the device assigned by CTest
+      use_gpu = get_ctest_gpu(local_rank_str);
+    } else if (ndevices >= 0) {
+      // Use the device assigned by the rank
+      if (local_rank_str) {
+        auto local_rank = std::atoi(local_rank_str);
+        use_gpu         = local_rank % ndevices;
+      } else {
+        // user only gave use ndevices, but the MPI environment variable wasn't
+        // set. start with GPU 0 at this point
+        use_gpu = 0;
+      }
     }
     // shift assignments over by one so no one is assigned to "skip_device"
     if (use_gpu >= skip_device) ++use_gpu;
@@ -261,6 +360,9 @@ void initialize_internal(const InitArguments& args) {
               << std::endl;
   }
 #endif
+}
+
+void initialize_profiling(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
 #else
@@ -270,7 +372,21 @@ void initialize_internal(const InitArguments& args) {
               << std::endl;
   }
 #endif
+}
+
+void pre_initialize_internal(const InitArguments& args) {
+  if (args.disable_warnings) g_show_warnings = false;
+}
+
+void post_initialize_internal(const InitArguments& args) {
+  initialize_profiling(args);
   g_is_initialized = true;
+}
+
+void initialize_internal(const InitArguments& args) {
+  pre_initialize_internal(args);
+  initialize_backends(args);
+  post_initialize_internal(args);
 }
 
 void finalize_internal(const bool all_spaces = false) {
@@ -818,6 +934,17 @@ void initialize(InitArguments arguments) {
   Impl::initialize_internal(arguments);
 }
 
+namespace Impl {
+
+void pre_initialize(const InitArguments& args) {
+  pre_initialize_internal(args);
+}
+
+void post_initialize(const InitArguments& args) {
+  post_initialize_internal(args);
+}
+}  // namespace Impl
+
 void push_finalize_hook(std::function<void()> f) { finalize_hooks.push(f); }
 
 void finalize() { Impl::finalize_internal(); }
@@ -831,6 +958,10 @@ void fence() { Impl::fence_internal(); }
 
 void print_configuration(std::ostream& out, const bool detail) {
   std::ostringstream msg;
+
+  msg << "Kokkos Version:" << std::endl;
+  msg << "  " << KOKKOS_VERSION / 10000 << "." << (KOKKOS_VERSION % 10000) / 100
+      << "." << KOKKOS_VERSION % 100 << std::endl;
 
   msg << "Compiler:" << std::endl;
 #ifdef KOKKOS_COMPILER_APPLECC

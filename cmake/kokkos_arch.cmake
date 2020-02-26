@@ -52,7 +52,8 @@ KOKKOS_ARCH_OPTION(VOLTA70         GPU  "NVIDIA Volta generation CC 7.0")
 KOKKOS_ARCH_OPTION(VOLTA72         GPU  "NVIDIA Volta generation CC 7.2")
 KOKKOS_ARCH_OPTION(TURING75        GPU  "NVIDIA Turing generation CC 7.5")
 KOKKOS_ARCH_OPTION(EPYC            HOST "AMD Epyc architecture")
-
+KOKKOS_ARCH_OPTION(VEGA            GPU  "AMD Vega generation GFX900")
+KOKKOS_ARCH_OPTION(MI60            GPU  "AMD GPU MI50/MI60 GFX906")
 
 IF (KOKKOS_ENABLE_CUDA)
  #Regardless of version, make sure we define the general architecture name
@@ -112,6 +113,7 @@ ENDIF()
 
 IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   SET(CUDA_ARCH_FLAG "--cuda-gpu-arch")
+  SET(AMDGPU_ARCH_FLAG "--amdgpu-target")
   GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS -x cuda)
   IF (KOKKOS_ENABLE_CUDA)
      SET(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND ON CACHE BOOL "enable CUDA Clang workarounds" FORCE)
@@ -330,11 +332,44 @@ CHECK_CUDA_ARCH(PASCAL61  sm_61)
 CHECK_CUDA_ARCH(VOLTA70   sm_70)
 CHECK_CUDA_ARCH(VOLTA72   sm_72)
 CHECK_CUDA_ARCH(TURING75  sm_75)
+
+SET(AMDGPU_ARCH_ALREADY_SPECIFIED "")
+FUNCTION(CHECK_AMDGPU_ARCH ARCH FLAG)
+  IF(KOKKOS_ARCH_${ARCH})
+    IF(AMDGPU_ARCH_ALREADY_SPECIFIED)
+      MESSAGE(FATAL_ERROR "Multiple GPU architectures given! Already have ${AMDGPU_ARCH_ALREADY_SPECIFIED}, but trying to add ${ARCH}. If you are re-running CMake, try clearing the cache and running again.")
+    ENDIF()
+    SET(AMDGPU_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
+    IF (NOT KOKKOS_ENABLE_HIP AND NOT KOKKOS_ENABLE_OPENMPTARGET)
+      MESSAGE(WARNING "Given HIP arch ${ARCH}, but Kokkos_ENABLE_AMDGPU and Kokkos_ENABLE_OPENMPTARGET are OFF. Option will be ignored.")
+      UNSET(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
+    ELSE()
+      SET(KOKKOS_AMDGPU_ARCH_FLAG ${FLAG} PARENT_SCOPE)
+      GLOBAL_APPEND(KOKKOS_AMDGPU_OPTIONS "${AMDGPU_ARCH_FLAG}=${FLAG}")
+      IF(KOKKOS_ENABLE_HIP)
+        GLOBAL_APPEND(KOKKOS_LINK_OPTIONS "${AMDGPU_ARCH_FLAG}=${FLAG}")
+      ENDIF()
+    ENDIF()
+  ENDIF()
+ENDFUNCTION()
+
+#These will define KOKKOS_AMDGPU_ARCH_FLAG
+#to the corresponding flag name if ON
+CHECK_AMDGPU_ARCH(VEGA gfx900)
+CHECK_AMDGPU_ARCH(MI60 gfx906)
+
 IF (KOKKOS_ENABLE_OPENMPTARGET)
   SET(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
   IF (CLANG_CUDA_ARCH)
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH} -fopenmp-targets=nvptx64-nvidia-cuda
+      XL -qtgtarch=${KOKKOS_CUDA_ARCH_FLAG}
+    )
+  ENDIF()
+  SET(CLANG_AMDGPU_ARCH ${KOKKOS_AMDGPU_ARCH_FLAG})
+  IF (CLANG_AMDGPU_ARCH)
+    COMPILER_SPECIFIC_FLAGS(
+      Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${CLANG_AMDGPU_ARCH} -fopenmp-targets=amdgcn-amd-amdhsa
     )
   ENDIF()
 ENDIF()
