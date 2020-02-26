@@ -380,14 +380,13 @@ void pre_initialize_internal(const InitArguments& args) {
 
 void post_initialize_internal(const InitArguments& args) {
   initialize_profiling(args);
+  g_is_initialized = true;
 }
 
 void initialize_internal(const InitArguments& args) {
   pre_initialize_internal(args);
   initialize_backends(args);
   post_initialize_internal(args);
-
-  g_is_initialized = true;
 }
 
 void finalize_internal(const bool all_spaces = false) {
