@@ -35,18 +35,9 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
   ENDIF()
 
-    IF(NOT ${FEATURE_NAME} IN_LIST CMAKE_CXX_COMPILE_FEATURES)
-          IF (KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA")
-                  MESSAGE(STATUS "nvcc_wrapper does not support TARGET_COMPILE_FEATURES")
-                        GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
-                            ELSE()
-                                    MESSAGE(FATAL_ERROR "Compiler ${KOKKOS_CXX_COMPILER_ID} should support ${FEATURE_NAME}, but CMake reports feature not supported")
-                                        ENDIF()
-                                          ENDIF()
-
-  #  IF(NOT ${FEATURE_NAME} IN_LIST CMAKE_CXX_COMPILE_FEATURES)
-  #    MESSAGE(FATAL_ERROR "Compiler ${KOKKOS_CXX_COMPILER_ID} should support ${FEATURE_NAME}, but CMake reports feature not supported")
-  #  ENDIF()
+  IF(NOT ${FEATURE_NAME} IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+    MESSAGE(FATAL_ERROR "Compiler ${KOKKOS_CXX_COMPILER_ID} should support ${FEATURE_NAME}, but CMake reports feature not supported")
+  ENDIF()
 ENDFUNCTION()
 
 
