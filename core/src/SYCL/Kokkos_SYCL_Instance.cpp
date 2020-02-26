@@ -202,15 +202,17 @@ void SYCLInternal::initialize( int sycl_device_id  )
 	 {
 		 auto dlist = cl::sycl::device::get_devices();
 		 cl::sycl::device& d = dlist[m_syclDev];
-		 bool is_accelerator = d.is_accelerator() || d.is_gpu();
-		 if ( !is_accelerator ) {
-			 std::cerr << "WARNING: Device " << m_syclDev << " is NOT an accelerator. Just so you know..." << std::endl;
-			 std::cerr << "Will initialize first accelerator device instead..." << std::endl;
-			 bool accel_found=false;
-			 for(int i=0; i < dlist.size() && !accel_found; ++i ) {
-				 if ( dlist[i].is_accelerator() || dlist[i].is_gpu() ) {
+//		 bool is_accelerator = d.is_accelerator() || d.is_gpu();
+		 bool is_cpu = d.is_cpu();
+
+		 if ( !is_cpu ) {
+			 std::cerr << "WARNING: Device " << m_syclDev << " is NOT a CPU. Just so you know..." << std::endl;
+			 std::cerr << "Will initialize first CPU device instead..." << std::endl;
+			 bool cpu_found=false;
+			 for(int i=0; i < dlist.size() && !cpu_found; ++i ) {
+				 if ( dlist[i].is_cpu() ) {
 					 m_syclDev=i;
-					 accel_found=true;
+					 cpu_found=true;
 				 }
 			 }
 		 }
@@ -218,6 +220,9 @@ void SYCLInternal::initialize( int sycl_device_id  )
 		 m_queue = new cl::sycl::queue(dlist[m_syclDev]);
 
 	 }
+
+
+
 /*
     // Query what compute capability architecture a kernel executes:
     m_syclArch = sycl_kernel_arch();
