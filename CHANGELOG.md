@@ -1,7 +1,7 @@
 # Change Log
 
-## [2.9.99](https://github.com/kokkos/kokkos/tree/2.9.99) (2020-01-27)
-[Full Changelog](https://github.com/kokkos/kokkos/compare/2.9.00...2.9.99)
+## [3.0.00](https://github.com/kokkos/kokkos/tree/3.0.00) (2020-01-27)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/2.9.00...3.0.00)
 
 **Implemented enhancements:**
 
