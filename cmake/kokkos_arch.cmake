@@ -81,8 +81,9 @@ ENDIF()
 
 IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
   SET(COMMON_WARNINGS
-    "-Wall" "-Wshadow" "-pedantic"
-    "-Wsign-compare" "-Wtype-limits" "-Wuninitialized")
+    "-Wall" "-Wextra" "-Wshadow" "-pedantic"
+    "-Wsign-compare" "-Wtype-limits" "-Wuninitialized"
+    "-Wno-implicit-fallthrough")
 
   SET(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers"
     ${COMMON_WARNINGS})

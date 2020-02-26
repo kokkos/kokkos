@@ -468,7 +468,7 @@ class ViewMapping<
 
   KOKKOS_INLINE_FUNCTION
   static void assign(DstType &dst, const SrcType &src,
-                     const TrackType &src_track) {
+                     const TrackType & /*src_track*/) {
     static_assert(is_assignable, "Can only convert to array_type");
 
     typedef typename DstType::offset_type dst_offset_type;

@@ -2143,7 +2143,7 @@ inline void resize(DynRankView<T, P...>& v,
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
                 "Can only resize managed views");
 
-  drview_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6);
+  drview_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
 
   Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
 
@@ -2170,7 +2170,7 @@ inline void realloc(DynRankView<T, P...>& v,
   const std::string label = v.label();
 
   v = drview_type();  // Deallocate first, if the only view to allocation
-  v = drview_type(label, n0, n1, n2, n3, n4, n5, n6);
+  v = drview_type(label, n0, n1, n2, n3, n4, n5, n6, n7);
 }
 
 }  // namespace Kokkos

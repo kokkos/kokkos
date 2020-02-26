@@ -349,14 +349,14 @@ class BinSort {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  void operator()(const bin_count_tag& tag, const int& i) const {
+  void operator()(const bin_count_tag& /*tag*/, const int& i) const {
     const int j = range_begin + i;
     bin_count_atomic(bin_op.bin(keys, j))++;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const bin_offset_tag& tag, const int& i, value_type& offset,
-                  const bool& final) const {
+  void operator()(const bin_offset_tag& /*tag*/, const int& i,
+                  value_type& offset, const bool& final) const {
     if (final) {
       bin_offsets(i) = offset;
     }
@@ -364,7 +364,7 @@ class BinSort {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const bin_binning_tag& tag, const int& i) const {
+  void operator()(const bin_binning_tag& /*tag*/, const int& i) const {
     const int j     = range_begin + i;
     const int bin   = bin_op.bin(keys, j);
     const int count = bin_count_atomic(bin)++;
@@ -373,7 +373,7 @@ class BinSort {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const bin_sort_bins_tag& tag, const int& i) const {
+  void operator()(const bin_sort_bins_tag& /*tag*/, const int& i) const {
     auto bin_size = bin_count_const(i);
     if (bin_size <= 1) return;
     int upper_bound = bin_offsets(i) + bin_size;

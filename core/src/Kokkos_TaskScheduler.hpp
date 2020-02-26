@@ -143,7 +143,7 @@ class BasicTaskScheduler : public Impl::TaskSchedulerBase {
       Kokkos::BasicFuture<typename FunctorType::value_type, scheduler_type>
       _spawn_impl(DepTaskType* arg_predecessor_task, TaskPriority arg_priority,
                   typename task_base::function_type arg_function,
-                  typename task_base::destroy_type arg_destroy,
+                  typename task_base::destroy_type /*arg_destroy*/,
                   FunctorType&& arg_functor) {
     using functor_future_type =
         future_type_for_functor<typename std::decay<FunctorType>::type>;

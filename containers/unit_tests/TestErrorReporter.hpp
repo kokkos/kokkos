@@ -52,7 +52,7 @@
 
 namespace Test {
 
-// Just save the data in the report.  Informative text goies in the
+// Just save the data in the report.  Informative text goes in the
 // operator<<(..).
 template <typename DataType1, typename DataType2, typename DataType3>
 struct ThreeValReport {
@@ -85,7 +85,7 @@ struct ErrorReporterDriverBase {
       error_reporter_type;
   error_reporter_type m_errorReporter;
 
-  ErrorReporterDriverBase(int reporter_capacity, int test_size)
+  ErrorReporterDriverBase(int reporter_capacity, int /*test_size*/)
       : m_errorReporter(reporter_capacity) {}
 
   KOKKOS_INLINE_FUNCTION bool error_condition(const int work_idx) const {

@@ -105,7 +105,7 @@ struct TestComplexConstruction {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int &i) const {
+  void operator()(const int & /*i*/) const {
     Kokkos::complex<double> a(1.5, 2.5);
     d_results(0) = a;
     Kokkos::complex<double> b(a);
@@ -232,7 +232,7 @@ struct TestComplexBasicMath {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int &i) const {
+  void operator()(const int & /*i*/) const {
     Kokkos::complex<double> a(1.5, 2.5);
     Kokkos::complex<double> b(3.25, 5.75);
     // Basic math complex / complex
@@ -325,7 +325,7 @@ struct TestComplexSpecialFunctions {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int &i) const {
+  void operator()(const int & /*i*/) const {
     Kokkos::complex<double> a(1.5, 2.5);
     Kokkos::complex<double> b(3.25, 5.75);
     double c = 9.3;

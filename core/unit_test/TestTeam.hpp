@@ -100,7 +100,7 @@ struct TestTeamPolicy {
   struct NoOpTag {};
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const NoOpTag &, const team_member &member) const {}
+  void operator()(const NoOpTag &, const team_member & /*member*/) const {}
 
   static void test_small_league_size() {
     int bs = 8;   // batch size (number of elements per batch)
@@ -445,7 +445,7 @@ struct SharedTeamFunctor {
       shared_int_array_type;
 
   // Tell how much shared memory will be required by this functor.
-  inline unsigned team_shmem_size(int team_size) const {
+  inline unsigned team_shmem_size(int /*team_size*/) const {
     return shared_int_array_type::shmem_size(SHARED_COUNT) +
            shared_int_array_type::shmem_size(SHARED_COUNT);
   }
@@ -1138,7 +1138,7 @@ struct TestTeamBroadcast {
   typedef typename Kokkos::TeamPolicy<ScheduleType, ExecSpace>::member_type
       team_member;
 
-  TestTeamBroadcast(const size_t league_size) {}
+  TestTeamBroadcast(const size_t /*league_size*/) {}
 
   struct BroadcastTag {};
 
@@ -1157,7 +1157,7 @@ struct TestTeamBroadcast {
 
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(teamMember, ts),
-        [&](const int j, value_type &teamUpdate) { teamUpdate += value; },
+        [&](const int /*j*/, value_type &teamUpdate) { teamUpdate += value; },
         parUpdate);
 
     if (teamMember.team_rank() == 0) update += parUpdate;
@@ -1178,7 +1178,7 @@ struct TestTeamBroadcast {
 
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(teamMember, ts),
-        [&](const int j, value_type &teamUpdate) { teamUpdate += value; },
+        [&](const int /*j*/, value_type &teamUpdate) { teamUpdate += value; },
         parUpdate);
 
     if (teamMember.team_rank() == 0) update += parUpdate;

@@ -830,10 +830,10 @@ class View : public ViewTraits<DataType, Properties...> {
 
 #else
 
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG) \
-  View::template verify_space<                \
-      Kokkos::Impl::ActiveExecutionMemorySpace>::check();
-
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)             \
+  View::template verify_space<                            \
+      Kokkos::Impl::ActiveExecutionMemorySpace>::check(); \
+  [](...) {} ARG;
 #endif
 
  public:

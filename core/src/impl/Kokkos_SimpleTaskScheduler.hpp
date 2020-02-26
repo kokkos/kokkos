@@ -226,13 +226,13 @@ class SimpleTaskScheduler
   }
 
   template <int TaskEnum, class DepTaskType, class FunctorType>
-  KOKKOS_FUNCTION
-      future_type_for_functor<typename std::decay<FunctorType>::type>
-      _spawn_impl(
-          DepTaskType arg_predecessor_task, TaskPriority arg_priority,
-          typename runnable_task_base_type::function_type apply_function_ptr,
-          typename runnable_task_base_type::destroy_type destroy_function_ptr,
-          FunctorType&& functor) {
+  KOKKOS_FUNCTION future_type_for_functor<
+      typename std::decay<FunctorType>::type>
+  _spawn_impl(
+      DepTaskType arg_predecessor_task, TaskPriority arg_priority,
+      typename runnable_task_base_type::function_type apply_function_ptr,
+      typename runnable_task_base_type::destroy_type /*destroy_function_ptr*/,
+      FunctorType&& functor) {
     KOKKOS_EXPECTS(m_queue != nullptr);
 
     using functor_future_type =

@@ -2113,7 +2113,8 @@ struct ViewStride;
 
 template <>
 struct ViewStride<0> {
-  enum { S0 = 0, S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
+  static constexpr size_t S0 = 0, S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0,
+                          S6 = 0, S7 = 0;
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2127,7 +2128,8 @@ struct ViewStride<0> {
 template <>
 struct ViewStride<1> {
   size_t S0;
-  enum { S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
+  static constexpr size_t S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0,
+                          S7 = 0;
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2142,7 +2144,7 @@ struct ViewStride<1> {
 template <>
 struct ViewStride<2> {
   size_t S0, S1;
-  enum { S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
+  static constexpr size_t S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0;
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2157,7 +2159,7 @@ struct ViewStride<2> {
 template <>
 struct ViewStride<3> {
   size_t S0, S1, S2;
-  enum { S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
+  static constexpr size_t S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0;
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2172,7 +2174,7 @@ struct ViewStride<3> {
 template <>
 struct ViewStride<4> {
   size_t S0, S1, S2, S3;
-  enum { S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
+  static constexpr size_t S4 = 0, S5 = 0, S6 = 0, S7 = 0;
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2187,7 +2189,7 @@ struct ViewStride<4> {
 template <>
 struct ViewStride<5> {
   size_t S0, S1, S2, S3, S4;
-  enum { S5 = 0, S6 = 0, S7 = 0 };
+  static constexpr size_t S5 = 0, S6 = 0, S7 = 0;
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2202,7 +2204,7 @@ struct ViewStride<5> {
 template <>
 struct ViewStride<6> {
   size_t S0, S1, S2, S3, S4, S5;
-  enum { S6 = 0, S7 = 0 };
+  static constexpr size_t S6 = 0, S7 = 0;
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2217,7 +2219,7 @@ struct ViewStride<6> {
 template <>
 struct ViewStride<7> {
   size_t S0, S1, S2, S3, S4, S5, S6;
-  enum { S7 = 0 };
+  static constexpr size_t S7 = 0;
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
