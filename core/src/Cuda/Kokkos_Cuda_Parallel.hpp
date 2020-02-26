@@ -192,7 +192,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   }
 
   template <class FunctorType, class ReducerType>
-  inline int team_size_max(const FunctorType& f, const ReducerType& r,
+  inline int team_size_max(const FunctorType& f, const ReducerType& /*r*/,
                            const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
