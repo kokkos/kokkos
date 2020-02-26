@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -899,7 +900,7 @@ void test_view_mapping() {
     ASSERT_TRUE(offset.span_is_contiguous());
 
     Kokkos::Impl::ViewMapping<traits_t, void> v(
-        Kokkos::Impl::ViewCtorProp<int*>((int*)0), stride);
+        Kokkos::Impl::ViewCtorProp<int*>(nullptr), stride);
   }
 
   {
@@ -1075,17 +1076,20 @@ void test_view_mapping() {
     typedef typename Kokkos::Impl::HostMirror<Space>::Space::execution_space
         host_exec_space;
 
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<host_exec_space>(0, 10), KOKKOS_LAMBDA(int) {
-          // 'a' is captured by copy, and the capture mechanism converts 'a' to
+    int errors = 0;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<host_exec_space>(0, 10),
+        KOKKOS_LAMBDA(int, int& e) {
           // an unmanaged copy.  When the parallel dispatch accepts a move for
           // the lambda, this count should become 1.
 
-          ASSERT_EQ(a.use_count(), 2);
+          if (a.use_count() != 2) ++e;
           V x = a;
-          ASSERT_EQ(a.use_count(), 2);
-          ASSERT_EQ(x.use_count(), 2);
-        });
+          if (a.use_count() != 2) ++e;
+          if (x.use_count() != 2) ++e;
+        },
+        errors);
+    ASSERT_EQ(errors, 0);
 #endif  // #if !defined( KOKKOS_ENABLE_CUDA_LAMBDA )
   }
 }

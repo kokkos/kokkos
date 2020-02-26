@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -69,6 +70,14 @@
 
 namespace Kokkos {
 namespace Impl {
+
+#ifdef KOKKOS_COMPILER_PGI
+// Bizzarely, an extra jump instruction forces the PGI compiler to not have a
+// bug related to (probably?) empty base optimization and/or aggregate
+// construction.  This must be defined out-of-line to generate a jump
+// jump instruction
+void _kokkos_pgi_compiler_bug_workaround();
+#endif
 
 enum TaskType : int16_t {
   TaskTeam    = 0,
@@ -121,11 +130,17 @@ class ReferenceCountedBase {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  constexpr explicit ReferenceCountedBase(
-      reference_count_size_type initial_reference_count)
+#ifndef KOKKOS_COMPILER_PGI
+  constexpr
+#endif
+      explicit ReferenceCountedBase(
+          reference_count_size_type initial_reference_count)
       : m_ref_count(initial_reference_count) {
     // This can't be here because it breaks constexpr
     // KOKKOS_EXPECTS(initial_reference_count > 0);
+#ifdef KOKKOS_COMPILER_PGI
+    Impl::_kokkos_pgi_compiler_bug_workaround();
+#endif
   }
 
   /** Decrement the reference count,

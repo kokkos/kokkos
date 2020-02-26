@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -45,8 +46,6 @@
 #define KOKKOS_IMPL_TASKQUEUE_IMPL_HPP
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
-
-#include <impl/Kokkos_Atomic_Store.hpp>
 
 #define KOKKOS_IMPL_DEBUG_TASKDAG_SCHEDULING 0
 
@@ -182,7 +181,7 @@ KOKKOS_FUNCTION bool TaskQueue<ExecSpace, MemorySpace>::push_task(
          task->m_priority, task->m_ref_count);
 #endif
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
 
   task_root_type *volatile &next = task->m_next;
@@ -193,7 +192,7 @@ KOKKOS_FUNCTION bool TaskQueue<ExecSpace, MemorySpace>::push_task(
   }
 
   // store the head of the queue
-  task_root_type *old_head = Impl::atomic_load(queue);
+  task_root_type *old_head = *queue;
 
   while (old_head != lock) {
     // set task->next to the head of the queue
@@ -246,8 +245,7 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
 
   // Retry until the lock is acquired or the queue is empty.
 
-  task_root_type *task =
-      Impl::atomic_load(queue);  // TODO this should be acquire
+  task_root_type *task = *queue;
 
   while (end != task) {
     // The only possible values for the queue are
@@ -256,7 +254,7 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
     //
     // If queue is locked then just read by guaranteeing the CAS will fail.
 
-    if (lock == task) task = 0;
+    if (lock == task) task = nullptr;
 
     task_root_type *const x = task;
 
@@ -282,7 +280,7 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
       // context switch this thread at this point and the rest of the threads
       // calling this method would never make forward progress
 
-      *queue = next;  // TODO this should be an atomic store
+      *queue = next;
       next   = lock;
 
       Kokkos::memory_fence();
@@ -336,7 +334,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_runnable(
          task->m_priority, task->m_ref_count);
 #endif
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
   task_root_type *const end  = (task_root_type *)task_root_type::EndTag;
 
@@ -384,16 +382,16 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_runnable(
   // If we don't have a dependency, or if pushing onto the wait queue of that
   // dependency failed (since the only time that queue should be locked is when
   // the task is transitioning to complete??!?)
-  const bool is_ready = (0 == dep) || (!push_task(&dep->m_wait, task));
+  const bool is_ready = (nullptr == dep) || (!push_task(&dep->m_wait, task));
 
-  if ((0 != dep) && respawn) {
+  if ((nullptr != dep) && respawn) {
     // Reference count for dep was incremented when
     // respawn assigned dependency to task->m_next
     // so that if dep completed prior to the
     // above push_task dep would not be destroyed.
     // dep reference count can now be decremented,
     // which may deallocate the task.
-    TaskQueue::assign(&dep, (task_root_type *)0);
+    TaskQueue::assign(&dep, nullptr);
   }
 
   if (is_ready) {
@@ -454,7 +452,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_aggregate(
          task->m_ref_count);
 #endif
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
   task_root_type *const end  = (task_root_type *)task_root_type::EndTag;
 
@@ -553,7 +551,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::reschedule(
   //   task is in Executing-Respawn state
   //   task->m_next == 0 (no dependence)
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
 
   if (lock != Kokkos::atomic_exchange(&task->m_next, zero)) {
@@ -569,7 +567,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::complete(
   // Complete a runnable task that has finished executing
   // or a when_all task when all of its dependeneces are complete.
 
-  task_root_type *const zero = (task_root_type *)0;
+  task_root_type *const zero = nullptr;
   task_root_type *const lock = (task_root_type *)task_root_type::LockTag;
   task_root_type *const end  = (task_root_type *)task_root_type::EndTag;
 
@@ -626,7 +624,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::complete(
         task_root_type volatile &vx = *x;
 
         task_root_type *const next = vx.m_next;
-        vx.m_next                  = 0;
+        vx.m_next                  = nullptr;
 
         Kokkos::memory_fence();
 

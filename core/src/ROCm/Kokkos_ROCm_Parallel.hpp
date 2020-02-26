@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -292,7 +293,6 @@ class TeamPolicyInternal<Kokkos::Experimental::ROCm, Properties...>
   }
   KOKKOS_INLINE_FUNCTION int team_size() const {
     return (m_team_size > 0) ? m_team_size : Impl::get_max_tile_thread();
-    ;
   }
   KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size; }
 
@@ -836,7 +836,7 @@ class ParallelFor<F, Kokkos::TeamPolicy<Traits...>,
     if (total_size == 0) return;
 
     const auto shared_size = FunctorTeamShmemSize<F>::value(f, team_size);
-    char* scratch          = NULL;
+    char* scratch          = nullptr;
     char* shared = (char*)rocm_device_allocate(shared_size * league_size +
                                                scratch_size0 * league_size);
     if (0 < scratch_size1)
@@ -888,7 +888,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       const FunctorType& f, const Policy& policy, const ViewType& result_view,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = NULL) {
+                              void*>::type = nullptr) {
     typedef typename Policy::work_tag Tag;
     typedef Kokkos::Impl::FunctorValueTraits<FunctorType, Tag> ValueTraits;
     typedef Kokkos::Impl::FunctorValueInit<FunctorType, Tag> ValueInit;
@@ -1105,7 +1105,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const HostViewType& arg_result,
                  typename std::enable_if<Kokkos::is_view<HostViewType>::value,
-                                         void*>::type = NULL)
+                                         void*>::type = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -1148,7 +1148,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Traits...>, ReducerType,
       const FunctorType& f, const Policy& policy, const ViewType& result_view,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = NULL) {
+                              void*>::type = nullptr) {
     const int league_size   = policy.league_size();
     const int team_size     = policy.team_size(f);
     const int vector_length = policy.vector_length();
@@ -1171,7 +1171,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Traits...>, ReducerType,
         FunctorTeamShmemSize<FunctorType>::value(f, team_size);
 
     char* shared;
-    char* scratch = NULL;
+    char* scratch = nullptr;
 
     shared = (char*)rocm_device_allocate(league_size *
                                          (shared_size + scratch_size0));
@@ -1222,7 +1222,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Traits...>, ReducerType,
     const int scratch_size1 = policy.scratch_size(1, team_size);
 
     char* shared;
-    char* scratch = NULL;
+    char* scratch = nullptr;
     shared        = (char*)rocm_device_allocate((shared_size + scratch_size0) *
                                          league_size);
     if (0 < scratch_size1)

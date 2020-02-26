@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -919,8 +920,6 @@ class TestViewAPI {
       dView4_unmanaged;
   typedef typename dView0::host_mirror_space host;
 
-  TestViewAPI() {}
-
   static void run_test_view_operator_a() {
     {
       TestViewOperator<T, device> f;
@@ -1033,12 +1032,12 @@ class TestViewAPI {
     dView4 dx, dy, dz;
     hView4 hx, hy, hz;
 
-    ASSERT_TRUE(dx.data() == 0);
-    ASSERT_TRUE(dy.data() == 0);
-    ASSERT_TRUE(dz.data() == 0);
-    ASSERT_TRUE(hx.data() == 0);
-    ASSERT_TRUE(hy.data() == 0);
-    ASSERT_TRUE(hz.data() == 0);
+    ASSERT_TRUE(dx.data() == nullptr);
+    ASSERT_TRUE(dy.data() == nullptr);
+    ASSERT_TRUE(dz.data() == nullptr);
+    ASSERT_TRUE(hx.data() == nullptr);
+    ASSERT_TRUE(hy.data() == nullptr);
+    ASSERT_TRUE(hz.data() == nullptr);
     ASSERT_EQ(dx.extent(0), 0u);
     ASSERT_EQ(dy.extent(0), 0u);
     ASSERT_EQ(dz.extent(0), 0u);
@@ -1095,11 +1094,11 @@ class TestViewAPI {
 
     ASSERT_EQ(dx.use_count(), size_t(2));
 
-    ASSERT_FALSE(dx.data() == 0);
-    ASSERT_FALSE(const_dx.data() == 0);
-    ASSERT_FALSE(unmanaged_dx.data() == 0);
-    ASSERT_FALSE(unmanaged_from_ptr_dx.data() == 0);
-    ASSERT_FALSE(dy.data() == 0);
+    ASSERT_FALSE(dx.data() == nullptr);
+    ASSERT_FALSE(const_dx.data() == nullptr);
+    ASSERT_FALSE(unmanaged_dx.data() == nullptr);
+    ASSERT_FALSE(unmanaged_from_ptr_dx.data() == nullptr);
+    ASSERT_FALSE(dy.data() == nullptr);
     ASSERT_NE(dx, dy);
 
     ASSERT_EQ(dx.extent(0), unsigned(N0));
@@ -1232,19 +1231,19 @@ class TestViewAPI {
     ASSERT_NE(dx, dz);
 
     dx = dView4();
-    ASSERT_TRUE(dx.data() == 0);
-    ASSERT_FALSE(dy.data() == 0);
-    ASSERT_FALSE(dz.data() == 0);
+    ASSERT_TRUE(dx.data() == nullptr);
+    ASSERT_FALSE(dy.data() == nullptr);
+    ASSERT_FALSE(dz.data() == nullptr);
 
     dy = dView4();
-    ASSERT_TRUE(dx.data() == 0);
-    ASSERT_TRUE(dy.data() == 0);
-    ASSERT_FALSE(dz.data() == 0);
+    ASSERT_TRUE(dx.data() == nullptr);
+    ASSERT_TRUE(dy.data() == nullptr);
+    ASSERT_FALSE(dz.data() == nullptr);
 
     dz = dView4();
-    ASSERT_TRUE(dx.data() == 0);
-    ASSERT_TRUE(dy.data() == 0);
-    ASSERT_TRUE(dz.data() == 0);
+    ASSERT_TRUE(dx.data() == nullptr);
+    ASSERT_TRUE(dy.data() == nullptr);
+    ASSERT_TRUE(dz.data() == nullptr);
   }
 
   static void run_test_deep_copy_empty() {
@@ -1449,6 +1448,11 @@ class TestViewAPI {
   }
 
   static void run_test_error() {
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    if (std::is_same<typename dView1::memory_space,
+                     Kokkos::Experimental::OpenMPTargetSpace>::value)
+      return;
+#endif
     auto alloc_size = std::numeric_limits<size_t>::max() - 42;
     try {
       auto should_always_fail = dView1("hello_world_failure", alloc_size);

@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -600,39 +601,10 @@ struct ViewOffset<
 
   //----------------------------------------
 
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  KOKKOS_INLINE_FUNCTION ~ViewOffset() {}
-  KOKKOS_INLINE_FUNCTION ViewOffset() {}
-  KOKKOS_INLINE_FUNCTION ViewOffset(const ViewOffset& rhs)
-      : m_dim(rhs.m_dim),
-        m_tile_N0(rhs.m_tile_N0),
-        m_tile_N1(rhs.m_tile_N1),
-        m_tile_N2(rhs.m_tile_N2),
-        m_tile_N3(rhs.m_tile_N3),
-        m_tile_N4(rhs.m_tile_N4),
-        m_tile_N5(rhs.m_tile_N5),
-        m_tile_N6(rhs.m_tile_N6),
-        m_tile_N7(rhs.m_tile_N7) {}
-
-  KOKKOS_INLINE_FUNCTION ViewOffset& operator=(const ViewOffset& rhs) {
-    m_dim     = rhs.m_dim;
-    m_tile_N0 = rhs.m_tile_N0;
-    m_tile_N1 = rhs.m_tile_N1;
-    m_tile_N2 = rhs.m_tile_N2;
-    m_tile_N3 = rhs.m_tile_N3;
-    m_tile_N4 = rhs.m_tile_N4;
-    m_tile_N5 = rhs.m_tile_N5;
-    m_tile_N6 = rhs.m_tile_N6;
-    m_tile_N7 = rhs.m_tile_N7;
-    return *this;
-  }
-
-#else
-  KOKKOS_INLINE_FUNCTION ~ViewOffset()                 = default;
-  KOKKOS_INLINE_FUNCTION ViewOffset()                  = default;
-  KOKKOS_INLINE_FUNCTION ViewOffset(const ViewOffset&) = default;
-  KOKKOS_INLINE_FUNCTION ViewOffset& operator=(const ViewOffset&) = default;
-#endif
+  KOKKOS_DEFAULTED_FUNCTION ~ViewOffset()                 = default;
+  KOKKOS_DEFAULTED_FUNCTION ViewOffset()                  = default;
+  KOKKOS_DEFAULTED_FUNCTION ViewOffset(const ViewOffset&) = default;
+  KOKKOS_DEFAULTED_FUNCTION ViewOffset& operator=(const ViewOffset&) = default;
 
   template <unsigned TrivialScalarSize>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(

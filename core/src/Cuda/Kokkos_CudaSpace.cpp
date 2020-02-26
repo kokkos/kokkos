@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -146,7 +147,7 @@ void CudaSpace::access_error(const void *const) {
 /*--------------------------------------------------------------------------*/
 
 bool CudaUVMSpace::available() {
-#if defined(CUDA_VERSION) && (6000 <= CUDA_VERSION) && !defined(__APPLE__)
+#if defined(CUDA_VERSION) && !defined(__APPLE__)
   enum { UVM_available = true };
 #else
   enum { UVM_available = false };
@@ -218,18 +219,9 @@ void *CudaSpace::allocate(const size_t arg_alloc_size) const {
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
   void *ptr = nullptr;
 
-  enum { max_uvm_allocations = 65536 };
-
   Cuda::impl_static_fence();
   if (arg_alloc_size > 0) {
     Kokkos::Impl::num_uvm_allocations++;
-
-    if (Kokkos::Impl::num_uvm_allocations.load() > max_uvm_allocations) {
-      throw Experimental::CudaRawMemoryAllocationFailure(
-          arg_alloc_size, 1,
-          Experimental::RawMemoryAllocationFailure::FailureMode::
-              MaximumCudaUVMAllocationsExceeded);
-    }
 
     auto error_code =
         cudaMallocManaged(&ptr, arg_alloc_size, cudaMemAttachGlobal);
@@ -359,7 +351,8 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::attach_texture_object(
   resDesc.res.linear.sizeInBytes = alloc_size;
   resDesc.res.linear.devPtr      = alloc_ptr;
 
-  CUDA_SAFE_CALL(cudaCreateTextureObject(&tex_obj, &resDesc, &texDesc, NULL));
+  CUDA_SAFE_CALL(
+      cudaCreateTextureObject(&tex_obj, &resDesc, &texDesc, nullptr));
 
   return tex_obj;
 }
@@ -894,7 +887,7 @@ void SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::print_records(
 //==============================================================================
 
 void *cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
-  static void *ptr                 = NULL;
+  static void *ptr                 = nullptr;
   static std::int64_t current_size = 0;
   if (current_size == 0) {
     current_size = bytes;

@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -162,7 +163,7 @@ float shfl(const float& val, const int& srcLane, const int& width) {
 template <typename Scalar>
 KOKKOS_INLINE_FUNCTION Scalar
 shfl(const Scalar& val, const int& srcLane,
-     const typename Impl::enable_if<(sizeof(Scalar) == 4), int>::type& width) {
+     const typename std::enable_if<(sizeof(Scalar) == 4), int>::type& width) {
   Scalar tmp1 = val;
   float tmp   = *reinterpret_cast<float*>(&tmp1);
   tmp         = __shfl(tmp, srcLane, width);
@@ -181,7 +182,7 @@ double shfl(const double& val, const int& srcLane, const int& width) {
 template <typename Scalar>
 KOKKOS_INLINE_FUNCTION Scalar
 shfl(const Scalar& val, const int& srcLane,
-     const typename Impl::enable_if<(sizeof(Scalar) == 8), int>::type& width) {
+     const typename std::enable_if<(sizeof(Scalar) == 8), int>::type& width) {
   int lo           = __double2loint(*reinterpret_cast<const double*>(&val));
   int hi           = __double2hiint(*reinterpret_cast<const double*>(&val));
   lo               = __shfl(lo, srcLane, width);
@@ -193,7 +194,7 @@ shfl(const Scalar& val, const int& srcLane,
 template <typename Scalar>
 KOKKOS_INLINE_FUNCTION Scalar
 shfl(const Scalar& val, const int& srcLane,
-     const typename Impl::enable_if<(sizeof(Scalar) > 8), int>::type& width) {
+     const typename std::enable_if<(sizeof(Scalar) > 8), int>::type& width) {
   Impl::shfl_union<Scalar> s_val;
   Impl::shfl_union<Scalar> r_val;
   s_val = val;
@@ -216,7 +217,7 @@ float shfl_down(const float& val, const int& delta, const int& width) {
 template <typename Scalar>
 KOKKOS_INLINE_FUNCTION Scalar shfl_down(
     const Scalar& val, const int& delta,
-    const typename Impl::enable_if<(sizeof(Scalar) == 4), int>::type& width) {
+    const typename std::enable_if<(sizeof(Scalar) == 4), int>::type& width) {
   Scalar tmp1 = val;
   float tmp   = *reinterpret_cast<float*>(&tmp1);
   tmp         = __shfl_down(tmp, delta, width);
@@ -244,7 +245,7 @@ double shfl_down(const double& val, const int& delta, const int& width) {
 template <typename Scalar>
 KOKKOS_INLINE_FUNCTION Scalar shfl_down(
     const Scalar& val, const int& delta,
-    const typename Impl::enable_if<(sizeof(Scalar) == 8), int>::type& width) {
+    const typename std::enable_if<(sizeof(Scalar) == 8), int>::type& width) {
   int lo           = __double2loint(*reinterpret_cast<const double*>(&val));
   int hi           = __double2hiint(*reinterpret_cast<const double*>(&val));
   lo               = __shfl_down(lo, delta, width);
@@ -256,7 +257,7 @@ KOKKOS_INLINE_FUNCTION Scalar shfl_down(
 template <typename Scalar>
 KOKKOS_INLINE_FUNCTION Scalar shfl_down(
     const Scalar& val, const int& delta,
-    const typename Impl::enable_if<(sizeof(Scalar) > 8), int>::type& width) {
+    const typename std::enable_if<(sizeof(Scalar) > 8), int>::type& width) {
   Impl::shfl_union<Scalar> s_val;
   Impl::shfl_union<Scalar> r_val;
   s_val = val;
@@ -279,7 +280,7 @@ float shfl_up(const float& val, const int& delta, const int& width) {
 template <typename Scalar>
 KOKKOS_INLINE_FUNCTION Scalar shfl_up(
     const Scalar& val, const int& delta,
-    const typename Impl::enable_if<(sizeof(Scalar) == 4), int>::type& width) {
+    const typename std::enable_if<(sizeof(Scalar) == 4), int>::type& width) {
   Scalar tmp1 = val;
   float tmp   = *reinterpret_cast<float*>(&tmp1);
   tmp         = __shfl_up(tmp, delta, width);
@@ -298,7 +299,7 @@ double shfl_up(const double& val, const int& delta, const int& width) {
 template <typename Scalar>
 KOKKOS_INLINE_FUNCTION Scalar shfl_up(
     const Scalar& val, const int& delta,
-    const typename Impl::enable_if<(sizeof(Scalar) == 8), int>::type& width) {
+    const typename std::enable_if<(sizeof(Scalar) == 8), int>::type& width) {
   int lo           = __double2loint(*reinterpret_cast<const double*>(&val));
   int hi           = __double2hiint(*reinterpret_cast<const double*>(&val));
   lo               = __shfl_up(lo, delta, width);
@@ -308,9 +309,9 @@ KOKKOS_INLINE_FUNCTION Scalar shfl_up(
 }
 
 template <typename Scalar>
-KOKKOS_INLINE_FUNCTION Scalar shfl_up(
-    const Scalar& val, const int& delta,
-    const typename Impl::enable_if<(sizeof(Scalar) > 8), int>::type& width) {
+KOKKOS_INLINE_FUNCTION Scalar
+shfl_up(const Scalar& val, const int& delta,
+        const typename std::enable_if<(sizeof(Scalar) > 8), int>::type& width) {
   Impl::shfl_union<Scalar> s_val;
   Impl::shfl_union<Scalar> r_val;
   s_val = val;

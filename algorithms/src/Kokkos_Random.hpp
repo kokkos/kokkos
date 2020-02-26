@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -661,6 +662,9 @@ class Random_XorShift64 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
+    using std::sqrt;
+#endif
     double S = 2.0;
     double U;
     while (S >= 1.0) {
@@ -668,7 +672,7 @@ class Random_XorShift64 {
       const double V = 2.0 * drand() - 1.0;
       S              = U * U + V * V;
     }
-    return U * std::sqrt(-2.0 * log(S) / S);
+    return U * sqrt(-2.0 * log(S) / S);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -694,10 +698,12 @@ class Random_XorShift64_Pool {
   Random_XorShift64_Pool() { num_states_ = 0; }
   Random_XorShift64_Pool(uint64_t seed) {
     num_states_ = 0;
+
+    using execution_space = typename DeviceType::execution_space;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    init(seed, DeviceType::max_hardware_threads());
+    init(seed, execution_space::max_hardware_threads());
 #else
-    init(seed, DeviceType::impl_max_hardware_threads());
+    init(seed, execution_space::impl_max_hardware_threads());
 #endif
   }
 
@@ -745,12 +751,11 @@ class Random_XorShift64_Pool {
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift64<DeviceType> get_state() const {
+    using execution_space = typename DeviceType::execution_space;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    const int i = DeviceType::hardware_thread_id();
-    ;
+    const int i = execution_space::hardware_thread_id();
 #else
-    const int i = DeviceType::impl_hardware_thread_id();
-    ;
+    const int i = execution_space::impl_hardware_thread_id();
 #endif
     return Random_XorShift64<DeviceType>(state_(i), i);
   }
@@ -900,6 +905,9 @@ class Random_XorShift1024 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
+    using std::sqrt;
+#endif
     double S = 2.0;
     double U;
     while (S >= 1.0) {
@@ -907,7 +915,7 @@ class Random_XorShift1024 {
       const double V = 2.0 * drand() - 1.0;
       S              = U * U + V * V;
     }
-    return U * std::sqrt(-2.0 * log(S) / S);
+    return U * sqrt(-2.0 * log(S) / S);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -938,10 +946,12 @@ class Random_XorShift1024_Pool {
 
   inline Random_XorShift1024_Pool(uint64_t seed) {
     num_states_ = 0;
+
+    using execution_space = typename DeviceType::execution_space;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    init(seed, DeviceType::max_hardware_threads());
+    init(seed, execution_space::max_hardware_threads());
 #else
-    init(seed, DeviceType::impl_max_hardware_threads());
+    init(seed, execution_space::impl_max_hardware_threads());
 #endif
   }
 
@@ -996,10 +1006,11 @@ class Random_XorShift1024_Pool {
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024<DeviceType> get_state() const {
+    using execution_space = typename DeviceType::execution_space;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    const int i = DeviceType::hardware_thread_id();
+    const int i = execution_space::hardware_thread_id();
 #else
-    const int i = DeviceType::impl_hardware_thread_id();
+    const int i = execution_space::impl_hardware_thread_id();
 #endif
     return Random_XorShift1024<DeviceType>(state_, p_(i), i);
   };
@@ -1154,6 +1165,9 @@ class Random_XorShift1024<Kokkos::Cuda> {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
+    using std::sqrt;
+#endif
     double S = 2.0;
     double U;
     while (S >= 1.0) {
@@ -1161,7 +1175,7 @@ class Random_XorShift1024<Kokkos::Cuda> {
       const double V = 2.0 * drand() - 1.0;
       S              = U * U + V * V;
     }
-    return U * std::sqrt(-2.0 * log(S) / S);
+    return U * sqrt(-2.0 * log(S) / S);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1389,6 +1403,9 @@ class Random_XorShift1024<Kokkos::Experimental::ROCm> {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
+#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
+    using std::sqrt;
+#endif
     double S = 2.0;
     double U;
     while (S >= 1.0) {
@@ -1396,7 +1413,7 @@ class Random_XorShift1024<Kokkos::Experimental::ROCm> {
       const double V = 2.0 * drand() - 1.0;
       S              = U * U + V * V;
     }
-    return U * std::sqrt(-2.0 * log(S) / S);
+    return U * sqrt(-2.0 * log(S) / S);
   }
 
   KOKKOS_INLINE_FUNCTION

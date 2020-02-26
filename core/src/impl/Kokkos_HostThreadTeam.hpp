@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -187,9 +188,9 @@ class HostThreadTeamData {
   constexpr HostThreadTeamData() noexcept
       : m_work_range(-1, -1),
         m_work_end(0),
-        m_scratch(0),
-        m_pool_scratch(0),
-        m_team_scratch(0),
+        m_scratch(nullptr),
+        m_pool_scratch(nullptr),
+        m_team_scratch(nullptr),
         m_pool_rank(0),
         m_pool_size(1),
         m_team_reduce(0),
@@ -590,9 +591,7 @@ class HostThreadTeamMember {
   }
 
   template <typename ReducerType>
-  KOKKOS_IMPL_THREAD_SANITIZER_IGNORE  // TODO stop having to ignore here,
-                                       // maybe?
-      KOKKOS_INLINE_FUNCTION
+  KOKKOS_INLINE_FUNCTION
       typename std::enable_if<is_reducer<ReducerType>::value>::type
       team_reduce(ReducerType const& reducer,
                   typename ReducerType::value_type contribution) const noexcept
@@ -633,12 +632,7 @@ class HostThreadTeamMember {
         // with a return value of 'false'
       } else {
         // Copy from root member's buffer:
-        // These can be write/write data races, but it doesn't matter
-        // clang-format off
-        KOKKOS_IMPL_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS(
-          reducer.reference() = *((value_type*)m_data.team_reduce());
-        ) // end supress threading errors
-        // clang-format on
+        reducer.reference() = *((value_type*)m_data.team_reduce());
       }
     } else {
       reducer.reference() = contribution;
@@ -699,8 +693,8 @@ class HostThreadTeamMember {
 #endif*/
 
   template <typename T>
-  KOKKOS_INLINE_FUNCTION T team_scan(T const& value, T* const global = 0) const
-      noexcept
+  KOKKOS_INLINE_FUNCTION T team_scan(T const& value,
+                                     T* const global = nullptr) const noexcept
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   {
     if (0 != m_data.m_team_rank) {
@@ -888,13 +882,12 @@ parallel_reduce(
 }
 
 template <typename iType, typename Closure, typename ValueType, typename Member>
-KOKKOS_IMPL_THREAD_SANITIZER_IGNORE  // TODO stop having to ignore here, maybe?
-    KOKKOS_INLINE_FUNCTION typename std::enable_if<
-        !Kokkos::is_reducer<ValueType>::value &&
-        Impl::is_host_thread_team_member<Member>::value>::type
-    parallel_reduce(Impl::TeamThreadRangeBoundariesStruct<iType, Member> const&
-                        loop_boundaries,
-                    Closure const& closure, ValueType& result) {
+KOKKOS_INLINE_FUNCTION typename std::enable_if<
+    !Kokkos::is_reducer<ValueType>::value &&
+    Impl::is_host_thread_team_member<Member>::value>::type
+parallel_reduce(
+    Impl::TeamThreadRangeBoundariesStruct<iType, Member> const& loop_boundaries,
+    Closure const& closure, ValueType& result) {
   ValueType val;
   Sum<ValueType> reducer(val);
   reducer.init(val);
@@ -905,12 +898,7 @@ KOKKOS_IMPL_THREAD_SANITIZER_IGNORE  // TODO stop having to ignore here, maybe?
   }
 
   loop_boundaries.thread.team_reduce(reducer);
-  // These can be write/write data races, but it doesn't matter
-  // clang-format off
-  KOKKOS_IMPL_INTEL_INSPECTOR_SUPRESS_THREADING_ERRORS(
-    result = reducer.reference();
-  ) // end supress threading errors
-  // clang-format on
+  result = reducer.reference();
 }
 
 /*template< typename iType, class Space

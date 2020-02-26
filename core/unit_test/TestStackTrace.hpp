@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -155,14 +156,12 @@ void test_stacktrace(bool bTerminate, bool bCustom = true) {
 
 TEST(defaultdevicetype, stacktrace_normal) { test_stacktrace(false); }
 
-#define DECLARE_DEATH_TEST(NAME) NAME##DeathTest
-
-TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_terminate) {
+TEST(defaultdevicetype_DeathTest, stacktrace_terminate) {
   ASSERT_DEATH({ test_stacktrace(true); },
                "I am the custom std::terminate handler.");
 }
 
-TEST(DECLARE_DEATH_TEST(defaultdevicetype), stacktrace_generic_term) {
+TEST(defaultdevicetype_DeathTest, stacktrace_generic_term) {
   ASSERT_DEATH({ test_stacktrace(true, false); },
                "Kokkos observes that std::terminate has been called");
 }

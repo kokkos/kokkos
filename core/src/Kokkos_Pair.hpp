@@ -1,10 +1,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -22,10 +23,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -77,14 +78,7 @@ struct pair {
   /// This calls the default constructors of T1 and T2.  It won't
   /// compile if those default constructors are not defined and
   /// public.
-  KOKKOS_FORCEINLINE_FUNCTION constexpr
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-      pair()
-      : first(), second() {
-  }
-#else
-      pair() = default;
-#endif
+  KOKKOS_DEFAULTED_FUNCTION constexpr pair() = default;
 
   /// \brief Constructor that takes both elements of the pair.
   ///
@@ -438,14 +432,7 @@ struct pair<T1, void> {
   first_type first;
   enum { second = 0 };
 
-  KOKKOS_FORCEINLINE_FUNCTION constexpr
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-      pair()
-      : first() {
-  }
-#else
-      pair() = default;
-#endif
+  KOKKOS_DEFAULTED_FUNCTION constexpr pair() = default;
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr pair(const first_type& f) : first(f) {}
 

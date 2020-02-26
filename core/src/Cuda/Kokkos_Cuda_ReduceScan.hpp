@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -155,7 +156,7 @@ __device__ bool cuda_inter_block_reduction(
   // One warp of last block performs inter block reduction through loading the
   // block values from global scratch_memory
   bool last_block = false;
-
+  __threadfence();
   __syncthreads();
   if (id < 32) {
     Cuda::size_type count;
@@ -344,6 +345,7 @@ __device__ inline
   // block values from global scratch_memory
   bool last_block = false;
 
+  __threadfence();
   __syncthreads();
   if (id < 32) {
     Cuda::size_type count;
@@ -513,10 +515,10 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
     scalar_intra_block_reduction(functor, value, true,
                                  my_global_team_buffer_element, shared_elements,
                                  shared_team_buffer_elements);
+    __threadfence();
     __syncthreads();
     unsigned int num_teams_done = 0;
     if (threadIdx.x + threadIdx.y == 0) {
-      __threadfence();
       num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
     }
     bool is_last_block = false;
@@ -614,11 +616,11 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     scalar_intra_block_reduction(functor, value, true,
                                  my_global_team_buffer_element, shared_elements,
                                  shared_team_buffer_elements);
+    __threadfence();
     __syncthreads();
 
     unsigned int num_teams_done = 0;
     if (threadIdx.x + threadIdx.y == 0) {
-      __threadfence();
       num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
     }
     bool is_last_block = false;
@@ -878,6 +880,7 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
       global[i] = shared[i];
     }
   }
+  __threadfence();
 
   // Contributing blocks note that their contribution has been completed via an
   // atomic-increment flag If this block is not the last block to contribute to

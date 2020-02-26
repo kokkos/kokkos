@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -73,12 +74,11 @@ __attribute__((aligned(16)))
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(LONG), const T&>::type
-        val) {
+    typename std::enable_if<sizeof(T) == sizeof(LONG), const T&>::type val) {
   union U {
     LONG i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } tmp;
 
   tmp.i = _InterlockedCompareExchange((LONG*)dest, *((LONG*)&val),
@@ -89,12 +89,12 @@ KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(LONGLONG),
-                                     const T&>::type val) {
+    typename std::enable_if<sizeof(T) == sizeof(LONGLONG), const T&>::type
+        val) {
   union U {
     LONGLONG i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } tmp;
 
   tmp.i = _InterlockedCompareExchange64((LONGLONG*)dest, *((LONGLONG*)&val),
@@ -105,12 +105,12 @@ KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_compare_exchange(
     volatile T* const dest, const T& compare,
-    typename Kokkos::Impl::enable_if<sizeof(T) == sizeof(Impl::cas128_t),
-                                     const T&>::type val) {
+    typename std::enable_if<sizeof(T) == sizeof(Impl::cas128_t), const T&>::type
+        val) {
   union U {
     Impl::cas128_t i;
     T t;
-    KOKKOS_INLINE_FUNCTION U(){};
+    KOKKOS_INLINE_FUNCTION U() {}
   } tmp, newval;
   newval.t = val;
   _InterlockedCompareExchange128((LONGLONG*)dest, newval.i.upper,

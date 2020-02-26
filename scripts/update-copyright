@@ -1,0 +1,6 @@
+files=`find . -name '*.cpp' -o -name '*.pc.in' -o -name '*.hpp' -o -name 'LICENSE' -o -name 'Copyright.txt' -o -name '*.cc'`
+for file in $files; do
+awk '{if($2=="Copyright" && $3=="(2014)" && $4=="Sandia" && $5=="Corporation") {print "//       Copyright (2020) National Technology & Engineering"; print "//               Solutions of Sandia, LLC (NTESS).";} else {print $0}}' $file | sed 's/DE-AC04-94AL85000 with Sandia Corporation/DE-NA0003525 with NTESS/g' | sed 's|Kokkos v. 2.0|Kokkos v. 3.0|g' &> tmp
+sed -i 's|SANDIA CORPORATION|NTESS|g' tmp
+cp tmp $file
+done

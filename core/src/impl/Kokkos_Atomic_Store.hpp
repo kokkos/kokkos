@@ -2,10 +2,10 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
+//                        Kokkos v. 3.0
 //              Copyright (2019) Sandia Corporation
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +23,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -69,9 +69,9 @@ namespace Impl {
 #define KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH inline
 #endif
 
-template <class T, class U, class MemoryOrder>
+template <class T, class MemoryOrder>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH void _atomic_store(
-    T* ptr, U val, MemoryOrder,
+    T* ptr, T val, MemoryOrder,
     typename std::enable_if<
         (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
          sizeof(T) == 8) &&
@@ -81,24 +81,15 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH void _atomic_store(
   __atomic_store_n(ptr, val, MemoryOrder::gnu_constant);
 }
 
-template <class T, class U, class MemoryOrder>
+template <class T, class MemoryOrder>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH void _atomic_store(
-    T* ptr, U val, MemoryOrder,
+    T* ptr, T val, MemoryOrder,
     typename std::enable_if<
-        std::is_same<typename MemoryOrder::memory_order,
-                     typename std::remove_cv<MemoryOrder>::type>::value &&
-            ((!(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
-                sizeof(T) == 8) &&
-              std::is_default_constructible<T>::value &&
-#ifndef KOKKOS_IMPL_YOLO_ASSUME_TRIVIALLY_COPYABLE_TO_WORK_AROUND_BUG
-              std::is_trivially_copyable<T>::value
-#else
-              true
-#endif
-              ) ||
-             ((sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
-               sizeof(T) == 8) &&
-              std::is_floating_point<T>::value)),
+        !(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
+          sizeof(T) == 8) &&
+            std::is_default_constructible<T>::value &&
+            std::is_same<typename MemoryOrder::memory_order,
+                         typename std::remove_cv<MemoryOrder>::type>::value,
         void const**>::type = nullptr) {
   __atomic_store(ptr, &val, MemoryOrder::gnu_constant);
 }
@@ -214,13 +205,7 @@ KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* ptr, T val,
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* ptr, T val) {
   // relaxed by default!
-  _atomic_store(ptr, val, Impl::memory_order_relaxed);
-}
-
-template <class T>
-KOKKOS_FORCEINLINE_FUNCTION void atomic_store(volatile T* ptr, T val) {
-  // relaxed by default!
-  _atomic_store(ptr, val, Impl::memory_order_relaxed);
+  _atomic_store(ptr, Impl::memory_order_relaxed);
 }
 
 }  // end namespace Impl

@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -58,7 +59,11 @@ namespace Kokkos {
 ///   \c float, \c double, and <tt>long double</tt>.  The latter is
 ///   currently forbidden in CUDA device kernels.
 template <class RealType>
-class alignas(2 * sizeof(RealType)) complex {
+class
+#ifdef KOKKOS_ENABLE_COMPLEX_ALIGN
+    alignas(2 * sizeof(RealType))
+#endif
+        complex {
  private:
   RealType re_{};
   RealType im_{};
@@ -68,14 +73,14 @@ class alignas(2 * sizeof(RealType)) complex {
   using value_type = RealType;
 
   //! Default constructor (initializes both real and imaginary parts to zero).
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   complex() noexcept = default;
 
   //! Copy constructor.
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   complex(const complex&) noexcept = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   complex& operator=(const complex&) noexcept = default;
 
   /// \brief Conversion constructor from compatible RType
@@ -214,7 +219,10 @@ class alignas(2 * sizeof(RealType)) complex {
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
-    const RealType s = std::fabs(y.real()) + std::fabs(y.imag());
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+    using std::fabs;
+#endif
+    const RealType s = fabs(y.real()) + fabs(y.imag());
 
     // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
     // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
@@ -242,7 +250,10 @@ class alignas(2 * sizeof(RealType)) complex {
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
-    const RealType s = std::fabs(y.real()) + std::fabs(y.imag());
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+    using std::fabs;
+#endif
+    const RealType s = fabs(y.real()) + fabs(y.imag());
 
     // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
     // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
@@ -293,8 +304,21 @@ class alignas(2 * sizeof(RealType)) complex {
   /// complex& </tt>.  See Kokkos Issue #177 for the
   /// explanation.  In practice, this means that you should not chain
   /// assignments with volatile lvalues.
-  KOKKOS_INLINE_FUNCTION void operator=(
-      const complex<RealType>& src) volatile noexcept {
+  //
+  // Templated, so as not to be a copy assignment operator (Kokkos issue #2577)
+  // Intended to behave as
+  //    void operator=(const complex&) volatile noexcept
+  //
+  // Use cases:
+  //    complex r;
+  //    const complex cr;
+  //    volatile complex vl;
+  //    vl = r;
+  //    vl = cr;
+  template <class Complex,
+            typename std::enable_if<std::is_same<Complex, complex>::value,
+                                    int>::type = 0>
+  KOKKOS_INLINE_FUNCTION void operator=(const Complex& src) volatile noexcept {
     re_ = src.re_;
     im_ = src.im_;
     // We deliberately do not return anything here.  See explanation
@@ -303,16 +327,45 @@ class alignas(2 * sizeof(RealType)) complex {
 
   //! Assignment operator, volatile LHS and volatile RHS
   // TODO Should this return void like the other volatile assignment operators?
+  //
+  // Templated, so as not to be a copy assignment operator (Kokkos issue #2577)
+  // Intended to behave as
+  //    volatile complex& operator=(const volatile complex&) volatile noexcept
+  //
+  // Use cases:
+  //    volatile complex vr;
+  //    const volatile complex cvr;
+  //    volatile complex vl;
+  //    vl = vr;
+  //    vl = cvr;
+  template <class Complex,
+            typename std::enable_if<std::is_same<Complex, complex>::value,
+                                    int>::type = 0>
   KOKKOS_INLINE_FUNCTION volatile complex& operator=(
-      const volatile complex<RealType>& src) volatile noexcept {
+      const volatile Complex& src) volatile noexcept {
     re_ = src.re_;
     im_ = src.im_;
     return *this;
   }
 
   //! Assignment operator, volatile RHS and non-volatile LHS
+  //
+  // Templated, so as not to be a copy assignment operator (Kokkos issue #2577)
+  // Intended to behave as
+  //    complex& operator=(const volatile complex&) noexcept
+  //
+  // Use cases:
+  //    volatile complex vr;
+  //    const volatile complex cvr;
+  //    complex l;
+  //    l = vr;
+  //    l = cvr;
+  //
+  template <class Complex,
+            typename std::enable_if<std::is_same<Complex, complex>::value,
+                                    int>::type = 0>
   KOKKOS_INLINE_FUNCTION complex& operator=(
-      const volatile complex<RealType>& src) noexcept {
+      const volatile Complex& src) noexcept {
     re_ = src.re_;
     im_ = src.im_;
     return *this;
@@ -645,7 +698,8 @@ KOKKOS_INLINE_FUNCTION RealType real(const complex<RealType>& x) noexcept {
 //! Absolute value (magnitude) of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType abs(const complex<RealType>& x) {
-#ifndef __CUDA_ARCH__
+#if !defined(__CUDA_ARCH__) && \
+    !defined(__HIP_DEVICE_COMPILE__)  // FIXME_CUDA FIXME_HIP
   using std::hypot;
 #endif
   return hypot(x.real(), x.imag());
@@ -655,20 +709,32 @@ KOKKOS_INLINE_FUNCTION RealType abs(const complex<RealType>& x) {
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> pow(const complex<RealType>& x,
                                                      const RealType& e) {
-  RealType r   = abs(x);
-  RealType phi = std::atan(x.imag() / x.real());
-  return std::pow(r, e) *
-         Kokkos::complex<RealType>(std::cos(phi * e), std::sin(phi * e));
+  RealType r = abs(x);
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+  using std::atan;
+  using std::cos;
+  using std::pow;
+  using std::sin;
+#endif
+  using ::pow;
+  RealType phi = atan(x.imag() / x.real());
+  return pow(r, e) * Kokkos::complex<RealType>(cos(phi * e), sin(phi * e));
 }
 
 //! Square root of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sqrt(
     const complex<RealType>& x) {
-  RealType r   = abs(x);
-  RealType phi = std::atan(x.imag() / x.real());
-  return std::sqrt(r) *
-         Kokkos::complex<RealType>(std::cos(phi * 0.5), std::sin(phi * 0.5));
+  RealType r = abs(x);
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+  using std::atan;
+  using std::cos;
+  using std::sin;
+  using std::sqrt;
+#endif
+  using ::sqrt;
+  RealType phi = atan(x.imag() / x.real());
+  return sqrt(r) * Kokkos::complex<RealType>(cos(phi * 0.5), sin(phi * 0.5));
 }
 
 //! Conjugate of a complex number.
@@ -681,8 +747,14 @@ KOKKOS_INLINE_FUNCTION complex<RealType> conj(
 //! Exponential of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION complex<RealType> exp(const complex<RealType>& x) {
-  return std::exp(x.real()) *
-         complex<RealType>(std::cos(x.imag()), std::sin(x.imag()));
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+  using std::cos;
+  using std::exp;
+  using std::sin;
+#else
+  using ::exp;
+#endif
+  return exp(x.real()) * complex<RealType>(cos(x.imag()), sin(x.imag()));
 }
 
 /// This function cannot be called in a CUDA device function,
@@ -715,9 +787,12 @@ KOKKOS_INLINE_FUNCTION
   // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
   // If the real part is +/-Inf and the imaginary part is -/+Inf,
   // this won't change the result.
+#if !defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+  using std::fabs;
+#endif
   typedef
       typename std::common_type<RealType1, RealType2>::type common_real_type;
-  const common_real_type s = std::fabs(real(y)) + std::fabs(imag(y));
+  const common_real_type s = fabs(real(y)) + fabs(imag(y));
 
   // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
   // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,

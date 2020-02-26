@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -158,22 +159,21 @@ struct Array {
     return &m_internal_implementation_private_member_data[0];
   }
 
-#ifdef KOKKOS_IMPL_ROCM_CLANG_WORKAROUND
+#ifdef KOKKOS_IMPL_HIP_CLANG_WORKAROUND
   // Do not default unless move and move-assignment are also defined
-  KOKKOS_INLINE_FUNCTION
-  ~Array()            = default;
-  Array()             = default;
-  Array(const Array&) = default;
-  Array& operator=(const Array&) = default;
+  KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
+  KOKKOS_DEFAULTED_FUNCTION Array()             = default;
+  KOKKOS_DEFAULTED_FUNCTION Array(const Array&) = default;
+  KOKKOS_DEFAULTED_FUNCTION Array& operator=(const Array&) = default;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.
-  Array(Array&&) = default;
-  Array& operator=(Array&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION Array(Array&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION Array& operator=(Array&&) = default;
 
   KOKKOS_INLINE_FUNCTION
   Array(const std::initializer_list<T>& vals) {
-    for (int i = 0; i < N; i++) {
+    for (size_t i = 0; i < N; i++) {
       m_internal_implementation_private_member_data[i] = vals.begin()[i];
     }
   }
@@ -216,17 +216,10 @@ struct Array<T, 0, Proxy> {
   KOKKOS_INLINE_FUNCTION pointer data() { return pointer(0); }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return const_pointer(0); }
 
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  KOKKOS_INLINE_FUNCTION ~Array() {}
-  KOKKOS_INLINE_FUNCTION Array() {}
-  KOKKOS_INLINE_FUNCTION Array(const Array&) {}
-  KOKKOS_INLINE_FUNCTION Array& operator=(const Array&) {}
-#else
-  KOKKOS_INLINE_FUNCTION ~Array()            = default;
-  KOKKOS_INLINE_FUNCTION Array()             = default;
-  KOKKOS_INLINE_FUNCTION Array(const Array&) = default;
-  KOKKOS_INLINE_FUNCTION Array& operator=(const Array&) = default;
-#endif
+  KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
+  KOKKOS_DEFAULTED_FUNCTION Array()             = default;
+  KOKKOS_DEFAULTED_FUNCTION Array(const Array&) = default;
+  KOKKOS_DEFAULTED_FUNCTION Array& operator=(const Array&) = default;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.
@@ -280,13 +273,9 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
   KOKKOS_INLINE_FUNCTION pointer data() { return m_elem; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return m_elem; }
 
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  KOKKOS_INLINE_FUNCTION ~Array() {}
-#else
-  KOKKOS_INLINE_FUNCTION ~Array()                       = default;
-#endif
-  Array()                 = delete;
-  Array(const Array& rhs) = delete;
+  KOKKOS_DEFAULTED_FUNCTION ~Array()                     = default;
+  KOKKOS_INLINE_FUNCTION_DELETED Array()                 = delete;
+  KOKKOS_INLINE_FUNCTION_DELETED Array(const Array& rhs) = delete;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.
@@ -353,13 +342,9 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
   KOKKOS_INLINE_FUNCTION pointer data() { return m_elem; }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return m_elem; }
 
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  KOKKOS_INLINE_FUNCTION ~Array() {}
-#else
-  KOKKOS_INLINE_FUNCTION ~Array()                       = default;
-#endif
-  Array()             = delete;
-  Array(const Array&) = delete;
+  KOKKOS_DEFAULTED_FUNCTION ~Array()                 = default;
+  KOKKOS_INLINE_FUNCTION_DELETED Array()             = delete;
+  KOKKOS_INLINE_FUNCTION_DELETED Array(const Array&) = delete;
 
   // Some supported compilers are not sufficiently C++11 compliant
   // for default move constructor and move assignment operator.

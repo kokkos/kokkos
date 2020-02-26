@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -64,9 +65,17 @@ struct TestRange {
   struct VerifyOffsetTag {};
 
   int N;
+#ifndef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
   static const int offset = 13;
+#else
+  int offset;
+#endif
   TestRange(const size_t N_)
-      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_), N(N_) {}
+      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_), N(N_) {
+#ifdef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
+    offset = 13;
+#endif
+  }
 
   void test_for() {
     typename view_type::HostMirror host_flags =
@@ -247,7 +256,6 @@ struct TestRange {
   void test_dynamic_policy() {
     auto const N_no_implicit_capture = N;
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-#if !defined(KOKKOS_ENABLE_CUDA) || (8000 <= CUDA_VERSION)
     typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
         policy_t;
 
@@ -341,7 +349,6 @@ struct TestRange {
         //}
       }
     }
-#endif
 #endif
   }
 };
