@@ -450,7 +450,12 @@ template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::SYCLHostUS
 {
   inline
   DeepCopy( void * dst , const void * src , size_t n )
-  { (void) DeepCopy< Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCL >( dst , src , n ); }
+  {
+	  // (void) DeepCopy< Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCL >( dst , src , n );
+	  if ( dst != src ) {
+		  memcpy(dst,src,n);
+	  }
+  }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
