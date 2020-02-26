@@ -77,7 +77,26 @@ namespace Impl {
 
 int SYCLInternal::was_finalized = 0;
 //----------------------------------------------------------------------------
+void SYCLInternal::listDevices() const
+{
 
+	auto dlist = cl::sycl::device::get_devices();
+
+	std::cout << "The system contains " << dlist.size() << " devices" << std::endl;
+	for(int i=0; i < dlist.size(); i++) {
+		cl::sycl::device& d = dlist[i];
+
+
+		auto name = d.get_info<cl::sycl::info::device::name>();
+
+		auto driver_version = d.get_info<cl::sycl::info::device::driver_version>();
+		bool is_accelerator = d.is_accelerator() || d.is_gpu();
+
+		std::cout << "Device " << i << " : " << name <<  " Driver Version: "
+				<< driver_version << " Is accelerator: " <<( is_accelerator ? "YES" : "NO" )<< std::endl;
+
+	}
+}
 
 void SYCLInternal::print_configuration( std::ostream & s ) const
 {
@@ -175,11 +194,35 @@ void SYCLInternal::initialize( int sycl_device_id  )
     //const struct syclDeviceProp & syclProp =
     //  dev_info.m_syclProp[ sycl_device_id ];
 
-    m_syclDev = sycl_device_id ;
+	 m_syclDev = sycl_device_id ;
 
-    //Kokkos::Impl::sycl_device_synchronize();
+	 //Kokkos::Impl::sycl_device_synchronize();
+	 listDevices();
 
-    m_queue = new cl::sycl::queue(cl::sycl::cpu_selector());
+	 {
+		 auto dlist = cl::sycl::device::get_devices();
+		 cl::sycl::device& d = dlist[m_syclDev];
+//		 bool is_accelerator = d.is_accelerator() || d.is_gpu();
+		 bool is_cpu = d.is_cpu();
+
+		 if ( !is_cpu ) {
+			 std::cerr << "WARNING: Device " << m_syclDev << " is NOT a CPU. Just so you know..." << std::endl;
+			 std::cerr << "Will initialize first CPU device instead..." << std::endl;
+			 bool cpu_found=false;
+			 for(int i=0; i < dlist.size() && !cpu_found; ++i ) {
+				 if ( dlist[i].is_cpu() ) {
+					 m_syclDev=i;
+					 cpu_found=true;
+				 }
+			 }
+		 }
+		 std::cout << "Initializing SYCL Device " << m_syclDev << std::endl;
+		 m_queue = new cl::sycl::queue(dlist[m_syclDev]);
+
+	 }
+
+
+
 /*
     // Query what compute capability architecture a kernel executes:
     m_syclArch = sycl_kernel_arch();

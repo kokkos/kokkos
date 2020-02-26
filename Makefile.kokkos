@@ -91,7 +91,7 @@ endif
 
 # Check for other Execution Spaces.
 KOKKOS_INTERNAL_USE_CUDA := $(call kokkos_has_string,$(KOKKOS_DEVICES),Cuda)
-KOKKOS_INTERNAL_USE_SYCL := $(call kokkos_has_string,$(KOKKOS_DEVICES),SyCL)
+KOKKOS_INTERNAL_USE_SYCL := $(call kokkos_has_string,$(KOKKOS_DEVICES),SYCL)
 KOKKOS_INTERNAL_USE_ROCM := $(call kokkos_has_string,$(KOKKOS_DEVICES),ROCm)
 KOKKOS_INTERNAL_USE_OPENMPTARGET := $(call kokkos_has_string,$(KOKKOS_DEVICES),OpenMPTarget)
 

@@ -229,6 +229,9 @@ void* SYCLHostUSMSpace::allocate(const size_t arg_alloc_size) const {
   const cl::sycl::queue& queue =
       *SYCL().impl_internal_space_instance()->m_queue;
   void* const hostPtr = cl::sycl::malloc_host(arg_alloc_size, queue);
+  if( hostPtr == nullptr) {
+	  std::cerr << "Error: malloc_host returned nullptr" << std::endl;
+  }
   return hostPtr;
 }
 

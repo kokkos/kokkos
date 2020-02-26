@@ -16,6 +16,7 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
      Qthread
      HPX
      Cuda
+     SYCL
      ROCm
      HWLOC
      MEMKIND
@@ -112,7 +113,7 @@ list(APPEND KOKKOS_ARCH_LIST
 # List of possible device architectures.
 # The case and spelling here needs to match Makefile.kokkos
 set(KOKKOS_DEVICES_LIST)
-# Options: Cuda,ROCm,OpenMP,Pthread,Qthreads,Serial
+# Options: Cuda,ROCm,OpenMP,Pthread,Qthreads,Serial,SYCL
 list(APPEND KOKKOS_DEVICES_LIST
     Cuda          # NVIDIA GPU -- see below
     OpenMP        # OpenMP
@@ -121,6 +122,7 @@ list(APPEND KOKKOS_DEVICES_LIST
     HPX           # HPX
     Serial        # serial
     ROCm          # Relocatable device code
+    SYCL	  # SYCL
     )
 
 # List of possible TPLs for Kokkos
@@ -174,7 +176,6 @@ set(KOKKOS_INTERNAL_LDG_INTRINSIC use_ldg)
 set(KOKKOS_INTERNAL_UVM force_uvm)
 set(KOKKOS_INTERNAL_RELOCATABLE_DEVICE_CODE rdc)
 set(KOKKOS_INTERNAL_LAMBDA enable_lambda)
-
 
 #-------------------------------------------------------------------------------
 # List of possible Options for HPX
@@ -252,6 +253,7 @@ IF(Trilinos_ENABLE_Kokkos)
     set_kokkos_default_default(CUDA OFF)
   ENDIF()
   set_kokkos_default_default(ROCM OFF)
+  set_kokkos_default_default(SYCL OFF)
 ELSE()
   set_kokkos_default_default(SERIAL ON)
   set_kokkos_default_default(OPENMP OFF)
@@ -260,6 +262,7 @@ ELSE()
   set_kokkos_default_default(HPX OFF)
   set_kokkos_default_default(CUDA OFF)
   set_kokkos_default_default(ROCM OFF)
+  set_kokkos_default_default(SYCL OFF)
 ENDIF()
 
 # Set which Kokkos backend to use.
@@ -271,6 +274,7 @@ set(KOKKOS_ENABLE_QTHREADS ${KOKKOS_INTERNAL_ENABLE_QTHREADS_DEFAULT} CACHE BOOL
 set(KOKKOS_ENABLE_HPX ${KOKKOS_INTERNAL_ENABLE_HPX_DEFAULT} CACHE BOOL "Enable HPX support in Kokkos.")
 set(KOKKOS_ENABLE_CUDA ${KOKKOS_INTERNAL_ENABLE_CUDA_DEFAULT} CACHE BOOL "Enable CUDA support in Kokkos.")
 set(KOKKOS_ENABLE_ROCM ${KOKKOS_INTERNAL_ENABLE_ROCM_DEFAULT} CACHE BOOL "Enable ROCm support in Kokkos.")
+set(KOKKOS_ENABLE_SYCL ${KOKKOS_INTERNAL_ENABLE_SYCL_DEFAULT} CACHE BOOL "Enable SYCL support in Kokkos.")
 
 
 
