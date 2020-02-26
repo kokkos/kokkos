@@ -47,7 +47,7 @@ struct ParallelFor< FunctorType
       int start = m_policy.begin();
       int end = m_policy.end();
       int extent = end - start;
-      std::cerr << "Setting range = " << extent << std::endl;
+      //std::cerr << "Setting range = " << extent << std::endl;
       cl::sycl::range<1> dispatch_range(extent);
 
       m_policy.space().impl_internal_space_instance()->m_queue->submit([&] (cl::sycl::handler& cgh) {
