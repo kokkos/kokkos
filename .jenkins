@@ -28,6 +28,8 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
+                                -DKokkos_ENABLE_LIBDL=OFF \
+                                -DKokkos_ENABLE_PROFILING=OFF \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
