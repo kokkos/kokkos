@@ -50,6 +50,7 @@ public:
   void print_configuration( std::ostream & ) const ;
   void print_configuration( std::ostream &, const bool ) const ;
 
+  void listDevices() const;
 
   ~SYCLInternal();
 
