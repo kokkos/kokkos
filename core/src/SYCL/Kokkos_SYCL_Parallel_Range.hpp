@@ -50,18 +50,16 @@ struct ParallelFor< FunctorType
       std::cerr << "Setting range = " << extent << std::endl;
       cl::sycl::range<1> dispatch_range(extent);
 
-      cl::sycl::gpu_selector localgpu;
-      cl::sycl::queue local_queue(localgpu);
-// m_policy.space().impl_internal_space_instance()->m_queue->submit([&] (cl::sycl::handler& cgh) {
-		local_queue.submit([&](cl::sycl::handler& cgh){
-			cl::sycl::stream out(4096,1024,cgh);
+      m_policy.space().impl_internal_space_instance()->m_queue->submit([&] (cl::sycl::handler& cgh) {
+
+			// cl::sycl::stream out(4096,1024,cgh);
           cgh.parallel_for(dispatch_range,
 				  	  [=](cl::sycl::id<1> item) {
-        	  	  	   	   out << item[0] << sycl::endl;
+        	  	  	   	   // out << item[0] << sycl::endl;
         	  	  	   	   m_functor( static_cast<const int>(item[0]) );
           	  });
 	        });
-	 //
+
 		m_policy.space().impl_internal_space_instance()->m_queue->wait();
     }
 
