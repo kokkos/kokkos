@@ -109,9 +109,9 @@ struct TestMDRangePolicy {
 
   // Routine to allocate memory in a specific memory space.
   template <class MemSpace>
-  value_type *allocate_mem(int N) {
+  value_type *allocate_mem(int N_) {
     return (static_cast<value_type *>(
-        Kokkos::kokkos_malloc<MemSpace>("Data", N * sizeof(value_type))));
+        Kokkos::kokkos_malloc<MemSpace>("Data", N_ * sizeof(value_type))));
   }
 
   // Routine to free the memory from a specific memory space.

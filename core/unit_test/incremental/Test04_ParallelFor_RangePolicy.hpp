@@ -76,7 +76,7 @@ struct TestParallel_For {
   // Check if the array values are updated correctly.
   void correctness_check(value_type *data) {
     for (int i = 0; i < num_elements; ++i) {
-      ASSERT_EQ((i + 1) * value,data[i])
+      ASSERT_EQ((i + 1) * value, data[i])
           << "Values in index " << i << " are incorrect";
     }
   }
@@ -141,11 +141,11 @@ struct TestParallel_For {
 
     // Creates a range policy that uses dynamic scheduling.
     typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
-        range_policy;
+        range_policy_t;
 
     // parallel-for functor with range-policy from 0 to num_elements iterations.
     Kokkos::parallel_for("RangePolicy_ParallelFor",
-                         range_policy(0, num_elements),
+                         range_policy_t(0, num_elements),
                          ParallelForFunctor(deviceData));
 
     // Checks if parallel_for gave the correct results.
