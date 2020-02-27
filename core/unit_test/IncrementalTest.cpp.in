@@ -45,7 +45,7 @@
 
 #include <gtest/gtest.h>
 
-#define TEST_CATEGORY @DEVICE_NAME@
+#define TEST_CATEGORY @DEVICE@
 #define TEST_EXECSPACE Kokkos::@DEVICE_NAME@
 
 #include <@CURRENT_FILE_NAME@>

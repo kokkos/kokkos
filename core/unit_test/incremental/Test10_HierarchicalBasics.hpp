@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-// @Kokkos_Feature_Level_Required:1
+// @Kokkos_Feature_Level_Required:10
 // Unit test for hierarchical parallelism
 // Create concurrent work hierarchically and verify if
 // contributions of paticipating processing units corresponds to expected value
