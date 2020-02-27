@@ -185,7 +185,7 @@ KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* ptr, T val,
 }
 
 template <class T>
-KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* ptr, T val,
+KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* /*ptr*/, T /*val*/,
                                               Impl::memory_order_acquire_t) {
   static_assert(
       sizeof(T) == 0,  // just something that will always be false, but only on
@@ -194,7 +194,7 @@ KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* ptr, T val,
 }
 
 template <class T>
-KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* ptr, T val,
+KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* /*ptr*/, T /*val*/,
                                               Impl::memory_order_acq_rel_t) {
   static_assert(
       sizeof(T) == 0,  // just something that will always be false, but only on

@@ -273,6 +273,7 @@ class ViewDataHandle<
     return handle_type(arg_data_ptr, r);
 
 #else
+    (void)arg_tracker;
     Kokkos::Impl::cuda_abort(
         "Cannot create Cuda texture object from within a Cuda kernel");
     return handle_type();

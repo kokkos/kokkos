@@ -293,6 +293,7 @@ KOKKOS_INLINE_FUNCTION void dyn_rank_view_verify_operator_bounds(
     dyn_rank_view_error_operator_bounds<0>(buffer + n, LEN - n, map, args...);
     Kokkos::Impl::throw_runtime_exception(std::string(buffer));
 #else
+    (void)tracker;
     Kokkos::abort("DynRankView bounds error");
 #endif
   }

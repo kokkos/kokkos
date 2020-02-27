@@ -223,7 +223,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 
 template <class Oper, typename T>
 KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
-    const Oper& op, volatile T* const dest,
+    const Oper& /*op*/, volatile T* const dest,
     typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
   union U {
     int i;
@@ -288,7 +288,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 
 template <class Oper, typename T>
 KOKKOS_INLINE_FUNCTION T
-atomic_oper_fetch(const Oper& op, volatile T* const dest,
+atomic_oper_fetch(const Oper& /*op*/, volatile T* const dest,
                   typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
 #if defined(KOKKOS_ENABLE_ASM) && \
     defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
