@@ -3692,6 +3692,7 @@ struct ViewMapping<
 namespace Kokkos {
 namespace Impl {
 
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
 template <unsigned, class MapType>
 KOKKOS_INLINE_FUNCTION bool view_verify_operator_bounds(const MapType&) {
   return true;
@@ -3704,6 +3705,13 @@ KOKKOS_INLINE_FUNCTION bool view_verify_operator_bounds(const MapType& map,
   return (size_t(i) < map.extent(R)) &&
          view_verify_operator_bounds<R + 1>(map, args...);
 }
+#else
+template <unsigned R, class MapType, class... Args>
+KOKKOS_INLINE_FUNCTION bool view_verify_operator_bounds(const MapType& /*map*/,
+                                                        Args... /*args*/) {
+  return true;
+}
+#endif
 
 template <unsigned, class MapType>
 inline void view_error_operator_bounds(char*, int, const MapType&) {}
