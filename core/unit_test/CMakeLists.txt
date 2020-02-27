@@ -314,10 +314,10 @@ KOKKOS_ADD_TEST_EXECUTABLE(
 )
 # We need -rdynamic on GNU platforms for the stacktrace functionality
 # to work correctly with shared libraries
-SET_PROPERTY(TARGET ${PACKAGE_NAME}_StackTraceTestExec PROPERTY ENABLE_EXPORTS ON)
+KOKKOS_SET_EXE_PROPERTY(StackTraceTestExec ENABLE_EXPORTS ON)
 
 KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
-                 EXE  ${PACKAGE_NAME}_StackTraceTestExec
+                 EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
 
