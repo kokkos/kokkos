@@ -193,6 +193,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   inline void set(const ChunkSize& chunksize, Args... args) {
     m_granularity      = chunksize.value;
     m_granularity_mask = m_granularity - 1;
+    set(args...);
   }
 
  public:
