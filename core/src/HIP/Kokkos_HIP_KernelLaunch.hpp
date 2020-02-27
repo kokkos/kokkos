@@ -171,8 +171,8 @@ struct HIPParallelLaunch<
       Kokkos::Experimental::HIP().fence();
       printf("Post Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-      // CUDA_SAFE_CALL( hipGetLastError() );
-      Kokkos::HIP().fence();
+      HIP_SAFE_CALL(hipGetLastError());
+      Kokkos::Experimental::HIP().fence();
 #endif
     }
   }
@@ -212,7 +212,7 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       Kokkos::Experimental::HIP().fence();
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
-      Kokkos::HIP().fence();
+      Kokkos::Experimental::HIP().fence();
 #endif
     }
   }
