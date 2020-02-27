@@ -537,10 +537,10 @@ struct rand<Generator, Kokkos::complex<double> > {
   }
 };
 
-template <class DeviceType>
+template <class DeviceType, class Enable = void>
 class Random_XorShift64_Pool;
 
-template <class DeviceType>
+template <class DeviceType, class Enable = void>
 class Random_XorShift64 {
  private:
   uint64_t state_;
@@ -681,7 +681,7 @@ class Random_XorShift64 {
   }
 };
 
-template <class DeviceType = Kokkos::DefaultExecutionSpace>
+template <class DeviceType = Kokkos::DefaultExecutionSpace, class>
 class Random_XorShift64_Pool {
  private:
   typedef View<int*, DeviceType> lock_type;
@@ -772,10 +772,10 @@ class Random_XorShift64_Pool {
   }
 };
 
-template <class DeviceType>
+template <class DeviceType, class Enable = void>
 class Random_XorShift1024_Pool;
 
-template <class DeviceType>
+template <class DeviceType, class Enable = void>
 class Random_XorShift1024 {
  private:
   int p_;
@@ -924,7 +924,7 @@ class Random_XorShift1024 {
   }
 };
 
-template <class DeviceType = Kokkos::DefaultExecutionSpace>
+template <class DeviceType = Kokkos::DefaultExecutionSpace, class>
 class Random_XorShift1024_Pool {
  private:
   typedef View<int*, DeviceType> int_view_type;
