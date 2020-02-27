@@ -243,19 +243,19 @@ struct TestMDRangePolicy {
 namespace Test {
 
 // 2D MDRangePolicy
-TEST(TEST_CATEGORY, incr_04_mdrange2D) {
+TEST(TEST_CATEGORY, IncrTest_06_mdrange2D) {
   Test04::TestMDRangePolicy<TEST_EXECSPACE> test;
   test.mdRange2D();
 }
 
 // 3D MDRangePolicy
-TEST(TEST_CATEGORY, incr_04_mdrange3D) {
+TEST(TEST_CATEGORY, IncrTest_06_mdrange3D) {
   Test04::TestMDRangePolicy<TEST_EXECSPACE> test;
   test.mdRange3D();
 }
 
 // 4D MDRangePolicy
-TEST(TEST_CATEGORY, incr_04_mdrange4D) {
+TEST(TEST_CATEGORY, IncrTest_06_mdrange4D) {
   Test04::TestMDRangePolicy<TEST_EXECSPACE> test;
   test.mdRange4D();
 }

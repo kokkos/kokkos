@@ -92,7 +92,7 @@ struct Hierarchical_Red_B {
   }
 };
 
-TEST(TEST_CATEGORY, Hierarchical_Red_B) {
+TEST(TEST_CATEGORY, IncrTest_13b_Hierarchical_Red) {
   Hierarchical_Red_B<TEST_EXECSPACE> test;
   test.run(4, 16);
   test.run(2, 39);

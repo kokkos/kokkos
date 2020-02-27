@@ -75,7 +75,7 @@ struct TestIncrMemorySpace_free {
   }
 };
 
-TEST(TEST_CATEGORY, incr_02b_memspace_free) {
+TEST(TEST_CATEGORY, IncrTest_03b_memspace_free) {
   TestIncrMemorySpace_free<TEST_EXECSPACE> test;
   test.test_free();
 }

@@ -85,7 +85,7 @@ struct HierarchicalBasics {
   }
 };
 
-TEST(TEST_CATEGORY, Hierarchical_Basics) {
+TEST(TEST_CATEGORY, IncrTest_10_Hierarchical_Basics) {
   HierarchicalBasics<TEST_EXECSPACE> test;
   test.run(1, 4);
   test.run(8, 16);

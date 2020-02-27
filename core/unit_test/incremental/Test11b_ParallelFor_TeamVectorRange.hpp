@@ -89,7 +89,7 @@ struct Hierarchical_ForLoop_B {
   }
 };
 
-TEST(TEST_CATEGORY, Hierarchical_ForLoop_B) {
+TEST(TEST_CATEGORY, IncrTest_11b_Hierarchical_ForLoop) {
   Hierarchical_ForLoop_B<TEST_EXECSPACE> test;
   test.run(1, 6, 400);
   test.run(6, 7, 19);

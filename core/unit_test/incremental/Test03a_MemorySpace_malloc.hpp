@@ -72,7 +72,7 @@ struct TestIncrMemorySpace_malloc {
   }
 };
 
-TEST(TEST_CATEGORY, incr_02a_memspace_malloc) {
+TEST(TEST_CATEGORY, IncrTest_03a_memspace_malloc) {
   TestIncrMemorySpace_malloc<TEST_EXECSPACE> test;
   test.test_malloc();
 }

@@ -146,7 +146,7 @@ struct TestReduction {
   }
 };
 
-TEST(TEST_CATEGORY, incr_03b_reduction) {
+TEST(TEST_CATEGORY, IncrTest_05_reduction) {
   TestReduction<TEST_EXECSPACE> test;
   test.sum_reduction();
 }
