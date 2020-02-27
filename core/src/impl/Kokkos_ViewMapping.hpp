@@ -2043,19 +2043,23 @@ struct ViewOffset<
       : m_dim(rhs.m_dim.N0, rhs.m_dim.N1, rhs.m_dim.N2, rhs.m_dim.N3,
               rhs.m_dim.N4, rhs.m_dim.N5, rhs.m_dim.N6, rhs.m_dim.N7),
         m_stride(rhs.stride_0()) {
-    if (((dimension_type::rank == 2)
-             ? rhs.m_stride.S1
-             : ((dimension_type::rank == 3)
-                    ? rhs.m_stride.S2
-                    : ((dimension_type::rank == 4)
-                           ? rhs.m_stride.S3
-                           : ((dimension_type::rank == 5)
-                                  ? rhs.m_stride.S4
-                                  : ((dimension_type::rank == 6)
-                                         ? rhs.m_stride.S5
-                                         : ((dimension_type::rank == 7)
-                                                ? rhs.m_stride.S6
-                                                : rhs.m_stride.S7)))))) != 1) {
+    bool right_stride_is_1 = true;
+    if (dimension_type::rank == 2)
+      right_stride_is_1 = (rhs.m_stride.S1 == 1);
+    else if (dimension_type::rank == 3)
+      right_stride_is_1 = (rhs.m_stride.S2 == 1);
+    else if (dimension_type::rank == 4)
+      right_stride_is_1 = (rhs.m_stride.S3 == 1);
+    else if (dimension_type::rank == 5)
+      right_stride_is_1 = (rhs.m_stride.S4 == 1);
+    else if (dimension_type::rank == 6)
+      right_stride_is_1 = (rhs.m_stride.S5 == 1);
+    else if (dimension_type::rank == 7)
+      right_stride_is_1 = (rhs.m_stride.S6 == 1);
+    else if (dimension_type::rank == 8)
+      right_stride_is_1 = (rhs.m_stride.S7 == 1);
+
+    if (!right_stride_is_1) {
       Kokkos::abort(
           "Kokkos::Impl::ViewOffset assignment of LayoutRight from "
           "LayoutStride requires right-most stride == 1");
@@ -2113,8 +2117,7 @@ struct ViewStride;
 
 template <>
 struct ViewStride<0> {
-  static constexpr size_t S0 = 0, S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0,
-                          S6 = 0, S7 = 0;
+  enum { S0 = 0, S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2128,8 +2131,7 @@ struct ViewStride<0> {
 template <>
 struct ViewStride<1> {
   size_t S0;
-  static constexpr size_t S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0,
-                          S7 = 0;
+  enum { S1 = 0, S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2144,7 +2146,7 @@ struct ViewStride<1> {
 template <>
 struct ViewStride<2> {
   size_t S0, S1;
-  static constexpr size_t S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0;
+  enum { S2 = 0, S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2159,7 +2161,7 @@ struct ViewStride<2> {
 template <>
 struct ViewStride<3> {
   size_t S0, S1, S2;
-  static constexpr size_t S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0;
+  enum { S3 = 0, S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2174,7 +2176,7 @@ struct ViewStride<3> {
 template <>
 struct ViewStride<4> {
   size_t S0, S1, S2, S3;
-  static constexpr size_t S4 = 0, S5 = 0, S6 = 0, S7 = 0;
+  enum { S4 = 0, S5 = 0, S6 = 0, S7 = 0 };
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2189,7 +2191,7 @@ struct ViewStride<4> {
 template <>
 struct ViewStride<5> {
   size_t S0, S1, S2, S3, S4;
-  static constexpr size_t S5 = 0, S6 = 0, S7 = 0;
+  enum { S5 = 0, S6 = 0, S7 = 0 };
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2204,7 +2206,7 @@ struct ViewStride<5> {
 template <>
 struct ViewStride<6> {
   size_t S0, S1, S2, S3, S4, S5;
-  static constexpr size_t S6 = 0, S7 = 0;
+  enum { S6 = 0, S7 = 0 };
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
@@ -2219,7 +2221,7 @@ struct ViewStride<6> {
 template <>
 struct ViewStride<7> {
   size_t S0, S1, S2, S3, S4, S5, S6;
-  static constexpr size_t S7 = 0;
+  enum { S7 = 0 };
 
   ViewStride()                  = default;
   ViewStride(const ViewStride&) = default;
