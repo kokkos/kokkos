@@ -176,7 +176,7 @@ struct TestMDRangePolicy {
   }
 };
 
-}
+}  // namespace Test05
 
 namespace Test {
 
