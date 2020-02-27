@@ -52,7 +52,7 @@
 // elements as a product of iterator indexes and a constant. At the end, we
 // check for correctness.
 
-namespace Test {
+namespace Test04 {
 
 using value_type       = double;
 const int N            = 10;
@@ -238,21 +238,25 @@ struct TestMDRangePolicy {
   }
 };
 
+}
+
+namespace Test {
+
 // 2D MDRangePolicy
 TEST(TEST_CATEGORY, incr_04_mdrange2D) {
-  TestMDRangePolicy<TEST_EXECSPACE> test;
+  Test04::TestMDRangePolicy<TEST_EXECSPACE> test;
   test.mdRange2D();
 }
 
 // 3D MDRangePolicy
 TEST(TEST_CATEGORY, incr_04_mdrange3D) {
-  TestMDRangePolicy<TEST_EXECSPACE> test;
+  Test04::TestMDRangePolicy<TEST_EXECSPACE> test;
   test.mdRange3D();
 }
 
 // 4D MDRangePolicy
 TEST(TEST_CATEGORY, incr_04_mdrange4D) {
-  TestMDRangePolicy<TEST_EXECSPACE> test;
+  Test04::TestMDRangePolicy<TEST_EXECSPACE> test;
   test.mdRange4D();
 }
 
