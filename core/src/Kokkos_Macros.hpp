@@ -639,4 +639,11 @@
     !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_CUDA)
 #undef __CUDA_ARCH__
 #endif
+
+#if defined(__has_cpp_attribute) && __has_cpp_attribute(fallthrough) >= 201603
+#define KOKKOS_FALLTHROUGH [[fallthrough]]
+#else
+#define KOKKOS_FALLTHROUGH
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP
