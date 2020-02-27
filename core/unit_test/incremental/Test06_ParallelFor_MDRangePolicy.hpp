@@ -45,7 +45,7 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
-/// @Kokkos_Feature_Level_Required:4
+/// @Kokkos_Feature_Level_Required:6
 // Unit Test for MDRangePolicy without Views uptil 4 ranks.
 // For each of the MDRangePolicy test from 2-to-4 ranks, we create an equivalent
 // dimensional array implemented in 1D. In each of these arrays we update the

@@ -45,7 +45,7 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
-/// @Kokkos_Feature_Level_Required:2
+/// @Kokkos_Feature_Level_Required:3
 // Unit Test for Kokkos malloc.
 // Allocate memory to a pointer and check if the allocation has not returned a
 // null pointer.

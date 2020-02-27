@@ -42,56 +42,42 @@
 //@HEADER
 */
 
-/// @Kokkos_Feature_Level_Required:1
-// Unit test for atomic exchange, atomic add and atomic sub.
-// Atomic exchange test : we interchange value1 with value2 and check for
-// correctness. Atomic add test : we add value2 to value1 and check for
-// correctness. Atomic sub test : we subtract value2 from value1 and check for
-// correctmess.
+/// @Kokkos_Feature_Level_Required:3
+// Unit test for Kokkos free.
+// We constantly allocate and free the memory.
+// If the kokkos_free does not free the allocated memory,
+// we will exceed the available space.
 
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
-using value_type = double;
-
 namespace Test {
 
-struct TestIncrAtomic {
-  value_type value1 = 1.5, value2 = 0.5;
+using value_type = double;
 
-  void testExchange() {
-    value_type ret_value = Kokkos::atomic_exchange(&value1, value2);
+// Allocate M number of value_type elements N number of times.
+const int N = 100000;
+const int M = 100000;
 
-    ASSERT_EQ(value1, 0.5);
-    ASSERT_EQ(ret_value, 1.5);
-  }
+template <class ExecSpace>
+struct TestIncrMemorySpace_free {
+  using memory_space = typename ExecSpace::memory_space;
 
-  void testAdd() {
-    Kokkos::atomic_add(&value1, value2);
+  void test_free() {
+    for (int i = 0; i < N; ++i) {
+      auto *data = static_cast<value_type *>(
+          Kokkos::kokkos_malloc<memory_space>("data", M * sizeof(value_type)));
 
-    ASSERT_EQ(value1, 2.0);
-  }
+      ASSERT_NE(data, nullptr);
 
-  void testSub() {
-    Kokkos::atomic_sub(&value1, value2);
-
-    ASSERT_EQ(value1, 1.0);
+      Kokkos::kokkos_free<memory_space>(data);
+    }
   }
 };
 
-TEST(TEST_CATEGORY, incr_01_AtomicExchange) {
-  TestIncrAtomic test;
-  test.testExchange();
-}
-
-TEST(TEST_CATEGORY, incr_01_AtomicAdd) {
-  TestIncrAtomic test;
-  test.testAdd();
-}
-
-TEST(TEST_CATEGORY, incr_01_AtomicSub) {
-  TestIncrAtomic test;
-  test.testSub();
+TEST(TEST_CATEGORY, incr_02b_memspace_free) {
+  TestIncrMemorySpace_free<TEST_EXECSPACE> test;
+  test.test_free();
 }
 
 }  // namespace Test
