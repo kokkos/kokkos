@@ -1266,6 +1266,23 @@ KOKKOS_INLINE_FUNCTION void Random_XorShift1024_Pool<Kokkos::Cuda>::free_state(
 
 #endif
 
+// An attempt to make Random_XorShift{64,1024} actually take a device type as
+// template argument without touching the design nor duplicate code.
+#define KOKKOS_IMPL_NO_WAY_I_DUPLICATE_CUDA_SPECIALIZATIONS(WHICH)        \
+  template <typename DeviceType>                                          \
+  struct WHICH<DeviceType, typename std::enable_if<                       \
+                               Impl::is_device<DeviceType>::value>::type> \
+      : public WHICH<typename DeviceType::execution_space> {              \
+    using WHICH<typename DeviceType::execution_space>::WHICH;             \
+    using device_type = DeviceType;                                       \
+  };
+KOKKOS_IMPL_NO_WAY_I_DUPLICATE_CUDA_SPECIALIZATIONS(Random_XorShift64)
+KOKKOS_IMPL_NO_WAY_I_DUPLICATE_CUDA_SPECIALIZATIONS(Random_XorShift64_Pool)
+KOKKOS_IMPL_NO_WAY_I_DUPLICATE_CUDA_SPECIALIZATIONS(Random_XorShift1024)
+KOKKOS_IMPL_NO_WAY_I_DUPLICATE_CUDA_SPECIALIZATIONS(Random_XorShift1024_Pool)
+
+#undef KOKKOS_IMPL_NO_WAY_I_DUPLICATE_CUDA_SPECIALIZATIONS
+
 #if defined(KOKKOS_ENABLE_ROCM)
 
 template <>
