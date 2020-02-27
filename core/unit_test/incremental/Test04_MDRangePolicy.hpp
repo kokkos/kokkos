@@ -164,7 +164,7 @@ struct TestMDRangePolicy {
     Kokkos::parallel_for("MDRange2D", mdPolicy_2D, Functor_2D);
 
     // Copy the data back to Host memory space
-    Kokkos::Impl::DeepCopy<d_memspace_type, h_memspace_type>(
+    Kokkos::Impl::DeepCopy<h_memspace_type, d_memspace_type>(
         hostData, deviceData, num_elements * sizeof(value_type));
 
     // Check if all data has been update correctly
@@ -195,7 +195,7 @@ struct TestMDRangePolicy {
     Kokkos::parallel_for("MDRange3D", mdPolicy_3D, Functor_3D);
 
     // Copy the data back to Host memory space
-    Kokkos::Impl::DeepCopy<d_memspace_type, h_memspace_type>(
+    Kokkos::Impl::DeepCopy<h_memspace_type, d_memspace_type>(
         hostData, deviceData, num_elements * sizeof(value_type));
 
     // Check if all data has been update correctly
@@ -226,7 +226,7 @@ struct TestMDRangePolicy {
     Kokkos::parallel_for("MDRange4D", mdPolicy_4D, Functor_4D);
 
     // Copy the data back to Host memory space
-    Kokkos::Impl::DeepCopy<d_memspace_type, h_memspace_type>(
+    Kokkos::Impl::DeepCopy<h_memspace_type, d_memspace_type>(
         hostData, deviceData, num_elements * sizeof(value_type));
 
     // Check if all data has been update correctly

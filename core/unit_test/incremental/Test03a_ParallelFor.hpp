@@ -76,7 +76,7 @@ struct TestParallel_For {
   // Check if the array values are updated correctly.
   void correctness_check(value_type *data) {
     for (int i = 0; i < num_elements; ++i) {
-      ASSERT_EQ(data[i], (i + 1) * value)
+      ASSERT_EQ((i + 1) * value,data[i])
           << "Values in index " << i << " are incorrect";
     }
   }
@@ -106,7 +106,7 @@ struct TestParallel_For {
 
   void check_correctness_and_cleanup() {
     // Copy the data back to Host memory space
-    Kokkos::Impl::DeepCopy<d_memspace_type, h_memspace_type>(
+    Kokkos::Impl::DeepCopy<h_memspace_type, d_memspace_type>(
         hostData, deviceData, num_elements * sizeof(value_type));
 
     // Check if all data has been update correctly
@@ -127,6 +127,7 @@ struct TestParallel_For {
     Kokkos::parallel_for("parallel_for", num_elements,
                          ParallelForFunctor(deviceData));
 
+    Kokkos::fence();
     // Checks if parallel_for gave the correct results.
     // Frees the allocated memory in init().
     check_correctness_and_cleanup();
