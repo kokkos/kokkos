@@ -83,6 +83,18 @@ struct TestIncrExecSpace {
 
     static_assert(passed == true,
                   "Checking if the is_execution_space is evaluated correctly");
+
+    ExecSpace().print_configuration(std::cout);
+    ExecSpace().fence();
+  
+    auto concurrency = ExecSpace().concurrency();
+    ASSERT_TRUE(concurrency>0);
+    
+    int in_parallel = ExecSpace::in_parallel();
+    ASSERT_FALSE(in_parallel);
+
+    const char* name = ExecSpace::name();
+    std::cout << name << std::endl; 
   }
 };
 
