@@ -197,7 +197,7 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
   typedef SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
       RecordHost;
 
-  if (alloc_ptr != nullptr) {
+  if (alloc_ptr) {
     Header head;
     const Header *const head_ompt = Header::get_header(alloc_ptr);
 
