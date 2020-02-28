@@ -2633,11 +2633,11 @@ inline void deep_copy(
         std::is_same<typename ViewTraits<DT, DP...>::specialize,
                      void>::value>::type* = nullptr) {
   typedef ViewTraits<DT, DP...> dst_traits;
-  typedef typename dst_traits::memory_space dst_memory_space;
   static_assert(std::is_same<typename dst_traits::non_const_value_type,
                              typename dst_traits::value_type>::value,
                 "deep_copy requires non-const type");
 #if defined(KOKKOS_ENABLE_PROFILING)
+  typedef typename dst_traits::memory_space dst_memory_space;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::SpaceHandle(dst_memory_space::name()), dst.label(),
