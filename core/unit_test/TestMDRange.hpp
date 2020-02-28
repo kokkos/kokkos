@@ -644,7 +644,8 @@ struct TestMDRange_2D {
               range_type;
       typedef typename range_type::point_type point_type;
 
-      range_type range(point_type{{0, 0}}, point_type{{N0, N1}});
+      range_type range(point_type{{0, 0}}, point_type{{N0, N1}},
+                       point_type{{0, 0}});
       TestMDRange_2D functor(N0, N1);
 
       parallel_for(range, functor);
@@ -1231,7 +1232,8 @@ struct TestMDRange_3D {
           range_type;
       typedef typename range_type::point_type point_type;
 
-      range_type range(point_type{{0, 0, 0}}, point_type{{N0, N1, N2}});
+      range_type range(point_type{{0, 0, 0}}, point_type{{N0, N1, N2}},
+                       point_type{{0, 0, 0}});
       TestMDRange_3D functor(N0, N1, N2);
 
       parallel_for(range, functor);
@@ -1867,7 +1869,8 @@ struct TestMDRange_4D {
           range_type;
       typedef typename range_type::point_type point_type;
 
-      range_type range(point_type{{0, 0, 0, 0}}, point_type{{N0, N1, N2, N3}});
+      range_type range(point_type{{0, 0, 0, 0}}, point_type{{N0, N1, N2, N3}},
+                       point_type{{0, 0, 0, 0}});
       TestMDRange_4D functor(N0, N1, N2, N3);
 
       parallel_for(range, functor);
@@ -2437,7 +2440,8 @@ struct TestMDRange_5D {
       typedef typename range_type::point_type point_type;
 
       range_type range(point_type{{0, 0, 0, 0, 0}},
-                       point_type{{N0, N1, N2, N3, N4}});
+                       point_type{{N0, N1, N2, N3, N4}},
+                       point_type{{0, 0, 0, 0, 0}});
       TestMDRange_5D functor(N0, N1, N2, N3, N4);
 
       parallel_for(range, functor);
@@ -3030,7 +3034,8 @@ struct TestMDRange_6D {
       typedef typename range_type::point_type point_type;
 
       range_type range(point_type{{0, 0, 0, 0, 0, 0}},
-                       point_type{{N0, N1, N2, N3, N4, N5}});
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       point_type{{0, 0, 0, 0, 0, 0}});
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
       parallel_for(range, functor);

@@ -127,7 +127,7 @@ void test_offsetview_construction() {
   typedef typename range_type::point_type point_type;
 
   range_type rangePolicy2D(point_type{{ovmin0, ovmin1}},
-                           point_type{{ovend0, ovend1}});
+                           point_type{{ovend0, ovend1}}, point_type{{0, 0}});
 
   const int constValue = 9;
   Kokkos::parallel_for(
@@ -195,7 +195,8 @@ void test_offsetview_construction() {
     typedef typename range3_type::point_type point3_type;
 
     range3_type rangePolicy3DZero(point3_type{{0, 0, 0}},
-                                  point3_type{{extent0, extent1, extent2}});
+                                  point3_type{{extent0, extent1, extent2}},
+                                  point3_type{{0, 0, 0}});
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
     int view3DSum = 0;
@@ -209,7 +210,8 @@ void test_offsetview_construction() {
     range3_type rangePolicy3D(
         point3_type{{begins[0], begins[1], begins[2]}},
         point3_type{
-            {begins[0] + extent0, begins[1] + extent1, begins[2] + extent2}});
+            {begins[0] + extent0, begins[1] + extent1, begins[2] + extent2}},
+        point3_type{{0, 0, 0}});
     int offsetView3DSum = 0;
 
     Kokkos::parallel_reduce(
@@ -457,7 +459,8 @@ void test_offsetview_subview() {
       const int e0 = offsetSubview.end(0);
       const int e1 = offsetSubview.end(1);
 
-      range_type rangeP2D(point_type{{b0, b1}}, point_type{{e0, e1}});
+      range_type rangeP2D(point_type{{b0, b1}}, point_type{{e0, e1}},
+                          point_type{{0, 0}});
 
       Kokkos::parallel_for(
           rangeP2D,
