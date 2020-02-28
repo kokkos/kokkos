@@ -42,58 +42,56 @@
 //@HEADER
 */
 
-/// @Kokkos_Feature_Level_Required:1
+/// @Kokkos_Feature_Level_Required:2
+// Unit test for atomic exchange, atomic add and atomic sub.
+// Atomic exchange test : we interchange value1 with value2 and check for
+// correctness. Atomic add test : we add value2 to value1 and check for
+// correctness. Atomic sub test : we subtract value2 from value1 and check for
+// correctmess.
 
 #include <Kokkos_Core.hpp>
-#include <cstdio>
-#include <sstream>
-#include <type_traits>
 #include <gtest/gtest.h>
+
+using value_type = double;
 
 namespace Test {
 
-// Unit test for Execution Space
-// Test1 - testing for memory_space, execution_space, scratch space and
-// array_layout of an execution space
-// Test2 - Test if the is_execution_space evaluation is working correctly
+struct TestIncrAtomic {
+  value_type value1 = 1.5, value2 = 0.5;
 
-template <class ExecSpace>
-struct TestIncrExecSpaceTypedef {
-  void testit() {
-    const bool passed =
-        (!std::is_same<void, typename ExecSpace::memory_space>::value) &&
-        std::is_same<ExecSpace, typename ExecSpace::execution_space>::value &&
-        !std::is_same<void, typename ExecSpace::scratch_memory_space>::value &&
-        !std::is_same<void, typename ExecSpace::array_layout>::value;
-    static_assert(passed == true,
-                  "The memory and execution spaces are defined");
+  void testExchange() {
+    value_type ret_value = Kokkos::atomic_exchange(&value1, value2);
+
+    ASSERT_EQ(value1, 0.5);
+    ASSERT_EQ(ret_value, 1.5);
+  }
+
+  void testAdd() {
+    Kokkos::atomic_add(&value1, value2);
+
+    ASSERT_EQ(value1, 2.0);
+  }
+
+  void testSub() {
+    Kokkos::atomic_sub(&value1, value2);
+
+    ASSERT_EQ(value1, 1.0);
   }
 };
 
-template <class ExecSpace>
-struct TestIncrExecSpace {
-  void testit() {
-    typedef typename ExecSpace::device_type device_type;
-    typedef typename device_type::memory_space memory_space;
-    typedef typename device_type::execution_space execution_space;
-
-    const bool passed =
-        std::is_same<device_type,
-                     Kokkos::Device<execution_space, memory_space>>::value;
-
-    static_assert(passed == true,
-                  "Checking if the is_execution_space is evaluated correctly");
-  }
-};
-
-TEST(TEST_CATEGORY, incr_01_execspace_typedef) {
-  TestIncrExecSpaceTypedef<TEST_EXECSPACE> test;
-  test.testit();
+TEST(TEST_CATEGORY, IncrTest_01_AtomicExchange) {
+  TestIncrAtomic test;
+  test.testExchange();
 }
 
-TEST(TEST_CATEGORY, incr_01_execspace) {
-  ASSERT_TRUE(Kokkos::is_execution_space<TEST_EXECSPACE>::value);
-  ASSERT_FALSE(Kokkos::is_execution_space<
-               TestIncrExecSpaceTypedef<TEST_EXECSPACE>>::value);
+TEST(TEST_CATEGORY, IncrTest_02_AtomicAdd) {
+  TestIncrAtomic test;
+  test.testAdd();
 }
+
+TEST(TEST_CATEGORY, IncrTest_02_AtomicSub) {
+  TestIncrAtomic test;
+  test.testSub();
+}
+
 }  // namespace Test

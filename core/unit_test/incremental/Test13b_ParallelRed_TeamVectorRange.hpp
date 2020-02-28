@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-// @Kokkos_Feature_Level_Required:1
+// @Kokkos_Feature_Level_Required:13
 // Unit test for hierarchical parallelism
 // Create concurrent work hierarchically and verify if
 // sum of created processing units corresponds to expected value
@@ -92,7 +92,7 @@ struct Hierarchical_Red_B {
   }
 };
 
-TEST(TEST_CATEGORY, Hierarchical_Red_B) {
+TEST(TEST_CATEGORY, IncrTest_13b_Hierarchical_Red) {
   Hierarchical_Red_B<TEST_EXECSPACE> test;
   test.run(4, 16);
   test.run(2, 39);

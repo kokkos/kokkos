@@ -45,14 +45,14 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
-/// @Kokkos_Feature_Level_Required:5
+/// @Kokkos_Feature_Level_Required:8
 // Unit Test for MDRangePolicy without Views uptil 4 ranks.
 // For each of the MDRangePolicy test from 2-to-4 ranks, we create an equivalent
 // dimensional view. In each of these views we update the
 // elements as a product of iterator indexes and a constant inside a
 // parallel_for lambda. At the end, we check for correctness.
 
-namespace Test {
+namespace Test05 {
 
 using value_type = double;
 const int N      = 10;
@@ -176,22 +176,32 @@ struct TestMDRangePolicy {
   }
 };
 
+}  // namespace Test05
+
+namespace Test {
+
 // 2D MDRangePolicy
-TEST(TEST_CATEGORY, incr_05_mdrange2D) {
-  TestMDRangePolicy<TEST_EXECSPACE> test;
-  test.mdRange2D();
+TEST(TEST_CATEGORY, IncrTest_08_deep_copy_2D) {
+  {
+    Test05::TestMDRangePolicy<TEST_EXECSPACE> test;
+    test.mdRange2D();
+  }
 }
 
 // 3D MDRangePolicy
-TEST(TEST_CATEGORY, incr_05_mdrange3D) {
-  TestMDRangePolicy<TEST_EXECSPACE> test;
-  test.mdRange3D();
+TEST(TEST_CATEGORY, IncrTest_08_deep_copy_3D) {
+  {
+    Test05::TestMDRangePolicy<TEST_EXECSPACE> test;
+    test.mdRange3D();
+  }
 }
 
 // 4D MDRangePolicy
-TEST(TEST_CATEGORY, incr_05_mdrange4D) {
-  TestMDRangePolicy<TEST_EXECSPACE> test;
-  test.mdRange4D();
+TEST(TEST_CATEGORY, IncrTest_08_deep_copy_4D) {
+  {
+    Test05::TestMDRangePolicy<TEST_EXECSPACE> test;
+    test.mdRange4D();
+  }
 }
 
 }  // namespace Test

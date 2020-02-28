@@ -45,14 +45,14 @@
 #include <Kokkos_Core.hpp>
 #include <gtest/gtest.h>
 
-/// @Kokkos_Feature_Level_Required:4
+/// @Kokkos_Feature_Level_Required:6
 // Unit Test for MDRangePolicy without Views uptil 4 ranks.
 // For each of the MDRangePolicy test from 2-to-4 ranks, we create an equivalent
 // dimensional array implemented in 1D. In each of these arrays we update the
 // elements as a product of iterator indexes and a constant. At the end, we
 // check for correctness.
 
-namespace Test {
+namespace Test04 {
 
 using value_type       = double;
 const int N            = 10;
@@ -109,9 +109,9 @@ struct TestMDRangePolicy {
 
   // Routine to allocate memory in a specific memory space.
   template <class MemSpace>
-  value_type *allocate_mem(int N) {
+  value_type *allocate_mem(int N_) {
     return (static_cast<value_type *>(
-        Kokkos::kokkos_malloc<MemSpace>("Data", N * sizeof(value_type))));
+        Kokkos::kokkos_malloc<MemSpace>("Data", N_ * sizeof(value_type))));
   }
 
   // Routine to free the memory from a specific memory space.
@@ -164,7 +164,7 @@ struct TestMDRangePolicy {
     Kokkos::parallel_for("MDRange2D", mdPolicy_2D, Functor_2D);
 
     // Copy the data back to Host memory space
-    Kokkos::Impl::DeepCopy<d_memspace_type, h_memspace_type>(
+    Kokkos::Impl::DeepCopy<h_memspace_type, d_memspace_type>(
         hostData, deviceData, num_elements * sizeof(value_type));
 
     // Check if all data has been update correctly
@@ -195,7 +195,7 @@ struct TestMDRangePolicy {
     Kokkos::parallel_for("MDRange3D", mdPolicy_3D, Functor_3D);
 
     // Copy the data back to Host memory space
-    Kokkos::Impl::DeepCopy<d_memspace_type, h_memspace_type>(
+    Kokkos::Impl::DeepCopy<h_memspace_type, d_memspace_type>(
         hostData, deviceData, num_elements * sizeof(value_type));
 
     // Check if all data has been update correctly
@@ -226,7 +226,7 @@ struct TestMDRangePolicy {
     Kokkos::parallel_for("MDRange4D", mdPolicy_4D, Functor_4D);
 
     // Copy the data back to Host memory space
-    Kokkos::Impl::DeepCopy<d_memspace_type, h_memspace_type>(
+    Kokkos::Impl::DeepCopy<h_memspace_type, d_memspace_type>(
         hostData, deviceData, num_elements * sizeof(value_type));
 
     // Check if all data has been update correctly
@@ -238,21 +238,25 @@ struct TestMDRangePolicy {
   }
 };
 
+}  // namespace Test04
+
+namespace Test {
+
 // 2D MDRangePolicy
-TEST(TEST_CATEGORY, incr_04_mdrange2D) {
-  TestMDRangePolicy<TEST_EXECSPACE> test;
+TEST(TEST_CATEGORY, IncrTest_06_mdrange2D) {
+  Test04::TestMDRangePolicy<TEST_EXECSPACE> test;
   test.mdRange2D();
 }
 
 // 3D MDRangePolicy
-TEST(TEST_CATEGORY, incr_04_mdrange3D) {
-  TestMDRangePolicy<TEST_EXECSPACE> test;
+TEST(TEST_CATEGORY, IncrTest_06_mdrange3D) {
+  Test04::TestMDRangePolicy<TEST_EXECSPACE> test;
   test.mdRange3D();
 }
 
 // 4D MDRangePolicy
-TEST(TEST_CATEGORY, incr_04_mdrange4D) {
-  TestMDRangePolicy<TEST_EXECSPACE> test;
+TEST(TEST_CATEGORY, IncrTest_06_mdrange4D) {
+  Test04::TestMDRangePolicy<TEST_EXECSPACE> test;
   test.mdRange4D();
 }
 

@@ -57,9 +57,10 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     XL    KOKKOS_IBM_XL_OMP45_WORKAROUND
     Clang KOKKOS_WORKAROUND_OPENMPTARGET_CLANG
   )
-  COMPILER_SPECIFIC_LIBS(
-    Clang -lopenmptarget
-  )
+# Are there compilers which identify as Clang and need this library?
+#  COMPILER_SPECIFIC_LIBS(
+#    Clang -lopenmptarget
+#  )
 ENDIF()
 
 IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)

@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-// @Kokkos_Feature_Level_Required:1
+// @Kokkos_Feature_Level_Required:13
 // Unit test for hierarchical parallelism
 // Create concurrent work hierarchically and verify if
 // sum of created processing units corresponds to expected value
@@ -66,7 +66,7 @@ struct Hierarchical_Red_C {
     Kokkos::parallel_for(
         "Team", team_policy(pN, Kokkos::AUTO),
         KOKKOS_LAMBDA(const member_type &team) {
-          const int n     = team.league_rank();
+          int n           = team.league_rank();
           SCALAR_TYPE out = 0;
 
           Kokkos::parallel_reduce(
@@ -102,7 +102,7 @@ struct Hierarchical_Red_C {
   }
 };
 
-TEST(TEST_CATEGORY, Hierarchical_Red_C) {
+TEST(TEST_CATEGORY, IncrTest_13c_Hierarchical_Red) {
   Hierarchical_Red_C<TEST_EXECSPACE> test;
   test.run(1, 4, 8);
   test.run(2, 39, 12);
