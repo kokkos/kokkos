@@ -14,7 +14,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull'
+                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-18.04:3.0'
                             label 'rocm-docker && vega'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video'
                         }
