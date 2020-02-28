@@ -71,7 +71,7 @@ struct TeamScratch {
         KOKKOS_LAMBDA(const team_t &team) {
           // Allocate and use scratch pad memory
           scratch_t v_S(team.team_scratch(1), sX, sY);
-          const int n = team.league_rank();
+          int n = team.league_rank();
 
           Kokkos::parallel_for(
               Kokkos::TeamThreadRange(team, sX), [&](const int m) {

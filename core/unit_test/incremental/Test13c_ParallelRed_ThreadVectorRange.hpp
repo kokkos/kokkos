@@ -66,7 +66,7 @@ struct Hierarchical_Red_C {
     Kokkos::parallel_for(
         "Team", team_policy(pN, Kokkos::AUTO),
         KOKKOS_LAMBDA(const member_type &team) {
-          const int n     = team.league_rank();
+          int n           = team.league_rank();
           SCALAR_TYPE out = 0;
 
           Kokkos::parallel_reduce(

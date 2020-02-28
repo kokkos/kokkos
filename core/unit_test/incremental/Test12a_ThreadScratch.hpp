@@ -67,7 +67,7 @@ struct ThreadScratch {
   void operator()(const team_t &team) const {
     // Allocate and use scratch pad memory
     scratch_t v_S(team.thread_scratch(1), sY);
-    const int n = team.league_rank();
+    int n = team.league_rank();
 
     for (int i = 0; i < sY; ++i) v_S(i) = 0;
 

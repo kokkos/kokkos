@@ -64,11 +64,11 @@ struct Hierarchical_ForLoop_C {
     Kokkos::parallel_for(
         "Team", team_policy(pN, Kokkos::AUTO),
         KOKKOS_LAMBDA(const member_type &team) {
-          const int n  = team.league_rank();
-          const int ls = team.league_size();
+          int n  = team.league_rank();
+          int ls = team.league_size();
 
-          const int startDim1 = n * (int)(sX / ls);
-          const int modDim1   = n == ls - 1 ? sX % ls : 0;
+          int startDim1 = n * (int)(sX / ls);
+          int modDim1   = n == ls - 1 ? sX % ls : 0;
 
           Kokkos::parallel_for(
               Kokkos::TeamThreadRange(team, v.extent(1)), [&](const int m) {
