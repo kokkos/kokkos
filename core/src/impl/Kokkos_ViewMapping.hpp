@@ -252,7 +252,7 @@ template <class A, class B>
 struct ViewDimensionJoin;
 
 template <size_t... A, size_t... B>
-struct ViewDimensionJoin<ViewDimension<A...>, ViewDimension<B...> > {
+struct ViewDimensionJoin<ViewDimension<A...>, ViewDimension<B...>> {
   typedef ViewDimension<A..., B...> type;
 };
 
@@ -263,7 +263,7 @@ struct ViewDimensionAssignable;
 
 template <size_t... DstArgs, size_t... SrcArgs>
 struct ViewDimensionAssignable<ViewDimension<DstArgs...>,
-                               ViewDimension<SrcArgs...> > {
+                               ViewDimension<SrcArgs...>> {
   typedef ViewDimension<DstArgs...> dst;
   typedef ViewDimension<SrcArgs...> src;
 
@@ -327,18 +327,18 @@ struct is_integral_extent_type {
 };
 
 template <class iType>
-struct is_integral_extent_type<std::pair<iType, iType> > {
+struct is_integral_extent_type<std::pair<iType, iType>> {
   enum { value = std::is_integral<iType>::value ? 1 : 0 };
 };
 
 template <class iType>
-struct is_integral_extent_type<Kokkos::pair<iType, iType> > {
+struct is_integral_extent_type<Kokkos::pair<iType, iType>> {
   enum { value = std::is_integral<iType>::value ? 1 : 0 };
 };
 
 // Assuming '2 == initializer_list<iType>::size()'
 template <class iType>
-struct is_integral_extent_type<std::initializer_list<iType> > {
+struct is_integral_extent_type<std::initializer_list<iType>> {
   enum { value = std::is_integral<iType>::value ? 1 : 0 };
 };
 
@@ -726,18 +726,18 @@ template <class T, class Dim>
 struct ViewDataType;
 
 template <class T>
-struct ViewDataType<T, ViewDimension<> > {
+struct ViewDataType<T, ViewDimension<>> {
   typedef T type;
 };
 
 template <class T, size_t... Args>
-struct ViewDataType<T, ViewDimension<0, Args...> > {
-  typedef typename ViewDataType<T*, ViewDimension<Args...> >::type type;
+struct ViewDataType<T, ViewDimension<0, Args...>> {
+  typedef typename ViewDataType<T*, ViewDimension<Args...>>::type type;
 };
 
 template <class T, size_t N, size_t... Args>
-struct ViewDataType<T, ViewDimension<N, Args...> > {
-  typedef typename ViewDataType<T, ViewDimension<Args...> >::type type[N];
+struct ViewDataType<T, ViewDimension<N, Args...>> {
+  typedef typename ViewDataType<T, ViewDimension<Args...>>::type type[N];
 };
 
 /**\brief  Analysis of View data type.
@@ -2740,7 +2740,7 @@ struct ViewValueFunctor;
 
 template <class ExecSpace, class ValueType>
 struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
-  typedef Kokkos::RangePolicy<ExecSpace> PolicyType;
+  typedef Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>> PolicyType;
   typedef typename ExecSpace::execution_space Exec;
 
   Exec space;
@@ -2800,7 +2800,7 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
 
 template <class ExecSpace, class ValueType>
 struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
-  typedef Kokkos::RangePolicy<ExecSpace> PolicyType;
+  typedef Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>> PolicyType;
 
   ExecSpace space;
   ValueType* ptr;
@@ -3493,7 +3493,7 @@ struct SubViewDataTypeImpl;
 
 /* base case */
 template <class ValueType>
-struct SubViewDataTypeImpl<void, ValueType, Experimental::Extents<> > {
+struct SubViewDataTypeImpl<void, ValueType, Experimental::Extents<>> {
   using type = ValueType;
 };
 
