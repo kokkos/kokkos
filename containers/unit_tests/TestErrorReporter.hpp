@@ -176,7 +176,8 @@ struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType> {
   }
 };
 
-#if defined(KOKKOS_CLASS_LAMBDA)
+#if defined(KOKKOS_CLASS_LAMBDA) && \
+    (!defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA))
 template <typename DeviceType>
 struct ErrorReporterDriverUseLambda
     : public ErrorReporterDriverBase<DeviceType> {
@@ -225,7 +226,8 @@ struct ErrorReporterDriverNativeOpenMP
 };
 #endif
 
-#if defined(KOKKOS_CLASS_LAMBDA)
+#if defined(KOKKOS_CLASS_LAMBDA) && \
+    (!defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_LAMBDA))
 TEST(TEST_CATEGORY, ErrorReporterViaLambda) {
   TestErrorReporter<ErrorReporterDriverUseLambda<TEST_EXECSPACE>>();
 }
