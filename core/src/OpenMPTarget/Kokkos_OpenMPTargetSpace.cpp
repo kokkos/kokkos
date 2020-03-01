@@ -205,7 +205,7 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
         &head, head_ompt, sizeof(SharedAllocationHeader));
 
     RecordHost *record = static_cast<RecordHost *>(head.m_record);
-    if (record->m_alloc_ptr != head_ompt) {
+    if (record->m_alloc_ptr == head_ompt) {
       return record;
     }
   }
