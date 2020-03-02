@@ -244,6 +244,9 @@ do
     --cmake-flags*)
       PASSTHRU_CMAKE_FLAGS="${key#*=}"
       ;;
+    --cmake-flags*)
+      PASSTHRU_CMAKE_FLAGS="${key#*=}"
+      ;;
     --make-j*)
       echo "Warning: ${key} is deprecated"
       echo "Call make with appropriate -j flag"
