@@ -125,6 +125,32 @@ struct FunctorPolicyExecutionSpace<
   typedef typename Functor::execution_space execution_space;
 };
 
+namespace detail {
+
+template <class LogicalDevice, bool Enable>
+struct FunctorLogicalDevice;
+
+template <class LogicalDevice>
+struct FunctorLogicalDevice<LogicalDevice,
+                            false  // this is not the default logical device
+                            > {
+  typedef LogicalDevice logical_device_id;
+};
+
+template <class LogicalDevice>
+struct FunctorLogicalDevice<LogicalDevice,
+                            true  // this is the default (void) Logical Device
+                            > {
+  typedef DeviceId<0> logical_device_id;
+};
+
+}  // namespace detail
+
+template <class Policy>
+struct FunctorLogicalDevice
+    : public detail::FunctorLogicalDevice<Policy, std::is_void<Policy>::value> {
+};
+
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -162,12 +188,15 @@ inline void parallel_for(
         Kokkos::Impl::is_execution_policy<ExecPolicy>::value>::type* =
         nullptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
+  using LogicalDevice = typename Impl::FunctorLogicalDevice<
+      typename ExecPolicy::logical_device_id>::logical_device_id;
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag>
         name(str);
-    Kokkos::Profiling::beginParallelFor(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelFor(name.get(), LogicalDevice::value,
+                                        &kpID);
   }
 #endif
 
@@ -193,9 +222,12 @@ inline void parallel_for(const size_t work_count, const FunctorType& functor,
 
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
+  using LogicalDevice =
+      DeviceId<0>;  // TODO: should we allow logical devices without policies?
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType, void> name(str);
-    Kokkos::Profiling::beginParallelFor(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelFor(name.get(), LogicalDevice::value,
+                                        &kpID);
   }
 #endif
 
@@ -407,13 +439,16 @@ inline void parallel_scan(
     typename std::enable_if<
         Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
         nullptr) {
+  using LogicalDevice = typename Impl::FunctorLogicalDevice<
+      typename ExecutionPolicy::logical_device_id>::logical_device_id;
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecutionPolicy::work_tag>
         name(str);
-    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelScan(name.get(), LogicalDevice::value,
+                                         &kpID);
   }
 #endif
 
@@ -439,10 +474,12 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
   typedef Kokkos::RangePolicy<execution_space> policy;
 
 #if defined(KOKKOS_ENABLE_PROFILING)
-  uint64_t kpID = 0;
+  uint64_t kpID       = 0;
+  using LogicalDevice = DeviceId<0>;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType, void> name(str);
-    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelScan(name.get(), LogicalDevice::value,
+                                         &kpID);
   }
 #endif
 
@@ -485,12 +522,15 @@ inline void parallel_scan(
         Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
         nullptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
-  uint64_t kpID = 0;
+  uint64_t kpID       = 0;
+  using LogicalDevice = typename Impl::FunctorLogicalDevice<
+      typename ExecutionPolicy::logical_device_id>::logical_device_id;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecutionPolicy::work_tag>
         name(str);
-    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelScan(name.get(), LogicalDevice::value,
+                                         &kpID);
   }
 #endif
 
@@ -518,11 +558,13 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
 
   typedef Kokkos::RangePolicy<execution_space> policy;
 
+  using LogicalDevice = DeviceId<0>;
 #if defined(KOKKOS_ENABLE_PROFILING)
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType, void> name(str);
-    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelScan(name.get(), LogicalDevice::value,
+                                         &kpID);
   }
 #endif
 

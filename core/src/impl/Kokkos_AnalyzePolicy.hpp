@@ -50,13 +50,26 @@
 #include <impl/Kokkos_Tags.hpp>
 
 namespace Kokkos {
+
+struct device_id_tag {};
+
+template <int N>
+struct DeviceId : public device_id_tag {
+  constexpr static int value = N;
+  using device_id            = void;
+};
+
 namespace Impl {
+
+template <typename T>
+using is_device_id = typename std::is_base_of<device_id_tag, T>::type;
 
 template <typename ExecutionSpace = void, typename Schedule = void,
           typename WorkTag = void, typename IndexType = void,
           typename IterationPattern = void, typename LaunchBounds = void,
           typename MyWorkItemProperty =
-              Kokkos::Experimental::WorkItemProperty::None_t>
+              Kokkos::Experimental::WorkItemProperty::None_t,
+          typename MyLogicalDeviceId = void>
 struct PolicyTraitsBase {
   using type =
       PolicyTraitsBase<ExecutionSpace, Schedule, WorkTag, IndexType,
@@ -69,6 +82,7 @@ struct PolicyTraitsBase {
   using iteration_pattern  = IterationPattern;
   using launch_bounds      = LaunchBounds;
   using work_item_property = MyWorkItemProperty;
+  using logical_device_id  = MyLogicalDeviceId;
 };
 
 template <typename PolicyBase, typename Property>
@@ -81,7 +95,21 @@ struct SetWorkItemProperty {
       typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       typename PolicyBase::iteration_pattern,
-      typename PolicyBase::launch_bounds, Property>;
+      typename PolicyBase::launch_bounds, Property,
+      typename PolicyBase::logical_device_id>;
+};
+
+template <typename PolicyBase, typename LogicalDeviceId>
+struct SetLogicalDeviceID {
+  static_assert(
+      std::is_same<typename PolicyBase::logical_device_id, void>::value,
+      "Kokkos Error: More than one logical device ID given");
+  using type = PolicyTraitsBase<
+      typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
+      typename PolicyBase::work_tag, typename PolicyBase::index_type,
+      typename PolicyBase::iteration_pattern,
+      typename PolicyBase::launch_bounds,
+      typename PolicyBase::work_item_property, LogicalDeviceId>;
 };
 
 template <typename PolicyBase, typename ExecutionSpace>
@@ -94,7 +122,8 @@ struct SetExecutionSpace {
                        typename PolicyBase::index_type,
                        typename PolicyBase::iteration_pattern,
                        typename PolicyBase::launch_bounds,
-                       typename PolicyBase::work_item_property>;
+                       typename PolicyBase::work_item_property,
+                       typename PolicyBase::logical_device_id>;
 };
 
 template <typename PolicyBase, typename Schedule>
@@ -106,7 +135,8 @@ struct SetSchedule {
                                 typename PolicyBase::index_type,
                                 typename PolicyBase::iteration_pattern,
                                 typename PolicyBase::launch_bounds,
-                                typename PolicyBase::work_item_property>;
+                                typename PolicyBase::work_item_property,
+                                typename PolicyBase::logical_device_id>;
 };
 
 template <typename PolicyBase, typename WorkTag>
@@ -118,7 +148,8 @@ struct SetWorkTag {
                                 typename PolicyBase::index_type,
                                 typename PolicyBase::iteration_pattern,
                                 typename PolicyBase::launch_bounds,
-                                typename PolicyBase::work_item_property>;
+                                typename PolicyBase::work_item_property,
+                                typename PolicyBase::logical_device_id>;
 };
 
 template <typename PolicyBase, typename IndexType>
@@ -130,7 +161,8 @@ struct SetIndexType {
                                 typename PolicyBase::work_tag, IndexType,
                                 typename PolicyBase::iteration_pattern,
                                 typename PolicyBase::launch_bounds,
-                                typename PolicyBase::work_item_property>;
+                                typename PolicyBase::work_item_property,
+                                typename PolicyBase::logical_device_id>;
 };
 
 template <typename PolicyBase, typename IterationPattern>
@@ -141,7 +173,8 @@ struct SetIterationPattern {
       typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       IterationPattern, typename PolicyBase::launch_bounds,
-      typename PolicyBase::work_item_property>;
+      typename PolicyBase::work_item_property,
+      typename PolicyBase::logical_device_id>;
 };
 
 template <typename PolicyBase, typename LaunchBounds>
@@ -152,8 +185,11 @@ struct SetLaunchBounds {
       typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       typename PolicyBase::iteration_pattern, LaunchBounds,
-      typename PolicyBase::work_item_property>;
+      typename PolicyBase::work_item_property,
+      typename PolicyBase::logical_device_id>;
 };
+
+// TODO DZP: modify here
 
 template <typename Base, typename... Traits>
 struct AnalyzePolicy;
@@ -181,10 +217,13 @@ struct AnalyzePolicy<Base, T, Traits...>
                                           T>::value,
                                       SetWorkItemProperty<Base, T>,
                                       typename std::conditional<
-                                          !std::is_void<T>::value,
-                                          SetWorkTag<Base, T>, Base>::type>::
-                                      type>::type>::type>::type>::type>::type>::
-              type::type,
+                                          is_device_id<T>::value,
+                                          SetLogicalDeviceID<Base, T>,
+                                          typename std::conditional<
+                                              !std::is_void<T>::value,
+                                              SetWorkTag<Base, T>,
+                                              Base>::type>::type>::type>::
+                                  type>::type>::type>::type>::type>::type::type,
           Traits...> {};
 
 template <typename Base>
@@ -221,9 +260,11 @@ struct AnalyzePolicy<Base> {
 
   using work_item_property = typename Base::work_item_property;
 
-  using type =
-      PolicyTraitsBase<execution_space, schedule_type, work_tag, index_type,
-                       iteration_pattern, launch_bounds, work_item_property>;
+  using logical_device_id = typename Base::logical_device_id;
+
+  using type = PolicyTraitsBase<execution_space, schedule_type, work_tag,
+                                index_type, iteration_pattern, launch_bounds,
+                                work_item_property, logical_device_id>;
 };
 
 template <typename... Traits>
