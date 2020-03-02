@@ -114,7 +114,7 @@ struct FunctorPolicyExecutionSpace<
     Functor, Policy,
     typename enable_if_type<typename Functor::device_type>::type,
     EnablePolicy> {
-  typedef typename Functor::device_type execution_space;
+  typedef typename Functor::device_type::execution_space execution_space;
 };
 
 template <class Functor, class Policy, class EnablePolicy>
