@@ -391,7 +391,7 @@ FOREACH (_BACKEND Cuda OpenMPTarget HIP ROCm)
                           "but execution space ${_DEVICE_PARALLEL} is already enabled. "
                           "Remove the CMakeCache.txt file and re-configure.")
     ENDIF()
-    IF (${_BACKEND} EQUAL "Cuda")   
+    IF (${_BACKEND} STREQUAL "Cuda")   
        SET(_DEVICE_PARALLEL ${_BACKEND})
     ELSE()
        SET(_DEVICE_PARALLEL "Experimental::${_BACKEND}")

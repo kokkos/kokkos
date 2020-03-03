@@ -103,54 +103,7 @@ struct Device;
 /// Kokkos::Cuda, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP,
 /// Kokkos::Threads, Kokkos::Serial
 
-namespace Kokkos {
-
-#if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA)
-typedef Cuda DefaultExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET)
-typedef Experimental::OpenMPTarget DefaultExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
-typedef Experimental::HIP DefaultExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM)
-typedef Experimental::ROCm DefaultExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
-typedef OpenMP DefaultExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
-typedef Threads DefaultExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
-typedef Kokkos::Experimental::HPX DefaultExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
-typedef Serial DefaultExecutionSpace;
-#else
-#error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::HIP, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
-#endif
-
-#if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
-typedef OpenMP DefaultHostExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
-typedef Threads DefaultHostExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
-typedef Kokkos::Experimental::HPX DefaultHostExecutionSpace;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
-typedef Serial DefaultHostExecutionSpace;
-#elif defined(KOKKOS_ENABLE_OPENMP)
-typedef OpenMP DefaultHostExecutionSpace;
-#elif defined(KOKKOS_ENABLE_THREADS)
-typedef Threads DefaultHostExecutionSpace;
-#elif defined(KOKKOS_ENABLE_HPX)
-typedef Kokkos::Experimental::HPX DefaultHostExecutionSpace;
-#elif defined(KOKKOS_ENABLE_SERIAL)
-typedef Serial DefaultHostExecutionSpace;
-#else
-#error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
-#endif
-
-}  // namespace Kokkos
-=======
 #include <Kokkos_Set_Default_Spaces.hpp>
->>>>>>> add initial CMake function to build dynamic headers for fwd, declare and setup
 
 namespace Kokkos {
 

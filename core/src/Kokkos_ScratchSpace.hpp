@@ -96,8 +96,6 @@ class ScratchMemorySpace {
   typedef typename ExecSpace::array_layout array_layout;
   typedef typename ExecSpace::size_type size_type;
 
-  static constexpr const char* name() { return "ScratchMemorySpace"; }
-
   template <typename IntType>
   KOKKOS_INLINE_FUNCTION static IntType align(const IntType& size) {
     return (size + MASK) & ~MASK;
