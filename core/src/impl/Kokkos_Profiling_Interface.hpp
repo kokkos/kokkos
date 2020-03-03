@@ -54,6 +54,35 @@
 #include <iostream>
 #include <cstdlib>
 
+// NOTE: in this Kokkos::Profiling block, do not define anything that shouldn't
+// exist should Profiling be disabled
+
+namespace Kokkos {
+namespace Profiling {
+namespace Experimental {
+enum struct DeviceType {
+  Serial,
+  OpenMP,
+  Cuda,
+  HIP,
+  OpenMPTarget,
+  HPX,
+  Threads
+};
+template <typename ExecutionSpace>
+struct DeviceTypeTraits;
+
+constexpr const size_t device_type_bits = 8;
+constexpr const size_t instance_bits    = 24;
+template <typename ExecutionSpace>
+inline uint32_t device_id(ExecutionSpace const& space) noexcept {
+  auto device_id = static_cast<uint32_t>(DeviceTypeTraits<ExecutionSpace>::id);
+  return (device_id << instance_bits) + space.impl_instance_id();
+}
+}  // namespace Experimental
+}  // namespace Profiling
+}  // end namespace Kokkos
+
 #if defined(KOKKOS_ENABLE_PROFILING)
 // We check at configure time that libdl is available.
 #include <dlfcn.h>

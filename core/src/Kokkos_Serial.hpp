@@ -181,11 +181,20 @@ class Serial {
     return impl_thread_pool_size(0);
   }
 #endif
+  uint32_t impl_instance_id() const noexcept { return 0; }
 
   static const char* name();
   //--------------------------------------------------------------------------
 };
 
+namespace Profiling {
+namespace Experimental {
+template <>
+struct DeviceTypeTraits<Serial> {
+  static constexpr DeviceType id = DeviceType::Serial;
+};
+}  // namespace Experimental
+}  // namespace Profiling
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

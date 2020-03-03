@@ -194,6 +194,7 @@ class HPX {
                                   const bool /* verbose */ = false) {
     std::cout << "HPX backend" << std::endl;
   }
+  uint32_t impl_instance_id() const noexcept { return 0 }
 
   static bool in_parallel(HPX const & = HPX()) noexcept { return false; }
   static void impl_static_fence(HPX const & = HPX())
@@ -296,6 +297,15 @@ class HPX {
   static constexpr const char *name() noexcept { return "HPX"; }
 };
 }  // namespace Experimental
+
+namespace Profiling {
+namespace Experimental {
+template <>
+struct DeviceTypeTraits<Experimental::HPX> {
+  constexpr DeviceType id = DeviceType::HPX;
+};
+}  // namespace Experimental
+}  // namespace Profiling
 
 namespace Impl {
 template <typename Closure>
