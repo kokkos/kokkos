@@ -565,13 +565,13 @@ template <>
 struct Random_XorShift1024_State<false> {
   uint64_t* state_;
   const int stride_;
-  KOKKOS_DEFAULTED_FUNCTION
-  Random_XorShift1024_State() = default;
+  KOKKOS_FUNCTION
+  Random_XorShift1024_State() : state_(nullptr), stride_(1){};
 
   template <class StateViewType>
   KOKKOS_FUNCTION Random_XorShift1024_State(const StateViewType& v,
                                             int state_idx)
-      : stride_(v.stride_1()), state_(&v(state_idx, 0)) {}
+      : state_(&v(state_idx, 0)), stride_(v.stride_1()) {}
 
   KOKKOS_FUNCTION
   uint64_t& operator[](const int i) const { return state_[i * stride_]; }
@@ -629,7 +629,7 @@ struct Random_UniqueIndex<Kokkos::Cuda> {
             locks_.extent(0);
     while (Kokkos::atomic_compare_exchange(&locks_(i), 0, 1)) {
       i += blockDim.x * blockDim.y * blockDim.z;
-      if (i >= locks_.extent(0)) {
+      if (i >= static_cast<int>(locks_.extent(0))) {
         i = i_offset;
       }
     }
@@ -808,7 +808,6 @@ class Random_XorShift64_Pool {
   Random_XorShift64_Pool(uint64_t seed) {
     num_states_ = 0;
 
-    using execution_space = typename DeviceType::execution_space;
     init(seed, execution_space().concurrency());
   }
 
@@ -1050,7 +1049,6 @@ class Random_XorShift1024_Pool {
   inline Random_XorShift1024_Pool(uint64_t seed) {
     num_states_ = 0;
 
-    using execution_space = typename DeviceType::execution_space;
     init(seed, execution_space().concurrency());
   }
 
