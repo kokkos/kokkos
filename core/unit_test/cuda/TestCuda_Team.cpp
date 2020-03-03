@@ -103,6 +103,30 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
   //      test_teambroadcast(1000, 1);
 }
 
+TEST(TEST_CATEGORY, team_broadcast_char) {
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                    unsigned char>::test_teambroadcast(0, 1);
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                    unsigned char>::test_teambroadcast(0, 1);
+
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                    unsigned char>::test_teambroadcast(2, 1);
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                    unsigned char>::test_teambroadcast(2, 1);
+
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                    unsigned char>::test_teambroadcast(16, 1);
+  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                    unsigned char>::test_teambroadcast(16, 1);
+
+  //  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>, long
+  //  >::
+  //      test_teambroadcast(1000, 1);
+  //  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>, long
+  //  >::
+  //      test_teambroadcast(1000, 1);
+}
+
 TEST(TEST_CATEGORY, team_broadcast_float) {
   TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
                     float>::test_teambroadcast(0, 1.3);
