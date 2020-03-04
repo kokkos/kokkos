@@ -945,7 +945,9 @@ void post_initialize(const InitArguments& args) {
 }
 }  // namespace Impl
 
-void push_finalize_hook(std::function<void()> f) { finalize_hooks.push_front(f); }
+void push_finalize_hook(std::function<void()> f) {
+  finalize_hooks.push_back(f);
+}
 
 void finalize() { Impl::finalize_internal(); }
 
