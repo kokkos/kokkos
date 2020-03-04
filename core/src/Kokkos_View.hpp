@@ -1749,6 +1749,20 @@ class View : public ViewTraits<DataType, Properties...> {
     m_map   = std::move(rhs.m_map);
     return *this;
   }
+  // -----------------------------------------------------------
+  // public is_assignable
+  // expose underlying view mapping property
+  template <class RT, class... RP>
+  inline const bool is_assignable(const View<RT, RP...>& rhs) {
+    using SrcTraits = typename View<RT, RP...>::traits;
+    using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
+                                              typename traits::specialize>;
+
+    if (Mapping::is_assignable)
+      return Mapping::assignable_layout_check(m_map, rhs.m_map);
+    else
+      return false;
+  }
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
