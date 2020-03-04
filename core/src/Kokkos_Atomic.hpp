@@ -269,6 +269,18 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 // { T tmp = *dest ; *dest = tmp & val ; return tmp ; }
 
 #include "impl/Kokkos_Atomic_Fetch_And.hpp"
+
+//----------------------------------------------------------------------------
+// Atomic MinMax
+//
+// template<class T>
+// T atomic_min(volatile T* const dest, const T val)
+// { T tmp = *dest ; *dest = min(*dest, val); return tmp ; }
+// template<class T>
+// T atomic_max(volatile T* const dest, const T val)
+// { T tmp = *dest ; *dest = max(*dest, val); return tmp ; }
+
+#include "impl/Kokkos_Atomic_MinMax.hpp"
 #endif /*Not _WIN32*/
 
 //----------------------------------------------------------------------------
