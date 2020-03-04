@@ -73,7 +73,7 @@ struct UnorderedMapRehash {
 
   void apply() const {
     parallel_for("kokkos.containers.unordered_map_rehash",
-                 Kokkos::RangePolicy<>(m_src.capacity()), *this);
+                 Kokkos::RangePolicy<>(0, m_src.capacity()), *this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -96,7 +96,7 @@ struct UnorderedMapErase {
 
   void apply() const {
     parallel_for("kokkos.containers.unordered_map_erase",
-                 Kokkos::RangePolicy<>(m_map.m_hash_lists.extent(0)), *this);
+                 Kokkos::RangePolicy<>(0, m_map.m_hash_lists.extent(0)), *this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -160,7 +160,7 @@ struct UnorderedMapHistogram {
 
   void calculate() {
     parallel_for("kokkos.containers.unordered_map_histogram",
-                 Kokkos::RangePolicy<>(m_map.m_hash_lists.extent(0)), *this);
+                 Kokkos::RangePolicy<>(0, m_map.m_hash_lists.extent(0)), *this);
   }
 
   void clear() {
@@ -240,7 +240,7 @@ struct UnorderedMapPrint {
 
   void apply() {
     parallel_for("kokkos.containers.unordered_map_print",
-                 Kokkos::RangePolicy<>(m_map.m_hash_lists.extent(0)), *this);
+                 Kokkos::RangePolicy<>(0, m_map.m_hash_lists.extent(0)), *this);
   }
 
   KOKKOS_INLINE_FUNCTION
