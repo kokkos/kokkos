@@ -9,13 +9,9 @@ IF(Kokkos_ENABLE_CUDA)
      TestCuda.cpp
      )
 
-   KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_Cuda
+   KOKKOS_ADD_EXECUTABLE_AND_TEST( PerformanceTest_Cuda
                                SOURCES ${SOURCES}
                              )
-
-   KOKKOS_ADD_TEST( NAME PerformanceTest_Cuda
-                    EXE  PerfTestExec_Cuda
-                  )
 ENDIF()
 
 IF(Kokkos_ENABLE_PTHREAD)
@@ -23,13 +19,9 @@ IF(Kokkos_ENABLE_PTHREAD)
      TestMain.cpp
      TestThreads.cpp
    )
-   KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_Threads
+   KOKKOS_ADD_EXECUTABLE_AND_TEST( PerformanceTest_Threads
                                SOURCES ${SOURCES}
                              )
-
-   KOKKOS_ADD_TEST( NAME PerformanceTest_Threads
-                    EXE  PerfTestExec_Threads
-                  )
 ENDIF()
 
 IF(Kokkos_ENABLE_OPENMP)
@@ -37,13 +29,9 @@ IF(Kokkos_ENABLE_OPENMP)
      TestMain.cpp
      TestOpenMP.cpp
    )
-   KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_OpenMP
+   KOKKOS_ADD_EXECUTABLE_AND_TEST( PerformanceTest_OpenMP
                                SOURCES ${SOURCES}
                              )
-
-   KOKKOS_ADD_TEST( NAME PerformanceTest_OpenMP
-                    EXE  PerfTestExec_OpenMP
-                  )
 ENDIF()
 
 IF(Kokkos_ENABLE_HPX)
@@ -51,12 +39,8 @@ IF(Kokkos_ENABLE_HPX)
      TestMain.cpp
      TestHPX.cpp
    )
-   KOKKOS_ADD_TEST_EXECUTABLE( PerfTestExec_HPX
+   KOKKOS_ADD_EXECUTABLE_AND_TEST( PerformanceTest_HPX
                                SOURCES ${SOURCES}
                              )
-
-   KOKKOS_ADD_TEST( NAME PerformanceTest_HPX
-                    EXE  PerfTestExec_HPX
-                  )
 ENDIF()
 
