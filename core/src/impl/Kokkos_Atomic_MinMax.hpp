@@ -89,6 +89,6 @@ __inline__ __device__ unsigned long long int atomic_fetch_max(
 
 #endif
 #endif
-}
+}  // namespace Kokkos
 
 #endif
