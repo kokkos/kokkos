@@ -71,7 +71,10 @@ struct UnorderedMapRehash {
   UnorderedMapRehash(map_type const& dst, const_map_type const& src)
       : m_dst(dst), m_src(src) {}
 
-  void apply() const { parallel_for(m_src.capacity(), *this); }
+  void apply() const {
+    parallel_for("kokkos.containers.unordered_map_rehash",
+                 Kokkos::RangePolicy<>(m_src.capacity()), *this);
+  }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_type i) const {
@@ -91,7 +94,10 @@ struct UnorderedMapErase {
 
   UnorderedMapErase(map_type const& map) : m_map(map) {}
 
-  void apply() const { parallel_for(m_map.m_hash_lists.extent(0), *this); }
+  void apply() const {
+    parallel_for("kokkos.containers.unordered_map_erase",
+                 Kokkos::RangePolicy<>(m_map.m_hash_lists.extent(0)), *this);
+  }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_type i) const {
@@ -152,7 +158,10 @@ struct UnorderedMapHistogram {
         m_distance("UnorderedMap Histogram"),
         m_block_distance("UnorderedMap Histogram") {}
 
-  void calculate() { parallel_for(m_map.m_hash_lists.extent(0), *this); }
+  void calculate() {
+    parallel_for("kokkos.containers.unordered_map_histogram",
+                 Kokkos::RangePolicy<>(m_map.m_hash_lists.extent(0)), *this);
+  }
 
   void clear() {
     Kokkos::deep_copy(m_length, 0);
@@ -229,7 +238,10 @@ struct UnorderedMapPrint {
 
   UnorderedMapPrint(map_type const& map) : m_map(map) {}
 
-  void apply() { parallel_for(m_map.m_hash_lists.extent(0), *this); }
+  void apply() {
+    parallel_for("kokkos.containers.unordered_map_print",
+                 Kokkos::RangePolicy<>(m_map.m_hash_lists.extent(0)), *this);
+  }
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_type i) const {
