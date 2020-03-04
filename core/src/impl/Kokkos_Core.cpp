@@ -49,7 +49,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
-#include <stack>
+#include <list>
 #include <cerrno>
 #include <unistd.h>
 
