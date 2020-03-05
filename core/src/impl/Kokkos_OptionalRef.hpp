@@ -69,16 +69,16 @@ struct OptionalRef {
  public:
   using value_type = T;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   OptionalRef() = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   OptionalRef(OptionalRef const&) = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   OptionalRef(OptionalRef&&) = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   OptionalRef& operator=(OptionalRef const&) = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -88,10 +88,10 @@ struct OptionalRef {
     m_value = other.m_value;
   }
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   OptionalRef& operator=(OptionalRef&&) = default;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ~OptionalRef() = default;
 
   KOKKOS_INLINE_FUNCTION
