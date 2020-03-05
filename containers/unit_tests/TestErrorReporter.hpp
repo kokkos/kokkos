@@ -56,7 +56,7 @@
 
 namespace Test {
 
-// Just save the data in the report.  Informative text goies in the
+// Just save the data in the report.  Informative text goes in the
 // operator<<(..).
 template <typename DataType1, typename DataType2, typename DataType3>
 struct ThreeValReport {
