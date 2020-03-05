@@ -49,7 +49,7 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
-#include <stack>
+#include <list>
 #include <cerrno>
 #include <unistd.h>
 
@@ -57,7 +57,7 @@
 namespace {
 bool g_is_initialized = false;
 bool g_show_warnings  = true;
-std::stack<std::function<void()> > finalize_hooks;
+std::list<std::function<void()> > finalize_hooks;
 }  // namespace
 
 namespace Kokkos {
@@ -392,7 +392,7 @@ void initialize_internal(const InitArguments& args) {
 void finalize_internal(const bool all_spaces = false) {
   typename decltype(finalize_hooks)::size_type numSuccessfulCalls = 0;
   while (!finalize_hooks.empty()) {
-    auto f = finalize_hooks.top();
+    auto f = finalize_hooks.back();
     try {
       f();
     } catch (...) {
@@ -413,7 +413,7 @@ void finalize_internal(const bool all_spaces = false) {
                 << std::endl;
       std::terminate();
     }
-    finalize_hooks.pop();
+    finalize_hooks.pop_back();
     ++numSuccessfulCalls;
   }
 
@@ -945,7 +945,9 @@ void post_initialize(const InitArguments& args) {
 }
 }  // namespace Impl
 
-void push_finalize_hook(std::function<void()> f) { finalize_hooks.push(f); }
+void push_finalize_hook(std::function<void()> f) {
+  finalize_hooks.push_back(f);
+}
 
 void finalize() { Impl::finalize_internal(); }
 
