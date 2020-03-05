@@ -57,80 +57,164 @@ namespace Kokkos {
 
 // Atomic_fetch_{min,max}
 
-__inline__ __device__ int atomic_fetch_min(volatile int* const dest,
-                                           const int val) {
-  return atomicMin((int*)dest, val);
+#ifdef KOKKOS_COMPILER_CLANG
+
+// Host implementations for CLANG compiler
+
+inline __host__ int atomic_fetch_min(volatile int* const dest, const int val) {
+  return Impl::atomic_fetch_oper(Impl::MinOper<int, const int>(), dest, val);
 }
 
-__inline__ __device__ unsigned int atomic_fetch_min(
-    volatile unsigned int* const dest, const unsigned int val) {
-  return atomicMin((unsigned int*)dest, val);
+inline __host__ unsigned int atomic_fetch_min(volatile unsigned int* const dest,
+                                              const unsigned int val) {
+  return Impl::atomic_fetch_oper(
+      Impl::MinOper<unsigned int, const unsigned int>(), dest, val);
 }
 
-__inline__ __device__ unsigned long long int atomic_fetch_min(
+inline __host__ unsigned long long int atomic_fetch_min(
     volatile unsigned long long int* const dest,
     const unsigned long long int val) {
-  return atomicMin((unsigned long long int*)dest, val);
+  return Impl::atomic_fetch_oper(
+      Impl::MinOper<unsigned long long int, const unsigned long long int>(),
+      dest, val);
 }
 
-__inline__ __device__ int atomic_fetch_max(volatile int* const dest,
-                                           const int val) {
-  return atomicMax((int*)dest, val);
+inline __host__ int atomic_fetch_max(volatile int* const dest, const int val) {
+  return Impl::atomic_fetch_oper(Impl::MaxOper<int, const int>(), dest, val);
 }
 
-__inline__ __device__ unsigned int atomic_fetch_max(
-    volatile unsigned int* const dest, const unsigned int val) {
-  return atomicMax((unsigned int*)dest, val);
+inline __host__ unsigned int atomic_fetch_max(volatile unsigned int* const dest,
+                                              const unsigned int val) {
+  return Impl::atomic_fetch_oper(
+      Impl::MaxOper<unsigned int, const unsigned int>(), dest, val);
 }
 
-__inline__ __device__ unsigned long long int atomic_fetch_max(
+inline __host__ unsigned long long int atomic_fetch_max(
     volatile unsigned long long int* const dest,
     const unsigned long long int val) {
-  return atomicMax((unsigned long long int*)dest, val);
-}
+  return Impl::atomic_fetch_oper(
+      Impl::MaxOper<unsigned long long int, const unsigned long long int>(),
+      dest, val);
 
-// Atomic_{min,max}_fetch
+#endif
 
-__inline__ __device__ int atomic_min_fetch(volatile int* const dest,
+  inline __device__ int atomic_fetch_min(volatile int* const dest,
+                                         const int val) {
+    return atomicMin((int*)dest, val);
+  }
+
+  inline __device__ unsigned int atomic_fetch_min(
+      volatile unsigned int* const dest, const unsigned int val) {
+    return atomicMin((unsigned int*)dest, val);
+  }
+
+  inline __device__ unsigned long long int atomic_fetch_min(
+      volatile unsigned long long int* const dest,
+      const unsigned long long int val) {
+    return atomicMin((unsigned long long int*)dest, val);
+  }
+
+  inline __device__ int atomic_fetch_max(volatile int* const dest,
+                                         const int val) {
+    return atomicMax((int*)dest, val);
+  }
+
+  inline __device__ unsigned int atomic_fetch_max(
+      volatile unsigned int* const dest, const unsigned int val) {
+    return atomicMax((unsigned int*)dest, val);
+  }
+
+  inline __device__ unsigned long long int atomic_fetch_max(
+      volatile unsigned long long int* const dest,
+      const unsigned long long int val) {
+    return atomicMax((unsigned long long int*)dest, val);
+  }
+
+  // Atomic_{min,max}_fetch
+
+#ifdef KOKKOS_COMPILER_CLANG
+
+  // Host implementations for CLANG compiler
+
+  inline __host__ int atomic_min_fetch(volatile int* const dest,
+                                       const int val) {
+    return Impl::atomic_oper_fetch(Impl::MinOper<int, const int>(), dest, val);
+  }
+
+  inline __host__ unsigned int atomic_min_fetch(
+      volatile unsigned int* const dest, const unsigned int val) {
+    return Impl::atomic_oper_fetch(
+        Impl::MinOper<unsigned int, const unsigned int>(), dest, val);
+  }
+
+  inline __host__ unsigned long long int atomic_min_fetch(
+      volatile unsigned long long int* const dest,
+      const unsigned long long int val) {
+    return Impl::atomic_oper_fetch(
+        Impl::MinOper<unsigned long long int, const unsigned long long int>(),
+        dest, val);
+  }
+
+  inline __host__ int atomic_max_fetch(volatile int* const dest,
+                                       const int val) {
+  const int old = atomicMax((inreturn Impl::atomic_oper_fetch(Impl::MaxOper<int, const int>(), dest, val);
+  }
+
+  inline __host__ unsigned int atomic_max_fetch(
+      volatile unsigned int* const dest, const unsigned int val) {
+    return Impl::atomic_oper_fetch(
+        Impl::MaxOper<unsigned int, const unsigned int>(), dest, val);
+  }
+
+  inline __host__ unsigned long long int atomic_max_fetch(
+      volatile unsigned long long int* const dest,
+      const unsigned long long int val) {
+    return Impl::atomic_oper_fetch(
+        Impl::MaxOper<unsigned long long int, const unsigned long long int>(),
+        dest, val);
+
+#endif
+
+    inline __device__ int atomic_min_fetch(volatile int* const dest,
                                            const int val) {
-  const int old = atomicMin((int*)dest, val);
-  return old < val ? old : val;
-}
+      const int old = atomicMin((int*)dest, val);
+      return old < val ? old : val;
+    }
 
-__inline__ __device__ unsigned int atomic_min_fetch(
-    volatile unsigned int* const dest, const unsigned int val) {
-  const unsigned int old = atomicMin((unsigned int*)dest, val);
-  return old < val ? old : val;
-}
+    inline __device__ unsigned int atomic_min_fetch(
+        volatile unsigned int* const dest, const unsigned int val) {
+      const unsigned int old = atomicMin((unsigned int*)dest, val);
+      return old < val ? old : val;
+    }
 
-__inline__ __device__ unsigned long long int atomic_min_fetch(
-    volatile unsigned long long int* const dest,
-    const unsigned long long int val) {
-  const unsigned long long old = atomicMin((unsigned long long*)dest, val);
-  return old < val ? old : val;
-}
+    inline __device__ unsigned long long int atomic_min_fetch(
+        volatile unsigned long long int* const dest,
+        const unsigned long long int val) {
+      const unsigned long long old = atomicMin((unsigned long long*)dest, val);
+      return old < val ? old : val;
+    }
 
-__inline__ __device__ int atomic_max_fetch(volatile int* const dest,
+    inline __device__ int atomic_max_fetch(volatile int* const dest,
                                            const int val) {
-  const int old = atomicMax((int*)dest, val);
-  return old >= val ? old : val;
-}
+      const int old = atomicMax((int*)dest, val);
+      return old >= val ? old : val;
+    }
 
-__inline__ __device__ unsigned int atomic_max_fetch(
-    volatile unsigned int* const dest, const unsigned int val) {
-  const unsigned int old = atomicMax((unsigned int*)dest, val);
-  return old >= val ? old : val;
-}
+    inline __device__ unsigned int atomic_max_fetch(
+        volatile unsigned int* const dest, const unsigned int val) {
+      const unsigned int old = atomicMax((unsigned int*)dest, val);
+      return old >= val ? old : val;
+    }
 
-__inline__ __device__ unsigned long long int atomic_max_fetch(
-    volatile unsigned long long int* const dest,
-    const unsigned long long int val) {
-  const unsigned long long old = atomicMax((unsigned long long*)dest, val);
-  return old >= val ? old : val;
-}
+    inline __device__ unsigned long long int atomic_max_fetch(
+        volatile unsigned long long int* const dest,
+        const unsigned long long int val) {
+      const unsigned long long old = atomicMax((unsigned long long*)dest, val);
+      return old >= val ? old : val;
+    }
 
 #endif
 #endif
-}  // namespace Kokkos
+  }  // namespace Kokkos
 
 #endif
