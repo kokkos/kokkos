@@ -70,7 +70,7 @@ struct DynRankDimTraits {
   KOKKOS_INLINE_FUNCTION
   static size_t computeRank(const size_t N0, const size_t N1, const size_t N2,
                             const size_t N3, const size_t N4, const size_t N5,
-                            const size_t N6, const size_t /* N7 */) {
+                            const size_t N6) {
     return (
         (N6 == unspecified && N5 == unspecified && N4 == unspecified &&
          N3 == unspecified && N2 == unspecified && N1 == unspecified &&
@@ -103,7 +103,7 @@ struct DynRankDimTraits {
     return computeRank(layout.dimension[0], layout.dimension[1],
                        layout.dimension[2], layout.dimension[3],
                        layout.dimension[4], layout.dimension[5],
-                       layout.dimension[6], layout.dimension[7]);
+                       layout.dimension[6]);
   }
 
   // Extra overload to match that for specialize types v2
@@ -176,12 +176,12 @@ struct DynRankDimTraits {
   template <typename ViewType, typename ViewArg>
   static ViewType createView(const ViewArg& arg, const size_t N0,
                              const size_t N1, const size_t N2, const size_t N3,
-                             const size_t N4, const size_t N5, const size_t N6,
-                             const size_t N7) {
+                             const size_t N4, const size_t N5,
+                             const size_t N6) {
     return ViewType(arg, N0 != unspecified ? N0 : 1, N1 != unspecified ? N1 : 1,
                     N2 != unspecified ? N2 : 1, N3 != unspecified ? N3 : 1,
                     N4 != unspecified ? N4 : 1, N5 != unspecified ? N5 : 1,
-                    N6 != unspecified ? N6 : 1, N7 != unspecified ? N7 : 1);
+                    N6 != unspecified ? N6 : 1);
   }
 };
 
@@ -1283,11 +1283,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
       const size_t arg_N3                                = KOKKOS_INVALID_INDEX,
       const size_t arg_N4                                = KOKKOS_INVALID_INDEX,
       const size_t arg_N5                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N6                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N7                                = KOKKOS_INVALID_INDEX)
+      const size_t arg_N6                                = KOKKOS_INVALID_INDEX)
       : DynRankView(arg_prop, typename traits::array_layout(
                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
-                                  arg_N5, arg_N6, arg_N7)) {}
+                                  arg_N5, arg_N6)) {}
 
   template <class... P>
   explicit KOKKOS_INLINE_FUNCTION DynRankView(
@@ -1299,11 +1298,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
       const size_t arg_N3                                = KOKKOS_INVALID_INDEX,
       const size_t arg_N4                                = KOKKOS_INVALID_INDEX,
       const size_t arg_N5                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N6                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N7                                = KOKKOS_INVALID_INDEX)
+      const size_t arg_N6                                = KOKKOS_INVALID_INDEX)
       : DynRankView(arg_prop, typename traits::array_layout(
                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
-                                  arg_N5, arg_N6, arg_N7)) {}
+                                  arg_N5, arg_N6)) {}
 
   // Allocate with label and layout
   template <typename Label>
@@ -1326,12 +1324,11 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
       const size_t arg_N3                                = KOKKOS_INVALID_INDEX,
       const size_t arg_N4                                = KOKKOS_INVALID_INDEX,
       const size_t arg_N5                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N6                                = KOKKOS_INVALID_INDEX,
-      const size_t arg_N7                                = KOKKOS_INVALID_INDEX)
+      const size_t arg_N6                                = KOKKOS_INVALID_INDEX)
       : DynRankView(
             Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                          arg_N4, arg_N5, arg_N6, arg_N7)) {}
+                                          arg_N4, arg_N5, arg_N6)) {}
 
   // For backward compatibility
   // NDE This ctor does not take ViewCtorProp argument - should not use
@@ -1351,23 +1348,22 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
                               const size_t arg_N3 = KOKKOS_INVALID_INDEX,
                               const size_t arg_N4 = KOKKOS_INVALID_INDEX,
                               const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N7 = KOKKOS_INVALID_INDEX)
+                              const size_t arg_N6 = KOKKOS_INVALID_INDEX)
       : DynRankView(
             Kokkos::Impl::ViewCtorProp<std::string,
                                        Kokkos::Impl::WithoutInitializing_t>(
                 arg_prop.label, Kokkos::WithoutInitializing),
             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                          arg_N4, arg_N5, arg_N6, arg_N7)) {}
+                                          arg_N4, arg_N5, arg_N6)) {}
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
   static constexpr size_t required_allocation_size(
       const size_t arg_N0 = 0, const size_t arg_N1 = 0, const size_t arg_N2 = 0,
       const size_t arg_N3 = 0, const size_t arg_N4 = 0, const size_t arg_N5 = 0,
-      const size_t arg_N6 = 0, const size_t arg_N7 = 0) {
+      const size_t arg_N6 = 0) {
     return map_type::memory_span(typename traits::array_layout(
-        arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
+        arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6));
   }
 
   explicit KOKKOS_INLINE_FUNCTION DynRankView(
@@ -1377,10 +1373,9 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
       const size_t arg_N3 = KOKKOS_INVALID_INDEX,
       const size_t arg_N4 = KOKKOS_INVALID_INDEX,
       const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-      const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-      const size_t arg_N7 = KOKKOS_INVALID_INDEX)
+      const size_t arg_N6 = KOKKOS_INVALID_INDEX)
       : DynRankView(Kokkos::Impl::ViewCtorProp<pointer_type>(arg_ptr), arg_N0,
-                    arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7) {}
+                    arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6) {}
 
   explicit KOKKOS_INLINE_FUNCTION DynRankView(
       pointer_type arg_ptr, typename traits::array_layout& arg_layout)
@@ -1396,13 +1391,12 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
                                   const size_t arg_N3 = KOKKOS_INVALID_INDEX,
                                   const size_t arg_N4 = KOKKOS_INVALID_INDEX,
                                   const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
+                                  const size_t arg_N6 = KOKKOS_INVALID_INDEX) {
     const size_t num_passed_args =
         (arg_N0 != KOKKOS_INVALID_INDEX) + (arg_N1 != KOKKOS_INVALID_INDEX) +
         (arg_N2 != KOKKOS_INVALID_INDEX) + (arg_N3 != KOKKOS_INVALID_INDEX) +
         (arg_N4 != KOKKOS_INVALID_INDEX) + (arg_N5 != KOKKOS_INVALID_INDEX) +
-        (arg_N6 != KOKKOS_INVALID_INDEX) + (arg_N7 != KOKKOS_INVALID_INDEX);
+        (arg_N6 != KOKKOS_INVALID_INDEX);
 
     if (std::is_same<typename traits::specialize, void>::value &&
         num_passed_args != traits::rank_dynamic) {
@@ -1412,7 +1406,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
     {}
 
     return map_type::memory_span(typename traits::array_layout(
-        arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
+        arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6));
   }
 
   explicit KOKKOS_INLINE_FUNCTION DynRankView(
@@ -1435,8 +1429,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
       const size_t arg_N3 = KOKKOS_INVALID_INDEX,
       const size_t arg_N4 = KOKKOS_INVALID_INDEX,
       const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-      const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-      const size_t arg_N7 = KOKKOS_INVALID_INDEX)
+      const size_t arg_N6 = KOKKOS_INVALID_INDEX)
 
       : DynRankView(
             Kokkos::Impl::ViewCtorProp<pointer_type>(
@@ -1445,9 +1438,9 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
                         Impl::DynRankDimTraits<typename traits::specialize>::
                             createLayout(typename traits::array_layout(
                                 arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
-                                arg_N6, arg_N7)))))),
+                                arg_N6)))))),
             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                          arg_N4, arg_N5, arg_N6, arg_N7)) {}
+                                          arg_N4, arg_N5, arg_N6)) {}
 };
 
 template <typename D, class... P>
@@ -1756,7 +1749,6 @@ struct DynRankViewRemap {
   const size_t n4;
   const size_t n5;
   const size_t n6;
-  const size_t n7;
 
   DynRankViewRemap(const OutputView& arg_out, const InputView& arg_in)
       : output(arg_out),
@@ -1767,8 +1759,7 @@ struct DynRankViewRemap {
         n3(std::min((size_t)arg_out.extent(3), (size_t)arg_in.extent(3))),
         n4(std::min((size_t)arg_out.extent(4), (size_t)arg_in.extent(4))),
         n5(std::min((size_t)arg_out.extent(5), (size_t)arg_in.extent(5))),
-        n6(std::min((size_t)arg_out.extent(6), (size_t)arg_in.extent(6))),
-        n7(std::min((size_t)arg_out.extent(7), (size_t)arg_in.extent(7))) {
+        n6(std::min((size_t)arg_out.extent(6), (size_t)arg_in.extent(6))) {
     typedef Kokkos::RangePolicy<ExecSpace> Policy;
     const Kokkos::Impl::ParallelFor<DynRankViewRemap, Policy> closure(
         *this, Policy(0, n0));
@@ -2136,8 +2127,7 @@ inline void resize(DynRankView<T, P...>& v,
                    const size_t n3 = KOKKOS_INVALID_INDEX,
                    const size_t n4 = KOKKOS_INVALID_INDEX,
                    const size_t n5 = KOKKOS_INVALID_INDEX,
-                   const size_t n6 = KOKKOS_INVALID_INDEX,
-                   const size_t n7 = KOKKOS_INVALID_INDEX) {
+                   const size_t n6 = KOKKOS_INVALID_INDEX) {
   typedef DynRankView<T, P...> drview_type;
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
@@ -2160,8 +2150,7 @@ inline void realloc(DynRankView<T, P...>& v,
                     const size_t n3 = KOKKOS_INVALID_INDEX,
                     const size_t n4 = KOKKOS_INVALID_INDEX,
                     const size_t n5 = KOKKOS_INVALID_INDEX,
-                    const size_t n6 = KOKKOS_INVALID_INDEX,
-                    const size_t n7 = KOKKOS_INVALID_INDEX) {
+                    const size_t n6 = KOKKOS_INVALID_INDEX) {
   typedef DynRankView<T, P...> drview_type;
 
   static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
