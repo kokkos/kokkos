@@ -55,6 +55,8 @@ namespace Kokkos {
 
 // Support for int, unsigned int, unsigned long long int, and float
 
+// Atomic_fetch_{min,max}
+
 __inline__ __device__ int atomic_fetch_min(volatile int* const dest,
                                            const int val) {
   return atomicMin((int*)dest, val);
@@ -85,6 +87,46 @@ __inline__ __device__ unsigned long long int atomic_fetch_max(
     volatile unsigned long long int* const dest,
     const unsigned long long int val) {
   return atomicMax((unsigned long long int*)dest, val);
+}
+
+// Atomic_{min,max}_fetch
+
+__inline__ __device__ int atomic_min_fetch(volatile int* const dest,
+                                           const int val) {
+  const int old = atomicMin((int*)dest, val);
+  return old < val ? old : val;
+}
+
+__inline__ __device__ unsigned int atomic_min_fetch(
+    volatile unsigned int* const dest, const unsigned int val) {
+  const unsigned int old = atomicMin((unsigned int*)dest, val);
+  return old < val ? old : val;
+}
+
+__inline__ __device__ unsigned long long int atomic_min_fetch(
+    volatile unsigned long long int* const dest,
+    const unsigned long long int val) {
+  const unsigned long long old = atomicMin((unsigned long long*)dest, val);
+  return old < val ? old : val;
+}
+
+__inline__ __device__ int atomic_max_fetch(volatile int* const dest,
+                                           const int val) {
+  const int old = atomicMax((int*)dest, val);
+  return old >= val ? old : val;
+}
+
+__inline__ __device__ unsigned int atomic_max_fetch(
+    volatile unsigned int* const dest, const unsigned int val) {
+  const unsigned int old = atomicMax((unsigned int*)dest, val);
+  return old >= val ? old : val;
+}
+
+__inline__ __device__ unsigned long long int atomic_max_fetch(
+    volatile unsigned long long int* const dest,
+    const unsigned long long int val) {
+  const unsigned long long old = atomicMax((unsigned long long*)dest, val);
+  return old >= val ? old : val;
 }
 
 #endif
