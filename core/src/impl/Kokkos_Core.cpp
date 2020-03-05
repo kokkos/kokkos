@@ -49,6 +49,8 @@
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
+#include <stack>
+#include <functional>
 #include <list>
 #include <cerrno>
 #include <unistd.h>
@@ -57,7 +59,17 @@
 namespace {
 bool g_is_initialized = false;
 bool g_show_warnings  = true;
-std::list<std::function<void()> > finalize_hooks;
+// When compiling with clang/LLVM and using the GNU (GCC) C++ Standard Library
+// (any recent version between GCC 7.3 and GCC 9.2), std::deque SEGV's during
+// the unwinding of the atexit(3C) handlers at program termination.  However,
+// this bug is not observable when building with GCC.
+// As an added bonus, std::list<T> provides constant insertion and
+// deletion time complexity, which translates to better run-time performance. As
+// opposed to std::deque<T> which does not provide the same constant time
+// complexity for inserts/removals, since std::deque<T> is implemented as a
+// segmented array.
+using hook_function_type = std::function<void()>;
+std::stack<hook_function_type, std::list<hook_function_type>> finalize_hooks;
 }  // namespace
 
 namespace Kokkos {
@@ -392,7 +404,7 @@ void initialize_internal(const InitArguments& args) {
 void finalize_internal(const bool all_spaces = false) {
   typename decltype(finalize_hooks)::size_type numSuccessfulCalls = 0;
   while (!finalize_hooks.empty()) {
-    auto f = finalize_hooks.back();
+    auto f = finalize_hooks.top();
     try {
       f();
     } catch (...) {
@@ -413,7 +425,7 @@ void finalize_internal(const bool all_spaces = false) {
                 << std::endl;
       std::terminate();
     }
-    finalize_hooks.pop_back();
+    finalize_hooks.pop();
     ++numSuccessfulCalls;
   }
 
@@ -945,9 +957,7 @@ void post_initialize(const InitArguments& args) {
 }
 }  // namespace Impl
 
-void push_finalize_hook(std::function<void()> f) {
-  finalize_hooks.push_back(f);
-}
+void push_finalize_hook(std::function<void()> f) { finalize_hooks.push(f); }
 
 void finalize() { Impl::finalize_internal(); }
 
