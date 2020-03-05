@@ -190,11 +190,21 @@ struct ChaseLevDeque {
       return_value = *static_cast<T*>(a[b]);  // relaxed load
       if (t == b) {
         /* single last element in the queue. */
-        if (not Impl::atomic_compare_exchange_strong(
+#ifdef _WIN32
+        Kokkos::memory_fence();
+        bool const success =
+            Kokkos::atomic_compare_exchange_strong(&m_top, t, t + 1);
+        Kokkos::memory_fence();
+        if (!success) {
+          return_value = nullptr;
+        }
+#else
+        if (!Impl::atomic_compare_exchange_strong(
                 &m_top, t, t + 1, memory_order_seq_cst, memory_order_relaxed)) {
           /* failed race, someone else stole it */
           return_value = nullptr;
         }
+#endif
         m_bottom = b + 1;  // memory order relaxed
       }
     } else {
@@ -240,10 +250,20 @@ struct ChaseLevDeque {
       Kokkos::load_fence();  // TODO @tasking @memory_order DSH memory order
                              // instead of fence
       return_value = *static_cast<T*>(a[t]);  // relaxed
-      if (not Impl::atomic_compare_exchange_strong(
+#ifdef _WIN32
+      Kokkos::memory_fence();
+      bool const success =
+          Kokkos::atomic_compare_exchange_strong(&m_top, t, t + 1);
+      Kokkos::memory_fence();
+      if (!success) {
+        return_value = nullptr;
+      }
+#else
+      if (!Impl::atomic_compare_exchange_strong(
               &m_top, t, t + 1, memory_order_seq_cst, memory_order_relaxed)) {
         return_value = nullptr;
       }
+#endif
     }
     return return_value;
   }
