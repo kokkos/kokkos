@@ -62,21 +62,22 @@ namespace Kokkos {
 // Host implementations for CLANG compiler
 
 inline __host__ int atomic_fetch_min(volatile int* const dest, const int val) {
-  return Impl::atomic_fetch_oper(Impl::MinOper<int, const int>(), dest, val);
+  return Impl::atomic_fetch_oper(Impl::MinOper<const int, const int>(), dest,
+                                 val);
 }
 
 inline __host__ unsigned int atomic_fetch_min(volatile unsigned int* const dest,
                                               const unsigned int val) {
   return Impl::atomic_fetch_oper(
-      Impl::MinOper<unsigned int, const unsigned int>(), dest, val);
+      Impl::MinOper<const unsigned int, const unsigned int>(), dest, val);
 }
 
 inline __host__ unsigned long long int atomic_fetch_min(
     volatile unsigned long long int* const dest,
     const unsigned long long int val) {
-  return Impl::atomic_fetch_oper(
-      Impl::MinOper<unsigned long long int, const unsigned long long int>(),
-      dest, val);
+  return Impl::atomic_fetch_oper(Impl::MinOper<const unsigned long long int,
+                                               const unsigned long long int>(),
+                                 dest, val);
 }
 
 inline __host__ int atomic_fetch_max(volatile int* const dest, const int val) {
@@ -86,15 +87,15 @@ inline __host__ int atomic_fetch_max(volatile int* const dest, const int val) {
 inline __host__ unsigned int atomic_fetch_max(volatile unsigned int* const dest,
                                               const unsigned int val) {
   return Impl::atomic_fetch_oper(
-      Impl::MaxOper<unsigned int, const unsigned int>(), dest, val);
+      Impl::MaxOper<const unsigned int, const unsigned int>(), dest, val);
 }
 
 inline __host__ unsigned long long int atomic_fetch_max(
     volatile unsigned long long int* const dest,
     const unsigned long long int val) {
-  return Impl::atomic_fetch_oper(
-      Impl::MaxOper<unsigned long long int, const unsigned long long int>(),
-      dest, val);
+  return Impl::atomic_fetch_oper(Impl::MaxOper<const unsigned long long int,
+                                               const unsigned long long int>(),
+                                 dest, val);
 
 #endif
 
@@ -138,20 +139,22 @@ inline __host__ unsigned long long int atomic_fetch_max(
 
   inline __host__ int atomic_min_fetch(volatile int* const dest,
                                        const int val) {
-    return Impl::atomic_oper_fetch(Impl::MinOper<int, const int>(), dest, val);
+    return Impl::atomic_oper_fetch(Impl::MinOper<const int, const int>(), dest,
+                                   val);
   }
 
   inline __host__ unsigned int atomic_min_fetch(
       volatile unsigned int* const dest, const unsigned int val) {
     return Impl::atomic_oper_fetch(
-        Impl::MinOper<unsigned int, const unsigned int>(), dest, val);
+        Impl::MinOper<const unsigned int, const unsigned int>(), dest, val);
   }
 
   inline __host__ unsigned long long int atomic_min_fetch(
       volatile unsigned long long int* const dest,
       const unsigned long long int val) {
     return Impl::atomic_oper_fetch(
-        Impl::MinOper<unsigned long long int, const unsigned long long int>(),
+        Impl::MinOper<const unsigned long long int,
+                      const unsigned long long int>(),
         dest, val);
   }
 
@@ -163,14 +166,15 @@ inline __host__ unsigned long long int atomic_fetch_max(
   inline __host__ unsigned int atomic_max_fetch(
       volatile unsigned int* const dest, const unsigned int val) {
     return Impl::atomic_oper_fetch(
-        Impl::MaxOper<unsigned int, const unsigned int>(), dest, val);
+        Impl::MaxOper<const unsigned int, const unsigned int>(), dest, val);
   }
 
   inline __host__ unsigned long long int atomic_max_fetch(
       volatile unsigned long long int* const dest,
       const unsigned long long int val) {
     return Impl::atomic_oper_fetch(
-        Impl::MaxOper<unsigned long long int, const unsigned long long int>(),
+        Impl::MaxOper<const unsigned long long int,
+                      const unsigned long long int>(),
         dest, val);
 
 #endif
