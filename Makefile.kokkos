@@ -178,20 +178,20 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
     KOKKOS_INTERNAL_COMPILER_WARNINGS =
   else
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-      KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
+      KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
     else
       ifeq ($(KOKKOS_INTERNAL_COMPILER_APPLE_CLANG), 1)
-        KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
+        KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
       else
         ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-          KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
+          KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wuninitialized
         else
           ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
             # TODO check if cray accepts GNU style warnings
             KOKKOS_INTERNAL_COMPILER_WARNINGS =
           else
             #gcc
-            KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized
+            KOKKOS_INTERNAL_COMPILER_WARNINGS = -Wall -Wunused-parameter -Wshadow -pedantic -Wsign-compare -Wtype-limits -Wignored-qualifiers -Wempty-body -Wclobbered -Wuninitialized
           endif
         endif
       endif
