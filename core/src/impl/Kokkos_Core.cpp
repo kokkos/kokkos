@@ -50,6 +50,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <stack>
+#include <list>
 #include <cerrno>
 #include <unistd.h>
 
@@ -57,7 +58,8 @@
 namespace {
 bool g_is_initialized = false;
 bool g_show_warnings  = true;
-std::stack<std::function<void()> > finalize_hooks;
+std::stack<std::function<void()>, std::list<std::function<void()>>>
+    finalize_hooks;
 }  // namespace
 
 namespace Kokkos {
