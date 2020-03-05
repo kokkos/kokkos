@@ -178,13 +178,9 @@ struct FunctorValueTraits<FunctorType, ArgTag,
       value_type;
   typedef FunctorType functor_type;
 
-  // It seems that if you have redction_identities for unsigned char and short
-  // that the below static assert is contradictory.  I am commenting it out
-  // (JSM)
-  //
-  //  static_assert(0 == (sizeof(value_type) % sizeof(int)),
-  //                "Reduction functor's declared value_type requires: 0 == "
-  //                "sizeof(value_type) % sizeof(int)");
+  static_assert((sizeof(value_type)<sizeof(int)) || 0 == (sizeof(value_type) % sizeof(int)),
+                 "Reduction functor's declared value_type requires: 0 == "
+                 "sizeof(value_type) % sizeof(int)");
 
   /* this cast to bool is needed for correctness by NVCC */
   enum : bool {
