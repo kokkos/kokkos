@@ -50,6 +50,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <stack>
+#include <functional>
 #include <list>
 #include <cerrno>
 #include <unistd.h>
@@ -67,8 +68,8 @@ bool g_show_warnings  = true;
 // opposed to std::deque<T> which does not provide the same constant time
 // complexity for inserts/removals, since std::deque<T> is implemented as a
 // segmented array.
-std::stack<std::function<void()>, std::list<std::function<void()>>>
-    finalize_hooks;
+using hook_function_type = std::function<void()>;
+std::stack<hook_function_type, std::list<hook_function_type>> finalize_hooks;
 }  // namespace
 
 namespace Kokkos {
