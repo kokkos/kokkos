@@ -259,9 +259,9 @@ class TaskQueueCommonMixin {
       // we've lost exclusive access and should nt touch task again
 
       // If the predecessor is not done, then task is not ready
-      task_is_ready = not predecessor_not_ready;
+      task_is_ready = !predecessor_not_ready;
 
-      if (task_is_ready and predecessor.is_runnable()) {
+      if (task_is_ready && predecessor.is_runnable()) {
         // this is our last chance to update the scheduling info before
         // predecessor is potentially deleted
         _self().update_scheduling_info_from_completed_predecessor(
@@ -299,7 +299,7 @@ class TaskQueueCommonMixin {
       // and enqueue the task
       // (can't move because the task isn't expired unless the push succeeds
       bool push_success = ready_queue.push(task);
-      if (not push_success) {
+      if (!push_success) {
         _self().handle_failed_ready_queue_insertion(std::move(task),
                                                     ready_queue, info);
       }
@@ -325,7 +325,7 @@ class TaskQueueCommonMixin {
       AggregateTask<TaskQueueTraits, SchedulingInfo>&& aggregate,
       TeamSchedulerInfo const& info) {
     // Because the aggregate is being scheduled, should not be in any queue
-    KOKKOS_EXPECTS(not aggregate.is_enqueued());
+    KOKKOS_EXPECTS(!aggregate.is_enqueued());
 
     using task_scheduling_info_type =
         typename Derived::task_scheduling_info_type;
@@ -369,7 +369,7 @@ class TaskQueueCommonMixin {
         // ready yet
         incomplete_dependence_found = pred_not_ready;
 
-        if (not pred_not_ready) {
+        if (!pred_not_ready) {
           // A predecessor was done, and we didn't enqueue the aggregate
           // Update the aggregate's scheduling info (we still have exclusive
           // access to it here)
@@ -403,7 +403,7 @@ class TaskQueueCommonMixin {
     // dependence was found, because some other thread could have already popped
     // it off of another waiting queue
 
-    if (not incomplete_dependence_found) {
+    if (!incomplete_dependence_found) {
       // all of the predecessors were completed, so we can complete `task`
       _self().complete(std::move(aggregate), info);
     }

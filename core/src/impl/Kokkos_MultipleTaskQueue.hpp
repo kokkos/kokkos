@@ -181,13 +181,13 @@ struct MultipleTaskQueueTeamEntry {
     auto return_value = OptionalRef<task_base_type>{};
     for (int i_priority = 0; i_priority < NumPriorities; ++i_priority) {
       return_value = _pop_failed_insertion(i_priority, TaskTeam);
-      if (not return_value)
+      if (!return_value)
         return_value = m_ready_queues[i_priority][TaskTeam].pop();
       if (return_value) return return_value;
 
       // Check for a single task with this priority
       return_value = _pop_failed_insertion(i_priority, TaskSingle);
-      if (not return_value)
+      if (!return_value)
         return_value = m_ready_queues[i_priority][TaskSingle].pop();
       if (return_value) return return_value;
     }
@@ -438,7 +438,7 @@ class MultipleTaskQueue final
 
     return_value = team_queue_info.pop_ready_task();
 
-    if (not return_value) {
+    if (!return_value) {
       // loop through the rest of the teams and try to steal
       for (auto isteal = (team_association + 1) % this->n_queues();
            isteal != team_association;
