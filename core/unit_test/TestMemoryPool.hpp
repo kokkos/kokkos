@@ -480,10 +480,10 @@ struct TestMemoryPoolHuge {
   using value_type = long;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i, long& err) const noexcept {}
+  void operator()(int /*i*/, long& /*err*/) const noexcept {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const noexcept {}
+  void operator()(int /*i*/) const noexcept {}
 };
 
 template <class DeviceType>

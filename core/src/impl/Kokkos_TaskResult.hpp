@@ -126,7 +126,7 @@ struct TaskResult<void> {
 
   KOKKOS_INLINE_FUNCTION static reference_type get(TaskBase*) {}
 
-  KOKKOS_INLINE_FUNCTION static void destroy(TaskBase* task) {}
+  KOKKOS_INLINE_FUNCTION static void destroy(TaskBase* /*task*/) {}
 
   // template <class TaskQueueTraits>
   // KOKKOS_INLINE_FUNCTION static

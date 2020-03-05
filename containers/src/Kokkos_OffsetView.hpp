@@ -1316,7 +1316,7 @@ KOKKOS_INLINE_FUNCTION
 
 KOKKOS_INLINE_FUNCTION
 Kokkos::Impl::ALL_t shift_input(const Kokkos::Impl::ALL_t arg,
-                                const int64_t offset) {
+                                const int64_t /*offset*/) {
   return arg;
 }
 
@@ -1346,9 +1346,9 @@ KOKKOS_INLINE_FUNCTION void map_arg_to_new_begin(
 
 template <size_t N, class Arg, class A>
 KOKKOS_INLINE_FUNCTION void map_arg_to_new_begin(
-    const size_t i, Kokkos::Array<int64_t, N>& subviewBegins,
-    typename std::enable_if<N == 0, const Arg>::type shiftedArg, const Arg arg,
-    const A viewBegins, size_t& counter) {}
+    const size_t /*i*/, Kokkos::Array<int64_t, N>& /*subviewBegins*/,
+    typename std::enable_if<N == 0, const Arg>::type /*shiftedArg*/,
+    const Arg /*arg*/, const A /*viewBegins*/, size_t& /*counter*/) {}
 
 template <class D, class... P, class T>
 KOKKOS_INLINE_FUNCTION

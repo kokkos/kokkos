@@ -312,8 +312,8 @@ class TaskQueueCommonMixin {
   template <class TaskQueueTraits, class ReadyQueueType,
             class TeamSchedulerInfo>
   KOKKOS_INLINE_FUNCTION void handle_failed_ready_queue_insertion(
-      RunnableTaskBase<TaskQueueTraits>&& task, ReadyQueueType& ready_queue,
-      TeamSchedulerInfo const& info) {
+      RunnableTaskBase<TaskQueueTraits>&& /*task*/,
+      ReadyQueueType& /*ready_queue*/, TeamSchedulerInfo const& /*info*/) {
     Kokkos::abort("Unhandled failure of ready task queue insertion!\n");
   }
 
@@ -462,15 +462,16 @@ class TaskQueueCommonMixin {
 
   template <class TaskQueueTraits>
   KOKKOS_INLINE_FUNCTION void initialize_scheduling_info_from_predecessor(
-      TaskNode<TaskQueueTraits>& task,
-      TaskNode<TaskQueueTraits>& predecessor) const {
+      TaskNode<TaskQueueTraits>& /*task*/,
+      TaskNode<TaskQueueTraits>& /*predecessor*/) const {
     /* do nothing by default */
   }
 
   template <class TeamSchedulerInfo, class TaskQueueTraits>
   KOKKOS_INLINE_FUNCTION void
   initialize_scheduling_info_from_team_scheduler_info(
-      TaskNode<TaskQueueTraits>& task, TeamSchedulerInfo const& info) const {
+      TaskNode<TaskQueueTraits>& /*task*/,
+      TeamSchedulerInfo const& /*info*/) const {
     /* do nothing by default */
   }
 

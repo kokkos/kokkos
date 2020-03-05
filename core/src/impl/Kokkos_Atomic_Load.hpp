@@ -197,7 +197,7 @@ KOKKOS_FORCEINLINE_FUNCTION T atomic_load(T* ptr,
 }
 
 template <class T>
-KOKKOS_FORCEINLINE_FUNCTION T atomic_load(T* ptr,
+KOKKOS_FORCEINLINE_FUNCTION T atomic_load(T* /*ptr*/,
                                           Impl::memory_order_release_t) {
   static_assert(
       sizeof(T) == 0,  // just something that will always be false, but only on
@@ -206,7 +206,7 @@ KOKKOS_FORCEINLINE_FUNCTION T atomic_load(T* ptr,
 }
 
 template <class T>
-KOKKOS_FORCEINLINE_FUNCTION T atomic_load(T* ptr,
+KOKKOS_FORCEINLINE_FUNCTION T atomic_load(T* /*ptr*/,
                                           Impl::memory_order_acq_rel_t) {
   static_assert(
       sizeof(T) == 0,  // just something that will always be false, but only on

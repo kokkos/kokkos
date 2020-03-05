@@ -89,7 +89,7 @@ struct ErrorReporterDriverBase {
       error_reporter_type;
   error_reporter_type m_errorReporter;
 
-  ErrorReporterDriverBase(int reporter_capacity, int test_size)
+  ErrorReporterDriverBase(int reporter_capacity, int /*test_size*/)
       : m_errorReporter(reporter_capacity) {}
 
   KOKKOS_INLINE_FUNCTION bool error_condition(const int work_idx) const {

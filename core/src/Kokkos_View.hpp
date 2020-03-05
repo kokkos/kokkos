@@ -820,20 +820,10 @@ class View : public ViewTraits<DataType, Properties...> {
     };
   };
 
-#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-
 #define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)             \
   View::template verify_space<                            \
       Kokkos::Impl::ActiveExecutionMemorySpace>::check(); \
   Kokkos::Impl::view_verify_operator_bounds<typename traits::memory_space> ARG;
-
-#else
-
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG) \
-  View::template verify_space<                \
-      Kokkos::Impl::ActiveExecutionMemorySpace>::check();
-
-#endif
 
  public:
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE

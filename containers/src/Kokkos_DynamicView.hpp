@@ -248,8 +248,8 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   //----------------------------------------
 
   template <typename I0, class... Args>
-  KOKKOS_INLINE_FUNCTION reference_type operator()(const I0& i0,
-                                                   const Args&... args) const {
+  KOKKOS_INLINE_FUNCTION reference_type
+  operator()(const I0& i0, const Args&... /*args*/) const {
     static_assert(Kokkos::Impl::are_integral<I0, Args...>::value,
                   "Indices must be integral type");
 
@@ -528,7 +528,7 @@ struct CommonSubview<Kokkos::Experimental::DynamicView<DP...>,
   typedef SrcType src_subview_type;
   dst_subview_type dst_sub;
   src_subview_type src_sub;
-  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& arg0)
+  CommonSubview(const DstType& dst, const SrcType& src, const Arg0& /*arg0*/)
       : dst_sub(dst), src_sub(src) {}
 };
 
