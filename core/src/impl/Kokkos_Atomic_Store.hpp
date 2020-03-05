@@ -212,7 +212,7 @@ KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* /*ptr*/, T /*val*/,
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION void atomic_store(T* ptr, T val) {
   // relaxed by default!
-  _atomic_store(ptr, Impl::memory_order_relaxed);
+  _atomic_store(ptr, val, Impl::memory_order_relaxed);
 }
 
 }  // end namespace Impl
