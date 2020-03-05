@@ -335,22 +335,22 @@ class MultipleTaskQueue final
     constexpr explicit SchedulerInfo(team_queue_id_t association) noexcept
         : team_association(association) {}
 
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     SchedulerInfo() = default;
 
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     SchedulerInfo(SchedulerInfo const&) = default;
 
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     SchedulerInfo(SchedulerInfo&&) = default;
 
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     SchedulerInfo& operator=(SchedulerInfo const&) = default;
 
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     SchedulerInfo& operator=(SchedulerInfo&&) = default;
 
-    KOKKOS_INLINE_FUNCTION
+    KOKKOS_DEFAULTED_FUNCTION
     ~SchedulerInfo() = default;
   };
 
