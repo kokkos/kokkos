@@ -29,7 +29,7 @@ branches:
   - /^release/
 
 env:
-  - 
+  -
 #  - BACKEND="OPENMP"
   - BACKEND="PTHREAD"
   - CMAKE_BUILD_TYPE=Debug COVERAGE=yes GTEST_FILTER="-*DeathTest*"
@@ -62,6 +62,15 @@ script:
       export CCACHE_CPP2=yes;
     fi
   - mkdir build &&
+    travis_wait 60 cmake
+        ${BACKEND:+-DKokkos_ENABLE_${BACKEND}=On}
+        -DKokkos_ENABLE_TESTS=On
+        ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}}
+        -DCMAKE_INSTALL_PREFIX=
+        -DNUM_PROC=2
+        -DSITE=Travis
+        -DCTEST_ARGS=-VV
+        -P cmake/KokkosCI.cmake &&
     pushd build &&
     cmake ..
           ${BACKEND:+-DKokkos_ENABLE_${BACKEND}=On}
