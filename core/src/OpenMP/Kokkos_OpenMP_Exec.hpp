@@ -187,7 +187,11 @@ inline bool OpenMP::is_asynchronous(OpenMP const& instance) noexcept {
 template <typename F>
 void OpenMP::partition_master(F const& f, int num_partitions,
                               int partition_size) {
-  if (omp_get_nested()) {
+#if _OPENMP >= 201811
+  if (omp_get_max_active_levels() > 1) {
+#else
+  if (omp_get_nested() > 1) {
+#endif
     using Exec = Impl::OpenMPExec;
 
     Exec* prev_instance = Impl::t_openmp_instance;
