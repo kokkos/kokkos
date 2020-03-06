@@ -75,18 +75,10 @@ struct test_dualview_combinations {
 
     if (with_init) {
       a = ViewType("A", n, m);
-      Kokkos::deep_copy(a.d_view, 1);
     } else {
       a = ViewType(Kokkos::ViewAllocateWithoutInitializing("A"), n, m);
-
-      Kokkos::parallel_for(
-          Kokkos::RangePolicy<execution_space>(0, n),
-          KOKKOS_LAMBDA(const int i) {
-            for (int j = 0; j < m; j++) {
-              a.d_view(i, j) = 1;
-            }
-          });
     }
+    Kokkos::deep_copy(a.d_view, 1);
 
     a.template modify<typename ViewType::execution_space>();
     a.template sync<typename ViewType::host_mirror_space>();
