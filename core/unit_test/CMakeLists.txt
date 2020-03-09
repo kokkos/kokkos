@@ -160,7 +160,7 @@ if(Kokkos_ENABLE_HIP)
 endif()
 
 FOREACH (PLUGIN ${Kokkos_PLUGIN_PATH})
-  INCLUDE(${PLUGIN}/core/unit_tests/CMakeLists.txt)
+  INCLUDE(${PLUGIN}/core/unit_test/CMakeLists.txt)
 ENDFOREACH()
 
 if(Kokkos_ENABLE_SERIAL)
