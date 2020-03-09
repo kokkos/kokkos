@@ -550,10 +550,10 @@ class Random_XorShift64 {
  public:
   typedef DeviceType device_type;
 
-  enum { MAX_URAND = 0xffffffffU };
-  enum { MAX_URAND64 = 0xffffffffffffffffULL - 1 };
-  enum { MAX_RAND = static_cast<int>(0xffffffff / 2) };
-  enum { MAX_RAND64 = static_cast<int64_t>(0xffffffffffffffffLL / 2 - 1) };
+  constexpr static uint32_t MAX_URAND   = std::numeric_limits<uint32_t>::max();
+  constexpr static uint64_t MAX_URAND64 = std::numeric_limits<uint64_t>::max();
+  constexpr static int32_t MAX_RAND     = std::numeric_limits<int32_t>::max();
+  constexpr static int64_t MAX_RAND64   = std::numeric_limits<int64_t>::max();
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift64(uint64_t state, int state_idx = 0)
@@ -787,10 +787,10 @@ class Random_XorShift1024 {
   typedef Random_XorShift1024_Pool<DeviceType> pool_type;
   typedef DeviceType device_type;
 
-  enum { MAX_URAND = 0xffffffffU };
-  enum { MAX_URAND64 = 0xffffffffffffffffULL - 1 };
-  enum { MAX_RAND = static_cast<int>(0xffffffffU / 2) };
-  enum { MAX_RAND64 = static_cast<int64_t>(0xffffffffffffffffULL / 2 - 1) };
+  constexpr static uint32_t MAX_URAND   = std::numeric_limits<uint32_t>::max();
+  constexpr static uint64_t MAX_URAND64 = std::numeric_limits<uint64_t>::max();
+  constexpr static int32_t MAX_RAND     = std::numeric_limits<int32_t>::max();
+  constexpr static int64_t MAX_RAND64   = std::numeric_limits<int64_t>::max();
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024(const typename pool_type::state_data_type& state, int p,
