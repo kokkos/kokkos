@@ -793,19 +793,18 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
 
  private:
-  enum {
-    is_layout_left =
-        std::is_same<typename traits::array_layout, Kokkos::LayoutLeft>::value,
+  static constexpr bool is_layout_left =
+      std::is_same<typename traits::array_layout, Kokkos::LayoutLeft>::value;
 
-    is_layout_right =
-        std::is_same<typename traits::array_layout, Kokkos::LayoutRight>::value,
+  static constexpr bool is_layout_right =
+      std::is_same<typename traits::array_layout, Kokkos::LayoutRight>::value;
 
-    is_layout_stride = std::is_same<typename traits::array_layout,
-                                    Kokkos::LayoutStride>::value,
+  static constexpr bool is_layout_stride =
+      std::is_same<typename traits::array_layout, Kokkos::LayoutStride>::value;
 
-    is_default_map = std::is_same<typename traits::specialize, void>::value &&
-                     (is_layout_left || is_layout_right || is_layout_stride)
-  };
+  static constexpr bool is_default_map =
+      std::is_same<typename traits::specialize, void>::value &&
+      (is_layout_left || is_layout_right || is_layout_stride);
 
   template <class Space, bool = Kokkos::Impl::MemorySpaceAccess<
                              Space, typename traits::memory_space>::accessible>

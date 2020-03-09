@@ -139,7 +139,7 @@ struct TestTeamPolicy {
 
   struct ReduceTag {};
 
-  typedef long value_type;
+  typedef int64_t value_type;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const team_member &member, value_type &update) const {
@@ -164,9 +164,9 @@ struct TestTeamPolicy {
         policy_type_reduce(league_size, 1)
             .team_size_max(functor, Kokkos::ParallelReduceTag());
 
-    const long N = team_size * league_size;
+    const int64_t N = team_size * league_size;
 
-    long total = 0;
+    int64_t total = 0;
 
     Kokkos::parallel_reduce(policy_type(league_size, team_size), functor,
                             total);
@@ -263,9 +263,8 @@ class TestReduceTeam {
 
     value_type result[Repeat];
 
-    const unsigned long nw = nwork;
-    const unsigned long nsum =
-        nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
+    const uint64_t nw   = nwork;
+    const uint64_t nsum = nw % 2 ? nw * ((nw + 1) / 2) : (nw / 2) * (nw + 1);
 
     policy_type team_exec(nw, 1);
 
@@ -284,7 +283,7 @@ class TestReduceTeam {
 
     for (unsigned i = 0; i < Repeat; ++i) {
       for (unsigned j = 0; j < Count; ++j) {
-        const unsigned long correct = 0 == j % 3 ? nw : nsum;
+        const uint64_t correct = 0 == j % 3 ? nw : nsum;
         ASSERT_EQ((ScalarType)correct, result[i].value[j]);
       }
     }
@@ -302,7 +301,7 @@ class ScanTeamFunctor {
  public:
   typedef DeviceType execution_space;
   typedef Kokkos::TeamPolicy<ScheduleType, execution_space> policy_type;
-  typedef long int value_type;
+  typedef int64_t value_type;
 
   Kokkos::View<value_type, execution_space> accum;
   Kokkos::View<value_type, execution_space> total;
@@ -319,7 +318,7 @@ class ScanTeamFunctor {
   }
 
   struct JoinMax {
-    typedef long int value_type;
+    typedef int64_t value_type;
 
     KOKKOS_INLINE_FUNCTION
     void join(value_type volatile &dst,
@@ -332,31 +331,31 @@ class ScanTeamFunctor {
   void operator()(const typename policy_type::member_type ind,
                   value_type &error) const {
     if (0 == ind.league_rank() && 0 == ind.team_rank()) {
-      const long int thread_count = ind.league_size() * ind.team_size();
-      total()                     = (thread_count * (thread_count + 1)) / 2;
+      const int64_t thread_count = ind.league_size() * ind.team_size();
+      total()                    = (thread_count * (thread_count + 1)) / 2;
     }
 
     // Team max:
-    int long m = (long int)(ind.league_rank() + ind.team_rank());
-    ind.team_reduce(Kokkos::Max<int long>(m));
+    int64_t m = (int64_t)(ind.league_rank() + ind.team_rank());
+    ind.team_reduce(Kokkos::Max<int64_t>(m));
 
     if (m != ind.league_rank() + (ind.team_size() - 1)) {
       printf(
           "ScanTeamFunctor[%d.%d of %d.%d] reduce_max_answer(%ld) != "
           "reduce_max(%ld)\n",
           ind.league_rank(), ind.team_rank(), ind.league_size(),
-          ind.team_size(),
-          (long int)(ind.league_rank() + (ind.team_size() - 1)), m);
+          ind.team_size(), (int64_t)(ind.league_rank() + (ind.team_size() - 1)),
+          m);
     }
 
     // Scan:
-    const long int answer = (ind.league_rank() + 1) * ind.team_rank() +
-                            (ind.team_rank() * (ind.team_rank() + 1)) / 2;
+    const int64_t answer = (ind.league_rank() + 1) * ind.team_rank() +
+                           (ind.team_rank() * (ind.team_rank() + 1)) / 2;
 
-    const long int result =
+    const int64_t result =
         ind.team_scan(ind.league_rank() + 1 + ind.team_rank() + 1);
 
-    const long int result2 =
+    const int64_t result2 =
         ind.team_scan(ind.league_rank() + 1 + ind.team_rank() + 1);
 
     if (answer != result || answer != result2) {
@@ -369,7 +368,7 @@ class ScanTeamFunctor {
       error = 1;
     }
 
-    const long int thread_rank =
+    const int64_t thread_rank =
         ind.team_rank() + ind.team_size() * ind.league_rank();
     ind.team_scan(1 + thread_rank, accum.data());
   }
@@ -379,14 +378,14 @@ template <class DeviceType, class ScheduleType>
 class TestScanTeam {
  public:
   typedef DeviceType execution_space;
-  typedef long int value_type;
+  typedef int64_t value_type;
   typedef Kokkos::TeamPolicy<ScheduleType, execution_space> policy_type;
   typedef Test::ScanTeamFunctor<DeviceType, ScheduleType> functor_type;
 
   TestScanTeam(const size_t nteam) { run_test(nteam); }
 
   void run_test(const size_t nteam) {
-    typedef Kokkos::View<long int, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>
+    typedef Kokkos::View<int64_t, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>
         result_type;
 
     const unsigned REPEAT = 100000;
@@ -405,9 +404,9 @@ class TestScanTeam {
         nteam, team_exec.team_size_max(functor, Kokkos::ParallelReduceTag()));
 
     for (unsigned i = 0; i < Repeat; ++i) {
-      long int accum = 0;
-      long int total = 0;
-      long int error = 0;
+      int64_t accum = 0;
+      int64_t total = 0;
+      int64_t error = 0;
       Kokkos::deep_copy(functor.accum, total);
 
       Kokkos::parallel_reduce(team_exec, functor, result_type(&error));
@@ -462,7 +461,7 @@ struct SharedTeamFunctor {
           "member( %d/%d , %d/%d ) Failed to allocate shared memory of size "
           "%lu\n",
           ind.league_rank(), ind.league_size(), ind.team_rank(),
-          ind.team_size(), static_cast<unsigned long>(SHARED_COUNT));
+          ind.team_size(), static_cast<uint64_t>(SHARED_COUNT));
 
       ++update;  // Failure to allocate is an error.
     } else {
@@ -567,7 +566,7 @@ struct TestLambdaSharedTeam {
           if ((shared_A.data() == nullptr && SHARED_COUNT > 0) ||
               (shared_B.data() == nullptr && SHARED_COUNT > 0)) {
             printf("Failed to allocate shared memory of size %lu\n",
-                   static_cast<unsigned long>(SHARED_COUNT));
+                   static_cast<uint64_t>(SHARED_COUNT));
 
             ++update;  // Failure to allocate is an error.
           } else {
@@ -634,7 +633,7 @@ struct ScratchTeamFunctor {
         (scratch_A.data() == nullptr && SHARED_TEAM_COUNT > 0) ||
         (scratch_B.data() == nullptr && SHARED_THREAD_COUNT > 0)) {
       printf("Failed to allocate shared memory of size %lu\n",
-             static_cast<unsigned long>(SHARED_TEAM_COUNT));
+             static_cast<uint64_t>(SHARED_TEAM_COUNT));
 
       ++update;  // Failure to allocate is an error.
     } else {
@@ -1098,7 +1097,7 @@ struct TestShmemSize {
   TestShmemSize() { run(); }
 
   void run() {
-    typedef Kokkos::View<long ***, ExecSpace> view_type;
+    typedef Kokkos::View<int64_t ***, ExecSpace> view_type;
 
     size_t d1 = 5;
     size_t d2 = 6;
@@ -1106,7 +1105,7 @@ struct TestShmemSize {
 
     size_t size = view_type::shmem_size(d1, d2, d3);
 
-    ASSERT_EQ(size, (d1 * d2 * d3 + 1) * sizeof(long));
+    ASSERT_EQ(size, (d1 * d2 * d3 + 1) * sizeof(int64_t));
 
     test_layout_stride();
   }
@@ -1142,7 +1141,7 @@ struct TestTeamBroadcast {
 
   struct BroadcastTag {};
 
-  typedef long value_type;
+  typedef int64_t value_type;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const team_member &teamMember, value_type &update) const {
@@ -1199,7 +1198,7 @@ struct TestTeamBroadcast {
                     ParallelReduceTag());  // printf("team_size=%d\n",team_size);
 
     // team_broadcast with value
-    long total = 0;
+    int64_t total = 0;
 
     Kokkos::parallel_reduce(policy_type(league_size, team_size), functor,
                             total);

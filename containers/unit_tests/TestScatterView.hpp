@@ -297,7 +297,7 @@ struct test_scatter_view_impl_cls<ExecSpace, Layout, duplication, contribution,
 
   void run_parallel(int n) {
     scatterSize = n;
-    auto policy = Kokkos::RangePolicy<ExecSpace, int>(0, n);
+    Kokkos::RangePolicy<ExecSpace, int> policy(0, n);
     Kokkos::parallel_for(policy, *this, "scatter_view_test: Prod");
   }
 

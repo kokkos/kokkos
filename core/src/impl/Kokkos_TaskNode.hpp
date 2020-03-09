@@ -308,7 +308,7 @@ class TaskNode
 
   template <class Function>
   KOKKOS_INLINE_FUNCTION void consume_wait_queue(Function&& f) {
-    KOKKOS_EXPECTS(not m_wait_queue.is_consumed());
+    KOKKOS_EXPECTS(!m_wait_queue.is_consumed());
     m_wait_queue.consume(std::forward<Function>(f));
   }
 

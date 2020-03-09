@@ -3,16 +3,30 @@
 namespace Kokkos {
 namespace Impl {
 
-int get_ctest_gpu(const char* local_rank_str);
+int get_ctest_gpu(const char *local_rank_str);
 
 }  // namespace Impl
 }  // namespace Kokkos
+
+#ifdef _WIN32
+int setenv(const char *name, const char *value, int overwrite) {
+  int errcode = 0;
+  if (!overwrite) {
+    size_t envsize = 0;
+    errcode        = getenv_s(&envsize, NULL, 0, name);
+    if (errcode || envsize) return errcode;
+  }
+  return _putenv_s(name, value);
+}
+
+int unsetenv(const char *name) { return _putenv_s(name, ""); }
+#endif
 
 // Needed because https://github.com/google/googletest/issues/952 has not been
 // resolved
 #define EXPECT_THROW_WITH_MESSAGE(stmt, etype, whatstring) \
   EXPECT_THROW(                                            \
-      try { stmt; } catch (const etype& ex) {              \
+      try { stmt; } catch (const etype &ex) {              \
         EXPECT_EQ(whatstring, std::string(ex.what()));     \
         throw;                                             \
       },                                                   \
