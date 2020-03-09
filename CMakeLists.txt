@@ -181,9 +181,9 @@ ENDIF()
 
 
 
-KOKKOS_OPTION(CODE_EXTENSIONS_PATH "" STRING "Code Extensions Path-Directories of all TPL Code extensions")
-FOREACH (EXT_PATH ${Kokkos_CODE_EXTENSIONS_PATH})
-  INCLUDE(${EXT_PATH}/CMakeLists.txt)
+KOKKOS_OPTION(PLUGIN_PATH "" STRING "Code Plugins Path-Directories of all TPL Plugs (backend extensions)")
+FOREACH (PLUGIN ${Kokkos_PLUGIN_PATH})
+  INCLUDE(${PLUGIN}/CMakeLists.txt)
 ENDFOREACH()
 #------------------------------------------------------------------------------
 #
