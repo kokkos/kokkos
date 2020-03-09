@@ -669,10 +669,10 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
   typedef Kokkos::View<DataType, Layout, device_type> original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef typename original_view_type::reference_type original_reference_type;
-  friend class ScatterAccess<DataType, Op, device_type, Layout,
+  friend class ScatterAccess<DataType, Op, DeviceType, Layout,
                              ScatterNonDuplicated, contribution,
                              ScatterNonAtomic>;
-  friend class ScatterAccess<DataType, Op, device_type, Layout,
+  friend class ScatterAccess<DataType, Op, DeviceType, Layout,
                              ScatterNonDuplicated, contribution, ScatterAtomic>;
   template <class, class, class, int, int, int>
   friend class ScatterView;
@@ -702,12 +702,11 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
 
   template <int override_contrib = contribution>
   KOKKOS_FORCEINLINE_FUNCTION
-      ScatterAccess<DataType, Op, device_type, Layout, ScatterNonDuplicated,
+      ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
                     contribution, override_contrib>
       access() const {
-    return ScatterAccess<DataType, Op, device_type, Layout,
-                         ScatterNonDuplicated, contribution, override_contrib>{
-        *this};
+    return ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
+                         contribution, override_contrib>(*this);
   }
 
   original_view_type subview() const { return internal_view; }
@@ -778,7 +777,6 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
 
   KOKKOS_INLINE_FUNCTION
   ScatterAccess(view_type const& view_in) : view(view_in) {}
-
   KOKKOS_DEFAULTED_FUNCTION
   ~ScatterAccess() = default;
 
@@ -815,9 +813,9 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
       original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef typename original_view_type::reference_type original_reference_type;
-  friend class ScatterAccess<DataType, Op, device_type, Kokkos::LayoutRight,
+  friend class ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutRight,
                              ScatterDuplicated, contribution, ScatterNonAtomic>;
-  friend class ScatterAccess<DataType, Op, device_type, Kokkos::LayoutRight,
+  friend class ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutRight,
                              ScatterDuplicated, contribution, ScatterAtomic>;
   template <class, class, class, int, int, int>
   friend class ScatterView;
@@ -894,12 +892,12 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
 
   template <int override_contribution = contribution>
   KOKKOS_FORCEINLINE_FUNCTION
-      ScatterAccess<DataType, Op, device_type, Kokkos::LayoutRight,
+      ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutRight,
                     ScatterDuplicated, contribution, override_contribution>
       access() const {
-    return ScatterAccess<DataType, Op, device_type, Kokkos::LayoutRight,
+    return ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutRight,
                          ScatterDuplicated, contribution,
-                         override_contribution>{*this};
+                         override_contribution>(*this);
   }
 
   typename Kokkos::Impl::Experimental::Slice<Kokkos::LayoutRight,
@@ -987,9 +985,9 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
       original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef typename original_view_type::reference_type original_reference_type;
-  friend class ScatterAccess<DataType, Op, device_type, Kokkos::LayoutLeft,
+  friend class ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutLeft,
                              ScatterDuplicated, contribution, ScatterNonAtomic>;
-  friend class ScatterAccess<DataType, Op, device_type, Kokkos::LayoutLeft,
+  friend class ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutLeft,
                              ScatterDuplicated, contribution, ScatterAtomic>;
   template <class, class, class, int, int, int>
   friend class ScatterView;
@@ -1072,12 +1070,12 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
 
   template <int override_contribution = contribution>
   KOKKOS_FORCEINLINE_FUNCTION
-      ScatterAccess<DataType, Op, device_type, Kokkos::LayoutLeft,
+      ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutLeft,
                     ScatterDuplicated, contribution, override_contribution>
       access() const {
-    return ScatterAccess<DataType, Op, device_type, Kokkos::LayoutLeft,
+    return ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutLeft,
                          ScatterDuplicated, contribution,
-                         override_contribution>{*this};
+                         override_contribution>(*this);
   }
 
   typename Kokkos::Impl::Experimental::Slice<Kokkos::LayoutLeft,
