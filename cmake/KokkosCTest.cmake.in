@@ -79,8 +79,6 @@ macro(COPY_CTEST_CONFIG_FILES)
 
 endmacro()
 
-
-
 ctest_read_custom_files("${CMAKE_CURRENT_LIST_DIR}")
 
 message(STATUS "CTEST_MODEL: ${CTEST_MODEL}")

@@ -32,9 +32,12 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
+                    environment {
+                        BUILD_JOBS = 8
+                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -46,8 +49,8 @@ pipeline {
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=SYCL-OneAPI \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -69,11 +72,12 @@ pipeline {
                         OMP_NUM_THREADS = 8
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
+                        BUILD_JOBS = 8
                     }
                     steps {
                         sh 'ccache --zero-stats'
                         sh 'echo "/opt/rocm/llvm/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=hipcc \
@@ -84,8 +88,8 @@ pipeline {
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=HIP-ROCm-3.8-C++14 \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -103,9 +107,12 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
+                    environment {
+                        BUILD_JOBS = 8
+                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=hipcc \
@@ -115,8 +122,8 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=HIP-ROCm-3.8-C++17 \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -133,9 +140,12 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
+                    environment {
+                        BUILD_JOBS = 8
+                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=clang++ \
@@ -146,8 +156,8 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=OPENMPTARGET-Clang \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -164,9 +174,12 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
+                    environment {
+                        BUILD_JOBS = 8
+                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
@@ -180,8 +193,8 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=CUDA-10.1-Clang-Tidy \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -233,11 +246,12 @@ pipeline {
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
                         NVCC_WRAPPER_DEFAULT_COMPILER = 'g++-8'
+                        BUILD_JOBS = 8
                     }
                     steps {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf install && mkdir -p install && \
-                              rm -rf build && mkdir -p build && cd build && \
+                              rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER=g++-8 \
@@ -251,9 +265,9 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
-                              .. && \
-                              make -j8 install && \
-                              cd .. && \
+                                -DBUILD_NAME=CUDA-11.0-NVCC-C++17-RDC \
+                                -DTARGET=install \
+                              -P cmake/KokkosCI.cmake && \
                               rm -rf build-tests && mkdir -p build-tests && cd build-tests && \
                               export CMAKE_PREFIX_PATH=${PWD}/../install && \
                               cmake \
@@ -290,9 +304,12 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
+                    environment {
+                        BUILD_JOBS = 8
+                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -306,9 +323,10 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
-                              .. && \
-                              make -j8 && ctest --verbose && \
-                              cd ../example/build_cmake_in_tree && \
+                                -DBUILD_NAME=CUDA-10.1-NVCC \
+                                -DTARGET=install \
+                              -P cmake/KokkosCI.cmake && \
+                              cd example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=14 .. && make -j8 && ctest --verbose'''
                     }
@@ -329,9 +347,10 @@ pipeline {
                     environment {
                         OMP_NUM_THREADS = 8
                         OMP_PROC_BIND = 'true'
+                        BUILD_JOBS = 8
                     }
                     steps {
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_STANDARD=14 \
@@ -340,8 +359,9 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
-                              .. && \
-                              make -j8 && ctest --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
+                                -DBUILD_NAME=GCC-5.3.0 \
+                              -P cmake/KokkosCI.cmake && \
+                              gcc -I$PWD/core/src core/unit_test/tools/TestCInterface.c'''
                     }
                 }
             }

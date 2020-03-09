@@ -1,5 +1,25 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
+message(STATUS "")
+
+get_cmake_property(_cached_vars CACHE_VARIABLES)
+set(KOKKOS_CMAKE_ARGS)
+set(EXCLUDED_VARIABLES "CMAKE_COMMAND" "CMAKE_CPACK_COMMAND" "CMAKE_CTEST_COMMAND" "CMAKE_ROOT" "CTEST_ARGS" "BUILD_NAME")
+list(SORT _cached_vars)
+foreach(_var ${_cached_vars})
+    if(NOT "${_var}" IN_LIST EXCLUDED_VARIABLES)
+        list(APPEND KOKKOS_CMAKE_ARGS ${_var})
+        if("${_var}" STREQUAL "CMAKE_BUILD_TYPE")
+            set(BUILD_TYPE "${CMAKE_BUILD_TYPE}")
+        endif()
+        #get_property(_var_type CACHE ${_var} PROPERTY TYPE)
+        #set(FORWARDED_VARIABLES "${FORWARDED_VARIABLES}set(${_var} \"${${_var}}\" CACHE ${_var_type} \"Command-line configuration\")\n")
+    endif()
+endforeach()
+
+#message(STATUS "${FORWARDED_VARIABLES}")
+#return()
+
 #----------------------------------------------------------------------------------------#
 #
 #   Macros and variables
@@ -12,9 +32,39 @@ macro(CHECK_REQUIRED VAR)
     endif()
 endmacro()
 
+# require the build name variable
+CHECK_REQUIRED(BUILD_NAME)
+
+# uses all args
 macro(SET_DEFAULT VAR)
     if(NOT DEFINED ${VAR})
         set(${VAR} ${ARGN})
+    endif()
+    # remove these ctest configuration variables from the defines
+    # passed to the Kokkos configuration
+    if("${VAR}" IN_LIST KOKKOS_CMAKE_ARGS)
+        list(REMOVE_ITEM KOKKOS_CMAKE_ARGS "${VAR}")
+    endif()
+endmacro()
+
+# uses first arg -- useful for selecting via priority from multiple
+# potentially defined variables, e.g.:
+#
+#   set_default_arg1(BUILD_NAME ${TRAVIS_BUILD_NAME} ${BUILD_NAME})
+#
+macro(SET_DEFAULT_ARG1 VAR)
+    if(NOT DEFINED ${VAR})
+        foreach(_ARG ${ARGN})
+            if(NOT "${_ARG}" STREQUAL "")
+                set(${VAR} ${_ARG})
+                break()
+            endif()
+        endforeach()
+    endif()
+    # remove these ctest configuration variables from the defines
+    # passed to the Kokkos configuration
+    if("${VAR}" IN_LIST KOKKOS_CMAKE_ARGS)
+        list(REMOVE_ITEM KOKKOS_CMAKE_ARGS "${VAR}")
     endif()
 endmacro()
 
@@ -43,147 +93,68 @@ if(NOT GIT_EXECUTABLE)
     unset(GIT_EXECUTABLE)
 endif()
 
-# function for finding variables matching a regex expression
-function(GET_CMAKE_VARIABLES VAR REGEXPR)
-    # get local and cache variables
-    get_cmake_property(_VAR_NAMES VARIABLES)
-    get_cmake_property(_TMP_NAMES CACHE_VARIABLES)
-    list(APPEND _VAR_NAMES ${_TMP_NAMES})
-    list(SORT _VAR_NAMES)
-    set(_TMP)
-    # loop over variables
-    foreach(_VAR ${_VAR_NAMES})
-        # loop over regex arguments
-        foreach(_ARG ${REGEXPR} ${ARGN})
-            # apply regex
-            string(REGEX MATCH ${_ARG} MATCHED ${_VAR})
-            # append if matched
-            if(MATCHED)
-                list(APPEND _TMP ${MATCHED})
-            endif()
-            unset(MATCHED)
-        endforeach()
-    endforeach()
-    if(_TMP)
-        list(REMOVE_DUPLICATES _TMP)
-        list(SORT _TMP)
+# just gets the git branch name if available
+function(GET_GIT_BRANCH_NAME VAR)
+    execute_process(COMMAND ${GIT_EXECUTABLE} describe --all
+        OUTPUT_VARIABLE GIT_DESCRIPTION
+        RESULT_VARIABLE RET
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+    if(RET EQUAL 0)
+        string(REPLACE " " ";" GIT_DESCRIPTION "${GIT_DESCRIPTION}")
+        list(GET GIT_DESCRIPTION 0 GIT_DESCRIPTION)
+        string(REPLACE "heads/" "" GIT_DESCRIPTION "${GIT_DESCRIPTION}")
+        set(${VAR} "${GIT_DESCRIPTION}" PARENT_SCOPE)
     endif()
-    # message(STATUS "MATCHES: ${_TMP}")
-    set(${VAR} ${_TMP} PARENT_SCOPE)
+    message(STATUS "GIT BRANCH via '${GIT_EXECUTABLE} describe --all': ${GIT_DESCRIPTION}")
 endfunction()
 
+# just gets the git branch name if available
+function(GET_GIT_AUTHOR_NAME VAR)
+    execute_process(COMMAND ${GIT_EXECUTABLE} show -s --format=%an
+        OUTPUT_VARIABLE GIT_AUTHOR
+        RESULT_VARIABLE RET
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+    if(RET EQUAL 0)
+        string(LENGTH "${GIT_AUTHOR}" STRLEN)
+        # if the build name gets too long, this can cause submission errors
+        if(STRLEN GREATER 24)
+            # remove middle initial
+            string(REGEX REPLACE " [A-Z]\. " " " GIT_AUTHOR "${GIT_AUTHOR}")
+            # get first and sur name
+            string(REGEX REPLACE "([A-Za-z]+) ([A-Za-z]+)" "\\1" F_NAME "${GIT_AUTHOR}")
+            string(REGEX REPLACE "([A-Za-z]+) ([A-Za-z]+)" "\\2" S_NAME "${GIT_AUTHOR}")
+            if(S_NAME)
+                set(GIT_AUTHOR "${S_NAME}")
+            elseif(F_NAME)
+                set(GIT_AUTHOR "${F_NAME}")
+            endif()
+        endif()
+        # remove any spaces, quotes, periods, etc.
+        string(REGEX REPLACE "[ ',;_\.\"]+" "" GIT_AUTHOR "${GIT_AUTHOR}")
+        set(${VAR} "${GIT_AUTHOR}" PARENT_SCOPE)
+    endif()
+    message(STATUS "GIT AUTHOR via '${GIT_EXECUTABLE} show -s --format=%an': ${GIT_AUTHOR}")
+endfunction()
 
-#----------------------------------------------------------------------------------------#
-#
-#   Set the configurations
-#
-#----------------------------------------------------------------------------------------#
+# get the name of the branch
+GET_GIT_BRANCH_NAME(GIT_BRANCH)
+# get the name of the author
+GET_GIT_AUTHOR_NAME(GIT_AUTHOR)
+# SLUG == owner_name/repo_name
+SET_DEFAULT_ARG1(SLUG $ENV{TRAVIS_PULL_REQUEST_SLUG} $ENV{TRAVIS_REPO_SLUG} $ENV{PULL_REQUEST_SLUG} $ENV{REPO_SLUG})
+# branch name
+SET_DEFAULT_ARG1(BRANCH $ENV{TRAVIS_PULL_REQUEST_BRANCH} $ENV{TRAVIS_BRANCH} $ENV{BRANCH_NAME} ${BRANCH} ${GIT_BRANCH})
+# pull request number
+SET_DEFAULT_ARG1(PULL_REQUEST_NUM $ENV{TRAVIS_PULL_REQUEST} $ENV{CHANGE_ID} $ENV{PULL_REQUEST_NUM})
+# get the event type, e.g. push, pull_request, api, cron, etc.
+SET_DEFAULT_ARG1(EVENT_TYPE $ENV{TRAVIS_EVENT_TYPE} ${EVENT_TYPE})
 
-set(VALID_CONFIGS
-    "HIP-3.1-HCC"
-    "CUDA-9.2-Clang"
-    "CUDA-9.2-NVCC"
-    "CUDA-10.1-NVCC-RDC"
-    "CUDA-10.1-NVCC-DEBUG"
-    "GCC-4.8.4"
-    "CUSTOM"
-)
-
-set(COMMON_CONFIG_ARGS
-    "-DCMAKE_CXX_FLAGS=-Werror"
-    "-DKokkos_ENABLE_COMPILER_WARNINGS=ON"
-    )
-
-set(COMMON_DEBUG_ARGS
-    "-DKokkos_ENABLE_DEBUG=ON"
-    "-DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON"
-    )
-
-set(COMMON_CUDA_ARGS
-    "-DKokkos_ENABLE_CUDA=ON"
-    "-DKokkos_ENABLE_CUDA_LAMBDA=ON"
-    "-DKokkos_ARCH_VOLTA70=ON"
-    )
-
-#----------------------------------------------------------------------------------------#
-#
-#   Check
-#
-#----------------------------------------------------------------------------------------#
-
-SET_DEFAULT(CONFIG "CUSTOM")
-
-if(NOT "${CONFIG}" IN_LIST VALID_CONFIGS)
-    message(DEVELOPER_WARNING "Error! Configuration '${CONFIG}' not in: '${VALID_CONFIGS}'")
-    set(CONFIG CUSTOM)
+if("${BRANCH}" STREQUAL "")
+    message(STATUS "Checked: environment variables: TRAVIS_PULL_REQUEST_BRANCH, TRAVIS_BRANCH, BRANCH_NAME, -DBRANCH=<...>, and 'git describe --all' in that order")
+    message(FATAL_ERROR "Error! Branch could not be determined")
 endif()
-
-string(REGEX REPLACE "(\\.|-)" "_" CONFIG_VAR "${CONFIG}")
-
-#----------------------------------------------------------------------------------------#
-#
-#   Build types
-#
-#----------------------------------------------------------------------------------------#
-
-set(HIP_3_1_HCC_BUILD_TYPE          "Debug")
-set(CUDA_9_2_CLANG_BUILD_TYPE       "Release")
-set(CUDA_9_2_NVCC_BUILD_TYPE        "Release")
-set(CUDA_10_1_NVCC_RDC_BUILD_TYPE   "Release")
-set(CUDA_10_1_NVCC_DEBUG_BUILD_TYPE "Debug")
-set(GCC_4_8_4_BUILD_TYPE            "Release")
-set(CUSTOM_BUILD_TYPE               "${CMAKE_BUILD_TYPE}")
-
-#----------------------------------------------------------------------------------------#
-#
-#   Configure arguments
-#
-#----------------------------------------------------------------------------------------#
-
-set(HIP_3_1_HCC_CONFIG_ARGS
-    "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-    "-DCMAKE_CXX_COMPILER=hipcc"
-    "-DKokkos_ENABLE_HIP=ON"
-    "-DKokkos_ENABLE_LIBDL=OFF"
-    "-DKokkos_ENABLE_PROFILING=OFF"
-    )
-
-set(CUDA_9_2_CLANG_CONFIG_ARGS
-    "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-    "-DCMAKE_CXX_COMPILER=clang++"
-    ${COMMON_CUDA_ARGS}
-    ${COMMON_CONFIG_ARGS}
-    )
-
-set(CUDA_9_2_NVCC_CONFIG_ARGS
-    "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-    "-DCMAKE_CXX_COMPILER=$ENV{WORKSPACE}/bin/nvcc_wrapper"
-    ${COMMON_CUDA_ARGS}
-    ${COMMON_CONFIG_ARGS}
-    )
-
-set(CUDA_10_1_NVCC_RDC_CONFIG_ARGS
-    "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-    "-DCMAKE_CXX_COMPILER=$ENV{WORKSPACE}/bin/nvcc_wrapper"
-    "-DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON"
-    "-DKokkos_ENABLE_CUDA_UVM=ON"
-    "-DKokkos_ENABLE_OPENMP=ON"
-    ${COMMON_CUDA_ARGS}
-    ${COMMON_CONFIG_ARGS}
-    )
-
-set(CUDA_10_1_NVCC_DEBUG_CONFIG_ARGS
-    "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
-    "-DCMAKE_CXX_COMPILER=$ENV{WORKSPACE}/bin/nvcc_wrapper"
-    ${COMMON_CUDA_ARGS}
-    ${COMMON_CONFIG_ARGS}
-    ${COMMON_DEBUG_ARGS}
-    )
-
-set(GCC_4_8_4_CONFIG_ARGS
-    "-DKokkos_ENABLE_OPENMP=ON"
-    ${COMMON_CONFIG_ARGS}
-    )
 
 #----------------------------------------------------------------------------------------#
 #
@@ -191,18 +162,18 @@ set(GCC_4_8_4_CONFIG_ARGS
 #
 #----------------------------------------------------------------------------------------#
 
-SET_DEFAULT(SOURCE_DIR      "${WORKING_DIR}")       # source directory
-SET_DEFAULT(BINARY_DIR      "${WORKING_DIR}/build")  # build directory
-SET_DEFAULT(BUILD_TYPE      "${${CONFIG_VAR}_BUILD_TYPE}")  # Release, Debug, etc.
-SET_DEFAULT(BUILD_NAME      "${CONFIG}")            # Build id
-SET_DEFAULT(MODEL           "Continuous")           # Continuous, Nightly, or Experimental
-SET_DEFAULT(SITE            "${HOSTNAME}")          # update site
-SET_DEFAULT(JOBS            1)                      # number of parallel ctests
-SET_DEFAULT(CTEST_COMMAND   "ctest")                # just in case
-SET_DEFAULT(CTEST_ARGS      "")                     # extra arguments when ctest is called
-SET_DEFAULT(GIT_EXECUTABLE  "git")                  # ctest_update
-SET_DEFAULT(NUM_PROC        "${NUM_PROCESSORS}")    # number of parallel compile jobs
-SET_DEFAULT(TARGET          "all")                  # build target
+SET_DEFAULT(SOURCE_DIR      "${WORKING_DIR}")           # source directory
+SET_DEFAULT(BINARY_DIR      "${WORKING_DIR}/build")     # build directory
+SET_DEFAULT(BUILD_TYPE      "${CMAKE_BUILD_TYPE}")      # Release, Debug, etc.
+SET_DEFAULT(MODEL           "Continuous")               # Continuous, Nightly, or Experimental
+SET_DEFAULT(SITE            "${HOSTNAME}")              # update site
+SET_DEFAULT(JOBS            1)                          # number of parallel ctests
+SET_DEFAULT(CTEST_COMMAND   "${CMAKE_CTEST_COMMAND}")   # just in case
+SET_DEFAULT(CTEST_ARGS      "-V --output-on-failure")   # extra arguments when ctest is called
+SET_DEFAULT(GIT_EXECUTABLE  "git")                      # ctest_update
+SET_DEFAULT(TARGET          "all")                      # build target
+SET_DEFAULT_ARG1(BUILD_JOBS "$ENV{BUILD_JOBS}"
+                            "${NUM_PROCESSORS}")        # number of parallel compile jobs
 #
 #   The variable below correspond to ctest arguments, i.e. START,END,STRIDE are
 #   '-I START,END,STRIDE'
@@ -219,9 +190,30 @@ SET_DEFAULT(STOP_TIME       "")
 SET_DEFAULT(LABELS          "")
 SET_DEFAULT(NOTES           "")
 
-if("${CONFIG}" STREQUAL "CUSTOM" AND "${BUILD_NAME}" STREQUAL "${CONFIG}")
-    set(BUILD_NAME "${HOSTNAME}")
+set(BUILD_TAG "[${BUILD_NAME}]")
+
+if("${MODEL}" STREQUAL "Nightly")
+    # build a static name if nightly
+    set(BUILD_TAG "${BRANCH}")
+else()
+    # build a dynamic name if continuous or experimental model
+    if(EVENT_TYPE AND PULL_REQUEST_NUM)
+        # e.g. pull_request #123
+        set(BUILD_TAG "${EVENT_TYPE} #${PULL_REQUEST_NUM}")
+    elseif(SLUG)
+        # e.g. owner_name/repo_name
+        set(BUILD_TAG "${SLUG}")
+    elseif(GIT_AUTHOR)
+        set(BUILD_TAG "${GIT_AUTHOR}/${BRANCH}")
+    endif()
+    if(EVENT_TYPE AND NOT PULL_REQUEST_NUM)
+        set(BUILD_TAG "${BUILD_TAG}-${EVENT_TYPE}")
+    endif()
 endif()
+
+message(STATUS "BUILD_TAG: ${BUILD_TAG}")
+
+set(BUILD_NAME "[${BUILD_NAME}][${BUILD_TAG}][${BUILD_TYPE}]")
 
 # check binary directory
 if(EXISTS ${BINARY_DIR})
@@ -243,16 +235,13 @@ get_filename_component(BINARY_REALDIR ${BINARY_DIR} REALPATH)
 #
 #----------------------------------------------------------------------------------------#
 
-get_cmake_variables(KOKKOS_CMAKE_ARGS "Kokkos_.*" "CMAKE_BUILD_.*" "CMAKE_INSTALL_.*"
-    "CMAKE_.*_FLAGS")
-
 foreach(_ARG ${KOKKOS_CMAKE_ARGS})
     if(NOT "${${_ARG}}" STREQUAL "")
-        list(APPEND ${CONFIG_VAR}_CONFIG_ARGS "-D${_ARG}=${${_ARG}}")
+        list(APPEND CONFIG_ARGS "-D${_ARG}=${${_ARG}}")
     endif()
 endforeach()
 
-string(REPLACE ";" " " CONFIG_ARGS  "${${CONFIG_VAR}_CONFIG_ARGS}")
+string(REPLACE ";" " " CONFIG_ARGS  "${CONFIG_ARGS}")
 
 # message(STATUS "BUILD_TYPE: ${BUILD_TYPE}; CONFIG: ${CONFIG}; CONFIG_VAR: ${CONFIG_VAR}")
 # message(STATUS "CONFIG_ARGS: ${CONFIG_ARGS}; BUILD_TYPE: ${BUILD_TYPE}")
@@ -280,6 +269,14 @@ execute_process(
 #   Execute CTest
 #
 #----------------------------------------------------------------------------------------#
+
+message(STATUS "")
+message(STATUS "BUILD_NAME: ${BUILD_NAME}")
+message(STATUS "Executing '${CTEST_COMMAND} -S KokkosCTest.cmake ${CTEST_ARGS}'...")
+message(STATUS "")
+
+# e.g. -DCTEST_ARGS="--output-on-failure -VV" should really be -DCTEST_ARGS="--output-on-failure;-VV"
+string(REPLACE " " ";" CTEST_ARGS "${CTEST_ARGS}")
 
 execute_process(
     COMMAND             ${CTEST_COMMAND} -S KokkosCTest.cmake ${CTEST_ARGS}
