@@ -5,6 +5,9 @@
 #cmakedefine KOKKOS_DEVICE_SPACE_ACTIVE
 #cmakedefine KOKKOS_HOSTPARALLEL_SPACE_ACTIVE
 
+class NoTypeDefined {
+};
+
 /// Define Kokkos::DefaultExecutionSpace as per configuration option
 /// or chosen from the enabled execution spaces in the following order:
 /// Kokkos::Cuda, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP,
