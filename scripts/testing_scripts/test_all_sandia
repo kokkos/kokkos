@@ -592,7 +592,10 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/18.0.5 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/19.0.5 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/3.7.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/3.8.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/3.9.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/5.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/7.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/9.0.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
@@ -782,6 +785,13 @@ single_build_and_test() {
   # Set up env.
   mkdir -p $ROOT_DIR/$compiler/"${build}-$build_type"
   cd $ROOT_DIR/$compiler/"${build}-$build_type"
+
+  local compiler_modules_list=$(get_compiler_modules $compiler)
+  echo "  #   Load modules:" &> reload_modules.sh
+  echo "        module load $compiler_modules_list" &>> reload_modules.sh
+  echo "" &>> reload_modules.sh
+  chmod +x reload_modules.sh
+
   local desc=$(echo "${compiler}-${build}-${build_type}" | sed 's:/:-:g')
   setup_env $compiler >& ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
 
@@ -835,6 +845,10 @@ single_build_and_test() {
     echo "kokkos options: ${KOKKOS_OPTIONS}"
     echo "kokkos devices: ${LOCAL_KOKKOS_DEVICES}"
     echo "kokkos cxx: ${cxxflags}"
+
+    echo "  #   Use generate_makefile line below to call cmake which generates makefile for this build:" &> call_generate_makefile.sh
+    echo "        ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --no-examples $extra_args" &>> call_generate_makefile.sh
+
     run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --no-examples $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local -i build_start_time=$(date +%s)
     run_cmd make -j 48 all >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
@@ -947,6 +961,32 @@ wait_summarize_and_exit() {
     do
       echo $failed_test "("$(cat $FAILED_DIR/$failed_test)" failed)"
       rv=$rv+1
+
+      local str=$failed_test
+      local comp=$(echo "$str" | cut -d- -f1)
+      local vers=$(echo "$str" | cut -d- -f2)
+      local lbuild=$(echo "$str" | cut -d- -f3-)
+      # Generate reproducer instructions
+      #local filename=reproducer_instructions-$comp-$vers-$lbuild
+      local faildir=$ROOT_DIR/$comp/$vers/$lbuild
+      # Output reproducer instructions
+      echo "#######################################################"
+      echo "  # Reproducer instructions:"
+      cat $faildir/reload_modules.sh
+      cat $faildir/call_generate_makefile.sh
+      echo ""
+      echo "  #  To reload modules, reconfigure, rebuild, and retest directly from this failing build do the following:"
+      echo "      # Move to the build directory"
+      echo "        cd $faildir"
+      echo "      # To reload modules"
+      echo "        source ./reload_modules.sh"
+      echo "      # To reconfigure"
+      echo "        ./call_generate_makefile.sh"
+      echo "      # To rebuild"
+      echo "        make -j"
+      echo "      # To retest"
+      echo "        ctest -V"
+      echo "#######################################################"
     done
   fi
 
