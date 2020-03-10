@@ -177,8 +177,8 @@ struct AnalyzePolicy<Base, T, Traits...>
                                   is_launch_bounds<T>::value,
                                   SetLaunchBounds<Base, T>,
                                   typename std::conditional<
-                                      Experimental::is_work_item_property<
-                                          T>::value,
+                                      Kokkos::Experimental::
+                                          is_work_item_property<T>::value,
                                       SetWorkItemProperty<Base, T>,
                                       typename std::conditional<
                                           !std::is_void<T>::value,

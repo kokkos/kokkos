@@ -318,12 +318,6 @@ __inline__ __device__ T atomic_fetch_sub(volatile T* const,
 }
 #endif
 
-// Simpler version of atomic_fetch_sub without the fetch
-template <typename T>
-KOKKOS_INLINE_FUNCTION void atomic_sub(volatile T* const dest, const T src) {
-  atomic_fetch_sub(dest, src);
-}
-
 }  // namespace Kokkos
 
 #include <impl/Kokkos_Atomic_Assembly.hpp>

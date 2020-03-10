@@ -238,6 +238,53 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
 #endif
   }
 
+  /// \brief Constructor that allocates View objects on both host and device.
+  ///
+  /// This constructor works like the analogous constructor of View.
+  /// The first arguments are wrapped up in a ViewCtor class, this allows
+  /// for a label, without initializing, and all of the other things that can
+  /// be wrapped up in a Ctor class.
+  /// The arguments that follow are the dimensions of the
+  /// View objects.  For example, if the View has three dimensions,
+  /// the first three integer arguments will be nonzero, and you may
+  /// omit the integer arguments that follow.
+  template <class... P>
+  DualView(const Impl::ViewCtorProp<P...>& arg_prop,
+           typename std::enable_if<!Impl::ViewCtorProp<P...>::has_pointer,
+                                   size_t>::type const n0 =
+               KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+           const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+      : d_view(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7),
+        h_view(create_mirror_view(d_view))  // without UVM, host View mirrors
+        ,
+        modified_flags(t_modified_flags("DualView::modified_flags")) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
+    modified_host   = t_modified_flag(modified_flags, 0);
+    modified_device = t_modified_flag(modified_flags, 1);
+#endif
+  }
+
+  explicit inline DualView(const ViewAllocateWithoutInitializing& arg_prop,
+                           const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                           const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                           const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                           const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                           const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                           const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                           const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                           const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+      : DualView(Impl::ViewCtorProp<std::string,
+                                    Kokkos::Impl::WithoutInitializing_t>(
+                     arg_prop.label, Kokkos::WithoutInitializing),
+                 arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
+                 arg_N7) {}
+
   //! Copy constructor (shallow copy)
   template <class SS, class LS, class DS, class MS>
   DualView(const DualView<SS, LS, DS, MS>& src)

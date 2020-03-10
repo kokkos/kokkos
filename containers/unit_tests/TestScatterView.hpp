@@ -300,8 +300,7 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, duplication, contribution,
 
   void run_parallel(int n) {
     scatterSize = n;
-    auto policy =
-        Kokkos::RangePolicy<typename DeviceType::execution_space, int>(0, n);
+    Kokkos::RangePolicy<typename DeviceType::execution_space, int> policy(0, n);
     Kokkos::parallel_for(policy, *this, "scatter_view_test: Prod");
   }
 

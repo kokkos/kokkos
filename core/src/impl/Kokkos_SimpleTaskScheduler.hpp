@@ -445,7 +445,7 @@ class SimpleTaskScheduler
     KOKKOS_EXPECTS(!task.get_respawn_flag());
 
     task.set_priority(priority);
-    KOKKOS_ASSERT(not task.has_predecessor());
+    KOKKOS_ASSERT(!task.has_predecessor());
     task.set_respawn_flag(true);
   }
 
