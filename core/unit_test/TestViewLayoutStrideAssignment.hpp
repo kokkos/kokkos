@@ -664,6 +664,58 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignable) {
       ASSERT_TRUE(false);
     }
   }
+  // assignment of compatible static to dynamic
+  {
+    using src_view_type =
+        Kokkos::View<double[10][3], Kokkos::LayoutLeft, exec_space>;
+    using dst_view_type =
+        Kokkos::View<double**, Kokkos::LayoutLeft, exec_space>;
+    src_view_type src("a");
+    dst_view_type dst;
+
+    src_view_type::HostMirror h_src = Kokkos::create_mirror_view(src);
+
+    for (size_t i = 0; i < src.extent(0); i++)
+      for (size_t j = 0; j < src.extent(1); j++) h_src(i, j) = (double)(i * j);
+
+    Kokkos::deep_copy(src, h_src);
+
+    if (Kokkos::is_assignable(dst, src)) {
+      dst = src;
+
+      dst_view_type::HostMirror h_dst = Kokkos::create_mirror_view(dst);
+
+      Kokkos::deep_copy(h_dst, dst);
+
+      bool test = true;
+      for (size_t i = 0; i < src.extent(0); i++) {
+        for (size_t j = 0; j < src.extent(1); j++) {
+          if (h_src(i, j) != h_dst(i, j)) {
+            test = false;
+            break;
+          }
+        }
+      }
+      ASSERT_EQ(dst.span(), src.span());
+      ASSERT_EQ(test, true);
+    }
+  }
+  // assignment of incompatible static to dynamic
+  {
+    using src_view_type =
+        Kokkos::View<double[100][10][3], Kokkos::LayoutLeft, exec_space>;
+    using dst_view_type =
+        Kokkos::View<double**, Kokkos::LayoutLeft, exec_space>;
+    src_view_type src("a");
+    dst_view_type dst;
+    if (Kokkos::is_always_assignable<dst_view_type, src_view_type>::value) {
+      ASSERT_TRUE(false);
+    }
+
+    if (Kokkos::is_assignable(dst, src)) {
+      ASSERT_TRUE(false);
+    }
+  }
   {  // Assignment of rank-2 LayoutLeft = LayoutStride (LayoutRight compatible)
     int ndims   = 2;
     int dims[]  = {10, 9};

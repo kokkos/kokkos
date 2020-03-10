@@ -2398,16 +2398,114 @@ KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...> common_view_alloc_prop(
 
 // -----------------------------------------------------------
 // public is_assignable
-// expose underlying view mapping properties
-template <class ViewType1, class ViewType2>
-inline static bool is_assignable(const ViewType1& lhs, const ViewType2& rhs) {
-  using LhsTraits = typename ViewType1::traits;
-  using RhsTraits = typename ViewType2::traits;
-  using Mapping   = Kokkos::Impl::ViewMapping<LhsTraits, RhsTraits,
-                                            typename LhsTraits::specialize>;
+// expose underlying view mapping properties case where layout isn't stride
+template <class DstViewType, class SrcViewType, class Enabled = void>
+struct is_always_assignable {
+  enum : bool { value = false };
+};
+
+template <class DstViewType, class SrcViewType>
+struct is_always_assignable<
+    DstViewType, SrcViewType,
+    typename std::enable_if<
+        (!(std::is_same<typename SrcViewType::traits::array_layout,
+                        Kokkos::LayoutStride>::value) &&
+         // Added to have a new specialization for SrcType of
+         // LayoutStride
+         // default mappings
+         std::is_same<typename DstViewType::traits::specialize, void>::value &&
+         std::is_same<typename SrcViewType::traits::specialize, void>::value &&
+         (
+             // same layout
+             std::is_same<typename DstViewType::traits::array_layout,
+                          typename SrcViewType::traits::array_layout>::value ||
+             // known layout
+             ((std::is_same<typename DstViewType::traits::array_layout,
+                            Kokkos::LayoutLeft>::value ||
+               std::is_same<typename DstViewType::traits::array_layout,
+                            Kokkos::LayoutRight>::value ||
+               std::is_same<typename DstViewType::traits::array_layout,
+                            Kokkos::LayoutStride>::value) &&
+              (std::is_same<typename SrcViewType::traits::array_layout,
+                            Kokkos::LayoutLeft>::value ||
+               std::is_same<typename SrcViewType::traits::array_layout,
+                            Kokkos::LayoutRight>::value ||
+               std::is_same<typename SrcViewType::traits::array_layout,
+                            Kokkos::LayoutStride>::value)))),
+        void>::type> {
+ private:
+  using DstTraits = typename DstViewType::traits;
+  using SrcTraits = typename SrcViewType::traits;
+  using Mapping   = Kokkos::Impl::ViewMapping<DstTraits, SrcTraits,
+                                            typename DstTraits::specialize>;
+
+ public:
+  enum : bool { value = Mapping::is_assignable };
+};
+
+// -----------------------------------------------------------
+// public is_assignable
+// expose underlying view mapping properties case where layout isn't stride
+template <class DstViewType, class SrcViewType>
+inline static typename std::enable_if<
+    (!(std::is_same<typename SrcViewType::traits::array_layout,
+                    Kokkos::LayoutStride>::value) &&
+     // Added to have a new specialization for SrcType of
+     // LayoutStride
+     // default mappings
+     std::is_same<typename DstViewType::traits::specialize, void>::value &&
+     std::is_same<typename SrcViewType::traits::specialize, void>::value &&
+     (
+         // same layout
+         std::is_same<typename DstViewType::traits::array_layout,
+                      typename SrcViewType::traits::array_layout>::value ||
+         // known layout
+         ((std::is_same<typename DstViewType::traits::array_layout,
+                        Kokkos::LayoutLeft>::value ||
+           std::is_same<typename DstViewType::traits::array_layout,
+                        Kokkos::LayoutRight>::value ||
+           std::is_same<typename DstViewType::traits::array_layout,
+                        Kokkos::LayoutStride>::value) &&
+          (std::is_same<typename SrcViewType::traits::array_layout,
+                        Kokkos::LayoutLeft>::value ||
+           std::is_same<typename SrcViewType::traits::array_layout,
+                        Kokkos::LayoutRight>::value ||
+           std::is_same<typename SrcViewType::traits::array_layout,
+                        Kokkos::LayoutStride>::value)))),
+    bool>::type
+is_assignable(const DstViewType& dst, const SrcViewType& src) {
+  return is_always_assignable<DstViewType, SrcViewType>::value;
+}
+
+// -----------------------------------------------------------
+// public is_assignable
+// expose underlying view mapping properties case where layout is stride
+template <class DstViewType, class SrcViewType>
+inline static typename std::enable_if<
+    (std::is_same<typename SrcViewType::traits::array_layout,
+                  Kokkos::LayoutStride>::value &&
+     std::is_same<typename DstViewType::traits::specialize, void>::value &&
+     std::is_same<typename SrcViewType::traits::specialize, void>::value &&
+     (
+         // same layout
+         std::is_same<typename DstViewType::traits::array_layout,
+                      typename SrcViewType::traits::array_layout>::value ||
+         // known layout
+         (std::is_same<typename DstViewType::traits::array_layout,
+                       Kokkos::LayoutLeft>::value ||
+          std::is_same<typename DstViewType::traits::array_layout,
+                       Kokkos::LayoutRight>::value ||
+          std::is_same<typename DstViewType::traits::array_layout,
+                       Kokkos::LayoutStride>::value))),
+    bool>::type
+is_assignable(const DstViewType& dst, const SrcViewType& src) {
+  using DstTraits = typename DstViewType::traits;
+  using SrcTraits = typename SrcViewType::traits;
+  using Mapping   = Kokkos::Impl::ViewMapping<DstTraits, SrcTraits,
+                                            typename DstTraits::specialize>;
 
   if (Mapping::is_assignable)
-    return Mapping::assignable_layout_check(lhs.impl_map(), rhs.impl_map());
+    return Mapping::assignable_layout_check(dst.impl_map(), src.impl_map());
   else
     return false;
 }
