@@ -475,29 +475,5 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(volatile T* const dest, const T val) {
 }
 #endif
 
-#ifndef KOKKOS_ENABLE_SERIAL_ATOMICS
-template <typename T>
-KOKKOS_INLINE_FUNCTION T atomic_exchange(volatile T* const dest, const T val) {
-  T oldval = *dest;
-  T assume;
-  do {
-    assume = oldval;
-    oldval = atomic_compare_exchange(dest, assume, val);
-  } while (assume != oldval);
-
-  return oldval;
-}
-#endif
-
-template <typename T>
-KOKKOS_INLINE_FUNCTION void atomic_add(volatile T* const dest, const T val) {
-  (void)atomic_fetch_add(dest, val);
-}
-
-template <typename T>
-KOKKOS_INLINE_FUNCTION void atomic_sub(volatile T* const dest, const T val) {
-  (void)atomic_fetch_sub(dest, val);
-}
-
 }  // namespace Kokkos
 #endif

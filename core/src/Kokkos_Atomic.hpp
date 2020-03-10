@@ -215,6 +215,11 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 
 #include "impl/Kokkos_Atomic_Compare_Exchange_Strong.hpp"
 
+#endif  //_WIN32
+
+#include "impl/Kokkos_Atomic_Generic.hpp"
+
+#ifndef _WIN32
 //----------------------------------------------------------------------------
 // Atomic fetch and add
 //
@@ -302,14 +307,14 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 
 #include "impl/Kokkos_Volatile_Load.hpp"
 
-#include "impl/Kokkos_Atomic_Generic.hpp"
-
 //----------------------------------------------------------------------------
 // Provide atomic loads and stores with memory order semantics
 
 #include "impl/Kokkos_Atomic_Load.hpp"
 #include "impl/Kokkos_Atomic_Store.hpp"
 
+// Generic functions using the above defined functions
+#include "impl/Kokkos_Atomic_Generic_Secondary.hpp"
 //----------------------------------------------------------------------------
 // This atomic-style macro should be an inlined function, not a macro
 
