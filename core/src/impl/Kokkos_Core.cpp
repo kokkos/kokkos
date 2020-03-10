@@ -50,14 +50,28 @@
 #include <sstream>
 #include <cstdlib>
 #include <stack>
+#include <functional>
+#include <list>
 #include <cerrno>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 //----------------------------------------------------------------------------
 namespace {
 bool g_is_initialized = false;
 bool g_show_warnings  = true;
-std::stack<std::function<void()> > finalize_hooks;
+// When compiling with clang/LLVM and using the GNU (GCC) C++ Standard Library
+// (any recent version between GCC 7.3 and GCC 9.2), std::deque SEGV's during
+// the unwinding of the atexit(3C) handlers at program termination.  However,
+// this bug is not observable when building with GCC.
+// As an added bonus, std::list<T> provides constant insertion and
+// deletion time complexity, which translates to better run-time performance. As
+// opposed to std::deque<T> which does not provide the same constant time
+// complexity for inserts/removals, since std::deque<T> is implemented as a
+// segmented array.
+using hook_function_type = std::function<void()>;
+std::stack<hook_function_type, std::list<hook_function_type>> finalize_hooks;
 }  // namespace
 
 namespace Kokkos {
@@ -583,6 +597,14 @@ void warn_deprecated_command_line_argument(std::string deprecated,
       << std::endl;
 }
 
+unsigned get_process_id() {
+#ifdef _WIN32
+  return unsigned(GetCurrentProcessId());
+#else
+  return unsigned(getpid());
+#endif
+}
+
 void parse_command_line_arguments(int& narg, char* arg[],
                                   InitArguments& arguments) {
   auto& num_threads      = arguments.num_threads;
@@ -890,7 +912,7 @@ void parse_environment_variables(InitArguments& arguments) {
             "Error: cannot KOKKOS_SKIP_DEVICE the only KOKKOS_RAND_DEVICE. "
             "Raised by Kokkos::initialize(int narg, char* argc[]).");
 
-      std::srand(getpid());
+      std::srand(get_process_id());
       while (device < 0) {
         int test_device = std::rand() % rdevices;
         if (test_device != skip_device) device = test_device;

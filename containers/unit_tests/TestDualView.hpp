@@ -67,11 +67,17 @@ struct test_dualview_combinations {
   Scalar result;
 
   template <typename ViewType>
-  Scalar run_me(unsigned int n, unsigned int m) {
+  Scalar run_me(unsigned int n, unsigned int m, bool with_init) {
     if (n < 10) n = 10;
     if (m < 3) m = 3;
-    ViewType a("A", n, m);
 
+    ViewType a;
+
+    if (with_init) {
+      a = ViewType("A", n, m);
+    } else {
+      a = ViewType(Kokkos::ViewAllocateWithoutInitializing("A"), n, m);
+    }
     Kokkos::deep_copy(a.d_view, 1);
 
     a.template modify<typename ViewType::execution_space>();
@@ -96,9 +102,9 @@ struct test_dualview_combinations {
     return count - a.d_view.extent(0) * a.d_view.extent(1) - 2 - 4 - 3 * 2;
   }
 
-  test_dualview_combinations(unsigned int size) {
+  test_dualview_combinations(unsigned int size, bool with_init) {
     result = run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(
-        size, 3);
+        size, 3, with_init);
   }
 };
 
@@ -315,8 +321,8 @@ struct test_dualview_realloc {
 }  // namespace Impl
 
 template <typename Scalar, typename Device>
-void test_dualview_combinations(unsigned int size) {
-  Impl::test_dualview_combinations<Scalar, Device> test(size);
+void test_dualview_combinations(unsigned int size, bool with_init) {
+  Impl::test_dualview_combinations<Scalar, Device> test(size, with_init);
   ASSERT_EQ(test.result, 0);
 }
 
@@ -336,7 +342,11 @@ void test_dualview_resize() {
 }
 
 TEST(TEST_CATEGORY, dualview_combination) {
-  test_dualview_combinations<int, TEST_EXECSPACE>(10);
+  test_dualview_combinations<int, TEST_EXECSPACE>(10, true);
+}
+
+TEST(TEST_CATEGORY, dualview_combinations_without_init) {
+  test_dualview_combinations<int, TEST_EXECSPACE>(10, false);
 }
 
 TEST(TEST_CATEGORY, dualview_deep_copy) {

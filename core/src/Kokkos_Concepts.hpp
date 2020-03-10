@@ -205,6 +205,43 @@ KOKKOS_IMPL_IS_CONCEPT(host_thread_team_member)
 
 }  // namespace Kokkos
 
+namespace Kokkos {
+namespace Impl {
+
+template <class Object>
+class has_member_team_shmem_size {
+  template <typename T>
+  static int32_t test_for_member(decltype(&T::team_shmem_size)) {
+    return int32_t(0);
+  }
+  template <typename T>
+  static int64_t test_for_member(...) {
+    return int64_t(0);
+  }
+
+ public:
+  constexpr static bool value =
+      sizeof(test_for_member<Object>(0)) == sizeof(int32_t);
+};
+
+template <class Object>
+class has_member_shmem_size {
+  template <typename T>
+  static int32_t test_for_member(decltype(&T::shmem_size_me)) {
+    return int32_t(0);
+  }
+  template <typename T>
+  static int64_t test_for_member(...) {
+    return int64_t(0);
+  }
+
+ public:
+  constexpr static bool value =
+      sizeof(test_for_member<Object>(0)) == sizeof(int32_t);
+};
+
+}  // namespace Impl
+}  // namespace Kokkos
 //----------------------------------------------------------------------------
 
 namespace Kokkos {

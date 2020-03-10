@@ -115,7 +115,7 @@ class SharedAllocationRecord<void, void> {
       SharedAllocationHeader* arg_alloc_ptr, size_t arg_alloc_size,
       function_type arg_dealloc);
  private:
-  static __thread int t_tracking_enabled;
+  static KOKKOS_THREAD_LOCAL int t_tracking_enabled;
 
  public:
   virtual std::string get_label() const { return std::string("Unmanaged"); }
@@ -393,6 +393,38 @@ union SharedAllocationTracker {
     KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
     return *this;
   }
+
+  /*  The following functions (assign_direct and assign_force_disable)
+   *  are the result of deconstructing the
+   *  KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS macro.  This
+   *  allows the caller to do the check for tracking enabled and managed
+   *  apart from the assignement of the record because the tracking
+   *  enabled / managed question may be important for other tasks as well
+   */
+
+  /** \brief  Copy assignment without the carry bits logic
+   *         This assumes that externally defined tracking is explicitly enabled
+   */
+  KOKKOS_FORCEINLINE_FUNCTION
+  void assign_direct(const SharedAllocationTracker& rhs) {
+    KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+    m_record_bits = rhs.m_record_bits;
+    KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
+  }
+
+  /** \brief  Copy assignment without the increment
+   *         we cannot assume that current record is unmanaged
+   *         but with externally defined tracking explicitly disabled
+   *         we can go straight to the do not deref flag     */
+  KOKKOS_FORCEINLINE_FUNCTION
+  void assign_force_disable(const SharedAllocationTracker& rhs) {
+    KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
+    m_record_bits = rhs.m_record_bits | DO_NOT_DEREF_FLAG;
+  }
+
+  // report if record is tracking or not
+  KOKKOS_FORCEINLINE_FUNCTION
+  bool tracking_enabled() { return (!(m_record_bits & DO_NOT_DEREF_FLAG)); }
 
   /** \brief  Copy assignment may disable tracking */
   KOKKOS_FORCEINLINE_FUNCTION

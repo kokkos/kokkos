@@ -21,6 +21,7 @@ ENDFUNCTION()
 
 # Certain defaults will depend on knowing the enabled devices
 KOKKOS_CFG_DEPENDS(OPTIONS DEVICES)
+KOKKOS_CFG_DEPENDS(OPTIONS COMPILER_ID)
 
 # Put a check in just in case people are using this option
 KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
@@ -98,4 +99,12 @@ CHECK_DEVICE_SPECIFIC_OPTIONS(DEVICE HPX OPTIONS HPX_ASYNC_DISPATCH)
 # Needed due to change from deprecated name to new header define name
 IF (KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)
   SET(KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ON)
+ENDIF()
+
+# This is known to occur with Clang 9. We would need to use nvcc as the linker
+# http://lists.llvm.org/pipermail/cfe-dev/2018-June/058296.html
+# TODO: Through great effort we can use a different linker by hacking
+# CMAKE_CXX_LINK_EXECUTABLE in a future release
+IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+  MESSAGE(FATAL_ERROR "Relocatable device code is currently not supported with Clang - must use nvcc_wrapper or turn off RDC")
 ENDIF()

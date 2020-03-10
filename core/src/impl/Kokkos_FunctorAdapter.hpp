@@ -1412,8 +1412,10 @@ struct FunctorValueInit<
     // First  substitution failure when FunctorType::init does not exist.
     // Second substitution failure when FunctorType::init is not compatible.
     ,
-    decltype(FunctorValueInitFunction<FunctorType, ArgTag>::enable_if(
-        &FunctorType::init))> {
+    typename std::enable_if<
+        !std::is_same<ArgTag, void>::value,
+        decltype(FunctorValueInitFunction<FunctorType, ArgTag>::enable_if(
+            &FunctorType::init))>::type> {
   KOKKOS_FORCEINLINE_FUNCTION static T& init(const FunctorType& f, void* p) {
     f.init(ArgTag(), *((T*)p));
     return *((T*)p);
@@ -1428,8 +1430,10 @@ struct FunctorValueInit<
     // First  substitution failure when FunctorType::init does not exist.
     // Second substitution failure when FunctorType::init is not compatible
     ,
-    decltype(FunctorValueInitFunction<FunctorType, ArgTag>::enable_if(
-        &FunctorType::init))> {
+    typename std::enable_if<
+        !std::is_same<ArgTag, void>::value,
+        decltype(FunctorValueInitFunction<FunctorType, ArgTag>::enable_if(
+            &FunctorType::init))>::type> {
   KOKKOS_FORCEINLINE_FUNCTION static T* init(const FunctorType& f, void* p) {
     f.init(ArgTag(), (T*)p);
     return (T*)p;

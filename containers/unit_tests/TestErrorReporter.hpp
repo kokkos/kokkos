@@ -50,6 +50,10 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_ErrorReporter.hpp>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace Test {
 
 // Just save the data in the report.  Informative text goies in the

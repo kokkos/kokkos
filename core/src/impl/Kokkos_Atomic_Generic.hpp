@@ -453,5 +453,51 @@ KOKKOS_INLINE_FUNCTION T atomic_rshift_fetch(volatile T* const dest,
                                  dest, val);
 }
 
+#ifdef _WIN32
+template <typename T>
+KOKKOS_INLINE_FUNCTION T atomic_add_fetch(volatile T* const dest, const T val) {
+  return Impl::atomic_oper_fetch(Impl::AddOper<T, const T>(), dest, val);
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION T atomic_sub_fetch(volatile T* const dest, const T val) {
+  return Impl::atomic_oper_fetch(Impl::SubOper<T, const T>(), dest, val);
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION T atomic_fetch_add(volatile T* const dest, const T val) {
+  return Impl::atomic_fetch_oper(Impl::AddOper<T, const T>(), dest, val);
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(volatile T* const dest, const T val) {
+  return Impl::atomic_fetch_oper(Impl::SubOper<T, const T>(), dest, val);
+}
+#endif
+
+#ifndef KOKKOS_ENABLE_SERIAL_ATOMICS
+template <typename T>
+KOKKOS_INLINE_FUNCTION T atomic_exchange(volatile T* const dest, const T val) {
+  T oldval = *dest;
+  T assume;
+  do {
+    assume = oldval;
+    oldval = atomic_compare_exchange(dest, assume, val);
+  } while (assume != oldval);
+
+  return oldval;
+}
+#endif
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION void atomic_add(volatile T* const dest, const T val) {
+  (void)atomic_fetch_add(dest, val);
+}
+
+template <typename T>
+KOKKOS_INLINE_FUNCTION void atomic_sub(volatile T* const dest, const T val) {
+  (void)atomic_fetch_sub(dest, val);
+}
+
 }  // namespace Kokkos
 #endif

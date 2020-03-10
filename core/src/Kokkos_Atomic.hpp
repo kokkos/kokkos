@@ -189,7 +189,6 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 #ifdef _WIN32
 #include "impl/Kokkos_Atomic_Windows.hpp"
 #else
-
 //----------------------------------------------------------------------------
 // Atomic Assembly
 //
@@ -291,9 +290,7 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 
 #include "impl/Kokkos_Volatile_Load.hpp"
 
-#ifndef _WIN32
 #include "impl/Kokkos_Atomic_Generic.hpp"
-#endif
 
 //----------------------------------------------------------------------------
 // Provide atomic loads and stores with memory order semantics
