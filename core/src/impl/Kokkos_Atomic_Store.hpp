@@ -164,6 +164,13 @@ inline void _atomic_store(T* ptr, T val, MemoryOrder) {
   *ptr = val;
 }
 
+#elif defined(KOKKOS_ENABLE_WINDOWS_ATOMICS)
+
+template <class T, class MemoryOrder>
+inline void _atomic_store(T* ptr, T val, MemoryOrder) {
+  atomic_exchange(ptr, val);
+}
+
 #endif  // end of all atomic implementations
 
 template <class T>

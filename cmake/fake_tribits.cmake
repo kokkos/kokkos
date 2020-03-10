@@ -100,7 +100,6 @@ FUNCTION(KOKKOS_ADD_TEST)
     TRIBITS_ADD_TEST(
       ${EXE_ROOT}
       NAME ${TEST_NAME}
-      ${ARGN}
       COMM serial mpi
       NUM_MPI_PROCS 1
       ${TEST_UNPARSED_ARGUMENTS}
@@ -111,13 +110,17 @@ FUNCTION(KOKKOS_ADD_TEST)
       "FAIL_REGULAR_EXPRESSION;PASS_REGULAR_EXPRESSION;EXE;NAME"
       "CATEGORIES;CMD_ARGS"
       ${ARGN})
+    # To match Tribits, we should always be receiving
+    # the root names of exes/libs
     IF(TEST_EXE)
-      SET(EXE ${TEST_EXE})
+      SET(EXE_ROOT ${TEST_EXE})
     ELSE()
-      SET(EXE ${TEST_NAME})
+      SET(EXE_ROOT ${TEST_NAME})
     ENDIF()
     # Prepend package name to the test name
+    # These should be the full target name
     SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
+    SET(EXE ${PACKAGE_NAME}_${EXE_ROOT})
     IF(WIN32)
       ADD_TEST(NAME ${TEST_NAME} WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH} COMMAND ${EXE}${CMAKE_EXECUTABLE_SUFFIX} ${TEST_CMD_ARGS})
     ELSE()

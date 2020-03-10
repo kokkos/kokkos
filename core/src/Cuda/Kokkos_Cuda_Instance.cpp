@@ -313,6 +313,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 
   enum { WordSize = sizeof(size_type) };
 
+#ifndef KOKKOS_IMPL_TURN_OFF_CUDA_HOST_INIT_CHECK
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   if (!HostSpace::execution_space::is_initialized()) {
 #else
@@ -323,6 +324,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
         "initialized");
     throw_runtime_exception(msg);
   }
+#endif
 
   const CudaInternalDevices &dev_info = CudaInternalDevices::singleton();
 

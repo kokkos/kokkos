@@ -3493,7 +3493,7 @@ struct SubViewDataTypeImpl;
 
 /* base case */
 template <class ValueType>
-struct SubViewDataTypeImpl<void, ValueType, Experimental::Extents<>> {
+struct SubViewDataTypeImpl<void, ValueType, Kokkos::Experimental::Extents<>> {
   using type = ValueType;
 };
 
@@ -3503,16 +3503,17 @@ template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class Integral,
 struct SubViewDataTypeImpl<
     typename std::enable_if<
         std::is_integral<typename std::decay<Integral>::type>::value>::type,
-    ValueType, Experimental::Extents<Ext, Exts...>, Integral, Args...>
-    : SubViewDataTypeImpl<void, ValueType, Experimental::Extents<Exts...>,
-                          Args...> {};
+    ValueType, Kokkos::Experimental::Extents<Ext, Exts...>, Integral, Args...>
+    : SubViewDataTypeImpl<void, ValueType,
+                          Kokkos::Experimental::Extents<Exts...>, Args...> {};
 
 /* for ALL slice, subview has the same dimension */
 template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class... Args>
-struct SubViewDataTypeImpl<void, ValueType, Experimental::Extents<Ext, Exts...>,
-                           ALL_t, Args...>
+struct SubViewDataTypeImpl<void, ValueType,
+                           Kokkos::Experimental::Extents<Ext, Exts...>, ALL_t,
+                           Args...>
     : SubViewDataTypeImpl<void, typename ApplyExtent<ValueType, Ext>::type,
-                          Experimental::Extents<Exts...>, Args...> {};
+                          Kokkos::Experimental::Extents<Exts...>, Args...> {};
 
 /* for pair-style slice, subview has dynamic dimension, since pair doesn't give
  * static sizes */
@@ -3522,10 +3523,10 @@ template <class ValueType, ptrdiff_t Ext, ptrdiff_t... Exts, class PairLike,
           class... Args>
 struct SubViewDataTypeImpl<
     typename std::enable_if<is_pair_like<PairLike>::value>::type, ValueType,
-    Experimental::Extents<Ext, Exts...>, PairLike, Args...>
+    Kokkos::Experimental::Extents<Ext, Exts...>, PairLike, Args...>
     : SubViewDataTypeImpl<
           void, typename make_all_extents_into_pointers<ValueType>::type*,
-          Experimental::Extents<Exts...>, Args...> {};
+          Kokkos::Experimental::Extents<Exts...>, Args...> {};
 
 template <class ValueType, class Exts, class... Args>
 struct SubViewDataType : SubViewDataTypeImpl<void, ValueType, Exts, Args...> {};

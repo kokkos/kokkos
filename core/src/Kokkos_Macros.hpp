@@ -79,6 +79,7 @@
  *  KOKKOS_COMPILER_APPLECC
  *  KOKKOS_COMPILER_CLANG
  *  KOKKOS_COMPILER_PGI
+ *  KOKKOS_COMPILER_MSVC
  *
  *  Macros for which compiler extension to use for atomics on intrinsice types
  *
@@ -248,6 +249,10 @@
 #if (1540 > KOKKOS_COMPILER_PGI)
 #error "Compiling with PGI version earlier than 15.4 is not supported."
 #endif
+#endif
+
+#if defined(_MSC_VER) && !defined(KOKKOS_COMPILER_INTEL)
+#define KOKKOS_COMPILER_MSVC _MSC_VER
 #endif
 
 //#endif // #if !defined( __CUDA_ARCH__ )
@@ -639,4 +644,11 @@
     !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_CUDA)
 #undef __CUDA_ARCH__
 #endif
+
+#if defined(KOKKOS_COMPILER_MSVC)
+#define KOKKOS_THREAD_LOCAL __declspec(thread)
+#else
+#define KOKKOS_THREAD_LOCAL __thread
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP
