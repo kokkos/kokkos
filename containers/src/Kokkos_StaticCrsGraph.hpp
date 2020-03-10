@@ -415,7 +415,8 @@ class StaticCrsGraph {
         partitioner(row_map, block_offsets, fix_cost_per_row, num_blocks);
 
     Kokkos::parallel_for("Kokkos::StaticCrsGraph::create_block_partitioning",
-                         numRows(), partitioner);
+                         Kokkos::RangePolicy<execution_space>(0, numRows()),
+                         partitioner);
     typename device_type::execution_space().fence();
 
     row_block_offsets = block_offsets;
