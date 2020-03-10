@@ -644,7 +644,7 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignable) {
 
     Kokkos::View<double*, Kokkos::LayoutLeft, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       dst = src;
       Kokkos::View<double*, Kokkos::LayoutLeft, exec_space>::HostMirror h_dst =
           Kokkos::create_mirror_view(dst);
@@ -678,15 +678,15 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignable) {
     Kokkos::View<char**, Kokkos::LayoutStride, exec_space> dstI;
     Kokkos::View<double***, Kokkos::LayoutStride, exec_space> dstII;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
 
-    if (dstI.is_assignable(src)) {
+    if (Kokkos::is_assignable(dstI, src)) {
       ASSERT_TRUE(false);
     }
 
-    if (dstII.is_assignable(src)) {
+    if (Kokkos::is_assignable(dstII, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -701,7 +701,7 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignable) {
 
     Kokkos::View<double***, Kokkos::LayoutLeft, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -716,7 +716,7 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignable) {
 
     Kokkos::View<double****, Kokkos::LayoutLeft, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -731,7 +731,7 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignable) {
 
     Kokkos::View<double*****, Kokkos::LayoutLeft, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -746,7 +746,7 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignable) {
 
     Kokkos::View<double******, Kokkos::LayoutLeft, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -761,7 +761,7 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignable) {
 
     Kokkos::View<double*******, Kokkos::LayoutLeft, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -776,7 +776,7 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutleft_assignable) {
 
     Kokkos::View<double********, Kokkos::LayoutLeft, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -960,7 +960,7 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignable) {
 
     Kokkos::View<double*, Kokkos::LayoutRight, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       dst = src;
 
       Kokkos::View<double*, Kokkos::LayoutRight, exec_space>::HostMirror h_dst =
@@ -992,7 +992,7 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignable) {
 
     Kokkos::View<double**, Kokkos::LayoutRight, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -1007,7 +1007,7 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignable) {
 
     Kokkos::View<double***, Kokkos::LayoutRight, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -1022,7 +1022,7 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignable) {
 
     Kokkos::View<double****, Kokkos::LayoutRight, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -1037,7 +1037,7 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignable) {
 
     Kokkos::View<double*****, Kokkos::LayoutRight, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -1052,7 +1052,7 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignable) {
 
     Kokkos::View<double******, Kokkos::LayoutRight, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -1067,7 +1067,7 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignable) {
 
     Kokkos::View<double*******, Kokkos::LayoutRight, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }
@@ -1082,7 +1082,7 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutright_assignable) {
 
     Kokkos::View<double********, Kokkos::LayoutRight, exec_space> dst;
 
-    if (dst.is_assignable(src)) {
+    if (Kokkos::is_assignable(dst, src)) {
       ASSERT_TRUE(false);
     }
   }

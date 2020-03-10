@@ -1749,20 +1749,6 @@ class View : public ViewTraits<DataType, Properties...> {
     m_map   = std::move(rhs.m_map);
     return *this;
   }
-  // -----------------------------------------------------------
-  // public is_assignable
-  // expose underlying view mapping property
-  template <class RT, class... RP>
-  inline const bool is_assignable(const View<RT, RP...>& rhs) {
-    using SrcTraits = typename View<RT, RP...>::traits;
-    using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
-                                              typename traits::specialize>;
-
-    if (Mapping::is_assignable)
-      return Mapping::assignable_layout_check(m_map, rhs.m_map);
-    else
-      return false;
-  }
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
@@ -2408,6 +2394,22 @@ template <class... Views>
 KOKKOS_INLINE_FUNCTION DeducedCommonPropsType<Views...> common_view_alloc_prop(
     Views const&... views) {
   return DeducedCommonPropsType<Views...>(views...);
+}
+
+// -----------------------------------------------------------
+// public is_assignable
+// expose underlying view mapping properties
+template <class ViewType1, class ViewType2>
+inline static bool is_assignable(const ViewType1& lhs, const ViewType2& rhs) {
+  using LhsTraits = typename ViewType1::traits;
+  using RhsTraits = typename ViewType2::traits;
+  using Mapping   = Kokkos::Impl::ViewMapping<LhsTraits, RhsTraits,
+                                            typename LhsTraits::specialize>;
+
+  if (Mapping::is_assignable)
+    return Mapping::assignable_layout_check(lhs.impl_map(), rhs.impl_map());
+  else
+    return false;
 }
 
 }  // namespace Kokkos

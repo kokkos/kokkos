@@ -3388,7 +3388,7 @@ class ViewMapping<
   typedef ViewMapping<SrcTraits, void> SrcType;
 
   KOKKOS_INLINE_FUNCTION
-  static bool assignable_layout_check(DstType&,
+  static bool assignable_layout_check(const DstType&,
                                       const SrcType& src)  // Runtime check
   {
     size_t strides[9];
