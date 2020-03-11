@@ -250,14 +250,8 @@ void HIPInternal::initialize(int hip_device_id) {
   }
 
   // Init the array for used for arbitrarily sized atomics
-  // Kokkos::Impl::init_lock_arrays_hip_space();
-
-  //  Kokkos::Impl::HIPLockArraysStruct locks;
-  //  locks.atomic = atomic_lock_array_hip_space_ptr(false);
-  //  locks.scratch = scratch_lock_array_hip_space_ptr(false);
-  //  locks.threadid = threadid_lock_array_hip_space_ptr(false);
-  //  hipMemcpyToSymbol( kokkos_impl_hip_lock_arrays , & locks ,
-  //  sizeof(HIPLockArraysStruct) );
+  // FIXME_HIP uncomment this when global variable works
+  // if (m_stream == 0) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
 }
 
 //----------------------------------------------------------------------------
@@ -340,16 +334,12 @@ void HIPInternal::finalize() {
 
 //----------------------------------------------------------------------------
 
-Kokkos::Experimental::HIP::size_type hip_internal_cu_count() {
-  return HIPInternal::singleton().m_multiProcCount;
-}
-
-Kokkos::Experimental::HIP::size_type hip_internal_maximum_extent_size() {
+Kokkos::Experimental::HIP::size_type hip_internal_maximum_warp_count() {
   return HIPInternal::singleton().m_maxWarpCount;
 }
 
-Kokkos::Experimental::HIP::size_type hip_internal_maximum_shared_words() {
-  return HIPInternal::singleton().m_maxSharedWords;
+Kokkos::Experimental::HIP::size_type hip_internal_maximum_grid_count() {
+  return HIPInternal::singleton().m_maxBlock;
 }
 
 Kokkos::Experimental::HIP::size_type *hip_internal_scratch_space(
@@ -369,76 +359,6 @@ Kokkos::Experimental::HIP::size_type *hip_internal_scratch_flags(
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
-
-// HIP::size_type HIP::detect_device_count()
-//{ return Impl::HIPInternalDevices::singleton().m_hipDevCount ; }
-
-int HIP::concurrency() {
-  // FIXME_HIP
-  return 32 * 8 * 40;  // 81920 fiji and hawaii
-}
-int HIP::impl_is_initialized() {
-  return Impl::HIPInternal::singleton().is_initialized();
-}
-
-void HIP::impl_initialize(const HIP::SelectDevice config) {
-  Impl::HIPInternal::singleton().initialize(config.hip_device_id);
-
-#if defined(KOKKOS_ENABLE_PROFILING)
-  Kokkos::Profiling::initialize();
-#endif
-}
-
-#if 0
-std::vector<unsigned>
-HIP::detect_device_arch()
-{
-  const Impl::HIPInternalDevices & s = Impl::HIPInternalDevices::singleton();
-
-  std::vector<unsigned> output( s.m_hipDevCount );
-
-  for ( int i = 0 ; i < s.m_hipDevCount ; ++i ) {
-    output[i] = s.m_hipProp[i].major * 100 + s.m_hipProp[i].minor ;
-  }
-
-  return output ;
-}
-
-HIP::size_type HIP::device_arch()
-{
-  return 1 ;
-}
-#endif
-
-void HIP::impl_finalize() {
-  Impl::HIPInternal::singleton().finalize();
-
-#if defined(KOKKOS_ENABLE_PROFILING)
-  Kokkos::Profiling::finalize();
-#endif
-}
-
-HIP::HIP() : m_space_instance(&Impl::HIPInternal::singleton()) {
-  Impl::HIPInternal::singleton().verify_is_initialized(
-      "HIP instance constructor");
-}
-
-// HIP::HIP( const int instance_id )
-//  : m_device( Impl::HIPInternal::singleton().m_hipDev )
-//{}
-
-void HIP::print_configuration(std::ostream &s, const bool) {
-  Impl::HIPInternal::singleton().print_configuration(s);
-}
-
-void HIP::fence() const { HIP_SAFE_CALL(hipDeviceSynchronize()); }
-
-int HIP::hip_device() const { return impl_internal_space_instance()->m_hipDev; }
-const char *HIP::name() { return "HIP"; }
-
-}  // namespace Experimental
-
 namespace Impl {
 void hip_device_synchronize() { HIP_SAFE_CALL(hipDeviceSynchronize()); }
 

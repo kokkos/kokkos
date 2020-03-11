@@ -49,9 +49,9 @@
 
 #if defined(KOKKOS_ENABLE_HIP) && defined(__HIPCC__)
 
+#include <Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
-#include <Kokkos_HIP.hpp>
 
 // TODO cannot use global variable on the device with ROCm 2.9
 //__device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
@@ -71,6 +71,8 @@ inline __device__ T *kokkos_impl_hip_shared_memory() {
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
+
+void *hip_resize_scratch_space(std::int64_t bytes, bool force_shrink = false);
 
 template <typename DriverType>
 __global__ static void hip_parallel_launch_constant_memory() {
@@ -130,34 +132,15 @@ template <class DriverType, unsigned int MaxThreadsPerBlock,
 struct HIPParallelLaunch<
     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
     HIPLaunchMechanism::LocalMemory> {
-  // static_assert(sizeof(DriverType)<HIPTraits::KernelArgumentLimit,"Kokkos
-  // Error: Requested HIPLaunchLocalMemory with a Functor larger than 4096
-  // bytes.");
   inline HIPParallelLaunch(const DriverType &driver, const dim3 &grid,
                            const dim3 &block, const int shmem,
                            const HIPInternal *hip_instance,
                            const bool /*prefer_shmem*/) {
     if ((grid.x != 0) && ((block.x * block.y * block.z) != 0)) {
-      // FIXME_HIP use prefer_shmem
-      /*
-            if ( hip_instance->m_maxShmemPerBlock < shmem ) {
-              Kokkos::Impl::throw_runtime_exception(
-         std::string("HIPParallelLaunch FAILED: shared memory request is too
-         large") );
-            }
-            #ifndef KOKKOS_ARCH_KEPLER
-            // On Kepler the L1 has no benefit since it doesn't cache reads
-            else {
-              CUDA_SAFE_CALL(
-                hipFuncSetCacheConfig
-                  ( hip_parallel_launch_local_memory
-                      < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >
-                  , ( prefer_shmem ? hipFuncCachePreferShared :
-         hipFuncCachePreferL1 ) ) );
-            }
-            #endif
-
-            KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();*/
+      if (hip_instance->m_maxShmemPerBlock < shmem) {
+        Kokkos::Impl::throw_runtime_exception(std::string(
+            "HIPParallelLaunch FAILED: shared memory request is too large"));
+      }
 
       // Invoke the driver function on the device
       printf("%i %i %i | %i %i %i | %i\n", grid.x, grid.y, grid.z, block.x,
@@ -177,36 +160,29 @@ struct HIPParallelLaunch<
 #endif
     }
   }
-  /*
-    static hipFuncAttributes get_hip_func_attributes() {
-      hipFuncAttributes attr;
-      hipFuncGetAttributes(&attr,hip_parallel_launch_local_memory
-              < DriverType, MaxThreadsPerBlock, MinBlocksPerSM >);
-      return attr;
-    }*/
+
+  static hipFuncAttributes get_hip_func_attributes() {
+    hipFuncAttributes attr;
+    hipFuncGetAttributes(
+        &attr, hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+                                                MinBlocksPerSM>);
+    return attr;
+  }
 };
 
 template <class DriverType>
 struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
                          HIPLaunchMechanism::LocalMemory> {
-  // static_assert(sizeof(DriverType)<HIPTraits::KernelArgumentLimit,"Kokkos
-  // Error: Requested HIPLaunchLocalMemory with a Functor larger than 4096
-  // bytes.");
   inline HIPParallelLaunch(const DriverType &driver, const dim3 &grid,
                            const dim3 &block, const int shmem,
                            const HIPInternal *hip_instance,
                            const bool /*prefer_shmem*/) {
     if ((grid.x != 0) && ((block.x * block.y * block.z) != 0)) {
-      // FIXME_HIP use prefer_shmem
-      /**
-            if ( hip_instance->m_maxShmemPerBlock < shmem ) {
-              Kokkos::Impl::throw_runtime_exception(
-         std::string("HIPParallelLaunch FAILED: shared memory request is too
-         large") );
-            }
+      if (hip_instance->m_maxShmemPerBlock < shmem) {
+        Kokkos::Impl::throw_runtime_exception(std::string(
+            "HIPParallelLaunch FAILED: shared memory request is too large"));
+      }
 
-            KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
-      */
       // Invoke the driver function on the device
       hipLaunchKernelGGL(hip_parallel_launch_local_memory<DriverType>, grid,
                          block, shmem, hip_instance->m_stream, driver);
@@ -218,13 +194,14 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 #endif
     }
   }
-  /*
-    static hipFuncAttributes get_hip_func_attributes() {
-      hipFuncAttributes attr;
-      hipFuncGetAttributes(&attr,hip_parallel_launch_local_memory
-              < DriverType >);
-      return attr;
-    }*/
+
+  static hipFuncAttributes get_hip_func_attributes() {
+    hipFuncAttributes attr;
+    hipFuncGetAttributes(&attr,
+                         reinterpret_cast<void *>(
+                             &hip_parallel_launch_local_memory<DriverType>));
+    return attr;
+  }
 };
 }  // namespace Impl
 }  // namespace Experimental

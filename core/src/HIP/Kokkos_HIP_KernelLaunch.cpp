@@ -24,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -42,24 +42,36 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_HPP
-#define KOKKOS_HIP_HPP
-
-#include <Kokkos_Core_fwd.hpp>
-
-#if defined(KOKKOS_ENABLE_HIP)
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
+#include <Kokkos_Core.hpp>
 #include <Kokkos_HIP_Space.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <impl/Kokkos_Tags.hpp>
+#include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 
-#include <HIP/Kokkos_HIP_Instance.hpp>
-#include <HIP/Kokkos_HIP_Parallel_Range.hpp>
-#include <HIP/Kokkos_HIP_Parallel_MDRange.hpp>
-#include <HIP/Kokkos_HIP_Parallel_Team.hpp>
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
 
-#endif
-#endif
+void *hip_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
+  static void *ptr                 = nullptr;
+  static std::int64_t current_size = 0;
+  if (current_size == 0) {
+    current_size = bytes;
+    ptr          = Kokkos::kokkos_malloc<::Kokkos::Experimental::HIPSpace>(
+        "HIPSpace::ScratchMemory", current_size);
+  }
+  if (bytes > current_size) {
+    current_size = bytes;
+    Kokkos::kokkos_free<::Kokkos::Experimental::HIPSpace>(ptr);
+    ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
+        "HIPSpace::ScratchMemory", current_size);
+  }
+  if ((bytes < current_size) && (force_shrink)) {
+    current_size = bytes;
+    Kokkos::kokkos_free<::Kokkos::Experimental::HIPSpace>(ptr);
+    ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
+        "HIPSpace::ScratchMemory", current_size);
+  }
+  return ptr;
+}
+}  // namespace Impl
+}  // namespace Experimental
+}  // namespace Kokkos

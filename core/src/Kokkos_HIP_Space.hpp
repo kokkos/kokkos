@@ -52,8 +52,16 @@
 #include <iosfwd>
 #include <typeinfo>
 #include <string>
+#include <cstddef>
+#include <iosfwd>
 
 #include <Kokkos_HostSpace.hpp>
+#include <Kokkos_Layout.hpp>
+#include <Kokkos_ScratchSpace.hpp>
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+#include <impl/Kokkos_Profiling_Interface.hpp>
+#endif
 
 #include <hip/hip_runtime_api.h>
 /*--------------------------------------------------------------------------*/
@@ -634,6 +642,138 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
+class HIPInternal;
+}
+/// \class HIP
+/// \brief Kokkos device for multicore processors in the host memory space.
+class HIP {
+ public:
+  //------------------------------------
+  //! \name Type declarations that all Kokkos devices must provide.
+  //@{
+
+  //! Tag this class as a kokkos execution space
+  using execution_space = HIP;
+  using memory_space    = HIPSpace;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+
+  using array_layout = LayoutLeft;
+  using size_type    = HIPSpace::size_type;
+
+  using scratch_memory_space = ScratchMemorySpace<HIP>;
+
+  ~HIP() = default;
+  HIP();
+  //  explicit HIP( const int instance_id );
+
+  HIP(HIP&&)      = default;
+  HIP(const HIP&) = default;
+  HIP& operator=(HIP&&) = default;
+  HIP& operator=(const HIP&) = default;
+
+  //@}
+  //------------------------------------
+  //! \name Functions that all Kokkos devices must implement.
+  //@{
+
+  KOKKOS_INLINE_FUNCTION static int in_parallel() {
+#if defined(__HIP_ARCH__)
+    return true;
+#else
+    return false;
+#endif
+  }
+
+  /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
+  static void impl_static_fence();
+  void fence() const;
+
+  /// \brief Print configuration information to the given output stream.
+  static void print_configuration(std::ostream&, const bool detail = false);
+
+  /// \brief Free any resources being consumed by the device.
+  static void impl_finalize();
+
+  /** \brief  Initialize the device.
+   *
+   */
+  struct SelectDevice {
+    int hip_device_id;
+    SelectDevice() : hip_device_id(0) {}
+    explicit SelectDevice(int id) : hip_device_id(id) {}
+  };
+
+  int hip_device() const;
+
+  static void impl_initialize(const SelectDevice = SelectDevice());
+
+  static int impl_is_initialized();
+
+  //  static size_type device_arch();
+
+  //  static size_type detect_device_count();
+
+  static int concurrency();
+  static const char* name();
+
+  inline Impl::HIPInternal* impl_internal_space_instance() const {
+    return m_space_instance;
+  }
+
+  uint32_t impl_instance_id() const noexcept { return 0; }
+
+ private:
+  Impl::HIPInternal* m_space_instance;
+};
+}  // namespace Experimental
+namespace Profiling {
+namespace Experimental {
+template <>
+struct DeviceTypeTraits<Kokkos::Experimental::HIP> {
+  static constexpr DeviceType id = DeviceType::HIP;
+};
+}  // namespace Experimental
+}  // namespace Profiling
+}  // namespace Kokkos
+
+namespace Kokkos {
+namespace Impl {
+
+template <>
+struct MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
+                         Kokkos::Experimental::HIP::scratch_memory_space> {
+  enum { assignable = false };
+  enum { accessible = true };
+  enum { deepcopy = false };
+};
+
+template <>
+struct VerifyExecutionCanAccessMemorySpace<
+    Kokkos::Experimental::HIP::memory_space,
+    Kokkos::Experimental::HIP::scratch_memory_space> {
+  enum { value = true };
+  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
+};
+
+template <>
+struct VerifyExecutionCanAccessMemorySpace<
+    Kokkos::HostSpace, Kokkos::Experimental::HIP::scratch_memory_space> {
+  enum { value = false };
+  inline static void verify(void) {
+    Kokkos::Experimental::HIPSpace::access_error();
+  }
+  inline static void verify(const void* p) {
+    Kokkos::Experimental::HIPSpace::access_error(p);
+  }
+};
+
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif /* #if defined( KOKKOS_ENABLE_HIP ) */
 #endif /* #define KOKKOS_HIPSPACE_HPP */
