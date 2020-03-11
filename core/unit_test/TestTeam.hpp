@@ -1165,7 +1165,7 @@ struct TestTeamBroadcast<
 
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(teamMember, ts),
-        [&](const int j, value_type &teamUpdate) { teamUpdate |= value; },
+        [&](const int /*j*/, value_type &teamUpdate) { teamUpdate |= value; },
         Kokkos::BOr<value_type, memory_space>(parUpdate));
 
     if (teamMember.team_rank() == 0) update |= parUpdate;
@@ -1186,7 +1186,7 @@ struct TestTeamBroadcast<
 
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(teamMember, ts),
-        [&](const int j, value_type &teamUpdate) { teamUpdate |= value; },
+        [&](const int /*j*/, value_type &teamUpdate) { teamUpdate |= value; },
         Kokkos::BOr<value_type, memory_space>(parUpdate));
 
     if (teamMember.team_rank() == 0) update |= parUpdate;
@@ -1251,7 +1251,7 @@ struct TestTeamBroadcast<
 
   const value_type offset;
 
-  TestTeamBroadcast(const size_t league_size, const value_type os_)
+  TestTeamBroadcast(const size_t /*league_size*/, const value_type os_)
       : offset(os_) {}
 
   struct BroadcastTag {};
