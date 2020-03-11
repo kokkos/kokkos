@@ -55,7 +55,7 @@ namespace Kokkos {
 namespace Impl {
 
 // Include all lanes
-constexpr unsigned shfl_all_mask = 0xffffffff;
+constexpr unsigned shfl_all_mask = 0xffffffffu;
 
 //----------------------------------------------------------------------------
 // Shuffle operations require input to be a register (stack) variable
@@ -71,16 +71,28 @@ struct in_place_shfl_op {
     return *static_cast<Derived const*>(this);
   }
 
-  // sizeof(Scalar) == sizeof(int) case
+  // sizeof(Scalar) <= sizeof(int) case
   template <class Scalar>
   // requires _assignable_from_bits<Scalar>
-  __device__ inline typename std::enable_if<sizeof(Scalar) == sizeof(int)>::type
+  __device__ inline typename std::enable_if<sizeof(Scalar) <= sizeof(int)>::type
   operator()(Scalar& out, Scalar const& in, int lane_or_delta, int width,
              unsigned mask = shfl_all_mask) const noexcept {
+    using shfl_type = int;
+    union conv_type {
+      Scalar orig;
+      shfl_type conv;
+    };
+    conv_type tmp_in;
+    tmp_in.orig = in;
+    conv_type tmp_out;
+    tmp_out.conv = tmp_in.conv;
+    conv_type res;
     //------------------------------------------------
-    reinterpret_cast<int&>(out) = self().do_shfl_op(
-        mask, reinterpret_cast<int const&>(in), lane_or_delta, width);
+    res.conv = self().do_shfl_op(
+        mask, reinterpret_cast<shfl_type const&>(tmp_out.conv), lane_or_delta,
+        width);
     //------------------------------------------------
+    out = res.orig;
   }
 
 // TODO: figure out why 64-bit shfl fails in Clang

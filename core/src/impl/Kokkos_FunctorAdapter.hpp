@@ -178,7 +178,8 @@ struct FunctorValueTraits<FunctorType, ArgTag,
       value_type;
   typedef FunctorType functor_type;
 
-  static_assert(0 == (sizeof(value_type) % sizeof(int)),
+  static_assert((sizeof(value_type) < sizeof(int)) ||
+                    0 == (sizeof(value_type) % sizeof(int)),
                 "Reduction functor's declared value_type requires: 0 == "
                 "sizeof(value_type) % sizeof(int)");
 

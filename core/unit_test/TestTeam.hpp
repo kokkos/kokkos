@@ -1132,16 +1132,24 @@ namespace Test {
 
 namespace {
 
-template <class ExecSpace, class ScheduleType>
-struct TestTeamBroadcast {
-  typedef typename Kokkos::TeamPolicy<ScheduleType, ExecSpace>::member_type
-      team_member;
+template <class ExecSpace, class ScheduleType, class T, class Enabled = void>
+struct TestTeamBroadcast;
 
-  TestTeamBroadcast(const size_t league_size) {}
+template <class ExecSpace, class ScheduleType, class T>
+struct TestTeamBroadcast<
+    ExecSpace, ScheduleType, T,
+    typename std::enable_if<(sizeof(T) == sizeof(char)), void>::type> {
+  using team_member =
+      typename Kokkos::TeamPolicy<ScheduleType, ExecSpace>::member_type;
+  using memory_space = typename ExecSpace::memory_space;
+  using value_type   = T;
+
+  const value_type offset;
+
+  TestTeamBroadcast(const size_t league_size, const value_type os_)
+      : offset(os_) {}
 
   struct BroadcastTag {};
-
-  typedef int64_t value_type;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const team_member &teamMember, value_type &update) const {
@@ -1150,16 +1158,17 @@ struct TestTeamBroadcast {
     int ts  = teamMember.team_size();
 
     value_type parUpdate = 0;
-    value_type value     = tid * 3 + 1;
+    value_type value     = (value_type)(tid % 0xFF) + offset;
 
+    // broadcast boolean and value to team from source thread
     teamMember.team_broadcast(value, lid % ts);
 
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(teamMember, ts),
-        [&](const int j, value_type &teamUpdate) { teamUpdate += value; },
-        parUpdate);
+        [&](const int j, value_type &teamUpdate) { teamUpdate |= value; },
+        Kokkos::BOr<value_type, memory_space>(parUpdate));
 
-    if (teamMember.team_rank() == 0) update += parUpdate;
+    if (teamMember.team_rank() == 0) update |= parUpdate;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1170,21 +1179,22 @@ struct TestTeamBroadcast {
     int ts  = teamMember.team_size();
 
     value_type parUpdate = 0;
-    value_type value     = tid * 3 + 1;
+    value_type value     = (value_type)(tid % 0xFF) + offset;
 
-    teamMember.team_broadcast([&](value_type &var) { var *= 2; }, value,
+    teamMember.team_broadcast([&](value_type &var) { var -= offset; }, value,
                               lid % ts);
 
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(teamMember, ts),
-        [&](const int j, value_type &teamUpdate) { teamUpdate += value; },
-        parUpdate);
+        [&](const int j, value_type &teamUpdate) { teamUpdate |= value; },
+        Kokkos::BOr<value_type, memory_space>(parUpdate));
 
-    if (teamMember.team_rank() == 0) update += parUpdate;
+    if (teamMember.team_rank() == 0) update |= parUpdate;
   }
 
-  static void test_teambroadcast(const size_t league_size) {
-    TestTeamBroadcast functor(league_size);
+  static void test_teambroadcast(const size_t league_size,
+                                 const value_type off) {
+    TestTeamBroadcast functor(league_size, off);
 
     typedef Kokkos::TeamPolicy<ScheduleType, ExecSpace> policy_type;
     typedef Kokkos::TeamPolicy<ScheduleType, ExecSpace, BroadcastTag>
@@ -1198,20 +1208,166 @@ struct TestTeamBroadcast {
                     ParallelReduceTag());  // printf("team_size=%d\n",team_size);
 
     // team_broadcast with value
-    int64_t total = 0;
+    value_type total = 0;
+
+    Kokkos::parallel_reduce(policy_type(league_size, team_size), functor,
+                            Kokkos::BOr<value_type, Kokkos::HostSpace>(total));
+
+    value_type expected_result = 0;
+    for (unsigned int i = 0; i < league_size; i++) {
+      value_type val = (value_type((i % team_size % 0xFF)) + off);
+      expected_result |= val;
+    }
+    ASSERT_EQ(expected_result, total);
+    // printf("team_broadcast with value --"
+    //"expected_result=%x,"
+    //"total=%x\n",expected_result, total);
+
+    // team_broadcast with funtion object
+    total = 0;
+
+    Kokkos::parallel_reduce(policy_type_f(league_size, team_size), functor,
+                            Kokkos::BOr<value_type, Kokkos::HostSpace>(total));
+
+    expected_result = 0;
+    for (unsigned int i = 0; i < league_size; i++) {
+      value_type val = ((value_type)((i % team_size % 0xFF)));
+      expected_result |= val;
+    }
+    ASSERT_EQ(expected_result, total);
+    // printf("team_broadcast with funtion object --"
+    // "expected_result=%x,"
+    // "total=%x\n",expected_result, total);
+  }
+};
+
+template <class ExecSpace, class ScheduleType, class T>
+struct TestTeamBroadcast<
+    ExecSpace, ScheduleType, T,
+    typename std::enable_if<(sizeof(T) > sizeof(char)), void>::type> {
+  using team_member =
+      typename Kokkos::TeamPolicy<ScheduleType, ExecSpace>::member_type;
+  using value_type = T;
+
+  const value_type offset;
+
+  TestTeamBroadcast(const size_t league_size, const value_type os_)
+      : offset(os_) {}
+
+  struct BroadcastTag {};
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const team_member &teamMember, value_type &update) const {
+    int lid = teamMember.league_rank();
+    int tid = teamMember.team_rank();
+    int ts  = teamMember.team_size();
+
+    value_type parUpdate = 0;
+    value_type value     = (value_type)(tid * 3) + offset;
+
+    // setValue is used to determine if the update should be
+    // performed at the bottom.  The thread id must match the
+    // thread id used to broadcast the value.  It is the
+    // thread id that matches the league rank mod team size
+    // this way each league rank will use a different thread id
+    // which is likely not 0
+    bool setValue = ((lid % ts) == tid);
+
+    // broadcast boolean and value to team from source thread
+    teamMember.team_broadcast(value, lid % ts);
+    teamMember.team_broadcast(setValue, lid % ts);
+
+    Kokkos::parallel_reduce(
+        Kokkos::TeamThreadRange(teamMember, ts),
+        [&](const int j, value_type &teamUpdate) { teamUpdate += value; },
+        parUpdate);
+
+    if (teamMember.team_rank() == 0 && setValue) update += parUpdate;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const BroadcastTag &, const team_member &teamMember,
+                  value_type &update) const {
+    int lid = teamMember.league_rank();
+    int tid = teamMember.team_rank();
+    int ts  = teamMember.team_size();
+
+    value_type parUpdate = 0;
+    value_type value     = (value_type)(tid * 3) + offset;
+
+    // setValue is used to determine if the update should be
+    // performed at the bottom.  The thread id must match the
+    // thread id used to broadcast the value.  It is the
+    // thread id that matches the league rank mod team size
+    // this way each league rank will use a different thread id
+    // which is likely not 0. Note the logic is switched from
+    // above because the functor switches it back.
+    bool setValue = ((lid % ts) != tid);
+
+    teamMember.team_broadcast([&](value_type &var) { var *= 2; }, value,
+                              lid % ts);
+    teamMember.team_broadcast([&](bool &bVar) { bVar = !bVar; }, setValue,
+                              lid % ts);
+
+    Kokkos::parallel_reduce(
+        Kokkos::TeamThreadRange(teamMember, ts),
+        [&](const int j, value_type &teamUpdate) { teamUpdate += value; },
+        parUpdate);
+
+    if (teamMember.team_rank() == 0 && setValue) update += parUpdate;
+  }
+
+  template <class ScalarType>
+  static inline
+      typename std::enable_if<!std::is_integral<ScalarType>::value, void>::type
+      compare_test(ScalarType A, ScalarType B) {
+    if (std::is_same<ScalarType, double>::value) {
+      ASSERT_DOUBLE_EQ((double)A, (double)B);
+    } else if (std::is_same<ScalarType, float>::value) {
+      ASSERT_FLOAT_EQ((double)A, (double)B);
+    } else {
+      ASSERT_EQ(A, B);
+    }
+  }
+
+  template <class ScalarType>
+  static inline
+      typename std::enable_if<std::is_integral<ScalarType>::value, void>::type
+      compare_test(ScalarType A, ScalarType B) {
+    ASSERT_EQ(A, B);
+  }
+
+  static void test_teambroadcast(const size_t league_size,
+                                 const value_type off) {
+    TestTeamBroadcast functor(league_size, off);
+
+    typedef Kokkos::TeamPolicy<ScheduleType, ExecSpace> policy_type;
+    typedef Kokkos::TeamPolicy<ScheduleType, ExecSpace, BroadcastTag>
+        policy_type_f;
+
+    const int team_size =
+        policy_type_f(league_size, 1)
+            .team_size_max(
+                functor,
+                Kokkos::
+                    ParallelReduceTag());  // printf("team_size=%d\n",team_size);
+
+    // team_broadcast with value
+    value_type total = 0;
 
     Kokkos::parallel_reduce(policy_type(league_size, team_size), functor,
                             total);
 
     value_type expected_result = 0;
     for (unsigned int i = 0; i < league_size; i++) {
-      value_type val = ((i % team_size) * 3 + 1) * team_size;
+      value_type val =
+          (value_type((i % team_size) * 3) + off) * (value_type)team_size;
       expected_result += val;
     }
-    ASSERT_EQ(size_t(expected_result),
-              size_t(total));  // printf("team_broadcast with value --
-                               // expected_result=%d,
-                               // total=%d\n",expected_result, total);
+    compare_test(expected_result,
+                 total);  // printf("team_broadcast with value --
+                          // expected_result=%d,
+                          // total=%d\n",expected_result, total);
 
     // team_broadcast with funtion object
     total = 0;
@@ -1221,13 +1377,14 @@ struct TestTeamBroadcast {
 
     expected_result = 0;
     for (unsigned int i = 0; i < league_size; i++) {
-      value_type val = ((i % team_size) * 3 + 1) * 2 * team_size;
+      value_type val = ((value_type)((i % team_size) * 3) + off) *
+                       (value_type)(2 * team_size);
       expected_result += val;
     }
-    ASSERT_EQ(size_t(expected_result),
-              size_t(total));  // printf("team_broadcast with funtion object --
-                               // expected_result=%d,
-                               // total=%d\n",expected_result, total);
+    compare_test(expected_result,
+                 total);  // printf("team_broadcast with funtion object --
+                          // expected_result=%d,
+                          // total=%d\n",expected_result, total);
   }
 };
 
