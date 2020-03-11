@@ -147,10 +147,20 @@ class HIP {
     return m_space_instance;
   }
 
+  uint32_t impl_instance_id() const noexcept { return 0; }
+
  private:
   Impl::HIPInternal *m_space_instance;
 };
 }  // namespace Experimental
+namespace Profiling {
+namespace Experimental {
+template <>
+struct DeviceTypeTraits<Kokkos::Experimental::HIP> {
+  static constexpr DeviceType id = DeviceType::HIP;
+};
+}  // namespace Experimental
+}  // namespace Profiling
 }  // namespace Kokkos
 
 namespace Kokkos {

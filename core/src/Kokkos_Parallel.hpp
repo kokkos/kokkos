@@ -167,7 +167,9 @@ inline void parallel_for(
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag>
         name(str);
-    Kokkos::Profiling::beginParallelFor(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelFor(
+        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        &kpID);
   }
 #endif
 
@@ -195,7 +197,9 @@ inline void parallel_for(const size_t work_count, const FunctorType& functor,
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType, void> name(str);
-    Kokkos::Profiling::beginParallelFor(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelFor(
+        name.get(),
+        Kokkos::Profiling::Experimental::device_id(policy().space()), &kpID);
   }
 #endif
 
@@ -413,7 +417,9 @@ inline void parallel_scan(
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecutionPolicy::work_tag>
         name(str);
-    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelScan(
+        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        &kpID);
   }
 #endif
 
@@ -442,7 +448,9 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType, void> name(str);
-    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelScan(
+        name.get(),
+        Kokkos::Profiling::Experimental::device_id(policy().space()), &kpID);
   }
 #endif
 
@@ -490,7 +498,9 @@ inline void parallel_scan(
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecutionPolicy::work_tag>
         name(str);
-    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelScan(
+        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        &kpID);
   }
 #endif
 
@@ -522,7 +532,9 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType, void> name(str);
-    Kokkos::Profiling::beginParallelScan(name.get(), 0, &kpID);
+    Kokkos::Profiling::beginParallelScan(
+        name.get(),
+        Kokkos::Profiling::Experimental::device_id(policy().space()), &kpID);
   }
 #endif
 

@@ -132,6 +132,8 @@ class Threads {
 
   static Threads& instance(int = 0);
 
+  uint32_t impl_instance_id() noexcept const { return 0; }
+
   //----------------------------------------
 
   static int thread_pool_size(int depth = 0);
@@ -205,6 +207,14 @@ class Threads {
   //----------------------------------------
 };
 
+namespace Profiling {
+namespace Experimental {
+template <>
+struct DeviceTypeTraits<Threads> {
+  static constexpr DeviceType id = DeviceType::Threads;
+};
+}  // namespace Experimental
+}  // namespace Profiling
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

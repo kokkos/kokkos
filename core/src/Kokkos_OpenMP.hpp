@@ -222,8 +222,17 @@ class OpenMP {
 #endif
 
   static constexpr const char* name() noexcept { return "OpenMP"; }
+  uint32_t impl_instance_id() const noexcept { return 0; }
 };
 
+namespace Profiling {
+namespace Experimental {
+template <>
+struct DeviceTypeTraits<OpenMP> {
+  static constexpr DeviceType id = DeviceType::OpenMP;
+};
+}  // namespace Experimental
+}  // namespace Profiling
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

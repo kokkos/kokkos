@@ -114,11 +114,21 @@ class OpenMPTarget {
   }
 
   OpenMPTarget();
+  uint32_t impl_instance_id() const noexcept { return 0; }
 
  private:
   Impl::OpenMPTargetInternal* m_space_instance;
 };
 }  // namespace Experimental
+
+namespace Profiling {
+namespace Experimental {
+template <>
+struct DeviceTypeTraits<Experimental::OpenMPTarget> {
+  static constexpr DeviceType id = DeviceType::OpenMPTarget;
+};
+}  // namespace Experimental
+}  // namespace Profiling
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
