@@ -32,7 +32,7 @@ TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_11)
 
 SET(KOKKOS_CUDA_FEATURE_LEVEL 999)
 SET(KOKKOS_CUDA_NAME Cuda)
-SET(KOKKOS_HIP_FEATURE_LEVEL 9)
+SET(KOKKOS_HIP_FEATURE_LEVEL 12)
 SET(KOKKOS_HIP_NAME Experimental::HIP)
 SET(KOKKOS_HPX_FEATURE_LEVEL 999)
 SET(KOKKOS_HPX_NAME Experimental::HPX)
@@ -288,6 +288,7 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_SubView_a.cpp
       hip/TestHIP_SubView_b.cpp
       hip/TestHIP_View_64bit.cpp
+      hip/TestHIP_LocalDeepCopy.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIP
