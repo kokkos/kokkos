@@ -56,6 +56,7 @@
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_Tags.hpp>
 
 /*--------------------------------------------------------------------------*/
@@ -132,8 +133,6 @@ class Threads {
 
   static Threads& instance(int = 0);
 
-  uint32_t impl_instance_id() noexcept const { return 0; }
-
   //----------------------------------------
 
   static int thread_pool_size(int depth = 0);
@@ -193,6 +192,8 @@ class Threads {
 #else
   KOKKOS_INLINE_FUNCTION static int impl_thread_pool_rank() { return 0; }
 #endif
+
+  uint32_t impl_instance_id() const noexcept { return 0; }
 
   inline static unsigned impl_max_hardware_threads() {
     return impl_thread_pool_size(0);
