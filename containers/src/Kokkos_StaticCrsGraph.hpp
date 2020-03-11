@@ -414,7 +414,8 @@ class StaticCrsGraph {
         row_map_type, View<size_type*, array_layout, device_type> >
         partitioner(row_map, block_offsets, fix_cost_per_row, num_blocks);
 
-    Kokkos::parallel_for(Kokkos::RangePolicy<execution_space>(0, numRows()),
+    Kokkos::parallel_for("Kokkos::StaticCrsGraph::create_block_partitioning",
+                         Kokkos::RangePolicy<execution_space>(0, numRows()),
                          partitioner);
     typename device_type::execution_space().fence();
 
@@ -522,7 +523,8 @@ DataType maximum_entry(const StaticCrsGraph<DataType, Arg1Type, Arg2Type,
   typedef Impl::StaticCrsGraphMaximumEntry<GraphType> FunctorType;
 
   DataType result = 0;
-  Kokkos::parallel_reduce(graph.entries.extent(0), FunctorType(graph), result);
+  Kokkos::parallel_reduce("Kokkos::maximum_entry", graph.entries.extent(0),
+                          FunctorType(graph), result);
   return result;
 }
 

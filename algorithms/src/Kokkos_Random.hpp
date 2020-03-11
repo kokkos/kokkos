@@ -1678,7 +1678,7 @@ void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type range) {
   int64_t LDA = a.extent(0);
   if (LDA > 0)
-    parallel_for((LDA + 127) / 128,
+    parallel_for("Kokkos::fill_random", (LDA + 127) / 128,
                  Impl::fill_random_functor_range<ViewType, RandomPool, 128,
                                                  ViewType::Rank, IndexType>(
                      a, g, range));
@@ -1690,7 +1690,7 @@ void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type end) {
   int64_t LDA = a.extent(0);
   if (LDA > 0)
-    parallel_for((LDA + 127) / 128,
+    parallel_for("Kokkos::fill_random", (LDA + 127) / 128,
                  Impl::fill_random_functor_begin_end<ViewType, RandomPool, 128,
                                                      ViewType::Rank, IndexType>(
                      a, g, begin, end));
