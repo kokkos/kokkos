@@ -736,22 +736,22 @@ KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
       a_thread2(team.thread_scratch(0), 16);
 
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
-      b_team1(team.team_scratch(1), 128000);
+      b_team1(team.team_scratch(1), 12800);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
-      b_thread1(team.thread_scratch(1), 16000);
+      b_thread1(team.thread_scratch(1), 1600);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
-      b_team2(team.team_scratch(1), 128000);
+      b_team2(team.team_scratch(1), 12800);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
-      b_thread2(team.thread_scratch(1), 16000);
+      b_thread2(team.thread_scratch(1), 1600);
 
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
       a_team3(team.team_scratch(0), 128);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
       a_thread3(team.thread_scratch(0), 16);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
-      b_team3(team.team_scratch(1), 128000);
+      b_team3(team.team_scratch(1), 12800);
   Kokkos::View<double *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged> >
-      b_thread3(team.thread_scratch(1), 16000);
+      b_thread3(team.thread_scratch(1), 1600);
 
   // The explicit types for 0 and 128 are here to test TeamThreadRange accepting
   // different types for begin and end.
@@ -772,7 +772,7 @@ KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
                    team.league_rank() * 100000;
   });
 
-  Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, 128000),
+  Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, 12800),
                        [&](const int &i) {
                          b_team1(i) = 1000000 + i + team.league_rank() * 100000;
                          b_team2(i) = 2000000 + i + team.league_rank() * 100000;
@@ -780,7 +780,7 @@ KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
                        });
   team.team_barrier();
 
-  Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, 16000),
+  Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, 1600),
                        [&](const int &i) {
                          b_thread1(i) = 1000000 + 100000 * team.team_rank() +
                                         16 - i + team.league_rank() * 100000;
@@ -814,7 +814,7 @@ KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
   });
 
   Kokkos::parallel_for(
-      Kokkos::TeamThreadRange(team, 0, 128000), [&](const int &i) {
+      Kokkos::TeamThreadRange(team, 0, 12800), [&](const int &i) {
         if (b_team1(i) != 1000000 + i + team.league_rank() * 100000) error++;
         if (b_team2(i) != 2000000 + i + team.league_rank() * 100000) error++;
         if (b_team3(i) != 3000000 + i + team.league_rank() * 100000) error++;
@@ -822,7 +822,7 @@ KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
   team.team_barrier();
 
   Kokkos::parallel_for(
-      Kokkos::ThreadVectorRange(team, 16000), [&](const int &i) {
+      Kokkos::ThreadVectorRange(team, 1600), [&](const int &i) {
         if (b_thread1(i) != 1000000 + 100000 * team.team_rank() + 16 - i +
                                 team.league_rank() * 100000)
           error++;
@@ -876,11 +876,11 @@ struct ClassNoShmemSizeFunction {
     const int per_team1 =
         3 * Kokkos::View<
                 double *, ExecSpace,
-                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(128000);
+                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(12800);
     const int per_thread1 =
         3 * Kokkos::View<
                 double *, ExecSpace,
-                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(16000);
+                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(1600);
 
     int team_size = 8;
     if (team_size > ExecSpace::concurrency())
@@ -949,11 +949,11 @@ struct ClassWithShmemSizeFunction {
     const int per_team1 =
         3 * Kokkos::View<
                 double *, ExecSpace,
-                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(128000);
+                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(12800);
     const int per_thread1 =
         3 * Kokkos::View<
                 double *, ExecSpace,
-                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(16000);
+                Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(1600);
 
     int team_size = 8;
     if (team_size > ExecSpace::concurrency())
@@ -1019,13 +1019,13 @@ void test_team_mulit_level_scratch_test_lambda() {
                    Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(16);
 
   const int per_team1 =
-      3 * Kokkos::View<
-              double *, ExecSpace,
-              Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(128000);
+      3 *
+      Kokkos::View<double *, ExecSpace,
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(12800);
   const int per_thread1 =
       3 *
       Kokkos::View<double *, ExecSpace,
-                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(16000);
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >::shmem_size(1600);
 
   int team_size = 8;
   if (team_size > ExecSpace::concurrency())
