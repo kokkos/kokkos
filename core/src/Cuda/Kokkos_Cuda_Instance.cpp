@@ -115,10 +115,14 @@ __global__ void query_cuda_kernel_arch(int *d_arch) {
 
 /** Query what compute capability is actually launched to the device: */
 int cuda_kernel_arch() {
-  int *d_arch = 0;
+  int arch    = 0;
+  int *d_arch = nullptr;
+
   cudaMalloc((void **)&d_arch, sizeof(int));
+  cudaMemcpy(d_arch, &arch, sizeof(int), cudaMemcpyDefault);
+
   query_cuda_kernel_arch<<<1, 1>>>(d_arch);
-  int arch = 0;
+
   cudaMemcpy(&arch, d_arch, sizeof(int), cudaMemcpyDefault);
   cudaFree(d_arch);
   return arch;
@@ -350,17 +354,24 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
     // Query what compute capability architecture a kernel executes:
     m_cudaArch = cuda_kernel_arch();
 
+    if (m_cudaArch == 0) {
+      std::stringstream ss;
+      ss << "Kokkos::Cuda::initialize ERROR: likely mismatch of architecture"
+         << std::endl;
+      std::string msg = ss.str();
+      Kokkos::abort(msg.c_str());
+    }
+
     int compiled_major = m_cudaArch / 100;
     int compiled_minor = (m_cudaArch % 100) / 10;
 
-    if (compiled_major < 5 && cudaProp.major >= 5) {
+    if (compiled_major != cudaProp.major || compiled_minor < cudaProp.minor) {
       std::stringstream ss;
       ss << "Kokkos::Cuda::initialize ERROR: running kernels compiled for "
             "compute capability "
          << compiled_major << "." << compiled_minor
-         << " (< 5.0) on device with compute capability " << cudaProp.major
-         << "." << cudaProp.minor
-         << " (>=5.0), this would give incorrect results!" << std::endl;
+         << " on device with compute capability " << cudaProp.major << "."
+         << cudaProp.minor << " is not supported by CUDA!" << std::endl;
       std::string msg = ss.str();
       Kokkos::abort(msg.c_str());
     }
