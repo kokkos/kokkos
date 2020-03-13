@@ -192,7 +192,7 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
 
   do {
     assume.i = oldval.i;
-    newval.t = Oper::apply(assume.t, val);
+    newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
                                                assume.i, newval.i);
   } while (assume.i != oldval.i);
@@ -235,7 +235,7 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
 
   do {
     assume.i = oldval.i;
-    newval.t = Oper::apply(assume.t, val);
+    newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
   } while (assume.i != oldval.i);
 
@@ -251,7 +251,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   while (!Impl::lock_address_host_space((void*)dest))
     ;
   T return_val = *dest;
-  *dest        = Oper::apply(return_val, val);
+  *dest        = op.apply(return_val, val);
   Impl::unlock_address_host_space((void*)dest);
   return return_val;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
@@ -269,7 +269,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     if (!done) {
       if (Impl::lock_address_cuda_space((void*)dest)) {
         return_val = *dest;
-        *dest      = Oper::apply(return_val, val);
+        *dest      = op.apply(return_val, val);
         Impl::unlock_address_cuda_space((void*)dest);
         done = 1;
       }
@@ -300,7 +300,7 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
   while (!Impl::lock_address_host_space((void*)dest))
     ;
-  T return_val = Oper::apply(*dest, val);
+  T return_val = op.apply(*dest, val);
   *dest        = return_val;
   Impl::unlock_address_host_space((void*)dest);
   return return_val;
@@ -318,7 +318,7 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
   while (active != done_active) {
     if (!done) {
       if (Impl::lock_address_cuda_space((void*)dest)) {
-        return_val = Oper::apply(*dest, val);
+        return_val = op.apply(*dest, val);
         *dest      = return_val;
         Impl::unlock_address_cuda_space((void*)dest);
         done = 1;

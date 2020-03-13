@@ -622,7 +622,7 @@ struct functor_vec_single {
     Scalar value2 = 0;
     Kokkos::parallel_reduce(
         Kokkos::ThreadVectorRange(team, nStart, nEnd),
-        [&](int i, Scalar &val) { val += value; }, value2);
+        [&](int /*i*/, Scalar &val) { val += value; }, value2);
 
     if (value2 != (value * (nEnd - nStart))) {
       printf("FAILED vector_single broadcast %i %i %f %f\n", team.league_rank(),

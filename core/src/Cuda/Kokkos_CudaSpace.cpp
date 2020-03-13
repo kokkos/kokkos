@@ -789,6 +789,8 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
 // Iterate records to print orphaned memory ...
 void SharedAllocationRecord<Kokkos::CudaSpace, void>::print_records(
     std::ostream &s, const Kokkos::CudaSpace &, bool detail) {
+  (void)s;
+  (void)detail;
 #ifdef KOKKOS_DEBUG
   SharedAllocationRecord<void, void> *r = &s_root_record;
 
@@ -861,6 +863,8 @@ void SharedAllocationRecord<Kokkos::CudaSpace, void>::print_records(
 
 void SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::print_records(
     std::ostream &s, const Kokkos::CudaUVMSpace &, bool detail) {
+  (void)s;
+  (void)detail;
 #ifdef KOKKOS_DEBUG
   SharedAllocationRecord<void, void>::print_host_accessible_records(
       s, "CudaUVM", &s_root_record, detail);
@@ -873,6 +877,8 @@ void SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::print_records(
 
 void SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::print_records(
     std::ostream &s, const Kokkos::CudaHostPinnedSpace &, bool detail) {
+  (void)s;
+  (void)detail;
 #ifdef KOKKOS_DEBUG
   SharedAllocationRecord<void, void>::print_host_accessible_records(
       s, "CudaHostPinned", &s_root_record, detail);

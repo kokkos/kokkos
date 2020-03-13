@@ -152,6 +152,10 @@ struct in_place_shfl_fn : in_place_shfl_op<in_place_shfl_fn> {
   __device__ KOKKOS_IMPL_FORCEINLINE T do_shfl_op(unsigned mask, T& val,
                                                   int lane, int width) const
       noexcept {
+    (void)mask;
+    (void)val;
+    (void)lane;
+    (void)width;
     return KOKKOS_IMPL_CUDA_SHFL_MASK(mask, val, lane, width);
   }
 };
@@ -179,6 +183,10 @@ struct in_place_shfl_down_fn : in_place_shfl_op<in_place_shfl_down_fn> {
   __device__ KOKKOS_IMPL_FORCEINLINE T do_shfl_op(unsigned mask, T& val,
                                                   int lane, int width) const
       noexcept {
+    (void)mask;
+    (void)val;
+    (void)lane;
+    (void)width;
     return KOKKOS_IMPL_CUDA_SHFL_DOWN_MASK(mask, val, lane, width);
   }
 };

@@ -50,6 +50,7 @@
 
 namespace Test {
 
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM)
 namespace {
 
 template <typename ExecSpace>
@@ -57,7 +58,6 @@ struct TestViewCopy {
   using InExecSpace = ExecSpace;
 
   static void test_view_copy(const int dim0, const int dim1, const int dim2) {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM)
     // ExecSpace = CudaUVM, CudaHostPinned
     // This test will fail at runtime with an illegal memory access if something
     // goes wrong Test 1: deep_copy from host_mirror_space to ExecSpace and
@@ -144,7 +144,6 @@ struct TestViewCopy {
       Kokkos::deep_copy(srcView, dstView);
       Kokkos::fence();
     }
-#endif
   }  // end test_view_copy
 
 };  // end struct
@@ -156,6 +155,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
   TestViewCopy<TEST_EXECSPACE>::test_view_copy(4, 2, 3);
   TestViewCopy<TEST_EXECSPACE>::test_view_copy(4, 2, 0);
 }
+#endif
 
 TEST(TEST_CATEGORY, view_copy_degenerated) {
   // Only include this file to be compiled with CudaUVM and CudaHostPinned

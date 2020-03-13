@@ -60,7 +60,7 @@ using std::endl;
 namespace Test {
 
 template <typename Scalar, typename Device>
-void test_offsetview_construction(unsigned int size) {
+void test_offsetview_construction() {
   typedef Kokkos::Experimental::OffsetView<Scalar**, Device> offset_view_type;
   typedef Kokkos::View<Scalar**, Device> view_type;
 
@@ -389,7 +389,7 @@ void test_offsetview_unmanaged_construction() {
 }
 
 template <typename Scalar, typename Device>
-void test_offsetview_subview(unsigned int size) {
+void test_offsetview_subview() {
   {  // test subview 1
     Kokkos::Experimental::OffsetView<Scalar*, Device> sliceMe("offsetToSlice",
                                                               {-10, 20});
@@ -676,7 +676,7 @@ void test_offsetview_offsets_rank3() {
 #endif
 
 TEST(TEST_CATEGORY, offsetview_construction) {
-  test_offsetview_construction<int, TEST_EXECSPACE>(10);
+  test_offsetview_construction<int, TEST_EXECSPACE>();
 }
 
 TEST(TEST_CATEGORY, offsetview_unmanaged_construction) {
@@ -684,7 +684,7 @@ TEST(TEST_CATEGORY, offsetview_unmanaged_construction) {
 }
 
 TEST(TEST_CATEGORY, offsetview_subview) {
-  test_offsetview_subview<int, TEST_EXECSPACE>(10);
+  test_offsetview_subview<int, TEST_EXECSPACE>();
 }
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)

@@ -447,7 +447,7 @@ void OpenMP::impl_finalize()
 
 //----------------------------------------------------------------------------
 
-void OpenMP::print_configuration(std::ostream &s, const bool verbose) {
+void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
   s << "Kokkos::OpenMP";
 
   const bool is_initialized = Impl::t_openmp_instance != nullptr;

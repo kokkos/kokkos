@@ -161,7 +161,7 @@ class FixedBlockSizeMemoryPool
   }
 
   KOKKOS_INLINE_FUNCTION
-  void deallocate(void* ptr, size_type alloc_size) const noexcept {
+  void deallocate(void* ptr, size_type /*alloc_size*/) const noexcept {
     // figure out which block we are
     auto offset = intptr_t(ptr) - intptr_t(m_first_block);
 

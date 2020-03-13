@@ -78,13 +78,13 @@ template <class T, int N, class PolicyType, int S>
 struct FunctorFor {
   double static_array[S];
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename PolicyType::member_type& team) const {}
+  void operator()(const typename PolicyType::member_type& /*team*/) const {}
 };
 template <class T, int N, class PolicyType, int S>
 struct FunctorReduce {
   double static_array[S];
   KOKKOS_INLINE_FUNCTION
-  void operator()(const typename PolicyType::member_type& team,
+  void operator()(const typename PolicyType::member_type& /*team*/,
                   MyArray<T, N>& lval) const {
     for (int j = 0; j < N; j++) lval.values[j] += 1 + lval.values[0];
   }

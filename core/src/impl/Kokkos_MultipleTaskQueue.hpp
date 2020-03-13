@@ -142,7 +142,7 @@ struct MultipleTaskQueueTeamEntry {
 
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION OptionalRef<task_base_type> _pop_failed_insertion(
-      int priority, TaskType type,
+      int /*priority*/, TaskType /*type*/,
       typename std::enable_if<
           !task_queue_traits::ready_queue_insertion_may_fail &&
               std::is_void<_always_void>::value,
@@ -217,7 +217,7 @@ struct MultipleTaskQueueTeamEntry {
 
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION void do_handle_failed_insertion(
-      runnable_task_base_type&& task,
+      runnable_task_base_type&& /*task*/,
       typename std::enable_if<
           !task_queue_traits::ready_queue_insertion_may_fail &&
               std::is_void<_always_void>::value,
@@ -484,32 +484,32 @@ class MultipleTaskQueue final
   // Provide a sensible default that can be overridden
   KOKKOS_INLINE_FUNCTION
   void update_scheduling_info_from_completed_predecessor(
-      runnable_task_base_type& ready_task,
-      runnable_task_base_type const& predecessor) const {
+      runnable_task_base_type& /*ready_task*/,
+      runnable_task_base_type const& /*predecessor*/) const {
     // Do nothing; we're using the extra storage for the failure linked list
   }
 
   // Provide a sensible default that can be overridden
   KOKKOS_INLINE_FUNCTION
   void update_scheduling_info_from_completed_predecessor(
-      aggregate_task_type& aggregate,
-      runnable_task_base_type const& predecessor) const {
+      aggregate_task_type& /*aggregate*/,
+      runnable_task_base_type const& /*predecessor*/) const {
     // Do nothing; we're using the extra storage for the failure linked list
   }
 
   // Provide a sensible default that can be overridden
   KOKKOS_INLINE_FUNCTION
   void update_scheduling_info_from_completed_predecessor(
-      aggregate_task_type& aggregate,
-      aggregate_task_type const& predecessor) const {
+      aggregate_task_type& /*aggregate*/,
+      aggregate_task_type const& /*predecessor*/) const {
     // Do nothing; we're using the extra storage for the failure linked list
   }
 
   // Provide a sensible default that can be overridden
   KOKKOS_INLINE_FUNCTION
   void update_scheduling_info_from_completed_predecessor(
-      runnable_task_base_type& ready_task,
-      aggregate_task_type const& predecessor) const {
+      runnable_task_base_type& /*ready_task*/,
+      aggregate_task_type const& /*predecessor*/) const {
     // Do nothing; we're using the extra storage for the failure linked list
   }
 

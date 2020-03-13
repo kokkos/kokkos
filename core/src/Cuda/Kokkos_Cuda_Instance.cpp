@@ -755,7 +755,7 @@ int Cuda::impl_is_initialized()
 void Cuda::initialize(const Cuda::SelectDevice config, size_t num_instances)
 #else
 void Cuda::impl_initialize(const Cuda::SelectDevice config,
-                           size_t num_instances)
+                           size_t /*num_instances*/)
 #endif
 {
   Impl::CudaInternal::singleton().initialize(config.cuda_device_id, 0);

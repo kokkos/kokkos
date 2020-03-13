@@ -539,6 +539,8 @@ class HostThreadTeamMember {
   }
 #else
   {
+    (void)value;
+    (void)source_team_rank;
     Kokkos::abort("HostThreadTeamMember team_broadcast\n");
   }
 #endif
@@ -575,6 +577,9 @@ class HostThreadTeamMember {
   }
 #else
   {
+    (void)f;
+    (void)value;
+    (void)source_team_rank;
     Kokkos::abort("HostThreadTeamMember team_broadcast\n");
   }
 #endif
@@ -641,6 +646,8 @@ class HostThreadTeamMember {
   }
 #else
   {
+    (void)reducer;
+    (void)contribution;
     Kokkos::abort("HostThreadTeamMember team_reduce\n");
   }
 #endif
@@ -752,6 +759,8 @@ class HostThreadTeamMember {
   }
 #else
   {
+    (void)value;
+    (void)global;
     Kokkos::abort("HostThreadTeamMember team_scan\n");
     return T();
   }

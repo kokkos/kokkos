@@ -268,7 +268,7 @@ struct TestMDRange_2D {
       double sum = 0.0;
       parallel_reduce(
           range,
-          KOKKOS_LAMBDA(const int i, const int j, double &lsum) {
+          KOKKOS_LAMBDA(const int /*i*/, const int /*j*/, double &lsum) {
             lsum += 1.0;
           },
           sum);
@@ -915,9 +915,8 @@ struct TestMDRange_3D {
       double sum = 0.0;
       parallel_reduce(
           range,
-          KOKKOS_LAMBDA(const int i, const int j, const int k, double &lsum) {
-            lsum += 1.0;
-          },
+          KOKKOS_LAMBDA(const int /*i*/, const int /*j*/, const int /*k*/,
+                        double &lsum) { lsum += 1.0; },
           sum);
       ASSERT_EQ(sum, N0 * N1 * N2);
     }
@@ -1549,8 +1548,8 @@ struct TestMDRange_4D {
       double sum = 0.0;
       parallel_reduce(
           range,
-          KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
-                        double &lsum) { lsum += 1.0; },
+          KOKKOS_LAMBDA(const int /*i*/, const int /*j*/, const int /*k*/,
+                        const int /*l*/, double &lsum) { lsum += 1.0; },
           sum);
       ASSERT_EQ(sum, N0 * N1 * N2 * N3);
     }
@@ -2201,8 +2200,9 @@ struct TestMDRange_5D {
       double sum = 0.0;
       parallel_reduce(
           range,
-          KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
-                        const int m, double &lsum) { lsum += 1.0; },
+          KOKKOS_LAMBDA(const int /*i*/, const int /*j*/, const int /*k*/,
+                        const int /*l*/, const int /*m*/,
+                        double &lsum) { lsum += 1.0; },
           sum);
       ASSERT_EQ(sum, N0 * N1 * N2 * N3 * N4);
     }
@@ -2787,8 +2787,8 @@ struct TestMDRange_6D {
       double sum = 0.0;
       parallel_reduce(
           range,
-          KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
-                        const int m, const int n,
+          KOKKOS_LAMBDA(const int /*i*/, const int /*j*/, const int /*k*/,
+                        const int /*l*/, const int /*m*/, const int /*n*/,
                         double &lsum) { lsum += 1.0; },
           sum);
       ASSERT_EQ(sum, N0 * N1 * N2 * N3 * N4 * N5);

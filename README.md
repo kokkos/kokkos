@@ -115,27 +115,27 @@ backend combinations (i.e. OpenMP, Pthreads, Serial, OpenMP+Serial, ...).
 We are using the following set of flags:
 * GCC:
    ````
-      -Wall -Wshadow -pedantic
+      -Wall -Wunused-parameter -Wshadow -pedantic
       -Werror -Wsign-compare -Wtype-limits
       -Wignored-qualifiers -Wempty-body
       -Wclobbered -Wuninitialized
    ````
 * Intel:
     ````
-      -Wall -Wshadow -pedantic
+      -Wall -Wunused-parameter -Wshadow -pedantic
       -Werror -Wsign-compare -Wtype-limits
       -Wuninitialized
     ````
 * Clang:
     ````
-      -Wall -Wshadow -pedantic
+      -Wall -Wunused-parameter -Wshadow -pedantic
       -Werror -Wsign-compare -Wtype-limits
       -Wuninitialized
     ````
 
 * NVCC:
   ````
-    -Wall -Wshadow -pedantic
+    -Wall -Wunused-parameter -Wshadow -pedantic
     -Werror -Wsign-compare -Wtype-limits
     -Wuninitialized
   ````
