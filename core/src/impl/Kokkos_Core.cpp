@@ -1035,6 +1035,12 @@ void print_configuration(std::ostream& out, const bool detail) {
 #else
   msg << "no" << std::endl;
 #endif
+  msg << "  KOKKOS_ENABLE_HIP: ";
+#ifdef KOKKOS_ENABLE_HIP
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
   msg << "  KOKKOS_ENABLE_OPENMP: ";
 #ifdef KOKKOS_ENABLE_OPENMP
   msg << "yes" << std::endl;
@@ -1063,6 +1069,12 @@ void print_configuration(std::ostream& out, const bool detail) {
   msg << "Default Device:" << std::endl;
   msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA: ";
 #ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP: ";
+#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;
@@ -1273,9 +1285,22 @@ void print_configuration(std::ostream& out, const bool detail) {
 
 #endif
 
+#ifdef KOKKOS_ENABLE_HIP
+  msg << "HIP Options:" << std::endl;
+  msg << "  KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE: ";
+#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+#endif
+
   msg << "\nRuntime Configuration:" << std::endl;
 #ifdef KOKKOS_ENABLE_CUDA
   Cuda::print_configuration(msg, detail);
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+  Experimental::HIP::print_configuration(msg, detail);
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
   OpenMP::print_configuration(msg, detail);
