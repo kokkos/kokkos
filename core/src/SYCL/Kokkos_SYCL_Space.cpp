@@ -66,6 +66,22 @@
 /*--------------------------------------------------------------------------*/
 namespace Kokkos {
 namespace Impl {
+namespace {
+void USM_memcpy(cl::sycl::queue& q, void* dst, const void* src, size_t n) {
+  cl::sycl::event e = q.memcpy(dst, src, n);
+  e.wait();
+}
+
+void USM_memcpy(Kokkos::Experimental::Impl::SYCLInternal& space, void* dst,
+                const void* src, size_t n) {
+  USM_memcpy(*space.m_queue, dst, src, n);
+}
+
+void USM_memcpy(void* dst, const void* src, size_t n) {
+  USM_memcpy(Kokkos::Experimental::Impl::SYCLInternal::singleton(), dst, src,
+             n);
+}
+}  // namespace
 
 DeepCopy<Kokkos::Experimental::SYCLSpace, Kokkos::Experimental::SYCLSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
@@ -157,7 +173,14 @@ DeepCopy<Kokkos::Experimental::SYCLHostUSMSpace,
          Kokkos::Experimental::SYCLHostUSMSpace, Kokkos::Experimental::SYCL>::
     DeepCopy(const Kokkos::Experimental::SYCL& instance, void* dst,
              const void* src, size_t n) {
-  memcpy(dst, src, n);
+  USM_memcpy(*instance.impl_internal_space_instance(), dst, src, n);
+}
+
+DeepCopy<Kokkos::Experimental::SYCLHostUSMSpace,
+         Kokkos::Experimental::SYCLHostUSMSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(dst, src, n);
 }
 
 DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLHostUSMSpace,
