@@ -186,7 +186,13 @@ DeepCopy<Kokkos::Experimental::SYCLHostUSMSpace,
 DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLHostUSMSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
                                                size_t n) {
-  memcpy(dst, src, n);
+  USM_memcpy(dst, src, n);
+}
+
+DeepCopy<Kokkos::Experimental::SYCLHostUSMSpace, Kokkos::HostSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(dst, src, n);
 }
 
 }  // namespace Impl
