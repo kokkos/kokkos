@@ -296,6 +296,20 @@ IF (Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
   )
 ENDIF()
 
+#Right now we cannot get the compiler ID when cross-compiling, so just check
+#that HIP is enabled
+IF (Kokkos_ENABLE_HIP)
+  IF (Kokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fgpu-rdc
+    )
+  ELSE()
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fno-gpu-rdc
+    )
+  ENDIF()
+ENDIF()
+
 
 SET(CUDA_ARCH_ALREADY_SPECIFIED "")
 FUNCTION(CHECK_CUDA_ARCH ARCH FLAG)
