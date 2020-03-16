@@ -302,7 +302,7 @@ namespace Profiling {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<Kokkos::Experimental::HPX> {
-  constexpr DeviceType id = DeviceType::HPX;
+  constexpr static DeviceType id = DeviceType::HPX;
 };
 }  // namespace Experimental
 }  // namespace Profiling

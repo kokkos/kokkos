@@ -683,7 +683,7 @@ struct TestViewLayoutTiled {
 #endif
   }  // end test_view_layout_tiled_3d
 
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+#if !defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
   static void test_view_layout_tiled_4d(const int, const int, const int,
                                         const int){
 #else
