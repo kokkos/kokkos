@@ -76,7 +76,7 @@
 #if defined(_WIN32)
 #define KOKKOS_ENABLE_WINDOWS_ATOMICS
 #else
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
 
 // Compiling NVIDIA device code, must use Cuda atomics:
 
