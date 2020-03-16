@@ -193,8 +193,6 @@ class Threads {
   KOKKOS_INLINE_FUNCTION static int impl_thread_pool_rank() { return 0; }
 #endif
 
-  uint32_t impl_instance_id() const noexcept { return 0; }
-
   inline static unsigned impl_max_hardware_threads() {
     return impl_thread_pool_size(0);
   }
@@ -202,6 +200,8 @@ class Threads {
     return impl_thread_pool_rank();
   }
 #endif
+
+  uint32_t impl_instance_id() const noexcept { return 0; }
 
   static const char* name();
   //@}
