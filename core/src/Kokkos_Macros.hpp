@@ -173,9 +173,7 @@
 #define KOKKOS_IMPL_HIP_CLANG_WORKAROUND
 
 #define HIP_ENABLE_PRINTF
-#define HCC_ENABLE_PRINTF
 #include <hip/hip_runtime.h>
-#include <hc_printf.hpp>
 #include <hip/hip_runtime_api.h>
 
 #define KOKKOS_LAMBDA [=] __host__ __device__
