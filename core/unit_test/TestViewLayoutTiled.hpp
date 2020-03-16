@@ -112,8 +112,10 @@ struct TestViewLayoutTiled {
       Kokkos::Iterate::Right, Kokkos::Iterate::Right, T0, T1, T2, T3>
       LayoutRR_4D_2x4x4x2;
 
+#if !defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  static void test_view_layout_tiled_2d(const int, const int) {
+#else
   static void test_view_layout_tiled_2d(const int N0, const int N1) {
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
     const int FT = T0 * T1;
 
     const int NT0 = int(std::ceil(N0 / T0));
@@ -384,10 +386,11 @@ struct TestViewLayoutTiled {
 #endif
   }  // end test_view_layout_tiled_2d
 
+#if !defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  static void test_view_layout_tiled_3d(const int, const int, const int) {
+#else
   static void test_view_layout_tiled_3d(const int N0, const int N1,
                                         const int N2) {
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-
     const int FT = T0 * T1 * T2;
 
     const int NT0 = int(std::ceil(N0 / T0));
@@ -680,9 +683,12 @@ struct TestViewLayoutTiled {
 #endif
   }  // end test_view_layout_tiled_3d
 
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  static void test_view_layout_tiled_4d(const int, const int, const int,
+                                        const int){
+#else
   static void test_view_layout_tiled_4d(const int N0, const int N1,
                                         const int N2, const int N3) {
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
     const int FT = T0 * T1 * T2 * T3;
 
     const int NT0 = int(std::ceil(N0 / T0));
