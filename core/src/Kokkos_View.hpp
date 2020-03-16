@@ -464,7 +464,7 @@ constexpr bool is_always_assignable(const Kokkos::View<ViewTDst...>&,
 }
 
 template <class... ViewTDst, class... ViewTSrc>
-constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
+constexpr bool is_assignable(const Kokkos::View<ViewTDst...>&,
                              const Kokkos::View<ViewTSrc...>& src) {
   using DstTraits = typename Kokkos::View<ViewTDst...>::traits;
   using SrcTraits = typename Kokkos::View<ViewTSrc...>::traits;
