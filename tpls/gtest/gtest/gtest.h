@@ -2192,7 +2192,7 @@ inline void FlushInfoLog() { fflush(NULL); }
 // const Foo*).  When you use ImplicitCast_, the compiler checks that
 // the cast is safe.  Such explicit ImplicitCast_s are necessary in
 // surprisingly many situations where C++ demands an exact type match
-// instead of an argument type convertable to a target type.
+// instead of an argument type convertible to a target type.
 //
 // The syntax for using ImplicitCast_ is the same as for static_cast:
 //
@@ -9945,7 +9945,7 @@ void UniversalTersePrint(const T& value, ::std::ostream* os) {
 // NUL-terminated string.
 template <typename T>
 void UniversalPrint(const T& value, ::std::ostream* os) {
-  // A workarond for the bug in VC++ 7.1 that prevents us from instantiating
+  // A workaround for the bug in VC++ 7.1 that prevents us from instantiating
   // UniversalPrinter with T directly.
   typedef T T1;
   UniversalPrinter<T1>::Print(value, os);
@@ -18672,7 +18672,7 @@ class GTEST_API_ UnitTest {
   internal::UnitTestImpl* impl() { return impl_; }
   const internal::UnitTestImpl* impl() const { return impl_; }
 
-  // These classes and funcions are friends as they need to access private
+  // These classes and functions are friends as they need to access private
   // members of UnitTest.
   friend class Test;
   friend class internal::AssertHelper;

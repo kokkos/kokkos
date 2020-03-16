@@ -13,7 +13,7 @@ int main() {
     case 5: printf("Maxwell"); break;
     case 6: printf("Pascal"); break;
     default:
-      fprintf(stderr, "Unspported Device %d%d\n", (int)prop.major,
+      fprintf(stderr, "Unsupported Device %d%d\n", (int)prop.major,
               (int)prop.minor);
       return -1;
   }

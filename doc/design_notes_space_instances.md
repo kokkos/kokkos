@@ -6,7 +6,7 @@
 
 ## Requirements
 
- * Backwards compatable with existing Kokkos API
+ * Backwards compatible with existing Kokkos API
  * Support existing Host execution spaces (Serial, Threads, OpenMP)
  * Support DARMA threading model (may require a new Host execution space)
  * Support Uintah threading model, i.e. indepentant worker threadpools working of of shared task queues
@@ -16,7 +16,7 @@
 
   * Parallel work is *dispatched* on an execution space instance
 
-  * Execution space instances are conceptually disjoint/independant from each other
+  * Execution space instances are conceptually disjoint/independent from each other
 
 
 ## Host Execution Space Instances
@@ -35,7 +35,7 @@
 
   *  The control thread is a member of the instance
 
-  *  The pool of threads associated with an instances is not mutatable during that instance existance
+  *  The pool of threads associated with an instances is not mutatable during that instance existence
 
   *  The pool of threads associated with an instance may be masked
 
@@ -103,7 +103,7 @@ public:
   //   max_hardware_threads
   //
   // Each control functor will accept a handle to its new default instance
-  // Each instance must be independant of all other instances
+  // Each instance must be independent of all other instances
   //   i.e. no assumption on scheduling between instances
   // The user is responible for checking the return code for errors
   static int run_instances( std::vector< InstanceRequest> const& requests );

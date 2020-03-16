@@ -341,7 +341,7 @@ struct is_space {
       host_mirror_space;
 };
 
-// For backward compatiblity
+// For backward compatibility
 
 namespace Impl {
 
