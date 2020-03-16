@@ -138,6 +138,7 @@ class FixedBlockSizeMemoryPool
 
   KOKKOS_INLINE_FUNCTION
   void* allocate(size_type alloc_size) const noexcept {
+    (void)alloc_size;
     KOKKOS_EXPECTS(alloc_size <= Size);
     auto free_idx_counter = Kokkos::atomic_fetch_add(
         (volatile size_type*)&m_first_free_idx, size_type(1));
