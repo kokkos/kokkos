@@ -169,7 +169,10 @@ class ThreadsExecTeamMember {
   KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& value,
                                              const int& thread_id) const {
 #if !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    {}
+    {
+      (void)value;
+      (void)thread_id;
+    }
 #else
     // Make sure there is enough scratch space:
     typedef typename if_c<sizeof(ValueType) < TEAM_REDUCE_SIZE, ValueType,
@@ -189,7 +192,11 @@ class ThreadsExecTeamMember {
   KOKKOS_INLINE_FUNCTION void team_broadcast(Closure const& f, ValueType& value,
                                              const int& thread_id) const {
 #if !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    {}
+    {
+      (void)f;
+      (void)value;
+      (void)thread_id;
+    }
 #else
     // Make sure there is enough scratch space:
     typedef typename if_c<sizeof(ValueType) < TEAM_REDUCE_SIZE, ValueType,
@@ -211,7 +218,7 @@ class ThreadsExecTeamMember {
       team_reduce(const Type& value) const
 #if !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   {
-    return Type();
+    return value;
   }
 #else
   {
@@ -313,7 +320,8 @@ class ThreadsExecTeamMember {
                                            ArgType* const global_accum) const
 #if !defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   {
-    return ArgType();
+    (void)global_accum;
+    return value;
   }
 #else
   {
