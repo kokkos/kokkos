@@ -214,7 +214,7 @@ def find_git_commit_information(options):
 
 def do_git_commit(message, options):
   if options.verbose_mode:
-    print "Commiting to destination repository."
+    print "Committing to destination repository."
 
   git_add_cmd = ["git", "add", "-A"]
   run_cmd(git_add_cmd, options, options.destination)
@@ -283,7 +283,7 @@ if (__name__ == "__main__"):
     options = parse_cmdline(__doc__)
     main(options)
   except RuntimeError, e:
-    print "Error occured:", e
+    print "Error occurred:", e
     if "--debug" in sys.argv:
       traceback.print_exc()
     sys.exit(1)
