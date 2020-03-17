@@ -91,11 +91,11 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   using functor_type = FunctorType;
 
   inline __device__ void operator()(void) const {
-    const Member work_stride = blockDim.y * gridDim.x;
+    const Member work_stride = hipBlockDim_y * hipGridDim_x;
     const Member work_end    = m_policy.end();
 
     for (Member iwork =
-             m_policy.begin() + threadIdx.y + blockDim.y * blockIdx.x;
+             m_policy.begin() + hipThreadIdx_y + hipBlockDim_y * hipBlockIdx_x;
          iwork < work_end;
          iwork = iwork < work_end - work_stride ? iwork + work_stride
                                                 : work_end) {
