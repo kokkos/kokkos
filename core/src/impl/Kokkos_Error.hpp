@@ -173,7 +173,7 @@ void abort(const char *const message) {
 #if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
   Kokkos::Impl::cuda_abort(message);
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
-  // TODO improve this once HIP supports asserting in a kernel properly
+  // FIXME_HIP improve this once HIP supports asserting in a kernel properly
   printf("%s", message);
 #elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__)
   Kokkos::Impl::host_abort(message);
