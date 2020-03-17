@@ -57,6 +57,7 @@ struct TestRange {
   typedef Kokkos::View<int *, ExecSpace> view_type;
 
   view_type m_flags;
+  view_type result_view;
 
   struct VerifyInitTag {};
   struct ResetTag {};
@@ -71,7 +72,9 @@ struct TestRange {
   int offset;
 #endif
   TestRange(const size_t N_)
-      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_), N(N_) {
+      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_),
+        result_view(Kokkos::ViewAllocateWithoutInitializing("results"), N_),
+        N(N_) {
 #ifdef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
     offset = 13;
 #endif
@@ -228,15 +231,31 @@ struct TestRange {
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, ScheduleType>(0, N),
                          *this);
 
+    auto check_scan_results = [&]() {
+      auto const host_mirror =
+          Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), result_view);
+      for (unsigned int i = 0; i < N; ++i) {
+        if (size_t(((i + 1) * i) / 2) != host_mirror(i)) {
+          std::cout << "Error at " << i << std::endl;
+          EXPECT_EQ(size_t(((i + 1) * i) / 2), size_t(host_mirror(i)));
+        }
+      }
+    };
+
     Kokkos::parallel_scan(
         "TestKernelScan",
         Kokkos::RangePolicy<ExecSpace, ScheduleType, OffsetTag>(0, N), *this);
+
+    check_scan_results();
 
     int total = 0;
     Kokkos::parallel_scan(
         "TestKernelScanWithTotal",
         Kokkos::RangePolicy<ExecSpace, ScheduleType, OffsetTag>(0, N), *this,
         total);
+
+    check_scan_results();
+
     ASSERT_EQ(size_t((N - 1) * (N) / 2), size_t(total));  // sum( 0 .. N-1 )
   }
 
@@ -247,9 +266,10 @@ struct TestRange {
 
     if (final) {
       if (update != (i * (i + 1)) / 2) {
-        printf("TestRange::test_scan error %d : %d != %d\n", i,
-               (i * (i + 1)) / 2, m_flags(i));
+        printf("TestRange::test_scan error (%d,%d) : %d != %d\n", i, m_flags(i),
+               (i * (i + 1)) / 2, update);
       }
+      result_view(i) = update;
     }
   }
 
@@ -413,8 +433,58 @@ TEST(TEST_CATEGORY, range_reduce) {
   }
 }
 
+#ifdef KOKKOS_ENABLE_HIP
+struct DummyFunctor {
+  using value_type = int;
+  void operator()(const int i, value_type &update, bool final) const {}
+};
+
+template <int N>
+__global__ void start_intra_block_scan() {
+  __shared__ int values[N];
+  const int i = hipThreadIdx_y;
+  values[i]   = i + 1;
+  __syncthreads();
+
+  DummyFunctor f;
+  Kokkos::Impl::hip_intra_block_reduce_scan<true, DummyFunctor, void>(f,
+                                                                      values);
+
+  __syncthreads();
+  if (values[i] != ((i + 2) * (i + 1)) / 2) {
+    printf("Value for %d should be %d but is %d\n", i, ((i + 2) * (i + 1)) / 2,
+           values[i]);
+    Kokkos::abort("Test for intra_block_reduce_scan failed!");
+  }
+}
+
+template <int N>
+void test_intra_block_scan() {
+  dim3 grid(1, 1, 1);
+  dim3 block(1, N, 1);
+  hipLaunchKernelGGL(start_intra_block_scan<N>, grid, block, 0, 0);
+}
+#endif
+
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, range_scan) {
+#ifdef KOKKOS_ENABLE_HIP
+  if (std::is_same<
+          TEST_EXECSPACE,
+          typename Kokkos::Experimental::HIPSpace::execution_space>::value) {
+    test_intra_block_scan<1>();
+    test_intra_block_scan<2>();
+    test_intra_block_scan<4>();
+    test_intra_block_scan<8>();
+    test_intra_block_scan<16>();
+    test_intra_block_scan<32>();
+    test_intra_block_scan<64>();
+    test_intra_block_scan<128>();
+    test_intra_block_scan<256>();
+    test_intra_block_scan<512>();
+    test_intra_block_scan<1024>();
+  }
+#endif
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
     f.test_scan();
@@ -423,7 +493,7 @@ TEST(TEST_CATEGORY, range_scan) {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(0);
     f.test_scan();
   }
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_ROCM)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(0);
     f.test_dynamic_policy();
@@ -438,7 +508,7 @@ TEST(TEST_CATEGORY, range_scan) {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(3);
     f.test_scan();
   }
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_ROCM)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(3);
     f.test_dynamic_policy();
@@ -453,7 +523,7 @@ TEST(TEST_CATEGORY, range_scan) {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(1001);
     f.test_scan();
   }
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_ROCM)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(1001);
     f.test_dynamic_policy();
