@@ -188,37 +188,31 @@ __device__ void hip_intra_block_reduce_scan(
 
   unsigned int const value_count   = ValueTraits::value_count(functor);
   unsigned int const BlockSizeMask = hipBlockDim_y - 1;
+  int const WarpMask = Experimental::Impl::HIPTraits::WarpSize - 1;
 
   // Must have power of two thread count
-
-  if (BlockSizeMask & hipBlockDim_y) {
-    Kokkos::abort("HIP::hip_intra_block_scan requires power-of-two blockDim");
+  if ((hipBlockDim_y - 1) & hipBlockDim_y) {
+    Kokkos::abort(
+        "HIP::hip_intra_block_reduce_scan requires power-of-two y- blockDim\n");
   }
 
-  auto block_reduce_step =
-      [&functor, value_count](int const R, pointer_type const TD, int const S) {
-        if (!(R & ((1 << (S + 1)) - 1))) {
-          ValueJoin::join(functor, TD, (TD - (value_count << S)));
-        }
-      };
-
-  auto block_scan_step = [&functor, value_count](pointer_type const TD,
-                                                 int const N, int const S) {
-    if (N == (1 << S)) {
+  auto block_reduce_step = [&functor, value_count, base_data](
+                               int const R, pointer_type const TD,
+                               int const S) {
+    if (R > ((1 << S) - 1)) {
       ValueJoin::join(functor, TD, (TD - (value_count << S)));
     }
   };
 
-  const unsigned rtid_intra      = hipThreadIdx_y ^ BlockSizeMask;
-  const pointer_type tdata_intra = base_data + value_count * hipThreadIdx_y;
-
   {  // Intra-warp reduction:
+    const unsigned rtid_intra      = hipThreadIdx_y & WarpMask;
+    const pointer_type tdata_intra = base_data + value_count * hipThreadIdx_y;
+
     block_reduce_step(rtid_intra, tdata_intra, 0);
     block_reduce_step(rtid_intra, tdata_intra, 1);
     block_reduce_step(rtid_intra, tdata_intra, 2);
     block_reduce_step(rtid_intra, tdata_intra, 3);
     block_reduce_step(rtid_intra, tdata_intra, 4);
-    // TODO check: one more than CUDA because bigger warpsize
     block_reduce_step(rtid_intra, tdata_intra, 5);
   }
 
@@ -226,12 +220,12 @@ __device__ void hip_intra_block_reduce_scan(
 
   {  // Inter-warp reduce-scan by a single warp to avoid extra synchronizations
     unsigned int const rtid_inter =
-        (hipThreadIdx_y ^ BlockSizeMask)
-        << ::Kokkos::Experimental::Impl::HIPTraits::WarpIndexShift;
+        ((hipThreadIdx_y + 1)
+         << Experimental::Impl::HIPTraits::WarpIndexShift) -
+        1;
 
     if (rtid_inter < hipBlockDim_y) {
-      pointer_type const tdata_inter =
-          base_data + value_count * (rtid_inter ^ BlockSizeMask);
+      pointer_type const tdata_inter = base_data + value_count * rtid_inter;
 
       if ((1 << 6) < BlockSizeMask) {
         block_reduce_step(rtid_inter, tdata_inter, 6);
@@ -248,60 +242,22 @@ __device__ void hip_intra_block_reduce_scan(
       if ((1 << 10) < BlockSizeMask) {
         block_reduce_step(rtid_inter, tdata_inter, 10);
       }
-
-      int constexpr warp_size =
-          ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
-      if (DoScan) {
-        int n =
-            (rtid_inter & warp_size)
-                ? warp_size
-                : ((rtid_inter & 2 * warp_size)
-                       ? 2 * warp_size
-                       : ((rtid_inter & 4 * warp_size)
-                              ? 4 * warp_size
-                              : ((rtid_inter & 8 * warp_size) ? 8 * warp_size
-                                                              : 0)));
-
-        if (!(rtid_inter + n < hipBlockDim_y)) n = 0;
-
-        block_scan_step(tdata_inter, n, 9);
-        block_scan_step(tdata_inter, n, 8);
-        block_scan_step(tdata_inter, n, 7);
-        block_scan_step(tdata_inter, n, 6);
-      }
     }
   }
 
   __syncthreads();  // Wait for inter-warp reduce-scan to complete
 
-  // TODO check: increased size because of warpsize difference
-  // TODO the runtime check could be avoided
   if (DoScan) {
-    int n = (rtid_intra & 1)
-                ? 1
-                : ((rtid_intra & 2)
-                       ? 2
-                       : ((rtid_intra & 4)
-                              ? 4
-                              : ((rtid_intra & 8)
-                                     ? 8
-                                     : ((rtid_intra & 16)
-                                            ? 16
-                                            : ((rtid_intra & 32) ? 32 : 0)))));
-
-    if (!(rtid_intra + n < hipBlockDim_y)) n = 0;
-    block_scan_step(tdata_intra, n, 5);
-    __threadfence_block();
-    block_scan_step(tdata_intra, n, 4);
-    __threadfence_block();
-    block_scan_step(tdata_intra, n, 3);
-    __threadfence_block();
-    block_scan_step(tdata_intra, n, 2);
-    __threadfence_block();
-    block_scan_step(tdata_intra, n, 1);
-    __threadfence_block();
-    block_scan_step(tdata_intra, n, 0);
-    __threadfence_block();
+    // Update all the values for the respective warps (except for the last one)
+    // by adding from the last value of the previous warp.
+    if (hipThreadIdx_y >= Experimental::Impl::HIPTraits::WarpSize &&
+        (hipThreadIdx_y & WarpMask) !=
+            Experimental::Impl::HIPTraits::WarpSize - 1) {
+      const int offset_to_previous_warp_total =
+          (hipThreadIdx_y & (~WarpMask)) - 1;
+      ValueJoin::join(functor, base_data + value_count * hipThreadIdx_y,
+                      base_data + value_count * offset_to_previous_warp_total);
+    }
   }
 }
 
