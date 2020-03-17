@@ -370,7 +370,7 @@ __device__ bool hip_single_inter_block_reduce_scan2(
       for (size_type i = b; i < e; ++i) {
         size_type* const global_value = global_data + word_count.value * i;
         ValueJoin::join(functor, shared_value, global_value);
-        ValueOps ::copy(functor, global_value, shared_value);
+        ValueOps::copy(functor, global_value, shared_value);
       }
     }
   }
