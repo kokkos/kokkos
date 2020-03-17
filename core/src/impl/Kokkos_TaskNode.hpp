@@ -447,12 +447,17 @@ class RunnableTaskBase
   function_type m_apply;
   task_base_type* m_predecessor = nullptr;
 
+  template <typename... Args>
+  static constexpr void ignore_unused_parameters_workaround(Args...) {}
+
  public:
   template <class... Args>
   // requires std::is_constructible_v<base_t, Args&&...>
   KOKKOS_INLINE_FUNCTION constexpr explicit RunnableTaskBase(
       function_type apply_function_ptr, Args&&... args)
-      : base_t(std::forward<Args>(args)...), m_apply(apply_function_ptr) {}
+      : base_t(std::forward<Args>(args)...), m_apply(apply_function_ptr) {
+    ignore_unused_parameters_workaround(args...);
+  }
 
   KOKKOS_INLINE_FUNCTION
   bool has_predecessor() const { return m_predecessor != nullptr; }
