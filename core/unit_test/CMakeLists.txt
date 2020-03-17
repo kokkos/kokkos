@@ -262,6 +262,7 @@ if(Kokkos_ENABLE_HIP)
       UnitTestMainInit.cpp
       hip/TestHIP_Init.cpp
       hip/TestHIP_RangePolicy.cpp
+      hip/TestHIP_RangePolicyRequire.cpp
       hip/TestHIP_Reductions.cpp
       hip/TestHIP_Reducers_a.cpp
       hip/TestHIP_Reducers_b.cpp
