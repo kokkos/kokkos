@@ -104,7 +104,8 @@ int HIPInternal::was_initialized = 0;
 int HIPInternal::was_finalized   = 0;
 //----------------------------------------------------------------------------
 
-void HIPInternal::print_configuration(std::ostream &s) const {
+void HIPInternal::print_configuration(std::ostream & /*s*/) const {
+  // FIXME_HIP
   /*const HIPInternalDevices & dev_info = HIPInternalDevices::singleton();
 
 #if defined( KOKKOS_ENABLE_HIP )

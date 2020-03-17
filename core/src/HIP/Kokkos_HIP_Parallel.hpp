@@ -109,10 +109,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
 };
 
 template <class... Properties>
-TeamPolicyInternal<Kokkos::Experimental::HIP,
-                   Properties...>::TeamPolicyInternal(int league_size,
-                                                      int team_size_request,
-                                                      int vector_length_request)
+TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>::
+    TeamPolicyInternal(int league_size, int team_size_request,
+                       int /*vector_length_request*/)
     : m_space(typename traits::execution_space()),
       m_league_size(league_size),
       m_team_size(team_size_request),
@@ -121,13 +120,13 @@ TeamPolicyInternal<Kokkos::Experimental::HIP,
       m_chunk_size(32) {
   // FIXME add a check that the league size is permissible
   // FIXME add a check that the block size is permissible
+  // FIXME use vector_length_request
 }
 
 template <class... Properties>
-TeamPolicyInternal<Kokkos::Experimental::HIP,
-                   Properties...>::TeamPolicyInternal(int league_size,
-                                                      Kokkos::AUTO_t const &,
-                                                      int vector_length_request)
+TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>::
+    TeamPolicyInternal(int league_size, Kokkos::AUTO_t const &,
+                       int /*vector_length_request*/)
     : m_space(typename traits::execution_space()),
       m_league_size(league_size),
       m_team_size(-1),
@@ -135,6 +134,7 @@ TeamPolicyInternal<Kokkos::Experimental::HIP,
       m_thread_scratch_size{0, 0},
       m_chunk_size(32) {
   // FIXME add a check that the league size is permissible
+  // FIXME use vector_length_request
 }
 
 template <class... Properties>
