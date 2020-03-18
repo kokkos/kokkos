@@ -83,6 +83,7 @@
 #include <hpx/runtime.hpp>
 #include <hpx/runtime/threads/run_as_hpx_thread.hpp>
 #include <hpx/runtime/threads/threadmanager.hpp>
+#include <hpx/runtime/thread_pool_helpers.hpp>
 
 #include <iostream>
 #include <memory>
