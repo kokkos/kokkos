@@ -19,7 +19,10 @@ struct TestAssignability {
   template <class MappingType>
   static void try_assign(
       ViewTypeDst&, ViewTypeSrc&,
-      typename std::enable_if<!MappingType::is_assignable>::type* = nullptr) {}
+      typename std::enable_if<!MappingType::is_assignable>::type* = nullptr) {
+    Kokkos::Impl::throw_runtime_exception(
+        "TestAssignability::try_assign: Unexpected call path");
+  }
 
   template <class... Dimensions>
   static void test(bool always, bool sometimes, Dimensions... dims) {
