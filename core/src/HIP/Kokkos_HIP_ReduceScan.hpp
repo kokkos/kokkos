@@ -193,7 +193,8 @@ __device__ void hip_intra_block_reduce_scan(
   // Must have power of two thread count
   if ((hipBlockDim_y - 1) & hipBlockDim_y) {
     Kokkos::abort(
-        "HIP::hip_intra_block_reduce_scan requires power-of-two y- blockDim\n");
+        "HIP::hip_intra_block_reduce_scan requires power-of-two "
+        "hipBlockDim_y\n");
   }
 
   auto block_reduce_step = [&functor, value_count, base_data](

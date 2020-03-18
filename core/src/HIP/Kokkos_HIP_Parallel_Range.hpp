@@ -535,8 +535,8 @@ class ParallelScanHIPBase {
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    // hipBlockDim_y must be power of two = 128 (2 warps) or 256 (4 warps) or 512
-    // (8 warps) hipGridDim_x <= hipBlockDim_y * hipBlockDim_y
+    // hipBlockDim_y must be power of two = 128 (2 warps) or 256 (4 warps) or
+    // 512 (8 warps) hipGridDim_x <= hipBlockDim_y * hipBlockDim_y
     //
     // TODO check best option
 
