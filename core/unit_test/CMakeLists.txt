@@ -268,6 +268,7 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_Reducers_b.cpp
       hip/TestHIP_Reducers_c.cpp
       hip/TestHIP_Reducers_d.cpp
+      hip/TestHIP_Scan.cpp
       hip/TestHIP_MDRange_a.cpp
       hip/TestHIP_MDRange_b.cpp
       hip/TestHIP_MDRange_c.cpp
