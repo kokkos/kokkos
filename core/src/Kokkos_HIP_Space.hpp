@@ -59,9 +59,7 @@
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#endif
 
 #include <hip/hip_runtime_api.h>
 /*--------------------------------------------------------------------------*/
