@@ -490,9 +490,8 @@ class ParallelScanHIPBase {
         shared_data[i + word_count.value] = shared_data[i] = shared_accum[i];
       }
 
-      if (Experimental::Impl::HIPTraits::WarpSize < word_count.value) {
-        __syncthreads();
-      }  // Protect against large scan values.
+      // Make sure the write is seen by all threads
+      __threadfence_block();
 
       // Call functor to accumulate inclusive scan value for this work item
       const bool doWork = (iwork < range.end());
@@ -555,18 +554,19 @@ class ParallelScanHIPBase {
   inline void impl_execute() {
     const index_type nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
-      enum { GridMaxComputeCapability_2x = 0x0ffff };
+      // FIXME_HIP we cannot choose it larger for large work sizes to work
+      // correctly
+      const int GridMaxComputeCapability_2x = 0x01fff;
 
-      const int block_size = local_block_size(m_functor);
+      // FIXME_HIP block sizes greater than 256 don't work correctly
+      const int block_size = std::min(local_block_size(m_functor), 256u);
 
       const int grid_max =
-          (block_size * block_size) < GridMaxComputeCapability_2x
-              ? (block_size * block_size)
-              : GridMaxComputeCapability_2x;
+          std::min(block_size * block_size, GridMaxComputeCapability_2x);
 
       // At most 'max_grid' blocks:
       const int max_grid =
-          std::min(int(grid_max), int((nwork + block_size - 1) / block_size));
+          std::min<int>(grid_max, (nwork + block_size - 1) / block_size);
 
       // How much work per block:
       const int work_per_block = (nwork + max_grid - 1) / max_grid;
