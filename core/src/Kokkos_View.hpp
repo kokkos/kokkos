@@ -464,48 +464,31 @@ constexpr bool is_always_assignable(const Kokkos::View<ViewTDst...>&,
 }
 
 template <class... ViewTDst, class... ViewTSrc>
-constexpr bool is_assignable(const Kokkos::View<ViewTDst...>&,
+constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
                              const Kokkos::View<ViewTSrc...>& src) {
   using DstTraits = typename Kokkos::View<ViewTDst...>::traits;
   using SrcTraits = typename Kokkos::View<ViewTSrc...>::traits;
-  using dst_dim   = typename DstTraits::dimension;
   using mapping_type =
       Kokkos::Impl::ViewMapping<DstTraits, SrcTraits,
                                 typename DstTraits::specialize>;
 
   return mapping_type::is_assignable &&
-         ((1 > DstTraits::dimension::rank_dynamic &&
-           1 <= SrcTraits::dimension::rank_dynamic)
-              ? dst_dim::ArgN0 == src.extent(0)
-              : true) &&
-         ((2 > DstTraits::dimension::rank_dynamic &&
-           2 <= SrcTraits::dimension::rank_dynamic)
-              ? dst_dim::ArgN1 == src.extent(1)
-              : true) &&
-         ((3 > DstTraits::dimension::rank_dynamic &&
-           3 <= SrcTraits::dimension::rank_dynamic)
-              ? dst_dim::ArgN2 == src.extent(2)
-              : true) &&
-         ((4 > DstTraits::dimension::rank_dynamic &&
-           4 <= SrcTraits::dimension::rank_dynamic)
-              ? dst_dim::ArgN3 == src.extent(3)
-              : true) &&
-         ((5 > DstTraits::dimension::rank_dynamic &&
-           5 <= SrcTraits::dimension::rank_dynamic)
-              ? dst_dim::ArgN4 == src.extent(4)
-              : true) &&
-         ((6 > DstTraits::dimension::rank_dynamic &&
-           6 <= SrcTraits::dimension::rank_dynamic)
-              ? dst_dim::ArgN5 == src.extent(5)
-              : true) &&
-         ((7 > DstTraits::dimension::rank_dynamic &&
-           7 <= SrcTraits::dimension::rank_dynamic)
-              ? dst_dim::ArgN6 == src.extent(6)
-              : true) &&
-         ((8 > DstTraits::dimension::rank_dynamic &&
-           8 <= SrcTraits::dimension::rank_dynamic)
-              ? dst_dim::ArgN7 == src.extent(7)
-              : true);
+         ((DstTraits::dimension::rank_dynamic >= 1) ||
+          (dst.static_extent(0) == src.extent(0))) &&
+         ((DstTraits::dimension::rank_dynamic >= 2) ||
+          (dst.static_extent(1) == src.extent(1))) &&
+         ((DstTraits::dimension::rank_dynamic >= 3) ||
+          (dst.static_extent(2) == src.extent(2))) &&
+         ((DstTraits::dimension::rank_dynamic >= 4) ||
+          (dst.static_extent(3) == src.extent(3))) &&
+         ((DstTraits::dimension::rank_dynamic >= 5) ||
+          (dst.static_extent(4) == src.extent(4))) &&
+         ((DstTraits::dimension::rank_dynamic >= 6) ||
+          (dst.static_extent(5) == src.extent(5))) &&
+         ((DstTraits::dimension::rank_dynamic >= 7) ||
+          (dst.static_extent(6) == src.extent(6))) &&
+         ((DstTraits::dimension::rank_dynamic >= 8) ||
+          (dst.static_extent(7) == src.extent(7)));
 }
 
 } /* namespace Kokkos */
