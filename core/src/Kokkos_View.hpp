@@ -450,18 +450,28 @@ struct ViewTraits {
 template <class DataType, class... Properties>
 class View;
 
+template <class T1, class T2>
+struct is_always_assignable : public std::false_type {};
+
 template <class... ViewTDst, class... ViewTSrc>
-constexpr bool is_always_assignable(const Kokkos::View<ViewTDst...>&,
-                                    const Kokkos::View<ViewTSrc...>&) {
+struct is_always_assignable<Kokkos::View<ViewTDst...>,
+                            Kokkos::View<ViewTSrc...>> {
   using mapping_type = Kokkos::Impl::ViewMapping<
       typename Kokkos::View<ViewTDst...>::traits,
       typename Kokkos::View<ViewTSrc...>::traits,
       typename Kokkos::View<ViewTDst...>::traits::specialize>;
 
-  return mapping_type::is_assignable &&
-         static_cast<int>(Kokkos::View<ViewTDst...>::rank_dynamic) >=
-             static_cast<int>(Kokkos::View<ViewTSrc...>::rank_dynamic);
-}
+  constexpr static bool value =
+      mapping_type::is_assignable &&
+      static_cast<int>(Kokkos::View<ViewTDst...>::rank_dynamic) >=
+          static_cast<int>(Kokkos::View<ViewTSrc...>::rank_dynamic);
+};
+
+#ifdef KOKKOS_ENABLE_CXX17
+template <class T1, class T2>
+inline constexpr bool is_always_assignable_v =
+    is_always_assignable<T1, T2>::value;
+#endif
 
 template <class... ViewTDst, class... ViewTSrc>
 constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
@@ -472,23 +482,30 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
       Kokkos::Impl::ViewMapping<DstTraits, SrcTraits,
                                 typename DstTraits::specialize>;
 
-  return mapping_type::is_assignable &&
-         ((DstTraits::dimension::rank_dynamic >= 1) ||
-          (dst.static_extent(0) == src.extent(0))) &&
-         ((DstTraits::dimension::rank_dynamic >= 2) ||
-          (dst.static_extent(1) == src.extent(1))) &&
-         ((DstTraits::dimension::rank_dynamic >= 3) ||
-          (dst.static_extent(2) == src.extent(2))) &&
-         ((DstTraits::dimension::rank_dynamic >= 4) ||
-          (dst.static_extent(3) == src.extent(3))) &&
-         ((DstTraits::dimension::rank_dynamic >= 5) ||
-          (dst.static_extent(4) == src.extent(4))) &&
-         ((DstTraits::dimension::rank_dynamic >= 6) ||
-          (dst.static_extent(5) == src.extent(5))) &&
-         ((DstTraits::dimension::rank_dynamic >= 7) ||
-          (dst.static_extent(6) == src.extent(6))) &&
-         ((DstTraits::dimension::rank_dynamic >= 8) ||
-          (dst.static_extent(7) == src.extent(7)));
+#ifdef KOKKOS_ENABLE_CXX17
+  return is_always_assignable_v<Kokkos::View<ViewTDst...>,
+                                Kokkos::View<ViewTSrc...>> ||
+#else
+  return is_always_assignable<Kokkos::View<ViewTDst...>,
+                              Kokkos::View<ViewTSrc...>>::value ||
+#endif
+         (mapping_type::is_assignable &&
+          ((DstTraits::dimension::rank_dynamic >= 1) ||
+           (dst.static_extent(0) == src.extent(0))) &&
+          ((DstTraits::dimension::rank_dynamic >= 2) ||
+           (dst.static_extent(1) == src.extent(1))) &&
+          ((DstTraits::dimension::rank_dynamic >= 3) ||
+           (dst.static_extent(2) == src.extent(2))) &&
+          ((DstTraits::dimension::rank_dynamic >= 4) ||
+           (dst.static_extent(3) == src.extent(3))) &&
+          ((DstTraits::dimension::rank_dynamic >= 5) ||
+           (dst.static_extent(4) == src.extent(4))) &&
+          ((DstTraits::dimension::rank_dynamic >= 6) ||
+           (dst.static_extent(5) == src.extent(5))) &&
+          ((DstTraits::dimension::rank_dynamic >= 7) ||
+           (dst.static_extent(6) == src.extent(6))) &&
+          ((DstTraits::dimension::rank_dynamic >= 8) ||
+           (dst.static_extent(7) == src.extent(7))));
 }
 
 } /* namespace Kokkos */

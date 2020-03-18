@@ -28,8 +28,9 @@ struct TestAssignability {
 
     // bool is_always_assignable =
     // Kokkos::is_always_assignable<ViewTypeDst,ViewTypeSrc>::value;
-    bool is_always_assignable = Kokkos::is_always_assignable(dst, src);
-    bool is_assignable        = Kokkos::is_assignable(dst, src);
+    bool is_always_assignable =
+        Kokkos::is_always_assignable<ViewTypeDst, ViewTypeSrc>::value;
+    bool is_assignable = Kokkos::is_assignable(dst, src);
 
     // Print out if there is an error with typeid so you can just filter the
     // output with c++filt -t to see which assignment causes the error.
