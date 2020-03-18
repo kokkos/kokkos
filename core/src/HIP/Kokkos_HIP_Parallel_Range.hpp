@@ -222,7 +222,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     }
 
-    // Reduce with final value at hipblockDim_y - 1 location.
+    // Reduce with final value at hipBlockDim_y - 1 location.
     if (hip_single_inter_block_reduce_scan<false, ReducerTypeFwd, WorkTagFwd>(
             ReducerConditional::select(m_functor, m_reducer), hipBlockIdx_x,
             hipGridDim_x,
@@ -536,8 +536,8 @@ class ParallelScanHIPBase {
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    // blockDim.y must be power of two = 128 (2 warps) or 256 (4 warps) or 512
-    // (8 warps) gridDim.x <= blockDim.y * blockDim.y
+    // hipBlockDim_y must be power of two = 128 (2 warps) or 256 (4 warps) or 512
+    // (8 warps) hipGridDim_x <= hipBlockDim_y * hipBlockDim_y
     //
     // TODO check best option
 
