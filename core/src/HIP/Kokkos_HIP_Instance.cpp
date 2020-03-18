@@ -106,6 +106,7 @@ int HIPInternal::was_finalized   = 0;
 
 void HIPInternal::print_configuration(std::ostream & /*s*/) const {
   // FIXME_HIP
+  Kokkos::abort("print_configuration not implemented!\n");
   /*const HIPInternalDevices & dev_info = HIPInternalDevices::singleton();
 
 #if defined( KOKKOS_ENABLE_HIP )

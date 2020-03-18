@@ -298,7 +298,7 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
   inline DeepCopy(const ExecutionSpace& /*exec*/, void* /*dst*/,
                   const void* /*src*/, size_t /*n*/) {
     // FIXME_HIP
-    Kokkos::abort("Not implemented!");
+    Kokkos::abort("DeepCopy with ExecutionSpace not implemented!");
 
     //    exec.fence();
     //    hc::completion_future fut = DeepCopyAsyncHIP (dst,src,n);
@@ -371,7 +371,7 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace,
   inline DeepCopy(const ExecutionSpace& /*exec*/, void* /*dst*/,
                   const void* /*src*/, size_t /*n*/) {
     // FIXME_HIP
-    Kokkos::abort("Not implemented!");
+    Kokkos::abort("DeepCopy with ExecutionSpace not implemented!");
 
     //    exec.fence();
     //    hc::completion_future fut = DeepCopyAsyncHIP (dst,src,n);
@@ -391,7 +391,7 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
   inline DeepCopy(const ExecutionSpace& /*exec*/, void* /*dst*/,
                   const void* /*src*/, size_t /*n*/) {
     // FIXME_HIP
-    Kokkos::abort("Not implemented!");
+    Kokkos::abort("DeepCopy with ExecutionSpace not implemented!");
 
     //    exec.fence();
     //    hc::completion_future fut = DeepCopyAsyncHIP (dst,src,n);

@@ -141,6 +141,7 @@ inline __device__ float atomic_exchange(float *dest, const float &val) {
 template <class T>
 inline __device__ T atomic_exchange(T * /*dest*/, const T &val) {
   // FIXME
+  Kokkos::abort("atomic_exchange not implemented!\n");
   return val;
 }
 
@@ -164,6 +165,7 @@ template <typename T>
 inline __device__ T atomic_compare_exchange(T * /*dest*/, T /*compare*/,
                                             const T &val) {
   // FIXME
+  Kokkos::abort("atomic_compare_exchange not implemented!\n");
   return val;
 }
 
@@ -171,6 +173,7 @@ template <typename T>
 inline __device__ T atomic_compare_exchange(volatile T * /*dest*/,
                                             T /*compare*/, const T &val) {
   // FIXME
+  Kokkos::abort("volatile atomic_compare_exchange not implemented!\n");
   return val;
 }
 
@@ -266,6 +269,7 @@ inline __device__ unsigned long long atomic_fetch_add(
 template <typename T>
 inline __device__ T atomic_fetch_add(volatile T * /*dest*/, const T &val) {
   // FIXME
+  Kokkos::abort("volatile atomic_fetch_add not implemented!\n");
   return val;
 }
 
