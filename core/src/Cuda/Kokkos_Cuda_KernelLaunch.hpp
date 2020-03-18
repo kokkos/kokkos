@@ -260,6 +260,8 @@ struct CudaParallelLaunch<
             (prefer_shmem ? cudaFuncCachePreferShared
                           : cudaFuncCachePreferL1)));
       }
+#else
+      (void)prefer_shmem;
 #endif
 
       // Copy functor to constant memory on the device
@@ -317,6 +319,8 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
             (prefer_shmem ? cudaFuncCachePreferShared
                           : cudaFuncCachePreferL1)));
       }
+#else
+      (void)prefer_shmem;
 #endif
 
       // Copy functor to constant memory on the device
@@ -371,6 +375,8 @@ struct CudaParallelLaunch<
             (prefer_shmem ? cudaFuncCachePreferShared
                           : cudaFuncCachePreferL1)));
       }
+#else
+      (void)prefer_shmem;
 #endif
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
@@ -419,6 +425,8 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
             (prefer_shmem ? cudaFuncCachePreferShared
                           : cudaFuncCachePreferL1)));
       }
+#else
+      (void)prefer_shmem;
 #endif
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
@@ -465,6 +473,8 @@ struct CudaParallelLaunch<
             (prefer_shmem ? cudaFuncCachePreferShared
                           : cudaFuncCachePreferL1)));
       }
+#else
+      (void)prefer_shmem;
 #endif
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
@@ -516,6 +526,8 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
             (prefer_shmem ? cudaFuncCachePreferShared
                           : cudaFuncCachePreferL1)));
       }
+#else
+      (void)prefer_shmem;
 #endif
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();

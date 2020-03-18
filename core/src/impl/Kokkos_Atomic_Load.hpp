@@ -125,8 +125,7 @@ __device__ __inline__ T _relaxed_atomic_load_impl(
                                     void const**>::type = nullptr) {
   T rv{};
   // TODO remove a copy operation here?
-  Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, &rv, rv);
-  return rv;
+  return Kokkos::Impl::atomic_oper_fetch(NoOpOper<T>{}, ptr, rv);
 }
 
 template <class T>
