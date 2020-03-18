@@ -451,7 +451,7 @@ template <class DataType, class... Properties>
 class View;
 
 template <class T1, class T2>
-struct is_always_assignable : public std::false_type {};
+struct is_always_assignable;
 
 template <class... ViewTDst, class... ViewTSrc>
 struct is_always_assignable<Kokkos::View<ViewTDst...>,
