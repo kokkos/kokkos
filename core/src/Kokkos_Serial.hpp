@@ -89,19 +89,19 @@ class Serial {
   //@{
 
   //! Tag this class as an execution space:
-  typedef Serial execution_space;
-  //! The size_type typedef best suited for this device.
-  typedef HostSpace::size_type size_type;
+  using execution_space = Serial;
   //! This device's preferred memory space.
-  typedef HostSpace memory_space;
+  using memory_space = Kokkos::Impl::DefaultHostMemorySpace;
+  //! The size_type typedef best suited for this device.
+  using size_type = memory_space::size_type;
   //! This execution space preferred device_type
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
+  using device_type = Kokkos::Device<execution_space, memory_space>;
 
   //! This device's preferred array layout.
-  typedef LayoutRight array_layout;
+  using array_layout = LayoutRight;
 
   /// \brief  Scratch memory space
-  typedef ScratchMemorySpace<Kokkos::Serial> scratch_memory_space;
+  using scratch_memory_space = ScratchMemorySpace<Kokkos::Serial>;
 
   //@}
 

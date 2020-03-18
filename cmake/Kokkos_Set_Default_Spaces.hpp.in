@@ -34,20 +34,24 @@ namespace Kokkos {
 
 namespace Impl {
 
+   using DefaultDeviceMemorySpace=@_DEFAULT_DEVICE_MEMSPACE@;
+   using DefaultHostMemorySpace=@_DEFAULT_HOST_MEMSPACE@;
+
+
 //----------------------------------------------------------------------------
 // Detect the active execution space and define its memory space.
 // This is used to verify whether a running kernel can access
 // a given memory space.
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
     defined(KOKKOS_ENABLE_CUDA)
-typedef Kokkos::CudaSpace ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = Kokkos::CudaSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP) && \
     defined(KOKKOS_ENABLE_HIP)
-typedef Kokkos::HIPSpace ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = Kokkos::Experimental::HIPSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-typedef Kokkos::HostSpace ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = Kokkos::HostSpace;
 #else
-typedef void ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = void;
 #endif
 
 
