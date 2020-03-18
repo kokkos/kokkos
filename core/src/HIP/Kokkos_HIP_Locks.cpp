@@ -122,4 +122,3 @@ void finalize_host_hip_lock_arrays() {
 void KOKKOS_CORE_SRC_CUDA_CUDA_LOCKS_PREVENT_LINK_ERROR() {}
 
 #endif
-

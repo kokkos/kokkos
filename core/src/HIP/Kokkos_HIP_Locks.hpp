@@ -176,4 +176,3 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
 #endif /* defined( KOKKOS_ENABLE_HIP ) */
 
 #endif /* #ifndef KOKKOS_HIP_LOCKS_HPP */
-
