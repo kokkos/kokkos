@@ -91,7 +91,7 @@ void finalize_host_hip_lock_arrays();
 /// When relocatable device code is enabled, there can be one single
 /// instance of this global variable for the entire executable,
 /// whose definition will be in Kokkos_HIP_Locks.cpp (and whose declaration
-/// here must then be extern.
+/// here must then be extern).
 /// This one instance will be initialized by initialize_host_HIP_lock_arrays
 /// and need not be modified afterwards.
 ///
@@ -165,7 +165,7 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
   }
 
 #ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
-#define KOKKOS_ENSUREG_HIP_LOCK_ARRAYS_ON_DEVICE()
+#define KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE()
 #else
 #define KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE() \
   KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()
