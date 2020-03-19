@@ -60,9 +60,15 @@ struct HierarchicalBasics {
   void run(const int nP, int nT) {
     if (nT > ExecSpace::concurrency()) nT = ExecSpace::concurrency();
 
+    policy_t pol(nP, nT);
+
+    ASSERT_EQ(pol.league_size(), nP);
+    ASSERT_LE(pol.team_size(), nT);
+    nT = pol.team_size();
+
     Kokkos::View<int **, ExecSpace> v("Array_A", nP, nT);
     Kokkos::parallel_for(
-        "Teams", policy_t(nP, nT), KOKKOS_LAMBDA(const team_t &team) {
+        "Teams", pol, KOKKOS_LAMBDA(const team_t &team) {
           const int tR = team.team_rank();
           const int tS = team.team_size();
           const int lR = team.league_rank();
