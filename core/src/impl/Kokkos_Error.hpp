@@ -51,16 +51,13 @@
 #ifdef KOKKOS_ENABLE_CUDA
 #include <Cuda/Kokkos_Cuda_abort.hpp>
 #endif
+#ifdef KOKKOS_ENABLE_HIP
+#include <HIP/Kokkos_HIP_Abort.hpp>
+#endif
 
 #ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
 #define KOKKOS_ABORT_MESSAGE_BUFFER_SIZE 2048
 #endif  // ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
-
-// HIP defines a macro abort() when using nvcc, thus we get a collision with the
-// abort function defined here
-#ifdef KOKKOS_ENABLE_HIP
-#undef abort
-#endif
 
 namespace Kokkos {
 namespace Impl {
@@ -173,8 +170,7 @@ void abort(const char *const message) {
 #if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
   Kokkos::Impl::cuda_abort(message);
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
-  // FIXME_HIP improve this once HIP supports asserting in a kernel properly
-  printf("%s", message);
+  Kokkos::Impl::hip_abort(message);
 #elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__)
   Kokkos::Impl::host_abort(message);
 #endif
