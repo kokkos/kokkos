@@ -170,6 +170,9 @@ class HIPTeamMember {
       ::Kokkos::Experimental::Impl::in_place_shfl(
           val, tmp, hipBlockDim_x * thread_id, hipBlockDim_x * hipBlockDim_y);
     }
+#else
+    (void)val;
+    (void)thread_id;
 #endif
   }
 
@@ -193,6 +196,10 @@ class HIPTeamMember {
       ::Kokkos::Experimental::Impl::in_place_shfl(
           val, tmp, hipBlockDim_x * thread_id, hipBlockDim_x * hipBlockDim_y);
     }
+#else
+    (void)f;
+    (void)val;
+    (void)thread_id;
 #endif
   }
 
@@ -225,6 +232,9 @@ class HIPTeamMember {
                   typename ReducerType::value_type& value) const noexcept {
 #ifdef __HIP_DEVICE_COMPILE__
     hip_intra_block_reduction(reducer, value, hipBlockDim_y);
+#else
+    (void)reducer;
+    (void)value;
 #endif
   }
 
@@ -267,6 +277,8 @@ class HIPTeamMember {
 
     return base_data[hipThreadIdx_y];
 #else
+    (void)value;
+    (void)global_accum;
     return Type();
 #endif
   }
@@ -327,6 +339,9 @@ class HIPTeamMember {
                                                 mask);
     value               = tmp2;
     reducer.reference() = tmp2;
+#else
+    (void)reducer;
+    (void)value;
 #endif
   }
 
@@ -517,6 +532,11 @@ class HIPTeamMember {
     return 0;
 
 #else
+    (void)reducer;
+    (void)global_scratch_flags;
+    (void)shmem;
+    (void)global_scratch_space;
+    (void)shmem_size;
     return 0;
 #endif
   }
@@ -695,6 +715,9 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   for (iType i = loop_boundaries.start + hipThreadIdx_y;
        i < loop_boundaries.end; i += hipBlockDim_y)
     closure(i);
+#else
+  (void)loop_boundaries;
+  (void)closure;
 #endif
 }
 
@@ -724,7 +747,10 @@ KOKKOS_INLINE_FUNCTION
   }
 
   loop_boundaries.member.team_reduce(reducer, value);
-
+#else
+  (void)loop_boundaries;
+  (void)closure;
+  (void)reducer;
 #endif
 }
 
@@ -755,6 +781,10 @@ KOKKOS_INLINE_FUNCTION
 
   loop_boundaries.member.team_reduce(reducer, val);
   result = reducer.reference();
+#else
+  (void)loop_boundaries;
+  (void)closure;
+  (void)result;
 #endif
 }
 
@@ -768,6 +798,9 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
                  hipThreadIdx_x;
        i < loop_boundaries.end; i += hipBlockDim_y * hipBlockDim_x)
     closure(i);
+#else
+  (void)loop_boundaries;
+  (void)closure;
 #endif
 }
 
@@ -789,6 +822,10 @@ KOKKOS_INLINE_FUNCTION
 
   loop_boundaries.member.vector_reduce(reducer, value);
   loop_boundaries.member.team_reduce(reducer, value);
+#else
+  (void)loop_boundaries;
+  (void)closure;
+  (void)reducer;
 #endif
 }
 
@@ -813,6 +850,10 @@ KOKKOS_INLINE_FUNCTION
   loop_boundaries.member.vector_reduce(reducer);
   loop_boundaries.member.team_reduce(reducer);
   result = reducer.reference();
+#else
+  (void)loop_boundaries;
+  (void)closure;
+  (void)result;
 #endif
 }
 
@@ -834,6 +875,9 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
        i < loop_boundaries.end; i += hipBlockDim_x) {
     closure(i);
   }
+#else
+  (void)loop_boundaries;
+  (void)closure;
 #endif
 }
 
@@ -865,7 +909,10 @@ KOKKOS_INLINE_FUNCTION
   }
 
   Impl::HIPTeamMember::vector_reduce(reducer);
-
+#else
+  (void)loop_boundaries;
+  (void)closure;
+  (void)reducer;
 #endif
 }
 
@@ -895,7 +942,10 @@ KOKKOS_INLINE_FUNCTION
   }
 
   Impl::HIPTeamMember::vector_reduce(Kokkos::Sum<ValueType>(result));
-
+#else
+  (void)loop_boundaries;
+  (void)closure;
+  (void)result;
 #endif
 }
 
@@ -980,7 +1030,9 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 
     accum += sval;
   }
-
+#else
+  (void)loop_boundaries;
+  (void)closure;
 #endif
 }
 
@@ -994,6 +1046,8 @@ KOKKOS_INLINE_FUNCTION void single(
     const FunctorType& lambda) {
 #ifdef __HIP_DEVICE_COMPILE__
   if (hipThreadIdx_x == 0) lambda();
+#else
+  (void)lambda;
 #endif
 }
 
@@ -1003,6 +1057,8 @@ KOKKOS_INLINE_FUNCTION void single(
     const FunctorType& lambda) {
 #ifdef __HIP_DEVICE_COMPILE__
   if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0) lambda();
+#else
+  (void)lambda;
 #endif
 }
 
@@ -1019,6 +1075,9 @@ KOKKOS_INLINE_FUNCTION void single(
                             << ((hipThreadIdx_y % (warp_size / hipBlockDim_x)) *
                                 hipBlockDim_x);
   ::Kokkos::Experimental::Impl::in_place_shfl(val, val, 0, hipBlockDim_x, mask);
+#else
+  (void)lambda;
+  (void)val;
 #endif
 }
 
@@ -1026,11 +1085,18 @@ template <class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION void single(
     const Impl::ThreadSingleStruct<Impl::HIPTeamMember>& single_struct,
     const FunctorType& lambda, ValueType& val) {
+  (void)single_struct;
+  (void)lambda;
+  (void)val;
 #ifdef __HIP_DEVICE_COMPILE__
   if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0) {
     lambda(val);
   }
   single_struct.team_member.team_broadcast(val, 0);
+#else
+  (void)single_struct;
+  (void)lambda;
+  (void)val;
 #endif
 }
 
