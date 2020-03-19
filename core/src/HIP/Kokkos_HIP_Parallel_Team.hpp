@@ -459,9 +459,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline void execute() const {
-    HIP_SAFE_CALL(
-        hipMalloc(&hip_lock_arrays.atomic,
-                  sizeof(std::int32_t) * (HIP_SPACE_ATOMIC_MASK + 1)));
+    HIP_SAFE_CALL(hipMalloc(
+        &hip_lock_arrays.atomic,
+        sizeof(std::int32_t) * (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1)));
     HIP_SAFE_CALL(hipMalloc(
         &hip_lock_arrays.scratch,
         sizeof(std::int32_t) * (::Kokkos::Experimental::HIP::concurrency())));

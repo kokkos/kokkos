@@ -65,7 +65,7 @@ namespace {
 
 __global__ void init_lock_array_kernel_atomic() {
   unsigned i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-  if (i < HIP_SPACE_ATOMIC_MASK + 1) {
+  if (i < KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1) {
     g_device_hip_lock_arrays.atomic[i] = 0;
   }
 }
@@ -85,8 +85,9 @@ HIPLockArrays g_host_hip_lock_arrays = {nullptr, nullptr, 0};
 
 void initialize_host_hip_lock_arrays() {
   if (g_host_hip_lock_arrays.atomic != nullptr) return;
-  HIP_SAFE_CALL(hipMalloc(&g_host_hip_lock_arrays.atomic,
-                          sizeof(std::int32_t) * (HIP_SPACE_ATOMIC_MASK + 1)));
+  HIP_SAFE_CALL(hipMalloc(
+      &g_host_hip_lock_arrays.atomic,
+      sizeof(std::int32_t) * (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1)));
   HIP_SAFE_CALL(hipMalloc(
       &g_host_hip_lock_arrays.scratch,
       sizeof(std::int32_t) * (::Kokkos::Experimental::HIP::concurrency())));
@@ -95,7 +96,8 @@ void initialize_host_hip_lock_arrays() {
 
   KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE();
   hipLaunchKernelGGL(init_lock_array_kernel_atomic,
-                     (HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256, 0, 0);
+                     (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256,
+                     0, 0);
   hipLaunchKernelGGL(init_lock_array_kernel_threadid,
                      (::Kokkos::Experimental::HIP::concurrency() + 255) / 256,
                      256, 0, 0, ::Kokkos::Experimental::HIP::concurrency());

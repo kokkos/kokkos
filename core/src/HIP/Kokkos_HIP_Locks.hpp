@@ -108,7 +108,7 @@ __device__
 #endif
     HIPLockArrays g_device_hip_lock_arrays;
 
-#define HIP_SPACE_ATOMIC_MASK 0x1FFFF
+#define KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK 0x1FFFF
 
 namespace Kokkos {
 namespace Impl {
@@ -119,9 +119,9 @@ namespace Impl {
 /// from the provided ptr. If the lock is successfully acquired the
 /// function returns true. Otherwise it returns false.
 __device__ inline bool lock_address_hip_space(void* ptr) {
-  size_t offset = size_t(ptr);
-  offset        = offset >> 2;
-  offset        = offset & HIP_SPACE_ATOMIC_MASK;
+  auto offset = static_cast<size_t>(ptr);
+  offset      = offset >> 2;
+  offset      = offset & KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK;
   return (0 == atomicCAS(&g_device_hip_lock_arrays.atomic[offset], 0, 1));
 }
 
@@ -132,9 +132,9 @@ __device__ inline bool lock_address_hip_space(void* ptr) {
 /// after previously successfully aquiring a lock with
 /// lock_address.
 __device__ inline void unlock_address_hip_space(void* ptr) {
-  size_t offset = size_t(ptr);
-  offset        = offset >> 2;
-  offset        = offset & HIP_SPACE_ATOMIC_MASK;
+  auto offset = static_cast<size_t>(ptr);
+  offset      = offset >> 2;
+  offset      = offset & KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK;
   atomicExch(&g_device_hip_lock_arrays.atomic[offset], 0);
 }
 
