@@ -55,7 +55,7 @@ namespace Impl {
 
 __device__ inline void hip_abort(char const *msg) {
   printf("%s", msg);
-  // FIXME_HIP both abort and the __assertfail system call are curretly
+  // FIXME_HIP both abort and the __assertfail system call are currently
   // implemented with __builtin_trap which causes the program to exit abnormally
   // without printing the error message.
   // abort();
