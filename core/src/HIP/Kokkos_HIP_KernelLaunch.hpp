@@ -136,8 +136,9 @@ struct HIPParallelLaunch<
   inline HIPParallelLaunch(const DriverType &driver, const dim3 &grid,
                            const dim3 &block, const int shmem,
                            const HIPInternal *hip_instance,
-                           const bool prefer_shmem) {
+                           const bool /*prefer_shmem*/) {
     if ((grid.x != 0) && ((block.x * block.y * block.z) != 0)) {
+      // FIXME_HIP use prefer_shmem
       /*
             if ( hip_instance->m_maxShmemPerBlock < shmem ) {
               Kokkos::Impl::throw_runtime_exception(
@@ -194,8 +195,9 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
   inline HIPParallelLaunch(const DriverType &driver, const dim3 &grid,
                            const dim3 &block, const int shmem,
                            const HIPInternal *hip_instance,
-                           const bool prefer_shmem) {
+                           const bool /*prefer_shmem*/) {
     if ((grid.x != 0) && ((block.x * block.y * block.z) != 0)) {
+      // FIXME_HIP use prefer_shmem
       /**
             if ( hip_instance->m_maxShmemPerBlock < shmem ) {
               Kokkos::Impl::throw_runtime_exception(
