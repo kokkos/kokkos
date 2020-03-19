@@ -138,8 +138,8 @@ struct HIPParallelLaunch<
                            const bool /*prefer_shmem*/) {
     if ((grid.x != 0) && ((block.x * block.y * block.z) != 0)) {
       if (hip_instance->m_maxShmemPerBlock < shmem) {
-        Kokkos::Impl::throw_runtime_exception(std::string(
-            "HIPParallelLaunch FAILED: shared memory request is too large"));
+        Kokkos::Impl::throw_runtime_exception(
+            "HIPParallelLaunch FAILED: shared memory request is too large");
       }
 
       // Invoke the driver function on the device
