@@ -180,6 +180,8 @@ class ThreadsExecTeamMember {
 
     if (m_team_base) {
       type* const local_value = ((type*)m_team_base[0]->scratch_memory());
+      memory_fence();
+      team_barrier();
       if (team_rank() == thread_id) *local_value = value;
       memory_fence();
       team_barrier();
@@ -204,6 +206,8 @@ class ThreadsExecTeamMember {
     f(value);
     if (m_team_base) {
       type* const local_value = ((type*)m_team_base[0]->scratch_memory());
+      memory_fence();
+      team_barrier();
       if (team_rank() == thread_id) *local_value = value;
       memory_fence();
       team_barrier();
