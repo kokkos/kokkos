@@ -42,7 +42,9 @@ struct TestAssignability {
           is_always_assignable ? 1 : 0, always ? 1 : 0, is_assignable ? 1 : 0,
           sometimes ? 1 : 0, typeid(ViewTypeSrc).name(),
           typeid(ViewTypeDst).name());
-    if (sometimes) ASSERT_NO_THROW(try_assign<mapping_type>(dst, src));
+    if (sometimes) {
+      ASSERT_NO_THROW(try_assign<mapping_type>(dst, src));
+    }
     ASSERT_EQ(always, is_always_assignable);
     ASSERT_EQ(sometimes, is_assignable);
   }
