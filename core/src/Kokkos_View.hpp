@@ -451,11 +451,11 @@ template <class DataType, class... Properties>
 class View;
 
 template <class T1, class T2>
-struct is_always_assignable;
+struct is_always_assignable_impl;
 
 template <class... ViewTDst, class... ViewTSrc>
-struct is_always_assignable<Kokkos::View<ViewTDst...>,
-                            Kokkos::View<ViewTSrc...>> {
+struct is_always_assignable_impl<Kokkos::View<ViewTDst...>,
+                                 Kokkos::View<ViewTSrc...>> {
   using mapping_type = Kokkos::Impl::ViewMapping<
       typename Kokkos::View<ViewTDst...>::traits,
       typename Kokkos::View<ViewTSrc...>::traits,
@@ -466,6 +466,12 @@ struct is_always_assignable<Kokkos::View<ViewTDst...>,
       static_cast<int>(Kokkos::View<ViewTDst...>::rank_dynamic) >=
           static_cast<int>(Kokkos::View<ViewTSrc...>::rank_dynamic);
 };
+
+template <class View1, class View2>
+using is_always_assignable = is_always_assignable_impl<
+    typename std::remove_reference<View1>::type,
+    typename std::remove_const<
+        typename std::remove_reference<View2>::type>::type>;
 
 #ifdef KOKKOS_ENABLE_CXX17
 template <class T1, class T2>
