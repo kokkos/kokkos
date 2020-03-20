@@ -83,7 +83,7 @@ struct HIPReductionsFunctor<FunctorType, ArgTag, false, false> {
 
   __device__ static inline void scalar_intra_block_reduction(
       FunctorType const& functor, Scalar value, bool const skip, Scalar* result,
-      int const shared_elements, Scalar* shared_team_buffer_element) {
+      int const /*shared_elements*/, Scalar* shared_team_buffer_element) {
     int const warp_id = (hipThreadIdx_y * hipBlockDim_x) /
                         ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
     Scalar* const my_shared_team_buffer_element =
@@ -115,7 +115,7 @@ struct HIPReductionsFunctor<FunctorType, ArgTag, false, false> {
 
   __device__ static inline bool scalar_inter_block_reduction(
       FunctorType const& functor,
-      ::Kokkos::Experimental::HIP::size_type const block_id,
+      ::Kokkos::Experimental::HIP::size_type const /*block_id*/,
       ::Kokkos::Experimental::HIP::size_type const block_count,
       ::Kokkos::Experimental::HIP::size_type* const shared_data,
       ::Kokkos::Experimental::HIP::size_type* const global_data,

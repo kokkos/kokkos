@@ -282,6 +282,8 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   }
   return return_val;
 #elif defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+  (void)op;
+  (void)dest;
   return val;
 #endif
 }
@@ -331,6 +333,10 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
 #endif
   }
   return return_val;
+#elif defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
+  (void)op;
+  (void)dest;
+  return val;
 #endif
 }
 

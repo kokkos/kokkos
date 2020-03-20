@@ -232,13 +232,15 @@ class ThreadsExecTeamMember {
 
     if (0 == m_exec) return value;
 
-    *((volatile type*)m_exec->scratch_memory()) = value;
+    if (team_rank() != team_size() - 1)
+      *((volatile type*)m_exec->scratch_memory()) = value;
 
     memory_fence();
 
     type& accum = *((type*)m_team_base[0]->scratch_memory());
 
     if (team_fan_in()) {
+      accum = value;
       for (int i = 1; i < m_team_size; ++i) {
         accum += *((type*)m_team_base[i]->scratch_memory());
       }
@@ -278,7 +280,7 @@ class ThreadsExecTeamMember {
     type* const local_value = ((type*)m_exec->scratch_memory());
 
     // Set this thread's contribution
-    *local_value = contribution;
+    if (team_rank() != team_size() - 1) *local_value = contribution;
 
     // Fence to make sure the base team member has access:
     memory_fence();
@@ -288,6 +290,7 @@ class ThreadsExecTeamMember {
       // team_fan_out()
       type* const team_value = ((type*)m_team_base[0]->scratch_memory());
 
+      *team_value = contribution;
       // Join to the team value:
       for (int i = 1; i < m_team_size; ++i) {
         reducer.join(*team_value, *((type*)m_team_base[i]->scratch_memory()));

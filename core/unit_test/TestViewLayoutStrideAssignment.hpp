@@ -51,6 +51,7 @@
 
 #include <Kokkos_Core.hpp>
 
+#include <TestViewIsAssignable.hpp>
 namespace Test {
 
 TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutleft_assignment) {
