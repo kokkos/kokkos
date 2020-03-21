@@ -57,7 +57,7 @@ namespace TestMemoryPool {
 template <typename MemSpace = Kokkos::HostSpace>
 void test_host_memory_pool_defaults() {
   typedef typename MemSpace::execution_space Space;
-  typedef typename Kokkos::MemoryPool<Space> MemPool;
+  typedef typename Kokkos::MemoryPool<Kokkos::Device<Space, MemSpace>> MemPool;
 
   {
     const size_t MemoryCapacity = 32000;
@@ -133,7 +133,7 @@ void test_host_memory_pool_defaults() {
 template <typename MemSpace = Kokkos::HostSpace>
 void test_host_memory_pool_stats() {
   typedef typename MemSpace::execution_space Space;
-  typedef typename Kokkos::MemoryPool<Space> MemPool;
+  typedef typename Kokkos::MemoryPool<Kokkos::Device<Space, MemSpace>> MemPool;
 
   const size_t MemoryCapacity = 32000;
   const size_t MinBlockSize   = 64;

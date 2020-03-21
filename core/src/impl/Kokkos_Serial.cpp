@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
+#include <Kokkos_Core.hpp>
 #if defined(KOKKOS_ENABLE_SERIAL)
 
 #include <cstdlib>
