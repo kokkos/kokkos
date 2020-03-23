@@ -131,14 +131,12 @@ void endParallelReduce(const uint64_t kernelID) {
 
 void pushRegion(const std::string& kName) {
   if (nullptr != pushRegionCallee) {
-    Kokkos::fence();
     (*pushRegionCallee)(kName.c_str());
   }
 }
 
 void popRegion() {
   if (nullptr != popRegionCallee) {
-    Kokkos::fence();
     (*popRegionCallee)();
   }
 }
