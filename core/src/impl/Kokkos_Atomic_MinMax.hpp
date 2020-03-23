@@ -57,7 +57,7 @@ namespace Kokkos {
 
 // Atomic_fetch_{min,max}
 
-#ifdef KOKKOS_COMPILER_CLANG
+#ifdef KOKKOS_IMPL_CUDA_CLANG_WORKAROUND
 
 // Host implementations for CLANG compiler
 
@@ -135,7 +135,7 @@ inline __device__ unsigned long long int atomic_fetch_max(
 
 // Atomic_{min,max}_fetch
 
-#ifdef KOKKOS_COMPILER_CLANG
+#ifdef KOKKOS_IMPL_CUDA_CLANG_WORKAROUND
 
 // Host implementations for CLANG compiler
 
