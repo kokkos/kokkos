@@ -260,39 +260,47 @@ endif()
 if(Kokkos_ENABLE_HIP)
   set(HIP_SOURCES
       UnitTestMainInit.cpp
+      #hip/TestHIP_AtomicOperations_complexdouble.cpp
+      hip/TestHIP_AtomicOperations_complexfloat.cpp
+      hip/TestHIP_AtomicOperations_double.cpp
+      hip/TestHIP_AtomicOperations_int.cpp
+      hip/TestHIP_AtomicOperations_float.cpp
+      hip/TestHIP_AtomicOperations_longint.cpp
+      hip/TestHIP_AtomicOperations_longlongint.cpp
+      hip/TestHIP_AtomicOperations_unsignedint.cpp
+      hip/TestHIP_AtomicOperations_unsignedlongint.cpp
+      hip/TestHIP_Atomics.cpp
+      hip/TestHIP_AtomicViews.cpp
+      hip/TestHIP_DeepCopyAlignment.cpp
       hip/TestHIP_Init.cpp
-      hip/TestHIP_RangePolicy.cpp
-      hip/TestHIP_RangePolicyRequire.cpp
-      hip/TestHIP_Reductions.cpp
-      hip/TestHIP_Reducers_a.cpp
-      hip/TestHIP_Reducers_b.cpp
-      hip/TestHIP_Reducers_c.cpp
-      hip/TestHIP_Reducers_d.cpp
-      hip/TestHIP_Scan.cpp
-      hip/TestHIP_ScanUnit.cpp
+      hip/TestHIP_LocalDeepCopy.cpp
       hip/TestHIP_MDRange_a.cpp
       hip/TestHIP_MDRange_b.cpp
       hip/TestHIP_MDRange_c.cpp
       hip/TestHIP_MDRange_d.cpp
       hip/TestHIP_MDRange_e.cpp
+      hip/TestHIP_RangePolicy.cpp
+      hip/TestHIP_RangePolicyRequire.cpp
+      hip/TestHIP_Reducers_a.cpp
+      hip/TestHIP_Reducers_b.cpp
+      hip/TestHIP_Reducers_c.cpp
+      hip/TestHIP_Reducers_d.cpp
+      hip/TestHIP_Reductions.cpp
+      hip/TestHIP_Scan.cpp
+      hip/TestHIP_ScanUnit.cpp
       hip/TestHIP_Spaces.cpp
-      hip/TestHIPHostPinned_ViewCopy.cpp
+      hip/TestHIP_SubView_a.cpp
+      hip/TestHIP_SubView_b.cpp
+      hip/TestHIP_View_64bit.cpp
       hip/TestHIPHostPinned_ViewAPI_a.cpp
       hip/TestHIPHostPinned_ViewAPI_b.cpp
       hip/TestHIPHostPinned_ViewAPI_c.cpp
       hip/TestHIPHostPinned_ViewAPI_d.cpp
       hip/TestHIPHostPinned_ViewAPI_e.cpp
+      hip/TestHIPHostPinned_ViewCopy.cpp
       hip/TestHIPHostPinned_ViewMapping_a.cpp
       hip/TestHIPHostPinned_ViewMapping_b.cpp
       hip/TestHIPHostPinned_ViewMapping_subview.cpp
-      hip/TestHIP_AtomicOperations_int.cpp
-      hip/TestHIP_AtomicOperations_unsignedint.cpp
-      hip/TestHIP_AtomicOperations_longlongint.cpp
-      hip/TestHIP_DeepCopyAlignment.cpp
-      hip/TestHIP_SubView_a.cpp
-      hip/TestHIP_SubView_b.cpp
-      hip/TestHIP_View_64bit.cpp
-      hip/TestHIP_LocalDeepCopy.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIP
