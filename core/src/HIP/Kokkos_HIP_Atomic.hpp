@@ -46,11 +46,14 @@
 #define KOKKOS_HIP_ATOMIC_HPP
 
 #ifdef KOKKOS_ENABLE_HIP_ATOMICS
+
 namespace Kokkos {
 // HIP can do:
 // Types int/unsigned int
 // variants:
 // atomic_exchange/compare_exchange/fetch_add/fetch_sub/fetch_max/fetch_min/fetch_and/fetch_or/fetch_xor/fetch_inc/fetch_dec
+
+// atomic_exchange -------------------------------------------------------------
 
 __inline__ __device__ int atomic_exchange(volatile int *const dest,
                                           const int val) {
@@ -68,7 +71,11 @@ __inline__ __device__ unsigned long long int atomic_exchange(
   return atomicExch(const_cast<unsigned long long *>(dest), val);
 }
 
-/** \brief  Atomic exchange for any type with compatible size */
+__inline__ __device__ float atomic_exchange(volatile float *const dest,
+                                            const float val) {
+  return atomicExch(const_cast<float *>(dest), val);
+}
+
 template <typename T>
 __inline__ __device__ T atomic_exchange(
     volatile T *const dest,
@@ -91,7 +98,34 @@ __inline__ __device__ T atomic_exchange(
   return reinterpret_cast<T &>(tmp);
 }
 
-/** \brief  Atomic exchange for any type with compatible size */
+template <typename T>
+__inline__ __device__ T
+atomic_exchange(volatile T *const dest,
+                typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                            sizeof(T) != sizeof(long long),
+                                        const T>::type &val) {
+  Kokkos::abort("atomic_exchange not implemented for large types.\n");
+  T return_val;
+  int done                 = 0;
+  unsigned int active      = __ballot(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      // if (Impl::lock_address_hip_space((void*)dest))
+      {
+        return_val = *dest;
+        *dest      = val;
+        // Impl::unlock_address_hip_space((void*)dest);
+        done = 1;
+      }
+    }
+    done_active = __ballot(done);
+  }
+  return return_val;
+}
+
+// atomic_assign ---------------------------------------------------------------
+
 template <typename T>
 __inline__ __device__ void atomic_assign(
     volatile T *const dest,
@@ -120,138 +154,86 @@ __inline__ __device__ void atomic_assign(
   atomic_exchange(dest, val);
 }
 
-inline __device__ int atomic_exchange(int *dest, const int &val) {
-  return atomicExch(dest, val);
-}
+// atomic_compare_exchange -----------------------------------------------------
 
-inline __device__ unsigned int atomic_exchange(unsigned int *dest,
-                                               const unsigned int &val) {
-  return atomicExch(dest, val);
-}
-
-inline __device__ unsigned long long int atomic_exchange(
-    unsigned long long int *dest, const unsigned long long int &val) {
-  return atomicExch(dest, val);
-}
-
-inline __device__ float atomic_exchange(float *dest, const float &val) {
-  return atomicExch(dest, val);
-}
-
-template <class T>
-inline __device__ T atomic_exchange(T * /*dest*/, const T &val) {
-  // FIXME
-  Kokkos::abort("atomic_exchange not implemented!\n");
-  return val;
-}
-
-inline __device__ int atomic_compare_exchange(int *dest, int compare,
+inline __device__ int atomic_compare_exchange(volatile int *dest, int compare,
                                               const int &val) {
-  return atomicCAS(dest, compare, val);
+  return atomicCAS(const_cast<int *>(dest), compare, val);
 }
 
 inline __device__ unsigned int atomic_compare_exchange(
-    unsigned int *dest, unsigned int compare, const unsigned int &val) {
-  return atomicCAS(dest, compare, val);
+    volatile unsigned int *dest, unsigned int compare,
+    const unsigned int &val) {
+  return atomicCAS(const_cast<unsigned int *>(dest), compare, val);
 }
 
 inline __device__ unsigned long long int atomic_compare_exchange(
-    unsigned long long int *dest, unsigned long long int compare,
+    volatile unsigned long long int *dest, unsigned long long int compare,
     const unsigned long long int &val) {
-  return atomicCAS(dest, compare, val);
+  return atomicCAS(const_cast<unsigned long long int *>(dest), compare, val);
+}
+
+template <class T>
+__inline__ __device__ T atomic_compare_exchange(
+    volatile T *dest, T compare,
+    typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
+  union U {
+    int i;
+    T f;
+    __inline__ __device__ U() {}
+  } idest, icompare, ival;
+  idest.f    = *dest;
+  icompare.f = compare;
+  ival.f     = val;
+  idest.i    = atomicCAS((int *)(dest), icompare.i, ival.i);
+  return idest.f;
+}
+
+template <class T>
+__inline__ __device__ T atomic_compare_exchange(
+    volatile T *dest, T compare,
+    typename std::enable_if<sizeof(T) == sizeof(unsigned long long int),
+                            const T &>::type val) {
+  union U {
+    unsigned long long int i;
+    T f;
+    __inline__ __device__ U() {}
+  } idest, icompare, ival;
+  idest.f    = *dest;
+  icompare.f = compare;
+  ival.f     = val;
+  idest.i    = atomicCAS((unsigned long long int *)(dest), icompare.i, ival.i);
+  return idest.f;
 }
 
 template <typename T>
-inline __device__ T atomic_compare_exchange(T * /*dest*/, T /*compare*/,
-                                            const T &val) {
-  // FIXME
-  Kokkos::abort("atomic_compare_exchange not implemented!\n");
-  return val;
+__inline__ __device__ T atomic_compare_exchange(
+    volatile T *const dest, const T &compare,
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) != sizeof(long long),
+                            const T>::type &val) {
+  Kokkos::abort("atomic_compare_exchange not implemented for large types.\n");
+  T return_val;
+  int done                 = 0;
+  unsigned int active      = __ballot(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      // if (Impl::lock_address_hip_space((void*)dest))
+      {
+        return_val = *dest;
+        if (return_val == compare) *dest = val;
+        // Impl::unlock_address_hip_space((void*)dest);
+        done = 1;
+      }
+    }
+    done_active = __ballot(done);
+  }
+  return return_val;
 }
 
-template <typename T>
-inline __device__ T atomic_compare_exchange(volatile T * /*dest*/,
-                                            T /*compare*/, const T &val) {
-  // FIXME
-  Kokkos::abort("volatile atomic_compare_exchange not implemented!\n");
-  return val;
-}
+// atomic_fetch_add ------------------------------------------------------------
 
-/*
-  KOKKOS_INLINE_FUNCTION
-  int64_t atomic_compare_exchange(int64_t* dest, int64_t compare, const int64_t&
-  val) { return (int64_t) hc::atomic_compare_exchange_uint64((uint64_t*)dest,
-  (uint64_t)compare, (const uint64_t&)val);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  uint64_t atomic_compare_exchange(uint64_t* dest, uint64_t compare, const
-  uint64_t& val) { return hc::atomic_compare_exchange_uint64(dest, compare,
-  val);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  long long atomic_compare_exchange(long long* dest, long long compare, const
-  long long& val) { return (long
-  long)hc::atomic_compare_exchange_uint64((uint64_t*)(dest),
-  (uint64_t)(compare), (const uint64_t&)(val));
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  float atomic_compare_exchange(float* dest, float compare, const float& val) {
-    union U {
-      int i ;
-      float f ;
-      KOKKOS_INLINE_FUNCTION U() {}
-    } idest,icompare,ival;
-    idest.f = *dest;
-    icompare.f = compare;
-    ival.f = val;
-    idest.i = hc::atomic_compare_exchange_int(reinterpret_cast<int*>(dest),
-  icompare.i, ival.i); return idest.f;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  double atomic_compare_exchange(double* dest, double compare, const double&
-  val) { union U { uint64_t i ; double d ; KOKKOS_INLINE_FUNCTION U() {}; }
-  idest,icompare,ival; idest.d = *dest; icompare.d = compare; ival.d = val;
-    idest.i =
-  hc::atomic_compare_exchange_uint64(reinterpret_cast<uint64_t*>(dest),
-  icompare.i, ival.i); return idest.d;
-  }
-
-  template<class T>
-  KOKKOS_INLINE_FUNCTION
-  T atomic_compare_exchange(volatile T* dest, T compare, typename
-  std::enable_if<sizeof(T) == sizeof(int), const T&>::type val) { union U { int
-  i ; T f ; KOKKOS_INLINE_FUNCTION U() {}; } idest,icompare,ival; idest.f =
-  *dest; icompare.f = compare; ival.f = val; idest.i =
-  hc::atomic_compare_exchange_int((int*)(dest), icompare.i, ival.i); return
-  idest.f;
-  }
-
-  template<class T>
-  KOKKOS_INLINE_FUNCTION
-  T atomic_compare_exchange(volatile T* dest, T compare, typename
-  std::enable_if<sizeof(T) == sizeof(int64_t), const T&>::type val) { union U {
-      uint64_t i ;
-      T f ;
-      KOKKOS_INLINE_FUNCTION U() {}
-    } idest,icompare,ival;
-    idest.f = *dest;
-    icompare.f = compare;
-    ival.f = val;
-    idest.i = hc::atomic_compare_exchange_uint64((uint64_t*)(dest), icompare.i,
-  ival.i); return idest.f;
-  }
-
-  template<class T>
-  KOKKOS_INLINE_FUNCTION
-  T atomic_compare_exchange(volatile T* dest, T compare, typename
-  std::enable_if<(sizeof(T) != sizeof(int32_t)) && (sizeof(T) !=
-  sizeof(int64_t)), const T&>::type val) { return val;
-  }
-*/
 inline __device__ int atomic_fetch_add(volatile int *dest, const int &val) {
   return atomicAdd(const_cast<int *>(dest), val);
 }
@@ -266,21 +248,57 @@ inline __device__ unsigned long long atomic_fetch_add(
   return atomicAdd(const_cast<unsigned long long *>(dest), val);
 }
 
-template <typename T>
-inline __device__ T atomic_fetch_add(volatile T * /*dest*/, const T &val) {
-  // FIXME
-  Kokkos::abort("volatile atomic_fetch_add not implemented!\n");
-  return val;
+inline __device__ float atomic_fetch_add(volatile float *dest,
+                                         const float &val) {
+  return atomicAdd(const_cast<float *>(dest), val);
 }
 
-// FIXME Not implemented in HIP
+template <typename T>
+inline __device__ T atomic_fetch_add(
+    volatile T *const dest,
+    typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
+  union U {
+    int i;
+    T t;
+    __inline__ __device__ U() {}
+  } assume, oldval, newval;
 
-// KOKKOS_INLINE_FUNCTION
-// int64_t atomic_fetch_add(volatile int64_t* dest, const int64_t& val) {
-//   return atomicAdd(const_cast<int64_t*>(dest),val);
-// }
-KOKKOS_INLINE_FUNCTION
-char atomic_fetch_add(volatile char *dest, const char &val) {
+  oldval.t = *dest;
+
+  do {
+    assume.i = oldval.i;
+    newval.t = assume.t + val;
+    oldval.i = atomicCAS((int *)dest, assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return oldval.t;
+}
+
+template <typename T>
+inline __device__ T atomic_fetch_add(
+    volatile T *const dest,
+    typename std::enable_if<sizeof(T) == sizeof(long long), const T>::type
+        val) {
+  union U {
+    unsigned long long i;
+    T t;
+    __inline__ __device__ U() {}
+  } assume, oldval, newval;
+
+  oldval.t = *dest;
+
+  do {
+    assume.i = oldval.i;
+    newval.t = assume.t + val;
+    oldval.i =
+        atomic_compare_exchange((unsigned long long *)dest, assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return oldval.t;
+}
+
+__inline__ __device__ char atomic_fetch_add(volatile char *dest,
+                                            const char &val) {
   unsigned int oldval, newval, assume;
   oldval = *(int *)dest;
 
@@ -293,8 +311,8 @@ char atomic_fetch_add(volatile char *dest, const char &val) {
   return oldval;
 }
 
-KOKKOS_INLINE_FUNCTION
-short atomic_fetch_add(volatile short *dest, const short &val) {
+__inline__ __device__ short atomic_fetch_add(volatile short *dest,
+                                             const short &val) {
   unsigned int oldval, newval, assume;
   oldval = *(int *)dest;
 
@@ -307,111 +325,56 @@ short atomic_fetch_add(volatile short *dest, const short &val) {
   return oldval;
 }
 
-KOKKOS_INLINE_FUNCTION
-long long atomic_fetch_add(volatile long long *dest, const long long &val) {
+__inline__ __device__ long long atomic_fetch_add(volatile long long *dest,
+                                                 const long long &val) {
   return atomicAdd((unsigned long long *)(dest), val);
 }
 
-/*
 template <class T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_add(
-    volatile T *dest,
-    typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val)
-{
-  union U {
-    unsigned int i;
-    T t;
-    KOKKOS_INLINE_FUNCTION U() {}
-  } assume, oldval, newval;
-
-  oldval.t = *dest;
-
-  do
-  {
-    assume.i = oldval.i;
-    newval.t = assume.t + val;
-    oldval.i =
-        atomic_compare_exchange((unsigned int *)(dest), assume.i, newval.i);
-  } while (assume.i != oldval.i);
-
-  return oldval.t;
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_add(
-    volatile T *dest, typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                                  sizeof(T) == sizeof(int64_t),
-                                              const T &>::type val)
-{
-  union U {
-    uint64_t i;
-    T t;
-    KOKKOS_INLINE_FUNCTION U() {}
-  } assume, oldval, newval;
-
-  oldval.t = *dest;
-
-  do
-  {
-    assume.i = oldval.i;
-    newval.t = assume.t + val;
-    oldval.i = atomic_compare_exchange((uint64_t *)dest, assume.i, newval.i);
-  } while (assume.i != oldval.i);
-
-  return oldval.t;
-}
-
-// WORKAROUND
-template <class T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_add(
-    volatile T *dest, typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                                  sizeof(T) != sizeof(int64_t),
-                                              const T &>::type val)
-{
+__inline__ __device__ T
+atomic_fetch_add(volatile T *dest,
+                 typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                             sizeof(T) != sizeof(long long),
+                                         const T &>::type val) {
+  Kokkos::abort("atomic_fetch_add not implemented for large types.\n");
   T return_val;
-  // Do we need to (like in CUDA) handle potential wavefront branching?
-  int done = 0;
-  // unsigned int active = KOKKOS_IMPL_CUDA_BALLOT(1);
-  // unsigned int done_active = 0;
-  // while (active!=done_active) {
-  if (!done)
-  {
-    bool locked = ::Kokkos::Impl::lock_address_hip_space((void *)dest);
-    if (locked)
-    {
-      return_val = *dest;
-      *dest = return_val + val;
-      ::Kokkos::Impl::unlock_address_hip_space((void *)dest);
-      done = 1;
+  int done                 = 0;
+  unsigned int active      = __ballot(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      // if(Kokkos::Impl::lock_address_hip_space((void *)dest))
+      {
+        return_val = *dest;
+        *dest      = return_val + val;
+        // Kokkos::Impl::unlock_address_hip_space((void *)dest);
+        done = 1;
+      }
     }
+    done_active = __ballot(done);
   }
-  // done_active = KOKKOS_IMPL_CUDA_BALLOT(done);
-  //}
   return return_val;
 }
 
-*/
+// atmic_fetch_sub -------------------------------------------------------------
 
-KOKKOS_INLINE_FUNCTION
-int atomic_fetch_sub(volatile int *dest, int const &val) {
+__inline__ __device__ int atomic_fetch_sub(volatile int *dest, int const &val) {
   return atomicSub(const_cast<int *>(dest), val);
 }
 
-KOKKOS_INLINE_FUNCTION
-unsigned int atomic_fetch_sub(volatile unsigned int *dest,
-                              unsigned int const &val) {
+__inline__ __device__ unsigned int atomic_fetch_sub(volatile unsigned int *dest,
+                                                    unsigned int const &val) {
   return atomicSub(const_cast<unsigned int *>(dest), val);
 }
 
-KOKKOS_INLINE_FUNCTION
-int64_t atomic_fetch_sub(int64_t *dest, int64_t const &val) {
-  return static_cast<int64_t>(
-      atomicAdd(reinterpret_cast<unsigned long long *>(dest),
-                -reinterpret_cast<unsigned long long const &>(val)));
+__inline__ __device__ unsigned long long atomic_fetch_sub(
+    unsigned long long *dest, int64_t const &val) {
+  return atomicAdd(reinterpret_cast<unsigned long long *>(dest),
+                   -reinterpret_cast<unsigned long long const &>(val));
 }
 
-KOKKOS_INLINE_FUNCTION
-char atomic_fetch_sub(volatile char *dest, const char &val) {
+__inline__ __device__ char atomic_fetch_sub(volatile char *dest,
+                                            const char &val) {
   unsigned int oldval, newval, assume;
   oldval = *(int *)dest;
 
@@ -426,8 +389,8 @@ char atomic_fetch_sub(volatile char *dest, const char &val) {
   return oldval;
 }
 
-KOKKOS_INLINE_FUNCTION
-short atomic_fetch_sub(volatile short *dest, const short &val) {
+__inline__ __device__ short atomic_fetch_sub(volatile short *dest,
+                                             const short &val) {
   unsigned int oldval, newval, assume;
   oldval = *(int *)dest;
 
@@ -442,21 +405,21 @@ short atomic_fetch_sub(volatile short *dest, const short &val) {
   return oldval;
 }
 
-KOKKOS_INLINE_FUNCTION
-long long atomic_fetch_sub(volatile long long *dest, const long long &val) {
+__inline__ __device__ long long atomic_fetch_sub(volatile long long *dest,
+                                                 const long long &val) {
   return static_cast<long long>(atomicAdd(
       reinterpret_cast<unsigned long long int *>(const_cast<long long *>(dest)),
       -reinterpret_cast<unsigned long long int const &>(val)));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
+__inline__ __device__ T atomic_fetch_sub(
     volatile T *dest,
     typename std::enable_if<sizeof(T) == sizeof(int), T>::type val) {
   union U {
     int i;
     T t;
-    KOKKOS_INLINE_FUNCTION U() {}
+    __inline__ __device__ U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -470,15 +433,15 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
   return oldval.t;
 }
 
-template <class T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
-    volatile T *dest, typename std::enable_if<sizeof(T) != sizeof(int) &&
-                                                  sizeof(T) == sizeof(int64_t),
-                                              const T &>::type val) {
+template <typename T>
+inline __device__ T atomic_fetch_sub(
+    volatile T *const dest,
+    typename std::enable_if<sizeof(T) == sizeof(long long), const T>::type
+        val) {
   union U {
-    int64_t i;
+    unsigned long long i;
     T t;
-    KOKKOS_INLINE_FUNCTION U() {}
+    __inline__ __device__ U() {}
   } assume, oldval, newval;
 
   oldval.t = *dest;
@@ -486,13 +449,15 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
   do {
     assume.i = oldval.i;
     newval.t = assume.t - val;
-    oldval.i = atomic_compare_exchange((int64_t *)dest, assume.i, newval.i);
+    oldval.i =
+        atomic_compare_exchange((unsigned long long *)dest, assume.i, newval.i);
   } while (assume.i != oldval.i);
 
   return oldval.t;
 }
+
 template <class T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
+__inline__ __device__ T atomic_fetch_sub(
     volatile T *dest,
     typename std::enable_if<sizeof(T) == sizeof(char), T>::type val) {
   unsigned int oldval, newval, assume;
@@ -508,7 +473,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
+__inline__ __device__ T atomic_fetch_sub(
     volatile T *dest,
     typename std::enable_if<sizeof(T) == sizeof(short), T>::type val) {
   unsigned int oldval, newval, assume;
@@ -523,37 +488,63 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_sub(
   return (T)oldval & 0xffff;
 }
 
-// KOKKOS_INLINE_FUNCTION
-// int atomic_fetch_or(volatile int *const dest, int const val) {
-//  return atomicOr(const_cast<int *>(dest), val);
-//}
+template <typename T>
+__inline__ __device__ T
+atomic_fetch_sub(volatile T *const dest,
+                 typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                             sizeof(T) != sizeof(long long),
+                                         const T>::type &val) {
+  Kokkos::abort("atomic_fetch_sub not implemented for large types.\n");
+  T return_val;
+  int done                 = 0;
+  unsigned int active      = __ballot(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      /*if (Impl::lock_address_hip_space((void*)dest)) */
+      {
+        return_val = *dest;
+        *dest      = return_val - val;
+        // Impl::unlock_address_hip_space((void*)dest);
+        done = 1;
+      }
+    }
+    done_active = __ballot(done);
+  }
+  return return_val;
+}
 
-// KOKKOS_INLINE_FUNCTION
-// unsigned int atomic_fetch_or(volatile unsigned int *const dest,
-//                             unsigned int const val) {
-//  return atomicOr(const_cast<unsigned int *>(dest), val);
-//}
+// atomic_fetch_or -------------------------------------------------------------
 
-KOKKOS_INLINE_FUNCTION
-unsigned long long int atomic_fetch_or(
+__inline__ __device__ int atomic_fetch_or(volatile int *const dest,
+                                          int const val) {
+  return atomicOr(const_cast<int *>(dest), val);
+}
+
+__inline__ __device__ unsigned int atomic_fetch_or(
+    volatile unsigned int *const dest, unsigned int const val) {
+  return atomicOr(const_cast<unsigned int *>(dest), val);
+}
+
+__inline__ __device__ unsigned long long int atomic_fetch_or(
     volatile unsigned long long int *const dest,
     unsigned long long int const val) {
   return atomicOr(const_cast<unsigned long long int *>(dest), val);
 }
 
-// KOKKOS_INLINE_FUNCTION
-// int atomic_fetch_and(volatile int *const dest, int const val) {
-//  return atomicAnd(const_cast<int *>(dest), val);
-//}
+// atomic_fetch_and ------------------------------------------------------------
 
-// KOKKOS_INLINE_FUNCTION
-// unsigned int atomic_fetch_and(volatile unsigned int *const dest,
-//                              unsigned int const val) {
-//  return atomicAnd(const_cast<unsigned int *>(dest), val);
-//}
+__inline__ __device__ int atomic_fetch_and(volatile int *const dest,
+                                           int const val) {
+  return atomicAnd(const_cast<int *>(dest), val);
+}
 
-KOKKOS_INLINE_FUNCTION
-unsigned long long int atomic_fetch_and(
+__inline__ __device__ unsigned int atomic_fetch_and(
+    volatile unsigned int *const dest, unsigned int const val) {
+  return atomicAnd(const_cast<unsigned int *>(dest), val);
+}
+
+__inline__ __device__ unsigned long long int atomic_fetch_and(
     volatile unsigned long long int *const dest,
     unsigned long long int const val) {
   return atomicAnd(const_cast<unsigned long long int *>(dest), val);
