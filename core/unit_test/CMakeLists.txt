@@ -260,6 +260,7 @@ endif()
 if(Kokkos_ENABLE_HIP)
   set(HIP_SOURCES
       UnitTestMainInit.cpp
+      #FIXME_HIP
       #hip/TestHIP_AtomicOperations_complexdouble.cpp
       hip/TestHIP_AtomicOperations_complexfloat.cpp
       hip/TestHIP_AtomicOperations_double.cpp

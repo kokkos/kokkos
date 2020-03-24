@@ -538,7 +538,7 @@ TEST(TEST_CATEGORY, atomics) {
   ASSERT_TRUE(
       (TestAtomic::Loop<Kokkos::complex<float>, TEST_EXECSPACE>(100, 3)));
 
-  // HIP doesn't yet support atomics for >64bit types properly
+  // FIXME_HIP HIP doesn't yet support atomics for >64bit types properly
 #ifndef KOKKOS_ENABLE_HIP
   ASSERT_TRUE(
       (TestAtomic::Loop<Kokkos::complex<double>, TEST_EXECSPACE>(1, 1)));

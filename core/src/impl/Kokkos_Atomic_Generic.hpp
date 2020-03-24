@@ -282,6 +282,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   }
   return return_val;
 #elif defined(__HIP_DEVICE_COMPILE__)
+  // FIXME_HIP
   Kokkos::abort("atomic_fetch_oper not implemented for large types.");
   T return_val             = *dest;
   int done                 = 0;
@@ -289,7 +290,6 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   unsigned int done_active = 0;
   while (active != done_active) {
     if (!done) {
-      // FIXME_HIP
       // if (Impl::lock_address_hip_space((void*)dest))
       {
         return_val = *dest;
@@ -350,6 +350,7 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
   }
   return return_val;
 #elif defined(__HIP_DEVICE_COMPILE__)
+  // FIXME_HIP
   Kokkos::abort("atomic_oper_fetch not implemented for large types.");
   T return_val;
   int done                 = 0;
@@ -357,7 +358,6 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
   unsigned int done_active = 0;
   while (active != done_active) {
     if (!done) {
-      // FIXME_HIP
       // if (Impl::lock_address_hip_space((void*)dest))
       {
         return_val = op.apply(*dest, val);
