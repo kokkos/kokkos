@@ -71,11 +71,11 @@ namespace Experimental {
 class HIPSpace {
  public:
   //! Tag this class as a kokkos memory space
-  typedef HIPSpace memory_space;
-  typedef Kokkos::Experimental::HIP execution_space;
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
+  using memory_space    = HIPSpace;
+  using execution_space = Kokkos::Experimental::HIP;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
 
-  typedef unsigned int size_type;
+  using size_type = unsigned int;
 
   /*--------------------------------*/
 
@@ -159,10 +159,10 @@ class HIPHostPinnedSpace {
  public:
   //! Tag this class as a kokkos memory space
   /** \brief  Memory is in HostSpace so use the HostSpace::execution_space */
-  typedef HostSpace::execution_space execution_space;
-  typedef HIPHostPinnedSpace memory_space;
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
-  typedef unsigned int size_type;
+  using execution_space = HostSpace::execution_space;
+  using memory_space    = HIPHostPinnedSpace;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+  using size_type       = unsigned int;
 
   /*--------------------------------*/
 
