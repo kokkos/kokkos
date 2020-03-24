@@ -281,10 +281,26 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
 #endif
   }
   return return_val;
-#elif defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
-  (void)op;
-  (void)dest;
-  return val;
+#elif defined(__HIP_DEVICE_COMPILE__)
+  Kokkos::abort("atomic_fetch_oper not implemented for large types.");
+  T return_val             = *dest;
+  int done                 = 0;
+  unsigned int active      = __ballot(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      // FIXME_HIP
+      // if (Impl::lock_address_hip_space((void*)dest))
+      {
+        return_val = *dest;
+        *dest      = op.apply(return_val, val);
+        // Impl::unlock_address_hip_space((void*)dest);
+        done = 1;
+      }
+    }
+    done_active = __ballot(done);
+  }
+  return return_val;
 #endif
 }
 
@@ -333,10 +349,26 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
 #endif
   }
   return return_val;
-#elif defined(__HIP_DEVICE_COMPILE__)  // FIXME_HIP
-  (void)op;
-  (void)dest;
-  return val;
+#elif defined(__HIP_DEVICE_COMPILE__)
+  Kokkos::abort("atomic_oper_fetch not implemented for large types.");
+  T return_val;
+  int done                 = 0;
+  unsigned int active      = __ballot(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      // FIXME_HIP
+      // if (Impl::lock_address_hip_space((void*)dest))
+      {
+        return_val = op.apply(*dest, val);
+        *dest      = return_val;
+        // Impl::unlock_address_hip_space((void*)dest);
+        done = 1;
+      }
+    }
+    done_active = __ballot(done);
+  }
+  return return_val;
 #endif
 }
 
