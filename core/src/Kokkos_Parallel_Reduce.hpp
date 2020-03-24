@@ -862,6 +862,8 @@ struct ParallelReduceAdaptor {
           name(label);
       Kokkos::Profiling::beginParallelReduce(name.get(), 0, &kpID);
     }
+#else
+    (void)label;
 #endif
 
     Kokkos::Impl::shared_allocation_tracking_disable();

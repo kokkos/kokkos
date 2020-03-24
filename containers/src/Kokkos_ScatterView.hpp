@@ -558,6 +558,8 @@ struct ReduceDuplicatesBase {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
                                           &kpID);
     }
+#else
+    (void)name;
 #endif
     typedef RangePolicy<ExecSpace, size_t> policy_type;
     typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
@@ -607,6 +609,8 @@ struct ResetDuplicatesBase {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
                                           &kpID);
     }
+#else
+    (void)name;
 #endif
     typedef RangePolicy<ExecSpace, size_t> policy_type;
     typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;

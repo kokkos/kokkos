@@ -171,6 +171,8 @@ inline void parallel_for(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
   }
+#else
+  (void)str;
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
@@ -201,6 +203,8 @@ inline void parallel_for(const size_t work_count, const FunctorType& functor,
         name.get(),
         Kokkos::Profiling::Experimental::device_id(policy().space()), &kpID);
   }
+#else
+  (void)str;
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
@@ -421,6 +425,8 @@ inline void parallel_scan(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
   }
+#else
+  (void)str;
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
@@ -452,6 +458,8 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
         name.get(),
         Kokkos::Profiling::Experimental::device_id(policy().space()), &kpID);
   }
+#else
+  (void)str;
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
@@ -502,6 +510,8 @@ inline void parallel_scan(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
   }
+#else
+  (void)str;
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
@@ -536,6 +546,8 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
         name.get(),
         Kokkos::Profiling::Experimental::device_id(policy().space()), &kpID);
   }
+#else
+  (void)str;
 #endif
 
   Kokkos::Impl::shared_allocation_tracking_disable();
