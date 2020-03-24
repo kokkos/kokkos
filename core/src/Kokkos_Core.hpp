@@ -225,7 +225,7 @@ class ScopeGuard {
 
 #include <Kokkos_Crs.hpp>
 #include <Kokkos_WorkGraphPolicy.hpp>
-
+#include <KokkosCore_Config_PostInclude.hpp>
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 

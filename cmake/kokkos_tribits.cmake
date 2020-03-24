@@ -220,6 +220,7 @@ MACRO(KOKKOS_CONFIGURE_CORE)
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_FwdBackend.hpp "fwd/Kokkos_Fwd" "${FWD_BACKEND_LIST}")
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_SetupBackend.hpp "Kokkos_Setup" "${DEVICE_SETUP_LIST}")
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_DeclareBackend.hpp "decl/Kokkos_Declare" "${FWD_BACKEND_LIST}")
+   KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_PostInclude.hpp "Kokkos_Post_Include" "${KOKKOS_BACKEND_POST_INCLUDE_LIST}")
 
    SET(_DEFAULT_HOST_MEMSPACE "Kokkos::HostSpace")
    KOKKOS_OPTION(DEFAULT_DEVICE_MEMORY_SPACE "" STRING "Override default device memory space")
@@ -246,6 +247,10 @@ MACRO(KOKKOS_CONFIGURE_CORE)
    #We are ready to configure the header
    CONFIGURE_FILE(cmake/KokkosCore_config.h.in KokkosCore_config.h @ONLY)
 
+   FOREACH (PLUGIN ${Kokkos_PLUGIN_PATH})
+      INCLUDE(${PLUGIN}/cmake/ConfigurePlugin.cmake OPTIONAL)
+   ENDFOREACH()
+
 ENDMACRO()
 
 MACRO(KOKKOS_INSTALL_FILES)
@@ -255,6 +260,9 @@ MACRO(KOKKOS_INSTALL_FILES)
    INSTALL(FILES "${CMAKE_BINARY_DIR}/KokkosCore_Config_SetupBackend.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
    INSTALL(FILES "${CMAKE_BINARY_DIR}/KokkosCore_Config_DeclareBackend.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
    INSTALL(FILES "${CMAKE_BINARY_DIR}/Kokkos_Set_Default_Spaces.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+   FOREACH(PLUGIN_ ${KOKKOS_INSTALL_PLUGIN_LIST})
+      INSTALL(FILES "${CMAKE_BINARY_DIR}/${PLUGIN_}" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+   ENDFOREACH()
 ENDMACRO()
 
 FUNCTION(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
