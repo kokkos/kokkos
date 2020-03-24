@@ -47,9 +47,6 @@
 
 #include <Kokkos_Core.hpp>
 
-/* only compile this file if HIP is enabled for Kokkos */
-#ifdef KOKKOS_ENABLE_HIP
-
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <Kokkos_HIP.hpp>
 #include <Kokkos_HIP_Space.hpp>
@@ -374,5 +371,3 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 }
 }  // namespace Impl
 }  // namespace Kokkos
-
-#endif  // KOKKOS_ENABLE_HIP

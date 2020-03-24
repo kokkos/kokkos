@@ -47,7 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-#if defined(KOKKOS_ENABLE_HIP) && defined(__HIPCC__)
+#if defined(__HIPCC__)
 
 #include <Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>

@@ -46,8 +46,6 @@
 #define KOKKOS_HIP_VECTORIZATION_HPP
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_HIP
-
 #include <Kokkos_HIP.hpp>
 
 namespace Kokkos {
@@ -158,7 +156,5 @@ __device__ KOKKOS_IMPL_FORCEINLINE void in_place_shfl_down(
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
-
-#endif
 
 #endif

@@ -47,7 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-#if defined(KOKKOS_ENABLE_HIP) && defined(__HIPCC__)
+#if defined(__HIPCC__)
 
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>

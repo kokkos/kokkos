@@ -47,8 +47,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-#ifdef KOKKOS_ENABLE_HIP
-
 #include <cstdint>
 
 #include <HIP/Kokkos_HIP_Error.hpp>
@@ -172,7 +170,5 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
 #endif
 
 #endif /* defined( __HIPCC__ ) */
-
-#endif /* defined( KOKKOS_ENABLE_HIP ) */
 
 #endif /* #ifndef KOKKOS_HIP_LOCKS_HPP */

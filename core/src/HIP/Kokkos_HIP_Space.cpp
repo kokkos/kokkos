@@ -50,9 +50,6 @@
 #include <atomic>
 #include <Kokkos_Macros.hpp>
 
-/* only compile this file if HIP is enabled for Kokkos */
-#ifdef KOKKOS_ENABLE_HIP
-
 #include <Kokkos_Core.hpp>
 #include <Kokkos_HIP.hpp>
 #include <Kokkos_HIP_Space.hpp>
@@ -620,5 +617,3 @@ const char* HIP::name() { return "HIP"; }
 
 }  // namespace Experimental
 }  // namespace Kokkos
-
-#endif  // KOKKOS_ENABLE_HIP

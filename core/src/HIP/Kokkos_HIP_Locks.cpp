@@ -44,8 +44,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-#ifdef KOKKOS_ENABLE_HIP
-
 #include <HIP/Kokkos_HIP_Locks.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <Kokkos_HIP_Space.hpp>
@@ -118,9 +116,3 @@ void finalize_host_hip_lock_arrays() {
 }  // namespace Impl
 
 }  // namespace Kokkos
-
-#else
-
-void KOKKOS_CORE_SRC_CUDA_CUDA_LOCKS_PREVENT_LINK_ERROR() {}
-
-#endif

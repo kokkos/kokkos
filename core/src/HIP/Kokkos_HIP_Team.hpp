@@ -47,8 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-/* only compile this file if HIP is enabled for Kokkos */
-#if defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP)
+#if defined(__HIPCC__)
 
 #include <utility>
 #include <Kokkos_Parallel.hpp>
