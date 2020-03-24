@@ -83,6 +83,7 @@
 #include <hpx/runtime.hpp>
 #include <hpx/runtime/threads/run_as_hpx_thread.hpp>
 #include <hpx/runtime/threads/threadmanager.hpp>
+#include <hpx/runtime/thread_pool_helpers.hpp>
 
 #include <iostream>
 #include <memory>
@@ -229,8 +230,8 @@ class HPX {
   }
 
   template <typename F>
-  static void partition_master(F const &f, int requested_num_partitions = 0,
-                               int requested_partition_size = 0) {
+  static void partition_master(F const &, int requested_num_partitions = 0,
+                               int = 0) {
     if (requested_num_partitions > 1) {
       Kokkos::abort(
           "Kokkos::Experimental::HPX::partition_master: can't partition an "
@@ -472,7 +473,7 @@ struct HPXTeamMember {
   template <class ReducerType>
   KOKKOS_INLINE_FUNCTION
       typename std::enable_if<is_reducer<ReducerType>::value>::type
-      team_reduce(const ReducerType &reducer) const {}
+      team_reduce(const ReducerType &) const {}
 
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type
@@ -627,8 +628,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
   }
 
   TeamPolicyInternal(const typename traits::execution_space &,
-                     int league_size_request,
-                     const Kokkos::AUTO_t &team_size_request,
+                     int league_size_request, const Kokkos::AUTO_t &,
                      int /* vector_length_request */ = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
@@ -644,8 +644,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     init(league_size_request, team_size_request);
   }
 
-  TeamPolicyInternal(int league_size_request,
-                     const Kokkos::AUTO_t &team_size_request,
+  TeamPolicyInternal(int league_size_request, const Kokkos::AUTO_t &,
                      int /* vector_length_request */ = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
@@ -2256,28 +2255,28 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 
 template <class FunctorType>
 KOKKOS_INLINE_FUNCTION void single(
-    const Impl::VectorSingleStruct<Impl::HPXTeamMember> &single_struct,
+    const Impl::VectorSingleStruct<Impl::HPXTeamMember> &,
     const FunctorType &lambda) {
   lambda();
 }
 
 template <class FunctorType>
 KOKKOS_INLINE_FUNCTION void single(
-    const Impl::ThreadSingleStruct<Impl::HPXTeamMember> &single_struct,
+    const Impl::ThreadSingleStruct<Impl::HPXTeamMember> &,
     const FunctorType &lambda) {
   lambda();
 }
 
 template <class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION void single(
-    const Impl::VectorSingleStruct<Impl::HPXTeamMember> &single_struct,
+    const Impl::VectorSingleStruct<Impl::HPXTeamMember> &,
     const FunctorType &lambda, ValueType &val) {
   lambda(val);
 }
 
 template <class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION void single(
-    const Impl::ThreadSingleStruct<Impl::HPXTeamMember> &single_struct,
+    const Impl::ThreadSingleStruct<Impl::HPXTeamMember> &,
     const FunctorType &lambda, ValueType &val) {
   lambda(val);
 }
