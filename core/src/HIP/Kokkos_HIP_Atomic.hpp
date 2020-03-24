@@ -185,7 +185,8 @@ __inline__ __device__ T atomic_compare_exchange(
   idest.f    = *dest;
   icompare.f = compare;
   ival.f     = val;
-  idest.i    = atomicCAS((int *)(dest), icompare.i, ival.i);
+  idest.i    = atomicCAS(reinterpret_cast<int *>(const_cast<T *>(dest)),
+                      icompare.i, ival.i);
   return idest.f;
 }
 
@@ -202,7 +203,9 @@ __inline__ __device__ T atomic_compare_exchange(
   idest.f    = *dest;
   icompare.f = compare;
   ival.f     = val;
-  idest.i    = atomicCAS((unsigned long long int *)(dest), icompare.i, ival.i);
+  idest.i    = atomicCAS(
+      reinterpret_cast<unsigned long long int *>(const_cast<T *>(dest)),
+      icompare.i, ival.i);
   return idest.f;
 }
 
@@ -268,7 +271,8 @@ inline __device__ T atomic_fetch_add(
   do {
     assume.i = oldval.i;
     newval.t = assume.t + val;
-    oldval.i = atomicCAS((int *)dest, assume.i, newval.i);
+    oldval.i = atomicCAS(reinterpret_cast<int *>(const_cast<T *>(dest)),
+                         assume.i, newval.i);
   } while (assume.i != oldval.i);
 
   return oldval.t;
@@ -290,8 +294,9 @@ inline __device__ T atomic_fetch_add(
   do {
     assume.i = oldval.i;
     newval.t = assume.t + val;
-    oldval.i =
-        atomic_compare_exchange((unsigned long long *)dest, assume.i, newval.i);
+    oldval.i = atomic_compare_exchange(
+        reinterpret_cast<volatile unsigned long long *>(dest), assume.i,
+        newval.i);
   } while (assume.i != oldval.i);
 
   return oldval.t;
@@ -300,12 +305,14 @@ inline __device__ T atomic_fetch_add(
 __inline__ __device__ char atomic_fetch_add(volatile char *dest,
                                             const char &val) {
   unsigned int oldval, newval, assume;
-  oldval = *(int *)dest;
+  oldval = *reinterpret_cast<volatile unsigned int *>(&dest);
 
   do {
     assume = oldval;
     newval = assume & 0x7fffff00 + ((assume & 0xff) + val) & 0xff;
-    oldval = atomicCAS((unsigned int *)dest, assume, newval);
+    oldval =
+        atomicCAS(reinterpret_cast<unsigned int *>(const_cast<char *>(dest)),
+                  assume, newval);
   } while (assume != oldval);
 
   return oldval;
@@ -314,12 +321,14 @@ __inline__ __device__ char atomic_fetch_add(volatile char *dest,
 __inline__ __device__ short atomic_fetch_add(volatile short *dest,
                                              const short &val) {
   unsigned int oldval, newval, assume;
-  oldval = *(int *)dest;
+  oldval = *reinterpret_cast<volatile unsigned int *>(&dest);
 
   do {
     assume = oldval;
     newval = assume & 0x7fff0000 + ((assume & 0xffff) + val) & 0xffff;
-    oldval = atomicCAS((unsigned int *)dest, assume, newval);
+    oldval =
+        atomicCAS(reinterpret_cast<unsigned int *>(const_cast<short *>(dest)),
+                  assume, newval);
   } while (assume != oldval);
 
   return oldval;
@@ -327,7 +336,9 @@ __inline__ __device__ short atomic_fetch_add(volatile short *dest,
 
 __inline__ __device__ long long atomic_fetch_add(volatile long long *dest,
                                                  const long long &val) {
-  return atomicAdd((unsigned long long *)(dest), val);
+  return atomicAdd(
+      reinterpret_cast<unsigned long long *>(const_cast<long long *>(dest)),
+      val);
 }
 
 template <class T>
@@ -376,7 +387,7 @@ __inline__ __device__ unsigned long long atomic_fetch_sub(
 __inline__ __device__ char atomic_fetch_sub(volatile char *dest,
                                             const char &val) {
   unsigned int oldval, newval, assume;
-  oldval = *(int *)dest;
+  oldval = *reinterpret_cast<volatile unsigned int *>(dest);
 
   do {
     assume = oldval;
@@ -392,7 +403,7 @@ __inline__ __device__ char atomic_fetch_sub(volatile char *dest,
 __inline__ __device__ short atomic_fetch_sub(volatile short *dest,
                                              const short &val) {
   unsigned int oldval, newval, assume;
-  oldval = *(int *)dest;
+  oldval = *reinterpret_cast<volatile unsigned int *>(dest);
 
   do {
     assume = oldval;
@@ -427,7 +438,8 @@ __inline__ __device__ T atomic_fetch_sub(
   do {
     assume.i = oldval.i;
     newval.t = assume.t - val;
-    oldval.i = atomic_compare_exchange((int *)dest, assume.i, newval.i);
+    oldval.i = atomic_compare_exchange(reinterpret_cast<volatile int *>(dest),
+                                       assume.i, newval.i);
   } while (assume.i != oldval.i);
 
   return oldval.t;
@@ -449,8 +461,9 @@ inline __device__ T atomic_fetch_sub(
   do {
     assume.i = oldval.i;
     newval.t = assume.t - val;
-    oldval.i =
-        atomic_compare_exchange((unsigned long long *)dest, assume.i, newval.i);
+    oldval.i = atomic_compare_exchange(
+        reinterpret_cast<volatile unsigned long long *>(dest), assume.i,
+        newval.i);
   } while (assume.i != oldval.i);
 
   return oldval.t;
@@ -461,7 +474,7 @@ __inline__ __device__ T atomic_fetch_sub(
     volatile T *dest,
     typename std::enable_if<sizeof(T) == sizeof(char), T>::type val) {
   unsigned int oldval, newval, assume;
-  oldval = *(int *)dest;
+  oldval = *reinterpret_cast<volatile unsigned int *>(dest);
 
   do {
     assume = oldval;
@@ -469,7 +482,7 @@ __inline__ __device__ T atomic_fetch_sub(
     oldval = atomicCAS(reinterpret_cast<unsigned int *>(dest), assume, newval);
   } while (assume != oldval);
 
-  return (T)oldval & 0xff;
+  return reinterpret_cast<T>(oldval) & 0xff;
 }
 
 template <class T>
@@ -477,7 +490,7 @@ __inline__ __device__ T atomic_fetch_sub(
     volatile T *dest,
     typename std::enable_if<sizeof(T) == sizeof(short), T>::type val) {
   unsigned int oldval, newval, assume;
-  oldval = *(int *)dest;
+  oldval = *reinterpret_cast<int *>(dest);
 
   do {
     assume = oldval;
@@ -485,7 +498,7 @@ __inline__ __device__ T atomic_fetch_sub(
     oldval = atomicCAS(reinterpret_cast<unsigned int *>(dest), assume, newval);
   } while (assume != oldval);
 
-  return (T)oldval & 0xffff;
+  return reinterpret_cast<T>(oldval) & 0xffff;
 }
 
 template <typename T>
