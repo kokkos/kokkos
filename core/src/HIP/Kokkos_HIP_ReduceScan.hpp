@@ -197,13 +197,12 @@ __device__ void hip_intra_block_reduce_scan(
         "hipBlockDim_y\n");
   }
 
-  auto block_reduce_step = [&functor, value_count, base_data](
-                               int const R, pointer_type const TD,
-                               int const S) {
-    if (R > ((1 << S) - 1)) {
-      ValueJoin::join(functor, TD, (TD - (value_count << S)));
-    }
-  };
+  auto block_reduce_step =
+      [&functor, value_count](int const R, pointer_type const TD, int const S) {
+        if (R > ((1 << S) - 1)) {
+          ValueJoin::join(functor, TD, (TD - (value_count << S)));
+        }
+      };
 
   {  // Intra-warp reduction:
     const unsigned rtid_intra      = hipThreadIdx_y & WarpMask;

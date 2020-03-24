@@ -436,7 +436,7 @@ TEST(TEST_CATEGORY, range_reduce) {
 #ifdef KOKKOS_ENABLE_HIP
 struct DummyFunctor {
   using value_type = int;
-  void operator()(const int i, value_type &update, bool final) const {}
+  void operator()(const int, value_type &, bool) const {}
 };
 
 template <int N>
@@ -481,6 +481,7 @@ TEST(TEST_CATEGORY, range_scan) {
     test_intra_block_scan<64>();
     test_intra_block_scan<128>();
     test_intra_block_scan<256>();
+    // FIXME_HIP block sizes larger than 256 give wrong results.
     // test_intra_block_scan<512>();
     // test_intra_block_scan<1024>();
   }

@@ -164,8 +164,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
-  size_type* m_scratch_space;
-  size_type* m_scratch_flags;
+  size_type* m_scratch_space = nullptr;
+  size_type* m_scratch_flags = nullptr;
 
   // Shall we use the shfl based reduction or not (only use it for static sized
   // types of more than 128bit)
@@ -339,9 +339,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_result_ptr(arg_result.data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
-                              typename ViewType::memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0) {}
+                              typename ViewType::memory_space>::accessible) {}
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -352,9 +350,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
                               typename ReducerType::result_view_type::
-                                  memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0) {}
+                                  memory_space>::accessible) {}
 };
 
 template <class FunctorType, class... Traits>
@@ -388,10 +384,10 @@ class ParallelScanHIPBase {
 
   const FunctorType m_functor;
   const Policy m_policy;
-  size_type* m_scratch_space;
-  size_type* m_scratch_flags;
-  size_type m_final;
-  int m_grid_x = 0;
+  size_type* m_scratch_space = nullptr;
+  size_type* m_scratch_flags = nullptr;
+  size_type m_final          = false;
+  int m_grid_x               = 0;
 
  private:
   template <class TagType>
@@ -541,9 +537,9 @@ class ParallelScanHIPBase {
     // TODO check best option
 
     unsigned n = Experimental::Impl::HIPTraits::WarpSize * 4;
-    while (n && unsigned(m_policy.space()
-                             .impl_internal_space_instance()
-                             ->m_maxShmemPerBlock) <
+    while (n && static_cast<unsigned>(m_policy.space()
+                                          .impl_internal_space_instance()
+                                          ->m_maxShmemPerBlock) <
                     hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
                                                              WorkTag>(f, n)) {
       n >>= 1;
@@ -555,14 +551,16 @@ class ParallelScanHIPBase {
     const index_type nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       // FIXME_HIP we cannot choose it larger for large work sizes to work
-      // correctly
-      const int GridMaxComputeCapability_2x = 0x01fff;
+      // correctly, the unit tests fail with wrong results
+      const int gridMaxComputeCapability_2x = 0x01fff;
 
-      // FIXME_HIP block sizes greater than 256 don't work correctly
-      const int block_size = std::min(local_block_size(m_functor), 256u);
+      // FIXME_HIP block sizes greater than 256 don't work correctly,
+      // the unit tests fail with wrong results
+      const int block_size =
+          std::min(static_cast<int>(local_block_size(m_functor)), 256);
 
       const int grid_max =
-          std::min(block_size * block_size, GridMaxComputeCapability_2x);
+          std::min(block_size * block_size, gridMaxComputeCapability_2x);
 
       // At most 'max_grid' blocks:
       const int max_grid =
@@ -600,11 +598,7 @@ class ParallelScanHIPBase {
   }
 
   ParallelScanHIPBase(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_scratch_space(0),
-        m_scratch_flags(0),
-        m_final(false) {}
+      : m_functor(arg_functor), m_policy(arg_policy) {}
 };
 
 template <class FunctorType, class... Traits>
