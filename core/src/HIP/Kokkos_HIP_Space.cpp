@@ -62,6 +62,16 @@
 namespace Kokkos {
 namespace Impl {
 
+namespace {
+hipStream_t get_deep_copy_stream() {
+  static hipStream_t s = 0;
+  if (s == 0) {
+    HIP_SAFE_CALL(hipStreamCreate(&s));
+  }
+  return s;
+}
+}  // namespace
+
 DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
          Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
                                               size_t n) {
@@ -146,6 +156,12 @@ DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
                                               size_t n) {
   // FIXME_HIP use instance
   HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
+}
+
+void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
+  hipStream_t s = get_deep_copy_stream();
+  HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
+  hipStreamSynchronize(s);
 }
 
 }  // namespace Impl

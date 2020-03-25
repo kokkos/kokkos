@@ -265,8 +265,7 @@ struct MemorySpaceAccess<Kokkos::Experimental::HIPHostPinnedSpace,
 namespace Kokkos {
 namespace Impl {
 
-// hc::completion_future DeepCopyAsyncHIP( void * dst , const void * src ,
-// size_t n);
+void DeepCopyAsyncHIP(void* dst, const void* src, size_t n);
 
 template <>
 struct DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
@@ -301,14 +300,10 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
         dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& /*exec*/, void* /*dst*/,
-                  const void* /*src*/, size_t /*n*/) {
-    // FIXME_HIP
-    Kokkos::abort("DeepCopy with ExecutionSpace not implemented!");
-    //    exec.fence();
-    //    hc::completion_future fut = DeepCopyAsyncHIP (dst,src,n);
-    //    fut.wait();
-    //    DeepCopy (dst,src,n);
+  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+                  size_t n) {
+    exec.fence();
+    DeepCopyAsyncHIP(dst, src, n);
   }
 };
 
@@ -322,7 +317,7 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace, ExecutionSpace> {
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
     exec.fence();
-    DeepCopy(dst, src, n);
+    DeepCopyAsyncHIP(dst, src, n);
   }
 };
 
@@ -336,7 +331,7 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace, ExecutionSpace> {
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
     exec.fence();
-    DeepCopy(dst, src, n);
+    DeepCopyAsyncHIP(dst, src, n);
   }
 };
 
@@ -373,14 +368,10 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace,
                    Kokkos::Experimental::HIP>(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& /*exec*/, void* /*dst*/,
-                  const void* /*src*/, size_t /*n*/) {
-    // FIXME_HIP
-    Kokkos::abort("DeepCopy with ExecutionSpace not implemented!");
-    //    exec.fence();
-    //    hc::completion_future fut = DeepCopyAsyncHIP (dst,src,n);
-    //    fut.wait();
-    //    DeepCopyHIP (dst,src,n);
+  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+                  size_t n) {
+    exec.fence();
+    DeepCopyAsyncHIP(dst, src, n);
   }
 };
 
@@ -392,14 +383,10 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
                    Kokkos::Experimental::HIP>(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& /*exec*/, void* /*dst*/,
-                  const void* /*src*/, size_t /*n*/) {
-    // FIXME_HIP
-    Kokkos::abort("DeepCopy with ExecutionSpace not implemented!");
-    //    exec.fence();
-    //    hc::completion_future fut = DeepCopyAsyncHIP (dst,src,n);
-    //    fut.wait();
-    //    DeepCopyHIP (dst,src,n);
+  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+                  size_t n) {
+    exec.fence();
+    DeepCopyAsyncHIP(dst, src, n);
   }
 };
 
@@ -415,10 +402,7 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
     exec.fence();
-    //    hc::completion_future fut = DeepCopyAsyncHIP (dst,src,n);
-    //    fut.wait();
-    //    DeepCopyAsyncHIP (dst,src,n);
-    DeepCopy(dst, src, n);
+    DeepCopyAsyncHIP(dst, src, n);
   }
 };
 
@@ -433,7 +417,7 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
     exec.fence();
-    DeepCopy(dst, src, n);
+    DeepCopyAsyncHIP(dst, src, n);
   }
 };
 
@@ -448,7 +432,7 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
     exec.fence();
-    DeepCopy(dst, src, n);
+    DeepCopyAsyncHIP(dst, src, n);
   }
 };
 }  // namespace Impl
