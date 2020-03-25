@@ -195,7 +195,7 @@ void HIPInternal::initialize(int hip_device_id) {
 
     hipSetDevice(m_hipDev);
 
-    // TODO for now always uses default stream
+    // FIXME_HIP for now always uses default stream
     m_stream = 0;
 
     // number of multiprocessors

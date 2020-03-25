@@ -163,8 +163,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   }
 
   static int scratch_size_max(int level) {
-    return (level == 0 ? 1024 * 40 :  // TODO arbitrarily setting this to 48kB
-                20 * 1024 * 1024);    // TODO arbitrarily setting this to 20MB
+    return (
+        level == 0 ? 1024 * 40 :  // FIXME_HIP arbitrarily setting this to 48kB
+            20 * 1024 * 1024);    // FIXME_HIP arbitrarily setting this to 20MB
   }
 
   int vector_length() const { return m_vector_length; }

@@ -53,7 +53,7 @@
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 
-// TODO cannot use global variable on the device with ROCm 2.9
+// FIXME_HIP cannot use global variable on the device with ROCm 2.9
 //__device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
 //    [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
 //     sizeof(unsigned long)];

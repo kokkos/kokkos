@@ -146,7 +146,7 @@ struct HIPReductionsFunctor<FunctorType, ArgTag, false, false> {
       num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
     }
     bool is_last_block = false;
-    // TODO HIP does not support syncthreads_or. That's why we need to make
+    // FIXME_HIP HIP does not support syncthreads_or. That's why we need to make
     // num_teams_done __shared__
     // if (__syncthreads_or(num_teams_done == hipGridDim_x)) {*/
     __syncthreads();
@@ -321,7 +321,7 @@ __device__ bool hip_single_inter_block_reduce_scan2(
   // Contributing blocks note that their contribution has been completed via an
   // atomic-increment flag If this block is not the last block to contribute to
   // this group then the block is done.
-  // TODO __syncthreads_or is not supported by HIP yet.
+  // FIXME_HIP __syncthreads_or is not supported by HIP yet.
   // const bool is_last_block = !__syncthreads_or(
   //    threadIdx.y
   //        ? 0
@@ -388,7 +388,7 @@ __device__ bool hip_single_inter_block_reduce_scan(
     ::Kokkos::Experimental::HIP::size_type* const global_flags) {
   using ValueTraits = FunctorValueTraits<FunctorType, ArgTag>;
   if (!DoScan && /*FIXME*/ (bool)ValueTraits::StaticValueSize)
-    // TODO For now we don't use shuffle
+    // FIXME_HIP For now we don't use shuffle
     // return Kokkos::Impl::HIPReductionsFunctor<
     //    FunctorType, ArgTag, false, (ValueTraits::StaticValueSize > 16)>::
     //    scalar_inter_block_reduction(functor, block_id, block_count,
