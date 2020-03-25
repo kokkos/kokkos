@@ -348,7 +348,7 @@ struct is_space {
   typedef typename std::conditional<
       std::is_same<execution_space, host_execution_space>::value &&
           std::is_same<memory_space, host_memory_space>::value,
-      T, Kokkos::Device<host_execution_space, host_memory_space> >::type
+      T, Kokkos::Device<host_execution_space, host_memory_space>>::type
       host_mirror_space;
 };
 
@@ -474,7 +474,7 @@ struct SpaceAccessibility {
       std::is_same<typename AccessSpace::memory_space, MemorySpace>::value ||
           !exe_access::accessible,
       AccessSpace,
-      Kokkos::Device<typename AccessSpace::execution_space, MemorySpace> >::type
+      Kokkos::Device<typename AccessSpace::execution_space, MemorySpace>>::type
       space;
 };
 
