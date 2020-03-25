@@ -448,7 +448,7 @@ struct ViewTraits {
  * \endcode
  */
 
-} // namespace Kokkos
+}  // namespace Kokkos
 
 // this is here because it contains the forward declar of Kokkos::View
 #include <impl/Kokkos_ViewTracker.hpp>
