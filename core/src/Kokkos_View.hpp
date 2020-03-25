@@ -448,6 +448,13 @@ struct ViewTraits {
  * \endcode
  */
 
+} // namespace Kokkos
+
+// this is here because it contains the forward declar of Kokkos::View
+#include <impl/Kokkos_ViewTracker.hpp>
+
+namespace Kokkos {
+
 template <class T1, class T2>
 struct is_always_assignable_impl;
 
@@ -517,7 +524,6 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#include <impl/Kokkos_ViewTracker.hpp>
 #include <impl/Kokkos_ViewMapping.hpp>
 #include <impl/Kokkos_ViewArray.hpp>
 
