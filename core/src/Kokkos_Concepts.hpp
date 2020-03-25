@@ -146,6 +146,19 @@ struct LaunchBounds {
 
 namespace Kokkos {
 
+namespace Impl {
+
+template <class T>
+struct remove_cvref {
+  using type =
+      typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+};
+
+template <class T>
+using remove_cvref_t = typename remove_cvref<T>::type;
+
+}  // namespace Impl
+
 #define KOKKOS_IMPL_IS_CONCEPT(CONCEPT)                                        \
   template <typename T>                                                        \
   struct is_##CONCEPT {                                                        \
