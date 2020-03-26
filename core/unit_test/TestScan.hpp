@@ -101,7 +101,9 @@ struct TestScan {
     int64_t total = 0;
     Kokkos::parallel_scan(N, *this, total);
 
-    run_check(size_t((N + 1) * N / 2), size_t(total));
+    // We can't return a value in a constructor so use a lambda as wrapper to
+    // ignore it.
+    [&] { ASSERT_EQ(size_t((N + 1) * N / 2), size_t(total)); }();
     check_error();
   }
 
@@ -128,10 +130,6 @@ struct TestScan {
     for (WorkSpec i = begin; i < end; ++i) {
       (void)TestScan(i);
     }
-  }
-
-  void run_check(const size_t& expected, const size_t& actual) {
-    ASSERT_EQ(expected, actual);
   }
 };
 

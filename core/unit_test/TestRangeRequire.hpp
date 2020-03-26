@@ -465,7 +465,7 @@ TEST(TEST_CATEGORY, range_scan_require) {
         f(0);
     f.test_scan();
   }
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_ROCM)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
   {
     TestRangeRequire<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                      Property>
@@ -485,7 +485,7 @@ TEST(TEST_CATEGORY, range_scan_require) {
         f(3);
     f.test_scan();
   }
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_ROCM)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
   {
     TestRangeRequire<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                      Property>
@@ -505,7 +505,7 @@ TEST(TEST_CATEGORY, range_scan_require) {
         f(1001);
     f.test_scan();
   }
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_ROCM)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
   {
     TestRangeRequire<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                      Property>
