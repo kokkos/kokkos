@@ -401,6 +401,126 @@ struct DeepCopy<HostSpace, CudaSpace, Cuda> {
   DeepCopy(const Cuda&, void* dst, const void* src, size_t);
 };
 
+template <>
+struct DeepCopy<CudaUVMSpace, CudaUVMSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<CudaUVMSpace, HostSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, HostSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, HostSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<HostSpace, CudaUVMSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<HostSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<HostSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<CudaHostPinnedSpace, CudaHostPinnedSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<CudaHostPinnedSpace, HostSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, HostSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, HostSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<HostSpace, CudaHostPinnedSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<HostSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<HostSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<CudaUVMSpace, CudaSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<CudaSpace, CudaUVMSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<CudaUVMSpace, CudaHostPinnedSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<CudaHostPinnedSpace, CudaUVMSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<CudaSpace, CudaHostPinnedSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
+template <>
+struct DeepCopy<CudaHostPinnedSpace, CudaSpace, Cuda> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(dst, src, n);
+  }
+  DeepCopy(const Cuda& instance, void* dst, const void* src, size_t n) {
+    (void)DeepCopy<CudaSpace, CudaSpace, Cuda>(instance, dst, src, n);
+  }
+};
+
 template <class ExecutionSpace>
 struct DeepCopy<CudaSpace, CudaSpace, ExecutionSpace> {
   inline DeepCopy(void* dst, const void* src, size_t n) {
