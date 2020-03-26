@@ -50,19 +50,12 @@
 #include <atomic>
 #include <Kokkos_Macros.hpp>
 
-/* only compile this file if HIP is enabled for Kokkos */
-#ifdef KOKKOS_ENABLE_HIP
-
 #include <Kokkos_Core.hpp>
 #include <Kokkos_HIP.hpp>
 #include <Kokkos_HIP_Space.hpp>
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
-
-#if defined(KOKKOS_ENABLE_PROFILING)
-#include <impl/Kokkos_Profiling_Interface.hpp>
-#endif
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -572,4 +565,55 @@ void* hip_resize_scratch_space(size_t bytes, bool force_shrink) {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif  // KOKKOS_ENABLE_HIP
+/*--------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
+namespace Kokkos {
+namespace Experimental {
+
+// HIP::size_type HIP::detect_device_count()
+//{ return Impl::HIPInternalDevices::singleton().m_hipDevCount ; }
+
+int HIP::concurrency() {
+  // FIXME_HIP
+  return 32 * 8 * 40;  // 81920 fiji and hawaii
+}
+int HIP::impl_is_initialized() {
+  return Impl::HIPInternal::singleton().is_initialized();
+}
+
+void HIP::impl_initialize(const HIP::SelectDevice config) {
+  Impl::HIPInternal::singleton().initialize(config.hip_device_id);
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  Kokkos::Profiling::initialize();
+#endif
+}
+
+void HIP::impl_finalize() {
+  Impl::HIPInternal::singleton().finalize();
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  Kokkos::Profiling::finalize();
+#endif
+}
+
+HIP::HIP() : m_space_instance(&Impl::HIPInternal::singleton()) {
+  Impl::HIPInternal::singleton().verify_is_initialized(
+      "HIP instance constructor");
+}
+
+// HIP::HIP( const int instance_id )
+//  : m_device( Impl::HIPInternal::singleton().m_hipDev )
+//{}
+
+void HIP::print_configuration(std::ostream& s, const bool) {
+  Impl::HIPInternal::singleton().print_configuration(s);
+}
+
+void HIP::fence() const { HIP_SAFE_CALL(hipDeviceSynchronize()); }
+
+int HIP::hip_device() const { return impl_internal_space_instance()->m_hipDev; }
+const char* HIP::name() { return "HIP"; }
+
+}  // namespace Experimental
+}  // namespace Kokkos

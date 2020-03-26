@@ -50,7 +50,7 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-// Degress of concurrency per nestig level
+// Degrees of concurrency per nesting level
 
 using SCALAR_TYPE = int;
 

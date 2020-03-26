@@ -44,9 +44,10 @@
 
 /*--------------------------------------------------------------------------*/
 
-#ifndef KOKKOS_HIP_INSTANCE_HPP_
-#define KOKKOS_HIP_INSTANCE_HPP_
-#include <Kokkos_HIP.hpp>
+#ifndef KOKKOS_HIP_INSTANCE_HPP
+#define KOKKOS_HIP_INSTANCE_HPP
+
+#include <Kokkos_HIP_Space.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -56,10 +57,15 @@ struct HIPTraits {
   static int constexpr WarpSize       = 64;
   static int constexpr WarpIndexShift = 6; /* WarpSize == 1 << WarpShift*/
 
-  static int constexpr ConstantMemoryUsage = 0x008000; /* 32k bytes */
+  static int constexpr ConstantMemoryUsage        = 0x008000; /* 32k bytes */
+  static int constexpr ConstantMemoryUseThreshold = 0x000200; /* 512 bytes */
 };
 
 //----------------------------------------------------------------------------
+
+HIP::size_type hip_internal_maximum_warp_count();
+HIP::size_type hip_internal_maximum_grid_count();
+
 HIP::size_type *hip_internal_scratch_space(const HIP::size_type size);
 HIP::size_type *hip_internal_scratch_flags(const HIP::size_type size);
 

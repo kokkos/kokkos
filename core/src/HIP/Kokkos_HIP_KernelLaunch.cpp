@@ -42,69 +42,31 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_ERROR_HPP
-#define KOKKOS_HIP_ERROR_HPP
-
-#include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_Error.hpp>
-
-#include <hip/hip_runtime.h>
-
-#include <ostream>
-
-namespace Kokkos {
-namespace Impl {
-
-void hip_internal_error_throw(hipError_t e, const char* name,
-                              const char* file = NULL, const int line = 0);
-
-inline void hip_internal_safe_call(hipError_t e, const char* name,
-                                   const char* file = NULL,
-                                   const int line   = 0) {
-  if (hipSuccess != e) {
-    hip_internal_error_throw(e, name, file, line);
-  }
-}
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-#define HIP_SAFE_CALL(call) \
-  Kokkos::Impl::hip_internal_safe_call(call, #call, __FILE__, __LINE__)
+#include <Kokkos_Core.hpp>
+#include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 
 namespace Kokkos {
 namespace Experimental {
+namespace Impl {
 
-class HIPRawMemoryAllocationFailure : public RawMemoryAllocationFailure {
- private:
-  hipError_t m_error_code = hipSuccess;
-
-  static FailureMode get_failure_mode(hipError_t error_code) {
-    switch (error_code) {
-      case hipErrorMemoryAllocation: return FailureMode::OutOfMemoryError;
-      case hipErrorInvalidValue: return FailureMode::InvalidAllocationSize;
-      default: return FailureMode::Unknown;
-    }
+void *hip_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
+  static void *ptr                 = nullptr;
+  static std::int64_t current_size = 0;
+  if (bytes > current_size) {
+    current_size = bytes;
+    if (ptr) Kokkos::kokkos_free<::Kokkos::Experimental::HIPSpace>(ptr);
+    ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
+        "HIPSpace::ScratchMemory", current_size);
   }
-
- public:
-  HIPRawMemoryAllocationFailure(size_t arg_attempted_size,
-                                hipError_t arg_error_code,
-                                AllocationMechanism arg_mechanism) noexcept
-      : RawMemoryAllocationFailure(
-            arg_attempted_size, /* HIPSpace doesn't handle alignment? */ 1,
-            get_failure_mode(arg_error_code), arg_mechanism),
-        m_error_code(arg_error_code) {}
-
-  void append_additional_error_information(std::ostream& o) const override {
-    if (m_error_code != hipSuccess) {
-      o << "  The HIP allocation returned the error code \"\""
-        << hipGetErrorName(m_error_code) << "\".";
-    }
+  if ((bytes < current_size) && (force_shrink)) {
+    current_size = bytes;
+    Kokkos::kokkos_free<::Kokkos::Experimental::HIPSpace>(ptr);
+    ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
+        "HIPSpace::ScratchMemory", current_size);
   }
-};
-
+  return ptr;
+}
+}  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
-
-#endif

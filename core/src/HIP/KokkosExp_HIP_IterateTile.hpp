@@ -46,7 +46,7 @@
 #define KOKKOS_HIP_EXP_ITERATE_TILE_REFACTOR_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP)
+#if defined(__HIPCC__)
 
 #include <iostream>
 #include <algorithm>
