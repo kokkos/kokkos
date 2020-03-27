@@ -184,7 +184,6 @@ __inline__ __device__ T atomic_compare_exchange(
     T f;
     __inline__ __device__ U() {}
   } idest, icompare, ival;
-  idest.f    = *dest;
   icompare.f = compare;
   ival.f     = val;
   idest.i    = atomicCAS(reinterpret_cast<int *>(const_cast<T *>(dest)),
@@ -203,7 +202,6 @@ __inline__ __device__ T atomic_compare_exchange(
     T f;
     __inline__ __device__ U() {}
   } idest, icompare, ival;
-  idest.f    = *dest;
   icompare.f = compare;
   ival.f     = val;
   idest.i    = atomicCAS(
