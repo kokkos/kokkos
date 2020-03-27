@@ -178,6 +178,7 @@ template <class T>
 __inline__ __device__ T atomic_compare_exchange(
     volatile T *dest, T compare,
     typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
+  // FIXME_HIP UB
   union U {
     int i;
     T f;
@@ -196,6 +197,7 @@ __inline__ __device__ T atomic_compare_exchange(
     volatile T *dest, T compare,
     typename std::enable_if<sizeof(T) == sizeof(unsigned long long int),
                             const T &>::type val) {
+  // FIXME_HIP UB
   union U {
     unsigned long long int i;
     T f;
@@ -262,6 +264,7 @@ template <typename T>
 inline __device__ T atomic_fetch_add(
     volatile T *const dest,
     typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
+  // FIXME_HIP UB
   union U {
     int i;
     T t;
@@ -285,6 +288,7 @@ inline __device__ T atomic_fetch_add(
     volatile T *const dest,
     typename std::enable_if<sizeof(T) == sizeof(long long), const T>::type
         val) {
+  // FIXME_HIP UB
   union U {
     unsigned long long i;
     T t;
@@ -430,6 +434,7 @@ template <class T>
 __inline__ __device__ T atomic_fetch_sub(
     volatile T *dest,
     typename std::enable_if<sizeof(T) == sizeof(int), T>::type val) {
+  // FIXME_HIP UB
   union U {
     int i;
     T t;
@@ -453,6 +458,7 @@ inline __device__ T atomic_fetch_sub(
     volatile T *const dest,
     typename std::enable_if<sizeof(T) == sizeof(long long), const T>::type
         val) {
+  // FIXME_HIP UB
   union U {
     unsigned long long i;
     T t;
