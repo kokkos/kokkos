@@ -168,6 +168,7 @@ namespace Kokkos {
 
 // Public concept:
 
+KOKKOS_IMPL_IS_CONCEPT(device)
 KOKKOS_IMPL_IS_CONCEPT(memory_space)
 KOKKOS_IMPL_IS_CONCEPT(memory_traits)
 KOKKOS_IMPL_IS_CONCEPT(execution_space)
