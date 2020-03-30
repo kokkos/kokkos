@@ -161,10 +161,8 @@ namespace Kokkos {
         : std::true_type {};                                                   \
                                                                                \
    public:                                                                     \
-    enum {                                                                     \
-      value =                                                                  \
-          is_##CONCEPT::template have<typename std::remove_cv<T>::type>::value \
-    };                                                                         \
+    static constexpr bool value =                                              \
+        is_##CONCEPT::template have<typename std::remove_cv<T>::type>::value;  \
   };
 
 // Public concept:
