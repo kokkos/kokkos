@@ -153,19 +153,18 @@ namespace Kokkos {
     template <typename, typename = std::true_type>                             \
     struct have : std::false_type {};                                          \
     template <typename U>                                                      \
-    struct have<U, typename std::is_base_of<                                   \
-                       typename std::remove_cv<typename U::CONCEPT>::type,     \
-                       typename std::remove_cv<U>::type>::type>                \
+    struct have<U, typename std::is_base_of<typename U::CONCEPT, U>::type>     \
         : std::true_type {};                                                   \
     template <typename U>                                                      \
     struct have<U,                                                             \
-                typename std::is_base_of<                                      \
-                    typename std::remove_cv<typename U::CONCEPT##_type>::type, \
-                    typename std::remove_cv<U>::type>::type>                   \
+                typename std::is_base_of<typename U::CONCEPT##_type, U>::type> \
         : std::true_type {};                                                   \
                                                                                \
    public:                                                                     \
-    enum { value = is_##CONCEPT::template have<T>::value };                    \
+    enum {                                                                     \
+      value =                                                                  \
+          is_##CONCEPT::template have<typename std::remove_cv<T>::type>::value \
+    };                                                                         \
   };
 
 // Public concept:
