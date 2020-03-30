@@ -163,6 +163,7 @@ namespace Kokkos {
    public:                                                                     \
     static constexpr bool value =                                              \
         is_##CONCEPT::template have<typename std::remove_cv<T>::type>::value;  \
+    constexpr operator bool() const noexcept { return value; }                 \
   };
 
 // Public concept:
