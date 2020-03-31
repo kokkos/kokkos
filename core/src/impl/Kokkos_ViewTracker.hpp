@@ -70,7 +70,8 @@ struct ViewTracker {
 
   track_type m_tracker;
 
-  ViewTracker() = default;
+  KOKKOS_INLINE_FUNCTION
+  ViewTracker() : m_tracker() {}
 
   KOKKOS_INLINE_FUNCTION
   ViewTracker(const ViewTracker& vt) noexcept
