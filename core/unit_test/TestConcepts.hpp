@@ -71,5 +71,11 @@ static_assert(!Kokkos::is_device<MemorySpace>{}, "");
 static_assert(Kokkos::is_space<ExecutionSpace>::value, "");
 static_assert(Kokkos::is_space<MemorySpace>::value, "");
 static_assert(Kokkos::is_space<DeviceType>::value, "");
+static_assert(Kokkos::is_space<ExecutionSpace const>::value, "");
+static_assert(Kokkos::is_space<MemorySpace const>::value, "");
+static_assert(Kokkos::is_space<DeviceType const>::value, "");
+static_assert(!Kokkos::is_space<ExecutionSpace &>::value, "");
+static_assert(!Kokkos::is_space<MemorySpace &>::value, "");
+static_assert(!Kokkos::is_space<DeviceType &>::value, "");
 
 }  // namespace TestConcept
