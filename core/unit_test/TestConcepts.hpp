@@ -45,30 +45,27 @@
 #include <Kokkos_Core.hpp>
 
 namespace TestConcept {
-void test() {
-  using ExecutionSpace = TEST_EXECSPACE;
-  using MemorySpace    = typename ExecutionSpace::memory_space;
-  using DeviceType     = typename ExecutionSpace::device_type;
 
-  static_assert(Kokkos::is_execution_space<ExecutionSpace>{}, "");
-  static_assert(Kokkos::is_execution_space<ExecutionSpace const>{}, "");
-  static_assert(!Kokkos::is_execution_space<ExecutionSpace &>{}, "");
-  static_assert(!Kokkos::is_execution_space<ExecutionSpace const &>{}, "");
-  static_assert(!Kokkos::is_execution_space<MemorySpace>{}, "");
-  static_assert(!Kokkos::is_execution_space<DeviceType>{}, "");
+using ExecutionSpace = TEST_EXECSPACE;
+using MemorySpace    = typename ExecutionSpace::memory_space;
+using DeviceType     = typename ExecutionSpace::device_type;
 
-  static_assert(Kokkos::is_memory_space<MemorySpace>{}, "");
-  static_assert(Kokkos::is_memory_space<MemorySpace const>{}, "");
-  static_assert(!Kokkos::is_memory_space<MemorySpace &>{}, "");
-  static_assert(!Kokkos::is_memory_space<MemorySpace const &>{}, "");
-  static_assert(!Kokkos::is_memory_space<ExecutionSpace>{}, "");
-  static_assert(!Kokkos::is_memory_space<DeviceType>{}, "");
+static_assert(Kokkos::is_execution_space<ExecutionSpace>{}, "");
+static_assert(Kokkos::is_execution_space<ExecutionSpace const>{}, "");
+static_assert(!Kokkos::is_execution_space<ExecutionSpace &>{}, "");
+static_assert(!Kokkos::is_execution_space<ExecutionSpace const &>{}, "");
 
-  static_assert(Kokkos::is_device<DeviceType>{}, "");
-  static_assert(Kokkos::is_device<DeviceType const>{}, "");
-  static_assert(!Kokkos::is_device<DeviceType &>{}, "");
-  static_assert(!Kokkos::is_device<DeviceType const &>{}, "");
-  static_assert(!Kokkos::is_device<ExecutionSpace>{}, "");
-  static_assert(!Kokkos::is_device<MemorySpace>{}, "");
-}
+static_assert(Kokkos::is_memory_space<MemorySpace>{}, "");
+static_assert(Kokkos::is_memory_space<MemorySpace const>{}, "");
+static_assert(!Kokkos::is_memory_space<MemorySpace &>{}, "");
+static_assert(!Kokkos::is_memory_space<MemorySpace const &>{}, "");
+
+static_assert(Kokkos::is_device<DeviceType>{}, "");
+static_assert(Kokkos::is_device<DeviceType const>{}, "");
+static_assert(!Kokkos::is_device<DeviceType &>{}, "");
+static_assert(!Kokkos::is_device<DeviceType const &>{}, "");
+
+static_assert(!Kokkos::is_device<ExecutionSpace>{}, "");
+static_assert(!Kokkos::is_device<MemorySpace>{}, "");
+
 }  // namespace TestConcept
