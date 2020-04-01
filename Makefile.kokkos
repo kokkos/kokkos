@@ -98,9 +98,31 @@ endif
 
 # Check for other Execution Spaces.
 KOKKOS_INTERNAL_USE_CUDA := $(call kokkos_has_string,$(KOKKOS_DEVICES),Cuda)
-KOKKOS_INTERNAL_USE_ROCM := $(call kokkos_has_string,$(KOKKOS_DEVICES),ROCm)
 KOKKOS_INTERNAL_USE_HIP := $(call kokkos_has_string,$(KOKKOS_DEVICES),HIP)
 KOKKOS_INTERNAL_USE_OPENMPTARGET := $(call kokkos_has_string,$(KOKKOS_DEVICES),OpenMPTarget)
+
+KOKKOS_DEVICELIST =
+ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
+  KOKKOS_DEVICELIST += Serial
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
+  KOKKOS_DEVICELIST += OpenMP
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
+  KOKKOS_DEVICELIST += Threads
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
+  KOKKOS_DEVICELIST += HPX
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
+  KOKKOS_DEVICELIST += Cuda
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
+  KOKKOS_DEVICELIST += HIP
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
+  KOKKOS_DEVICELIST += OPENMPTARGET
+endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_INTERNAL_NVCC_PATH := $(shell which nvcc)
