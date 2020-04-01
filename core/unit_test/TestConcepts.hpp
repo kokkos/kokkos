@@ -68,4 +68,8 @@ static_assert(!Kokkos::is_device<DeviceType const &>{}, "");
 static_assert(!Kokkos::is_device<ExecutionSpace>{}, "");
 static_assert(!Kokkos::is_device<MemorySpace>{}, "");
 
+static_assert(Kokkos::is_space<ExecutionSpace>::value, "");
+static_assert(Kokkos::is_space<MemorySpace>::value, "");
+static_assert(Kokkos::is_space<DeviceType>::value, "");
+
 }  // namespace TestConcept
