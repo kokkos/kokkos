@@ -168,7 +168,6 @@ namespace Kokkos {
 
 // Public concept:
 
-KOKKOS_IMPL_IS_CONCEPT(device)
 KOKKOS_IMPL_IS_CONCEPT(memory_space)
 KOKKOS_IMPL_IS_CONCEPT(memory_traits)
 KOKKOS_IMPL_IS_CONCEPT(execution_space)
@@ -255,6 +254,23 @@ struct Device {
   typedef MemorySpace memory_space;
   typedef Device<execution_space, memory_space> device_type;
 };
+
+namespace Impl {
+
+template <typename T>
+struct is_device_helper : std::false_type {};
+
+template <typename ExecutionSpace, typename MemorySpace>
+struct is_device_helper<Device<ExecutionSpace, MemorySpace>> : std::true_type {
+};
+
+}  // namespace Impl
+
+template <typename T>
+using is_device =
+    typename Impl::is_device_helper<typename std::remove_cv<T>::type>::type;
+
+//----------------------------------------------------------------------------
 
 template <typename T>
 struct is_space {
