@@ -2714,8 +2714,8 @@ inline void deep_copy(
   static_assert(std::is_same<typename dst_traits::non_const_value_type,
                              typename dst_traits::value_type>::value,
                 "deep_copy requires non-const type");
-  typedef typename dst_traits::memory_space dst_memory_space;
 #if defined(KOKKOS_ENABLE_PROFILING)
+  typedef typename dst_traits::memory_space dst_memory_space;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::SpaceHandle(dst_memory_space::name()), dst.label(),
@@ -2755,8 +2755,8 @@ inline void deep_copy(
   static_assert(std::is_same<typename dst_traits::non_const_value_type,
                              typename dst_traits::value_type>::value,
                 "deep_copy requires non-const type");
-  typedef typename dst_traits::memory_space dst_memory_space;
 #if defined(KOKKOS_ENABLE_PROFILING)
+  typedef typename dst_traits::memory_space dst_memory_space;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::SpaceHandle(dst_memory_space::name()), dst.label(),
