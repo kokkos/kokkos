@@ -311,9 +311,12 @@ struct is_space {
     typedef typename U::device_type space;
   };
 
-  typedef typename is_space::template exe<T> is_exe;
-  typedef typename is_space::template mem<T> is_mem;
-  typedef typename is_space::template dev<T> is_dev;
+  typedef typename is_space::template exe<typename std::remove_cv<T>::type>
+      is_exe;
+  typedef typename is_space::template mem<typename std::remove_cv<T>::type>
+      is_mem;
+  typedef typename is_space::template dev<typename std::remove_cv<T>::type>
+      is_dev;
 
  public:
   static constexpr bool value = is_exe::value || is_mem::value || is_dev::value;
