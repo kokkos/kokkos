@@ -316,7 +316,7 @@ struct is_space {
   typedef typename is_space::template dev<T> is_dev;
 
  public:
-  enum { value = is_exe::value || is_mem::value || is_dev::value };
+  static constexpr bool value = is_exe::value || is_mem::value || is_dev::value;
 
   typedef typename is_exe::space execution_space;
   typedef typename is_mem::space memory_space;
