@@ -93,7 +93,6 @@ struct ViewFill<ViewType, Layout, ExecSpace, 1, iType, ETIAvail> {
   ViewType a;
   typename ViewType::const_value_type val;
   typedef typename ViewType::non_const_value_type ST;
-  ViewFill(const ViewType&, const ST&);
   ViewFill(const ViewType&, const ST&, const ExecSpace&);
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType&) const;
@@ -105,7 +104,6 @@ struct ViewFill<ViewType, Layout, ExecSpace, 2, iType, ETIAvail> {
   ViewType a;
   typename ViewType::const_value_type val;
   typedef typename ViewType::non_const_value_type ST;
-  ViewFill(const ViewType&, const ST&);
   ViewFill(const ViewType&, const ST&, const ExecSpace&);
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType&, const iType&) const;
@@ -117,7 +115,6 @@ struct ViewFill<ViewType, Layout, ExecSpace, 3, iType, ETIAvail> {
   ViewType a;
   typename ViewType::const_value_type val;
   typedef typename ViewType::non_const_value_type ST;
-  ViewFill(const ViewType&, const ST&);
   ViewFill(const ViewType&, const ST&, const ExecSpace&);
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType&, const iType&, const iType&) const;
@@ -129,7 +126,6 @@ struct ViewFill<ViewType, Layout, ExecSpace, 4, iType, ETIAvail> {
   ViewType a;
   typename ViewType::const_value_type val;
   typedef typename ViewType::non_const_value_type ST;
-  ViewFill(const ViewType&, const ST&);
   ViewFill(const ViewType&, const ST&, const ExecSpace&);
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType&, const iType&, const iType&, const iType&) const;
@@ -141,7 +137,6 @@ struct ViewFill<ViewType, Layout, ExecSpace, 5, iType, ETIAvail> {
   ViewType a;
   typename ViewType::const_value_type val;
   typedef typename ViewType::non_const_value_type ST;
-  ViewFill(const ViewType&, const ST&);
   ViewFill(const ViewType&, const ST&, const ExecSpace&);
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType&, const iType&, const iType&, const iType&,
@@ -204,10 +199,8 @@ struct ViewFill<ViewType, Layout, ExecSpace, 1, iType,
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-1D",
                          policy_type(space, 0, a.extent(0)), *this);
-    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -230,11 +223,9 @@ struct ViewFill<ViewType, Layout, ExecSpace, 2, iType,
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-2D",
                          policy_type(space, {0, 0}, {a.extent(0), a.extent(1)}),
                          *this);
-    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -257,12 +248,10 @@ struct ViewFill<ViewType, Layout, ExecSpace, 3, iType,
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    ExecSpace().fence();
     Kokkos::parallel_for(
         "Kokkos::ViewFill-3D",
         policy_type(space, {0, 0, 0}, {a.extent(0), a.extent(1), a.extent(2)}),
         *this);
-    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -287,13 +276,11 @@ struct ViewFill<ViewType, Layout, ExecSpace, 4, iType,
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    ExecSpace().fence();
     Kokkos::parallel_for(
         "Kokkos::ViewFill-4D",
         policy_type(space, {0, 0, 0, 0},
                     {a.extent(0), a.extent(1), a.extent(2), a.extent(3)}),
         *this);
-    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -319,13 +306,11 @@ struct ViewFill<ViewType, Layout, ExecSpace, 5, iType,
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-5D",
                          policy_type(space, {0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(2),
                                       a.extent(3), a.extent(4)}),
                          *this);
-    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -351,13 +336,11 @@ struct ViewFill<ViewType, Layout, ExecSpace, 6, iType,
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-6D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(2),
                                       a.extent(3), a.extent(4), a.extent(5)}),
                          *this);
-    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -383,13 +366,11 @@ struct ViewFill<ViewType, Layout, ExecSpace, 7, iType,
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-7D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(2),
                                       a.extent(3), a.extent(5), a.extent(6)}),
                          *this);
-    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -416,13 +397,11 @@ struct ViewFill<ViewType, Layout, ExecSpace, 8, iType,
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)
       : a(a_), val(val_) {
-    ExecSpace().fence();
     Kokkos::parallel_for("Kokkos::ViewFill-8D",
                          policy_type(space, {0, 0, 0, 0, 0, 0},
                                      {a.extent(0), a.extent(1), a.extent(3),
                                       a.extent(5), a.extent(6), a.extent(7)}),
                          *this);
-    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -591,12 +570,10 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType,
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
       : a(a_), b(b_) {
-    ExecSpace().fence();
     Kokkos::parallel_for(
         "Kokkos::ViewCopy-3D",
         policy_type(space, {0, 0, 0}, {a.extent(0), a.extent(1), a.extent(2)}),
         *this);
-    ExecSpace().fence();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -2796,6 +2773,7 @@ inline void deep_copy(
     using fill_exec_space = typename dst_traits::memory_space::execution_space;
     Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
                            fill_exec_space>(dst, value, fill_exec_space());
+    fill_exec_space().fence();
   }
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -3565,7 +3543,7 @@ create_mirror_view_and_copy(
         Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
         nullptr) {
   (void)name;
-  // Inherit fencing behaviro of deep_copy
+  // Inherit fencing behavior of deep_copy
   deep_copy(src, src);
   return src;
 }
