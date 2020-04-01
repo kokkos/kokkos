@@ -321,6 +321,8 @@ struct is_space {
  public:
   static constexpr bool value = is_exe::value || is_mem::value || is_dev::value;
 
+  constexpr operator bool() const noexcept { return value; }
+
   typedef typename is_exe::space execution_space;
   typedef typename is_mem::space memory_space;
 
