@@ -76,6 +76,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       ${dir}/Test${Tag}_AtomicOperations_complexfloat.cpp
       ${dir}/Test${Tag}_AtomicViews.cpp
       ${dir}/Test${Tag}_Atomics.cpp
+      ${dir}/Test${Tag}_Concepts.cpp
       ${dir}/Test${Tag}_Complex.cpp
       ${dir}/Test${Tag}_Crs.cpp
       ${dir}/Test${Tag}_DeepCopyAlignment.cpp
@@ -272,6 +273,7 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIP_AtomicOperations_unsignedlongint.cpp
       hip/TestHIP_Atomics.cpp
       hip/TestHIP_AtomicViews.cpp
+      hip/TestHIP_Concepts.cpp
       hip/TestHIP_DeepCopyAlignment.cpp
       hip/TestHIP_Init.cpp
       hip/TestHIP_LocalDeepCopy.cpp
