@@ -281,6 +281,15 @@ if(Kokkos_ENABLE_HIP)
     UnitTest_HIP
     SOURCES
       ${HIP_SOURCES}
+      hip/TestHIPHostPinned_ViewAPI_a.cpp
+      hip/TestHIPHostPinned_ViewAPI_b.cpp
+      hip/TestHIPHostPinned_ViewAPI_c.cpp
+      hip/TestHIPHostPinned_ViewAPI_d.cpp
+      hip/TestHIPHostPinned_ViewAPI_e.cpp
+      hip/TestHIPHostPinned_ViewCopy.cpp
+      hip/TestHIPHostPinned_ViewMapping_a.cpp
+      hip/TestHIPHostPinned_ViewMapping_b.cpp
+      hip/TestHIPHostPinned_ViewMapping_subview.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIPInterOpInit
