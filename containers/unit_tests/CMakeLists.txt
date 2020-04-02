@@ -32,8 +32,10 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda)
         ViewCtorPropEmbeddedDim
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      file(WRITE ${file} "#include <Test${Tag}_Category.hpp>\n")
-      file(APPEND ${file} "#include <Test${Name}.hpp>\n")
+      file(WRITE ${file}
+          "#include <Test${Tag}_Category.hpp>\n"
+          "#include <Test${Name}.hpp>\n"
+      )
       list(APPEND UnitTestSources ${file})
     endforeach()
     KOKKOS_ADD_EXECUTABLE_AND_TEST(UnitTest_${Tag} SOURCES ${UnitTestSources})
