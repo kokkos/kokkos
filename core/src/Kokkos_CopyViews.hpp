@@ -781,6 +781,8 @@ void view_copy(const ExecutionSpace& space, const DstType& dst,
   };
 
   if (!(ExecCanAccessSrc && ExecCanAccessDst)) {
+    Kokkos::Impl::throw_runtime_exception(
+        "Kokkos::Impl::view_copy called with invalid execution space");
   } else {
     // Figure out iteration order in case we need it
     int64_t strides[DstType::Rank + 1];
@@ -3078,11 +3080,23 @@ inline void deep_copy(
     if ((void*)dst.data() != (void*)src.data()) {
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space, ExecSpace>(
           exec_space, dst.data(), src.data(), nbytes);
-    } else {
-      exec_space.fence();
     }
   } else {
-    Impl::view_copy(exec_space, dst, src);
+    // Copying data between views in accessible memory spaces and either
+    // non-contiguous or incompatible shape.
+    if (ExecCanAccessSrcDst) {
+      Impl::view_copy(exec_space, dst, src);
+    } else if (DstExecCanAccessSrc || SrcExecCanAccessDst) {
+      using cpy_exec_space =
+          typename std::conditional<DstExecCanAccessSrc, dst_execution_space,
+                                    src_execution_space>::type;
+      exec_space.fence();
+      Impl::view_copy(cpy_exec_space(), dst, src);
+      cpy_exec_space().fence();
+    } else {
+      Kokkos::Impl::throw_runtime_exception(
+          "deep_copy given views that would require a temporary allocation");
+    }
   }
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
