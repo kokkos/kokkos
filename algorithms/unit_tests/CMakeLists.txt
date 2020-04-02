@@ -63,11 +63,6 @@ IF(Kokkos_ENABLE_PTHREAD)
   )
 ENDIF()
 
-IF(Kokkos_ENABLE_HIP)
-  # FIXME sqrt(complex)
-  LIST(REMOVE_ITEM SOURCES TestSerial.cpp)
-ENDIF()
-
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest
   SOURCES ${SOURCES}
