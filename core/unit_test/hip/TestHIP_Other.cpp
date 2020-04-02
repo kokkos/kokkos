@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -42,17 +43,15 @@
 //@HEADER
 */
 
-#include <TestViewAPI.hpp>
-
-namespace Test {
-
-TEST(TEST_CATEGORY, view_api_b) {
-// FIXME_HIP
+#include <hip/TestHIP_Category.hpp>
+#include <TestTemplateMetaFunctions.hpp>
+#include <TestAggregate.hpp>
+#include <TestMemoryPool.hpp>
+// FIXME_HIP need Team Reduce
 #ifndef KOKKOS_ENABLE_HIP
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_a();
+#include <TestCXX11.hpp>
 #endif
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_mirror();
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_scalar();
-}
+#include <TestTile.hpp>
 
-}  // namespace Test
+#include <TestViewCtorPropEmbeddedDim.hpp>
+#include <TestViewLayoutTiled.hpp>

@@ -59,11 +59,11 @@ TEST(TEST_CATEGORY, view_remap) {
   std::conditional<std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value, \
                    Kokkos::CudaHostPinnedSpace, TEST_EXECSPACE>::type
 #else
-#ifdef KOKKOS_ENABLE_ROCM
-#define EXECSPACE                                                      \
-  std::conditional<                                                    \
-      std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value, \
-      Kokkos::Experimental::ROCmHostPinnedSpace, TEST_EXECSPACE>::type
+#ifdef KOKKOS_ENABLE_HIP
+#define EXECSPACE                                                     \
+  std::conditional<                                                   \
+      std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value, \
+      Kokkos::Experimental::HIPHostPinnedSpace, TEST_EXECSPACE>::type
 #else
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
 #define EXECSPACE Kokkos::HostSpace
