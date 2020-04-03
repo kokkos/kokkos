@@ -60,7 +60,7 @@ struct CheckResult {
   CheckResult(ViewType v_, value_type value_) : v(v_), value(value_){};
   KOKKOS_FUNCTION
   void operator()(const int i, int& lsum) const {
-    for (int j = 0; j < v.extent(1); j++) {
+    for (int j = 0; j < static_cast<int>(v.extent(1)); j++) {
       if (v.access(i, j) != value) lsum++;
     }
   }
@@ -327,7 +327,6 @@ TEST(TEST_CATEGORY, view_copy_tests) {
 }
 
 TEST(TEST_CATEGORY, view_copy_degenerated) {
-  // Only include this file to be compiled with CudaUVM and CudaHostPinned
   Kokkos::View<int*, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       v_um_def_1;
   Kokkos::View<int*, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
