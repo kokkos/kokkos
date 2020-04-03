@@ -2858,6 +2858,18 @@ inline void deep_copy(
   dst_value_type* dst_end   = dst.data() + dst.span();
   src_value_type* src_start = src.data();
   src_value_type* src_end   = src.data() + src.span();
+  if (((std::ptrdiff_t)dst_start == (std::ptrdiff_t)src_start) &&
+      ((std::ptrdiff_t)dst_end == (std::ptrdiff_t)src_end) &&
+      (dst.span_is_contiguous() && src.span_is_contiguous())) {
+    Kokkos::fence();
+#if defined(KOKKOS_ENABLE_PROFILING)
+    if (Kokkos::Profiling::profileLibraryLoaded()) {
+      Kokkos::Profiling::endDeepCopy();
+    }
+#endif
+    return;
+  }
+
   if ((((std::ptrdiff_t)dst_start < (std::ptrdiff_t)src_end) &&
        ((std::ptrdiff_t)dst_end > (std::ptrdiff_t)src_start)) &&
       ((dst.span_is_contiguous() && src.span_is_contiguous()))) {
