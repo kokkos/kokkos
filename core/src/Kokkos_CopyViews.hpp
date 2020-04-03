@@ -2918,7 +2918,15 @@ inline void deep_copy(
   }
 #endif
 
-  if (dst.data() == nullptr || src.data() == nullptr) {
+  dst_value_type* dst_start = dst.data();
+  dst_value_type* dst_end   = dst.data() + dst.span();
+  src_value_type* src_start = src.data();
+  src_value_type* src_end   = src.data() + src.span();
+
+  // Early dropout if identical range
+  if ((dst_start == nullptr || src_start == nullptr) ||
+      ((std::ptrdiff_t(dst_start) == std::ptrdiff_t(src_start)) &&
+       (std::ptrdiff_t(dst_end) == std::ptrdiff_t(src_end)))) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     // do nothing
 #else
@@ -2950,7 +2958,6 @@ inline void deep_copy(
       Kokkos::Impl::throw_runtime_exception(message);
     }
 #endif
-    exec_space.fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
@@ -2978,11 +2985,7 @@ inline void deep_copy(
                                          dst_memory_space>::accessible
   };
 
-  // Checking for Overlapping Views.
-  dst_value_type* dst_start = dst.data();
-  dst_value_type* dst_end   = dst.data() + dst.span();
-  src_value_type* src_start = src.data();
-  src_value_type* src_end   = src.data() + src.span();
+  // Error out for non-identical overlapping views.
   if ((((std::ptrdiff_t)dst_start < (std::ptrdiff_t)src_end) &&
        ((std::ptrdiff_t)dst_end > (std::ptrdiff_t)src_start)) &&
       ((dst.span_is_contiguous() && src.span_is_contiguous()))) {
