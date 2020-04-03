@@ -785,6 +785,9 @@ struct TestViewMirror {
 
     ASSERT_EQ(a_h.extent(0), a_h2.extent(0));
     ASSERT_EQ(a_h.extent(0), a_d.extent(0));
+
+    ASSERT_NO_THROW(
+        Kokkos::deep_copy(Kokkos::DefaultHostExecutionSpace{}, a_h, a_org));
   }
 
   template <class MemoryTraits>
