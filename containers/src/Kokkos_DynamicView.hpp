@@ -70,10 +70,10 @@ struct ChunkArraySpace<Kokkos::CudaSpace> {
   using memory_space = typename Kokkos::CudaUVMSpace;
 };
 #endif
-#ifdef KOKKOS_ENABLE_ROCM
+#ifdef KOKKOS_ENABLE_HIP
 template <>
-struct ChunkArraySpace<Kokkos::Experimental::ROCmSpace> {
-  using memory_space = typename Kokkos::Experimental::ROCmHostPinnedSpace;
+struct ChunkArraySpace<Kokkos::Experimental::HIPSpace> {
+  using memory_space = typename Kokkos::Experimental::HIPHostPinnedSpace;
 };
 #endif
 }  // end namespace Impl

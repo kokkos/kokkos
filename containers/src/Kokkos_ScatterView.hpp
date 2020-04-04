@@ -171,6 +171,23 @@ struct DefaultContribution<Kokkos::Cuda,
 };
 #endif
 
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct DefaultDuplication<Kokkos::Experimental::HIP> {
+  enum : int { value = Kokkos::Experimental::ScatterNonDuplicated };
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::HIP,
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  enum : int { value = Kokkos::Experimental::ScatterAtomic };
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::HIP,
+                           Kokkos::Experimental::ScatterDuplicated> {
+  enum : int { value = Kokkos::Experimental::ScatterAtomic };
+};
+#endif
+
 /* ScatterValue <Op=ScatterSum, contribution=ScatterNonAtomic> is the object
    returned by the access operator() of ScatterAccess, This class inherits from
    the Sum<> reducer and it wraps join(dest, src) with convenient operator+=,
