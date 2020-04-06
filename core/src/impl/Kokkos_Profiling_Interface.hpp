@@ -45,10 +45,8 @@
 #ifndef KOKKOSP_INTERFACE_HPP
 #define KOKKOSP_INTERFACE_HPP
 
-#include <Kokkos_Macros.hpp>
 #include <cinttypes>
 #include <cstddef>
-#include <Kokkos_Core_fwd.hpp>
 #include <string>
 
 #include <iostream>
@@ -86,126 +84,43 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
 #if defined(KOKKOS_ENABLE_PROFILING)
 // We check at configure time that libdl is available.
 #include <dlfcn.h>
+#endif
 
 #include <impl/Kokkos_Profiling_DeviceInfo.hpp>
-
-#define KOKKOSP_INTERFACE_VERSION 20171029
+#include <impl/Kokkos_Profiling_DeviceInfo.hpp>
+#include <impl/Kokkos_Profiling_C_Interface.h>
+#include <impl/Kokkos_Profiling_C_Interface.h>
 
 namespace Kokkos {
 namespace Profiling {
 
-struct SpaceHandle {
-  SpaceHandle(const char* space_name);
-  char name[64];
-};
+using SpaceHandle = Kokkos_Profiling_SpaceHandle;
 
-typedef void (*initFunction)(const int, const uint64_t, const uint32_t,
-                             KokkosPDeviceInfo*);
-typedef void (*finalizeFunction)();
-typedef void (*beginFunction)(const char*, const uint32_t, uint64_t*);
-typedef void (*endFunction)(uint64_t);
+}  // end namespace Profiling
 
-typedef void (*pushFunction)(const char*);
-typedef void (*popFunction)();
-
-typedef void (*allocateDataFunction)(const SpaceHandle, const char*,
-                                     const void*, const uint64_t);
-typedef void (*deallocateDataFunction)(const SpaceHandle, const char*,
-                                       const void*, const uint64_t);
-
-typedef void (*createProfileSectionFunction)(const char*, uint32_t*);
-typedef void (*startProfileSectionFunction)(const uint32_t);
-typedef void (*stopProfileSectionFunction)(const uint32_t);
-typedef void (*destroyProfileSectionFunction)(const uint32_t);
-
-typedef void (*profileEventFunction)(const char*);
-
-typedef void (*beginDeepCopyFunction)(SpaceHandle, const char*, const void*,
-                                      SpaceHandle, const char*, const void*,
-                                      uint64_t);
-typedef void (*endDeepCopyFunction)();
-
-bool profileLibraryLoaded();
-
-void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
-                      uint64_t* kernelID);
-void endParallelFor(const uint64_t kernelID);
-void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
-                       uint64_t* kernelID);
-void endParallelScan(const uint64_t kernelID);
-void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
-                         uint64_t* kernelID);
-void endParallelReduce(const uint64_t kernelID);
-
-void pushRegion(const std::string& kName);
-void popRegion();
-
-void createProfileSection(const std::string& sectionName, uint32_t* secID);
-void startSection(const uint32_t secID);
-void stopSection(const uint32_t secID);
-void destroyProfileSection(const uint32_t secID);
-
-void markEvent(const std::string* evName);
-
-void allocateData(const SpaceHandle space, const std::string label,
-                  const void* ptr, const uint64_t size);
-void deallocateData(const SpaceHandle space, const std::string label,
-                    const void* ptr, const uint64_t size);
-
-void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
-                   const void* dst_ptr, const SpaceHandle src_space,
-                   const std::string src_label, const void* src_ptr,
-                   const uint64_t size);
-void endDeepCopy();
-
-void initialize();
-void finalize();
-
-}  // namespace Profiling
-}  // namespace Kokkos
-
-#else
-namespace Kokkos {
 namespace Profiling {
 
-struct SpaceHandle {
-  SpaceHandle(const char* space_name);
-  char name[64];
-};
+using initFunction           = Kokkos_Profiling_initFunction;
+using finalizeFunction       = Kokkos_Profiling_finalizeFunction;
+using beginFunction          = Kokkos_Profiling_beginFunction;
+using endFunction            = Kokkos_Profiling_endFunction;
+using pushFunction           = Kokkos_Profiling_pushFunction;
+using popFunction            = Kokkos_Profiling_popFunction;
+using allocateDataFunction   = Kokkos_Profiling_allocateDataFunction;
+using deallocateDataFunction = Kokkos_Profiling_deallocateDataFunction;
+using createProfileSectionFunction =
+    Kokkos_Profiling_createProfileSectionFunction;
+using startProfileSectionFunction =
+    Kokkos_Profiling_startProfileSectionFunction;
+using stopProfileSectionFunction = Kokkos_Profiling_stopProfileSectionFunction;
+using destroyProfileSectionFunction =
+    Kokkos_Profiling_destroyProfileSectionFunction;
+using profileEventFunction  = Kokkos_Profiling_profileEventFunction;
+using beginDeepCopyFunction = Kokkos_Profiling_beginDeepCopyFunction;
+using endDeepCopyFunction   = Kokkos_Profiling_endDeepCopyFunction;
 
-bool profileLibraryLoaded();
+}  // end namespace Profiling
 
-void beginParallelFor(const std::string&, const uint32_t, uint64_t*);
-void endParallelFor(const uint64_t);
-void beginParallelScan(const std::string&, const uint32_t, uint64_t*);
-void endParallelScan(const uint64_t);
-void beginParallelReduce(const std::string&, const uint32_t, uint64_t*);
-void endParallelReduce(const uint64_t);
-
-void pushRegion(const std::string&);
-void popRegion();
-void createProfileSection(const std::string&, uint32_t*);
-void startSection(const uint32_t);
-void stopSection(const uint32_t);
-void destroyProfileSection(const uint32_t);
-
-void markEvent(const std::string&);
-
-void allocateData(const SpaceHandle, const std::string, const void*,
-                  const uint64_t);
-void deallocateData(const SpaceHandle, const std::string, const void*,
-                    const uint64_t);
-
-void beginDeepCopy(const SpaceHandle, const std::string, const void*,
-                   const SpaceHandle, const std::string, const void*,
-                   const uint64_t);
-void endDeepCopy();
-
-void initialize();
-void finalize();
-
-}  // namespace Profiling
 }  // namespace Kokkos
 
-#endif
 #endif
