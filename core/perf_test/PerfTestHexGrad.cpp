@@ -289,9 +289,9 @@ TEST(default_exec, hexgrad) {
   int exp_end    = 20;
   int num_trials = 5;
 
-  if (command_line_num_args() > 1) exp_beg = atoi(command_line_arg(1));
-  if (command_line_num_args() > 2) exp_end = atoi(command_line_arg(2));
-  if (command_line_num_args() > 3) num_trials = atoi(command_line_arg(3));
+  if (command_line_num_args() > 1) exp_beg = std::stoi(command_line_arg(1));
+  if (command_line_num_args() > 2) exp_end = std::stoi(command_line_arg(2));
+  if (command_line_num_args() > 3) num_trials = std::stoi(command_line_arg(3));
 
   EXPECT_NO_THROW(run_test_hexgrad<Kokkos::DefaultExecutionSpace>(
       exp_beg, exp_end, num_trials, Kokkos::DefaultExecutionSpace::name()));

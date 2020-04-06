@@ -134,7 +134,7 @@ bool cuda_launch_blocking() {
 
   if (env == 0) return false;
 
-  return atoi(env);
+  return std::stoi(env);
 }
 #endif
 
@@ -510,7 +510,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
   if (env_force_device_alloc == 0)
     force_device_alloc = false;
   else
-    force_device_alloc = atoi(env_force_device_alloc) != 0;
+    force_device_alloc = std::stoi(env_force_device_alloc) != 0;
 
   const char *env_visible_devices = getenv("CUDA_VISIBLE_DEVICES");
   bool visible_devices_one        = true;

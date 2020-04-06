@@ -152,13 +152,13 @@ int main(int argc, char* argv[]) {
       total_alloc_size = atol(a + strlen(alloc_size));
 
     if (!strncmp(a, super_size, strlen(super_size)))
-      min_superblock_size = atoi(a + strlen(super_size));
+      min_superblock_size = std::stoi(a + strlen(super_size));
 
     if (!strncmp(a, repeat_outer, strlen(repeat_outer)))
-      test_repeat_outer = atoi(a + strlen(repeat_outer));
+      test_repeat_outer = std::stoi(a + strlen(repeat_outer));
 
     if (!strncmp(a, input_value, strlen(input_value)))
-      fib_input = atoi(a + strlen(input_value));
+      fib_input = std::stoi(a + strlen(input_value));
   }
 
   const long fib_output   = eval_fib(fib_input);

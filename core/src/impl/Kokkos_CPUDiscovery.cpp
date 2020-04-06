@@ -52,6 +52,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
+#include <string>
 
 namespace Kokkos {
 namespace Impl {
@@ -73,15 +74,15 @@ int mpi_ranks_per_node() {
   char *str;
   int ppn = 1;
   // if ((str = getenv("SLURM_TASKS_PER_NODE"))) {
-  //  ppn = atoi(str);
+  //  ppn = std::stoi(str);
   //  if(ppn<=0) ppn = 1;
   //}
   if ((str = getenv("MV2_COMM_WORLD_LOCAL_SIZE"))) {
-    ppn = atoi(str);
+    ppn = std::stoi(str);
     if (ppn <= 0) ppn = 1;
   }
   if ((str = getenv("OMPI_COMM_WORLD_LOCAL_SIZE"))) {
-    ppn = atoi(str);
+    ppn = std::stoi(str);
     if (ppn <= 0) ppn = 1;
   }
   return ppn;
@@ -91,13 +92,13 @@ int mpi_local_rank_on_node() {
   char *str;
   int local_rank = 0;
   // if ((str = getenv("SLURM_LOCALID"))) {
-  //  local_rank = atoi(str);
+  //  local_rank = std::stoi(str);
   //}
   if ((str = getenv("MV2_COMM_WORLD_LOCAL_RANK"))) {
-    local_rank = atoi(str);
+    local_rank = std::stoi(str);
   }
   if ((str = getenv("OMPI_COMM_WORLD_LOCAL_RANK"))) {
-    local_rank = atoi(str);
+    local_rank = std::stoi(str);
   }
   return local_rank;
 }
