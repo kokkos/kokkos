@@ -2728,8 +2728,10 @@ inline void deep_copy(
   if (dst.data() == nullptr) {
     space.fence();
   } else {
-    typedef typename View<DT, DP...>::uniform_runtime_nomemspace_type
-        ViewTypeUniform;
+    using ViewTypeUniform = typename std::conditional<
+        View<DT, DP...>::Rank == 0,
+        typename View<DT, DP...>::uniform_runtime_type,
+        typename View<DT, DP...>::uniform_runtime_nomemspace_type>::type;
     Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
                            ExecSpace>(dst, value, space);
   }
@@ -2770,8 +2772,10 @@ inline void deep_copy(
     space.fence();
   } else {
     space.fence();
-    typedef typename View<DT, DP...>::uniform_runtime_nomemspace_type
-        ViewTypeUniform;
+    using ViewTypeUniform = typename std::conditional<
+        View<DT, DP...>::Rank == 0,
+        typename View<DT, DP...>::uniform_runtime_type,
+        typename View<DT, DP...>::uniform_runtime_nomemspace_type>::type;
     using fill_exec_space = typename dst_traits::memory_space::execution_space;
     Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
                            fill_exec_space>(dst, value, fill_exec_space());
