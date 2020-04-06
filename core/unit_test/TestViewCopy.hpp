@@ -149,7 +149,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
     Kokkos::deep_copy(b, h_b);
     ASSERT_TRUE(run_check(b, 4));
   }
-  // Non contiguous copes
+  // Non contiguous copies
   {
     Kokkos::deep_copy(s_a, 5);
     ASSERT_TRUE(run_check(s_a, 5));
@@ -223,7 +223,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
     Kokkos::deep_copy(dev, b, h_b);
     ASSERT_TRUE(run_check(b, 4));
   }
-  // Non contiguous copes
+  // Non contiguous copies
   {
     Kokkos::deep_copy(dev, s_a, 5);
     ASSERT_TRUE(run_check(s_a, 5));
@@ -297,7 +297,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
     Kokkos::deep_copy(host, b, h_b);
     ASSERT_TRUE(run_check(b, 4));
   }
-  // Non contiguous copes
+  // Non contiguous copies
   {
     Kokkos::deep_copy(host, s_a, 5);
     ASSERT_TRUE(run_check(s_a, 5));
