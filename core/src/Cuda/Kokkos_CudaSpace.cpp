@@ -919,7 +919,11 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
                            bool to_device) {
   cudaPointerAttributes attr;
   cudaPointerGetAttributes(&attr, ptr);
+#if CUDA_VERSION < 10000
+  if (to_device && attr.isManaged &&
+#else
   if (to_device && (attr.type == cudaMemoryTypeManaged) &&
+#endif
       space.cuda_device_prop().concurrentManagedAccess) {
     cudaMemPrefetchAsync(ptr, bytes, space.cuda_device(), space.cuda_stream());
   }
