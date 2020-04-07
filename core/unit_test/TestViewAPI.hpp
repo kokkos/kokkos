@@ -853,10 +853,8 @@ struct TestViewMirror {
     Kokkos::deep_copy(v, 255);
     auto v_m1 = Kokkos::create_mirror_view_and_copy(
         Kokkos::DefaultHostExecutionSpace(), view_const_cast(v));
-    ASSERT_TRUE(run_check(v_m1, 255));
     auto v_m2 = Kokkos::create_mirror_view_and_copy(ExecutionSpace(),
                                                     view_const_cast(v));
-    ASSERT_TRUE(run_check(v_m2, 255));
   }
 
   template <class MemoryTraits, class Space>
