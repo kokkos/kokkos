@@ -259,42 +259,28 @@ if(Kokkos_ENABLE_CUDA)
 endif()
 
 if(Kokkos_ENABLE_HIP)
-  set(HIP_SOURCES
-      UnitTestMainInit.cpp
-      #FIXME_HIP
-      #hip/TestHIP_AtomicOperations_complexdouble.cpp
-      hip/TestHIP_AtomicOperations_complexfloat.cpp
-      hip/TestHIP_AtomicOperations_double.cpp
-      hip/TestHIP_AtomicOperations_int.cpp
-      hip/TestHIP_AtomicOperations_float.cpp
-      hip/TestHIP_AtomicOperations_longint.cpp
-      hip/TestHIP_AtomicOperations_longlongint.cpp
-      hip/TestHIP_AtomicOperations_unsignedint.cpp
-      hip/TestHIP_AtomicOperations_unsignedlongint.cpp
-      hip/TestHIP_Atomics.cpp
-      hip/TestHIP_AtomicViews.cpp
-      hip/TestHIP_Concepts.cpp
-      hip/TestHIP_DeepCopyAlignment.cpp
-      hip/TestHIP_Init.cpp
-      hip/TestHIP_LocalDeepCopy.cpp
-      hip/TestHIP_MDRange_a.cpp
-      hip/TestHIP_MDRange_b.cpp
-      hip/TestHIP_MDRange_c.cpp
-      hip/TestHIP_MDRange_d.cpp
-      hip/TestHIP_MDRange_e.cpp
-      hip/TestHIP_RangePolicy.cpp
-      hip/TestHIP_RangePolicyRequire.cpp
-      hip/TestHIP_Reducers_a.cpp
-      hip/TestHIP_Reducers_b.cpp
-      hip/TestHIP_Reducers_c.cpp
-      hip/TestHIP_Reducers_d.cpp
-      hip/TestHIP_Reductions.cpp
-      hip/TestHIP_Scan.cpp
-      hip/TestHIP_ScanUnit.cpp
-      hip/TestHIP_Spaces.cpp
-      hip/TestHIP_SubView_a.cpp
-      hip/TestHIP_SubView_b.cpp
-      hip/TestHIP_View_64bit.cpp
+  # FIXME_HIP
+  LIST(REMOVE_ITEM HIP_SOURCES
+    hip/TestHIP_AtomicOperations_complexdouble.cpp
+    hip/TestHIP_Other.cpp
+    hip/TestHIP_Reductions_DeviceView.cpp
+    hip/TestHIP_Team.cpp
+    hip/TestHIP_TeamReductionScan.cpp
+    hip/TestHIP_TeamScratch.cpp
+    hip/TestHIP_TeamTeamSize.cpp
+    hip/TestHIP_TeamVectorRange.cpp
+    hip/TestHIP_UniqueToken.cpp
+    hip/TestHIP_ViewAPI_a.cpp
+    hip/TestHIP_ViewAPI_b.cpp
+    hip/TestHIP_ViewAPI_e.cpp
+    hip/TestHIP_ViewLayoutStrideAssignment.cpp
+    hip/TestHIP_WorkGraph.cpp
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HIP
+    SOURCES
+      ${HIP_SOURCES}
       hip/TestHIPHostPinned_ViewAPI_a.cpp
       hip/TestHIPHostPinned_ViewAPI_b.cpp
       hip/TestHIPHostPinned_ViewAPI_c.cpp
@@ -304,11 +290,6 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIPHostPinned_ViewMapping_a.cpp
       hip/TestHIPHostPinned_ViewMapping_b.cpp
       hip/TestHIPHostPinned_ViewMapping_subview.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HIP
-    SOURCES
-      ${HIP_SOURCES}
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIPInterOpInit
@@ -333,24 +314,6 @@ SET(DEFAULT_DEVICE_SOURCES
   default/TestDefaultDeviceType_d.cpp
   default/TestDefaultDeviceTypeResize.cpp
 )
-
-IF(Kokkos_ENABLE_HIP)
-  # FIXME
-  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES
-    default/TestDefaultDeviceType_a1.cpp
-    default/TestDefaultDeviceType_b1.cpp
-    default/TestDefaultDeviceType_c1.cpp
-    default/TestDefaultDeviceType_a2.cpp
-    default/TestDefaultDeviceType_b2.cpp
-    default/TestDefaultDeviceType_c2.cpp
-    default/TestDefaultDeviceType_a3.cpp
-    default/TestDefaultDeviceType_b3.cpp
-    default/TestDefaultDeviceType_c3.cpp
-    default/TestDefaultDeviceType_d.cpp
-    # NOTE the one below compiles but fails
-    default/TestDefaultDeviceTypeResize.cpp
-  )
-ENDIF()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
