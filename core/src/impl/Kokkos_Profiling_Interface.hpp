@@ -89,7 +89,6 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
 #include <impl/Kokkos_Profiling_DeviceInfo.hpp>
 #include <impl/Kokkos_Profiling_DeviceInfo.hpp>
 #include <impl/Kokkos_Profiling_C_Interface.h>
-#include <impl/Kokkos_Profiling_C_Interface.h>
 
 namespace Kokkos {
 namespace Profiling {
