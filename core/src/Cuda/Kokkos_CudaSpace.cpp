@@ -915,6 +915,17 @@ void *cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
   return ptr;
 }
 
+void cuda_prefetch_pointer(const Cuda &space, void *const ptr, size_t bytes,
+                           bool to_device) {
+  cudaPointerAttributes attr;
+  cudaPointerGetAttributes(&attr, ptr);
+  int direction = to_device ? space.cuda_device() : cudaCpuDeviceId;
+
+  if (attr.isManaged && space.cuda_device_prop().concurrentManagedAccess) {
+    cudaMemPrefetchAsync(ptr, bytes, space.cuda_device(), space.cuda_stream());
+  }
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 #else

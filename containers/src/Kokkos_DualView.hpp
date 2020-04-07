@@ -528,12 +528,32 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
 
     if (dev == 1) {  // if Device is the same as DualView's device type
       if ((modified_flags(0) > 0) && (modified_flags(0) >= modified_flags(1))) {
+#ifdef KOKKOS_ENABLE_CUDA
+        if (std::is_same<typename t_dev::memory_space,
+                         Kokkos::CudaUVMSpace>::value) {
+          if (d_view.data() == h_view.data())
+            Kokkos::Impl::cuda_prefetch_pointer(
+                Kokkos::Cuda(), d_view.data(),
+                sizeof(typename t_dev::value_type) * d_view.span(), true);
+        }
+#endif
+
         deep_copy(d_view, h_view);
         modified_flags(0) = modified_flags(1) = 0;
       }
     }
     if (dev == 0) {  // hopefully Device is the same as DualView's host type
       if ((modified_flags(1) > 0) && (modified_flags(1) >= modified_flags(0))) {
+#ifdef KOKKOS_ENABLE_CUDA
+        if (std::is_same<typename t_dev::memory_space,
+                         Kokkos::CudaUVMSpace>::value) {
+          if (d_view.data() == h_view.data())
+            Kokkos::Impl::cuda_prefetch_pointer(
+                Kokkos::Cuda(), d_view.data(),
+                sizeof(typename t_dev::value_type) * d_view.span(), false);
+        }
+#endif
+
         deep_copy(h_view, d_view);
         modified_flags(0) = modified_flags(1) = 0;
       }
@@ -576,6 +596,16 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
           "Calling sync_host on a DualView with a const datatype.");
     if (modified_flags.data() == nullptr) return;
     if (modified_flags(1) > modified_flags(0)) {
+#ifdef KOKKOS_ENABLE_CUDA
+      if (std::is_same<typename t_dev::memory_space,
+                       Kokkos::CudaUVMSpace>::value) {
+        if (d_view.data() == h_view.data())
+          Kokkos::Impl::cuda_prefetch_pointer(
+              Kokkos::Cuda(), d_view.data(),
+              sizeof(typename t_dev::value_type) * d_view.span(), false);
+      }
+#endif
+
       deep_copy(h_view, d_view);
       modified_flags(1) = modified_flags(0) = 0;
     }
@@ -588,6 +618,16 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
           "Calling sync_device on a DualView with a const datatype.");
     if (modified_flags.data() == nullptr) return;
     if (modified_flags(0) > modified_flags(1)) {
+#ifdef KOKKOS_ENABLE_CUDA
+      if (std::is_same<typename t_dev::memory_space,
+                       Kokkos::CudaUVMSpace>::value) {
+        if (d_view.data() == h_view.data())
+          Kokkos::Impl::cuda_prefetch_pointer(
+              Kokkos::Cuda(), d_view.data(),
+              sizeof(typename t_dev::value_type) * d_view.span(), true);
+      }
+#endif
+
       deep_copy(d_view, h_view);
       modified_flags(1) = modified_flags(0) = 0;
     }

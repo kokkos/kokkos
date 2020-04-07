@@ -346,7 +346,8 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
   if (ok_init && ok_dev) {
     const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
 
-    m_cudaDev = cuda_device_id;
+    m_cudaDev    = cuda_device_id;
+    m_deviceProp = cudaProp;
 
     CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     Kokkos::Impl::cuda_device_synchronize();
@@ -839,6 +840,9 @@ const char *Cuda::name() { return "Cuda"; }
 
 cudaStream_t Cuda::cuda_stream() const { return m_space_instance->m_stream; }
 int Cuda::cuda_device() const { return m_space_instance->m_cudaDev; }
+cudaDeviceProp &Cuda::cuda_device_prop() const {
+  return m_space_instance->m_deviceProp;
+}
 
 }  // namespace Kokkos
 
