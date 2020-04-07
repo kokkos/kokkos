@@ -55,7 +55,9 @@
 
 namespace Test {
 
-TEST(openmp, SortIssue1160) { Impl::test_issue_1160_sort<Kokkos::OpenMP>(); }
+TEST(openmp, SortUnsigned3D) {
+  Impl::test_3D_sort<Kokkos::OpenMP, unsigned>(171);
+}
 
 }  // namespace Test
 #else

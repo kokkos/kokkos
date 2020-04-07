@@ -240,3 +240,5 @@ TEST(TEST_CATEGORY, view_overload_resolution) {
   TestViewOverloadResolution<TEST_EXECSPACE>::test_function_overload();
 }
 }  // namespace Test
+
+#include <TestViewIsAssignable.hpp>
