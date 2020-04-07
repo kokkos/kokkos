@@ -3564,8 +3564,7 @@ create_mirror_view_and_copy(
         Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
         nullptr) {
   (void)name;
-  // Inherit fencing behavior of deep_copy
-  deep_copy(src, src);
+  fence();  // same behavior as deep_copy(src, src)
   return src;
 }
 
@@ -3580,7 +3579,8 @@ create_mirror_view_and_copy(
         !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* = 0) {
   using Mirror      = typename Impl::MirrorViewType<Space, T, P...>::view_type;
   std::string label = name.empty() ? src.label() : name;
-  auto mirror = Mirror(ViewAllocateWithoutInitializing(label), src.layout());
+  auto mirror       = typename Mirror::non_const_type{
+      ViewAllocateWithoutInitializing(label), src.layout()};
   deep_copy(mirror, src);
   return mirror;
 }
