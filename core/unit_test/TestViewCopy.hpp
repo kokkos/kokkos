@@ -149,7 +149,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
     Kokkos::deep_copy(b, h_b);
     ASSERT_TRUE(run_check(b, 4));
   }
-  // Non contiguous copes
+  // Non contiguous copies
   {
     Kokkos::deep_copy(s_a, 5);
     ASSERT_TRUE(run_check(s_a, 5));
@@ -223,7 +223,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
     Kokkos::deep_copy(dev, b, h_b);
     ASSERT_TRUE(run_check(b, 4));
   }
-  // Non contiguous copes
+  // Non contiguous copies
   {
     Kokkos::deep_copy(dev, s_a, 5);
     ASSERT_TRUE(run_check(s_a, 5));
@@ -297,7 +297,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
     Kokkos::deep_copy(host, b, h_b);
     ASSERT_TRUE(run_check(b, 4));
   }
-  // Non contiguous copes
+  // Non contiguous copies
   {
     Kokkos::deep_copy(host, s_a, 5);
     ASSERT_TRUE(run_check(s_a, 5));
@@ -323,6 +323,158 @@ TEST(TEST_CATEGORY, view_copy_tests) {
       Kokkos::deep_copy(host, s_a, hs_a);
       ASSERT_TRUE(run_check(s_a, 6));
     }
+  }
+}
+
+TEST(TEST_CATEGORY, view_copy_tests_rank_0) {
+  Kokkos::View<int, TEST_EXECSPACE> defaulted;
+  Kokkos::View<int, TEST_EXECSPACE> a("A");
+  Kokkos::View<int, TEST_EXECSPACE> b("B");
+  auto h_a  = Kokkos::create_mirror(a);
+  auto h_b  = Kokkos::create_mirror(b);
+  auto m_a  = Kokkos::create_mirror_view(a);
+  auto dev  = typename TEST_EXECSPACE::execution_space();
+  auto host = Kokkos::DefaultHostExecutionSpace();
+
+  // No execution space
+  { Kokkos::deep_copy(defaulted, defaulted); }
+  {
+    Kokkos::deep_copy(a, 1);
+    ASSERT_TRUE(run_check(a, 1));
+  }
+  {
+    Kokkos::deep_copy(a, a);
+    ASSERT_TRUE(run_check(a, 1));
+  }
+  {
+    Kokkos::deep_copy(m_a, a);
+    ASSERT_TRUE(run_check(m_a, 1));
+  }
+  {
+    Kokkos::deep_copy(m_a, 2);
+    ASSERT_TRUE(run_check(m_a, 2));
+  }
+  {
+    Kokkos::deep_copy(a, m_a);
+    ASSERT_TRUE(run_check(a, 2));
+  }
+  {
+    Kokkos::deep_copy(b, 3);
+    ASSERT_TRUE(run_check(b, 3));
+  }
+  {
+    Kokkos::deep_copy(h_a, 4);
+    ASSERT_TRUE(run_check(h_a, 4));
+  }
+  {
+    Kokkos::deep_copy(a, b);
+    ASSERT_TRUE(run_check(a, 3));
+  }
+  {
+    Kokkos::deep_copy(h_b, h_a);
+    ASSERT_TRUE(run_check(h_b, 4));
+  }
+  {
+    Kokkos::deep_copy(h_a, a);
+    ASSERT_TRUE(run_check(h_a, 3));
+  }
+  {
+    Kokkos::deep_copy(b, h_b);
+    ASSERT_TRUE(run_check(b, 4));
+  }
+
+  // Device
+  { Kokkos::deep_copy(dev, defaulted, defaulted); }
+  {
+    Kokkos::deep_copy(dev, a, 1);
+    ASSERT_TRUE(run_check(a, 1));
+  }
+  {
+    Kokkos::deep_copy(dev, a, a);
+    ASSERT_TRUE(run_check(a, 1));
+  }
+  {
+    Kokkos::deep_copy(dev, m_a, a);
+    ASSERT_TRUE(run_check(m_a, 1));
+  }
+  {
+    Kokkos::deep_copy(dev, m_a, 2);
+    ASSERT_TRUE(run_check(m_a, 2));
+  }
+  {
+    Kokkos::deep_copy(dev, a, m_a);
+    ASSERT_TRUE(run_check(a, 2));
+  }
+  {
+    Kokkos::deep_copy(dev, b, 3);
+    ASSERT_TRUE(run_check(b, 3));
+  }
+  {
+    Kokkos::deep_copy(dev, h_a, 4);
+    ASSERT_TRUE(run_check(h_a, 4));
+  }
+  {
+    Kokkos::deep_copy(dev, a, b);
+    ASSERT_TRUE(run_check(a, 3));
+  }
+  {
+    Kokkos::deep_copy(dev, h_b, h_a);
+    ASSERT_TRUE(run_check(h_b, 4));
+  }
+  {
+    Kokkos::deep_copy(dev, h_a, a);
+    ASSERT_TRUE(run_check(h_a, 3));
+  }
+  {
+    Kokkos::deep_copy(dev, b, h_b);
+    ASSERT_TRUE(run_check(b, 4));
+  }
+
+  // Host
+  { Kokkos::deep_copy(host, defaulted, defaulted); }
+  {
+    Kokkos::deep_copy(host, a, 1);
+    ASSERT_TRUE(run_check(a, 1));
+  }
+  {
+    Kokkos::deep_copy(host, a, a);
+    ASSERT_TRUE(run_check(a, 1));
+  }
+  {
+    Kokkos::deep_copy(host, m_a, a);
+    ASSERT_TRUE(run_check(m_a, 1));
+  }
+  {
+    Kokkos::deep_copy(host, m_a, 2);
+    ASSERT_TRUE(run_check(m_a, 2));
+  }
+  {
+    Kokkos::deep_copy(host, a, m_a);
+    ASSERT_TRUE(run_check(a, 2));
+  }
+  {
+    Kokkos::deep_copy(host, b, 3);
+    ASSERT_TRUE(run_check(b, 3));
+  }
+  {
+    Kokkos::deep_copy(host, h_a, 4);
+    ASSERT_TRUE(run_check(h_a, 4));
+  }
+  {
+    Kokkos::deep_copy(host, a, b);
+    ASSERT_TRUE(run_check(a, 3));
+  }
+  {
+    Kokkos::deep_copy(host, h_b, h_a);
+    ASSERT_TRUE(run_check(h_b, 4));
+  }
+  {
+    Kokkos::deep_copy(host, h_a, a);
+    ASSERT_TRUE(run_check(h_a, 3));
+  }
+  {
+    Kokkos::deep_copy(host, b, h_b);
+    ASSERT_TRUE(run_check(b, 4));
   }
 }
 
