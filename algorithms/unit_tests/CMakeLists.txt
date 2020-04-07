@@ -33,15 +33,19 @@ SET(SOURCES
   UnitTestMain.cpp
 )
 
-IF(Kokkos_ENABLE_CUDA)
-  LIST( APPEND SOURCES
-    TestCuda.cpp
-  )
-ENDIF()
-
 IF(Kokkos_ENABLE_OPENMP)
   LIST( APPEND SOURCES
     TestOpenMP.cpp
+    TestOpenMP_Sort1D.cpp
+    TestOpenMP_Sort3D.cpp
+    TestOpenMP_SortDynamicView.cpp
+    TestOpenMP_Random.cpp
+  )
+ENDIF()
+
+IF(Kokkos_ENABLE_CUDA)
+  LIST( APPEND SOURCES
+    TestCuda.cpp
   )
 ENDIF()
 
