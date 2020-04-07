@@ -840,7 +840,7 @@ const char *Cuda::name() { return "Cuda"; }
 
 cudaStream_t Cuda::cuda_stream() const { return m_space_instance->m_stream; }
 int Cuda::cuda_device() const { return m_space_instance->m_cudaDev; }
-cudaDeviceProp &Cuda::cuda_device_prop() const {
+const cudaDeviceProp &Cuda::cuda_device_prop() const {
   return m_space_instance->m_deviceProp;
 }
 

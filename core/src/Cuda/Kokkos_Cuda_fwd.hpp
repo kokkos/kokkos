@@ -55,10 +55,10 @@ class Cuda;                 ///< Execution space for Cuda GPU
 namespace Impl {
 
 template <class ExecSpace>
-void cuda_prefetch_pointer(const ExecSpace& /*space*/, void* const /*ptr*/,
+void cuda_prefetch_pointer(const ExecSpace& /*space*/, const void* /*ptr*/,
                            size_t /*bytes*/, bool /*to_device*/) {}
 
-void cuda_prefetch_pointer(const Cuda& space, void* const ptr, size_t bytes,
+void cuda_prefetch_pointer(const Cuda& space, const void* ptr, size_t bytes,
                            bool to_device);
 
 }  // namespace Impl
