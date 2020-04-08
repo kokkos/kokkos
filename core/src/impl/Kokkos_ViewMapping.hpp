@@ -2783,6 +2783,12 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
             0, &kpID);
       }
 #endif
+#ifdef KOKKOS_ENABLE_CUDA
+      if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
+        Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
+                                            true);
+      }
+#endif
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
           *this, PolicyType(0, n));
       closure.execute();
@@ -2828,6 +2834,12 @@ struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::beginParallelFor("Kokkos::View::initialization", 0,
                                             &kpID);
+      }
+#endif
+#ifdef KOKKOS_ENABLE_CUDA
+      if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
+        Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
+                                            true);
       }
 #endif
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(

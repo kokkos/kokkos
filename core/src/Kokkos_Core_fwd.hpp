@@ -120,13 +120,6 @@ class OpenMPTargetSpace;
 }  // namespace Experimental
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
-class CudaSpace;            ///< Memory space on Cuda GPU
-class CudaUVMSpace;         ///< Memory space on Cuda GPU with UVM
-class CudaHostPinnedSpace;  ///< Memory space on Host accessible to Cuda GPU
-class Cuda;                 ///< Execution space for Cuda GPU
-#endif
-
 #if defined(KOKKOS_ENABLE_ROCM)
 namespace Experimental {
 class ROCmSpace;  ///< Memory space on ROCm GPU
@@ -145,6 +138,8 @@ template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
 }  // namespace Kokkos
+
+#include "Cuda/Kokkos_Cuda_fwd.hpp"
 
 //----------------------------------------------------------------------------
 // Set the default execution space.
