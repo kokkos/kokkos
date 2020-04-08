@@ -77,6 +77,54 @@ std::stack<hook_function_type, std::list<hook_function_type>> finalize_hooks;
 namespace Kokkos {
 namespace Impl {
 
+ExecSpaceManager ExecSpaceManager::g_space_initializer;
+
+ExecSpaceManager& ExecSpaceManager::get_instance() {
+  return g_space_initializer;
+}
+
+void ExecSpaceManager::register_space_factory(
+    const std::string name, std::unique_ptr<ExecSpaceInitializerBase> space) {
+  printf("registering exec space: %s \n", name.c_str());
+  exec_space_factory_list[name] = std::move(space);
+}
+
+void ExecSpaceManager::initialize_spaces(const Kokkos::InitArguments& args) {
+  for (std::map<std::string,
+                std::unique_ptr<ExecSpaceInitializerBase>>::iterator it =
+           exec_space_factory_list.begin();
+       it != exec_space_factory_list.end(); it++) {
+    it->second->initialize(args);
+  }
+}
+
+void ExecSpaceManager::finalize_spaces(const bool all_spaces) {
+  for (std::map<std::string,
+                std::unique_ptr<ExecSpaceInitializerBase>>::iterator it =
+           exec_space_factory_list.begin();
+       it != exec_space_factory_list.end(); it++) {
+    it->second->finalize(all_spaces);
+  }
+}
+
+void ExecSpaceManager::static_fence() {
+  for (std::map<std::string,
+                std::unique_ptr<ExecSpaceInitializerBase>>::iterator it =
+           exec_space_factory_list.begin();
+       it != exec_space_factory_list.end(); it++) {
+    it->second->fence();
+  }
+}
+void ExecSpaceManager::print_configuration(std::ostringstream& msg,
+                                           const bool detail) {
+  for (std::map<std::string,
+                std::unique_ptr<ExecSpaceInitializerBase>>::iterator it =
+           exec_space_factory_list.begin();
+       it != exec_space_factory_list.end(); it++) {
+    it->second->print_configuration(msg, detail);
+  }
+}
+
 int get_ctest_gpu(const char* local_rank_str) {
   auto const* ctest_kokkos_device_type =
       std::getenv("CTEST_KOKKOS_DEVICE_TYPE");
@@ -166,9 +214,7 @@ int get_ctest_gpu(const char* local_rank_str) {
   return std::stoi(id.c_str());
 }
 
-namespace {
-
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+// extern function to extrat gpu # from args
 int get_gpu(const InitArguments& args) {
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
@@ -208,7 +254,8 @@ int get_gpu(const InitArguments& args) {
   }
   return use_gpu;
 }
-#endif  // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_HIP
+
+namespace {
 
 bool is_unsigned_int(const char* str) {
   const size_t len = strlen(str);
@@ -229,26 +276,15 @@ void initialize_backends(const InitArguments& args) {
 #endif
 
   // Protect declarations, to prevent "unused variable" warnings.
-#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
-    defined(KOKKOS_ENABLE_HPX)
+#if defined(KOKKOS_ENABLE_THREADS)
   const int num_threads = args.num_threads;
 #endif
 #if defined(KOKKOS_ENABLE_THREADS)
   const int use_numa = args.num_numa;
 #endif
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_HIP)
   int use_gpu = get_gpu(args);
-#endif  // defined( KOKKOS_ENABLE_CUDA )
-
-#if defined(KOKKOS_ENABLE_OPENMP)
-  if (std::is_same<Kokkos::OpenMP, Kokkos::DefaultExecutionSpace>::value ||
-      std::is_same<Kokkos::OpenMP, Kokkos::HostSpace::execution_space>::value) {
-    Kokkos::OpenMP::impl_initialize(num_threads);
-  } else {
-    // std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not
-    // initialized" << std::endl ;
-  }
-#endif
+#endif  // defined( KOKKOS_ENABLE_HIP )
 
 #if defined(KOKKOS_ENABLE_THREADS)
   if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
@@ -271,58 +307,7 @@ void initialize_backends(const InitArguments& args) {
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_HPX)
-  if (std::is_same<Kokkos::Experimental::HPX,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      std::is_same<Kokkos::Experimental::HPX,
-                   Kokkos::HostSpace::execution_space>::value) {
-    if (num_threads > 0) {
-      Kokkos::Experimental::HPX::impl_initialize(num_threads);
-    } else {
-      Kokkos::Experimental::HPX::impl_initialize();
-    }
-    // std::cout << "Kokkos::initialize() fyi: HPX enabled and initialized" <<
-    // std::endl ;
-  } else {
-    // std::cout << "Kokkos::initialize() fyi: HPX enabled but not initialized"
-    // << std::endl ;
-  }
-#endif
-
-#if defined(KOKKOS_ENABLE_SERIAL)
-  // Prevent "unused variable" warning for 'args' input struct.  If
-  // Serial::initialize() ever needs to take arguments from the input
-  // struct, you may remove this line of code.
-  (void)args;
-
-  // Always initialize Serial if it is configure time enabled
-  Kokkos::Serial::impl_initialize();
-#endif
-
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-  if (std::is_same<Kokkos::Experimental::OpenMPTarget,
-                   Kokkos::DefaultExecutionSpace>::value) {
-    Kokkos::Experimental::OpenMPTarget().impl_initialize();
-    // std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized"
-    // << std::endl ;
-  } else {
-    // std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not
-    // initialized" << std::endl ;
-  }
-#endif
-
-#if defined(KOKKOS_ENABLE_CUDA)
-  if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
-      0 < use_gpu) {
-    if (use_gpu > -1) {
-      Kokkos::Cuda::impl_initialize(Kokkos::Cuda::SelectDevice(use_gpu));
-    } else {
-      Kokkos::Cuda::impl_initialize();
-    }
-    // std::cout << "Kokkos::initialize() fyi: Cuda enabled and initialized" <<
-    // std::endl ;
-  }
-#endif
+  Impl::ExecSpaceManager::get_instance().initialize_spaces(args);
 
 #if defined(KOKKOS_ENABLE_HIP)
   if (std::is_same<Kokkos::Experimental::HIP,
@@ -387,48 +372,12 @@ void finalize_internal(const bool all_spaces = false) {
 
   Kokkos::Profiling::finalize();
 
-#if defined(KOKKOS_ENABLE_CUDA)
-  if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
-      all_spaces) {
-    if (Kokkos::Cuda::impl_is_initialized()) Kokkos::Cuda::impl_finalize();
-  }
-#else
-  (void)all_spaces;
-#endif
-
 #if defined(KOKKOS_ENABLE_HIP)
   if (std::is_same<Kokkos::Experimental::HIP,
                    Kokkos::DefaultExecutionSpace>::value ||
       all_spaces) {
     if (Kokkos::Experimental::HIP::impl_is_initialized())
       Kokkos::Experimental::HIP::impl_finalize();
-  }
-#endif
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-  if (std::is_same<Kokkos::Experimental::OpenMPTarget,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      all_spaces) {
-    if (Kokkos::Experimental::OpenMPTarget().impl_is_initialized())
-      Kokkos::Experimental::OpenMPTarget().impl_finalize();
-  }
-#endif
-
-#if defined(KOKKOS_ENABLE_OPENMP)
-  if (std::is_same<Kokkos::OpenMP, Kokkos::DefaultExecutionSpace>::value ||
-      std::is_same<Kokkos::OpenMP, Kokkos::HostSpace::execution_space>::value ||
-      all_spaces) {
-    if (Kokkos::OpenMP::impl_is_initialized()) Kokkos::OpenMP::impl_finalize();
-  }
-#endif
-
-#if defined(KOKKOS_ENABLE_HPX)
-  if (std::is_same<Kokkos::Experimental::HPX,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      std::is_same<Kokkos::Experimental::HPX,
-                   Kokkos::HostSpace::execution_space>::value ||
-      all_spaces) {
-    if (Kokkos::Experimental::HPX::impl_is_initialized())
-      Kokkos::Experimental::HPX::impl_finalize();
   }
 #endif
 
@@ -442,38 +391,21 @@ void finalize_internal(const bool all_spaces = false) {
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_SERIAL)
-  if (Kokkos::Serial::impl_is_initialized()) Kokkos::Serial::impl_finalize();
-#endif
+  Impl::ExecSpaceManager::get_instance().finalize_spaces(all_spaces);
 
   g_is_initialized = false;
   g_show_warnings  = true;
 }
 
 void fence_internal() {
-#if defined(KOKKOS_ENABLE_CUDA)
-  Kokkos::Cuda::impl_static_fence();
-#endif
-
 #if defined(KOKKOS_ENABLE_HIP)
   Kokkos::Experimental::HIP::impl_static_fence();
-#endif
-
-#if defined(KOKKOS_ENABLE_OPENMP)
-  Kokkos::OpenMP::impl_static_fence();
-#endif
-
-#if defined(KOKKOS_ENABLE_HPX)
-  Kokkos::Experimental::HPX().fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_THREADS)
   Kokkos::Threads::impl_static_fence();
 #endif
-
-#if defined(KOKKOS_ENABLE_SERIAL)
-  Kokkos::Serial::impl_static_fence();
-#endif
+  Impl::ExecSpaceManager::get_instance().static_fence();
 }
 
 bool check_arg(char const* arg, char const* expected) {
@@ -952,26 +884,8 @@ void print_configuration(std::ostream& out, const bool detail) {
 #endif
 
   msg << "Devices:" << std::endl;
-  msg << "  KOKKOS_ENABLE_CUDA: ";
-#ifdef KOKKOS_ENABLE_CUDA
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
   msg << "  KOKKOS_ENABLE_HIP: ";
 #ifdef KOKKOS_ENABLE_HIP
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_OPENMP: ";
-#ifdef KOKKOS_ENABLE_OPENMP
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_HPX: ";
-#ifdef KOKKOS_ENABLE_HPX
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;
@@ -982,52 +896,11 @@ void print_configuration(std::ostream& out, const bool detail) {
 #else
   msg << "no" << std::endl;
 #endif
-  msg << "  KOKKOS_ENABLE_SERIAL: ";
-#ifdef KOKKOS_ENABLE_SERIAL
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
 
-  msg << "Default Device:" << std::endl;
-  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA: ";
-#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP: ";
-#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP: ";
-#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS: ";
-#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL: ";
-#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
+  msg << "Default Device:" << typeid(Kokkos::DefaultExecutionSpace).name()
+      << std::endl;
 
   msg << "Atomics:" << std::endl;
-  msg << "  KOKKOS_ENABLE_CUDA_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_CUDA_ATOMICS
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
   msg << "  KOKKOS_ENABLE_GNU_ATOMICS: ";
 #ifdef KOKKOS_ENABLE_GNU_ATOMICS
   msg << "yes" << std::endl;
@@ -1040,20 +913,8 @@ void print_configuration(std::ostream& out, const bool detail) {
 #else
   msg << "no" << std::endl;
 #endif
-  msg << "  KOKKOS_ENABLE_OPENMP_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_OPENMP_ATOMICS
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
   msg << "  KOKKOS_ENABLE_WINDOWS_ATOMICS: ";
 #ifdef KOKKOS_ENABLE_WINDOWS_ATOMICS
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_SERIAL_ATOMICS: ";
-#ifdef KOKKOS_ENABLE_SERIAL_ATOMICS
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;
@@ -1161,47 +1022,6 @@ void print_configuration(std::ostream& out, const bool detail) {
   msg << "no" << std::endl;
 #endif
 
-#ifdef KOKKOS_ENABLE_CUDA
-  msg << "Cuda Options:" << std::endl;
-  msg << "  KOKKOS_ENABLE_CUDA_LAMBDA: ";
-#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_CUDA_LDG_INTRINSIC: ";
-#ifdef KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE: ";
-#ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_CUDA_UVM: ";
-#ifdef KOKKOS_ENABLE_CUDA_UVM
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_CUSPARSE: ";
-#ifdef KOKKOS_ENABLE_CUSPARSE
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: ";
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-
-#endif
-
 #ifdef KOKKOS_ENABLE_HIP
   msg << "HIP Options:" << std::endl;
   msg << "  KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE: ";
@@ -1213,24 +1033,14 @@ void print_configuration(std::ostream& out, const bool detail) {
 #endif
 
   msg << "\nRuntime Configuration:" << std::endl;
-#ifdef KOKKOS_ENABLE_CUDA
-  Cuda::print_configuration(msg, detail);
-#endif
 #ifdef KOKKOS_ENABLE_HIP
   Experimental::HIP::print_configuration(msg, detail);
-#endif
-#ifdef KOKKOS_ENABLE_OPENMP
-  OpenMP::print_configuration(msg, detail);
-#endif
-#ifdef KOKKOS_ENABLE_HPX
-  Experimental::HPX::print_configuration(msg, detail);
 #endif
 #if defined(KOKKOS_ENABLE_THREADS)
   Threads::print_configuration(msg, detail);
 #endif
-#ifdef KOKKOS_ENABLE_SERIAL
-  Serial::print_configuration(msg, detail);
-#endif
+
+  Impl::ExecSpaceManager::get_instance().print_configuration(msg, detail);
 
   out << msg.str() << std::endl;
 }

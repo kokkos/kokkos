@@ -838,7 +838,6 @@ ENDFUNCTION(COMPILER_SPECIFIC_DEFS)
 FUNCTION(COMPILER_SPECIFIC_LIBS)
   COMPILER_SPECIFIC_OPTIONS_HELPER(${ARGN} LINK_LIBRARIES)
 ENDFUNCTION(COMPILER_SPECIFIC_LIBS)
-
 # Given a list of the form
 #  key1;value1;key2;value2,...
 # Create a list of all keys in a variable named ${KEY_LIST_NAME}
@@ -961,4 +960,24 @@ FUNCTION(kokkos_compilation)
             ENDIF()
         ENDFOREACH()
     ENDIF()
+ENDFUNCTION()
+## KOKKOS_CONFIG_HEADER - parse the data list which is a list of backend names
+##                        and create output config header file...used for
+##                        creating dynamic include files based on enabled backends
+##
+##                        SRC_FILE is input file
+##                        TARGET_FILE output file
+##                        HEADER_GUARD TEXT used with include header guard
+##                        HEADER_PREFIX prefix used with include (i.e. fwd, decl, setup)
+##                        DATA_LIST list of backends to include in generated file
+FUNCTION(KOKKOS_CONFIG_HEADER SRC_FILE TARGET_FILE HEADER_GUARD HEADER_PREFIX DATA_LIST)
+   SET(HEADER_GUARD_TAG "${HEADER_GUARD}_HPP_")
+   CONFIGURE_FILE(cmake/${SRC_FILE} ${CMAKE_BINARY_DIR}/temp/${TARGET_FILE}.work COPYONLY)
+   FOREACH( BACKEND_NAME ${DATA_LIST} )
+   SET(INCLUDE_NEXT_FILE "#include <${HEADER_PREFIX}_${BACKEND_NAME}.hpp>
+\@INCLUDE_NEXT_FILE\@")
+   CONFIGURE_FILE(${CMAKE_BINARY_DIR}/temp/${TARGET_FILE}.work ${CMAKE_BINARY_DIR}/temp/${TARGET_FILE}.work @ONLY)
+   ENDFOREACH()
+   SET(INCLUDE_NEXT_FILE "" )
+   CONFIGURE_FILE(${CMAKE_BINARY_DIR}/temp/${TARGET_FILE}.work ${TARGET_FILE} @ONLY)
 ENDFUNCTION()

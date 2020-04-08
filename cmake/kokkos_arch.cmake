@@ -484,35 +484,53 @@ ENDIF()
 
 #CMake verbose is kind of pointless
 #Let's just always print things
-MESSAGE(STATUS "Execution Spaces:")
+MESSAGE(STATUS "Built-in Execution Spaces:")
 
-FOREACH (_BACKEND CUDA OPENMPTARGET HIP)
-  IF(KOKKOS_ENABLE_${_BACKEND})
+FOREACH (_BACKEND Cuda OpenMPTarget HIP)
+  STRING(TOUPPER ${_BACKEND} UC_BACKEND)
+  IF(KOKKOS_ENABLE_${UC_BACKEND})
     IF(_DEVICE_PARALLEL)
       MESSAGE(FATAL_ERROR "Multiple device parallel execution spaces are not allowed! "
                           "Trying to enable execution space ${_BACKEND}, "
                           "but execution space ${_DEVICE_PARALLEL} is already enabled. "
                           "Remove the CMakeCache.txt file and re-configure.")
     ENDIF()
-    SET(_DEVICE_PARALLEL ${_BACKEND})
+    IF (${_BACKEND} STREQUAL "Cuda")
+       IF(KOKKOS_ENABLE_CUDA_UVM)
+          SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}UVMSpace")
+       ELSE()
+          SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::${_BACKEND}Space")
+       ENDIF()
+       SET(_DEVICE_PARALLEL "Kokkos::${_BACKEND}")
+    ELSE()
+       SET(_DEFAULT_DEVICE_MEMSPACE "Kokkos::Experimental::${_BACKEND}Space")
+       SET(_DEVICE_PARALLEL "Kokkos::Experimental::${_BACKEND}")
+    ENDIF()
   ENDIF()
 ENDFOREACH()
 IF(NOT _DEVICE_PARALLEL)
-  SET(_DEVICE_PARALLEL "NONE")
+  SET(_DEVICE_PARALLEL "NoTypeDefined")
+  SET(_DEFAULT_DEVICE_MEMSPACE "NoTypeDefined")
 ENDIF()
 MESSAGE(STATUS "    Device Parallel: ${_DEVICE_PARALLEL}")
-UNSET(_DEVICE_PARALLEL)
+IF(KOKKOS_ENABLE_PTHREAD)
+  SET(KOKKOS_ENABLE_THREADS ON)
+ENDIF()
 
-
-FOREACH (_BACKEND OPENMP PTHREAD HPX)
-  IF(KOKKOS_ENABLE_${_BACKEND})
+FOREACH (_BACKEND OpenMP Threads HPX)
+  STRING(TOUPPER ${_BACKEND} UC_BACKEND)
+  IF(KOKKOS_ENABLE_${UC_BACKEND})
     IF(_HOST_PARALLEL)
       MESSAGE(FATAL_ERROR "Multiple host parallel execution spaces are not allowed! "
                           "Trying to enable execution space ${_BACKEND}, "
                           "but execution space ${_HOST_PARALLEL} is already enabled. "
                           "Remove the CMakeCache.txt file and re-configure.")
     ENDIF()
-    SET(_HOST_PARALLEL ${_BACKEND})
+    IF (${_BACKEND} STREQUAL "HPX")
+       SET(_HOST_PARALLEL "Kokkos::Experimental::${_BACKEND}")
+    ELSE()
+       SET(_HOST_PARALLEL "Kokkos::${_BACKEND}")
+    ENDIF()
   ENDIF()
 ENDFOREACH()
 
@@ -522,14 +540,11 @@ IF(NOT _HOST_PARALLEL AND NOT KOKKOS_ENABLE_SERIAL)
                       "and Kokkos_ENABLE_SERIAL=OFF.")
 ENDIF()
 
-IF(NOT _HOST_PARALLEL)
-  SET(_HOST_PARALLEL "NONE")
-ENDIF()
+IF(_HOST_PARALLEL)
 MESSAGE(STATUS "    Host Parallel: ${_HOST_PARALLEL}")
-UNSET(_HOST_PARALLEL)
-
-IF(KOKKOS_ENABLE_PTHREAD)
-  SET(KOKKOS_ENABLE_THREADS ON)
+ELSE()
+  SET(_HOST_PARALLEL "NoTypeDefined")
+  MESSAGE(STATUS "    Host Parallel: NoTypeDefined")
 ENDIF()
 
 IF(KOKKOS_ENABLE_SERIAL)

@@ -71,6 +71,7 @@
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
+#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
@@ -455,6 +456,17 @@ struct DeviceTypeTraits<Kokkos::Experimental::HPX> {
 }  // namespace Tools
 
 namespace Impl {
+
+class HPXSpaceInitializer : public ExecSpaceInitializerBase {
+ public:
+  HPXSpaceInitializer()          = default;
+  virtual ~HPXSpaceInitializer() = default;
+  void initialize(const InitArguments &args);
+  void finalize(const bool);
+  void fence();
+  void print_configuration(std::ostringstream &msg, const bool detail);
+};
+
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
 template <typename Closure>
 inline void dispatch_execute_task(Closure *closure,

@@ -1,4 +1,5 @@
-#include <Kokkos_OpenMPTarget.hpp>
+
+#include <Kokkos_Core.hpp>
 
 namespace Kokkos {
 namespace Experimental {

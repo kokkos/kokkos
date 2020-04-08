@@ -87,124 +87,20 @@ namespace Kokkos {
 class HostSpace;  ///< Memory space for main process and CPU execution spaces
 class AnonymousSpace;
 
-#ifdef KOKKOS_ENABLE_HBWSPACE
-namespace Experimental {
-class HBWSpace;  /// Memory space for hbw_malloc from memkind (e.g. for KNL
-                 /// processor)
-}
-#endif
-
-#if defined(KOKKOS_ENABLE_SERIAL)
-class Serial;  ///< Execution space main process on CPU.
-#endif
-
-#if defined(KOKKOS_ENABLE_HPX)
-namespace Experimental {
-class HPX;  ///< Execution space with HPX back-end.
-}
-#endif
-
-#if defined(KOKKOS_ENABLE_THREADS)
-class Threads;  ///< Execution space with pthreads back-end.
-#endif
-
-#if defined(KOKKOS_ENABLE_OPENMP)
-class OpenMP;  ///< OpenMP execution space.
-#endif
-
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-namespace Experimental {
-class OpenMPTarget;  ///< OpenMPTarget execution space.
-class OpenMPTargetSpace;
-}  // namespace Experimental
-#endif
-
-#if defined(KOKKOS_ENABLE_HIP)
-namespace Experimental {
-class HIPSpace;  ///< Memory space on HIP GPU
-class HIP;       ///< Execution space for HIP GPU
-}  // namespace Experimental
-#endif
-
 template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
+// forward declare here so that backend initializer calls can use it.
+struct InitArguments;
+
 }  // namespace Kokkos
 
-#include "Cuda/Kokkos_Cuda_fwd.hpp"
+// Include backend forward statements as determined by build options
+#include <KokkosCore_Config_FwdBackend.hpp>
 
 //----------------------------------------------------------------------------
 // Set the default execution space.
-
-/// Define Kokkos::DefaultExecutionSpace as per configuration option
-/// or chosen from the enabled execution spaces in the following order:
-/// Kokkos::Cuda, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP,
-/// Kokkos::Threads, Kokkos::Serial
-
-#if defined(__clang_analyzer__)
-#define KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION \
-  [[clang::annotate("DefaultExecutionSpace")]]
-#define KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION \
-  [[clang::annotate("DefaultHostExecutionSpace")]]
-#else
-#define KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION
-#define KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION
-#endif
-
-namespace Kokkos {
-
-#if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA)
-using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Cuda;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET)
-using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
-    Experimental::OpenMPTarget;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
-using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
-    Experimental::HIP;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
-using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = OpenMP;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
-using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Threads;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
-using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
-    Kokkos::Experimental::HPX;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
-using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Serial;
-#else
-#error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::HIP, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
-#endif
-
-#if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
-using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
-    OpenMP;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
-using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
-    Threads;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
-using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
-    Kokkos::Experimental::HPX;
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
-using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
-    Serial;
-#elif defined(KOKKOS_ENABLE_OPENMP)
-using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
-    OpenMP;
-#elif defined(KOKKOS_ENABLE_THREADS)
-using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
-    Threads;
-#elif defined(KOKKOS_ENABLE_HPX)
-using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
-    Kokkos::Experimental::HPX;
-#elif defined(KOKKOS_ENABLE_SERIAL)
-using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
-    Serial;
-#else
-#error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
-#endif
-
-}  // namespace Kokkos
+#include <Kokkos_Set_Default_Spaces.hpp>
 
 //----------------------------------------------------------------------------
 // Detect the active execution space and define its memory space.
@@ -214,17 +110,6 @@ using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
 namespace Kokkos {
 
 namespace Impl {
-
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
-    defined(KOKKOS_ENABLE_CUDA)
-using ActiveExecutionMemorySpace = Kokkos::CudaSpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
-using ActiveExecutionMemorySpace = Kokkos::Experimental::HIPSpace;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-using ActiveExecutionMemorySpace = Kokkos::HostSpace;
-#else
-using ActiveExecutionMemorySpace = void;
-#endif
 
 template <class ActiveSpace, class MemorySpace>
 struct VerifyExecutionCanAccessMemorySpace {
@@ -237,6 +122,10 @@ struct VerifyExecutionCanAccessMemorySpace<Space, Space> {
   KOKKOS_INLINE_FUNCTION static void verify(void) {}
   KOKKOS_INLINE_FUNCTION static void verify(const void *) {}
 };
+
+// Base class for exec space initializer factories
+class ExecSpaceInitializerBase;
+
 }  // namespace Impl
 
 }  // namespace Kokkos

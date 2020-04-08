@@ -62,6 +62,7 @@
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_Tags.hpp>
+#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -120,13 +121,7 @@ class Cuda {
   //! Tag this class as a kokkos execution space
   using execution_space = Cuda;
 
-#if defined(KOKKOS_ENABLE_CUDA_UVM)
-  //! This execution space's preferred memory space.
-  using memory_space = CudaUVMSpace;
-#else
-  //! This execution space's preferred memory space.
-  using memory_space = CudaSpace;
-#endif
+  using memory_space = Kokkos::Impl::DefaultDeviceMemorySpace;
 
   //! This execution space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
@@ -270,6 +265,20 @@ struct DeviceTypeTraits<Cuda> {
 };
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Impl {
+
+class CudaSpaceInitializer : public ExecSpaceInitializerBase {
+ public:
+  CudaSpaceInitializer()          = default;
+  virtual ~CudaSpaceInitializer() = default;
+  void initialize(const InitArguments& args);
+  void finalize(const bool all_spaces);
+  void fence();
+  void print_configuration(std::ostringstream& msg, const bool detail);
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

@@ -64,6 +64,7 @@
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 
 #include <vector>
 
@@ -82,12 +83,7 @@ class OpenMP {
   //! Tag this class as a kokkos execution space
   using execution_space = OpenMP;
 
-  using memory_space =
-#ifdef KOKKOS_ENABLE_HBWSPACE
-      Experimental::HBWSpace;
-#else
-      HostSpace;
-#endif
+  using memory_space = Kokkos::Impl::DefaultHostMemorySpace;
 
   //! This execution space preferred device_type
   using device_type          = Kokkos::Device<execution_space, memory_space>;
@@ -177,6 +173,20 @@ struct DeviceTypeTraits<OpenMP> {
 };
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Impl {
+
+class OpenMPSpaceInitializer : public ExecSpaceInitializerBase {
+ public:
+  OpenMPSpaceInitializer()          = default;
+  virtual ~OpenMPSpaceInitializer() = default;
+  void initialize(const InitArguments& args);
+  void finalize(const bool);
+  void fence();
+  void print_configuration(std::ostringstream& msg, const bool detail);
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
