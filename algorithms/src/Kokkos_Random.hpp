@@ -779,7 +779,9 @@ class Random_XorShift64 {
   float frand() { return urand64() / static_cast<float>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
-  float frand(const float& range) { return range * urand64() / MAX_URAND64; }
+  float frand(const float& range) {
+    return range * urand64() / static_cast<float>(MAX_URAND64);
+  }
 
   KOKKOS_INLINE_FUNCTION
   float frand(const float& start, const float& end) {
@@ -790,7 +792,9 @@ class Random_XorShift64 {
   double drand() { return urand64() / static_cast<double>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
-  double drand(const double& range) { return range * urand64() / MAX_URAND64; }
+  double drand(const double& range) {
+    return range * urand64() / static_cast<double>(MAX_URAND64);
+  }
 
   KOKKOS_INLINE_FUNCTION
   double drand(const double& start, const double& end) {
@@ -1016,7 +1020,9 @@ class Random_XorShift1024 {
   float frand() { return urand64() / static_cast<float>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
-  float frand(const float& range) { return range * urand64() / MAX_URAND64; }
+  float frand(const float& range) {
+    return range * urand64() / static_cast<float>(MAX_URAND64);
+  }
 
   KOKKOS_INLINE_FUNCTION
   float frand(const float& start, const float& end) {
@@ -1027,7 +1033,9 @@ class Random_XorShift1024 {
   double drand() { return urand64() / static_cast<double>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
-  double drand(const double& range) { return range * urand64() / MAX_URAND64; }
+  double drand(const double& range) {
+    return range * urand64() / static_cast<double>(MAX_URAND64);
+  }
 
   KOKKOS_INLINE_FUNCTION
   double drand(const double& start, const double& end) {
