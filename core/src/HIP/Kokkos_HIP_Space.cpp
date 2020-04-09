@@ -591,7 +591,8 @@ namespace Experimental {
 
 int HIP::concurrency() {
   // FIXME_HIP
-  return 32 * 8 * 40;  // 81920 fiji and hawaii
+  // MI60: ThreadsPerComputeUnit*ComputeUnits/ShaderEngine*ShaderEngines)
+  return 2536 * 16 * 4;
 }
 int HIP::impl_is_initialized() {
   return Impl::HIPInternal::singleton().is_initialized();
