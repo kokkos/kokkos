@@ -660,6 +660,13 @@ MACRO(kokkos_find_imported NAME)
 
   MARK_AS_ADVANCED(${NAME}_INCLUDE_DIRS ${NAME}_FOUND_LIBRARIES ${NAME}_LIBRARY)
 
+  #this is so much fun on a Cray system
+  #/usr/include should never be added as a -isystem include
+  #this freaks out the compiler include search order
+  IF (KOKKOS_IS_CRAYPE)
+    LIST(REMOVE_ITEM ${NAME}_INCLUDE_DIRS "/usr/include")
+  ENDIF()
+
   IF (${TPL_MODULE_NAME}_FOUND)
     SET(IMPORT_TYPE)
     IF (TPL_INTERFACE)
