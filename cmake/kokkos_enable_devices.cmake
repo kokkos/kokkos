@@ -32,8 +32,12 @@ ELSE()
 ENDIF()
 KOKKOS_DEVICE_OPTION(OPENMP ${OMP_DEFAULT} HOST "Whether to build OpenMP backend")
 IF(KOKKOS_ENABLE_OPENMP)
+  SET(ClangOpenMPFlag -fopenmp=libomp)
+  IF(KOKKOS_CLANG_IS_CRAY)
+    SET(ClangOpenMPFlag -fopenmp)
+  ENDIF()
   COMPILER_SPECIFIC_FLAGS(
-    Clang      -fopenmp=libomp
+    Clang      ${ClangOpenMPFlag}
     AppleClang -Xpreprocessor -fopenmp
     PGI        -mp
     NVIDIA     -Xcompiler -fopenmp

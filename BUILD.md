@@ -40,6 +40,13 @@ cmake ${srcdir} \
 ````
 which activates the OpenMP backend. All of the options controlling device backends, options, architectures, and third-party libraries (TPLs) are given below.
 
+## Platform-specific Problems
+
+### Cray
+
+* The Cray compiler wrappers do static linking by default. This seems to break the Kokkos build. You will likely need to set the environment variable `CRAYPE_LINK_TYPE=dynamic` in order to link correctly. Kokkos warns during configure if this is missing.
+* The Cray compiler identifies to CMake as Clang, but it sometimes has its own flags that differ from Clang. We try to include all exceptions, but flag errors may occur in which a Clang-specific flag is passed that the Cray compiler does not recognize.
+
 ## Spack
 An alternative to manually building with the CMake is to use the Spack package manager.
 To do so, download the `kokkos-spack` git repo and add to the package list:
