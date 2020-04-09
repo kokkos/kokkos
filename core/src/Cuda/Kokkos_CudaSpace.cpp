@@ -917,6 +917,7 @@ void *cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
 
 void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
                            bool to_device) {
+  if ((ptr == nullptr) || (bytes == 0)) return;
   cudaPointerAttributes attr;
   cudaPointerGetAttributes(&attr, ptr);
   // I measured this and it turns out prefetching towards the host slows
