@@ -164,8 +164,10 @@ struct HIPParallelLaunch<
   static hipFuncAttributes get_hip_func_attributes() {
     hipFuncAttributes attr;
     hipFuncGetAttributes(
-        &attr, hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                                MinBlocksPerSM>);
+        &attr,
+        reinterpret_cast<void const *>(
+            hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+                                             MinBlocksPerSM>));
     return attr;
   }
 };
