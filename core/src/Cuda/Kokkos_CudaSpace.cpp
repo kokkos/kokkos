@@ -917,19 +917,22 @@ void *cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
 
 void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
                            bool to_device) {
+  if ((ptr == nullptr) || (bytes == 0)) return;
   cudaPointerAttributes attr;
-  cudaPointerGetAttributes(&attr, ptr);
+  CUDA_SAFE_CALL(cudaPointerGetAttributes(&attr, ptr));
   // I measured this and it turns out prefetching towards the host slows
   // DualView syncs down. Probably because the latency is not too bad in the
   // first place for the pull down. If we want to change that provde
   // cudaCpuDeviceId as the device if to_device is false
 #if CUDA_VERSION < 10000
-  if (to_device && attr.isManaged &&
+  bool is_managed = attr.isManaged;
 #else
-  if (to_device && (attr.type == cudaMemoryTypeManaged) &&
+  bool is_managed = attr.type == cudaMemoryTypeManaged;
 #endif
+  if (to_device && is_managed &&
       space.cuda_device_prop().concurrentManagedAccess) {
-    cudaMemPrefetchAsync(ptr, bytes, space.cuda_device(), space.cuda_stream());
+    CUDA_SAFE_CALL(cudaMemPrefetchAsync(ptr, bytes, space.cuda_device(),
+                                        space.cuda_stream()));
   }
 }
 
