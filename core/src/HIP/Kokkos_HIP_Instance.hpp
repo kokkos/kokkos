@@ -94,6 +94,8 @@ class HIPInternal {
   size_type *m_scratchSpace;
   size_type *m_scratchFlags;
 
+  hipDeviceProp_t m_deviceProp;
+
   hipStream_t m_stream;
 
   static int was_initialized;

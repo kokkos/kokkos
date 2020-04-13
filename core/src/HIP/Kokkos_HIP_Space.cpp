@@ -630,6 +630,11 @@ void HIP::print_configuration(std::ostream& s, const bool) {
 void HIP::fence() const { HIP_SAFE_CALL(hipDeviceSynchronize()); }
 
 int HIP::hip_device() const { return impl_internal_space_instance()->m_hipDev; }
+
+hipDeviceProp_t const& HIP::hip_device_prop() {
+  return Impl::HIPInternal::singleton().m_deviceProp;
+}
+
 const char* HIP::name() { return "HIP"; }
 
 }  // namespace Experimental
