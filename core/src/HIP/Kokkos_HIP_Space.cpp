@@ -590,9 +590,8 @@ namespace Experimental {
 //{ return Impl::HIPInternalDevices::singleton().m_hipDevCount ; }
 
 int HIP::concurrency() {
-  // FIXME_HIP
-  // MI60: ThreadsPerComputeUnit*ComputeUnits/ShaderEngine*ShaderEngines)
-  return 2536 * 16 * 4;
+  auto const& prop = hip_device_prop();
+  return prop.maxThreadsPerMultiProcessor * prop.multiProcessorCount;
 }
 int HIP::impl_is_initialized() {
   return Impl::HIPInternal::singleton().is_initialized();
