@@ -13,7 +13,7 @@ KOKKOS_DEVICES ?= "Pthread"
 # NVIDIA:   Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,Pascal60,Pascal61,Volta70,Volta72,Turing75
 # ARM:      ARMv80,ARMv81,ARMv8-ThunderX,ARMv8-TX2
 # IBM:      BGQ,Power7,Power8,Power9
-# AMD-GPUS: Kaveri,Carrizo,Fiji,Vega
+# AMD-GPUS: Vega900,Vega906
 # AMD-CPUS: AMDAVX,Ryzen,EPYC
 KOKKOS_ARCH ?= ""
 # Options: yes,no
@@ -33,6 +33,9 @@ KOKKOS_STANDALONE_CMAKE ?= "no"
 # Default settings specific options.
 # Options: force_uvm,use_ldg,rdc,enable_lambda,enable_constexpr
 KOKKOS_CUDA_OPTIONS ?= ""
+
+# Options: rdc
+KOKKOS_HIP_OPTIONS ?= ""
 
 # Default settings specific options.
 # Options: enable_async_dispatch
@@ -81,6 +84,7 @@ KOKKOS_INTERNAL_CUDA_USE_CONSTEXPR := $(call kokkos_has_string,$(KOKKOS_CUDA_OPT
 KOKKOS_INTERNAL_HPX_ENABLE_ASYNC_DISPATCH := $(call kokkos_has_string,$(KOKKOS_HPX_OPTIONS),enable_async_dispatch)
 KOKKOS_INTERNAL_ENABLE_ETI := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_eti)
 
+KOKKOS_INTERNAL_HIP_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_HIP_OPTIONS),rdc)
 
 # Check for Kokkos Host Execution Spaces one of which must be on.
 KOKKOS_INTERNAL_USE_OPENMP := $(call kokkos_has_string,$(subst OpenMPTarget,,$(KOKKOS_DEVICES)),OpenMP)
@@ -378,11 +382,8 @@ KOKKOS_INTERNAL_USE_ARCH_IBM := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_
 KOKKOS_INTERNAL_USE_ARCH_AMDAVX := $(call kokkos_has_string,$(KOKKOS_ARCH),AMDAVX)
 KOKKOS_INTERNAL_USE_ARCH_RYZEN := $(call kokkos_has_string,$(KOKKOS_ARCH),Ryzen)
 KOKKOS_INTERNAL_USE_ARCH_EPYC := $(call kokkos_has_string,$(KOKKOS_ARCH),EPYC)
-KOKKOS_INTERNAL_USE_ARCH_KAVERI := $(call kokkos_has_string,$(KOKKOS_ARCH),Kaveri)
-KOKKOS_INTERNAL_USE_ARCH_CARRIZO := $(call kokkos_has_string,$(KOKKOS_ARCH),Carrizo)
-KOKKOS_INTERNAL_USE_ARCH_FIJI := $(call kokkos_has_string,$(KOKKOS_ARCH),Fiji)
-KOKKOS_INTERNAL_USE_ARCH_VEGA := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega)
-KOKKOS_INTERNAL_USE_ARCH_GFX901 := $(call kokkos_has_string,$(KOKKOS_ARCH),gfx901)
+KOKKOS_INTERNAL_USE_ARCH_VEGA900 := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega900)
+KOKKOS_INTERNAL_USE_ARCH_VEGA906 := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega906)
 
 # Any AVX?
 KOKKOS_INTERNAL_USE_ARCH_SSE42      := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_WSM))
@@ -1106,66 +1107,33 @@ endif
 # Figure out the architecture flag for ROCm.
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   # Lets start with adding architecture defines
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_FIJI), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_HIP 803")
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_FIJI")
-    KOKKOS_INTERNAL_HIP_ARCH_FLAG := --amdgpu-target=gfx803
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA), 1)
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA900), 1)
     tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_HIP 900")
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_VEGA")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_VEGA900")
     KOKKOS_INTERNAL_HIP_ARCH_FLAG := --amdgpu-target=gfx900
   endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_GFX901), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_HIP 901")
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_GFX901")
-    KOKKOS_INTERNAL_HIP_ARCH_FLAG := --amdgpu-target=gfx901
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA906), 1)
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_HIP 906")
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_VEGA906")
+    KOKKOS_INTERNAL_HIP_ARCH_FLAG := --amdgpu-target=gfx906
   endif
 
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.cpp)
-  ifeq ($(KOKKOS_INTERNAL_ENABLE_ETI), 1)
-    KOKKOS_SRC += $(wildcard $(KOKKOS_ETI_PATH)/HIP/*.cpp)
-  endif
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/HIP/*.hpp)
 
   KOKKOS_CXXFLAGS+=$(KOKKOS_INTERNAL_HIP_ARCH_FLAG)
+  KOKKOS_LDFLAGS+=$(KOKKOS_INTERNAL_HIP_ARCH_FLAG)
+
+  ifeq ($(KOKKOS_INTERNAL_HIP_USE_RELOC), 1)
+    tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE")
+    KOKKOS_CXXFLAGS+=-fgpu-rdc
+    KOKKOS_LDFLAGS+=-fgpu-rdc
+  else
+    KOKKOS_CXXFLAGS+=-fno-gpu-rdc
+    KOKKOS_LDFLAGS+=-fno-gpu-rdc
+  endif
 endif
 
-# Figure out the architecture flag for ROCm.
-ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
-  # Lets start with adding architecture defines
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_FIJI), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_ROCM 803")
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_FIJI")
-    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx803
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_VEGA), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_ROCM 900")
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_VEGA")
-    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx900
-  endif
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_GFX901), 1)
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_ROCM 901")
-    tmp := $(call kokkos_append_header,"\#define KOKKOS_ARCH_GFX901")
-    KOKKOS_INTERNAL_ROCM_ARCH_FLAG := --amdgpu-target=gfx901
-  endif
-
-
-  KOKKOS_INTERNAL_HCC_PATH := $(shell which $(CXX))
-  ROCM_HCC_PATH ?= $(KOKKOS_INTERNAL_HCC_PATH:/bin/clang++=)
-
-  KOKKOS_CXXFLAGS += $(shell $(ROCM_HCC_PATH)/bin/hcc-config --cxxflags)
-  KOKKOS_LDFLAGS += $(shell $(ROCM_HCC_PATH)/bin/hcc-config --ldflags) -lhc_am -lm
-  KOKKOS_CXXLDFLAGS += $(shell $(ROCM_HCC_PATH)/bin/hcc-config --ldflags) -lhc_am -lm
-  KOKKOS_TPL_LIBRARY_NAMES += hc_am m
-  KOKKOS_LDFLAGS += $(KOKKOS_INTERNAL_ROCM_ARCH_FLAG)
-
-  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/ROCm/*.cpp)
-ifeq ($(KOKKOS_INTERNAL_ENABLE_ETI), 1)
-  KOKKOS_SRC += $(wildcard $(KOKKOS_ETI_PATH)/ROCm/*.cpp)
-endif
-  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/ROCm/*.hpp)
-endif
 
 KOKKOS_INTERNAL_LS_CONFIG := $(shell ls KokkosCore_config.h 2>&1)
 
