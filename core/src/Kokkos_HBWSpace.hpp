@@ -64,10 +64,10 @@ namespace Impl {
 /// This function initializes the locks to zero (unset).
 void init_lock_array_hbw_space();
 
-/// \brief Aquire a lock for the address
+/// \brief Acquire a lock for the address
 ///
-/// This function tries to aquire the lock for the hash value derived
-/// from the provided ptr. If the lock is successfully aquired the
+/// This function tries to acquire the lock for the hash value derived
+/// from the provided ptr. If the lock is successfully acquired the
 /// function returns true. Otherwise it returns false.
 bool lock_address_hbw_space(void* ptr);
 
@@ -75,7 +75,7 @@ bool lock_address_hbw_space(void* ptr);
 ///
 /// This function releases the lock for the hash value derived
 /// from the provided ptr. This function should only be called
-/// after previously successfully aquiring a lock with
+/// after previously successfully acquiring a lock with
 /// lock_address.
 void unlock_address_hbw_space(void* ptr);
 
@@ -110,19 +110,15 @@ class HBWSpace {
   typedef Kokkos::OpenMP execution_space;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
   typedef Kokkos::Threads execution_space;
-//#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
-//  typedef Kokkos::Qthreads  execution_space;
 #elif defined(KOKKOS_ENABLE_OPENMP)
   typedef Kokkos::OpenMP execution_space;
 #elif defined(KOKKOS_ENABLE_THREADS)
   typedef Kokkos::Threads execution_space;
-//#elif defined( KOKKOS_ENABLE_QTHREADS )
-//  typedef Kokkos::Qthreads  execution_space;
 #elif defined(KOKKOS_ENABLE_SERIAL)
   typedef Kokkos::Serial execution_space;
 #else
 #error \
-    "At least one of the following host execution spaces must be defined: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Qhreads, or Kokkos::Serial.  You might be seeing this message if you disabled the Kokkos::Serial device explicitly using the Kokkos_ENABLE_Serial:BOOL=OFF CMake option, but did not enable any of the other host execution space devices."
+    "At least one of the following host execution spaces must be defined: Kokkos::OpenMP, Kokkos::Threads, or Kokkos::Serial.  You might be seeing this message if you disabled the Kokkos::Serial device explicitly using the Kokkos_ENABLE_Serial:BOOL=OFF CMake option, but did not enable any of the other host execution space devices."
 #endif
 
   //! This memory space preferred device_type
@@ -192,7 +188,12 @@ class SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
   const Kokkos::Experimental::HBWSpace m_space;
 
  protected:
-  ~SharedAllocationRecord();
+  ~SharedAllocationRecord()
+#if defined( \
+    KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
+      noexcept
+#endif
+      ;
   SharedAllocationRecord() = default;
 
   SharedAllocationRecord(

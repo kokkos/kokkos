@@ -389,7 +389,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       const ViewType& arg_view,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = NULL)
+                              void*>::type = nullptr)
       : m_instance(t_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
@@ -551,7 +551,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       const ViewType& arg_view,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = NULL)
+                              void*>::type = nullptr)
       : m_instance(t_openmp_instance),
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
@@ -930,7 +930,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       if (is_dynamic) {
         // Must synchronize to make sure each team has set its
-        // partition before begining the work stealing loop.
+        // partition before beginning the work stealing loop.
         if (data.pool_rendezvous()) data.pool_rendezvous_release();
       }
 
@@ -1077,7 +1077,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       if (is_dynamic) {
         // Must synchronize to make sure each team has set its
-        // partition before begining the work stealing loop.
+        // partition before beginning the work stealing loop.
         if (data.pool_rendezvous()) data.pool_rendezvous_release();
       }
 
@@ -1146,7 +1146,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const ViewType& arg_result,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
-                              void*>::type = NULL)
+                              void*>::type = nullptr)
       : m_instance(t_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),

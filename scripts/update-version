@@ -1,0 +1,35 @@
+
+NEW_MAJOR=$1
+NEW_MINOR=$2
+NEW_PATCH=$3
+
+GNU_MAJOR=`grep "KOKKOS_VERSION_MAJOR =" Makefile.kokkos | awk '{print $3}'`
+CMAKE_MAJOR=`grep "Kokkos_VERSION_MAJOR " CMakeLists.txt | awk '{print $2}' | sed 's|)||'`
+
+GNU_MINOR=`grep "KOKKOS_VERSION_MINOR =" Makefile.kokkos | awk '{print $3}'`
+CMAKE_MINOR=`grep "Kokkos_VERSION_MINOR " CMakeLists.txt | awk '{print $2}' | sed 's|)||'`
+
+GNU_PATCH=`grep "KOKKOS_VERSION_PATCH =" Makefile.kokkos | awk '{print $3}'`
+CMAKE_PATCH=`grep "Kokkos_VERSION_PATCH " CMakeLists.txt | awk '{print $2}' | sed 's|)||'`
+
+if [ $GNU_MAJOR -ne $CMAKE_MAJOR ]
+then
+  echo 'MAJOR Versions do not agree GNU' $GNU_MAJOR 'vs CMAKE' $CMAKE_MAJOR
+fi
+if [ $GNU_MINOR -ne $CMAKE_MINOR ]
+then
+  echo 'MINOR Versions do not agree GNU' $GNU_MINOR 'vs CMAKE' $CMAKE_MINOR
+fi
+if [ $GNU_PATCH -ne $CMAKE_PATCH ]
+then
+  echo 'PATCH Versions do not agree GNU' $GNU_PATCH 'vs CMAKE' $CMAKE_PATCH
+fi
+
+sed -i.bak 's|KOKKOS_VERSION_MAJOR = '$GNU_MAJOR'|KOKKOS_VERSION_MAJOR = '$NEW_MAJOR'|g' Makefile.kokkos
+sed -i.bak 's|KOKKOS_VERSION_MINOR = '$GNU_MINOR'|KOKKOS_VERSION_MINOR = '$NEW_MINOR'|g' Makefile.kokkos
+sed -i.bak 's|KOKKOS_VERSION_PATCH = '$GNU_PATCH'|KOKKOS_VERSION_PATCH = '$NEW_PATCH'|g' Makefile.kokkos
+rm Makefile.kokkos.bak
+sed -i.bak 's|Kokkos_VERSION_MAJOR '$GNU_MAJOR')|Kokkos_VERSION_MAJOR '$NEW_MAJOR')|g' CMakeLists.txt
+sed -i.bak 's|Kokkos_VERSION_MINOR '$GNU_MINOR')|Kokkos_VERSION_MINOR '$NEW_MINOR')|g' CMakeLists.txt
+sed -i.bak 's|Kokkos_VERSION_PATCH '$GNU_PATCH')|Kokkos_VERSION_PATCH '$NEW_PATCH')|g' CMakeLists.txt
+rm CMakeLists.txt.bak

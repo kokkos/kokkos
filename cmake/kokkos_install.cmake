@@ -31,7 +31,10 @@ IF (NOT KOKKOS_HAS_TRILINOS)
 ELSE()
   CONFIGURE_FILE(cmake/KokkosConfigCommon.cmake.in ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake @ONLY)
   file(READ ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake KOKKOS_CONFIG_COMMON)
-  file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/KokkosConfig_install.cmake" ${KOKKOS_CONFIG_COMMON})
+  file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/KokkosConfig_install.cmake" "${KOKKOS_CONFIG_COMMON}")
+  CONFIGURE_FILE(cmake/KokkosTrilinosConfig.cmake.in ${Kokkos_BINARY_DIR}/KokkosTrilinosConfig.cmake @ONLY)
+  file(READ ${Kokkos_BINARY_DIR}/KokkosTrilinosConfig.cmake KOKKOS_TRILINOS_CONFIG)
+  file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/KokkosConfig_install.cmake" "${KOKKOS_TRILINOS_CONFIG}")
 ENDIF()
 
 # build and install pkgconfig file

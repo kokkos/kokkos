@@ -9,6 +9,38 @@ pipeline {
     stages {
         stage('Build') {
             parallel {
+                stage('HIP-3.1-HCC') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.hipcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-18.04:3.1'
+                            label 'rocm-docker && vega'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video'
+                        }
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=hipcc \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument -Wno-braced-scalar-init" \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_HIP=ON \
+                                -DKokkos_ENABLE_LIBDL=OFF \
+                                -DKokkos_ENABLE_PROFILING=OFF \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
                 stage('CUDA-9.2-Clang') {
                     agent {
                         dockerfile {

@@ -171,24 +171,41 @@ struct DefaultContribution<Kokkos::Cuda,
 };
 #endif
 
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct DefaultDuplication<Kokkos::Experimental::HIP> {
+  enum : int { value = Kokkos::Experimental::ScatterNonDuplicated };
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::HIP,
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  enum : int { value = Kokkos::Experimental::ScatterAtomic };
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::HIP,
+                           Kokkos::Experimental::ScatterDuplicated> {
+  enum : int { value = Kokkos::Experimental::ScatterAtomic };
+};
+#endif
+
 /* ScatterValue <Op=ScatterSum, contribution=ScatterNonAtomic> is the object
    returned by the access operator() of ScatterAccess, This class inherits from
    the Sum<> reducer and it wraps join(dest, src) with convenient operator+=,
    etc. Note the addition of update(ValueType const& rhs) and reset()  so that
    all reducers can have common functions See ReduceDuplicates and
    ResetDuplicates ) */
-template <typename ValueType, int Op, int contribution>
+template <typename ValueType, int Op, typename DeviceType, int contribution>
 struct ScatterValue;
 
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
                     Kokkos::Experimental::ScatterNonAtomic>
-    : Sum<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Sum<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Sum<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Sum<ValueType, DeviceType>(value_in) {}
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
-      : Sum<ValueType, Kokkos::DefaultExecutionSpace>(other.reference()) {}
+      : Sum<ValueType, DeviceType>(other.reference()) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
@@ -206,13 +223,13 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum,
  * of ScatterAccess, similar to that returned by an Atomic View, it wraps
  Kokkos::atomic_add with convenient operator+=, etc. This version also has the
  update(rhs) and reset() functions. */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
                     Kokkos::Experimental::ScatterAtomic>
-    : Sum<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Sum<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Sum<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Sum<ValueType, DeviceType>(value_in) {}
 
   KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
@@ -244,15 +261,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum,
    etc. Note the addition of update(ValueType const& rhs) and reset()  so that
    all reducers can have common functions See ReduceDuplicates and
    ResetDuplicates ) */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
                     Kokkos::Experimental::ScatterNonAtomic>
-    : Prod<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Prod<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Prod<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Prod<ValueType, DeviceType>(value_in) {}
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
-      : Prod<ValueType, Kokkos::DefaultExecutionSpace>(other.reference()) {}
+      : Prod<ValueType, DeviceType>(other.reference()) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
@@ -271,13 +288,13 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd,
  atomic_prod with convenient operator*=, etc. atomic_prod uses the
  atomic_compare_exchange. This version also has the update(rhs) and reset()
  functions. */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
                     Kokkos::Experimental::ScatterAtomic>
-    : Prod<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Prod<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Prod<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Prod<ValueType, DeviceType>(value_in) {}
 
   KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
@@ -320,15 +337,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd,
    Note the addition of update(ValueType const& rhs) and reset() are so that all
    reducers can have a common update function See ReduceDuplicates and
    ResetDuplicates ) */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
                     Kokkos::Experimental::ScatterNonAtomic>
-    : Min<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Min<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Min<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Min<ValueType, DeviceType>(value_in) {}
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
-      : Min<ValueType, Kokkos::DefaultExecutionSpace>(other.reference()) {}
+      : Min<ValueType, DeviceType>(other.reference()) {}
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
@@ -340,13 +357,13 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin,
  * of ScatterAccess, similar to that returned by an Atomic View, it wraps and
  atomic_min with the update(rhs) function. atomic_min uses the
  atomic_compare_exchange. This version also has the reset() function */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
                     Kokkos::Experimental::ScatterAtomic>
-    : Min<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Min<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Min<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Min<ValueType, DeviceType>(value_in) {}
 
   KOKKOS_FORCEINLINE_FUNCTION
   void atomic_min(ValueType& dest, const ValueType& src) const {
@@ -382,15 +399,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin,
    Note the addition of update(ValueType const& rhs) and reset() are so that all
    reducers can have a common update function See ReduceDuplicates and
    ResetDuplicates ) */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
                     Kokkos::Experimental::ScatterNonAtomic>
-    : Max<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Max<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Max<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Max<ValueType, DeviceType>(value_in) {}
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
-      : Max<ValueType, Kokkos::DefaultExecutionSpace>(other.reference()) {}
+      : Max<ValueType, DeviceType>(other.reference()) {}
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
@@ -402,13 +419,13 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax,
  * of ScatterAccess, similar to that returned by an Atomic View, it wraps and
  atomic_max with the update(rhs) function. atomic_max uses the
  atomic_compare_exchange. This version also has the reset() function  */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
                     Kokkos::Experimental::ScatterAtomic>
-    : Max<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Max<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Max<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Max<ValueType, DeviceType>(value_in) {}
 
   KOKKOS_FORCEINLINE_FUNCTION
   void atomic_max(ValueType& dest, const ValueType& src) const {
@@ -558,6 +575,8 @@ struct ReduceDuplicatesBase {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
                                           &kpID);
     }
+#else
+    (void)name;
 #endif
     typedef RangePolicy<ExecSpace, size_t> policy_type;
     typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
@@ -584,8 +603,9 @@ struct ReduceDuplicates
       : Base(src_in, dst_in, stride_in, start_in, n_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     for (size_t j = Base::start; j < Base::n; ++j) {
-      ScatterValue<ValueType, Op, Kokkos::Experimental::ScatterNonAtomic> sv(
-          Base::dst[i]);
+      ScatterValue<ValueType, Op, ExecSpace,
+                   Kokkos::Experimental::ScatterNonAtomic>
+          sv(Base::dst[i]);
       sv.update(Base::src[i + Base::stride * j]);
     }
   }
@@ -607,6 +627,8 @@ struct ResetDuplicatesBase {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
                                           &kpID);
     }
+#else
+    (void)name;
 #endif
     typedef RangePolicy<ExecSpace, size_t> policy_type;
     typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
@@ -630,8 +652,9 @@ struct ResetDuplicates : public ResetDuplicatesBase<ExecSpace, ValueType, Op> {
   ResetDuplicates(ValueType* data_in, size_t size_in, std::string const& name)
       : Base(data_in, size_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
-    ScatterValue<ValueType, Op, Kokkos::Experimental::ScatterNonAtomic> sv(
-        Base::data[i]);
+    ScatterValue<ValueType, Op, ExecSpace,
+                 Kokkos::Experimental::ScatterNonAtomic>
+        sv(Base::data[i]);
     sv.reset();
   }
 };
@@ -644,35 +667,40 @@ namespace Kokkos {
 namespace Experimental {
 
 template <typename DataType,
-          typename Layout    = Kokkos::DefaultExecutionSpace::array_layout,
-          typename ExecSpace = Kokkos::DefaultExecutionSpace,
-          int Op             = ScatterSum,
-          int duplication =
-              Kokkos::Impl::Experimental::DefaultDuplication<ExecSpace>::value,
+          typename Layout     = Kokkos::DefaultExecutionSpace::array_layout,
+          typename DeviceType = Kokkos::DefaultExecutionSpace,
+          int Op              = ScatterSum,
+          int duplication     = Kokkos::Impl::Experimental::DefaultDuplication<
+              typename DeviceType::execution_space>::value,
           int contribution = Kokkos::Impl::Experimental::DefaultContribution<
-              ExecSpace, duplication>::value>
+              typename DeviceType::execution_space, duplication>::value>
 class ScatterView;
 
-template <typename DataType, int Op, typename ExecSpace, typename Layout,
+template <typename DataType, int Op, typename DeviceType, typename Layout,
           int duplication, int contribution, int override_contribution>
 class ScatterAccess;
 
 // non-duplicated implementation
-template <typename DataType, int Op, typename ExecSpace, typename Layout,
+template <typename DataType, int Op, typename DeviceType, typename Layout,
           int contribution>
-class ScatterView<DataType, Layout, ExecSpace, Op, ScatterNonDuplicated,
+class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
                   contribution> {
  public:
-  typedef Kokkos::View<DataType, Layout, ExecSpace> original_view_type;
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+  typedef Kokkos::View<DataType, Layout, device_type> original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef typename original_view_type::reference_type original_reference_type;
-  friend class ScatterAccess<DataType, Op, ExecSpace, Layout,
+  friend class ScatterAccess<DataType, Op, DeviceType, Layout,
                              ScatterNonDuplicated, contribution,
                              ScatterNonAtomic>;
-  friend class ScatterAccess<DataType, Op, ExecSpace, Layout,
+  friend class ScatterAccess<DataType, Op, DeviceType, Layout,
                              ScatterNonDuplicated, contribution, ScatterAtomic>;
+  template <class, class, class, int, int, int>
+  friend class ScatterView;
 
-  ScatterView() {}
+  ScatterView() = default;
 
   template <typename RT, typename... RP>
   ScatterView(View<RT, RP...> const& original_view)
@@ -682,13 +710,26 @@ class ScatterView<DataType, Layout, ExecSpace, Op, ScatterNonDuplicated,
   ScatterView(std::string const& name, Dims... dims)
       : internal_view(name, dims...) {}
 
+  template <typename OtherDataType, typename OtherDeviceType>
+  KOKKOS_FUNCTION ScatterView(
+      const ScatterView<OtherDataType, Layout, OtherDeviceType, Op,
+                        ScatterNonDuplicated, contribution>& other_view)
+      : internal_view(other_view.internal_view) {}
+
+  template <typename OtherDataType, typename OtherDeviceType>
+  KOKKOS_FUNCTION void operator=(
+      const ScatterView<OtherDataType, Layout, OtherDeviceType, Op,
+                        ScatterNonDuplicated, contribution>& other_view) {
+    internal_view = other_view.internal_view;
+  }
+
   template <int override_contrib = contribution>
   KOKKOS_FORCEINLINE_FUNCTION
-      ScatterAccess<DataType, Op, ExecSpace, Layout, ScatterNonDuplicated,
+      ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
                     contribution, override_contrib>
       access() const {
-    return ScatterAccess<DataType, Op, ExecSpace, Layout, ScatterNonDuplicated,
-                         contribution, override_contrib>{*this};
+    return ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
+                         contribution, override_contrib>(*this);
   }
 
   original_view_type subview() const { return internal_view; }
@@ -700,18 +741,17 @@ class ScatterView<DataType, Layout, ExecSpace, Op, ScatterNonDuplicated,
                   "ScatterView contribute destination has different layout");
     static_assert(
         Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
-            typename ExecSpace::memory_space,
-            typename dest_type::memory_space>::value,
+            memory_space, typename dest_type::memory_space>::value,
         "ScatterView contribute destination memory space not accessible");
     if (dest.data() == internal_view.data()) return;
-    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type,
-                                                 Op>(
+    Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
+                                                 original_value_type, Op>(
         internal_view.data(), dest.data(), 0, 0, 1, internal_view.label());
   }
 
   void reset() {
-    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type,
-                                                Op>(
+    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+                                                original_value_type, Op>(
         internal_view.data(), internal_view.size(), internal_view.label());
   }
   template <typename DT, typename... RP>
@@ -742,17 +782,17 @@ class ScatterView<DataType, Layout, ExecSpace, Op, ScatterNonDuplicated,
   internal_view_type internal_view;
 };
 
-template <typename DataType, int Op, typename ExecSpace, typename Layout,
+template <typename DataType, int Op, typename DeviceType, typename Layout,
           int contribution, int override_contribution>
-class ScatterAccess<DataType, Op, ExecSpace, Layout, ScatterNonDuplicated,
+class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
                     contribution, override_contribution> {
  public:
-  typedef ScatterView<DataType, Layout, ExecSpace, Op, ScatterNonDuplicated,
+  typedef ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
                       contribution>
       view_type;
   typedef typename view_type::original_value_type original_value_type;
-  typedef Kokkos::Impl::Experimental::ScatterValue<original_value_type, Op,
-                                                   override_contribution>
+  typedef Kokkos::Impl::Experimental::ScatterValue<
+      original_value_type, Op, DeviceType, override_contribution>
       value_type;
 
   KOKKOS_INLINE_FUNCTION
@@ -760,9 +800,8 @@ class ScatterAccess<DataType, Op, ExecSpace, Layout, ScatterNonDuplicated,
 
   KOKKOS_INLINE_FUNCTION
   ScatterAccess(view_type const& view_in) : view(view_in) {}
-
-  KOKKOS_INLINE_FUNCTION
-  ~ScatterAccess() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  ~ScatterAccess() = default;
 
   template <typename... Args>
   KOKKOS_FORCEINLINE_FUNCTION value_type operator()(Args... args) const {
@@ -786,26 +825,47 @@ class ScatterAccess<DataType, Op, ExecSpace, Layout, ScatterNonDuplicated,
 // LayoutLeft and LayoutRight are different enough that we'll just specialize
 // each
 
-template <typename DataType, int Op, typename ExecSpace, int contribution>
-class ScatterView<DataType, Kokkos::LayoutRight, ExecSpace, Op,
+template <typename DataType, int Op, typename DeviceType, int contribution>
+class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
                   ScatterDuplicated, contribution> {
  public:
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, ExecSpace>
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+  typedef Kokkos::View<DataType, Kokkos::LayoutRight, device_type>
       original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef typename original_view_type::reference_type original_reference_type;
-  friend class ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight,
+  friend class ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutRight,
                              ScatterDuplicated, contribution, ScatterNonAtomic>;
-  friend class ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight,
+  friend class ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutRight,
                              ScatterDuplicated, contribution, ScatterAtomic>;
+  template <class, class, class, int, int, int>
+  friend class ScatterView;
+
   typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<
       DataType, Kokkos::LayoutRight>
       data_type_info;
   typedef typename data_type_info::value_type internal_data_type;
-  typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, ExecSpace>
+  typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, device_type>
       internal_view_type;
 
-  ScatterView() {}
+  ScatterView() = default;
+
+  template <typename OtherDataType, typename OtherDeviceType>
+  KOKKOS_FUNCTION ScatterView(
+      const ScatterView<OtherDataType, Kokkos::LayoutRight, OtherDeviceType, Op,
+                        ScatterDuplicated, contribution>& other_view)
+      : unique_token(other_view.unique_token),
+        internal_view(other_view.internal_view) {}
+
+  template <typename OtherDataType, typename OtherDeviceType>
+  KOKKOS_FUNCTION void operator=(
+      const ScatterView<OtherDataType, Kokkos::LayoutRight, OtherDeviceType, Op,
+                        ScatterDuplicated, contribution>& other_view) {
+    unique_token  = other_view.unique_token;
+    internal_view = other_view.internal_view;
+  }
 
   template <typename RT, typename... RP>
   ScatterView(View<RT, RP...> const& original_view)
@@ -855,12 +915,12 @@ class ScatterView<DataType, Kokkos::LayoutRight, ExecSpace, Op,
 
   template <int override_contribution = contribution>
   KOKKOS_FORCEINLINE_FUNCTION
-      ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight,
+      ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutRight,
                     ScatterDuplicated, contribution, override_contribution>
       access() const {
-    return ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutRight,
+    return ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutRight,
                          ScatterDuplicated, contribution,
-                         override_contribution>{*this};
+                         override_contribution>(*this);
   }
 
   typename Kokkos::Impl::Experimental::Slice<Kokkos::LayoutRight,
@@ -880,20 +940,19 @@ class ScatterView<DataType, Kokkos::LayoutRight, ExecSpace, Op,
                   "ScatterView deep_copy destination has different layout");
     static_assert(
         Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
-            typename ExecSpace::memory_space,
-            typename dest_type::memory_space>::value,
+            memory_space, typename dest_type::memory_space>::value,
         "ScatterView deep_copy destination memory space not accessible");
     bool is_equal = (dest.data() == internal_view.data());
     size_t start  = is_equal ? 1 : 0;
-    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type,
-                                                 Op>(
+    Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
+                                                 original_value_type, Op>(
         internal_view.data(), dest.data(), internal_view.stride(0), start,
         internal_view.extent(0), internal_view.label());
   }
 
   void reset() {
-    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type,
-                                                Op>(
+    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+                                                original_value_type, Op>(
         internal_view.data(), internal_view.size(), internal_view.label());
   }
   template <typename DT, typename... RP>
@@ -902,8 +961,8 @@ class ScatterView<DataType, Kokkos::LayoutRight, ExecSpace, Op,
       reset();
       return;
     }
-    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type,
-                                                Op>(
+    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+                                                original_value_type, Op>(
         internal_view.data() + view.size(), internal_view.size() - view.size(),
         internal_view.label());
   }
@@ -931,33 +990,39 @@ class ScatterView<DataType, Kokkos::LayoutRight, ExecSpace, Op,
 
  protected:
   typedef Kokkos::Experimental::UniqueToken<
-      ExecSpace, Kokkos::Experimental::UniqueTokenScope::Global>
+      execution_space, Kokkos::Experimental::UniqueTokenScope::Global>
       unique_token_type;
 
   unique_token_type unique_token;
   internal_view_type internal_view;
 };
 
-template <typename DataType, int Op, typename ExecSpace, int contribution>
-class ScatterView<DataType, Kokkos::LayoutLeft, ExecSpace, Op,
+template <typename DataType, int Op, typename DeviceType, int contribution>
+class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
                   ScatterDuplicated, contribution> {
  public:
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, ExecSpace>
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, device_type>
       original_view_type;
   typedef typename original_view_type::value_type original_value_type;
   typedef typename original_view_type::reference_type original_reference_type;
-  friend class ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft,
+  friend class ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutLeft,
                              ScatterDuplicated, contribution, ScatterNonAtomic>;
-  friend class ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft,
+  friend class ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutLeft,
                              ScatterDuplicated, contribution, ScatterAtomic>;
+  template <class, class, class, int, int, int>
+  friend class ScatterView;
+
   typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<
       DataType, Kokkos::LayoutLeft>
       data_type_info;
   typedef typename data_type_info::value_type internal_data_type;
-  typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, ExecSpace>
+  typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, device_type>
       internal_view_type;
 
-  ScatterView() {}
+  ScatterView() = default;
 
   template <typename RT, typename... RP>
   ScatterView(View<RT, RP...> const& original_view) : unique_token() {
@@ -1011,14 +1076,29 @@ class ScatterView<DataType, Kokkos::LayoutLeft, ExecSpace, Op,
     reset();
   }
 
+  template <typename OtherDataType, typename OtherDeviceType>
+  KOKKOS_FUNCTION ScatterView(
+      const ScatterView<OtherDataType, Kokkos::LayoutLeft, OtherDeviceType, Op,
+                        ScatterDuplicated, contribution>& other_view)
+      : unique_token(other_view.unique_token),
+        internal_view(other_view.internal_view) {}
+
+  template <typename OtherDataType, typename OtherDeviceType>
+  KOKKOS_FUNCTION void operator=(
+      const ScatterView<OtherDataType, Kokkos::LayoutLeft, OtherDeviceType, Op,
+                        ScatterDuplicated, contribution>& other_view) {
+    unique_token  = other_view.unique_token;
+    internal_view = other_view.internal_view;
+  }
+
   template <int override_contribution = contribution>
   KOKKOS_FORCEINLINE_FUNCTION
-      ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft,
+      ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutLeft,
                     ScatterDuplicated, contribution, override_contribution>
       access() const {
-    return ScatterAccess<DataType, Op, ExecSpace, Kokkos::LayoutLeft,
+    return ScatterAccess<DataType, Op, DeviceType, Kokkos::LayoutLeft,
                          ScatterDuplicated, contribution,
-                         override_contribution>{*this};
+                         override_contribution>(*this);
   }
 
   typename Kokkos::Impl::Experimental::Slice<Kokkos::LayoutLeft,
@@ -1042,22 +1122,21 @@ class ScatterView<DataType, Kokkos::LayoutLeft, ExecSpace, Op,
                   "ScatterView deep_copy destination has different layout");
     static_assert(
         Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<
-            typename ExecSpace::memory_space,
-            typename dest_type::memory_space>::value,
+            memory_space, typename dest_type::memory_space>::value,
         "ScatterView deep_copy destination memory space not accessible");
     auto extent   = internal_view.extent(internal_view_type::rank - 1);
     bool is_equal = (dest.data() == internal_view.data());
     size_t start  = is_equal ? 1 : 0;
-    Kokkos::Impl::Experimental::ReduceDuplicates<ExecSpace, original_value_type,
-                                                 Op>(
+    Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
+                                                 original_value_type, Op>(
         internal_view.data(), dest.data(),
         internal_view.stride(internal_view_type::rank - 1), start, extent,
         internal_view.label());
   }
 
   void reset() {
-    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type,
-                                                Op>(
+    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+                                                original_value_type, Op>(
         internal_view.data(), internal_view.size(), internal_view.label());
   }
   template <typename DT, typename... RP>
@@ -1066,8 +1145,8 @@ class ScatterView<DataType, Kokkos::LayoutLeft, ExecSpace, Op,
       reset();
       return;
     }
-    Kokkos::Impl::Experimental::ResetDuplicates<ExecSpace, original_value_type,
-                                                Op>(
+    Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
+                                                original_value_type, Op>(
         internal_view.data() + view.size(), internal_view.size() - view.size(),
         internal_view.label());
   }
@@ -1103,7 +1182,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, ExecSpace, Op,
 
  protected:
   typedef Kokkos::Experimental::UniqueToken<
-      ExecSpace, Kokkos::Experimental::UniqueTokenScope::Global>
+      execution_space, Kokkos::Experimental::UniqueTokenScope::Global>
       unique_token_type;
 
   unique_token_type unique_token;
@@ -1120,17 +1199,17 @@ class ScatterView<DataType, Kokkos::LayoutLeft, ExecSpace, Op,
    ScatterAccess serves as a non-const object on the stack which can store the
    thread ID */
 
-template <typename DataType, int Op, typename ExecSpace, typename Layout,
+template <typename DataType, int Op, typename DeviceType, typename Layout,
           int contribution, int override_contribution>
-class ScatterAccess<DataType, Op, ExecSpace, Layout, ScatterDuplicated,
+class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
                     contribution, override_contribution> {
  public:
-  typedef ScatterView<DataType, Layout, ExecSpace, Op, ScatterDuplicated,
+  typedef ScatterView<DataType, Layout, DeviceType, Op, ScatterDuplicated,
                       contribution>
       view_type;
   typedef typename view_type::original_value_type original_value_type;
-  typedef Kokkos::Impl::Experimental::ScatterValue<original_value_type, Op,
-                                                   override_contribution>
+  typedef Kokkos::Impl::Experimental::ScatterValue<
+      original_value_type, Op, DeviceType, override_contribution>
       value_type;
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -1184,7 +1263,7 @@ template <int Op = Kokkos::Experimental::ScatterSum, int duplication = -1,
           int contribution = -1, typename RT, typename... RP>
 ScatterView<
     RT, typename ViewTraits<RT, RP...>::array_layout,
-    typename ViewTraits<RT, RP...>::execution_space,
+    typename ViewTraits<RT, RP...>::device_type,
     Op
     /* just setting defaults if not specified... things got messy because the
        view type does not come before the duplication/contribution settings in

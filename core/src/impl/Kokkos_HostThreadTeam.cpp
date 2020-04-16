@@ -62,7 +62,8 @@ void HostThreadTeamData::organize_pool(HostThreadTeamData *members[],
 
   // Verify not already a member of a pool:
   for (int rank = 0; rank < size && ok; ++rank) {
-    ok = (nullptr != members[rank]) && (0 == members[rank]->m_pool_scratch);
+    ok = (nullptr != members[rank]) &&
+         (nullptr == members[rank]->m_pool_scratch);
   }
 
   if (ok) {
@@ -106,8 +107,8 @@ void HostThreadTeamData::organize_pool(HostThreadTeamData *members[],
 void HostThreadTeamData::disband_pool() {
   m_work_range.first     = -1;
   m_work_range.second    = -1;
-  m_pool_scratch         = 0;
-  m_team_scratch         = 0;
+  m_pool_scratch         = nullptr;
+  m_team_scratch         = nullptr;
   m_pool_rank            = 0;
   m_pool_size            = 1;
   m_team_base            = 0;
@@ -121,7 +122,7 @@ void HostThreadTeamData::disband_pool() {
 
 int HostThreadTeamData::organize_team(const int team_size) {
   // Pool is initialized
-  const bool ok_pool = 0 != m_pool_scratch;
+  const bool ok_pool = nullptr != m_pool_scratch;
 
   // Team is not set
   const bool ok_team =
@@ -240,7 +241,7 @@ int HostThreadTeamData::get_work_stealing() noexcept {
       HostThreadTeamData *const *const pool =
           (HostThreadTeamData **)(m_pool_scratch + m_pool_members);
 
-      // Attempt from begining failed, try to steal from end of neighbor
+      // Attempt from beginning failed, try to steal from end of neighbor
 
       pair_int_t volatile *steal_range = &(pool[m_steal_rank]->m_work_range);
 
