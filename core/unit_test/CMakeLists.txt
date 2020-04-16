@@ -262,18 +262,12 @@ if(Kokkos_ENABLE_HIP)
   # FIXME_HIP
   LIST(REMOVE_ITEM HIP_SOURCES
     hip/TestHIP_AtomicOperations_complexdouble.cpp
-    hip/TestHIP_Other.cpp
-    hip/TestHIP_Reductions_DeviceView.cpp
     hip/TestHIP_Team.cpp
     hip/TestHIP_TeamReductionScan.cpp
     hip/TestHIP_TeamScratch.cpp
     hip/TestHIP_TeamTeamSize.cpp
     hip/TestHIP_TeamVectorRange.cpp
     hip/TestHIP_UniqueToken.cpp
-    hip/TestHIP_ViewAPI_a.cpp
-    hip/TestHIP_ViewAPI_b.cpp
-    hip/TestHIP_ViewAPI_e.cpp
-    hip/TestHIP_ViewLayoutStrideAssignment.cpp
     hip/TestHIP_WorkGraph.cpp
   )
 
