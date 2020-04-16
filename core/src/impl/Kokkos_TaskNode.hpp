@@ -308,7 +308,7 @@ class TaskNode
 
   template <class Function>
   KOKKOS_INLINE_FUNCTION void consume_wait_queue(Function&& f) {
-    KOKKOS_EXPECTS(not m_wait_queue.is_consumed());
+    KOKKOS_EXPECTS(!m_wait_queue.is_consumed());
     m_wait_queue.consume(std::forward<Function>(f));
   }
 
@@ -499,7 +499,7 @@ class RunnableTaskBase
   void acquire_predecessor_from(runnable_task_type& other) {
     KOKKOS_EXPECTS(m_predecessor == nullptr ||
                    other.m_predecessor == m_predecessor);
-    // since we're transfering, no need to modify the reference count
+    // since we're transferring, no need to modify the reference count
     m_predecessor       = other.m_predecessor;
     other.m_predecessor = nullptr;
   }
@@ -508,7 +508,7 @@ class RunnableTaskBase
   void acquire_predecessor_from(runnable_task_type& other) volatile {
     KOKKOS_EXPECTS(m_predecessor == nullptr ||
                    other.m_predecessor == m_predecessor);
-    // since we're transfering, no need to modify the reference count
+    // since we're transferring, no need to modify the reference count
     m_predecessor       = other.m_predecessor;
     other.m_predecessor = nullptr;
   }
@@ -620,7 +620,7 @@ class alignas(16) RunnableTask
   ~RunnableTask() = delete;
 
   KOKKOS_INLINE_FUNCTION
-  void update_scheduling_info(member_type& member) {
+  void update_scheduling_info(member_type& /*member*/) {
     // TODO @tasking @generalization DSH call a queue-specific hook here; for
     // now, this info is already updated elsewhere this->scheduling_info() =
     // member.scheduler().scheduling_info();
@@ -639,7 +639,7 @@ class alignas(16) RunnableTask
     this->functor_type::operator()(*member, *val);
   }
 
-  KOKKOS_FUNCTION static void destroy(task_base_type* root) {
+  KOKKOS_FUNCTION static void destroy(task_base_type* /*root*/) {
     // TaskResult<result_type>::destroy(root);
   }
 

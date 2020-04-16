@@ -130,7 +130,7 @@ int* atomic_lock_array_rocm_space_ptr(bool deallocate = false);
 /// global memory.
 ///
 /// Team and Thread private scratch allocations in
-/// global memory are aquired via locks.
+/// global memory are acquired via locks.
 /// This function retrieves the lock array pointer.
 /// If the array is not yet allocated it will do so.
 int* scratch_lock_array_rocm_space_ptr(bool deallocate = false);
@@ -481,7 +481,7 @@ struct VerifyExecutionCanAccessMemorySpace<
 /** Running in ROCmSpace attempting to access an unknown space: error */
 template <class OtherSpace>
 struct VerifyExecutionCanAccessMemorySpace<
-    typename enable_if<
+    typename std::enable_if<
         !is_same<Kokkos::Experimental::ROCmSpace, OtherSpace>::value,
         Kokkos::Experimental::ROCmSpace>::type,
     OtherSpace> {

@@ -52,7 +52,7 @@
 #include <sched.h>
 #include <errno.h>
 
-/* Standard C++ libaries */
+/* Standard C++ libraries */
 
 #include <cstdlib>
 #include <string>
@@ -87,7 +87,7 @@ void* internal_pthread_driver(void*) {
     std::cerr.flush();
     std::abort();
   }
-  return NULL;
+  return nullptr;
 }
 
 }  // namespace
@@ -105,7 +105,7 @@ bool ThreadsExec::spawn() {
       0 == pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED)) {
     pthread_t pt;
 
-    result = 0 == pthread_create(&pt, &attr, internal_pthread_driver, 0);
+    result = 0 == pthread_create(&pt, &attr, internal_pthread_driver, nullptr);
   }
 
   pthread_attr_destroy(&attr);
@@ -153,7 +153,7 @@ void ThreadsExec::wait_yield(volatile int& flag, const int value) {
 #include <windows.h>
 #include <process.h>
 
-/* Standard C++ libaries */
+/* Standard C++ libraries */
 
 #include <cstdlib>
 #include <string>

@@ -69,10 +69,10 @@ namespace Impl {
 /// This function initializes the locks to zero (unset).
 // void init_lock_array_host_space();
 
-/// \brief Aquire a lock for the address
+/// \brief Acquire a lock for the address
 ///
-/// This function tries to aquire the lock for the hash value derived
-/// from the provided ptr. If the lock is successfully aquired the
+/// This function tries to acquire the lock for the hash value derived
+/// from the provided ptr. If the lock is successfully acquired the
 /// function returns true. Otherwise it returns false.
 // bool lock_address_host_space(void* ptr);
 
@@ -80,7 +80,7 @@ namespace Impl {
 ///
 /// This function releases the lock for the hash value derived
 /// from the provided ptr. This function should only be called
-/// after previously successfully aquiring a lock with
+/// after previously successfully acquiring a lock with
 /// lock_address.
 // void unlock_address_host_space(void* ptr);
 
@@ -128,6 +128,8 @@ class OpenMPTargetSpace {
   /**\brief  Deallocate untracked memory in the space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
 
+  static constexpr const char* name() { return "OpenMPTargetSpace"; }
+
  private:
   friend class Kokkos::Impl::SharedAllocationRecord<
       Kokkos::Experimental::OpenMPTargetSpace, void>;
@@ -174,7 +176,13 @@ class SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
 
   KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
       const Kokkos::Experimental::OpenMPTargetSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size);
+      const std::string& arg_label, const size_t arg_alloc_size) {
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+    return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
+#else
+    return nullptr;
+#endif
+  }
 
   /**\brief  Allocate tracked memory in the space */
   static void* allocate_tracked(

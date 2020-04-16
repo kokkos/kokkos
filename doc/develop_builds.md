@@ -26,7 +26,7 @@ grouping by platform.
 ### generate_makefile.sh
 
 The bash code does not do any error checking on the `--arch=`  or `--device=`
-arguments thus strictly speaking you do not *need* to do anything to add a 
+arguments thus strictly speaking you do not *need* to do anything to add a
 device or architecture; however, you should add it to the help menu.  For the
 archictectures, please group by one of the platforms listed above.
 
@@ -37,7 +37,7 @@ The options for the CMake build system are: `-DKOKKOS_HOST_ARCH:STRING=` and
 `-DKOKKOS_ENABLE_<device>:BOOL=`.  Although any string can be passed into
 KOKKOS_HOST_ARCH option, it is checked against an accepted list.  Likewise, the
 KOKKOS_ENABLE_<device> must have the option added AND it is formed using the
-list. Thus: 
+list. Thus:
   + A new architecture should be added to the KOKKOS_HOST_ARCH_LIST variable.
   + A new device should be added to the KOKKOS_DEVICES_LIST variable **AND** a
     KOKKOS_ENABLE_<newdevice> option specified (see KOKKOS_ENABLE_CUDA for
@@ -46,7 +46,7 @@ list. Thus:
 
 The translation from option to the `KOKKOS_SETTINGS` is done in
 `kokkos_settings.cmake`.  This translation is automated for some types if you ad
-to the list, but for others, it may need to be hand coded. 
+to the list, but for others, it may need to be hand coded.
 
 
 ### Makefile.kokkos
@@ -62,7 +62,7 @@ the Kokkos development team.
 
 This file is used to check the build system in a platform-independent way.  It
 works by looping over available architectures and devices; thus, you should add
-your new architecure to KOKKOS_ARCH_OPTIONS and your new device to 
+your new architecure to KOKKOS_ARCH_OPTIONS and your new device to
 KOKKOS_DEVICE_OPTIONS to be tested.  The build system tests work by grepping the
 generated build files (automatically).  The header file tests work by diffing
 the generated file with results that are stored in

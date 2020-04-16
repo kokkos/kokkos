@@ -2,6 +2,8 @@
 
 KOKKOS_DEVICES=""
 
+KOKKOS_DO_EXAMPLES="1"
+
 while [[ $# > 0 ]]
 do
   key="$1"
@@ -78,6 +80,9 @@ do
     --make-j*)
       echo "Warning: ${key} is deprecated"
       echo "Call make with appropriate -j flag"
+      ;;
+    --no-examples)
+      KOKKOS_DO_EXAMPLES="0"
       ;;
     --compiler*)
       COMPILER="${key#*=}"
@@ -271,10 +276,6 @@ if [ ${#KOKKOS_USE_TPLS} -gt 0 ]; then
   KOKKOS_SETTINGS="${KOKKOS_SETTINGS} KOKKOS_USE_TPLS=${KOKKOS_USE_TPLS}"
 fi
 
-if [ ${#QTHREADS_PATH} -gt 0 ]; then
-  KOKKOS_SETTINGS="${KOKKOS_SETTINGS} QTHREADS_PATH=${QTHREADS_PATH}"
-fi
-
 if [ ${#HPX_PATH} -gt 0 ]; then
     KOKKOS_SETTINGS="${KOKKOS_SETTINGS} HPX_PATH=${HPX_PATH}"
 fi
@@ -441,6 +442,14 @@ echo -e "\t\$(MAKE) -C core/perf_test" >> Makefile
 echo -e "\t\$(MAKE) -C containers/unit_tests" >> Makefile
 echo -e "\t\$(MAKE) -C containers/performance_tests" >> Makefile
 echo -e "\t\$(MAKE) -C algorithms/unit_tests" >> Makefile
+if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
+$()
+echo -e "\t\$(MAKE) -C example/fixture" >> Makefile
+echo -e "\t\$(MAKE) -C example/feint" >> Makefile
+echo -e "\t\$(MAKE) -C example/fenl" >> Makefile
+echo -e "\t\$(MAKE) -C example/make_buildlink build" >> Makefile
+echo -e "\t\$(MAKE) -C example/tutorial build" >> Makefile
+fi
 echo "" >> Makefile
 echo "test: build-test" >> Makefile
 echo -e "\t\$(MAKE) -C core/unit_test test" >> Makefile
@@ -448,6 +457,13 @@ echo -e "\t\$(MAKE) -C core/perf_test test" >> Makefile
 echo -e "\t\$(MAKE) -C containers/unit_tests test" >> Makefile
 echo -e "\t\$(MAKE) -C containers/performance_tests test" >> Makefile
 echo -e "\t\$(MAKE) -C algorithms/unit_tests test" >> Makefile
+if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
+echo -e "\t\$(MAKE) -C example/fixture test" >> Makefile
+echo -e "\t\$(MAKE) -C example/feint test" >> Makefile
+echo -e "\t\$(MAKE) -C example/fenl test" >> Makefile
+echo -e "\t\$(MAKE) -C example/make_buildlink test" >> Makefile
+echo -e "\t\$(MAKE) -C example/tutorial test" >> Makefile
+fi
 echo "" >> Makefile
 echo "unit-tests-only:" >> Makefile
 echo -e "\t\$(MAKE) -C core/unit_test test" >> Makefile
@@ -461,4 +477,11 @@ echo -e "\t\$(MAKE) -C core/perf_test clean" >> Makefile
 echo -e "\t\$(MAKE) -C containers/unit_tests clean" >> Makefile
 echo -e "\t\$(MAKE) -C containers/performance_tests clean" >> Makefile
 echo -e "\t\$(MAKE) -C algorithms/unit_tests clean" >> Makefile
+if [ ${KOKKOS_DO_EXAMPLES} -gt 0 ]; then
+echo -e "\t\$(MAKE) -C example/fixture clean" >> Makefile
+echo -e "\t\$(MAKE) -C example/feint clean" >> Makefile
+echo -e "\t\$(MAKE) -C example/fenl clean" >> Makefile
+echo -e "\t\$(MAKE) -C example/make_buildlink clean" >> Makefile
+echo -e "\t\$(MAKE) -C example/tutorial clean" >> Makefile
+fi
 
