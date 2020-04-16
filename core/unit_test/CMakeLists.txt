@@ -344,6 +344,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     ALWAYS_FAIL_ON_ZERO_RETURN
 )
 
+if(NOT KOKKOS_HAS_TRILINOS)
 KOKKOS_ADD_TEST_EXECUTABLE(
   StackTraceTestExec
   SOURCES
@@ -362,6 +363,7 @@ KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
+endif()
 
 foreach(INITTESTS_NUM RANGE 1 16)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(

@@ -112,7 +112,7 @@ struct StaticCrsGraphBalancerFunctor {
         }
       } else {
         if ((count >= (current_block + 1) * cost_per_workset) ||
-            (iRow + 2 == row_offsets.extent(0))) {
+            (iRow + 2 == int_type(row_offsets.extent(0)))) {
           if (end_block > current_block + 1) {
             int_type num_block                   = end_block - current_block;
             row_block_offsets(current_block + 1) = iRow;
