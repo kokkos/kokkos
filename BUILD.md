@@ -141,6 +141,9 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_DEPRECATED_CODE
     * Whether to enable deprecated code
     * BOOL Default: OFF
+* Kokkos_ENABLE_EXAMPLES
+    * Whether to enable building examples
+    * BOOL Default: OFF
 * Kokkos_ENABLE_HPX_ASYNC_DISPATCH
     * Whether HPX supports asynchronous dispatch
     * BOOL Default: OFF
