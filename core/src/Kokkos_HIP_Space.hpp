@@ -687,6 +687,7 @@ class HIP {
   };
 
   int hip_device() const;
+  static hipDeviceProp_t const& hip_device_prop();
 
   static void impl_initialize(const SelectDevice = SelectDevice());
 
