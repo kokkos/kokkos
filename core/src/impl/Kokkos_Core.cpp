@@ -91,8 +91,8 @@ int get_ctest_gpu(const char* local_rank_str) {
   }
 
   // Make sure rank is within bounds of resource groups specified by CTest
-  auto resource_group_count = std::atoi(ctest_resource_group_count_str);
-  auto local_rank           = std::atoi(local_rank_str);
+  auto resource_group_count = std::stoi(ctest_resource_group_count_str);
+  auto local_rank           = std::stoi(local_rank_str);
   if (local_rank >= resource_group_count) {
     std::ostringstream ss;
     ss << "Error: local rank " << local_rank
@@ -163,7 +163,7 @@ int get_ctest_gpu(const char* local_rank_str) {
   }
 
   std::string id(resource_str + 3, comma - resource_str - 3);
-  return std::atoi(id.c_str());
+  return std::stoi(id.c_str());
 }
 
 namespace {
@@ -220,7 +220,7 @@ void initialize_backends(const InitArguments& args) {
     } else if (ndevices >= 0) {
       // Use the device assigned by the rank
       if (local_rank_str) {
-        auto local_rank = std::atoi(local_rank_str);
+        auto local_rank = std::stoi(local_rank_str);
         use_gpu         = local_rank % ndevices;
       } else {
         // user only gave use ndevices, but the MPI environment variable wasn't
@@ -577,7 +577,7 @@ bool check_int_arg(char const* arg, char const* expected, int* value) {
   if (arg_len == exp_len || arg[exp_len] != '=') okay = false;
   char const* number = arg + exp_len + 1;
   if (!Impl::is_unsigned_int(number) || strlen(number) == 0) okay = false;
-  *value = std::atoi(number);
+  *value = std::stoi(number);
   if (!okay) {
     std::ostringstream ss;
     ss << "Error: expecting an '=INT' after command line argument '" << expected
@@ -694,7 +694,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       }
       if (check_arg(arg[iarg], "--kokkos-num-devices") ||
           check_arg(arg[iarg], "--kokkos-ndevices") || !kokkos_ndevices_found)
-        ndevices = atoi(num1_only);
+        ndevices = std::stoi(num1_only);
       delete[] num1_only;
 
       if (num2 != nullptr) {
@@ -706,7 +706,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
 
         if (check_arg(arg[iarg], "--kokkos-num-devices") ||
             check_arg(arg[iarg], "--kokkos-ndevices") || !kokkos_ndevices_found)
-          skip_device = atoi(num2 + 1);
+          skip_device = std::stoi(num2 + 1);
       }
 
       // Remove the --kokkos-num-devices argument from the list but leave
