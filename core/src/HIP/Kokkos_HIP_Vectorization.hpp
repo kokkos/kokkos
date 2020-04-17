@@ -71,8 +71,8 @@ struct in_place_shfl_op {
   template <class Scalar>
   // requires _assignable_from_bits<Scalar>
   __device__ inline typename std::enable_if<sizeof(Scalar) < sizeof(int)>::type
-  operator()(Scalar& out, Scalar const& in, int lane_or_delta,
-             int width) const noexcept {
+  operator()(Scalar& out, Scalar const& in, int lane_or_delta, int width) const
+      noexcept {
     using shfl_type = int;
     union conv_type {
       Scalar orig;
@@ -94,8 +94,8 @@ struct in_place_shfl_op {
   template <class Scalar>
   // requires _assignable_from_bits<Scalar>
   __device__ inline typename std::enable_if<sizeof(Scalar) == sizeof(int)>::type
-  operator()(Scalar& out, Scalar const& in, int lane_or_delta,
-             int width) const noexcept {
+  operator()(Scalar& out, Scalar const& in, int lane_or_delta, int width) const
+      noexcept {
     reinterpret_cast<int&>(out) = self().do_shfl_op(
         reinterpret_cast<int const&>(in), lane_or_delta, width);
   }
