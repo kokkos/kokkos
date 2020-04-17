@@ -51,6 +51,8 @@
 
 #include <HIP/Kokkos_HIP_Vectorization.hpp>
 
+#include <climits>
+
 namespace Kokkos {
 namespace Impl {
 
@@ -73,7 +75,7 @@ __device__ inline void hip_intra_warp_reduction(
   while (hipBlockDim_x * shift < warp_size) {
     ValueType const tmp = Kokkos::Experimental::shfl_down(
         result, hipBlockDim_x * shift, warp_size);
-    // Only join the if upper thread is active (this allows non power of two for
+    // Only join if upper thread is active (this allows non power of two for
     // hipBlockDim_y)
     if (hipThreadIdx_y + shift < max_active_thread) join(result, tmp);
     shift *= 2;
@@ -99,7 +101,8 @@ __device__ inline void hip_inter_warp_reduction(
   ValueType* result = reinterpret_cast<ValueType*>(&sh_result);
   int const step    = warp_size / hipBlockDim_x;
   int shift         = step_width;
-  int const id = hipThreadIdx_y % step == 0 ? hipThreadIdx_y / step : 65000;
+  // Skip the code below if  hipThreadIdx_y % step != 0
+  int const id = hipThreadIdx_y % step == 0 ? hipThreadIdx_y / step : INT_MAX;
   if (id < step_width) {
     result[id] = value;
   }
@@ -249,8 +252,9 @@ __device__ inline void hip_inter_warp_reduction(
   ValueType* result = reinterpret_cast<ValueType*>(&sh_result);
   int const step =
       Kokkos::Experimental::Impl::HIPTraits::WarpSize / hipBlockDim_x;
-  int shift    = step_width;
-  int const id = hipThreadIdx_y % step == 0 ? hipThreadIdx_y / step : 65000;
+  int shift = step_width;
+  // Skip the code below if  hipThreadIdx_y % step != 0
+  int const id = hipThreadIdx_y % step == 0 ? hipThreadIdx_y / step : INT_MAX;
   if (id < step_width) {
     result[id] = value;
   }
