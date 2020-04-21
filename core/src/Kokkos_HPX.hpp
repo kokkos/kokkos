@@ -67,7 +67,7 @@
 #include <Kokkos_TaskScheduler.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
-#include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
 
@@ -299,14 +299,14 @@ class HPX {
 };
 }  // namespace Experimental
 
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<Kokkos::Experimental::HPX> {
   constexpr static DeviceType id = DeviceType::HPX;
 };
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 
 namespace Impl {
 template <typename Closure>

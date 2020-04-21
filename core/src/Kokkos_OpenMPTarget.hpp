@@ -121,14 +121,14 @@ class OpenMPTarget {
 };
 }  // namespace Experimental
 
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<Experimental::OpenMPTarget> {
   static constexpr DeviceType id = DeviceType::OpenMPTarget;
 };
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

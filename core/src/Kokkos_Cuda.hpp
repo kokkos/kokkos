@@ -273,7 +273,7 @@ class Cuda {
   Impl::CudaInternal* m_space_instance;
 };
 
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<Cuda> {
@@ -281,7 +281,7 @@ struct DeviceTypeTraits<Cuda> {
   static constexpr DeviceType id = DeviceType::Cuda;
 };
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
