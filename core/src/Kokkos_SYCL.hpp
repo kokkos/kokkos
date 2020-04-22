@@ -83,7 +83,8 @@ public:
 
   //! Tag this class as a kokkos execution space
   typedef SYCL                  execution_space ;
-  typedef SYCLSpace             memory_space ;
+  //typedef SYCLSpace             memory_space ;
+  typedef SYCLHostUSMSpace             memory_space ;
   typedef Kokkos::Device<execution_space,memory_space> device_type;
 
   typedef LayoutLeft            array_layout ;

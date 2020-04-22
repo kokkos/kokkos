@@ -195,6 +195,60 @@ DeepCopy<Kokkos::Experimental::SYCLHostUSMSpace, Kokkos::HostSpace,
   USM_memcpy(dst, src, n);
 }
 
+
+DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
+         Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::Experimental::SYCL>::
+    DeepCopy(const Kokkos::Experimental::SYCL& instance, void* dst,
+             const void* src, size_t n) {
+  USM_memcpy(*instance.impl_internal_space_instance(), dst, src, n);
+}
+
+DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
+         Kokkos::Experimental::SYCLDeviceUSMSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(dst, src, n);
+}
+
+DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(dst, src, n);
+}
+
+DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(dst, src, n);
+}
+
+
+DeepCopy<Kokkos::Experimental::SYCLSharedUSMSpace,
+         Kokkos::Experimental::SYCLSharedUSMSpace, Kokkos::Experimental::SYCL>::
+    DeepCopy(const Kokkos::Experimental::SYCL& instance, void* dst,
+             const void* src, size_t n) {
+  USM_memcpy(*instance.impl_internal_space_instance(), dst, src, n);
+}
+
+DeepCopy<Kokkos::Experimental::SYCLSharedUSMSpace,
+         Kokkos::Experimental::SYCLSharedUSMSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(dst, src, n);
+}
+
+DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLSharedUSMSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(dst, src, n);
+}
+
+DeepCopy<Kokkos::Experimental::SYCLSharedUSMSpace, Kokkos::HostSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(dst, src, n);
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 

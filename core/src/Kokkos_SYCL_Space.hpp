@@ -53,7 +53,6 @@
 #include <string>
 
 #include <Kokkos_HostSpace.hpp>
-#include <cassert>  //NLIBER
 
 /*--------------------------------------------------------------------------*/
 
@@ -169,6 +168,46 @@ private:
   int m_device;
 };
 
+class SYCLDeviceUSMSpace
+{
+public:
+    typedef HostSpace::execution_space execution_space;
+    typedef SYCLDeviceUSMSpace memory_space;
+    typedef Kokkos::Device<execution_space, memory_space> device_type;
+    typedef unsigned int size_type;
+
+    SYCLDeviceUSMSpace();
+
+    void* allocate(const size_t arg_alloc_size) const;
+    void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+
+    static constexpr const char* name() { return m_name; }
+
+private:
+  static constexpr const char* m_name = "SYCLDeviceUSM";
+  int m_device;
+};
+
+class SYCLSharedUSMSpace
+{
+public:
+    typedef HostSpace::execution_space execution_space;
+    typedef SYCLSharedUSMSpace memory_space;
+    typedef Kokkos::Device<execution_space, memory_space> device_type;
+    typedef unsigned int size_type;
+
+    SYCLSharedUSMSpace();
+
+    void* allocate(const size_t arg_alloc_size) const;
+    void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+
+    static constexpr const char* name() { return m_name; }
+
+private:
+  static constexpr const char* m_name = "SYCLSharedUSM";
+  int m_device;
+};
+
 
 }}
 
@@ -230,11 +269,41 @@ struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::Experimental::SYCLHostUSMSpa
 };
 
 template<>
+struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace> {
+    enum { assignable = false };
+    enum { accessible = false };
+    enum { deepcopy   = false };
+};
+
+template<>
+struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::Experimental::SYCLSharedUSMSpace> {
+    enum { assignable = true };
+    enum { accessible = true };
+    enum { deepcopy   = true };
+};
+
+template<>
 struct MemorySpaceAccess<Kokkos::Experimental::SYCLHostUSMSpace, Kokkos::HostSpace> {
     enum { assignable = false };
     enum { accessible = true };
     enum { deepcopy   = false };
 };
+
+template<>
+struct MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace> {
+    enum { assignable = false };
+    enum { accessible = false };
+    enum { deepcopy   = false };
+};
+
+template<>
+struct MemorySpaceAccess<Kokkos::Experimental::SYCLSharedUSMSpace, Kokkos::HostSpace> {
+    enum { assignable = true };
+    enum { accessible = true };
+    enum { deepcopy   = true };
+};
+
+// NLIBER TODO MemorySpaceAccess between Host, Device and Shared
 
 template<>
 struct SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>
@@ -284,6 +353,110 @@ public:
 
     static void print_records(std::ostream&,
                               const Kokkos::Experimental::SYCLHostUSMSpace&,
+                              bool detail = false);
+
+};
+
+template<>
+struct SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>
+: SharedAllocationRecord<void, void>
+{
+    SharedAllocationRecord(const SharedAllocationRecord&) = delete;
+    SharedAllocationRecord(SharedAllocationRecord&&) = delete;
+    SharedAllocationRecord& operator=(SharedAllocationRecord&&) = delete;
+    SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
+    
+    static void deallocate(SharedAllocationRecord<void, void>*);
+    
+    #ifdef KOKKOS_DEBUG
+      static SharedAllocationRecord<void, void> s_root_record;
+    #endif
+
+    const Kokkos::Experimental::SYCLDeviceUSMSpace m_space;
+    
+protected:
+    ~SharedAllocationRecord();
+    
+    SharedAllocationRecord(
+        const Kokkos::Experimental::SYCLDeviceUSMSpace& space,
+        const std::string& label,
+        const size_t size,
+        const SharedAllocationRecord<void, void>::function_type dealloc = &deallocate);
+    
+public:
+    std::string get_label() const;
+    
+    static SharedAllocationRecord* allocate(
+        const Kokkos::Experimental::SYCLDeviceUSMSpace& space,
+        const std::string& label,
+        const size_t size);
+
+    static void* allocate_tracked(
+        const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
+        const std::string& label,
+        const size_t size);
+
+    static void* reallocate_tracked(void* const ptr,
+                                    const size_t size);
+
+    static void deallocate_tracked(void* const ptr);
+
+    static SharedAllocationRecord* get_record(void* ptr);
+
+    static void print_records(std::ostream&,
+                              const Kokkos::Experimental::SYCLDeviceUSMSpace&,
+                              bool detail = false);
+
+};
+
+template<>
+struct SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>
+: SharedAllocationRecord<void, void>
+{
+    SharedAllocationRecord(const SharedAllocationRecord&) = delete;
+    SharedAllocationRecord(SharedAllocationRecord&&) = delete;
+    SharedAllocationRecord& operator=(SharedAllocationRecord&&) = delete;
+    SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
+    
+    static void deallocate(SharedAllocationRecord<void, void>*);
+    
+    #ifdef KOKKOS_DEBUG
+      static SharedAllocationRecord<void, void> s_root_record;
+    #endif
+
+    const Kokkos::Experimental::SYCLSharedUSMSpace m_space;
+    
+protected:
+    ~SharedAllocationRecord();
+    
+    SharedAllocationRecord(
+        const Kokkos::Experimental::SYCLSharedUSMSpace& space,
+        const std::string& label,
+        const size_t size,
+        const SharedAllocationRecord<void, void>::function_type dealloc = &deallocate);
+    
+public:
+    std::string get_label() const;
+    
+    static SharedAllocationRecord* allocate(
+        const Kokkos::Experimental::SYCLSharedUSMSpace& space,
+        const std::string& label,
+        const size_t size);
+
+    static void* allocate_tracked(
+        const Kokkos::Experimental::SYCLSharedUSMSpace& arg_space,
+        const std::string& label,
+        const size_t size);
+
+    static void* reallocate_tracked(void* const ptr,
+                                    const size_t size);
+
+    static void deallocate_tracked(void* const ptr);
+
+    static SharedAllocationRecord* get_record(void* ptr);
+
+    static void print_records(std::ostream&,
+                              const Kokkos::Experimental::SYCLSharedUSMSpace&,
                               bool detail = false);
 
 };
@@ -482,6 +655,138 @@ struct DeepCopy< HostSpace , Kokkos::Experimental::SYCLHostUSMSpace , ExecutionS
   inline
   DeepCopy( void * dst , const void * src , size_t n )
   { (void) DeepCopy< HostSpace , Kokkos::Experimental::SYCLHostUSMSpace , Kokkos::Experimental::SYCL >( dst , src , n ); }
+
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+    exec.fence();
+    DeepCopy (dst,src,n);
+  }
+};
+
+
+//========================
+//========================
+template<> struct DeepCopy< Kokkos::Experimental::SYCLDeviceUSMSpace , Kokkos::Experimental::SYCLDeviceUSMSpace , Kokkos::Experimental::SYCL>
+{
+  DeepCopy( void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::SYCL & , void * dst , const void * src , size_t );
+};
+
+template<> struct DeepCopy< Kokkos::Experimental::SYCLDeviceUSMSpace , HostSpace , Kokkos::Experimental::SYCL >
+{
+  DeepCopy( void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::SYCL & , void * dst , const void * src , size_t );
+};
+
+template<> struct DeepCopy< HostSpace , Kokkos::Experimental::SYCLDeviceUSMSpace , Kokkos::Experimental::SYCL >
+{
+  DeepCopy( void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::SYCL & , void * dst , const void * src , size_t );
+};
+
+template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::SYCLDeviceUSMSpace , Kokkos::Experimental::SYCLDeviceUSMSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  { (void) DeepCopy< Kokkos::Experimental::SYCLDeviceUSMSpace , Kokkos::Experimental::SYCLDeviceUSMSpace , Kokkos::Experimental::SYCL >( dst , src , n ); }
+
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+//    exec.fence();
+//    hc::completion_future fut = DeepCopyAsyncSYCL (dst,src,n);
+//    fut.wait();
+//    DeepCopy (dst,src,n);
+  }
+};
+
+template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::SYCLDeviceUSMSpace , HostSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  { (void) DeepCopy< Kokkos::Experimental::SYCLDeviceUSMSpace , HostSpace , Kokkos::Experimental::SYCL>( dst , src , n ); }
+
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+    exec.fence();
+    DeepCopy (dst,src,n);
+  }
+};
+
+template<class ExecutionSpace>
+struct DeepCopy< HostSpace , Kokkos::Experimental::SYCLDeviceUSMSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  { (void) DeepCopy< HostSpace , Kokkos::Experimental::SYCLDeviceUSMSpace , Kokkos::Experimental::SYCL >( dst , src , n ); }
+
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+    exec.fence();
+    DeepCopy (dst,src,n);
+  }
+};
+
+
+//========================
+//========================
+template<> struct DeepCopy< Kokkos::Experimental::SYCLSharedUSMSpace , Kokkos::Experimental::SYCLSharedUSMSpace , Kokkos::Experimental::SYCL>
+{
+  DeepCopy( void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::SYCL & , void * dst , const void * src , size_t );
+};
+
+template<> struct DeepCopy< Kokkos::Experimental::SYCLSharedUSMSpace , HostSpace , Kokkos::Experimental::SYCL >
+{
+  DeepCopy( void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::SYCL & , void * dst , const void * src , size_t );
+};
+
+template<> struct DeepCopy< HostSpace , Kokkos::Experimental::SYCLSharedUSMSpace , Kokkos::Experimental::SYCL >
+{
+  DeepCopy( void * dst , const void * src , size_t );
+  DeepCopy( const Kokkos::Experimental::SYCL & , void * dst , const void * src , size_t );
+};
+
+template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::SYCLSharedUSMSpace , Kokkos::Experimental::SYCLSharedUSMSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  { (void) DeepCopy< Kokkos::Experimental::SYCLSharedUSMSpace , Kokkos::Experimental::SYCLSharedUSMSpace , Kokkos::Experimental::SYCL >( dst , src , n ); }
+
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+//    exec.fence();
+//    hc::completion_future fut = DeepCopyAsyncSYCL (dst,src,n);
+//    fut.wait();
+//    DeepCopy (dst,src,n);
+  }
+};
+
+template<class ExecutionSpace> struct DeepCopy< Kokkos::Experimental::SYCLSharedUSMSpace , HostSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  { (void) DeepCopy< Kokkos::Experimental::SYCLSharedUSMSpace , HostSpace , Kokkos::Experimental::SYCL>( dst , src , n ); }
+
+  inline
+  DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
+  {
+    exec.fence();
+    DeepCopy (dst,src,n);
+  }
+};
+
+template<class ExecutionSpace>
+struct DeepCopy< HostSpace , Kokkos::Experimental::SYCLSharedUSMSpace , ExecutionSpace >
+{
+  inline
+  DeepCopy( void * dst , const void * src , size_t n )
+  { (void) DeepCopy< HostSpace , Kokkos::Experimental::SYCLSharedUSMSpace , Kokkos::Experimental::SYCL >( dst , src , n ); }
 
   inline
   DeepCopy( const ExecutionSpace& exec, void * dst , const void * src , size_t n )
