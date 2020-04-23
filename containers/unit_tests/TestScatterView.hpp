@@ -103,7 +103,15 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, duplication, contribution,
     for (int j = 0; j < 10; ++j) {
       auto k = (i + j) % scatterSize;
       scatter_access(k, 0) += 4.2;
+      ++scatter_access(k, 0);
+      --scatter_access(k, 0);
+      scatter_access(k, 0)++;
+      scatter_access(k, 0)--;
       scatter_access_atomic(k, 1) += 2.0;
+      scatter_access_atomic(k, 1)++;
+      scatter_access_atomic(k, 1)--;
+      --scatter_access_atomic(k, 1);
+      ++scatter_access_atomic(k, 1);
       scatter_access(k, 2) += 1.0;
     }
   }
