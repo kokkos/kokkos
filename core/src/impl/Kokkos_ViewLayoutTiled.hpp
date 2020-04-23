@@ -45,8 +45,6 @@
 #ifndef KOKKOS_EXPERIMENTAL_VIEWLAYOUTTILE_HPP
 #define KOKKOS_EXPERIMENTAL_VIEWLAYOUTTILE_HPP
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
-
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_View.hpp>
 
@@ -1357,7 +1355,6 @@ tile_subview(const Kokkos::View<
 }
 
 } /* namespace Kokkos */
-#endif  //! defined(KOKKOS_ENABLE_DEPRECATED_CODE
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 

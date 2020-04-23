@@ -3255,14 +3255,8 @@ class ViewMapping<
         ((Kokkos::Impl::ViewCtorProp<void, std::string> const&)arg_prop).value,
         alloc_size);
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (alloc_size) {
-#endif
       m_impl_handle =
           handle_type(reinterpret_cast<pointer_type>(record->data()));
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    }
-#endif
 
     //  Only initialize if the allocation is non-zero.
     //  May be zero if one of the dimensions is zero.

@@ -130,13 +130,8 @@ class OpenMPExec {
 namespace Kokkos {
 
 inline
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    bool
-    OpenMP::is_initialized() noexcept
-#else
     bool
     OpenMP::impl_is_initialized() noexcept
-#endif
 {
   return Impl::t_openmp_instance != nullptr;
 }
@@ -148,24 +143,15 @@ inline bool OpenMP::in_parallel(OpenMP const&) noexcept {
 }
 
 inline
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    int
-    OpenMP::thread_pool_size() noexcept
-#else
     int
     OpenMP::impl_thread_pool_size() noexcept
-#endif
 {
   return OpenMP::in_parallel() ? omp_get_num_threads()
                                : Impl::t_openmp_instance->m_pool_size;
 }
 
 KOKKOS_INLINE_FUNCTION
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-int OpenMP::thread_pool_rank() noexcept
-#else
 int OpenMP::impl_thread_pool_rank() noexcept
-#endif
 {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   return Impl::t_openmp_instance ? 0 : omp_get_thread_num();
@@ -175,10 +161,6 @@ int OpenMP::impl_thread_pool_rank() noexcept
 }
 
 inline void OpenMP::impl_static_fence(OpenMP const& /*instance*/) noexcept {}
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-inline void OpenMP::fence(OpenMP const& instance) noexcept {}
-#endif
 
 inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
   return false;
@@ -274,11 +256,7 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
   KOKKOS_INLINE_FUNCTION
   int size() const noexcept {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE)
-    return Kokkos::OpenMP::thread_pool_size();
-#else
     return Kokkos::OpenMP::impl_thread_pool_size();
-#endif
 #else
     return 0;
 #endif
@@ -288,11 +266,7 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
   KOKKOS_INLINE_FUNCTION
   int acquire() const noexcept {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE)
-    return Kokkos::OpenMP::thread_pool_rank();
-#else
     return Kokkos::OpenMP::impl_thread_pool_rank();
-#endif
 #else
     return 0;
 #endif
@@ -342,29 +316,16 @@ class UniqueToken<OpenMP, UniqueTokenScope::Global> {
 }  // namespace Experimental
 
 inline
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    int
-    OpenMP::thread_pool_size(int depth)
-#else
     int
     OpenMP::impl_thread_pool_size(int depth)
-#endif
 {
   return depth < 2
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-             ? thread_pool_size()
-#else
              ? impl_thread_pool_size()
-#endif
              : 1;
 }
 
 KOKKOS_INLINE_FUNCTION
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-int OpenMP::hardware_thread_id() noexcept
-#else
 int OpenMP::impl_hardware_thread_id() noexcept
-#endif
 {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
   return Impl::t_openmp_hardware_id;
@@ -374,13 +335,8 @@ int OpenMP::impl_hardware_thread_id() noexcept
 }
 
 inline
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    int
-    OpenMP::max_hardware_threads() noexcept
-#else
     int
     OpenMP::impl_max_hardware_threads() noexcept
-#endif
 {
   return Impl::g_openmp_hardware_max_threads;
 }

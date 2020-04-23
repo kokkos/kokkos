@@ -585,9 +585,6 @@ class TestTeamPolicyConstruction {
     int per_team_scratch   = 1024;
     int per_thread_scratch = 16;
     int scratch_size       = per_team_scratch + per_thread_scratch * team_size;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    int vector_length = 4;
-#endif
 
     policy_t p1(league_size, team_size);
     ASSERT_EQ(p1.league_size(), league_size);
@@ -598,11 +595,7 @@ class TestTeamPolicyConstruction {
     policy_t p2 = p1.set_chunk_size(chunk_size);
     ASSERT_EQ(p1.league_size(), league_size);
     ASSERT_EQ(p1.team_size(), team_size);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    ASSERT_TRUE(p1.chunk_size() > 0);
-#else
     ASSERT_EQ(p1.chunk_size(), chunk_size);
-#endif
     ASSERT_EQ(p1.scratch_size(0), 0);
 
     ASSERT_EQ(p2.league_size(), league_size);
@@ -614,11 +607,7 @@ class TestTeamPolicyConstruction {
     ASSERT_EQ(p2.league_size(), league_size);
     ASSERT_EQ(p2.team_size(), team_size);
     ASSERT_EQ(p2.chunk_size(), chunk_size);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    ASSERT_EQ(p2.scratch_size(0), 0);
-#else
     ASSERT_EQ(p2.scratch_size(0), per_team_scratch);
-#endif
     ASSERT_EQ(p3.league_size(), league_size);
     ASSERT_EQ(p3.team_size(), team_size);
     ASSERT_EQ(p3.chunk_size(), chunk_size);
@@ -628,30 +617,18 @@ class TestTeamPolicyConstruction {
     ASSERT_EQ(p2.league_size(), league_size);
     ASSERT_EQ(p2.team_size(), team_size);
     ASSERT_EQ(p2.chunk_size(), chunk_size);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    ASSERT_EQ(p2.scratch_size(0), 0);
-#else
     ASSERT_EQ(p2.scratch_size(0), scratch_size);
-#endif
     ASSERT_EQ(p4.league_size(), league_size);
     ASSERT_EQ(p4.team_size(), team_size);
     ASSERT_EQ(p4.chunk_size(), chunk_size);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    ASSERT_EQ(p4.scratch_size(0), per_thread_scratch * team_size);
-#else
     ASSERT_EQ(p4.scratch_size(0), scratch_size);
-#endif
 
     policy_t p5 = p2.set_scratch_size(0, Kokkos::PerThread(per_thread_scratch),
                                       Kokkos::PerTeam(per_team_scratch));
     ASSERT_EQ(p2.league_size(), league_size);
     ASSERT_EQ(p2.team_size(), team_size);
     ASSERT_EQ(p2.chunk_size(), chunk_size);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    ASSERT_EQ(p2.scratch_size(0), 0);
-#else
     ASSERT_EQ(p2.scratch_size(0), scratch_size);
-#endif
     ASSERT_EQ(p5.league_size(), league_size);
     ASSERT_EQ(p5.team_size(), team_size);
     ASSERT_EQ(p5.chunk_size(), chunk_size);
@@ -662,11 +639,7 @@ class TestTeamPolicyConstruction {
     ASSERT_EQ(p2.league_size(), league_size);
     ASSERT_EQ(p2.team_size(), team_size);
     ASSERT_EQ(p2.chunk_size(), chunk_size);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    ASSERT_EQ(p2.scratch_size(0), 0);
-#else
     ASSERT_EQ(p2.scratch_size(0), scratch_size);
-#endif
     ASSERT_EQ(p6.league_size(), league_size);
     ASSERT_EQ(p6.team_size(), team_size);
     ASSERT_EQ(p6.chunk_size(), chunk_size);
@@ -677,189 +650,11 @@ class TestTeamPolicyConstruction {
     ASSERT_EQ(p3.league_size(), league_size);
     ASSERT_EQ(p3.team_size(), team_size);
     ASSERT_EQ(p3.chunk_size(), chunk_size);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    ASSERT_EQ(p3.scratch_size(0), per_team_scratch);
-#else
     ASSERT_EQ(p3.scratch_size(0), scratch_size);
-#endif
     ASSERT_EQ(p7.league_size(), league_size);
     ASSERT_EQ(p7.team_size(), team_size);
     ASSERT_EQ(p7.chunk_size(), chunk_size);
     ASSERT_EQ(p7.scratch_size(0), scratch_size);
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    policy_t p8(league_size, team_size, Kokkos::ChunkSize(chunk_size));
-    ASSERT_EQ(p8.league_size(), league_size);
-    ASSERT_EQ(p8.team_size(), team_size);
-    ASSERT_EQ(p8.chunk_size(), chunk_size);
-    ASSERT_EQ(p8.scratch_size(0), 0);
-
-    policy_t p10(league_size, team_size,
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch)));
-    ASSERT_EQ(p10.league_size(), league_size);
-    ASSERT_EQ(p10.team_size(), team_size);
-    ASSERT_TRUE(p10.chunk_size() > 0);
-    ASSERT_EQ(p10.scratch_size(0), per_team_scratch);
-
-    policy_t p11(
-        league_size, team_size,
-        Kokkos::ScratchRequest(0, Kokkos::PerThread(per_thread_scratch)));
-    ASSERT_EQ(p11.league_size(), league_size);
-    ASSERT_EQ(p11.team_size(), team_size);
-    ASSERT_TRUE(p11.chunk_size() > 0);
-    ASSERT_EQ(p11.scratch_size(0), per_thread_scratch * team_size);
-
-    policy_t p12(
-        league_size, team_size,
-        Kokkos::ScratchRequest(0, Kokkos::PerThread(per_thread_scratch),
-                               Kokkos::PerTeam(per_team_scratch)));
-    ASSERT_EQ(p12.league_size(), league_size);
-    ASSERT_EQ(p12.team_size(), team_size);
-    ASSERT_TRUE(p12.chunk_size() > 0);
-    ASSERT_EQ(p12.scratch_size(0), scratch_size);
-
-    policy_t p13(league_size, team_size,
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch),
-                                        Kokkos::PerThread(per_thread_scratch)));
-    ASSERT_EQ(p13.league_size(), league_size);
-    ASSERT_EQ(p13.team_size(), team_size);
-    ASSERT_TRUE(p13.chunk_size() > 0);
-    ASSERT_EQ(p13.scratch_size(0), scratch_size);
-
-    policy_t p14(league_size, team_size,
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch),
-                                        Kokkos::PerThread(per_thread_scratch)));
-    ASSERT_EQ(p14.league_size(), league_size);
-    ASSERT_EQ(p14.team_size(), team_size);
-    ASSERT_TRUE(p14.chunk_size() > 0);
-    ASSERT_EQ(p14.scratch_size(0), scratch_size);
-
-    policy_t p15(league_size, team_size, Kokkos::ChunkSize(chunk_size),
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch)));
-    ASSERT_EQ(p15.league_size(), league_size);
-    ASSERT_EQ(p15.team_size(), team_size);
-    ASSERT_TRUE(p15.chunk_size() > 0);
-    ASSERT_EQ(p15.scratch_size(0), per_team_scratch);
-
-    policy_t p16(
-        league_size, team_size,
-        Kokkos::ScratchRequest(0, Kokkos::PerThread(per_thread_scratch)),
-        Kokkos::ChunkSize(chunk_size));
-    ASSERT_EQ(p16.league_size(), league_size);
-    ASSERT_EQ(p16.team_size(), team_size);
-    ASSERT_EQ(p16.chunk_size(), chunk_size);
-    ASSERT_EQ(p16.scratch_size(0), per_thread_scratch * team_size);
-
-    policy_t p17(
-        league_size, team_size, Kokkos::ChunkSize(chunk_size),
-        Kokkos::ScratchRequest(0, Kokkos::PerThread(per_thread_scratch),
-                               Kokkos::PerTeam(per_team_scratch)));
-    ASSERT_EQ(p17.league_size(), league_size);
-    ASSERT_EQ(p17.team_size(), team_size);
-    ASSERT_EQ(p17.chunk_size(), chunk_size);
-    ASSERT_EQ(p17.scratch_size(0), scratch_size);
-
-    policy_t p18(league_size, team_size,
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch),
-                                        Kokkos::PerThread(per_thread_scratch)),
-                 Kokkos::ChunkSize(chunk_size));
-    ASSERT_EQ(p18.league_size(), league_size);
-    ASSERT_EQ(p18.team_size(), team_size);
-    ASSERT_EQ(p18.chunk_size(), chunk_size);
-    ASSERT_EQ(p18.scratch_size(0), scratch_size);
-
-    policy_t p19(league_size, team_size, Kokkos::ChunkSize(chunk_size),
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch),
-                                        Kokkos::PerThread(per_thread_scratch)));
-    ASSERT_EQ(p19.league_size(), league_size);
-    ASSERT_EQ(p19.team_size(), team_size);
-    ASSERT_EQ(p19.chunk_size(), chunk_size);
-    ASSERT_EQ(p19.scratch_size(0), scratch_size);
-
-    policy_t p20(league_size, team_size, vector_length,
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch)));
-    ASSERT_EQ(p20.league_size(), league_size);
-    ASSERT_EQ(p20.team_size(), team_size);
-    ASSERT_TRUE(p20.chunk_size() > 0);
-    ASSERT_EQ(p20.scratch_size(0), per_team_scratch);
-
-    policy_t p21(
-        league_size, team_size, vector_length,
-        Kokkos::ScratchRequest(0, Kokkos::PerThread(per_thread_scratch)));
-    ASSERT_EQ(p21.league_size(), league_size);
-    ASSERT_EQ(p21.team_size(), team_size);
-    ASSERT_TRUE(p21.chunk_size() > 0);
-    ASSERT_EQ(p21.scratch_size(0), per_thread_scratch * team_size);
-
-    policy_t p22(
-        league_size, team_size, vector_length,
-        Kokkos::ScratchRequest(0, Kokkos::PerThread(per_thread_scratch),
-                               Kokkos::PerTeam(per_team_scratch)));
-    ASSERT_EQ(p22.league_size(), league_size);
-    ASSERT_EQ(p22.team_size(), team_size);
-    ASSERT_TRUE(p22.chunk_size() > 0);
-    ASSERT_EQ(p22.scratch_size(0), scratch_size);
-
-    policy_t p23(league_size, team_size, (size_t)vector_length,
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch),
-                                        Kokkos::PerThread(per_thread_scratch)));
-    ASSERT_EQ(p23.league_size(), league_size);
-    ASSERT_EQ(p23.team_size(), team_size);
-    ASSERT_TRUE(p23.chunk_size() > 0);
-    ASSERT_EQ(p23.scratch_size(0), scratch_size);
-
-    policy_t p24(league_size, team_size, (size_t)vector_length,
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch),
-                                        Kokkos::PerThread(per_thread_scratch)));
-    ASSERT_EQ(p24.league_size(), league_size);
-    ASSERT_EQ(p24.team_size(), team_size);
-    ASSERT_TRUE(p24.chunk_size() > 0);
-    ASSERT_EQ(p24.scratch_size(0), scratch_size);
-
-    policy_t p25(league_size, team_size, vector_length,
-                 Kokkos::ChunkSize(chunk_size),
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch)));
-    ASSERT_EQ(p25.league_size(), league_size);
-    ASSERT_EQ(p25.team_size(), team_size);
-    ASSERT_TRUE(p25.chunk_size() > 0);
-    ASSERT_EQ(p25.scratch_size(0), per_team_scratch);
-
-    policy_t p26(
-        league_size, team_size, vector_length,
-        Kokkos::ScratchRequest(0, Kokkos::PerThread(per_thread_scratch)),
-        Kokkos::ChunkSize(chunk_size));
-    ASSERT_EQ(p26.league_size(), league_size);
-    ASSERT_EQ(p26.team_size(), team_size);
-    ASSERT_EQ(p26.chunk_size(), chunk_size);
-    ASSERT_EQ(p26.scratch_size(0), per_thread_scratch * team_size);
-
-    policy_t p27(
-        league_size, team_size, vector_length, Kokkos::ChunkSize(chunk_size),
-        Kokkos::ScratchRequest(0, Kokkos::PerThread(per_thread_scratch),
-                               Kokkos::PerTeam(per_team_scratch)));
-    ASSERT_EQ(p27.league_size(), league_size);
-    ASSERT_EQ(p27.team_size(), team_size);
-    ASSERT_EQ(p27.chunk_size(), chunk_size);
-    ASSERT_EQ(p27.scratch_size(0), scratch_size);
-
-    policy_t p28(league_size, team_size, (size_t)vector_length,
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch),
-                                        Kokkos::PerThread(per_thread_scratch)),
-                 Kokkos::ChunkSize(chunk_size));
-    ASSERT_EQ(p28.league_size(), league_size);
-    ASSERT_EQ(p28.team_size(), team_size);
-    ASSERT_EQ(p28.chunk_size(), chunk_size);
-    ASSERT_EQ(p28.scratch_size(0), scratch_size);
-
-    policy_t p29(league_size, team_size, (size_t)vector_length,
-                 Kokkos::ChunkSize(chunk_size),
-                 Kokkos::ScratchRequest(0, Kokkos::PerTeam(per_team_scratch),
-                                        Kokkos::PerThread(per_thread_scratch)));
-    ASSERT_EQ(p29.league_size(), league_size);
-    ASSERT_EQ(p29.team_size(), team_size);
-    ASSERT_EQ(p29.chunk_size(), chunk_size);
-    ASSERT_EQ(p29.scratch_size(0), scratch_size);
-#endif
   }
 
   void test_run_time_parameters() {

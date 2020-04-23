@@ -290,11 +290,7 @@ struct TestRange {
                  k++) {
               a(i)++;
             }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-            count(ExecSpace::hardware_thread_id())++;
-#else
         count( ExecSpace::impl_hardware_thread_id() )++;
-#endif
           });
 
       int error = 0;
@@ -335,11 +331,7 @@ struct TestRange {
                  k++) {
               a(i)++;
             }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-            count(ExecSpace::hardware_thread_id())++;
-#else
             count(ExecSpace::impl_hardware_thread_id())++;
-#endif
             lsum++;
           },
           sum);

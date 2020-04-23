@@ -614,21 +614,11 @@ namespace Kokkos {
 
 inline int Threads::in_parallel() { return Impl::ThreadsExec::in_parallel(); }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-inline int Threads::is_initialized() {
-  return Impl::ThreadsExec::is_initialized();
-}
-#else
 inline int Threads::impl_is_initialized() {
   return Impl::ThreadsExec::is_initialized();
 }
-#endif
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-inline void Threads::initialize(
-#else
 inline void Threads::impl_initialize(
-#endif
     unsigned threads_count, unsigned use_numa_count,
     unsigned use_cores_per_numa, bool allow_asynchronous_threadpool) {
   Impl::ThreadsExec::initialize(threads_count, use_numa_count,
@@ -636,11 +626,7 @@ inline void Threads::impl_initialize(
                                 allow_asynchronous_threadpool);
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-inline void Threads::finalize()
-#else
 inline void Threads::impl_finalize()
-#endif
 {
   Impl::ThreadsExec::finalize();
 }
@@ -649,17 +635,7 @@ inline void Threads::print_configuration(std::ostream &s, const bool detail) {
   Impl::ThreadsExec::print_configuration(s, detail);
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-inline bool Threads::sleep() { return Impl::ThreadsExec::sleep(); }
-
-inline bool Threads::wake() { return Impl::ThreadsExec::wake(); }
-#endif
-
 inline void Threads::impl_static_fence() { Impl::ThreadsExec::fence(); }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-inline void Threads::fence() { Impl::ThreadsExec::fence(); }
-#endif
-
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
@@ -681,31 +657,17 @@ class UniqueToken<Threads, UniqueTokenScope::Instance> {
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   inline
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      int
-      size() const noexcept {
-    return Threads::thread_pool_size();
-  }
-#else
       int
       size() const noexcept {
     return Threads::impl_thread_pool_size();
   }
-#endif
 
   /// \brief acquire value such that 0 <= value < size()
   inline
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      int
-      acquire() const noexcept {
-    return Threads::thread_pool_rank();
-  }
-#else
       int
       acquire() const noexcept {
     return Threads::impl_thread_pool_rank();
   }
-#endif
 
   /// \brief release a value acquired by generate
   inline void release(int) const noexcept {}
@@ -724,31 +686,18 @@ class UniqueToken<Threads, UniqueTokenScope::Global> {
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   inline
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      int
-      size() const noexcept {
-    return Threads::thread_pool_size();
-  }
-#else
       int
       size() const noexcept {
     return Threads::impl_thread_pool_size();
   }
-#endif
 
   /// \brief acquire value such that 0 <= value < size()
   inline
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      int
-      acquire() const noexcept {
-    return Threads::thread_pool_rank();
-  }
-#else
       int
       acquire() const noexcept {
     return Threads::impl_thread_pool_rank();
   }
-#endif
+
   /// \brief release a value acquired by generate
   inline void release(int) const noexcept {}
 };

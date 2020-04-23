@@ -1238,11 +1238,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                   "OffsetView allocation constructor requires managed memory");
 
     if (alloc_prop::initialize &&
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-        !alloc_prop::execution_space::is_initialized()
-#else
         !alloc_prop::execution_space::impl_is_initialized()
-#endif
     ) {
       // If initializing view data then
       // the execution space must be initialized.

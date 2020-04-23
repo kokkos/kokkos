@@ -278,13 +278,6 @@ class BinSort {
           "BinSort::sort: values range length != permutation vector length");
     }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    scratch_view_type sorted_values(
-        ViewAllocateWithoutInitializing(
-            "Kokkos::SortImpl::BinSortFunctor::sorted_values"),
-        len, values.extent(1), values.extent(2), values.extent(3),
-        values.extent(4), values.extent(5), values.extent(6), values.extent(7));
-#else
     scratch_view_type sorted_values(
         ViewAllocateWithoutInitializing(
             "Kokkos::SortImpl::BinSortFunctor::sorted_values"),
@@ -303,7 +296,6 @@ class BinSort {
                                 : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
         values.rank_dynamic > 7 ? values.extent(7)
                                 : KOKKOS_IMPL_CTOR_DEFAULT_ARG);
-#endif
 
     {
       copy_permute_functor<scratch_view_type /* DstViewType */

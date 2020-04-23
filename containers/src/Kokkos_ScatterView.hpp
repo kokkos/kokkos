@@ -897,12 +897,6 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
         internal_view(Kokkos::ViewAllocateWithoutInitializing(
                           std::string("duplicated_") + original_view.label()),
                       unique_token.size(),
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-                      original_view.extent(0), original_view.extent(1),
-                      original_view.extent(2), original_view.extent(3),
-                      original_view.extent(4), original_view.extent(5),
-                      original_view.extent(6))
-#else
                       original_view.rank_dynamic > 0
                           ? original_view.extent(0)
                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -925,7 +919,6 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
                           ? original_view.extent(6)
                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG)
 
-#endif
   {
     reset();
   }

@@ -250,11 +250,7 @@ namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-int OpenMP::get_current_max_threads() noexcept
-#else
 int OpenMP::impl_get_current_max_threads() noexcept
-#endif
 {
   // Using omp_get_max_threads(); is problematic in conjunction with
   // Hwloc on Intel (essentially an initial call to the OpenMP runtime
@@ -274,11 +270,7 @@ int OpenMP::impl_get_current_max_threads() noexcept
   return count;
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-void OpenMP::initialize(int thread_count)
-#else
 void OpenMP::impl_initialize(int thread_count)
-#endif
 {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::initialize ERROR : in parallel");
@@ -306,11 +298,7 @@ void OpenMP::impl_initialize(int thread_count)
     // Before any other call to OMP query the maximum number of threads
     // and save the value for re-initialization unit testing.
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    Impl::g_openmp_hardware_max_threads = get_current_max_threads();
-#else
     Impl::g_openmp_hardware_max_threads = impl_get_current_max_threads();
-#endif
 
     int process_num_threads = Impl::g_openmp_hardware_max_threads;
 
@@ -391,19 +379,11 @@ void OpenMP::impl_initialize(int thread_count)
   }
   // Init the array for used for arbitrarily sized atomics
   Impl::init_lock_array_host_space();
-
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE) && defined(KOKKOS_ENABLE_PROFILING)
-  Kokkos::Profiling::initialize();
-#endif
 }
 
 //----------------------------------------------------------------------------
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-void OpenMP::finalize()
-#else
 void OpenMP::impl_finalize()
-#endif
 {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR ");
@@ -472,18 +452,7 @@ OpenMP OpenMP::create_instance(...) { return OpenMP(); }
 
 int OpenMP::concurrency() { return Impl::g_openmp_hardware_max_threads; }
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 void OpenMP::fence() const {}
-#endif
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-
-void OpenMP::initialize(int thread_count, int, int) {
-  initialize(thread_count);
-}
-
-#endif
-
 }  // namespace Kokkos
 
 #else

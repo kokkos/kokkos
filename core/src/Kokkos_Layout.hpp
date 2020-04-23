@@ -186,58 +186,6 @@ struct LayoutStride {
                                                           S4, S5, S6, S7} {}
 };
 
-// ==========================================================================
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-
-//----------------------------------------------------------------------------
-/// \struct LayoutTileLeft
-/// \brief Memory layout tag indicating left-to-right (Fortran scheme)
-///   striding of multi-indices by tiles.
-///
-/// This is an example of a \c MemoryLayout template parameter of
-/// View.  The memory layout describes how View maps from a
-/// multi-index (i0, i1, ..., ik) to a memory location.
-///
-/// "Tiled layout" indicates a mapping to contiguously stored
-/// <tt>ArgN0</tt> by <tt>ArgN1</tt> tiles for the rightmost two
-/// dimensions.  Indices are LayoutLeft within each tile, and the
-/// tiles themselves are arranged using LayoutLeft.  Note that the
-/// dimensions <tt>ArgN0</tt> and <tt>ArgN1</tt> of the tiles must be
-/// compile-time constants.  This speeds up index calculations.  If
-/// both tile dimensions are powers of two, Kokkos can optimize
-/// further.
-template <unsigned ArgN0, unsigned ArgN1,
-          bool IsPowerOfTwo = (Impl::is_integral_power_of_two(ArgN0) &&
-                               Impl::is_integral_power_of_two(ArgN1))>
-struct LayoutTileLeft {
-  static_assert(Impl::is_integral_power_of_two(ArgN0) &&
-                    Impl::is_integral_power_of_two(ArgN1),
-                "LayoutTileLeft must be given power-of-two tile dimensions");
-
-  //! Tag this class as a kokkos array layout
-  typedef LayoutTileLeft<ArgN0, ArgN1, IsPowerOfTwo> array_layout;
-
-  enum { N0 = ArgN0 };
-  enum { N1 = ArgN1 };
-
-  size_t dimension[ARRAY_LAYOUT_MAX_RANK];
-
-  enum { is_extent_constructible = true };
-
-  LayoutTileLeft(LayoutTileLeft const&) = default;
-  LayoutTileLeft(LayoutTileLeft&&)      = default;
-  LayoutTileLeft& operator=(LayoutTileLeft const&) = default;
-  LayoutTileLeft& operator=(LayoutTileLeft&&) = default;
-
-  KOKKOS_INLINE_FUNCTION
-  explicit constexpr LayoutTileLeft(size_t argN0 = 0, size_t argN1 = 0,
-                                    size_t argN2 = 0, size_t argN3 = 0,
-                                    size_t argN4 = 0, size_t argN5 = 0,
-                                    size_t argN6 = 0, size_t argN7 = 0)
-      : dimension{argN0, argN1, argN2, argN3, argN4, argN5, argN6, argN7} {}
-};
-
-#endif  // KOKKOS_ENABLE_DEPRECATED_CODE
 // ===================================================================================
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -254,7 +202,6 @@ enum class Iterate {
 template <typename LayoutTiledCheck, class Enable = void>
 struct is_layouttiled : std::false_type {};
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 template <typename LayoutTiledCheck>
 struct is_layouttiled<
     LayoutTiledCheck,
@@ -327,7 +274,6 @@ struct LayoutTiled {
 };
 
 }  // namespace Experimental
-#endif
 
 // For use with view_copy
 template <typename... Layout>
@@ -358,7 +304,6 @@ struct layout_iterate_type_selector<Kokkos::LayoutStride> {
       Kokkos::Iterate::Default;
 };
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
 template <unsigned ArgN0, unsigned ArgN1, unsigned ArgN2, unsigned ArgN3,
           unsigned ArgN4, unsigned ArgN5, unsigned ArgN6, unsigned ArgN7>
 struct layout_iterate_type_selector<Kokkos::Experimental::LayoutTiled<
@@ -394,7 +339,6 @@ struct layout_iterate_type_selector<Kokkos::Experimental::LayoutTiled<
   static const Kokkos::Iterate outer_iteration_pattern = Kokkos::Iterate::Right;
   static const Kokkos::Iterate inner_iteration_pattern = Kokkos::Iterate::Right;
 };
-#endif
 
 }  // namespace Kokkos
 

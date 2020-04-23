@@ -350,33 +350,5 @@ template <class ScalarType, class Space = HostSpace>
 struct LOr;
 
 }  // namespace Kokkos
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-namespace Kokkos {
-template <class ScalarType>
-struct MinMaxScalar;
-template <class ScalarType, class Index>
-struct MinMaxLocScalar;
-template <class ScalarType, class Index>
-struct ValLocScalar;
-
-namespace Experimental {
-using Kokkos::BAnd;
-using Kokkos::BOr;
-using Kokkos::LAnd;
-using Kokkos::LOr;
-using Kokkos::Max;
-using Kokkos::MaxLoc;
-using Kokkos::Min;
-using Kokkos::MinLoc;
-using Kokkos::MinMax;
-using Kokkos::MinMaxLoc;
-using Kokkos::MinMaxLocScalar;
-using Kokkos::MinMaxScalar;
-using Kokkos::Prod;
-using Kokkos::Sum;
-using Kokkos::ValLocScalar;
-}  // namespace Experimental
-}  // namespace Kokkos
-#endif
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */

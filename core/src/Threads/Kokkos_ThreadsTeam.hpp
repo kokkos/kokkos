@@ -578,26 +578,16 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
   int m_chunk_size;
 
   inline void init(const int league_size_request, const int team_size_request) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    const int pool_size = traits::execution_space::thread_pool_size(0);
-#else
     const int pool_size = traits::execution_space::impl_thread_pool_size(0);
-#endif
     const int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
     const int team_max =
         pool_size < max_host_team_size ? pool_size : max_host_team_size;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    const int team_grain = traits::execution_space::thread_pool_size(2);
-#else
     const int team_grain = traits::execution_space::impl_thread_pool_size(2);
-#endif
 
     m_league_size = league_size_request;
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
     if (team_size_request > team_max)
       Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
-#endif
 
     m_team_size = team_size_request < team_max ? team_size_request : team_max;
 
@@ -659,42 +649,15 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 
   //----------------------------------------
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  template <class FunctorType>
-  inline static int team_size_max(const FunctorType&) {
-    int pool_size          = traits::execution_space::thread_pool_size(1);
-    int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
-    return pool_size < max_host_team_size ? pool_size : max_host_team_size;
-  }
-
-  template <class FunctorType>
-  inline static int team_size_recommended(const FunctorType&) {
-    return traits::execution_space::thread_pool_size(2);
-  }
-
-  template <class FunctorType>
-  inline static int team_size_recommended(const FunctorType&, const int&) {
-    return traits::execution_space::thread_pool_size(2);
-  }
-#endif
-
   template <class FunctorType>
   int team_size_max(const FunctorType&, const ParallelForTag&) const {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    int pool_size = traits::execution_space::thread_pool_size(1);
-#else
     int pool_size = traits::execution_space::impl_thread_pool_size(1);
-#endif
     int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
     return pool_size < max_host_team_size ? pool_size : max_host_team_size;
   }
   template <class FunctorType>
   int team_size_max(const FunctorType&, const ParallelReduceTag&) const {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    int pool_size = traits::execution_space::thread_pool_size(1);
-#else
     int pool_size = traits::execution_space::impl_thread_pool_size(1);
-#endif
     int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
     return pool_size < max_host_team_size ? pool_size : max_host_team_size;
   }
@@ -705,20 +668,12 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
   }
   template <class FunctorType>
   int team_size_recommended(const FunctorType&, const ParallelForTag&) const {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    return traits::execution_space::thread_pool_size(2);
-#else
     return traits::execution_space::impl_thread_pool_size(2);
-#endif
   }
   template <class FunctorType>
   int team_size_recommended(const FunctorType&,
                             const ParallelReduceTag&) const {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    return traits::execution_space::thread_pool_size(2);
-#else
     return traits::execution_space::impl_thread_pool_size(2);
-#endif
   }
   template <class FunctorType, class ReducerType>
   inline int team_size_recommended(const FunctorType& f, const ReducerType&,
@@ -774,16 +729,10 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0)
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  {
-    init(league_size_request, traits::execution_space::thread_pool_size(2));
-  }
-#else
   {
     init(league_size_request,
          traits::execution_space::impl_thread_pool_size(2));
   }
-#endif
 
   TeamPolicyInternal(int league_size_request, int team_size_request,
                      int /* vector_length_request */ = 1)
@@ -806,56 +755,13 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0)
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  {
-    init(league_size_request, traits::execution_space::thread_pool_size(2));
-  }
-#else
   {
     init(league_size_request,
          traits::execution_space::impl_thread_pool_size(2));
   }
-#endif
+
   inline int chunk_size() const { return m_chunk_size; }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  /** \brief set chunk_size to a discrete value*/
-  inline TeamPolicyInternal set_chunk_size(
-      typename traits::index_type chunk_size_) const {
-    TeamPolicyInternal p = *this;
-    p.m_chunk_size       = chunk_size_;
-    return p;
-  }
-
-  /** \brief set per team scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal set_scratch_size(
-      const int& level, const PerTeamValue& per_team) const {
-    TeamPolicyInternal p         = *this;
-    p.m_team_scratch_size[level] = per_team.value;
-    return p;
-  }
-
-  /** \brief set per thread scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal set_scratch_size(
-      const int& level, const PerThreadValue& per_thread) const {
-    TeamPolicyInternal p           = *this;
-    p.m_thread_scratch_size[level] = per_thread.value;
-    return p;
-  }
-
-  /** \brief set per thread and per team scratch size for a specific level of
-   * the scratch hierarchy */
-  inline TeamPolicyInternal set_scratch_size(
-      const int& level, const PerTeamValue& per_team,
-      const PerThreadValue& per_thread) const {
-    TeamPolicyInternal p           = *this;
-    p.m_team_scratch_size[level]   = per_team.value;
-    p.m_thread_scratch_size[level] = per_thread.value;
-    return p;
-  }
-#else
   /** \brief set chunk_size to a discrete value*/
   inline TeamPolicyInternal& set_chunk_size(
       typename traits::index_type chunk_size_) {
@@ -888,43 +794,6 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
   }
-#endif
-
- protected:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  /** \brief set chunk_size to a discrete value*/
-  inline TeamPolicyInternal internal_set_chunk_size(
-      typename traits::index_type chunk_size_) {
-    m_chunk_size = chunk_size_;
-    return *this;
-  }
-
-  /** \brief set per team scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal internal_set_scratch_size(
-      const int& level, const PerTeamValue& per_team) {
-    m_team_scratch_size[level] = per_team.value;
-    return *this;
-  }
-
-  /** \brief set per thread scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal internal_set_scratch_size(
-      const int& level, const PerThreadValue& per_thread) {
-    m_thread_scratch_size[level] = per_thread.value;
-    return *this;
-  }
-
-  /** \brief set per thread and per team scratch size for a specific level of
-   * the scratch hierarchy */
-  inline TeamPolicyInternal internal_set_scratch_size(
-      const int& level, const PerTeamValue& per_team,
-      const PerThreadValue& per_thread) {
-    m_team_scratch_size[level]   = per_team.value;
-    m_thread_scratch_size[level] = per_thread.value;
-    return *this;
-  }
-#endif
 
  private:
   /** \brief finalize chunk_size if it was set to AUTO*/

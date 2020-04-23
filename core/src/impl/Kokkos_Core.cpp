@@ -243,11 +243,7 @@ void initialize_backends(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_OPENMP)
   if (std::is_same<Kokkos::OpenMP, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::OpenMP, Kokkos::HostSpace::execution_space>::value) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    Kokkos::OpenMP::initialize(num_threads);
-#else
     Kokkos::OpenMP::impl_initialize(num_threads);
-#endif
   } else {
     // std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not
     // initialized" << std::endl ;
@@ -258,17 +254,6 @@ void initialize_backends(const InitArguments& args) {
   if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::Threads,
                    Kokkos::HostSpace::execution_space>::value) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (num_threads > 0) {
-      if (use_numa > 0) {
-        Kokkos::Threads::initialize(num_threads, use_numa);
-      } else {
-        Kokkos::Threads::initialize(num_threads);
-      }
-    } else {
-      Kokkos::Threads::initialize();
-    }
-#else
     if (num_threads > 0) {
       if (use_numa > 0) {
         Kokkos::Threads::impl_initialize(num_threads, use_numa);
@@ -278,7 +263,6 @@ void initialize_backends(const InitArguments& args) {
     } else {
       Kokkos::Threads::impl_initialize();
     }
-#endif
     // std::cout << "Kokkos::initialize() fyi: Pthread enabled and initialized"
     // << std::endl ;
   } else {
@@ -312,11 +296,7 @@ void initialize_backends(const InitArguments& args) {
   (void)args;
 
   // Always initialize Serial if it is configure time enabled
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  Kokkos::Serial::initialize();
-#else
   Kokkos::Serial::impl_initialize();
-#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -335,17 +315,9 @@ void initialize_backends(const InitArguments& args) {
   if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
       0 < use_gpu) {
     if (use_gpu > -1) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      Kokkos::Cuda::initialize(Kokkos::Cuda::SelectDevice(use_gpu));
-#else
       Kokkos::Cuda::impl_initialize(Kokkos::Cuda::SelectDevice(use_gpu));
-#endif
     } else {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      Kokkos::Cuda::initialize();
-#else
       Kokkos::Cuda::impl_initialize();
-#endif
     }
     // std::cout << "Kokkos::initialize() fyi: Cuda enabled and initialized" <<
     // std::endl ;
@@ -445,11 +417,7 @@ void finalize_internal(const bool all_spaces = false) {
 #if defined(KOKKOS_ENABLE_CUDA)
   if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
       all_spaces) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (Kokkos::Cuda::is_initialized()) Kokkos::Cuda::finalize();
-#else
     if (Kokkos::Cuda::impl_is_initialized()) Kokkos::Cuda::impl_finalize();
-#endif
   }
 #else
   (void)all_spaces;
@@ -485,11 +453,7 @@ void finalize_internal(const bool all_spaces = false) {
   if (std::is_same<Kokkos::OpenMP, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::OpenMP, Kokkos::HostSpace::execution_space>::value ||
       all_spaces) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (Kokkos::OpenMP::is_initialized()) Kokkos::OpenMP::finalize();
-#else
     if (Kokkos::OpenMP::impl_is_initialized()) Kokkos::OpenMP::impl_finalize();
-#endif
   }
 #endif
 
@@ -509,21 +473,13 @@ void finalize_internal(const bool all_spaces = false) {
       std::is_same<Kokkos::Threads,
                    Kokkos::HostSpace::execution_space>::value ||
       all_spaces) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (Kokkos::Threads::is_initialized()) Kokkos::Threads::finalize();
-#else
     if (Kokkos::Threads::impl_is_initialized())
       Kokkos::Threads::impl_finalize();
-#endif
   }
 #endif
 
 #if defined(KOKKOS_ENABLE_SERIAL)
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  if (Kokkos::Serial::is_initialized()) Kokkos::Serial::finalize();
-#else
   if (Kokkos::Serial::impl_is_initialized()) Kokkos::Serial::impl_finalize();
-#endif
 #endif
 
   g_is_initialized = false;

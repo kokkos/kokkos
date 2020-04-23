@@ -782,14 +782,10 @@ struct ParallelReduceReturnValue<
 
   static return_type return_value(ReturnType& return_val,
                                   const FunctorType& functor) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    return return_type(return_val, functor.value_count);
-#else
     if (std::is_array<ReturnType>::value)
       return return_type(return_val);
     else
       return return_type(return_val, functor.value_count);
-#endif
   }
 };
 
@@ -1183,28 +1179,5 @@ inline void parallel_reduce(const std::string& label, const size_t& policy,
 }
 
 }  // namespace Kokkos
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-// backwards compatibility for Kokkos::Experimental reducers
-namespace Kokkos {
-namespace Experimental {
-using Kokkos::BAnd;
-using Kokkos::BOr;
-using Kokkos::LAnd;
-using Kokkos::LOr;
-using Kokkos::Max;
-using Kokkos::MaxLoc;
-using Kokkos::Min;
-using Kokkos::MinLoc;
-using Kokkos::MinMax;
-using Kokkos::MinMaxLoc;
-using Kokkos::MinMaxLocScalar;
-using Kokkos::MinMaxScalar;
-using Kokkos::Prod;
-using Kokkos::Sum;
-using Kokkos::ValLocScalar;
-}  // namespace Experimental
-}  // namespace Kokkos
-#endif
 
 #endif  // KOKKOS_PARALLEL_REDUCE_HPP
