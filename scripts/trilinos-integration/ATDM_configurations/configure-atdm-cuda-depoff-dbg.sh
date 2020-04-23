@@ -33,7 +33,6 @@ cmake \
   -DTrilinos_ENABLE_${PACKAGE8}=ON \
   -DTrilinos_ENABLE_${PACKAGE9}=ON \
   -DTrilinos_ENABLE_${PACKAGE10}=ON \
-  -DKOKKOS_ENABLE_DEPRECATED_CODE=OFF \
   -DKokkos_SOURCE_DIR_OVERRIDE:STRING=kokkos \
   -DKokkosKernels_SOURCE_DIR_OVERRIDE:STRING=kokkos-kernels \
   -DTpetra_ENABLE_DEBUG=ON \
