@@ -64,8 +64,6 @@
 #include <KokkosCore_config.h>
 #endif
 
-#include <impl/Kokkos_OldMacros.hpp>
-
 //----------------------------------------------------------------------------
 /** Pick up compiler specific #define macros:
  *
