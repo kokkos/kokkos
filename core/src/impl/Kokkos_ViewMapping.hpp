@@ -3255,8 +3255,7 @@ class ViewMapping<
         ((Kokkos::Impl::ViewCtorProp<void, std::string> const&)arg_prop).value,
         alloc_size);
 
-      m_impl_handle =
-          handle_type(reinterpret_cast<pointer_type>(record->data()));
+    m_impl_handle = handle_type(reinterpret_cast<pointer_type>(record->data()));
 
     //  Only initialize if the allocation is non-zero.
     //  May be zero if one of the dimensions is zero.

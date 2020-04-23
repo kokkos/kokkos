@@ -739,14 +739,12 @@ int Cuda::concurrency() {
   return Impl::CudaInternal::singleton().m_maxConcurrency;
 }
 
-int Cuda::impl_is_initialized()
-{
+int Cuda::impl_is_initialized() {
   return Impl::CudaInternal::singleton().is_initialized();
 }
 
 void Cuda::impl_initialize(const Cuda::SelectDevice config,
-                           size_t /*num_instances*/)
-{
+                           size_t /*num_instances*/) {
   Impl::CudaInternal::singleton().initialize(config.cuda_device_id, 0);
 
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -781,8 +779,7 @@ Cuda::size_type Cuda::device_arch() {
   return dev_arch;
 }
 
-void Cuda::impl_finalize()
-{
+void Cuda::impl_finalize() {
   Impl::CudaInternal::singleton().finalize();
 
 #if defined(KOKKOS_ENABLE_PROFILING)

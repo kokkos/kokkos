@@ -1140,8 +1140,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
                   "View allocation constructor requires managed memory");
 
     if (alloc_prop::initialize &&
-        !alloc_prop::execution_space::impl_is_initialized()
-    ) {
+        !alloc_prop::execution_space::impl_is_initialized()) {
       // If initializing view data then
       // the execution space must be initialized.
       Kokkos::Impl::throw_runtime_exception(

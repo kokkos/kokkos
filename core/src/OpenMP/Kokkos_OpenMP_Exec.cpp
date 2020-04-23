@@ -250,8 +250,7 @@ namespace Kokkos {
 
 //----------------------------------------------------------------------------
 
-int OpenMP::impl_get_current_max_threads() noexcept
-{
+int OpenMP::impl_get_current_max_threads() noexcept {
   // Using omp_get_max_threads(); is problematic in conjunction with
   // Hwloc on Intel (essentially an initial call to the OpenMP runtime
   // without a parallel region before will set a process mask for a single core
@@ -270,8 +269,7 @@ int OpenMP::impl_get_current_max_threads() noexcept
   return count;
 }
 
-void OpenMP::impl_initialize(int thread_count)
-{
+void OpenMP::impl_initialize(int thread_count) {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::initialize ERROR : in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
@@ -383,8 +381,7 @@ void OpenMP::impl_initialize(int thread_count)
 
 //----------------------------------------------------------------------------
 
-void OpenMP::impl_finalize()
-{
+void OpenMP::impl_finalize() {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR ");
     if (!Impl::t_openmp_instance) msg.append(": not initialized");

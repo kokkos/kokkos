@@ -3383,24 +3383,16 @@ inline typename Kokkos::View<T, P...>::HostMirror create_mirror(
   typedef View<T, P...> src_type;
   typedef typename src_type::HostMirror dst_type;
 
-  return dst_type(std::string(src.label()).append("_mirror")
-                      ,
-                  src.rank_dynamic > 0 ? src.extent(0)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 1 ? src.extent(1)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 2 ? src.extent(2)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 3 ? src.extent(3)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 4 ? src.extent(4)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 5 ? src.extent(5)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 6 ? src.extent(6)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 7 ? src.extent(7)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG);
+  return dst_type(
+      std::string(src.label()).append("_mirror"),
+      src.rank_dynamic > 0 ? src.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 1 ? src.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 2 ? src.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 3 ? src.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 4 ? src.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 5 ? src.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 6 ? src.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 7 ? src.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG);
 }
 
 template <class T, class... P>

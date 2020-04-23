@@ -175,7 +175,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   t_modified_flags modified_flags;
 
  public:
-
   //@}
 
   // Moved this specifically after modified_flags to resolve an alignment issue
@@ -216,8 +215,8 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
            const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : modified_flags(t_modified_flags("DualView::modified_flags")),
         d_view(label, n0, n1, n2, n3, n4, n5, n6, n7),
-        h_view(create_mirror_view(d_view)) {  // without UVM, host View mirrors
-  }
+        h_view(create_mirror_view(d_view))  // without UVM, host View mirrors
+  {}
 
   /// \brief Constructor that allocates View objects on both host and device.
   ///
@@ -243,8 +242,8 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
            const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : modified_flags(t_modified_flags("DualView::modified_flags")),
         d_view(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7),
-        h_view(create_mirror_view(d_view)) {  // without UVM, host View mirrors
-  }
+        h_view(create_mirror_view(d_view))  // without UVM, host View mirrors
+  {}
 
   explicit inline DualView(const ViewAllocateWithoutInitializing& arg_prop,
                            const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -266,18 +265,14 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   DualView(const DualView<SS, LS, DS, MS>& src)
       : modified_flags(src.modified_flags),
         d_view(src.d_view),
-        h_view(src.h_view)
-  {
-  }
+        h_view(src.h_view) {}
 
   //! Subview constructor
   template <class SD, class S1, class S2, class S3, class Arg0, class... Args>
   DualView(const DualView<SD, S1, S2, S3>& src, const Arg0& arg0, Args... args)
       : modified_flags(src.modified_flags),
         d_view(Kokkos::subview(src.d_view, arg0, args...)),
-        h_view(Kokkos::subview(src.h_view, arg0, args...))
-  {
-  }
+        h_view(Kokkos::subview(src.h_view, arg0, args...)) {}
 
   /// \brief Create DualView from existing device and host View objects.
   ///

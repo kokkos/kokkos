@@ -150,7 +150,7 @@ class Serial {
   inline static unsigned impl_max_hardware_threads() {
     return impl_thread_pool_size(0);
   }
-  
+
   uint32_t impl_instance_id() const noexcept { return 0; }
 
   static const char* name();
@@ -311,11 +311,8 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
     return (level == 0 ? 1024 * 32 : 20 * 1024 * 1024);
   }
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal(const execution_space&, int league_size_request
-                     ,
-                     int team_size_request
-                     ,
-                     int /* vector_length_request */ = 1)
+  TeamPolicyInternal(const execution_space&, int league_size_request,
+                     int team_size_request, int /* vector_length_request */ = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_league_size(league_size_request),
@@ -333,10 +330,7 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
         m_league_size(league_size_request),
         m_chunk_size(32) {}
 
-  TeamPolicyInternal(int league_size_request
-                     ,
-                     int team_size_request
-                     ,
+  TeamPolicyInternal(int league_size_request, int team_size_request,
                      int /* vector_length_request */ = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},

@@ -1055,8 +1055,7 @@ class TestViewAPI {
     {
       // Destruction of this view should be harmless.
 
-      const_dView4 unmanaged_from_ptr_const_dx(dx.data(), dx.extent(0)
-      );
+      const_dView4 unmanaged_from_ptr_const_dx(dx.data(), dx.extent(0));
     }
 
     const_dView4 const_dx = dx;

@@ -397,7 +397,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   typedef Kokkos::Impl::CudaTeamMember member_type;
 
  protected:
-
   template <class ClosureType, class FunctorType, class BlockSizeCallable>
   int internal_team_size_common(const FunctorType& f,
                                 BlockSizeCallable&& block_size_callable) const {

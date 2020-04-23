@@ -145,13 +145,9 @@ HostThreadTeamData* serial_get_thread_team_data() {
 
 namespace Kokkos {
 
-bool Serial::impl_is_initialized()
-{
-  return Impl::g_serial_is_initialized;
-}
+bool Serial::impl_is_initialized() { return Impl::g_serial_is_initialized; }
 
 void Serial::impl_initialize() {
-
   Impl::SharedAllocationRecord<void, void>::tracking_enable();
 
   // Init the array of locks used for arbitrarily sized atomics
@@ -160,8 +156,7 @@ void Serial::impl_initialize() {
   Impl::g_serial_is_initialized = true;
 }
 
-void Serial::impl_finalize()
-{
+void Serial::impl_finalize() {
   if (Impl::g_serial_thread_team_data.scratch_buffer()) {
     Impl::g_serial_thread_team_data.disband_team();
     Impl::g_serial_thread_team_data.disband_pool();

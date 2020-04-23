@@ -618,18 +618,16 @@ inline int Threads::impl_is_initialized() {
   return Impl::ThreadsExec::is_initialized();
 }
 
-inline void Threads::impl_initialize(
-    unsigned threads_count, unsigned use_numa_count,
-    unsigned use_cores_per_numa, bool allow_asynchronous_threadpool) {
+inline void Threads::impl_initialize(unsigned threads_count,
+                                     unsigned use_numa_count,
+                                     unsigned use_cores_per_numa,
+                                     bool allow_asynchronous_threadpool) {
   Impl::ThreadsExec::initialize(threads_count, use_numa_count,
                                 use_cores_per_numa,
                                 allow_asynchronous_threadpool);
 }
 
-inline void Threads::impl_finalize()
-{
-  Impl::ThreadsExec::finalize();
-}
+inline void Threads::impl_finalize() { Impl::ThreadsExec::finalize(); }
 
 inline void Threads::print_configuration(std::ostream &s, const bool detail) {
   Impl::ThreadsExec::print_configuration(s, detail);
@@ -656,16 +654,10 @@ class UniqueToken<Threads, UniqueTokenScope::Instance> {
   UniqueToken(execution_space const & = execution_space()) noexcept {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
-  inline
-      int
-      size() const noexcept {
-    return Threads::impl_thread_pool_size();
-  }
+  inline int size() const noexcept { return Threads::impl_thread_pool_size(); }
 
   /// \brief acquire value such that 0 <= value < size()
-  inline
-      int
-      acquire() const noexcept {
+  inline int acquire() const noexcept {
     return Threads::impl_thread_pool_rank();
   }
 
@@ -685,16 +677,10 @@ class UniqueToken<Threads, UniqueTokenScope::Global> {
   UniqueToken(execution_space const & = execution_space()) noexcept {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
-  inline
-      int
-      size() const noexcept {
-    return Threads::impl_thread_pool_size();
-  }
+  inline int size() const noexcept { return Threads::impl_thread_pool_size(); }
 
   /// \brief acquire value such that 0 <= value < size()
-  inline
-      int
-      acquire() const noexcept {
+  inline int acquire() const noexcept {
     return Threads::impl_thread_pool_rank();
   }
 

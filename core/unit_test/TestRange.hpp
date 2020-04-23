@@ -290,7 +290,7 @@ struct TestRange {
                  k++) {
               a(i)++;
             }
-        count( ExecSpace::impl_hardware_thread_id() )++;
+            count(ExecSpace::impl_hardware_thread_id())++;
           });
 
       int error = 0;

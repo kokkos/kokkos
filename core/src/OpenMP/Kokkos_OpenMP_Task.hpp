@@ -215,9 +215,7 @@ class TaskQueueSpecializationConstrained<
     using task_base_type = typename scheduler_type::task_base;
     using queue_type     = typename scheduler_type::queue_type;
 
-    if (1 == OpenMP::impl_thread_pool_size())
-    {
-
+    if (1 == OpenMP::impl_thread_pool_size()) {
       task_base_type* const end = (task_base_type*)task_base_type::EndTag;
 
       HostThreadTeamData& team_data_single =
@@ -261,7 +259,7 @@ class TaskQueueSpecializationConstrained<
         HostThreadTeamDataSingleton::singleton();
 
     Impl::OpenMPExec* instance = t_openmp_instance;
-    const int pool_size = OpenMP::impl_thread_pool_size();
+    const int pool_size        = OpenMP::impl_thread_pool_size();
 
     const int team_size = 1;       // Threads per core
     instance->resize_thread_data(0 /* global reduce buffer */

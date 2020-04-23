@@ -101,8 +101,7 @@ create_mirror_view(
     const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>&
         view,
     typename std::enable_if<!ViewTraits<DataType, Arg1Type, Arg2Type,
-                                        Arg3Type>::is_hostspace>::type* = 0)
-{
+                                        Arg3Type>::is_hostspace>::type* = 0) {
   return create_mirror(view);
 }
 }  // namespace Kokkos

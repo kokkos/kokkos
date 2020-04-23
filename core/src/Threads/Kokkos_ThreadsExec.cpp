@@ -770,25 +770,20 @@ void ThreadsExec::finalize() {
 
 namespace Kokkos {
 
-int Threads::concurrency() {
-  return impl_thread_pool_size(0);
-}
+int Threads::concurrency() { return impl_thread_pool_size(0); }
 void Threads::fence() const { Impl::ThreadsExec::fence(); }
 
-Threads &Threads::impl_instance(int)
-{
+Threads &Threads::impl_instance(int) {
   static Threads t;
   return t;
 }
 
-int Threads::impl_thread_pool_size(int depth)
-{
+int Threads::impl_thread_pool_size(int depth) {
   return Impl::s_thread_pool_size[depth];
 }
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-int Threads::impl_thread_pool_rank()
-{
+int Threads::impl_thread_pool_rank() {
   const pthread_t pid = pthread_self();
   int i               = 0;
   while ((i < Impl::s_thread_pool_size[0]) && (pid != Impl::s_threads_pid[i])) {

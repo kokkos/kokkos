@@ -100,13 +100,13 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
 
   template <class FunctorType>
   int team_size_max(const FunctorType&, const ParallelForTag&) const {
-    int pool_size = traits::execution_space::impl_thread_pool_size(1);
+    int pool_size          = traits::execution_space::impl_thread_pool_size(1);
     int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
     return pool_size < max_host_team_size ? pool_size : max_host_team_size;
   }
   template <class FunctorType>
   int team_size_max(const FunctorType&, const ParallelReduceTag&) const {
-    int pool_size = traits::execution_space::impl_thread_pool_size(1);
+    int pool_size          = traits::execution_space::impl_thread_pool_size(1);
     int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
     return pool_size < max_host_team_size ? pool_size : max_host_team_size;
   }
@@ -206,8 +206,7 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
                      int /* vector_length_request */ = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0)
-  {
+        m_chunk_size(0) {
     init(league_size_request,
          traits::execution_space::impl_thread_pool_size(2));
   }
@@ -228,8 +227,7 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
     init(league_size_request,
-         traits::execution_space::impl_thread_pool_size(2)
-    );
+         traits::execution_space::impl_thread_pool_size(2));
   }
 
   inline int team_alloc() const { return m_team_alloc; }
@@ -265,7 +263,7 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
   inline TeamPolicyInternal& set_scratch_size(
       const int& level, const PerTeamValue& per_team,
       const PerThreadValue& per_thread) {
-    m_team_scratch_size[level] = per_team.value;
+    m_team_scratch_size[level]   = per_team.value;
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
   }

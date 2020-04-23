@@ -421,15 +421,15 @@ typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
 
 //----------------------------------------------------------------------------
 
-template <class DataType, class Arg1Type, class Arg2Type,
-          class Arg3Type, typename SizeType>
+template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
+          typename SizeType>
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                         SizeType>::HostMirror
 create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                         SizeType>& input);
 
-template <class DataType, class Arg1Type, class Arg2Type,
-          class Arg3Type, typename SizeType>
+template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
+          typename SizeType>
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                         SizeType>::HostMirror
 create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
