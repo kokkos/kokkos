@@ -296,6 +296,13 @@ IF (Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
   )
 ENDIF()
 
+# Clang needs mcx16 option enabled for Windows atomic functions
+IF (CMAKE_CXX_COMPILER_ID STREQUAL Clang AND WIN32)
+  COMPILER_SPECIFIC_FLAGS(
+    Clang -mcx16
+  )
+ENDIF()
+
 #Right now we cannot get the compiler ID when cross-compiling, so just check
 #that HIP is enabled
 IF (Kokkos_ENABLE_HIP)
