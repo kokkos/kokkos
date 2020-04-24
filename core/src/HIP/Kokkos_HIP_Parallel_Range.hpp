@@ -281,6 +281,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const index_type nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       const int block_size = local_block_size(m_functor);
+      KOKKOS_ASSERT(block_size > 0);
 
       m_scratch_space =
           ::Kokkos::Experimental::Impl::hip_internal_scratch_space(
@@ -558,6 +559,7 @@ class ParallelScanHIPBase {
       // the unit tests fail with wrong results
       const int block_size =
           std::min(static_cast<int>(local_block_size(m_functor)), 256);
+      KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
           std::min(block_size * block_size, gridMaxComputeCapability_2x);

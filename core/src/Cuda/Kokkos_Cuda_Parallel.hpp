@@ -620,6 +620,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
             m_policy.space().impl_internal_space_instance(), attr, m_functor, 1,
             0, 0);
+    KOKKOS_ASSERT(block_size > 0);
     dim3 block(1, block_size, 1);
     dim3 grid(
         std::min(
@@ -671,6 +672,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
         m_rp.space().impl_internal_space_instance()->m_maxBlock);
     if (RP::rank == 2) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], 1);
+      KOKKOS_ASSERT(block.x > 0);
+      KOKKOS_ASSERT(block.y > 0);
       const dim3 grid(
           std::min((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
                    maxblocks),
@@ -682,6 +685,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
           false);
     } else if (RP::rank == 3) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], m_rp.m_tile[2]);
+      KOKKOS_ASSERT(block.x > 0);
+      KOKKOS_ASSERT(block.y > 0);
+      KOKKOS_ASSERT(block.z > 0);
       const dim3 grid(
           std::min((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
                    maxblocks),
@@ -697,6 +703,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
       // threadIdx.z
       const dim3 block(m_rp.m_tile[0] * m_rp.m_tile[1], m_rp.m_tile[2],
                        m_rp.m_tile[3]);
+      KOKKOS_ASSERT(block.y > 0);
+      KOKKOS_ASSERT(block.z > 0);
       const dim3 grid(
           std::min(
               static_cast<index_type>(m_rp.m_tile_end[0] * m_rp.m_tile_end[1]),
@@ -713,6 +721,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
       // threadIdx.z
       const dim3 block(m_rp.m_tile[0] * m_rp.m_tile[1],
                        m_rp.m_tile[2] * m_rp.m_tile[3], m_rp.m_tile[4]);
+      KOKKOS_ASSERT(block.z > 0);
       const dim3 grid(
           std::min(
               static_cast<index_type>(m_rp.m_tile_end[0] * m_rp.m_tile_end[1]),
@@ -1142,6 +1151,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const index_type nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       const int block_size = local_block_size(m_functor);
+      KOKKOS_ASSERT(block_size > 0);
 
       m_scratch_space = cuda_internal_scratch_space(
           m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
@@ -2233,6 +2243,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
       const int block_size = local_block_size(m_functor);
+      KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
           (block_size * block_size) < GridMaxComputeCapability_2x
@@ -2523,6 +2534,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
       const int block_size = local_block_size(m_functor);
+      KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
           (block_size * block_size) < GridMaxComputeCapability_2x
