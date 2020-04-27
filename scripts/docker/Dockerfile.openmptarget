@@ -51,8 +51,8 @@ RUN GCC_VERSION=6.5.0 && \
 ENV PATH=${GCC_DIR}/bin:$PATH
 
 ENV LLVM_DIR=/opt/llvm
-RUN LLVM_VERSION=9.0.1 && \
-    LLVM_KEY=86419D8A && \
+RUN LLVM_VERSION=10.0.0 && \
+    LLVM_KEY="345AD05D 86419D8A" && \
     LLVM_URL=https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION} &&\
     LLVM_ARCHIVE=llvm-project-${LLVM_VERSION}.tar.xz &&\
     SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
