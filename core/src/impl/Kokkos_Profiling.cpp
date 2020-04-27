@@ -262,50 +262,52 @@ void initialize() {
       // pointer to function A direct cast will give warnings hence, we have to
       // workaround the issue by casting pointer to pointers.
       auto p1 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
-      beginForCallback = *((beginFunction*)&p1);
+      set_begin_parallel_for_callback(*((beginFunction*)&p1));
       auto p2 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
-      beginScanCallback = *((beginFunction*)&p2);
+      set_begin_parallel_scan_callback(*((beginFunction*)&p2));
       auto p3 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
-      beginReduceCallback = *((beginFunction*)&p3);
+      set_begin_parallel_reduce_callback(*((beginFunction*)&p3));
 
-      auto p4         = dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
-      endScanCallback = *((endFunction*)&p4);
-      auto p5         = dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
-      endForCallback  = *((endFunction*)&p5);
+      auto p4 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
+      set_end_parallel_scan_callback(*((endFunction*)&p4));
+      auto p5 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
+      set_end_parallel_for_callback(*((endFunction*)&p5));
       auto p6 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
-      endReduceCallback = *((endFunction*)&p6);
+      set_end_parallel_reduce_callback(*((endFunction*)&p6));
 
-      auto p7            = dlsym(firstProfileLibrary, "kokkosp_init_library");
-      initProfileLibrary = *((initFunction*)&p7);
+      auto p7 = dlsym(firstProfileLibrary, "kokkosp_init_library");
+      set_init_callback(*((initFunction*)&p7));
       auto p8 = dlsym(firstProfileLibrary, "kokkosp_finalize_library");
-      finalizeProfileLibrary = *((finalizeFunction*)&p8);
+      set_finalize_callback(*((finalizeFunction*)&p8));
 
       auto p9 = dlsym(firstProfileLibrary, "kokkosp_push_profile_region");
-      pushRegionCallback = *((pushFunction*)&p9);
+      set_push_region_callback(*((pushFunction*)&p9));
       auto p10 = dlsym(firstProfileLibrary, "kokkosp_pop_profile_region");
-      popRegionCallback = *((popFunction*)&p10);
+      set_pop_region_callback(*((popFunction*)&p10));
 
       auto p11 = dlsym(firstProfileLibrary, "kokkosp_allocate_data");
-      allocateDataCallback = *((allocateDataFunction*)&p11);
+      set_allocate_data_callback(*((allocateDataFunction*)&p11));
       auto p12 = dlsym(firstProfileLibrary, "kokkosp_deallocate_data");
-      deallocateDataCallback = *((deallocateDataFunction*)&p12);
+      set_deallocate_data_callback(*((deallocateDataFunction*)&p12));
 
       auto p13 = dlsym(firstProfileLibrary, "kokkosp_begin_deep_copy");
-      beginDeepCopyCallback = *((beginDeepCopyFunction*)&p13);
-      auto p14            = dlsym(firstProfileLibrary, "kokkosp_end_deep_copy");
-      endDeepCopyCallback = *((endDeepCopyFunction*)&p14);
+      set_begin_deep_copy_callback(*((beginDeepCopyFunction*)&p13));
+      auto p14 = dlsym(firstProfileLibrary, "kokkosp_end_deep_copy");
+      set_end_deep_copy_callback(*((endDeepCopyFunction*)&p14));
 
       auto p15 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
-      createSectionCallback = *((createProfileSectionFunction*)&p15);
+      set_create_profile_section_callback(
+          *((createProfileSectionFunction*)&p15));
       auto p16 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
-      startSectionCallback = *((startProfileSectionFunction*)&p16);
+      set_start_profile_section_callback(*((startProfileSectionFunction*)&p16));
       auto p17 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
-      stopSectionCallback = *((stopProfileSectionFunction*)&p17);
+      set_stop_profile_section_callback(*((stopProfileSectionFunction*)&p17));
       auto p18 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
-      destroySectionCallback = *((destroyProfileSectionFunction*)&p18);
+      set_destroy_profile_section_callback(
+          *((destroyProfileSectionFunction*)&p18));
 
       auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
-      profileEventCallback = *((profileEventFunction*)&p19);
+      set_profile_event_callback(*((profileEventFunction*)&p19));
     }
   }
 
@@ -401,6 +403,146 @@ void endDeepCopy() {}
 
 void initialize() {}
 void finalize() {}
+
+static eventSet current_callbacks;
+
+initFunction set_init_callback(initFunction callback) {
+  initProfileLibrary     = callback;
+  current_callbacks.init = callback;
+}
+finalizeFunction set_finalize_callback(finalizeFunction callback) {
+  finalizeProfileLibrary     = callback;
+  current_callbacks.finalize = callback;
+}
+beginFunction set_begin_parallel_for_callback(beginFunction callback) {
+  beginForCallback                     = callback;
+  current_callbacks.begin_parallel_for = callback;
+}
+endFunction set_end_parallel_for_callback(endFunction callback) {
+  endForCallback                     = callback;
+  current_callbacks.end_parallel_for = callback;
+}
+beginFunction set_begin_parallel_reduce_callback(beginFunction callback) {
+  beginReduceCallback                     = callback;
+  current_callbacks.begin_parallel_reduce = callback;
+}
+endFunction set_end_parallel_reduce_callback(endFunction callback) {
+  endReduceCallback                     = callback;
+  current_callbacks.end_parallel_reduce = callback;
+}
+beginFunction set_begin_parallel_scan_callback(beginFunction callback) {
+  beginScanCallback                     = callback;
+  current_callbacks.begin_parallel_scan = callback;
+}
+endFunction set_end_parallel_scan_callback(endFunction callback) {
+  endScanCallback                     = callback;
+  current_callbacks.end_parallel_scan = callback;
+}
+pushFunction set_push_region_callback(pushFunction callback) {
+  pushRegionCallback            = callback;
+  current_callbacks.push_region = callback;
+}
+popFunction set_pop_region_callback(popFunction callback) {
+  popRegionCallback            = callback;
+  current_callbacks.pop_region = callback;
+}
+allocateDataFunction set_allocate_data_callback(allocateDataFunction callback) {
+  allocateDataCallback            = callback;
+  current_callbacks.allocate_data = callback;
+}
+deallocateDataFunction set_deallocate_data_callback(
+    deallocateDataFunction callback) {
+  deallocateDataCallback            = callback;
+  current_callbacks.deallocate_data = callback;
+}
+createProfileSectionFunction set_create_profile_section_callback(
+    createProfileSectionFunction callback) {
+  createSectionCallback                    = callback;
+  current_callbacks.create_profile_section = callback;
+}
+startProfileSectionFunction set_start_profile_section_callback(
+    startProfileSectionFunction callback) {
+  startSectionCallback                    = callback;
+  current_callbacks.start_profile_section = callback;
+}
+stopProfileSectionFunction set_stop_profile_section_callback(
+    stopProfileSectionFunction callback) {
+  stopSectionCallback                    = callback;
+  current_callbacks.stop_profile_section = callback;
+}
+destroyProfileSectionFunction set_destroy_profile_section_callback(
+    destroyProfileSectionFunction callback) {
+  destroySectionCallback                    = callback;
+  current_callbacks.destroy_profile_section = callback;
+}
+profileEventFunction set_profile_event_callback(profileEventFunction callback) {
+  profileEventCallback            = callback;
+  current_callbacks.profile_event = callback;
+}
+beginDeepCopyFunction set_begin_deep_copy_callback(
+    beginDeepCopyFunction callback) {
+  beginDeepCopyCallback             = callback;
+  current_callbacks.begin_deep_copy = callback;
+}
+endDeepCopyFunction set_end_deep_copy_callback(endDeepCopyFunction callback) {
+  endDeepCopyCallback             = callback;
+  current_callbacks.end_deep_copy = callback;
+}
+
+void pause_tools() {
+  initProfileLibrary     = nullptr;
+  finalizeProfileLibrary = nullptr;
+
+  beginForCallback    = nullptr;
+  beginScanCallback   = nullptr;
+  beginReduceCallback = nullptr;
+  endScanCallback     = nullptr;
+  endForCallback      = nullptr;
+  endReduceCallback   = nullptr;
+
+  pushRegionCallback = nullptr;
+  popRegionCallback  = nullptr;
+
+  allocateDataCallback   = nullptr;
+  deallocateDataCallback = nullptr;
+
+  beginDeepCopyCallback = nullptr;
+  endDeepCopyCallback   = nullptr;
+
+  createSectionCallback  = nullptr;
+  startSectionCallback   = nullptr;
+  stopSectionCallback    = nullptr;
+  destroySectionCallback = nullptr;
+
+  profileEventCallback = nullptr;
+}
+
+void resume_tools() {
+  initProfileLibrary     = current_callbacks.init;
+  finalizeProfileLibrary = current_callbacks.finalize;
+
+  beginForCallback    = current_callbacks.begin_parallel_for;
+  beginScanCallback   = current_callbacks.begin_parallel_scan;
+  beginReduceCallback = current_callbacks.begin_parallel_reduce;
+  endScanCallback     = current_callbacks.end_parallel_scan;
+  endForCallback      = current_callbacks.end_parallel_for;
+  endReduceCallback   = current_callbacks.end_parallel_reduce;
+
+  pushRegionCallback     = current_callbacks.push_region;
+  popRegionCallback      = current_callbacks.pop_region;
+  allocateDataCallback   = current_callbacks.allocate_data;
+  deallocateDataCallback = current_callbacks.deallocate_data;
+
+  beginDeepCopyCallback = current_callbacks.begin_deep_copy;
+  endDeepCopyCallback   = current_callbacks.end_deep_copy;
+
+  createSectionCallback  = current_callbacks.create_profile_section;
+  startSectionCallback   = current_callbacks.start_profile_section;
+  stopSectionCallback    = current_callbacks.stop_profile_section;
+  destroySectionCallback = current_callbacks.destroy_profile_section;
+
+  profileEventCallback = current_callbacks.profile_event;
+}
 
 }  // namespace Profiling
 }  // namespace Kokkos

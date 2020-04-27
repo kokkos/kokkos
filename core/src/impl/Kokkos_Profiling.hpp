@@ -88,6 +88,58 @@ void initialize();
 void finalize();
 
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
+
+initFunction set_init_callback(initFunction callback);
+finalizeFunction set_finalize_callback(finalizeFunction callback);
+beginFunction set_begin_parallel_for_callback(beginFunction callback);
+endFunction set_end_parallel_for_callback(endFunction callback);
+beginFunction set_begin_parallel_reduce_callback(beginFunction callback);
+endFunction set_end_parallel_reduce_callback(endFunction callback);
+beginFunction set_begin_parallel_scan_callback(beginFunction callback);
+endFunction set_end_parallel_scan_callback(endFunction callback);
+pushFunction set_push_region_callback(pushFunction callback);
+popFunction set_pop_region_callback(popFunction callback);
+allocateDataFunction set_allocate_data_callback(allocateDataFunction callback);
+deallocateDataFunction set_deallocate_data_callback(
+    deallocateDataFunction callback);
+createProfileSectionFunction set_create_profile_section_callback(
+    createProfileSectionFunction callback);
+startProfileSectionFunction set_start_profile_section_callback(
+    startProfileSectionFunction callback);
+stopProfileSectionFunction set_stop_profile_section_callback(
+    stopProfileSectionFunction callback);
+destroyProfileSectionFunction set_destroy_profile_section_callback(
+    destroyProfileSectionFunction callback);
+profileEventFunction set_profile_event_callback(profileEventFunction callback);
+beginDeepCopyFunction set_begin_deep_copy_callback(
+    beginDeepCopyFunction callback);
+endDeepCopyFunction set_end_deep_copy_callback(endDeepCopyFunction callback);
+
+struct eventSet {
+  initFunction init;
+  finalizeFunction finalize;
+  beginFunction begin_parallel_for;
+  endFunction end_parallel_for;
+  beginFunction begin_parallel_reduce;
+  endFunction end_parallel_reduce;
+  beginFunction begin_parallel_scan;
+  endFunction end_parallel_scan;
+  pushFunction push_region;
+  popFunction pop_region;
+  allocateDataFunction allocate_data;
+  deallocateDataFunction deallocate_data;
+  createProfileSectionFunction create_profile_section;
+  startProfileSectionFunction start_profile_section;
+  stopProfileSectionFunction stop_profile_section;
+  destroyProfileSectionFunction destroy_profile_section;
+  profileEventFunction profile_event;
+  beginDeepCopyFunction begin_deep_copy;
+  endDeepCopyFunction end_deep_copy;
+};
+
+void pause_tools();
+void resume_tools();
+
 }  // namespace Profiling
 
 }  // namespace Kokkos
