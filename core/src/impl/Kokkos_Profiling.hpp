@@ -89,31 +89,31 @@ void finalize();
 
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
-initFunction set_init_callback(initFunction callback);
-finalizeFunction set_finalize_callback(finalizeFunction callback);
-beginFunction set_begin_parallel_for_callback(beginFunction callback);
-endFunction set_end_parallel_for_callback(endFunction callback);
-beginFunction set_begin_parallel_reduce_callback(beginFunction callback);
-endFunction set_end_parallel_reduce_callback(endFunction callback);
-beginFunction set_begin_parallel_scan_callback(beginFunction callback);
-endFunction set_end_parallel_scan_callback(endFunction callback);
-pushFunction set_push_region_callback(pushFunction callback);
-popFunction set_pop_region_callback(popFunction callback);
-allocateDataFunction set_allocate_data_callback(allocateDataFunction callback);
-deallocateDataFunction set_deallocate_data_callback(
+void set_init_callback(initFunction callback);
+void set_finalize_callback(finalizeFunction callback);
+void set_begin_parallel_for_callback(beginFunction callback);
+void set_end_parallel_for_callback(endFunction callback);
+void set_begin_parallel_reduce_callback(beginFunction callback);
+void set_end_parallel_reduce_callback(endFunction callback);
+void set_begin_parallel_scan_callback(beginFunction callback);
+void set_end_parallel_scan_callback(endFunction callback);
+void set_push_region_callback(pushFunction callback);
+void set_pop_region_callback(popFunction callback);
+void set_allocate_data_callback(allocateDataFunction callback);
+void set_deallocate_data_callback(
     deallocateDataFunction callback);
-createProfileSectionFunction set_create_profile_section_callback(
+void set_create_profile_section_callback(
     createProfileSectionFunction callback);
-startProfileSectionFunction set_start_profile_section_callback(
+void set_start_profile_section_callback(
     startProfileSectionFunction callback);
-stopProfileSectionFunction set_stop_profile_section_callback(
+void set_stop_profile_section_callback(
     stopProfileSectionFunction callback);
-destroyProfileSectionFunction set_destroy_profile_section_callback(
+void set_destroy_profile_section_callback(
     destroyProfileSectionFunction callback);
-profileEventFunction set_profile_event_callback(profileEventFunction callback);
-beginDeepCopyFunction set_begin_deep_copy_callback(
+void set_profile_event_callback(profileEventFunction callback);
+void set_begin_deep_copy_callback(
     beginDeepCopyFunction callback);
-endDeepCopyFunction set_end_deep_copy_callback(endDeepCopyFunction callback);
+void set_end_deep_copy_callback(endDeepCopyFunction callback);
 
 struct eventSet {
   initFunction init;
