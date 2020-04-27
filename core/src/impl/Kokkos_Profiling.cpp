@@ -262,52 +262,53 @@ void initialize() {
       // pointer to function A direct cast will give warnings hence, we have to
       // workaround the issue by casting pointer to pointers.
       auto p1 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
-      set_begin_parallel_for_callback(*((beginFunction*)&p1));
+      set_begin_parallel_for_callback(*reinterpret_cast<beginFunction*>(&p1));
       auto p2 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
-      set_begin_parallel_scan_callback(*((beginFunction*)&p2));
+      set_begin_parallel_scan_callback(*reinterpret_cast<beginFunction*>(&p2));
       auto p3 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
-      set_begin_parallel_reduce_callback(*((beginFunction*)&p3));
+      set_begin_parallel_reduce_callback(*reinterpret_cast<beginFunction*>(&p3));
 
       auto p4 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
-      set_end_parallel_scan_callback(*((endFunction*)&p4));
+      set_end_parallel_scan_callback(*reinterpret_cast<endFunction*>(&p4));
       auto p5 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
-      set_end_parallel_for_callback(*((endFunction*)&p5));
+      set_end_parallel_for_callback(*reinterpret_cast<endFunction*>(&p5));
       auto p6 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
-      set_end_parallel_reduce_callback(*((endFunction*)&p6));
+      set_end_parallel_reduce_callback(*reinterpret_cast<endFunction*>(&p6));
 
       auto p7 = dlsym(firstProfileLibrary, "kokkosp_init_library");
-      set_init_callback(*((initFunction*)&p7));
+      set_init_callback(*reinterpret_cast<initFunction*>(&p7));
       auto p8 = dlsym(firstProfileLibrary, "kokkosp_finalize_library");
-      set_finalize_callback(*((finalizeFunction*)&p8));
+      set_finalize_callback(*reinterpret_cast<finalizeFunction*>(&p8));
 
       auto p9 = dlsym(firstProfileLibrary, "kokkosp_push_profile_region");
-      set_push_region_callback(*((pushFunction*)&p9));
+      set_push_region_callback(*reinterpret_cast<pushFunction*>(&p9));
       auto p10 = dlsym(firstProfileLibrary, "kokkosp_pop_profile_region");
-      set_pop_region_callback(*((popFunction*)&p10));
+      set_pop_region_callback(*reinterpret_cast<popFunction*>(&p10));
 
       auto p11 = dlsym(firstProfileLibrary, "kokkosp_allocate_data");
-      set_allocate_data_callback(*((allocateDataFunction*)&p11));
+      set_allocate_data_callback(*reinterpret_cast<allocateDataFunction*>(&p11));
       auto p12 = dlsym(firstProfileLibrary, "kokkosp_deallocate_data");
-      set_deallocate_data_callback(*((deallocateDataFunction*)&p12));
+      set_deallocate_data_callback(*reinterpret_cast<deallocateDataFunction*>(&p12));
 
       auto p13 = dlsym(firstProfileLibrary, "kokkosp_begin_deep_copy");
-      set_begin_deep_copy_callback(*((beginDeepCopyFunction*)&p13));
+      set_begin_deep_copy_callback(*reinterpret_cast<beginDeepCopyFunction*>(&p13));
       auto p14 = dlsym(firstProfileLibrary, "kokkosp_end_deep_copy");
-      set_end_deep_copy_callback(*((endDeepCopyFunction*)&p14));
+      set_end_deep_copy_callback(*reinterpret_cast<endDeepCopyFunction*>(&p14));
 
       auto p15 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
       set_create_profile_section_callback(
-          *((createProfileSectionFunction*)&p15));
+          *(reinterpret_cast<createProfileSectionFunction*>(&p15)));
       auto p16 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
-      set_start_profile_section_callback(*((startProfileSectionFunction*)&p16));
+      set_start_profile_section_callback(*reinterpret_cast<startProfileSectionFunction*>(&p16));
       auto p17 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
-      set_stop_profile_section_callback(*((stopProfileSectionFunction*)&p17));
+      set_stop_profile_section_callback(*reinterpret_cast<stopProfileSectionFunction*>(&p17));
       auto p18 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
       set_destroy_profile_section_callback(
-          *((destroyProfileSectionFunction*)&p18));
+          *(reinterpret_cast<destroyProfileSectionFunction*>(&p18));
+
 
       auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
-      set_profile_event_callback(*((profileEventFunction*)&p19));
+      set_profile_event_callback(*reinterpret_cast<profileEventFunction*>(&p19));
     }
   }
 
