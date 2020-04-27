@@ -85,24 +85,24 @@ __global__ static void hip_parallel_launch_constant_memory() {
        sizeof(unsigned long)];
   #endif
 
-  const DriverType &driver = *(reinterpret_cast<const DriverType *>(
+  const DriverType* driver = (reinterpret_cast<const DriverType *>(
       kokkos_impl_hip_constant_memory_buffer));
 
-  driver();
+  driver->operator()();
 }
 
 template <class DriverType>
 __global__ static void hip_parallel_launch_local_memory(
-    const DriverType driver) {
-  driver();
+    const DriverType* driver) {
+  driver->operator()();
 }
 
 template <class DriverType, unsigned int maxTperB, unsigned int minBperSM>
 __global__ __launch_bounds__(
     maxTperB,
-    minBperSM) static void hip_parallel_launch_local_memory(const DriverType
+    minBperSM) static void hip_parallel_launch_local_memory(const DriverType*
                                                                 driver) {
-  driver();
+  driver->operator()();
 }
 
 enum class HIPLaunchMechanism : unsigned {
@@ -152,13 +152,17 @@ struct HIPParallelLaunch<
              block.y, block.z, shmem);
       printf("Pre Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
 
+      DriverType* device;
+      HIP_SAFE_CALL(hipMalloc(&device, sizeof(DriverType)));
+      HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType), hipMemcpyHostToDevice, hip_instance->m_stream));
       hipLaunchKernelGGL(
           (hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
                                             MinBlocksPerSM>),
-          grid, block, shmem, hip_instance->m_stream, driver);
+          grid, block, shmem, hip_instance->m_stream, device);
 
       Kokkos::Experimental::HIP().fence();
       printf("Post Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
+      HIP_SAFE_CALL(hipFree(device));
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
       Kokkos::Experimental::HIP().fence();
@@ -191,10 +195,14 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       }
 
       // Invoke the driver function on the device
+      DriverType* device;
+      HIP_SAFE_CALL(hipMalloc(&device, sizeof(DriverType)));
+      HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType), hipMemcpyHostToDevice, hip_instance->m_stream));
       hipLaunchKernelGGL(hip_parallel_launch_local_memory<DriverType>, grid,
-                         block, shmem, hip_instance->m_stream, driver);
+                         block, shmem, hip_instance->m_stream, device);
 
       Kokkos::Experimental::HIP().fence();
+      HIP_SAFE_CALL(hipFree(device));
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
       Kokkos::Experimental::HIP().fence();
