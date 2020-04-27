@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+ARG NPROC=8
+
 ARG CMAKE_VERSION=3.10.3
 ENV CMAKE_DIR=/opt/cmake
 RUN CMAKE_KEY=2D2CEF1034921684 && \
@@ -53,7 +55,7 @@ RUN LLVM_VERSION=9.0.1 && \
       -DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_70 \
       -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
     ../llvm && \
-    make -j8 && \
+    make -j${NPROC} && \
     make install && \
     rm -rf ../build/* && \
     cmake \
@@ -63,7 +65,7 @@ RUN LLVM_VERSION=9.0.1 && \
       -DCMAKE_CXX_COMPILER=$LLVM_DIR/bin/clang++ \
       -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
     ../openmp && \
-    make -j8 && \
+    make -j${NPROC} && \
     make install && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${LLVM_DIR}/bin:$PATH
