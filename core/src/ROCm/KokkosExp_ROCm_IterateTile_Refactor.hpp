@@ -61,7 +61,7 @@
 // resolved
 
 #if defined(KOKKOS_ENABLE_PROFILING)
-#include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
 #endif
 
