@@ -117,7 +117,7 @@ char** init_kokkos_args(bool do_threads, bool do_numa, bool do_device,
 
   if (do_device) {
     init_args.device_id = 0;
-    sprintf(args_kokkos[device_idx], "--device=%i", 0);
+    sprintf(args_kokkos[device_idx], "--device-id=%i", 0);
   }
 
   if (do_other) {
