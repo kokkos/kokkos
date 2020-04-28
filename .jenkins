@@ -32,7 +32,8 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              cd core/unit_test && \
+                              make -j8 && ctest --output-on-failure -R IncrementalTest'''
                     }
                     post {
                         always {
