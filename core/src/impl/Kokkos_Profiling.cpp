@@ -43,6 +43,8 @@
 */
 
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_Profiling.hpp>
+
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <dlfcn.h>
 #endif
@@ -52,7 +54,6 @@
 #include <chrono>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
-#include <impl/Kokkos_Profiling.hpp>
 #include <cstring>
 #include <unordered_map>
 #include <unordered_set>
