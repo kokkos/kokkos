@@ -90,6 +90,7 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
 #include <impl/Kokkos_Profiling_C_Interface.h>
 
 namespace Kokkos {
+<<<<<<< HEAD
 namespace Tools {
 
 using SpaceHandle = Kokkos_Profiling_SpaceHandle;
@@ -97,6 +98,15 @@ using SpaceHandle = Kokkos_Profiling_SpaceHandle;
 }  // namespace Tools
 
 namespace Tools {
+=======
+namespace Profiling {
+
+using SpaceHandle = Kokkos_Profiling_SpaceHandle;
+
+}  // end namespace Profiling
+
+namespace Profiling {
+>>>>>>> current_profiling
 
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;
@@ -117,6 +127,7 @@ using profileEventFunction  = Kokkos_Profiling_profileEventFunction;
 using beginDeepCopyFunction = Kokkos_Profiling_beginDeepCopyFunction;
 using endDeepCopyFunction   = Kokkos_Profiling_endDeepCopyFunction;
 
+<<<<<<< HEAD
 }  // namespace Tools
 
 }  // namespace Kokkos
@@ -157,6 +168,10 @@ using Kokkos::Tools::stopProfileSectionFunction;
 
 }  // namespace Profiling
 
+=======
+}  // end namespace Profiling
+
+>>>>>>> current_profiling
 }  // namespace Kokkos
 
 #endif

@@ -52,7 +52,6 @@
 namespace Kokkos {
 namespace Tools {
 
-
 bool profileLibraryLoaded();
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
@@ -91,6 +90,58 @@ void finalize();
 
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 }  // namespace Tools
+namespace Tools {
+
+void set_init_callback(initFunction callback);
+void set_finalize_callback(finalizeFunction callback);
+void set_begin_parallel_for_callback(beginFunction callback);
+void set_end_parallel_for_callback(endFunction callback);
+void set_begin_parallel_reduce_callback(beginFunction callback);
+void set_end_parallel_reduce_callback(endFunction callback);
+void set_begin_parallel_scan_callback(beginFunction callback);
+void set_end_parallel_scan_callback(endFunction callback);
+void set_push_region_callback(pushFunction callback);
+void set_pop_region_callback(popFunction callback);
+void set_allocate_data_callback(allocateDataFunction callback);
+void set_deallocate_data_callback(deallocateDataFunction callback);
+void set_create_profile_section_callback(createProfileSectionFunction callback);
+void set_start_profile_section_callback(startProfileSectionFunction callback);
+void set_stop_profile_section_callback(stopProfileSectionFunction callback);
+void set_destroy_profile_section_callback(
+    destroyProfileSectionFunction callback);
+void set_profile_event_callback(profileEventFunction callback);
+void set_begin_deep_copy_callback(beginDeepCopyFunction callback);
+void set_end_deep_copy_callback(endDeepCopyFunction callback);
+
+struct EventSet {
+  initFunction init;
+  finalizeFunction finalize;
+  beginFunction begin_parallel_for;
+  endFunction end_parallel_for;
+  beginFunction begin_parallel_reduce;
+  endFunction end_parallel_reduce;
+  beginFunction begin_parallel_scan;
+  endFunction end_parallel_scan;
+  pushFunction push_region;
+  popFunction pop_region;
+  allocateDataFunction allocate_data;
+  deallocateDataFunction deallocate_data;
+  createProfileSectionFunction create_profile_section;
+  startProfileSectionFunction start_profile_section;
+  stopProfileSectionFunction stop_profile_section;
+  destroyProfileSectionFunction destroy_profile_section;
+  profileEventFunction profile_event;
+  beginDeepCopyFunction begin_deep_copy;
+  endDeepCopyFunction end_deep_copy;
+};
+
+void pause_tools();
+void resume_tools();
+
+EventSet get_callbacks();
+void set_callbacks(EventSet new_events);
+
+}  // namespace Tools
 namespace Profiling {
 
 using Kokkos::Tools::profileLibraryLoaded;
@@ -123,7 +174,38 @@ using Kokkos::Tools::initialize;
 
 using Kokkos::Tools::make_space_handle;
 
+
+using Kokkos::Tools::set_init_callback;
+using Kokkos::Tools::set_finalize_callback;
+using Kokkos::Tools::set_begin_parallel_for_callback;
+using Kokkos::Tools::set_end_parallel_for_callback;
+using Kokkos::Tools::set_begin_parallel_reduce_callback;
+using Kokkos::Tools::set_end_parallel_reduce_callback;
+using Kokkos::Tools::set_begin_parallel_scan_callback;
+using Kokkos::Tools::set_end_parallel_scan_callback;
+using Kokkos::Tools::set_push_region_callback;
+using Kokkos::Tools::set_pop_region_callback;
+using Kokkos::Tools::set_allocate_data_callback;
+using Kokkos::Tools::set_deallocate_data_callback;
+using Kokkos::Tools::set_create_profile_section_callback;
+using Kokkos::Tools::set_start_profile_section_callback;
+using Kokkos::Tools::set_stop_profile_section_callback;
+using Kokkos::Tools::set_destroy_profile_section_callback;
+using Kokkos::Tools::set_profile_event_callback;
+using Kokkos::Tools::set_begin_deep_copy_callback;
+using Kokkos::Tools::set_end_deep_copy_callback;
+
+using Kokkos::Tools::EventSet;
+
+using Kokkos::Tools::pause_tools;
+using Kokkos::Tools::resume_tools;
+
+using Kokkos::Tools::get_callbacks;
+using Kokkos::Tools::set_callbacks;
+
 }  // namespace Profiling
+
+
 }  // namespace Kokkos
 
 #endif
