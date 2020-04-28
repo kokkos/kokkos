@@ -135,6 +135,9 @@ struct EventSet {
 void pause_tools();
 void resume_tools();
 
+EventSet get_callbacks();
+void set_callbacks(EventSet new_events);
+
 }  // namespace Profiling
 
 }  // namespace Kokkos

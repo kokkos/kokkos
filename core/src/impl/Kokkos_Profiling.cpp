@@ -411,6 +411,10 @@ void pause_tools() {
 }
 
 void resume_tools() { current_callbacks = backup_callbacks; }
+
+EventSet get_callbacks() { return current_callbacks; }
+void set_callbacks(EventSet new_events) { current_callbacks = new_events; }
+
 }  // namespace Profiling
 
 }  // namespace Kokkos
@@ -483,6 +487,9 @@ void set_end_deep_copy_callback(endDeepCopyFunction callback) {}
 void pause_tools() {}
 
 void resume_tools() {}
+
+EventSet get_callbacks() { return current_callbacks; }
+void set_callbacks(EventSet new_events) {}
 
 }  // namespace Profiling
 }  // namespace Kokkos
