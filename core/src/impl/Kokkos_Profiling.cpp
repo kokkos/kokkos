@@ -61,107 +61,84 @@
 namespace Kokkos {
 namespace Profiling {
 
-static initFunction initProfileLibrary         = nullptr;
-static finalizeFunction finalizeProfileLibrary = nullptr;
+static EventSet current_callbacks;
+static EventSet backup_callbacks;
 
-static beginFunction beginForCallback    = nullptr;
-static beginFunction beginScanCallback   = nullptr;
-static beginFunction beginReduceCallback = nullptr;
-static endFunction endForCallback        = nullptr;
-static endFunction endScanCallback       = nullptr;
-static endFunction endReduceCallback     = nullptr;
-
-static pushFunction pushRegionCallback = nullptr;
-static popFunction popRegionCallback   = nullptr;
-
-static allocateDataFunction allocateDataCallback     = nullptr;
-static deallocateDataFunction deallocateDataCallback = nullptr;
-
-static beginDeepCopyFunction beginDeepCopyCallback = nullptr;
-static endDeepCopyFunction endDeepCopyCallback     = nullptr;
-
-static createProfileSectionFunction createSectionCallback   = nullptr;
-static startProfileSectionFunction startSectionCallback     = nullptr;
-static stopProfileSectionFunction stopSectionCallback       = nullptr;
-static destroyProfileSectionFunction destroySectionCallback = nullptr;
-
-static profileEventFunction profileEventCallback = nullptr;
-}  // end namespace Profiling
-
-namespace Profiling {
-
-bool profileLibraryLoaded() { return (initProfileLibrary != nullptr); }
+bool profileLibraryLoaded() { return (current_callbacks.init != nullptr); }
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
-  if (beginForCallback != nullptr) {
+  if (current_callbacks.begin_parallel_for != nullptr) {
     Kokkos::fence();
-    (*beginForCallback)(kernelPrefix.c_str(), devID, kernelID);
+    (*current_callbacks.begin_parallel_for)(kernelPrefix.c_str(), devID,
+                                            kernelID);
   }
 }
 
 void endParallelFor(const uint64_t kernelID) {
-  if (endForCallback != nullptr) {
+  if (current_callbacks.end_parallel_for != nullptr) {
     Kokkos::fence();
-    (*endForCallback)(kernelID);
+    (*current_callbacks.end_parallel_for)(kernelID);
   }
 }
 
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                        uint64_t* kernelID) {
-  if (beginScanCallback != nullptr) {
+  if (current_callbacks.begin_parallel_scan != nullptr) {
     Kokkos::fence();
-    (*beginScanCallback)(kernelPrefix.c_str(), devID, kernelID);
+    (*current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(), devID,
+                                             kernelID);
   }
 }
 
 void endParallelScan(const uint64_t kernelID) {
-  if (endScanCallback != nullptr) {
+  if (current_callbacks.end_parallel_scan != nullptr) {
     Kokkos::fence();
-    (*endScanCallback)(kernelID);
+    (*current_callbacks.end_parallel_scan)(kernelID);
   }
 }
 
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
                          uint64_t* kernelID) {
-  if (beginReduceCallback != nullptr) {
+  if (current_callbacks.begin_parallel_reduce != nullptr) {
     Kokkos::fence();
-    (*beginReduceCallback)(kernelPrefix.c_str(), devID, kernelID);
+    (*current_callbacks.begin_parallel_reduce)(kernelPrefix.c_str(), devID,
+                                               kernelID);
   }
 }
 
 void endParallelReduce(const uint64_t kernelID) {
-  if (endReduceCallback != nullptr) {
+  if (current_callbacks.end_parallel_reduce != nullptr) {
     Kokkos::fence();
-    (*endReduceCallback)(kernelID);
+    (*current_callbacks.end_parallel_reduce)(kernelID);
   }
 }
 
 void pushRegion(const std::string& kName) {
-  if (pushRegionCallback != nullptr) {
+  if (current_callbacks.push_region != nullptr) {
     Kokkos::fence();
-    (*pushRegionCallback)(kName.c_str());
+    (*current_callbacks.push_region)(kName.c_str());
   }
 }
 
 void popRegion() {
-  if (popRegionCallback != nullptr) {
+  if (current_callbacks.pop_region != nullptr) {
     Kokkos::fence();
-    (*popRegionCallback)();
+    (*current_callbacks.pop_region)();
   }
 }
 
 void allocateData(const SpaceHandle space, const std::string label,
                   const void* ptr, const uint64_t size) {
-  if (allocateDataCallback != nullptr) {
-    (*allocateDataCallback)(space, label.c_str(), ptr, size);
+  if (current_callbacks.allocate_data != nullptr) {
+    (*current_callbacks.allocate_data)(space, label.c_str(), ptr, size);
   }
 }
 
 void deallocateData(const SpaceHandle space, const std::string label,
                     const void* ptr, const uint64_t size) {
-  if (deallocateDataCallback != nullptr) {
-    (*deallocateDataCallback)(space, label.c_str(), ptr, size);
+  if (current_callbacks.deallocate_data != nullptr) {
+    (*current_callbacks.deallocate_data)(space, label.c_str(), ptr, size);
   }
 }
 
@@ -169,45 +146,46 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
                    const void* dst_ptr, const SpaceHandle src_space,
                    const std::string src_label, const void* src_ptr,
                    const uint64_t size) {
-  if (beginDeepCopyCallback != nullptr) {
-    (*beginDeepCopyCallback)(dst_space, dst_label.c_str(), dst_ptr, src_space,
-                             src_label.c_str(), src_ptr, size);
+  if (current_callbacks.begin_deep_copy != nullptr) {
+    (*current_callbacks.begin_deep_copy)(dst_space, dst_label.c_str(), dst_ptr,
+                                         src_space, src_label.c_str(), src_ptr,
+                                         size);
   }
 }
 
 void endDeepCopy() {
-  if (endDeepCopyCallback != nullptr) {
-    (*endDeepCopyCallback)();
+  if (current_callbacks.end_deep_copy != nullptr) {
+    (*current_callbacks.end_deep_copy)();
   }
 }
 
 void createProfileSection(const std::string& sectionName, uint32_t* secID) {
-  if (createSectionCallback != nullptr) {
-    (*createSectionCallback)(sectionName.c_str(), secID);
+  if (current_callbacks.create_profile_section != nullptr) {
+    (*current_callbacks.create_profile_section)(sectionName.c_str(), secID);
   }
 }
 
 void startSection(const uint32_t secID) {
-  if (startSectionCallback != nullptr) {
-    (*startSectionCallback)(secID);
+  if (current_callbacks.start_profile_section != nullptr) {
+    (*current_callbacks.start_profile_section)(secID);
   }
 }
 
 void stopSection(const uint32_t secID) {
-  if (stopSectionCallback != nullptr) {
-    (*stopSectionCallback)(secID);
+  if (current_callbacks.stop_profile_section != nullptr) {
+    (*current_callbacks.stop_profile_section)(secID);
   }
 }
 
 void destroyProfileSection(const uint32_t secID) {
-  if (destroySectionCallback != nullptr) {
-    (*destroySectionCallback)(secID);
+  if (current_callbacks.destroy_profile_section != nullptr) {
+    (*current_callbacks.destroy_profile_section)(secID);
   }
 }
 
 void markEvent(const std::string& eventName) {
-  if (profileEventCallback != nullptr) {
-    (*profileEventCallback)(eventName.c_str());
+  if (current_callbacks.profile_event != nullptr) {
+    (*current_callbacks.profile_event)(eventName.c_str());
   }
 }
 
@@ -319,9 +297,9 @@ void initialize() {
     }
   }
 
-  if (initProfileLibrary != nullptr) {
-    (*initProfileLibrary)(0, (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0,
-                          nullptr);
+  if (current_callbacks.init != nullptr) {
+    (*current_callbacks.init)(0, (uint64_t)KOKKOSP_INTERFACE_VERSION,
+                              (uint32_t)0, nullptr);
   }
 
   free(envProfileCopy);
@@ -333,174 +311,106 @@ void finalize() {
   if (is_finalized) return;
   is_finalized = 1;
 
-  if (finalizeProfileLibrary != nullptr) {
-    (*finalizeProfileLibrary)();
+  if (current_callbacks.finalize != nullptr) {
+    (*current_callbacks.finalize)();
 
     // Set all profile hooks to nullptr to prevent
     // any additional calls. Once we are told to
     // finalize, we mean it
-    initProfileLibrary     = nullptr;
-    finalizeProfileLibrary = nullptr;
-
-    beginForCallback    = nullptr;
-    beginScanCallback   = nullptr;
-    beginReduceCallback = nullptr;
-    endScanCallback     = nullptr;
-    endForCallback      = nullptr;
-    endReduceCallback   = nullptr;
-
-    pushRegionCallback = nullptr;
-    popRegionCallback  = nullptr;
-
-    allocateDataCallback   = nullptr;
-    deallocateDataCallback = nullptr;
-
-    beginDeepCopyCallback = nullptr;
-    endDeepCopyCallback   = nullptr;
-
-    createSectionCallback  = nullptr;
-    startSectionCallback   = nullptr;
-    stopSectionCallback    = nullptr;
-    destroySectionCallback = nullptr;
-
-    profileEventCallback = nullptr;
-    // TODO DZP: move to its own section
+    pause_tools();
   }
 }
-static EventSet current_callbacks;
+
 void set_init_callback(initFunction callback) {
-  initProfileLibrary     = callback;
   current_callbacks.init = callback;
 }
 void set_finalize_callback(finalizeFunction callback) {
-  finalizeProfileLibrary     = callback;
   current_callbacks.finalize = callback;
 }
 void set_begin_parallel_for_callback(beginFunction callback) {
-  beginForCallback                     = callback;
   current_callbacks.begin_parallel_for = callback;
 }
 void set_end_parallel_for_callback(endFunction callback) {
-  endForCallback                     = callback;
   current_callbacks.end_parallel_for = callback;
 }
 void set_begin_parallel_reduce_callback(beginFunction callback) {
-  beginReduceCallback                     = callback;
   current_callbacks.begin_parallel_reduce = callback;
 }
 void set_end_parallel_reduce_callback(endFunction callback) {
-  endReduceCallback                     = callback;
   current_callbacks.end_parallel_reduce = callback;
 }
 void set_begin_parallel_scan_callback(beginFunction callback) {
-  beginScanCallback                     = callback;
   current_callbacks.begin_parallel_scan = callback;
 }
 void set_end_parallel_scan_callback(endFunction callback) {
-  endScanCallback                     = callback;
   current_callbacks.end_parallel_scan = callback;
 }
 void set_push_region_callback(pushFunction callback) {
-  pushRegionCallback            = callback;
   current_callbacks.push_region = callback;
 }
 void set_pop_region_callback(popFunction callback) {
-  popRegionCallback            = callback;
   current_callbacks.pop_region = callback;
 }
 void set_allocate_data_callback(allocateDataFunction callback) {
-  allocateDataCallback            = callback;
   current_callbacks.allocate_data = callback;
 }
 void set_deallocate_data_callback(deallocateDataFunction callback) {
-  deallocateDataCallback            = callback;
   current_callbacks.deallocate_data = callback;
 }
 void set_create_profile_section_callback(
     createProfileSectionFunction callback) {
-  createSectionCallback                    = callback;
   current_callbacks.create_profile_section = callback;
 }
 void set_start_profile_section_callback(startProfileSectionFunction callback) {
-  startSectionCallback                    = callback;
   current_callbacks.start_profile_section = callback;
 }
 void set_stop_profile_section_callback(stopProfileSectionFunction callback) {
-  stopSectionCallback                    = callback;
   current_callbacks.stop_profile_section = callback;
 }
 void set_destroy_profile_section_callback(
     destroyProfileSectionFunction callback) {
-  destroySectionCallback                    = callback;
   current_callbacks.destroy_profile_section = callback;
 }
 void set_profile_event_callback(profileEventFunction callback) {
-  profileEventCallback            = callback;
   current_callbacks.profile_event = callback;
 }
 void set_begin_deep_copy_callback(beginDeepCopyFunction callback) {
-  beginDeepCopyCallback             = callback;
   current_callbacks.begin_deep_copy = callback;
 }
 void set_end_deep_copy_callback(endDeepCopyFunction callback) {
-  endDeepCopyCallback             = callback;
   current_callbacks.end_deep_copy = callback;
 }
 
 void pause_tools() {
-  initProfileLibrary     = nullptr;
-  finalizeProfileLibrary = nullptr;
+  backup_callbacks = current_callbacks;
 
-  beginForCallback    = nullptr;
-  beginScanCallback   = nullptr;
-  beginReduceCallback = nullptr;
-  endScanCallback     = nullptr;
-  endForCallback      = nullptr;
-  endReduceCallback   = nullptr;
+  current_callbacks.init     = nullptr;
+  current_callbacks.finalize = nullptr;
 
-  pushRegionCallback = nullptr;
-  popRegionCallback  = nullptr;
+  current_callbacks.begin_parallel_for    = nullptr;
+  current_callbacks.begin_parallel_scan   = nullptr;
+  current_callbacks.begin_parallel_reduce = nullptr;
+  current_callbacks.end_parallel_scan     = nullptr;
+  current_callbacks.end_parallel_for      = nullptr;
+  current_callbacks.end_parallel_reduce   = nullptr;
 
-  allocateDataCallback   = nullptr;
-  deallocateDataCallback = nullptr;
+  current_callbacks.push_region     = nullptr;
+  current_callbacks.pop_region      = nullptr;
+  current_callbacks.allocate_data   = nullptr;
+  current_callbacks.deallocate_data = nullptr;
 
-  beginDeepCopyCallback = nullptr;
-  endDeepCopyCallback   = nullptr;
+  current_callbacks.begin_deep_copy = nullptr;
+  current_callbacks.end_deep_copy   = nullptr;
 
-  createSectionCallback  = nullptr;
-  startSectionCallback   = nullptr;
-  stopSectionCallback    = nullptr;
-  destroySectionCallback = nullptr;
+  current_callbacks.create_profile_section  = nullptr;
+  current_callbacks.start_profile_section   = nullptr;
+  current_callbacks.stop_profile_section    = nullptr;
+  current_callbacks.destroy_profile_section = nullptr;
 
-  profileEventCallback = nullptr;
+  current_callbacks.profile_event = nullptr;
 }
 
-void resume_tools() {
-  initProfileLibrary     = current_callbacks.init;
-  finalizeProfileLibrary = current_callbacks.finalize;
-
-  beginForCallback    = current_callbacks.begin_parallel_for;
-  beginScanCallback   = current_callbacks.begin_parallel_scan;
-  beginReduceCallback = current_callbacks.begin_parallel_reduce;
-  endScanCallback     = current_callbacks.end_parallel_scan;
-  endForCallback      = current_callbacks.end_parallel_for;
-  endReduceCallback   = current_callbacks.end_parallel_reduce;
-
-  pushRegionCallback     = current_callbacks.push_region;
-  popRegionCallback      = current_callbacks.pop_region;
-  allocateDataCallback   = current_callbacks.allocate_data;
-  deallocateDataCallback = current_callbacks.deallocate_data;
-
-  beginDeepCopyCallback = current_callbacks.begin_deep_copy;
-  endDeepCopyCallback   = current_callbacks.end_deep_copy;
-
-  createSectionCallback  = current_callbacks.create_profile_section;
-  startSectionCallback   = current_callbacks.start_profile_section;
-  stopSectionCallback    = current_callbacks.stop_profile_section;
-  destroySectionCallback = current_callbacks.destroy_profile_section;
-
-  profileEventCallback = current_callbacks.profile_event;
-}
+void resume_tools() { current_callbacks = backup_callbacks; }
 }  // namespace Profiling
 
 }  // namespace Kokkos
