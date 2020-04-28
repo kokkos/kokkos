@@ -85,5 +85,6 @@ RUN LLVM_VERSION=10.0.0 && \
     ../openmp && \
     make -j${NPROC} && \
     make install && \
+    echo "${LLVM_DIR}/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${LLVM_DIR}/bin:$PATH
