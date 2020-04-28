@@ -95,6 +95,7 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
             Kokkos::Tools::kernel_type_context_variable_id, "parallel_for")};
     Kokkos::Tools::declareContextVariableValues(Tools::getNewContextId(), 2,
                                                 contextValues);
+#endif
   }
 }
 
@@ -506,7 +507,6 @@ void initialize() {
 
       Kokkos::Tools::declareOptimizationGoal(initial_goal);
 #endif
-    }
 
   free(envProfileCopy);
 }
