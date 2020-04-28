@@ -427,3 +427,5 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_CTestDevice
   SOURCES UnitTestMain.cpp  TestCTestDevice.cpp
 )
+
+add_subdirectory(headers_self_contained)
