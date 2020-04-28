@@ -44,7 +44,7 @@
 
 #ifndef KOKKOS_IMPL_KOKKOS_TUNING_HPP
 #define KOKKOS_IMPL_KOKKOS_TUNING_HPP
-
+#include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Tuning_Interface.hpp>
 #include <string>
 #include <chrono>
@@ -55,13 +55,13 @@ namespace Tools {
 // static size_t kernel_type_context_variable_id;
 // static size_t time_context_variable_id;
 
-static tuningVariableDeclarationFunction tuningVariableDeclarationCallback =
-    nullptr;
-static tuningVariableValueFunction tuningVariableValueCallback = nullptr;
-static contextVariableDeclarationFunction contextVariableDeclarationCallback =
-    nullptr;
-static contextEndFunction contextEndCallback                        = nullptr;
-static optimizationGoalDeclarationFunction optimizationGoalCallback = nullptr;
+//static tuningVariableDeclarationFunction tuningVariableDeclarationCallback =
+//    nullptr;
+extern tuningVariableDeclarationFunction tuningVariableDeclarationCallback;
+extern tuningVariableValueFunction tuningVariableValueCallback;
+extern contextVariableDeclarationFunction contextVariableDeclarationCallback;
+extern contextEndFunction contextEndCallback;
+extern optimizationGoalDeclarationFunction optimizationGoalCallback;
 using time_point = std::chrono::time_point<std::chrono::system_clock>;
 // static std::stack<time_point> timer_stack;
 // static int last_microseconds;

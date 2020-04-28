@@ -88,6 +88,11 @@ static stopProfileSectionFunction stopSectionCallback       = nullptr;
 static destroyProfileSectionFunction destroySectionCallback = nullptr;
 
 static profileEventFunction profileEventCallback = nullptr;
+#ifdef KOKKOS_ENABLE_TUNING
+ static size_t kernel_name_context_variable_id;
+ static size_t kernel_type_context_variable_id;
+ static size_t time_context_variable_id;
+#endif
 }  // namespace Tools
 
 // namespace Tools {
@@ -96,10 +101,6 @@ static profileEventFunction profileEventCallback = nullptr;
 // void decrementCurrentContextId();
 // size_t getNewVariableId();
 //
-//#ifdef KOKKOS_ENABLE_TUNING
-// static size_t kernel_name_context_variable_id;
-// static size_t kernel_type_context_variable_id;
-// static size_t time_context_variable_id;
 //
 // static tuningVariableDeclarationFunction tuningVariableDeclarationCallback =
 //    nullptr;
@@ -594,23 +595,6 @@ void finalize() {
 }
 }  // namespace Tools
 
-namespace Tools {
-
-static size_t& getContextCounter() {
-  static size_t x;
-  return x;
-}
-static size_t& getVariableCounter() {
-  static size_t x;
-  return ++x;
-}
-
-size_t getNewContextId() { return ++getContextCounter(); }
-size_t getCurrentContextId() { return getContextCounter(); }
-void decrementCurrentContextId() { --getContextCounter(); }
-size_t getNewVariableId() { return getVariableCounter(); }
-
-}  // end namespace Tools
 
 }  // namespace Kokkos
 

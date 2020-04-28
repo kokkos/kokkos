@@ -52,9 +52,6 @@
 namespace Kokkos {
 namespace Tools {
 
-size_t kernel_name_context_variable_id;
-size_t kernel_type_context_variable_id;
-size_t time_context_variable_id;
 
 bool profileLibraryLoaded();
 

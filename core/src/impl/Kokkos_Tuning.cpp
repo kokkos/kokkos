@@ -41,12 +41,35 @@
 // ************************************************************************
 //@HEADER
 */
-
+#include <Kokkos_Macros.hpp>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
+#include <iostream>
 #include <impl/Kokkos_Tuning.hpp>
 namespace Kokkos {
 namespace Tools {
+
+tuningVariableDeclarationFunction tuningVariableDeclarationCallback;
+tuningVariableValueFunction tuningVariableValueCallback;
+contextVariableDeclarationFunction contextVariableDeclarationCallback;
+contextEndFunction contextEndCallback;
+optimizationGoalDeclarationFunction optimizationGoalCallback;
+
+static size_t& getContextCounter() {
+  static size_t x;
+  return x;
+}
+static size_t& getVariableCounter() {
+  static size_t x;
+  return ++x;
+}
+
+size_t getNewContextId() { return ++getContextCounter(); }
+size_t getCurrentContextId() { return getContextCounter(); }
+void decrementCurrentContextId() { --getContextCounter(); }
+size_t getNewVariableId() { return getVariableCounter(); }
+
 
 static std::unordered_map<size_t, std::unordered_set<size_t>>
     features_per_context;
