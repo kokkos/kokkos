@@ -94,7 +94,7 @@ typedef void (*Kokkos_Profiling_beginDeepCopyFunction)(
     Kokkos_Profiling_SpaceHandle, const char*, const void*, uint64_t);
 typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 
-struct EventSet {
+struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_initFunction init;
   Kokkos_Profiling_finalizeFunction finalize;
   Kokkos_Profiling_beginFunction begin_parallel_for;
