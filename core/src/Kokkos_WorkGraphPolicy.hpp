@@ -45,6 +45,9 @@
 #ifndef KOKKOS_WORKGRAPHPOLICY_HPP
 #define KOKKOS_WORKGRAPHPOLICY_HPP
 
+#include <impl/Kokkos_AnalyzePolicy.hpp>
+#include <Kokkos_Crs.hpp>
+
 namespace Kokkos {
 namespace Impl {
 

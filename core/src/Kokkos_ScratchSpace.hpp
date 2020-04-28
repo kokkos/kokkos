@@ -46,6 +46,7 @@
 #define KOKKOS_SCRATCHSPACE_HPP
 
 #include <cstdio>
+#include <cstddef>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
 
