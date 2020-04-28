@@ -113,28 +113,6 @@ void set_profile_event_callback(profileEventFunction callback);
 void set_begin_deep_copy_callback(beginDeepCopyFunction callback);
 void set_end_deep_copy_callback(endDeepCopyFunction callback);
 
-struct EventSet {
-  initFunction init;
-  finalizeFunction finalize;
-  beginFunction begin_parallel_for;
-  endFunction end_parallel_for;
-  beginFunction begin_parallel_reduce;
-  endFunction end_parallel_reduce;
-  beginFunction begin_parallel_scan;
-  endFunction end_parallel_scan;
-  pushFunction push_region;
-  popFunction pop_region;
-  allocateDataFunction allocate_data;
-  deallocateDataFunction deallocate_data;
-  createProfileSectionFunction create_profile_section;
-  startProfileSectionFunction start_profile_section;
-  stopProfileSectionFunction stop_profile_section;
-  destroyProfileSectionFunction destroy_profile_section;
-  profileEventFunction profile_event;
-  beginDeepCopyFunction begin_deep_copy;
-  endDeepCopyFunction end_deep_copy;
-};
-
 void pause_tools();
 void resume_tools();
 
