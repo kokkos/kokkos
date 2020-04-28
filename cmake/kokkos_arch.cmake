@@ -298,10 +298,18 @@ ENDIF()
 
 # Clang needs mcx16 option enabled for Windows atomic functions
 IF (CMAKE_CXX_COMPILER_ID STREQUAL Clang AND WIN32)
-  COMPILER_SPECIFIC_FLAGS(
+  COMPILER_SPECIFIC_OPTIONS(
     Clang -mcx16
   )
 ENDIF()
+
+# MSVC ABI has many deprecation warnings, so ignore them
+IF (CMAKE_CXX_COMPILER_ID STREQUAL MSVC OR "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
+  COMPILER_SPECIFIC_DEFS(
+    Clang _CRT_SECURE_NO_WARNINGS
+  )
+ENDIF()
+
 
 #Right now we cannot get the compiler ID when cross-compiling, so just check
 #that HIP is enabled
