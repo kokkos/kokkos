@@ -98,6 +98,7 @@ using SpaceHandle = Kokkos_Profiling_SpaceHandle;
 
 namespace Profiling {
 
+using EventSet               = Kokkos_Profiling_EventSet;
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;
 using beginFunction          = Kokkos_Profiling_beginFunction;
