@@ -680,25 +680,6 @@ void finalize() {}
 }  // namespace Profiling
 
 namespace Tools {
-void declareTuningVariable(const std::string& variableName, size_t uniqID,
-                           VariableInfo info) {}
-
-void declareContextVariable(const std::string& variableName, size_t uniqID,
-                            VariableInfo info,
-                            Kokkos::Tools::SetOrRange candidate_values) {}
-
-void declareContextVariableValues(size_t contextId, size_t count,
-                                  size_t* uniqIds, VariableValue* values) {}
-
-void endContext(size_t contextId) {}
-
-void requestTuningVariableValues(size_t contextId, size_t count,
-                                 size_t* uniqIds, VariableValue* values,
-                                 Kokkos::Tools::SetOrRange* candidate_values) {}
-size_t getNewContextId() { return 0; }
-size_t getCurrentContextId() { return 0; }
-size_t getNewVariableId() { return 0; }
-
 }  // end namespace Tools
 
 namsepace Tools {

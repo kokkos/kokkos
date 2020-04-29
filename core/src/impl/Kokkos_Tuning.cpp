@@ -109,11 +109,12 @@ void declareContextVariableValues(size_t contextId, size_t count,
   }
 #endif
 }
-
+#include <iostream>
 void requestTuningVariableValues(size_t contextId, size_t count,
                                  VariableValue* values,
                                  Kokkos::Tools::SetOrRange* candidate_values) {
 #ifdef KOKKOS_ENABLE_TUNING
+
   std::vector<size_t> context_ids;
   std::vector<VariableValue> context_values;
   for (auto id : active_features) {
