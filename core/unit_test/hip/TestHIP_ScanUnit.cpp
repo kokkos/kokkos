@@ -52,7 +52,8 @@ struct DummyFunctor {
 };
 
 template <int N>
-__global__ void start_intra_block_scan() {
+__global__ void start_intra_block_scan()
+    __attribute__((amdgpu_flat_work_group_size(1, 1024))) {
   __shared__ DummyFunctor::value_type values[N];
   const int i = hipThreadIdx_y;
   values[i]   = i + 1;
@@ -90,8 +91,7 @@ TEST(TEST_CATEGORY, scan_unit) {
     test_intra_block_scan<64>();
     test_intra_block_scan<128>();
     test_intra_block_scan<256>();
-    // FIXME_HIP block sizes larger than 256 give wrong results.
-    // test_intra_block_scan<512>();
-    // test_intra_block_scan<1024>();
+    test_intra_block_scan<512>();
+    test_intra_block_scan<1024>();
   }
 }

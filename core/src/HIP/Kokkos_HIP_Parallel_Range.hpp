@@ -550,14 +550,9 @@ class ParallelScanHIPBase {
   inline void impl_execute() {
     const index_type nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
-      // FIXME_HIP we cannot choose it larger for large work sizes to work
-      // correctly, the unit tests fail with wrong results
-      const int gridMaxComputeCapability_2x = 0x01fff;
+      const int gridMaxComputeCapability_2x = 0x0ffff;
 
-      // FIXME_HIP block sizes greater than 256 don't work correctly,
-      // the unit tests fail with wrong results
-      const int block_size =
-          std::min(static_cast<int>(local_block_size(m_functor)), 256);
+      const int block_size = (local_block_size(m_functor));
 
       const int grid_max =
           std::min(block_size * block_size, gridMaxComputeCapability_2x);
