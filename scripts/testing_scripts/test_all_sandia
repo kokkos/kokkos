@@ -855,7 +855,7 @@ single_build_and_test() {
     comment="build_time=$(($build_end_time-$build_start_time))"
 
     if [[ "$BUILD_ONLY" == False ]]; then
-      run_cmd ctest -V  --output-on-failure >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
+      run_cmd ctest --timeout 2000 -V  --output-on-failure >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
       local -i run_end_time=$(date +%s)
       comment="$comment run_time=$(($run_end_time-$build_end_time))"
     fi
