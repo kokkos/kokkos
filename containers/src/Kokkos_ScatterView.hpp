@@ -209,8 +209,20 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
   KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++() {
+    this->join(this->reference(), 1);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++(int) {
+    this->join(this->reference(), 1);
+  }
   KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
-    this->join(this->reference(), -rhs);
+    this->join(this->reference(), ValueType(-rhs));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--() {
+    this->join(this->reference(), ValueType(-1));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--(int) {
+    this->join(this->reference(), ValueType(-1));
   }
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     this->join(this->reference(), rhs);
@@ -234,8 +246,20 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
   KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++() {
+    this->join(this->reference(), 1);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++(int) {
+    this->join(this->reference(), 1);
+  }
   KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
-    this->join(this->reference(), -rhs);
+    this->join(this->reference(), ValueType(-rhs));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--() {
+    this->join(this->reference(), ValueType(-1));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--(int) {
+    this->join(this->reference(), ValueType(-1));
   }
 
   KOKKOS_INLINE_FUNCTION
