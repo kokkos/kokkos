@@ -222,7 +222,13 @@ struct array_reduce {
   array_reduce(const scalar_t value) {
     for (int i = 0; i < N; i++) data[i] = scalar_t(value);
   }
-  array_reduce &operator=(const array_reduce &src) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  array_reduce &operator=(const array_reduce &src) {
+    for (int i = 0; i < N; i++) data[i] = src.data[i];
+    return *this;
+  }
+
   KOKKOS_INLINE_FUNCTION
   array_reduce &operator=(const volatile array_reduce &src) {
     for (int i = 0; i < N; i++) data[i] = src.data[i];
