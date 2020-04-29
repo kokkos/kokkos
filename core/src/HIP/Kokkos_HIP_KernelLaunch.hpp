@@ -75,7 +75,8 @@ namespace Impl {
 void *hip_resize_scratch_space(std::int64_t bytes, bool force_shrink = false);
 
 template <typename DriverType>
-__global__ static void hip_parallel_launch_constant_memory() {
+__global__ static void hip_parallel_launch_constant_memory()
+    __attribute__((amdgpu_flat_work_group_size(1, 1024))) {
   __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
       [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
        sizeof(unsigned long)];
@@ -87,8 +88,8 @@ __global__ static void hip_parallel_launch_constant_memory() {
 }
 
 template <class DriverType>
-__global__ static void hip_parallel_launch_local_memory(
-    const DriverType driver) {
+__global__ static void hip_parallel_launch_local_memory(const DriverType driver)
+    __attribute__((amdgpu_flat_work_group_size(1, 1024))) {
   driver();
 }
 
@@ -96,7 +97,8 @@ template <class DriverType, unsigned int maxTperB, unsigned int minBperSM>
 __global__ __launch_bounds__(
     maxTperB,
     minBperSM) static void hip_parallel_launch_local_memory(const DriverType
-                                                                driver) {
+                                                                driver)
+    __attribute__((amdgpu_flat_work_group_size(1, 1024))) {
   driver();
 }
 
