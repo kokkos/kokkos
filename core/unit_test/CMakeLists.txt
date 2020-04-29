@@ -275,6 +275,7 @@ if(Kokkos_ENABLE_HIP)
     UnitTest_HIP
     SOURCES
       ${HIP_SOURCES}
+      hip/TestHIP_ScanUnit.cpp
       hip/TestHIPHostPinned_ViewAPI_a.cpp
       hip/TestHIPHostPinned_ViewAPI_b.cpp
       hip/TestHIPHostPinned_ViewAPI_c.cpp
