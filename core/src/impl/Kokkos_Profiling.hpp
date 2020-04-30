@@ -88,6 +88,34 @@ void initialize();
 void finalize();
 
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
+
+void set_init_callback(initFunction callback);
+void set_finalize_callback(finalizeFunction callback);
+void set_begin_parallel_for_callback(beginFunction callback);
+void set_end_parallel_for_callback(endFunction callback);
+void set_begin_parallel_reduce_callback(beginFunction callback);
+void set_end_parallel_reduce_callback(endFunction callback);
+void set_begin_parallel_scan_callback(beginFunction callback);
+void set_end_parallel_scan_callback(endFunction callback);
+void set_push_region_callback(pushFunction callback);
+void set_pop_region_callback(popFunction callback);
+void set_allocate_data_callback(allocateDataFunction callback);
+void set_deallocate_data_callback(deallocateDataFunction callback);
+void set_create_profile_section_callback(createProfileSectionFunction callback);
+void set_start_profile_section_callback(startProfileSectionFunction callback);
+void set_stop_profile_section_callback(stopProfileSectionFunction callback);
+void set_destroy_profile_section_callback(
+    destroyProfileSectionFunction callback);
+void set_profile_event_callback(profileEventFunction callback);
+void set_begin_deep_copy_callback(beginDeepCopyFunction callback);
+void set_end_deep_copy_callback(endDeepCopyFunction callback);
+
+void pause_tools();
+void resume_tools();
+
+EventSet get_callbacks();
+void set_callbacks(EventSet new_events);
+
 }  // namespace Profiling
 
 }  // namespace Kokkos

@@ -94,4 +94,26 @@ typedef void (*Kokkos_Profiling_beginDeepCopyFunction)(
     Kokkos_Profiling_SpaceHandle, const char*, const void*, uint64_t);
 typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 
+struct Kokkos_Profiling_EventSet {
+  Kokkos_Profiling_initFunction init;
+  Kokkos_Profiling_finalizeFunction finalize;
+  Kokkos_Profiling_beginFunction begin_parallel_for;
+  Kokkos_Profiling_endFunction end_parallel_for;
+  Kokkos_Profiling_beginFunction begin_parallel_reduce;
+  Kokkos_Profiling_endFunction end_parallel_reduce;
+  Kokkos_Profiling_beginFunction begin_parallel_scan;
+  Kokkos_Profiling_endFunction end_parallel_scan;
+  Kokkos_Profiling_pushFunction push_region;
+  Kokkos_Profiling_popFunction pop_region;
+  Kokkos_Profiling_allocateDataFunction allocate_data;
+  Kokkos_Profiling_deallocateDataFunction deallocate_data;
+  Kokkos_Profiling_createProfileSectionFunction create_profile_section;
+  Kokkos_Profiling_startProfileSectionFunction start_profile_section;
+  Kokkos_Profiling_stopProfileSectionFunction stop_profile_section;
+  Kokkos_Profiling_destroyProfileSectionFunction destroy_profile_section;
+  Kokkos_Profiling_profileEventFunction profile_event;
+  Kokkos_Profiling_beginDeepCopyFunction begin_deep_copy;
+  Kokkos_Profiling_endDeepCopyFunction end_deep_copy;
+};
+
 #endif  // KOKKOS_PROFILING_C_INTERFACE_HPP
