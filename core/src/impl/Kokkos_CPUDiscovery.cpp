@@ -77,7 +77,7 @@ int processors_per_node() {
   if (ncpu < 1 || activecpu < 1)
     return -1;
   else
-    return ncpu;
+    return activecpu;
 #else
   return -1;
 #endif
