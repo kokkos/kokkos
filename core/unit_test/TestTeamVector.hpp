@@ -49,173 +49,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cinttypes>
-
-namespace TestTeamVector {
-
-struct my_complex {
-  double re, im;
-  int dummy;
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex() {
-    re    = 0.0;
-    im    = 0.0;
-    dummy = 0;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex(const my_complex &src) {
-    re    = src.re;
-    im    = src.im;
-    dummy = src.dummy;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex &operator=(const my_complex &src) {
-    re    = src.re;
-    im    = src.im;
-    dummy = src.dummy;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex &operator=(const volatile my_complex &src) {
-    re    = src.re;
-    im    = src.im;
-    dummy = src.dummy;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  volatile my_complex &operator=(const my_complex &src) volatile {
-    re    = src.re;
-    im    = src.im;
-    dummy = src.dummy;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  volatile my_complex &operator=(const volatile my_complex &src) volatile {
-    re    = src.re;
-    im    = src.im;
-    dummy = src.dummy;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex(const volatile my_complex &src) {
-    re    = src.re;
-    im    = src.im;
-    dummy = src.dummy;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex(const double &val) {
-    re    = val;
-    im    = 0.0;
-    dummy = 0;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex &operator+=(const my_complex &src) {
-    re += src.re;
-    im += src.im;
-    dummy += src.dummy;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator+=(const volatile my_complex &src) volatile {
-    re += src.re;
-    im += src.im;
-    dummy += src.dummy;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex operator+(const my_complex &src) {
-    my_complex tmp = *this;
-    tmp.re += src.re;
-    tmp.im += src.im;
-    tmp.dummy += src.dummy;
-    return tmp;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex operator+(const volatile my_complex &src) volatile {
-    my_complex tmp = *this;
-    tmp.re += src.re;
-    tmp.im += src.im;
-    tmp.dummy += src.dummy;
-    return tmp;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex &operator*=(const my_complex &src) {
-    double re_tmp = re * src.re - im * src.im;
-    double im_tmp = re * src.im + im * src.re;
-    re            = re_tmp;
-    im            = im_tmp;
-    dummy *= src.dummy;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator*=(const volatile my_complex &src) volatile {
-    double re_tmp = re * src.re - im * src.im;
-    double im_tmp = re * src.im + im * src.re;
-    re            = re_tmp;
-    im            = im_tmp;
-    dummy *= src.dummy;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  bool operator==(const my_complex &src) {
-    return (re == src.re) && (im == src.im) && (dummy == src.dummy);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  bool operator!=(const my_complex &src) {
-    return (re != src.re) || (im != src.im) || (dummy != src.dummy);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  bool operator!=(const double &val) {
-    return (re != val) || (im != 0) || (dummy != 0);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex &operator=(const int &val) {
-    re    = val;
-    im    = 0.0;
-    dummy = 0;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  my_complex &operator=(const double &val) {
-    re    = val;
-    im    = 0.0;
-    dummy = 0;
-    return *this;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  operator double() { return re; }
-};
-}  // namespace TestTeamVector
-
-namespace Kokkos {
-template <>
-struct reduction_identity<TestTeamVector::my_complex> {
-  typedef reduction_identity<double> t_red_ident;
-  KOKKOS_FORCEINLINE_FUNCTION static TestTeamVector::my_complex sum() {
-    return TestTeamVector::my_complex(t_red_ident::sum());
-  }
-  KOKKOS_FORCEINLINE_FUNCTION static TestTeamVector::my_complex prod() {
-    return TestTeamVector::my_complex(t_red_ident::prod());
-  }
-};
-}  // namespace Kokkos
+#include <TestNonTrivialScalarTypes.hpp>
 
 namespace TestTeamVector {
 
@@ -624,7 +458,7 @@ struct functor_vec_single {
         Kokkos::ThreadVectorRange(team, nStart, nEnd),
         [&](int /*i*/, Scalar &val) { val += value; }, value2);
 
-    if (value2 != (value * (nEnd - nStart))) {
+    if (value2 != (value * Scalar(nEnd - nStart))) {
       printf("FAILED vector_single broadcast %i %i %f %f\n", team.league_rank(),
              team.team_rank(), (double)value2, (double)value);
 
@@ -882,8 +716,14 @@ bool Test(int test) {
            test_scalar<long long int, ExecutionSpace>(317, team_size, test);
   passed = passed && test_scalar<float, ExecutionSpace>(317, team_size, test);
   passed = passed && test_scalar<double, ExecutionSpace>(317, team_size, test);
-  passed =
-      passed && test_scalar<my_complex, ExecutionSpace>(317, team_size, test);
+  passed = passed &&
+           test_scalar<Test::my_complex, ExecutionSpace>(317, team_size, test);
+  passed = passed && test_scalar<Test::array_reduce<double, 1>, ExecutionSpace>(
+                         317, team_size, test);
+  passed = passed && test_scalar<Test::array_reduce<float, 1>, ExecutionSpace>(
+                         317, team_size, test);
+  passed = passed && test_scalar<Test::array_reduce<double, 3>, ExecutionSpace>(
+                         317, team_size, test);
 
   return passed;
 }
