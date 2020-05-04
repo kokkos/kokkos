@@ -8,9 +8,9 @@ struct SpaceHandle {
   char name[64];
 };
 
-constexpr const int parallel_for_id    = 0;
-constexpr const int parallel_reduce_id = 1;
-constexpr const int parallel_scan_id   = 2;
+const int parallel_for_id    = 0;
+const int parallel_reduce_id = 1;
+const int parallel_scan_id   = 2;
 
 extern "C" void kokkosp_init_library(const int loadSeq,
                                      const uint64_t interfaceVer,
