@@ -255,6 +255,7 @@ class ScopeGuard {
 
 #include <Kokkos_Crs.hpp>
 #include <Kokkos_WorkGraphPolicy.hpp>
+#include <impl/Kokkos_Combined_Reducer.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

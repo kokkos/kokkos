@@ -215,6 +215,30 @@ class RuntimeReduceFunctorFinal
   }
 };
 
+template <class ValueType, class DeviceType>
+class CombinedReduceFunctorSameType {
+ public:
+  using execution_space = typename DeviceType::execution_space;
+  using size_type = typename execution_space::size_type;
+
+  const size_type nwork;
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit
+  CombinedReduceFunctorSameType(const size_type& arg_nwork) : nwork(arg_nwork) {}
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr
+  CombinedReduceFunctorSameType(const CombinedReduceFunctorSameType& rhs) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr void operator()(size_type iwork, ValueType& dst1, ValueType& dst2, ValueType& dst3) const {
+    dst1 += 1;
+    dst2 += iwork + 1;
+    dst3 += nwork - iwork;
+  }
+};
+
 namespace {
 
 template <typename ScalarType, class DeviceType>
@@ -453,6 +477,19 @@ TEST(TEST_CATEGORY, double_reduce_dynamic) {
 TEST(TEST_CATEGORY, int64_t_reduce_dynamic_view) {
   TestReduceDynamicView<int64_t, TEST_EXECSPACE>(0);
   TestReduceDynamicView<int64_t, TEST_EXECSPACE>(1000000);
+}
+
+TEST(TEST_CATEGORY, int_combined_reduce) {
+  using functor_type = CombinedReduceFunctorSameType<int64_t, TEST_EXECSPACE>;
+  constexpr uint64_t nw = 2;
+  uint64_t nsum = (nw / 2) * (nw + 1);
+  int64_t result1 = 0;
+  int64_t result2 = 0;
+  int64_t result3 = 0;
+  Kokkos::parallel_reduce(nw, functor_type(nw), result1, result2, result3);
+  ASSERT_EQ(nw, result1);
+  ASSERT_EQ(nsum, result2);
+  ASSERT_EQ(nsum, result3);
 }
 
 }  // namespace Test
