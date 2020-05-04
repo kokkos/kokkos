@@ -27,7 +27,7 @@ extern "C" void kokkosp_begin_parallel_for(const char* name,
                                            const uint32_t devID,
                                            uint64_t* kID) {
   *kID = parallel_for_id;
-  printf("kokkosp_begin_parallel_for:%s:%lu::", name, *kID);
+  printf("kokkosp_begin_parallel_for:%s:%u:%lu::", name, devID, *kID);
 }
 
 extern "C" void kokkosp_end_parallel_for(const uint64_t kID) {
@@ -38,7 +38,7 @@ extern "C" void kokkosp_begin_parallel_scan(const char* name,
                                             const uint32_t devID,
                                             uint64_t* kID) {
   *kID = parallel_scan_id;
-  printf("kokkosp_begin_parallel_scan:%s:%lu::", name, *kID);
+  printf("kokkosp_begin_parallel_scan:%s:%u:%lu::", name, devID, *kID);
 }
 
 extern "C" void kokkosp_end_parallel_scan(const uint64_t kID) {
@@ -49,7 +49,7 @@ extern "C" void kokkosp_begin_parallel_reduce(const char* name,
                                               const uint32_t devID,
                                               uint64_t* kID) {
   *kID = parallel_reduce_id;
-  printf("kokkosp_begin_parallel_reduce:%s:%lu::", name, *kID);
+  printf("kokkosp_begin_parallel_reduce:%s:%u:%lu::", name, devID, *kID);
 }
 
 extern "C" void kokkosp_end_parallel_reduce(const uint64_t kID) {
