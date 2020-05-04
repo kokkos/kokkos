@@ -12,6 +12,7 @@ KOKKOS_ADD_TEST_LIBRARY(
   HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
+
 #These can be direct, no need for Tribits or Kokkos wrappers
 
 # WORKAROUND FOR HIPCC
@@ -337,6 +338,24 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       "PASSED: I am the custom std::terminate handler."
     ALWAYS_FAIL_ON_ZERO_RETURN
 )
+
+if(Kokkos_ENABLE_PROFILING)
+  add_library(
+     printer-tool SHARED
+     tools/printing-tool.cpp
+  )
+
+  KOKKOS_ADD_TEST_EXECUTABLE(
+    ProfilingAllCalls
+    tools/TestAllCalls.cpp
+  )
+
+  KOKKOS_ADD_TEST_EXECUTABLE(
+    ProfilingStacks
+    tools/TestStacks.cpp
+  )
+
+endif()
 
 if(NOT KOKKOS_HAS_TRILINOS)
 KOKKOS_ADD_TEST_EXECUTABLE(
