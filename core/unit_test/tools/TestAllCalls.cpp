@@ -47,20 +47,28 @@
 #include <gtest/gtest.h>
 #include "Kokkos_Core.hpp"
 
-int main(){
+int main() {
   Kokkos::initialize();
   {
-    Kokkos::View<int*> src_view("source",10);
-    Kokkos::View<int*> dst_view("destination",10);
-    Kokkos::deep_copy(dst_view,src_view);
-    Kokkos::parallel_for("parallel_for",1,KOKKOS_LAMBDA(int i){});
+    Kokkos::View<int*> src_view("source", 10);
+    Kokkos::View<int*> dst_view("destination", 10);
+    Kokkos::deep_copy(dst_view, src_view);
+    Kokkos::parallel_for("parallel_for", 1, KOKKOS_LAMBDA(int i){});
     int result;
-    Kokkos::parallel_reduce("parallel_reduce",1,KOKKOS_LAMBDA(int i, int & result){}, result);
-    Kokkos::parallel_scan("parallel_scan",1,KOKKOS_LAMBDA(const int i, int& result, const bool final){});
+    Kokkos::parallel_reduce(
+        "parallel_reduce", 1,
+        KOKKOS_LAMBDA(int i, int& hold_result) { hold_result += i; }, result);
+    Kokkos::parallel_scan(
+        "parallel_scan", 1,
+        KOKKOS_LAMBDA(const int i, int& hold_result, const bool final) {
+          if (final) {
+            hold_result += i;
+          }
+        });
     Kokkos::Profiling::pushRegion("push_region");
     Kokkos::Profiling::popRegion();
     uint32_t sectionId;
-    Kokkos::Profiling::createProfileSection("created_section",&sectionId);
+    Kokkos::Profiling::createProfileSection("created_section", &sectionId);
     Kokkos::Profiling::startSection(sectionId);
     Kokkos::Profiling::stopSection(sectionId);
     Kokkos::Profiling::destroyProfileSection(sectionId);
