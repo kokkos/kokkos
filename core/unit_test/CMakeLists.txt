@@ -350,9 +350,20 @@ if(Kokkos_ENABLE_PROFILING)
     tools/TestAllCalls.cpp
   )
 
-  KOKKOS_ADD_TEST_EXECUTABLE(
-    ProfilingStacks
-    tools/TestStacks.cpp
+  KOKKOS_ADD_TEST( NAME ProfilingTestParallelFor
+    EXE  ProfilingAllCalls
+    TOOL ${CMAKE_CURRENT_BINARY_DIR}/libprinter-tool.so
+    PASS_REGULAR_EXPRESSION ".*kokkosp_begin_parallel_for:parallel_for:0.*end_parallel_for:0"
+  )
+  KOKKOS_ADD_TEST( NAME ProfilingTestParallelFor
+    EXE  ProfilingAllCalls
+    TOOL ${CMAKE_CURRENT_BINARY_DIR}/libprinter-tool.so
+    PASS_REGULAR_EXPRESSION ".*kokkosp_begin_parallel_reduce:parallel_reduce:1.*end_parallel_reduce:1"
+  )
+  KOKKOS_ADD_TEST( NAME ProfilingTestParallelFor
+    EXE  ProfilingAllCalls
+    TOOL ${CMAKE_CURRENT_BINARY_DIR}/libprinter-tool.so
+    PASS_REGULAR_EXPRESSION ".*kokkosp_begin_parallel_scan:parallel_scan:2.*end_parallel_scan:2"
   )
 
 endif()
