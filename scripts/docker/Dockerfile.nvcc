@@ -23,5 +23,5 @@ RUN CMAKE_KEY=2D2CEF1034921684 && \
     grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
     mkdir -p ${CMAKE_DIR} && \
     sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
-    rm ${CMAKE_SCRIPT}
+    rm cmake*
 ENV PATH=${CMAKE_DIR}/bin:$PATH
