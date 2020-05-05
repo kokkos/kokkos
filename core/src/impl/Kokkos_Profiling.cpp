@@ -308,7 +308,7 @@ void initialize() {
   if (is_initialized) return;
   is_initialized = 1;
 
-  void* firstProfileLibrary;
+  void* firstProfileLibrary = nullptr;
 
   char* envProfileLibrary = getenv("KOKKOS_PROFILE_LIBRARY");
 
