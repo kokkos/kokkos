@@ -5,7 +5,6 @@ SET(C_HEADERS "")
 
 FILE(GLOB HEADERS *.hpp *.h)
 FILE(GLOB SOURCES *.cpp)
-FILE(GLOB C_HEADERS *.h)
 
 TRIBITS_ADD_LIBRARY(
     kokkoscore_impl
