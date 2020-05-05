@@ -1,13 +1,14 @@
 # Create tests that contain each header separately. We do not  run these tests
 # but we just try to compile them.
 
- # Globbing all the header filenames to test for self-containment and presence of header guards
-file(GLOB KOKKOS_CORE_HEADERS RELATIVE ${CMAKE_SOURCE_DIR}/core/src
-     ${CMAKE_SOURCE_DIR}/core/src/*.hpp ${CMAKE_SOURCE_DIR}/core/src/*.h)
-file(GLOB KOKKOS_CONTAINERS_HEADERS RELATIVE ${CMAKE_SOURCE_DIR}/containers/src
-     ${CMAKE_SOURCE_DIR}/containers/src/*.hpp)
-file(GLOB KOKKOS_ALGORITHMS_HEADERS RELATIVE  ${CMAKE_SOURCE_DIR}/algorithms/src
-     ${CMAKE_SOURCE_DIR}/algorithms/src/*.hpp)
+# Globbing all the header filenames to test for self-containment and presence of header guards
+SET(BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../")
+file(GLOB KOKKOS_CORE_HEADERS RELATIVE ${BASE_DIR}/core/src
+     ${BASE_DIR}/core/src/*.hpp ${BASE_DIR}/core/src/*.h)
+file(GLOB KOKKOS_CONTAINERS_HEADERS RELATIVE ${BASE_DIR}/containers/src
+     ${BASE_DIR}/containers/src/*.hpp)
+file(GLOB KOKKOS_ALGORITHMS_HEADERS RELATIVE  ${BASE_DIR}/algorithms/src
+     ${BASE_DIR}/algorithms/src/*.hpp)
 
 foreach (_header ${KOKKOS_CORE_HEADERS} ${KOKKOS_CONTAINERS_HEADERS} ${KOKKOS_ALGORITHMS_HEADERS})
   string(REGEX REPLACE "[\./]" "_" header_test_name ${_header})
