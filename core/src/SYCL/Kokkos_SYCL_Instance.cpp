@@ -207,21 +207,11 @@ void SYCLInternal::initialize(int sycl_device_id) {
     m_syclDev = sycl_device_id;
     listDevices();
 
-    // Initialize with the first GPU or accelerator
-    auto devices = cl::sycl::device::get_devices();
-    auto found   = std::find_if(devices.begin(), devices.end(),
-                              [](const cl::sycl::device& d) {
-                                return d.is_accelerator() || d.is_gpu();
-                              });
-    // Didn't find a GPU or accelerator
-    if (found != devices.end())
-    {
-        m_syclDev = found - devices.begin();
-    }
-
     // Kokkos::Impl::sycl_device_synchronize();
 
-    std::cout << "Initializing with device " << m_syclDev << ": " << SYCLDevice(devices[m_syclDev]) << '\n';
+    auto devices = cl::sycl::device::get_devices();
+    std::cout << "Initializing with device " << m_syclDev << ": "
+              << SYCLDevice(devices[m_syclDev]) << '\n';
     m_queue = new cl::sycl::queue(devices[m_syclDev]);
     /*
         // Query what compute capability architecture a kernel executes:
@@ -301,6 +291,21 @@ void SYCLInternal::initialize(int sycl_device_id) {
   //  locks.threadid = threadid_lock_array_sycl_space_ptr(false);
   //  syclMemcpyToSymbol( kokkos_impl_sycl_lock_arrays , & locks ,
   //  sizeof(SYCLLockArraysStruct) );
+}
+
+// Initialize with the first GPU or accelerator
+void SYCLInternal::initialize() {
+  auto devices = cl::sycl::device::get_devices();
+  auto found   = std::find_if(devices.begin(), devices.end(),
+                            [](const cl::sycl::device& d) {
+                              return d.is_accelerator() || d.is_gpu();
+                            });
+  // Didn't find a GPU or accelerator
+  if (found == devices.end()) {
+    Kokkos::abort("No GPU or Accelerator was found!");
+  }
+
+  return initialize(found - devices.begin());
 }
 
 //----------------------------------------------------------------------------

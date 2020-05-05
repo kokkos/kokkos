@@ -42,6 +42,7 @@ class SYCLInternal {
   }  // 0 != m_scratchSpace && 0 != m_scratchFlags ; }
 
   void initialize(int sycl_device_id);
+  void initialize();
   void finalize();
 
   void print_configuration(std::ostream&) const;
