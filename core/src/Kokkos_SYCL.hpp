@@ -46,8 +46,7 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
-#if defined( KOKKOS_ENABLE_SYCL )
-
+#if defined(KOKKOS_ENABLE_SYCL)
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -61,9 +60,9 @@
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Tags.hpp>
 
+#include <CL/sycl.hpp>
+
 /*--------------------------------------------------------------------------*/
-
-
 
 /*--------------------------------------------------------------------------*/
 
@@ -76,31 +75,30 @@ class SYCLInternal;
 /// \class SYCL
 /// \brief Kokkos device for multicore processors in the host memory space.
 class SYCL {
-public:
+ public:
   //------------------------------------
   //! \name Type declarations that all Kokkos devices must provide.
   //@{
 
   //! Tag this class as a kokkos execution space
-  typedef SYCL                  execution_space ;
-  //typedef SYCLSpace             memory_space ;
-  typedef SYCLHostUSMSpace             memory_space ;
-  typedef Kokkos::Device<execution_space,memory_space> device_type;
+  typedef SYCL execution_space;
+  // typedef SYCLSpace             memory_space ;
+  typedef SYCLHostUSMSpace memory_space;
+  typedef Kokkos::Device<execution_space, memory_space> device_type;
 
-  typedef LayoutLeft            array_layout ;
-  typedef SYCLSpace::size_type  size_type ;
+  typedef LayoutLeft array_layout;
+  typedef SYCLSpace::size_type size_type;
 
-  typedef ScratchMemorySpace< SYCL > scratch_memory_space ;
+  typedef ScratchMemorySpace<SYCL> scratch_memory_space;
 
-    ~SYCL() = default;
+  ~SYCL() = default;
   SYCL();
-//  explicit SYCL( const int instance_id );
+  //  explicit SYCL( const int instance_id );
 
-  SYCL( SYCL && ) = default ;
-  SYCL( const SYCL & ) = default ;
-  SYCL & operator = ( SYCL && ) = default ;
-  SYCL & operator = ( const SYCL & ) = default ;
-
+  SYCL(SYCL&&)      = default;
+  SYCL(const SYCL&) = default;
+  SYCL& operator=(SYCL&&) = default;
+  SYCL& operator=(const SYCL&) = default;
 
   //@}
   //------------------------------------
@@ -108,7 +106,7 @@ public:
   //@{
 
   KOKKOS_INLINE_FUNCTION static int in_parallel() {
-#if defined( __HCC_ACCELERATOR__ )
+#if defined(__HCC_ACCELERATOR__)
     return true;
 #else
     return false;
@@ -116,102 +114,112 @@ public:
   }
 
   /** \brief  Set the device in a "sleep" state. */
-  static bool sleep() ;
+  static bool sleep();
 
   /** \brief Wake the device from the 'sleep' state. A noop for OpenMP. */
-  static bool wake() ;
+  static bool wake();
 
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
-  static void impl_static_fence() ;
+  static void impl_static_fence();
   void fence() const;
 
-
   /// \brief Print configuration information to the given output stream.
-  static void print_configuration( std::ostream & , const bool detail = false );
+  static void print_configuration(std::ostream&, const bool detail = false);
 
   /// \brief Free any resources being consumed by the device.
-  static void impl_finalize() ;
-
+  static void impl_finalize();
 
   /** \brief  Initialize the device.
    *
    */
   struct SelectDevice {
-    int sycl_device_id ;
-    SelectDevice() : sycl_device_id(1) {}
-    explicit SelectDevice( int id ) : sycl_device_id( id+1 ) {}
+    int sycl_device_id;
+
+    SelectDevice() : sycl_device_id(firstGPUDevice()) {}
+    explicit SelectDevice(int id)
+        : sycl_device_id(id)
+
+    {
+      if (id < 0 || cl::sycl::device::get_devices().size() < id)
+        Kokkos::abort("SYCL Device id out of range");
+    }
+
+   private:
+    static int firstGPUDevice() {
+      auto devices = cl::sycl::device::get_devices();
+      auto found   = std::find_if(
+          devices.begin(), devices.end(),
+          [](const cl::sycl::device& device) { return device.is_gpu(); });
+
+      if (found == devices.end()) {
+        Kokkos::abort("No GPU device found.");
+      }
+
+      return found - devices.begin();
+    }
   };
 
-  int          sycl_device() const;
+  int sycl_device() const;
 
-  static void impl_initialize( const SelectDevice = SelectDevice());
+  static void impl_initialize(const SelectDevice = SelectDevice());
 
   static int impl_is_initialized();
 
+  //  static size_type device_arch();
 
-//  static size_type device_arch();
+  //  static size_type detect_device_count();
 
-//  static size_type detect_device_count();
-
-
-  static int concurrency() ;
+  static int concurrency();
   static const char* name();
 
-  inline Impl::SYCLInternal* impl_internal_space_instance() const { return m_space_instance; }
-private:
-  Impl::SYCLInternal* m_space_instance ;
+  inline Impl::SYCLInternal* impl_internal_space_instance() const {
+    return m_space_instance;
+  }
 
-
+ private:
+  Impl::SYCLInternal* m_space_instance;
 };
-}
-} // namespace Kokkos
+}  // namespace Experimental
+}  // namespace Kokkos
 
 namespace Kokkos {
 namespace Impl {
 
-template<>
-struct MemorySpaceAccess
-  < Kokkos::Experimental::SYCLSpace
-  , Kokkos::Experimental::SYCL::scratch_memory_space
-  >
-{
+template <>
+struct MemorySpaceAccess<Kokkos::Experimental::SYCLSpace,
+                         Kokkos::Experimental::SYCL::scratch_memory_space> {
   enum { assignable = false };
   enum { accessible = true };
-  enum { deepcopy   = false };
+  enum { deepcopy = false };
 };
 
-template<>
-struct VerifyExecutionCanAccessMemorySpace
-  < Kokkos::Experimental::SYCL::memory_space
-  , Kokkos::Experimental::SYCL::scratch_memory_space
-  >
-{
+template <>
+struct VerifyExecutionCanAccessMemorySpace<
+    Kokkos::Experimental::SYCL::memory_space,
+    Kokkos::Experimental::SYCL::scratch_memory_space> {
   enum { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify( void ) { }
-  KOKKOS_INLINE_FUNCTION static void verify( const void * ) { }
+  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 
-template<>
-struct VerifyExecutionCanAccessMemorySpace
-  < Kokkos::HostSpace
-  , Kokkos::Experimental::SYCL::scratch_memory_space
-  >
-{
+template <>
+struct VerifyExecutionCanAccessMemorySpace<
+    Kokkos::HostSpace, Kokkos::Experimental::SYCL::scratch_memory_space> {
   enum { value = false };
-  inline static void verify( void ) { Kokkos::Experimental::SYCLSpace::access_error(); }
-  inline static void verify( const void * p ) { Kokkos::Experimental::SYCLSpace::access_error(p); }
+  inline static void verify(void) {
+    Kokkos::Experimental::SYCLSpace::access_error();
+  }
+  inline static void verify(const void* p) {
+    Kokkos::Experimental::SYCLSpace::access_error(p);
+  }
 };
 
-} // namespace Experimental
-} // namespace Kokkos
-
-
+}  // namespace Impl
+}  // namespace Kokkos
 
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <SYCL/Kokkos_SYCL_Parallel_Range.hpp>
 
-
 #endif
 #endif
-
 
