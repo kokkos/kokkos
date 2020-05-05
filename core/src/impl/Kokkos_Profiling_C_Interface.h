@@ -114,6 +114,8 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_profileEventFunction profile_event;
   Kokkos_Profiling_beginDeepCopyFunction begin_deep_copy;
   Kokkos_Profiling_endDeepCopyFunction end_deep_copy;
+  char padding[2048];  // allows us to add another 256 events to the Tools
+                       // interface without changing struct layout
 };
 
 #endif  // KOKKOS_PROFILING_C_INTERFACE_HPP

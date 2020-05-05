@@ -89,8 +89,6 @@ void initialize();
 void finalize();
 
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
-}  // namespace Tools
-namespace Tools {
 
 void set_init_callback(initFunction callback);
 void set_finalize_callback(finalizeFunction callback);
@@ -152,26 +150,25 @@ using Kokkos::Tools::initialize;
 
 using Kokkos::Tools::make_space_handle;
 
-
-using Kokkos::Tools::set_init_callback;
-using Kokkos::Tools::set_finalize_callback;
-using Kokkos::Tools::set_begin_parallel_for_callback;
-using Kokkos::Tools::set_end_parallel_for_callback;
-using Kokkos::Tools::set_begin_parallel_reduce_callback;
-using Kokkos::Tools::set_end_parallel_reduce_callback;
-using Kokkos::Tools::set_begin_parallel_scan_callback;
-using Kokkos::Tools::set_end_parallel_scan_callback;
-using Kokkos::Tools::set_push_region_callback;
-using Kokkos::Tools::set_pop_region_callback;
 using Kokkos::Tools::set_allocate_data_callback;
-using Kokkos::Tools::set_deallocate_data_callback;
+using Kokkos::Tools::set_begin_deep_copy_callback;
+using Kokkos::Tools::set_begin_parallel_for_callback;
+using Kokkos::Tools::set_begin_parallel_reduce_callback;
+using Kokkos::Tools::set_begin_parallel_scan_callback;
 using Kokkos::Tools::set_create_profile_section_callback;
+using Kokkos::Tools::set_deallocate_data_callback;
+using Kokkos::Tools::set_destroy_profile_section_callback;
+using Kokkos::Tools::set_end_deep_copy_callback;
+using Kokkos::Tools::set_end_parallel_for_callback;
+using Kokkos::Tools::set_end_parallel_reduce_callback;
+using Kokkos::Tools::set_end_parallel_scan_callback;
+using Kokkos::Tools::set_finalize_callback;
+using Kokkos::Tools::set_init_callback;
+using Kokkos::Tools::set_pop_region_callback;
+using Kokkos::Tools::set_profile_event_callback;
+using Kokkos::Tools::set_push_region_callback;
 using Kokkos::Tools::set_start_profile_section_callback;
 using Kokkos::Tools::set_stop_profile_section_callback;
-using Kokkos::Tools::set_destroy_profile_section_callback;
-using Kokkos::Tools::set_profile_event_callback;
-using Kokkos::Tools::set_begin_deep_copy_callback;
-using Kokkos::Tools::set_end_deep_copy_callback;
 
 using Kokkos::Tools::EventSet;
 
@@ -182,7 +179,6 @@ using Kokkos::Tools::get_callbacks;
 using Kokkos::Tools::set_callbacks;
 
 }  // namespace Profiling
-
 
 }  // namespace Kokkos
 
