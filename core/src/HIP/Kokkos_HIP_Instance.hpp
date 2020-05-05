@@ -93,6 +93,7 @@ class HIPInternal {
   size_type m_scratchFlagsCount;
   size_type *m_scratchSpace;
   size_type *m_scratchFlags;
+  uint32_t *m_scratchConcurrentBitset = nullptr;
 
   hipDeviceProp_t m_deviceProp;
 

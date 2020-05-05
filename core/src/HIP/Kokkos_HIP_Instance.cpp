@@ -130,23 +130,24 @@ i ) s << " : Selected" ; s << std::endl ;
 //----------------------------------------------------------------------------
 
 HIPInternal::~HIPInternal() {
-  if (m_scratchSpace || m_scratchFlags) {
+  if (m_scratchSpace || m_scratchFlags || m_scratchConcurrentBitset) {
     std::cerr << "Kokkos::Experimental::HIP ERROR: Failed to call "
                  "Kokkos::Experimental::HIP::finalize()"
               << std::endl;
     std::cerr.flush();
   }
 
-  m_hipDev            = -1;
-  m_hipArch           = -1;
-  m_multiProcCount    = 0;
-  m_maxWarpCount      = 0;
-  m_maxSharedWords    = 0;
-  m_maxShmemPerBlock  = 0;
-  m_scratchSpaceCount = 0;
-  m_scratchFlagsCount = 0;
-  m_scratchSpace      = 0;
-  m_scratchFlags      = 0;
+  m_hipDev                  = -1;
+  m_hipArch                 = -1;
+  m_multiProcCount          = 0;
+  m_maxWarpCount            = 0;
+  m_maxSharedWords          = 0;
+  m_maxShmemPerBlock        = 0;
+  m_scratchSpaceCount       = 0;
+  m_scratchFlagsCount       = 0;
+  m_scratchSpace            = 0;
+  m_scratchFlags            = 0;
+  m_scratchConcurrentBitset = nullptr;
 }
 
 int HIPInternal::verify_is_initialized(const char *const label) const {
@@ -232,6 +233,31 @@ void HIPInternal::initialize(int hip_device_id) {
       (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
     }
     //----------------------------------
+    // Concurrent bitset for obtaining unique tokens from within
+    // an executing kernel.
+    {
+      const int32_t buffer_bound =
+          Kokkos::Impl::concurrent_bitset::buffer_bound(HIP::concurrency());
+
+      // Allocate and initialize uint32_t[ buffer_bound ]
+
+      using Record =
+          Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
+                                               void>;
+
+      Record *const r = Record::allocate(Kokkos::Experimental::HIPSpace(),
+                                         "InternalScratchBitset",
+                                         sizeof(uint32_t) * buffer_bound);
+
+      Record::increment(r);
+
+      m_scratchConcurrentBitset = reinterpret_cast<uint32_t *>(r->data());
+
+      HIP_SAFE_CALL(hipMemset(m_scratchConcurrentBitset, 0,
+                              sizeof(uint32_t) * buffer_bound));
+    }
+    //----------------------------------
+
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::HIP::initialize(" << hip_device_id
@@ -310,23 +336,25 @@ void HIPInternal::finalize() {
   HIP().fence();
   was_finalized = 1;
   if (0 != m_scratchSpace || 0 != m_scratchFlags) {
-    typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>
-        RecordHIP;
+    using RecordHIP =
+        Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>;
 
     RecordHIP::decrement(RecordHIP::get_record(m_scratchFlags));
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
+    RecordHIP::decrement(RecordHIP::get_record(m_scratchConcurrentBitset));
 
-    m_hipDev            = -1;
-    m_hipArch           = -1;
-    m_multiProcCount    = 0;
-    m_maxWarpCount      = 0;
-    m_maxBlock          = 0;
-    m_maxSharedWords    = 0;
-    m_maxShmemPerBlock  = 0;
-    m_scratchSpaceCount = 0;
-    m_scratchFlagsCount = 0;
-    m_scratchSpace      = 0;
-    m_scratchFlags      = 0;
+    m_hipDev                  = -1;
+    m_hipArch                 = -1;
+    m_multiProcCount          = 0;
+    m_maxWarpCount            = 0;
+    m_maxBlock                = 0;
+    m_maxSharedWords          = 0;
+    m_maxShmemPerBlock        = 0;
+    m_scratchSpaceCount       = 0;
+    m_scratchFlagsCount       = 0;
+    m_scratchSpace            = 0;
+    m_scratchFlags            = 0;
+    m_scratchConcurrentBitset = nullptr;
   }
 }
 
