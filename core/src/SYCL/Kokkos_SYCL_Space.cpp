@@ -389,7 +389,6 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::allocate(
     const Kokkos::Experimental::SYCLHostUSMSpace& space,
     const std::string& label, const size_t size) {
   return new SharedAllocationRecord(space, label, size);
-  // NLIBER return nullptr;
 }
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>*
@@ -397,7 +396,6 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
     allocate(const Kokkos::Experimental::SYCLDeviceUSMSpace& space,
              const std::string& label, const size_t size) {
   return new SharedAllocationRecord(space, label, size);
-  // return nullptr;
 }
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>*
@@ -405,7 +403,6 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::
     allocate(const Kokkos::Experimental::SYCLSharedUSMSpace& space,
              const std::string& label, const size_t size) {
   return new SharedAllocationRecord(space, label, size);
-  // return nullptr;
 }
 
 void SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::
