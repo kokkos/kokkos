@@ -96,8 +96,8 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
   if (Experimental::current_callbacks.begin_parallel_for != nullptr) {
     Kokkos::fence();
-    (*Experimental::current_callbacks.begin_parallel_for)(kernelPrefix.c_str(), devID,
-                                            kernelID);
+    (*Experimental::current_callbacks.begin_parallel_for)(kernelPrefix.c_str(),
+                                                          devID, kernelID);
   }
 }
 
@@ -112,8 +112,8 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                        uint64_t* kernelID) {
   if (Experimental::current_callbacks.begin_parallel_scan != nullptr) {
     Kokkos::fence();
-    (*Experimental::current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(), devID,
-                                             kernelID);
+    (*Experimental::current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(),
+                                                           devID, kernelID);
   }
 }
 
@@ -128,8 +128,8 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
                          uint64_t* kernelID) {
   if (Experimental::current_callbacks.begin_parallel_reduce != nullptr) {
     Kokkos::fence();
-    (*Experimental::current_callbacks.begin_parallel_reduce)(kernelPrefix.c_str(), devID,
-                                               kernelID);
+    (*Experimental::current_callbacks.begin_parallel_reduce)(
+        kernelPrefix.c_str(), devID, kernelID);
   }
 }
 
@@ -157,14 +157,16 @@ void popRegion() {
 void allocateData(const SpaceHandle space, const std::string label,
                   const void* ptr, const uint64_t size) {
   if (Experimental::current_callbacks.allocate_data != nullptr) {
-    (*Experimental::current_callbacks.allocate_data)(space, label.c_str(), ptr, size);
+    (*Experimental::current_callbacks.allocate_data)(space, label.c_str(), ptr,
+                                                     size);
   }
 }
 
 void deallocateData(const SpaceHandle space, const std::string label,
                     const void* ptr, const uint64_t size) {
   if (Experimental::current_callbacks.deallocate_data != nullptr) {
-    (*Experimental::current_callbacks.deallocate_data)(space, label.c_str(), ptr, size);
+    (*Experimental::current_callbacks.deallocate_data)(space, label.c_str(),
+                                                       ptr, size);
   }
 }
 
@@ -173,9 +175,9 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
                    const std::string src_label, const void* src_ptr,
                    const uint64_t size) {
   if (Experimental::current_callbacks.begin_deep_copy != nullptr) {
-    (*Experimental::current_callbacks.begin_deep_copy)(dst_space, dst_label.c_str(), dst_ptr,
-                                         src_space, src_label.c_str(), src_ptr,
-                                         size);
+    (*Experimental::current_callbacks.begin_deep_copy)(
+        dst_space, dst_label.c_str(), dst_ptr, src_space, src_label.c_str(),
+        src_ptr, size);
   }
 }
 
@@ -187,7 +189,8 @@ void endDeepCopy() {
 
 void createProfileSection(const std::string& sectionName, uint32_t* secID) {
   if (Experimental::current_callbacks.create_profile_section != nullptr) {
-    (*Experimental::current_callbacks.create_profile_section)(sectionName.c_str(), secID);
+    (*Experimental::current_callbacks.create_profile_section)(
+        sectionName.c_str(), secID);
   }
 }
 
@@ -267,29 +270,37 @@ void initialize() {
       // pointer to function A direct cast will give warnings hence, we have to
       // workaround the issue by casting pointer to pointers.
       auto p1 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
-      Experimental::set_begin_parallel_for_callback(*reinterpret_cast<beginFunction*>(&p1));
+      Experimental::set_begin_parallel_for_callback(
+          *reinterpret_cast<beginFunction*>(&p1));
       auto p2 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
-      Experimental::set_begin_parallel_scan_callback(*reinterpret_cast<beginFunction*>(&p2));
+      Experimental::set_begin_parallel_scan_callback(
+          *reinterpret_cast<beginFunction*>(&p2));
       auto p3 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
       Experimental::set_begin_parallel_reduce_callback(
           *reinterpret_cast<beginFunction*>(&p3));
 
       auto p4 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
-      Experimental::set_end_parallel_scan_callback(*reinterpret_cast<endFunction*>(&p4));
+      Experimental::set_end_parallel_scan_callback(
+          *reinterpret_cast<endFunction*>(&p4));
       auto p5 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
-      Experimental::set_end_parallel_for_callback(*reinterpret_cast<endFunction*>(&p5));
+      Experimental::set_end_parallel_for_callback(
+          *reinterpret_cast<endFunction*>(&p5));
       auto p6 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
-      Experimental::set_end_parallel_reduce_callback(*reinterpret_cast<endFunction*>(&p6));
+      Experimental::set_end_parallel_reduce_callback(
+          *reinterpret_cast<endFunction*>(&p6));
 
       auto p7 = dlsym(firstProfileLibrary, "kokkosp_init_library");
       Experimental::set_init_callback(*reinterpret_cast<initFunction*>(&p7));
       auto p8 = dlsym(firstProfileLibrary, "kokkosp_finalize_library");
-      Experimental::set_finalize_callback(*reinterpret_cast<finalizeFunction*>(&p8));
+      Experimental::set_finalize_callback(
+          *reinterpret_cast<finalizeFunction*>(&p8));
 
       auto p9 = dlsym(firstProfileLibrary, "kokkosp_push_profile_region");
-      Experimental::set_push_region_callback(*reinterpret_cast<pushFunction*>(&p9));
+      Experimental::set_push_region_callback(
+          *reinterpret_cast<pushFunction*>(&p9));
       auto p10 = dlsym(firstProfileLibrary, "kokkosp_pop_profile_region");
-      Experimental::set_pop_region_callback(*reinterpret_cast<popFunction*>(&p10));
+      Experimental::set_pop_region_callback(
+          *reinterpret_cast<popFunction*>(&p10));
 
       auto p11 = dlsym(firstProfileLibrary, "kokkosp_allocate_data");
       Experimental::set_allocate_data_callback(
@@ -302,7 +313,8 @@ void initialize() {
       Experimental::set_begin_deep_copy_callback(
           *reinterpret_cast<beginDeepCopyFunction*>(&p13));
       auto p14 = dlsym(firstProfileLibrary, "kokkosp_end_deep_copy");
-      Experimental::set_end_deep_copy_callback(*reinterpret_cast<endDeepCopyFunction*>(&p14));
+      Experimental::set_end_deep_copy_callback(
+          *reinterpret_cast<endDeepCopyFunction*>(&p14));
 
       auto p15 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
       Experimental::set_create_profile_section_callback(
@@ -324,8 +336,8 @@ void initialize() {
   }
 
   if (Experimental::current_callbacks.init != nullptr) {
-    (*Experimental::current_callbacks.init)(0, (uint64_t)KOKKOSP_INTERFACE_VERSION,
-                              (uint32_t)0, nullptr);
+    (*Experimental::current_callbacks.init)(
+        0, (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
   }
 
   Experimental::no_profiling.init     = nullptr;
@@ -441,7 +453,7 @@ void resume_tools() { current_callbacks = backup_callbacks; }
 
 EventSet get_callbacks() { return current_callbacks; }
 void set_callbacks(EventSet new_events) { current_callbacks = new_events; }
-} // namespace Experimental
+}  // namespace Experimental
 }  // namespace Profiling
 
 }  // namespace Kokkos
@@ -486,7 +498,7 @@ void endDeepCopy() {}
 
 void initialize() {}
 void finalize() {}
-
+namespace Experimental {
 static EventSet current_callbacks;
 
 void set_init_callback(initFunction) {}
@@ -515,7 +527,7 @@ void resume_tools() {}
 
 EventSet get_callbacks() { return current_callbacks; }
 void set_callbacks(EventSet) {}
-
+}  // namespace Experimental
 }  // namespace Profiling
 }  // namespace Kokkos
 
