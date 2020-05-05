@@ -84,9 +84,8 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
     Kokkos::fence();
     (*current_callbacks.begin_parallel_for)(kernelPrefix.c_str(), devID,
                                             kernelID);
-<<<<<<< HEAD
-#ifdef KOKKOS_ENABLE_TUNING Tools::timer_stack.push(
-        std::chrono::system_clock::now());
+#ifdef KOKKOS_ENABLE_TUNING
+    Tools::timer_stack.push(std::chrono::system_clock::now());
     Kokkos::Tools::VariableValue contextValues[] = {
         Kokkos::Tools::make_variable_value(
             Kokkos::Tools::kernel_name_context_variable_id,
@@ -96,8 +95,6 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
     Kokkos::Tools::declareContextVariableValues(Tools::getNewContextId(), 2,
                                                 contextValues);
 #endif
-=======
->>>>>>> feature/programmatic-profiling
   }
 }
 
@@ -105,11 +102,10 @@ void endParallelFor(const uint64_t kernelID) {
   if (current_callbacks.end_parallel_for != nullptr) {
     Kokkos::fence();
     (*current_callbacks.end_parallel_for)(kernelID);
-<<<<<<< HEAD
-#ifdef KOKKOS_ENABLE_TUNING Tools::last_microseconds =
-        std::chrono::duration_cast <
-        std::chrono::microseconds>
-        (std::chrono::system_clock::now() - Tools::timer_stack.top())
+#ifdef KOKKOS_ENABLE_TUNING
+    Tools::last_microseconds =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - Tools::timer_stack.top())
             .count();
     Tools::timer_stack.pop();
     std::array<Kokkos::Tools::VariableValue, 1> value = {
@@ -120,8 +116,6 @@ void endParallelFor(const uint64_t kernelID) {
                                         value.data());
     Kokkos::Tools::endContext(Kokkos::Tools::getCurrentContextId());
 #endif
-=======
->>>>>>> feature/programmatic-profiling
   }
 }
 
@@ -131,9 +125,8 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
     Kokkos::fence();
     (*current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(), devID,
                                              kernelID);
-<<<<<<< HEAD
-#ifdef KOKKOS_ENABLE_TUNING Tools::timer_stack.push(
-        std::chrono::system_clock::now());
+#ifdef KOKKOS_ENABLE_TUNING
+    Tools::timer_stack.push(std::chrono::system_clock::now());
     Kokkos::Tools::VariableValue contextValues[] = {
         Kokkos::Tools::make_variable_value(
             Kokkos::Tools::kernel_name_context_variable_id,
@@ -143,8 +136,6 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
     Kokkos::Tools::declareContextVariableValues(
         Kokkos::Tools::getNewContextId(), 2, contextValues);
 #endif
-=======
->>>>>>> feature/programmatic-profiling
   }
 }
 
@@ -152,11 +143,10 @@ void endParallelScan(const uint64_t kernelID) {
   if (current_callbacks.end_parallel_scan != nullptr) {
     Kokkos::fence();
     (*current_callbacks.end_parallel_scan)(kernelID);
-<<<<<<< HEAD
-#ifdef KOKKOS_ENABLE_TUNING Tools::last_microseconds =
-        std::chrono::duration_cast <
-        std::chrono::microseconds>
-        (std::chrono::system_clock::now() - Tools::timer_stack.top())
+#ifdef KOKKOS_ENABLE_TUNING
+    Tools::last_microseconds =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - Tools::timer_stack.top())
             .count();
     Tools::timer_stack.pop();
     std::array<Kokkos::Tools::VariableValue, 1> value = {
@@ -167,8 +157,6 @@ void endParallelScan(const uint64_t kernelID) {
                                         value.data());
     Kokkos::Tools::endContext(Kokkos::Tools::getCurrentContextId());
 #endif
-=======
->>>>>>> feature/programmatic-profiling
   }
 }
 
@@ -178,9 +166,8 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
     Kokkos::fence();
     (*current_callbacks.begin_parallel_reduce)(kernelPrefix.c_str(), devID,
                                                kernelID);
-<<<<<<< HEAD
-#ifdef KOKKOS_ENABLE_TUNING Tools::timer_stack.push(
-        std::chrono::system_clock::now());
+#ifdef KOKKOS_ENABLE_TUNING
+    Tools::timer_stack.push(std::chrono::system_clock::now());
     Kokkos::Tools::VariableValue contextValues[] = {
         Kokkos::Tools::make_variable_value(
             Kokkos::Tools::kernel_name_context_variable_id,
@@ -190,8 +177,6 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
     Kokkos::Tools::declareContextVariableValues(
         Kokkos::Tools::getNewContextId(), 2, contextValues);
 #endif
-=======
->>>>>>> feature/programmatic-profiling
   }
 }
 
@@ -199,11 +184,10 @@ void endParallelReduce(const uint64_t kernelID) {
   if (current_callbacks.end_parallel_reduce != nullptr) {
     Kokkos::fence();
     (*current_callbacks.end_parallel_reduce)(kernelID);
-<<<<<<< HEAD
-#ifdef KOKKOS_ENABLE_TUNING Tools::last_microseconds =
-        std::chrono::duration_cast <
-        std::chrono::microseconds>
-        (std::chrono::system_clock::now() - Tools::timer_stack.top())
+#ifdef KOKKOS_ENABLE_TUNING
+    Tools::last_microseconds =
+        std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::system_clock::now() - Tools::timer_stack.top())
             .count();
     Tools::timer_stack.pop();
     std::array<Kokkos::Tools::VariableValue, 1> value = {
@@ -214,8 +198,6 @@ void endParallelReduce(const uint64_t kernelID) {
                                         value.data());
     Kokkos::Tools::endContext(Kokkos::Tools::getCurrentContextId());
 #endif
-=======
->>>>>>> feature/programmatic-profiling
   }
 }
 
@@ -255,31 +237,26 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
     (*current_callbacks.begin_deep_copy)(dst_space, dst_label.c_str(), dst_ptr,
                                          src_space, src_label.c_str(), src_ptr,
                                          size);
-<<<<<<< HEAD
-#ifdef KOKKOS_ENABLE_TUNING Kokkos::Tools::VariableValue contextValues[] = {
+#ifdef KOKKOS_ENABLE_TUNING
+    Kokkos::Tools::VariableValue contextValues[] = {
         Kokkos::Tools::make_variable_value(
             Kokkos::Tools::kernel_name_context_variable_id, "deep_copy_kernel"),
         Kokkos::Tools::make_variable_value(
             Kokkos::Tools::kernel_type_context_variable_id,
-            "deep_copy") };  // TODO DZP: should deep copy have context
-                             // variables for source and destination features?
+            "deep_copy")};  // TODO DZP: should deep copy have context
+                            // variables for source and destination features?
     Kokkos::Tools::declareContextVariableValues(
         Kokkos::Tools::getNewContextId(), 2, contextValues);
 #endif
-=======
->>>>>>> feature/programmatic-profiling
   }
 }
 
 void endDeepCopy() {
   if (current_callbacks.end_deep_copy != nullptr) {
     (*current_callbacks.end_deep_copy)();
-<<<<<<< HEAD
-#ifdef KOKKOS_ENABLE_TUNING Kokkos::Tools::endContext(
-        Kokkos::Tools::getCurrentContextId());
+#ifdef KOKKOS_ENABLE_TUNING
+    Kokkos::Tools::endContext(Kokkos::Tools::getCurrentContextId());
 #endif
-=======
->>>>>>> feature/programmatic-profiling
   }
 }
 
