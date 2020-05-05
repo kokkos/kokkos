@@ -63,8 +63,31 @@ namespace Profiling {
 
 static EventSet current_callbacks;
 static EventSet backup_callbacks;
+static EventSet no_profiling;
 
-bool profileLibraryLoaded() { return (current_callbacks.init != nullptr); }
+bool eventSetsEqual(const EventSet& l, const EventSet& r) {
+  return l.init == r.init && l.finalize == r.finalize &&
+         l.begin_parallel_for == r.begin_parallel_for &&
+         l.end_parallel_for == r.end_parallel_for &&
+         l.begin_parallel_reduce == r.begin_parallel_reduce &&
+         l.end_parallel_reduce == r.end_parallel_reduce &&
+         l.begin_parallel_scan == r.begin_parallel_scan &&
+         l.end_parallel_scan == r.end_parallel_scan &&
+         l.push_region == r.push_region && l.pop_region == r.pop_region &&
+         l.allocate_data == r.allocate_data &&
+         l.deallocate_data == r.deallocate_data &&
+         l.create_profile_section == r.create_profile_section &&
+         l.start_profile_section == r.start_profile_section &&
+         l.stop_profile_section == r.stop_profile_section &&
+         l.destroy_profile_section == r.destroy_profile_section &&
+         l.profile_event == r.profile_event &&
+         l.begin_deep_copy == r.begin_deep_copy &&
+         l.end_deep_copy == r.end_deep_copy;
+}
+
+bool profileLibraryLoaded() {
+  return !eventSetsEqual(current_callbacks, no_profiling);
+}
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
@@ -198,8 +221,6 @@ SpaceHandle make_space_handle(const char* space_name) {
 }  // end namespace Profiling
 
 namespace Profiling {
-
-static EventSet no_profiling;
 
 void initialize() {
   // Make sure initialize calls happens only once
