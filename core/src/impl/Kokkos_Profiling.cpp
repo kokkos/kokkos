@@ -698,7 +698,7 @@ void set_callbacks(EventSet) {}
 
 namespace Tools {}  // end namespace Tools
 
-namsepace Tools {
+namespace Tools {
   static EventSet current_callbacks;
 
   void set_init_callback(initFunction callback) {}
