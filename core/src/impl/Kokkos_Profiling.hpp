@@ -90,6 +90,8 @@ void finalize();
 
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
+namespace Experimental {
+
 void set_init_callback(initFunction callback);
 void set_finalize_callback(finalizeFunction callback);
 void set_begin_parallel_for_callback(beginFunction callback);
@@ -116,6 +118,7 @@ void resume_tools();
 
 EventSet get_callbacks();
 void set_callbacks(EventSet new_events);
+<<<<<<< HEAD
 
 }  // namespace Tools
 namespace Profiling {
@@ -178,6 +181,9 @@ using Kokkos::Tools::resume_tools;
 using Kokkos::Tools::get_callbacks;
 using Kokkos::Tools::set_callbacks;
 
+=======
+}  // namespace Experimental
+>>>>>>> feature/programmatic-profiling
 }  // namespace Profiling
 
 }  // namespace Kokkos

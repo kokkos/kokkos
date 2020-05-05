@@ -73,16 +73,42 @@ static int last_microseconds;
 
 namespace Tools {
 
+namespace Experimental {
+
 static EventSet current_callbacks;
 static EventSet backup_callbacks;
+static EventSet no_profiling;
 
-bool profileLibraryLoaded() { return (current_callbacks.init != nullptr); }
+bool eventSetsEqual(const EventSet& l, const EventSet& r) {
+  return l.init == r.init && l.finalize == r.finalize &&
+         l.begin_parallel_for == r.begin_parallel_for &&
+         l.end_parallel_for == r.end_parallel_for &&
+         l.begin_parallel_reduce == r.begin_parallel_reduce &&
+         l.end_parallel_reduce == r.end_parallel_reduce &&
+         l.begin_parallel_scan == r.begin_parallel_scan &&
+         l.end_parallel_scan == r.end_parallel_scan &&
+         l.push_region == r.push_region && l.pop_region == r.pop_region &&
+         l.allocate_data == r.allocate_data &&
+         l.deallocate_data == r.deallocate_data &&
+         l.create_profile_section == r.create_profile_section &&
+         l.start_profile_section == r.start_profile_section &&
+         l.stop_profile_section == r.stop_profile_section &&
+         l.destroy_profile_section == r.destroy_profile_section &&
+         l.profile_event == r.profile_event &&
+         l.begin_deep_copy == r.begin_deep_copy &&
+         l.end_deep_copy == r.end_deep_copy;
+}
+}  // namespace Experimental
+bool profileLibraryLoaded() {
+  return !Experimental::eventSetsEqual(Experimental::current_callbacks,
+                                       Experimental::no_profiling);
+}
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
-  if (current_callbacks.begin_parallel_for != nullptr) {
+  if (Experimental::current_callbacks.begin_parallel_for != nullptr) {
     Kokkos::fence();
-    (*current_callbacks.begin_parallel_for)(kernelPrefix.c_str(), devID,
+    (*Experimental::current_callbacks.begin_parallel_for)(kernelPrefix.c_str(), devID,
                                             kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
     Tools::timer_stack.push(std::chrono::system_clock::now());
@@ -99,9 +125,9 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
 }
 
 void endParallelFor(const uint64_t kernelID) {
-  if (current_callbacks.end_parallel_for != nullptr) {
+  if (Experimental::current_callbacks.end_parallel_for != nullptr) {
     Kokkos::fence();
-    (*current_callbacks.end_parallel_for)(kernelID);
+    (*Experimental::current_callbacks.end_parallel_for)(kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
     Tools::last_microseconds =
         std::chrono::duration_cast<std::chrono::microseconds>(
@@ -121,9 +147,9 @@ void endParallelFor(const uint64_t kernelID) {
 
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                        uint64_t* kernelID) {
-  if (current_callbacks.begin_parallel_scan != nullptr) {
+  if (Experimental::current_callbacks.begin_parallel_scan != nullptr) {
     Kokkos::fence();
-    (*current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(), devID,
+    (*Experimental::current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(), devID,
                                              kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
     Tools::timer_stack.push(std::chrono::system_clock::now());
@@ -140,9 +166,9 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
 }
 
 void endParallelScan(const uint64_t kernelID) {
-  if (current_callbacks.end_parallel_scan != nullptr) {
+  if (Experimental::current_callbacks.end_parallel_scan != nullptr) {
     Kokkos::fence();
-    (*current_callbacks.end_parallel_scan)(kernelID);
+    (*Experimental::current_callbacks.end_parallel_scan)(kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
     Tools::last_microseconds =
         std::chrono::duration_cast<std::chrono::microseconds>(
@@ -162,9 +188,9 @@ void endParallelScan(const uint64_t kernelID) {
 
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
                          uint64_t* kernelID) {
-  if (current_callbacks.begin_parallel_reduce != nullptr) {
+  if (Experimental::current_callbacks.begin_parallel_reduce != nullptr) {
     Kokkos::fence();
-    (*current_callbacks.begin_parallel_reduce)(kernelPrefix.c_str(), devID,
+    (*Experimental::current_callbacks.begin_parallel_reduce)(kernelPrefix.c_str(), devID,
                                                kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
     Tools::timer_stack.push(std::chrono::system_clock::now());
@@ -181,9 +207,9 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
 }
 
 void endParallelReduce(const uint64_t kernelID) {
-  if (current_callbacks.end_parallel_reduce != nullptr) {
+  if (Experimental::current_callbacks.end_parallel_reduce != nullptr) {
     Kokkos::fence();
-    (*current_callbacks.end_parallel_reduce)(kernelID);
+    (*Experimental::current_callbacks.end_parallel_reduce)(kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
     Tools::last_microseconds =
         std::chrono::duration_cast<std::chrono::microseconds>(
@@ -202,30 +228,30 @@ void endParallelReduce(const uint64_t kernelID) {
 }
 
 void pushRegion(const std::string& kName) {
-  if (current_callbacks.push_region != nullptr) {
+  if (Experimental::current_callbacks.push_region != nullptr) {
     Kokkos::fence();
-    (*current_callbacks.push_region)(kName.c_str());
+    (*Experimental::current_callbacks.push_region)(kName.c_str());
   }
 }
 
 void popRegion() {
-  if (current_callbacks.pop_region != nullptr) {
+  if (Experimental::current_callbacks.pop_region != nullptr) {
     Kokkos::fence();
-    (*current_callbacks.pop_region)();
+    (*Experimental::current_callbacks.pop_region)();
   }
 }
 
 void allocateData(const SpaceHandle space, const std::string label,
                   const void* ptr, const uint64_t size) {
-  if (current_callbacks.allocate_data != nullptr) {
-    (*current_callbacks.allocate_data)(space, label.c_str(), ptr, size);
+  if (Experimental::current_callbacks.allocate_data != nullptr) {
+    (*Experimental::current_callbacks.allocate_data)(space, label.c_str(), ptr, size);
   }
 }
 
 void deallocateData(const SpaceHandle space, const std::string label,
                     const void* ptr, const uint64_t size) {
-  if (current_callbacks.deallocate_data != nullptr) {
-    (*current_callbacks.deallocate_data)(space, label.c_str(), ptr, size);
+  if (Experimental::current_callbacks.deallocate_data != nullptr) {
+    (*Experimental::current_callbacks.deallocate_data)(space, label.c_str(), ptr, size);
   }
 }
 
@@ -233,8 +259,8 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
                    const void* dst_ptr, const SpaceHandle src_space,
                    const std::string src_label, const void* src_ptr,
                    const uint64_t size) {
-  if (current_callbacks.begin_deep_copy != nullptr) {
-    (*current_callbacks.begin_deep_copy)(dst_space, dst_label.c_str(), dst_ptr,
+  if (Experimental::current_callbacks.begin_deep_copy != nullptr) {
+    (*Experimental::current_callbacks.begin_deep_copy)(dst_space, dst_label.c_str(), dst_ptr,
                                          src_space, src_label.c_str(), src_ptr,
                                          size);
 #ifdef KOKKOS_ENABLE_TUNING
@@ -252,8 +278,8 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
 }
 
 void endDeepCopy() {
-  if (current_callbacks.end_deep_copy != nullptr) {
-    (*current_callbacks.end_deep_copy)();
+  if (Experimental::current_callbacks.end_deep_copy != nullptr) {
+    (*Experimental::current_callbacks.end_deep_copy)();
 #ifdef KOKKOS_ENABLE_TUNING
     Kokkos::Tools::endContext(Kokkos::Tools::getCurrentContextId());
 #endif
@@ -261,32 +287,32 @@ void endDeepCopy() {
 }
 
 void createProfileSection(const std::string& sectionName, uint32_t* secID) {
-  if (current_callbacks.create_profile_section != nullptr) {
-    (*current_callbacks.create_profile_section)(sectionName.c_str(), secID);
+  if (Experimental::current_callbacks.create_profile_section != nullptr) {
+    (*Experimental::current_callbacks.create_profile_section)(sectionName.c_str(), secID);
   }
 }
 
 void startSection(const uint32_t secID) {
-  if (current_callbacks.start_profile_section != nullptr) {
-    (*current_callbacks.start_profile_section)(secID);
+  if (Experimental::current_callbacks.start_profile_section != nullptr) {
+    (*Experimental::current_callbacks.start_profile_section)(secID);
   }
 }
 
 void stopSection(const uint32_t secID) {
-  if (current_callbacks.stop_profile_section != nullptr) {
-    (*current_callbacks.stop_profile_section)(secID);
+  if (Experimental::current_callbacks.stop_profile_section != nullptr) {
+    (*Experimental::current_callbacks.stop_profile_section)(secID);
   }
 }
 
 void destroyProfileSection(const uint32_t secID) {
-  if (current_callbacks.destroy_profile_section != nullptr) {
-    (*current_callbacks.destroy_profile_section)(secID);
+  if (Experimental::current_callbacks.destroy_profile_section != nullptr) {
+    (*Experimental::current_callbacks.destroy_profile_section)(secID);
   }
 }
 
 void markEvent(const std::string& eventName) {
-  if (current_callbacks.profile_event != nullptr) {
-    (*current_callbacks.profile_event)(eventName.c_str());
+  if (Experimental::current_callbacks.profile_event != nullptr) {
+    (*Experimental::current_callbacks.profile_event)(eventName.c_str());
   }
 }
 
@@ -299,8 +325,6 @@ SpaceHandle make_space_handle(const char* space_name) {
 }  // namespace Tools
 
 namespace Tools {
-
-static EventSet no_profiling;
 
 void initialize() {
   // Make sure initialize calls happens only once
@@ -339,6 +363,7 @@ void initialize() {
       std::cout << "KokkosP: Library Loaded: " << profileLibraryName
                 << std::endl;
 #endif
+<<<<<<< HEAD
     }
   }
   if (firstProfileLibrary != nullptr) {
@@ -497,33 +522,98 @@ void initialize() {
 #endif
   if (current_callbacks.init != nullptr) {
     (*current_callbacks.init)(0, (uint64_t)KOKKOSP_INTERFACE_VERSION,
+=======
+
+      // dlsym returns a pointer to an object, while we want to assign to
+      // pointer to function A direct cast will give warnings hence, we have to
+      // workaround the issue by casting pointer to pointers.
+      auto p1 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
+      Experimental::set_begin_parallel_for_callback(*reinterpret_cast<beginFunction*>(&p1));
+      auto p2 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
+      Experimental::set_begin_parallel_scan_callback(*reinterpret_cast<beginFunction*>(&p2));
+      auto p3 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
+      Experimental::set_begin_parallel_reduce_callback(
+          *reinterpret_cast<beginFunction*>(&p3));
+
+      auto p4 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
+      Experimental::set_end_parallel_scan_callback(*reinterpret_cast<endFunction*>(&p4));
+      auto p5 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
+      Experimental::set_end_parallel_for_callback(*reinterpret_cast<endFunction*>(&p5));
+      auto p6 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
+      Experimental::set_end_parallel_reduce_callback(*reinterpret_cast<endFunction*>(&p6));
+
+      auto p7 = dlsym(firstProfileLibrary, "kokkosp_init_library");
+      Experimental::set_init_callback(*reinterpret_cast<initFunction*>(&p7));
+      auto p8 = dlsym(firstProfileLibrary, "kokkosp_finalize_library");
+      Experimental::set_finalize_callback(*reinterpret_cast<finalizeFunction*>(&p8));
+
+      auto p9 = dlsym(firstProfileLibrary, "kokkosp_push_profile_region");
+      Experimental::set_push_region_callback(*reinterpret_cast<pushFunction*>(&p9));
+      auto p10 = dlsym(firstProfileLibrary, "kokkosp_pop_profile_region");
+      Experimental::set_pop_region_callback(*reinterpret_cast<popFunction*>(&p10));
+
+      auto p11 = dlsym(firstProfileLibrary, "kokkosp_allocate_data");
+      Experimental::set_allocate_data_callback(
+          *reinterpret_cast<allocateDataFunction*>(&p11));
+      auto p12 = dlsym(firstProfileLibrary, "kokkosp_deallocate_data");
+      Experimental::set_deallocate_data_callback(
+          *reinterpret_cast<deallocateDataFunction*>(&p12));
+
+      auto p13 = dlsym(firstProfileLibrary, "kokkosp_begin_deep_copy");
+      Experimental::set_begin_deep_copy_callback(
+          *reinterpret_cast<beginDeepCopyFunction*>(&p13));
+      auto p14 = dlsym(firstProfileLibrary, "kokkosp_end_deep_copy");
+      Experimental::set_end_deep_copy_callback(*reinterpret_cast<endDeepCopyFunction*>(&p14));
+
+      auto p15 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
+      Experimental::set_create_profile_section_callback(
+          *(reinterpret_cast<createProfileSectionFunction*>(&p15)));
+      auto p16 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
+      Experimental::set_start_profile_section_callback(
+          *reinterpret_cast<startProfileSectionFunction*>(&p16));
+      auto p17 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
+      Experimental::set_stop_profile_section_callback(
+          *reinterpret_cast<stopProfileSectionFunction*>(&p17));
+      auto p18 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
+      Experimental::set_destroy_profile_section_callback(
+          *(reinterpret_cast<destroyProfileSectionFunction*>(&p18)));
+
+      auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
+      Experimental::set_profile_event_callback(
+          *reinterpret_cast<profileEventFunction*>(&p19));
+    }
+  }
+
+  if (Experimental::current_callbacks.init != nullptr) {
+    (*Experimental::current_callbacks.init)(0, (uint64_t)KOKKOSP_INTERFACE_VERSION,
+>>>>>>> feature/programmatic-profiling
                               (uint32_t)0, nullptr);
   }
 
-  no_profiling.init     = nullptr;
-  no_profiling.finalize = nullptr;
+  Experimental::no_profiling.init     = nullptr;
+  Experimental::no_profiling.finalize = nullptr;
 
-  no_profiling.begin_parallel_for    = nullptr;
-  no_profiling.begin_parallel_scan   = nullptr;
-  no_profiling.begin_parallel_reduce = nullptr;
-  no_profiling.end_parallel_scan     = nullptr;
-  no_profiling.end_parallel_for      = nullptr;
-  no_profiling.end_parallel_reduce   = nullptr;
+  Experimental::no_profiling.begin_parallel_for    = nullptr;
+  Experimental::no_profiling.begin_parallel_scan   = nullptr;
+  Experimental::no_profiling.begin_parallel_reduce = nullptr;
+  Experimental::no_profiling.end_parallel_scan     = nullptr;
+  Experimental::no_profiling.end_parallel_for      = nullptr;
+  Experimental::no_profiling.end_parallel_reduce   = nullptr;
 
-  no_profiling.push_region     = nullptr;
-  no_profiling.pop_region      = nullptr;
-  no_profiling.allocate_data   = nullptr;
-  no_profiling.deallocate_data = nullptr;
+  Experimental::no_profiling.push_region     = nullptr;
+  Experimental::no_profiling.pop_region      = nullptr;
+  Experimental::no_profiling.allocate_data   = nullptr;
+  Experimental::no_profiling.deallocate_data = nullptr;
 
-  no_profiling.begin_deep_copy = nullptr;
-  no_profiling.end_deep_copy   = nullptr;
+  Experimental::no_profiling.begin_deep_copy = nullptr;
+  Experimental::no_profiling.end_deep_copy   = nullptr;
 
-  no_profiling.create_profile_section  = nullptr;
-  no_profiling.start_profile_section   = nullptr;
-  no_profiling.stop_profile_section    = nullptr;
-  no_profiling.destroy_profile_section = nullptr;
+  Experimental::no_profiling.create_profile_section  = nullptr;
+  Experimental::no_profiling.start_profile_section   = nullptr;
+  Experimental::no_profiling.stop_profile_section    = nullptr;
+  Experimental::no_profiling.destroy_profile_section = nullptr;
 
-  no_profiling.profile_event = nullptr;
+  Experimental::no_profiling.profile_event = nullptr;
 
   free(envProfileCopy);
 }
@@ -534,12 +624,13 @@ void finalize() {
   if (is_finalized) return;
   is_finalized = 1;
 
-  if (current_callbacks.finalize != nullptr) {
-    (*current_callbacks.finalize)();
+  if (Experimental::current_callbacks.finalize != nullptr) {
+    (*Experimental::current_callbacks.finalize)();
 
     // Set all profile hooks to nullptr to prevent
     // any additional calls. Once we are told to
     // finalize, we mean it
+<<<<<<< HEAD
     // TODO DZP: move to its own section
     pause_tools();
 #ifdef KOKKOS_ENABLE_TUNING
@@ -554,6 +645,12 @@ void finalize() {
 }  // namespace Tools
 
 namespace Tools {
+=======
+    Experimental::pause_tools();
+  }
+}
+namespace Experimental {
+>>>>>>> feature/programmatic-profiling
 void set_init_callback(initFunction callback) {
   current_callbacks.init = callback;
 }
@@ -623,8 +720,13 @@ void resume_tools() { current_callbacks = backup_callbacks; }
 
 EventSet get_callbacks() { return current_callbacks; }
 void set_callbacks(EventSet new_events) { current_callbacks = new_events; }
+<<<<<<< HEAD
 
 }  // namespace Tools
+=======
+} // namespace Experimental
+}  // namespace Profiling
+>>>>>>> feature/programmatic-profiling
 
 }  // namespace Kokkos
 
