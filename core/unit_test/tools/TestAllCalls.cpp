@@ -53,7 +53,8 @@ int main() {
     Kokkos::View<int*> src_view("source", 10);
     Kokkos::View<int*> dst_view("destination", 10);
     Kokkos::deep_copy(dst_view, src_view);
-    Kokkos::parallel_for("parallel_for", 1, KOKKOS_LAMBDA(int i){(void)i});
+    Kokkos::parallel_for(
+        "parallel_for", 1, KOKKOS_LAMBDA(int i) { (void)i; });
     int result;
     Kokkos::parallel_reduce(
         "parallel_reduce", 1,
