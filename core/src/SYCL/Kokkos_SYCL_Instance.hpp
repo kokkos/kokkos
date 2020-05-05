@@ -4,6 +4,7 @@
 #define KOKKOS_SYCL_INSTANCE_HPP_
 #include <Kokkos_SYCL.hpp>
 #include <CL/sycl.hpp>
+#include <iosfwd>
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -45,6 +46,9 @@ class SYCLInternal {
 
   void print_configuration(std::ostream&) const;
   void print_configuration(std::ostream&, const bool) const;
+
+  void listDevices(std::ostream&) const;
+  void listDevices() const;
 
   ~SYCLInternal();
 

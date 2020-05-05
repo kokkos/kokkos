@@ -1,13 +1,13 @@
 /*
 //@HEADER
 // ************************************************************************
-// 
+//
 //                        Kokkos v. 2.0
 //              Copyright (2014) Sandia Corporation
-// 
+//
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -36,7 +36,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-// 
+//
 // ************************************************************************
 //@HEADER
 */
@@ -66,10 +66,29 @@
 #include <sstream>
 #include <string>
 
-
-
-//KOKKOS_INLINE_FUNCTION
+// KOKKOS_INLINE_FUNCTION
 // Kokkos::Impl::SYCLLockArraysStruct kokkos_impl_sycl_lock_arrays ;
+
+namespace {
+class SYCLDevice {
+ public:
+  explicit SYCLDevice(const cl::sycl::device& d) : device(d) {}
+
+  friend std::ostream& operator<<(std::ostream& os, SYCLDevice const& that) {
+    return os << "Name: "
+              << that.device.get_info<cl::sycl::info::device::name>()
+              << " Driver Version: "
+              << that.device.get_info<cl::sycl::info::device::driver_version>()
+              << " Is Host: " << that.device.is_host()
+              << " Is CPU: " << that.device.is_cpu()
+              << " Is GPU: " << that.device.is_gpu()
+              << " Is Accelerator: " << that.device.is_accelerator();
+  }
+
+ private:
+  const cl::sycl::device& device;
+};
+};  // namespace
 
 namespace Kokkos {
 namespace Experimental {
@@ -77,158 +96,184 @@ namespace Impl {
 
 int SYCLInternal::was_finalized = 0;
 //----------------------------------------------------------------------------
+void SYCLInternal::listDevices(std::ostream& out) const {
+  auto devices = cl::sycl::device::get_devices();
+  out << "The system contains " << devices.size() << " devices\n";
 
+  for (size_t d = 0; d != devices.size(); ++d) {
+    out << "Device: " << d << ' ' << SYCLDevice(devices[d]) << '\n';
+  }
+}
 
-void SYCLInternal::print_configuration( std::ostream & s ) const
-{
-  //const SYCLInternalDevices & dev_info = SYCLInternalDevices::singleton();
+void SYCLInternal::listDevices() const { return listDevices(std::cout); }
 
-#if defined( KOKKOS_ENABLE_SYCL )
-    s << "macro  KOKKOS_ENABLE_SYCL      : defined" << std::endl ;
+void SYCLInternal::print_configuration(std::ostream& s) const {
+  // const SYCLInternalDevices & dev_info = SYCLInternalDevices::singleton();
+
+#if defined(KOKKOS_ENABLE_SYCL)
+  s << "macro  KOKKOS_ENABLE_SYCL      : defined" << std::endl;
 #endif
 
-  //for ( int i = 0 ; i < dev_info.m_syclDevCount ; ++i ) {
+  // for ( int i = 0 ; i < dev_info.m_syclDevCount ; ++i ) {
   //  s << "Kokkos::Experimental::SYCL[ " << i << " ] "
-      //<< dev_info.m_syclProp[i].name
-      //<< " version " << (dev_info.m_syclProp[i].major) << "." << dev_info.m_syclProp[i].minor
-      //<< ", Total Global Memory: " << human_memory_size(dev_info.m_syclProp[i].totalGlobalMem)
-      //<< ", Shared Memory per Wavefront: " << human_memory_size(dev_info.m_syclProp[i].sharedMemPerWavefront);
-    //if ( m_syclDev == i ) s << " : Selected" ;
-    //s << std::endl ;
+  //<< dev_info.m_syclProp[i].name
+  //<< " version " << (dev_info.m_syclProp[i].major) << "." <<
+  // dev_info.m_syclProp[i].minor
+  //<< ", Total Global Memory: " <<
+  // human_memory_size(dev_info.m_syclProp[i].totalGlobalMem)
+  //<< ", Shared Memory per Wavefront: " <<
+  // human_memory_size(dev_info.m_syclProp[i].sharedMemPerWavefront);
+  // if ( m_syclDev == i ) s << " : Selected" ;
+  // s << std::endl ;
   //}
 }
 
 //----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
-void SYCLInternal::print_configuration( std::ostream & s, const bool ) const
-{ print_configuration(s); }
+void SYCLInternal::print_configuration(std::ostream& s, const bool) const {
+  print_configuration(s);
+}
 
 //----------------------------------------------------------------------------
 
-SYCLInternal::~SYCLInternal()
-{
-  if ( m_scratchSpace ||
-       m_scratchFlags ) {
-    std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call Kokkos::Experimental::SYCL::finalize()"
-              << std::endl ;
+SYCLInternal::~SYCLInternal() {
+  if (m_scratchSpace || m_scratchFlags) {
+    std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call "
+                 "Kokkos::Experimental::SYCL::finalize()"
+              << std::endl;
     std::cerr.flush();
   }
 
-  m_syclDev                 = -1 ;
-  m_syclArch                = -1 ;
-  m_multiProcCount          = 0 ;
-  m_maxWorkgroup            = 0 ;
-  m_maxSharedWords          = 0 ;
-  m_scratchSpaceCount       = 0 ;
-  m_scratchFlagsCount       = 0 ;
-  m_scratchSpace            = 0 ;
-  m_scratchFlags            = 0 ;
+  m_syclDev           = -1;
+  m_syclArch          = -1;
+  m_multiProcCount    = 0;
+  m_maxWorkgroup      = 0;
+  m_maxSharedWords    = 0;
+  m_scratchSpaceCount = 0;
+  m_scratchFlagsCount = 0;
+  m_scratchSpace      = 0;
+  m_scratchFlags      = 0;
 }
 
-int SYCLInternal::verify_is_initialized( const char * const label ) const
-{
-  if ( m_syclDev < 0 ) {
-    std::cerr << "Kokkos::Experimental::SYCL::" << label << " : ERROR device not initialized" << std::endl ;
+int SYCLInternal::verify_is_initialized(const char* const label) const {
+  if (m_syclDev < 0) {
+    std::cerr << "Kokkos::Experimental::SYCL::" << label
+              << " : ERROR device not initialized" << std::endl;
   }
-  return 0 <= m_syclDev ;
+  return 0 <= m_syclDev;
 }
 
-SYCLInternal & SYCLInternal::singleton()
-{
-  static SYCLInternal* self = nullptr ;
+SYCLInternal& SYCLInternal::singleton() {
+  static SYCLInternal* self = nullptr;
   if (!self) {
     self = new SYCLInternal();
   }
-  return *self ;
-
+  return *self;
 }
 
-void SYCLInternal::initialize( int sycl_device_id  )
-{
-  if ( was_finalized ) Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
+void SYCLInternal::initialize(int sycl_device_id) {
+  if (was_finalized)
+    Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
 
-  if ( is_initialized() ) return;
+  if (is_initialized()) return;
 
   enum { WordSize = sizeof(size_type) };
 
-  if ( ! HostSpace::execution_space::impl_is_initialized() ) {
-    const std::string msg("SYCL::initialize ERROR : HostSpace::execution_space is not initialized");
-    Kokkos::Impl::throw_runtime_exception( msg );
+  if (!HostSpace::execution_space::impl_is_initialized()) {
+    const std::string msg(
+        "SYCL::initialize ERROR : HostSpace::execution_space is not "
+        "initialized");
+    Kokkos::Impl::throw_runtime_exception(msg);
   }
 
-  //const SYCLInternalDevices & dev_info = SYCLInternalDevices::singleton();
+  // const SYCLInternalDevices & dev_info = SYCLInternalDevices::singleton();
 
-  const bool ok_init = 0 == m_scratchSpace || 0 == m_scratchFlags ;
+  const bool ok_init = 0 == m_scratchSpace || 0 == m_scratchFlags;
 
-  //const bool ok_id   = 1 <= sycl_device_id &&
+  // const bool ok_id   = 1 <= sycl_device_id &&
   //                          sycl_device_id < dev_info.m_syclDevCount ;
   const bool ok_id = true;
   // Need at least a GPU device
 
-  //const bool ok_dev = ok_id &&
+  // const bool ok_dev = ok_id &&
   //  ( 1 <= dev_info.m_syclProp[ sycl_device_id ].major &&
   //    0 <= dev_info.m_syclProp[ sycl_device_id ].minor );
   const bool ok_dev = true;
-  if ( ok_init && ok_dev ) {
-
-    //const struct syclDeviceProp & syclProp =
+  if (ok_init && ok_dev) {
+    // const struct syclDeviceProp & syclProp =
     //  dev_info.m_syclProp[ sycl_device_id ];
 
-    m_syclDev = sycl_device_id ;
+    m_syclDev = sycl_device_id;
+    listDevices();
 
-    //Kokkos::Impl::sycl_device_synchronize();
-
-    m_queue = new cl::sycl::queue(cl::sycl::cpu_selector());
-/*
-    // Query what compute capability architecture a kernel executes:
-    m_syclArch = sycl_kernel_arch();
-    if ( m_syclArch != syclProp.major * 100 + syclProp.minor * 10 ) {
-      std::cerr << "Kokkos::Experimental::SYCL::initialize WARNING: running kernels compiled for compute capability "
-                << ( m_syclArch / 100 ) << "." << ( ( m_syclArch % 100 ) / 10 )
-                << " on device with compute capability "
-                << syclProp.major << "." << syclProp.minor
-                << " , this will likely reduce potential performance."
-                << std::endl ;
+    // Initialize with the first GPU or accelerator
+    auto devices = cl::sycl::device::get_devices();
+    auto found   = std::find_if(devices.begin(), devices.end(),
+                              [](const cl::sycl::device& d) {
+                                return d.is_accelerator() || d.is_gpu();
+                              });
+    // Didn't find a GPU or accelerator
+    if (found != devices.end())
+    {
+        m_syclDev = found - devices.begin();
     }
-*/
+
+    // Kokkos::Impl::sycl_device_synchronize();
+
+    std::cout << "Initializing with device " << m_syclDev << ": " << SYCLDevice(devices[m_syclDev]) << '\n';
+    m_queue = new cl::sycl::queue(devices[m_syclDev]);
+    /*
+        // Query what compute capability architecture a kernel executes:
+        m_syclArch = sycl_kernel_arch();
+        if ( m_syclArch != syclProp.major * 100 + syclProp.minor * 10 ) {
+          std::cerr << "Kokkos::Experimental::SYCL::initialize WARNING: running
+       kernels compiled for compute capability "
+                    << ( m_syclArch / 100 ) << "." << ( ( m_syclArch % 100 ) /
+       10 )
+                    << " on device with compute capability "
+                    << syclProp.major << "." << syclProp.minor
+                    << " , this will likely reduce potential performance."
+                    << std::endl ;
+        }
+    */
     // number of multiprocessors
 
-//    m_multiProcCount = syclProp.multiProcessorCount ;
+    //    m_multiProcCount = syclProp.multiProcessorCount ;
 
     //----------------------------------
     // Maximum number of wavefronts,
     // at most one workgroup per thread in a workgroup for reduction.
 
-
-//    m_maxSharedWords = syclProp.sharedMemPerWavefront/ WordSize ;
+    //    m_maxSharedWords = syclProp.sharedMemPerWavefront/ WordSize ;
 
     //----------------------------------
     // Maximum number of Workgroups:
 
-//    m_maxWorkgroup = 5*syclProp.multiProcessorCount;  //TODO: confirm usage and value
+    //    m_maxWorkgroup = 5*syclProp.multiProcessorCount;  //TODO: confirm
+    //    usage and value
 
     //----------------------------------
     // Multiblock reduction uses scratch flags for counters
     // and scratch space for partial reduction values.
     // Allocate some initial space.  This will grow as needed.
 
- /*   {
-      const unsigned reduce_block_count = m_maxWorkgroup * Impl::SYCLTraits::WorkgroupSize ;
+    /*   {
+         const unsigned reduce_block_count = m_maxWorkgroup *
+       Impl::SYCLTraits::WorkgroupSize ;
 
-      (void) scratch_flags( reduce_block_count * 2  * sizeof(size_type) );
-      (void) scratch_space( reduce_block_count * 16 * sizeof(size_type) );
-    }*/
+         (void) scratch_flags( reduce_block_count * 2  * sizeof(size_type) );
+         (void) scratch_space( reduce_block_count * 16 * sizeof(size_type) );
+       }*/
     //----------------------------------
 
-  }
-  else {
+  } else {
+    std::ostringstream msg;
+    msg << "Kokkos::Experimental::SYCL::initialize(" << sycl_device_id
+        << ") FAILED";
 
-    std::ostringstream msg ;
-    msg << "Kokkos::Experimental::SYCL::initialize(" << sycl_device_id << ") FAILED" ;
-
-    if ( ! ok_init ) {
-      msg << " : Already initialized" ;
+    if (!ok_init) {
+      msg << " : Already initialized";
     }
     /*
     if ( ! ok_id ) {
@@ -244,148 +289,159 @@ void SYCLInternal::initialize( int sycl_device_id  )
       msg << std::endl;
     }
     */
-    Kokkos::Impl::throw_runtime_exception( msg.str() );
+    Kokkos::Impl::throw_runtime_exception(msg.str());
   }
-
 
   // Init the array for used for arbitrarily sized atomics
-  //Kokkos::Impl::init_lock_arrays_sycl_space();
+  // Kokkos::Impl::init_lock_arrays_sycl_space();
 
-//  Kokkos::Impl::SYCLLockArraysStruct locks;
-//  locks.atomic = atomic_lock_array_sycl_space_ptr(false);
-//  locks.scratch = scratch_lock_array_sycl_space_ptr(false);
-//  locks.threadid = threadid_lock_array_sycl_space_ptr(false);
-//  syclMemcpyToSymbol( kokkos_impl_sycl_lock_arrays , & locks , sizeof(SYCLLockArraysStruct) );
+  //  Kokkos::Impl::SYCLLockArraysStruct locks;
+  //  locks.atomic = atomic_lock_array_sycl_space_ptr(false);
+  //  locks.scratch = scratch_lock_array_sycl_space_ptr(false);
+  //  locks.threadid = threadid_lock_array_sycl_space_ptr(false);
+  //  syclMemcpyToSymbol( kokkos_impl_sycl_lock_arrays , & locks ,
+  //  sizeof(SYCLLockArraysStruct) );
 }
 
 //----------------------------------------------------------------------------
 
-//typedef Kokkos::Experimental::SYCL::size_type ScratchGrain[ Impl::SYCLTraits::WorkgroupSize ] ;
-//enum { sizeScratchGrain = sizeof(ScratchGrain) };
+// typedef Kokkos::Experimental::SYCL::size_type ScratchGrain[
+// Impl::SYCLTraits::WorkgroupSize ] ; enum { sizeScratchGrain =
+// sizeof(ScratchGrain) };
 
-Kokkos::Experimental::SYCL::size_type *
-SYCLInternal::scratch_flags( const Kokkos::Experimental::SYCL::size_type size )
-{
-/*  if ( verify_is_initialized("scratch_flags") && m_scratchFlagsCount * sizeScratchGrain < size ) {
+Kokkos::Experimental::SYCL::size_type* SYCLInternal::scratch_flags(
+    const Kokkos::Experimental::SYCL::size_type size) {
+  /*  if ( verify_is_initialized("scratch_flags") && m_scratchFlagsCount *
+    sizeScratchGrain < size ) {
 
 
-    m_scratchFlagsCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
+      m_scratchFlagsCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
 
-    typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::SYCLSpace , void > Record ;
+      typedef Kokkos::Impl::SharedAllocationRecord<
+    Kokkos::Experimental::SYCLSpace , void > Record ;
 
-    Record * const r = Record::allocate( Kokkos::Experimental::SYCLSpace()
-                                       , "InternalScratchFlags"
-                                       , ( sizeScratchGrain  * m_scratchFlagsCount ) );
+      Record * const r = Record::allocate( Kokkos::Experimental::SYCLSpace()
+                                         , "InternalScratchFlags"
+                                         , ( sizeScratchGrain  *
+    m_scratchFlagsCount ) );
 
-    Record::increment( r );
+      Record::increment( r );
 
-    m_scratchFlags = reinterpret_cast<size_type *>( r->data() );
+      m_scratchFlags = reinterpret_cast<size_type *>( r->data() );
 
-    syclMemset( m_scratchFlags , 0 , m_scratchFlagsCount * sizeScratchGrain );
-  }
-*/
-  return m_scratchFlags ;
+      syclMemset( m_scratchFlags , 0 , m_scratchFlagsCount * sizeScratchGrain );
+    }
+  */
+  return m_scratchFlags;
 }
 
-Kokkos::Experimental::SYCL::size_type *
-SYCLInternal::scratch_space( const Kokkos::Experimental::SYCL::size_type size )
-{
-/*  if ( verify_is_initialized("scratch_space") && m_scratchSpaceCount * sizeScratchGrain < size ) {
+Kokkos::Experimental::SYCL::size_type* SYCLInternal::scratch_space(
+    const Kokkos::Experimental::SYCL::size_type size) {
+  /*  if ( verify_is_initialized("scratch_space") && m_scratchSpaceCount *
+    sizeScratchGrain < size ) {
 
-    m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
+      m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
 
-     typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::SYCLSpace , void > Record ;
+       typedef Kokkos::Impl::SharedAllocationRecord<
+    Kokkos::Experimental::SYCLSpace , void > Record ;
 
-     static Record * const r = Record::allocate( Kokkos::Experimental::SYCLSpace()
-                                        , "InternalScratchSpace"
-                                        , ( sizeScratchGrain  * m_scratchSpaceCount ) );
+       static Record * const r = Record::allocate(
+    Kokkos::Experimental::SYCLSpace() , "InternalScratchSpace" , (
+    sizeScratchGrain  * m_scratchSpaceCount ) );
 
-     Record::increment( r );
+       Record::increment( r );
 
-     m_scratchSpace = reinterpret_cast<size_type *>( r->data() );
-  }
-*/
-  return m_scratchSpace ;
+       m_scratchSpace = reinterpret_cast<size_type *>( r->data() );
+    }
+  */
+  return m_scratchSpace;
 }
 
 //----------------------------------------------------------------------------
 
-void SYCLInternal::finalize()
-{
+void SYCLInternal::finalize() {
   SYCL().fence();
   was_finalized = 1;
-  if ( 0 != m_scratchSpace || 0 != m_scratchFlags ) {
+  if (0 != m_scratchSpace || 0 != m_scratchFlags) {
+    //    atomic_lock_array_sycl_space_ptr(false);
+    //    scratch_lock_array_sycl_space_ptr(false);
+    //    threadid_lock_array_sycl_space_ptr(false);
 
-//    atomic_lock_array_sycl_space_ptr(false);
-//    scratch_lock_array_sycl_space_ptr(false);
-//    threadid_lock_array_sycl_space_ptr(false);
+    typedef Kokkos::Impl::SharedAllocationRecord<
+        Kokkos::Experimental::SYCLSpace>
+        RecordSYCL;
+    typedef Kokkos::Impl::SharedAllocationRecord<
+        Kokkos::Experimental::SYCLHostPinnedSpace>
+        RecordHost;
 
-    typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::SYCLSpace > RecordSYCL ;
-    typedef Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::SYCLHostPinnedSpace > RecordHost ;
+    RecordSYCL::decrement(RecordSYCL::get_record(m_scratchFlags));
+    RecordSYCL::decrement(RecordSYCL::get_record(m_scratchSpace));
 
-    RecordSYCL::decrement( RecordSYCL::get_record( m_scratchFlags ) );
-    RecordSYCL::decrement( RecordSYCL::get_record( m_scratchSpace ) );
-
-    m_syclDev             = -1 ;
-    m_multiProcCount      = 0 ;
-    m_maxWorkgroup        = 0 ;
-    m_maxSharedWords      = 0 ;
-    m_scratchSpaceCount   = 0 ;
-    m_scratchFlagsCount   = 0 ;
-    m_scratchSpace        = 0 ;
-    m_scratchFlags        = 0 ;
+    m_syclDev           = -1;
+    m_multiProcCount    = 0;
+    m_maxWorkgroup      = 0;
+    m_maxSharedWords    = 0;
+    m_scratchSpaceCount = 0;
+    m_scratchFlagsCount = 0;
+    m_scratchSpace      = 0;
+    m_scratchFlags      = 0;
   }
   delete m_queue;
 }
 
 //----------------------------------------------------------------------------
 
-Kokkos::Experimental::SYCL::size_type sycl_internal_cu_count()
-{ return SYCLInternal::singleton().m_multiProcCount ; }
+Kokkos::Experimental::SYCL::size_type sycl_internal_cu_count() {
+  return SYCLInternal::singleton().m_multiProcCount;
+}
 
-Kokkos::Experimental::SYCL::size_type sycl_internal_maximum_extent_size()
-{ return SYCLInternal::singleton().m_maxWorkgroup ; }
+Kokkos::Experimental::SYCL::size_type sycl_internal_maximum_extent_size() {
+  return SYCLInternal::singleton().m_maxWorkgroup;
+}
 
-Kokkos::Experimental::SYCL::size_type sycl_internal_maximum_shared_words()
-{ return SYCLInternal::singleton().m_maxSharedWords ; }
+Kokkos::Experimental::SYCL::size_type sycl_internal_maximum_shared_words() {
+  return SYCLInternal::singleton().m_maxSharedWords;
+}
 
-Kokkos::Experimental::SYCL::size_type * sycl_internal_scratch_space( const Kokkos::Experimental::SYCL::size_type size )
-{ return SYCLInternal::singleton().scratch_space( size ); }
+Kokkos::Experimental::SYCL::size_type* sycl_internal_scratch_space(
+    const Kokkos::Experimental::SYCL::size_type size) {
+  return SYCLInternal::singleton().scratch_space(size);
+}
 
-Kokkos::Experimental::SYCL::size_type * sycl_internal_scratch_flags( const Kokkos::Experimental::SYCL::size_type size )
-{ return SYCLInternal::singleton().scratch_flags( size ); }
+Kokkos::Experimental::SYCL::size_type* sycl_internal_scratch_flags(
+    const Kokkos::Experimental::SYCL::size_type size) {
+  return SYCLInternal::singleton().scratch_flags(size);
+}
 
-
-
-} // namespace Impl
-} // namespace Experimental
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Experimental
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
 namespace Experimental {
 
-//SYCL::size_type SYCL::detect_device_count()
+// SYCL::size_type SYCL::detect_device_count()
 //{ return Impl::SYCLInternalDevices::singleton().m_syclDevCount ; }
 
 int SYCL::concurrency() {
-#if defined(KOKKOS_ARCH_KAVERI) 
-  return 8*64*40;  // 20480 kaveri
+#if defined(KOKKOS_ARCH_KAVERI)
+  return 8 * 64 * 40;  // 20480 kaveri
 #else
-  return 32*8*40;  // 81920 fiji and hawaii
+  return 32 * 8 * 40;  // 81920 fiji and hawaii
 #endif
 }
-int SYCL::impl_is_initialized()
-{ return Impl::SYCLInternal::singleton().is_initialized(); }
+int SYCL::impl_is_initialized() {
+  return Impl::SYCLInternal::singleton().is_initialized();
+}
 
-void SYCL::impl_initialize( const SYCL::SelectDevice config )
-{
-  Impl::SYCLInternal::singleton().initialize( config.sycl_device_id );
+void SYCL::impl_initialize(const SYCL::SelectDevice config) {
+  Impl::SYCLInternal::singleton().initialize(config.sycl_device_id);
 
-  #if defined(KOKKOS_ENABLE_PROFILING)
-    Kokkos::Profiling::initialize();
-  #endif
+#if defined(KOKKOS_ENABLE_PROFILING)
+  Kokkos::Profiling::initialize();
+#endif
 }
 
 #if 0
@@ -409,42 +465,42 @@ SYCL::size_type SYCL::device_arch()
 }
 #endif
 
-void SYCL::impl_finalize()
-{
+void SYCL::impl_finalize() {
   Impl::SYCLInternal::singleton().finalize();
 
-  #if defined(KOKKOS_ENABLE_PROFILING)
-    Kokkos::Profiling::finalize();
-  #endif
+#if defined(KOKKOS_ENABLE_PROFILING)
+  Kokkos::Profiling::finalize();
+#endif
 }
 
-SYCL::SYCL()
-  : m_space_instance(&Impl::SYCLInternal::singleton())
-{
-  Impl::SYCLInternal::singleton().verify_is_initialized( "SYCL instance constructor" );
+SYCL::SYCL() : m_space_instance(&Impl::SYCLInternal::singleton()) {
+  Impl::SYCLInternal::singleton().verify_is_initialized(
+      "SYCL instance constructor");
 }
 
-//SYCL::SYCL( const int instance_id )
+// SYCL::SYCL( const int instance_id )
 //  : m_device( Impl::SYCLInternal::singleton().m_syclDev )
 //{}
 
-void SYCL::print_configuration( std::ostream & s , const bool detail)
-{ Impl::SYCLInternal::singleton().print_configuration( s, detail ); }
-
-bool SYCL::sleep() { return false ; }
-
-bool SYCL::wake() { return true ; }
-
-void SYCL::fence() const
-{
-  m_space_instance->m_queue->wait();
-  //SYCL_SAFE_CALL( syclDeviceSynchronize() );
+void SYCL::print_configuration(std::ostream& s, const bool detail) {
+  Impl::SYCLInternal::singleton().print_configuration(s, detail);
 }
 
-int SYCL::sycl_device() const { return impl_internal_space_instance()->m_syclDev; }
+bool SYCL::sleep() { return false; }
+
+bool SYCL::wake() { return true; }
+
+void SYCL::fence() const {
+  m_space_instance->m_queue->wait();
+  // SYCL_SAFE_CALL( syclDeviceSynchronize() );
+}
+
+int SYCL::sycl_device() const {
+  return impl_internal_space_instance()->m_syclDev;
+}
 const char* SYCL::name() { return "SYCL"; }
 
-} // namespace Experimental
+}  // namespace Experimental
 /*
 namespace Impl {
 void sycl_device_synchronize()
@@ -452,19 +508,18 @@ void sycl_device_synchronize()
   SYCL_SAFE_CALL( syclDeviceSynchronize() );
 }
 
-void sycl_internal_error_throw( syclError_t e , const char * name, const char * file, const int line )
+void sycl_internal_error_throw( syclError_t e , const char * name, const char *
+file, const int line )
 {
   std::ostringstream out ;
-  out << name << " error( " << syclGetErrorName(e) << "): " << syclGetErrorString(e);
-  if (file) {
-    out << " " << file << ":" << line;
+  out << name << " error( " << syclGetErrorName(e) << "): " <<
+syclGetErrorString(e); if (file) { out << " " << file << ":" << line;
   }
   throw_runtime_exception( out.str() );
 }
 }*/
-} // namespace Kokkos
+}  // namespace Kokkos
 
-
-#endif // KOKKOS_ENABLE_SYCL
+#endif  // KOKKOS_ENABLE_SYCL
 //----------------------------------------------------------------------------
 
