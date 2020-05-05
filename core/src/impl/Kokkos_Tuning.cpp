@@ -70,7 +70,6 @@ size_t getCurrentContextId() { return getContextCounter(); }
 void decrementCurrentContextId() { --getContextCounter(); }
 size_t getNewVariableId() { return getVariableCounter(); }
 
-
 static std::unordered_map<size_t, std::unordered_set<size_t>>
     features_per_context;
 static std::unordered_set<size_t> active_features;
@@ -82,6 +81,10 @@ void declareTuningVariable(const std::string& variableName, size_t uniqID,
   if (tuningVariableDeclarationCallback != nullptr) {
     (*tuningVariableDeclarationCallback)(variableName.c_str(), uniqID, info);
   }
+#else
+  (void)variableName;
+  (void)uniqID;
+  (void)info;
 #endif
 }
 
@@ -93,6 +96,11 @@ void declareContextVariable(const std::string& variableName, size_t uniqID,
     (*contextVariableDeclarationCallback)(variableName.c_str(), uniqID, info,
                                           candidate_values);
   }
+#else
+  (void)variableName;
+  (void)uniqID;
+  (void)info;
+  (void)candidate_values;
 #endif
 }
 
@@ -107,6 +115,10 @@ void declareContextVariableValues(size_t contextId, size_t count,
     active_features.insert(values[x].id);
     feature_values[values[x].id] = values[x];
   }
+#else
+  (void)contextId;
+  (void)count;
+  (void)values;
 #endif
 }
 #include <iostream>
@@ -125,6 +137,11 @@ void requestTuningVariableValues(size_t contextId, size_t count,
                                    context_values.data(), count, values,
                                    candidate_values);
   }
+#else
+  (void)contextId;
+  (void)count;
+  (void)values;
+  (void)candidate_values;
 #endif
 }
 
@@ -137,6 +154,8 @@ void endContext(size_t contextId) {
     (*contextEndCallback)(contextId);
   }
   decrementCurrentContextId();
+#else
+  (void)contextId;
 #endif
 }
 
@@ -183,6 +202,8 @@ void declareOptimizationGoal(const OptimizationGoal& goal) {
   if (Kokkos::Tools::optimizationGoalCallback != nullptr) {
     (*optimizationGoalCallback)(goal);
   }
+#else
+  (void)goal;
 #endif
 }
 
