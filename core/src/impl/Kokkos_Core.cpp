@@ -194,11 +194,17 @@ void initialize_backends(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
   const int use_numa = args.num_numa;
 #endif
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
-    defined(KOKKOS_ENABLE_HIP)
-  int use_gpu           = args.device_id;
-  const int ndevices    = args.ndevices;
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  int use_gpu        = args.device_id;
+  const int ndevices = args.ndevices > 0 ? args.ndevices :
+#if defined(KOKKOS_ENABLE_CUDA)
+                                         Cuda::detect_device_count();
+#elif defined(KOKKOS_ENABLE_HIP)
+                                         1;  // FIXME_HIP
+#endif
+
   const int skip_device = args.skip_device;
+
   // if the exact device is not set, but ndevices was given, assign round-robin
   // using on-node MPI rank
   if (use_gpu < 0) {
@@ -614,10 +620,10 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& skip_device      = arguments.skip_device;
   auto& disable_warnings = arguments.disable_warnings;
 
-  int kokkos_threads_found  = 0;
-  int kokkos_numa_found     = 0;
-  int kokkos_device_found   = 0;
-  int kokkos_ndevices_found = 0;
+  bool kokkos_threads_found  = false;
+  bool kokkos_numa_found     = false;
+  bool kokkos_device_found   = false;
+  bool kokkos_ndevices_found = false;
 
   int iarg = 0;
 
@@ -626,7 +632,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
-      kokkos_threads_found = 1;
+      kokkos_threads_found = true;
       narg--;
     } else if (!kokkos_threads_found &&
                check_int_arg(arg[iarg], "--threads", &num_threads)) {
@@ -635,7 +641,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
-      kokkos_numa_found = 1;
+      kokkos_numa_found = true;
       narg--;
     } else if (!kokkos_numa_found &&
                check_int_arg(arg[iarg], "--numa", &numa)) {
@@ -649,7 +655,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
-      kokkos_device_found = 1;
+      kokkos_device_found = true;
       narg--;
     } else if (!kokkos_device_found &&
                (check_int_arg(arg[iarg], "--device-id", &device) ||
@@ -716,7 +722,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
         for (int k = iarg; k < narg - 1; k++) {
           arg[k] = arg[k + 1];
         }
-        kokkos_ndevices_found = 1;
+        kokkos_ndevices_found = true;
         narg--;
       } else {
         iarg++;
