@@ -667,11 +667,7 @@ void resume_tools() { current_callbacks = backup_callbacks; }
 EventSet get_callbacks() { return current_callbacks; }
 void set_callbacks(EventSet new_events) { current_callbacks = new_events; }
 }  // namespace Experimental
-<<<<<<< HEAD
 }  // namespace Tools
-=======
-}  // namespace Profiling
->>>>>>> develop
 
 }  // namespace Kokkos
 
@@ -715,15 +711,8 @@ void endDeepCopy() {}
 
 void initialize() {}
 void finalize() {}
-<<<<<<< HEAD
-
-}  // namespace Tools
-
-namespace Tools {}  // end namespace Tools
 
 namespace Tools {
-=======
->>>>>>> develop
 namespace Experimental {
 static EventSet current_callbacks;
 
@@ -754,11 +743,7 @@ void resume_tools() {}
 EventSet get_callbacks() { return current_callbacks; }
 void set_callbacks(EventSet) {}
 }  // namespace Experimental
-<<<<<<< HEAD
 }  // namespace Tools
-=======
-}  // namespace Profiling
->>>>>>> develop
-}  // namespace Kokkos
+}  // namespace Tools
 
 #endif
