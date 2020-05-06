@@ -55,7 +55,7 @@
 #include <Cuda/Kokkos_Cuda_Instance.hpp>
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <impl/Kokkos_Error.hpp>
-#include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_Tools.hpp>
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */
@@ -134,7 +134,7 @@ bool cuda_launch_blocking() {
 
   if (env == 0) return false;
 
-  return atoi(env);
+  return std::stoi(env);
 }
 #endif
 
@@ -346,7 +346,8 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
   if (ok_init && ok_dev) {
     const struct cudaDeviceProp &cudaProp = dev_info.m_cudaProp[cuda_device_id];
 
-    m_cudaDev = cuda_device_id;
+    m_cudaDev    = cuda_device_id;
+    m_deviceProp = cudaProp;
 
     CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     Kokkos::Impl::cuda_device_synchronize();
@@ -510,7 +511,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
   if (env_force_device_alloc == 0)
     force_device_alloc = false;
   else
-    force_device_alloc = atoi(env_force_device_alloc) != 0;
+    force_device_alloc = std::stoi(env_force_device_alloc) != 0;
 
   const char *env_visible_devices = getenv("CUDA_VISIBLE_DEVICES");
   bool visible_devices_one        = true;
@@ -839,6 +840,9 @@ const char *Cuda::name() { return "Cuda"; }
 
 cudaStream_t Cuda::cuda_stream() const { return m_space_instance->m_stream; }
 int Cuda::cuda_device() const { return m_space_instance->m_cudaDev; }
+const cudaDeviceProp &Cuda::cuda_device_prop() const {
+  return m_space_instance->m_deviceProp;
+}
 
 }  // namespace Kokkos
 

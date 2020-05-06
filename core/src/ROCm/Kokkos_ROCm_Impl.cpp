@@ -101,7 +101,7 @@ bool rocm_launch_blocking()
 
   if (env == 0) return false;
 
-  return atoi(env);
+  return std::stoi(env);
 }
 
 }

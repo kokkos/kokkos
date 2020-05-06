@@ -76,6 +76,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       ${dir}/Test${Tag}_AtomicOperations_complexfloat.cpp
       ${dir}/Test${Tag}_AtomicViews.cpp
       ${dir}/Test${Tag}_Atomics.cpp
+      ${dir}/Test${Tag}_Concepts.cpp
       ${dir}/Test${Tag}_Complex.cpp
       ${dir}/Test${Tag}_Crs.cpp
       ${dir}/Test${Tag}_DeepCopyAlignment.cpp
@@ -258,46 +259,28 @@ if(Kokkos_ENABLE_CUDA)
 endif()
 
 if(Kokkos_ENABLE_HIP)
-  set(HIP_SOURCES
-      UnitTestMainInit.cpp
-      hip/TestHIP_Init.cpp
-      hip/TestHIP_RangePolicy.cpp
-      hip/TestHIP_RangePolicyRequire.cpp
-      hip/TestHIP_Reductions.cpp
-      hip/TestHIP_Reducers_a.cpp
-      hip/TestHIP_Reducers_b.cpp
-      hip/TestHIP_Reducers_c.cpp
-      hip/TestHIP_Reducers_d.cpp
-      hip/TestHIP_Scan.cpp
-      hip/TestHIP_ScanUnit.cpp
-      hip/TestHIP_MDRange_a.cpp
-      hip/TestHIP_MDRange_b.cpp
-      hip/TestHIP_MDRange_c.cpp
-      hip/TestHIP_MDRange_d.cpp
-      hip/TestHIP_MDRange_e.cpp
-      hip/TestHIP_Spaces.cpp
-      hip/TestHIPHostPinned_ViewCopy.cpp
+  # FIXME_HIP
+  LIST(REMOVE_ITEM HIP_SOURCES
+    hip/TestHIP_AtomicOperations_complexdouble.cpp
+    hip/TestHIP_TeamTeamSize.cpp
+    hip/TestHIP_TeamVectorRange.cpp
+    hip/TestHIP_UniqueToken.cpp
+    hip/TestHIP_WorkGraph.cpp
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HIP
+    SOURCES
+      ${HIP_SOURCES}
       hip/TestHIPHostPinned_ViewAPI_a.cpp
       hip/TestHIPHostPinned_ViewAPI_b.cpp
       hip/TestHIPHostPinned_ViewAPI_c.cpp
       hip/TestHIPHostPinned_ViewAPI_d.cpp
       hip/TestHIPHostPinned_ViewAPI_e.cpp
+      hip/TestHIPHostPinned_ViewCopy.cpp
       hip/TestHIPHostPinned_ViewMapping_a.cpp
       hip/TestHIPHostPinned_ViewMapping_b.cpp
       hip/TestHIPHostPinned_ViewMapping_subview.cpp
-      hip/TestHIP_AtomicOperations_int.cpp
-      hip/TestHIP_AtomicOperations_unsignedint.cpp
-      hip/TestHIP_AtomicOperations_longlongint.cpp
-      hip/TestHIP_DeepCopyAlignment.cpp
-      hip/TestHIP_SubView_a.cpp
-      hip/TestHIP_SubView_b.cpp
-      hip/TestHIP_View_64bit.cpp
-      hip/TestHIP_LocalDeepCopy.cpp
-  )
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_HIP
-    SOURCES
-      ${HIP_SOURCES}
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIPInterOpInit
@@ -322,24 +305,6 @@ SET(DEFAULT_DEVICE_SOURCES
   default/TestDefaultDeviceType_d.cpp
   default/TestDefaultDeviceTypeResize.cpp
 )
-
-IF(Kokkos_ENABLE_HIP)
-  # FIXME
-  LIST(REMOVE_ITEM DEFAULT_DEVICE_SOURCES
-    default/TestDefaultDeviceType_a1.cpp
-    default/TestDefaultDeviceType_b1.cpp
-    default/TestDefaultDeviceType_c1.cpp
-    default/TestDefaultDeviceType_a2.cpp
-    default/TestDefaultDeviceType_b2.cpp
-    default/TestDefaultDeviceType_c2.cpp
-    default/TestDefaultDeviceType_a3.cpp
-    default/TestDefaultDeviceType_b3.cpp
-    default/TestDefaultDeviceType_c3.cpp
-    default/TestDefaultDeviceType_d.cpp
-    # NOTE the one below compiles but fails
-    default/TestDefaultDeviceTypeResize.cpp
-  )
-ENDIF()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
@@ -370,6 +335,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     ALWAYS_FAIL_ON_ZERO_RETURN
 )
 
+if(NOT KOKKOS_HAS_TRILINOS)
 KOKKOS_ADD_TEST_EXECUTABLE(
   StackTraceTestExec
   SOURCES
@@ -388,6 +354,7 @@ KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
                  EXE  StackTraceTestExec
                  FAIL_REGULAR_EXPRESSION "FAILED"
                )
+endif()
 
 foreach(INITTESTS_NUM RANGE 1 16)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(

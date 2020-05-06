@@ -1,6 +1,8 @@
 #ifndef KOKKOS_CUDA_INSTANCE_HPP_
 #define KOKKOS_CUDA_INSTANCE_HPP_
 
+#include <vector>
+#include <impl/Kokkos_Tools.hpp>
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // These functions fulfill the purpose of allowing to work around
@@ -96,6 +98,8 @@ class CudaInternal {
   int m_maxBlocksPerSM;
   int m_maxThreadsPerSM;
   int m_maxThreadsPerBlock;
+
+  cudaDeviceProp m_deviceProp;
 
   mutable size_type m_scratchSpaceCount;
   mutable size_type m_scratchFlagsCount;

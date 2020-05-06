@@ -171,29 +171,58 @@ struct DefaultContribution<Kokkos::Cuda,
 };
 #endif
 
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct DefaultDuplication<Kokkos::Experimental::HIP> {
+  enum : int { value = Kokkos::Experimental::ScatterNonDuplicated };
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::HIP,
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  enum : int { value = Kokkos::Experimental::ScatterAtomic };
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::HIP,
+                           Kokkos::Experimental::ScatterDuplicated> {
+  enum : int { value = Kokkos::Experimental::ScatterAtomic };
+};
+#endif
+
 /* ScatterValue <Op=ScatterSum, contribution=ScatterNonAtomic> is the object
    returned by the access operator() of ScatterAccess, This class inherits from
    the Sum<> reducer and it wraps join(dest, src) with convenient operator+=,
    etc. Note the addition of update(ValueType const& rhs) and reset()  so that
    all reducers can have common functions See ReduceDuplicates and
    ResetDuplicates ) */
-template <typename ValueType, int Op, int contribution>
+template <typename ValueType, int Op, typename DeviceType, int contribution>
 struct ScatterValue;
 
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
                     Kokkos::Experimental::ScatterNonAtomic>
-    : Sum<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Sum<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Sum<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Sum<ValueType, DeviceType>(value_in) {}
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
-      : Sum<ValueType, Kokkos::DefaultExecutionSpace>(other.reference()) {}
+      : Sum<ValueType, DeviceType>(other.reference()) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++() {
+    this->join(this->reference(), 1);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++(int) {
+    this->join(this->reference(), 1);
+  }
   KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
-    this->join(this->reference(), -rhs);
+    this->join(this->reference(), ValueType(-rhs));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--() {
+    this->join(this->reference(), ValueType(-1));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--(int) {
+    this->join(this->reference(), ValueType(-1));
   }
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     this->join(this->reference(), rhs);
@@ -206,19 +235,31 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum,
  * of ScatterAccess, similar to that returned by an Atomic View, it wraps
  Kokkos::atomic_add with convenient operator+=, etc. This version also has the
  update(rhs) and reset() functions. */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
                     Kokkos::Experimental::ScatterAtomic>
-    : Sum<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Sum<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Sum<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Sum<ValueType, DeviceType>(value_in) {}
 
   KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++() {
+    this->join(this->reference(), 1);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++(int) {
+    this->join(this->reference(), 1);
+  }
   KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
-    this->join(this->reference(), -rhs);
+    this->join(this->reference(), ValueType(-rhs));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--() {
+    this->join(this->reference(), ValueType(-1));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--(int) {
+    this->join(this->reference(), ValueType(-1));
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -244,15 +285,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum,
    etc. Note the addition of update(ValueType const& rhs) and reset()  so that
    all reducers can have common functions See ReduceDuplicates and
    ResetDuplicates ) */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
                     Kokkos::Experimental::ScatterNonAtomic>
-    : Prod<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Prod<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Prod<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Prod<ValueType, DeviceType>(value_in) {}
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
-      : Prod<ValueType, Kokkos::DefaultExecutionSpace>(other.reference()) {}
+      : Prod<ValueType, DeviceType>(other.reference()) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
@@ -271,13 +312,13 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd,
  atomic_prod with convenient operator*=, etc. atomic_prod uses the
  atomic_compare_exchange. This version also has the update(rhs) and reset()
  functions. */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
                     Kokkos::Experimental::ScatterAtomic>
-    : Prod<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Prod<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Prod<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Prod<ValueType, DeviceType>(value_in) {}
 
   KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
@@ -320,15 +361,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd,
    Note the addition of update(ValueType const& rhs) and reset() are so that all
    reducers can have a common update function See ReduceDuplicates and
    ResetDuplicates ) */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
                     Kokkos::Experimental::ScatterNonAtomic>
-    : Min<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Min<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Min<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Min<ValueType, DeviceType>(value_in) {}
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
-      : Min<ValueType, Kokkos::DefaultExecutionSpace>(other.reference()) {}
+      : Min<ValueType, DeviceType>(other.reference()) {}
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
@@ -340,13 +381,13 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin,
  * of ScatterAccess, similar to that returned by an Atomic View, it wraps and
  atomic_min with the update(rhs) function. atomic_min uses the
  atomic_compare_exchange. This version also has the reset() function */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
                     Kokkos::Experimental::ScatterAtomic>
-    : Min<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Min<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Min<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Min<ValueType, DeviceType>(value_in) {}
 
   KOKKOS_FORCEINLINE_FUNCTION
   void atomic_min(ValueType& dest, const ValueType& src) const {
@@ -382,15 +423,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin,
    Note the addition of update(ValueType const& rhs) and reset() are so that all
    reducers can have a common update function See ReduceDuplicates and
    ResetDuplicates ) */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
                     Kokkos::Experimental::ScatterNonAtomic>
-    : Max<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Max<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Max<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Max<ValueType, DeviceType>(value_in) {}
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
-      : Max<ValueType, Kokkos::DefaultExecutionSpace>(other.reference()) {}
+      : Max<ValueType, DeviceType>(other.reference()) {}
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
@@ -402,13 +443,13 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax,
  * of ScatterAccess, similar to that returned by an Atomic View, it wraps and
  atomic_max with the update(rhs) function. atomic_max uses the
  atomic_compare_exchange. This version also has the reset() function  */
-template <typename ValueType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax,
+template <typename ValueType, typename DeviceType>
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
                     Kokkos::Experimental::ScatterAtomic>
-    : Max<ValueType, Kokkos::DefaultExecutionSpace> {
+    : Max<ValueType, DeviceType> {
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
-      : Max<ValueType, Kokkos::DefaultExecutionSpace>(value_in) {}
+      : Max<ValueType, DeviceType>(value_in) {}
 
   KOKKOS_FORCEINLINE_FUNCTION
   void atomic_max(ValueType& dest, const ValueType& src) const {
@@ -586,8 +627,9 @@ struct ReduceDuplicates
       : Base(src_in, dst_in, stride_in, start_in, n_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     for (size_t j = Base::start; j < Base::n; ++j) {
-      ScatterValue<ValueType, Op, Kokkos::Experimental::ScatterNonAtomic> sv(
-          Base::dst[i]);
+      ScatterValue<ValueType, Op, ExecSpace,
+                   Kokkos::Experimental::ScatterNonAtomic>
+          sv(Base::dst[i]);
       sv.update(Base::src[i + Base::stride * j]);
     }
   }
@@ -634,8 +676,9 @@ struct ResetDuplicates : public ResetDuplicatesBase<ExecSpace, ValueType, Op> {
   ResetDuplicates(ValueType* data_in, size_t size_in, std::string const& name)
       : Base(data_in, size_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
-    ScatterValue<ValueType, Op, Kokkos::Experimental::ScatterNonAtomic> sv(
-        Base::data[i]);
+    ScatterValue<ValueType, Op, ExecSpace,
+                 Kokkos::Experimental::ScatterNonAtomic>
+        sv(Base::data[i]);
     sv.reset();
   }
 };
@@ -772,8 +815,8 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
                       contribution>
       view_type;
   typedef typename view_type::original_value_type original_value_type;
-  typedef Kokkos::Impl::Experimental::ScatterValue<original_value_type, Op,
-                                                   override_contribution>
+  typedef Kokkos::Impl::Experimental::ScatterValue<
+      original_value_type, Op, DeviceType, override_contribution>
       value_type;
 
   KOKKOS_INLINE_FUNCTION
@@ -1189,8 +1232,8 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
                       contribution>
       view_type;
   typedef typename view_type::original_value_type original_value_type;
-  typedef Kokkos::Impl::Experimental::ScatterValue<original_value_type, Op,
-                                                   override_contribution>
+  typedef Kokkos::Impl::Experimental::ScatterValue<
+      original_value_type, Op, DeviceType, override_contribution>
       value_type;
 
   KOKKOS_FORCEINLINE_FUNCTION

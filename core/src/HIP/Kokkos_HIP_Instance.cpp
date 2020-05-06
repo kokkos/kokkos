@@ -191,11 +191,12 @@ void HIPInternal::initialize(int hip_device_id) {
   if (ok_init && ok_id) {
     const struct hipDeviceProp_t &hipProp = dev_info.m_hipProp[hip_device_id];
 
-    m_hipDev = hip_device_id;
+    m_hipDev     = hip_device_id;
+    m_deviceProp = hipProp;
 
     hipSetDevice(m_hipDev);
 
-    // TODO for now always uses default stream
+    // FIXME_HIP for now always uses default stream
     m_stream = 0;
 
     // number of multiprocessors

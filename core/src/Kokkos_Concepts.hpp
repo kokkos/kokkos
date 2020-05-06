@@ -153,19 +153,17 @@ namespace Kokkos {
     template <typename, typename = std::true_type>                             \
     struct have : std::false_type {};                                          \
     template <typename U>                                                      \
-    struct have<U, typename std::is_base_of<                                   \
-                       typename std::remove_cv<typename U::CONCEPT>::type,     \
-                       typename std::remove_cv<U>::type>::type>                \
+    struct have<U, typename std::is_base_of<typename U::CONCEPT, U>::type>     \
         : std::true_type {};                                                   \
     template <typename U>                                                      \
     struct have<U,                                                             \
-                typename std::is_base_of<                                      \
-                    typename std::remove_cv<typename U::CONCEPT##_type>::type, \
-                    typename std::remove_cv<U>::type>::type>                   \
+                typename std::is_base_of<typename U::CONCEPT##_type, U>::type> \
         : std::true_type {};                                                   \
                                                                                \
    public:                                                                     \
-    enum { value = is_##CONCEPT::template have<T>::value };                    \
+    static constexpr bool value =                                              \
+        is_##CONCEPT::template have<typename std::remove_cv<T>::type>::value;  \
+    constexpr operator bool() const noexcept { return value; }                 \
   };
 
 // Public concept:
@@ -257,6 +255,23 @@ struct Device {
   typedef Device<execution_space, memory_space> device_type;
 };
 
+namespace Impl {
+
+template <typename T>
+struct is_device_helper : std::false_type {};
+
+template <typename ExecutionSpace, typename MemorySpace>
+struct is_device_helper<Device<ExecutionSpace, MemorySpace>> : std::true_type {
+};
+
+}  // namespace Impl
+
+template <typename T>
+using is_device =
+    typename Impl::is_device_helper<typename std::remove_cv<T>::type>::type;
+
+//----------------------------------------------------------------------------
+
 template <typename T>
 struct is_space {
  private:
@@ -296,12 +311,17 @@ struct is_space {
     typedef typename U::device_type space;
   };
 
-  typedef typename is_space::template exe<T> is_exe;
-  typedef typename is_space::template mem<T> is_mem;
-  typedef typename is_space::template dev<T> is_dev;
+  typedef typename is_space::template exe<typename std::remove_cv<T>::type>
+      is_exe;
+  typedef typename is_space::template mem<typename std::remove_cv<T>::type>
+      is_mem;
+  typedef typename is_space::template dev<typename std::remove_cv<T>::type>
+      is_dev;
 
  public:
-  enum { value = is_exe::value || is_mem::value || is_dev::value };
+  static constexpr bool value = is_exe::value || is_mem::value || is_dev::value;
+
+  constexpr operator bool() const noexcept { return value; }
 
   typedef typename is_exe::space execution_space;
   typedef typename is_mem::space memory_space;
@@ -337,7 +357,7 @@ struct is_space {
   typedef typename std::conditional<
       std::is_same<execution_space, host_execution_space>::value &&
           std::is_same<memory_space, host_memory_space>::value,
-      T, Kokkos::Device<host_execution_space, host_memory_space> >::type
+      T, Kokkos::Device<host_execution_space, host_memory_space>>::type
       host_mirror_space;
 };
 
@@ -463,7 +483,7 @@ struct SpaceAccessibility {
       std::is_same<typename AccessSpace::memory_space, MemorySpace>::value ||
           !exe_access::accessible,
       AccessSpace,
-      Kokkos::Device<typename AccessSpace::execution_space, MemorySpace> >::type
+      Kokkos::Device<typename AccessSpace::execution_space, MemorySpace>>::type
       space;
 };
 

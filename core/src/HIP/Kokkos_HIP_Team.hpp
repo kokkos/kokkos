@@ -313,17 +313,9 @@ class HIPTeamMember {
     typename ReducerType::value_type tmp(value);
     typename ReducerType::value_type tmp2 = tmp;
 
-    int constexpr warp_size = ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
-    unsigned mask =
-        hipBlockDim_x == warp_size
-            ? 0xffffffff
-            : ((1 << hipBlockDim_x) - 1)
-                  << ((hipThreadIdx_y % (warp_size / hipBlockDim_x)) *
-                      hipBlockDim_x);
-
     for (int i = hipBlockDim_x; (i >>= 1);) {
       ::Kokkos::Experimental::Impl::in_place_shfl_down(tmp2, tmp, i,
-                                                       hipBlockDim_x, mask);
+                                                       hipBlockDim_x);
       if (static_cast<int>(hipThreadIdx_x) < i) {
         reducer.join(tmp, tmp2);
       }
@@ -334,8 +326,7 @@ class HIPTeamMember {
     // because floating point summation is not associative
     // and thus different threads could have different results.
 
-    ::Kokkos::Experimental::Impl::in_place_shfl(tmp2, tmp, 0, hipBlockDim_x,
-                                                mask);
+    ::Kokkos::Experimental::Impl::in_place_shfl(tmp2, tmp, 0, hipBlockDim_x);
     value               = tmp2;
     reducer.reference() = tmp2;
 #else
@@ -981,16 +972,9 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   //     ( end % hipBlockDim_x ) == ( end & ( hipBlockDim_x - 1 ) )
   //   1 <= hipBlockDim_x <= HIPTraits::WarpSize
 
-  int constexpr warp_size = ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
-  const int mask          = hipBlockDim_x - 1;
-  const unsigned active_mask =
-      blockDim.x == warp_size
-          ? 0xffffffff
-          : ((1 << hipBlockDim_x) - 1)
-                << (hipThreadIdx_y % (warp_size / hipBlockDim_x)) *
-                       hipBlockDim_x;
-  const int rem = loop_boundaries.end & mask;  // == end % hipBlockDim_x
-  const int end = loop_boundaries.end + (rem ? hipBlockDim_x - rem : 0);
+  const int mask = hipBlockDim_x - 1;
+  const int rem  = loop_boundaries.end & mask;  // == end % hipBlockDim_x
+  const int end  = loop_boundaries.end + (rem ? hipBlockDim_x - rem : 0);
 
   for (int i = hipThreadIdx_x; i < end; i += hipBlockDim_x) {
     value_type val = 0;
@@ -1010,8 +994,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 
     for (int j = 1; j < static_cast<int>(hipBlockDim_x); j <<= 1) {
       value_type tmp = 0;
-      ::Kokkos::Experimental::Impl::in_place_shfl_up(
-          tmp, sval, j, hipBlockDim_x, active_mask);
+      ::Kokkos::Experimental::Impl::in_place_shfl_up(tmp, sval, j,
+                                                     hipBlockDim_x);
       if (j <= static_cast<int>(hipThreadIdx_x)) {
         sval += tmp;
       }
@@ -1024,8 +1008,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     if (i < loop_boundaries.end) closure(i, val, true);
 
     // Accumulate the last value in the inclusive scan:
-    ::Kokkos::Experimental::Impl::in_place_shfl(sval, sval, mask, blockDim.x,
-                                                active_mask);
+    ::Kokkos::Experimental::Impl::in_place_shfl(sval, sval, hipBlockDim_x - 1,
+                                                hipBlockDim_x);
 
     accum += sval;
   }
@@ -1066,14 +1050,8 @@ KOKKOS_INLINE_FUNCTION void single(
     const Impl::VectorSingleStruct<Impl::HIPTeamMember>&,
     const FunctorType& lambda, ValueType& val) {
 #ifdef __HIP_DEVICE_COMPILE__
-  int constexpr warp_size = ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
   if (hipThreadIdx_x == 0) lambda(val);
-  unsigned mask = hipBlockDim_x == warp_size
-                      ? 0xffffffff
-                      : ((1 << hipBlockDim_x) - 1)
-                            << ((hipThreadIdx_y % (warp_size / hipBlockDim_x)) *
-                                hipBlockDim_x);
-  ::Kokkos::Experimental::Impl::in_place_shfl(val, val, 0, hipBlockDim_x, mask);
+  ::Kokkos::Experimental::Impl::in_place_shfl(val, val, 0, hipBlockDim_x);
 #else
   (void)lambda;
   (void)val;

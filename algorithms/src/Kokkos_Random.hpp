@@ -621,9 +621,8 @@ template <>
 struct Random_UniqueIndex<Kokkos::Cuda> {
   using locks_view_type = View<int*, Kokkos::Cuda>;
   KOKKOS_FUNCTION
-  static int get_state_idx(const locks_view_type&
+  static int get_state_idx(const locks_view_type& locks_) {
 #ifdef __CUDA_ARCH__
-                               locks_) {
     const int i_offset =
         (threadIdx.x * blockDim.y + threadIdx.y) * blockDim.z + threadIdx.z;
     int i = (((blockIdx.x * gridDim.y + blockIdx.y) * gridDim.z + blockIdx.z) *
@@ -637,12 +636,41 @@ struct Random_UniqueIndex<Kokkos::Cuda> {
       }
     }
     return i;
-  }
 #else
-  ) {
+    (void)locks_;
     return 0;
-  }
 #endif
+  }
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct Random_UniqueIndex<Kokkos::Experimental::HIP> {
+  using locks_view_type = View<int*, Kokkos::Experimental::HIP>;
+  KOKKOS_FUNCTION
+  static int get_state_idx(const locks_view_type& locks_) {
+#ifdef __HIP_DEVICE_COMPILE__
+    const int i_offset =
+        (hipThreadIdx_x * hipBlockDim_y + hipThreadIdx_y) * hipBlockDim_z +
+        hipThreadIdx_z;
+    int i = (((hipBlockIdx_x * hipGridDim_y + hipBlockIdx_y) * hipGridDim_z +
+              hipBlockIdx_z) *
+                 hipBlockDim_x * hipBlockDim_y * hipBlockDim_z +
+             i_offset) %
+            locks_.extent(0);
+    while (Kokkos::atomic_compare_exchange(&locks_(i), 0, 1)) {
+      i += hipBlockDim_x * hipBlockDim_y * hipBlockDim_z;
+      if (i >= static_cast<int>(locks_.extent(0))) {
+        i = i_offset;
+      }
+    }
+    return i;
+#else
+    (void)locks_;
+    return 0;
+#endif
+  }
 };
 #endif
 
@@ -748,10 +776,12 @@ class Random_XorShift64 {
   }
 
   KOKKOS_INLINE_FUNCTION
-  float frand() { return 1.0f * urand64() / MAX_URAND64; }
+  float frand() { return urand64() / static_cast<float>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
-  float frand(const float& range) { return range * urand64() / MAX_URAND64; }
+  float frand(const float& range) {
+    return range * urand64() / static_cast<float>(MAX_URAND64);
+  }
 
   KOKKOS_INLINE_FUNCTION
   float frand(const float& start, const float& end) {
@@ -759,10 +789,12 @@ class Random_XorShift64 {
   }
 
   KOKKOS_INLINE_FUNCTION
-  double drand() { return 1.0 * urand64() / MAX_URAND64; }
+  double drand() { return urand64() / static_cast<double>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
-  double drand(const double& range) { return range * urand64() / MAX_URAND64; }
+  double drand(const double& range) {
+    return range * urand64() / static_cast<double>(MAX_URAND64);
+  }
 
   KOKKOS_INLINE_FUNCTION
   double drand(const double& start, const double& end) {
@@ -773,8 +805,10 @@ class Random_XorShift64 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
+#ifndef __HIP_DEVICE_COMPILE__  // FIXME_HIP
     using std::sqrt;
+#else
+    using ::sqrt;
 #endif
     double S = 2.0;
     double U;
@@ -983,10 +1017,12 @@ class Random_XorShift1024 {
   }
 
   KOKKOS_INLINE_FUNCTION
-  float frand() { return 1.0f * urand64() / MAX_URAND64; }
+  float frand() { return urand64() / static_cast<float>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
-  float frand(const float& range) { return range * urand64() / MAX_URAND64; }
+  float frand(const float& range) {
+    return range * urand64() / static_cast<float>(MAX_URAND64);
+  }
 
   KOKKOS_INLINE_FUNCTION
   float frand(const float& start, const float& end) {
@@ -994,10 +1030,12 @@ class Random_XorShift1024 {
   }
 
   KOKKOS_INLINE_FUNCTION
-  double drand() { return 1.0 * urand64() / MAX_URAND64; }
+  double drand() { return urand64() / static_cast<double>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
-  double drand(const double& range) { return range * urand64() / MAX_URAND64; }
+  double drand(const double& range) {
+    return range * urand64() / static_cast<double>(MAX_URAND64);
+  }
 
   KOKKOS_INLINE_FUNCTION
   double drand(const double& start, const double& end) {
@@ -1010,6 +1048,8 @@ class Random_XorShift1024 {
   double normal() {
 #ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
     using std::sqrt;
+#else
+    using ::sqrt;
 #endif
     double S = 2.0;
     double U;

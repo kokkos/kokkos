@@ -102,7 +102,7 @@ ENDIF()
 
 
 set(Kokkos_VERSION_MAJOR 3)
-set(Kokkos_VERSION_MINOR 0)
+set(Kokkos_VERSION_MINOR 1)
 set(Kokkos_VERSION_PATCH 0)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 math(EXPR KOKKOS_VERSION "${Kokkos_VERSION_MAJOR} * 10000 + ${Kokkos_VERSION_MINOR} * 100 + ${Kokkos_VERSION_PATCH}")
@@ -144,6 +144,9 @@ GLOBAL_SET(KOKKOS_TPL_EXPORTS)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
 
 
+# Check the environment and set certain variables
+# to allow platform-specific checks
+INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_check_env.cmake)
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES
 # 2) Check the compiler ID (type and version)

@@ -448,15 +448,15 @@ int main(int argc, char* argv[]) {
 
   for (int i = 0; i < argc; i++) {
     if ((strcmp(argv[i], "--test") == 0)) {
-      test = atoi(argv[++i]);
+      test = std::stoi(argv[++i]);
       continue;
     }
     if ((strcmp(argv[i], "--type") == 0)) {
-      type = atoi(argv[++i]);
+      type = std::stoi(argv[++i]);
       continue;
     }
     if ((strcmp(argv[i], "-l") == 0) || (strcmp(argv[i], "--loop") == 0)) {
-      loop = atoi(argv[++i]);
+      loop = std::stoi(argv[++i]);
       continue;
     }
   }

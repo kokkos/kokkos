@@ -33,15 +33,25 @@ SET(SOURCES
   UnitTestMain.cpp
 )
 
-IF(Kokkos_ENABLE_CUDA)
-  LIST( APPEND SOURCES
-    TestCuda.cpp
-  )
-ENDIF()
-
 IF(Kokkos_ENABLE_OPENMP)
   LIST( APPEND SOURCES
     TestOpenMP.cpp
+    TestOpenMP_Sort1D.cpp
+    TestOpenMP_Sort3D.cpp
+    TestOpenMP_SortDynamicView.cpp
+    TestOpenMP_Random.cpp
+  )
+ENDIF()
+
+IF(Kokkos_ENABLE_HIP)
+  LIST( APPEND SOURCES
+    TestHIP.cpp
+  )
+ENDIF()
+
+IF(Kokkos_ENABLE_CUDA)
+  LIST( APPEND SOURCES
+    TestCuda.cpp
   )
 ENDIF()
 
@@ -61,11 +71,6 @@ IF(Kokkos_ENABLE_PTHREAD)
   LIST( APPEND SOURCES
     TestThreads.cpp
   )
-ENDIF()
-
-IF(Kokkos_ENABLE_HIP)
-  # FIXME sqrt(complex)
-  LIST(REMOVE_ITEM SOURCES TestSerial.cpp)
 ENDIF()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(

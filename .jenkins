@@ -9,12 +9,12 @@ pipeline {
     stages {
         stage('Build') {
             parallel {
-                stage('HIP-3.1-HCC') {
+                stage('HIP-3.3-HCC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-18.04:3.1'
+                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-18.04:3.3'
                             label 'rocm-docker && vega'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video'
                         }
@@ -95,7 +95,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
-                                -DKokkos_ARCH_VOLTA70=ON \
+                                -DKokkos_ENABLE_PROFILING=OFF \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
@@ -130,7 +130,6 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
-                                -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
@@ -164,7 +163,6 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
-                                -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }

@@ -130,18 +130,25 @@ struct test_dual_view_deep_copy {
   typedef Device execution_space;
 
   template <typename ViewType>
-  void run_me() {
-    const unsigned int n         = 10;
-    const unsigned int m         = 5;
-    const unsigned int sum_total = n * m;
-
-    ViewType a("A", n, m);
-    ViewType b("B", n, m);
+  void run_me(int n, const int m, const bool use_templ_sync) {
+    ViewType a, b;
+    if (n >= 0) {
+      a = ViewType("A", n, m);
+      b = ViewType("B", n, m);
+    } else {
+      n = 0;
+    }
+    const scalar_type sum_total = scalar_type(n * m);
 
     Kokkos::deep_copy(a.d_view, 1);
 
-    a.template modify<typename ViewType::execution_space>();
-    a.template sync<typename ViewType::host_mirror_space>();
+    if (use_templ_sync) {
+      a.template modify<typename ViewType::execution_space>();
+      a.template sync<typename ViewType::host_mirror_space>();
+    } else {
+      a.modify_device();
+      a.sync_host();
+    }
 
     // Check device view is initialized as expected
     scalar_type a_d_sum = 0;
@@ -165,7 +172,11 @@ struct test_dual_view_deep_copy {
 
     // Test deep_copy
     Kokkos::deep_copy(b, a);
-    b.template sync<typename ViewType::host_mirror_space>();
+    if (use_templ_sync) {
+      b.template sync<typename ViewType::host_mirror_space>();
+    } else {
+      b.sync_host();
+    }
 
     // Perform same checks on b as done on a
     // Check device view is initialized as expected
@@ -189,7 +200,21 @@ struct test_dual_view_deep_copy {
   }  // end run_me
 
   test_dual_view_deep_copy() {
-    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >();
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(10, 5,
+                                                                    true);
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(10, 5,
+                                                                    false);
+    // Test zero length but allocated (a.d_view.data!=nullptr but
+    // a.d_view.span()==0)
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(0, 5, true);
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(0, 5,
+                                                                    false);
+
+    // Test default constructed view
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(-1, 5,
+                                                                    true);
+    run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(-1, 5,
+                                                                    false);
   }
 };
 

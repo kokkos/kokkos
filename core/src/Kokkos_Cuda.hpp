@@ -257,6 +257,7 @@ class Cuda {
 
   cudaStream_t cuda_stream() const;
   int cuda_device() const;
+  const cudaDeviceProp& cuda_device_prop() const;
 
   //@}
   //--------------------------------------------------------------------------

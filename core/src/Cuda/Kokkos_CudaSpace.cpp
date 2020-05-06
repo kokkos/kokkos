@@ -61,7 +61,7 @@
 #include <impl/Kokkos_MemorySpace.hpp>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
-#include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_Tools.hpp>
 #endif
 
 /*--------------------------------------------------------------------------*/
@@ -441,7 +441,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
         &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
 
     Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(Kokkos::CudaSpace::name()),
+        Kokkos::Profiling::make_space_handle(Kokkos::CudaSpace::name()),
         header.m_label, data(), size());
   }
 #endif
@@ -455,7 +455,7 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::~SharedAllocationRecord() {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Cuda::impl_static_fence();  // Make sure I can access the label ...
     Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(Kokkos::CudaUVMSpace::name()),
+        Kokkos::Profiling::make_space_handle(Kokkos::CudaUVMSpace::name()),
         RecordBase::m_alloc_ptr->m_label, data(), size());
   }
 #endif
@@ -468,9 +468,10 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
                        void>::~SharedAllocationRecord() {
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(Kokkos::CudaHostPinnedSpace::name()),
-        RecordBase::m_alloc_ptr->m_label, data(), size());
+    Kokkos::Profiling::deallocateData(Kokkos::Profiling::make_space_handle(
+                                          Kokkos::CudaHostPinnedSpace::name()),
+                                      RecordBase::m_alloc_ptr->m_label, data(),
+                                      size());
   }
 #endif
 
@@ -502,8 +503,8 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(arg_space.name()), arg_label, data(),
-        arg_alloc_size);
+        Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
+        data(), arg_alloc_size);
   }
 #endif
 
@@ -540,8 +541,8 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(arg_space.name()), arg_label, data(),
-        arg_alloc_size);
+        Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
+        data(), arg_alloc_size);
   }
 #endif
   // Fill in the Header information, directly accessible via UVM
@@ -575,8 +576,8 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(arg_space.name()), arg_label, data(),
-        arg_alloc_size);
+        Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
+        data(), arg_alloc_size);
   }
 #endif
   // Fill in the Header information, directly accessible on the host
@@ -913,6 +914,27 @@ void *cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
                                                    current_size);
   }
   return ptr;
+}
+
+void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
+                           bool to_device) {
+  if ((ptr == nullptr) || (bytes == 0)) return;
+  cudaPointerAttributes attr;
+  CUDA_SAFE_CALL(cudaPointerGetAttributes(&attr, ptr));
+  // I measured this and it turns out prefetching towards the host slows
+  // DualView syncs down. Probably because the latency is not too bad in the
+  // first place for the pull down. If we want to change that provde
+  // cudaCpuDeviceId as the device if to_device is false
+#if CUDA_VERSION < 10000
+  bool is_managed = attr.isManaged;
+#else
+  bool is_managed = attr.type == cudaMemoryTypeManaged;
+#endif
+  if (to_device && is_managed &&
+      space.cuda_device_prop().concurrentManagedAccess) {
+    CUDA_SAFE_CALL(cudaMemPrefetchAsync(ptr, bytes, space.cuda_device(),
+                                        space.cuda_stream()));
+  }
 }
 
 }  // namespace Impl

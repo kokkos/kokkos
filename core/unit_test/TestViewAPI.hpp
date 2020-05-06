@@ -841,6 +841,22 @@ struct TestViewMirror {
     ASSERT_EQ(a_org(5), a_h3(5));
   }
 
+  template <typename View>
+  static typename View::const_type view_const_cast(View const &v) {
+    return v;
+  }
+
+  static void test_mirror_copy_const_data_type() {
+    using ExecutionSpace = typename DeviceType::execution_space;
+    int const N          = 100;
+    Kokkos::View<int *, ExecutionSpace> v("v", N);
+    Kokkos::deep_copy(v, 255);
+    auto v_m1 = Kokkos::create_mirror_view_and_copy(
+        Kokkos::DefaultHostExecutionSpace(), view_const_cast(v));
+    auto v_m2 = Kokkos::create_mirror_view_and_copy(ExecutionSpace(),
+                                                    view_const_cast(v));
+  }
+
   template <class MemoryTraits, class Space>
   struct CopyUnInit {
     typedef typename Kokkos::Impl::MirrorViewType<
@@ -896,6 +912,7 @@ struct TestViewMirror {
     test_mirror_view<Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
     test_mirror_copy<Kokkos::MemoryTraits<0> >();
     test_mirror_copy<Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
+    test_mirror_copy_const_data_type();
     test_mirror_no_initialize<Kokkos::MemoryTraits<0> >();
     test_mirror_no_initialize<Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
   }
@@ -1137,6 +1154,7 @@ class TestViewAPI {
       Kokkos::deep_copy(typename hView4::execution_space(), dx, hx);
       Kokkos::deep_copy(typename hView4::execution_space(), dy, dx);
       Kokkos::deep_copy(typename hView4::execution_space(), hy, dy);
+      typename dView4::execution_space().fence();
 
       for (size_t ip = 0; ip < N0; ++ip)
         for (size_t i1 = 0; i1 < N1; ++i1)
@@ -1147,6 +1165,7 @@ class TestViewAPI {
 
       Kokkos::deep_copy(typename hView4::execution_space(), dx, T(0));
       Kokkos::deep_copy(typename hView4::execution_space(), hx, dx);
+      typename dView4::execution_space().fence();
 
       for (size_t ip = 0; ip < N0; ++ip)
         for (size_t i1 = 0; i1 < N1; ++i1)
@@ -1170,6 +1189,7 @@ class TestViewAPI {
       Kokkos::deep_copy(typename dView4::execution_space(), dx, hx);
       Kokkos::deep_copy(typename dView4::execution_space(), dy, dx);
       Kokkos::deep_copy(typename dView4::execution_space(), hy, dy);
+      typename dView4::execution_space().fence();
 
       for (size_t ip = 0; ip < N0; ++ip)
         for (size_t i1 = 0; i1 < N1; ++i1)
@@ -1180,6 +1200,7 @@ class TestViewAPI {
 
       Kokkos::deep_copy(typename dView4::execution_space(), dx, T(0));
       Kokkos::deep_copy(typename dView4::execution_space(), hx, dx);
+      typename dView4::execution_space().fence();
 
       for (size_t ip = 0; ip < N0; ++ip)
         for (size_t i1 = 0; i1 < N1; ++i1)

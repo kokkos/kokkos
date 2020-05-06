@@ -62,22 +62,32 @@
 namespace Kokkos {
 namespace Impl {
 
+namespace {
+hipStream_t get_deep_copy_stream() {
+  static hipStream_t s = 0;
+  if (s == 0) {
+    HIP_SAFE_CALL(hipStreamCreate(&s));
+  }
+  return s;
+}
+}  // namespace
+
 DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
          Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
                                               size_t n) {
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace,
          Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
                                               size_t n) {
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace,
          Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
                                               size_t n) {
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
@@ -86,40 +96,40 @@ DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
                                               void* dst, const void* src,
                                               size_t n) {
   // FIXME_HIP use instance
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIP>::
     DeepCopy(const Kokkos::Experimental::HIP& /*instance*/, void* dst,
              const void* src, size_t n) {
   // FIXME_HIP use instance
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace, Kokkos::Experimental::HIP>::
     DeepCopy(const Kokkos::Experimental::HIP& /*instance*/, void* dst,
              const void* src, size_t n) {
   // FIXME_HIP use instance
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
          Kokkos::Experimental::HIPHostPinnedSpace,
          Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
                                               size_t n) {
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
          Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
                                               size_t n) {
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
          Kokkos::Experimental::HIP>::DeepCopy(void* dst, const void* src,
                                               size_t n) {
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
@@ -127,7 +137,7 @@ DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
     DeepCopy(const Kokkos::Experimental::HIP& /*instance*/, void* dst,
              const void* src, size_t n) {
   // FIXME_HIP use instance
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
@@ -136,7 +146,7 @@ DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
                                               void* dst, const void* src,
                                               size_t n) {
   // FIXME_HIP use instance
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
 }
 
 DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
@@ -145,7 +155,13 @@ DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
                                               void* dst, const void* src,
                                               size_t n) {
   // FIXME_HIP use instance
-  hipMemcpy(dst, src, n, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(dst, src, n, hipMemcpyDefault));
+}
+
+void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
+  hipStream_t s = get_deep_copy_stream();
+  HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
+  hipStreamSynchronize(s);
 }
 
 }  // namespace Impl
@@ -216,12 +232,12 @@ void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
 
 void HIPSpace::deallocate(void* const arg_alloc_ptr,
                           const size_t /* arg_alloc_size */) const {
-  hipFree(arg_alloc_ptr);
+  HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
 }
 
 void HIPHostPinnedSpace::deallocate(void* const arg_alloc_ptr,
                                     const size_t /* arg_alloc_size */) const {
-  hipHostFree(arg_alloc_ptr);
+  HIP_SAFE_CALL(hipHostFree(arg_alloc_ptr));
 }
 
 }  // namespace Experimental
@@ -289,7 +305,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
         &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
 
     Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(Kokkos::Experimental::HIPSpace::name()),
+        Kokkos::Profiling::make_space_handle(
+            Kokkos::Experimental::HIPSpace::name()),
         header.m_label, data(), size());
   }
 #endif
@@ -303,7 +320,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(
+        Kokkos::Profiling::make_space_handle(
             Kokkos::Experimental::HIPHostPinnedSpace::name()),
         RecordBase::m_alloc_ptr->m_label, data(), size());
   }
@@ -332,8 +349,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(arg_space.name()), arg_label, data(),
-        arg_alloc_size);
+        Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
+        data(), arg_alloc_size);
   }
 #endif
 
@@ -371,8 +388,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(arg_space.name()), arg_label, data(),
-        arg_alloc_size);
+        Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
+        data(), arg_alloc_size);
   }
 #endif
   // Fill in the Header information, directly accessible via host pinned memory
@@ -574,8 +591,8 @@ namespace Experimental {
 //{ return Impl::HIPInternalDevices::singleton().m_hipDevCount ; }
 
 int HIP::concurrency() {
-  // FIXME_HIP
-  return 32 * 8 * 40;  // 81920 fiji and hawaii
+  auto const& prop = hip_device_prop();
+  return prop.maxThreadsPerMultiProcessor * prop.multiProcessorCount;
 }
 int HIP::impl_is_initialized() {
   return Impl::HIPInternal::singleton().is_initialized();
@@ -613,6 +630,11 @@ void HIP::print_configuration(std::ostream& s, const bool) {
 void HIP::fence() const { HIP_SAFE_CALL(hipDeviceSynchronize()); }
 
 int HIP::hip_device() const { return impl_internal_space_instance()->m_hipDev; }
+
+hipDeviceProp_t const& HIP::hip_device_prop() {
+  return Impl::HIPInternal::singleton().m_deviceProp;
+}
+
 const char* HIP::name() { return "HIP"; }
 
 }  // namespace Experimental
