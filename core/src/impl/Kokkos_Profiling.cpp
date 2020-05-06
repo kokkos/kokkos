@@ -712,7 +712,6 @@ void endDeepCopy() {}
 void initialize() {}
 void finalize() {}
 
-namespace Tools {
 namespace Experimental {
 static EventSet current_callbacks;
 
@@ -743,7 +742,6 @@ void resume_tools() {}
 EventSet get_callbacks() { return current_callbacks; }
 void set_callbacks(EventSet) {}
 }  // namespace Experimental
-}  // namespace Tools
 }  // namespace Tools
 
 #endif
