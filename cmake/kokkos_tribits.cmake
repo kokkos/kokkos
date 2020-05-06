@@ -81,6 +81,7 @@ MACRO(KOKKOS_PROCESS_SUBPACKAGES)
     ADD_SUBDIRECTORY(containers)
     ADD_SUBDIRECTORY(algorithms)
     ADD_SUBDIRECTORY(example)
+    ADD_SUBDIRECTORY(python)
   endif()
 ENDMACRO()
 
