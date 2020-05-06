@@ -72,7 +72,7 @@ void startSection(const uint32_t secID);
 void stopSection(const uint32_t secID);
 void destroyProfileSection(const uint32_t secID);
 
-void markEvent(const std::string* evName);
+void markEvent(const std::string& evName);
 
 void allocateData(const SpaceHandle space, const std::string label,
                   const void* ptr, const uint64_t size);

@@ -849,7 +849,8 @@ class TestTripleNestedReduce {
 
 #endif
 
-#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
+// FIXME_HIP check if HIP needs CUDA-clang workaround
+#if !(defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ENABLE_HIP))
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));

@@ -366,73 +366,74 @@ void initialize() {
       std::cout << "KokkosP: Library Loaded: " << profileLibraryName
                 << std::endl;
 #endif
+
+      // dlsym returns a pointer to an object, while we want to assign to
+      // pointer to function A direct cast will give warnings hence, we have to
+      // workaround the issue by casting pointer to pointers.
+      auto p1 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
+      Experimental::set_begin_parallel_for_callback(
+          *reinterpret_cast<beginFunction*>(&p1));
+      auto p2 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
+      Experimental::set_begin_parallel_scan_callback(
+          *reinterpret_cast<beginFunction*>(&p2));
+      auto p3 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
+      Experimental::set_begin_parallel_reduce_callback(
+          *reinterpret_cast<beginFunction*>(&p3));
+
+      auto p4 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
+      Experimental::set_end_parallel_scan_callback(
+          *reinterpret_cast<endFunction*>(&p4));
+      auto p5 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
+      Experimental::set_end_parallel_for_callback(
+          *reinterpret_cast<endFunction*>(&p5));
+      auto p6 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
+      Experimental::set_end_parallel_reduce_callback(
+          *reinterpret_cast<endFunction*>(&p6));
+
+      auto p7 = dlsym(firstProfileLibrary, "kokkosp_init_library");
+      Experimental::set_init_callback(*reinterpret_cast<initFunction*>(&p7));
+      auto p8 = dlsym(firstProfileLibrary, "kokkosp_finalize_library");
+      Experimental::set_finalize_callback(
+          *reinterpret_cast<finalizeFunction*>(&p8));
+
+      auto p9 = dlsym(firstProfileLibrary, "kokkosp_push_profile_region");
+      Experimental::set_push_region_callback(
+          *reinterpret_cast<pushFunction*>(&p9));
+      auto p10 = dlsym(firstProfileLibrary, "kokkosp_pop_profile_region");
+      Experimental::set_pop_region_callback(
+          *reinterpret_cast<popFunction*>(&p10));
+
+      auto p11 = dlsym(firstProfileLibrary, "kokkosp_allocate_data");
+      Experimental::set_allocate_data_callback(
+          *reinterpret_cast<allocateDataFunction*>(&p11));
+      auto p12 = dlsym(firstProfileLibrary, "kokkosp_deallocate_data");
+      Experimental::set_deallocate_data_callback(
+          *reinterpret_cast<deallocateDataFunction*>(&p12));
+
+      auto p13 = dlsym(firstProfileLibrary, "kokkosp_begin_deep_copy");
+      Experimental::set_begin_deep_copy_callback(
+          *reinterpret_cast<beginDeepCopyFunction*>(&p13));
+      auto p14 = dlsym(firstProfileLibrary, "kokkosp_end_deep_copy");
+      Experimental::set_end_deep_copy_callback(
+          *reinterpret_cast<endDeepCopyFunction*>(&p14));
+
+      auto p15 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
+      Experimental::set_create_profile_section_callback(
+          *(reinterpret_cast<createProfileSectionFunction*>(&p15)));
+      auto p16 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
+      Experimental::set_start_profile_section_callback(
+          *reinterpret_cast<startProfileSectionFunction*>(&p16));
+      auto p17 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
+      Experimental::set_stop_profile_section_callback(
+          *reinterpret_cast<stopProfileSectionFunction*>(&p17));
+      auto p18 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
+      Experimental::set_destroy_profile_section_callback(
+          *(reinterpret_cast<destroyProfileSectionFunction*>(&p18)));
+
+      auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
+      Experimental::set_profile_event_callback(
+          *reinterpret_cast<profileEventFunction*>(&p19));
     }
-  }
-  if (firstProfileLibrary != nullptr) {
-    auto p1 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
-    Experimental::set_begin_parallel_for_callback(
-        *reinterpret_cast<beginFunction*>(&p1));
-    auto p2 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
-    Experimental::set_begin_parallel_scan_callback(
-        *reinterpret_cast<beginFunction*>(&p2));
-    auto p3 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
-    Experimental::set_begin_parallel_reduce_callback(
-        *reinterpret_cast<beginFunction*>(&p3));
-
-    auto p4 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
-    Experimental::set_end_parallel_scan_callback(
-        *reinterpret_cast<endFunction*>(&p4));
-    auto p5 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
-    Experimental::set_end_parallel_for_callback(
-        *reinterpret_cast<endFunction*>(&p5));
-    auto p6 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
-    Experimental::set_end_parallel_reduce_callback(
-        *reinterpret_cast<endFunction*>(&p6));
-
-    auto p7 = dlsym(firstProfileLibrary, "kokkosp_init_library");
-    Experimental::set_init_callback(*reinterpret_cast<initFunction*>(&p7));
-    auto p8 = dlsym(firstProfileLibrary, "kokkosp_finalize_library");
-    Experimental::set_finalize_callback(
-        *reinterpret_cast<finalizeFunction*>(&p8));
-
-    auto p9 = dlsym(firstProfileLibrary, "kokkosp_push_profile_region");
-    Experimental::set_push_region_callback(
-        *reinterpret_cast<pushFunction*>(&p9));
-    auto p10 = dlsym(firstProfileLibrary, "kokkosp_pop_profile_region");
-    Experimental::set_pop_region_callback(
-        *reinterpret_cast<popFunction*>(&p10));
-
-    auto p11 = dlsym(firstProfileLibrary, "kokkosp_allocate_data");
-    Experimental::set_allocate_data_callback(
-        *reinterpret_cast<allocateDataFunction*>(&p11));
-    auto p12 = dlsym(firstProfileLibrary, "kokkosp_deallocate_data");
-    Experimental::set_deallocate_data_callback(
-        *reinterpret_cast<deallocateDataFunction*>(&p12));
-
-    auto p13 = dlsym(firstProfileLibrary, "kokkosp_begin_deep_copy");
-    Experimental::set_begin_deep_copy_callback(
-        *reinterpret_cast<beginDeepCopyFunction*>(&p13));
-    auto p14 = dlsym(firstProfileLibrary, "kokkosp_end_deep_copy");
-    Experimental::set_end_deep_copy_callback(
-        *reinterpret_cast<endDeepCopyFunction*>(&p14));
-
-    auto p15 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
-    Experimental::set_create_profile_section_callback(
-        *(reinterpret_cast<createProfileSectionFunction*>(&p15)));
-    auto p16 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
-    Experimental::set_start_profile_section_callback(
-        *reinterpret_cast<startProfileSectionFunction*>(&p16));
-    auto p17 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
-    Experimental::set_stop_profile_section_callback(
-        *reinterpret_cast<stopProfileSectionFunction*>(&p17));
-    auto p18 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
-    Experimental::set_destroy_profile_section_callback(
-        *(reinterpret_cast<destroyProfileSectionFunction*>(&p18)));
-
-    auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
-    Experimental::set_profile_event_callback(
-        *reinterpret_cast<profileEventFunction*>(&p19));
-
 #ifdef KOKKOS_ENABLE_TUNING
     // TODO DZP: move to its own section
     auto p20 = dlsym(firstProfileLibrary, "kokkosp_declare_tuning_variable");
@@ -664,7 +665,11 @@ void resume_tools() { current_callbacks = backup_callbacks; }
 EventSet get_callbacks() { return current_callbacks; }
 void set_callbacks(EventSet new_events) { current_callbacks = new_events; }
 }  // namespace Experimental
+<<<<<<< HEAD
 }  // namespace Tools
+=======
+}  // namespace Profiling
+>>>>>>> develop
 
 }  // namespace Kokkos
 
@@ -708,12 +713,15 @@ void endDeepCopy() {}
 
 void initialize() {}
 void finalize() {}
+<<<<<<< HEAD
 
 }  // namespace Tools
 
 namespace Tools {}  // end namespace Tools
 
 namespace Tools {
+=======
+>>>>>>> develop
 namespace Experimental {
 static EventSet current_callbacks;
 
@@ -744,7 +752,11 @@ void resume_tools() {}
 EventSet get_callbacks() { return current_callbacks; }
 void set_callbacks(EventSet) {}
 }  // namespace Experimental
+<<<<<<< HEAD
 }  // namespace Tools
+=======
+}  // namespace Profiling
+>>>>>>> develop
 }  // namespace Kokkos
 
 #endif
