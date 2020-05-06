@@ -695,7 +695,7 @@ class HIP {
 
   //  static size_type device_arch();
 
-  //  static size_type detect_device_count();
+  static size_type detect_device_count();
 
   static int concurrency();
   static const char* name();
