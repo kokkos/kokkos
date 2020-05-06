@@ -51,20 +51,12 @@
 namespace Kokkos {
 namespace Tools {
 #ifdef KOKKOS_ENABLE_TUNING
-// static size_t kernel_name_context_variable_id;
-// static size_t kernel_type_context_variable_id;
-// static size_t time_context_variable_id;
-
-//static tuningVariableDeclarationFunction tuningVariableDeclarationCallback =
-//    nullptr;
 extern tuningVariableDeclarationFunction tuningVariableDeclarationCallback;
 extern tuningVariableValueFunction tuningVariableValueCallback;
 extern contextVariableDeclarationFunction contextVariableDeclarationCallback;
 extern contextEndFunction contextEndCallback;
 extern optimizationGoalDeclarationFunction optimizationGoalCallback;
 using time_point = std::chrono::time_point<std::chrono::system_clock>;
-// static std::stack<time_point> timer_stack;
-// static int last_microseconds;
 #endif
 
 VariableValue make_variable_value(size_t id, bool val);
