@@ -118,8 +118,7 @@ void resume_tools();
 
 EventSet get_callbacks();
 void set_callbacks(EventSet new_events);
-<<<<<<< HEAD
-
+}  // namespace Experimental
 }  // namespace Tools
 namespace Profiling {
 
@@ -152,38 +151,36 @@ using Kokkos::Tools::finalize;
 using Kokkos::Tools::initialize;
 
 using Kokkos::Tools::make_space_handle;
+namespace Experimental {
+using Kokkos::Tools::Experimental::set_allocate_data_callback;
+using Kokkos::Tools::Experimental::set_begin_deep_copy_callback;
+using Kokkos::Tools::Experimental::set_begin_parallel_for_callback;
+using Kokkos::Tools::Experimental::set_begin_parallel_reduce_callback;
+using Kokkos::Tools::Experimental::set_begin_parallel_scan_callback;
+using Kokkos::Tools::Experimental::set_create_profile_section_callback;
+using Kokkos::Tools::Experimental::set_deallocate_data_callback;
+using Kokkos::Tools::Experimental::set_destroy_profile_section_callback;
+using Kokkos::Tools::Experimental::set_end_deep_copy_callback;
+using Kokkos::Tools::Experimental::set_end_parallel_for_callback;
+using Kokkos::Tools::Experimental::set_end_parallel_reduce_callback;
+using Kokkos::Tools::Experimental::set_end_parallel_scan_callback;
+using Kokkos::Tools::Experimental::set_finalize_callback;
+using Kokkos::Tools::Experimental::set_init_callback;
+using Kokkos::Tools::Experimental::set_pop_region_callback;
+using Kokkos::Tools::Experimental::set_profile_event_callback;
+using Kokkos::Tools::Experimental::set_push_region_callback;
+using Kokkos::Tools::Experimental::set_start_profile_section_callback;
+using Kokkos::Tools::Experimental::set_stop_profile_section_callback;
 
-using Kokkos::Tools::set_allocate_data_callback;
-using Kokkos::Tools::set_begin_deep_copy_callback;
-using Kokkos::Tools::set_begin_parallel_for_callback;
-using Kokkos::Tools::set_begin_parallel_reduce_callback;
-using Kokkos::Tools::set_begin_parallel_scan_callback;
-using Kokkos::Tools::set_create_profile_section_callback;
-using Kokkos::Tools::set_deallocate_data_callback;
-using Kokkos::Tools::set_destroy_profile_section_callback;
-using Kokkos::Tools::set_end_deep_copy_callback;
-using Kokkos::Tools::set_end_parallel_for_callback;
-using Kokkos::Tools::set_end_parallel_reduce_callback;
-using Kokkos::Tools::set_end_parallel_scan_callback;
-using Kokkos::Tools::set_finalize_callback;
-using Kokkos::Tools::set_init_callback;
-using Kokkos::Tools::set_pop_region_callback;
-using Kokkos::Tools::set_profile_event_callback;
-using Kokkos::Tools::set_push_region_callback;
-using Kokkos::Tools::set_start_profile_section_callback;
-using Kokkos::Tools::set_stop_profile_section_callback;
+using Kokkos::Tools::Experimental::EventSet;
 
-using Kokkos::Tools::EventSet;
+using Kokkos::Tools::Experimental::pause_tools;
+using Kokkos::Tools::Experimental::resume_tools;
 
-using Kokkos::Tools::pause_tools;
-using Kokkos::Tools::resume_tools;
+using Kokkos::Tools::Experimental::get_callbacks;
+using Kokkos::Tools::Experimental::set_callbacks;
 
-using Kokkos::Tools::get_callbacks;
-using Kokkos::Tools::set_callbacks;
-
-=======
 }  // namespace Experimental
->>>>>>> feature/programmatic-profiling
 }  // namespace Profiling
 
 }  // namespace Kokkos
