@@ -58,6 +58,7 @@
 #include <impl/Kokkos_SharedAlloc.hpp>
 
 #include "impl/Kokkos_HostSpace_deepcopy.hpp"
+#include "impl/Kokkos_Profiling.hpp"
 
 /*--------------------------------------------------------------------------*/
 
@@ -69,12 +70,12 @@ namespace Kokkos {
 /// LogicalMemorySpace is a space that is identical to another space, but
 /// differentiable by name and template argument
 
-template <const char* const* Name, class BaseSpace,
+template <class Namer, class BaseSpace,
           class DefaultExecutionSpace = void, bool SharesAccessWithBase = true>
 class LogicalMemorySpace {
  public:
   //! Tag this class as a kokkos memory space
-  typedef LogicalMemorySpace<Name, BaseSpace, DefaultExecutionSpace,
+  typedef LogicalMemorySpace<Namer, BaseSpace, DefaultExecutionSpace,
                              SharesAccessWithBase>
       memory_space;
   typedef size_t size_type;
@@ -118,10 +119,9 @@ class LogicalMemorySpace {
   }
 
   /**\brief Return Name of the MemorySpace */
-  constexpr const char* name() const { return m_name; }
+  constexpr static const char* name() { return Namer::name(); }
 
  private:
-  constexpr static const char* m_name = *Name;
   friend class Kokkos::Impl::SharedAllocationRecord<memory_space, void>;
 };
 
@@ -133,21 +133,21 @@ namespace Kokkos {
 
 namespace Impl {
 
-template <const char* const* Name, typename BaseSpace,
+template <class Namer, typename BaseSpace,
           typename DefaultExecutionSpace, typename OtherSpace>
 struct MemorySpaceAccess<
-    Kokkos::LogicalMemorySpace<Name, BaseSpace, DefaultExecutionSpace, true>,
+    Kokkos::LogicalMemorySpace<Namer, BaseSpace, DefaultExecutionSpace, true>,
     OtherSpace> {
   enum { assignable = MemorySpaceAccess<BaseSpace, OtherSpace>::assignable };
   enum { accessible = MemorySpaceAccess<BaseSpace, OtherSpace>::accessible };
   enum { deepcopy = MemorySpaceAccess<BaseSpace, OtherSpace>::deepcopy };
 };
 
-template <const char* const* Name, typename BaseSpace,
+template <class Namer, typename BaseSpace,
           typename DefaultExecutionSpace>
 struct MemorySpaceAccess<
     HostSpace,
-    Kokkos::LogicalMemorySpace<Name, BaseSpace, DefaultExecutionSpace, true> > {
+    Kokkos::LogicalMemorySpace<Namer, BaseSpace, DefaultExecutionSpace, true> > {
   enum { assignable = true };
   enum { accessible = true };
   enum { deepcopy = true };
@@ -163,14 +163,14 @@ namespace Kokkos {
 
 namespace Impl {
 
-template <const char* const* Name, class BaseSpace, class DefaultExecutionSpace,
+template <class Namer, class BaseSpace, class DefaultExecutionSpace,
           bool SharesAccessSemanticsWithBase>
 class SharedAllocationRecord<
-    Kokkos::LogicalMemorySpace<Name, BaseSpace, DefaultExecutionSpace,
+    Kokkos::LogicalMemorySpace<Namer, BaseSpace, DefaultExecutionSpace,
                                SharesAccessSemanticsWithBase>,
     void> : public SharedAllocationRecord<void, void> {
  private:
-  typedef Kokkos::LogicalMemorySpace<Name, BaseSpace, DefaultExecutionSpace,
+  typedef Kokkos::LogicalMemorySpace<Namer, BaseSpace, DefaultExecutionSpace,
                                      SharesAccessSemanticsWithBase>
       SpaceType;
   typedef SharedAllocationRecord<void, void> RecordBase;
@@ -196,7 +196,7 @@ class SharedAllocationRecord<
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::deallocateData(
-          Kokkos::Profiling::SpaceHandle(m_space.name()),
+          Kokkos::Profiling::make_space_handle(m_space.name()),
           RecordBase::m_alloc_ptr->m_label, data(), size());
     }
 #endif
@@ -221,7 +221,7 @@ class SharedAllocationRecord<
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::allocateData(
-          Kokkos::Profiling::SpaceHandle(arg_space.name()), arg_label, data(),
+          Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label, data(),
           arg_alloc_size);
     }
 #endif
@@ -338,14 +338,12 @@ namespace Kokkos {
 
 namespace Impl {
 
-#define PAR_DEEP_COPY_USE_MEMCPY
-
-template <const char* const Name, class BaseSpace, class DefaultExecutionSpace,
+template <class Namer, class BaseSpace, class DefaultExecutionSpace,
           bool SharesAccessSemanticsWithBase, class ExecutionSpace>
 struct DeepCopy<
-    Kokkos::LogicalMemorySpace<Name, BaseSpace, DefaultExecutionSpace,
+    Kokkos::LogicalMemorySpace<Namer, BaseSpace, DefaultExecutionSpace,
                                SharesAccessSemanticsWithBase>,
-    Kokkos::LogicalMemorySpace<Name, BaseSpace, DefaultExecutionSpace,
+    Kokkos::LogicalMemorySpace<Namer, BaseSpace, DefaultExecutionSpace,
                                SharesAccessSemanticsWithBase>,
     ExecutionSpace> {
   DeepCopy(void* dst, void* src, size_t n) {
@@ -356,6 +354,35 @@ struct DeepCopy<
   }
 };
 
+template <class Namer, class BaseSpace, class DefaultExecutionSpace,
+          bool SharesAccessSemanticsWithBase, class ExecutionSpace, class SourceSpace>
+struct DeepCopy<
+    SourceSpace,
+    Kokkos::LogicalMemorySpace<Namer, BaseSpace, DefaultExecutionSpace,
+                               SharesAccessSemanticsWithBase>,
+    ExecutionSpace> {
+  DeepCopy(void* dst, void* src, size_t n) {
+    DeepCopy<SourceSpace, BaseSpace, ExecutionSpace>(dst, src, n);
+  }
+  DeepCopy(const ExecutionSpace& exec, void* dst, void* src, size_t n) {
+    DeepCopy<SourceSpace, BaseSpace, ExecutionSpace>(exec, dst, src, n);
+  }
+};
+
+template <class Namer, class BaseSpace, class DefaultExecutionSpace,
+          bool SharesAccessSemanticsWithBase, class ExecutionSpace, class DestinationSpace>
+struct DeepCopy<
+    Kokkos::LogicalMemorySpace<Namer, BaseSpace, DefaultExecutionSpace,
+                               SharesAccessSemanticsWithBase>,
+    DestinationSpace,
+    ExecutionSpace> {
+  DeepCopy(void* dst, void* src, size_t n) {
+    DeepCopy<BaseSpace, DestinationSpace, ExecutionSpace>(dst, src, n);
+  }
+  DeepCopy(const ExecutionSpace& exec, void* dst, void* src, size_t n) {
+    DeepCopy<BaseSpace, DestinationSpace, ExecutionSpace>(exec, dst, src, n);
+  }
+};
 }  // namespace Impl
 
 }  // namespace Kokkos
