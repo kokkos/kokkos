@@ -49,7 +49,7 @@
 #include <string>
 #include <iosfwd>
 #include <typeinfo>
-
+#include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_MemoryTraits.hpp>
@@ -106,7 +106,7 @@ class LogicalMemorySpace {
   BaseSpace underlying_allocator;
 
   template <typename... Args>
-  LogicalMemorySpace(Args&&... args) : underlying_allocator(args...){};
+  LogicalMemorySpace(Args&&... args) : underlying_allocator(args...) {}
 
   /**\brief  Allocate untracked memory in the space */
   void* allocate(const size_t arg_alloc_size) const {
@@ -246,6 +246,9 @@ class SharedAllocationRecord<
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
 #else
+    (void)arg_size;
+    (void)arg_label;
+    (void)arg_alloc_size;
     return (SharedAllocationRecord*)0;
 #endif
   }
@@ -314,6 +317,7 @@ class SharedAllocationRecord<
 #else
   static void print_records(std::ostream&, const SpaceType&,
                             bool detail = false) {
+    (void)detail;
     throw_runtime_exception(
         "SharedAllocationRecord<HostSpace>::print_records only works with "
         "KOKKOS_DEBUG enabled");
