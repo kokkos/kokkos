@@ -454,6 +454,12 @@ void initialize() {
         *((Kokkos::Tools::optimizationGoalDeclarationFunction*)&p24);
 #endif
   }
+
+  if (Experimental::current_callbacks.init != nullptr) {
+    (*Experimental::current_callbacks.init)(
+        0, (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
+  }
+
 #ifdef KOKKOS_ENABLE_TUNING
   Kokkos::Tools::VariableInfo kernel_name;
   kernel_name.type = Kokkos::Tools::ValueType::kokkos_value_text;
@@ -535,10 +541,6 @@ void initialize() {
 
   Kokkos::Tools::declareOptimizationGoal(initial_goal);
 #endif
-  if (Experimental::current_callbacks.init != nullptr) {
-    (*Experimental::current_callbacks.init)(
-        0, (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
-  }
 
   Experimental::no_profiling.init     = nullptr;
   Experimental::no_profiling.finalize = nullptr;
