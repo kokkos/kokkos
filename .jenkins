@@ -115,6 +115,11 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
+                    environment {
+                        OMP_NUM_THREADS = 8
+                        OMP_PLACES = 'threads'
+                        OMP_PROC_BIND = 'spread'
+                    }
                     steps {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && mkdir -p build && cd build && \
