@@ -69,6 +69,10 @@ ELSE()
   LIST(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/impl/Kokkos_Serial_task.cpp)
 ENDIF()
 
+IF(Kokkos_ENABLE_CUDA AND WIN32)
+add_compile_options(-x cu)
+ENDIF()
+
 KOKKOS_ADD_LIBRARY(
   kokkoscore
   SOURCES ${KOKKOS_CORE_SRCS}

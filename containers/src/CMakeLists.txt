@@ -6,6 +6,9 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 #-----------------------------------------------------------------------------
+IF(Kokkos_ENABLE_CUDA AND WIN32)
+add_compile_options(-x cu)
+ENDIF()
 
 SET(KOKKOS_CONTAINERS_SRCS)
 APPEND_GLOB(KOKKOS_CONTAINERS_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/impl/*.cpp)

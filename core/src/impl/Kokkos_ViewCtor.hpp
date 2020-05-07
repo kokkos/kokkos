@@ -194,7 +194,7 @@ struct ViewCtorProp<void, T *> {
   type value;
 };
 
-#ifdef KOKKOS_IMPL_CUDA_WINDOWS
+#ifdef KOKKOS_IMPL_WINDOWS_CUDA
 template <typename T>
 struct ViewCtorProp<T *> {
   ViewCtorProp()                     = default;
@@ -261,7 +261,7 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 
   /* Copy from a matching property subset */
 
-#ifdef KOKKOS_IMPL_CUDA_WINDOWS
+#ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_INLINE_FUNCTION ViewCtorProp(pointer_type arg0)
       : ViewCtorProp<void, pointer_type>(arg0) {}
 
