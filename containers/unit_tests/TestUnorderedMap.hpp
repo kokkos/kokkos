@@ -295,7 +295,7 @@ void test_deep_copy(uint32_t num_nodes) {
   }
 }
 
-// FIXME_HIP deadlock
+// FIXME_HIP wrong result in CI but works locally
 #ifndef KOKKOS_ENABLE_HIP
 // WORKAROUND MSVC
 #ifndef _WIN32
@@ -306,6 +306,7 @@ TEST(TEST_CATEGORY, UnorderedMap_insert) {
   }
 }
 #endif
+#endif
 
 TEST(TEST_CATEGORY, UnorderedMap_failed_insert) {
   for (int i = 0; i < 1000; ++i) test_failed_insert<TEST_EXECSPACE>(10000);
@@ -314,7 +315,6 @@ TEST(TEST_CATEGORY, UnorderedMap_failed_insert) {
 TEST(TEST_CATEGORY, UnorderedMap_deep_copy) {
   for (int i = 0; i < 2; ++i) test_deep_copy<TEST_EXECSPACE>(10000);
 }
-#endif
 
 TEST(TEST_CATEGORY, UnorderedMap_valid_empty) {
   using Key   = int;
