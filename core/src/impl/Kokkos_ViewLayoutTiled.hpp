@@ -600,11 +600,37 @@ struct ViewOffset<
   }
 
   //----------------------------------------
-
+#ifdef KOKKOS_IMPL_WINDOWS_CUDA
+  KOKKOS_FUNCTION ViewOffset() {}
+  KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) {
+    m_dim     = src.m_dim;
+    m_tile_N0 = src.m_tile_N0;
+    m_tile_N1 = src.m_tile_N1;
+    m_tile_N2 = src.m_tile_N2;
+    m_tile_N3 = src.m_tile_N3;
+    m_tile_N4 = src.m_tile_N4;
+    m_tile_N5 = src.m_tile_N5;
+    m_tile_N6 = src.m_tile_N6;
+    m_tile_N7 = src.m_tile_N7;
+  }
+  KOKKOS_FUNCTION ViewOffset& operator=(const ViewOffset& src) {
+    m_dim     = src.m_dim;
+    m_tile_N0 = src.m_tile_N0;
+    m_tile_N1 = src.m_tile_N1;
+    m_tile_N2 = src.m_tile_N2;
+    m_tile_N3 = src.m_tile_N3;
+    m_tile_N4 = src.m_tile_N4;
+    m_tile_N5 = src.m_tile_N5;
+    m_tile_N6 = src.m_tile_N6;
+    m_tile_N7 = src.m_tile_N7;
+    return *this;
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION ~ViewOffset()                 = default;
   KOKKOS_DEFAULTED_FUNCTION ViewOffset()                  = default;
   KOKKOS_DEFAULTED_FUNCTION ViewOffset(const ViewOffset&) = default;
   KOKKOS_DEFAULTED_FUNCTION ViewOffset& operator=(const ViewOffset&) = default;
+#endif
 
   template <unsigned TrivialScalarSize>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(

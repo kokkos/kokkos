@@ -45,7 +45,8 @@ struct CudaTraits {
   KOKKOS_INLINE_FUNCTION static CudaSpace::size_type warp_align(
       CudaSpace::size_type i) {
     enum { Mask = ~CudaSpace::size_type(WarpIndexMask) };
-    return (i + WarpIndexMask) & Mask;
+    return CudaSpace::size_type(i + CudaSpace::size_type(WarpIndexMask)) &
+           CudaSpace::size_type(Mask);
   }
 };
 

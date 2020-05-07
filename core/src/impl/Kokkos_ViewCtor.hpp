@@ -194,6 +194,30 @@ struct ViewCtorProp<void, T *> {
   type value;
 };
 
+#ifdef KOKKOS_IMPL_CUDA_WINDOWS
+template <typename T>
+struct ViewCtorProp<T *> {
+  ViewCtorProp()                     = default;
+  ViewCtorProp(const ViewCtorProp &) = default;
+  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+
+  typedef T *type;
+
+  KOKKOS_INLINE_FUNCTION
+  ViewCtorProp(const type arg) : value(arg) {}
+
+  enum { has_pointer = true };
+  using pointer_type = type;
+  type value;
+};
+
+template <typename... Args>
+using view_ctor_prop_args = ViewCtorProp<Args...>;
+
+template <typename Arg>
+using view_ctor_prop_base = ViewCtorProp<void, Arg>;
+#endif
+
 template <typename... P>
 struct ViewCtorProp : public ViewCtorProp<void, P>... {
  private:
@@ -236,12 +260,25 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
         ViewCtorProp<void, typename ViewCtorProp<void, Args>::type>(args)... {}
 
   /* Copy from a matching property subset */
+
+#ifdef KOKKOS_IMPL_CUDA_WINDOWS
+  KOKKOS_INLINE_FUNCTION ViewCtorProp(pointer_type arg0)
+      : ViewCtorProp<void, pointer_type>(arg0) {}
+
+  template <typename... Args>
+  ViewCtorProp(view_ctor_prop_args<Args...> const &arg)
+      : view_ctor_prop_base<Args>(
+            static_cast<view_ctor_prop_base<Args> const &>(arg))... {
+    (void)arg;
+  }
+#else
   template <typename... Args>
   ViewCtorProp(ViewCtorProp<Args...> const &arg)
       : ViewCtorProp<void, Args>(
             static_cast<ViewCtorProp<void, Args> const &>(arg))... {
     (void)arg;
   }
+#endif
 };
 
 } /* namespace Impl */

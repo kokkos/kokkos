@@ -534,7 +534,8 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
     __syncthreads();
     unsigned int num_teams_done = 0;
     if (threadIdx.x + threadIdx.y == 0) {
-      num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
+      num_teams_done =
+          Kokkos::atomic_fetch_add(global_flags, (unsigned int)1) + 1;
     }
     bool is_last_block = false;
     if (__syncthreads_or(num_teams_done == gridDim.x)) {
@@ -636,7 +637,8 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
 
     unsigned int num_teams_done = 0;
     if (threadIdx.x + threadIdx.y == 0) {
-      num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
+      num_teams_done =
+          Kokkos::atomic_fetch_add(global_flags, (unsigned int)1) + 1;
     }
     bool is_last_block = false;
     if (__syncthreads_or(num_teams_done == gridDim.x)) {
