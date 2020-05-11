@@ -124,6 +124,8 @@ using endDeepCopyFunction   = Kokkos_Profiling_endDeepCopyFunction;
 
 }  // namespace Kokkos
 
+// Profiling
+
 namespace Kokkos {
 
 namespace Profiling {
@@ -160,5 +162,42 @@ using Kokkos::Tools::stopProfileSectionFunction;
 
 }  // namespace Profiling
 }  // namespace Kokkos
+
+// Tuning
+
+namespace Kokkos {
+namespace Tools {
+
+using ValueSet            = Kokkos_Tuning_ValueSet;
+using ValueRange          = Kokkos_Tuning_ValueRange;
+using StatisticalCategory = Kokkos_Tuning_VariableInfo_StatisticalCategory;
+using ValueType           = Kokkos_Tuning_VariableInfo_ValueType;
+using CandidateValueType  = Kokkos_Tuning_VariableInfo_CandidateValueType;
+using SetOrRange          = Kokkos_Tuning_VariableInfo_SetOrRange;
+using VariableInfo        = Kokkos_Tuning_VariableInfo;
+using OptimizationGoal    = Kokkos_Tuning_OptimzationGoal;
+// TODO DZP: VariableInfo subclasses to automate some of this
+
+using VariableValue = Kokkos_Tuning_VariableValue;
+
+VariableValue make_variable_value(size_t id, bool val);
+VariableValue make_variable_value(size_t id, int64_t val);
+VariableValue make_variable_value(size_t id, double val);
+VariableValue make_variable_value(size_t id, const char* val);
+
+using tuningVariableDeclarationFunction =
+    Kokkos_Tuning_tuningVariableDeclarationFunction;
+using contextVariableDeclarationFunction =
+    Kokkos_Tuning_contextVariableDeclarationFunction;
+using tuningVariableValueFunction  = Kokkos_Tuning_tuningVariableValueFunction;
+using contextVariableValueFunction = Kokkos_Tuning_contextVariableValueFunction;
+using contextEndFunction           = Kokkos_Tuning_contextEndFunction;
+using optimizationGoalDeclarationFunction =
+    Kokkos_Tuning_optimizationGoalDeclarationFunction;
+
+}  // end namespace Tools
+
+}  // end namespace Kokkos
+
 
 #endif
