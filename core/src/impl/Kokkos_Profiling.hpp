@@ -118,7 +118,7 @@ void set_declare_tuning_variable_callback(
     tuningVariableDeclarationFunction callback);
 void set_declare_context_variable_callback(
     contextVariableDeclarationFunction callback);
-void set_declare_tuning_variable_values_callback(
+void set_request_tuning_variable_values_callback(
     tuningVariableValueFunction callback);
 void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction callback);
@@ -195,14 +195,8 @@ using Kokkos::Tools::Experimental::set_callbacks;
 }  // namespace Profiling
 
 namespace Tools {
-#ifdef KOKKOS_ENABLE_TUNING
-extern tuningVariableDeclarationFunction tuningVariableDeclarationCallback;
-extern tuningVariableValueFunction tuningVariableValueCallback;
-extern contextVariableDeclarationFunction contextVariableDeclarationCallback;
-extern contextEndFunction contextEndCallback;
-extern optimizationGoalDeclarationFunction optimizationGoalCallback;
+
 using time_point = std::chrono::time_point<std::chrono::system_clock>;
-#endif
 
 VariableValue make_variable_value(size_t id, bool val);
 VariableValue make_variable_value(size_t id, int64_t val);

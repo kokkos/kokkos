@@ -437,26 +437,31 @@ void initialize() {
       auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
       Experimental::set_profile_event_callback(
           *reinterpret_cast<profileEventFunction*>(&p19));
-    }
+
 #ifdef KOKKOS_ENABLE_TUNING
-    // TODO DZP: move to its own section
-    auto p20 = dlsym(firstProfileLibrary, "kokkosp_declare_tuning_variable");
-    Kokkos::Tools::tuningVariableDeclarationCallback =
-        *((Kokkos::Tools::tuningVariableDeclarationFunction*)&p20);
-    auto p21 = dlsym(firstProfileLibrary, "kokkosp_declare_context_variable");
-    Kokkos::Tools::contextVariableDeclarationCallback =
-        *((Kokkos::Tools::contextVariableDeclarationFunction*)&p21);
-    auto p22 =
-        dlsym(firstProfileLibrary, "kokkosp_request_tuning_variable_values");
-    Kokkos::Tools::tuningVariableValueCallback =
-        *((Kokkos::Tools::tuningVariableValueFunction*)&p22);
-    auto p23 = dlsym(firstProfileLibrary, "kokkosp_end_context");
-    Kokkos::Tools::contextEndCallback =
-        *((Kokkos::Tools::contextEndFunction*)&p23);
-    auto p24 = dlsym(firstProfileLibrary, "kokkosp_declare_optimization_goal");
-    Kokkos::Tools::optimizationGoalCallback =
-        *((Kokkos::Tools::optimizationGoalDeclarationFunction*)&p24);
+      auto p20 = dlsym(firstProfileLibrary, "kokkosp_declare_tuning_variable");
+      Experimental::set_declare_tuning_variable_callback(
+          *reinterpret_cast<Kokkos::Tools::tuningVariableDeclarationFunction*>(
+              &p20));
+
+      auto p21 = dlsym(firstProfileLibrary, "kokkosp_declare_context_variable");
+      Experimental::set_declare_context_variable_callback(
+          *reinterpret_cast<Kokkos::Tools::contextVariableDeclarationFunction*>(
+              &p21));
+      auto p22 =
+          dlsym(firstProfileLibrary, "kokkosp_request_tuning_variable_values");
+      Experimental::set_request_tuning_variable_values_callback(
+          *reinterpret_cast<Kokkos::Tools::tuningVariableValueFunction*>(&p22));
+      auto p23 = dlsym(firstProfileLibrary, "kokkosp_end_context");
+      Experimental::set_end_context_callback(
+          *reinterpret_cast<Kokkos::Tools::contextEndFunction*>(&p23));
+      auto p24 =
+          dlsym(firstProfileLibrary, "kokkosp_declare_optimization_goal");
+      Experimental::set_declare_optimization_goal_callback(
+          *reinterpret_cast<
+              Kokkos::Tools::optimizationGoalDeclarationFunction*>(&p24));
 #endif
+    }
   }
 
   if (Experimental::current_callbacks.init != nullptr) {
@@ -588,17 +593,7 @@ void finalize() {
   if (Experimental::current_callbacks.finalize != nullptr) {
     (*Experimental::current_callbacks.finalize)();
 
-    // Set all profile hooks to nullptr to prevent
-    // any additional calls. Once we are told to
-    // finalize, we mean it
-    // TODO DZP: move to its own section
     Experimental::pause_tools();
-#ifdef KOKKOS_ENABLE_TUNING
-    Kokkos::Tools::tuningVariableDeclarationCallback  = nullptr;
-    Kokkos::Tools::contextVariableDeclarationCallback = nullptr;
-    Kokkos::Tools::tuningVariableValueCallback        = nullptr;
-    Kokkos::Tools::contextEndCallback                 = nullptr;
-#endif
   }
 }
 
@@ -705,12 +700,6 @@ void set_callbacks(EventSet new_events) { current_callbacks = new_events; }
 
 namespace Kokkos {
 namespace Tools {
-
-tuningVariableDeclarationFunction tuningVariableDeclarationCallback;
-tuningVariableValueFunction tuningVariableValueCallback;
-contextVariableDeclarationFunction contextVariableDeclarationCallback;
-contextEndFunction contextEndCallback;
-optimizationGoalDeclarationFunction optimizationGoalCallback;
 
 static size_t& getContextCounter() {
   static size_t x;
@@ -947,12 +936,6 @@ void set_callbacks(EventSet) {}
 
 namespace Kokkos {
 namespace Tools {
-
-tuningVariableDeclarationFunction tuningVariableDeclarationCallback;
-tuningVariableValueFunction tuningVariableValueCallback;
-contextVariableDeclarationFunction contextVariableDeclarationCallback;
-contextEndFunction contextEndCallback;
-optimizationGoalDeclarationFunction optimizationGoalCallback;
 
 static size_t& getContextCounter() {
   static size_t x;
