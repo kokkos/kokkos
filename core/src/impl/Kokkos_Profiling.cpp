@@ -669,7 +669,7 @@ void set_declare_context_variable_callback(
     contextVariableDeclarationFunction callback) {
   current_callbacks.declare_context_variable = callback;
 }
-void set_declare_tuning_variable_values_callback(
+void set_request_tuning_variable_values_callback(
     tuningVariableValueFunction callback) {
   current_callbacks.request_tuning_values = callback;
 }
@@ -920,7 +920,7 @@ void set_end_deep_copy_callback(endDeepCopyFunction) {}
 void set_declare_tuning_variable_callback(tuningVariableDeclarationFunction) {}
 void set_declare_context_variable_callback(contextVariableDeclarationFunction) {
 }
-void set_declare_tuning_variable_values_callback(tuningVariableValueFunction) {}
+void set_request_tuning_variable_values_callback(tuningVariableValueFunction) {}
 void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction) {}
 void set_end_context_callback(contextEndFunction) {}
