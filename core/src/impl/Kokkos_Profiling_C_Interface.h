@@ -204,6 +204,8 @@ typedef void (*Kokkos_Tuning_contextEndFunction)(const size_t);
 typedef void (*Kokkos_Tuning_optimizationGoalDeclarationFunction)(
     const Kokkos_Tuning_OptimzationGoal& goal);
 
+using function_pointer = void(*)();
+
 struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_initFunction init;
   Kokkos_Profiling_finalizeFunction finalize;
@@ -224,13 +226,13 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_profileEventFunction profile_event;
   Kokkos_Profiling_beginDeepCopyFunction begin_deep_copy;
   Kokkos_Profiling_endDeepCopyFunction end_deep_copy;
-  char profiling_padding[128];
+  char profiling_padding[16 * sizeof(function_pointer)];
   Kokkos_Tuning_tuningVariableDeclarationFunction declare_tuning_variable;
   Kokkos_Tuning_contextVariableDeclarationFunction declare_context_variable;
   Kokkos_Tuning_tuningVariableValueFunction declare_tuning_values;
   Kokkos_Tuning_contextEndFunction end_tuning_context;
   Kokkos_Tuning_optimizationGoalDeclarationFunction declare_optimization_goal;
-  char padding[1880];  // allows us to add another 256 events to the Tools
+  char padding[235 * sizeof(function_pointer)];  // allows us to add another 256 events to the Tools
                        // interface without changing struct layout
 };
 #endif  // KOKKOS_PROFILING_C_INTERFACE_HPP
