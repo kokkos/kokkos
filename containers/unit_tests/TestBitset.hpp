@@ -185,8 +185,8 @@ void test_bitset() {
   typedef Kokkos::Bitset<Device> bitset_type;
   typedef Kokkos::ConstBitset<Device> const_bitset_type;
 
-  std::array<unsigned, 7> test_sizes = {0u,       10u,      100u,    1000u,
-                                        1u << 14, 1u << 16, 10000001};
+  std::array<unsigned, 7> test_sizes = {
+      {0u, 10u, 100u, 1000u, 1u << 14, 1u << 16, 10000001}};
 
   for (const auto test_size : test_sizes) {
     // std::cout << "Bitset " << test_sizes[i] << std::endl;
