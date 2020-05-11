@@ -566,6 +566,11 @@ void initialize() {
 
   Experimental::no_profiling.profile_event = nullptr;
 
+  Experimental::no_profiling.declare_context_variable = nullptr;
+  Experimental::no_profiling.declare_tuning_variable  = nullptr;
+  Experimental::no_profiling.request_tuning_values    = nullptr;
+  Experimental::no_profiling.end_tuning_context       = nullptr;
+
   free(envProfileCopy);
 }
 
@@ -654,6 +659,26 @@ void set_begin_deep_copy_callback(beginDeepCopyFunction callback) {
 }
 void set_end_deep_copy_callback(endDeepCopyFunction callback) {
   current_callbacks.end_deep_copy = callback;
+}
+
+void set_declare_tuning_variable_callback(
+    tuningVariableDeclarationFunction callback) {
+  current_callbacks.declare_tuning_variable = callback;
+}
+void set_declare_context_variable_callback(
+    contextVariableDeclarationFunction callback) {
+  current_callbacks.declare_context_variable = callback;
+}
+void set_declare_tuning_variable_values_callback(
+    tuningVariableValueFunction callback) {
+  current_callbacks.request_tuning_values = callback;
+}
+void set_end_context_callback(contextEndFunction callback) {
+  current_callbacks.end_tuning_context = callback;
+}
+void set_declare_optimization_goal_callback(
+    optimizationGoalDeclarationFunction callback) {
+  current_callbacks.declare_optimization_goal = callback;
 }
 
 void pause_tools() {
@@ -897,6 +922,13 @@ void set_destroy_profile_section_callback(destroyProfileSectionFunction) {}
 void set_profile_event_callback(profileEventFunction) {}
 void set_begin_deep_copy_callback(beginDeepCopyFunction) {}
 void set_end_deep_copy_callback(endDeepCopyFunction) {}
+void set_declare_tuning_variable_callback(tuningVariableDeclarationFunction) {}
+void set_declare_context_variable_callback(contextVariableDeclarationFunction) {
+}
+void set_declare_tuning_variable_values_callback(tuningVariableValueFunction) {}
+void set_declare_optimization_goal_callback(
+    optimizationGoalDeclarationFunction) {}
+void set_end_context_callback(contextEndFunction) {}
 
 void pause_tools() {}
 

@@ -114,6 +114,16 @@ void set_profile_event_callback(profileEventFunction callback);
 void set_begin_deep_copy_callback(beginDeepCopyFunction callback);
 void set_end_deep_copy_callback(endDeepCopyFunction callback);
 
+void set_declare_tuning_variable_callback(
+    tuningVariableDeclarationFunction callback);
+void set_declare_context_variable_callback(
+    contextVariableDeclarationFunction callback);
+void set_declare_tuning_variable_values_callback(
+    tuningVariableValueFunction callback);
+void set_declare_optimization_goal_callback(
+    optimizationGoalDeclarationFunction callback);
+void set_end_context_callback(contextEndFunction callback);
+
 void pause_tools();
 void resume_tools();
 

@@ -100,6 +100,9 @@ namespace Tools {
 
 namespace Experimental {
 using EventSet = Kokkos_Profiling_EventSet;
+static_assert(sizeof(EventSet) / sizeof(function_pointer) == 275,
+              "sizeof EventSet has changed, this is an error on the part of a "
+              "Kokkos developer");
 }  // namespace Experimental
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;

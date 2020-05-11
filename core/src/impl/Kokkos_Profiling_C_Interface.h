@@ -227,7 +227,7 @@ struct Kokkos_Profiling_EventSet {
   char profiling_padding[16 * sizeof(function_pointer)];
   Kokkos_Tuning_tuningVariableDeclarationFunction declare_tuning_variable;
   Kokkos_Tuning_contextVariableDeclarationFunction declare_context_variable;
-  Kokkos_Tuning_tuningVariableValueFunction declare_tuning_values;
+  Kokkos_Tuning_tuningVariableValueFunction request_tuning_values;
   Kokkos_Tuning_contextEndFunction end_tuning_context;
   Kokkos_Tuning_optimizationGoalDeclarationFunction declare_optimization_goal;
   char padding[235 *
@@ -235,4 +235,5 @@ struct Kokkos_Profiling_EventSet {
                                            // events to the Tools interface
                                            // without changing struct layout
 };
+
 #endif  // KOKKOS_PROFILING_C_INTERFACE_HPP
