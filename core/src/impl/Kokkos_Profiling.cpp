@@ -95,7 +95,12 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.destroy_profile_section == r.destroy_profile_section &&
          l.profile_event == r.profile_event &&
          l.begin_deep_copy == r.begin_deep_copy &&
-         l.end_deep_copy == r.end_deep_copy;
+         l.end_deep_copy == r.end_deep_copy &&
+         l.declare_context_variable == r.declare_context_variable &&
+         l.declare_tuning_variable == r.declare_tuning_variable &&
+         l.end_tuning_context == r.end_tuning_context &&
+         l.request_tuning_values == r.request_tuning_values &&
+         l.declare_optimization_goal == r.declare_optimization_goal;
 }
 }  // namespace Experimental
 bool profileLibraryLoaded() {
