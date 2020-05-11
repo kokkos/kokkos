@@ -723,8 +723,9 @@ static std::unordered_map<size_t, VariableValue> feature_values;
 void declareTuningVariable(const std::string& variableName, size_t uniqID,
                            VariableInfo info) {
 #ifdef KOKKOS_ENABLE_TUNING
-  if (tuningVariableDeclarationCallback != nullptr) {
-    (*tuningVariableDeclarationCallback)(variableName.c_str(), uniqID, info);
+  if (Experimental::current_callbacks.declare_tuning_variable != nullptr) {
+    (*Experimental::current_callbacks.declare_tuning_variable)(
+        variableName.c_str(), uniqID, info);
   }
 #else
   (void)variableName;
@@ -737,9 +738,9 @@ void declareContextVariable(const std::string& variableName, size_t uniqID,
                             VariableInfo info,
                             Kokkos::Tools::SetOrRange candidate_values) {
 #ifdef KOKKOS_ENABLE_TUNING
-  if (contextVariableDeclarationCallback != nullptr) {
-    (*contextVariableDeclarationCallback)(variableName.c_str(), uniqID, info,
-                                          candidate_values);
+  if (Experimental::current_callbacks.declare_context_variable != nullptr) {
+    (*Experimental::current_callbacks.declare_context_variable)(
+        variableName.c_str(), uniqID, info, candidate_values);
   }
 #else
   (void)variableName;
@@ -777,10 +778,10 @@ void requestTuningVariableValues(size_t contextId, size_t count,
   for (auto id : active_features) {
     context_values.push_back(feature_values[id]);
   }
-  if (tuningVariableValueCallback != nullptr) {
-    (*tuningVariableValueCallback)(contextId, context_values.size(),
-                                   context_values.data(), count, values,
-                                   candidate_values);
+  if (Experimental::current_callbacks.request_tuning_values != nullptr) {
+    (*Experimental::current_callbacks.request_tuning_values)(
+        contextId, context_values.size(), context_values.data(), count, values,
+        candidate_values);
   }
 #else
   (void)contextId;
@@ -795,8 +796,8 @@ void endContext(size_t contextId) {
   for (auto id : features_per_context[contextId]) {
     active_features.erase(id);
   }
-  if (Kokkos::Tools::contextEndCallback != nullptr) {
-    (*contextEndCallback)(contextId);
+  if (Experimental::current_callbacks.end_tuning_context != nullptr) {
+    (*Experimental::current_callbacks.end_tuning_context)(contextId);
   }
   decrementCurrentContextId();
 #else
@@ -806,7 +807,7 @@ void endContext(size_t contextId) {
 
 bool haveTuningTool() {
 #ifdef KOKKOS_ENABLE_TUNING
-  return (tuningVariableValueCallback != nullptr);
+  return (Experimental::current_callbacks.request_tuning_values != nullptr);
 #else
   return false;
 #endif
@@ -844,8 +845,8 @@ size_t getNewVariableId();
 
 void declareOptimizationGoal(const OptimizationGoal& goal) {
 #ifdef KOKKOS_ENABLE_TUNING
-  if (Kokkos::Tools::optimizationGoalCallback != nullptr) {
-    (*optimizationGoalCallback)(goal);
+  if (Experimental::current_callbacks.declare_optimization_goal != nullptr) {
+    (*Experimental::current_callbacks.declare_optimization_goal)(goal);
   }
 #else
   (void)goal;
