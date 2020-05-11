@@ -50,7 +50,7 @@
 
 #include <iostream>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
-#include <impl/Kokkos_Profiling.hpp>
+#include <impl/Kokkos_Tools.hpp>
 namespace Kokkos {
 namespace Impl {
 
