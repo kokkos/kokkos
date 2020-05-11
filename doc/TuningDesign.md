@@ -17,7 +17,7 @@ feel of past Kokkos tooling efforts, we'd like to achieve this with a callback s
 
 A Kokkos Tuning system should be as small as is wise while achieving the following goals
 
-1. Expose to tools enough data about the _context_ of the running application to tune intelligently
+1. Expose to tools enough data about the _context_ of the running application to tune intelligently. In autotuning terms, decribe the _features_
 2. Expose to tools enough data about tuning parameters that they might know how to optimize what they're asked to
 3. Expose to applications an interface that they might inform a tool about their current application context
 4. Expose to tools the results of their choices
@@ -44,7 +44,7 @@ Semantics (as always) are likely the source of the most confusion here, so a bit
 of statistics to enable tools to do intelligent searching. If ordering doesn't make sense, if a value is "categorical", the only thing
 a tool can do is try all possible values for a tuning value. If they're ordered (ordinal), the search can take advantage of this by
 using the concept of a directional search. If the distances between elements matter (interval data) you can cheat with things like
-bisection. Finally if ratios matter you can play games where you increase by a factor of 10 in your searches.
+bisection. Finally if ratios matter you can play games where you increase by a factor of 10 in your searches. Note that one good point in favor of this design is that it matches up nicely with scikit-opt (a happy accident).
 
 In describing the candidate values in (3), users have two options: sets or ranges. A set has a number of entries of the given type, a range has lower and upper bounds and a step size.
 
@@ -55,9 +55,9 @@ tuning parameters
 
 Suppose a tool perfectly understands what a block size is. To effectively tune one, it needs to know something about the application.
 
-In a trivial case, the tool knows absolutely nothing other than candidate values, and tries to make a choice that optimizes across all
+In a trivial case, the tool knows absolutely nothing other than candidate values for the block size, and tries to make a choice that optimizes across all
 invocations of kernels. This isn't _that_ far from what Kokkos does now, so it's not unreasonable for this to produce decent results.
-That said, we could quickly add some context from Kokkos, stuff like the name and type of the kernel, the execution space, all with the semantic information described above [TODO: caveat one]. That way a tuning tool could differentiate based on all the information available to Kokkos. Going a little further, we could expose this ability to provide context to our applications. What if the tools wasn't just tuning to the fact that the kernel name was "GEMM", but that "matrix_size" was a million? Or that "live_particles" had a
+That said, we could quickly add some context from Kokkos, stuff like the name and type of the kernel, the execution space, all with the semantic information described above. That way a tuning tool could differentiate based on all the information available to Kokkos. Going a little further, we could expose this ability to provide context to our applications. What if the tools wasn't just tuning to the fact that the kernel name was "GEMM", but that "matrix_size" was a million? Or that "live_particles" had a
 certain value? The more (relevant) context we provide to a tool, the better it will be able to tune.
 
 
@@ -90,7 +90,7 @@ endContext(contextId(0));
 bar();
 ```
 
-They should know in `bar` that it is no longer safe to push the button. Similarly, if the have provided tuning values to contextId(0), when contextId(0) ends, that is when they take measurements related to those tuning values and learn things. For many tools, the first time they see a value associated with a contextId, they'll do a starting measurement, and at endContext they'll stop that measurement.
+They should know in `bar` that it is no longer safe to push the button. Similarly, if tools have provided tuning values to contextId(0), when contextId(0) ends, that is when the tool takes measurements related to those tuning values and learns things. *For many tools, the first time they see a value associated with a contextId, they'll do a starting measurement, and at endContext they'll stop that measurement*.
 
 The ugliest divergence from design is in the semantics. We would absolutely love to tell users the valid values for a given tuning parameter at variable declaration time. We hate the idea of telling them the valid values on each request for the value of that parameter. Unfortunately the universe is cruel: things can happen outside of Kokkos that make the valid values of a tuning parameter change on each request. Just taking the example of block size
 
