@@ -117,7 +117,8 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
-                        OMP_PROC_BIND = 'false'
+                        OMP_PLACES = 'threads'
+                        OMP_PROC_BIND = 'spread'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -187,7 +188,7 @@ pipeline {
                     }
                     environment {
                         OMP_NUM_THREADS = 8
-                        OMP_PROC_BIND = 'false'
+                        OMP_PROC_BIND = 'true'
                     }
                     steps {
                         sh '''rm -rf build && mkdir -p build && cd build && \
