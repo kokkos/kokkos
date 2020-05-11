@@ -96,7 +96,6 @@ typedef void (*Kokkos_Profiling_beginDeepCopyFunction)(
     Kokkos_Profiling_SpaceHandle, const char*, const void*, uint64_t);
 typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 
-
 // Tuning
 
 struct Kokkos_Tuning_VariableValue;  // forward declaration
@@ -193,9 +192,8 @@ typedef void (*Kokkos_Tuning_contextVariableDeclarationFunction)(
     Kokkos_Tuning_VariableInfo_SetOrRange);
 
 typedef void (*Kokkos_Tuning_tuningVariableValueFunction)(
-    const size_t, const size_t,
-    const Kokkos_Tuning_VariableValue*, const size_t count,
-    Kokkos_Tuning_VariableValue*,
+    const size_t, const size_t, const Kokkos_Tuning_VariableValue*,
+    const size_t count, Kokkos_Tuning_VariableValue*,
     Kokkos_Tuning_VariableInfo_SetOrRange*);
 typedef void (*Kokkos_Tuning_contextVariableValueFunction)(
     const size_t contextId, const size_t count,
@@ -204,7 +202,7 @@ typedef void (*Kokkos_Tuning_contextEndFunction)(const size_t);
 typedef void (*Kokkos_Tuning_optimizationGoalDeclarationFunction)(
     const Kokkos_Tuning_OptimzationGoal& goal);
 
-using function_pointer = void(*)();
+using function_pointer = void (*)();
 
 struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_initFunction init;
@@ -232,7 +230,9 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Tuning_tuningVariableValueFunction declare_tuning_values;
   Kokkos_Tuning_contextEndFunction end_tuning_context;
   Kokkos_Tuning_optimizationGoalDeclarationFunction declare_optimization_goal;
-  char padding[235 * sizeof(function_pointer)];  // allows us to add another 256 events to the Tools
-                       // interface without changing struct layout
+  char padding[235 *
+               sizeof(function_pointer)];  // allows us to add another 256
+                                           // events to the Tools interface
+                                           // without changing struct layout
 };
 #endif  // KOKKOS_PROFILING_C_INTERFACE_HPP

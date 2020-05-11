@@ -199,5 +199,4 @@ using optimizationGoalDeclarationFunction =
 
 }  // end namespace Kokkos
 
-
 #endif

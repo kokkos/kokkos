@@ -50,6 +50,5 @@
 #define KOKKOS_IMPL_KOKKOS_TOOLS_HPP
 
 #include <impl/Kokkos_Profiling.hpp>
-#include <impl/Kokkos_Tuning.hpp>
 
 #endif

@@ -48,6 +48,7 @@
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
+#include <chrono>
 
 namespace Kokkos {
 namespace Tools {
@@ -182,6 +183,48 @@ using Kokkos::Tools::Experimental::set_callbacks;
 
 }  // namespace Experimental
 }  // namespace Profiling
+
+namespace Tools {
+#ifdef KOKKOS_ENABLE_TUNING
+extern tuningVariableDeclarationFunction tuningVariableDeclarationCallback;
+extern tuningVariableValueFunction tuningVariableValueCallback;
+extern contextVariableDeclarationFunction contextVariableDeclarationCallback;
+extern contextEndFunction contextEndCallback;
+extern optimizationGoalDeclarationFunction optimizationGoalCallback;
+using time_point = std::chrono::time_point<std::chrono::system_clock>;
+#endif
+
+VariableValue make_variable_value(size_t id, bool val);
+VariableValue make_variable_value(size_t id, int64_t val);
+VariableValue make_variable_value(size_t id, double val);
+VariableValue make_variable_value(size_t id, const char* val);
+
+void declareOptimizationGoal(const OptimizationGoal& goal);
+
+void declareTuningVariable(const std::string& variableName, size_t uniqID,
+                           VariableInfo info);
+
+void declareContextVariable(const std::string& variableName, size_t uniqID,
+                            VariableInfo info,
+                            Kokkos::Tools::SetOrRange candidate_values);
+
+void declareContextVariableValues(size_t contextId, size_t count,
+                                  VariableValue* values);
+
+void endContext(size_t contextId);
+
+void requestTuningVariableValues(size_t contextId, size_t count,
+                                 VariableValue* values,
+                                 Kokkos::Tools::SetOrRange* candidate_values);
+
+bool haveTuningTool();
+
+size_t getNewContextId();
+size_t getCurrentContextId();
+
+size_t getNewVariableId();
+
+}  // namespace Tools
 
 }  // namespace Kokkos
 
