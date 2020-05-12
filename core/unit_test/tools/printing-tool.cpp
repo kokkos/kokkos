@@ -1,8 +1,6 @@
 
 #include <cstdio>
 #include <inttypes.h>
-#include <vector>
-#include <string>
 
 struct SpaceHandle {
   char name[64];

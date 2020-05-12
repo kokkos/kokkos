@@ -42,10 +42,11 @@
 //@HEADER
 */
 
+// This file calls most of the basic Kokkos primitives. When combined with a testing library
+// this tests that our shared-library loading based profiling mechanisms work
+
 #include <iostream>
-#include "Kokkos_Core.hpp"
-#include <gtest/gtest.h>
-#include "Kokkos_Core.hpp"
+#include <Kokkos_Core.hpp>
 
 int main() {
   Kokkos::initialize();
