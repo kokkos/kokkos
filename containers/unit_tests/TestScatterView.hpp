@@ -533,8 +533,6 @@ void test_scatter_view(int n) {
   TestDuplicatedScatterView<DeviceType, ScatterType, NumberType> duptest(n);
 }
 
-// FIXME_HIP ScatterView requires UniqueToken
-#ifndef KOKKOS_ENABLE_HIP
 TEST(TEST_CATEGORY, scatterview) {
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum, double>(
       10);
@@ -601,7 +599,6 @@ TEST(TEST_CATEGORY, scatterview_devicetype) {
   }
 #endif
 }
-#endif
 
 }  // namespace Test
 

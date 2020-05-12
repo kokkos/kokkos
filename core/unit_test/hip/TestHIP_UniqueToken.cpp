@@ -42,25 +42,5 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_HPP
-#define KOKKOS_HIP_HPP
-
-#include <Kokkos_Core_fwd.hpp>
-
-#if defined(KOKKOS_ENABLE_HIP)
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-#include <Kokkos_HIP_Space.hpp>
-#include <Kokkos_Parallel.hpp>
-#include <impl/Kokkos_Tags.hpp>
-
-#include <HIP/Kokkos_HIP_Instance.hpp>
-#include <HIP/Kokkos_HIP_Parallel_Range.hpp>
-#include <HIP/Kokkos_HIP_Parallel_MDRange.hpp>
-#include <HIP/Kokkos_HIP_Parallel_Team.hpp>
-#include <HIP/Kokkos_HIP_UniqueToken.hpp>
-
-#endif
-#endif
+#include <hip/TestHIP_Category.hpp>
+#include <TestUniqueToken.hpp>
