@@ -350,6 +350,13 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_PushFinalizeHook.cpp
 )
 
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  UnitTest_Develop
+  SOURCES
+    UnitTestMainInit.cpp
+    default/TestDefaultDeviceDevelop.cpp
+)
+
 # This test is special, because it passes exactly when it prints the
 # message "PASSED: I am the custom std::terminate handler.", AND calls
 # std::terminate.  This means that we can't use
