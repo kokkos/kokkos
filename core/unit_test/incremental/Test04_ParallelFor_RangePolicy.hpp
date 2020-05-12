@@ -54,15 +54,15 @@ namespace Test {
 
 using value_type       = double;
 int num_elements       = 10;
-const value_type value = 0.5;
 
 struct ParallelForFunctor {
   value_type *_data;
+  const value_type _value;
 
-  ParallelForFunctor(value_type *data) : _data(data) {}
+  ParallelForFunctor(value_type *data, const value_type value) : _data(data),_value(value) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i) const { _data[i] = (i + 1) * value; }
+  void operator()(const int i) const { _data[i] = (i + 1) * _value; }
 };
 
 template <class ExecSpace>
@@ -72,6 +72,7 @@ struct TestParallel_For {
   using h_memspace_type = Kokkos::HostSpace;
 
   value_type *deviceData, *hostData;
+  const value_type value = 0.5;
 
   // Check if the array values are updated correctly.
   void correctness_check(value_type *data) {
@@ -125,7 +126,7 @@ struct TestParallel_For {
 
     // parallel-for functor called for num_elements number of iterations.
     Kokkos::parallel_for("parallel_for", num_elements,
-                         ParallelForFunctor(deviceData));
+                         ParallelForFunctor(deviceData,value));
 
     Kokkos::fence();
     // Checks if parallel_for gave the correct results.
@@ -146,7 +147,7 @@ struct TestParallel_For {
     // parallel-for functor with range-policy from 0 to num_elements iterations.
     Kokkos::parallel_for("RangePolicy_ParallelFor",
                          range_policy_t(0, num_elements),
-                         ParallelForFunctor(deviceData));
+                         ParallelForFunctor(deviceData,value));
 
     // Checks if parallel_for gave the correct results.
     // Free the allocated memory in init().
