@@ -55,6 +55,7 @@
 #endif
 
 namespace Test {
+using namespace std;
 
 // Just save the data in the report.  Informative text goes in the
 // operator<<(..).
@@ -100,7 +101,7 @@ struct ErrorReporterDriverBase {
     int num_reported = m_errorReporter.getNumReports();
     int num_attempts = m_errorReporter.getNumReportAttempts();
 
-    int expected_num_reports = std::min(reporter_capacity, test_size / 2);
+    int expected_num_reports = min(reporter_capacity, test_size / 2);
     EXPECT_EQ(expected_num_reports, num_reported);
     EXPECT_EQ(test_size / 2, num_attempts);
 
