@@ -341,7 +341,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
 
 if(Kokkos_ENABLE_PROFILING)
   add_library(
-     printer-tool SHARED
+     printer-tool MODULE
      tools/printing-tool.cpp
   )
 
@@ -350,20 +350,11 @@ if(Kokkos_ENABLE_PROFILING)
     tools/TestAllCalls.cpp
   )
 
-  KOKKOS_ADD_TEST( NAME ProfilingTestParallelFor
+  KOKKOS_ADD_TEST( NAME ProfilingTestLibraryLoad
     EXE  ProfilingAllCalls
-    TOOL ${CMAKE_CURRENT_BINARY_DIR}/libprinter-tool.so
-    PASS_REGULAR_EXPRESSION ".*kokkosp_begin_parallel_for:parallel_for:[^:]*:0.*end_parallel_for:0"
-  )
-  KOKKOS_ADD_TEST( NAME ProfilingTestParallelReduce
-    EXE  ProfilingAllCalls
-    TOOL ${CMAKE_CURRENT_BINARY_DIR}/libprinter-tool.so
-    PASS_REGULAR_EXPRESSION ".*kokkosp_begin_parallel_reduce:parallel_reduce:[^:]*:1.*end_parallel_reduce:1"
-  )
-  KOKKOS_ADD_TEST( NAME ProfilingTestParallelScan
-    EXE  ProfilingAllCalls
-    TOOL ${CMAKE_CURRENT_BINARY_DIR}/libprinter-tool.so
-    PASS_REGULAR_EXPRESSION ".*kokkosp_begin_parallel_scan:parallel_scan:[^:]*:2.*end_parallel_scan:2"
+    TOOL printer-tool
+    PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_allocate_data:Host:source:0x[0-9a-f]*:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:Host:destination:0x[0-9a-f]*:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:Host:destination:0x[0-9a-f]*:Host:source:0x[0-9a-f]*:40::kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:[0-9]*:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:0:1::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:[0-9]*:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_deallocate_data:Host:destination:0x[0-9a-f]*:40::kokkosp_deallocate_data:Host:source:0x[0-9a-f]*:40::kokkosp_finalize_library::"
+    #PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_allocate_data:Host:source:0x[0-9a-f]*:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:Host:destination:0x[0-9a-f]*:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:Host:destination:0xf69600:Host:source:0x[0-9a-f]*:40::kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:16777216:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:0:1::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:16777216:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_deallocate_data:Host:destination:0x[0-9a-f]*:40::kokkosp_deallocate_data:Host:source:0x[0-9a-f]*:40::kokkosp_finalize_library::"
   )
 
 endif()
