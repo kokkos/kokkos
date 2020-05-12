@@ -75,17 +75,139 @@ class SYCLDevice {
   explicit SYCLDevice(const cl::sycl::device& d) : device(d) {}
 
   friend std::ostream& operator<<(std::ostream& os, SYCLDevice const& that) {
-    return os << "Name: "
-              << that.device.get_info<cl::sycl::info::device::name>()
-              << " Driver Version: "
-              << that.device.get_info<cl::sycl::info::device::driver_version>()
-              << " Is Host: " << that.device.is_host()
-              << " Is CPU: " << that.device.is_cpu()
-              << " Is GPU: " << that.device.is_gpu()
-              << " Is Accelerator: " << that.device.is_accelerator();
+    using namespace cl::sycl::info;
+    return os << "Name: " << that.device.get_info<device::name>()
+              << "\nDriver Version: "
+              << that.device.get_info<device::driver_version>()
+              << "\nIs Host: " << that.device.is_host()
+              << "\nIs CPU: " << that.device.is_cpu()
+              << "\nIs GPU: " << that.device.is_gpu()
+              << "\nIs Accelerator: " << that.device.is_accelerator()
+              << "\nVendor Id: " << that.device.get_info<device::vendor_id>()
+              << "\nMax Compute Units: "
+              << that.device.get_info<device::max_compute_units>()
+              << "\nMax Work Item Dimensions: "
+              << that.device.get_info<device::max_work_item_dimensions>()
+              << "\nMax Work Group Size: "
+              << that.device.get_info<device::max_work_group_size>()
+              << "\nPreferred Vector Width Char: "
+              << that.device.get_info<device::preferred_vector_width_char>()
+              << "\nPreferred Vector Width Short: "
+              << that.device.get_info<device::preferred_vector_width_short>()
+              << "\nPreferred Vector Width Int: "
+              << that.device.get_info<device::preferred_vector_width_int>()
+              << "\nPreferred Vector Width Long: "
+              << that.device.get_info<device::preferred_vector_width_long>()
+              << "\nPreferred Vector Width Float: "
+              << that.device.get_info<device::preferred_vector_width_float>()
+              << "\nPreferred Vector Width Double: "
+              << that.device.get_info<device::preferred_vector_width_double>()
+              << "\nPreferred Vector Width Half: "
+              << that.device.get_info<device::preferred_vector_width_half>()
+              << "\nNative Vector Width Char: "
+              << that.device.get_info<device::native_vector_width_char>()
+              << "\nNative Vector Width Short: "
+              << that.device.get_info<device::native_vector_width_short>()
+              << "\nNative Vector Width Int: "
+              << that.device.get_info<device::native_vector_width_int>()
+              << "\nNative Vector Width Long: "
+              << that.device.get_info<device::native_vector_width_long>()
+              << "\nNative Vector Width Float: "
+              << that.device.get_info<device::native_vector_width_float>()
+              << "\nNative Vector Width Double: "
+              << that.device.get_info<device::native_vector_width_double>()
+              << "\nNative Vector Width Half: "
+              << that.device.get_info<device::native_vector_width_half>()
+              << "\nAddress Bits: "
+              << that.device.get_info<device::address_bits>()
+              << "\nImage Support: "
+              << that.device.get_info<device::image_support>()
+              << "\nMax Mem Alloc Size: "
+              << that.device.get_info<device::max_mem_alloc_size>()
+              << "\nMax Read Image Args: "
+              << that.device.get_info<device::max_read_image_args>()
+              << "\nImage2d Max Width: "
+              << that.device.get_info<device::image2d_max_width>()
+              << "\nImage2d Max Height: "
+              << that.device.get_info<device::image2d_max_height>()
+              << "\nImage3d Max Width: "
+              << that.device.get_info<device::image3d_max_width>()
+              << "\nImage3d Max Height: "
+              << that.device.get_info<device::image3d_max_height>()
+              << "\nImage3d Max Depth: "
+              << that.device.get_info<device::image3d_max_depth>()
+              << "\nImage Max Buffer Size: "
+              << that.device.get_info<device::image_max_buffer_size>()
+              << "\nImage Max Array Size: "
+              << that.device.get_info<device::image_max_array_size>()
+              << "\nMax Samplers: "
+              << that.device.get_info<device::max_samplers>()
+              << "\nMax Parameter Size: "
+              << that.device.get_info<device::max_parameter_size>()
+              << "\nMem Base Addr Align: "
+              << that.device.get_info<device::mem_base_addr_align>()
+              << "\nGlobal Cache Mem Line Size: "
+              << that.device.get_info<device::global_mem_cache_line_size>()
+              << "\nGlobal Mem Cache Size: "
+              << that.device.get_info<device::global_mem_cache_size>()
+              << "\nGlobal Mem Size: "
+              << that.device.get_info<device::global_mem_size>()
+              << "\nMax Constant Buffer Size: "
+              << that.device.get_info<device::max_constant_buffer_size>()
+              << "\nMax Constant Args: "
+              << that.device.get_info<device::max_constant_args>()
+              << "\nLocal Mem Size: "
+              << that.device.get_info<device::local_mem_size>()
+              << "\nError Correction Support: "
+              << that.device.get_info<device::error_correction_support>()
+              << "\nHost Unified Memory: "
+              << that.device.get_info<device::host_unified_memory>()
+              << "\nProfiling Timer Resolution: "
+              << that.device.get_info<device::profiling_timer_resolution>()
+              << "\nIs Endian Little: "
+              << that.device.get_info<device::is_endian_little>()
+              << "\nIs Available: "
+              << that.device.get_info<device::is_available>()
+              << "\nIs Compiler Available: "
+              << that.device.get_info<device::is_compiler_available>()
+              << "\nIs Linker Available: "
+              << that.device.get_info<device::is_linker_available>()
+              << "\nQueue Profiling: "
+              << that.device.get_info<device::queue_profiling>()
+              << "\nBuilt In Kernels: "
+              << Container(that.device.get_info<device::built_in_kernels>())
+              << "\nVendor: " << that.device.get_info<device::vendor>()
+              << "\nProfile: " << that.device.get_info<device::profile>()
+              << "\nVersion: " << that.device.get_info<device::version>()
+              << "\nExtensions: "
+              << Container(that.device.get_info<device::extensions>())
+              << "\nPrintf Buffer Size: "
+              << that.device.get_info<device::printf_buffer_size>()
+              << "\nPreferred Interop User Sync: "
+              << that.device.get_info<device::preferred_interop_user_sync>()
+              << "\nPartition Max Sub Devices: "
+              << that.device.get_info<device::partition_max_sub_devices>()
+              << "\nReference Count: "
+              << that.device.get_info<device::reference_count>() << '\n';
   }
 
  private:
+  template <typename C>
+  struct Container {
+    explicit Container(const C& c) : container(c) {}
+
+    friend std::ostream& operator<<(std::ostream& os, const Container& that) {
+      os << that.container.size();
+      for (const auto& v : that.container) {
+        os << "\n\t" << v;
+      }
+      return os;
+    }
+
+   private:
+    const C& container;
+  };
+
   const cl::sycl::device& device;
 };
 };  // namespace
@@ -101,7 +223,7 @@ void SYCLInternal::listDevices(std::ostream& out) const {
   out << "The system contains " << devices.size() << " devices\n";
 
   for (size_t d = 0; d != devices.size(); ++d) {
-    out << "Device: " << d << ' ' << SYCLDevice(devices[d]) << '\n';
+    out << "Device: " << d << '\n' << SYCLDevice(devices[d]) << '\n';
   }
 }
 
@@ -205,14 +327,15 @@ void SYCLInternal::initialize(int sycl_device_id) {
     //  dev_info.m_syclProp[ sycl_device_id ];
 
     m_syclDev = sycl_device_id;
-    listDevices();
+    //listDevices();
 
     // Kokkos::Impl::sycl_device_synchronize();
 
     auto devices = cl::sycl::device::get_devices();
-    std::cout << "Initializing with device " << m_syclDev << ": "
-              << SYCLDevice(devices[m_syclDev]) << '\n';
-    m_queue = new cl::sycl::queue(devices[m_syclDev]);
+    m_queue      = new cl::sycl::queue(devices[m_syclDev]);
+    std::cout << "Initialized with Device " << m_syclDev << '\n'
+              << SYCLDevice(m_queue->get_device()) << '\n';
+
     /*
         // Query what compute capability architecture a kernel executes:
         m_syclArch = sycl_kernel_arch();
