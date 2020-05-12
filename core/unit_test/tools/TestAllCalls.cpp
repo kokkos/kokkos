@@ -42,8 +42,9 @@
 //@HEADER
 */
 
-// This file calls most of the basic Kokkos primitives. When combined with a testing library
-// this tests that our shared-library loading based profiling mechanisms work
+// This file calls most of the basic Kokkos primitives. When combined with a
+// testing library this tests that our shared-library loading based profiling
+// mechanisms work
 
 #include <iostream>
 #include <Kokkos_Core.hpp>
