@@ -450,9 +450,6 @@ struct ViewTraits {
 
 }  // namespace Kokkos
 
-// this is here because it contains the forward declar of Kokkos::View
-#include <impl/Kokkos_ViewTracker.hpp>
-
 namespace Kokkos {
 
 template <class T1, class T2>
@@ -608,9 +605,10 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class, class...>
   friend class Kokkos::Impl::ViewMapping;
 
- public:
-  using traits            = ViewTraits<DataType, Properties...>;
   using view_tracker_type = Kokkos::Impl::ViewTracker<View>;
+
+ public:
+  using traits = ViewTraits<DataType, Properties...>;
 
  private:
   using map_type =

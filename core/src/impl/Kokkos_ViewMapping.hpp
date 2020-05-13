@@ -54,6 +54,7 @@
 #include <Kokkos_Extents.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
+#include <impl/Kokkos_ViewTracker.hpp>
 #include <impl/Kokkos_ViewCtor.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 #if defined(KOKKOS_ENABLE_PROFILING)
