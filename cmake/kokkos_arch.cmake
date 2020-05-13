@@ -14,6 +14,10 @@ KOKKOS_CFG_DEPENDS(ARCH COMPILER_ID)
 KOKKOS_CFG_DEPENDS(ARCH DEVICES)
 KOKKOS_CFG_DEPENDS(ARCH OPTIONS)
 
+KOKKOS_CHECK_DEPRECATED_OPTIONS(
+  ARCH_EPYC   "Please replace EPYC with ZEN or ZEN2, depending on your platform"
+  ARCH_RYZEN  "Please replace RYZEN with ZEN or ZEN2, depending on your platform"
+)
 
 #-------------------------------------------------------------------------------
 # List of possible host architectures.
