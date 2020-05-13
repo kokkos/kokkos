@@ -13,11 +13,6 @@ KOKKOS_ADD_TEST_LIBRARY(
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
 
-#These can be direct, no need for Tribits or Kokkos wrappers
-IF(Kokkos_ENABLE_CUDA AND WIN32)
-add_compile_options(-x cu)
-ENDIF()
-
 # WORKAROUND FOR HIPCC
 IF(Kokkos_ENABLE_HIP)
   TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0 --amdgpu-target=gfx906")
@@ -27,7 +22,9 @@ ENDIF()
 
 TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
 #Gtest minimally requires C++11
-#TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_11)
+IF(NOT (Kokkos_ENABLE_CUDA AND WIN32))
+TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_11)
+ENDIF()
 
 #
 # Define Incremental Testing Feature Levels
@@ -67,7 +64,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
   endif()
   string(TOLOWER ${Tag} dir)
 
-    SET(${Tag}_SOURCES1
+  # Needed to split this for Windows NVCC, since it ends up putting everything on the
+  # command line in an intermediate compilation step even if CMake generated a response
+  # file. That then exceeded the shell comand line max length.
+  SET(${Tag}_SOURCES1
       ${dir}/Test${Tag}_AtomicOperations_int.cpp
       ${dir}/Test${Tag}_AtomicOperations_unsignedint.cpp
       ${dir}/Test${Tag}_AtomicOperations_longint.cpp
@@ -304,6 +304,7 @@ if(Kokkos_ENABLE_HIP)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIP
     SOURCES
+      UnitTestMainInit.cpp
       ${HIP_SOURCES}
       hip/TestHIPHostPinned_ViewAPI_a.cpp
       hip/TestHIPHostPinned_ViewAPI_b.cpp
@@ -350,6 +351,8 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_PushFinalizeHook.cpp
 )
 
+# This test is intended for development and debugging by putting code
+# into TestDefaultDeviceDevelop.cpp. By default its empty.
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Develop
   SOURCES

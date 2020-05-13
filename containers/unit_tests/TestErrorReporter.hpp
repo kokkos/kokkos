@@ -55,7 +55,6 @@
 #endif
 
 namespace Test {
-using namespace std;
 
 // Just save the data in the report.  Informative text goes in the
 // operator<<(..).
@@ -98,6 +97,7 @@ struct ErrorReporterDriverBase {
   }
 
   void check_expectations(int reporter_capacity, int test_size) {
+    using namespace std;
     int num_reported = m_errorReporter.getNumReports();
     int num_attempts = m_errorReporter.getNumReportAttempts();
 

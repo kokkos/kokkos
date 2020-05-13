@@ -9,10 +9,6 @@
 # that in TriBITS KokkosAlgorithms can be disabled...
 #INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../algorithms/src")
 
-IF(Kokkos_ENABLE_CUDA AND WIN32)
-add_compile_options(-x cu)
-ENDIF()
-
 SET(SOURCES
   PerfTestMain.cpp
   PerfTestGramSchmidt.cpp

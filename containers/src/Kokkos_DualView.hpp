@@ -232,7 +232,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
            const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : modified_flags(t_modified_flags("DualView::modified_flags")),
         d_view(label, n0, n1, n2, n3, n4, n5, n6, n7),
-        h_view(create_mirror_view(d_view)) { // without UVM, host View mirrors
+        h_view(create_mirror_view(d_view)) {  // without UVM, host View mirrors
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     modified_host   = t_modified_flag(modified_flags, 0);
     modified_device = t_modified_flag(modified_flags, 1);
@@ -263,7 +263,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
            const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : modified_flags(t_modified_flags("DualView::modified_flags")),
         d_view(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7),
-        h_view(create_mirror_view(d_view)) { // without UVM, host View mirrors
+        h_view(create_mirror_view(d_view)) {  // without UVM, host View mirrors
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     modified_host   = t_modified_flag(modified_flags, 0);
     modified_device = t_modified_flag(modified_flags, 1);

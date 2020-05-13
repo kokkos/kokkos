@@ -194,6 +194,8 @@ struct ViewCtorProp<void, T *> {
   type value;
 };
 
+// For some reason I don't understand I needed this specialization explicitly
+// for NVCC/MSVC
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
 template <typename T>
 struct ViewCtorProp<T *> {

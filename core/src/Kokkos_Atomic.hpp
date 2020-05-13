@@ -220,7 +220,6 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 
 #include "impl/Kokkos_Atomic_Generic.hpp"
 
-//#ifndef _WIN32
 //----------------------------------------------------------------------------
 // Atomic fetch and add
 //
@@ -286,7 +285,6 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 // { T tmp = *dest ; *dest = max(*dest, val); return tmp ; }
 
 #include "impl/Kokkos_Atomic_MinMax.hpp"
-//#endif /*Not _WIN32*/
 
 //----------------------------------------------------------------------------
 // Memory fence

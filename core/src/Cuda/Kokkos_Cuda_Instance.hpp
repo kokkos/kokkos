@@ -17,13 +17,23 @@ namespace Kokkos {
 namespace Impl {
 
 struct CudaTraits {
-  enum { WarpSize = 32 /* 0x0020 */ };
-  enum { WarpIndexMask = 0x001f /* Mask for warpindex */ };
-  enum { WarpIndexShift = 5 /* WarpSize == 1 << WarpShift */ };
+  enum : CudaSpace::size_type { WarpSize = 32 /* 0x0020 */ };
+  enum : CudaSpace::size_type {
+    WarpIndexMask = 0x001f /* Mask for warpindex */
+  };
+  enum : CudaSpace::size_type {
+    WarpIndexShift = 5 /* WarpSize == 1 << WarpShift */
+  };
 
-  enum { ConstantMemoryUsage = 0x008000 /* 32k bytes */ };
-  enum { ConstantMemoryCache = 0x002000 /*  8k bytes */ };
-  enum { KernelArgumentLimit = 0x001000 /*  4k bytes */ };
+  enum : CudaSpace::size_type {
+    ConstantMemoryUsage = 0x008000 /* 32k bytes */
+  };
+  enum : CudaSpace::size_type {
+    ConstantMemoryCache = 0x002000 /*  8k bytes */
+  };
+  enum : CudaSpace::size_type {
+    KernelArgumentLimit = 0x001000 /*  4k bytes */
+  };
 
   typedef unsigned long
       ConstantGlobalBufferType[ConstantMemoryUsage / sizeof(unsigned long)];
@@ -44,9 +54,8 @@ struct CudaTraits {
 
   KOKKOS_INLINE_FUNCTION static CudaSpace::size_type warp_align(
       CudaSpace::size_type i) {
-    enum { Mask = ~CudaSpace::size_type(WarpIndexMask) };
-    return CudaSpace::size_type(i + CudaSpace::size_type(WarpIndexMask)) &
-           CudaSpace::size_type(Mask);
+    constexpr CudaSpace::size_type Mask = ~WarpIndexMask;
+    return (i + WarpIndexMask) & Mask;
   }
 };
 

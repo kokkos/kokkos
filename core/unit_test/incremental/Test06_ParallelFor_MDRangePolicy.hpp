@@ -55,12 +55,12 @@
 namespace Test06 {
 
 using value_type = double;
-const int N      = 10;
-const int M      = 10;
 
 struct MDFunctor {
   value_type *_data;
   const value_type _delta;
+  const int N = 10;
+  const int M = 10;
 
   MDFunctor(value_type *data, const value_type delta)
       : _data(data), _delta(delta) {}
@@ -108,6 +108,8 @@ struct TestMDRangePolicy {
   // Device and Host Data structure pointer
   value_type *deviceData, *hostData;
   const value_type delta = 0.5;
+  const int N            = 10;
+  const int M            = 10;
 
   // Routine to allocate memory in a specific memory space.
   template <class MemSpace>

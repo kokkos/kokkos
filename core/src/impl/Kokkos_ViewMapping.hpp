@@ -87,12 +87,12 @@ struct rank_dynamic;
 
 template <>
 struct rank_dynamic<> {
-  enum : size_t { value = 0 };
+  enum : unsigned { value = 0 };
 };
 
 template <size_t Val, size_t... Args>
 struct rank_dynamic<Val, Args...> {
-  enum : size_t { value = (Val == 0 ? 1 : 0) + rank_dynamic<Args...>::value };
+  enum : unsigned { value = (Val == 0 ? 1 : 0) + rank_dynamic<Args...>::value };
 };
 
 #define KOKKOS_IMPL_VIEW_DIMENSION(R)                                       \
@@ -134,45 +134,45 @@ struct
     __declspec(empty_bases)
 #endif
         ViewDimension
-    : public ViewDimension0<size_t(variadic_size_t<0u, Vals...>::value),
-                            unsigned(rank_dynamic<Vals...>::value)>,
-      public ViewDimension1<size_t(variadic_size_t<1u, Vals...>::value),
-                            unsigned(rank_dynamic<Vals...>::value)>,
-      public ViewDimension2<size_t(variadic_size_t<2u, Vals...>::value),
-                            unsigned(rank_dynamic<Vals...>::value)>,
-      public ViewDimension3<size_t(variadic_size_t<3u, Vals...>::value),
-                            unsigned(rank_dynamic<Vals...>::value)>,
-      public ViewDimension4<size_t(variadic_size_t<4u, Vals...>::value),
-                            unsigned(rank_dynamic<Vals...>::value)>,
-      public ViewDimension5<size_t(variadic_size_t<5u, Vals...>::value),
-                            unsigned(rank_dynamic<Vals...>::value)>,
-      public ViewDimension6<size_t(variadic_size_t<6u, Vals...>::value),
-                            unsigned(rank_dynamic<Vals...>::value)>,
-      public ViewDimension7<size_t(variadic_size_t<7u, Vals...>::value),
-                            unsigned(rank_dynamic<Vals...>::value)> {
-  typedef ViewDimension0<size_t(variadic_size_t<0u, Vals...>::value),
-                         unsigned(rank_dynamic<Vals...>::value)>
+    : public ViewDimension0<variadic_size_t<0u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension1<variadic_size_t<1u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension2<variadic_size_t<2u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension3<variadic_size_t<3u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension4<variadic_size_t<4u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension5<variadic_size_t<5u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension6<variadic_size_t<6u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension7<variadic_size_t<7u, Vals...>::value,
+                            rank_dynamic<Vals...>::value> {
+  typedef ViewDimension0<variadic_size_t<0u, Vals...>::value,
+                         rank_dynamic<Vals...>::value>
       D0;
-  typedef ViewDimension1<size_t(variadic_size_t<1u, Vals...>::value),
-                         unsigned(rank_dynamic<Vals...>::value)>
+  typedef ViewDimension1<variadic_size_t<1u, Vals...>::value,
+                         rank_dynamic<Vals...>::value>
       D1;
-  typedef ViewDimension2<size_t(variadic_size_t<2u, Vals...>::value),
-                         unsigned(rank_dynamic<Vals...>::value)>
+  typedef ViewDimension2<variadic_size_t<2u, Vals...>::value,
+                         rank_dynamic<Vals...>::value>
       D2;
-  typedef ViewDimension3<size_t(variadic_size_t<3u, Vals...>::value),
-                         unsigned(rank_dynamic<Vals...>::value)>
+  typedef ViewDimension3<variadic_size_t<3u, Vals...>::value,
+                         rank_dynamic<Vals...>::value>
       D3;
-  typedef ViewDimension4<size_t(variadic_size_t<4u, Vals...>::value),
-                         unsigned(rank_dynamic<Vals...>::value)>
+  typedef ViewDimension4<variadic_size_t<4u, Vals...>::value,
+                         rank_dynamic<Vals...>::value>
       D4;
-  typedef ViewDimension5<size_t(variadic_size_t<5u, Vals...>::value),
-                         unsigned(rank_dynamic<Vals...>::value)>
+  typedef ViewDimension5<variadic_size_t<5u, Vals...>::value,
+                         rank_dynamic<Vals...>::value>
       D5;
-  typedef ViewDimension6<size_t(variadic_size_t<6u, Vals...>::value),
-                         unsigned(rank_dynamic<Vals...>::value)>
+  typedef ViewDimension6<variadic_size_t<6u, Vals...>::value,
+                         rank_dynamic<Vals...>::value>
       D6;
-  typedef ViewDimension7<size_t(variadic_size_t<7u, Vals...>::value),
-                         unsigned(rank_dynamic<Vals...>::value)>
+  typedef ViewDimension7<variadic_size_t<7u, Vals...>::value,
+                         rank_dynamic<Vals...>::value>
       D7;
 
   using D0::ArgN0;
@@ -193,8 +193,8 @@ struct
   using D6::N6;
   using D7::N7;
 
-  enum : size_t { rank = sizeof...(Vals) };
-  enum : size_t { rank_dynamic = Impl::rank_dynamic<Vals...>::value };
+  enum : unsigned { rank = sizeof...(Vals) };
+  enum : unsigned { rank_dynamic = Impl::rank_dynamic<Vals...>::value };
 
   ViewDimension()                     = default;
   ViewDimension(const ViewDimension&) = default;
@@ -1088,6 +1088,8 @@ struct ViewOffset<
 
   //----------------------------------------
 
+  // NVCC+MSVC did not generate the defaulted functions correct and errors out
+  // during compilation. Same for the other places where I changed this.
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()) {}
   KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) { m_dim = src.m_dim; }
@@ -1096,7 +1098,6 @@ struct ViewOffset<
     return *this;
   }
 #else
-
   ViewOffset()                  = default;
   ViewOffset(const ViewOffset&) = default;
   ViewOffset& operator=(const ViewOffset&) = default;
@@ -1403,6 +1404,8 @@ struct ViewOffset<
   };
 
  public:
+  // NVCC+MSVC did not generate the defaulted functions correct and errors out
+  // during compilation. Same for the other places where I changed this.
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()), m_stride(0) {}
   KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) {
@@ -1717,6 +1720,9 @@ struct ViewOffset<
   }
 
   //----------------------------------------
+  // NVCC+MSVC did not generate the defaulted functions correct and errors out
+  // during compilation. Same for the other places where I changed this.
+
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()) {}
   KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) { m_dim = src.m_dim; }
@@ -2029,6 +2035,10 @@ struct ViewOffset<
   };
 
  public:
+  // NVCC+MSVC did not generate the defaulted functions correct and errors out
+  // during compilation.
+  // Same for the other places where I changed this.
+
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()), m_stride(0) {}
   KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) {
@@ -2528,6 +2538,10 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   }
 
   //----------------------------------------
+  // NVCC+MSVC did not generate the defaulted functions correct and errors out
+  // during compilation.
+  // Same for the other places where I changed this.
+
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset()
       : m_dim(dimension_type()), m_stride(stride_type()) {}

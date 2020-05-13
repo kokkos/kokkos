@@ -343,8 +343,10 @@ class ScanTeamFunctor {
       printf(
           "ScanTeamFunctor[%i.%i of %i.%i] reduce_max_answer(%li) != "
           "reduce_max(%li)\n",
-          (int)ind.league_rank(), (int)ind.team_rank(), (int)ind.league_size(),
-          (int)ind.team_size(),
+          static_cast<int>(ind.league_rank()),
+          static_cast<int>(ind.team_rank()),
+          static_cast<int>(ind.league_size()),
+          static_cast<int>(ind.team_size()),
           static_cast<long>(ind.league_rank() + (ind.team_size() - 1)),
           static_cast<long>(m));
     }
@@ -363,8 +365,10 @@ class ScanTeamFunctor {
       printf(
           "ScanTeamFunctor[%i.%i of %i.%i] answer(%li) != scan_first(%li) or "
           "scan_second(%li)\n",
-          (int)ind.league_rank(), (int)ind.team_rank(), (int)ind.league_size(),
-          (int)ind.team_size(), static_cast<long>(answer),
+          static_cast<int>(ind.league_rank()),
+          static_cast<int>(ind.team_rank()),
+          static_cast<int>(ind.league_size()),
+          static_cast<int>(ind.team_size()), static_cast<long>(answer),
           static_cast<long>(result), static_cast<long>(result2));
 
       error = 1;

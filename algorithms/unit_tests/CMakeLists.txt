@@ -21,10 +21,6 @@ KOKKOS_ADD_TEST_LIBRARY(
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
 
-IF(Kokkos_ENABLE_CUDA AND WIN32)
-add_compile_options(-x cu)
-ENDIF()
-
 # WORKAROUND FOR HIPCC
 IF(Kokkos_ENABLE_HIP)
   TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0 --amdgpu-target=gfx906")

@@ -61,6 +61,10 @@ struct ReduceFunctorHasInit {
   enum { value = false };
 };
 
+// The else clause idiom failed with NVCC+MSVC, causing some symbols not being
+// compiled for the device. The code in there is anyway sketchy, and likely not
+// standard compliant (just happens to work on all compilers we ever used)
+// We intend to replace all of this long term with proper detection idiom.
 #if defined(KOKKOS_COMPILER_MSVC) || defined(KOKKOS_IMPL_WINDOWS_CUDA)
 template <class>
 using impl_void_t_workaround = void;
