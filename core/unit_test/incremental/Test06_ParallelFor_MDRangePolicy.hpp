@@ -54,15 +54,16 @@
 
 namespace Test06 {
 
-using value_type       = double;
-const int N            = 10;
-const int M            = 10;
+using value_type = double;
+const int N      = 10;
+const int M      = 10;
 
 struct MDFunctor {
   value_type *_data;
   const value_type _delta;
 
-  MDFunctor(value_type *data,const value_type delta) : _data(data),_delta(delta) {}
+  MDFunctor(value_type *data, const value_type delta)
+      : _data(data), _delta(delta) {}
 
   // 2D
   KOKKOS_INLINE_FUNCTION
@@ -161,7 +162,7 @@ struct TestMDRangePolicy {
     ASSERT_NE(hostData, nullptr);
 
     // parallel_for call
-    MDFunctor Functor_2D(deviceData,delta);
+    MDFunctor Functor_2D(deviceData, delta);
     Kokkos::parallel_for("MDRange2D", mdPolicy_2D, Functor_2D);
 
     // Copy the data back to Host memory space
@@ -192,7 +193,7 @@ struct TestMDRangePolicy {
     ASSERT_NE(hostData, nullptr);
 
     // parallel_for call
-    MDFunctor Functor_3D(deviceData,delta);
+    MDFunctor Functor_3D(deviceData, delta);
     Kokkos::parallel_for("MDRange3D", mdPolicy_3D, Functor_3D);
 
     // Copy the data back to Host memory space
@@ -223,7 +224,7 @@ struct TestMDRangePolicy {
     ASSERT_NE(hostData, nullptr);
 
     // parallel_for call
-    MDFunctor Functor_4D(deviceData,delta);
+    MDFunctor Functor_4D(deviceData, delta);
     Kokkos::parallel_for("MDRange4D", mdPolicy_4D, Functor_4D);
 
     // Copy the data back to Host memory space
@@ -239,7 +240,7 @@ struct TestMDRangePolicy {
   }
 };
 
-}  // namespace Test04
+}  // namespace Test06
 
 namespace Test {
 

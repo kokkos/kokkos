@@ -66,7 +66,7 @@
 
 namespace Kokkos {
 
-enum { UnorderedMapInvalidIndex = ~0u };
+enum : unsigned { UnorderedMapInvalidIndex = ~0u };
 
 /// \brief First element of the return value of UnorderedMap::insert().
 ///
@@ -84,7 +84,7 @@ enum { UnorderedMapInvalidIndex = ~0u };
 
 class UnorderedMapInsertResult {
  private:
-  enum Status {
+  enum Status : uint32_t {
     SUCCESS          = 1u << 31,
     EXISTING         = 1u << 30,
     FREED_EXISTING   = 1u << 29,
@@ -264,7 +264,7 @@ class UnorderedMap {
   //@}
 
  private:
-  enum { invalid_index = ~static_cast<size_type>(0) };
+  enum : size_type { invalid_index = ~static_cast<size_type>(0) };
 
   typedef typename Impl::if_c<is_set, int, declared_value_type>::type
       impl_value_type;

@@ -51,7 +51,6 @@
 
 namespace Test {
 
-TEST(defaultdevicetype, development_test) {
-}
+TEST(defaultdevicetype, development_test) {}
 
 }  // namespace Test

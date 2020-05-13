@@ -163,7 +163,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   ///   \c t_dev_const_randomread.
   typedef
       typename t_dev_const_randomread::HostMirror t_host_const_randomread_um;
- 
+
   //@}
   //! \name Counters to keep track of changes ("modified" flags)
   //@{
@@ -186,8 +186,9 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
 #endif
 
   //@}
-  
-  // Moved this specifically after modified_flags to resolve an alignment issue on MSVC/NVCC
+
+  // Moved this specifically after modified_flags to resolve an alignment issue
+  // on MSVC/NVCC
   //! \name The two View instances.
   //@{
   t_dev d_view;

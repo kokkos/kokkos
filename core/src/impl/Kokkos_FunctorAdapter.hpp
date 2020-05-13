@@ -91,8 +91,9 @@ struct ReduceFunctorHasJoin {
 template <class F>
 using join_archetype = decltype(&F::join);
 
-    template <class FunctorType>
-    struct ReduceFunctorHasJoin<FunctorType, impl_void_t_workaround<join_archetype<FunctorType>>> {
+template <class FunctorType>
+struct ReduceFunctorHasJoin<
+    FunctorType, impl_void_t_workaround<join_archetype<FunctorType>>> {
   enum { value = true };
 };
 #else
@@ -113,8 +114,9 @@ struct ReduceFunctorHasFinal {
 template <class F>
 using final_archetype = decltype(&F::final);
 
-    template <class FunctorType>
-    struct ReduceFunctorHasFinal<FunctorType, impl_void_t_workaround<final_archetype<FunctorType>>> {
+template <class FunctorType>
+struct ReduceFunctorHasFinal<
+    FunctorType, impl_void_t_workaround<final_archetype<FunctorType>>> {
   enum { value = true };
 };
 #else
@@ -131,13 +133,13 @@ struct ReduceFunctorHasShmemSize {
   enum { value = false };
 };
 
-
 #if defined(KOKKOS_COMPILER_MSVC) || defined(KOKKOS_IMPL_WINDOWS_CUDA)
 template <class F>
 using shmemsize_archetype = decltype(&F::team_shmem_size);
 
-    template <class FunctorType>
-    struct ReduceFunctorHasShmemSize<FunctorType, impl_void_t_workaround<shmemsize_archetype<FunctorType>>> {
+template <class FunctorType>
+struct ReduceFunctorHasShmemSize<
+    FunctorType, impl_void_t_workaround<shmemsize_archetype<FunctorType>>> {
   enum { value = true };
 };
 #else

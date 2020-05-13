@@ -53,7 +53,7 @@
 namespace Test {
 
 using value_type       = double;
-constexpr double value     = 0.5;
+constexpr double value = 0.5;
 const int num_elements = 10;
 
 struct ReduceFunctor {
