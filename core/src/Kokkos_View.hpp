@@ -825,6 +825,9 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION bool span_is_contiguous() const {
     return m_map.span_is_contiguous();
   }
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return m_map.data() != nullptr;
+  }
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const {
     return m_map.data();
   }
