@@ -366,7 +366,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
     int compiled_major = m_cudaArch / 100;
     int compiled_minor = (m_cudaArch % 100) / 10;
 
-    if (compiled_major != cudaProp.major || compiled_minor < cudaProp.minor) {
+    if (compiled_major != cudaProp.major || compiled_minor > cudaProp.minor) {
       std::stringstream ss;
       ss << "Kokkos::Cuda::initialize ERROR: running kernels compiled for "
             "compute capability "
