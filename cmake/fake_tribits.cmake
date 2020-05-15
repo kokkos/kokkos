@@ -106,8 +106,8 @@ FUNCTION(KOKKOS_ADD_TEST)
     )
 
     if(TEST_TOOL)
-	    add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
-	    set_property(TEST ${TEST_NAME} APPEND_STRING PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
+      add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
+      set_property(TEST ${TEST_NAME} APPEND_STRING PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
     endif()
   else()
     CMAKE_PARSE_ARGUMENTS(TEST
@@ -141,8 +141,8 @@ FUNCTION(KOKKOS_ADD_TEST)
       SET_TESTS_PROPERTIES(${TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION ${TEST_PASS_REGULAR_EXPRESSION})
     ENDIF()
     if(TEST_TOOL)
-	    add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
-	    set_property(TEST ${TEST_NAME} APPEND_STRING PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
+      add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
+      set_property(TEST ${TEST_NAME} APPEND_STRING PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
     endif()
     VERIFY_EMPTY(KOKKOS_ADD_TEST ${TEST_UNPARSED_ARGUMENTS})
   endif()
