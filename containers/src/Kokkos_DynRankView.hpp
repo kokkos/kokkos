@@ -589,6 +589,9 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const {
     return m_map.data();
   }
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return (m_map.data() != nullptr);
+  }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE
   // Deprecated, use 'span_is_contigous()' instead
