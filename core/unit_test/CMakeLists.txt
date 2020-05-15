@@ -12,6 +12,7 @@ KOKKOS_ADD_TEST_LIBRARY(
   HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
+
 #These can be direct, no need for Tribits or Kokkos wrappers
 
 # WORKAROUND FOR HIPCC
@@ -333,6 +334,28 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       "PASSED: I am the custom std::terminate handler."
     ALWAYS_FAIL_ON_ZERO_RETURN
 )
+
+if(Kokkos_ENABLE_PROFILING)
+  add_library(
+    printer-tool MODULE
+    tools/printing-tool.cpp
+  )
+
+  KOKKOS_ADD_TEST_EXECUTABLE(
+    ProfilingAllCalls
+    tools/TestAllCalls.cpp
+  )
+
+  set(ADDRESS_REGEX "0x[0-9a-f]*")
+  set(MEMSPACE_REGEX "[HC][ou][sd][ta][a-zA-Z]*")
+
+  KOKKOS_ADD_TEST( NAME ProfilingTestLibraryLoad
+    EXE  ProfilingAllCalls
+    TOOL printer-tool
+    PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:[0-9]*:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:0:1::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:[0-9]*:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
+  )
+
+endif()
 
 if(NOT KOKKOS_HAS_TRILINOS)
 KOKKOS_ADD_TEST_EXECUTABLE(
