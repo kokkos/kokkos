@@ -54,6 +54,7 @@
 #include <Kokkos_Extents.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Traits.hpp>
+#include <impl/Kokkos_ViewTracker.hpp>
 #include <impl/Kokkos_ViewCtor.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -3798,15 +3799,16 @@ KOKKOS_INLINE_FUNCTION void operator_bounds_error_on_device(MapType const& map,
 
 #endif  // ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
 
-template <class MemorySpace, class MapType, class... Args>
+template <class MemorySpace, class ViewType, class MapType, class... Args>
 KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
-    Kokkos::Impl::SharedAllocationTracker const& tracker, const MapType& map,
+    Kokkos::Impl::ViewTracker<ViewType> const& tracker, const MapType& map,
     Args... args) {
   if (!view_verify_operator_bounds<0>(map, args...)) {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     enum { LEN = 1024 };
     char buffer[LEN];
-    const std::string label = tracker.template get_label<MemorySpace>();
+    const std::string label =
+        tracker.m_tracker.template get_label<MemorySpace>();
     int n =
         snprintf(buffer, LEN, "View bounds error of view %s (", label.c_str());
     view_error_operator_bounds<0>(buffer + n, LEN - n, map, args...);
@@ -3817,7 +3819,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
         a corresponding SharedAllocationHeader containing a label).
        This check should cover the case of Views that don't
        have the Unmanaged trait but were initialized by pointer. */
-    if (tracker.has_record()) {
+    if (tracker.m_tracker.has_record()) {
       operator_bounds_error_on_device<MapType>(
           map, has_printable_label_typedef<MapType>());
     } else {

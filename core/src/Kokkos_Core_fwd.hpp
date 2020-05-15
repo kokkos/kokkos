@@ -250,6 +250,9 @@ void fence();
 
 namespace Kokkos {
 
+template <class DataType, class... Properties>
+class View;
+
 namespace Impl {
 
 template <class DstSpace, class SrcSpace,
