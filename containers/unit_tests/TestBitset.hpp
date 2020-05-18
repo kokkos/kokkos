@@ -188,7 +188,7 @@ void test_bitset() {
   {
     unsigned ts = 100u;
     bitset_type b1;
-    ASSERT_FALSE(b1.is_allocated());
+    ASSERT_TRUE(b1.is_allocated());
 
     b1 = bitset_type(ts);
     bitset_type b2(b1);
