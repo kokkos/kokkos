@@ -50,24 +50,9 @@
 #include <string>
 #include <unordered_map>
 
-static std::unordered_map<size_t, Kokkos::Tools::ValueType> variableTypeInfo;
 static size_t expectedVariableId;
 static size_t expectedNumberOfContextVariables;
 static int64_t expectedContextVariableValue;
-
-std::string variableValueString(Kokkos::Tools::VariableValue value) {
-  switch (variableTypeInfo[value.id]) {
-    case Kokkos::Tools::ValueType::kokkos_value_text:
-      return std::string(value.value.string_value);
-    case Kokkos::Tools::ValueType::kokkos_value_integer:
-      return std::to_string(value.value.int_value);
-    case Kokkos::Tools::ValueType::kokkos_value_floating_point:
-      return std::to_string(value.value.double_value);
-    case Kokkos::Tools::ValueType::kokkos_value_boolean:
-      return value.value.bool_value ? "true" : "false";
-    default: return "TEST ERROR";
-  }
-}
 
 int main() {
   Kokkos::initialize();
@@ -101,7 +86,6 @@ int main() {
           if (id != expectedVariableId) {
             throw(std::runtime_error("Tuning Variable has wrong ID"));
           }
-          variableTypeInfo[id] = info.type;
         });
     Kokkos::Tools::Experimental::set_declare_context_variable_callback(
         [](const char* name, const size_t id, Kokkos::Tools::VariableInfo info,
@@ -109,7 +93,6 @@ int main() {
           if (id != expectedVariableId) {
             throw(std::runtime_error("Context Variable has wrong ID"));
           }
-          variableTypeInfo[id] = info.type;
         });
     expectedVariableId = contextVariableId;
     Kokkos::Tools::declareContextVariable("kokkos.testing.context_variable",
