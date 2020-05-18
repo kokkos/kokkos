@@ -42,10 +42,40 @@
 //@HEADER
 */
 
-#include <TestDynViewAPI.hpp>
+// This file calls most of the basic Kokkos primitives. When combined with a
+// testing library this tests that our shared-library loading based profiling
+// mechanisms work
 
-namespace Test {
-TEST(TEST_CATEGORY, dyn_rank_view_api_operator_rank12345) {
-  TestDynViewAPI<double, TEST_EXECSPACE>::run_operator_test_rank12345();
+#include <iostream>
+#include <Kokkos_Core.hpp>
+
+int main() {
+  Kokkos::initialize();
+  {
+    Kokkos::View<int*> src_view("source", 10);
+    Kokkos::View<int*> dst_view("destination", 10);
+    Kokkos::deep_copy(dst_view, src_view);
+    Kokkos::parallel_for(
+        "parallel_for", 1, KOKKOS_LAMBDA(int i) { (void)i; });
+    int result;
+    Kokkos::parallel_reduce(
+        "parallel_reduce", 1,
+        KOKKOS_LAMBDA(int i, int& hold_result) { hold_result += i; }, result);
+    Kokkos::parallel_scan(
+        "parallel_scan", 1,
+        KOKKOS_LAMBDA(const int i, int& hold_result, const bool final) {
+          if (final) {
+            hold_result += i;
+          }
+        });
+    Kokkos::Profiling::pushRegion("push_region");
+    Kokkos::Profiling::popRegion();
+    uint32_t sectionId;
+    Kokkos::Profiling::createProfileSection("created_section", &sectionId);
+    Kokkos::Profiling::startSection(sectionId);
+    Kokkos::Profiling::stopSection(sectionId);
+    Kokkos::Profiling::destroyProfileSection(sectionId);
+    Kokkos::Profiling::markEvent("profiling_event");
+  }
+  Kokkos::finalize();
 }
-}  // namespace Test

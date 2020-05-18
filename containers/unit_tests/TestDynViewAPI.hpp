@@ -1514,7 +1514,8 @@ class TestDynViewAPI {
     ASSERT_EQ(ds5.extent(4), ds5plus.extent(4));
     ASSERT_EQ(ds5.extent(5), ds5plus.extent(5));
 
-#if !defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_UVM)
+#if (!defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_UVM)) && \
+    !defined(KOKKOS_ENABLE_HIP)
     ASSERT_EQ(&ds5(1, 1, 1, 1, 0) - &ds5plus(1, 1, 1, 1, 0), 0);
     ASSERT_EQ(&ds5(1, 1, 1, 1, 0, 0) - &ds5plus(1, 1, 1, 1, 0, 0),
               0);  // passing argument to rank beyond the view's rank is allowed

@@ -587,9 +587,6 @@ void* hip_resize_scratch_space(size_t bytes, bool force_shrink) {
 namespace Kokkos {
 namespace Experimental {
 
-// HIP::size_type HIP::detect_device_count()
-//{ return Impl::HIPInternalDevices::singleton().m_hipDevCount ; }
-
 int HIP::concurrency() {
   auto const& prop = hip_device_prop();
   return prop.maxThreadsPerMultiProcessor * prop.multiProcessorCount;
