@@ -428,6 +428,10 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   KOKKOS_INLINE_FUNCTION
   t_dev view_device() const { return d_view; }
 
+  KOKKOS_INLINE_FUNCTION bool is_allocated() const {
+    return (d_view.is_allocated() && h_view.is_allocated());
+  }
+
   template <class Device>
   static int get_device_side() {
     constexpr bool device_is_memspace =
