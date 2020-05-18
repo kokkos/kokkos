@@ -129,11 +129,7 @@ KOKKOS_IMPL_VIEW_DIMENSION(7)
 // MSVC does not do empty base class optimization by default.
 // Per standard it is required for standard layout types
 template <size_t... Vals>
-struct
-#if defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)
-    __declspec(empty_bases)
-#endif
-        ViewDimension
+struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION ViewDimension
     : public ViewDimension0<variadic_size_t<0u, Vals...>::value,
                             rank_dynamic<Vals...>::value>,
       public ViewDimension1<variadic_size_t<1u, Vals...>::value,
@@ -1088,8 +1084,9 @@ struct ViewOffset<
 
   //----------------------------------------
 
-  // NVCC+MSVC did not generate the defaulted functions correct and errors out
-  // during compilation. Same for the other places where I changed this.
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()) {}
   KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) { m_dim = src.m_dim; }
@@ -1404,8 +1401,9 @@ struct ViewOffset<
   };
 
  public:
-  // NVCC+MSVC did not generate the defaulted functions correct and errors out
-  // during compilation. Same for the other places where I changed this.
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()), m_stride(0) {}
   KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) {
@@ -1720,8 +1718,9 @@ struct ViewOffset<
   }
 
   //----------------------------------------
-  // NVCC+MSVC did not generate the defaulted functions correct and errors out
-  // during compilation. Same for the other places where I changed this.
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
 
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()) {}
@@ -2035,9 +2034,9 @@ struct ViewOffset<
   };
 
  public:
-  // NVCC+MSVC did not generate the defaulted functions correct and errors out
-  // during compilation.
-  // Same for the other places where I changed this.
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
 
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()), m_stride(0) {}
@@ -2538,9 +2537,9 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   }
 
   //----------------------------------------
-  // NVCC+MSVC did not generate the defaulted functions correct and errors out
-  // during compilation.
-  // Same for the other places where I changed this.
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
 
 #ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_FUNCTION ViewOffset()

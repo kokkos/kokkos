@@ -196,7 +196,6 @@ struct ViewCtorProp<void, T *> {
 
 // For some reason I don't understand I needed this specialization explicitly
 // for NVCC/MSVC
-#ifdef KOKKOS_IMPL_WINDOWS_CUDA
 template <typename T>
 struct ViewCtorProp<T *> {
   ViewCtorProp()                     = default;
@@ -213,12 +212,17 @@ struct ViewCtorProp<T *> {
   type value;
 };
 
+// If we use `ViewCtorProp<Args...>` and `ViewCtorProp<void, Args>...` directly
+// in the parameter lists and base class initializers, respectively, as far as
+// we can tell MSVC 16.5.5+CUDA 10.2 thinks that `ViewCtorProp` refers to the
+// current instantiation, not the template itself, and gets all kinds of
+// confused. To work around this, we just use a couple of alias templates that
+// amount to the same thing.
 template <typename... Args>
 using view_ctor_prop_args = ViewCtorProp<Args...>;
 
 template <typename Arg>
 using view_ctor_prop_base = ViewCtorProp<void, Arg>;
-#endif
 
 template <typename... P>
 struct ViewCtorProp : public ViewCtorProp<void, P>... {
@@ -262,25 +266,22 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
         ViewCtorProp<void, typename ViewCtorProp<void, Args>::type>(args)... {}
 
   /* Copy from a matching property subset */
-
-#ifdef KOKKOS_IMPL_WINDOWS_CUDA
   KOKKOS_INLINE_FUNCTION ViewCtorProp(pointer_type arg0)
       : ViewCtorProp<void, pointer_type>(arg0) {}
 
+  // If we use `ViewCtorProp<Args...>` and `ViewCtorProp<void, Args>...` here
+  // directly, MSVC 16.5.5+CUDA 10.2 appears to think that `ViewCtorProp` refers
+  // to the current instantiation, not the template itself, and gets all kinds
+  // of confused. To work around this, we just use a couple of alias templates
+  // that amount to the same thing.
   template <typename... Args>
   ViewCtorProp(view_ctor_prop_args<Args...> const &arg)
       : view_ctor_prop_base<Args>(
             static_cast<view_ctor_prop_base<Args> const &>(arg))... {
+    // Suppress an unused argument warning that (at least at one point) would
+    // show up if sizeof...(Args) == 0
     (void)arg;
   }
-#else
-  template <typename... Args>
-  ViewCtorProp(ViewCtorProp<Args...> const &arg)
-      : ViewCtorProp<void, Args>(
-            static_cast<ViewCtorProp<void, Args> const &>(arg))... {
-    (void)arg;
-  }
-#endif
 };
 
 } /* namespace Impl */

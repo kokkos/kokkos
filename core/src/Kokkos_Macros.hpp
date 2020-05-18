@@ -657,4 +657,13 @@
 #define KOKKOS_THREAD_LOCAL __thread
 #endif
 
+#if defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)
+// MSVC (as of 16.5.5 at least) does not do empty base class optimization by
+// default when there are multiple bases, even though the standard requires it
+// for standard layout types.
+#define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION __declspec(empty_bases)
+#else
+#define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP
