@@ -185,6 +185,20 @@ void test_bitset() {
   typedef Kokkos::Bitset<Device> bitset_type;
   typedef Kokkos::ConstBitset<Device> const_bitset_type;
 
+  {
+    unsigned ts = 100u;
+    bitset_type b1;
+    ASSERT_FALSE(b1.is_allocated());
+
+    b1 = bitset_type(ts);
+    bitset_type b2(b1);
+    bitset_type b3(ts);
+
+    ASSERT_TRUE(b1.is_allocated());
+    ASSERT_TRUE(b2.is_allocated());
+    ASSERT_TRUE(b3.is_allocated());
+  }
+
   std::array<unsigned, 7> test_sizes = {
       {0u, 10u, 100u, 1000u, 1u << 14, 1u << 16, 10000001}};
 

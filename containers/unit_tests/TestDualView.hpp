@@ -55,6 +55,38 @@
 namespace Test {
 
 namespace Impl {
+template <typename Scalar, class Device>
+struct test_dualview_alloc {
+  typedef Scalar scalar_type;
+  typedef Device execution_space;
+
+  template <typename ViewType>
+  bool run_me(unsigned int n, unsigned int m) {
+    if (n < 10) n = 10;
+    if (m < 3) m = 3;
+
+    {
+      ViewType b1;
+      if (b1.is_allocated() == true) return false;
+
+      b1 = ViewType("B1", n, m);
+      ViewType b2(b1);
+      ViewType b3("B3", n, m);
+
+      if (b1.is_allocated() == false) return false;
+      if (b2.is_allocated() == false) return false;
+      if (b3.is_allocated() == false) return false;
+    }
+    return true;
+  }
+
+  bool result = false;
+
+  test_dualview_alloc(unsigned int size) {
+    result = run_me<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device> >(
+        size, 3);
+  }
+};
 
 template <typename Scalar, class Device>
 struct test_dualview_combinations {
@@ -352,6 +384,12 @@ void test_dualview_combinations(unsigned int size, bool with_init) {
 }
 
 template <typename Scalar, typename Device>
+void test_dualview_alloc(unsigned int size) {
+  Impl::test_dualview_alloc<Scalar, Device> test(size);
+  ASSERT_TRUE(test.result);
+}
+
+template <typename Scalar, typename Device>
 void test_dualview_deep_copy() {
   Impl::test_dual_view_deep_copy<Scalar, Device>();
 }
@@ -368,6 +406,10 @@ void test_dualview_resize() {
 
 TEST(TEST_CATEGORY, dualview_combination) {
   test_dualview_combinations<int, TEST_EXECSPACE>(10, true);
+}
+
+TEST(TEST_CATEGORY, dualview_alloc) {
+  test_dualview_alloc<int, TEST_EXECSPACE>(10);
 }
 
 TEST(TEST_CATEGORY, dualview_combinations_without_init) {
