@@ -274,9 +274,7 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
         Kokkos::Tools::make_variable_value(
             Kokkos::Tools::kernel_name_context_variable_id, "deep_copy_kernel"),
         Kokkos::Tools::make_variable_value(
-            Kokkos::Tools::kernel_type_context_variable_id,
-            "deep_copy")};  // TODO DZP: should deep copy have context
-                            // variables for source and destination features?
+            Kokkos::Tools::kernel_type_context_variable_id, "deep_copy")};
     Kokkos::Tools::declareContextVariableValues(
         Kokkos::Tools::getNewContextId(), 2, contextValues);
 #endif
@@ -500,12 +498,7 @@ void initialize() {
 
   kernel_type_variable_candidates.set.values = candidate_values.data();
 
-  Kokkos::Tools::SetOrRange
-      kernel_name_candidates;  // TODO DZP: an empty set in SetOrRange if
-                               // things are unbounded? Maybe an empty
-                               // struct in the union just for
-                               // clarification? Or unify the tag and the
-                               // data
+  Kokkos::Tools::SetOrRange kernel_name_candidates;
   kernel_name_candidates.set.size = 0;
   kernel_name_candidates.set.id =
       Kokkos::Tools::kernel_name_context_variable_id;
@@ -525,12 +518,7 @@ void initialize() {
       "kokkos.kernel_type", Kokkos::Tools::kernel_type_context_variable_id,
       kernel_type, kernel_type_variable_candidates);
 
-  Kokkos::Tools::SetOrRange
-      time_candidates;  // TODO DZP: an empty set in SetOrRange if
-                        // things are unbounded? Maybe an empty
-                        // struct in the union just for
-                        // clarification? Or unify the tag and the
-                        // data
+  Kokkos::Tools::SetOrRange time_candidates;
   time_candidates.set.size = 0;
   time_candidates.set.id   = Kokkos::Tools::time_context_variable_id;
 
