@@ -340,13 +340,13 @@ if(Kokkos_ENABLE_PROFILING)
     printer-tool MODULE
     tools/printing-tool.cpp
   )
-
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_TuningBasics
-    SOURCES
-      tools/TestTuning.cpp
-  )
-
+  if(KOKKOS_ENABLE_TUNING)
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_TuningBasics
+      SOURCES
+        tools/TestTuning.cpp
+    )
+  endif()
   KOKKOS_ADD_TEST_EXECUTABLE(
     ProfilingAllCalls
     tools/TestAllCalls.cpp
