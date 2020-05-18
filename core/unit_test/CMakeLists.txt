@@ -341,6 +341,12 @@ if(Kokkos_ENABLE_PROFILING)
     tools/printing-tool.cpp
   )
 
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_TuningBasics
+    SOURCES
+      tools/TestTuning.cpp
+  )
+
   KOKKOS_ADD_TEST_EXECUTABLE(
     ProfilingAllCalls
     tools/TestAllCalls.cpp
