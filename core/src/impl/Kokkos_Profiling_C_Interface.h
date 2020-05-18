@@ -118,9 +118,7 @@ struct Kokkos_Tuning_OptimzationGoal {
 
 struct Kokkos_Tuning_ValueRange {
   size_t id;
-  Kokkos_Tuning_VariableValue*
-      lower;  // pointer because I'm used in Kokkos_VariableValue_ValueUnion,
-              // defined below
+  Kokkos_Tuning_VariableValue* lower;
   Kokkos_Tuning_VariableValue* upper;
   Kokkos_Tuning_VariableValue* step;
   bool openLower;
@@ -142,18 +140,10 @@ struct Kokkos_Tuning_VariableValue {
 };
 
 enum Kokkos_Tuning_VariableInfo_ValueType {
-  kokkos_value_floating_point,  // TODO DZP: single and double? One or the
+  kokkos_value_floating_point,
   kokkos_value_integer,
   kokkos_value_text,
   kokkos_value_boolean,
-  kokkos_value_floating_point_tuple,
-  kokkos_value_integer_tuple,
-  kokkos_value_text_tuple,
-  kokkos_value_boolean_tuple,
-  kokkos_value_floating_point_range,  // TODO DZP: prove to myself that a
-                                      // boolean or text range is stupid and
-                                      // shouldn't exist
-  kokkos_value_integer_range,
 };
 
 enum Kokkos_Tuning_VariableInfo_StatisticalCategory {
@@ -170,8 +160,6 @@ enum Kokkos_Tuning_VariableInfo_CandidateValueType {
   kokkos_value_unbounded  // I am [text/int/float], but we don't know at
                           // declaration time what values are appropriate. Only
                           // valid for Context Variables
-  // TODO DZP: not handled: 1 + 3x, sets of ranges, range with hole (zero). Do
-  // these matter?
 };
 
 union Kokkos_Tuning_VariableInfo_SetOrRange {
