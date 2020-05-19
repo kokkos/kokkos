@@ -50,19 +50,23 @@
 #include <Kokkos_Core.hpp>
 
 int main() {
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   Kokkos::initialize();
   {
-    Kokkos::View<int*> src_view("source", 10);
-    Kokkos::View<int*> dst_view("destination", 10);
+    using execution_space = Kokkos::DefaultExecutionSpace;
+    using memory_space    = typename execution_space::memory_space;
+    Kokkos::View<int*, memory_space> src_view("source", 10);
+    Kokkos::View<int*, memory_space> dst_view("destination", 10);
     Kokkos::deep_copy(dst_view, src_view);
     Kokkos::parallel_for(
-        "parallel_for", 1, KOKKOS_LAMBDA(int i) { (void)i; });
+        "parallel_for", Kokkos::RangePolicy<execution_space>(0, 1),
+        KOKKOS_LAMBDA(int i) { (void)i; });
     int result;
     Kokkos::parallel_reduce(
-        "parallel_reduce", 1,
+        "parallel_reduce", Kokkos::RangePolicy<execution_space>(0, 1),
         KOKKOS_LAMBDA(int i, int& hold_result) { hold_result += i; }, result);
     Kokkos::parallel_scan(
-        "parallel_scan", 1,
+        "parallel_scan", Kokkos::RangePolicy<execution_space>(0, 1),
         KOKKOS_LAMBDA(const int i, int& hold_result, const bool final) {
           if (final) {
             hold_result += i;
@@ -78,4 +82,5 @@ int main() {
     Kokkos::Profiling::markEvent("profiling_event");
   }
   Kokkos::finalize();
+#endif
 }
