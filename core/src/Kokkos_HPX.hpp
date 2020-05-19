@@ -455,7 +455,8 @@ namespace Impl {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
 template <typename Closure>
 inline void dispatch_execute_task(Closure *closure,
-                                  Kokkos::Experimental::HPX const &instance) {
+                                  Kokkos::Experimental::HPX const &instance,
+                                  bool force_synchronous = false) {
   Kokkos::Experimental::HPX::impl_increment_active_parallel_region_count();
 
   if (hpx::threads::get_self_ptr() == nullptr) {
@@ -473,11 +474,16 @@ inline void dispatch_execute_task(Closure *closure,
       closure_copy.execute_task();
     });
   }
+
+  if (force_synchronous) {
+    instance.fence();
+  }
 }
 #else
 template <typename Closure>
 inline void dispatch_execute_task(Closure *closure,
-                                  Kokkos::Experimental::HPX const &) {
+                                  Kokkos::Experimental::HPX const &,
+                                  bool = false) {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
   Kokkos::Experimental::HPX::impl_increment_active_parallel_region_count();
 #endif
@@ -1188,7 +1194,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   };
 
  public:
-  void execute() const { dispatch_execute_task(this, m_policy.space()); }
+  void execute() const {
+    dispatch_execute_task(this, m_policy.space(), m_force_synchronous);
+  }
 
   inline void execute_task() const {
     // See [note 1] for an explanation.
@@ -1411,7 +1419,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   bool m_force_synchronous;
 
  public:
-  void execute() const { dispatch_execute_task(this, m_mdr_policy.space()); }
+  void execute() const {
+    dispatch_execute_task(this, m_mdr_policy.space(), m_force_synchronous);
+  }
 
   inline void execute_task() const {
     // See [note 1] for an explanation.
