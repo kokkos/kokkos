@@ -839,10 +839,11 @@ size_t get_current_context_id();
 void decrement_current_context_id();
 size_t get_new_variable_id();
 
-void declare_optimization_goal(const OptimizationGoal& goal) {
+void declare_optimization_goal(const size_t context,
+                               const OptimizationGoal& goal) {
 #ifdef KOKKOS_ENABLE_TUNING
   if (Experimental::current_callbacks.declare_optimization_goal != nullptr) {
-    (*Experimental::current_callbacks.declare_optimization_goal)(goal);
+    (*Experimental::current_callbacks.declare_optimization_goal)(context, goal);
   }
 #else
   (void)goal;
@@ -988,7 +989,7 @@ size_t get_current_context_id();
 void decrement_current_context_id();
 size_t get_new_variable_id();
 
-void declare_optimization_goal(const OptimizationGoal&) {}
+void declare_optimization_goal(size_t context, const OptimizationGoal&) {}
 
 }  // end namespace Tools
 

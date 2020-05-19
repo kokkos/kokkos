@@ -213,7 +213,8 @@ Kokkos::Tools::SetOrRange make_candidate_range(int64_t lower, int64_t upper,
                                                int64_t step, bool openLower,
                                                bool openUpper);
 
-void declare_optimization_goal(const OptimizationGoal& goal);
+void declare_optimization_goal(const size_t context,
+                               const OptimizationGoal& goal);
 
 size_t declare_output_type(const std::string& typeName, VariableInfo info);
 
