@@ -52,6 +52,14 @@
 
 #if !defined(KOKKOS_ENABLE_CUDA) || defined(__CUDACC__)
 
+namespace Kokkos {
+namespace Impl {
+
+int get_gpu(const InitArguments& args);
+
+}  // namespace Impl
+}  // namespace Kokkos
+
 namespace Test {
 
 namespace Impl {
@@ -273,7 +281,7 @@ void check_correct_initialization(const Kokkos::InitArguments& argstruct) {
 
     int expected_device = argstruct.device_id;
     if (argstruct.device_id < 0) {
-      expected_device = 0;
+      expected_device = Kokkos::Impl::get_gpu(argstruct);
     }
 
     ASSERT_EQ(expected_device, device);
