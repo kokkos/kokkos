@@ -884,7 +884,7 @@ void set_callbacks(EventSet) {}
 
 namespace Kokkos {
 namespace Tools {
-
+namespace Experimental {
 static size_t& get_context_counter() {
   static size_t x;
   return x;
@@ -942,6 +942,7 @@ size_t get_new_variable_id();
 
 void declare_optimization_goal(size_t context, const OptimizationGoal&) {}
 
+}  // end namespace Experimental
 }  // end namespace Tools
 
 }  // end namespace Kokkos
