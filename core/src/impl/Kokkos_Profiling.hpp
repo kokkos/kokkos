@@ -114,11 +114,9 @@ void set_profile_event_callback(profileEventFunction callback);
 void set_begin_deep_copy_callback(beginDeepCopyFunction callback);
 void set_end_deep_copy_callback(endDeepCopyFunction callback);
 
-void set_declare_output_type_callback(
-    tuningVariableDeclarationFunction callback);
-void set_declare_input_type_callback(
-    contextVariableDeclarationFunction callback);
-void set_request_output_values_callback(tuningVariableValueFunction callback);
+void set_declare_output_type_callback(outputTypeDeclarationFunction callback);
+void set_declare_input_type_callback(inputTypeDeclarationFunction callback);
+void set_request_output_values_callback(requestValueFunction callback);
 void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction callback);
 void set_end_context_callback(contextEndFunction callback);
@@ -217,11 +215,9 @@ Kokkos::Tools::SetOrRange make_candidate_range(int64_t lower, int64_t upper,
 
 void declare_optimization_goal(const OptimizationGoal& goal);
 
-size_t declare_output_type(const std::string& typeName, VariableInfo info,
-                           Kokkos::Tools::SetOrRange candidate_values);
+size_t declare_output_type(const std::string& typeName, VariableInfo info);
 
-size_t declare_input_type(const std::string& typeName, VariableInfo info,
-                          Kokkos::Tools::SetOrRange candidate_values);
+size_t declare_input_type(const std::string& typeName, VariableInfo info);
 
 void set_input_values(size_t contextId, size_t count, VariableValue* values);
 

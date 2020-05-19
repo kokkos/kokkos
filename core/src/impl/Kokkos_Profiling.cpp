@@ -439,17 +439,16 @@ void initialize() {
 #ifdef KOKKOS_ENABLE_TUNING
       auto p20 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
       Experimental::set_declare_output_type_callback(
-          *reinterpret_cast<Kokkos::Tools::tuningVariableDeclarationFunction*>(
+          *reinterpret_cast<Kokkos::Tools::outputTypeDeclarationFunction*>(
               &p20));
 
       auto p21 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
       Experimental::set_declare_input_type_callback(
-          *reinterpret_cast<Kokkos::Tools::contextVariableDeclarationFunction*>(
+          *reinterpret_cast<Kokkos::Tools::inputTypeDeclarationFunction*>(
               &p21));
-      auto p22 =
-          dlsym(firstProfileLibrary, "kokkosp_request_tuning_variable_values");
+      auto p22 = dlsym(firstProfileLibrary, "kokkosp_request_values");
       Experimental::set_request_output_values_callback(
-          *reinterpret_cast<Kokkos::Tools::tuningVariableValueFunction*>(&p22));
+          *reinterpret_cast<Kokkos::Tools::requestValueFunction*>(&p22));
       auto p23 = dlsym(firstProfileLibrary, "kokkosp_end_context");
       Experimental::set_end_context_callback(
           *reinterpret_cast<Kokkos::Tools::contextEndFunction*>(&p23));
@@ -492,10 +491,9 @@ void initialize() {
       make_candidate_set(4, candidate_values.data());
 
   Kokkos::Tools::SetOrRange kernel_name_candidates;
-
+  kernel_name.candidates = kernel_name_candidates;
   Kokkos::Tools::kernel_name_context_variable_id =
-      Kokkos::Tools::declare_input_type("kokkos.kernel_name", kernel_name,
-                                        kernel_name_candidates);
+      Kokkos::Tools::declare_input_type("kokkos.kernel_name", kernel_name);
 
   Kokkos::Tools::VariableInfo kernel_type;
   kernel_type.type = Kokkos::Tools::ValueType::kokkos_value_text;
@@ -503,10 +501,9 @@ void initialize() {
       Kokkos::Tools::StatisticalCategory::kokkos_value_categorical;
   kernel_type.valueQuantity =
       Kokkos::Tools::CandidateValueType::kokkos_value_set;
-
+  kernel_type.candidates = kernel_type_variable_candidates;
   Kokkos::Tools::kernel_type_context_variable_id =
-      Kokkos::Tools::declare_input_type("kokkos.kernel_type", kernel_type,
-                                        kernel_type_variable_candidates);
+      Kokkos::Tools::declare_input_type("kokkos.kernel_type", kernel_type);
 
   Kokkos::Tools::SetOrRange time_candidates;
 
@@ -516,12 +513,12 @@ void initialize() {
       Kokkos::Tools::StatisticalCategory::kokkos_value_ratio;
   wall_clock_time.valueQuantity =
       Kokkos::Tools::CandidateValueType::kokkos_value_unbounded;
-
-  Kokkos::Tools::time_context_variable_id = Kokkos::Tools::declare_input_type(
-      "kokkos.wall_time", wall_clock_time, time_candidates);
+  wall_clock_time.candidates = time_candidates;
+  Kokkos::Tools::time_context_variable_id =
+      Kokkos::Tools::declare_input_type("kokkos.wall_time", wall_clock_time);
 
   Kokkos::Tools::OptimizationGoal initial_goal{
-      Kokkos::Tools::kernel_type_context_variable_id, Kokkos_Tuning_Minimize};
+      Kokkos::Tools::kernel_type_context_variable_id, Kokkos_Tools_Minimize};
 
   Kokkos::Tools::declare_optimization_goal(initial_goal);
 #endif
@@ -636,15 +633,13 @@ void set_end_deep_copy_callback(endDeepCopyFunction callback) {
   current_callbacks.end_deep_copy = callback;
 }
 
-void set_declare_output_type_callback(
-    tuningVariableDeclarationFunction callback) {
+void set_declare_output_type_callback(outputTypeDeclarationFunction callback) {
   current_callbacks.declare_output_type = callback;
 }
-void set_declare_input_type_callback(
-    contextVariableDeclarationFunction callback) {
+void set_declare_input_type_callback(inputTypeDeclarationFunction callback) {
   current_callbacks.declare_input_type = callback;
 }
-void set_request_output_values_callback(tuningVariableValueFunction callback) {
+void set_request_output_values_callback(requestValueFunction callback) {
   current_callbacks.request_output_values = callback;
 }
 void set_end_context_callback(contextEndFunction callback) {
@@ -692,14 +687,14 @@ static std::unordered_map<size_t, std::unordered_set<size_t>>
     features_per_context;
 static std::unordered_set<size_t> active_features;
 static std::unordered_map<size_t, VariableValue> feature_values;
-
-size_t declare_output_type(const std::string& variableName, VariableInfo info,
-                           Kokkos::Tools::SetOrRange candidate_values) {
+static std::unordered_map<size_t, VariableInfo> variable_metadata;
+size_t declare_output_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = Kokkos::Tools::get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
+  variable_metadata[variableId] = info;
   if (Experimental::current_callbacks.declare_output_type != nullptr) {
-    (*Experimental::current_callbacks.declare_output_type)(
-        variableName.c_str(), variableId, info, candidate_values);
+    (*Experimental::current_callbacks.declare_output_type)(variableName.c_str(),
+                                                           variableId, info);
   }
 #else
   (void)variableName;
@@ -709,19 +704,18 @@ size_t declare_output_type(const std::string& variableName, VariableInfo info,
   return variableId;
 }
 
-size_t declare_input_type(const std::string& variableName, VariableInfo info,
-                          Kokkos::Tools::SetOrRange candidate_values) {
+size_t declare_input_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = Kokkos::Tools::get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
+  variable_metadata[variableId] = info;
   if (Experimental::current_callbacks.declare_input_type != nullptr) {
-    (*Experimental::current_callbacks.declare_input_type)(
-        variableName.c_str(), variableId, info, candidate_values);
+    (*Experimental::current_callbacks.declare_input_type)(variableName.c_str(),
+                                                          variableId, info);
   }
 #else
   (void)variableName;
   (void)uniqID;
   (void)info;
-  (void)candidate_values;
 #endif
   return variableId;
 }
@@ -732,6 +726,7 @@ void set_input_values(size_t contextId, size_t count, VariableValue* values) {
     features_per_context[contextId] = std::unordered_set<size_t>();
   }
   for (size_t x = 0; x < count; ++x) {
+    values[x].metadata = &variable_metadata[values[x].id];
     features_per_context[contextId].insert(values[x].id);
     active_features.insert(values[x].id);
     feature_values[values[x].id] = values[x];
@@ -753,6 +748,9 @@ void request_output_values(size_t contextId, size_t count,
     context_values.push_back(feature_values[id]);
   }
   if (Experimental::current_callbacks.request_output_values != nullptr) {
+    for (int x = 0; x < count; ++x) {
+      values[x].metadata = &variable_metadata[values[x].id];
+    }
     (*Experimental::current_callbacks.request_output_values)(
         contextId, context_values.size(), context_values.data(), count, values);
   }
@@ -760,7 +758,6 @@ void request_output_values(size_t contextId, size_t count,
   (void)contextId;
   (void)count;
   (void)values;
-  (void)candidate_values;
 #endif
 }
 
@@ -939,9 +936,9 @@ void set_destroy_profile_section_callback(destroyProfileSectionFunction) {}
 void set_profile_event_callback(profileEventFunction) {}
 void set_begin_deep_copy_callback(beginDeepCopyFunction) {}
 void set_end_deep_copy_callback(endDeepCopyFunction) {}
-void set_declare_output_type_callback(tuningVariableDeclarationFunction) {}
-void set_declare_input_type_callback(contextVariableDeclarationFunction) {}
-void set_request_output_values_callback(tuningVariableValueFunction) {}
+void set_declare_output_type_callback(outputTypeDeclarationFunction) {}
+void set_declare_input_type_callback(inputTypeDeclarationFunction) {}
+void set_request_output_values_callback(requestValueFunction) {}
 void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction) {}
 void set_end_context_callback(contextEndFunction) {}
@@ -973,11 +970,9 @@ size_t get_current_context_id() { return get_context_counter(); }
 void decrement_current_context_id() { --get_context_counter(); }
 size_t get_new_variable_id() { return get_variable_counter(); }
 
-void declare_output_type(const std::string&, size_t, VariableInfo,
-                         Kokkos::Tools::SetOrRange) {}
+void declare_output_type(const std::string&, size_t, VariableInfo) {}
 
-void declare_input_type(const std::string&, size_t, VariableInfo,
-                        Kokkos::Tools::SetOrRange) {}
+void declare_input_type(const std::string&, size_t, VariableInfo) {}
 
 void set_input_values(size_t, size_t, VariableValue*) {}
 void request_output_values(size_t, size_t, VariableValue*) {}

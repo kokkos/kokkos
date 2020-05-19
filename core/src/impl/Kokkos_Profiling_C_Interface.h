@@ -98,56 +98,51 @@ typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 
 // Tuning
 
-union Kokkos_Tuning_VariableValue_ValueUnion {
+union Kokkos_Tools_VariableValue_ValueUnion {
   bool bool_value;
   int64_t int_value;
   double double_value;
   const char* string_value;
 };
 
-union Kokkos_Tuning_VariableValue_ValueUnionSet {
+union Kokkos_Tools_VariableValue_ValueUnionSet {
   bool* bool_value;
   int64_t* int_value;
   double* double_value;
   const char** string_value;
 };
 
-struct Kokkos_Tuning_ValueSet {
+struct Kokkos_Tools_ValueSet {
   size_t size;
-  union Kokkos_Tuning_VariableValue_ValueUnionSet values;
+  union Kokkos_Tools_VariableValue_ValueUnionSet values;
 };
 
-enum Kokkos_Tuning_OptimizationType {
-  Kokkos_Tuning_Minimize,
-  Kokkos_Tuning_Maximize
+enum Kokkos_Tools_OptimizationType {
+  Kokkos_Tools_Minimize,
+  Kokkos_Tools_Maximize
 };
 
-struct Kokkos_Tuning_OptimzationGoal {
+struct Kokkos_Tools_OptimzationGoal {
   size_t id;
-  Kokkos_Tuning_OptimizationType goal;
+  Kokkos_Tools_OptimizationType goal;
 };
 
-struct Kokkos_Tuning_ValueRange {
-  union Kokkos_Tuning_VariableValue_ValueUnion lower;
-  union Kokkos_Tuning_VariableValue_ValueUnion upper;
-  union Kokkos_Tuning_VariableValue_ValueUnion step;
+struct Kokkos_Tools_ValueRange {
+  union Kokkos_Tools_VariableValue_ValueUnion lower;
+  union Kokkos_Tools_VariableValue_ValueUnion upper;
+  union Kokkos_Tools_VariableValue_ValueUnion step;
   bool openLower;
   bool openUpper;
 };
 
-struct Kokkos_Tuning_VariableValue {
-  size_t id;
-  union Kokkos_Tuning_VariableValue_ValueUnion value;
-};
-
-enum Kokkos_Tuning_VariableInfo_ValueType {
+enum Kokkos_Tools_VariableInfo_ValueType {
   kokkos_value_floating_point,
   kokkos_value_integer,
   kokkos_value_text,
   kokkos_value_boolean,
 };
 
-enum Kokkos_Tuning_VariableInfo_StatisticalCategory {
+enum Kokkos_Tools_VariableInfo_StatisticalCategory {
   kokkos_value_categorical,  // unordered distinct objects
   kokkos_value_ordinal,      // ordered distinct objects
   kokkos_value_interval,  // ordered distinct objects for which distance matters
@@ -155,7 +150,7 @@ enum Kokkos_Tuning_VariableInfo_StatisticalCategory {
                       // division matters, and the concept of zero exists
 };
 
-enum Kokkos_Tuning_VariableInfo_CandidateValueType {
+enum Kokkos_Tools_VariableInfo_CandidateValueType {
   kokkos_value_set,       // I am one of [2,3,4,5]
   kokkos_value_range,     // I am somewhere in [2,12)
   kokkos_value_unbounded  // I am [text/int/float], but we don't know at
@@ -163,33 +158,35 @@ enum Kokkos_Tuning_VariableInfo_CandidateValueType {
                           // valid for Context Variables
 };
 
-union Kokkos_Tuning_VariableInfo_SetOrRange {
-  struct Kokkos_Tuning_ValueSet set;
-  struct Kokkos_Tuning_ValueRange range;
+union Kokkos_Tools_VariableInfo_SetOrRange {
+  struct Kokkos_Tools_ValueSet set;
+  struct Kokkos_Tools_ValueRange range;
 };
 
-struct Kokkos_Tuning_VariableInfo {
-  enum Kokkos_Tuning_VariableInfo_ValueType type;
-  enum Kokkos_Tuning_VariableInfo_StatisticalCategory category;
-  enum Kokkos_Tuning_VariableInfo_CandidateValueType valueQuantity;
+struct Kokkos_Tools_VariableInfo {
+  enum Kokkos_Tools_VariableInfo_ValueType type;
+  enum Kokkos_Tools_VariableInfo_StatisticalCategory category;
+  enum Kokkos_Tools_VariableInfo_CandidateValueType valueQuantity;
+  union Kokkos_Tools_VariableInfo_SetOrRange candidates;
 };
 
-typedef void (*Kokkos_Tuning_tuningVariableDeclarationFunction)(
-    const char*, const size_t, Kokkos_Tuning_VariableInfo info,
-    Kokkos_Tuning_VariableInfo_SetOrRange);
-typedef void (*Kokkos_Tuning_contextVariableDeclarationFunction)(
-    const char*, const size_t, Kokkos_Tuning_VariableInfo info,
-    Kokkos_Tuning_VariableInfo_SetOrRange);
+struct Kokkos_Tools_VariableValue {
+  size_t id;
+  union Kokkos_Tools_VariableValue_ValueUnion value;
+  struct Kokkos_Tools_VariableInfo* metadata;
+};
 
-typedef void (*Kokkos_Tuning_tuningVariableValueFunction)(
-    const size_t, const size_t, const Kokkos_Tuning_VariableValue*,
-    const size_t count, Kokkos_Tuning_VariableValue*);
-typedef void (*Kokkos_Tuning_contextVariableValueFunction)(
-    const size_t contextId, const size_t count,
-    Kokkos_Tuning_VariableValue* values);
-typedef void (*Kokkos_Tuning_contextEndFunction)(const size_t);
-typedef void (*Kokkos_Tuning_optimizationGoalDeclarationFunction)(
-    const Kokkos_Tuning_OptimzationGoal& goal);
+typedef void (*Kokkos_Tools_outputTypeDeclarationFunction)(
+    const char*, const size_t, Kokkos_Tools_VariableInfo info);
+typedef void (*Kokkos_Tools_inputTypeDeclarationFunction)(
+    const char*, const size_t, Kokkos_Tools_VariableInfo info);
+
+typedef void (*Kokkos_Tools_requestValueFunction)(
+    const size_t, const size_t, const Kokkos_Tools_VariableValue*,
+    const size_t count, Kokkos_Tools_VariableValue*);
+typedef void (*Kokkos_Tools_contextEndFunction)(const size_t);
+typedef void (*Kokkos_Tools_optimizationGoalDeclarationFunction)(
+    const Kokkos_Tools_OptimzationGoal& goal);
 
 using function_pointer = void (*)();
 
@@ -214,11 +211,11 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_beginDeepCopyFunction begin_deep_copy;
   Kokkos_Profiling_endDeepCopyFunction end_deep_copy;
   char profiling_padding[16 * sizeof(function_pointer)];
-  Kokkos_Tuning_tuningVariableDeclarationFunction declare_output_type;
-  Kokkos_Tuning_contextVariableDeclarationFunction declare_input_type;
-  Kokkos_Tuning_tuningVariableValueFunction request_output_values;
-  Kokkos_Tuning_contextEndFunction end_tuning_context;
-  Kokkos_Tuning_optimizationGoalDeclarationFunction declare_optimization_goal;
+  Kokkos_Tools_outputTypeDeclarationFunction declare_output_type;
+  Kokkos_Tools_inputTypeDeclarationFunction declare_input_type;
+  Kokkos_Tools_requestValueFunction request_output_values;
+  Kokkos_Tools_contextEndFunction end_tuning_context;
+  Kokkos_Tools_optimizationGoalDeclarationFunction declare_optimization_goal;
   char padding[235 *
                sizeof(function_pointer)];  // allows us to add another 256
                                            // events to the Tools interface

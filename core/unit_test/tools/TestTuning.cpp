@@ -87,24 +87,25 @@ int main() {
                                           candidate_value_vector.data());
     // test that ID's are transmitted to the tool
     Kokkos::Tools::Experimental::set_declare_output_type_callback(
-        [](const char* name, const size_t id, Kokkos::Tools::VariableInfo info,
-           Kokkos::Tools::SetOrRange candidates) {
-          candidate_value_map[id] = candidates;
+        [](const char* name, const size_t id,
+           Kokkos::Tools::VariableInfo info) {
           if (info.type != Kokkos::Tools::ValueType::kokkos_value_integer) {
             throw(std::runtime_error("Tuning Variable has wrong type"));
           }
         });
     Kokkos::Tools::Experimental::set_declare_input_type_callback(
-        [](const char* name, const size_t id, Kokkos::Tools::VariableInfo info,
-           Kokkos::Tools::SetOrRange candidates) {
+        [](const char* name, const size_t id,
+           Kokkos::Tools::VariableInfo info) {
           if (info.type != Kokkos::Tools::ValueType::kokkos_value_integer) {
             throw(std::runtime_error("Context Variable has wrong type"));
           }
         });
-    auto contextVariableId = Kokkos::Tools::declare_input_type(
-        "kokkos.testing.context_variable", contextVariableInfo, empty);
+    contextVariableInfo.candidates = empty;
+    tuningVariableInfo.candidates  = allowed_values;
+    auto contextVariableId         = Kokkos::Tools::declare_input_type(
+        "kokkos.testing.context_variable", contextVariableInfo);
     auto tuningVariableId = Kokkos::Tools::declare_output_type(
-        "kokkos.testing.tuning_variable", tuningVariableInfo, allowed_values);
+        "kokkos.testing.tuning_variable", tuningVariableInfo);
 
     // test that we correctly pass context values, and receive tuning variables
     // back in return
@@ -117,7 +118,7 @@ int main() {
            const Kokkos::Tools::VariableValue* context_values,
            const size_t num_tuning_variables,
            Kokkos::Tools::VariableValue* tuning_values) {
-          auto candidate_values = candidate_value_map[tuning_values[0].id];
+          auto candidate_values = tuning_values[0].metadata->candidates;
           if (context_values[0].value.int_value !=
               expectedContextVariableValue) {
             throw std::runtime_error(
@@ -154,10 +155,9 @@ int main() {
         Kokkos::Tools::ValueType::kokkos_value_integer;
     secondContextVariableInfo.valueQuantity =
         Kokkos::Tools::CandidateValueType::kokkos_value_unbounded;
-
-    auto secondContextVariableId = Kokkos::Tools::declare_output_type(
-        "kokkos.testing.second_context_variable", secondContextVariableInfo,
-        empty);
+    secondContextVariableInfo.candidates = empty;
+    auto secondContextVariableId         = Kokkos::Tools::declare_output_type(
+        "kokkos.testing.second_context_variable", secondContextVariableInfo);
 
     Kokkos::Tools::VariableValue contextValueTwo[] = {
         Kokkos::Tools::make_variable_value(secondContextVariableId,

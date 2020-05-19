@@ -171,32 +171,29 @@ using Kokkos::Tools::stopProfileSectionFunction;
 namespace Kokkos {
 namespace Tools {
 
-using ValueSet            = Kokkos_Tuning_ValueSet;
-using ValueRange          = Kokkos_Tuning_ValueRange;
-using StatisticalCategory = Kokkos_Tuning_VariableInfo_StatisticalCategory;
-using ValueType           = Kokkos_Tuning_VariableInfo_ValueType;
-using CandidateValueType  = Kokkos_Tuning_VariableInfo_CandidateValueType;
-using SetOrRange          = Kokkos_Tuning_VariableInfo_SetOrRange;
-using VariableInfo        = Kokkos_Tuning_VariableInfo;
-using OptimizationGoal    = Kokkos_Tuning_OptimzationGoal;
-// TODO DZP: VariableInfo subclasses to automate some of this
+using ValueSet            = Kokkos_Tools_ValueSet;
+using ValueRange          = Kokkos_Tools_ValueRange;
+using StatisticalCategory = Kokkos_Tools_VariableInfo_StatisticalCategory;
+using ValueType           = Kokkos_Tools_VariableInfo_ValueType;
+using CandidateValueType  = Kokkos_Tools_VariableInfo_CandidateValueType;
+using SetOrRange          = Kokkos_Tools_VariableInfo_SetOrRange;
+using VariableInfo        = Kokkos_Tools_VariableInfo;
+using OptimizationGoal    = Kokkos_Tools_OptimzationGoal;
 
-using VariableValue = Kokkos_Tuning_VariableValue;
+using VariableValue = Kokkos_Tools_VariableValue;
 
 VariableValue make_variable_value(size_t id, bool val);
 VariableValue make_variable_value(size_t id, int64_t val);
 VariableValue make_variable_value(size_t id, double val);
 VariableValue make_variable_value(size_t id, const char* val);
 
-using tuningVariableDeclarationFunction =
-    Kokkos_Tuning_tuningVariableDeclarationFunction;
-using contextVariableDeclarationFunction =
-    Kokkos_Tuning_contextVariableDeclarationFunction;
-using tuningVariableValueFunction  = Kokkos_Tuning_tuningVariableValueFunction;
-using contextVariableValueFunction = Kokkos_Tuning_contextVariableValueFunction;
-using contextEndFunction           = Kokkos_Tuning_contextEndFunction;
+using outputTypeDeclarationFunction =
+    Kokkos_Tools_outputTypeDeclarationFunction;
+using inputTypeDeclarationFunction = Kokkos_Tools_inputTypeDeclarationFunction;
+using requestValueFunction         = Kokkos_Tools_requestValueFunction;
+using contextEndFunction           = Kokkos_Tools_contextEndFunction;
 using optimizationGoalDeclarationFunction =
-    Kokkos_Tuning_optimizationGoalDeclarationFunction;
+    Kokkos_Tools_optimizationGoalDeclarationFunction;
 
 }  // end namespace Tools
 
