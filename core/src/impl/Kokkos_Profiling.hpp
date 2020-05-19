@@ -48,7 +48,6 @@
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
-#include <chrono>
 
 namespace Kokkos {
 namespace Tools {
@@ -193,8 +192,6 @@ using Kokkos::Tools::Experimental::set_callbacks;
 
 namespace Tools {
 namespace Experimental {
-using clock_type = std::chrono::system_clock;
-using time_point = std::chrono::time_point<clock_type>;
 
 VariableValue make_variable_value(size_t id, bool val);
 VariableValue make_variable_value(size_t id, int64_t val);

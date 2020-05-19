@@ -50,7 +50,6 @@
 #include <vector>
 #include <array>
 #include <stack>
-#include <chrono>
 
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <cstring>
@@ -283,10 +282,6 @@ SpaceHandle make_space_handle(const char* space_name) {
   strncpy(handle.name, space_name, 63);
   return handle;
 }
-
-}  // namespace Tools
-
-namespace Tools {
 
 void initialize() {
   // Make sure initialize calls happens only once
