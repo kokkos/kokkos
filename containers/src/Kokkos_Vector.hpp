@@ -212,6 +212,10 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     return begin() + start;
   }
 
+  KOKKOS_INLINE_FUNCTION bool is_allocated() const {
+    return DV::is_allocated();
+  }
+
   size_type size() const { return _size; }
   size_type max_size() const { return 2000000000; }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE

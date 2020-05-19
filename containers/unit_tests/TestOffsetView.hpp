@@ -69,15 +69,15 @@ void test_offsetview_construction() {
 
   {
     offset_view_type o1;
-    ASSERT_FALSE( o1.is_allocated() );
+    ASSERT_FALSE(o1.is_allocated());
 
     o1 = offset_view_type("o1", range0, range1);
     offset_view_type o2(o1);
     offset_view_type o3("o3", range0, range1);
 
-    ASSERT_TRUE( o1.is_allocated() );
-    ASSERT_TRUE( o2.is_allocated() );
-    ASSERT_TRUE( o3.is_allocated() );
+    ASSERT_TRUE(o1.is_allocated());
+    ASSERT_TRUE(o2.is_allocated());
+    ASSERT_TRUE(o3.is_allocated());
   }
 
   offset_view_type ov("firstOV", range0, range1);

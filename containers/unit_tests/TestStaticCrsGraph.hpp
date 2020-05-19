@@ -59,8 +59,6 @@ void run_test_graph() {
   typedef typename dView::HostMirror hView;
 
   const unsigned LENGTH = 1000;
-  dView dx;
-  hView hx;
 
   std::vector<std::vector<int> > graph(LENGTH);
 
@@ -70,6 +68,23 @@ void run_test_graph() {
       graph[i].push_back(i + j * 3);
     }
   }
+
+  {
+    dView d1;
+    ASSERT_FALSE(d1.is_allocated());
+
+    d1 = Kokkos::create_staticcrsgraph<dView>("d1", graph);
+
+    dView d2(d1);
+    dView d3(d1.entries, d1.row_map);
+
+    ASSERT_TRUE(d1.is_allocated());
+    ASSERT_TRUE(d2.is_allocated());
+    ASSERT_TRUE(d3.is_allocated());
+  }
+
+  dView dx;
+  hView hx;
 
   dx = Kokkos::create_staticcrsgraph<dView>("dx", graph);
   hx = Kokkos::create_mirror(dx);
