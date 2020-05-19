@@ -467,6 +467,8 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
       CUDA_SAFE_CALL(cudaMemset(m_scratchConcurrentBitset, 0,
                                 sizeof(uint32_t) * buffer_bound));
     }
+    //----------------------------------
+
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Cuda::initialize(" << cuda_device_id << ") FAILED";

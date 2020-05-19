@@ -50,7 +50,7 @@
 
 #include <iostream>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
-#include <impl/Kokkos_Tools.hpp>
+
 namespace Kokkos {
 namespace Impl {
 
@@ -65,8 +65,6 @@ int cuda_get_max_block_size(const typename DriverType::functor_type& f,
   return CudaGetMaxBlockSize<DriverType, LaunchBounds, true>::get_block_size(
       f, vector_length, shmem_extra_block, shmem_extra_thread);
 }
-
-size_t getBlockSizeVariableId();
 
 template <class FunctorType, class LaunchBounds>
 int cuda_get_max_block_size(const CudaInternal* cuda_instance,
@@ -353,13 +351,16 @@ int cuda_get_opt_block_size(const typename DriverType::functor_type& f,
                             const size_t vector_length,
                             const size_t shmem_extra_block,
                             const size_t shmem_extra_thread) {
-  int kokkos_suggested_block_size;
-  kokkos_suggested_block_size = CudaGetOptBlockSize<
+  return CudaGetOptBlockSize<
       DriverType, LaunchBounds,
+      // LaunchBounds::launch_mechanism == Kokkos::Experimental::LaunchDefault ?
+      //            (( CudaTraits::ConstantMemoryUseThreshold <
+      //            sizeof(DriverType) )?
+      //                   Kokkos::Experimental::CudaLaunchConstantMemory:Kokkos::Experimental::CudaLaunchLocalMemory):
+      //             LaunchBounds::launch_mechanism
       (CudaTraits::ConstantMemoryUseThreshold <
        sizeof(DriverType))>::get_block_size(f, vector_length, shmem_extra_block,
                                             shmem_extra_thread);
-  return kokkos_suggested_block_size;
 }
 
 template <class FunctorType, class LaunchBounds>
@@ -368,7 +369,6 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
                             const FunctorType& f, const size_t vector_length,
                             const size_t shmem_block,
                             const size_t shmem_thread) {
-  int kokkos_suggested_block_size;
   const int min_blocks_per_sm =
       LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
   const int max_threads_per_block = LaunchBounds::maxTperB == 0
@@ -428,8 +428,7 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
     }
     block_size -= 32;
   }
-  kokkos_suggested_block_size = opt_block_size;
-  return kokkos_suggested_block_size;
+  return opt_block_size;
 }
 
 template <class DriverType>
