@@ -379,9 +379,9 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
 )
 
 if(Kokkos_ENABLE_PROFILING)
-  add_library(
-    printer-tool MODULE
-    tools/printing-tool.cpp
+  KOKKOS_ADD_LIBRARY(
+    printer-tool SHARED
+    SOURCES tools/printing-tool.cpp
   )
 
   KOKKOS_ADD_TEST_EXECUTABLE(
