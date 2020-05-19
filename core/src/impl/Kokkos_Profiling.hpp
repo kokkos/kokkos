@@ -114,12 +114,11 @@ void set_profile_event_callback(profileEventFunction callback);
 void set_begin_deep_copy_callback(beginDeepCopyFunction callback);
 void set_end_deep_copy_callback(endDeepCopyFunction callback);
 
-void set_declare_tuning_variable_callback(
+void set_declare_output_type_callback(
     tuningVariableDeclarationFunction callback);
-void set_declare_context_variable_callback(
+void set_declare_input_type_callback(
     contextVariableDeclarationFunction callback);
-void set_request_tuning_variable_values_callback(
-    tuningVariableValueFunction callback);
+void set_request_output_values_callback(tuningVariableValueFunction callback);
 void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction callback);
 void set_end_context_callback(contextEndFunction callback);
@@ -196,37 +195,47 @@ using Kokkos::Tools::Experimental::set_callbacks;
 
 namespace Tools {
 
-using time_point = std::chrono::time_point<std::chrono::system_clock>;
+using clock_type = std::chrono::system_clock;
+using time_point = std::chrono::time_point<clock_type>;
 
 VariableValue make_variable_value(size_t id, bool val);
 VariableValue make_variable_value(size_t id, int64_t val);
 VariableValue make_variable_value(size_t id, double val);
 VariableValue make_variable_value(size_t id, const char* val);
 
-void declareOptimizationGoal(const OptimizationGoal& goal);
+Kokkos::Tools::SetOrRange make_candidate_set(size_t size, const char** data);
+Kokkos::Tools::SetOrRange make_candidate_set(size_t size, int64_t* data);
+Kokkos::Tools::SetOrRange make_candidate_set(size_t size, bool* data);
+Kokkos::Tools::SetOrRange make_candidate_set(size_t size, double* data);
+Kokkos::Tools::SetOrRange make_candidate_range(double lower, double upper,
+                                               double step, bool openLower,
+                                               bool openUpper);
 
-void declareTuningVariable(const std::string& variableName, size_t uniqID,
-                           VariableInfo info);
+Kokkos::Tools::SetOrRange make_candidate_range(int64_t lower, int64_t upper,
+                                               int64_t step, bool openLower,
+                                               bool openUpper);
 
-void declareContextVariable(const std::string& variableName, size_t uniqID,
-                            VariableInfo info,
-                            Kokkos::Tools::SetOrRange candidate_values);
+void declare_optimization_goal(const OptimizationGoal& goal);
 
-void declareContextVariableValues(size_t contextId, size_t count,
-                                  VariableValue* values);
+size_t declare_output_type(const std::string& typeName, VariableInfo info,
+                           Kokkos::Tools::SetOrRange candidate_values);
 
-void endContext(size_t contextId);
+size_t declare_input_type(const std::string& typeName, VariableInfo info,
+                          Kokkos::Tools::SetOrRange candidate_values);
 
-void requestTuningVariableValues(size_t contextId, size_t count,
-                                 VariableValue* values,
-                                 Kokkos::Tools::SetOrRange* candidate_values);
+void set_input_values(size_t contextId, size_t count, VariableValue* values);
 
-bool haveTuningTool();
+void end_context(size_t contextId);
 
-size_t getNewContextId();
-size_t getCurrentContextId();
+void request_output_values(size_t contextId, size_t count,
+                           VariableValue* values);
 
-size_t getNewVariableId();
+bool have_tuning_tool();
+
+size_t get_new_context_id();
+size_t get_current_context_id();
+
+size_t get_new_variable_id();
 
 }  // namespace Tools
 

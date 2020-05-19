@@ -98,12 +98,23 @@ typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 
 // Tuning
 
-struct Kokkos_Tuning_VariableValue;  // forward declaration
+union Kokkos_Tuning_VariableValue_ValueUnion {
+  bool bool_value;
+  int64_t int_value;
+  double double_value;
+  const char* string_value;
+};
+
+union Kokkos_Tuning_VariableValue_ValueUnionSet {
+  bool* bool_value;
+  int64_t* int_value;
+  double* double_value;
+  const char** string_value;
+};
 
 struct Kokkos_Tuning_ValueSet {
-  size_t id;
   size_t size;
-  struct Kokkos_Tuning_VariableValue* values;
+  union Kokkos_Tuning_VariableValue_ValueUnionSet values;
 };
 
 enum Kokkos_Tuning_OptimizationType {
@@ -117,21 +128,11 @@ struct Kokkos_Tuning_OptimzationGoal {
 };
 
 struct Kokkos_Tuning_ValueRange {
-  size_t id;
-  Kokkos_Tuning_VariableValue* lower;
-  Kokkos_Tuning_VariableValue* upper;
-  Kokkos_Tuning_VariableValue* step;
+  union Kokkos_Tuning_VariableValue_ValueUnion lower;
+  union Kokkos_Tuning_VariableValue_ValueUnion upper;
+  union Kokkos_Tuning_VariableValue_ValueUnion step;
   bool openLower;
   bool openUpper;
-};
-
-union Kokkos_Tuning_VariableValue_ValueUnion {
-  bool bool_value;
-  int64_t int_value;
-  double double_value;
-  const char* string_value;
-  Kokkos_Tuning_ValueRange range_value;
-  Kokkos_Tuning_ValueSet set_value;
 };
 
 struct Kokkos_Tuning_VariableValue {
@@ -174,15 +175,15 @@ struct Kokkos_Tuning_VariableInfo {
 };
 
 typedef void (*Kokkos_Tuning_tuningVariableDeclarationFunction)(
-    const char*, const size_t, Kokkos_Tuning_VariableInfo info);
+    const char*, const size_t, Kokkos_Tuning_VariableInfo info,
+    Kokkos_Tuning_VariableInfo_SetOrRange);
 typedef void (*Kokkos_Tuning_contextVariableDeclarationFunction)(
     const char*, const size_t, Kokkos_Tuning_VariableInfo info,
     Kokkos_Tuning_VariableInfo_SetOrRange);
 
 typedef void (*Kokkos_Tuning_tuningVariableValueFunction)(
     const size_t, const size_t, const Kokkos_Tuning_VariableValue*,
-    const size_t count, Kokkos_Tuning_VariableValue*,
-    Kokkos_Tuning_VariableInfo_SetOrRange*);
+    const size_t count, Kokkos_Tuning_VariableValue*);
 typedef void (*Kokkos_Tuning_contextVariableValueFunction)(
     const size_t contextId, const size_t count,
     Kokkos_Tuning_VariableValue* values);
@@ -213,9 +214,9 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_beginDeepCopyFunction begin_deep_copy;
   Kokkos_Profiling_endDeepCopyFunction end_deep_copy;
   char profiling_padding[16 * sizeof(function_pointer)];
-  Kokkos_Tuning_tuningVariableDeclarationFunction declare_tuning_variable;
-  Kokkos_Tuning_contextVariableDeclarationFunction declare_context_variable;
-  Kokkos_Tuning_tuningVariableValueFunction request_tuning_values;
+  Kokkos_Tuning_tuningVariableDeclarationFunction declare_output_type;
+  Kokkos_Tuning_contextVariableDeclarationFunction declare_input_type;
+  Kokkos_Tuning_tuningVariableValueFunction request_output_values;
   Kokkos_Tuning_contextEndFunction end_tuning_context;
   Kokkos_Tuning_optimizationGoalDeclarationFunction declare_optimization_goal;
   char padding[235 *

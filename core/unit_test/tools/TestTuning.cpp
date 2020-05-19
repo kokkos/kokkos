@@ -53,13 +53,14 @@
 static size_t expectedVariableId;
 static size_t expectedNumberOfContextVariables;
 static int64_t expectedContextVariableValue;
+static std::unordered_map<size_t, Kokkos::Tools::SetOrRange>
+    candidate_value_map;
 
 int main() {
   Kokkos::initialize();
   {
-    auto context = Kokkos::Tools::getNewContextId();
+    auto context = Kokkos::Tools::get_new_context_id();
 
-    auto contextVariableId = Kokkos::Tools::getNewVariableId();
     Kokkos::Tools::VariableInfo contextVariableInfo;
 
     contextVariableInfo.category =
@@ -70,97 +71,80 @@ int main() {
 
     Kokkos::Tools::SetOrRange empty;
 
-    auto tuningVariableId = Kokkos::Tools::getNewVariableId();
     Kokkos::Tools::VariableInfo tuningVariableInfo;
 
     tuningVariableInfo.category =
         Kokkos::Tools::StatisticalCategory::kokkos_value_categorical;
     tuningVariableInfo.type = Kokkos::Tools::ValueType::kokkos_value_integer;
     tuningVariableInfo.valueQuantity =
-        Kokkos::Tools::CandidateValueType::kokkos_value_unbounded;
+        Kokkos::Tools::CandidateValueType::kokkos_value_set;
 
+    std::vector<int64_t> candidate_value_vector = {0, 1, 2, 3, 4,
+                                                   5, 6, 7, 8, 9};
+
+    Kokkos::Tools::SetOrRange allowed_values =
+        Kokkos::Tools::make_candidate_set(candidate_value_vector.size(),
+                                          candidate_value_vector.data());
     // test that ID's are transmitted to the tool
-    Kokkos::Tools::Experimental::set_declare_tuning_variable_callback(
-        [](const char* name, const size_t id,
-           Kokkos::Tools::VariableInfo info) {
-          if (id != expectedVariableId) {
-            throw(std::runtime_error("Tuning Variable has wrong ID"));
-          }
-        });
-    Kokkos::Tools::Experimental::set_declare_context_variable_callback(
+    Kokkos::Tools::Experimental::set_declare_output_type_callback(
         [](const char* name, const size_t id, Kokkos::Tools::VariableInfo info,
            Kokkos::Tools::SetOrRange candidates) {
-          if (id != expectedVariableId) {
-            throw(std::runtime_error("Context Variable has wrong ID"));
+          candidate_value_map[id] = candidates;
+          if (info.type != Kokkos::Tools::ValueType::kokkos_value_integer) {
+            throw(std::runtime_error("Tuning Variable has wrong type"));
           }
         });
-    expectedVariableId = contextVariableId;
-    Kokkos::Tools::declareContextVariable("kokkos.testing.context_variable",
-                                          contextVariableId,
-                                          contextVariableInfo, empty);
-    expectedVariableId = tuningVariableId;
-    Kokkos::Tools::declareTuningVariable("kokkos.testing.tuning_variable",
-                                         tuningVariableId, tuningVariableInfo);
+    Kokkos::Tools::Experimental::set_declare_input_type_callback(
+        [](const char* name, const size_t id, Kokkos::Tools::VariableInfo info,
+           Kokkos::Tools::SetOrRange candidates) {
+          if (info.type != Kokkos::Tools::ValueType::kokkos_value_integer) {
+            throw(std::runtime_error("Context Variable has wrong type"));
+          }
+        });
+    auto contextVariableId = Kokkos::Tools::declare_input_type(
+        "kokkos.testing.context_variable", contextVariableInfo, empty);
+    auto tuningVariableId = Kokkos::Tools::declare_output_type(
+        "kokkos.testing.tuning_variable", tuningVariableInfo, allowed_values);
 
     // test that we correctly pass context values, and receive tuning variables
     // back in return
     Kokkos::Tools::VariableValue contextValues[] = {
         Kokkos::Tools::make_variable_value(contextVariableId, int64_t(0))};
-    Kokkos::Tools::declareContextVariableValues(context, 1, contextValues);
+    Kokkos::Tools::set_input_values(context, 1, contextValues);
 
-    Kokkos::Tools::Experimental::set_request_tuning_variable_values_callback(
+    Kokkos::Tools::Experimental::set_request_output_values_callback(
         [](const size_t context, const size_t num_context_variables,
            const Kokkos::Tools::VariableValue* context_values,
            const size_t num_tuning_variables,
-           Kokkos::Tools::VariableValue* tuning_values,
-           Kokkos::Tools::SetOrRange* candidate_values) {
+           Kokkos::Tools::VariableValue* tuning_values) {
+          auto candidate_values = candidate_value_map[tuning_values[0].id];
           if (context_values[0].value.int_value !=
               expectedContextVariableValue) {
             throw std::runtime_error(
                 "Context variables not correctly passed to tuning callbacks");
           }
-          int tuningVariableSetSize = candidate_values[0].set.size;
+          int tuningVariableSetSize = candidate_values.set.size;
+          std::cout << "Set of size " << tuningVariableSetSize << std::endl;
           // tuning methodology via https://xkcd.com/221/
-          tuning_values[0] =
-              candidate_values[0].set.values[4 % tuningVariableSetSize];
+          tuning_values[0].value.int_value =
+              candidate_values.set.values.int_value[4 % tuningVariableSetSize];
         });
 
     Kokkos::Tools::VariableValue tuningValues[] = {
         Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(0))};
 
-    Kokkos::Tools::VariableValue viableOptions[] = {
-        Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(0)),
-        Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(1)),
-        Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(2)),
-        Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(3)),
-        Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(4)),
-        Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(5)),
-        Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(6)),
-        Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(7)),
-        Kokkos::Tools::make_variable_value(tuningVariableId, int64_t(8)),
-    };
-
-    Kokkos::Tools::SetOrRange tuningCandidates[1];
-
-    tuningCandidates[0].set.id     = tuningVariableId;
-    tuningCandidates[0].set.size   = 9;
-    tuningCandidates[0].set.values = viableOptions;
-
-    Kokkos::Tools::requestTuningVariableValues(context, 1, tuningValues,
-                                               tuningCandidates);
+    Kokkos::Tools::request_output_values(context, 1, tuningValues);
     std::cout << tuningValues[0].value.int_value << ","
-              << viableOptions[5].value.int_value << std::endl;
-    if (tuningValues[0].value.int_value != viableOptions[4].value.int_value) {
+              << candidate_value_vector[4] << std::endl;
+    if (tuningValues[0].value.int_value != candidate_value_vector[4]) {
       throw std::runtime_error("Tuning value return is incorrect");
     }
 
-    Kokkos::Tools::endContext(context);
+    Kokkos::Tools::end_context(context);
 
     // test nested contexts
-    auto outerContext = Kokkos::Tools::getNewContextId();
-    auto innerContext = Kokkos::Tools::getNewContextId();
-
-    auto secondContextVariableId = Kokkos::Tools::getNewVariableId();
+    auto outerContext = Kokkos::Tools::get_new_context_id();
+    auto innerContext = Kokkos::Tools::get_new_context_id();
 
     Kokkos::Tools::VariableInfo secondContextVariableInfo;
 
@@ -171,21 +155,19 @@ int main() {
     secondContextVariableInfo.valueQuantity =
         Kokkos::Tools::CandidateValueType::kokkos_value_unbounded;
 
-    expectedVariableId = secondContextVariableId;
-    Kokkos::Tools::declareContextVariable(
-        "kokkos.testing.second_context_variable", secondContextVariableId,
-        secondContextVariableInfo, empty);
+    auto secondContextVariableId = Kokkos::Tools::declare_output_type(
+        "kokkos.testing.second_context_variable", secondContextVariableInfo,
+        empty);
 
     Kokkos::Tools::VariableValue contextValueTwo[] = {
         Kokkos::Tools::make_variable_value(secondContextVariableId,
                                            int64_t(1))};
 
-    Kokkos::Tools::Experimental::set_request_tuning_variable_values_callback(
+    Kokkos::Tools::Experimental::set_request_output_values_callback(
         [](const size_t context, const size_t num_context_variables,
            const Kokkos::Tools::VariableValue* context_values,
            const size_t num_tuning_variables,
-           Kokkos::Tools::VariableValue* tuning_values,
-           Kokkos::Tools::SetOrRange* candidate_values) {
+           Kokkos::Tools::VariableValue* tuning_values) {
           std::cout << "Expect " << expectedNumberOfContextVariables
                     << ", have " << num_context_variables << std::endl;
           if (num_context_variables != expectedNumberOfContextVariables) {
@@ -194,15 +176,12 @@ int main() {
                                    "nested tuning contexts"));
           }
         });
-    Kokkos::Tools::declareContextVariableValues(outerContext, 1, contextValues);
+    Kokkos::Tools::set_input_values(outerContext, 1, contextValues);
     expectedNumberOfContextVariables = 1;
-    Kokkos::Tools::requestTuningVariableValues(outerContext, 1, tuningValues,
-                                               tuningCandidates);
-    Kokkos::Tools::declareContextVariableValues(innerContext, 1,
-                                                contextValueTwo);
+    Kokkos::Tools::request_output_values(outerContext, 1, tuningValues);
+    Kokkos::Tools::set_input_values(innerContext, 1, contextValueTwo);
     expectedNumberOfContextVariables = 2;
-    Kokkos::Tools::requestTuningVariableValues(innerContext, 1, tuningValues,
-                                               tuningCandidates);
+    Kokkos::Tools::request_output_values(innerContext, 1, tuningValues);
   }  // end Kokkos block
 
   Kokkos::finalize();
