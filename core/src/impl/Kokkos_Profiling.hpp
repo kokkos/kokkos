@@ -192,7 +192,7 @@ using Kokkos::Tools::Experimental::set_callbacks;
 }  // namespace Profiling
 
 namespace Tools {
-
+namespace Experimental {
 using clock_type = std::chrono::system_clock;
 using time_point = std::chrono::time_point<clock_type>;
 
@@ -201,17 +201,15 @@ VariableValue make_variable_value(size_t id, int64_t val);
 VariableValue make_variable_value(size_t id, double val);
 VariableValue make_variable_value(size_t id, const char* val);
 
-Kokkos::Tools::SetOrRange make_candidate_set(size_t size, const char** data);
-Kokkos::Tools::SetOrRange make_candidate_set(size_t size, int64_t* data);
-Kokkos::Tools::SetOrRange make_candidate_set(size_t size, bool* data);
-Kokkos::Tools::SetOrRange make_candidate_set(size_t size, double* data);
-Kokkos::Tools::SetOrRange make_candidate_range(double lower, double upper,
-                                               double step, bool openLower,
-                                               bool openUpper);
+SetOrRange make_candidate_set(size_t size, const char** data);
+SetOrRange make_candidate_set(size_t size, int64_t* data);
+SetOrRange make_candidate_set(size_t size, bool* data);
+SetOrRange make_candidate_set(size_t size, double* data);
+SetOrRange make_candidate_range(double lower, double upper, double step,
+                                bool openLower, bool openUpper);
 
-Kokkos::Tools::SetOrRange make_candidate_range(int64_t lower, int64_t upper,
-                                               int64_t step, bool openLower,
-                                               bool openUpper);
+SetOrRange make_candidate_range(int64_t lower, int64_t upper, int64_t step,
+                                bool openLower, bool openUpper);
 
 void declare_optimization_goal(const size_t context,
                                const OptimizationGoal& goal);
@@ -233,7 +231,7 @@ size_t get_new_context_id();
 size_t get_current_context_id();
 
 size_t get_new_variable_id();
-
+}  // namespace Experimental
 }  // namespace Tools
 
 }  // namespace Kokkos

@@ -170,7 +170,7 @@ using Kokkos::Tools::stopProfileSectionFunction;
 
 namespace Kokkos {
 namespace Tools {
-
+namespace Experimental {
 using ValueSet            = Kokkos_Tools_ValueSet;
 using ValueRange          = Kokkos_Tools_ValueRange;
 using StatisticalCategory = Kokkos_Tools_VariableInfo_StatisticalCategory;
@@ -194,7 +194,7 @@ using requestValueFunction         = Kokkos_Tools_requestValueFunction;
 using contextEndFunction           = Kokkos_Tools_contextEndFunction;
 using optimizationGoalDeclarationFunction =
     Kokkos_Tools_optimizationGoalDeclarationFunction;
-
+}  // end namespace Experimental
 }  // end namespace Tools
 
 }  // end namespace Kokkos

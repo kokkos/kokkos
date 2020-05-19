@@ -58,20 +58,14 @@
 #include <unordered_set>
 #include <algorithm>
 namespace Kokkos {
-namespace Tools {
-
-#ifdef KOKKOS_ENABLE_TUNING
-static size_t kernel_name_context_variable_id;
-static size_t kernel_type_context_variable_id;
-using time_point = std::chrono::time_point<std::chrono::system_clock>;
-static std::stack<time_point> timer_stack;
-static int last_microseconds;
-#endif
-}  // namespace Tools
 
 namespace Tools {
 
 namespace Experimental {
+#ifdef KOKKOS_ENABLE_TUNING
+static size_t kernel_name_context_variable_id;
+static size_t kernel_type_context_variable_id;
+#endif
 
 static EventSet current_callbacks;
 static EventSet backup_callbacks;
@@ -114,15 +108,14 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
     (*Experimental::current_callbacks.begin_parallel_for)(kernelPrefix.c_str(),
                                                           devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
-    Tools::timer_stack.push(std::chrono::system_clock::now());
-    Kokkos::Tools::VariableValue contextValues[] = {
-        Kokkos::Tools::make_variable_value(
-            Kokkos::Tools::kernel_name_context_variable_id,
+    Experimental::VariableValue contextValues[] = {
+        Experimental::make_variable_value(
+            Experimental::kernel_name_context_variable_id,
             kernelPrefix.c_str()),
-        Kokkos::Tools::make_variable_value(
-            Kokkos::Tools::kernel_type_context_variable_id, "parallel_for")};
-    Kokkos::Tools::set_input_values(Tools::get_new_context_id(), 2,
-                                    contextValues);
+        Experimental::make_variable_value(
+            Experimental::kernel_type_context_variable_id, "parallel_for")};
+    Experimental::set_input_values(Experimental::get_new_context_id(), 2,
+                                   contextValues);
 #endif
   }
 }
@@ -132,18 +125,7 @@ void endParallelFor(const uint64_t kernelID) {
     Kokkos::fence();
     (*Experimental::current_callbacks.end_parallel_for)(kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
-    Tools::last_microseconds =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - Tools::timer_stack.top())
-            .count();
-    Tools::timer_stack.pop();
-    std::array<Kokkos::Tools::VariableValue, 1> value = {
-        Kokkos::Tools::make_variable_value(
-            Tools::kernel_type_context_variable_id,
-            static_cast<double>(Tools::last_microseconds))};
-    Tools::set_input_values(Kokkos::Tools::get_current_context_id(), 1,
-                            value.data());
-    Kokkos::Tools::end_context(Kokkos::Tools::get_current_context_id());
+    Experimental::end_context(Experimental::get_current_context_id());
 #endif
   }
 }
@@ -155,15 +137,14 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
     (*Experimental::current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(),
                                                            devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
-    Tools::timer_stack.push(std::chrono::system_clock::now());
-    Kokkos::Tools::VariableValue contextValues[] = {
-        Kokkos::Tools::make_variable_value(
-            Kokkos::Tools::kernel_name_context_variable_id,
+    Experimental::VariableValue contextValues[] = {
+        Experimental::make_variable_value(
+            Experimental::kernel_name_context_variable_id,
             kernelPrefix.c_str()),
-        Kokkos::Tools::make_variable_value(
-            Kokkos::Tools::kernel_type_context_variable_id, "parallel_for")};
-    Kokkos::Tools::set_input_values(Kokkos::Tools::get_new_context_id(), 2,
-                                    contextValues);
+        Experimental::make_variable_value(
+            Experimental::kernel_type_context_variable_id, "parallel_for")};
+    Experimental::set_input_values(Experimental::get_new_context_id(), 2,
+                                   contextValues);
 #endif
   }
 }
@@ -173,18 +154,7 @@ void endParallelScan(const uint64_t kernelID) {
     Kokkos::fence();
     (*Experimental::current_callbacks.end_parallel_scan)(kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
-    Tools::last_microseconds =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - Tools::timer_stack.top())
-            .count();
-    Tools::timer_stack.pop();
-    std::array<Kokkos::Tools::VariableValue, 1> value = {
-        Kokkos::Tools::make_variable_value(
-            Tools::kernel_type_context_variable_id,
-            static_cast<double>(Tools::last_microseconds))};
-    Tools::set_input_values(Kokkos::Tools::get_current_context_id(), 1,
-                            value.data());
-    Kokkos::Tools::end_context(Kokkos::Tools::get_current_context_id());
+    Experimental::end_context(Experimental::get_current_context_id());
 #endif
   }
 }
@@ -196,15 +166,14 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
     (*Experimental::current_callbacks.begin_parallel_reduce)(
         kernelPrefix.c_str(), devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
-    Tools::timer_stack.push(std::chrono::system_clock::now());
-    Kokkos::Tools::VariableValue contextValues[] = {
-        Kokkos::Tools::make_variable_value(
-            Kokkos::Tools::kernel_name_context_variable_id,
+    Experimental::VariableValue contextValues[] = {
+        Experimental::make_variable_value(
+            Experimental::kernel_name_context_variable_id,
             kernelPrefix.c_str()),
-        Kokkos::Tools::make_variable_value(
-            Kokkos::Tools::kernel_type_context_variable_id, "parallel_for")};
-    Kokkos::Tools::set_input_values(Kokkos::Tools::get_new_context_id(), 2,
-                                    contextValues);
+        Experimental::make_variable_value(
+            Experimental::kernel_type_context_variable_id, "parallel_for")};
+    Experimental::set_input_values(Experimental::get_new_context_id(), 2,
+                                   contextValues);
 #endif
   }
 }
@@ -214,18 +183,7 @@ void endParallelReduce(const uint64_t kernelID) {
     Kokkos::fence();
     (*Experimental::current_callbacks.end_parallel_reduce)(kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
-    Tools::last_microseconds =
-        std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now() - Tools::timer_stack.top())
-            .count();
-    Tools::timer_stack.pop();
-    std::array<Kokkos::Tools::VariableValue, 1> value = {
-        Kokkos::Tools::make_variable_value(
-            Tools::kernel_type_context_variable_id,
-            static_cast<double>(Tools::last_microseconds))};
-    Tools::set_input_values(Kokkos::Tools::get_current_context_id(), 1,
-                            value.data());
-    Kokkos::Tools::end_context(Kokkos::Tools::get_current_context_id());
+    Experimental::end_context(Experimental::get_current_context_id());
 #endif
   }
 }
@@ -269,13 +227,13 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
         dst_space, dst_label.c_str(), dst_ptr, src_space, src_label.c_str(),
         src_ptr, size);
 #ifdef KOKKOS_ENABLE_TUNING
-    Kokkos::Tools::VariableValue contextValues[] = {
-        Kokkos::Tools::make_variable_value(
-            Kokkos::Tools::kernel_name_context_variable_id, "deep_copy_kernel"),
-        Kokkos::Tools::make_variable_value(
-            Kokkos::Tools::kernel_type_context_variable_id, "deep_copy")};
-    Kokkos::Tools::set_input_values(Kokkos::Tools::get_new_context_id(), 2,
-                                    contextValues);
+    Experimental::VariableValue contextValues[] = {
+        Experimental::make_variable_value(
+            Experimental::kernel_name_context_variable_id, "deep_copy_kernel"),
+        Experimental::make_variable_value(
+            Experimental::kernel_type_context_variable_id, "deep_copy")};
+    Experimental::set_input_values(Experimental::get_new_context_id(), 2,
+                                   contextValues);
 #endif
   }
 }
@@ -284,7 +242,7 @@ void endDeepCopy() {
   if (Experimental::current_callbacks.end_deep_copy != nullptr) {
     (*Experimental::current_callbacks.end_deep_copy)();
 #ifdef KOKKOS_ENABLE_TUNING
-    Kokkos::Tools::end_context(Kokkos::Tools::get_current_context_id());
+    Experimental::end_context(Experimental::get_current_context_id());
 #endif
   }
 }
@@ -438,24 +396,23 @@ void initialize() {
 #ifdef KOKKOS_ENABLE_TUNING
       auto p20 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
       Experimental::set_declare_output_type_callback(
-          *reinterpret_cast<Kokkos::Tools::outputTypeDeclarationFunction*>(
+          *reinterpret_cast<Experimental::outputTypeDeclarationFunction*>(
               &p20));
 
       auto p21 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
       Experimental::set_declare_input_type_callback(
-          *reinterpret_cast<Kokkos::Tools::inputTypeDeclarationFunction*>(
-              &p21));
+          *reinterpret_cast<Experimental::inputTypeDeclarationFunction*>(&p21));
       auto p22 = dlsym(firstProfileLibrary, "kokkosp_request_values");
       Experimental::set_request_output_values_callback(
-          *reinterpret_cast<Kokkos::Tools::requestValueFunction*>(&p22));
+          *reinterpret_cast<Experimental::requestValueFunction*>(&p22));
       auto p23 = dlsym(firstProfileLibrary, "kokkosp_end_context");
       Experimental::set_end_context_callback(
-          *reinterpret_cast<Kokkos::Tools::contextEndFunction*>(&p23));
+          *reinterpret_cast<Experimental::contextEndFunction*>(&p23));
       auto p24 =
           dlsym(firstProfileLibrary, "kokkosp_declare_optimization_goal");
       Experimental::set_declare_optimization_goal_callback(
-          *reinterpret_cast<
-              Kokkos::Tools::optimizationGoalDeclarationFunction*>(&p24));
+          *reinterpret_cast<Experimental::optimizationGoalDeclarationFunction*>(
+              &p24));
 #endif
     }
   }
@@ -466,16 +423,12 @@ void initialize() {
   }
 
 #ifdef KOKKOS_ENABLE_TUNING
-  Kokkos::Tools::VariableInfo kernel_name;
-  kernel_name.type = Kokkos::Tools::ValueType::kokkos_value_text;
+  Experimental::VariableInfo kernel_name;
+  kernel_name.type = Experimental::ValueType::kokkos_value_text;
   kernel_name.category =
-      Kokkos::Tools::StatisticalCategory::kokkos_value_categorical;
+      Experimental::StatisticalCategory::kokkos_value_categorical;
   kernel_name.valueQuantity =
-      Kokkos::Tools::CandidateValueType::kokkos_value_unbounded;
-  Kokkos::Tools::kernel_name_context_variable_id =
-      Kokkos::Tools::get_new_variable_id();
-  Kokkos::Tools::kernel_type_context_variable_id =
-      Kokkos::Tools::get_new_variable_id();
+      Experimental::CandidateValueType::kokkos_value_unbounded;
 
   std::array<const char*, 4> candidate_values = {
       "parallel_for",
@@ -484,21 +437,21 @@ void initialize() {
       "parallel_copy",
   };
 
-  Kokkos::Tools::SetOrRange kernel_type_variable_candidates =
-      make_candidate_set(4, candidate_values.data());
+  Experimental::SetOrRange kernel_type_variable_candidates =
+      Experimental::make_candidate_set(4, candidate_values.data());
 
-  Kokkos::Tools::kernel_name_context_variable_id =
-      Kokkos::Tools::declare_input_type("kokkos.kernel_name", kernel_name);
+  Experimental::kernel_name_context_variable_id =
+      Experimental::declare_input_type("kokkos.kernel_name", kernel_name);
 
-  Kokkos::Tools::VariableInfo kernel_type;
-  kernel_type.type = Kokkos::Tools::ValueType::kokkos_value_text;
+  Experimental::VariableInfo kernel_type;
+  kernel_type.type = Experimental::ValueType::kokkos_value_text;
   kernel_type.category =
-      Kokkos::Tools::StatisticalCategory::kokkos_value_categorical;
+      Experimental::StatisticalCategory::kokkos_value_categorical;
   kernel_type.valueQuantity =
-      Kokkos::Tools::CandidateValueType::kokkos_value_set;
+      Experimental::CandidateValueType::kokkos_value_set;
   kernel_type.candidates = kernel_type_variable_candidates;
-  Kokkos::Tools::kernel_type_context_variable_id =
-      Kokkos::Tools::declare_input_type("kokkos.kernel_type", kernel_type);
+  Experimental::kernel_type_context_variable_id =
+      Experimental::declare_input_type("kokkos.kernel_type", kernel_type);
 
 #endif
 
@@ -647,7 +600,7 @@ void set_callbacks(EventSet new_events) { current_callbacks = new_events; }
 
 namespace Kokkos {
 namespace Tools {
-
+namespace Experimental {
 static size_t& get_context_counter() {
   static size_t x;
   return x;
@@ -668,7 +621,7 @@ static std::unordered_set<size_t> active_features;
 static std::unordered_map<size_t, VariableValue> feature_values;
 static std::unordered_map<size_t, VariableInfo> variable_metadata;
 size_t declare_output_type(const std::string& variableName, VariableInfo info) {
-  size_t variableId = Kokkos::Tools::get_new_variable_id();
+  size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
   variable_metadata[variableId] = info;
   if (Experimental::current_callbacks.declare_output_type != nullptr) {
@@ -683,7 +636,7 @@ size_t declare_output_type(const std::string& variableName, VariableInfo info) {
 }
 
 size_t declare_input_type(const std::string& variableName, VariableInfo info) {
-  size_t variableId = Kokkos::Tools::get_new_variable_id();
+  size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
   variable_metadata[variableId] = info;
   if (Experimental::current_callbacks.declare_input_type != nullptr) {
@@ -718,7 +671,6 @@ void set_input_values(size_t contextId, size_t count, VariableValue* values) {
 void request_output_values(size_t contextId, size_t count,
                            VariableValue* values) {
 #ifdef KOKKOS_ENABLE_TUNING
-
   std::vector<size_t> context_ids;
   std::vector<VariableValue> context_values;
   for (auto id : active_features) {
@@ -778,41 +730,40 @@ VariableValue make_variable_value(size_t id, double val) {
   variable_value.value.double_value = val;
   return variable_value;
 }
-VariableValue make_variable_value(size_t id, const char* val) {
+Experimental::VariableValue make_variable_value(size_t id, const char* val) {
   VariableValue variable_value;
   variable_value.id                 = id;
   variable_value.value.string_value = val;
   return variable_value;
 }
-Kokkos::Tools::SetOrRange make_candidate_set(size_t size, const char** data) {
-  Kokkos::Tools::SetOrRange value_set;
+SetOrRange make_candidate_set(size_t size, const char** data) {
+  SetOrRange value_set;
   value_set.set.size                = size;
   value_set.set.values.string_value = data;
   return value_set;
 }
-Kokkos::Tools::SetOrRange make_candidate_set(size_t size, int64_t* data) {
-  Kokkos::Tools::SetOrRange value_set;
+SetOrRange make_candidate_set(size_t size, int64_t* data) {
+  SetOrRange value_set;
   value_set.set.size             = size;
   value_set.set.values.int_value = data;
   return value_set;
 }
-Kokkos::Tools::SetOrRange make_candidate_set(size_t size, bool* data) {
-  Kokkos::Tools::SetOrRange value_set;
+SetOrRange make_candidate_set(size_t size, bool* data) {
+  SetOrRange value_set;
   value_set.set.size              = size;
   value_set.set.values.bool_value = data;
   return value_set;
 }
-Kokkos::Tools::SetOrRange make_candidate_set(size_t size, double* data) {
-  Kokkos::Tools::SetOrRange value_set;
+SetOrRange make_candidate_set(size_t size, double* data) {
+  SetOrRange value_set;
   value_set.set.size                = size;
   value_set.set.values.double_value = data;
   return value_set;
 }
-Kokkos::Tools::SetOrRange make_candidate_range(double lower, double upper,
-                                               double step,
-                                               bool openLower = false,
-                                               bool openUpper = false) {
-  Kokkos::Tools::SetOrRange value_range;
+SetOrRange make_candidate_range(double lower, double upper, double step,
+                                bool openLower = false,
+                                bool openUpper = false) {
+  SetOrRange value_range;
   value_range.range.lower.double_value = lower;
   value_range.range.upper.double_value = upper;
   value_range.range.step.double_value  = step;
@@ -821,11 +772,10 @@ Kokkos::Tools::SetOrRange make_candidate_range(double lower, double upper,
   return value_range;
 }
 
-Kokkos::Tools::SetOrRange make_candidate_range(int64_t lower, int64_t upper,
-                                               int64_t step,
-                                               bool openLower = false,
-                                               bool openUpper = false) {
-  Kokkos::Tools::SetOrRange value_range;
+SetOrRange make_candidate_range(int64_t lower, int64_t upper, int64_t step,
+                                bool openLower = false,
+                                bool openUpper = false) {
+  SetOrRange value_range;
   value_range.range.lower.int_value = lower;
   value_range.range.upper.int_value = upper;
   value_range.range.step.int_value  = step;
@@ -846,10 +796,11 @@ void declare_optimization_goal(const size_t context,
     (*Experimental::current_callbacks.declare_optimization_goal)(context, goal);
   }
 #else
+  (void)context;
   (void)goal;
 #endif
 }
-
+}  // end namespace Experimental
 }  // end namespace Tools
 
 }  // end namespace Kokkos
