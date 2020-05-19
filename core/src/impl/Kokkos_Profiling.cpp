@@ -935,7 +935,7 @@ size_t get_current_context_id();
 void decrement_current_context_id();
 size_t get_new_variable_id();
 
-void declare_optimization_goal(size_t context, const OptimizationGoal&) {}
+void declare_optimization_goal(const size_t, const OptimizationGoal&) {}
 
 }  // end namespace Experimental
 }  // end namespace Tools
