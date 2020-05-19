@@ -63,7 +63,6 @@ namespace Tools {
 #ifdef KOKKOS_ENABLE_TUNING
 static size_t kernel_name_context_variable_id;
 static size_t kernel_type_context_variable_id;
-static size_t time_context_variable_id;
 using time_point = std::chrono::time_point<std::chrono::system_clock>;
 static std::stack<time_point> timer_stack;
 static int last_microseconds;
@@ -477,8 +476,6 @@ void initialize() {
       Kokkos::Tools::get_new_variable_id();
   Kokkos::Tools::kernel_type_context_variable_id =
       Kokkos::Tools::get_new_variable_id();
-  Kokkos::Tools::time_context_variable_id =
-      Kokkos::Tools::get_new_variable_id();
 
   std::array<const char*, 4> candidate_values = {
       "parallel_for",
@@ -490,8 +487,6 @@ void initialize() {
   Kokkos::Tools::SetOrRange kernel_type_variable_candidates =
       make_candidate_set(4, candidate_values.data());
 
-  Kokkos::Tools::SetOrRange kernel_name_candidates;
-  kernel_name.candidates = kernel_name_candidates;
   Kokkos::Tools::kernel_name_context_variable_id =
       Kokkos::Tools::declare_input_type("kokkos.kernel_name", kernel_name);
 
@@ -505,22 +500,6 @@ void initialize() {
   Kokkos::Tools::kernel_type_context_variable_id =
       Kokkos::Tools::declare_input_type("kokkos.kernel_type", kernel_type);
 
-  Kokkos::Tools::SetOrRange time_candidates;
-
-  Kokkos::Tools::VariableInfo wall_clock_time;
-  wall_clock_time.type = Kokkos::Tools::ValueType::kokkos_value_floating_point;
-  wall_clock_time.category =
-      Kokkos::Tools::StatisticalCategory::kokkos_value_ratio;
-  wall_clock_time.valueQuantity =
-      Kokkos::Tools::CandidateValueType::kokkos_value_unbounded;
-  wall_clock_time.candidates = time_candidates;
-  Kokkos::Tools::time_context_variable_id =
-      Kokkos::Tools::declare_input_type("kokkos.wall_time", wall_clock_time);
-
-  Kokkos::Tools::OptimizationGoal initial_goal{
-      Kokkos::Tools::kernel_type_context_variable_id, Kokkos_Tools_Minimize};
-
-  Kokkos::Tools::declare_optimization_goal(initial_goal);
 #endif
 
   Experimental::no_profiling.init     = nullptr;
@@ -698,7 +677,6 @@ size_t declare_output_type(const std::string& variableName, VariableInfo info) {
   }
 #else
   (void)variableName;
-  (void)uniqID;
   (void)info;
 #endif
   return variableId;
@@ -714,7 +692,6 @@ size_t declare_input_type(const std::string& variableName, VariableInfo info) {
   }
 #else
   (void)variableName;
-  (void)uniqID;
   (void)info;
 #endif
   return variableId;
