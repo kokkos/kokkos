@@ -127,6 +127,10 @@
 #include <cuda_runtime.h>
 #include <cuda.h>
 
+#if defined(_WIN32)
+#define KOKKOS_IMPL_WINDOWS_CUDA
+#endif
+
 #if !defined(CUDA_VERSION)
 #error "#include <cuda.h> did not define CUDA_VERSION."
 #endif
@@ -154,7 +158,8 @@
 #define KOKKOS_ENABLE_PRE_CUDA_10_DEPRECATION_API
 #endif
 
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700)
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700) && \
+    !defined(KOKKOS_IMPL_WINDOWS_CUDA)
 // PTX atomics with memory order semantics are only available on volta and later
 #if !defined(KOKKOS_DISABLE_CUDA_ASM)
 #if !defined(KOKKOS_ENABLE_CUDA_ASM)
@@ -650,6 +655,15 @@
 #define KOKKOS_THREAD_LOCAL __declspec(thread)
 #else
 #define KOKKOS_THREAD_LOCAL __thread
+#endif
+
+#if defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)
+// MSVC (as of 16.5.5 at least) does not do empty base class optimization by
+// default when there are multiple bases, even though the standard requires it
+// for standard layout types.
+#define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION __declspec(empty_bases)
+#else
+#define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
 #endif
 
 #endif  // #ifndef KOKKOS_MACROS_HPP

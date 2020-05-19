@@ -75,6 +75,9 @@
 //----------------------------------------------------------------------------
 #if defined(_WIN32)
 #define KOKKOS_ENABLE_WINDOWS_ATOMICS
+#if defined(KOKKOS_ENABLE_CUDA)
+#define KOKKOS_ENABLE_CUDA_ATOMICS
+#endif
 #else
 #if defined(KOKKOS_ENABLE_CUDA)
 
@@ -188,7 +191,7 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 
 #ifdef _WIN32
 #include "impl/Kokkos_Atomic_Windows.hpp"
-#else
+#endif
 //----------------------------------------------------------------------------
 // Atomic Assembly
 //
@@ -215,11 +218,8 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 
 #include "impl/Kokkos_Atomic_Compare_Exchange_Strong.hpp"
 
-#endif  //_WIN32
-
 #include "impl/Kokkos_Atomic_Generic.hpp"
 
-#ifndef _WIN32
 //----------------------------------------------------------------------------
 // Atomic fetch and add
 //
@@ -285,7 +285,6 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 // { T tmp = *dest ; *dest = max(*dest, val); return tmp ; }
 
 #include "impl/Kokkos_Atomic_MinMax.hpp"
-#endif /*Not _WIN32*/
 
 //----------------------------------------------------------------------------
 // Memory fence

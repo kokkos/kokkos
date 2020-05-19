@@ -59,7 +59,7 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutleft_assignment) {
   auto t = time(nullptr);
   srand(t);  // Use current time as seed for random generator
   printf("view_layoutstride_left_to_layoutleft_assignment: srand(%lu)\n",
-         size_t(t));
+         static_cast<unsigned long>(t));
 
   {  // Assignment of rank-1 LayoutLeft = LayoutStride
     int ndims   = 1;
@@ -344,7 +344,7 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutright_assignment) {
   auto t = time(nullptr);
   srand(t);  // Use current time as seed for random generator
   printf("view_layoutstride_right_to_layoutright_assignment: srand(%lu)\n",
-         size_t(t));
+         static_cast<unsigned long>(t));
 
   {  // Assignment of rank-1 LayoutRight = LayoutStride
     int ndims   = 1;
@@ -629,7 +629,7 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
   auto t = time(nullptr);
   srand(t);  // Use current time as seed for random generator
   printf("view_layoutstride_right_to_layoutleft_assignment: srand(%lu)\n",
-         size_t(t));
+         static_cast<unsigned long>(t));
 
   {  // Assignment of rank-1 LayoutLeft = LayoutStride (LayoutRight compatible)
     int ndims   = 1;
@@ -783,7 +783,7 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
   auto t = time(nullptr);
   srand(t);  // Use current time as seed for random generator
   printf("view_layoutstride_left_to_layoutright_assignment: srand(%lu)\n",
-         size_t(t));
+         static_cast<unsigned long>(t));
 
   {  // Assignment of rank-1 LayoutRight = LayoutStride (LayoutLeft compatible)
     int ndims   = 1;

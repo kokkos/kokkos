@@ -69,17 +69,17 @@ namespace Impl {
 
 template <unsigned I, size_t... Args>
 struct variadic_size_t {
-  enum { value = KOKKOS_INVALID_INDEX };
+  enum : size_t { value = KOKKOS_INVALID_INDEX };
 };
 
 template <size_t Val, size_t... Args>
 struct variadic_size_t<0, Val, Args...> {
-  enum { value = Val };
+  enum : size_t { value = Val };
 };
 
 template <unsigned I, size_t Val, size_t... Args>
 struct variadic_size_t<I, Val, Args...> {
-  enum { value = variadic_size_t<I - 1, Args...>::value };
+  enum : size_t { value = variadic_size_t<I - 1, Args...>::value };
 };
 
 template <size_t... Args>
@@ -87,27 +87,27 @@ struct rank_dynamic;
 
 template <>
 struct rank_dynamic<> {
-  enum { value = 0 };
+  enum : unsigned { value = 0 };
 };
 
 template <size_t Val, size_t... Args>
 struct rank_dynamic<Val, Args...> {
-  enum { value = (Val == 0 ? 1 : 0) + rank_dynamic<Args...>::value };
+  enum : unsigned { value = (Val == 0 ? 1 : 0) + rank_dynamic<Args...>::value };
 };
 
 #define KOKKOS_IMPL_VIEW_DIMENSION(R)                                       \
   template <size_t V, unsigned>                                             \
   struct ViewDimension##R {                                                 \
-    enum { ArgN##R = (V != KOKKOS_INVALID_INDEX ? V : 1) };                 \
-    enum { N##R = (V != KOKKOS_INVALID_INDEX ? V : 1) };                    \
+    enum : size_t { ArgN##R = (V != KOKKOS_INVALID_INDEX ? V : 1) };        \
+    enum : size_t { N##R = (V != KOKKOS_INVALID_INDEX ? V : 1) };           \
     KOKKOS_INLINE_FUNCTION explicit ViewDimension##R(size_t) {}             \
     ViewDimension##R()                        = default;                    \
     ViewDimension##R(const ViewDimension##R&) = default;                    \
     ViewDimension##R& operator=(const ViewDimension##R&) = default;         \
   };                                                                        \
   template <unsigned RD>                                                    \
-  struct ViewDimension##R<0, RD> {                                          \
-    enum { ArgN##R = 0 };                                                   \
+  struct ViewDimension##R<0u, RD> {                                         \
+    enum : size_t { ArgN##R = 0 };                                          \
     typename std::conditional<(RD < 3), size_t, unsigned>::type N##R;       \
     ViewDimension##R()                        = default;                    \
     ViewDimension##R(const ViewDimension##R&) = default;                    \
@@ -126,45 +126,48 @@ KOKKOS_IMPL_VIEW_DIMENSION(7)
 
 #undef KOKKOS_IMPL_VIEW_DIMENSION
 
+// MSVC does not do empty base class optimization by default.
+// Per standard it is required for standard layout types
 template <size_t... Vals>
-struct ViewDimension : public ViewDimension0<variadic_size_t<0, Vals...>::value,
-                                             rank_dynamic<Vals...>::value>,
-                       public ViewDimension1<variadic_size_t<1, Vals...>::value,
-                                             rank_dynamic<Vals...>::value>,
-                       public ViewDimension2<variadic_size_t<2, Vals...>::value,
-                                             rank_dynamic<Vals...>::value>,
-                       public ViewDimension3<variadic_size_t<3, Vals...>::value,
-                                             rank_dynamic<Vals...>::value>,
-                       public ViewDimension4<variadic_size_t<4, Vals...>::value,
-                                             rank_dynamic<Vals...>::value>,
-                       public ViewDimension5<variadic_size_t<5, Vals...>::value,
-                                             rank_dynamic<Vals...>::value>,
-                       public ViewDimension6<variadic_size_t<6, Vals...>::value,
-                                             rank_dynamic<Vals...>::value>,
-                       public ViewDimension7<variadic_size_t<7, Vals...>::value,
-                                             rank_dynamic<Vals...>::value> {
-  typedef ViewDimension0<variadic_size_t<0, Vals...>::value,
+struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION ViewDimension
+    : public ViewDimension0<variadic_size_t<0u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension1<variadic_size_t<1u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension2<variadic_size_t<2u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension3<variadic_size_t<3u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension4<variadic_size_t<4u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension5<variadic_size_t<5u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension6<variadic_size_t<6u, Vals...>::value,
+                            rank_dynamic<Vals...>::value>,
+      public ViewDimension7<variadic_size_t<7u, Vals...>::value,
+                            rank_dynamic<Vals...>::value> {
+  typedef ViewDimension0<variadic_size_t<0u, Vals...>::value,
                          rank_dynamic<Vals...>::value>
       D0;
-  typedef ViewDimension1<variadic_size_t<1, Vals...>::value,
+  typedef ViewDimension1<variadic_size_t<1u, Vals...>::value,
                          rank_dynamic<Vals...>::value>
       D1;
-  typedef ViewDimension2<variadic_size_t<2, Vals...>::value,
+  typedef ViewDimension2<variadic_size_t<2u, Vals...>::value,
                          rank_dynamic<Vals...>::value>
       D2;
-  typedef ViewDimension3<variadic_size_t<3, Vals...>::value,
+  typedef ViewDimension3<variadic_size_t<3u, Vals...>::value,
                          rank_dynamic<Vals...>::value>
       D3;
-  typedef ViewDimension4<variadic_size_t<4, Vals...>::value,
+  typedef ViewDimension4<variadic_size_t<4u, Vals...>::value,
                          rank_dynamic<Vals...>::value>
       D4;
-  typedef ViewDimension5<variadic_size_t<5, Vals...>::value,
+  typedef ViewDimension5<variadic_size_t<5u, Vals...>::value,
                          rank_dynamic<Vals...>::value>
       D5;
-  typedef ViewDimension6<variadic_size_t<6, Vals...>::value,
+  typedef ViewDimension6<variadic_size_t<6u, Vals...>::value,
                          rank_dynamic<Vals...>::value>
       D6;
-  typedef ViewDimension7<variadic_size_t<7, Vals...>::value,
+  typedef ViewDimension7<variadic_size_t<7u, Vals...>::value,
                          rank_dynamic<Vals...>::value>
       D7;
 
@@ -186,8 +189,8 @@ struct ViewDimension : public ViewDimension0<variadic_size_t<0, Vals...>::value,
   using D6::N6;
   using D7::N7;
 
-  enum { rank = sizeof...(Vals) };
-  enum { rank_dynamic = Impl::rank_dynamic<Vals...>::value };
+  enum : unsigned { rank = sizeof...(Vals) };
+  enum : unsigned { rank_dynamic = Impl::rank_dynamic<Vals...>::value };
 
   ViewDimension()                     = default;
   ViewDimension(const ViewDimension&) = default;
@@ -1081,9 +1084,21 @@ struct ViewOffset<
 
   //----------------------------------------
 
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
+#ifdef KOKKOS_IMPL_WINDOWS_CUDA
+  KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()) {}
+  KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) { m_dim = src.m_dim; }
+  KOKKOS_FUNCTION ViewOffset& operator=(const ViewOffset& src) {
+    m_dim = src.m_dim;
+    return *this;
+  }
+#else
   ViewOffset()                  = default;
   ViewOffset(const ViewOffset&) = default;
   ViewOffset& operator=(const ViewOffset&) = default;
+#endif
 
   template <unsigned TrivialScalarSize>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(
@@ -1386,9 +1401,26 @@ struct ViewOffset<
   };
 
  public:
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
+#ifdef KOKKOS_IMPL_WINDOWS_CUDA
+  KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()), m_stride(0) {}
+  KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) {
+    m_dim    = src.m_dim;
+    m_stride = src.m_stride;
+  }
+  KOKKOS_FUNCTION ViewOffset& operator=(const ViewOffset& src) {
+    m_dim    = src.m_dim;
+    m_stride = src.m_stride;
+    return *this;
+  }
+#else
+
   ViewOffset()                  = default;
   ViewOffset(const ViewOffset&) = default;
   ViewOffset& operator=(const ViewOffset&) = default;
+#endif
 
   /* Enable padding for trivial scalar types with non-zero trivial scalar size
    */
@@ -1686,10 +1718,23 @@ struct ViewOffset<
   }
 
   //----------------------------------------
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
+
+#ifdef KOKKOS_IMPL_WINDOWS_CUDA
+  KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()) {}
+  KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) { m_dim = src.m_dim; }
+  KOKKOS_FUNCTION ViewOffset& operator=(const ViewOffset& src) {
+    m_dim = src.m_dim;
+    return *this;
+  }
+#else
 
   ViewOffset()                  = default;
   ViewOffset(const ViewOffset&) = default;
   ViewOffset& operator=(const ViewOffset&) = default;
+#endif
 
   template <unsigned TrivialScalarSize>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(
@@ -1989,9 +2034,27 @@ struct ViewOffset<
   };
 
  public:
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
+
+#ifdef KOKKOS_IMPL_WINDOWS_CUDA
+  KOKKOS_FUNCTION ViewOffset() : m_dim(dimension_type()), m_stride(0) {}
+  KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) {
+    m_dim    = src.m_dim;
+    m_stride = src.m_stride;
+  }
+  KOKKOS_FUNCTION ViewOffset& operator=(const ViewOffset& src) {
+    m_dim    = src.m_dim;
+    m_stride = src.m_stride;
+    return *this;
+  }
+#else
+
   ViewOffset()                  = default;
   ViewOffset(const ViewOffset&) = default;
   ViewOffset& operator=(const ViewOffset&) = default;
+#endif
 
   /* Enable padding for trivial scalar types with non-zero trivial scalar size.
    */
@@ -2474,10 +2537,28 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   }
 
   //----------------------------------------
+  // MSVC (16.5.5) + CUDA (10.2) did not generate the defaulted functions
+  // correct and errors out during compilation. Same for the other places where
+  // I changed this.
+
+#ifdef KOKKOS_IMPL_WINDOWS_CUDA
+  KOKKOS_FUNCTION ViewOffset()
+      : m_dim(dimension_type()), m_stride(stride_type()) {}
+  KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) {
+    m_dim    = src.m_dim;
+    m_stride = src.m_stride;
+  }
+  KOKKOS_FUNCTION ViewOffset& operator=(const ViewOffset& src) {
+    m_dim    = src.m_dim;
+    m_stride = src.m_stride;
+    return *this;
+  }
+#else
 
   ViewOffset()                  = default;
   ViewOffset(const ViewOffset&) = default;
   ViewOffset& operator=(const ViewOffset&) = default;
+#endif
 
   KOKKOS_INLINE_FUNCTION
   constexpr ViewOffset(std::integral_constant<unsigned, 0> const&,

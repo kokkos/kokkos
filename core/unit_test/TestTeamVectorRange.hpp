@@ -345,9 +345,9 @@ struct functor_teamvector_reduce {
       if (test != value) {
         if (team.league_rank() == 0) {
           printf("FAILED teamvector_parallel_reduce %i %i %lf %lf %lu\n",
-                 team.league_rank(), team.team_rank(),
+                 (int)team.league_rank(), (int)team.team_rank(),
                  static_cast<double>(test), static_cast<double>(value),
-                 sizeof(Scalar));
+                 static_cast<unsigned long>(sizeof(Scalar)));
         }
 
         flag() = 1;
@@ -357,8 +357,10 @@ struct functor_teamvector_reduce {
           printf(
               "FAILED teamvector_parallel_reduce with shared result %i %i %lf "
               "%lf %lu\n",
-              team.league_rank(), team.team_rank(), static_cast<double>(test),
-              static_cast<double>(shared_value(0)), sizeof(Scalar));
+              static_cast<int>(team.league_rank()),
+              static_cast<int>(team.team_rank()), static_cast<double>(test),
+              static_cast<double>(shared_value(0)),
+              static_cast<unsigned long>(sizeof(Scalar)));
         }
 
         flag() = 1;
