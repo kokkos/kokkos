@@ -166,6 +166,8 @@ int get_ctest_gpu(const char* local_rank_str) {
   return std::atoi(id.c_str());
 }
 
+namespace {
+
 int get_gpu(const InitArguments& args) {
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
@@ -204,8 +206,6 @@ int get_gpu(const InitArguments& args) {
   }
   return use_gpu;
 }
-
-namespace {
 
 bool is_unsigned_int(const char* str) {
   const size_t len = strlen(str);
