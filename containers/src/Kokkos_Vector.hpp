@@ -212,7 +212,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     return begin() + start;
   }
 
-  KOKKOS_INLINE_FUNCTION bool is_allocated() const {
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
     return DV::is_allocated();
   }
 
