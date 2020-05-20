@@ -368,8 +368,8 @@ union SharedAllocationTracker {
   }
 
   template <class MemorySpace>
-  constexpr SharedAllocationRecord<MemorySpace, void>* get_record() const
-      noexcept {
+  constexpr SharedAllocationRecord<MemorySpace, void>* get_record()
+      const noexcept {
     return (m_record_bits & DO_NOT_DEREF_FLAG)
                ? (SharedAllocationRecord<MemorySpace, void>*)0
                : static_cast<SharedAllocationRecord<MemorySpace, void>*>(
@@ -420,7 +420,7 @@ union SharedAllocationTracker {
   // Move:
 
   KOKKOS_FORCEINLINE_FUNCTION
-  SharedAllocationTracker(SharedAllocationTracker&& rhs)
+      SharedAllocationTracker(SharedAllocationTracker&& rhs)
       : m_record_bits(rhs.m_record_bits) {
     rhs.m_record_bits = DO_NOT_DEREF_FLAG;
   }
@@ -437,26 +437,30 @@ union SharedAllocationTracker {
 
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker(const SharedAllocationTracker& rhs)
-      : m_record_bits(KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(
-            rhs, true)){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT}
+      : m_record_bits(
+            KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true)) {
+    KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
+  }
 
-        /** \brief  Copy construction may disable tracking. */
-        KOKKOS_FORCEINLINE_FUNCTION SharedAllocationTracker(
-            const SharedAllocationTracker& rhs, const bool enable_tracking)
+#endif  // !__SYCL_DEVICE_ONLY__
+  /** \brief  Copy construction may disable tracking. */
+  KOKKOS_FORCEINLINE_FUNCTION SharedAllocationTracker(
+      const SharedAllocationTracker& rhs, const bool enable_tracking)
       : m_record_bits(KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(
-            rhs,
-            enable_tracking)){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT}
+            rhs, enable_tracking)) {
+    KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
+  }
 
-        KOKKOS_FORCEINLINE_FUNCTION SharedAllocationTracker
-        &
-        operator=(const SharedAllocationTracker& rhs) {
+#ifndef __SYCL_DEVICE_ONLY__
+  KOKKOS_FORCEINLINE_FUNCTION SharedAllocationTracker& operator=(
+      const SharedAllocationTracker& rhs) {
     // If this is tracking then must decrement
     KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
     m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true);
     KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT
     return *this;
   }
-#endif // !__SYCL_DEVICE_ONLY
+#endif  // !__SYCL_DEVICE_ONLY__
 
   /*  The following functions (assign_direct and assign_force_disable)
    *  are the result of deconstructing the
@@ -504,8 +508,9 @@ union SharedAllocationTracker {
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
 };
 #ifdef __SYCL_DEVICE_ONLY__
-static_assert(std::is_trivially_copyable<SharedAllocationTracker>::value, "SharedAllocationTracker not trivially copyable on SYCL device.");
-#endif // __SYCL_DEVICE_ONLY__
+static_assert(std::is_trivially_copyable<SharedAllocationTracker>::value,
+              "SharedAllocationTracker not trivially copyable on SYCL device.");
+#endif  // __SYCL_DEVICE_ONLY__
 
 } /* namespace Impl */
 } /* namespace Kokkos */
