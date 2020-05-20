@@ -168,6 +168,7 @@ struct Kokkos_Tools_VariableInfo {
   enum Kokkos_Tools_VariableInfo_StatisticalCategory category;
   enum Kokkos_Tools_VariableInfo_CandidateValueType valueQuantity;
   union Kokkos_Tools_VariableInfo_SetOrRange candidates;
+  void* toolProvidedInfo;
 };
 
 struct Kokkos_Tools_VariableValue {
@@ -177,9 +178,9 @@ struct Kokkos_Tools_VariableValue {
 };
 
 typedef void (*Kokkos_Tools_outputTypeDeclarationFunction)(
-    const char*, const size_t, Kokkos_Tools_VariableInfo info);
+    const char*, const size_t, Kokkos_Tools_VariableInfo& info);
 typedef void (*Kokkos_Tools_inputTypeDeclarationFunction)(
-    const char*, const size_t, Kokkos_Tools_VariableInfo info);
+    const char*, const size_t, Kokkos_Tools_VariableInfo& info);
 
 typedef void (*Kokkos_Tools_requestValueFunction)(
     const size_t, const size_t, const Kokkos_Tools_VariableValue*,

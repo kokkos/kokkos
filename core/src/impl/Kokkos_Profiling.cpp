@@ -618,11 +618,11 @@ static std::unordered_map<size_t, VariableInfo> variable_metadata;
 size_t declare_output_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
-  variable_metadata[variableId] = info;
   if (Experimental::current_callbacks.declare_output_type != nullptr) {
     (*Experimental::current_callbacks.declare_output_type)(variableName.c_str(),
                                                            variableId, info);
   }
+  variable_metadata[variableId] = info;
 #else
   (void)variableName;
   (void)info;
@@ -633,11 +633,11 @@ size_t declare_output_type(const std::string& variableName, VariableInfo info) {
 size_t declare_input_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
-  variable_metadata[variableId] = info;
   if (Experimental::current_callbacks.declare_input_type != nullptr) {
     (*Experimental::current_callbacks.declare_input_type)(variableName.c_str(),
                                                           variableId, info);
   }
+  variable_metadata[variableId] = info;
 #else
   (void)variableName;
   (void)info;
