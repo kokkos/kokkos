@@ -53,7 +53,7 @@
 #include <stdint.h>
 #endif
 
-#define KOKKOSP_INTERFACE_VERSION 20191080
+#define KOKKOSP_INTERFACE_VERSION 20200520
 
 // Profiling
 
