@@ -1176,6 +1176,4 @@ inline void parallel_reduce(const std::string& label, const size_t& policy,
 
 }  // namespace Kokkos
 
-#include "impl/Kokkos_Combined_Reducer.hpp"
-
 #endif  // KOKKOS_PARALLEL_REDUCE_HPP

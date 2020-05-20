@@ -219,20 +219,21 @@ template <class ValueType, class DeviceType>
 class CombinedReduceFunctorSameType {
  public:
   using execution_space = typename DeviceType::execution_space;
-  using size_type = typename execution_space::size_type;
+  using size_type       = typename execution_space::size_type;
 
   const size_type nwork;
 
   KOKKOS_INLINE_FUNCTION
-  constexpr explicit
-  CombinedReduceFunctorSameType(const size_type& arg_nwork) : nwork(arg_nwork) {}
+  constexpr explicit CombinedReduceFunctorSameType(const size_type& arg_nwork)
+      : nwork(arg_nwork) {}
+
+  KOKKOS_DEFAULTED_FUNCTION
+  constexpr CombinedReduceFunctorSameType(
+      const CombinedReduceFunctorSameType& rhs) = default;
 
   KOKKOS_INLINE_FUNCTION
-  constexpr
-  CombinedReduceFunctorSameType(const CombinedReduceFunctorSameType& rhs) = default;
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr void operator()(size_type iwork, ValueType& dst1, ValueType& dst2, ValueType& dst3) const {
+  void operator()(size_type iwork, ValueType& dst1, ValueType& dst2,
+                  ValueType& dst3) const {
     dst1 += 1;
     dst2 += iwork + 1;
     dst3 += nwork - iwork;
@@ -481,15 +482,65 @@ TEST(TEST_CATEGORY, int64_t_reduce_dynamic_view) {
 
 TEST(TEST_CATEGORY, int_combined_reduce) {
   using functor_type = CombinedReduceFunctorSameType<int64_t, TEST_EXECSPACE>;
-  constexpr uint64_t nw = 2;
+  constexpr uint64_t nw = 1000;
+
   uint64_t nsum = (nw / 2) * (nw + 1);
+
   int64_t result1 = 0;
   int64_t result2 = 0;
   int64_t result3 = 0;
+
   Kokkos::parallel_reduce(nw, functor_type(nw), result1, result2, result3);
+
   ASSERT_EQ(nw, result1);
   ASSERT_EQ(nsum, result2);
   ASSERT_EQ(nsum, result3);
+}
+
+// This should eventually work, and should at least compile for now
+TEST(TEST_CATEGORY, DISABLED_int_combined_reduce_views) {
+  using functor_type = CombinedReduceFunctorSameType<int64_t, TEST_EXECSPACE>;
+
+  constexpr uint64_t nw = 1000;
+
+  uint64_t nsum = (nw / 2) * (nw + 1);
+
+  Kokkos::View<int64_t> result1_v = {};
+  Kokkos::View<int64_t> result2_v = {};
+  Kokkos::View<int64_t> result3_v = {};
+  Kokkos::parallel_reduce(nw, functor_type(nw), result1_v, result2_v,
+                          result3_v);
+
+  auto result1_vh =
+      Kokkos::create_mirror_view_and_copy(TEST_EXECSPACE{}, result1_v);
+  auto result2_vh =
+      Kokkos::create_mirror_view_and_copy(TEST_EXECSPACE{}, result2_v);
+  auto result3_vh =
+      Kokkos::create_mirror_view_and_copy(TEST_EXECSPACE{}, result3_v);
+  ASSERT_EQ(nw, result1_vh());
+  ASSERT_EQ(nsum, result2_vh());
+  ASSERT_EQ(nsum, result3_vh());
+}
+
+TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
+  using functor_type = CombinedReduceFunctorSameType<int64_t, TEST_EXECSPACE>;
+
+  constexpr uint64_t nw = 1000;
+
+  uint64_t nsum = (nw / 2) * (nw + 1);
+
+  auto result1_v = Kokkos::View<int64_t, Kokkos::HostSpace>{"result1_v"};
+
+  int64_t result2 = 0;
+
+  auto result3_v = Kokkos::View<int64_t, Kokkos::HostSpace>{"result3_v"};
+
+  Kokkos::parallel_reduce(nw, functor_type(nw), result1_v, result2,
+                          Kokkos::Sum<int64_t, Kokkos::HostSpace>{result3_v});
+
+  ASSERT_EQ(nw, result1_v());
+  ASSERT_EQ(nsum, result2);
+  ASSERT_EQ(nsum, result3_v());
 }
 
 }  // namespace Test
