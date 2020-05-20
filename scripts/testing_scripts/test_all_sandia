@@ -439,7 +439,7 @@ elif [ "$MACHINE" = "mayer" ]; then
              "arm/20.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
 
   if [ -z "$ARCH_FLAG" ]; then
-    ARCH_FLAG="--arch=ARMv8-TX2"
+    ARCH_FLAG="--arch=ARMV8_THUNDERX2""
   fi
 
 elif [ "$MACHINE" = "blake" ]; then
