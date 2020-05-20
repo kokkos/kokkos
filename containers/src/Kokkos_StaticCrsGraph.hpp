@@ -370,7 +370,7 @@ class StaticCrsGraph {
                : static_cast<size_type>(0);
   }
 
-  KOKKOS_INLINE_FUNCTION bool is_allocated() const {
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
     return (row_map.is_allocated() && entries.is_allocated());
   }
 
