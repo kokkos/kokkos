@@ -232,6 +232,11 @@ class MasterLock<OpenMP> {
 
 template <>
 class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
+ private:
+  uint32_t m_count;
+  Kokkos::View<uint32_t*, Kokkos::HostSpace> m_buffer_view;
+  uint32_t volatile* m_buffer;
+
  public:
   using execution_space = OpenMP;
   using size_type       = int;
@@ -239,13 +244,22 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
   /// \brief create object size for concurrency on the given instance
   ///
   /// This object should not be shared between instances
-  UniqueToken(execution_space const& = execution_space()) noexcept {}
+  UniqueToken(execution_space const& = execution_space()) noexcept
+      : m_count(::Kokkos::OpenMP::impl_thread_pool_size())
+  {
+  }
+
+  UniqueToken(size_type max_size, execution_space const& = execution_space())
+      : m_count(max_size),
+        m_buffer_view("UniqueToken::m_buffer_view",
+                      ::Kokkos::Impl::concurrent_bitset::buffer_bound(m_count)),
+        m_buffer(m_buffer_view.data()) {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int size() const noexcept {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    return Kokkos::OpenMP::impl_thread_pool_size();
+    return m_count;
 #else
     return 0;
 #endif
@@ -255,7 +269,18 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
   KOKKOS_INLINE_FUNCTION
   int acquire() const noexcept {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    return Kokkos::OpenMP::impl_thread_pool_rank();
+    if (m_count >= ::Kokkos::OpenMP::impl_thread_pool_size())
+      return ::Kokkos::OpenMP::impl_thread_pool_rank();
+    const ::Kokkos::pair<int, int> result =
+        ::Kokkos::Impl::concurrent_bitset::acquire_bounded(
+            m_buffer, m_count, ::Kokkos::Impl::clock_tic() % m_count);
+
+    if (result.first < 0) {
+      ::Kokkos::abort(
+          "UniqueToken<OpenMP> failure to release tokens, no tokens available");
+    }
+
+    return result.first;
 #else
     return 0;
 #endif
@@ -263,7 +288,12 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
 
   /// \brief release a value acquired by generate
   KOKKOS_INLINE_FUNCTION
-  void release(int) const noexcept {}
+  void release(int i) const noexcept {
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+    if (m_count < ::Kokkos::OpenMP::impl_thread_pool_size())
+      ::Kokkos::Impl::concurrent_bitset::release(m_buffer, i);
+#endif
+  }
 };
 
 template <>

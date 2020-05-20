@@ -48,15 +48,13 @@
 
 namespace Test {
 
-template <class Space>
+template <class Space, Kokkos::Experimental::UniqueTokenScope Scope>
 class TestUniqueToken {
  public:
   typedef typename Space::execution_space execution_space;
   typedef Kokkos::View<int*, execution_space> view_type;
 
-  Kokkos::Experimental::UniqueToken<
-      execution_space, Kokkos::Experimental::UniqueTokenScope::Global>
-      tokens;
+  Kokkos::Experimental::UniqueToken<execution_space, Scope> tokens;
 
   view_type verify;
   view_type counts;
@@ -89,14 +87,24 @@ class TestUniqueToken {
         counts("TestUniqueTokenCounts", tokens.size()),
         errors("TestUniqueTokenErrors", 1) {}
 
-  static void run() {
-    using policy = Kokkos::RangePolicy<execution_space>;
+  TestUniqueToken(int size)
+      : tokens(size, execution_space()),
+        verify("TestUniqueTokenVerify", tokens.size()),
+        counts("TestUniqueTokenCounts", tokens.size()),
+        errors("TestUniqueTokenErrors", 1) {}
 
-    TestUniqueToken self;
+  static void run_impl(TestUniqueToken& self) {
+    using policy = Kokkos::RangePolicy<execution_space>;
 
     {
       const int duplicate = 100;
-      const long n        = duplicate * self.tokens.size();
+      // For the user size case UniqueToken does not handle having more
+      // concurrent threads than the maximum bound the user provided so we limit
+      // the loop bounds to avoid that.
+      const bool limit_loop_bound =
+          self.tokens.size() < execution_space::concurrency();
+      const long n = limit_loop_bound ? self.tokens.size()
+                                      : duplicate * self.tokens.size();
 
       Kokkos::parallel_for(policy(0, n), self);
       Kokkos::parallel_for(policy(0, n), self);
@@ -127,8 +135,31 @@ class TestUniqueToken {
 
     ASSERT_EQ(host_errors(0), 0);
   }
+
+  static void run() {
+    TestUniqueToken self;
+    run_impl(self);
+  }
+
+  static void run(int size) {
+    TestUniqueToken self(size);
+    run_impl(self);
+  }
 };
 
-TEST(TEST_CATEGORY, unique_token) { TestUniqueToken<TEST_EXECSPACE>::run(); }
+TEST(TEST_CATEGORY, unique_token_global) {
+  TestUniqueToken<TEST_EXECSPACE,
+                  Kokkos::Experimental::UniqueTokenScope::Global>::run();
+}
+
+TEST(TEST_CATEGORY, unique_token_instance) {
+  TestUniqueToken<TEST_EXECSPACE,
+                  Kokkos::Experimental::UniqueTokenScope::Instance>::run();
+}
+
+TEST(TEST_CATEGORY, unique_token_instance_user_size) {
+  TestUniqueToken<TEST_EXECSPACE,
+                  Kokkos::Experimental::UniqueTokenScope::Instance>::run(2);
+}
 
 }  // namespace Test

@@ -82,6 +82,33 @@ class UniqueToken {
   void release(size_type) const;
 };
 
+/// \brief Instance scope UniqueToken allows for a max size other than
+/// execution_space::concurrency()
+///
+/// This object should behave like a ref-counted object, so that when the last
+/// instance is destroy resources are free if needed
+template <typename ExecutionSpace>
+class UniqueToken<ExecutionSpace, UniqueTokenScope::Instance>
+    : public UniqueToken<ExecutionSpace, UniqueTokenScope::Global> {
+ public:
+  using execution_space = ExecutionSpace;
+  using size_type       = typename execution_space::size_type;
+
+  /// \brief Create object with specified size
+  ///
+  /// It is required that max_size is >= the maximum number of concurrent
+  /// threads that will attempt to acquire the UniqueToken. This constructor is
+  /// intended for cases where you either:
+  ///   1) Have a loop bound that may be smaller than
+  ///   execution_space::concurrency(). 2) Have a parallel loop that will use
+  ///   multiple UniqueToken objects of different
+  ///      sizes for different iterations of the parallel loop to use separate
+  ///      index spaces. For example if you fuse multiple kernels into a single
+  ///      launch to increase the available parallelism, but each kernel has
+  ///      scratch arrays associated with its logical loop bounds.
+  UniqueToken(size_type max_size, execution_space const& = execution_space());
+};
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
