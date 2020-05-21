@@ -85,7 +85,8 @@ struct CombinedReducerValueItemImpl {
   operator=(CombinedReducerValueItemImpl const&) = default;
   KOKKOS_DEFAULTED_FUNCTION KOKKOS_CONSTEXPR_14 CombinedReducerValueItemImpl&
   operator=(CombinedReducerValueItemImpl&&) = default;
-  ~CombinedReducerValueItemImpl()           = default;
+  KOKKOS_DEFAULTED_FUNCTION
+  ~CombinedReducerValueItemImpl() = default;
   explicit KOKKOS_FUNCTION CombinedReducerValueItemImpl(value_type arg_value)
       : m_value(std::move(arg_value)) {}
 
@@ -234,11 +235,10 @@ struct CombinedReducerImpl<integer_sequence<size_t, Idxs...>, Space,
                                       Reducers...>;
   using value_type = CombinedReducerValueImpl<integer_sequence<size_t, Idxs...>,
                                               typename Reducers::value_type...>;
-  using result_view_type = Kokkos::View<value_type, Space>;
+  using result_view_type =
+      Kokkos::View<value_type, Space, Kokkos::MemoryUnmanaged>;
 
  private:
-  value_type m_value;
-  // Note: for now, this always just references the value directly
   result_view_type m_value_view;
 
  public:
@@ -254,31 +254,12 @@ struct CombinedReducerImpl<integer_sequence<size_t, Idxs...>, Space,
 
   KOKKOS_DEFAULTED_FUNCTION ~CombinedReducerImpl() = default;
 
-  template <class... ValueReferences>
+  template <class... ReducersDeduced>
   KOKKOS_FUNCTION constexpr explicit CombinedReducerImpl(
-      _construct_combined_reducer_from_args_tag,
-      ValueReferences&... refs) noexcept
-      : CombinedReducerStorageImpl<Idxs, Reducers>(Reducers(refs))...,
-        m_value(Impl::_get_value_from_combined_reducer_ctor_arg(refs)...),
-        m_value_view(&m_value) {}
-
-  // TODO check if this gets used (it's part of the reducer concept, but we may
-  //  want to remove it from here later anyway since this is an implementation
-  //  detail).
-  KOKKOS_FUNCTION
-  constexpr explicit CombinedReducerImpl(
-      result_view_type const& arg_view) noexcept
-      : CombinedReducerStorageImpl<Idxs, Reducers>(
-            typename Reducers::result_view_type(
-                &arg_view()
-                     .template get<Idxs, typename Reducers::value_type>()))...,
-        m_value(arg_view()),
-        m_value_view(&m_value) {}
-
-  // TODO technically m_value and m_value_view aren't valid in copy constructed
-  //      instances of the reducer, but they're also only used in instances that
-  //      don't get copy constructed.  This is a general design flaw in Kokkos
-  //      reducers that doesn't really need to be solved here.
+      value_type& value, ReducersDeduced&&... reducers) noexcept
+      : CombinedReducerStorageImpl<Idxs, Reducers>((ReducersDeduced &&)
+                                                       reducers)...,
+        m_value_view(&value) {}
 
   KOKKOS_FUNCTION KOKKOS_CONSTEXPR_14 void join(value_type& dest,
                                                 value_type const& src) const
@@ -321,12 +302,12 @@ struct CombinedReducerImpl<integer_sequence<size_t, Idxs...>, Space,
   }
 
   KOKKOS_FUNCTION
-  KOKKOS_CONSTEXPR_14 void write_value_back_to_original_references(
-      Reducers const&... reducers_that_reference_original_values) const
-      noexcept {
+  KOKKOS_CONSTEXPR_14 static void write_value_back_to_original_references(
+      value_type const& value,
+      Reducers const&... reducers_that_reference_original_values) noexcept {
     emulate_fold_comma_operator(
         (reducers_that_reference_original_values.view()() =
-             m_value.template get<Idxs, typename Reducers::value_type>())...);
+             value.template get<Idxs, typename Reducers::value_type>())...);
   }
 };
 
@@ -373,21 +354,21 @@ struct CombinedReductionFunctorWrapperImpl<integer_sequence<size_t, Idxs...>,
   //----------------------------------------------------------------------------
   // <editor-fold desc="Ctors, destructor, and assignment"> {{{2
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   constexpr CombinedReductionFunctorWrapperImpl() noexcept = default;
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   constexpr CombinedReductionFunctorWrapperImpl(
       CombinedReductionFunctorWrapperImpl const&) = default;
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   constexpr CombinedReductionFunctorWrapperImpl(
       CombinedReductionFunctorWrapperImpl&&) = default;
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   KOKKOS_CONSTEXPR_14 CombinedReductionFunctorWrapperImpl& operator=(
       CombinedReductionFunctorWrapperImpl const&) = default;
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   KOKKOS_CONSTEXPR_14 CombinedReductionFunctorWrapperImpl& operator=(
       CombinedReductionFunctorWrapperImpl&&) = default;
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   ~CombinedReductionFunctorWrapperImpl() = default;
 
   KOKKOS_INLINE_FUNCTION
@@ -492,14 +473,40 @@ using _reducer_from_arg_t =
 //------------------------------------------------------------------------------
 
 template <class Space, class... ReferencesOrViewsOrReducers>
+KOKKOS_INLINE_FUNCTION constexpr CombinedReducerValueImpl<
+    make_index_sequence<sizeof...(ReferencesOrViewsOrReducers)>,
+    typename _reducer_from_arg_t<Space,
+                                 ReferencesOrViewsOrReducers>::value_type...>
+make_combined_reducer_value(ReferencesOrViewsOrReducers&&... args) {
+  //----------------------------------------
+  // This is a bit round-about and we should make sure it doesn't have
+  // any performance implications. Basically, we make a reducer out of anything
+  // just to get the value back out here (for the sake of uniformity). Most
+  // compilers should figure out what's going on, but we should double-check
+  // that.
+  return CombinedReducerValueImpl<
+      make_index_sequence<sizeof...(ReferencesOrViewsOrReducers)>,
+      typename _reducer_from_arg_t<Space,
+                                   ReferencesOrViewsOrReducers>::value_type...>{
+      // This helper function is now poorly named after refactoring.
+      _get_value_from_combined_reducer_ctor_arg((ReferencesOrViewsOrReducers &&)
+                                                    args)...};
+  //----------------------------------------
+}
+
+template <class Space, class ValueType, class... ReferencesOrViewsOrReducers>
 KOKKOS_INLINE_FUNCTION constexpr CombinedReducer<
     Space, _reducer_from_arg_t<Space, ReferencesOrViewsOrReducers>...>
-make_combined_reducer(ReferencesOrViewsOrReducers&&... args) {
+make_combined_reducer(ValueType& value, ReferencesOrViewsOrReducers&&... args) {
   //----------------------------------------
+  // This is doing more or less the same thing of making every argument into
+  // a reducer, just in a different place than in `make_combined_reducer_value`,
+  // so we should probably eventually make this read a little more similarly
   using reducer_type = CombinedReducer<
       Space, _reducer_from_arg_t<Space, ReferencesOrViewsOrReducers>...>;
-  return reducer_type(_construct_combined_reducer_from_args_tag{},
-                      (ReferencesOrViewsOrReducers &&) args...);
+  return reducer_type(value,
+                      _reducer_from_arg_t<Space, ReferencesOrViewsOrReducers>{
+                          (ReferencesOrViewsOrReducers &&) args}...);
   //----------------------------------------
 }
 
@@ -532,18 +539,28 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
     typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type {
   //----------------------------------------
-  using space_type      = Kokkos::AnonymousSpace;
-  auto combined_reducer = Impl::make_combined_reducer<space_type>(
+  // Since we don't support asynchronous combined reducers yet for various
+  // reasons, we actually just want to work with the pointers and references
+  // directly
+  using space_type = Kokkos::DefaultHostExecutionSpace::memory_space;
+
+  auto value = Impl::make_combined_reducer_value<space_type>(
       returnType1, returnType2, returnTypes...);
-  using combined_reducer_type = decltype(combined_reducer);
+
+  using combined_reducer_type = Impl::CombinedReducer<
+      space_type, Impl::_reducer_from_arg_t<space_type, ReturnType1>,
+      Impl::_reducer_from_arg_t<space_type, ReturnType2>,
+      Impl::_reducer_from_arg_t<space_type, ReturnTypes>...>;
+  auto combined_reducer = Impl::make_combined_reducer<space_type>(
+      value, returnType1, returnType2, returnTypes...);
 
   auto combined_functor = Impl::make_wrapped_combined_functor(
-      functor, policy.space(), returnType1, returnType2, returnTypes...);
+      functor, space_type{}, returnType1, returnType2, returnTypes...);
 
   using combined_functor_type = decltype(combined_functor);
-  // static_assert(
-  //    Impl::FunctorDeclaresValueType<combined_functor_type, void>::value,
-  //    "value_type not properly detected");
+  static_assert(
+      Impl::FunctorDeclaresValueType<combined_functor_type, void>::value,
+      "value_type not properly detected");
   using reduce_adaptor_t =
       Impl::ParallelReduceAdaptor<PolicyType, combined_functor_type,
                                   combined_reducer_type>;
@@ -553,7 +570,7 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
                             combined_reducer_type>::fence(policy.space(),
                                                           combined_reducer);
   combined_reducer.write_value_back_to_original_references(
-      Impl::_make_reducer_from_arg<space_type>(returnType1),
+      value, Impl::_make_reducer_from_arg<space_type>(returnType1),
       Impl::_make_reducer_from_arg<space_type>(returnType2),
       Impl::_make_reducer_from_arg<space_type>(returnTypes)...);
   //----------------------------------------
@@ -603,61 +620,63 @@ void parallel_reduce(size_t n, Functor const& functor,
 // Copied three times because that's the best way we have right now to match
 // Impl::TeamThreadRangeBoundariesStruct,
 // Impl::ThreadVectorRangeBoundariesStruct, and
-// Impl::TeamVectorRangeBoundariesStruct
-template <class iType, class MemberType, class Functor, class ReturnType1,
-          class ReturnType2, class... ReturnTypes>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    std::string const& label,
-    Impl::TeamThreadRangeBoundariesStruct<iType, MemberType> const& boundaries,
-    Functor const& functor, ReturnType1&& returnType1,
-    ReturnType2&& returnType2, ReturnTypes&&... returnTypes) noexcept {
-  const auto combined_reducer =
-      Impl::make_combined_reducer<Kokkos::AnonymousSpace>(
-          returnType1, returnType2, returnTypes...);
+// Impl::TeamVectorRangeBoundariesStruct.
+// TODO make these work after restructuring
 
-  auto combined_functor = Impl::make_wrapped_combined_functor(
-      functor, Kokkos::AnonymousSpace(), returnType1, returnType2,
-      returnTypes...);
+// template <class iType, class MemberType, class Functor, class ReturnType1,
+//          class ReturnType2, class... ReturnTypes>
+// KOKKOS_INLINE_FUNCTION void parallel_reduce(
+//    std::string const& label,
+//    Impl::TeamThreadRangeBoundariesStruct<iType, MemberType> const&
+//    boundaries, Functor const& functor, ReturnType1&& returnType1,
+//    ReturnType2&& returnType2, ReturnTypes&&... returnTypes) noexcept {
+//  const auto combined_reducer =
+//      Impl::make_combined_reducer<Kokkos::AnonymousSpace>(
+//          returnType1, returnType2, returnTypes...);
+//
+//  auto combined_functor = Impl::make_wrapped_combined_functor(
+//      functor, Kokkos::AnonymousSpace{}, returnType1, returnType2,
+//      returnTypes...);
+//
+//  parallel_reduce(label, boundaries, combined_functor, combined_reducer);
+//}
+//
+// template <class iType, class MemberType, class Functor, class ReturnType1,
+//          class ReturnType2, class... ReturnTypes>
+// KOKKOS_INLINE_FUNCTION void parallel_reduce(
+//    std::string const& label,
+//    Impl::ThreadVectorRangeBoundariesStruct<iType, MemberType> const&
+//        boundaries,
+//    Functor const& functor, ReturnType1&& returnType1,
+//    ReturnType2&& returnType2, ReturnTypes&&... returnTypes) noexcept {
+//  const auto combined_reducer =
+//      Impl::make_combined_reducer<Kokkos::AnonymousSpace>(
+//          returnType1, returnType2, returnTypes...);
+//
+//  auto combined_functor = Impl::make_wrapped_combined_functor(
+//      functor, Kokkos::AnonymousSpace{}, returnType1, returnType2,
+//      returnTypes...);
+//
+//  parallel_reduce(label, boundaries, combined_functor, combined_reducer);
+//}
 
-  parallel_reduce(label, boundaries, combined_functor, combined_reducer);
-}
-
-template <class iType, class MemberType, class Functor, class ReturnType1,
-          class ReturnType2, class... ReturnTypes>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    std::string const& label,
-    Impl::ThreadVectorRangeBoundariesStruct<iType, MemberType> const&
-        boundaries,
-    Functor const& functor, ReturnType1&& returnType1,
-    ReturnType2&& returnType2, ReturnTypes&&... returnTypes) noexcept {
-  const auto combined_reducer =
-      Impl::make_combined_reducer<Kokkos::AnonymousSpace>(
-          returnType1, returnType2, returnTypes...);
-
-  auto combined_functor = Impl::make_wrapped_combined_functor(
-      functor, Kokkos::AnonymousSpace(), returnType1, returnType2,
-      returnTypes...);
-
-  parallel_reduce(label, boundaries, combined_functor, combined_reducer);
-}
-
-template <class iType, class MemberType, class Functor, class ReturnType1,
-          class ReturnType2, class... ReturnTypes>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    std::string const& label,
-    Impl::TeamVectorRangeBoundariesStruct<iType, MemberType> const& boundaries,
-    Functor const& functor, ReturnType1&& returnType1,
-    ReturnType2&& returnType2, ReturnTypes&&... returnTypes) noexcept {
-  const auto combined_reducer =
-      Impl::make_combined_reducer<Kokkos::AnonymousSpace>(
-          returnType1, returnType2, returnTypes...);
-
-  auto combined_functor = Impl::make_wrapped_combined_functor(
-      functor, Kokkos::AnonymousSpace(), returnType1, returnType2,
-      returnTypes...);
-
-  parallel_reduce(label, boundaries, combined_functor, combined_reducer);
-}
+// template <class iType, class MemberType, class Functor, class ReturnType1,
+//          class ReturnType2, class... ReturnTypes>
+// KOKKOS_INLINE_FUNCTION void parallel_reduce(
+//    std::string const& label,
+//    Impl::TeamVectorRangeBoundariesStruct<iType, MemberType> const&
+//    boundaries, Functor const& functor, ReturnType1&& returnType1,
+//    ReturnType2&& returnType2, ReturnTypes&&... returnTypes) noexcept {
+//  const auto combined_reducer =
+//      Impl::make_combined_reducer<Kokkos::AnonymousSpace>(
+//          returnType1, returnType2, returnTypes...);
+//
+//  auto combined_functor = Impl::make_wrapped_combined_functor(
+//      functor, Kokkos::AnonymousSpace{}, returnType1, returnType2,
+//      returnTypes...);
+//
+//  parallel_reduce(label, boundaries, combined_functor, combined_reducer);
+//}
 
 // </editor-fold> end Team overloads }}}2
 //------------------------------------------------------------------------------

@@ -255,6 +255,10 @@ class ScopeGuard {
 
 #include <Kokkos_Crs.hpp>
 #include <Kokkos_WorkGraphPolicy.hpp>
+// Including this in Kokkos_Parallel_Reduce.hpp led to a circular dependency
+// because Kokkos::Sum is used in Kokkos_Combined_Reducer.hpp and the default.
+// The real answer is to finally break up Kokkos_Parallel_Reduce.hpp into
+// smaller parts...
 #include <impl/Kokkos_Combined_Reducer.hpp>
 
 //----------------------------------------------------------------------------
