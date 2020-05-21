@@ -45,7 +45,7 @@
 #ifndef KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 #define KOKKOS_HPX_WORKGRAPHPOLICY_HPP
 
-#include <HPX/Kokkos_HPX_ChunkedRoundRobinExecutor.hpp>
+#include <Kokkos_HPX.hpp>
 
 #include <hpx/apply.hpp>
 #include <hpx/lcos/local/latch.hpp>
