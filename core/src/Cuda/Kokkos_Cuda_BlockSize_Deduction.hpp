@@ -294,9 +294,6 @@ struct CudaGetMaxBlockSize<
   }
 };
 
-template <class DriverType, class LaunchBounds, bool Large>
-struct CudaGetOptBlockSize;
-
 template <class FunctorType, class LaunchBounds>
 int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
                             const cudaFuncAttributes& attr,
@@ -364,90 +361,6 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
   }
   return opt_block_size;
 }
-
-template <class DriverType, bool Large>
-struct CudaGetOptBlockSize<DriverType, Kokkos::LaunchBounds<0, 0>, Large> {
-  static int get_block_size(const typename DriverType::functor_type& f,
-                            const size_t vector_length,
-                            const size_t shmem_extra_block,
-                            const size_t shmem_extra_thread) {
-    int blockSize = 16;
-    int numBlocks;
-    int sharedmem;
-    int maxOccupancy  = 0;
-    int bestBlockSize = 0;
-
-    while (blockSize < 1024) {
-      blockSize *= 2;
-
-      // calculate the occupancy with that optBlockSize and check whether its
-      // larger than the largest one found so far
-      sharedmem =
-          shmem_extra_block + shmem_extra_thread * (blockSize / vector_length) +
-          FunctorTeamShmemSize<typename DriverType::functor_type>::value(
-              f, blockSize / vector_length);
-
-      cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-          &numBlocks,
-          CudaParallelLaunchLocalOrConstantMemory<
-              DriverType, Kokkos::LaunchBounds<>, Large>::func,
-          blockSize, sharedmem);
-      if (maxOccupancy < numBlocks * blockSize) {
-        maxOccupancy  = numBlocks * blockSize;
-        bestBlockSize = blockSize;
-      }
-    }
-    return bestBlockSize;
-  }
-};
-
-template <class DriverType, unsigned int MaxThreadsPerBlock,
-          unsigned int MinBlocksPerSM, bool Large>
-struct CudaGetOptBlockSize<
-    DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
-    Large> {
-  static int get_block_size(const typename DriverType::functor_type& f,
-                            const size_t vector_length,
-                            const size_t shmem_extra_block,
-                            const size_t shmem_extra_thread) {
-    int blockSize = 16;
-    int numBlocks;
-    int sharedmem;
-    int maxOccupancy  = 0;
-    int bestBlockSize = 0;
-    int max_threads_per_block =
-        std::min(MaxThreadsPerBlock,
-                 cuda_internal_maximum_warp_count() * CudaTraits::WarpSize);
-
-    while (blockSize < max_threads_per_block) {
-      blockSize *= 2;
-
-      // calculate the occupancy with that optBlockSize and check whether its
-      // larger than the largest one found so far
-      sharedmem =
-          shmem_extra_block + shmem_extra_thread * (blockSize / vector_length) +
-          FunctorTeamShmemSize<typename DriverType::functor_type>::value(
-              f, blockSize / vector_length);
-
-      cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-          &numBlocks,
-          CudaParallelLaunchLocalOrConstantMemory<
-              DriverType,
-              Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
-              Large>::func,
-          blockSize, sharedmem);
-      if (numBlocks >= int(MinBlocksPerSM) &&
-          blockSize <= int(MaxThreadsPerBlock)) {
-        if (maxOccupancy < numBlocks * blockSize) {
-          maxOccupancy  = numBlocks * blockSize;
-          bestBlockSize = blockSize;
-        }
-      }
-    }
-    if (maxOccupancy > 0) return bestBlockSize;
-    return -1;
-  }
-};
 
 }  // namespace Impl
 }  // namespace Kokkos
