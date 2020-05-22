@@ -265,7 +265,7 @@ struct CudaGetMaxBlockSize<
       cudaOccupancyMaxActiveBlocksPerMultiprocessor(
           &numBlocks,
           CudaParallelLaunchLocalOrConstantMemory<
-              DriverType, Kokkos::LaunchBounds<>, Large>::func,
+              DriverType, Kokkos::LaunchBounds</*not a typo*/>, Large>::func,
           blockSize, sharedmem);
     }
     unsigned int blockSizeUpperBound =
@@ -282,7 +282,7 @@ struct CudaGetMaxBlockSize<
       cudaOccupancyMaxActiveBlocksPerMultiprocessor(
           &numBlocks,
           CudaParallelLaunchLocalOrConstantMemory<
-              DriverType, Kokkos::LaunchBounds<>, Large>::func,
+              DriverType, Kokkos::LaunchBounds</*not a typo*/>, Large>::func,
           blockSize, sharedmem);
     }
     if (static_cast<unsigned int>(oldNumBlocks) >= MinBlocksPerSM)
