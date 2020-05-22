@@ -129,46 +129,6 @@ int cuda_get_max_block_size(const CudaInternal* cuda_instance,
   return opt_block_size;
 }
 
-// Holds the kernel function for which occupancy is calculated using
-// cudaOccupancyMaxActiveBlocksPerMultiprocessor
-template <typename DriverType, typename LaunchBounds, bool Large>
-struct CudaParallelLaunchLocalOrConstantMemory;
-
-template <typename DriverType>
-struct CudaParallelLaunchLocalOrConstantMemory<DriverType,
-                                               Kokkos::LaunchBounds<>, true> {
-  static constexpr auto func = cuda_parallel_launch_constant_memory<DriverType>;
-};
-
-template <typename DriverType>
-struct CudaParallelLaunchLocalOrConstantMemory<DriverType,
-                                               Kokkos::LaunchBounds<>, false> {
-  static constexpr auto func = cuda_parallel_launch_local_memory<DriverType>;
-};
-
-// realized none of the CudaGetMaxBlockSize and CudaGetOptBlockSize
-// specializations that would require them actually gets instantiated.
-
-template <typename DriverType, unsigned int MaxThreadsPerBlock,
-          unsigned int MinBlocksPerSM>
-struct CudaParallelLaunchLocalOrConstantMemory<
-    DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
-    true> {
-  static constexpr auto func =
-      cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
-                                           MinBlocksPerSM>;
-};
-
-template <typename DriverType, unsigned int MaxThreadsPerBlock,
-          unsigned int MinBlocksPerSM>
-struct CudaParallelLaunchLocalOrConstantMemory<
-    DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
-    false> {
-  static constexpr auto func =
-      cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                        MinBlocksPerSM>;
-};
-
 template <class FunctorType, class LaunchBounds>
 int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
                             const cudaFuncAttributes& attr,
