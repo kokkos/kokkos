@@ -141,8 +141,45 @@ int cuda_get_max_block_size(const CudaInternal* cuda_instance,
   return opt_block_size;
 }
 
-template <class DriverType>
-struct CudaGetMaxBlockSize<DriverType, Kokkos::LaunchBounds<>, true> {
+// Holds the kernel function for which occupancy is calculated using
+// cudaOccupancyMaxActiveBlocksPerMultiprocessor
+template <typename DriverType, typename LaunchBounds, bool Large>
+struct CudaParallelLaunchLocalOrConstantMemory;
+
+template <typename DriverType>
+struct CudaParallelLaunchLocalOrConstantMemory<DriverType,
+                                               Kokkos::LaunchBounds<>, true> {
+  static constexpr auto func = cuda_parallel_launch_constant_memory<DriverType>;
+};
+
+template <typename DriverType>
+struct CudaParallelLaunchLocalOrConstantMemory<DriverType,
+                                               Kokkos::LaunchBounds<>, false> {
+  static constexpr auto func = cuda_parallel_launch_local_memory<DriverType>;
+};
+
+template <typename DriverType, unsigned int MaxThreadsPerBlock,
+          unsigned int MinBlocksPerSM>
+struct CudaParallelLaunchLocalOrConstantMemory<
+    DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
+    true> {
+  static constexpr auto func =
+      cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
+                                           MinBlocksPerSM>;
+};
+
+template <typename DriverType, unsigned int MaxThreadsPerBlock,
+          unsigned int MinBlocksPerSM>
+struct CudaParallelLaunchLocalOrConstantMemory<
+    DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
+    false> {
+  static constexpr auto func =
+      cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+                                        MinBlocksPerSM>;
+};
+
+template <class DriverType, bool Large>
+struct CudaGetMaxBlockSize<DriverType, Kokkos::LaunchBounds<>, Large> {
   static int get_block_size(const typename DriverType::functor_type& f,
                             const size_t vector_length,
                             const size_t shmem_extra_block,
