@@ -57,15 +57,6 @@ namespace Impl {
 template <class DriverType, class LaunchBounds, bool Large>
 struct CudaGetMaxBlockSize;
 
-template <class DriverType, class LaunchBounds>
-int cuda_get_max_block_size(const typename DriverType::functor_type& f,
-                            const size_t vector_length,
-                            const size_t shmem_extra_block,
-                            const size_t shmem_extra_thread) {
-  return CudaGetMaxBlockSize<DriverType, LaunchBounds, true>::get_block_size(
-      f, vector_length, shmem_extra_block, shmem_extra_thread);
-}
-
 template <class FunctorType, class LaunchBounds>
 int cuda_get_max_block_size(const CudaInternal* cuda_instance,
                             const cudaFuncAttributes& attr,
