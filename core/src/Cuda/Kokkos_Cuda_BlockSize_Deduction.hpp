@@ -158,25 +158,29 @@ struct CudaParallelLaunchLocalOrConstantMemory<DriverType,
   static constexpr auto func = cuda_parallel_launch_local_memory<DriverType>;
 };
 
-template <typename DriverType, unsigned int MaxThreadsPerBlock,
-          unsigned int MinBlocksPerSM>
-struct CudaParallelLaunchLocalOrConstantMemory<
-    DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
-    true> {
-  static constexpr auto func =
-      cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
-                                           MinBlocksPerSM>;
-};
+// NOTE Commented out the two specializations below because accidentally
+// realized none of the CudaGetMaxBlockSize and CudaGetOptBlockSize
+// specializations that would require them actually gets instantiated.
 
-template <typename DriverType, unsigned int MaxThreadsPerBlock,
-          unsigned int MinBlocksPerSM>
-struct CudaParallelLaunchLocalOrConstantMemory<
-    DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
-    false> {
-  static constexpr auto func =
-      cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                        MinBlocksPerSM>;
-};
+// template <typename DriverType, unsigned int MaxThreadsPerBlock,
+//           unsigned int MinBlocksPerSM>
+// struct CudaParallelLaunchLocalOrConstantMemory<
+//     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
+//     true> {
+//   static constexpr auto func =
+//       cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
+//                                            MinBlocksPerSM>;
+// };
+
+// template <typename DriverType, unsigned int MaxThreadsPerBlock,
+//           unsigned int MinBlocksPerSM>
+// struct CudaParallelLaunchLocalOrConstantMemory<
+//     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
+//     false> {
+//   static constexpr auto func =
+//       cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+//                                         MinBlocksPerSM>;
+// };
 
 template <class DriverType, bool Large>
 struct CudaGetMaxBlockSize<DriverType, Kokkos::LaunchBounds<>, Large> {
