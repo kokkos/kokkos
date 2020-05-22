@@ -14,6 +14,6 @@ foreach (_header ${KOKKOS_CORE_HEADERS} ${KOKKOS_CONTAINERS_HEADERS} ${KOKKOS_AL
   string(REGEX REPLACE "[\./]" "_" header_test_name ${_header})
   set(header_test_name Kokkos_HeaderSelfContained_${header_test_name})
   add_executable(${header_test_name} tstHeader.cpp)
-  target_link_libraries(${header_test_name} PRIVATE kokkos)
+  target_link_libraries(${header_test_name} PRIVATE Kokkos::kokkos)
   target_compile_definitions(${header_test_name} PRIVATE KOKKOS_HEADER_TEST_NAME=${_header})
 endforeach()
