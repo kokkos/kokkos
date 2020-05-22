@@ -261,6 +261,8 @@ class ScopeGuard {
 // smaller parts...
 #include <impl/Kokkos_Combined_Reducer.hpp>
 
+#include <Kokkos_AcquireUniqueTokenImpl.hpp>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 

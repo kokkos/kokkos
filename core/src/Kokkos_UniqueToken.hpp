@@ -46,6 +46,8 @@
 #define KOKKOS_UNIQUE_TOKEN_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_MemoryTraits.hpp>
+#include <Kokkos_Core_fwd.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -98,15 +100,66 @@ class UniqueToken<ExecutionSpace, UniqueTokenScope::Instance>
   ///
   /// It is required that max_size is >= the maximum number of concurrent
   /// threads that will attempt to acquire the UniqueToken. This constructor is
-  /// intended for cases where you either:
+  /// most commonly useful when you:
   ///   1) Have a loop bound that may be smaller than
-  ///   execution_space::concurrency(). 2) Have a parallel loop that will use
-  ///   multiple UniqueToken objects of different
-  ///      sizes for different iterations of the parallel loop to use separate
-  ///      index spaces. For example if you fuse multiple kernels into a single
-  ///      launch to increase the available parallelism, but each kernel has
-  ///      scratch arrays associated with its logical loop bounds.
+  ///   execution_space::concurrency().
+  ///   2) Want a per-team unique token in the range [0,
+  ///   execution_space::concurrency() / team_size)
   UniqueToken(size_type max_size, execution_space const& = execution_space());
+};
+
+/// \brief RAII helper for per-thread unique token values.
+///
+/// The token value will be acquired at construction and automatically
+/// released at destruction.
+template <typename ExecutionSpace,
+          UniqueTokenScope TokenScope = UniqueTokenScope::Instance>
+class AcquireUniqueToken {
+ public:
+  using exec_space = ExecutionSpace;
+  using size_type  = typename exec_space::size_type;
+  using token_type = UniqueToken<exec_space, TokenScope>;
+
+ private:
+  token_type my_token;
+  size_type my_acquired_val;
+
+ public:
+  KOKKOS_FUNCTION AcquireUniqueToken(token_type t)
+      : my_token(t), my_acquired_val(my_token.acquire()) {}
+
+  KOKKOS_FUNCTION ~AcquireUniqueToken() { my_token.release(my_acquired_val); }
+
+  KOKKOS_INLINE_FUNCTION size_type value() const { return my_acquired_val; }
+};
+
+/// \brief RAII helper for per-team unique token values.
+///
+/// The token value will be acquired at construction and automatically
+/// released at destruction. All threads in a team will share the same
+/// token value.
+template <typename TeamPolicy>
+class AcquireTeamUniqueToken {
+ public:
+  using exec_space       = typename TeamPolicy::execution_space;
+  using size_type        = typename exec_space::size_type;
+  using token_type       = UniqueToken<exec_space>;
+  using team_member_type = typename TeamPolicy::member_type;
+  using scratch_view =
+      Kokkos::View<size_type, typename exec_space::scratch_memory_space,
+                   Kokkos::MemoryUnmanaged>;
+
+ private:
+  token_type my_token;
+  size_type my_acquired_val;
+  scratch_view my_team_acquired_val;
+  team_member_type my_team;
+
+ public:
+  KOKKOS_FUNCTION AcquireTeamUniqueToken(token_type t, team_member_type team);
+  KOKKOS_FUNCTION ~AcquireTeamUniqueToken();
+  KOKKOS_INLINE_FUNCTION size_type value() const { return my_acquired_val; }
+  static std::size_t shmem_size() { return scratch_view::shmem_size(); }
 };
 
 }  // namespace Experimental

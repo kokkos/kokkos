@@ -52,7 +52,6 @@
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
-#include <Kokkos_UniqueToken.hpp>
 #include <Kokkos_MasterLock.hpp>
 
 //----------------------------------------------------------------------------
