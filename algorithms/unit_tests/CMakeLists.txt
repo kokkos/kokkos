@@ -23,7 +23,14 @@ KOKKOS_ADD_TEST_LIBRARY(
 
 # WORKAROUND FOR HIPCC
 IF(Kokkos_ENABLE_HIP)
-  TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0 --amdgpu-target=gfx906")
+  IF("${KOKKOS_CXX_COMPILER_ID}" STREQUAL Clang)
+    TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
+    TARGET_COMPILE_OPTIONS(kokkosalgorithms_gtest PUBLIC "--cuda-host-only")
+  ELSE()
+    # pass dummy workaround for hcc
+    TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
+    TARGET_COMPILE_OPTIONS(kokkosalgorithms_gtest PUBLIC "--amdgpu-target=gfx906")
+  ENDIF()
 ELSE()
   TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
 ENDIF()
