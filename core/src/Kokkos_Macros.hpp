@@ -272,6 +272,8 @@
 #define KOKKOS_IMPL_FORCEINLINE __forceinline__
 #define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
 #define KOKKOS_FUNCTION __device__ __host__
+#define KOKKOS_HOST_FUNCTION __host__
+#define KOKKOS_DEVICE_FUNCTION __device__
 #if defined(KOKKOS_COMPILER_NVCC)
 #define KOKKOS_INLINE_FUNCTION_DELETED inline
 #else
@@ -282,6 +284,8 @@
 #else
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
+#define KOKKOS_HOST_FUNCTION __host__
+#define KOKKOS_DEVICE_FUNCTION __device__
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
@@ -291,6 +295,8 @@
 #define KOKKOS_DEFAULTED_FUNCTION __device__ __host__ inline
 #define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
 #define KOKKOS_FUNCTION __device__ __host__
+#define KOKKOS_HOST_FUNCTION __host__
+#define KOKKOS_DEVICE_FUNCTION __device__
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
 #endif
@@ -490,6 +496,15 @@
 #if !defined(KOKKOS_DEFAULTED_FUNCTION)
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
+
+#if !defined(KOKKOS_HOST_FUNCTION)
+#define KOKKOS_HOST_FUNCTION
+#endif
+
+#if !defined(KOKKOS_DEVICE_FUNCTION)
+#define KOKKOS_DEVICE_FUNCTION
+#endif
+
 //----------------------------------------------------------------------------
 // Define empty macro for restrict if necessary:
 
@@ -541,6 +556,11 @@
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
 #elif defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
+#if defined(__HIP__)
+// mark that HIP-clang can use __host__ and __device__
+// as valid overload criteria
+#define KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
+#endif
 #elif defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -563,12 +583,10 @@
 #elif defined(__HCC__) && defined(__HCC_ACCELERATOR__) && \
     defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU
-#elif defined(__HIPCC__) &&                                     \
-    (defined(__HCC_ACCELERATOR__) || defined(__CUDA_ARCH__)) && \
-    defined(KOKKOS_ENABLE_HIP)
-#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
+#elif defined(__HIPCC__) && defined(__HIP_DEVICE_COMPILE__) && defined(KOKKOS_ENABLE_HIP)
+  #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
 #else
-#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif
 
 //----------------------------------------------------------------------------
