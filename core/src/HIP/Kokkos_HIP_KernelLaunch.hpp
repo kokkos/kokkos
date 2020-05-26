@@ -53,10 +53,12 @@
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 
-// FIXME_HIP cannot use global variable on the device with ROCm 2.9
-//__device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
-//    [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
-//     sizeof(unsigned long)];
+// Must use global variable on the device with HIP-Clang
+#ifdef __HIP__
+__device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
+   [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
+    sizeof(unsigned long)];
+#endif
 
 namespace Kokkos {
 namespace Experimental {
@@ -76,9 +78,12 @@ void *hip_resize_scratch_space(std::int64_t bytes, bool force_shrink = false);
 
 template <typename DriverType>
 __global__ static void hip_parallel_launch_constant_memory() {
+  // cannot use global constants in HCC
+  #ifdef __HCC__
   __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
       [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
        sizeof(unsigned long)];
+  #endif
 
   const DriverType &driver = *(reinterpret_cast<const DriverType *>(
       kokkos_impl_hip_constant_memory_buffer));
