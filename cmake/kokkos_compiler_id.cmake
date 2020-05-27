@@ -63,18 +63,14 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Cray OR KOKKOS_CLANG_IS_CRAY)
 ENDIF()
 
 
-# check for HCC vs HIP-Clang
-EXECUTE_PROCESS(COMMAND "${CMAKE_CXX_COMPILER} --version --amdgpu-target=gfx906"
-                COMMAND grep "HCC clang"
-                COMMAND wc -l
-                OUTPUT_VARIABLE INTERNAL_HAVE_COMPILER_HCC
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-IF(INTERNAL_HAVE_COMPILER_HCC)
-  # SET the compiler id to hcc.  We use the value used by CMake 3.8.
-  SET(KOKKOS_CXX_COMPILER_ID HCC CACHE STRING INTERNAL FORCE)
+IF(Kokkos_ENABLE_HIP)
+  # check for HCC vs HIP-Clang
+  EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version --amdgpu-target=gfx906
+                  COMMAND grep HCC
+                  COMMAND wc -l
+                  OUTPUT_VARIABLE INTERNAL_HAVE_COMPILER_HCC
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
 ENDIF()
-
 
 # Enforce the minimum compilers supported by Kokkos.
 SET(KOKKOS_MESSAGE_TEXT "Compiler not supported by Kokkos.  Required compiler versions:")

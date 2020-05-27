@@ -21,19 +21,18 @@ KOKKOS_ADD_TEST_LIBRARY(
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
 
+TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
 # WORKAROUND FOR HIPCC
 IF(Kokkos_ENABLE_HIP)
-  IF("${KOKKOS_CXX_COMPILER_ID}" STREQUAL Clang)
-    TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
-    TARGET_COMPILE_OPTIONS(kokkosalgorithms_gtest PUBLIC "--cuda-host-only")
+  # FIXME_HIP - remove the HCC path when HIP-Clang is more mature
+  IF("${INTERNAL_HAVE_COMPILER_HCC}" STREQUAL "1")
+    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--cuda-host-only")
   ELSE()
     # pass dummy workaround for hcc
-    TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
-    TARGET_COMPILE_OPTIONS(kokkosalgorithms_gtest PUBLIC "--amdgpu-target=gfx906")
+    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--amdgpu-target=gfx906")
   ENDIF()
-ELSE()
-  TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
 ENDIF()
+TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
 
 IF(NOT (Kokkos_ENABLE_CUDA AND WIN32))
 TARGET_COMPILE_FEATURES(kokkosalgorithms_gtest PUBLIC cxx_std_11)
