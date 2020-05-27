@@ -93,14 +93,14 @@ struct HIPGetMaxBlockSize<DriverType, Kokkos::LaunchBounds<>, true> {
                             size_t const vector_length,
                             size_t const shmem_extra_block,
                             size_t const shmem_extra_thread) {
-    // FIXME_HIP -- remove this once the API change becomes mature
-    #if !defined(__HIP__)
+// FIXME_HIP -- remove this once the API change becomes mature
+#if !defined(__HIP__)
     using blocktype = unsigned int;
-    #else
+#else
     using blocktype = int;
-    #endif
+#endif
     blocktype numBlocks = 0;
-    int blockSize          = 1024;
+    int blockSize       = 1024;
     int sharedmem =
         shmem_extra_block + shmem_extra_thread * (blockSize / vector_length) +
         ::Kokkos::Impl::FunctorTeamShmemSize<

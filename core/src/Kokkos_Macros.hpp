@@ -583,10 +583,11 @@
 #elif defined(__HCC__) && defined(__HCC_ACCELERATOR__) && \
     defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU
-#elif defined(__HIPCC__) && defined(__HIP_DEVICE_COMPILE__) && defined(KOKKOS_ENABLE_HIP)
-  #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
+#elif defined(__HIPCC__) && defined(__HIP_DEVICE_COMPILE__) && \
+    defined(KOKKOS_ENABLE_HIP)
+#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
 #else
-  #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif
 
 //----------------------------------------------------------------------------

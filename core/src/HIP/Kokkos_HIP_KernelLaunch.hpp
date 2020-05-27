@@ -56,8 +56,8 @@
 // Must use global variable on the device with HIP-Clang
 #ifdef __HIP__
 __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
-   [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
-    sizeof(unsigned long)];
+    [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
+     sizeof(unsigned long)];
 #endif
 
 namespace Kokkos {
@@ -78,14 +78,14 @@ void *hip_resize_scratch_space(std::int64_t bytes, bool force_shrink = false);
 
 template <typename DriverType>
 __global__ static void hip_parallel_launch_constant_memory() {
-  // cannot use global constants in HCC
-  #ifdef __HCC__
+// cannot use global constants in HCC
+#ifdef __HCC__
   __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
       [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
        sizeof(unsigned long)];
-  #endif
+#endif
 
-  const DriverType* driver = (reinterpret_cast<const DriverType *>(
+  const DriverType *driver = (reinterpret_cast<const DriverType *>(
       kokkos_impl_hip_constant_memory_buffer));
 
   driver->operator()();
@@ -93,15 +93,15 @@ __global__ static void hip_parallel_launch_constant_memory() {
 
 template <class DriverType>
 __global__ static void hip_parallel_launch_local_memory(
-    const DriverType* driver) {
+    const DriverType *driver) {
   driver->operator()();
 }
 
 template <class DriverType, unsigned int maxTperB, unsigned int minBperSM>
 __global__ __launch_bounds__(
     maxTperB,
-    minBperSM) static void hip_parallel_launch_local_memory(const DriverType*
-                                                                driver) {
+    minBperSM) static void hip_parallel_launch_local_memory(const DriverType
+                                                                *driver) {
   driver->operator()();
 }
 
@@ -156,9 +156,11 @@ struct HIPParallelLaunch<
       // by value to the device in HIP-Clang / VDI
       // As a workaround, we can malloc the DriverType and explictly copy over.
       // To remove once solved in HIP
-      DriverType* device;
+      DriverType *device;
       HIP_SAFE_CALL(hipMalloc(&device, sizeof(DriverType)));
-      HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType), hipMemcpyHostToDevice, hip_instance->m_stream));
+      HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType),
+                                   hipMemcpyHostToDevice,
+                                   hip_instance->m_stream));
       hipLaunchKernelGGL(
           (hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
                                             MinBlocksPerSM>),
@@ -201,9 +203,11 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       // Invoke the driver function on the device
 
       // FIXME_HIP -- see note about struct copy by value above
-      DriverType* device;
+      DriverType *device;
       HIP_SAFE_CALL(hipMalloc(&device, sizeof(DriverType)));
-      HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType), hipMemcpyHostToDevice, hip_instance->m_stream));
+      HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType),
+                                   hipMemcpyHostToDevice,
+                                   hip_instance->m_stream));
       hipLaunchKernelGGL(hip_parallel_launch_local_memory<DriverType>, grid,
                          block, shmem, hip_instance->m_stream, device);
 

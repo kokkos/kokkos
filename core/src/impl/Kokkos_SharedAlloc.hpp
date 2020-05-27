@@ -171,21 +171,21 @@ class SharedAllocationRecord<void, void> {
   /* Cannot be 'constexpr' because 'm_count' is volatile */
   int use_count() const { return *static_cast<const volatile int*>(&m_count); }
 
-  #ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
-    /* Device tracking_enabled -- always disabled */
-    KOKKOS_IMPL_DEVICE_FUNCTION
-    static void increment(SharedAllocationRecord*) {};
-  #endif
+#ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
+  /* Device tracking_enabled -- always disabled */
+  KOKKOS_IMPL_DEVICE_FUNCTION
+  static void increment(SharedAllocationRecord*){};
+#endif
 
   /* Increment use count */
   KOKKOS_IMPL_HOST_FUNCTION
   static void increment(SharedAllocationRecord*);
 
-  #ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
-    /* Device tracking_enabled -- always disabled */
-    KOKKOS_IMPL_DEVICE_FUNCTION
-    static void decrement(SharedAllocationRecord*) {};
-  #endif
+#ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
+  /* Device tracking_enabled -- always disabled */
+  KOKKOS_IMPL_DEVICE_FUNCTION
+  static void decrement(SharedAllocationRecord*){};
+#endif
 
   /* Decrement use count. If 1->0 then remove from the tracking list and invoke
    * m_dealloc */
@@ -298,16 +298,19 @@ union SharedAllocationTracker {
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED Record::tracking_enabled()
 
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-  #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION (!(m_record_bits & DO_NOT_DEREF_FLAG))
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION \
+  (!(m_record_bits & DO_NOT_DEREF_FLAG))
 #else
-  #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION (0)
+#define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION (0)
 #endif
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT \
-  if(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION) Record::increment(m_record);
+  if (KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION)  \
+    Record::increment(m_record);
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT \
-  if(KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION) Record::decrement(m_record);
+  if (KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION)  \
+    Record::decrement(m_record);
 
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 
