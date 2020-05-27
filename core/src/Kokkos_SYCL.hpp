@@ -135,7 +135,19 @@ class SYCL {
   struct SelectDevice {
     int sycl_device_id;
 
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+    SelectDevice() : sycl_device_id(firstCPUDevice()) {}
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU)
     SelectDevice() : sycl_device_id(firstGPUDevice()) {}
+#else
+    SelectDevice() : syl_device_id(-1) {
+      static_assert(
+          false,
+          "Neither KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_HOST or "
+          "KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU is defined.");
+    }
+#endif
+
     explicit SelectDevice(int id)
         : sycl_device_id(id)
 
@@ -153,6 +165,19 @@ class SYCL {
 
       if (found == devices.end()) {
         Kokkos::abort("No GPU device found.");
+      }
+
+      return found - devices.begin();
+    }
+
+    static int firstCPUDevice() {
+      auto devices = cl::sycl::device::get_devices();
+      auto found   = std::find_if(
+          devices.begin(), devices.end(),
+          [](const cl::sycl::device& device) { return device.is_cpu(); });
+
+      if (found == devices.end()) {
+        Kokkos::abort("No CPU device found.");
       }
 
       return found - devices.begin();
