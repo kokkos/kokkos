@@ -130,7 +130,7 @@ FUNCTION(KOKKOS_ADD_EXECUTABLE ROOT_NAME)
     VERIFY_EMPTY(KOKKOS_ADD_EXECUTABLE ${PARSE_UNPARSED_ARGUMENTS})
     #All executables must link to all the kokkos targets
     #This is just private linkage because exe is final
-    TARGET_LINK_LIBRARIES(${EXE_NAME} PRIVATE kokkos)
+    TARGET_LINK_LIBRARIES(${EXE_NAME} PRIVATE Kokkos::kokkos)
   endif()
 ENDFUNCTION()
 
@@ -170,16 +170,42 @@ FUNCTION(KOKKOS_SET_EXE_PROPERTY ROOT_NAME)
 ENDFUNCTION()
 
 MACRO(KOKKOS_SETUP_BUILD_ENVIRONMENT)
- INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
- INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_devices.cmake)
- INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_options.cmake)
- INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_test_cxx_std.cmake)
- INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
- IF (NOT KOKKOS_HAS_TRILINOS)
-  SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kokkos_SOURCE_DIR}/cmake/Modules/")
-  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tpls.cmake)
- ENDIF()
- INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_corner_cases.cmake)
+  # This is needed for both regular build and install tests
+  INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_compiler_id.cmake)
+  #set an internal option, if not already set
+  SET(Kokkos_INSTALL_TESTING OFF CACHE INTERNAL "Whether to build tests and examples against installation")
+  IF (Kokkos_INSTALL_TESTING)
+    SET(KOKKOS_ENABLE_TESTS ON)
+    SET(KOKKOS_ENABLE_EXAMPLES ON)
+    # This looks a little weird, but what we are doing
+    # is to NOT build Kokkos but instead look for an
+    # installed Kokkos - then build examples and tests
+    # against that installed Kokkos
+    FIND_PACKAGE(Kokkos REQUIRED)
+    # Just grab the configuration from the installation
+    FOREACH(DEV ${Kokkos_DEVICES})
+      SET(KOKKOS_ENABLE_${DEV} ON)
+    ENDFOREACH()
+    FOREACH(OPT ${Kokkos_OPTIONS})
+      SET(KOKKOS_ENABLE_${OPT} ON)
+    ENDFOREACH()
+    FOREACH(TPL ${Kokkos_TPLS})
+      SET(KOKKOS_ENABLE_${TPL} ON)
+    ENDFOREACH()
+    FOREACH(ARCH ${Kokkos_ARCH})
+      SET(KOKKOS_ARCH_${ARCH} ON)
+    ENDFOREACH()
+  ELSE()
+    INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_devices.cmake)
+    INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_enable_options.cmake)
+    INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_test_cxx_std.cmake)
+    INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
+    IF (NOT KOKKOS_HAS_TRILINOS)
+      SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kokkos_SOURCE_DIR}/cmake/Modules/")
+      INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tpls.cmake)
+    ENDIF()
+    INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_corner_cases.cmake)
+  ENDIF()
 ENDMACRO()
 
 MACRO(KOKKOS_ADD_TEST_EXECUTABLE ROOT_NAME)
@@ -306,8 +332,17 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     LIST(REMOVE_DUPLICATES PARSE_SOURCES)
   ENDIF()
 
+  IF(PARSE_STATIC)
+    SET(LINK_TYPE STATIC)
+  ENDIF()
+
+  IF(PARSE_SHARED)
+    SET(LINK_TYPE SHARED)
+  ENDIF()
+
   ADD_LIBRARY(
     ${LIBRARY_NAME}
+    ${LINK_TYPE}
     ${PARSE_HEADERS}
     ${PARSE_SOURCES}
   )

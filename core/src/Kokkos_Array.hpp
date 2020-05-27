@@ -152,6 +152,8 @@ struct Array {
     return m_internal_implementation_private_member_data[i];
   }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const { return true; }
+
   KOKKOS_INLINE_FUNCTION pointer data() {
     return &m_internal_implementation_private_member_data[0];
   }
@@ -213,6 +215,8 @@ struct Array<T, 0, Proxy> {
     return *reinterpret_cast<const_pointer>(-1);
   }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const { return false; }
+
   KOKKOS_INLINE_FUNCTION pointer data() { return pointer(0); }
   KOKKOS_INLINE_FUNCTION const_pointer data() const { return const_pointer(0); }
 
@@ -268,6 +272,10 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::contiguous> {
         "Must be integral argument");
     KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
     return m_elem[i];
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return (m_elem != nullptr);
   }
 
   KOKKOS_INLINE_FUNCTION pointer data() { return m_elem; }
@@ -337,6 +345,10 @@ struct Array<T, KOKKOS_INVALID_INDEX, Array<>::strided> {
         "Must be integral argument");
     KOKKOS_ARRAY_BOUNDS_CHECK(i, m_size);
     return m_elem[i * m_stride];
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return (m_elem != nullptr);
   }
 
   KOKKOS_INLINE_FUNCTION pointer data() { return m_elem; }

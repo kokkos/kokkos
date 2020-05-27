@@ -42,38 +42,45 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TIMER_HPP
-#define KOKKOS_TIMER_HPP
+// This file calls most of the basic Kokkos primitives. When combined with a
+// testing library this tests that our shared-library loading based profiling
+// mechanisms work
 
-#include <Kokkos_Macros.hpp>
-#include <chrono>
+#include <iostream>
+#include <Kokkos_Core.hpp>
 
-namespace Kokkos {
-
-/** \brief  Time since construction */
-
-class Timer {
- private:
-  std::chrono::high_resolution_clock::time_point m_old;
-  Timer(const Timer&);
-  Timer& operator=(const Timer&);
-
- public:
-  inline void reset() { m_old = std::chrono::high_resolution_clock::now(); }
-
-  inline ~Timer() = default;
-
-  inline Timer() { reset(); }
-
-  inline double seconds() const {
-    std::chrono::high_resolution_clock::time_point m_new =
-        std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::duration<double>>(m_new -
-                                                                     m_old)
-        .count();
+int main() {
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+  Kokkos::initialize();
+  {
+    using execution_space = Kokkos::DefaultExecutionSpace;
+    using memory_space    = typename execution_space::memory_space;
+    Kokkos::View<int*, memory_space> src_view("source", 10);
+    Kokkos::View<int*, memory_space> dst_view("destination", 10);
+    Kokkos::deep_copy(dst_view, src_view);
+    Kokkos::parallel_for(
+        "parallel_for", Kokkos::RangePolicy<execution_space>(0, 1),
+        KOKKOS_LAMBDA(int i) { (void)i; });
+    int result;
+    Kokkos::parallel_reduce(
+        "parallel_reduce", Kokkos::RangePolicy<execution_space>(0, 1),
+        KOKKOS_LAMBDA(int i, int& hold_result) { hold_result += i; }, result);
+    Kokkos::parallel_scan(
+        "parallel_scan", Kokkos::RangePolicy<execution_space>(0, 1),
+        KOKKOS_LAMBDA(const int i, int& hold_result, const bool final) {
+          if (final) {
+            hold_result += i;
+          }
+        });
+    Kokkos::Profiling::pushRegion("push_region");
+    Kokkos::Profiling::popRegion();
+    uint32_t sectionId;
+    Kokkos::Profiling::createProfileSection("created_section", &sectionId);
+    Kokkos::Profiling::startSection(sectionId);
+    Kokkos::Profiling::stopSection(sectionId);
+    Kokkos::Profiling::destroyProfileSection(sectionId);
+    Kokkos::Profiling::markEvent("profiling_event");
   }
-};
-
-}  // namespace Kokkos
-
-#endif /* #ifndef KOKKOS_TIMER_HPP */
+  Kokkos::finalize();
+#endif
+}

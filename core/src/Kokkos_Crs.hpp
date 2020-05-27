@@ -45,6 +45,9 @@
 #ifndef KOKKOS_CRS_HPP
 #define KOKKOS_CRS_HPP
 
+#include <Kokkos_View.hpp>
+#include <Kokkos_CopyViews.hpp>
+
 namespace Kokkos {
 
 /// \class Crs

@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -42,38 +43,14 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TIMER_HPP
-#define KOKKOS_TIMER_HPP
+#include <gtest/gtest.h>
 
-#include <Kokkos_Macros.hpp>
-#include <chrono>
+#include <Kokkos_Core.hpp>
 
-namespace Kokkos {
+#include <default/TestDefaultDeviceType_Category.hpp>
 
-/** \brief  Time since construction */
+namespace Test {
 
-class Timer {
- private:
-  std::chrono::high_resolution_clock::time_point m_old;
-  Timer(const Timer&);
-  Timer& operator=(const Timer&);
+TEST(defaultdevicetype, development_test) {}
 
- public:
-  inline void reset() { m_old = std::chrono::high_resolution_clock::now(); }
-
-  inline ~Timer() = default;
-
-  inline Timer() { reset(); }
-
-  inline double seconds() const {
-    std::chrono::high_resolution_clock::time_point m_new =
-        std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::duration<double>>(m_new -
-                                                                     m_old)
-        .count();
-  }
-};
-
-}  // namespace Kokkos
-
-#endif /* #ifndef KOKKOS_TIMER_HPP */
+}  // namespace Test

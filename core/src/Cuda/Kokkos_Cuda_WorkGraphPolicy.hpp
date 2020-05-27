@@ -45,6 +45,8 @@
 #ifndef KOKKOS_CUDA_WORKGRAPHPOLICY_HPP
 #define KOKKOS_CUDA_WORKGRAPHPOLICY_HPP
 
+#include <Kokkos_Cuda.hpp>
+
 namespace Kokkos {
 namespace Impl {
 

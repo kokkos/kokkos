@@ -370,8 +370,8 @@ class ViewMapping<
         std::integral_constant<unsigned, 0>(),
         src.layout());  // Check this for integer input1 for padding, etc
     dst.m_map.m_impl_handle = Kokkos::Impl::ViewDataHandle<DstTraits>::assign(
-        src.m_map.m_impl_handle, src.m_track);
-    dst.m_track.assign(src.m_track, DstTraits::is_managed);
+        src.m_map.m_impl_handle, src.m_track.m_tracker);
+    dst.m_track.assign(src.m_track.m_tracker, DstTraits::is_managed);
     dst.m_rank = src.Rank;
   }
 };

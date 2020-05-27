@@ -76,7 +76,8 @@ struct TestScan {
         int fail = errors()++;
 
         if (fail < 20) {
-          printf("TestScan(%d,%ld) != %ld\n", iwork, update, answer);
+          printf("TestScan(%d,%ld) != %ld\n", iwork, static_cast<long>(update),
+                 static_cast<long>(answer));
         }
       }
     }

@@ -131,14 +131,14 @@ struct ViewOffset<
 
   enum { VORank = Dimension::rank };
 
-  enum { SHIFT_0 = Kokkos::Impl::integral_power_of_two(Layout::N0) };
-  enum { SHIFT_1 = Kokkos::Impl::integral_power_of_two(Layout::N1) };
-  enum { SHIFT_2 = Kokkos::Impl::integral_power_of_two(Layout::N2) };
-  enum { SHIFT_3 = Kokkos::Impl::integral_power_of_two(Layout::N3) };
-  enum { SHIFT_4 = Kokkos::Impl::integral_power_of_two(Layout::N4) };
-  enum { SHIFT_5 = Kokkos::Impl::integral_power_of_two(Layout::N5) };
-  enum { SHIFT_6 = Kokkos::Impl::integral_power_of_two(Layout::N6) };
-  enum { SHIFT_7 = Kokkos::Impl::integral_power_of_two(Layout::N7) };
+  enum : unsigned { SHIFT_0 = Kokkos::Impl::integral_power_of_two(Layout::N0) };
+  enum : unsigned { SHIFT_1 = Kokkos::Impl::integral_power_of_two(Layout::N1) };
+  enum : unsigned { SHIFT_2 = Kokkos::Impl::integral_power_of_two(Layout::N2) };
+  enum : unsigned { SHIFT_3 = Kokkos::Impl::integral_power_of_two(Layout::N3) };
+  enum : unsigned { SHIFT_4 = Kokkos::Impl::integral_power_of_two(Layout::N4) };
+  enum : unsigned { SHIFT_5 = Kokkos::Impl::integral_power_of_two(Layout::N5) };
+  enum : unsigned { SHIFT_6 = Kokkos::Impl::integral_power_of_two(Layout::N6) };
+  enum : unsigned { SHIFT_7 = Kokkos::Impl::integral_power_of_two(Layout::N7) };
   enum { MASK_0 = Layout::N0 - 1 };
   enum { MASK_1 = Layout::N1 - 1 };
   enum { MASK_2 = Layout::N2 - 1 };
@@ -148,16 +148,20 @@ struct ViewOffset<
   enum { MASK_6 = Layout::N6 - 1 };
   enum { MASK_7 = Layout::N7 - 1 };
 
-  enum { SHIFT_2T = SHIFT_0 + SHIFT_1 };
-  enum { SHIFT_3T = SHIFT_0 + SHIFT_1 + SHIFT_2 };
-  enum { SHIFT_4T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 };
-  enum { SHIFT_5T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 };
-  enum { SHIFT_6T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 + SHIFT_5 };
-  enum {
+  enum : unsigned { SHIFT_2T = SHIFT_0 + SHIFT_1 };
+  enum : unsigned { SHIFT_3T = SHIFT_0 + SHIFT_1 + SHIFT_2 };
+  enum : unsigned { SHIFT_4T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 };
+  enum : unsigned {
+    SHIFT_5T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4
+  };
+  enum : unsigned {
+    SHIFT_6T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 + SHIFT_5
+  };
+  enum : unsigned {
     SHIFT_7T =
         SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 + SHIFT_5 + SHIFT_6
   };
-  enum {
+  enum : unsigned {
     SHIFT_8T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 + SHIFT_5 +
                SHIFT_6 + SHIFT_7
   };
@@ -600,11 +604,37 @@ struct ViewOffset<
   }
 
   //----------------------------------------
-
+#ifdef KOKKOS_IMPL_WINDOWS_CUDA
+  KOKKOS_FUNCTION ViewOffset() {}
+  KOKKOS_FUNCTION ViewOffset(const ViewOffset& src) {
+    m_dim     = src.m_dim;
+    m_tile_N0 = src.m_tile_N0;
+    m_tile_N1 = src.m_tile_N1;
+    m_tile_N2 = src.m_tile_N2;
+    m_tile_N3 = src.m_tile_N3;
+    m_tile_N4 = src.m_tile_N4;
+    m_tile_N5 = src.m_tile_N5;
+    m_tile_N6 = src.m_tile_N6;
+    m_tile_N7 = src.m_tile_N7;
+  }
+  KOKKOS_FUNCTION ViewOffset& operator=(const ViewOffset& src) {
+    m_dim     = src.m_dim;
+    m_tile_N0 = src.m_tile_N0;
+    m_tile_N1 = src.m_tile_N1;
+    m_tile_N2 = src.m_tile_N2;
+    m_tile_N3 = src.m_tile_N3;
+    m_tile_N4 = src.m_tile_N4;
+    m_tile_N5 = src.m_tile_N5;
+    m_tile_N6 = src.m_tile_N6;
+    m_tile_N7 = src.m_tile_N7;
+    return *this;
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION ~ViewOffset()                 = default;
   KOKKOS_DEFAULTED_FUNCTION ViewOffset()                  = default;
   KOKKOS_DEFAULTED_FUNCTION ViewOffset(const ViewOffset&) = default;
   KOKKOS_DEFAULTED_FUNCTION ViewOffset& operator=(const ViewOffset&) = default;
+#endif
 
   template <unsigned TrivialScalarSize>
   KOKKOS_INLINE_FUNCTION constexpr ViewOffset(
