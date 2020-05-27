@@ -272,8 +272,8 @@
 #define KOKKOS_IMPL_FORCEINLINE __forceinline__
 #define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
 #define KOKKOS_FUNCTION __device__ __host__
-#define KOKKOS_HOST_FUNCTION __host__
-#define KOKKOS_DEVICE_FUNCTION __device__
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #if defined(KOKKOS_COMPILER_NVCC)
 #define KOKKOS_INLINE_FUNCTION_DELETED inline
 #else
@@ -284,8 +284,8 @@
 #else
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
-#define KOKKOS_HOST_FUNCTION __host__
-#define KOKKOS_DEVICE_FUNCTION __device__
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
@@ -295,8 +295,8 @@
 #define KOKKOS_DEFAULTED_FUNCTION __device__ __host__ inline
 #define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
 #define KOKKOS_FUNCTION __device__ __host__
-#define KOKKOS_HOST_FUNCTION __host__
-#define KOKKOS_DEVICE_FUNCTION __device__
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
 #endif
@@ -497,12 +497,12 @@
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
 
-#if !defined(KOKKOS_HOST_FUNCTION)
-#define KOKKOS_HOST_FUNCTION
+#if !defined(KOKKOS_IMPL_HOST_FUNCTION)
+#define KOKKOS_IMPL_HOST_FUNCTION
 #endif
 
-#if !defined(KOKKOS_DEVICE_FUNCTION)
-#define KOKKOS_DEVICE_FUNCTION
+#if !defined(KOKKOS_IMPL_DEVICE_FUNCTION)
+#define KOKKOS_IMPL_DEVICE_FUNCTION
 #endif
 
 //----------------------------------------------------------------------------

@@ -122,11 +122,11 @@ class SharedAllocationRecord<void, void> {
 
 #ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
   /* Device tracking_enabled -- always disabled */
-  KOKKOS_DEVICE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   static int tracking_enabled() { return 0; }
 #endif
 
-  KOKKOS_HOST_FUNCTION
+  KOKKOS_IMPL_HOST_FUNCTION
   static int tracking_enabled() { return t_tracking_enabled; }
 
   /**\brief A host process thread claims and disables the
@@ -173,23 +173,23 @@ class SharedAllocationRecord<void, void> {
 
   #ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
     /* Device tracking_enabled -- always disabled */
-    KOKKOS_DEVICE_FUNCTION
+    KOKKOS_IMPL_DEVICE_FUNCTION
     static void increment(SharedAllocationRecord*) {};
   #endif
 
   /* Increment use count */
-  KOKKOS_HOST_FUNCTION
+  KOKKOS_IMPL_HOST_FUNCTION
   static void increment(SharedAllocationRecord*);
 
   #ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
     /* Device tracking_enabled -- always disabled */
-    KOKKOS_DEVICE_FUNCTION
+    KOKKOS_IMPL_DEVICE_FUNCTION
     static void decrement(SharedAllocationRecord*) {};
   #endif
 
   /* Decrement use count. If 1->0 then remove from the tracking list and invoke
    * m_dealloc */
-  KOKKOS_HOST_FUNCTION
+  KOKKOS_IMPL_HOST_FUNCTION
   static SharedAllocationRecord* decrement(SharedAllocationRecord*);
 
   /* Given a root record and data pointer find the record */
