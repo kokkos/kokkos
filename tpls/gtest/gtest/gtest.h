@@ -48,6 +48,8 @@
 // registration from Barthelemy Dagenais' (barthelemy@prologique.com)
 // easyUnit framework.
 
+#define GTEST_HAS_TR1_TUPLE 0
+
 #ifdef __GNUC__
 #pragma GCC system_header
 #endif
