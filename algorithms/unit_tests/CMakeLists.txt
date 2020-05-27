@@ -21,11 +21,11 @@ KOKKOS_ADD_TEST_LIBRARY(
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
 
-# WORKAROUND FOR HIPCC
+# Workaround for HIP, avoid deprecation warnings from MSVC
 IF(Kokkos_ENABLE_HIP)
-  TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0 --amdgpu-target=gfx906")
+  TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_TR1_TUPLE=0 -DGTEST_HAS_PTHREAD=0 --amdgpu-target=gfx906")
 ELSE()
-  TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
+  TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_TR1_TUPLE=0 -DGTEST_HAS_PTHREAD=0")
 ENDIF()
 
 IF(NOT (Kokkos_ENABLE_CUDA AND WIN32))
