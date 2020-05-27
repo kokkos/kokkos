@@ -152,6 +152,10 @@ struct HIPParallelLaunch<
              block.y, block.z, shmem);
       printf("Pre Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
 
+      // FIXME_HIP -- there is currently an error copying (some) structs
+      // by value to the device in HIP-Clang / VDI
+      // As a workaround, we can malloc the DriverType and explictly copy over.
+      // To remove once solved in HIP
       DriverType* device;
       HIP_SAFE_CALL(hipMalloc(&device, sizeof(DriverType)));
       HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType), hipMemcpyHostToDevice, hip_instance->m_stream));
@@ -195,6 +199,8 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       }
 
       // Invoke the driver function on the device
+
+      // FIXME_HIP -- see note about struct copy by value above
       DriverType* device;
       HIP_SAFE_CALL(hipMalloc(&device, sizeof(DriverType)));
       HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType), hipMemcpyHostToDevice, hip_instance->m_stream));
