@@ -29,7 +29,7 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
   ELSEIF(NOT KOKKOS_USE_CXX_EXTENSIONS AND ${STANDARD_NAME})
     MESSAGE(STATUS "Using ${${STANDARD_NAME}} for C++${standard} standard as feature")
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE ${FEATURE_NAME})
-  ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL "MSVC")
+  ELSEIF (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
     #MSVC doesn't need a command line flag, that doesn't mean it has no support
     MESSAGE(STATUS "Using no flag for C++${standard} standard as feature")
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE ${FEATURE_NAME})
