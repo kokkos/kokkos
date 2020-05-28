@@ -120,7 +120,7 @@ class SharedAllocationRecord<void, void> {
  public:
   virtual std::string get_label() const { return std::string("Unmanaged"); }
 
-#ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
+#ifdef KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE
   /* Device tracking_enabled -- always disabled */
   KOKKOS_IMPL_DEVICE_FUNCTION
   static int tracking_enabled() { return 0; }
@@ -171,7 +171,7 @@ class SharedAllocationRecord<void, void> {
   /* Cannot be 'constexpr' because 'm_count' is volatile */
   int use_count() const { return *static_cast<const volatile int*>(&m_count); }
 
-#ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
+#ifdef KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE
   /* Device tracking_enabled -- always disabled */
   KOKKOS_IMPL_DEVICE_FUNCTION
   static void increment(SharedAllocationRecord*){};
@@ -181,7 +181,7 @@ class SharedAllocationRecord<void, void> {
   KOKKOS_IMPL_HOST_FUNCTION
   static void increment(SharedAllocationRecord*);
 
-#ifdef KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
+#ifdef KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE
   /* Device tracking_enabled -- always disabled */
   KOKKOS_IMPL_DEVICE_FUNCTION
   static void decrement(SharedAllocationRecord*){};
@@ -293,7 +293,7 @@ union SharedAllocationTracker {
   // pressure on compiler optimization by reducing
   // number of symbols and inline functions.
 
-#if defined(KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE)
+#if defined(KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE)
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED Record::tracking_enabled()
 

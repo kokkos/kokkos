@@ -559,7 +559,7 @@
 #if defined(__HIP__)
 // mark that HIP-clang can use __host__ and __device__
 // as valid overload criteria
-#define KOKKOS_ENABLE_OVERLOAD_HOST_DEVICE
+#define KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE
 #endif
 #elif defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM
