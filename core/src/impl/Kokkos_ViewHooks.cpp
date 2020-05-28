@@ -42,7 +42,25 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaHostPinned_Category.hpp>
-#include <TestViewAPI_e.hpp>
-#include <TestViewCopy.hpp>
-#include <TestLambdaCapture.hpp>
+#include <Kokkos_Core.hpp>
+
+namespace Kokkos {
+namespace Experimental {
+ViewHooks &ViewHooks::get_instance() {
+  static ViewHooks view_hooks_instance = {};
+  return view_hooks_instance;
+}
+ViewHookCallerBase::~ViewHookCallerBase() {}
+
+void deactivate_view_hook_caller(const std::string &name) {
+  ViewHooks::get_instance().deactivate_hook_caller(name);
+}
+void reactivate_view_hook_caller(const std::string &name) {
+  ViewHooks::get_instance().reactivate_hook_caller(name);
+}
+void remove_view_hook_caller(const std::string &name) {
+  ViewHooks::get_instance().remove_hook_caller(name);
+}
+
+}  // namespace Experimental
+}  // namespace Kokkos

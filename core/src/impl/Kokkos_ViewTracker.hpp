@@ -45,6 +45,8 @@
 #ifndef KOKKOS_VIEW_TRACKER_HPP
 #define KOKKOS_VIEW_TRACKER_HPP
 
+#include <impl/Kokkos_ViewHooks.hpp>
+
 namespace Kokkos {
 
 template <class DataType, class... Properties>
@@ -78,6 +80,21 @@ struct ViewTracker {
       : m_tracker(vt.m_tracker, view_traits::is_managed) {}
 
   KOKKOS_INLINE_FUNCTION
+  explicit ViewTracker(const ParentView& vt, bool /*_skip_viewhooks*/) noexcept
+      : m_tracker() {
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+    if (view_traits::is_managed &&
+        Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()) {
+      m_tracker.assign_direct(vt.m_track.m_tracker);
+    } else {
+      m_tracker.assign_force_disable(vt.m_track.m_tracker);
+    }
+#else
+    m_tracker.assign_force_disable(vt.m_track.m_tracker);
+#endif
+  }
+
+  KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const ParentView& vt) noexcept : m_tracker() {
     assign(vt);
   }
@@ -95,6 +112,9 @@ struct ViewTracker {
     if (view_traits::is_managed &&
         Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()) {
       m_tracker.assign_direct(vt.m_track.m_tracker);
+      if (Kokkos::Experimental::ViewHooks::get_instance().is_set()) {
+        Kokkos::Experimental::ViewHooks::get_instance().call(vt);
+      }
     } else {
       m_tracker.assign_force_disable(vt.m_track.m_tracker);
     }

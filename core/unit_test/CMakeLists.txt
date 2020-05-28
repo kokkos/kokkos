@@ -141,6 +141,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewMapping_b
       ViewMapping_subview
       ViewOfClass
+      LambdaCapture
       WorkGraph
       View_64bit
       ViewResize
@@ -507,6 +508,25 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
   SOURCES ${DEFAULT_DEVICE_SOURCES}
 )
+
+FOREACH(Tag Threads;Serial;OpenMP;Cuda;HIP;OpenMPTarget;HPX)
+  # Because there is always an exception to the rule
+  IF(Tag STREQUAL "Threads")
+    SET(DEVICE "PTHREAD")
+  ELSE()
+    STRING(TOUPPER ${Tag} DEVICE)
+  ENDIF()
+  STRING(TOLOWER ${Tag} dir)
+
+  IF(Kokkos_ENABLE_${DEVICE})
+     KOKKOS_ADD_EXECUTABLE_AND_TEST(
+        UnitTest_ViewHooksTest_${Tag}
+        SOURCES
+            UnitTestMainInit.cpp
+            ${dir}/Test${Tag}_ViewHooks.cpp
+        )
+   ENDIF()
+ENDFOREACH()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_PushFinalizeHook
