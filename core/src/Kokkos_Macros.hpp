@@ -268,10 +268,10 @@
 #if defined(KOKKOS_ENABLE_CUDA)
 // Compiling Cuda code to 'ptx'
 
-#define KOKKOS_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
 #define KOKKOS_IMPL_FORCEINLINE __forceinline__
-#define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
-#define KOKKOS_FUNCTION __device__ __host__
+#define KOKKOS_IMPL_INLINE_FUNCTION __device__ __host__ inline
+#define KOKKOS_IMPL_FUNCTION __device__ __host__
 #if defined(KOKKOS_COMPILER_NVCC)
 #define KOKKOS_INLINE_FUNCTION_DELETED inline
 #else
@@ -286,11 +286,11 @@
 
 #if defined(KOKKOS_ENABLE_HIP)
 
-#define KOKKOS_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
-#define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
+#define KOKKOS_IMPL_INLINE_FUNCTION __device__ __host__ inline
 #define KOKKOS_DEFAULTED_FUNCTION __device__ __host__ inline
 #define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
-#define KOKKOS_FUNCTION __device__ __host__
+#define KOKKOS_IMPL_FUNCTION __device__ __host__
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
 #endif
@@ -298,9 +298,9 @@
 
 #if defined(KOKKOS_ENABLE_ROCM) && defined(__HCC__)
 
-#define KOKKOS_FORCEINLINE_FUNCTION __attribute__((amp, cpu)) inline
-#define KOKKOS_INLINE_FUNCTION __attribute__((amp, cpu)) inline
-#define KOKKOS_FUNCTION __attribute__((amp, cpu))
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION __attribute__((amp, cpu)) inline
+#define KOKKOS_IMPL_INLINE_FUNCTION __attribute__((amp, cpu)) inline
+#define KOKKOS_IMPL_FUNCTION __attribute__((amp, cpu))
 #define KOKKOS_LAMBDA [=] __attribute__((amp, cpu))
 #define KOKKOS_DEFAULTED_FUNCTION __attribute__((amp, cpu)) inline
 #endif
@@ -353,10 +353,10 @@
 
 #if !defined(KOKKOS_FORCEINLINE_FUNCTION)
 #if !defined(_WIN32)
-#define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
 #define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
 #else
-#define KOKKOS_FORCEINLINE_FUNCTION inline
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline
 #endif
 #endif
 
@@ -407,8 +407,8 @@
 //#define KOKKOS_ENABLE_PRAGMA_VECTOR 1
 //#define KOKKOS_ENABLE_PRAGMA_SIMD 1
 
-#if !defined(KOKKOS_FORCEINLINE_FUNCTION)
-#define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
 #define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
 #endif
 
@@ -432,8 +432,8 @@
 #define KOKKOS_ENABLE_RFO_PREFETCH 1
 #endif
 
-#if !defined(KOKKOS_FORCEINLINE_FUNCTION)
-#define KOKKOS_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
+#if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
 #define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
 #endif
 
@@ -467,20 +467,20 @@
 //----------------------------------------------------------------------------
 // Define function marking macros if compiler specific macros are undefined:
 
-#if !defined(KOKKOS_FORCEINLINE_FUNCTION)
-#define KOKKOS_FORCEINLINE_FUNCTION inline
+#if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline
 #endif
 
 #if !defined(KOKKOS_IMPL_FORCEINLINE)
 #define KOKKOS_IMPL_FORCEINLINE inline
 #endif
 
-#if !defined(KOKKOS_INLINE_FUNCTION)
-#define KOKKOS_INLINE_FUNCTION inline
+#if !defined(KOKKOS_IMPL_INLINE_FUNCTION)
+#define KOKKOS_IMPL_INLINE_FUNCTION inline
 #endif
 
-#if !defined(KOKKOS_FUNCTION)
-#define KOKKOS_FUNCTION /**/
+#if !defined(KOKKOS_IMPL_FUNCTION)
+#define KOKKOS_IMPL_FUNCTION /**/
 #endif
 
 #if !defined(KOKKOS_INLINE_FUNCTION_DELETED)
@@ -490,6 +490,25 @@
 #if !defined(KOKKOS_DEFAULTED_FUNCTION)
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
+
+//----------------------------------------------------------------------------
+// Define final version of functions. This is so that clang tidy can find these
+// maros more easily
+#if defined(__clang_analyzer__)
+#define KOKKOS_FUNCTION \
+  KOKKOS_IMPL_FUNCTION __attribute__((annotate("KOKKOS_FUNCTION")))
+#define KOKKOS_INLINE_FUNCTION \
+  KOKKOS_IMPL_INLINE_FUNCTION  \
+      __attribute__((annotate("KOKKOS_INLINE_FUNCTION")))
+#define KOKKOS_FORCEINLINE_FUNCTION \
+  KOKKOS_IMPL_FORCEINLINE_FUNCTION  \
+      __attribute__((annotate("KOKKOS_FORCEINLINE_FUNCTION")))
+#else
+#define KOKKOS_FUNCTION KOKKOS_IMPL_FUNCTION
+#define KOKKOS_INLINE_FUNCTION KOKKOS_IMPL_INLINE_FUNCTION
+#define KOKKOS_FORCEINLINE_FUNCTION KOKKOS_IMPL_FORCEINLINE_FUNCTION
+#endif
+
 //----------------------------------------------------------------------------
 // Define empty macro for restrict if necessary:
 
