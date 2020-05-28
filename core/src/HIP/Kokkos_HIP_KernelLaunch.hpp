@@ -85,7 +85,7 @@ __global__ static void hip_parallel_launch_constant_memory() {
        sizeof(unsigned long)];
 #endif
 
-  const DriverType * const driver = (reinterpret_cast<const DriverType *>(
+  const DriverType *const driver = (reinterpret_cast<const DriverType *>(
       kokkos_impl_hip_constant_memory_buffer));
 
   driver->operator()();
