@@ -16,7 +16,7 @@ KOKKOS_ADD_TEST_LIBRARY(
 TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
 IF(Kokkos_ENABLE_HIP)
   # FIXME_HIP - remove the HCC path when HIP-Clang is more mature
-  IF("${INTERNAL_HAVE_COMPILER_HCC}" STREQUAL "1")
+  IF(NOT "${INTERNAL_HAVE_COMPILER_HCC}" STREQUAL "1")
     SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--cuda-host-only")
   ELSE()
     # pass dummy workaround for hcc
