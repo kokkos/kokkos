@@ -493,7 +493,7 @@
 
 //----------------------------------------------------------------------------
 // Define final version of functions. This is so that clang tidy can find these
-// maros more easily
+// macros more easily
 #if defined(__clang_analyzer__)
 #define KOKKOS_FUNCTION \
   KOKKOS_IMPL_FUNCTION __attribute__((annotate("KOKKOS_FUNCTION")))
