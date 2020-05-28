@@ -32,7 +32,6 @@ IF(Kokkos_ENABLE_HIP)
     SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--amdgpu-target=gfx906")
   ENDIF()
 ENDIF()
-TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
 
 IF(NOT (Kokkos_ENABLE_CUDA AND WIN32))
 TARGET_COMPILE_FEATURES(kokkosalgorithms_gtest PUBLIC cxx_std_11)
