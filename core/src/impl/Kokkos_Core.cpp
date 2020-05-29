@@ -168,6 +168,8 @@ int get_ctest_gpu(const char* local_rank_str) {
 
 namespace {
 
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
+    defined(KOKKOS_ENABLE_HIP)
 int get_gpu(const InitArguments& args) {
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
@@ -207,6 +209,7 @@ int get_gpu(const InitArguments& args) {
   }
   return use_gpu;
 }
+#endif  // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_ROCM || KOKKOS_ENABLE_HIP
 
 bool is_unsigned_int(const char* str) {
   const size_t len = strlen(str);
