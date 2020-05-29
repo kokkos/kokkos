@@ -129,35 +129,71 @@ void set_callbacks(EventSet new_events);
 }  // namespace Tools
 namespace Profiling {
 
-using Kokkos::Tools::profileLibraryLoaded;
+bool profileLibraryLoaded() { return Kokkos::Tools::profileLibraryLoaded(); }
 
-using Kokkos::Tools::beginParallelFor;
-using Kokkos::Tools::beginParallelReduce;
-using Kokkos::Tools::beginParallelScan;
-using Kokkos::Tools::endParallelFor;
-using Kokkos::Tools::endParallelReduce;
-using Kokkos::Tools::endParallelScan;
+void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
+                      uint64_t* kernelID) {
+  Kokkos::Tools::beginParallelFor(kernelPrefix, devID, kernelID);
+}
+void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
+                         uint64_t* kernelID) {
+  Kokkos::Tools::beginParallelReduce(kernelPrefix, devID, kernelID);
+}
+void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
+                       uint64_t* kernelID) {
+  Kokkos::Tools::beginParallelScan(kernelPrefix, devID, kernelID);
+}
+void endParallelFor(const uint64_t kernelID) {
+  Kokkos::Tools::endParallelFor(kernelID);
+}
+void endParallelReduce(const uint64_t kernelID) {
+  Kokkos::Tools::endParallelReduce(kernelID);
+}
+void endParallelScan(const uint64_t kernelID) {
+  Kokkos::Tools::endParallelScan(kernelID);
+}
 
-using Kokkos::Tools::popRegion;
-using Kokkos::Tools::pushRegion;
+void pushRegion(const std::string& kName) { Kokkos::Tools::pushRegion(kName); }
+void popRegion() { Kokkos::Tools::popRegion(); }
 
-using Kokkos::Tools::createProfileSection;
-using Kokkos::Tools::destroyProfileSection;
-using Kokkos::Tools::startSection;
-using Kokkos::Tools::stopSection;
+void createProfileSection(const std::string& sectionName, uint32_t* secID) {
+  Kokkos::Tools::createProfileSection(sectionName, secID);
+}
+void destroyProfileSection(const uint32_t secID) {
+  Kokkos::Tools::destroyProfileSection(secID);
+}
 
-using Kokkos::Tools::markEvent;
+void startSection(const uint32_t secID) { Kokkos::Tools::startSection(secID); }
 
-using Kokkos::Tools::allocateData;
-using Kokkos::Tools::deallocateData;
+void stopSection(const uint32_t secID) { Kokkos::Tools::stopSection(secID); }
 
-using Kokkos::Tools::beginDeepCopy;
-using Kokkos::Tools::endDeepCopy;
+void markEvent(const std::string& eventName) {
+  Kokkos::Tools::markEvent(eventName);
+}
+void allocateData(const SpaceHandle handle, const std::string name,
+                  const void* data, const uint64_t size) {
+  Kokkos::Tools::allocateData(handle, name, data, size);
+}
+void deallocateData(const SpaceHandle space, const std::string label,
+                    const void* ptr, const uint64_t size) {
+  Kokkos::Tools::deallocateData(space, label, ptr, size);
+}
 
-using Kokkos::Tools::finalize;
-using Kokkos::Tools::initialize;
+void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
+                   const void* dst_ptr, const SpaceHandle src_space,
+                   const std::string src_label, const void* src_ptr,
+                   const uint64_t size) {
+  Kokkos::Tools::beginDeepCopy(dst_space, dst_label, dst_ptr, src_space,
+                               src_label, src_ptr, size);
+}
+void endDeepCopy() { Kokkos::Tools::endDeepCopy(); }
 
-using Kokkos::Tools::make_space_handle;
+void finalize() { Kokkos::Tools::finalize(); }
+void initialize() { Kokkos::Tools::initialize(); }
+
+SpaceHandle make_space_handle(const char* space_name) {
+  return Kokkos::Tools::make_space_handle(space_name);
+}
 namespace Experimental {
 using Kokkos::Tools::Experimental::set_allocate_data_callback;
 using Kokkos::Tools::Experimental::set_begin_deep_copy_callback;
