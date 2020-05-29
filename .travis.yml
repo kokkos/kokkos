@@ -20,7 +20,7 @@ stages:
 jobs:
     include:
         - stage: canary
-          env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP" CXXFLAGS="-Werror"
+          env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
           os: linux
 
 branches:
@@ -63,6 +63,7 @@ before_script:
       export HOMEBREW_NO_AUTO_UPDATE=1;
       brew ls --versions ccache   > /dev/null || brew install ccache;
       export PATH=/usr/local/opt/ccache/libexec:$PATH;
+      export CXXFLAGS="${CXXFLAGS} -Wno-unused-command-line-argument";
       if [[ ${BACKEND} == "OPENMP" ]]; then brew install libomp; fi
     fi
   - ccache -z
@@ -84,6 +85,8 @@ script:
     pushd build &&
     cmake ..
           ${BACKEND:+-DKokkos_ENABLE_${BACKEND}=On}
+          -DCMAKE_CXX_FLAGS="${CXXFLAGS} -Werror"
+          -DKokkos_ENABLE_COMPILER_WARNINGS=ON
           -DKokkos_ENABLE_TESTS=On
           ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}} &&
     make VERBOSE=1 -j2 &&
