@@ -156,19 +156,19 @@ struct HIPParallelLaunch<
       // by value to the device in HIP-Clang / VDI
       // As a workaround, we can malloc the DriverType and explictly copy over.
       // To remove once solved in HIP
-      DriverType *device;
-      HIP_SAFE_CALL(hipMalloc(&device, sizeof(DriverType)));
-      HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType),
+      DriverType *d_driver;
+      HIP_SAFE_CALL(hipMalloc(&d_driver, sizeof(DriverType)));
+      HIP_SAFE_CALL(hipMemcpyAsync(d_driver, &driver, sizeof(DriverType),
                                    hipMemcpyHostToDevice,
                                    hip_instance->m_stream));
       hipLaunchKernelGGL(
           (hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
                                             MinBlocksPerSM>),
-          grid, block, shmem, hip_instance->m_stream, device);
+          grid, block, shmem, hip_instance->m_stream, d_driver);
 
       Kokkos::Experimental::HIP().fence();
       printf("Post Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
-      HIP_SAFE_CALL(hipFree(device));
+      HIP_SAFE_CALL(hipFree(d_driver));
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
       Kokkos::Experimental::HIP().fence();
@@ -203,16 +203,16 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       // Invoke the driver function on the device
 
       // FIXME_HIP -- see note about struct copy by value above
-      DriverType *device;
-      HIP_SAFE_CALL(hipMalloc(&device, sizeof(DriverType)));
-      HIP_SAFE_CALL(hipMemcpyAsync(device, &driver, sizeof(DriverType),
+      DriverType *d_driver;
+      HIP_SAFE_CALL(hipMalloc(&d_driver, sizeof(DriverType)));
+      HIP_SAFE_CALL(hipMemcpyAsync(d_driver, &driver, sizeof(DriverType),
                                    hipMemcpyHostToDevice,
                                    hip_instance->m_stream));
       hipLaunchKernelGGL(hip_parallel_launch_local_memory<DriverType>, grid,
-                         block, shmem, hip_instance->m_stream, device);
+                         block, shmem, hip_instance->m_stream, d_driver);
 
       Kokkos::Experimental::HIP().fence();
-      HIP_SAFE_CALL(hipFree(device));
+      HIP_SAFE_CALL(hipFree(d_driver));
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
       Kokkos::Experimental::HIP().fence();
