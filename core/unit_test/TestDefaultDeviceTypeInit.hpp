@@ -273,7 +273,7 @@ void check_correct_initialization(const Kokkos::InitArguments& argstruct) {
 
     int expected_device = argstruct.device_id;
     if (argstruct.device_id < 0) {
-      expected_device = 0;
+      expected_device = Kokkos::Cuda().cuda_device();
     }
 
     ASSERT_EQ(expected_device, device);

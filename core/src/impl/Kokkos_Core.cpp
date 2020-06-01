@@ -168,42 +168,11 @@ int get_ctest_gpu(const char* local_rank_str) {
 
 namespace {
 
-bool is_unsigned_int(const char* str) {
-  const size_t len = strlen(str);
-  for (size_t i = 0; i < len; ++i) {
-    if (!isdigit(str[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
-void initialize_backends(const InitArguments& args) {
-// This is an experimental setting
-// For KNL in Flat mode this variable should be set, so that
-// memkind allocates high bandwidth memory correctly.
-#ifdef KOKKOS_ENABLE_HBWSPACE
-  setenv("MEMKIND_HBW_NODES", "1", 0);
-#endif
-
-  // Protect declarations, to prevent "unused variable" warnings.
-#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
-    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HPX)
-  const int num_threads = args.num_threads;
-#endif
-#if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
-  const int use_numa = args.num_numa;
-#endif
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  int use_gpu        = args.device_id;
-  const int ndevices = args.ndevices > 0 ? args.ndevices :
-#if defined(KOKKOS_ENABLE_CUDA)
-                                         Cuda::detect_device_count();
-#elif defined(KOKKOS_ENABLE_HIP)
-                                         Experimental::HIP::
-                                             detect_device_count();
-#endif
-
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
+    defined(KOKKOS_ENABLE_HIP)
+int get_gpu(const InitArguments& args) {
+  int use_gpu           = args.device_id;
+  const int ndevices    = args.ndevices;
   const int skip_device = args.skip_device;
 
   // if the exact device is not set, but ndevices was given, assign round-robin
@@ -238,6 +207,39 @@ void initialize_backends(const InitArguments& args) {
     // shift assignments over by one so no one is assigned to "skip_device"
     if (use_gpu >= skip_device) ++use_gpu;
   }
+  return use_gpu;
+}
+#endif  // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_ROCM || KOKKOS_ENABLE_HIP
+
+bool is_unsigned_int(const char* str) {
+  const size_t len = strlen(str);
+  for (size_t i = 0; i < len; ++i) {
+    if (!isdigit(str[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void initialize_backends(const InitArguments& args) {
+// This is an experimental setting
+// For KNL in Flat mode this variable should be set, so that
+// memkind allocates high bandwidth memory correctly.
+#ifdef KOKKOS_ENABLE_HBWSPACE
+  setenv("MEMKIND_HBW_NODES", "1", 0);
+#endif
+
+  // Protect declarations, to prevent "unused variable" warnings.
+#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
+    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HPX)
+  const int num_threads = args.num_threads;
+#endif
+#if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+  const int use_numa = args.num_numa;
+#endif
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
+    defined(KOKKOS_ENABLE_HIP)
+  int use_gpu = get_gpu(args);
 #endif  // defined( KOKKOS_ENABLE_CUDA )
 
 #if defined(KOKKOS_ENABLE_OPENMP)

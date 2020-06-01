@@ -15,9 +15,14 @@ KOKKOS_ADD_TEST_LIBRARY(
 
 # avoid deprecation warnings from MSVC
 TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_PTHREAD=0)
-# Workaround for HIP
 IF(Kokkos_ENABLE_HIP)
-  SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--amdgpu-target=gfx906")
+  # FIXME_HIP - remove the HCC path when HIP-Clang is more mature
+  IF(NOT "${INTERNAL_HAVE_COMPILER_HCC}" STREQUAL "1")
+    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--cuda-host-only")
+  ELSE()
+    # pass dummy workaround for hcc
+    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--amdgpu-target=gfx906")
+  ENDIF()
 ENDIF()
 
 TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
@@ -299,6 +304,7 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_TeamTeamSize.cpp
     hip/TestHIP_TeamVectorRange.cpp
     hip/TestHIP_WorkGraph.cpp
+    hip/TestHIP_LocalDeepCopy.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
