@@ -178,9 +178,9 @@ struct Kokkos_Tools_VariableValue {
 };
 
 typedef void (*Kokkos_Tools_outputTypeDeclarationFunction)(
-    const char*, Kokkos_Tools_VariableInfo& info);
+    const char*, const size_t, Kokkos_Tools_VariableInfo& info);
 typedef void (*Kokkos_Tools_inputTypeDeclarationFunction)(
-    const char*, Kokkos_Tools_VariableInfo& info);
+    const char*, const size_t, Kokkos_Tools_VariableInfo& info);
 
 typedef void (*Kokkos_Tools_requestValueFunction)(
     const size_t, const size_t, const Kokkos_Tools_VariableValue*,

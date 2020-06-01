@@ -86,14 +86,16 @@ int main() {
             candidate_value_vector.size(), candidate_value_vector.data());
     // test that ID's are transmitted to the tool
     Kokkos::Tools::Experimental::set_declare_output_type_callback(
-        [](const char* name, Kokkos::Tools::Experimental::VariableInfo& info) {
+        [](const char* name, const size_t id,
+           Kokkos::Tools::Experimental::VariableInfo& info) {
           if (info.type !=
               Kokkos::Tools::Experimental::ValueType::kokkos_value_integer) {
             throw(std::runtime_error("Tuning Variable has wrong type"));
           }
         });
     Kokkos::Tools::Experimental::set_declare_input_type_callback(
-        [](const char* name, Kokkos::Tools::Experimental::VariableInfo& info) {
+        [](const char* name, const size_t id,
+           Kokkos::Tools::Experimental::VariableInfo& info) {
           if (info.type !=
               Kokkos::Tools::Experimental::ValueType::kokkos_value_integer) {
             throw(std::runtime_error("Context Variable has wrong type"));
