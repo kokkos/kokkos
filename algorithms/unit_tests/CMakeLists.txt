@@ -21,7 +21,8 @@ KOKKOS_ADD_TEST_LIBRARY(
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
 
-TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
+# avoid deprecation warnings from MSVC
+TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_PTHREAD=0)
 # WORKAROUND FOR HIPCC
 IF(Kokkos_ENABLE_HIP)
   # FIXME_HIP - remove the HCC path when HIP-Clang is more mature
