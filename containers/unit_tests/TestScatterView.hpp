@@ -385,6 +385,24 @@ struct test_scatter_view_config {
       NumberType>::orig_view_type orig_view_def;
 
   void run_test(int n) {
+    // test allocation
+    {
+      orig_view_def ov1("ov1", n);
+      scatter_view_def sv1;
+
+      ASSERT_FALSE(sv1.is_allocated());
+
+      sv1 = Kokkos::Experimental::create_scatter_view<op, duplication,
+                                                      contribution>(ov1);
+
+      scatter_view_def sv2(sv1);
+      scatter_view_def sv3("sv3", n);
+
+      ASSERT_TRUE(sv1.is_allocated());
+      ASSERT_TRUE(sv2.is_allocated());
+      ASSERT_TRUE(sv3.is_allocated());
+    }
+
     // Test creation via create_scatter_view
     {
       orig_view_def original_view("original_view", n);

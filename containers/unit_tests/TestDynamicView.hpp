@@ -71,6 +71,27 @@ struct TestDynamicView {
     // values and repeat
     //   Case 1: min_chunk_size is a power of 2
     {
+      {
+        view_type d1;
+        ASSERT_FALSE(d1.is_allocated());
+
+        d1 = view_type("d1", 1024, arg_total_size);
+        view_type d2(d1);
+        view_type d3("d3", 1024, arg_total_size);
+
+        ASSERT_FALSE(d1.is_allocated());
+        ASSERT_FALSE(d2.is_allocated());
+        ASSERT_FALSE(d3.is_allocated());
+
+        unsigned d_size = arg_total_size / 8;
+        d1.resize_serial(d_size);
+        d2.resize_serial(d_size);
+        d3.resize_serial(d_size);
+
+        ASSERT_TRUE(d1.is_allocated());
+        ASSERT_TRUE(d2.is_allocated());
+        ASSERT_TRUE(d3.is_allocated());
+      }
       view_type da("da", 1024, arg_total_size);
       ASSERT_EQ(da.size(), 0);
       // Init

@@ -370,6 +370,10 @@ class StaticCrsGraph {
                : static_cast<size_type>(0);
   }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return (row_map.is_allocated() && entries.is_allocated());
+  }
+
   /// \brief Return a const view of row i of the graph.
   ///
   /// If row i does not belong to the graph, return an empty view.

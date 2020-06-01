@@ -118,8 +118,8 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
  private:
   track_type m_track;
-  typename traits::value_type**
-      m_chunks;            // array of pointers to 'chunks' of memory
+  typename traits::value_type** m_chunks =
+      nullptr;             // array of pointers to 'chunks' of memory
   unsigned m_chunk_shift;  // ceil(log2(m_chunk_size))
   unsigned m_chunk_mask;   // m_chunk_size - 1
   unsigned m_chunk_max;  // number of entries in the chunk array - each pointing
@@ -330,6 +330,17 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
     }
     // *m_chunks[m_chunk_max+1] stores the 'extent' requested by resize
     *(pc + 1) = n;
+  }
+
+  KOKKOS_INLINE_FUNCTION bool is_allocated() const {
+    if (m_chunks == nullptr) {
+      return false;
+    } else {
+      // *m_chunks[m_chunk_max] stores the current number of chunks being used
+      uintptr_t* const pc =
+          reinterpret_cast<uintptr_t*>(m_chunks + m_chunk_max);
+      return (*(pc + 1) > 0);
+    }
   }
 
   //----------------------------------------------------------------------
