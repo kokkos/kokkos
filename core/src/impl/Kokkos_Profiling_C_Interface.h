@@ -185,7 +185,8 @@ typedef void (*Kokkos_Tools_inputTypeDeclarationFunction)(
 typedef void (*Kokkos_Tools_requestValueFunction)(
     const size_t, const size_t, const Kokkos_Tools_VariableValue*,
     const size_t count, Kokkos_Tools_VariableValue*);
-typedef void (*Kokkos_Tools_contextEndFunction)(const size_t);
+typedef void (*Kokkos_Tools_contextEndFunction)(const size_t,
+                                                Kokkos_Tools_VariableValue);
 typedef void (*Kokkos_Tools_optimizationGoalDeclarationFunction)(
     const size_t, const Kokkos_Tools_OptimzationGoal& goal);
 
