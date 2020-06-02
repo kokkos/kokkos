@@ -151,7 +151,7 @@ namespace Experimental {
 class SYCLHostUSMSpace
 {
 public:
-    typedef HostSpace::execution_space execution_space;
+    typedef SYCL execution_space;
     typedef SYCLHostUSMSpace memory_space;
     typedef Kokkos::Device<execution_space, memory_space> device_type;
     typedef unsigned int size_type;
@@ -171,7 +171,7 @@ private:
 class SYCLDeviceUSMSpace
 {
 public:
-    typedef HostSpace::execution_space execution_space;
+    typedef SYCL execution_space;
     typedef SYCLDeviceUSMSpace memory_space;
     typedef Kokkos::Device<execution_space, memory_space> device_type;
     typedef unsigned int size_type;
@@ -191,7 +191,7 @@ private:
 class SYCLSharedUSMSpace
 {
 public:
-    typedef HostSpace::execution_space execution_space;
+    typedef SYCL execution_space;
     typedef SYCLSharedUSMSpace memory_space;
     typedef Kokkos::Device<execution_space, memory_space> device_type;
     typedef unsigned int size_type;

@@ -55,17 +55,15 @@
 #include <HIP/Kokkos_HIP_Abort.hpp>
 #endif
 
-
-#ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
-#define KOKKOS_ABORT_MESSAGE_BUFFER_SIZE 2048
-#endif  // ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
-
 // SYCL defines a macro abort() when using nvcc, thus we get a collision with the abort function
 // defined here
 #ifdef KOKKOS_ENABLE_SYCL
   #undef abort
 #endif
 
+#ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
+#define KOKKOS_ABORT_MESSAGE_BUFFER_SIZE 2048
+#endif  // ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE
 
 namespace Kokkos {
 namespace Impl {
@@ -200,6 +198,10 @@ KOKKOS_IMPL_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
   Kokkos::Impl::cuda_abort(message);
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
   Kokkos::Impl::hip_abort(message);
+#elif defined(KOKKOS_ENABLE_SYCL)
+#ifndef __SYCL_DEVICE_ONLY__
+  Kokkos::Impl::host_abort(message);
+#endif
 #elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__)
   Kokkos::Impl::host_abort(message);
 #endif

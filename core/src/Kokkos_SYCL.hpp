@@ -135,15 +135,15 @@ class SYCL {
   struct SelectDevice {
     int sycl_device_id;
 
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU)
     SelectDevice() : sycl_device_id(firstCPUDevice()) {}
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU)
     SelectDevice() : sycl_device_id(firstGPUDevice()) {}
 #else
-    SelectDevice() : syl_device_id(-1) {
+    SelectDevice() : sycl_device_id(-1) {
       static_assert(
           false,
-          "Neither KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_HOST or "
+          "Neither KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU or "
           "KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU is defined.");
     }
 #endif
