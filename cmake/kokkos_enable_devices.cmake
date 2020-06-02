@@ -76,6 +76,9 @@ KOKKOS_DEVICE_OPTION(CUDA ${CUDA_DEFAULT} DEVICE "Whether to build CUDA backend"
 
 IF (KOKKOS_ENABLE_CUDA)
   GLOBAL_SET(KOKKOS_DONT_ALLOW_EXTENSIONS "CUDA enabled")
+  IF(WIN32)
+    GLOBAL_APPEND(KOKKOS_COMPILE_OPTIONS -x cu)
+  ENDIF()
 ENDIF()
 
 # We want this to default to OFF for cache reasons, but if no

@@ -45,6 +45,8 @@
 #ifndef KOKKOS_THREADS_VIEWETIDECL_HPP
 #define KOKKOS_THREADS_VIEWETIDECL_HPP
 
+#include <Kokkos_Macros.hpp>
+
 namespace Kokkos {
 namespace Impl {
 #define KOKKOS_IMPL_VIEWCOPY_ETI_AVAIL_EXECSPACE Kokkos::Threads

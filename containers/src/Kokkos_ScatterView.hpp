@@ -209,8 +209,20 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
   KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++() {
+    this->join(this->reference(), 1);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++(int) {
+    this->join(this->reference(), 1);
+  }
   KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
-    this->join(this->reference(), -rhs);
+    this->join(this->reference(), ValueType(-rhs));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--() {
+    this->join(this->reference(), ValueType(-1));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--(int) {
+    this->join(this->reference(), ValueType(-1));
   }
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     this->join(this->reference(), rhs);
@@ -234,8 +246,20 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
   KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
     this->join(this->reference(), rhs);
   }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++() {
+    this->join(this->reference(), 1);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator++(int) {
+    this->join(this->reference(), 1);
+  }
   KOKKOS_FORCEINLINE_FUNCTION void operator-=(ValueType const& rhs) {
-    this->join(this->reference(), -rhs);
+    this->join(this->reference(), ValueType(-rhs));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--() {
+    this->join(this->reference(), ValueType(-1));
+  }
+  KOKKOS_FORCEINLINE_FUNCTION void operator--(int) {
+    this->join(this->reference(), ValueType(-1));
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -734,6 +758,10 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
 
   original_view_type subview() const { return internal_view; }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return internal_view.is_allocated();
+  }
+
   template <typename DT, typename... RP>
   void contribute_into(View<DT, RP...> const& dest) const {
     typedef View<DT, RP...> dest_type;
@@ -932,6 +960,10 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
         internal_view_type>::get(internal_view, 0);
   }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return internal_view.is_allocated();
+  }
+
   template <typename DT, typename... RP>
   void contribute_into(View<DT, RP...> const& dest) const {
     typedef View<DT, RP...> dest_type;
@@ -1108,6 +1140,10 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
     return Kokkos::Impl::Experimental::Slice<
         Kokkos::LayoutLeft, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return internal_view.is_allocated();
   }
 
   template <typename... RP>

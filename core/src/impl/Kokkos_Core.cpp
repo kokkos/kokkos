@@ -168,37 +168,13 @@ int get_ctest_gpu(const char* local_rank_str) {
 
 namespace {
 
-bool is_unsigned_int(const char* str) {
-  const size_t len = strlen(str);
-  for (size_t i = 0; i < len; ++i) {
-    if (!isdigit(str[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
-void initialize_backends(const InitArguments& args) {
-// This is an experimental setting
-// For KNL in Flat mode this variable should be set, so that
-// memkind allocates high bandwidth memory correctly.
-#ifdef KOKKOS_ENABLE_HBWSPACE
-  setenv("MEMKIND_HBW_NODES", "1", 0);
-#endif
-
-  // Protect declarations, to prevent "unused variable" warnings.
-#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
-    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HPX)
-  const int num_threads = args.num_threads;
-#endif
-#if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
-  const int use_numa = args.num_numa;
-#endif
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
     defined(KOKKOS_ENABLE_HIP)
+int get_gpu(const InitArguments& args) {
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
   const int skip_device = args.skip_device;
+
   // if the exact device is not set, but ndevices was given, assign round-robin
   // using on-node MPI rank
   if (use_gpu < 0) {
@@ -231,6 +207,39 @@ void initialize_backends(const InitArguments& args) {
     // shift assignments over by one so no one is assigned to "skip_device"
     if (use_gpu >= skip_device) ++use_gpu;
   }
+  return use_gpu;
+}
+#endif  // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_ROCM || KOKKOS_ENABLE_HIP
+
+bool is_unsigned_int(const char* str) {
+  const size_t len = strlen(str);
+  for (size_t i = 0; i < len; ++i) {
+    if (!isdigit(str[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void initialize_backends(const InitArguments& args) {
+// This is an experimental setting
+// For KNL in Flat mode this variable should be set, so that
+// memkind allocates high bandwidth memory correctly.
+#ifdef KOKKOS_ENABLE_HBWSPACE
+  setenv("MEMKIND_HBW_NODES", "1", 0);
+#endif
+
+  // Protect declarations, to prevent "unused variable" warnings.
+#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
+    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HPX)
+  const int num_threads = args.num_threads;
+#endif
+#if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+  const int use_numa = args.num_numa;
+#endif
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
+    defined(KOKKOS_ENABLE_HIP)
+  int use_gpu = get_gpu(args);
 #endif  // defined( KOKKOS_ENABLE_CUDA )
 
 #if defined(KOKKOS_ENABLE_OPENMP)
@@ -614,10 +623,10 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& skip_device      = arguments.skip_device;
   auto& disable_warnings = arguments.disable_warnings;
 
-  int kokkos_threads_found  = 0;
-  int kokkos_numa_found     = 0;
-  int kokkos_device_found   = 0;
-  int kokkos_ndevices_found = 0;
+  bool kokkos_threads_found  = false;
+  bool kokkos_numa_found     = false;
+  bool kokkos_device_found   = false;
+  bool kokkos_ndevices_found = false;
 
   int iarg = 0;
 
@@ -626,7 +635,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
-      kokkos_threads_found = 1;
+      kokkos_threads_found = true;
       narg--;
     } else if (!kokkos_threads_found &&
                check_int_arg(arg[iarg], "--threads", &num_threads)) {
@@ -635,7 +644,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
-      kokkos_numa_found = 1;
+      kokkos_numa_found = true;
       narg--;
     } else if (!kokkos_numa_found &&
                check_int_arg(arg[iarg], "--numa", &numa)) {
@@ -649,7 +658,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
-      kokkos_device_found = 1;
+      kokkos_device_found = true;
       narg--;
     } else if (!kokkos_device_found &&
                (check_int_arg(arg[iarg], "--device-id", &device) ||
@@ -716,7 +725,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
         for (int k = iarg; k < narg - 1; k++) {
           arg[k] = arg[k + 1];
         }
-        kokkos_ndevices_found = 1;
+        kokkos_ndevices_found = true;
         narg--;
       } else {
         iarg++;

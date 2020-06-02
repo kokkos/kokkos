@@ -45,6 +45,8 @@
 #ifndef KOKKOS_COPYVIEWS_HPP_
 #define KOKKOS_COPYVIEWS_HPP_
 #include <string>
+#include <Kokkos_Parallel.hpp>
+#include <KokkosExp_MDRangePolicy.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

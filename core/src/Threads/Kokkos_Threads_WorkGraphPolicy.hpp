@@ -45,6 +45,9 @@
 #ifndef KOKKOS_THREADS_WORKGRAPHPOLICY_HPP
 #define KOKKOS_THREADS_WORKGRAPHPOLICY_HPP
 
+#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Threads.hpp>
+
 namespace Kokkos {
 namespace Impl {
 

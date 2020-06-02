@@ -127,6 +127,10 @@
 #include <cuda_runtime.h>
 #include <cuda.h>
 
+#if defined(_WIN32)
+#define KOKKOS_IMPL_WINDOWS_CUDA
+#endif
+
 #if !defined(CUDA_VERSION)
 #error "#include <cuda.h> did not define CUDA_VERSION."
 #endif
@@ -154,7 +158,8 @@
 #define KOKKOS_ENABLE_PRE_CUDA_10_DEPRECATION_API
 #endif
 
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700)
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700) && \
+    !defined(KOKKOS_IMPL_WINDOWS_CUDA)
 // PTX atomics with memory order semantics are only available on volta and later
 #if !defined(KOKKOS_DISABLE_CUDA_ASM)
 #if !defined(KOKKOS_ENABLE_CUDA_ASM)
@@ -267,6 +272,8 @@
 #define KOKKOS_IMPL_FORCEINLINE __forceinline__
 #define KOKKOS_INLINE_FUNCTION __device__ __host__ inline
 #define KOKKOS_FUNCTION __device__ __host__
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #if defined(KOKKOS_COMPILER_NVCC)
 #define KOKKOS_INLINE_FUNCTION_DELETED inline
 #else
@@ -277,6 +284,8 @@
 #else
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
@@ -286,6 +295,8 @@
 #define KOKKOS_DEFAULTED_FUNCTION __device__ __host__ inline
 #define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
 #define KOKKOS_FUNCTION __device__ __host__
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
 #endif
@@ -485,6 +496,15 @@
 #if !defined(KOKKOS_DEFAULTED_FUNCTION)
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
+
+#if !defined(KOKKOS_IMPL_HOST_FUNCTION)
+#define KOKKOS_IMPL_HOST_FUNCTION
+#endif
+
+#if !defined(KOKKOS_IMPL_DEVICE_FUNCTION)
+#define KOKKOS_IMPL_DEVICE_FUNCTION
+#endif
+
 //----------------------------------------------------------------------------
 // Define empty macro for restrict if necessary:
 
@@ -536,6 +556,11 @@
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
 #elif defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
+#if defined(__HIP__)
+// mark that HIP-clang can use __host__ and __device__
+// as valid overload criteria
+#define KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE
+#endif
 #elif defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -558,8 +583,7 @@
 #elif defined(__HCC__) && defined(__HCC_ACCELERATOR__) && \
     defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU
-#elif defined(__HIPCC__) &&                                     \
-    (defined(__HCC_ACCELERATOR__) || defined(__CUDA_ARCH__)) && \
+#elif defined(__HIPCC__) && defined(__HIP_DEVICE_COMPILE__) && \
     defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
 #else
@@ -650,6 +674,15 @@
 #define KOKKOS_THREAD_LOCAL __declspec(thread)
 #else
 #define KOKKOS_THREAD_LOCAL __thread
+#endif
+
+#if defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)
+// MSVC (as of 16.5.5 at least) does not do empty base class optimization by
+// default when there are multiple bases, even though the standard requires it
+// for standard layout types.
+#define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION __declspec(empty_bases)
+#else
+#define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
 #endif
 
 #endif  // #ifndef KOKKOS_MACROS_HPP

@@ -45,7 +45,10 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#elif !defined(__APPLE__)
+#elif defined(__APPLE__)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#else
 #include <unistd.h>
 #endif
 #include <cstdio>
@@ -65,6 +68,16 @@ int processors_per_node() {
     return -1;
   }
   return num_procs;
+#elif defined(__APPLE__)
+  int ncpu;
+  int activecpu;
+  size_t size = sizeof(int);
+  sysctlbyname("hw.ncpu", &ncpu, &size, nullptr, 0);
+  sysctlbyname("hw.activecpu", &activecpu, &size, nullptr, 0);
+  if (ncpu < 1 || activecpu < 1)
+    return -1;
+  else
+    return activecpu;
 #else
   return -1;
 #endif

@@ -20,14 +20,23 @@ KOKKOS_ADD_TEST_LIBRARY(
   HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
+
+# avoid deprecation warnings from MSVC
+TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_PTHREAD=0)
 # WORKAROUND FOR HIPCC
 IF(Kokkos_ENABLE_HIP)
-  TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0 --amdgpu-target=gfx906")
-ELSE()
-  TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
+  # FIXME_HIP - remove the HCC path when HIP-Clang is more mature
+  IF(NOT "${INTERNAL_HAVE_COMPILER_HCC}" STREQUAL "1")
+    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--cuda-host-only")
+  ELSE()
+    # pass dummy workaround for hcc
+    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--amdgpu-target=gfx906")
+  ENDIF()
 ENDIF()
 
+IF(NOT (Kokkos_ENABLE_CUDA AND WIN32))
 TARGET_COMPILE_FEATURES(kokkosalgorithms_gtest PUBLIC cxx_std_11)
+ENDIF()
 
 SET(SOURCES
   UnitTestMain.cpp

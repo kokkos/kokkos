@@ -368,7 +368,7 @@ elif [ "$MACHINE" = "white" ]; then
   fi
 
   if [ -z "$ARCH_FLAG" ]; then
-    ARCH_FLAG="--arch=Power8,Kepler37"
+    ARCH_FLAG="--arch=Power8,Pascal60"
   fi
 
 elif [ "$MACHINE" = "waterman" ]; then
@@ -439,7 +439,7 @@ elif [ "$MACHINE" = "mayer" ]; then
              "arm/20.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
 
   if [ -z "$ARCH_FLAG" ]; then
-    ARCH_FLAG="--arch=ARMv8-TX2"
+    ARCH_FLAG="--arch=ARMV8_THUNDERX2"
   fi
 
 elif [ "$MACHINE" = "blake" ]; then
@@ -554,6 +554,7 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
   BASE_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,kokkos-hwloc/1.10.1/base,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
   GCC91_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>"
   NVCC_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
+  NVCC9_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,kokkos-hwloc/1.10.1/base,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
 
   CLANG_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0"
   CLANG8_MODULE_LIST="sems-env,kokkos-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
@@ -576,6 +577,7 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
     # Format: (compiler module-list build-list exe-name warning-flag)
     COMPILERS=("cuda/10.0 $NVCC_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "cuda/10.1 $NVCC_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/9.2 $NVCC9_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
                "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
                "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -845,8 +847,12 @@ single_build_and_test() {
     echo "kokkos devices: ${LOCAL_KOKKOS_DEVICES}"
     echo "kokkos cxx: ${cxxflags}"
 
+    # KOKKOS_OPTIONS and KOKKOS_CUDA_OPTIONS are exported and detected by kokkos' generate_makefile.sh during install of kokkos; we pass them to the reproducer script instructions
     echo "  #   Use generate_makefile line below to call cmake which generates makefile for this build:" &> call_generate_makefile.sh
-    echo "        ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --no-examples $extra_args" &>> call_generate_makefile.sh
+    echo "        ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} --no-examples $extra_args" &>> call_generate_makefile.sh
+
+    # store script command with generic path for faster copy/paste of reproducer into issues
+    echo "        \$KOKKOS_PATH/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=\$KOKKOS_PATH --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} --no-examples $extra_args" &> call_generate_makefile_genericpath.sh
 
     run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --no-examples $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local -i build_start_time=$(date +%s)
@@ -855,7 +861,7 @@ single_build_and_test() {
     comment="build_time=$(($build_end_time-$build_start_time))"
 
     if [[ "$BUILD_ONLY" == False ]]; then
-      run_cmd ctest -V  --output-on-failure >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
+      run_cmd ctest --timeout 2000 -V  --output-on-failure >& ${desc}.test.log || { report_and_log_test_result 1 ${desc} test && return 0; }
       local -i run_end_time=$(date +%s)
       comment="$comment run_time=$(($run_end_time-$build_end_time))"
     fi
@@ -972,7 +978,7 @@ wait_summarize_and_exit() {
       echo "#######################################################"
       echo "  # Reproducer instructions:"
       cat $faildir/reload_modules.sh
-      cat $faildir/call_generate_makefile.sh
+      cat $faildir/call_generate_makefile_genericpath.sh
       echo ""
       echo "  #  To reload modules, reconfigure, rebuild, and retest directly from this failing build do the following:"
       echo "      # Move to the build directory"

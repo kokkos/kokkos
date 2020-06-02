@@ -80,7 +80,11 @@ IF(NOT KOKKOS_HAS_TRILINOS)
     # WORKAROUND FOR HIPCC
     IF(Kokkos_ENABLE_HIP)
       SET(KOKKOS_INTERNAL_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --amdgpu-target=gfx906")
+      IF(NOT "${INTERNAL_HAVE_COMPILER_HCC}" STREQUAL "1")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --cuda-host-only")
+      ELSE()
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --amdgpu-target=gfx906")
+      ENDIF()
     ENDIF()
     PROJECT(Kokkos CXX)
     IF(Kokkos_ENABLE_HIP)
@@ -147,6 +151,7 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
 # Check the environment and set certain variables
 # to allow platform-specific checks
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_check_env.cmake)
+
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES
 # 2) Check the compiler ID (type and version)
@@ -203,7 +208,7 @@ IF (KOKKOS_HAS_TRILINOS)
     SET(KOKKOSCORE_XCOMPILER_OPTIONS "${KOKKOSCORE_XCOMPILER_OPTIONS} -Xcompiler ${XCOMP_FLAG}")
     LIST(APPEND KOKKOS_ALL_COMPILE_OPTIONS -Xcompiler ${XCOMP_FLAG})
   ENDFOREACH()
-  SET(KOKKOSCORE_CXX_FLAGS "${KOKKOSCORE_COMPILE_OPTIONS} ${CMAKE_CXX${KOKKOS_CXX_STANDARD}_STANDARD_COMPILE_OPTION} ${KOKKOSCORE_XCOMPILER_OPTIONS}")
+  SET(KOKKOSCORE_CXX_FLAGS "${KOKKOSCORE_COMPILE_OPTIONS} ${KOKKOSCORE_XCOMPILER_OPTIONS}")
   IF (KOKKOS_ENABLE_CUDA)
     STRING(REPLACE ";" " " KOKKOSCORE_CUDA_OPTIONS    "${KOKKOS_CUDA_OPTIONS}")
     FOREACH(CUDAFE_FLAG ${KOKKOS_CUDAFE_OPTIONS})
