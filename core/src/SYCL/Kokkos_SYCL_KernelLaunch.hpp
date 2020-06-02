@@ -31,6 +31,7 @@ void sycl_launch(const Driver driver) {
                 driver.m_functor(id);        
          });
       });
+      driver.m_policy.space().impl_internal_space_instance()->m_queue->wait();
       #else
       driver.m_policy.space().impl_internal_space_instance()->m_queue->submit(
         std::bind(Kokkos::Experimental::Impl::sycl_launch_bind<Driver>,driver,std::placeholders::_1));
