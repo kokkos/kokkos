@@ -514,6 +514,49 @@ void* SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
   return r_new->data();
 }
 
+void *SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
+    allocate_tracked(const Kokkos::Experimental::HIPHostPinnedSpace &arg_space,
+                     const std::string &arg_alloc_label,
+                     const size_t arg_alloc_size) {
+  if (!arg_alloc_size)
+    return (void *)0;
+
+  SharedAllocationRecord *const r =
+      allocate(arg_space, arg_alloc_label, arg_alloc_size);
+
+  RecordBase::increment(r);
+
+  return r->data();
+}
+
+void SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
+                            void>::deallocate_tracked(void *const
+                                                          arg_alloc_ptr) {
+  if (arg_alloc_ptr != 0) {
+    SharedAllocationRecord *const r = get_record(arg_alloc_ptr);
+
+    RecordBase::decrement(r);
+  }
+}
+
+void *
+SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
+                       void>::reallocate_tracked(void *const arg_alloc_ptr,
+                                                 const size_t arg_alloc_size) {
+  SharedAllocationRecord *const r_old = get_record(arg_alloc_ptr);
+  SharedAllocationRecord *const r_new =
+      allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
+
+  using HIPHostPinnedSpace = Kokkos::Experimental::HIPHostPinnedSpace;
+  Kokkos::Impl::DeepCopy<HIPHostPinnedSpace, HIPHostPinnedSpace>(
+      r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
+
+  RecordBase::increment(r_new);
+  RecordBase::decrement(r_old);
+
+  return r_new->data();
+}
+
 //----------------------------------------------------------------------------
 
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>*
@@ -544,6 +587,25 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::get_record(
   }
 
   return record;
+}
+
+SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void> *
+SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
+                       void>::get_record(void *alloc_ptr) {
+  using Header = SharedAllocationHeader;
+  using RecordHIP =
+      SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>;
+
+  Header *const h =
+      alloc_ptr ? reinterpret_cast<Header *>(alloc_ptr) - 1 : (Header *)0;
+
+  if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
+    Kokkos::Impl::throw_runtime_exception(std::string(
+        "Kokkos::Impl::SharedAllocationRecord< "
+        "Kokkos::Experimental::HIPHostPinnedSpace , void >::get_record ERROR"));
+  }
+
+  return static_cast<RecordHIP *>(h->m_record);
 }
 
 // Iterate records to print orphaned memory ...
