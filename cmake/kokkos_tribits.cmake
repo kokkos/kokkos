@@ -340,6 +340,9 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     SET(LINK_TYPE SHARED)
   ENDIF()
 
+  # MSVC and other platforms want to have
+  # the headers included as source files
+  # for better dependency detection
   ADD_LIBRARY(
     ${LIBRARY_NAME}
     ${LINK_TYPE}
@@ -348,12 +351,6 @@ FUNCTION(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
   )
 
   KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(${LIBRARY_NAME})
-
-  INSTALL(
-    FILES  ${PARSE_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    COMPONENT ${PACKAGE_NAME}
-  )
 
   #In case we are building in-tree, add an alias name
   #that matches the install Kokkos:: name
@@ -395,17 +392,6 @@ ELSE()
 
   ADD_LIBRARY(${NAME} INTERFACE)
   KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL(${NAME})
-
-  INSTALL(
-    FILES  ${PARSE_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  )
-
-  INSTALL(
-    FILES  ${PARSE_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    COMPONENT ${PACKAGE_NAME}
-  )
 ENDIF()
 ENDFUNCTION()
 
