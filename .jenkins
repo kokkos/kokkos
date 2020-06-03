@@ -55,7 +55,7 @@ pipeline {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
-                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS="--gcc-toolchain=$GCC_DIR" \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
