@@ -1,0 +1,90 @@
+ARG BASE=nvidia/cuda:10.1-devel
+FROM $BASE
+
+RUN apt-get update && apt-get install -y \
+        bc \
+        git \
+        wget \
+        ccache \
+        python3 \
+        libelf-dev \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ARG NPROC=8
+
+ARG CMAKE_VERSION=3.10.3
+ENV CMAKE_DIR=/opt/cmake
+RUN CMAKE_KEY=2D2CEF1034921684 && \
+    CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
+    CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh && \
+    CMAKE_SHA256=cmake-${CMAKE_VERSION}-SHA-256.txt && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
+    gpg --keyserver hkps.pool.sks-keyservers.net --recv-keys ${CMAKE_KEY} && \
+    gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
+    grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
+    mkdir -p ${CMAKE_DIR} && \
+    sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
+    rm ${CMAKE_SCRIPT}
+ENV PATH=${CMAKE_DIR}/bin:$PATH
+
+ENV GCC_DIR=/opt/gcc
+RUN GCC_VERSION=6.5.0 && \
+    GNU_MIRROR=https://gnu.freemirror.org/gnu && \
+    wget --quiet ${GNU_MIRROR}/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz && \
+    wget --quiet ${GNU_MIRROR}/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz.sig && \
+    wget --quiet ${GNU_MIRROR}/gnu-keyring.gpg && \
+    gpg --verify --no-default-keyring --keyring ./gnu-keyring.gpg gcc-${GCC_VERSION}.tar.xz.sig && \
+    tar -xf gcc-${GCC_VERSION}.tar.xz && \
+    cd gcc-${GCC_VERSION} && \
+    ./contrib/download_prerequisites && \
+    cd .. && \
+    mkdir gcc-${GCC_VERSION}-build && \
+    cd gcc-${GCC_VERSION}-build && \
+    $PWD/../gcc-${GCC_VERSION}/configure --prefix=${GCC_DIR} --enable-languages=c,c++ --disable-multilib && \
+    make -j${NPROC} && \
+    make install && \
+    cd .. && rm -rf gcc-*
+ENV PATH=${GCC_DIR}/bin:$PATH
+
+ENV LLVM_DIR=/opt/llvm
+RUN LLVM_VERSION=10.0.0 && \
+    LLVM_KEY="345AD05D 86419D8A" && \
+    LLVM_URL=https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION} &&\
+    LLVM_ARCHIVE=llvm-project-${LLVM_VERSION}.tar.xz &&\
+    SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
+    wget --quiet ${LLVM_URL}/${LLVM_ARCHIVE} && \
+    wget --quiet ${LLVM_URL}/${LLVM_ARCHIVE}.sig && \
+    gpg --keyserver hkps.pool.sks-keyservers.net --recv-keys ${LLVM_KEY} && \
+    gpg --verify ${LLVM_ARCHIVE}.sig ${LLVM_ARCHIVE} && \
+    mkdir llvm-project && \
+    tar -xf ${LLVM_ARCHIVE} -C llvm-project --strip-components=1 && \
+    cd llvm-project && \
+    mkdir build && cd build && \
+    cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$LLVM_DIR \
+      -DCMAKE_C_COMPILER=gcc \
+      -DCMAKE_CXX_COMPILER=g++ \
+      -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi;openmp" \
+      -DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_70 \
+      -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
+    ../llvm && \
+    make -j${NPROC} && \
+    make install && \
+    rm -rf ../build/* && \
+    cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$LLVM_DIR \
+      -DCMAKE_C_COMPILER=$LLVM_DIR/bin/clang \
+      -DCMAKE_CXX_COMPILER=$LLVM_DIR/bin/clang++ \
+      -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
+    ../openmp && \
+    make -j${NPROC} && \
+    make install && \
+    echo "${LLVM_DIR}/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig && \
+    rm -rf ${SCRATCH_DIR}
+ENV PATH=${LLVM_DIR}/bin:$PATH
