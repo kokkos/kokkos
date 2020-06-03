@@ -550,7 +550,7 @@ void fence_internal() {
 #endif
 
 #if defined(KOKKOS_ENABLE_HPX)
-  Kokkos::Experimental::HPX::impl_static_fence();
+  Kokkos::Experimental::HPX().fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_THREADS)

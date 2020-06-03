@@ -227,6 +227,30 @@ if(Kokkos_ENABLE_HPX)
       UnitTestMain.cpp
       hpx/TestHPX_InterOp.cpp
   )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HPX_IndependentInstances
+    SOURCES
+      UnitTestMain.cpp
+      hpx/TestHPX_IndependentInstances.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HPX_IndependentInstancesDelayedExecution
+    SOURCES
+      UnitTestMain.cpp
+      hpx/TestHPX_IndependentInstancesDelayedExecution.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HPX_IndependentInstancesInstanceIds
+    SOURCES
+      UnitTestMain.cpp
+      hpx/TestHPX_IndependentInstancesInstanceIds.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HPX_IndependentInstancesRefCounting
+    SOURCES
+      UnitTestMain.cpp
+      hpx/TestHPX_IndependentInstancesRefCounting.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
