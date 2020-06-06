@@ -1,4 +1,10 @@
 
+# Disable in-source builds to prevent source tree corruption.
+if( " ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}" )
+  message( FATAL_ERROR "FATAL: In-source builds are not allowed.
+                       You should create a separate directory for build files." )
+endif()
+
 # We want to determine if options are given with the wrong case
 # In order to detect which arguments are given to compare against
 # the list of valid arguments, at the beginning here we need to
