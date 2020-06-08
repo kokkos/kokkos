@@ -104,12 +104,10 @@ int HIPInternal::was_finalized   = 0;
 void HIPInternal::print_configuration(std::ostream &s) const {
   const HIPInternalDevices &dev_info = HIPInternalDevices::singleton();
 
-#if defined(KOKKOS_ENABLE_HIP)
-  s << "macro  KOKKOS_ENABLE_HIP : defined" << std::endl;
-#endif
+  s << "macro  KOKKOS_ENABLE_HIP : defined" << '\n';
 #if defined(HIP_VERSION)
   s << "macro  HIP_VERSION = " << HIP_VERSION << " = version "
-    << HIP_VERSION / 100 << "." << HIP_VERSION % 100 << std::endl;
+    << HIP_VERSION / 100 << "." << HIP_VERSION % 100 << '\n';
 #endif
 
   for (int i = 0; i < dev_info.m_hipDevCount; ++i) {
@@ -122,7 +120,7 @@ void HIPInternal::print_configuration(std::ostream &s) const {
       << ::Kokkos::Impl::human_memory_size(
              dev_info.m_hipProp[i].sharedMemPerBlock);
     if (m_hipDev == i) s << " : Selected";
-    s << std::endl;
+    s << '\n';
   }
 }
 
