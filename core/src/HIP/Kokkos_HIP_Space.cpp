@@ -201,8 +201,14 @@ HIPHostPinnedSpace::HIPHostPinnedSpace() {}
 void* HIPSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void* HIPSpace::allocate(const char* arg_label,
-                         const size_t arg_alloc_size) const {
+void* HIPSpace::allocate(
+
+    const char*
+#if defined(KOKKOS_ENABLE_PROFILING)
+        arg_label
+#endif
+    ,
+    const size_t arg_alloc_size) const {
   void* ptr = nullptr;
 
   auto const error_code = hipMalloc(&ptr, arg_alloc_size);
@@ -251,7 +257,12 @@ void HIPSpace::deallocate(void* const arg_alloc_ptr,
                           const size_t arg_alloc_size) const {
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
-void HIPSpace::deallocate(const char* arg_label, void* const arg_alloc_ptr,
+void HIPSpace::deallocate(const char*
+#if defined(KOKKOS_ENABLE_PROFILING)
+                              arg_label
+#endif
+                          ,
+                          void* const arg_alloc_ptr,
                           const size_t arg_alloc_size) const {
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -342,7 +353,7 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
 
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                        void>::~SharedAllocationRecord() {
-  m_space.deallocate(header.m_label,
+  m_space.deallocate(RecordBase::m_alloc_ptr->m_label,
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
 }
