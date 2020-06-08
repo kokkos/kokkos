@@ -186,9 +186,12 @@ class CudaUVMSpace {
 
   /**\brief  Allocate untracked memory in the cuda space */
   void* allocate(const size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
 
   /**\brief  Deallocate untracked memory in the cuda space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
 
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
@@ -238,9 +241,12 @@ class CudaHostPinnedSpace {
 
   /**\brief  Allocate untracked memory in the space */
   void* allocate(const size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
 
   /**\brief  Deallocate untracked memory in the space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
 
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
