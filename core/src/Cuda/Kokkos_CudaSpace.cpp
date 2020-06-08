@@ -311,8 +311,9 @@ void CudaSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
 
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    Kokkos::Profiling::deallocateData(name(), arg_label, arg_alloc_ptr,
-                                      arg_alloc_size);
+    Kokkos::Profiling::deallocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, arg_alloc_ptr,
+        arg_alloc_size);
   }
 #endif
 
