@@ -288,8 +288,8 @@ void *HostSpace::allocate(const char *
         Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
         arg_alloc_size);
   }
-  return ptr;
 #endif
+  return ptr;
 }
 
 void HostSpace::deallocate(void *const arg_alloc_ptr,

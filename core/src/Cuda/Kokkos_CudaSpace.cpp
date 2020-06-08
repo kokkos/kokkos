@@ -203,7 +203,11 @@ CudaHostPinnedSpace::CudaHostPinnedSpace() {}
 void *CudaSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void *CudaSpace::allocate(const char *arg_label,
+void *CudaSpace::allocate(const char *
+#if defined(KOKKOS_ENABLE_PROFILING)
+                              arg_label
+#endif
+                          ,
                           const size_t arg_alloc_size) const {
   void *ptr = nullptr;
 
@@ -231,7 +235,11 @@ void *CudaSpace::allocate(const char *arg_label,
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void *CudaUVMSpace::allocate(const char *arg_label,
+void *CudaUVMSpace::allocate(const char *
+#if defined(KOKKOS_ENABLE_PROFILING)
+                                 arg_label
+#endif
+                             ,
                              const size_t arg_alloc_size) const {
   void *ptr = nullptr;
 
@@ -272,7 +280,11 @@ void *CudaUVMSpace::allocate(const char *arg_label,
 void *CudaHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void *CudaHostPinnedSpace::allocate(const char *arg_label,
+void *CudaHostPinnedSpace::allocate(const char *
+#if defined(KOKKOS_ENABLE_PROFILING)
+                                        arg_label
+#endif
+                                    ,
                                     const size_t arg_alloc_size) const {
   void *ptr = nullptr;
 
@@ -302,7 +314,12 @@ void CudaSpace::deallocate(void *const arg_alloc_ptr,
                            const size_t arg_alloc_size) const {
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
-void CudaSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
+void CudaSpace::deallocate(const char *
+#if defined(KOKKOS_ENABLE_PROFILING)
+                               arg_label
+#endif
+                           ,
+                           void *const arg_alloc_ptr,
                            const size_t
 #if defined(KOKKOS_ENABLE_PROFILING)
                                arg_alloc_size
@@ -327,7 +344,12 @@ void CudaUVMSpace::deallocate(void *const arg_alloc_ptr,
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
-void CudaUVMSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
+void CudaUVMSpace::deallocate(const char *
+#if defined(KOKKOS_ENABLE_PROFILING)
+                                  arg_label
+#endif
+                              ,
+                              void *const arg_alloc_ptr,
                               const size_t
 #if defined(KOKKOS_ENABLE_PROFILING)
                                   arg_alloc_size
@@ -357,7 +379,11 @@ void CudaHostPinnedSpace::deallocate(void *const arg_alloc_ptr,
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
-void CudaHostPinnedSpace::deallocate(const char *arg_label,
+void CudaHostPinnedSpace::deallocate(const char *
+#if defined(KOKKOS_ENABLE_PROFILING)
+                                         arg_label
+#endif
+                                     ,
                                      void *const arg_alloc_ptr,
                                      const size_t
 #if defined(KOKKOS_ENABLE_PROFILING)
