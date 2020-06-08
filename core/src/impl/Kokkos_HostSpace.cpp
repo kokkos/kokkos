@@ -307,7 +307,7 @@ void HostSpace::deallocate(const char *
 #if defined(KOKKOS_IMPL_POSIX_MMAP_FLAGS) || defined(KOKKOS_ENABLE_PROFILING)
                                arg_alloc_size
 #endif
-) const {
+                           ) const {
   if (arg_alloc_ptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
