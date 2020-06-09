@@ -379,8 +379,6 @@ void initialize_backends(const InitArguments& args) {
     } else {
       Kokkos::Experimental::HIP::impl_initialize();
     }
-    std::cout << "Kokkos::initialize() fyi: HIP enabled and initialized"
-              << std::endl;
   }
 #endif
 }
