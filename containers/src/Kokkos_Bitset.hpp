@@ -234,6 +234,10 @@ class Bitset {
     return find_any_helper(block_idx, offset, block, scan_direction);
   }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return m_blocks.is_allocated();
+  }
+
  private:
   KOKKOS_FORCEINLINE_FUNCTION
   Kokkos::pair<bool, unsigned> find_any_helper(unsigned block_idx,

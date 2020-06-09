@@ -173,6 +173,37 @@ struct test_vector_insert {
 };
 
 template <typename Scalar, class Device>
+struct test_vector_allocate {
+  typedef test_vector_allocate<Scalar, Device> self_type;
+
+  typedef Scalar scalar_type;
+  typedef Device execution_space;
+
+  bool result = false;
+
+  template <typename Vector>
+  Scalar run_me(unsigned int n) {
+    {
+      Vector v1;
+      if (v1.is_allocated() == true) return false;
+
+      v1 = Vector(n, 1);
+      Vector v2(v1);
+      Vector v3(n, 1);
+
+      if (v1.is_allocated() == false) return false;
+      if (v2.is_allocated() == false) return false;
+      if (v3.is_allocated() == false) return false;
+    }
+    return true;
+  }
+
+  test_vector_allocate(unsigned int size) {
+    result = run_me<Kokkos::vector<Scalar, Device> >(size);
+  }
+};
+
+template <typename Scalar, class Device>
 struct test_vector_combinations {
   typedef test_vector_combinations<Scalar, Device> self_type;
 
@@ -231,7 +262,14 @@ void test_vector_combinations(unsigned int size) {
   ASSERT_EQ(test.reference, test.result);
 }
 
+template <typename Scalar, typename Device>
+void test_vector_allocate(unsigned int size) {
+  Impl::test_vector_allocate<Scalar, Device> test(size);
+  ASSERT_TRUE(test.result);
+}
+
 TEST(TEST_CATEGORY, vector_combination) {
+  test_vector_allocate<int, TEST_EXECSPACE>(10);
   test_vector_combinations<int, TEST_EXECSPACE>(10);
   test_vector_combinations<int, TEST_EXECSPACE>(3057);
 }

@@ -36,18 +36,26 @@ IF(KOKKOS_ENABLE_OPENMP)
   IF(KOKKOS_CLANG_IS_CRAY)
     SET(ClangOpenMPFlag -fopenmp)
   ENDIF()
-  COMPILER_SPECIFIC_FLAGS(
-    Clang      ${ClangOpenMPFlag}
-    AppleClang -Xpreprocessor -fopenmp
-    PGI        -mp
-    NVIDIA     -Xcompiler -fopenmp
-    Cray       NO-VALUE-SPECIFIED
-    XL         -qsmp=omp
-    DEFAULT    -fopenmp
-  )
-  COMPILER_SPECIFIC_LIBS(
-    AppleClang -lomp
-  )
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
+    #expression /openmp yields error, so add a specific Clang flag
+    COMPILER_SPECIFIC_OPTIONS(Clang /clang:-fopenmp)
+    #link omp library from LLVM lib dir
+    get_filename_component(LLVM_BIN_DIR ${CMAKE_CXX_COMPILER_AR} DIRECTORY)
+    COMPILER_SPECIFIC_LIBS(Clang "${LLVM_BIN_DIR}/../lib/libomp.lib")
+  ELSE()
+    COMPILER_SPECIFIC_FLAGS(
+      Clang      ${ClangOpenMPFlag}
+      AppleClang -Xpreprocessor -fopenmp
+      PGI        -mp
+      NVIDIA     -Xcompiler -fopenmp
+      Cray       NO-VALUE-SPECIFIED
+      XL         -qsmp=omp
+      DEFAULT    -fopenmp
+    )
+    COMPILER_SPECIFIC_LIBS(
+      AppleClang -lomp
+    )
+  ENDIF()
 ENDIF()
 
 KOKKOS_DEVICE_OPTION(OPENMPTARGET OFF DEVICE "Whether to build the OpenMP target backend")

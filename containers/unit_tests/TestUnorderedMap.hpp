@@ -326,6 +326,8 @@ TEST(TEST_CATEGORY, UnorderedMap_valid_empty) {
   n = Map{m.capacity()};
   n.rehash(m.capacity());
   Kokkos::deep_copy(n, m);
+  ASSERT_TRUE(m.is_allocated());
+  ASSERT_TRUE(n.is_allocated());
 }
 
 }  // namespace Test

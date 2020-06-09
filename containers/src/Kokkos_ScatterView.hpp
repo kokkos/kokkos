@@ -758,6 +758,10 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
 
   original_view_type subview() const { return internal_view; }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return internal_view.is_allocated();
+  }
+
   template <typename DT, typename... RP>
   void contribute_into(View<DT, RP...> const& dest) const {
     typedef View<DT, RP...> dest_type;
@@ -956,6 +960,10 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
         internal_view_type>::get(internal_view, 0);
   }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return internal_view.is_allocated();
+  }
+
   template <typename DT, typename... RP>
   void contribute_into(View<DT, RP...> const& dest) const {
     typedef View<DT, RP...> dest_type;
@@ -1132,6 +1140,10 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
     return Kokkos::Impl::Experimental::Slice<
         Kokkos::LayoutLeft, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return internal_view.is_allocated();
   }
 
   template <typename... RP>

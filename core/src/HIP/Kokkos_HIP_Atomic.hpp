@@ -45,8 +45,7 @@
 #ifndef KOKKOS_HIP_ATOMIC_HPP
 #define KOKKOS_HIP_ATOMIC_HPP
 
-#ifdef KOKKOS_ENABLE_HIP_ATOMICS
-
+#if defined(KOKKOS_ENABLE_HIP_ATOMICS)
 namespace Kokkos {
 // HIP can do:
 // Types int/unsigned int

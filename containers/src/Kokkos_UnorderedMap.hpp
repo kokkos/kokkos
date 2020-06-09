@@ -353,6 +353,11 @@ class UnorderedMap {
     { Kokkos::deep_copy(m_scalars, 0); }
   }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return (m_keys.is_allocated() && m_values.is_allocated() &&
+            m_scalars.is_allocated());
+  }
+
   /// \brief Change the capacity of the the map
   ///
   /// If there are no failed inserts the current size of the map will

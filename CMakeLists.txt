@@ -80,7 +80,11 @@ IF(NOT KOKKOS_HAS_TRILINOS)
     # WORKAROUND FOR HIPCC
     IF(Kokkos_ENABLE_HIP)
       SET(KOKKOS_INTERNAL_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --amdgpu-target=gfx906")
+      IF(NOT "${INTERNAL_HAVE_COMPILER_HCC}" STREQUAL "1")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --cuda-host-only")
+      ELSE()
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --amdgpu-target=gfx906")
+      ENDIF()
     ENDIF()
     PROJECT(Kokkos CXX)
     IF(Kokkos_ENABLE_HIP)
@@ -263,8 +267,6 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 # If the argument of DESTINATION is a relative path, CMake computes it
 # as relative to ${CMAKE_INSTALL_PATH}.
 INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION ${CMAKE_INSTALL_BINDIR})
-INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_config.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
 
 #  Finally - if we are a subproject - make sure the enabled devices are visible
 IF (HAS_PARENT)

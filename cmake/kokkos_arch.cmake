@@ -14,6 +14,10 @@ KOKKOS_CFG_DEPENDS(ARCH COMPILER_ID)
 KOKKOS_CFG_DEPENDS(ARCH DEVICES)
 KOKKOS_CFG_DEPENDS(ARCH OPTIONS)
 
+KOKKOS_CHECK_DEPRECATED_OPTIONS(
+  ARCH_EPYC   "Please replace EPYC with ZEN or ZEN2, depending on your platform"
+  ARCH_RYZEN  "Please replace RYZEN with ZEN or ZEN2, depending on your platform"
+)
 
 #-------------------------------------------------------------------------------
 # List of possible host architectures.
@@ -50,7 +54,8 @@ KOKKOS_ARCH_OPTION(PASCAL61        GPU  "NVIDIA Pascal generation CC 6.1")
 KOKKOS_ARCH_OPTION(VOLTA70         GPU  "NVIDIA Volta generation CC 7.0")
 KOKKOS_ARCH_OPTION(VOLTA72         GPU  "NVIDIA Volta generation CC 7.2")
 KOKKOS_ARCH_OPTION(TURING75        GPU  "NVIDIA Turing generation CC 7.5")
-KOKKOS_ARCH_OPTION(EPYC            HOST "AMD Epyc architecture")
+KOKKOS_ARCH_OPTION(ZEN             HOST "AMD Zen architecture")
+KOKKOS_ARCH_OPTION(ZEN2            HOST "AMD Zen2 architecture")
 KOKKOS_ARCH_OPTION(VEGA900         GPU  "AMD GPU MI25 GFX900")
 KOKKOS_ARCH_OPTION(VEGA906         GPU  "AMD GPU MI50/MI60 GFX906")
 
@@ -166,12 +171,21 @@ IF (KOKKOS_ARCH_ARMV8_THUNDERX2)
   )
 ENDIF()
 
-IF (KOKKOS_ARCH_EPYC)
+IF (KOKKOS_ARCH_ZEN)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
     DEFAULT -march=znver1 -mtune=znver1
   )
-  SET(KOKKOS_ARCH_AMD_EPYC ON)
+  SET(KOKKOS_ARCH_AMD_ZEN  ON)
+  SET(KOKKOS_ARCH_AMD_AVX2 ON)
+ENDIF()
+
+IF (KOKKOS_ARCH_ZEN2)
+  COMPILER_SPECIFIC_FLAGS(
+    Intel   -mavx2
+    DEFAULT -march=znver2 -mtune=znver2
+  )
+  SET(KOKKOS_ARCH_AMD_ZEN2 ON)
   SET(KOKKOS_ARCH_AMD_AVX2 ON)
 ENDIF()
 
@@ -215,14 +229,6 @@ IF (KOKKOS_ARCH_BDW)
   )
 ENDIF()
 
-IF (KOKKOS_ARCH_EPYC)
-  SET(KOKKOS_ARCH_AMD_AVX2 ON)
-  COMPILER_SPECIFIC_FLAGS(
-    Intel   -mvax2
-    DEFAULT  -march=znver1 -mtune=znver1
-  )
-ENDIF()
-
 IF (KOKKOS_ARCH_KNL)
   #avx512-mic
   SET(KOKKOS_ARCH_AVX512MIC ON) #not a cache variable
@@ -252,7 +258,7 @@ IF (KOKKOS_ARCH_SKX)
   )
 ENDIF()
 
-IF (KOKKOS_ARCH_WSM OR KOKKOS_ARCH_SNB OR KOKKOS_ARCH_HSW OR KOKKOS_ARCH_BDW OR KOKKOS_ARCH_KNL OR KOKKOS_ARCH_SKX OR KOKKOS_ARCH_EPYC)
+IF (KOKKOS_ARCH_WSM OR KOKKOS_ARCH_SNB OR KOKKOS_ARCH_HSW OR KOKKOS_ARCH_BDW OR KOKKOS_ARCH_KNL OR KOKKOS_ARCH_SKX OR KOKKOS_ARCH_ZEN OR KOKKOS_ARCH_ZEN2)
   SET(KOKKOS_USE_ISA_X86_64 ON)
 ENDIF()
 
@@ -294,6 +300,21 @@ IF (Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
     NVIDIA --relocatable-device-code=true
   )
 ENDIF()
+
+# Clang needs mcx16 option enabled for Windows atomic functions
+IF (CMAKE_CXX_COMPILER_ID STREQUAL Clang AND WIN32)
+  COMPILER_SPECIFIC_OPTIONS(
+    Clang -mcx16
+  )
+ENDIF()
+
+# MSVC ABI has many deprecation warnings, so ignore them
+IF (CMAKE_CXX_COMPILER_ID STREQUAL MSVC OR "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
+  COMPILER_SPECIFIC_DEFS(
+    Clang _CRT_SECURE_NO_WARNINGS
+  )
+ENDIF()
+
 
 #Right now we cannot get the compiler ID when cross-compiling, so just check
 #that HIP is enabled
@@ -481,4 +502,3 @@ MESSAGE(STATUS "Architectures:")
 FOREACH(Arch ${KOKKOS_ENABLED_ARCH_LIST})
   MESSAGE(STATUS " ${Arch}")
 ENDFOREACH()
-

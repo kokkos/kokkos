@@ -272,6 +272,8 @@
 #define KOKKOS_IMPL_FORCEINLINE __forceinline__
 #define KOKKOS_IMPL_INLINE_FUNCTION __device__ __host__ inline
 #define KOKKOS_IMPL_FUNCTION __device__ __host__
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #if defined(KOKKOS_COMPILER_NVCC)
 #define KOKKOS_INLINE_FUNCTION_DELETED inline
 #else
@@ -282,6 +284,8 @@
 #else
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
@@ -291,6 +295,8 @@
 #define KOKKOS_DEFAULTED_FUNCTION __device__ __host__ inline
 #define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
 #define KOKKOS_IMPL_FUNCTION __device__ __host__
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
 #endif
@@ -491,6 +497,14 @@
 #define KOKKOS_DEFAULTED_FUNCTION inline
 #endif
 
+#if !defined(KOKKOS_IMPL_HOST_FUNCTION)
+#define KOKKOS_IMPL_HOST_FUNCTION
+#endif
+
+#if !defined(KOKKOS_IMPL_DEVICE_FUNCTION)
+#define KOKKOS_IMPL_DEVICE_FUNCTION
+#endif
+
 //----------------------------------------------------------------------------
 // Define final version of functions. This is so that clang tidy can find these
 // macros more easily
@@ -499,10 +513,10 @@
   KOKKOS_IMPL_FUNCTION __attribute__((annotate("KOKKOS_FUNCTION")))
 #define KOKKOS_INLINE_FUNCTION \
   KOKKOS_IMPL_INLINE_FUNCTION  \
-      __attribute__((annotate("KOKKOS_INLINE_FUNCTION")))
+  __attribute__((annotate("KOKKOS_INLINE_FUNCTION")))
 #define KOKKOS_FORCEINLINE_FUNCTION \
   KOKKOS_IMPL_FORCEINLINE_FUNCTION  \
-      __attribute__((annotate("KOKKOS_FORCEINLINE_FUNCTION")))
+  __attribute__((annotate("KOKKOS_FORCEINLINE_FUNCTION")))
 #else
 #define KOKKOS_FUNCTION KOKKOS_IMPL_FUNCTION
 #define KOKKOS_INLINE_FUNCTION KOKKOS_IMPL_INLINE_FUNCTION
@@ -560,6 +574,11 @@
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA
 #elif defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
+#if defined(__HIP__)
+// mark that HIP-clang can use __host__ and __device__
+// as valid overload criteria
+#define KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE
+#endif
 #elif defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -582,8 +601,7 @@
 #elif defined(__HCC__) && defined(__HCC_ACCELERATOR__) && \
     defined(KOKKOS_ENABLE_ROCM)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU
-#elif defined(__HIPCC__) &&                                     \
-    (defined(__HCC_ACCELERATOR__) || defined(__CUDA_ARCH__)) && \
+#elif defined(__HIPCC__) && defined(__HIP_DEVICE_COMPILE__) && \
     defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
 #else
@@ -657,8 +675,9 @@
 #define KOKKOS_ATTRIBUTE_NODISCARD
 #endif
 
-#if defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) || \
-    defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)
+#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
+     defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
+    !defined(KOKKOS_COMPILER_MSVC)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
 #define KOKKOS_IMPL_ENABLE_CXXABI
 #endif

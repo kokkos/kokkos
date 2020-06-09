@@ -74,6 +74,7 @@ int cuda_get_max_block_size(const CudaInternal* cuda_instance,
   const int max_threads_per_sm  = cuda_instance->m_maxThreadsPerSM;
 
   int block_size = std::min(attr.maxThreadsPerBlock, max_threads_per_block);
+  KOKKOS_ASSERT(block_size > 0);
 
   int functor_shmem =
       FunctorTeamShmemSize<FunctorType>::value(f, block_size / vector_length);
@@ -149,6 +150,7 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
   const int max_threads_per_sm  = cuda_instance->m_maxThreadsPerSM;
 
   int block_size = std::min(attr.maxThreadsPerBlock, max_threads_per_block);
+  KOKKOS_ASSERT(block_size > 0);
 
   int functor_shmem =
       FunctorTeamShmemSize<FunctorType>::value(f, block_size / vector_length);

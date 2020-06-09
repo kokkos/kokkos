@@ -101,30 +101,27 @@ int HIPInternal::was_initialized = 0;
 int HIPInternal::was_finalized   = 0;
 //----------------------------------------------------------------------------
 
-void HIPInternal::print_configuration(std::ostream & /*s*/) const {
-  // FIXME_HIP
-  Kokkos::abort("print_configuration not implemented!\n");
-  /*const HIPInternalDevices & dev_info = HIPInternalDevices::singleton();
+void HIPInternal::print_configuration(std::ostream &s) const {
+  const HIPInternalDevices &dev_info = HIPInternalDevices::singleton();
 
-#if defined( KOKKOS_ENABLE_HIP )
-    s << "macro  KOKKOS_ENABLE_HIP      : defined" << std::endl ;
-#endif
-#if defined( __hcc_version__ )
-    s << "macro  __hcc_version__          = " << __hcc_version__
-      << std::endl ;
+  s << "macro  KOKKOS_ENABLE_HIP : defined" << '\n';
+#if defined(HIP_VERSION)
+  s << "macro  HIP_VERSION = " << HIP_VERSION << " = version "
+    << HIP_VERSION / 100 << "." << HIP_VERSION % 100 << '\n';
 #endif
 
-  for ( int i = 0 ; i < dev_info.m_hipDevCount ; ++i ) {
+  for (int i = 0; i < dev_info.m_hipDevCount; ++i) {
     s << "Kokkos::Experimental::HIP[ " << i << " ] "
-      << dev_info.m_hipProp[i].name
-      << " version " << (dev_info.m_hipProp[i].major) << "." <<
-dev_info.m_hipProp[i].minor
-      << ", Total Global Memory: " <<
-human_memory_size(dev_info.m_hipProp[i].totalGlobalMem)
-      << ", Shared Memory per Wavefront: " <<
-human_memory_size(dev_info.m_hipProp[i].sharedMemPerWavefront); if ( m_hipDev ==
-i ) s << " : Selected" ; s << std::endl ;
-  }*/
+      << dev_info.m_hipProp[i].name << " version "
+      << (dev_info.m_hipProp[i].major) << "." << dev_info.m_hipProp[i].minor
+      << ", Total Global Memory: "
+      << ::Kokkos::Impl::human_memory_size(dev_info.m_hipProp[i].totalGlobalMem)
+      << ", Shared Memory per Wavefront: "
+      << ::Kokkos::Impl::human_memory_size(
+             dev_info.m_hipProp[i].sharedMemPerBlock);
+    if (m_hipDev == i) s << " : Selected";
+    s << '\n';
+  }
 }
 
 //----------------------------------------------------------------------------

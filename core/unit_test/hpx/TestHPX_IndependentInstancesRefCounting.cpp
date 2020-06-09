@@ -36,73 +36,60 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Questions? Contact  H. Carter Edwards (hcedwar@sandia.gov)
+// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
 //
 // ************************************************************************
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ATOMIC_HPP) && !defined(KOKKOS_MEMORY_FENCE_HPP)
-#define KOKKOS_MEMORY_FENCE_HPP
-namespace Kokkos {
+#include <Kokkos_Core.hpp>
+#include <hpx/TestHPX_Category.hpp>
 
-//----------------------------------------------------------------------------
+#ifdef KOKKOS_ENABLE_HPX_ASYNC_DISPATCH
 
-KOKKOS_FORCEINLINE_FUNCTION
-void memory_fence() {
-#if defined(__CUDA_ARCH__)
-  __threadfence();
-#elif defined(KOKKOS_ENABLE_ROCM_ATOMICS)
-  amp_barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-#elif defined(__HIP_DEVICE_COMPILE__)
-  __threadfence();
-#elif defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
-  asm volatile("mfence" ::: "memory");
-#elif defined(KOKKOS_ENABLE_GNU_ATOMICS) || \
-    (defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_INTEL_ATOMICS))
-  __sync_synchronize();
-#elif defined(KOKKOS_ENABLE_INTEL_ATOMICS)
-  _mm_mfence();
-#elif defined(KOKKOS_ENABLE_OPENMP_ATOMICS)
-#pragma omp flush
-#elif defined(KOKKOS_ENABLE_WINDOWS_ATOMICS)
-  MemoryBarrier();
-#elif !defined(KOKKOS_ENABLE_SERIAL_ATOMICS)
-#error "Error: memory_fence() not defined"
-#endif
+namespace Test {
+namespace {
+std::atomic<int> dummy_count;
+
+struct dummy {
+  dummy() { ++dummy_count; }
+  dummy(dummy const &) { ++dummy_count; }
+  ~dummy() { --dummy_count; }
+  void f() const {}
+};
+}  // namespace
+// This test makes sure the independent HPX instances don't hold on to captured
+// data after destruction.
+TEST(hpx, reference_counting) {
+  Kokkos::InitArguments arguments{-1, -1, -1, false};
+  Kokkos::initialize(arguments);
+
+  {
+    dummy d;
+    Kokkos::Experimental::HPX hpx(
+        Kokkos::Experimental::HPX::instance_mode::independent);
+    Kokkos::parallel_for(
+        "Test::hpx::reference_counting::dummy",
+        Kokkos::RangePolicy<Kokkos::Experimental::HPX>(hpx, 0, 1),
+        KOKKOS_LAMBDA(int) {
+          // Make sure dummy struct is captured.
+          d.f();
+        });
+
+    // This attaches a continuation and releases the d captured above from the
+    // shared state of the internal future.
+    Kokkos::parallel_for(
+        "Test::hpx::reference_counting::dummy_clear",
+        Kokkos::RangePolicy<Kokkos::Experimental::HPX>(hpx, 0, 1),
+        KOKKOS_LAMBDA(int){});
+
+    hpx.fence();
+
+    ASSERT_EQ(1, dummy_count);
+  }
+
+  Kokkos::finalize();
 }
-
-//////////////////////////////////////////////////////
-// store_fence()
-//
-// If possible use a store fence on the architecture, if not run a full memory
-// fence
-
-KOKKOS_FORCEINLINE_FUNCTION
-void store_fence() {
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
-  asm volatile("sfence" ::: "memory");
-#else
-  memory_fence();
-#endif
-}
-
-//////////////////////////////////////////////////////
-// load_fence()
-//
-// If possible use a load fence on the architecture, if not run a full memory
-// fence
-
-KOKKOS_FORCEINLINE_FUNCTION
-void load_fence() {
-#if defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)
-  asm volatile("lfence" ::: "memory");
-#else
-  memory_fence();
-#endif
-}
-
-}  // namespace Kokkos
+}  // namespace Test
 
 #endif
