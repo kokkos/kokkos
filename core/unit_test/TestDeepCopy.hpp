@@ -213,7 +213,7 @@ TEST(TEST_CATEGORY, deep_copy_alignment) {
 }
 #endif
 
-// KOKKOS_IMPL_HIP_CLANG_WORKAROUND
+// FIXME_HIP
 #ifndef KOKKOS_ENABLE_HIP
 namespace Impl {
 template <class Scalar1, class Scalar2, class Layout1, class Layout2>
