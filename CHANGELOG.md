@@ -1,6 +1,6 @@
 # Change Log
 
-## [3.1.1](https://github.com/kokkos/kokkos/tree/3.1.1) (2020-04-14)
+## [3.1.01](https://github.com/kokkos/kokkos/tree/3.1.1) (2020-04-14)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.1.00...3.1.1)
 
 **Fixed bugs:**
