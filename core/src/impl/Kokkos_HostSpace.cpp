@@ -173,7 +173,18 @@ void *HostSpace::allocate(const char *
                               arg_label
 #endif
                           ,
-                          const size_t arg_alloc_size) const {
+                          const size_t arg_alloc_size,
+                          const size_t
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+                              arg_logical_size
+#endif
+                          ) const {
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+  const size_t reported_size =
+      (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+#endif
   static_assert(sizeof(void *) == sizeof(uintptr_t),
                 "Error sizeof(void*) != sizeof(uintptr_t)");
 
@@ -286,7 +297,7 @@ void *HostSpace::allocate(const char *
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
         Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
-        arg_alloc_size);
+        reported_size);
   }
 #endif
   return ptr;
@@ -307,13 +318,21 @@ void HostSpace::deallocate(const char *
 #if defined(KOKKOS_IMPL_POSIX_MMAP_FLAGS) || defined(KOKKOS_ENABLE_PROFILING)
                                arg_alloc_size
 #endif
+                           ,
+                           const size_t
+
+#if defined(KOKKOS_ENABLE_PROFILING)
+                               arg_logical_size
+#endif
                            ) const {
   if (arg_alloc_ptr) {
 #if defined(KOKKOS_ENABLE_PROFILING)
+    size_t reported_size =
+        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::deallocateData(
           Kokkos::Profiling::make_space_handle(name()), arg_label,
-          arg_alloc_ptr, arg_alloc_size);
+          arg_alloc_ptr, reported_size);
     }
 #endif
     if (m_alloc_mech == STD_MALLOC) {
@@ -367,7 +386,9 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::~SharedAllocationRecord()
 
   m_space.deallocate(RecordBase::m_alloc_ptr->m_label,
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
-                     SharedAllocationRecord<void, void>::m_alloc_size);
+                     SharedAllocationRecord<void, void>::m_alloc_size,
+                     (SharedAllocationRecord<void, void>::m_alloc_size -
+                      sizeof(SharedAllocationHeader)));
 }
 
 SharedAllocationHeader *_do_allocation(Kokkos::HostSpace const &space,

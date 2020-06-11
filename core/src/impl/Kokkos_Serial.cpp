@@ -94,7 +94,8 @@ void serial_resize_thread_team_data(size_t pool_reduce_bytes,
       g_serial_thread_team_data.disband_team();
       g_serial_thread_team_data.disband_pool();
 
-      space.deallocate(g_serial_thread_team_data.scratch_buffer(),
+      space.deallocate("Kokkos::Serial::scratch_mem",
+                       g_serial_thread_team_data.scratch_buffer(),
                        g_serial_thread_team_data.scratch_bytes());
     }
 
@@ -117,7 +118,7 @@ void serial_resize_thread_team_data(size_t pool_reduce_bytes,
 
     void* ptr = nullptr;
     try {
-      ptr = space.allocate(alloc_bytes);
+      ptr = space.allocate("Kokkos::Serial::scratch_mem", alloc_bytes);
     } catch (Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
       // For now, just rethrow the error message the existing way
       Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
