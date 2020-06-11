@@ -213,7 +213,7 @@ void *CudaSpace::allocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                               arg_logical_size
 #endif
-) const {
+                          ) const {
   void *ptr = nullptr;
 
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
@@ -252,7 +252,7 @@ void *CudaUVMSpace::allocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                  arg_logical_size
 #endif
-) const {
+                             ) const {
   void *ptr = nullptr;
 
   Cuda::impl_static_fence();
@@ -304,7 +304,7 @@ void *CudaHostPinnedSpace::allocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                         arg_logical_size
 #endif
-) const {
+                                    ) const {
   void *ptr = nullptr;
 
   auto error_code = cudaHostAlloc(&ptr, arg_alloc_size, cudaHostAllocDefault);
@@ -350,7 +350,7 @@ void CudaSpace::deallocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                arg_logical_size
 #endif
-) const {
+                           ) const {
 
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -388,7 +388,7 @@ void CudaUVMSpace::deallocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                   arg_logical_size
 #endif
-) const {
+                              ) const {
   Cuda::impl_static_fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -429,7 +429,7 @@ void CudaHostPinnedSpace::deallocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                          arg_logical_size
 #endif
-) const {
+                                     ) const {
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
