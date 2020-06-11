@@ -68,12 +68,12 @@ namespace Impl {
     ;
 }
 
-} // namespace Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
-#define HIP_ABORT(msg)                                                         \
-  do {                                                                         \
-    Kokkos::Impl::__hip_abort(msg, __FILE__, __LINE__, __FUNCTION__);          \
+#define HIP_ABORT(msg)                                                \
+  do {                                                                \
+    Kokkos::Impl::__hip_abort(msg, __FILE__, __LINE__, __FUNCTION__); \
   } while (0)
 
 #endif
