@@ -85,7 +85,9 @@ class HIPInternal {
   unsigned m_multiProcCount;
   unsigned m_maxWarpCount;
   unsigned m_maxBlock;
+  unsigned m_maxBlocksPerSM;
   unsigned m_maxSharedWords;
+  int m_regsPerSM;
   int m_shmemPerSM;
   int m_maxShmemPerBlock;
   int m_maxThreadsPerSM;

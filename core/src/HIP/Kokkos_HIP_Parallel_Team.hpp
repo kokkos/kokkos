@@ -120,10 +120,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         static_cast<size_t>(vector_length()),
         static_cast<size_t>(team_scratch_size(0)) + 2 * sizeof(double),
         static_cast<size_t>(thread_scratch_size(0)) + sizeof(double));
-    // FIXME_HIP if the team size is larger than 256, the test hip.team_for
-    // fails with Memory access fault by GPU. Reason: Page not present or
-    // supervisor privilege
-    return std::min(block_size / vector_length(), 256);
+    return block_size / vector_length();
   }
 
   template <class FunctorType>
@@ -138,8 +135,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              reducer_type>;
-    // FIXME_HIP See comment about teams larger than 256 above
-    return std::min(internal_team_size_max<closure_type>(f), 256);
+    return internal_team_size_max<closure_type>(f);
   }
 
   template <class FunctorType, class ReducerType>
@@ -148,8 +144,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     using closure_type =
         Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
                              ReducerType>;
-    // FIXME_HIP See comment about teams larger than 256 above
-    return std::min(internal_team_size_max<closure_type>(f), 256);
+    return internal_team_size_max<closure_type>(f);
   }
 
   template <typename FunctorType>
@@ -165,8 +160,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         static_cast<size_t>(vector_length()),
         static_cast<size_t>(team_scratch_size(0)) + 2 * sizeof(double),
         static_cast<size_t>(thread_scratch_size(0)) + sizeof(double));
-    // FIXME_HIP See comment about teams larger than 256 above
-    return std::min(block_size / vector_length(), 256);
+    return std::min(block_size / vector_length(), 1024);
   }
 
   template <typename FunctorType>
@@ -405,22 +399,16 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
 
   template <class ClosureType, class FunctorType>
   int internal_team_size_max(const FunctorType& f) const {
-    // FIXME_HIP if the team size is larger than 256, there seems to be a
-    // problem in Kokkos_HIP_ReduceScan.cc::hip_inter_warp_reduction:120
-    return std::min(internal_team_size_common<ClosureType>(
-                        f, ::Kokkos::Experimental::Impl::hip_get_max_block_size<
-                               FunctorType, typename traits::launch_bounds>),
-                    256);
+    return internal_team_size_common<ClosureType>(
+        f, ::Kokkos::Experimental::Impl::hip_get_max_block_size<
+               FunctorType, typename traits::launch_bounds>);
   }
 
   template <class ClosureType, class FunctorType>
   int internal_team_size_recommended(const FunctorType& f) const {
-    // FIXME_HIP if the team size is larger than 256, there seems to be a
-    // problem in Kokkos_HIP_ReduceScan.cc::hip_inter_warp_reduction:120
-    return std::min(internal_team_size_common<ClosureType>(
-                        f, ::Kokkos::Experimental::Impl::hip_get_opt_block_size<
-                               FunctorType, typename traits::launch_bounds>),
-                    256);
+    return internal_team_size_common<ClosureType>(
+        f, ::Kokkos::Experimental::Impl::hip_get_opt_block_size<
+               FunctorType, typename traits::launch_bounds>);
   }
 };
 

@@ -553,10 +553,8 @@ class ParallelScanHIPBase {
       // correctly, the unit tests fail with wrong results
       const int gridMaxComputeCapability_2x = 0x01fff;
 
-      // FIXME_HIP block sizes greater than 256 don't work correctly,
-      // the unit tests fail with wrong results
       const int block_size =
-          std::min(static_cast<int>(local_block_size(m_functor)), 256);
+          std::min(static_cast<int>(local_block_size(m_functor)), 1024);
       KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
