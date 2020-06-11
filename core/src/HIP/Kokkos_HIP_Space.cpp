@@ -422,9 +422,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
           &SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                                   void>::s_root_record,
 #endif
-          Kokkos::Impl::checked_allocation_with_header(
-              Kokkos::Profiling::make_space_handle(arg_space), arg_label,
-              arg_alloc_size),
+          Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
+                                                       arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
 

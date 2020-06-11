@@ -92,8 +92,8 @@ class HIPSpace {
                  const size_t arg_logical_size = 0) const;
 
   /**\brief  Deallocate untracked memory in the hip space */
-  void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+  void deallocate(void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size, ) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
