@@ -68,7 +68,7 @@ int hip_get_max_block_size(typename DriverType::functor_type const &f,
 }
 
 template <class FunctorType, class LaunchBounds, typename F>
-int hip_internal_get_block_size(const F& condition_check,
+int hip_internal_get_block_size(const F &condition_check,
                                 const HIPInternal *hip_instance,
                                 const hipFuncAttributes &attr,
                                 const FunctorType &f,
@@ -89,7 +89,8 @@ int hip_internal_get_block_size(const F& condition_check,
   const int max_threads_per_sm  = hip_instance->m_maxThreadsPerSM;
 
 // FIXME_HIP this is broken in 3.5, but should be in 3.6
-#if (HIP_VERSION_MAJOR > 3 || HIP_VERSION_MINOR > 5 || HIP_VERSION_PATCH >= 20226)
+#if (HIP_VERSION_MAJOR > 3 || HIP_VERSION_MINOR > 5 || \
+     HIP_VERSION_PATCH >= 20226)
   int block_size = std::min(attr.maxThreadsPerBlock, max_threads_per_block);
 #else
   int block_size = max_threads_per_block;
@@ -231,13 +232,11 @@ int hip_get_opt_block_size(typename DriverType::functor_type const &f,
 }
 
 template <typename FunctorType, typename LaunchBounds>
-int hip_get_opt_block_size(HIPInternal const * hip_instance,
-                           hipFuncAttributes const &attr,
-                           FunctorType const & f,
-                           size_t const vector_length,
-                           size_t const shmem_block,
+int hip_get_opt_block_size(HIPInternal const *hip_instance,
+                           hipFuncAttributes const &attr, FunctorType const &f,
+                           size_t const vector_length, size_t const shmem_block,
                            size_t const shmem_thread) {
- return hip_internal_get_block_size<FunctorType, LaunchBounds>(
+  return hip_internal_get_block_size<FunctorType, LaunchBounds>(
       [](int x) { return true; }, hip_instance, attr, f, vector_length,
       shmem_block, shmem_thread);
 }
