@@ -41,11 +41,15 @@ KOKKOS_HIP_OPTIONS ?= ""
 # Options: enable_async_dispatch
 KOKKOS_HPX_OPTIONS ?= ""
 
+# Helper functions for conversion to upper case
+uppercase_TABLE:=a,A b,B c,C d,D e,E f,F g,G h,H i,I j,J k,K l,L m,M n,N o,O p,P q,Q r,R s,S t,T u,U v,V w,W x,X y,Y z,Z
+uppercase_internal=$(if $1,$$(subst $(firstword $1),$(call uppercase_internal,$(wordlist 2,$(words $1),$1),$2)),$2)
+uppercase=$(eval uppercase_RESULT:=$(call uppercase_internal,$(uppercase_TABLE),$1))$(uppercase_RESULT)
 # Return a 1 if a string contains a substring and 0 if not
 # Note the search string should be without '"'
 # Example: $(call kokkos_has_string,"hwloc,librt",hwloc)
 #   Will return a 1
-kokkos_has_string=$(if $(findstring $2,$1),1,0)
+kokkos_has_string=$(if $(findstring $(call uppercase,$2),$(call uppercase,$1)),1,0)
 # Returns 1 if the path exists, 0 otherwise
 # Example: $(call kokkos_path_exists,/path/to/file)
 #   Will return a 1 if /path/to/file exists
