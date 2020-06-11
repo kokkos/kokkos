@@ -357,6 +357,10 @@ void HIPInternal::finalize() {
 
 //----------------------------------------------------------------------------
 
+Kokkos::Experimental::HIP::size_type hip_internal_multiprocessor_count() {
+  return HIPInternal::singleton().m_multiProcCount;
+}
+
 Kokkos::Experimental::HIP::size_type hip_internal_maximum_warp_count() {
   return HIPInternal::singleton().m_maxWarpCount;
 }

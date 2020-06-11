@@ -248,6 +248,10 @@ class WorkGraphPolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 #include "Cuda/Kokkos_Cuda_WorkGraphPolicy.hpp"
 #endif
 
+#ifdef KOKKOS_ENABLE_HIP
+#include "HIP/Kokkos_HIP_WorkGraphPolicy.hpp"
+#endif
+
 #ifdef KOKKOS_ENABLE_THREADS
 #include "Threads/Kokkos_Threads_WorkGraphPolicy.hpp"
 #endif
