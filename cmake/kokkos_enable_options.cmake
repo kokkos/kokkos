@@ -53,7 +53,6 @@ ENDIF()
 KOKKOS_ENABLE_OPTION(PROFILING ${PROFILING_DEFAULT} "Whether to create bindings for profiling tools")
 KOKKOS_ENABLE_OPTION(PROFILING_LOAD_PRINT OFF "Whether to print information about which profiling tools got loaded")
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
-KOKKOS_ENABLE_OPTION(DEPRECATED_CODE          OFF "Whether to enable deprecated code")
 
 IF (KOKKOS_ENABLE_CUDA)
   SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_COMPILER_VERSION_MAJOR}${KOKKOS_COMPILER_VERSION_MINOR}")

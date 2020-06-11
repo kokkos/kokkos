@@ -64,8 +64,6 @@
 #include <KokkosCore_config.h>
 #endif
 
-#include <impl/Kokkos_OldMacros.hpp>
-
 //----------------------------------------------------------------------------
 /** Pick up compiler specific #define macros:
  *
@@ -640,11 +638,7 @@
 
 #define KOKKOS_INVALID_INDEX (~std::size_t(0))
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-#define KOKKOS_IMPL_CTOR_DEFAULT_ARG 0
-#else
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
-#endif
 
 #if (defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || \
      defined(KOKKOS_ENABLE_CXX20))

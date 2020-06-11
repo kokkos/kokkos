@@ -123,21 +123,12 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 1> {
     for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0) {
       // Below checks that values match, but unable to check the references.
       // Should this be able to be checked?
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      if (left(i0) != left(i0, 0, 0, 0, 0, 0, 0, 0)) {
-        update |= 3;
-      }
-      if (right(i0) != right(i0, 0, 0, 0, 0, 0, 0, 0)) {
-        update |= 3;
-      }
-#else
       if (left(i0) != left.access(i0, 0, 0, 0, 0, 0, 0, 0)) {
         update |= 3;
       }
       if (right(i0) != right.access(i0, 0, 0, 0, 0, 0, 0, 0)) {
         update |= 3;
       }
-#endif
       if (left(i0) != left_stride(i0)) {
         update |= 4;
       }

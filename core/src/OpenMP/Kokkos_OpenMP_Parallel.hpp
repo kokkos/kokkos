@@ -116,11 +116,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
     } else {
       OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-#pragma omp parallel num_threads(OpenMP::thread_pool_size())
-#else
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
-#endif
       {
         HostThreadTeamData& data = *(m_instance->get_thread_data());
 
@@ -201,11 +197,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     } else {
       OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-#pragma omp parallel num_threads(OpenMP::thread_pool_size())
-#else
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
-#endif
       {
         HostThreadTeamData& data = *(m_instance->get_thread_data());
 
@@ -324,11 +316,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                    0  // thread_local_bytes
     );
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    const int pool_size = OpenMP::thread_pool_size();
-#else
     const int pool_size = OpenMP::impl_thread_pool_size();
-#endif
 #pragma omp parallel num_threads(pool_size)
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
@@ -485,11 +473,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                    0  // thread_local_bytes
     );
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    const int pool_size = OpenMP::thread_pool_size();
-#else
     const int pool_size = OpenMP::impl_thread_pool_size();
-#endif
 #pragma omp parallel num_threads(pool_size)
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
@@ -647,11 +631,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    0  // thread_local_bytes
     );
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-#pragma omp parallel num_threads(OpenMP::thread_pool_size())
-#else
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
-#endif
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
@@ -766,11 +746,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                                    0  // thread_local_bytes
     );
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-#pragma omp parallel num_threads(OpenMP::thread_pool_size())
-#else
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
-#endif
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
@@ -911,11 +887,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-#pragma omp parallel num_threads(OpenMP::thread_pool_size())
-#else
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
-#endif
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
@@ -1057,11 +1029,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_instance->resize_thread_data(pool_reduce_size, team_reduce_size,
                                    team_shared_size, thread_local_size);
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    const int pool_size = OpenMP::thread_pool_size();
-#else
     const int pool_size = OpenMP::impl_thread_pool_size();
-#endif
 #pragma omp parallel num_threads(pool_size)
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());

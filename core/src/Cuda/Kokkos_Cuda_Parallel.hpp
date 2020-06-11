@@ -134,31 +134,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   //----------------------------------------
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  template <class FunctorType>
-  static inline int team_size_max(const FunctorType& functor) {
-    int n = MAX_WARP * Impl::CudaTraits::WarpSize;
-
-    for (; n; n >>= 1) {
-      const int shmem_size =
-          /* for global reduce */ Impl::
-              cuda_single_inter_block_reduce_scan_shmem<
-                  false, FunctorType, typename traits::work_tag>(functor, n)
-          /* for team   reduce */
-          + (n + 2) * sizeof(double)
-          /* for team   shared */
-          + Impl::FunctorTeamShmemSize<FunctorType>::value(functor, n);
-
-      if (shmem_size < typename traits::execution_space()
-                           .impl_internal_space_instance()
-                           ->m_maxShmemPerBlock)
-        break;
-    }
-
-    return n;
-  }
-#endif
-
   template <class FunctorType>
   int team_size_max(const FunctorType& f, const ParallelForTag&) const {
     typedef Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>
@@ -199,21 +174,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                              ReducerType>;
     return internal_team_size_max<closure_type>(f);
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  template <class FunctorType>
-  static int team_size_recommended(const FunctorType& functor) {
-    return team_size_max(functor);
-  }
-
-  template <class FunctorType>
-  static int team_size_recommended(const FunctorType& functor,
-                                   const int vector_length) {
-    int max = team_size_max(functor) / vector_length;
-    if (max < 1) max = 1;
-    return max;
-  }
-#endif
 
   template <class FunctorType>
   int team_size_recommended(const FunctorType& f, const ParallelForTag&) const {
@@ -401,44 +361,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   inline int chunk_size() const { return m_chunk_size; }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  /** \brief set chunk_size to a discrete value*/
-  inline TeamPolicyInternal set_chunk_size(
-      typename traits::index_type chunk_size_) const {
-    TeamPolicyInternal p = *this;
-    p.m_chunk_size       = chunk_size_;
-    return p;
-  }
-
-  /** \brief set per team scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal set_scratch_size(
-      const int& level, const PerTeamValue& per_team) const {
-    TeamPolicyInternal p         = *this;
-    p.m_team_scratch_size[level] = per_team.value;
-    return p;
-  };
-
-  /** \brief set per thread scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal set_scratch_size(
-      const int& level, const PerThreadValue& per_thread) const {
-    TeamPolicyInternal p           = *this;
-    p.m_thread_scratch_size[level] = per_thread.value;
-    return p;
-  };
-
-  /** \brief set per thread and per team scratch size for a specific level of
-   * the scratch hierarchy */
-  inline TeamPolicyInternal set_scratch_size(
-      const int& level, const PerTeamValue& per_team,
-      const PerThreadValue& per_thread) const {
-    TeamPolicyInternal p           = *this;
-    p.m_team_scratch_size[level]   = per_team.value;
-    p.m_thread_scratch_size[level] = per_thread.value;
-    return p;
-  };
-#else
   /** \brief set chunk_size to a discrete value*/
   inline TeamPolicyInternal& set_chunk_size(
       typename traits::index_type chunk_size_) {
@@ -471,46 +393,10 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
   }
-#endif
 
   typedef Kokkos::Impl::CudaTeamMember member_type;
 
  protected:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  /** \brief set chunk_size to a discrete value*/
-  inline TeamPolicyInternal internal_set_chunk_size(
-      typename traits::index_type chunk_size_) {
-    m_chunk_size = chunk_size_;
-    return *this;
-  }
-
-  /** \brief set per team scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal internal_set_scratch_size(
-      const int& level, const PerTeamValue& per_team) {
-    m_team_scratch_size[level] = per_team.value;
-    return *this;
-  }
-
-  /** \brief set per thread scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal internal_set_scratch_size(
-      const int& level, const PerThreadValue& per_thread) {
-    m_thread_scratch_size[level] = per_thread.value;
-    return *this;
-  }
-
-  /** \brief set per thread and per team scratch size for a specific level of
-   * the scratch hierarchy */
-  inline TeamPolicyInternal internal_set_scratch_size(
-      const int& level, const PerTeamValue& per_team,
-      const PerThreadValue& per_thread) {
-    m_team_scratch_size[level]   = per_team.value;
-    m_thread_scratch_size[level] = per_thread.value;
-    return *this;
-  }
-#endif
-
   template <class ClosureType, class FunctorType, class BlockSizeCallable>
   int internal_team_size_common(const FunctorType& f,
                                 BlockSizeCallable&& block_size_callable) const {

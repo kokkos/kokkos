@@ -1754,9 +1754,6 @@ inline void deep_copy(
 #endif
 
   if (dst.data() == nullptr || src.data() == nullptr) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    // do nothing
-#else
     // throw if dimension mismatch
     if ((src.extent(0) != dst.extent(0)) || (src.extent(1) != dst.extent(1)) ||
         (src.extent(2) != dst.extent(2)) || (src.extent(3) != dst.extent(3)) ||
@@ -1784,7 +1781,6 @@ inline void deep_copy(
 
       Kokkos::Impl::throw_runtime_exception(message);
     }
-#endif
     Kokkos::fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -1847,29 +1843,6 @@ inline void deep_copy(
       (src.extent(2) != dst.extent(2)) || (src.extent(3) != dst.extent(3)) ||
       (src.extent(4) != dst.extent(4)) || (src.extent(5) != dst.extent(5)) ||
       (src.extent(6) != dst.extent(6)) || (src.extent(7) != dst.extent(7))) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    Kokkos::fence();
-    if (DstExecCanAccessSrc) {
-      // Copying data between views in accessible memory spaces and either
-      // non-contiguous or incompatible shape.
-      Kokkos::Impl::ViewRemap<dst_type, src_type>(dst, src);
-    } else if (SrcExecCanAccessDst) {
-      // Copying data between views in accessible memory spaces and either
-      // non-contiguous or incompatible shape.
-      Kokkos::Impl::ViewRemap<dst_type, src_type, src_execution_space>(dst,
-                                                                       src);
-    } else {
-      Kokkos::Impl::throw_runtime_exception(
-          "deep_copy given views that would require a temporary allocation");
-    }
-    Kokkos::fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endDeepCopy();
-    }
-#endif
-    return;
-#else
     std::string message(
         "Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
     message += dst.label();
@@ -1890,7 +1863,6 @@ inline void deep_copy(
     message += ") ";
 
     Kokkos::Impl::throw_runtime_exception(message);
-#endif
   }
 
   // If same type, equal layout, equal dimensions, equal span, and contiguous
@@ -2941,9 +2913,6 @@ inline void deep_copy(
   if ((dst_start == nullptr || src_start == nullptr) ||
       ((std::ptrdiff_t(dst_start) == std::ptrdiff_t(src_start)) &&
        (std::ptrdiff_t(dst_end) == std::ptrdiff_t(src_end)))) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    // do nothing
-#else
     // throw if dimension mismatch
     if ((src.extent(0) != dst.extent(0)) || (src.extent(1) != dst.extent(1)) ||
         (src.extent(2) != dst.extent(2)) || (src.extent(3) != dst.extent(3)) ||
@@ -2971,7 +2940,6 @@ inline void deep_copy(
 
       Kokkos::Impl::throw_runtime_exception(message);
     }
-#endif
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
@@ -3024,35 +2992,6 @@ inline void deep_copy(
       (src.extent(2) != dst.extent(2)) || (src.extent(3) != dst.extent(3)) ||
       (src.extent(4) != dst.extent(4)) || (src.extent(5) != dst.extent(5)) ||
       (src.extent(6) != dst.extent(6)) || (src.extent(7) != dst.extent(7))) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (ExecCanAccessSrcDst) {
-      Kokkos::Impl::ViewRemap<dst_type, src_type, ExecSpace>(dst, src);
-      exec_space.fence();
-    } else if (DstExecCanAccessSrc) {
-      // Copying data between views in accessible memory spaces and either
-      // non-contiguous or incompatible shape.
-      exec_space.fence();
-      Kokkos::Impl::ViewRemap<dst_type, src_type, dst_execution_space>(dst,
-                                                                       src);
-      dst_execution_space().fence();
-    } else if (SrcExecCanAccessDst) {
-      // Copying data between views in accessible memory spaces and either
-      // non-contiguous or incompatible shape.
-      exec_space.fence();
-      Kokkos::Impl::ViewRemap<dst_type, src_type, src_execution_space>(dst,
-                                                                       src);
-      src_execution_space().fence();
-    } else {
-      Kokkos::Impl::throw_runtime_exception(
-          "deep_copy given views that would require a temporary allocation");
-    }
-#if defined(KOKKOS_ENABLE_PROFILING)
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endDeepCopy();
-    }
-#endif
-    return;
-#else
     std::string message(
         "Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
     message += dst.label();
@@ -3073,7 +3012,6 @@ inline void deep_copy(
     message += ") ";
 
     Kokkos::Impl::throw_runtime_exception(message);
-#endif
   }
 
   // If same type, equal layout, equal dimensions, equal span, and contiguous
@@ -3447,30 +3385,16 @@ inline typename Kokkos::View<T, P...>::HostMirror create_mirror(
   typedef View<T, P...> src_type;
   typedef typename src_type::HostMirror dst_type;
 
-  return dst_type(std::string(src.label()).append("_mirror")
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-                      ,
-                  src.extent(0), src.extent(1), src.extent(2), src.extent(3),
-                  src.extent(4), src.extent(5), src.extent(6), src.extent(7));
-#else
-                      ,
-                  src.rank_dynamic > 0 ? src.extent(0)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 1 ? src.extent(1)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 2 ? src.extent(2)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 3 ? src.extent(3)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 4 ? src.extent(4)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 5 ? src.extent(5)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 6 ? src.extent(6)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                  src.rank_dynamic > 7 ? src.extent(7)
-                                       : KOKKOS_IMPL_CTOR_DEFAULT_ARG);
-#endif
+  return dst_type(
+      std::string(src.label()).append("_mirror"),
+      src.rank_dynamic > 0 ? src.extent(0) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 1 ? src.extent(1) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 2 ? src.extent(2) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 3 ? src.extent(3) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 4 ? src.extent(4) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 5 ? src.extent(5) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 6 ? src.extent(6) : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      src.rank_dynamic > 7 ? src.extent(7) : KOKKOS_IMPL_CTOR_DEFAULT_ARG);
 }
 
 template <class T, class... P>

@@ -604,11 +604,7 @@ struct Random_UniqueIndex {
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    const int i = ExecutionSpace::hardware_thread_id();
-#else
     const int i = ExecutionSpace::impl_hardware_thread_id();
-#endif
     return i;
 #else
     return 0;

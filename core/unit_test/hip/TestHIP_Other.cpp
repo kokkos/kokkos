@@ -51,7 +51,6 @@
 #ifndef KOKKOS_ENABLE_HIP
 #include <TestCXX11.hpp>
 #endif
-#include <TestTile.hpp>
 
 #include <TestViewCtorPropEmbeddedDim.hpp>
 #include <TestViewLayoutTiled.hpp>

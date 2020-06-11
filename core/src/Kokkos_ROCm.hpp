@@ -142,11 +142,7 @@ class ROCm {
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
   static void impl_static_fence();
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  static void fence();
-#else
   void fence() const;
-#endif
 
   /// \brief Print configuration information to the given output stream.
   static void print_configuration(std::ostream&, const bool detail = false);

@@ -279,15 +279,9 @@ struct GraphRowViewConst {
 /// <li> <tt> entries( row_map[i0] + i1 , i2 , i3 , ... ); </tt> </li>
 /// </ul>
 template <class DataType, class Arg1Type, class Arg2Type = void,
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-          typename SizeType =
-              typename ViewTraits<DataType*, Arg1Type, Arg2Type>::size_type,
-          class Arg3Type = void>
-#else
           class Arg3Type    = void,
           typename SizeType = typename ViewTraits<DataType*, Arg1Type, Arg2Type,
                                                   Arg3Type>::size_type>
-#endif
 class StaticCrsGraph {
  private:
   typedef ViewTraits<DataType*, Arg1Type, Arg2Type, Arg3Type> traits;
@@ -300,21 +294,12 @@ class StaticCrsGraph {
   typedef typename traits::memory_traits memory_traits;
   typedef SizeType size_type;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  typedef StaticCrsGraph<DataType, Arg1Type, Arg2Type, SizeType, Arg3Type>
-      staticcrsgraph_type;
-  typedef StaticCrsGraph<data_type, array_layout,
-                         typename traits::host_mirror_space, size_type,
-                         memory_traits>
-      HostMirror;
-#else
   typedef StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>
       staticcrsgraph_type;
   typedef StaticCrsGraph<data_type, array_layout,
                          typename traits::host_mirror_space, memory_traits,
                          size_type>
       HostMirror;
-#endif
 
   typedef View<const size_type*, array_layout, device_type, memory_traits>
       row_map_type;
@@ -440,35 +425,19 @@ typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
 
 //----------------------------------------------------------------------------
 
-template <class DataType, class Arg1Type, class Arg2Type,
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-          typename SizeType, class Arg3Type>
-typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, SizeType,
-                        Arg3Type>::HostMirror
-create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, SizeType,
-                                        Arg3Type>& input);
-#else
-          class Arg3Type, typename SizeType>
+template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
+          typename SizeType>
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                         SizeType>::HostMirror
 create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                         SizeType>& input);
-#endif
 
-template <class DataType, class Arg1Type, class Arg2Type,
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-          typename SizeType, class Arg3Type>
-typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, SizeType,
-                        Arg3Type>::HostMirror
-create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, SizeType,
-                                        Arg3Type>& input);
-#else
-          class Arg3Type, typename SizeType>
+template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
+          typename SizeType>
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                         SizeType>::HostMirror
 create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                    SizeType>& input);
-#endif
 
 }  // namespace Kokkos
 
@@ -509,21 +478,12 @@ struct StaticCrsGraphMaximumEntry {
 
 }  // namespace Impl
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-template <class DataType, class Arg1Type, class Arg2Type, typename SizeType,
-          class Arg3Type>
-DataType maximum_entry(const StaticCrsGraph<DataType, Arg1Type, Arg2Type,
-                                            SizeType, Arg3Type>& graph) {
-  typedef StaticCrsGraph<DataType, Arg1Type, Arg2Type, SizeType, Arg3Type>
-      GraphType;
-#else
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
 DataType maximum_entry(const StaticCrsGraph<DataType, Arg1Type, Arg2Type,
                                             Arg3Type, SizeType>& graph) {
   typedef StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>
       GraphType;
-#endif
   typedef Impl::StaticCrsGraphMaximumEntry<GraphType> FunctorType;
 
   DataType result = 0;

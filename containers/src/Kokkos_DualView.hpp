@@ -168,7 +168,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   //! \name Counters to keep track of changes ("modified" flags)
   //@{
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
  protected:
   // modified_flags[0] -> host
   // modified_flags[1] -> device
@@ -176,15 +175,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   t_modified_flags modified_flags;
 
  public:
-#else
-  typedef View<unsigned int[2], LayoutLeft, typename t_host::execution_space>
-      t_modified_flags;
-  typedef View<unsigned int, LayoutLeft, typename t_host::execution_space>
-      t_modified_flag;
-  t_modified_flags modified_flags;
-  t_modified_flag modified_host, modified_device;
-#endif
-
   //@}
 
   // Moved this specifically after modified_flags to resolve an alignment issue
@@ -203,14 +193,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   /// Both device and host View objects are constructed using their
   /// default constructors.  The "modified" flags are both initialized
   /// to "unmodified."
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
   DualView() = default;
-#else
-  DualView() : modified_flags(t_modified_flags("DualView::modified_flags")) {
-    modified_host   = t_modified_flag(modified_flags, 0);
-    modified_device = t_modified_flag(modified_flags, 1);
-  }
-#endif
 
   /// \brief Constructor that allocates View objects on both host and device.
   ///
@@ -232,12 +215,8 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
            const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : modified_flags(t_modified_flags("DualView::modified_flags")),
         d_view(label, n0, n1, n2, n3, n4, n5, n6, n7),
-        h_view(create_mirror_view(d_view)) {  // without UVM, host View mirrors
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    modified_host   = t_modified_flag(modified_flags, 0);
-    modified_device = t_modified_flag(modified_flags, 1);
-#endif
-  }
+        h_view(create_mirror_view(d_view))  // without UVM, host View mirrors
+  {}
 
   /// \brief Constructor that allocates View objects on both host and device.
   ///
@@ -263,12 +242,8 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
            const size_t n7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : modified_flags(t_modified_flags("DualView::modified_flags")),
         d_view(arg_prop, n0, n1, n2, n3, n4, n5, n6, n7),
-        h_view(create_mirror_view(d_view)) {  // without UVM, host View mirrors
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    modified_host   = t_modified_flag(modified_flags, 0);
-    modified_device = t_modified_flag(modified_flags, 1);
-#endif
-  }
+        h_view(create_mirror_view(d_view))  // without UVM, host View mirrors
+  {}
 
   explicit inline DualView(const ViewAllocateWithoutInitializing& arg_prop,
                            const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -290,28 +265,14 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   DualView(const DualView<SS, LS, DS, MS>& src)
       : modified_flags(src.modified_flags),
         d_view(src.d_view),
-        h_view(src.h_view)
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-        ,
-        modified_host(src.modified_host),
-        modified_device(src.modified_device)
-#endif
-  {
-  }
+        h_view(src.h_view) {}
 
   //! Subview constructor
   template <class SD, class S1, class S2, class S3, class Arg0, class... Args>
   DualView(const DualView<SD, S1, S2, S3>& src, const Arg0& arg0, Args... args)
       : modified_flags(src.modified_flags),
         d_view(Kokkos::subview(src.d_view, arg0, args...)),
-        h_view(Kokkos::subview(src.h_view, arg0, args...))
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-        ,
-        modified_host(src.modified_host),
-        modified_device(src.modified_device)
-#endif
-  {
-  }
+        h_view(Kokkos::subview(src.h_view, arg0, args...)) {}
 
   /// \brief Create DualView from existing device and host View objects.
   ///
@@ -348,10 +309,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       Kokkos::Impl::throw_runtime_exception(
           "DualView constructed with incompatible views");
     }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    modified_host   = t_modified_flag(modified_flags, 0);
-    modified_device = t_modified_flag(modified_flags, 1);
-#endif
   }
 
   //@}
@@ -380,7 +337,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
                    typename Device::memory_space>::value,
       t_dev, t_host>::type&
   view() const {
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
     constexpr bool device_is_memspace =
         std::is_same<Device, typename Device::memory_space>::value;
     constexpr bool device_is_execspace =
@@ -415,7 +371,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
               (device_exec_is_t_dev_exec || device_exec_is_t_host_exec))),
         "Template parameter to .view() must exactly match one of the "
         "DualView's device types or one of the execution or memory spaces");
-#endif
 
     return Impl::if_c<std::is_same<typename t_dev::memory_space,
                                    typename Device::memory_space>::value,
@@ -457,7 +412,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
         std::is_same<typename Device::memory_space,
                      typename t_host::device_type>::value;
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
     static_assert(
         device_is_t_dev_device || device_is_t_host_device ||
             (device_is_memspace &&
@@ -469,13 +423,8 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
               (device_exec_is_t_dev_exec || device_exec_is_t_host_exec))),
         "Template parameter to .sync() must exactly match one of the "
         "DualView's device types or one of the execution or memory spaces");
-#endif
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE
     int dev = -1;
-#else
-    int dev = 0;
-#endif
     if (device_is_t_dev_device)
       dev = 1;
     else if (device_is_t_host_device)
@@ -826,11 +775,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   //! \name Methods for getting capacity, stride, or dimension(s).
   //@{
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  //! The allocation size (same as Kokkos::View::capacity).
-  size_t capacity() const { return d_view.span(); }
-#endif
-
   //! The allocation size (same as Kokkos::View::span).
   KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return d_view.span(); }
 
@@ -857,29 +801,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       extent_int(const iType& r) const {
     return static_cast<int>(d_view.extent(r));
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  /*  Deprecate all 'dimension' functions in favor of
-   *  ISO/C++ vocabulary 'extent'.
-   */
-
-  /* \brief return size of dimension 0 */
-  size_t dimension_0() const { return d_view.extent(0); }
-  /* \brief return size of dimension 1 */
-  size_t dimension_1() const { return d_view.extent(1); }
-  /* \brief return size of dimension 2 */
-  size_t dimension_2() const { return d_view.extent(2); }
-  /* \brief return size of dimension 3 */
-  size_t dimension_3() const { return d_view.extent(3); }
-  /* \brief return size of dimension 4 */
-  size_t dimension_4() const { return d_view.extent(4); }
-  /* \brief return size of dimension 5 */
-  size_t dimension_5() const { return d_view.extent(5); }
-  /* \brief return size of dimension 6 */
-  size_t dimension_6() const { return d_view.extent(6); }
-  /* \brief return size of dimension 7 */
-  size_t dimension_7() const { return d_view.extent(7); }
-#endif
 
   //@}
 };
