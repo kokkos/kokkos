@@ -229,7 +229,9 @@ void* HIPSpace::allocate(
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::allocateData(name(), arg_label, ptr, reported_size);
+    Kokkos::Profiling::allocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
+        reported_size);
   }
 #endif
 
@@ -265,7 +267,9 @@ void* HIPHostPinnedSpace::allocate(const char*
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::allocateData(name(), arg_label, ptr, reported_size);
+    Kokkos::Profiling::allocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
+        reported_size);
   }
 #endif
 
@@ -295,8 +299,9 @@ void HIPSpace::deallocate(const char*
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::deallocateData(name(), arg_label, arg_alloc_ptr,
-                                      reported_size);
+    Kokkos::Profiling::deallocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, arg_alloc_ptr,
+        reported_size);
   }
 #endif
   HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
@@ -323,8 +328,9 @@ void HIPHostPinnedSpace::deallocate(const char* arg_label,
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::deallocateData(name(), arg_label, arg_alloc_ptr,
-                                      reported_size);
+    Kokkos::Profiling::deallocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, arg_alloc_ptr,
+        reported_size);
   }
 #endif
   HIP_SAFE_CALL(hipHostFree(arg_alloc_ptr));
@@ -416,8 +422,9 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
           &SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                                   void>::s_root_record,
 #endif
-          Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
-                                                       arg_alloc_size),
+          Kokkos::Impl::checked_allocation_with_header(
+              Kokkos::Profiling::make_space_handle(arg_space), arg_label,
+              arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
 
