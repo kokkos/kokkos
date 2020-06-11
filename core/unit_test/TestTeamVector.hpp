@@ -869,7 +869,7 @@ TEST(TEST_CATEGORY, team_vector) {
 #endif
 
 // FIXME_HIP
-#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) && !defined(KOKKOS_ENABLE_HIP)
+#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST(TEST_CATEGORY, triple_nested_parallelism) {
 // With KOKKOS_DEBUG enabled, the functor uses too many registers to run
 // with a team size of 32 on GPUs, 16 is the max possible (at least on a K80
