@@ -167,12 +167,6 @@ if(Kokkos_ENABLE_OPENMPTARGET)
   )
 endif()
 
-if(Kokkos_ENABLE_HIP)
-  # FIXME Linktime error: undefined reference to
-  # Kokkos::Impl::ViewDimensin<0ul, ...>(unsigned int, ...)
-  list(REMOVE_ITEM Serial_SOURCES serial/TestSerial_ViewLayoutStrideAssignment.cpp)
-endif()
-
 if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial1
@@ -335,6 +329,7 @@ if(Kokkos_ENABLE_HIP)
     SOURCES
       UnitTestMainInit.cpp
       ${HIP_SOURCES}
+      hip/TestHIP_ScanUnit.cpp
       hip/TestHIPHostPinned_ViewAPI_a.cpp
       hip/TestHIPHostPinned_ViewAPI_b.cpp
       hip/TestHIPHostPinned_ViewAPI_c.cpp

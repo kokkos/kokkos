@@ -213,8 +213,6 @@ TEST(TEST_CATEGORY, deep_copy_alignment) {
 }
 #endif
 
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
 namespace Impl {
 template <class Scalar1, class Scalar2, class Layout1, class Layout2>
 struct TestDeepCopyScalarConversion {
@@ -355,5 +353,4 @@ TEST(TEST_CATEGORY, deep_copy_conversion) {
   Impl::TestDeepCopyScalarConversion<double, float, right, stride>().run_tests(
       N0, N1);
 }
-#endif
 }  // namespace Test

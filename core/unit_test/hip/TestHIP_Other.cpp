@@ -47,10 +47,7 @@
 #include <TestTemplateMetaFunctions.hpp>
 #include <TestAggregate.hpp>
 #include <TestMemoryPool.hpp>
-// FIXME_HIP need Team Reduce
-#ifndef KOKKOS_ENABLE_HIP
 #include <TestCXX11.hpp>
-#endif
 
 #include <TestViewCtorPropEmbeddedDim.hpp>
 #include <TestViewLayoutTiled.hpp>
