@@ -213,7 +213,7 @@ void* HIPSpace::allocate(
 #if defined(KOKKOS_ENABLE_PROFILING)
         arg_logical_size
 #endif
-    ) const {
+) const {
   void* ptr = nullptr;
 
   auto const error_code = hipMalloc(&ptr, arg_alloc_size);
@@ -251,7 +251,7 @@ void* HIPHostPinnedSpace::allocate(const char*
 #if defined(KOKKOS_ENABLE_PROFILING)
                                        arg_logical_size
 #endif
-                                   ) const {
+) const {
   void* ptr = nullptr;
 
   auto const error_code = hipHostMalloc(&ptr, arg_alloc_size);
@@ -294,7 +294,7 @@ void HIPSpace::deallocate(const char*
 #if defined(KOKKOS_ENABLE_PROFILING)
                               arg_logical_size
 #endif
-                          ) const {
+) const {
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
@@ -323,7 +323,7 @@ void HIPHostPinnedSpace::deallocate(const char* arg_label,
 #if defined(KOKKOS_ENABLE_PROFILING)
                                         arg_logical_size
 #endif
-                                    ) const {
+) const {
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
@@ -394,9 +394,13 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
 
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                        void>::~SharedAllocationRecord() {
-  SharedAllocationHeader header;
-  Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
-      &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+  const char* label = nullptr;
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    SharedAllocationHeader header;
+    Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
+        &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+    label = header.label();
+  }
   auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
   m_space.deallocate(header.label(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,

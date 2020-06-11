@@ -213,7 +213,7 @@ void *CudaSpace::allocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                               arg_logical_size
 #endif
-                          ) const {
+) const {
   void *ptr = nullptr;
 
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
@@ -252,7 +252,7 @@ void *CudaUVMSpace::allocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                  arg_logical_size
 #endif
-                             ) const {
+) const {
   void *ptr = nullptr;
 
   Cuda::impl_static_fence();
@@ -304,7 +304,7 @@ void *CudaHostPinnedSpace::allocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                         arg_logical_size
 #endif
-                                    ) const {
+) const {
   void *ptr = nullptr;
 
   auto error_code = cudaHostAlloc(&ptr, arg_alloc_size, cudaHostAllocDefault);
@@ -350,7 +350,7 @@ void CudaSpace::deallocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                arg_logical_size
 #endif
-                           ) const {
+) const {
 
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -388,7 +388,7 @@ void CudaUVMSpace::deallocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                   arg_logical_size
 #endif
-                              ) const {
+) const {
   Cuda::impl_static_fence();
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -429,7 +429,7 @@ void CudaHostPinnedSpace::deallocate(const char *
 #if defined(KOKKOS_ENABLE_PROFILING)
                                          arg_logical_size
 #endif
-                                     ) const {
+) const {
 #if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
@@ -583,18 +583,24 @@ void SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::deallocate(
 // <editor-fold desc="SharedAllocationRecord destructors"> {{{1
 
 SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
-  SharedAllocationHeader header;
-  Kokkos::Impl::DeepCopy<Kokkos::CudaSpace, HostSpace>(
-      &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+  const char *label = nullptr;
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    SharedAllocationHeader header;
+    Kokkos::Impl::DeepCopy<Kokkos::CudaSpace, HostSpace>(
+        &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+    label = header.label();
+  }
   auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
-  m_space.deallocate(header.label(),
-                     SharedAllocationRecord<void, void>::m_alloc_ptr,
+  m_space.deallocate(label, SharedAllocationRecord<void, void>::m_alloc_ptr,
                      alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
 }
 
 SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::~SharedAllocationRecord() {
-  m_space.deallocate(RecordBase::m_alloc_ptr->m_label,
-                     SharedAllocationRecord<void, void>::m_alloc_ptr,
+  const char *label = nullptr;
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    label = RecordBase::m_alloc_ptr->m_label;
+  }
+  m_space.deallocate(label, SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size,
                      (SharedAllocationRecord<void, void>::m_alloc_size -
                       sizeof(SharedAllocationHeader)));
