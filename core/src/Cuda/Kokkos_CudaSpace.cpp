@@ -583,11 +583,13 @@ void SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::deallocate(
 // <editor-fold desc="SharedAllocationRecord destructors"> {{{1
 
 SharedAllocationRecord<Kokkos::CudaSpace, void>::~SharedAllocationRecord() {
-  m_space.deallocate(RecordBase::m_alloc_ptr->m_label,
+  SharedAllocationHeader header;
+  Kokkos::Impl::DeepCopy<Kokkos::CudaSpace, HostSpace>(
+      &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+  auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
+  m_space.deallocate(header.label(),
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
-                     SharedAllocationRecord<void, void>::m_alloc_size,
-                     (SharedAllocationRecord<void, void>::m_alloc_size -
-                      sizeof(SharedAllocationHeader)));
+                     alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
 }
 
 SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::~SharedAllocationRecord() {
