@@ -78,7 +78,11 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
 
  public:
   __device__ inline void operator()() const noexcept {
-    if (0 == (threadIdx.y % 16)) {
+    constexpr int active_threads_per_warp = 2;
+    constexpr int filter_value =
+        Kokkos::Experimental::Impl::HIPTraits::WarpSize /
+        active_threads_per_warp;
+    if (0 == (hipThreadIdx_y % filter_value)) {
       // Spin until COMPLETED_TOKEN.
       // END_TOKEN indicates no work is currently available.
 
