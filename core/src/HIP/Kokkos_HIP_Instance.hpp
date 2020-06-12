@@ -65,6 +65,7 @@ struct HIPTraits {
 
 HIP::size_type hip_internal_maximum_warp_count();
 HIP::size_type hip_internal_maximum_grid_count();
+HIP::size_type hip_internal_multiprocessor_count();
 
 HIP::size_type *hip_internal_scratch_space(const HIP::size_type size);
 HIP::size_type *hip_internal_scratch_flags(const HIP::size_type size);
