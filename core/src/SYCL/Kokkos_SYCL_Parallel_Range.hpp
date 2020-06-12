@@ -1,17 +1,19 @@
-#include<SYCL/Kokkos_SYCL_KernelLaunch.hpp>
+#ifndef KOKKOS_SYCL_PARALLEL_RANGE_HPP_
+#define KOKKOS_SYCL_PARALLEL_RANGE_HPP_
+#include <SYCL/Kokkos_SYCL_KernelLaunch.hpp>
 #include <algorithm>
 #include <functional>
-namespace Kokkos {
-namespace Impl {
 
-template< class FunctorType , class ... Traits >
-class ParallelFor< FunctorType
-                 , Kokkos::RangePolicy< Traits ... >
+template< class FunctorType , class ExecPolicy >
+class Kokkos::Impl::ParallelFor< FunctorType
+                 //NLIBER , Kokkos::RangePolicy< Traits ... >
+                 , ExecPolicy
                  , Kokkos::Experimental::SYCL
                  >
 {
 public:
-  typedef Kokkos::RangePolicy< Traits ... > Policy;
+  //NLIBER typedef Kokkos::RangePolicy< Traits ... > Policy;
+  typedef ExecPolicy Policy;
 private:
 
   typedef typename Policy::member_type  Member ;
@@ -66,5 +68,52 @@ public:
 
 };
 
-}
-}
+// NLIBER
+#if 0
+template <bool B>
+class Kokkos::Impl::ParallelFor<
+    Kokkos::Impl::ViewCopy<
+        Kokkos::View<int*, ::Kokkos::LayoutLeft,
+                     ::Kokkos::Device<::Kokkos::Experimental::SYCL,
+                                      ::Kokkos::AnonymousSpace>,
+                     ::Kokkos::MemoryTraits<0>>,
+        Kokkos::View<const int*, ::Kokkos::LayoutLeft,
+                     ::Kokkos::Device<::Kokkos::Experimental::SYCL,
+                                      ::Kokkos::AnonymousSpace>,
+                     ::Kokkos::MemoryTraits<0>>,
+        Kokkos::LayoutLeft, Kokkos::Experimental::SYCL, 1, int, B>,
+    Kokkos::RangePolicy<::Kokkos::Experimental::SYCL, ::Kokkos::IndexType<int>>,
+    Kokkos::Experimental::SYCL> {
+ public:
+  using functor_type = Kokkos::Impl::ViewCopy<
+      Kokkos::View<int*, ::Kokkos::LayoutLeft,
+                   ::Kokkos::Device<::Kokkos::Experimental::SYCL,
+                                    ::Kokkos::AnonymousSpace>,
+                   ::Kokkos::MemoryTraits<0>>,
+      Kokkos::View<const int*, ::Kokkos::LayoutLeft,
+                   ::Kokkos::Device<::Kokkos::Experimental::SYCL,
+                                    ::Kokkos::AnonymousSpace>,
+                   ::Kokkos::MemoryTraits<0>>,
+      Kokkos::LayoutLeft, Kokkos::Experimental::SYCL, 1, int, B>;
+
+  using Policy = Kokkos::RangePolicy<::Kokkos::Experimental::SYCL,
+                                     ::Kokkos::IndexType<int>>;
+
+  void operator()(cl::sycl::item<1> item) const {
+    int id = item.get_linear_id();
+    m_functor(id);
+  }
+
+  void execute() const { Kokkos::Experimental::Impl::sycl_launch(*this); }
+
+  ParallelFor(const functor_type& arg_functor, const Policy& arg_policy)
+      : m_functor(arg_functor), m_policy(arg_policy) {}
+
+  functor_type m_functor;
+  Policy m_policy;
+};
+#endif
+
+
+#endif // KOKKOS_SYCL_PARALLEL_RANGE_HPP_
+

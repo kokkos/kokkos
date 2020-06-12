@@ -1,4 +1,8 @@
+#ifndef KOKKOS_SYCL_KERNELLAUNCH_HPP_
+#define KOKKOS_SYCL_KERNELLAUNCH_HPP_
+
 #include <SYCL/Kokkos_SYCL_Error.hpp>
+#include <CL/sycl.hpp>
 
 template<class T>
 class kokkos_sycl_functor;
@@ -39,6 +43,8 @@ void sycl_launch(const Driver driver) {
 }
 
 
-}
-}
-}
+} // Impl namespace
+} // Experimental namespace
+} // Kokkos namespace
+
+#endif // KOKKOS_SYCL_KERNELLAUNCH_HPP_
