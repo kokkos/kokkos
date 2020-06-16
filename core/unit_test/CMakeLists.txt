@@ -321,7 +321,6 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_AtomicOperations_complexdouble.cpp
     hip/TestHIP_TeamTeamSize.cpp
     hip/TestHIP_TeamVectorRange.cpp
-    hip/TestHIP_LocalDeepCopy.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
