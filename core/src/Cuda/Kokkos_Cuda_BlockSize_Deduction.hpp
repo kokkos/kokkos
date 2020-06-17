@@ -167,33 +167,26 @@ int cuda_get_max_block_size(const CudaInternal* cuda_instance,
                             const FunctorType& f, const size_t vector_length,
                             const size_t shmem_block,
                             const size_t shmem_thread) {
-  int compare;
-  {
-    //#ifdef EXPERIMENTAL_BLOCK_DEDUCTION
-    auto const& prop = Kokkos::Cuda().cuda_device_prop();
+#ifdef EXPERIMENTAL_BLOCK_DEDUCTION
+  auto const& prop = Kokkos::Cuda().cuda_device_prop();
 
-    auto const block_size_to_dynamic_shmem = [&f, vector_length, shmem_block,
-                                              shmem_thread](int block_size) {
-      size_t const functor_shmem =
-          Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
-              f, block_size / vector_length);
+  auto const block_size_to_dynamic_shmem = [&f, vector_length, shmem_block,
+                                            shmem_thread](int block_size) {
+    size_t const functor_shmem =
+        Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
+            f, block_size / vector_length);
 
-      size_t const total_shmem = shmem_block +
-                                 shmem_thread * (block_size / vector_length) +
-                                 functor_shmem;
-      return total_shmem;
-    };
+    size_t const total_shmem = shmem_block +
+                               shmem_thread * (block_size / vector_length) +
+                               functor_shmem;
+    return total_shmem;
+  };
 
-    const int max_blocks_per_sm = cuda_instance->m_maxBlocksPerSM;
+  const int max_blocks_per_sm = cuda_instance->m_maxBlocksPerSM;
 
-    compare =
-        cuda_deduce_block_size(true, prop, attr, block_size_to_dynamic_shmem,
-                               max_blocks_per_sm, LaunchBounds{});
-  }
-  //  return cuda_deduce_block_size(true, prop, attr,
-  //  block_size_to_dynamic_shmem,
-  //                                max_blocks_per_sm, LaunchBounds{});
-  //#else
+  return cuda_deduce_block_size(true, prop, attr, block_size_to_dynamic_shmem,
+                                max_blocks_per_sm, LaunchBounds{});
+#else
   const int min_blocks_per_sm =
       LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
   const int max_threads_per_block = LaunchBounds::maxTperB == 0
@@ -267,14 +260,8 @@ int cuda_get_max_block_size(const CudaInternal* cuda_instance,
 #endif
     block_size -= 32;
   }
-  if (compare != opt_block_size) {
-    std::stringstream ss;
-    ss << "max ";
-    ss << "new " << compare << " != old " << opt_block_size << '\n';
-    Impl::throw_runtime_exception(ss.str());
-  }
   return opt_block_size;
-  //#endif
+#endif
 }
 
 template <class FunctorType, class LaunchBounds>
@@ -283,33 +270,27 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
                             const FunctorType& f, const size_t vector_length,
                             const size_t shmem_block,
                             const size_t shmem_thread) {
-  //#ifdef EXPERIMENTAL_BLOCK_DEDUCTION
-  int compare;
-  {
-    auto const& prop = Kokkos::Cuda().cuda_device_prop();
+#ifdef EXPERIMENTAL_BLOCK_DEDUCTION
 
-    auto const block_size_to_dynamic_shmem = [&f, vector_length, shmem_block,
-                                              shmem_thread](int block_size) {
-      size_t const functor_shmem =
-          Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
-              f, block_size / vector_length);
+  auto const& prop = Kokkos::Cuda().cuda_device_prop();
 
-      size_t const total_shmem = shmem_block +
-                                 shmem_thread * (block_size / vector_length) +
-                                 functor_shmem;
-      return total_shmem;
-    };
+  auto const block_size_to_dynamic_shmem = [&f, vector_length, shmem_block,
+                                            shmem_thread](int block_size) {
+    size_t const functor_shmem =
+        Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
+            f, block_size / vector_length);
 
-    const int max_blocks_per_sm = cuda_instance->m_maxBlocksPerSM;
+    size_t const total_shmem = shmem_block +
+                               shmem_thread * (block_size / vector_length) +
+                               functor_shmem;
+    return total_shmem;
+  };
 
-    compare =
-        cuda_deduce_block_size(false, prop, attr, block_size_to_dynamic_shmem,
-                               max_blocks_per_sm, LaunchBounds{});
-  }
-  //  return cuda_deduce_block_size(false, prop, attr,
-  //  block_size_to_dynamic_shmem,
-  //                                max_blocks_per_sm, LaunchBounds{});
-  //#else
+  const int max_blocks_per_sm = cuda_instance->m_maxBlocksPerSM;
+
+  return cuda_deduce_block_size(false, prop, attr, block_size_to_dynamic_shmem,
+                                max_blocks_per_sm, LaunchBounds{});
+#else
   const int min_blocks_per_sm =
       LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
   const int max_threads_per_block = LaunchBounds::maxTperB == 0
@@ -384,14 +365,8 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
 #endif
     block_size -= 32;
   }
-  if (compare != opt_block_size) {
-    std::stringstream ss;
-    ss << "opt ";
-    ss << "new " << compare << " != old " << opt_block_size << '\n';
-    Impl::throw_runtime_exception(ss.str());
-  }
   return opt_block_size;
-  //#endif
+#endif
 }
 
 }  // namespace Impl
