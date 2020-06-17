@@ -62,14 +62,14 @@ namespace Kokkos {
 namespace {
 
 __global__ void init_lock_array_kernel_atomic() {
-  unsigned i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  unsigned i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1) {
     g_device_hip_lock_arrays.atomic[i] = 0;
   }
 }
 
 __global__ void init_lock_array_kernel_threadid(int N) {
-  unsigned i = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  unsigned i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < static_cast<unsigned>(N)) {
     g_device_hip_lock_arrays.scratch[i] = 0;
   }

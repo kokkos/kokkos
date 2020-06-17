@@ -48,7 +48,7 @@
 namespace Test {
 
 __global__ void offset(int* p) {
-  int idx = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < 100) {
     p[idx] += idx;
   }

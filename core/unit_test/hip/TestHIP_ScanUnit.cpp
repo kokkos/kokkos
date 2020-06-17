@@ -54,7 +54,7 @@ struct DummyFunctor {
 template <int N>
 __global__ void start_intra_block_scan() {
   __shared__ DummyFunctor::value_type values[N];
-  const int i = hipThreadIdx_y;
+  const int i = threadIdx.y;
   values[i]   = i + 1;
   __syncthreads();
 
