@@ -427,7 +427,7 @@ void initialize() {
 
 #ifdef KOKKOS_ENABLE_TUNING
   Experimental::VariableInfo kernel_name;
-  kernel_name.type = Experimental::ValueType::kokkos_value_text;
+  kernel_name.type = Experimental::ValueType::kokkos_value_string;
   kernel_name.category =
       Experimental::StatisticalCategory::kokkos_value_categorical;
   kernel_name.valueQuantity =
@@ -447,7 +447,7 @@ void initialize() {
       Experimental::declare_input_type("kokkos.kernel_name", kernel_name);
 
   Experimental::VariableInfo kernel_type;
-  kernel_type.type = Experimental::ValueType::kokkos_value_text;
+  kernel_type.type = Experimental::ValueType::kokkos_value_string;
   kernel_type.category =
       Experimental::StatisticalCategory::kokkos_value_categorical;
   kernel_type.valueQuantity =

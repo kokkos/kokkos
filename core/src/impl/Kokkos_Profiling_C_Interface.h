@@ -134,9 +134,9 @@ struct Kokkos_Tools_ValueRange {
 };
 
 enum Kokkos_Tools_VariableInfo_ValueType {
-  kokkos_value_floating_point,
-  kokkos_value_integer,
-  kokkos_value_text,
+  kokkos_value_double,
+  kokkos_value_int64,
+  kokkos_value_string,
 };
 
 enum Kokkos_Tools_VariableInfo_StatisticalCategory {
