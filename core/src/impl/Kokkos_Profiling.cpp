@@ -107,13 +107,15 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
     (*Experimental::current_callbacks.begin_parallel_for)(kernelPrefix.c_str(),
                                                           devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
+    auto context_id = Experimental::get_new_context_id();
+    Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
             Experimental::kernel_name_context_variable_id,
             kernelPrefix.c_str()),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
-    Experimental::set_input_values(Experimental::get_new_context_id(), 2,
+    Experimental::set_input_values(context_id, 2,
                                    contextValues);
 #endif
   }
@@ -136,13 +138,15 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
     (*Experimental::current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(),
                                                            devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
+    auto context_id = Experimental::get_new_context_id();
+    Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
             Experimental::kernel_name_context_variable_id,
             kernelPrefix.c_str()),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
-    Experimental::set_input_values(Experimental::get_new_context_id(), 2,
+    Experimental::set_input_values(context_id, 2,
                                    contextValues);
 #endif
   }
@@ -165,13 +169,15 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
     (*Experimental::current_callbacks.begin_parallel_reduce)(
         kernelPrefix.c_str(), devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
+    auto context_id = Experimental::get_new_context_id();
+    Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
             Experimental::kernel_name_context_variable_id,
             kernelPrefix.c_str()),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
-    Experimental::set_input_values(Experimental::get_new_context_id(), 2,
+    Experimental::set_input_values(context_id, 2,
                                    contextValues);
 #endif
   }
@@ -226,12 +232,14 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
         dst_space, dst_label.c_str(), dst_ptr, src_space, src_label.c_str(),
         src_ptr, size);
 #ifdef KOKKOS_ENABLE_TUNING
+    auto context_id = Experimental::get_new_context_id();
+    Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
             Experimental::kernel_name_context_variable_id, "deep_copy_kernel"),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "deep_copy")};
-    Experimental::set_input_values(Experimental::get_new_context_id(), 2,
+    Experimental::set_input_values(context_id, 2,
                                    contextValues);
 #endif
   }
