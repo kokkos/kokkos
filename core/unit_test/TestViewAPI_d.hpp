@@ -51,10 +51,7 @@ TEST(TEST_CATEGORY, view_api_d) {
   TestViewAPI<double, TEST_EXECSPACE>::run_test_subview();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_subview_strided();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_vector();
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
   TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_c();
-#endif
 }
 
 TEST(TEST_CATEGORY, view_allocation_error) {

@@ -801,11 +801,6 @@ class Random_XorShift64 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef __HIP_DEVICE_COMPILE__  // FIXME_HIP
-    using std::sqrt;
-#else
-    using ::sqrt;
-#endif
     double S = 2.0;
     double U;
     while (S >= 1.0) {
@@ -813,7 +808,7 @@ class Random_XorShift64 {
       const double V = 2.0 * drand() - 1.0;
       S              = U * U + V * V;
     }
-    return U * sqrt(-2.0 * log(S) / S);
+    return U * std::sqrt(-2.0 * log(S) / S);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1042,11 +1037,6 @@ class Random_XorShift1024 {
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-#ifndef KOKKOS_ENABLE_HIP  // FIXME_HIP
-    using std::sqrt;
-#else
-    using ::sqrt;
-#endif
     double S = 2.0;
     double U;
     while (S >= 1.0) {
@@ -1054,7 +1044,7 @@ class Random_XorShift1024 {
       const double V = 2.0 * drand() - 1.0;
       S              = U * U + V * V;
     }
-    return U * sqrt(-2.0 * log(S) / S);
+    return U * std::sqrt(-2.0 * log(S) / S);
   }
 
   KOKKOS_INLINE_FUNCTION

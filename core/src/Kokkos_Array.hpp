@@ -158,26 +158,6 @@ struct Array {
   KOKKOS_INLINE_FUNCTION const_pointer data() const {
     return &m_internal_implementation_private_member_data[0];
   }
-
-#ifdef KOKKOS_IMPL_HIP_CLANG_WORKAROUND
-  // Do not default unless move and move-assignment are also defined
-  KOKKOS_DEFAULTED_FUNCTION ~Array()            = default;
-  KOKKOS_DEFAULTED_FUNCTION Array()             = default;
-  KOKKOS_DEFAULTED_FUNCTION Array(const Array&) = default;
-  KOKKOS_DEFAULTED_FUNCTION Array& operator=(const Array&) = default;
-
-  // Some supported compilers are not sufficiently C++11 compliant
-  // for default move constructor and move assignment operator.
-  KOKKOS_DEFAULTED_FUNCTION Array(Array&&) = default;
-  KOKKOS_DEFAULTED_FUNCTION Array& operator=(Array&&) = default;
-
-  KOKKOS_INLINE_FUNCTION
-  Array(const std::initializer_list<T>& vals) {
-    for (size_t i = 0; i < N; i++) {
-      m_internal_implementation_private_member_data[i] = vals.begin()[i];
-    }
-  }
-#endif
 };
 
 template <class T, class Proxy>

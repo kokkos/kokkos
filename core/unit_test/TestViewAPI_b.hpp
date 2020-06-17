@@ -47,10 +47,7 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, view_api_b) {
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
   TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_a();
-#endif
   TestViewAPI<double, TEST_EXECSPACE>::run_test_mirror();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_scalar();
 }
