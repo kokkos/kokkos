@@ -113,7 +113,8 @@ inline int cuda_deduce_block_size(bool early_termination,
                                   LaunchBounds) {
   // Limits
   int const max_threads_per_sm = properties.maxThreadsPerMultiProcessor;
-  // unsure if I need to do that
+  // unsure if I need to do that or if this is already accounted for in the
+  // functor attributes
   int const max_threads_per_block =
       std::min(LaunchBounds::maxTperB == 0 ? (int)properties.maxThreadsPerBlock
                                            : (int)LaunchBounds::maxTperB,
