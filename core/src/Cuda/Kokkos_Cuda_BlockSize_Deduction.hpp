@@ -114,6 +114,7 @@ inline int cuda_deduce_block_size(bool early_termination,
       }
       default:
         throw_runtime_exception("Unknown device in cuda block size deduction");
+        return 0;
     }
   }();
 #endif
