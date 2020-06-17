@@ -65,7 +65,7 @@ int main() {
     contextVariableInfo.category = Kokkos::Tools::Experimental::
         StatisticalCategory::kokkos_value_categorical;
     contextVariableInfo.type =
-        Kokkos::Tools::Experimental::ValueType::kokkos_value_integer;
+        Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
     contextVariableInfo.valueQuantity =
         Kokkos::Tools::Experimental::CandidateValueType::kokkos_value_unbounded;
 
@@ -74,7 +74,7 @@ int main() {
     tuningVariableInfo.category = Kokkos::Tools::Experimental::
         StatisticalCategory::kokkos_value_categorical;
     tuningVariableInfo.type =
-        Kokkos::Tools::Experimental::ValueType::kokkos_value_integer;
+        Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
     tuningVariableInfo.valueQuantity =
         Kokkos::Tools::Experimental::CandidateValueType::kokkos_value_set;
 
@@ -89,7 +89,7 @@ int main() {
         [](const char* name, const size_t id,
            Kokkos::Tools::Experimental::VariableInfo& info) {
           if (info.type !=
-              Kokkos::Tools::Experimental::ValueType::kokkos_value_integer) {
+              Kokkos::Tools::Experimental::ValueType::kokkos_value_int64) {
             throw(std::runtime_error("Tuning Variable has wrong type"));
           }
         });
@@ -97,7 +97,7 @@ int main() {
         [](const char* name, const size_t id,
            Kokkos::Tools::Experimental::VariableInfo& info) {
           if (info.type !=
-              Kokkos::Tools::Experimental::ValueType::kokkos_value_integer) {
+              Kokkos::Tools::Experimental::ValueType::kokkos_value_int64) {
             throw(std::runtime_error("Context Variable has wrong type"));
           }
         });
@@ -155,7 +155,7 @@ int main() {
     secondContextVariableInfo.category = Kokkos::Tools::Experimental::
         StatisticalCategory::kokkos_value_categorical;
     secondContextVariableInfo.type =
-        Kokkos::Tools::Experimental::ValueType::kokkos_value_integer;
+        Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
     secondContextVariableInfo.valueQuantity =
         Kokkos::Tools::Experimental::CandidateValueType::kokkos_value_unbounded;
     auto secondContextVariableId =
