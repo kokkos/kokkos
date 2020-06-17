@@ -182,6 +182,8 @@ typedef void (*Kokkos_Tools_inputTypeDeclarationFunction)(
 typedef void (*Kokkos_Tools_requestValueFunction)(
     const size_t, const size_t, const Kokkos_Tools_VariableValue*,
     const size_t count, Kokkos_Tools_VariableValue*);
+typedef void (*Kokkos_Tools_contextBeginFunction)(const size_t
+                                                );
 typedef void (*Kokkos_Tools_contextEndFunction)(const size_t,
                                                 Kokkos_Tools_VariableValue);
 typedef void (*Kokkos_Tools_optimizationGoalDeclarationFunction)(
@@ -213,9 +215,10 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Tools_outputTypeDeclarationFunction declare_output_type;
   Kokkos_Tools_inputTypeDeclarationFunction declare_input_type;
   Kokkos_Tools_requestValueFunction request_output_values;
+  Kokkos_Tools_contextBeginFunction begin_tuning_context;
   Kokkos_Tools_contextEndFunction end_tuning_context;
   Kokkos_Tools_optimizationGoalDeclarationFunction declare_optimization_goal;
-  char padding[235 *
+  char padding[234 *
                sizeof(function_pointer)];  // allows us to add another 256
                                            // events to the Tools interface
                                            // without changing struct layout

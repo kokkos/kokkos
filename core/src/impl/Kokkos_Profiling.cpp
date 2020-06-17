@@ -403,11 +403,14 @@ void initialize() {
       auto p23 = dlsym(firstProfileLibrary, "kokkosp_end_context");
       Experimental::set_end_context_callback(
           *reinterpret_cast<Experimental::contextEndFunction*>(&p23));
-      auto p24 =
+      auto p24 = dlsym(firstProfileLibrary, "kokkosp_begin_context");
+      Experimental::set_begin_context_callback(
+          *reinterpret_cast<Experimental::contextBeginFunction*>(&p24));
+      auto p25 =
           dlsym(firstProfileLibrary, "kokkosp_declare_optimization_goal");
       Experimental::set_declare_optimization_goal_callback(
           *reinterpret_cast<Experimental::optimizationGoalDeclarationFunction*>(
-              &p24));
+              &p25));
 #endif
     }
   }
@@ -571,6 +574,9 @@ void set_request_output_values_callback(requestValueFunction callback) {
 }
 void set_end_context_callback(contextEndFunction callback) {
   current_callbacks.end_tuning_context = callback;
+}
+void set_begin_context_callback(contextBeginFunction callback) {
+  current_callbacks.begin_tuning_context = callback;
 }
 void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction callback) {
@@ -755,6 +761,12 @@ void request_output_values(size_t contextId, size_t count,
 
 static std::unordered_map<size_t, size_t> optimization_goals;
 
+void begin_context(size_t contextId) {
+  if (Experimental::current_callbacks.begin_tuning_context != nullptr) {
+    (*Experimental::current_callbacks.begin_tuning_context)(
+        contextId);
+  }
+}
 void end_context(size_t contextId) {
 #ifdef KOKKOS_ENABLE_TUNING
   for (auto id : features_per_context[contextId]) {
@@ -926,6 +938,7 @@ void set_request_output_values_callback(requestValueFunction) {}
 void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction) {}
 void set_end_context_callback(contextEndFunction) {}
+void set_begin_context_callback(contextBeginFunction) {}
 
 void pause_tools() {}
 
@@ -962,6 +975,7 @@ void set_input_values(size_t, size_t, VariableValue*) {}
 void request_output_values(size_t, size_t, VariableValue*) {}
 
 void end_context(size_t) {}
+void begin_context(size_t) {}
 
 bool have_tuning_tool() { return false; }
 

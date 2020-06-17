@@ -119,6 +119,7 @@ void set_request_output_values_callback(requestValueFunction callback);
 void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction callback);
 void set_end_context_callback(contextEndFunction callback);
+void set_begin_context_callback(contextBeginFunction callback);
 
 void pause_tools();
 void resume_tools();
@@ -222,6 +223,7 @@ size_t declare_input_type(const std::string& typeName, VariableInfo info);
 void set_input_values(size_t contextId, size_t count, VariableValue* values);
 
 void end_context(size_t contextId);
+void begin_context(size_t contextId);
 
 void request_output_values(size_t contextId, size_t count,
                            VariableValue* values);
