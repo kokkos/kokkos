@@ -116,8 +116,7 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
             kernelPrefix.c_str()),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
-    Experimental::set_input_values(context_id, 2,
-                                   contextValues);
+    Experimental::set_input_values(context_id, 2, contextValues);
 #endif
   }
 }
@@ -147,8 +146,7 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
             kernelPrefix.c_str()),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
-    Experimental::set_input_values(context_id, 2,
-                                   contextValues);
+    Experimental::set_input_values(context_id, 2, contextValues);
 #endif
   }
 }
@@ -178,8 +176,7 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
             kernelPrefix.c_str()),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
-    Experimental::set_input_values(context_id, 2,
-                                   contextValues);
+    Experimental::set_input_values(context_id, 2, contextValues);
 #endif
   }
 }
@@ -240,8 +237,7 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
             Experimental::kernel_name_context_variable_id, "deep_copy_kernel"),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "deep_copy")};
-    Experimental::set_input_values(context_id, 2,
-                                   contextValues);
+    Experimental::set_input_values(context_id, 2, contextValues);
 #endif
   }
 }
@@ -772,8 +768,7 @@ static std::unordered_map<size_t, size_t> optimization_goals;
 
 void begin_context(size_t contextId) {
   if (Experimental::current_callbacks.begin_tuning_context != nullptr) {
-    (*Experimental::current_callbacks.begin_tuning_context)(
-        contextId);
+    (*Experimental::current_callbacks.begin_tuning_context)(contextId);
   }
 }
 void end_context(size_t contextId) {
@@ -802,26 +797,26 @@ bool have_tuning_tool() {
 
 VariableValue make_variable_value(size_t id, int64_t val) {
   VariableValue variable_value;
-  variable_value.type_id              = id;
+  variable_value.type_id         = id;
   variable_value.value.int_value = val;
   return variable_value;
 }
 VariableValue make_variable_value(size_t id, double val) {
   VariableValue variable_value;
-  variable_value.type_id                 = id;
+  variable_value.type_id            = id;
   variable_value.value.double_value = val;
   return variable_value;
 }
 Experimental::VariableValue make_variable_value(size_t id, const char* val) {
   VariableValue variable_value;
-  variable_value.type_id                 = id;
+  variable_value.type_id            = id;
   variable_value.value.string_value = val;
   return variable_value;
 }
 SetOrRange make_candidate_set(size_t size, const char** data) {
   SetOrRange value_set;
   const char** data_copy = new const char*[size];
-  for(int x = 0 ; x < size; ++x){
+  for (int x = 0; x < size; ++x) {
     data_copy[x] = new char[strnlen(data[x], 512)]{};
     strncpy(const_cast<char*>(data_copy[x]), data[x], 512);
   }
@@ -995,25 +990,25 @@ bool have_tuning_tool() { return false; }
 
 VariableValue make_variable_value(size_t id, bool val) {
   VariableValue variable_value;
-  variable_value.type_id               = id;
+  variable_value.type_id          = id;
   variable_value.value.bool_value = val;
   return variable_value;
 }
 VariableValue make_variable_value(size_t id, int64_t val) {
   VariableValue variable_value;
-  variable_value.type_id              = id;
+  variable_value.type_id         = id;
   variable_value.value.int_value = val;
   return variable_value;
 }
 VariableValue make_variable_value(size_t id, double val) {
   VariableValue variable_value;
-  variable_value.type_id                 = id;
+  variable_value.type_id            = id;
   variable_value.value.double_value = val;
   return variable_value;
 }
 VariableValue make_variable_value(size_t id, const char* val) {
   VariableValue variable_value;
-  variable_value.type_id                 = id;
+  variable_value.type_id            = id;
   variable_value.value.string_value = val;
   return variable_value;
 }

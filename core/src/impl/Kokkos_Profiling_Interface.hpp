@@ -191,7 +191,7 @@ using outputTypeDeclarationFunction =
     Kokkos_Tools_outputTypeDeclarationFunction;
 using inputTypeDeclarationFunction = Kokkos_Tools_inputTypeDeclarationFunction;
 using requestValueFunction         = Kokkos_Tools_requestValueFunction;
-using contextBeginFunction           = Kokkos_Tools_contextBeginFunction;
+using contextBeginFunction         = Kokkos_Tools_contextBeginFunction;
 using contextEndFunction           = Kokkos_Tools_contextEndFunction;
 using optimizationGoalDeclarationFunction =
     Kokkos_Tools_optimizationGoalDeclarationFunction;
