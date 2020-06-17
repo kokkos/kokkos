@@ -66,11 +66,13 @@ inline int cuda_max_active_blocks_per_sm(cudaDeviceProp const& properties,
   //       max_blocks_regs);
 
   // Limits due to shared memory/SM
-  size_t const shmem_per_sm            = properties.sharedMemPerMultiprocessor;
-  size_t const shmem_per_block         = properties.sharedMemPerBlock;
-  size_t const static_shmem            = attributes.sharedSizeBytes;
-  size_t const dynamic_shmem_per_block = attributes.maxDynamicSharedSizeBytes;
-  size_t const total_shmem             = static_shmem + dynamic_shmem;
+  size_t const shmem_per_sm    = properties.sharedMemPerMultiprocessor;
+  size_t const shmem_per_block = properties.sharedMemPerBlock;
+  size_t const static_shmem    = attributes.sharedSizeBytes;
+  // Temporarily commented since was not used previously in block size deduction
+  // size_t const dynamic_shmem_per_block =
+  // attributes.maxDynamicSharedSizeBytes;
+  size_t const total_shmem = static_shmem + dynamic_shmem;
 
   int const max_blocks_shmem =
       total_shmem > shmem_per_block
