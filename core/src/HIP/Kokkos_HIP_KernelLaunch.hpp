@@ -161,10 +161,9 @@ struct HIPParallelLaunch<
       HIP_SAFE_CALL(hipMemcpyAsync(d_driver, &driver, sizeof(DriverType),
                                    hipMemcpyHostToDevice,
                                    hip_instance->m_stream));
-      hipLaunchKernelGGL(
-          (hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                            MinBlocksPerSM>),
-          grid, block, shmem, hip_instance->m_stream, d_driver);
+      hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+                                       MinBlocksPerSM>
+          <<<grid, block, shmem, hip_instance->m_stream>>>(d_driver);
 
       Kokkos::Experimental::HIP().fence();
       printf("Post Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
@@ -208,8 +207,8 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       HIP_SAFE_CALL(hipMemcpyAsync(d_driver, &driver, sizeof(DriverType),
                                    hipMemcpyHostToDevice,
                                    hip_instance->m_stream));
-      hipLaunchKernelGGL(hip_parallel_launch_local_memory<DriverType>, grid,
-                         block, shmem, hip_instance->m_stream, d_driver);
+      hip_parallel_launch_local_memory<DriverType>
+          <<<grid, block, shmem, hip_instance->m_stream>>>(d_driver);
 
       Kokkos::Experimental::HIP().fence();
       HIP_SAFE_CALL(hipFree(d_driver));

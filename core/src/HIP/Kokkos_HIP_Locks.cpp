@@ -93,12 +93,11 @@ void initialize_host_hip_lock_arrays() {
   g_host_hip_lock_arrays.n = ::Kokkos::Experimental::HIP::concurrency();
 
   KOKKOS_COPY_HIP_LOCK_ARRAYS_TO_DEVICE();
-  hipLaunchKernelGGL(init_lock_array_kernel_atomic,
-                     (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256,
-                     0, 0);
-  hipLaunchKernelGGL(init_lock_array_kernel_threadid,
-                     (::Kokkos::Experimental::HIP::concurrency() + 255) / 256,
-                     256, 0, 0, ::Kokkos::Experimental::HIP::concurrency());
+  init_lock_array_kernel_atomic<<<
+      (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256, 0, 0>>>();
+  init_lock_array_kernel_threadid<<<
+      (::Kokkos::Experimental::HIP::concurrency() + 255) / 256, 256, 0, 0>>>(
+      ::Kokkos::Experimental::HIP::concurrency());
 }
 
 void finalize_host_hip_lock_arrays() {

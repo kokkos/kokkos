@@ -67,7 +67,7 @@ TEST(hip, raw_hip_interop) {
 
   Kokkos::finalize();
 
-  hipLaunchKernelGGL(offset, dim3(100), dim3(100), 0, 0, p);
+  offset<<<dim3(100), dim3(100), 0, 0>>>(p);
   HIP_SAFE_CALL(hipDeviceSynchronize());
 
   int* h_p = new int[100];
