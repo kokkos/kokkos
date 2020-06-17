@@ -61,9 +61,6 @@ inline int cuda_max_active_blocks_per_sm(cudaDeviceProp const& properties,
   int const regs_per_sm     = properties.regsPerMultiprocessor;
   int const regs_per_thread = attributes.numRegs;
   int const max_blocks_regs = regs_per_sm / (regs_per_thread * block_size);
-  // printf("regs/sm %d  regs/thread %d  occ %d\n", regs_per_sm,
-  // regs_per_thread,
-  //       max_blocks_regs);
 
   // Limits due to shared memory/SM
   size_t const shmem_per_sm    = properties.sharedMemPerMultiprocessor;
@@ -81,28 +78,9 @@ inline int cuda_max_active_blocks_per_sm(cudaDeviceProp const& properties,
           ? 0
           : (total_shmem > 0 ? (int)shmem_per_sm / total_shmem
                              : max_blocks_regs);
-  // printf(
-  //    "shmem/sm %d  shmem/cta %d  staticshmem %d  dynamicshmem/block %d  "
-  //    "dynamicshmem %d  total %d  occ %d\n",
-  //    shmem_per_sm, shmem_per_block, static_shmem, dynamic_shmem_per_block,
-  //    dynamic_shmem, total_shmem, max_blocks_shmem);
-
-  // cudaOccDeviceState state{};
-  // state.cacheConfig = CACHE_PREFER_L1;
-  // cudaOccResult result;
-  // cudaOccDeviceProp prop = properties;
-  // cudaOccFuncAttributes attr = attributes;
-  // cudaOccMaxActiveBlocksPerMultiprocessor(&result, &prop, &attr, &state,
-  //                                        block_size, dynamic_shmem);
-  // printf("kokkos %d cuda %d\n", std::min(max_blocks_regs, max_blocks_shmem),
-  //       result.activeBlocksPerMultiprocessor);
-  // printf("regs %d shmem %d warps %d blocks %d\n", result.blockLimitRegs,
-  //       result.blockLimitSharedMem, result.blockLimitWarps,
-  //       result.blockLimitBlocks);
 
   // Overall occupancy in blocks
   return std::min(max_blocks_regs, max_blocks_shmem);
-  // return result.activeBlocksPerMultiprocessor;
 }
 
 template <typename UnaryFunction, typename LaunchBounds>
@@ -167,12 +145,7 @@ inline int cuda_deduce_block_size(bool early_termination,
         opt_threads_per_sm = threads_per_sm;
       }
     }
-    // printf("Block size: %d ", block_size);
-    // printf("Shmem: %d ", dynamic_shmem);
-    // printf("Bounds: %d %d %d ", min_blocks_per_sm, max_threads_per_sm,
-    //       max_blocks_per_sm);
-    // printf("Achieved: %d %d ", blocks_per_sm, threads_per_sm);
-    // printf("Opt: %d %d\n", opt_block_size, opt_threads_per_sm);
+
     if (early_termination && blocks_per_sm != 0) break;
   }
 
