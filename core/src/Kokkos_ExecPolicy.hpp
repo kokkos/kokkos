@@ -51,7 +51,6 @@
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Concepts.hpp>
-#include <sstream>
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <typeinfo>
 #endif  // KOKKOS_ENABLE_PROFILING
@@ -500,6 +499,9 @@ struct ScratchRequest {
   }
 };
 
+// Throws a runtime exception if level is not `0` or `1`
+void team_policy_check_valid_storage_level_argument(int level);
+
 /** \brief  Execution policy for parallel work over a league of teams of
  * threads.
  *
@@ -589,14 +591,6 @@ class TeamPolicy
   TeamPolicy(const internal_policy& p) : internal_policy(p) {
     first_arg = false;
   }
-  void check_valid_storage_level_argument(int level) const {
-    if (!(level == 0 || level == 1)) {
-      std::stringstream ss;
-      ss << "TeamPolicy::set_scratch_size(/*level*/ " << level
-         << ", ...) storage level argument must be 1 or 2 to be valid\n";
-      Impl::throw_runtime_exception(ss.str());
-    }
-  }
 
  public:
   inline TeamPolicy& set_chunk_size(int chunk) {
@@ -612,27 +606,28 @@ class TeamPolicy
                                    level, per_team)),
                                internal_policy&>::value,
                   "internal set_chunk_size should return a reference");
-    check_valid_storage_level_argument(level);
+
+    team_policy_check_valid_storage_level_argument(level);
     return static_cast<TeamPolicy&>(
         internal_policy::set_scratch_size(level, per_team));
   }
   inline TeamPolicy& set_scratch_size(const int& level,
                                       const Impl::PerThreadValue& per_thread) {
-    check_valid_storage_level_argument(level);
+    team_policy_check_valid_storage_level_argument(level);
     return static_cast<TeamPolicy&>(
         internal_policy::set_scratch_size(level, per_thread));
   }
   inline TeamPolicy& set_scratch_size(const int& level,
                                       const Impl::PerTeamValue& per_team,
                                       const Impl::PerThreadValue& per_thread) {
-    check_valid_storage_level_argument(level);
+    team_policy_check_valid_storage_level_argument(level);
     return static_cast<TeamPolicy&>(
         internal_policy::set_scratch_size(level, per_team, per_thread));
   }
   inline TeamPolicy& set_scratch_size(const int& level,
                                       const Impl::PerThreadValue& per_thread,
                                       const Impl::PerTeamValue& per_team) {
-    check_valid_storage_level_argument(level);
+    team_policy_check_valid_storage_level_argument(level);
     return static_cast<TeamPolicy&>(
         internal_policy::set_scratch_size(level, per_team, per_thread));
   }
