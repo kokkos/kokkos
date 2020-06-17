@@ -132,8 +132,6 @@ inline int cuda_deduce_block_size(bool early_termination,
     int threads_per_sm = blocks_per_sm * block_size;
 
     if (threads_per_sm > max_threads_per_sm) {
-      //      threads_per_sm = max_threads_per_sm;
-      //      blocks_per_sm  = threads_per_sm / block_size;
       blocks_per_sm  = max_threads_per_sm / block_size;
       threads_per_sm = blocks_per_sm * block_size;
     }
