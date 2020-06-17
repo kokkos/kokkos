@@ -78,20 +78,14 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
 
  public:
   __device__ inline void operator()() const noexcept {
-    constexpr int active_threads_per_warp = 2;
-    constexpr int filter_value =
-        Kokkos::Experimental::Impl::HIPTraits::WarpSize /
-        active_threads_per_warp;
-    if (0 == (hipThreadIdx_y % filter_value)) {
-      // Spin until COMPLETED_TOKEN.
-      // END_TOKEN indicates no work is currently available.
+    // Spin until COMPLETED_TOKEN.
+    // END_TOKEN indicates no work is currently available.
 
-      for (std::int32_t w = Policy::END_TOKEN;
-           Policy::COMPLETED_TOKEN != (w = m_policy.pop_work());) {
-        if (Policy::END_TOKEN != w) {
-          exec_one<typename Policy::work_tag>(w);
-          m_policy.completed_work(w);
-        }
+    for (std::int32_t w = Policy::END_TOKEN;
+         Policy::COMPLETED_TOKEN != (w = m_policy.pop_work());) {
+      if (Policy::END_TOKEN != w) {
+        exec_one<typename Policy::work_tag>(w);
+        m_policy.completed_work(w);
       }
     }
   }
