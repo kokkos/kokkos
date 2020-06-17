@@ -191,10 +191,10 @@ int cuda_get_max_block_size(const CudaInternal* cuda_instance,
         Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
             f, block_size / vector_length);
 
-    size_t const total_shmem = shmem_block +
-                               shmem_thread * (block_size / vector_length) +
-                               functor_shmem;
-    return total_shmem;
+    size_t const dynamic_shmem = shmem_block +
+                                 shmem_thread * (block_size / vector_length) +
+                                 functor_shmem;
+    return dynamic_shmem;
   };
 
   return cuda_deduce_block_size(true, prop, attr, block_size_to_dynamic_shmem,
@@ -293,10 +293,10 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
         Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
             f, block_size / vector_length);
 
-    size_t const total_shmem = shmem_block +
-                               shmem_thread * (block_size / vector_length) +
-                               functor_shmem;
-    return total_shmem;
+    size_t const dynamic_shmem = shmem_block +
+                                 shmem_thread * (block_size / vector_length) +
+                                 functor_shmem;
+    return dynamic_shmem;
   };
 
   return cuda_deduce_block_size(false, prop, attr, block_size_to_dynamic_shmem,
