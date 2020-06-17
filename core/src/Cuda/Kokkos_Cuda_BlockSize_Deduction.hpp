@@ -108,7 +108,7 @@ inline int cuda_deduce_block_size(bool early_termination,
                                   cudaDeviceProp const& properties,
                                   cudaFuncAttributes const& attributes,
                                   UnaryFunction block_size_to_dynamic_shmem,
-                                  int max_blocks_per_sm, LaunchBounds) {
+                                  LaunchBounds) {
   // Limits
   int const max_threads_per_sm = properties.maxThreadsPerMultiProcessor;
   // unsure if I need to do that
@@ -119,8 +119,23 @@ inline int cuda_deduce_block_size(bool early_termination,
   int const min_blocks_per_sm =
       LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
 
-  // added in CUDA 11
-  // const int max_blocks_per_sm = properties.maxBlocksPerMultiProcessor;
+#if CUDA_VERSION >= 11000
+  int const max_blocks_per_sm = properties.maxBlocksPerMultiProcessor;
+#else
+  int const max_blocks_per_sm = [&properties]() {
+    switch (properties.major) {
+      case 3: return 16;
+      case 5:
+      case 6: return 32;
+      case 7: {
+        int isTuring = properties.minor == 5;
+        return (isTuring) ? 16 : 32;
+      }
+      default:
+        throw_runtime_exception("Unknown device in cuda block size deduction");
+    }
+  }();
+#endif
 
   // Recorded maximum
   int opt_block_size     = 0;
@@ -182,10 +197,8 @@ int cuda_get_max_block_size(const CudaInternal* cuda_instance,
     return total_shmem;
   };
 
-  const int max_blocks_per_sm = cuda_instance->m_maxBlocksPerSM;
-
   return cuda_deduce_block_size(true, prop, attr, block_size_to_dynamic_shmem,
-                                max_blocks_per_sm, LaunchBounds{});
+                                LaunchBounds{});
 #else
   const int min_blocks_per_sm =
       LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
@@ -286,10 +299,8 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
     return total_shmem;
   };
 
-  const int max_blocks_per_sm = cuda_instance->m_maxBlocksPerSM;
-
   return cuda_deduce_block_size(false, prop, attr, block_size_to_dynamic_shmem,
-                                max_blocks_per_sm, LaunchBounds{});
+                                LaunchBounds{});
 #else
   const int min_blocks_per_sm =
       LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
