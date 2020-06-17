@@ -176,13 +176,15 @@ inline int cuda_deduce_block_size(bool early_termination,
   return opt_block_size;
 }
 
+#define KOKKOS_IMPL_EXPERIMENTAL_BLOCK_DEDUCTION
+
 template <class FunctorType, class LaunchBounds>
 int cuda_get_max_block_size(const CudaInternal* cuda_instance,
                             const cudaFuncAttributes& attr,
                             const FunctorType& f, const size_t vector_length,
                             const size_t shmem_block,
                             const size_t shmem_thread) {
-#ifdef EXPERIMENTAL_BLOCK_DEDUCTION
+#ifdef KOKKOS_IMPL_EXPERIMENTAL_BLOCK_DEDUCTION
   auto const& prop = Kokkos::Cuda().cuda_device_prop();
 
   auto const block_size_to_dynamic_shmem = [&f, vector_length, shmem_block,
@@ -283,7 +285,7 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
                             const FunctorType& f, const size_t vector_length,
                             const size_t shmem_block,
                             const size_t shmem_thread) {
-#ifdef EXPERIMENTAL_BLOCK_DEDUCTION
+#ifdef KOKKOS_IMPL_EXPERIMENTAL_BLOCK_DEDUCTION
 
   auto const& prop = Kokkos::Cuda().cuda_device_prop();
 
@@ -379,6 +381,8 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
   return opt_block_size;
 #endif
 }
+
+#undef KOKKOS_IMPL_EXPERIMENTAL_BLOCK_DEDUCTION
 
 }  // namespace Impl
 }  // namespace Kokkos
