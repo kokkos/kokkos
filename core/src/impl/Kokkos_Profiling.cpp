@@ -816,7 +816,7 @@ Experimental::VariableValue make_variable_value(size_t id, const char* val) {
 SetOrRange make_candidate_set(size_t size, const char** data) {
   SetOrRange value_set;
   const char** data_copy = new const char*[size];
-  for (int x = 0; x < size; ++x) {
+  for (size_t x = 0; x < size; ++x) {
     data_copy[x] = new char[strnlen(data[x], 512)]{};
     strncpy(const_cast<char*>(data_copy[x]), data[x], 512);
   }
