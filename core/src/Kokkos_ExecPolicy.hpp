@@ -51,7 +51,6 @@
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Concepts.hpp>
-#include <iosfwd>
 #include <sstream>
 #if defined(KOKKOS_ENABLE_PROFILING)
 #include <typeinfo>
