@@ -160,6 +160,8 @@ int cuda_get_max_block_size(const CudaInternal* cuda_instance,
                             const size_t shmem_block,
                             const size_t shmem_thread) {
 #ifdef KOKKOS_IMPL_EXPERIMENTAL_BLOCK_DEDUCTION
+  (void)cuda_instance;
+
   auto const& prop = Kokkos::Cuda().cuda_device_prop();
 
   auto const block_size_to_dynamic_shmem = [&f, vector_length, shmem_block,
@@ -261,6 +263,7 @@ int cuda_get_opt_block_size(const CudaInternal* cuda_instance,
                             const size_t shmem_block,
                             const size_t shmem_thread) {
 #ifdef KOKKOS_IMPL_EXPERIMENTAL_BLOCK_DEDUCTION
+  (void)cuda_instance;
 
   auto const& prop = Kokkos::Cuda().cuda_device_prop();
 
