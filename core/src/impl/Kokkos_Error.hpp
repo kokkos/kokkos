@@ -62,7 +62,7 @@
 namespace Kokkos {
 namespace Impl {
 
-void host_abort(const char *const);
+[[noreturn]] void host_abort(const char *const);
 
 void throw_runtime_exception(const std::string &);
 
@@ -164,9 +164,16 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#if (defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) || \
+    (!defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__))
+#define KOKKOS_ABORT_NORETURN [[noreturn]]
+#else
+#define KOKKOS_ABORT_NORETURN
+#endif
+
 namespace Kokkos {
-KOKKOS_INLINE_FUNCTION
-void abort(const char *const message) {
+KOKKOS_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
+    const char *const message) {
 #if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
   Kokkos::Impl::cuda_abort(message);
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)

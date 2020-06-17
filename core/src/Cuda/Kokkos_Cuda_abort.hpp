@@ -64,13 +64,11 @@ extern __device__ void __assertfail(const void *message, const void *file,
 namespace Kokkos {
 namespace Impl {
 
-__device__ inline void cuda_abort(const char *const message) {
-#ifndef __APPLE__
+[[noreturn]] __device__ inline void cuda_abort(const char *const message) {
   const char empty[] = "";
 
   __assertfail((const void *)message, (const void *)empty, (unsigned int)0,
                (const void *)empty, sizeof(char));
-#endif
 }
 
 }  // namespace Impl
