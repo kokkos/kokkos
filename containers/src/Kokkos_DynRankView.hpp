@@ -493,42 +493,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
    *  ISO/C++ vocabulary 'extent'.
    */
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, size_t>::type
-      dimension(const iType& r) const {
-    return extent(r);
-  }
-
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_0() const {
-    return m_map.dimension_0();
-  }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const {
-    return m_map.dimension_1();
-  }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const {
-    return m_map.dimension_2();
-  }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_3() const {
-    return m_map.dimension_3();
-  }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_4() const {
-    return m_map.dimension_4();
-  }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const {
-    return m_map.dimension_5();
-  }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const {
-    return m_map.dimension_6();
-  }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const {
-    return m_map.dimension_7();
-  }
-#endif
-
-  //----------------------------------------
-
   KOKKOS_INLINE_FUNCTION constexpr size_t size() const {
     return m_map.extent(0) * m_map.extent(1) * m_map.extent(2) *
            m_map.extent(3) * m_map.extent(4) * m_map.extent(5) *
@@ -577,39 +541,18 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   };
 
   KOKKOS_INLINE_FUNCTION constexpr size_t span() const { return m_map.span(); }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  // Deprecated, use 'span()' instead
-  KOKKOS_INLINE_FUNCTION constexpr size_t capacity() const {
-    return m_map.span();
-  }
-#endif
   KOKKOS_INLINE_FUNCTION constexpr bool span_is_contiguous() const {
     return m_map.span_is_contiguous();
   }
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const {
     return m_map.data();
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  // Deprecated, use 'span_is_contigous()' instead
-  KOKKOS_INLINE_FUNCTION constexpr bool is_contiguous() const {
-    return m_map.span_is_contiguous();
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return (m_map.data() != nullptr);
   }
-  // Deprecated, use 'data()' instead
-  KOKKOS_INLINE_FUNCTION constexpr pointer_type ptr_on_device() const {
-    return m_map.data();
-  }
-#endif
 
   //----------------------------------------
   // Allow specializations to query their specialized map
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  KOKKOS_INLINE_FUNCTION
-  const Kokkos::Impl::ViewMapping<traits, typename traits::specialize>&
-  implementation_map() const {
-    return m_map;
-  }
-#endif
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::ViewMapping<traits, typename traits::specialize>&
   impl_map() const {
@@ -1200,12 +1143,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
                   "View allocation constructor requires managed memory");
 
     if (alloc_prop::initialize &&
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-        !alloc_prop::execution_space::is_initialized()
-#else
-        !alloc_prop::execution_space::impl_is_initialized()
-#endif
-    ) {
+        !alloc_prop::execution_space::impl_is_initialized()) {
       // If initializing view data then
       // the execution space must be initialized.
       Kokkos::Impl::throw_runtime_exception(

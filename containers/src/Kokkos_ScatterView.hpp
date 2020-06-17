@@ -758,6 +758,10 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
 
   original_view_type subview() const { return internal_view; }
 
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return internal_view.is_allocated();
+  }
+
   template <typename DT, typename... RP>
   void contribute_into(View<DT, RP...> const& dest) const {
     typedef View<DT, RP...> dest_type;
@@ -894,38 +898,25 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
   template <typename RT, typename... RP>
   ScatterView(View<RT, RP...> const& original_view)
       : unique_token(),
-        internal_view(Kokkos::ViewAllocateWithoutInitializing(
-                          std::string("duplicated_") + original_view.label()),
-                      unique_token.size(),
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-                      original_view.extent(0), original_view.extent(1),
-                      original_view.extent(2), original_view.extent(3),
-                      original_view.extent(4), original_view.extent(5),
-                      original_view.extent(6))
-#else
-                      original_view.rank_dynamic > 0
-                          ? original_view.extent(0)
-                          : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                      original_view.rank_dynamic > 1
-                          ? original_view.extent(1)
-                          : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                      original_view.rank_dynamic > 2
-                          ? original_view.extent(2)
-                          : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                      original_view.rank_dynamic > 3
-                          ? original_view.extent(3)
-                          : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                      original_view.rank_dynamic > 4
-                          ? original_view.extent(4)
-                          : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                      original_view.rank_dynamic > 5
-                          ? original_view.extent(5)
-                          : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                      original_view.rank_dynamic > 6
-                          ? original_view.extent(6)
-                          : KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+        internal_view(
+            Kokkos::ViewAllocateWithoutInitializing(std::string("duplicated_") +
+                                                    original_view.label()),
+            unique_token.size(),
+            original_view.rank_dynamic > 0 ? original_view.extent(0)
+                                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            original_view.rank_dynamic > 1 ? original_view.extent(1)
+                                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            original_view.rank_dynamic > 2 ? original_view.extent(2)
+                                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            original_view.rank_dynamic > 3 ? original_view.extent(3)
+                                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            original_view.rank_dynamic > 4 ? original_view.extent(4)
+                                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            original_view.rank_dynamic > 5 ? original_view.extent(5)
+                                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+            original_view.rank_dynamic > 6 ? original_view.extent(6)
+                                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG)
 
-#endif
   {
     reset();
   }
@@ -954,6 +945,10 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
     return Kokkos::Impl::Experimental::Slice<
         Kokkos::LayoutRight, internal_view_type::Rank,
         internal_view_type>::get(internal_view, 0);
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return internal_view.is_allocated();
   }
 
   template <typename DT, typename... RP>
@@ -1132,6 +1127,10 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
     return Kokkos::Impl::Experimental::Slice<
         Kokkos::LayoutLeft, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return internal_view.is_allocated();
   }
 
   template <typename... RP>

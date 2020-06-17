@@ -45,6 +45,9 @@
 #ifndef KOKKOS_CRS_HPP
 #define KOKKOS_CRS_HPP
 
+#include <Kokkos_View.hpp>
+#include <Kokkos_CopyViews.hpp>
+
 namespace Kokkos {
 
 /// \class Crs
@@ -340,9 +343,14 @@ struct CountAndFillBase {
   CountAndFillBase(CrsType& crs, Functor const& f) : m_crs(crs), m_functor(f) {}
 };
 
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
 #if defined(KOKKOS_ENABLE_CUDA)
+#define EXEC_SPACE Kokkos::Cuda
+#elif defined(KOKKOS_ENABLE_HIP)
+#define EXEC_SPACE Kokkos::Experimental::HIP
+#endif
 template <class CrsType, class Functor>
-struct CountAndFillBase<CrsType, Functor, Kokkos::Cuda> {
+struct CountAndFillBase<CrsType, Functor, EXEC_SPACE> {
   using data_type    = typename CrsType::data_type;
   using size_type    = typename CrsType::size_type;
   using row_map_type = typename CrsType::row_map_type;

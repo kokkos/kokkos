@@ -19,6 +19,13 @@ default_arch="sm_35"
 # The default C++ compiler.
 #
 host_compiler=${NVCC_WRAPPER_DEFAULT_COMPILER:-"g++"}
+
+# Default to whatever is in the path
+nvcc_compiler=nvcc
+if [ ! -z $CUDA_ROOT ]; then
+  nvcc_compiler="$CUDA_ROOT/bin/nvcc"
+fi
+
 #host_compiler="icpc"
 #host_compiler="/usr/local/gcc/4.8.3/bin/g++"
 #host_compiler="/usr/local/gcc/4.9.1/bin/g++"
@@ -187,7 +194,7 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument
-  -rdc|-maxrregcount|--default-stream|-Xnvlink|--fmad)
+  -rdc|-maxrregcount|--default-stream|-Xnvlink|--fmad|-cudart|--cudart)
     cuda_args="$cuda_args $1 $2"
     shift
     ;;
@@ -391,7 +398,7 @@ if [ $arch_set -ne 1 ]; then
 fi
 
 #Compose compilation command
-nvcc_command="nvcc $cuda_args $shared_args $xlinker_args $shared_versioned_libraries"
+nvcc_command="$nvcc_compiler $cuda_args $shared_args $xlinker_args $shared_versioned_libraries"
 if [ $first_xcompiler_arg -eq 0 ]; then
   nvcc_command="$nvcc_command -Xcompiler $xcompiler_args"
 fi

@@ -183,11 +183,7 @@ class Cuda {
   /// device have completed.
   static void impl_static_fence();
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  static void fence();
-#else
   void fence() const;
-#endif
 
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();
@@ -220,17 +216,6 @@ class Cuda {
     explicit SelectDevice(int id) : cuda_device_id(id) {}
   };
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  //! Free any resources being consumed by the device.
-  static void finalize();
-
-  //! Has been initialized
-  static int is_initialized();
-
-  //! Initialize, telling the CUDA run-time library which device to use.
-  static void initialize(const SelectDevice         = SelectDevice(),
-                         const size_t num_instances = 1);
-#else
   //! Free any resources being consumed by the device.
   static void impl_finalize();
 
@@ -240,7 +225,6 @@ class Cuda {
   //! Initialize, telling the CUDA run-time library which device to use.
   static void impl_initialize(const SelectDevice         = SelectDevice(),
                               const size_t num_instances = 1);
-#endif
 
   /// \brief Cuda device architecture of the selected device.
   ///

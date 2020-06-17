@@ -118,8 +118,8 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
  private:
   track_type m_track;
-  typename traits::value_type**
-      m_chunks;            // array of pointers to 'chunks' of memory
+  typename traits::value_type** m_chunks =
+      nullptr;             // array of pointers to 'chunks' of memory
   unsigned m_chunk_shift;  // ceil(log2(m_chunk_size))
   unsigned m_chunk_mask;   // m_chunk_size - 1
   unsigned m_chunk_max;  // number of entries in the chunk array - each pointing
@@ -192,17 +192,6 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   KOKKOS_INLINE_FUNCTION size_t extent_int(const iType& r) const {
     return r == 0 ? size() : 1;
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  KOKKOS_INLINE_FUNCTION size_t dimension_0() const { return size(); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_1() const { return 1; }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_2() const { return 1; }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_3() const { return 1; }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_4() const { return 1; }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_5() const { return 1; }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_6() const { return 1; }
-  KOKKOS_INLINE_FUNCTION constexpr size_t dimension_7() const { return 1; }
-#endif
 
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return 0; }
   KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return 0; }
@@ -330,6 +319,17 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
     }
     // *m_chunks[m_chunk_max+1] stores the 'extent' requested by resize
     *(pc + 1) = n;
+  }
+
+  KOKKOS_INLINE_FUNCTION bool is_allocated() const {
+    if (m_chunks == nullptr) {
+      return false;
+    } else {
+      // *m_chunks[m_chunk_max] stores the current number of chunks being used
+      uintptr_t* const pc =
+          reinterpret_cast<uintptr_t*>(m_chunks + m_chunk_max);
+      return (*(pc + 1) > 0);
+    }
   }
 
   //----------------------------------------------------------------------

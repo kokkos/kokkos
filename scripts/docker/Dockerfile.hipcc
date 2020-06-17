@@ -1,10 +1,11 @@
-ARG BASE=rocm/dev-ubuntu-18.04:3.3
+ARG BASE=rocm/dev-ubuntu-18.04:3.5
 FROM $BASE
 
 RUN apt-get update && apt-get install -y \
         kmod \
         wget \
         ccache \
+        file \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

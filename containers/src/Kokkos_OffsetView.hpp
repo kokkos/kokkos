@@ -347,6 +347,9 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION bool span_is_contiguous() const {
     return m_map.span_is_contiguous();
   }
+  KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
+    return m_map.data() != nullptr;
+  }
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const {
     return m_map.data();
   }
@@ -1238,12 +1241,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                   "OffsetView allocation constructor requires managed memory");
 
     if (alloc_prop::initialize &&
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-        !alloc_prop::execution_space::is_initialized()
-#else
-        !alloc_prop::execution_space::impl_is_initialized()
-#endif
-    ) {
+        !alloc_prop::execution_space::impl_is_initialized()) {
       // If initializing view data then
       // the execution space must be initialized.
       Kokkos::Impl::throw_runtime_exception(

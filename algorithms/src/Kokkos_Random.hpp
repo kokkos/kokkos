@@ -138,75 +138,75 @@ namespace Kokkos {
     KOKKOS_INLINE_FUNCTION
     Generator (STATE_ARGUMENTS, int state_idx = 0);
 
-    //Draw a equidistributed uint32_t in the range (0,MAX_URAND]
+    //Draw a equidistributed uint32_t in the range [0,MAX_URAND)
     KOKKOS_INLINE_FUNCTION
     uint32_t urand();
 
-    //Draw a equidistributed uint64_t in the range (0,MAX_URAND64]
+    //Draw a equidistributed uint64_t in the range [0,MAX_URAND64)
     KOKKOS_INLINE_FUNCTION
     uint64_t urand64();
 
-    //Draw a equidistributed uint32_t in the range (0,range]
+    //Draw a equidistributed uint32_t in the range [0,range)
     KOKKOS_INLINE_FUNCTION
     uint32_t urand(const uint32_t& range);
 
-    //Draw a equidistributed uint32_t in the range (start,end]
+    //Draw a equidistributed uint32_t in the range [start,end)
     KOKKOS_INLINE_FUNCTION
     uint32_t urand(const uint32_t& start, const uint32_t& end );
 
-    //Draw a equidistributed uint64_t in the range (0,range]
+    //Draw a equidistributed uint64_t in the range [0,range)
     KOKKOS_INLINE_FUNCTION
     uint64_t urand64(const uint64_t& range);
 
-    //Draw a equidistributed uint64_t in the range (start,end]
+    //Draw a equidistributed uint64_t in the range [start,end)
     KOKKOS_INLINE_FUNCTION
     uint64_t urand64(const uint64_t& start, const uint64_t& end );
 
-    //Draw a equidistributed int in the range (0,MAX_RAND]
+    //Draw a equidistributed int in the range [0,MAX_RAND)
     KOKKOS_INLINE_FUNCTION
     int rand();
 
-    //Draw a equidistributed int in the range (0,range]
+    //Draw a equidistributed int in the range [0,range)
     KOKKOS_INLINE_FUNCTION
     int rand(const int& range);
 
-    //Draw a equidistributed int in the range (start,end]
+    //Draw a equidistributed int in the range [start,end)
     KOKKOS_INLINE_FUNCTION
     int rand(const int& start, const int& end );
 
-    //Draw a equidistributed int64_t in the range (0,MAX_RAND64]
+    //Draw a equidistributed int64_t in the range [0,MAX_RAND64)
     KOKKOS_INLINE_FUNCTION
     int64_t rand64();
 
-    //Draw a equidistributed int64_t in the range (0,range]
+    //Draw a equidistributed int64_t in the range [0,range)
     KOKKOS_INLINE_FUNCTION
     int64_t rand64(const int64_t& range);
 
-    //Draw a equidistributed int64_t in the range (start,end]
+    //Draw a equidistributed int64_t in the range [start,end)
     KOKKOS_INLINE_FUNCTION
     int64_t rand64(const int64_t& start, const int64_t& end );
 
-    //Draw a equidistributed float in the range (0,1.0]
+    //Draw a equidistributed float in the range [0,1.0)
     KOKKOS_INLINE_FUNCTION
     float frand();
 
-    //Draw a equidistributed float in the range (0,range]
+    //Draw a equidistributed float in the range [0,range)
     KOKKOS_INLINE_FUNCTION
     float frand(const float& range);
 
-    //Draw a equidistributed float in the range (start,end]
+    //Draw a equidistributed float in the range [start,end)
     KOKKOS_INLINE_FUNCTION
     float frand(const float& start, const float& end );
 
-    //Draw a equidistributed double in the range (0,1.0]
+    //Draw a equidistributed double in the range [0,1.0)
     KOKKOS_INLINE_FUNCTION
     double drand();
 
-    //Draw a equidistributed double in the range (0,range]
+    //Draw a equidistributed double in the range [0,range)
     KOKKOS_INLINE_FUNCTION
     double drand(const double& range);
 
-    //Draw a equidistributed double in the range (start,end]
+    //Draw a equidistributed double in the range [start,end)
     KOKKOS_INLINE_FUNCTION
     double drand(const double& start, const double& end );
 
@@ -221,11 +221,11 @@ namespace Kokkos {
 
     //Additional Functions:
 
-    //Fills view with random numbers in the range (0,range]
+    //Fills view with random numbers in the range [0,range)
     template<class ViewType, class PoolType>
     void fill_random(ViewType view, PoolType pool, ViewType::value_type range);
 
-    //Fills view with random numbers in the range (start,end]
+    //Fills view with random numbers in the range [start,end)
     template<class ViewType, class PoolType>
     void fill_random(ViewType view, PoolType pool,
                      ViewType::value_type start, ViewType::value_type end);
@@ -604,11 +604,7 @@ struct Random_UniqueIndex {
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    const int i = ExecutionSpace::hardware_thread_id();
-#else
     const int i = ExecutionSpace::impl_hardware_thread_id();
-#endif
     return i;
 #else
     return 0;

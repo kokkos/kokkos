@@ -168,42 +168,11 @@ int get_ctest_gpu(const char* local_rank_str) {
 
 namespace {
 
-bool is_unsigned_int(const char* str) {
-  const size_t len = strlen(str);
-  for (size_t i = 0; i < len; ++i) {
-    if (!isdigit(str[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
-void initialize_backends(const InitArguments& args) {
-// This is an experimental setting
-// For KNL in Flat mode this variable should be set, so that
-// memkind allocates high bandwidth memory correctly.
-#ifdef KOKKOS_ENABLE_HBWSPACE
-  setenv("MEMKIND_HBW_NODES", "1", 0);
-#endif
-
-  // Protect declarations, to prevent "unused variable" warnings.
-#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
-    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HPX)
-  const int num_threads = args.num_threads;
-#endif
-#if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
-  const int use_numa = args.num_numa;
-#endif
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  int use_gpu        = args.device_id;
-  const int ndevices = args.ndevices > 0 ? args.ndevices :
-#if defined(KOKKOS_ENABLE_CUDA)
-                                         Cuda::detect_device_count();
-#elif defined(KOKKOS_ENABLE_HIP)
-                                         Experimental::HIP::
-                                             detect_device_count();
-#endif
-
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
+    defined(KOKKOS_ENABLE_HIP)
+int get_gpu(const InitArguments& args) {
+  int use_gpu           = args.device_id;
+  const int ndevices    = args.ndevices;
   const int skip_device = args.skip_device;
 
   // if the exact device is not set, but ndevices was given, assign round-robin
@@ -238,16 +207,45 @@ void initialize_backends(const InitArguments& args) {
     // shift assignments over by one so no one is assigned to "skip_device"
     if (use_gpu >= skip_device) ++use_gpu;
   }
+  return use_gpu;
+}
+#endif  // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_ROCM || KOKKOS_ENABLE_HIP
+
+bool is_unsigned_int(const char* str) {
+  const size_t len = strlen(str);
+  for (size_t i = 0; i < len; ++i) {
+    if (!isdigit(str[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void initialize_backends(const InitArguments& args) {
+// This is an experimental setting
+// For KNL in Flat mode this variable should be set, so that
+// memkind allocates high bandwidth memory correctly.
+#ifdef KOKKOS_ENABLE_HBWSPACE
+  setenv("MEMKIND_HBW_NODES", "1", 0);
+#endif
+
+  // Protect declarations, to prevent "unused variable" warnings.
+#if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
+    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HPX)
+  const int num_threads = args.num_threads;
+#endif
+#if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+  const int use_numa = args.num_numa;
+#endif
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
+    defined(KOKKOS_ENABLE_HIP)
+  int use_gpu = get_gpu(args);
 #endif  // defined( KOKKOS_ENABLE_CUDA )
 
 #if defined(KOKKOS_ENABLE_OPENMP)
   if (std::is_same<Kokkos::OpenMP, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::OpenMP, Kokkos::HostSpace::execution_space>::value) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    Kokkos::OpenMP::initialize(num_threads);
-#else
     Kokkos::OpenMP::impl_initialize(num_threads);
-#endif
   } else {
     // std::cout << "Kokkos::initialize() fyi: OpenMP enabled but not
     // initialized" << std::endl ;
@@ -258,17 +256,6 @@ void initialize_backends(const InitArguments& args) {
   if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::Threads,
                    Kokkos::HostSpace::execution_space>::value) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (num_threads > 0) {
-      if (use_numa > 0) {
-        Kokkos::Threads::initialize(num_threads, use_numa);
-      } else {
-        Kokkos::Threads::initialize(num_threads);
-      }
-    } else {
-      Kokkos::Threads::initialize();
-    }
-#else
     if (num_threads > 0) {
       if (use_numa > 0) {
         Kokkos::Threads::impl_initialize(num_threads, use_numa);
@@ -278,7 +265,6 @@ void initialize_backends(const InitArguments& args) {
     } else {
       Kokkos::Threads::impl_initialize();
     }
-#endif
     // std::cout << "Kokkos::initialize() fyi: Pthread enabled and initialized"
     // << std::endl ;
   } else {
@@ -312,11 +298,7 @@ void initialize_backends(const InitArguments& args) {
   (void)args;
 
   // Always initialize Serial if it is configure time enabled
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  Kokkos::Serial::initialize();
-#else
   Kokkos::Serial::impl_initialize();
-#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -335,17 +317,9 @@ void initialize_backends(const InitArguments& args) {
   if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
       0 < use_gpu) {
     if (use_gpu > -1) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      Kokkos::Cuda::initialize(Kokkos::Cuda::SelectDevice(use_gpu));
-#else
       Kokkos::Cuda::impl_initialize(Kokkos::Cuda::SelectDevice(use_gpu));
-#endif
     } else {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      Kokkos::Cuda::initialize();
-#else
       Kokkos::Cuda::impl_initialize();
-#endif
     }
     // std::cout << "Kokkos::initialize() fyi: Cuda enabled and initialized" <<
     // std::endl ;
@@ -377,8 +351,6 @@ void initialize_backends(const InitArguments& args) {
     } else {
       Kokkos::Experimental::HIP::impl_initialize();
     }
-    std::cout << "Kokkos::initialize() fyi: HIP enabled and initialized"
-              << std::endl;
   }
 #endif
 }
@@ -445,11 +417,7 @@ void finalize_internal(const bool all_spaces = false) {
 #if defined(KOKKOS_ENABLE_CUDA)
   if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
       all_spaces) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (Kokkos::Cuda::is_initialized()) Kokkos::Cuda::finalize();
-#else
     if (Kokkos::Cuda::impl_is_initialized()) Kokkos::Cuda::impl_finalize();
-#endif
   }
 #else
   (void)all_spaces;
@@ -485,11 +453,7 @@ void finalize_internal(const bool all_spaces = false) {
   if (std::is_same<Kokkos::OpenMP, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::OpenMP, Kokkos::HostSpace::execution_space>::value ||
       all_spaces) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (Kokkos::OpenMP::is_initialized()) Kokkos::OpenMP::finalize();
-#else
     if (Kokkos::OpenMP::impl_is_initialized()) Kokkos::OpenMP::impl_finalize();
-#endif
   }
 #endif
 
@@ -509,21 +473,13 @@ void finalize_internal(const bool all_spaces = false) {
       std::is_same<Kokkos::Threads,
                    Kokkos::HostSpace::execution_space>::value ||
       all_spaces) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    if (Kokkos::Threads::is_initialized()) Kokkos::Threads::finalize();
-#else
     if (Kokkos::Threads::impl_is_initialized())
       Kokkos::Threads::impl_finalize();
-#endif
   }
 #endif
 
 #if defined(KOKKOS_ENABLE_SERIAL)
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  if (Kokkos::Serial::is_initialized()) Kokkos::Serial::finalize();
-#else
   if (Kokkos::Serial::impl_is_initialized()) Kokkos::Serial::impl_finalize();
-#endif
 #endif
 
   g_is_initialized = false;
@@ -548,7 +504,7 @@ void fence_internal() {
 #endif
 
 #if defined(KOKKOS_ENABLE_HPX)
-  Kokkos::Experimental::HPX::impl_static_fence();
+  Kokkos::Experimental::HPX().fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_THREADS)

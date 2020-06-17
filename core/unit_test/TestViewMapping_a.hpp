@@ -1104,20 +1104,12 @@ struct TestViewMapOperator {
   static_assert(ViewType::reference_type_is_lvalue_reference,
                 "Test only valid for lvalue reference type");
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  const ViewType v;
-#else
   ViewType v;
-#endif
 
   KOKKOS_INLINE_FUNCTION
   void test_left(size_t i0, int64_t& error_count) const {
-#ifdef KOKKOS_ENABLE_DEPPRECATED_CODE
-    typename ViewType::value_type* const base_ptr = &v(0, 0, 0, 0, 0, 0, 0, 0);
-#else
     typename ViewType::value_type* const base_ptr =
         &v.access(0, 0, 0, 0, 0, 0, 0, 0);
-#endif
     const size_t n1 = v.extent(1);
     const size_t n2 = v.extent(2);
     const size_t n3 = v.extent(3);
@@ -1135,13 +1127,8 @@ struct TestViewMapOperator {
             for (size_t i3 = 0; i3 < n3; ++i3)
               for (size_t i2 = 0; i2 < n2; ++i2)
                 for (size_t i1 = 0; i1 < n1; ++i1) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-                  const int64_t d =
-                      &v(i0, i1, i2, i3, i4, i5, i6, i7) - base_ptr;
-#else
                   const int64_t d =
                       &v.access(i0, i1, i2, i3, i4, i5, i6, i7) - base_ptr;
-#endif
                   if (d < offset) ++error_count;
                   offset = d;
                 }
@@ -1151,12 +1138,8 @@ struct TestViewMapOperator {
 
   KOKKOS_INLINE_FUNCTION
   void test_right(size_t i0, int64_t& error_count) const {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-    typename ViewType::value_type* const base_ptr = &v(0, 0, 0, 0, 0, 0, 0, 0);
-#else
     typename ViewType::value_type* const base_ptr =
         &v.access(0, 0, 0, 0, 0, 0, 0, 0);
-#endif
     const size_t n1 = v.extent(1);
     const size_t n2 = v.extent(2);
     const size_t n3 = v.extent(3);
@@ -1174,13 +1157,8 @@ struct TestViewMapOperator {
             for (size_t i5 = 0; i5 < n5; ++i5)
               for (size_t i6 = 0; i6 < n6; ++i6)
                 for (size_t i7 = 0; i7 < n7; ++i7) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-                  const int64_t d =
-                      &v(i0, i1, i2, i3, i4, i5, i6, i7) - base_ptr;
-#else
                   const int64_t d =
                       &v.access(i0, i1, i2, i3, i4, i5, i6, i7) - base_ptr;
-#endif
                   if (d < offset) ++error_count;
                   offset = d;
                 }
@@ -1208,10 +1186,6 @@ struct TestViewMapOperator {
   enum { N6 = 4 };
   enum { N7 = 3 };
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  TestViewMapOperator() : v("Test", N0, N1, N2, N3, N4, N5, N6, N7) {}
-
-#else
   TestViewMapOperator() {
     const size_t dyn_rank = v.rank_dynamic;
     const std::string label("Test");
@@ -1229,7 +1203,6 @@ struct TestViewMapOperator {
     }
   }
 
-#endif
   void run() {
     ASSERT_EQ(v.extent(0),
               (0 < ViewType::rank ? TestViewMapOperator<ViewType>::N0 : 1));

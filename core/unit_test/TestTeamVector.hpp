@@ -169,7 +169,7 @@ struct functor_team_reduce {
           printf("FAILED team_parallel_reduce %i %i %lf %lf %lu\n",
                  team.league_rank(), team.team_rank(),
                  static_cast<double>(test), static_cast<double>(value),
-                 sizeof(Scalar));
+                 static_cast<unsigned long>(sizeof(Scalar)));
         }
 
         flag() = 1;
@@ -180,7 +180,8 @@ struct functor_team_reduce {
               "FAILED team_parallel_reduce with shared result %i %i %lf %lf "
               "%lu\n",
               team.league_rank(), team.team_rank(), static_cast<double>(test),
-              static_cast<double>(shared_value(0)), sizeof(Scalar));
+              static_cast<double>(shared_value(0)),
+              static_cast<unsigned long>(sizeof(Scalar)));
         }
 
         flag() = 1;
@@ -365,7 +366,7 @@ struct functor_team_vector_reduce {
           printf("FAILED team_vector_parallel_reduce %i %i %f %f %lu\n",
                  team.league_rank(), team.team_rank(),
                  static_cast<double>(test), static_cast<double>(value),
-                 sizeof(Scalar));
+                 static_cast<unsigned long>(sizeof(Scalar)));
         }
 
         flag() = 1;
@@ -867,7 +868,8 @@ TEST(TEST_CATEGORY, team_vector) {
 }
 #endif
 
-#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
+// FIXME_HIP
+#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) && !defined(KOKKOS_ENABLE_HIP)
 TEST(TEST_CATEGORY, triple_nested_parallelism) {
 // With KOKKOS_DEBUG enabled, the functor uses too many registers to run
 // with a team size of 32 on GPUs, 16 is the max possible (at least on a K80

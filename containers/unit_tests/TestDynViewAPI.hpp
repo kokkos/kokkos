@@ -712,6 +712,7 @@ class TestDynViewAPI {
     run_test_mirror_and_copy();
     run_test_scalar();
     run_test();
+    run_test_allocated();
     run_test_const();
     run_test_subview();
     run_test_subview_strided();
@@ -1367,6 +1368,23 @@ class TestDynViewAPI {
       const Kokkos::DynRankView<const DataType, device>& arg_const,
       const Kokkos::DynRankView<DataType, device>& arg) {
     ASSERT_TRUE(arg_const == arg);
+  }
+
+  static void run_test_allocated() {
+    using device_type = Kokkos::DynRankView<DataType, device>;
+
+    const int N1 = 100;
+    const int N2 = 10;
+
+    device_type d1;
+    ASSERT_FALSE(d1.is_allocated());
+
+    d1 = device_type("d1", N1, N2);
+    device_type d2(d1);
+    device_type d3("d3", N1);
+    ASSERT_TRUE(d1.is_allocated());
+    ASSERT_TRUE(d2.is_allocated());
+    ASSERT_TRUE(d3.is_allocated());
   }
 
   static void run_test_const() {

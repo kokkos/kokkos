@@ -45,6 +45,8 @@
 #ifndef KOKKOS_EXPERIMENTAL_VIEWUNIFORMTYPE_HPP
 #define KOKKOS_EXPERIMENTAL_VIEWUNIFORMTYPE_HPP
 
+#include <Kokkos_Macros.hpp>
+
 namespace Kokkos {
 namespace Impl {
 template <class ScalarType, int Rank>

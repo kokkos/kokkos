@@ -2,7 +2,7 @@
 
 KOKKOS_VERSION_MAJOR = 3
 KOKKOS_VERSION_MINOR = 1
-KOKKOS_VERSION_PATCH = 0
+KOKKOS_VERSION_PATCH = 1
 KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MINOR)*100+$(KOKKOS_VERSION_PATCH) | bc)
 
 # Options: Cuda,HIP,ROCm,OpenMP,Pthread,Serial
@@ -14,7 +14,7 @@ KOKKOS_DEVICES ?= "Pthread"
 # ARM:      ARMv80,ARMv81,ARMv8-ThunderX,ARMv8-TX2
 # IBM:      BGQ,Power7,Power8,Power9
 # AMD-GPUS: Vega900,Vega906
-# AMD-CPUS: AMDAVX,Ryzen,EPYC
+# AMD-CPUS: AMDAVX,Zen,Zen2
 KOKKOS_ARCH ?= ""
 # Options: yes,no
 KOKKOS_DEBUG ?= "no"
@@ -22,7 +22,7 @@ KOKKOS_DEBUG ?= "no"
 KOKKOS_USE_TPLS ?= ""
 # Options: c++11,c++14,c++1y,c++17,c++1z,c++2a
 KOKKOS_CXX_STANDARD ?= "c++11"
-# Options: aggressive_vectorization,disable_profiling,enable_deprecated_code,disable_deprecated_code,enable_large_mem_tests,disable_complex_align
+# Options: aggressive_vectorization,disable_profiling,enable_large_mem_tests,disable_complex_align
 KOKKOS_OPTIONS ?= ""
 # Option for setting ETI path
 KOKKOS_ETI_PATH ?= ${KOKKOS_PATH}/core/src/eti
@@ -41,11 +41,15 @@ KOKKOS_HIP_OPTIONS ?= ""
 # Options: enable_async_dispatch
 KOKKOS_HPX_OPTIONS ?= ""
 
+# Helper functions for conversion to upper case
+uppercase_TABLE:=a,A b,B c,C d,D e,E f,F g,G h,H i,I j,J k,K l,L m,M n,N o,O p,P q,Q r,R s,S t,T u,U v,V w,W x,X y,Y z,Z
+uppercase_internal=$(if $1,$$(subst $(firstword $1),$(call uppercase_internal,$(wordlist 2,$(words $1),$1),$2)),$2)
+uppercase=$(eval uppercase_RESULT:=$(call uppercase_internal,$(uppercase_TABLE),$1))$(uppercase_RESULT)
 # Return a 1 if a string contains a substring and 0 if not
 # Note the search string should be without '"'
 # Example: $(call kokkos_has_string,"hwloc,librt",hwloc)
 #   Will return a 1
-kokkos_has_string=$(if $(findstring $2,$1),1,0)
+kokkos_has_string=$(if $(findstring $(call uppercase,$2),$(call uppercase,$1)),1,0)
 # Returns 1 if the path exists, 0 otherwise
 # Example: $(call kokkos_path_exists,/path/to/file)
 #   Will return a 1 if /path/to/file exists
@@ -71,8 +75,6 @@ KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OP
 KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(call kokkos_has_string,$(KOKKOS_OPTIONS),aggressive_vectorization)
 KOKKOS_INTERNAL_ENABLE_TUNING := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_tuning)
 KOKKOS_INTERNAL_DISABLE_PROFILING := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_profiling)
-KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_deprecated_code)
-KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_deprecated_code)
 KOKKOS_INTERNAL_DISABLE_COMPLEX_ALIGN := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_complex_align)
 KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_dualview_modify_check)
 KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_profile_load_print)
@@ -381,20 +383,20 @@ KOKKOS_INTERNAL_USE_ARCH_IBM := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_
 
 # AMD based.
 KOKKOS_INTERNAL_USE_ARCH_AMDAVX := $(call kokkos_has_string,$(KOKKOS_ARCH),AMDAVX)
-KOKKOS_INTERNAL_USE_ARCH_RYZEN := $(call kokkos_has_string,$(KOKKOS_ARCH),Ryzen)
-KOKKOS_INTERNAL_USE_ARCH_EPYC := $(call kokkos_has_string,$(KOKKOS_ARCH),EPYC)
+KOKKOS_INTERNAL_USE_ARCH_ZEN2 := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen2)
+KOKKOS_INTERNAL_USE_ARCH_ZEN := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen)
 KOKKOS_INTERNAL_USE_ARCH_VEGA900 := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega900)
 KOKKOS_INTERNAL_USE_ARCH_VEGA906 := $(call kokkos_has_string,$(KOKKOS_ARCH),Vega906)
 
 # Any AVX?
 KOKKOS_INTERNAL_USE_ARCH_SSE42      := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_WSM))
 KOKKOS_INTERNAL_USE_ARCH_AVX        := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_SNB) + $(KOKKOS_INTERNAL_USE_ARCH_AMDAVX))
-KOKKOS_INTERNAL_USE_ARCH_AVX2       := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_HSW) + $(KOKKOS_INTERNAL_USE_ARCH_BDW) + $(KOKKOS_INTERNAL_USE_ARCH_EPYC))
+KOKKOS_INTERNAL_USE_ARCH_AVX2       := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_HSW) + $(KOKKOS_INTERNAL_USE_ARCH_BDW) + $(KOKKOS_INTERNAL_USE_ARCH_ZEN) + $(KOKKOS_INTERNAL_USE_ARCH_ZEN2))
 KOKKOS_INTERNAL_USE_ARCH_AVX512MIC  := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_KNL))
 KOKKOS_INTERNAL_USE_ARCH_AVX512XEON := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_SKX))
 
 # Decide what ISA level we are able to support.
-KOKKOS_INTERNAL_USE_ISA_X86_64    := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_WSM) + $(KOKKOS_INTERNAL_USE_ARCH_SNB) + $(KOKKOS_INTERNAL_USE_ARCH_HSW) + $(KOKKOS_INTERNAL_USE_ARCH_BDW) + $(KOKKOS_INTERNAL_USE_ARCH_KNL) + $(KOKKOS_INTERNAL_USE_ARCH_SKX) + $(KOKKOS_INTERNAL_USE_ARCH_EPYC))
+KOKKOS_INTERNAL_USE_ISA_X86_64    := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_WSM) + $(KOKKOS_INTERNAL_USE_ARCH_SNB) + $(KOKKOS_INTERNAL_USE_ARCH_HSW) + $(KOKKOS_INTERNAL_USE_ARCH_BDW) + $(KOKKOS_INTERNAL_USE_ARCH_KNL) + $(KOKKOS_INTERNAL_USE_ARCH_SKX) + $(KOKKOS_INTERNAL_USE_ARCH_ZEN) + $(KOKKOS_INTERNAL_USE_ARCH_ZEN2))
 KOKKOS_INTERNAL_USE_ISA_KNC       := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_KNC))
 KOKKOS_INTERNAL_USE_ISA_POWERPCLE := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_POWER8) + $(KOKKOS_INTERNAL_USE_ARCH_POWER9))
 KOKKOS_INTERNAL_USE_ISA_POWERPCBE := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_POWER7))
@@ -634,12 +636,6 @@ ifeq ($(KOKKOS_INTERNAL_DISABLE_PROFILING), 0)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_PROFILING")
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
-  ifeq ($(KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE), 1)
-    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_DEPRECATED_CODE")
-  endif
-endif
-
 ifeq ($(KOKKOS_INTERNAL_ENABLE_ETI), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_ETI")
 endif
@@ -765,8 +761,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV81), 1)
   endif
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_ARCH_EPYC), 1)
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_EPYC")
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_ZEN")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_AVX2")
 
   ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
@@ -775,6 +771,19 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_EPYC), 1)
   else
     KOKKOS_CXXFLAGS += -march=znver1 -mtune=znver1
     KOKKOS_LDFLAGS += -march=znver1 -mtune=znver1
+  endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN2), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_ZEN2")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_AVX2")
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
+    KOKKOS_CXXFLAGS += -mavx2
+    KOKKOS_LDFLAGS += -mavx2
+  else
+    KOKKOS_CXXFLAGS += -march=znver2 -mtune=znver2
+    KOKKOS_LDFLAGS += -march=znver2 -mtune=znver2
   endif
 endif
 

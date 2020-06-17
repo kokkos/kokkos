@@ -67,14 +67,7 @@ class UniqueToken<Cuda, UniqueTokenScope::Global> {
   using execution_space = Cuda;
   using size_type       = int32_t;
 
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE)
-  explicit UniqueToken(execution_space const&);
-
-  KOKKOS_INLINE_FUNCTION
-  UniqueToken() : m_buffer(0), m_count(0) {}
-#else
   explicit UniqueToken(execution_space const& = execution_space());
-#endif
 
   KOKKOS_DEFAULTED_FUNCTION
   UniqueToken(const UniqueToken&) = default;
@@ -118,13 +111,8 @@ template <>
 class UniqueToken<Cuda, UniqueTokenScope::Instance>
     : public UniqueToken<Cuda, UniqueTokenScope::Global> {
  public:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  explicit UniqueToken(execution_space const& arg)
-      : UniqueToken<Cuda, UniqueTokenScope::Global>(arg) {}
-#else
   explicit UniqueToken(execution_space const& arg = execution_space())
       : UniqueToken<Cuda, UniqueTokenScope::Global>(arg) {}
-#endif
 };
 
 }  // namespace Experimental

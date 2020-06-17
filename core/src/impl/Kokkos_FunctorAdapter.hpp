@@ -61,48 +61,99 @@ struct ReduceFunctorHasInit {
   enum { value = false };
 };
 
+// The else clause idiom failed with NVCC+MSVC, causing some symbols not being
+// compiled for the device. The code in there is anyway sketchy, and likely not
+// standard compliant (just happens to work on all compilers we ever used)
+// We intend to replace all of this long term with proper detection idiom.
+#if defined(KOKKOS_COMPILER_MSVC) || defined(KOKKOS_IMPL_WINDOWS_CUDA)
+template <class>
+using impl_void_t_workaround = void;
+
+template <class F>
+using init_archetype = decltype(&F::init);
+
+template <class FunctorType>
+struct ReduceFunctorHasInit<
+    FunctorType, impl_void_t_workaround<init_archetype<FunctorType>>> {
+  enum { value = true };
+};
+#else
 template <class FunctorType>
 struct ReduceFunctorHasInit<
     FunctorType,
     typename std::enable_if<0 < sizeof(&FunctorType::init)>::type> {
   enum { value = true };
 };
+#endif
 
 template <class FunctorType, class Enable = void>
 struct ReduceFunctorHasJoin {
   enum { value = false };
 };
 
+#if defined(KOKKOS_COMPILER_MSVC) || defined(KOKKOS_IMPL_WINDOWS_CUDA)
+template <class F>
+using join_archetype = decltype(&F::join);
+
+template <class FunctorType>
+struct ReduceFunctorHasJoin<
+    FunctorType, impl_void_t_workaround<join_archetype<FunctorType>>> {
+  enum { value = true };
+};
+#else
 template <class FunctorType>
 struct ReduceFunctorHasJoin<
     FunctorType,
     typename std::enable_if<0 < sizeof(&FunctorType::join)>::type> {
   enum { value = true };
 };
+#endif
 
 template <class FunctorType, class Enable = void>
 struct ReduceFunctorHasFinal {
   enum { value = false };
 };
 
+#if defined(KOKKOS_COMPILER_MSVC) || defined(KOKKOS_IMPL_WINDOWS_CUDA)
+template <class F>
+using final_archetype = decltype(&F::final);
+
+template <class FunctorType>
+struct ReduceFunctorHasFinal<
+    FunctorType, impl_void_t_workaround<final_archetype<FunctorType>>> {
+  enum { value = true };
+};
+#else
 template <class FunctorType>
 struct ReduceFunctorHasFinal<
     FunctorType,
     typename std::enable_if<0 < sizeof(&FunctorType::final)>::type> {
   enum { value = true };
 };
+#endif
 
 template <class FunctorType, class Enable = void>
 struct ReduceFunctorHasShmemSize {
   enum { value = false };
 };
 
+#if defined(KOKKOS_COMPILER_MSVC) || defined(KOKKOS_IMPL_WINDOWS_CUDA)
+template <class F>
+using shmemsize_archetype = decltype(&F::team_shmem_size);
+
+template <class FunctorType>
+struct ReduceFunctorHasShmemSize<
+    FunctorType, impl_void_t_workaround<shmemsize_archetype<FunctorType>>> {
+  enum { value = true };
+};
+#else
 template <class FunctorType>
 struct ReduceFunctorHasShmemSize<
     FunctorType,
     typename std::enable_if<0 < sizeof(&FunctorType::team_shmem_size)>::type> {
   enum { value = true };
 };
+#endif
 
 template <class FunctorType, class ArgTag, class Enable = void>
 struct FunctorDeclaresValueType : public std::false_type {};

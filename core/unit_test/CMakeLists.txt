@@ -13,18 +13,23 @@ KOKKOS_ADD_TEST_LIBRARY(
   SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
 )
 
-#These can be direct, no need for Tribits or Kokkos wrappers
-
-# WORKAROUND FOR HIPCC
+# avoid deprecation warnings from MSVC
+TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_PTHREAD=0)
 IF(Kokkos_ENABLE_HIP)
-  TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0 --amdgpu-target=gfx906")
-ELSE()
-  TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC "-DGTEST_HAS_PTHREAD=0")
+  # FIXME_HIP - remove the HCC path when HIP-Clang is more mature
+  IF(NOT "${INTERNAL_HAVE_COMPILER_HCC}" STREQUAL "1")
+    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--cuda-host-only")
+  ELSE()
+    # pass dummy workaround for hcc
+    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--amdgpu-target=gfx906")
+  ENDIF()
 ENDIF()
 
 TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
 #Gtest minimally requires C++11
+IF(NOT (Kokkos_ENABLE_CUDA AND WIN32))
 TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_11)
+ENDIF()
 
 #
 # Define Incremental Testing Feature Levels
@@ -64,8 +69,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
   endif()
   string(TOLOWER ${Tag} dir)
 
-  SET(${Tag}_SOURCES
-      UnitTestMainInit.cpp
+  # Needed to split this for Windows NVCC, since it ends up putting everything on the
+  # command line in an intermediate compilation step even if CMake generated a response
+  # file. That then exceeded the shell comand line max length.
+  SET(${Tag}_SOURCES1
       ${dir}/Test${Tag}_AtomicOperations_int.cpp
       ${dir}/Test${Tag}_AtomicOperations_unsignedint.cpp
       ${dir}/Test${Tag}_AtomicOperations_longint.cpp
@@ -100,6 +107,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       ${dir}/Test${Tag}_Reductions_DeviceView.cpp
       ${dir}/Test${Tag}_Scan.cpp
       ${dir}/Test${Tag}_SharedAlloc.cpp
+  )
+
+  SET(${Tag}_SOURCES2
       ${dir}/Test${Tag}_SubView_a.cpp
       ${dir}/Test${Tag}_SubView_b.cpp
       ${dir}/Test${Tag}_SubView_c01.cpp
@@ -135,6 +145,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       ${dir}/Test${Tag}_View_64bit.cpp
       ${dir}/Test${Tag}_ViewResize.cpp
   )
+  SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
+
 endforeach()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
@@ -163,10 +175,17 @@ endif()
 
 if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Serial
+    UnitTest_Serial1
     SOURCES
-    ${Serial_SOURCES}
+    UnitTestMainInit.cpp
+    ${Serial_SOURCES1}
     serial/TestSerial_Task.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Serial2
+    SOURCES
+    UnitTestMainInit.cpp
+    ${Serial_SOURCES2}
   )
 endif()
 
@@ -174,6 +193,7 @@ if(Kokkos_ENABLE_PTHREAD)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Threads
     SOURCES ${Threads_SOURCES}
+    UnitTestMainInit.cpp
   )
 endif()
 
@@ -181,6 +201,7 @@ if(Kokkos_ENABLE_OPENMP)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMP
     SOURCES
+    UnitTestMainInit.cpp
     ${OpenMP_SOURCES}
     openmp/TestOpenMP_Task.cpp
   )
@@ -196,6 +217,7 @@ if(Kokkos_ENABLE_HPX)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HPX
     SOURCES
+      UnitTestMainInit.cpp
       ${HPX_SOURCES}
       hpx/TestHPX_Task.cpp
   )
@@ -205,21 +227,60 @@ if(Kokkos_ENABLE_HPX)
       UnitTestMain.cpp
       hpx/TestHPX_InterOp.cpp
   )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HPX_IndependentInstances
+    SOURCES
+      UnitTestMain.cpp
+      hpx/TestHPX_IndependentInstances.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HPX_IndependentInstancesDelayedExecution
+    SOURCES
+      UnitTestMain.cpp
+      hpx/TestHPX_IndependentInstancesDelayedExecution.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HPX_IndependentInstancesInstanceIds
+    SOURCES
+      UnitTestMain.cpp
+      hpx/TestHPX_IndependentInstancesInstanceIds.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HPX_IndependentInstancesRefCounting
+    SOURCES
+      UnitTestMain.cpp
+      hpx/TestHPX_IndependentInstancesRefCounting.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMPTarget
     SOURCES
+    UnitTestMainInit.cpp
     ${OpenMPTarget_SOURCES}
   )
 endif()
 
 if(Kokkos_ENABLE_CUDA)
-  KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_Cuda
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Cuda1
     SOURCES
-      ${Cuda_SOURCES}
+      UnitTestMainInit.cpp
+      ${Cuda_SOURCES1}
+    )
+
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Cuda2
+    SOURCES
+      UnitTestMainInit.cpp
+      ${Cuda_SOURCES2}
+    )
+
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_Cuda3
+    SOURCES
+      UnitTestMainInit.cpp
       cuda/TestCuda_Task.cpp
       cuda/TestCudaHostPinned_SharedAlloc.cpp
       cuda/TestCudaHostPinned_ViewCopy.cpp
@@ -245,6 +306,7 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCuda_DebugSerialExecution.cpp
       cuda/TestCuda_DebugPinUVMSpace.cpp
   )
+
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_CudaInterOpInit
     SOURCES
@@ -265,12 +327,13 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_AtomicOperations_complexdouble.cpp
     hip/TestHIP_TeamTeamSize.cpp
     hip/TestHIP_TeamVectorRange.cpp
-    hip/TestHIP_WorkGraph.cpp
+    hip/TestHIP_LocalDeepCopy.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIP
     SOURCES
+      UnitTestMainInit.cpp
       ${HIP_SOURCES}
       hip/TestHIPHostPinned_ViewAPI_a.cpp
       hip/TestHIPHostPinned_ViewAPI_b.cpp
@@ -317,6 +380,15 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_PushFinalizeHook.cpp
 )
 
+# This test is intended for development and debugging by putting code
+# into TestDefaultDeviceDevelop.cpp. By default its empty.
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  UnitTest_Develop
+  SOURCES
+    UnitTestMainInit.cpp
+    default/TestDefaultDeviceDevelop.cpp
+)
+
 # This test is special, because it passes exactly when it prints the
 # message "PASSED: I am the custom std::terminate handler.", AND calls
 # std::terminate.  This means that we can't use
@@ -336,9 +408,9 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
 )
 
 if(Kokkos_ENABLE_PROFILING)
-  add_library(
-    printer-tool MODULE
-    tools/printing-tool.cpp
+  KOKKOS_ADD_LIBRARY(
+    printer-tool SHARED
+    SOURCES tools/printing-tool.cpp
   )
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -452,3 +524,5 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_CTestDevice
   SOURCES UnitTestMain.cpp  TestCTestDevice.cpp
 )
+
+add_subdirectory(headers_self_contained)

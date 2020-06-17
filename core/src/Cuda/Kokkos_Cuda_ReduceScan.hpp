@@ -533,8 +533,12 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, true> {
     __threadfence();
     __syncthreads();
     unsigned int num_teams_done = 0;
+    // The cast in the atomic call is necessary to find matching call with
+    // MSVC/NVCC
     if (threadIdx.x + threadIdx.y == 0) {
-      num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
+      num_teams_done =
+          Kokkos::atomic_fetch_add(global_flags, static_cast<unsigned int>(1)) +
+          1;
     }
     bool is_last_block = false;
     if (__syncthreads_or(num_teams_done == gridDim.x)) {
@@ -635,8 +639,12 @@ struct CudaReductionsFunctor<FunctorType, ArgTag, false, false> {
     __syncthreads();
 
     unsigned int num_teams_done = 0;
+    // The cast in the atomic call is necessary to find matching call with
+    // MSVC/NVCC
     if (threadIdx.x + threadIdx.y == 0) {
-      num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
+      num_teams_done =
+          Kokkos::atomic_fetch_add(global_flags, static_cast<unsigned int>(1)) +
+          1;
     }
     bool is_last_block = false;
     if (__syncthreads_or(num_teams_done == gridDim.x)) {

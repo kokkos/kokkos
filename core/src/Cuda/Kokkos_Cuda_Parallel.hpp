@@ -134,31 +134,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   //----------------------------------------
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  template <class FunctorType>
-  static inline int team_size_max(const FunctorType& functor) {
-    int n = MAX_WARP * Impl::CudaTraits::WarpSize;
-
-    for (; n; n >>= 1) {
-      const int shmem_size =
-          /* for global reduce */ Impl::
-              cuda_single_inter_block_reduce_scan_shmem<
-                  false, FunctorType, typename traits::work_tag>(functor, n)
-          /* for team   reduce */
-          + (n + 2) * sizeof(double)
-          /* for team   shared */
-          + Impl::FunctorTeamShmemSize<FunctorType>::value(functor, n);
-
-      if (shmem_size < typename traits::execution_space()
-                           .impl_internal_space_instance()
-                           ->m_maxShmemPerBlock)
-        break;
-    }
-
-    return n;
-  }
-#endif
-
   template <class FunctorType>
   int team_size_max(const FunctorType& f, const ParallelForTag&) const {
     typedef Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>
@@ -199,21 +174,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
                              ReducerType>;
     return internal_team_size_max<closure_type>(f);
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  template <class FunctorType>
-  static int team_size_recommended(const FunctorType& functor) {
-    return team_size_max(functor);
-  }
-
-  template <class FunctorType>
-  static int team_size_recommended(const FunctorType& functor,
-                                   const int vector_length) {
-    int max = team_size_max(functor) / vector_length;
-    if (max < 1) max = 1;
-    return max;
-  }
-#endif
 
   template <class FunctorType>
   int team_size_recommended(const FunctorType& f, const ParallelForTag&) const {
@@ -401,44 +361,6 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   inline int chunk_size() const { return m_chunk_size; }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  /** \brief set chunk_size to a discrete value*/
-  inline TeamPolicyInternal set_chunk_size(
-      typename traits::index_type chunk_size_) const {
-    TeamPolicyInternal p = *this;
-    p.m_chunk_size       = chunk_size_;
-    return p;
-  }
-
-  /** \brief set per team scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal set_scratch_size(
-      const int& level, const PerTeamValue& per_team) const {
-    TeamPolicyInternal p         = *this;
-    p.m_team_scratch_size[level] = per_team.value;
-    return p;
-  };
-
-  /** \brief set per thread scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal set_scratch_size(
-      const int& level, const PerThreadValue& per_thread) const {
-    TeamPolicyInternal p           = *this;
-    p.m_thread_scratch_size[level] = per_thread.value;
-    return p;
-  };
-
-  /** \brief set per thread and per team scratch size for a specific level of
-   * the scratch hierarchy */
-  inline TeamPolicyInternal set_scratch_size(
-      const int& level, const PerTeamValue& per_team,
-      const PerThreadValue& per_thread) const {
-    TeamPolicyInternal p           = *this;
-    p.m_team_scratch_size[level]   = per_team.value;
-    p.m_thread_scratch_size[level] = per_thread.value;
-    return p;
-  };
-#else
   /** \brief set chunk_size to a discrete value*/
   inline TeamPolicyInternal& set_chunk_size(
       typename traits::index_type chunk_size_) {
@@ -471,46 +393,10 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     m_thread_scratch_size[level] = per_thread.value;
     return *this;
   }
-#endif
 
   typedef Kokkos::Impl::CudaTeamMember member_type;
 
  protected:
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-  /** \brief set chunk_size to a discrete value*/
-  inline TeamPolicyInternal internal_set_chunk_size(
-      typename traits::index_type chunk_size_) {
-    m_chunk_size = chunk_size_;
-    return *this;
-  }
-
-  /** \brief set per team scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal internal_set_scratch_size(
-      const int& level, const PerTeamValue& per_team) {
-    m_team_scratch_size[level] = per_team.value;
-    return *this;
-  }
-
-  /** \brief set per thread scratch size for a specific level of the scratch
-   * hierarchy */
-  inline TeamPolicyInternal internal_set_scratch_size(
-      const int& level, const PerThreadValue& per_thread) {
-    m_thread_scratch_size[level] = per_thread.value;
-    return *this;
-  }
-
-  /** \brief set per thread and per team scratch size for a specific level of
-   * the scratch hierarchy */
-  inline TeamPolicyInternal internal_set_scratch_size(
-      const int& level, const PerTeamValue& per_team,
-      const PerThreadValue& per_thread) {
-    m_team_scratch_size[level]   = per_team.value;
-    m_thread_scratch_size[level] = per_thread.value;
-    return *this;
-  }
-#endif
-
   template <class ClosureType, class FunctorType, class BlockSizeCallable>
   int internal_team_size_common(const FunctorType& f,
                                 BlockSizeCallable&& block_size_callable) const {
@@ -620,6 +506,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
         Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
             m_policy.space().impl_internal_space_instance(), attr, m_functor, 1,
             0, 0);
+    KOKKOS_ASSERT(block_size > 0);
     dim3 block(1, block_size, 1);
     dim3 grid(
         std::min(
@@ -666,29 +553,36 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
   inline void execute() const {
+    using namespace std;
+
     if (m_rp.m_num_tiles == 0) return;
     const array_index_type maxblocks = static_cast<array_index_type>(
         m_rp.space().impl_internal_space_instance()->m_maxBlock);
     if (RP::rank == 2) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], 1);
+      KOKKOS_ASSERT(block.x > 0);
+      KOKKOS_ASSERT(block.y > 0);
       const dim3 grid(
-          std::min((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
-                   maxblocks),
-          std::min((m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1) / block.y,
-                   maxblocks),
+          min((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
+              maxblocks),
+          min((m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1) / block.y,
+              maxblocks),
           1);
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
           false);
     } else if (RP::rank == 3) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], m_rp.m_tile[2]);
+      KOKKOS_ASSERT(block.x > 0);
+      KOKKOS_ASSERT(block.y > 0);
+      KOKKOS_ASSERT(block.z > 0);
       const dim3 grid(
-          std::min((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
-                   maxblocks),
-          std::min((m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1) / block.y,
-                   maxblocks),
-          std::min((m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1) / block.z,
-                   maxblocks));
+          min((m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
+              maxblocks),
+          min((m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1) / block.y,
+              maxblocks),
+          min((m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1) / block.z,
+              maxblocks));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
           false);
@@ -697,14 +591,15 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
       // threadIdx.z
       const dim3 block(m_rp.m_tile[0] * m_rp.m_tile[1], m_rp.m_tile[2],
                        m_rp.m_tile[3]);
+      KOKKOS_ASSERT(block.y > 0);
+      KOKKOS_ASSERT(block.z > 0);
       const dim3 grid(
-          std::min(
-              static_cast<index_type>(m_rp.m_tile_end[0] * m_rp.m_tile_end[1]),
+          min(static_cast<index_type>(m_rp.m_tile_end[0] * m_rp.m_tile_end[1]),
               static_cast<index_type>(maxblocks)),
-          std::min((m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1) / block.y,
-                   maxblocks),
-          std::min((m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1) / block.z,
-                   maxblocks));
+          min((m_rp.m_upper[2] - m_rp.m_lower[2] + block.y - 1) / block.y,
+              maxblocks),
+          min((m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1) / block.z,
+              maxblocks));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
           false);
@@ -713,15 +608,14 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
       // threadIdx.z
       const dim3 block(m_rp.m_tile[0] * m_rp.m_tile[1],
                        m_rp.m_tile[2] * m_rp.m_tile[3], m_rp.m_tile[4]);
+      KOKKOS_ASSERT(block.z > 0);
       const dim3 grid(
-          std::min(
-              static_cast<index_type>(m_rp.m_tile_end[0] * m_rp.m_tile_end[1]),
+          min(static_cast<index_type>(m_rp.m_tile_end[0] * m_rp.m_tile_end[1]),
               static_cast<index_type>(maxblocks)),
-          std::min(
-              static_cast<index_type>(m_rp.m_tile_end[2] * m_rp.m_tile_end[3]),
+          min(static_cast<index_type>(m_rp.m_tile_end[2] * m_rp.m_tile_end[3]),
               static_cast<index_type>(maxblocks)),
-          std::min((m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1) / block.z,
-                   maxblocks));
+          min((m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1) / block.z,
+              maxblocks));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
           false);
@@ -732,14 +626,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
                        m_rp.m_tile[2] * m_rp.m_tile[3],
                        m_rp.m_tile[4] * m_rp.m_tile[5]);
       const dim3 grid(
-          std::min(
-              static_cast<index_type>(m_rp.m_tile_end[0] * m_rp.m_tile_end[1]),
+          min(static_cast<index_type>(m_rp.m_tile_end[0] * m_rp.m_tile_end[1]),
               static_cast<index_type>(maxblocks)),
-          std::min(
-              static_cast<index_type>(m_rp.m_tile_end[2] * m_rp.m_tile_end[3]),
+          min(static_cast<index_type>(m_rp.m_tile_end[2] * m_rp.m_tile_end[3]),
               static_cast<index_type>(maxblocks)),
-          std::min(
-              static_cast<index_type>(m_rp.m_tile_end[4] * m_rp.m_tile_end[5]),
+          min(static_cast<index_type>(m_rp.m_tile_end[4] * m_rp.m_tile_end[5]),
               static_cast<index_type>(maxblocks)));
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
@@ -1124,13 +1015,19 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
             f, n);
+    using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType>;
+    cudaFuncAttributes attr =
+        CudaParallelLaunch<closure_type,
+                           LaunchBounds>::get_cuda_func_attributes();
     while (
         (n &&
          (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
           shmem_size)) ||
-        (n > static_cast<unsigned>(
-                 Kokkos::Impl::cuda_get_max_block_size<
-                     ParallelReduce, LaunchBounds>(f, 1, shmem_size, 0)))) {
+        (n >
+         static_cast<unsigned>(
+             Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
+                 m_policy.space().impl_internal_space_instance(), attr, f, 1,
+                 shmem_size, 0)))) {
       n >>= 1;
       shmem_size = cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
                                                              WorkTag>(f, n);
@@ -1142,6 +1039,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const index_type nwork = m_policy.end() - m_policy.begin();
     if (nwork) {
       const int block_size = local_block_size(m_functor);
+      KOKKOS_ASSERT(block_size > 0);
 
       m_scratch_space = cuda_internal_scratch_space(
           m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
@@ -1414,13 +1312,19 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
             f, n);
+    using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType>;
+    cudaFuncAttributes attr =
+        CudaParallelLaunch<closure_type,
+                           LaunchBounds>::get_cuda_func_attributes();
     while (
         (n &&
          (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
           shmem_size)) ||
-        (n > static_cast<unsigned>(
-                 Kokkos::Impl::cuda_get_max_block_size<
-                     ParallelReduce, LaunchBounds>(f, 1, shmem_size, 0)))) {
+        (n >
+         static_cast<unsigned>(
+             Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
+                 m_policy.space().impl_internal_space_instance(), attr, f, 1,
+                 shmem_size, 0)))) {
       n >>= 1;
       shmem_size = cuda_single_inter_block_reduce_scan_shmem<false, FunctorType,
                                                              WorkTag>(f, n);
@@ -2233,6 +2137,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
       const int block_size = local_block_size(m_functor);
+      KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
           (block_size * block_size) < GridMaxComputeCapability_2x
@@ -2523,6 +2428,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       enum { GridMaxComputeCapability_2x = 0x0ffff };
 
       const int block_size = local_block_size(m_functor);
+      KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
           (block_size * block_size) < GridMaxComputeCapability_2x

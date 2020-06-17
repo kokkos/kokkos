@@ -341,11 +341,14 @@ class ScanTeamFunctor {
 
     if (m != ind.league_rank() + (ind.team_size() - 1)) {
       printf(
-          "ScanTeamFunctor[%d.%d of %d.%d] reduce_max_answer(%ld) != "
-          "reduce_max(%ld)\n",
-          ind.league_rank(), ind.team_rank(), ind.league_size(),
-          ind.team_size(), (int64_t)(ind.league_rank() + (ind.team_size() - 1)),
-          m);
+          "ScanTeamFunctor[%i.%i of %i.%i] reduce_max_answer(%li) != "
+          "reduce_max(%li)\n",
+          static_cast<int>(ind.league_rank()),
+          static_cast<int>(ind.team_rank()),
+          static_cast<int>(ind.league_size()),
+          static_cast<int>(ind.team_size()),
+          static_cast<long>(ind.league_rank() + (ind.team_size() - 1)),
+          static_cast<long>(m));
     }
 
     // Scan:
@@ -360,10 +363,13 @@ class ScanTeamFunctor {
 
     if (answer != result || answer != result2) {
       printf(
-          "ScanTeamFunctor[%d.%d of %d.%d] answer(%ld) != scan_first(%ld) or "
-          "scan_second(%ld)\n",
-          ind.league_rank(), ind.team_rank(), ind.league_size(),
-          ind.team_size(), answer, result, result2);
+          "ScanTeamFunctor[%i.%i of %i.%i] answer(%li) != scan_first(%li) or "
+          "scan_second(%li)\n",
+          static_cast<int>(ind.league_rank()),
+          static_cast<int>(ind.team_rank()),
+          static_cast<int>(ind.league_size()),
+          static_cast<int>(ind.team_size()), static_cast<long>(answer),
+          static_cast<long>(result), static_cast<long>(result2));
 
       error = 1;
     }
@@ -458,10 +464,12 @@ struct SharedTeamFunctor {
     if ((shared_A.data() == nullptr && SHARED_COUNT > 0) ||
         (shared_B.data() == nullptr && SHARED_COUNT > 0)) {
       printf(
-          "member( %d/%d , %d/%d ) Failed to allocate shared memory of size "
+          "member( %i/%i , %i/%i ) Failed to allocate shared memory of size "
           "%lu\n",
-          ind.league_rank(), ind.league_size(), ind.team_rank(),
-          ind.team_size(), static_cast<uint64_t>(SHARED_COUNT));
+          static_cast<int>(ind.league_rank()),
+          static_cast<int>(ind.league_size()),
+          static_cast<int>(ind.team_rank()), static_cast<int>(ind.team_size()),
+          static_cast<unsigned long>(SHARED_COUNT));
 
       ++update;  // Failure to allocate is an error.
     } else {
@@ -566,7 +574,7 @@ struct TestLambdaSharedTeam {
           if ((shared_A.data() == nullptr && SHARED_COUNT > 0) ||
               (shared_B.data() == nullptr && SHARED_COUNT > 0)) {
             printf("Failed to allocate shared memory of size %lu\n",
-                   static_cast<uint64_t>(SHARED_COUNT));
+                   static_cast<unsigned long>(SHARED_COUNT));
 
             ++update;  // Failure to allocate is an error.
           } else {
@@ -633,7 +641,7 @@ struct ScratchTeamFunctor {
         (scratch_A.data() == nullptr && SHARED_TEAM_COUNT > 0) ||
         (scratch_B.data() == nullptr && SHARED_THREAD_COUNT > 0)) {
       printf("Failed to allocate shared memory of size %lu\n",
-             static_cast<uint64_t>(SHARED_TEAM_COUNT));
+             static_cast<unsigned long>(SHARED_TEAM_COUNT));
 
       ++update;  // Failure to allocate is an error.
     } else {

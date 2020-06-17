@@ -46,7 +46,6 @@
 #define KOKKOS_HIP_VECTORIZATION_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_HIP.hpp>
 
 namespace Kokkos {
 namespace Experimental {

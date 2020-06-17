@@ -52,22 +52,30 @@
 int main() {
   Kokkos::initialize();
   {
-    Kokkos::View<int*> src_view("source", 10);
-    Kokkos::View<int*> dst_view("destination", 10);
+    // This test only uses host kernel launch mechanisms. This is to allow for
+    // the test to run on platforms where CUDA lambda launch isn't supported.
+    // This is safe because this test only seeks to test that the dlsym-based
+    // tool loading mechanisms work, all of which happens completely
+    // independently of the enabled backends
+    using execution_space = Kokkos::DefaultHostExecutionSpace;
+    using memory_space    = typename execution_space::memory_space;
+    Kokkos::View<int*, memory_space> src_view("source", 10);
+    Kokkos::View<int*, memory_space> dst_view("destination", 10);
     Kokkos::deep_copy(dst_view, src_view);
-    Kokkos::parallel_for(
-        "parallel_for", 1, KOKKOS_LAMBDA(int i) { (void)i; });
+    Kokkos::parallel_for("parallel_for",
+                         Kokkos::RangePolicy<execution_space>(0, 1),
+                         [=](int i) { (void)i; });
     int result;
     Kokkos::parallel_reduce(
-        "parallel_reduce", 1,
-        KOKKOS_LAMBDA(int i, int& hold_result) { hold_result += i; }, result);
-    Kokkos::parallel_scan(
-        "parallel_scan", 1,
-        KOKKOS_LAMBDA(const int i, int& hold_result, const bool final) {
-          if (final) {
-            hold_result += i;
-          }
-        });
+        "parallel_reduce", Kokkos::RangePolicy<execution_space>(0, 1),
+        [=](int i, int& hold_result) { hold_result += i; }, result);
+    Kokkos::parallel_scan("parallel_scan",
+                          Kokkos::RangePolicy<execution_space>(0, 1),
+                          [=](const int i, int& hold_result, const bool final) {
+                            if (final) {
+                              hold_result += i;
+                            }
+                          });
     Kokkos::Profiling::pushRegion("push_region");
     Kokkos::Profiling::popRegion();
     uint32_t sectionId;

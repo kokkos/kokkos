@@ -586,21 +586,12 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 3> {
     for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0)
       for (unsigned i1 = 0; i1 < unsigned(left.extent(1)); ++i1)
         for (unsigned i2 = 0; i2 < unsigned(left.extent(2)); ++i2) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-          if (&left(i0, i1, i2) != &left(i0, i1, i2, 0, 0, 0, 0, 0)) {
-            update |= 3;
-          }
-          if (&right(i0, i1, i2) != &right(i0, i1, i2, 0, 0, 0, 0, 0)) {
-            update |= 3;
-          }
-#else
           if (&left(i0, i1, i2) != &left.access(i0, i1, i2, 0, 0, 0, 0, 0)) {
             update |= 3;
           }
           if (&right(i0, i1, i2) != &right.access(i0, i1, i2, 0, 0, 0, 0, 0)) {
             update |= 3;
           }
-#endif
         }
   }
 };
@@ -671,21 +662,12 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 2> {
 
     for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0)
       for (unsigned i1 = 0; i1 < unsigned(left.extent(1)); ++i1) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-        if (&left(i0, i1) != &left(i0, i1, 0, 0, 0, 0, 0, 0)) {
-          update |= 3;
-        }
-        if (&right(i0, i1) != &right(i0, i1, 0, 0, 0, 0, 0, 0)) {
-          update |= 3;
-        }
-#else
         if (&left(i0, i1) != &left.access(i0, i1, 0, 0, 0, 0, 0, 0)) {
           update |= 3;
         }
         if (&right(i0, i1) != &right.access(i0, i1, 0, 0, 0, 0, 0, 0)) {
           update |= 3;
         }
-#endif
       }
   }
 };
@@ -741,21 +723,12 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 1> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const size_type, value_type &update) const {
     for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0) {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-      if (&left(i0) != &left(i0, 0, 0, 0, 0, 0, 0, 0)) {
-        update |= 3;
-      }
-      if (&right(i0) != &right(i0, 0, 0, 0, 0, 0, 0, 0)) {
-        update |= 3;
-      }
-#else
       if (&left(i0) != &left.access(i0, 0, 0, 0, 0, 0, 0, 0)) {
         update |= 3;
       }
       if (&right(i0) != &right.access(i0, 0, 0, 0, 0, 0, 0, 0)) {
         update |= 3;
       }
-#endif
       if (&left(i0) != &left_stride(i0)) {
         update |= 4;
       }
@@ -846,6 +819,44 @@ struct TestViewMirror {
     return v;
   }
 
+  static void test_allocated() {
+    using ExecutionSpace = typename DeviceType::execution_space;
+    using dynamic_view   = Kokkos::View<int *, ExecutionSpace>;
+    using static_view    = Kokkos::View<int[5], ExecutionSpace>;
+    using unmanaged_view =
+        Kokkos::View<int *, ExecutionSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+    int const N = 100;
+
+    dynamic_view d1;
+    static_view s1;
+    unmanaged_view u1;
+    ASSERT_FALSE(d1.is_allocated());
+    ASSERT_FALSE(s1.is_allocated());
+    ASSERT_FALSE(u1.is_allocated());
+
+    d1 = dynamic_view("d1", N);
+    dynamic_view d2(d1);
+    dynamic_view d3("d3", N);
+    ASSERT_TRUE(d1.is_allocated());
+    ASSERT_TRUE(d2.is_allocated());
+    ASSERT_TRUE(d3.is_allocated());
+
+    s1 = static_view("s1");
+    static_view s2(s1);
+    static_view s3("s3");
+    ASSERT_TRUE(s1.is_allocated());
+    ASSERT_TRUE(s2.is_allocated());
+    ASSERT_TRUE(s3.is_allocated());
+
+    u1 = unmanaged_view(d1.data(), N);
+    unmanaged_view u2(u1);
+    unmanaged_view u3(d1.data(), N);
+    ASSERT_TRUE(u1.is_allocated());
+    ASSERT_TRUE(u2.is_allocated());
+    ASSERT_TRUE(u3.is_allocated());
+  }
+
   static void test_mirror_copy_const_data_type() {
     using ExecutionSpace = typename DeviceType::execution_space;
     int const N          = 100;
@@ -913,6 +924,7 @@ struct TestViewMirror {
     test_mirror_copy<Kokkos::MemoryTraits<0> >();
     test_mirror_copy<Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
     test_mirror_copy_const_data_type();
+    test_allocated();
     test_mirror_no_initialize<Kokkos::MemoryTraits<0> >();
     test_mirror_no_initialize<Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
   }
@@ -1082,13 +1094,7 @@ class TestViewAPI {
     {
       // Destruction of this view should be harmless.
 
-      const_dView4 unmanaged_from_ptr_const_dx(dx.data(), dx.extent(0)
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
-                                                              ,
-                                               dx.extent(1), dx.extent(2),
-                                               dx.extent(3)
-#endif
-      );
+      const_dView4 unmanaged_from_ptr_const_dx(dx.data(), dx.extent(0));
     }
 
     const_dView4 const_dx = dx;

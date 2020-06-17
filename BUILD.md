@@ -138,9 +138,6 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
     * Debug check on dual views
     * BOOL Default: OFF
-* Kokkos_ENABLE_DEPRECATED_CODE
-    * Whether to enable deprecated code
-    * BOOL Default: OFF
 * Kokkos_ENABLE_EXAMPLES
     * Whether to enable building examples
     * BOOL Default: OFF
@@ -235,8 +232,11 @@ Architecture-specific optimizations can be enabled by specifying `-DKokkos_ARCH_
 * Kokkos_ARCH_BGQ
     * Whether to optimize for the BGQ architecture
     * BOOL Default: OFF
-* Kokkos_ARCH_EPYC
-    * Whether to optimize for the EPYC architecture
+* Kokkos_ARCH_ZEN
+    * Whether to optimize for the Zen architecture
+    * BOOL Default: OFF
+* Kokkos_ARCH_ZEN2
+    * Whether to optimize for the Zen2 architecture
     * BOOL Default: OFF
 * Kokkos_ARCH_HSW
     * Whether to optimize for the HSW architecture
