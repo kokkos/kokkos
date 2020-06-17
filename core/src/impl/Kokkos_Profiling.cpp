@@ -988,12 +988,6 @@ void begin_context(size_t) {}
 
 bool have_tuning_tool() { return false; }
 
-VariableValue make_variable_value(size_t id, bool val) {
-  VariableValue variable_value;
-  variable_value.type_id          = id;
-  variable_value.value.bool_value = val;
-  return variable_value;
-}
 VariableValue make_variable_value(size_t id, int64_t val) {
   VariableValue variable_value;
   variable_value.type_id         = id;
