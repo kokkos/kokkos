@@ -99,14 +99,12 @@ typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 // Tuning
 
 union Kokkos_Tools_VariableValue_ValueUnion {
-  bool bool_value;
   int64_t int_value;
   double double_value;
   const char* string_value;
 };
 
 union Kokkos_Tools_VariableValue_ValueUnionSet {
-  bool* bool_value;
   int64_t* int_value;
   double* double_value;
   const char** string_value;
@@ -139,7 +137,6 @@ enum Kokkos_Tools_VariableInfo_ValueType {
   kokkos_value_floating_point,
   kokkos_value_integer,
   kokkos_value_text,
-  kokkos_value_boolean,
 };
 
 enum Kokkos_Tools_VariableInfo_StatisticalCategory {

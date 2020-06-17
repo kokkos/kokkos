@@ -199,14 +199,12 @@ using Kokkos::Tools::Experimental::set_callbacks;
 namespace Tools {
 namespace Experimental {
 
-VariableValue make_variable_value(size_t id, bool val);
 VariableValue make_variable_value(size_t id, int64_t val);
 VariableValue make_variable_value(size_t id, double val);
 VariableValue make_variable_value(size_t id, const char* val);
 
 SetOrRange make_candidate_set(size_t size, const char** data);
 SetOrRange make_candidate_set(size_t size, int64_t* data);
-SetOrRange make_candidate_set(size_t size, bool* data);
 SetOrRange make_candidate_set(size_t size, double* data);
 SetOrRange make_candidate_range(double lower, double upper, double step,
                                 bool openLower, bool openUpper);

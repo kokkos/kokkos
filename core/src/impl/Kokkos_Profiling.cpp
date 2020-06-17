@@ -779,12 +779,6 @@ bool have_tuning_tool() {
 #endif
 }
 
-VariableValue make_variable_value(size_t id, bool val) {
-  VariableValue variable_value;
-  variable_value.id               = id;
-  variable_value.value.bool_value = val;
-  return variable_value;
-}
 VariableValue make_variable_value(size_t id, int64_t val) {
   VariableValue variable_value;
   variable_value.id              = id;
@@ -813,12 +807,6 @@ SetOrRange make_candidate_set(size_t size, int64_t* data) {
   SetOrRange value_set;
   value_set.set.size             = size;
   value_set.set.values.int_value = data;
-  return value_set;
-}
-SetOrRange make_candidate_set(size_t size, bool* data) {
-  SetOrRange value_set;
-  value_set.set.size              = size;
-  value_set.set.values.bool_value = data;
   return value_set;
 }
 SetOrRange make_candidate_set(size_t size, double* data) {
