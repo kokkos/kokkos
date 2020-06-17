@@ -719,10 +719,10 @@ void set_input_values(size_t contextId, size_t count, VariableValue* values) {
     features_per_context[contextId] = std::unordered_set<size_t>();
   }
   for (size_t x = 0; x < count; ++x) {
-    values[x].metadata = &variable_metadata[values[x].id];
-    features_per_context[contextId].insert(values[x].id);
-    active_features.insert(values[x].id);
-    feature_values[values[x].id] = values[x];
+    values[x].metadata = &variable_metadata[values[x].type_id];
+    features_per_context[contextId].insert(values[x].type_id);
+    active_features.insert(values[x].type_id);
+    feature_values[values[x].type_id] = values[x];
   }
 #else
   (void)contextId;
@@ -741,7 +741,7 @@ void request_output_values(size_t contextId, size_t count,
   }
   if (Experimental::current_callbacks.request_output_values != nullptr) {
     for (int x = 0; x < count; ++x) {
-      values[x].metadata = &variable_metadata[values[x].id];
+      values[x].metadata = &variable_metadata[values[x].type_id];
     }
     (*Experimental::current_callbacks.request_output_values)(
         contextId, context_values.size(), context_values.data(), count, values);
@@ -781,19 +781,19 @@ bool have_tuning_tool() {
 
 VariableValue make_variable_value(size_t id, int64_t val) {
   VariableValue variable_value;
-  variable_value.id              = id;
+  variable_value.type_id              = id;
   variable_value.value.int_value = val;
   return variable_value;
 }
 VariableValue make_variable_value(size_t id, double val) {
   VariableValue variable_value;
-  variable_value.id                 = id;
+  variable_value.type_id                 = id;
   variable_value.value.double_value = val;
   return variable_value;
 }
 Experimental::VariableValue make_variable_value(size_t id, const char* val) {
   VariableValue variable_value;
-  variable_value.id                 = id;
+  variable_value.type_id                 = id;
   variable_value.value.string_value = val;
   return variable_value;
 }
@@ -849,7 +849,7 @@ void declare_optimization_goal(const size_t context,
   if (Experimental::current_callbacks.declare_optimization_goal != nullptr) {
     (*Experimental::current_callbacks.declare_optimization_goal)(context, goal);
   }
-  optimization_goals[context] = goal.id;
+  optimization_goals[context] = goal.type_id;
 #else
   (void)context;
   (void)goal;
@@ -967,25 +967,25 @@ bool have_tuning_tool() { return false; }
 
 VariableValue make_variable_value(size_t id, bool val) {
   VariableValue variable_value;
-  variable_value.id               = id;
+  variable_value.type_id               = id;
   variable_value.value.bool_value = val;
   return variable_value;
 }
 VariableValue make_variable_value(size_t id, int64_t val) {
   VariableValue variable_value;
-  variable_value.id              = id;
+  variable_value.type_id              = id;
   variable_value.value.int_value = val;
   return variable_value;
 }
 VariableValue make_variable_value(size_t id, double val) {
   VariableValue variable_value;
-  variable_value.id                 = id;
+  variable_value.type_id                 = id;
   variable_value.value.double_value = val;
   return variable_value;
 }
 VariableValue make_variable_value(size_t id, const char* val) {
   VariableValue variable_value;
-  variable_value.id                 = id;
+  variable_value.type_id                 = id;
   variable_value.value.string_value = val;
   return variable_value;
 }

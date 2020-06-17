@@ -121,7 +121,7 @@ enum Kokkos_Tools_OptimizationType {
 };
 
 struct Kokkos_Tools_OptimzationGoal {
-  size_t id;
+  size_t type_id;
   Kokkos_Tools_OptimizationType goal;
 };
 
@@ -169,7 +169,7 @@ struct Kokkos_Tools_VariableInfo {
 };
 
 struct Kokkos_Tools_VariableValue {
-  size_t id;
+  size_t type_id;
   union Kokkos_Tools_VariableValue_ValueUnion value;
   struct Kokkos_Tools_VariableInfo* metadata;
 };
