@@ -74,34 +74,21 @@ The easier we make this loop, the better
 
 ## Design
 
-The design of this system is intended to reflect the above ideas with the minimal necessary additions to make the mechanics work. This section is almost entirely describing the small holes in the above descriptions. Variable declaration works exactly as described above, except for two things
-
-1) Each variable is associated with a unique ID at declaration time
-2) In addition to allowing "int, float, string" types, we also allow for sets and ranges of the same
-
-(2) is important because it allows us to express interdependency of tuning variables, you can't tune "blockSize.x" and "blockSize.y" independently, the choices intersect [caveat two: interdependent variables must have the same type]. So we wouldn't describe blockSize.x as being between 32 and MAX_BLOCK_SIZE, just like blockSize.y, we would describe "3D_block_size" as being in {1,1,1}, ... {MAX_BLOCK_SIZE,1,1}
+The design of this system is intended to reflect the above ideas with the minimal necessary additions to make the mechanics work. This section is almost entirely describing the small holes in the above descriptions. Variable declaration works exactly as described above, except that we associate types and associated values using a type_id with each type at declaration time.
 
 Any time a value of a variable is declared (context) or requested (tuning), it is also associated with a context ID that says how long that declaration is valid for. So if a user sees
 
 ```c++
+startContext(contextId(0))
 declare_value("is_safe_to_push_button",true,contextId(0));
 foo();
 endContext(contextId(0));
 bar();
 ```
 
-They should know in `bar` that it is no longer safe to push the button. Similarly, if tools have provided tuning values to contextId(0), when contextId(0) ends, that is when the tool takes measurements related to those tuning values and learns things. *For many tools, the first time they see a value associated with a contextId, they'll do a starting measurement, and at endContext they'll stop that measurement*.
+They should know in `bar` that it is no longer safe to push the button. Similarly, if tools have provided tuning values to contextId(0), when contextId(0) ends, that is when the tool takes measurements related to those tuning values and learns things. *For most tools, when they see a call to startContext associated with a contextId, they'll do a starting measurement, and at endContext they'll stop that measurement*.
 
-The ugliest divergence from design is in the semantics. We would absolutely love to tell users the valid values for a given tuning parameter at variable declaration time. We hate the idea of telling them the valid values on each request for the value of that parameter. Unfortunately the universe is cruel: things can happen outside of Kokkos that make the valid values of a tuning parameter change on each request. Just taking the example of block size
-
-1) Different kernels have different valid values for block size
-2) Different invocations of the same kernel can have different values for block size if somebody changes settings
-3) We don't know how much worse this gets as we move past block size
-
-So we'll do our best to mitigate the impacts of this, but for now the set of candidate values must be provided every time we request a
-value
-
-Otherwise the ideas behind the tuning system translate directly into the design and the implementation
+One ugly bit of semantic complexity is in variables with complicated sets of candidates. Taking the exmaple of GPU block size, for different kernels an application might have different sets of valid block sizes. This means that while "block size" might make sense as a type, there could be different types, "block_sizes_up_to_1024," "block_sizes_up_to_2048," that cover the concept of block size. In our experience every solution to this problem is ugly, our alternate answers were much uglier.
 
 ## Implementation
 
@@ -115,34 +102,41 @@ If you're a Kokkos developer, you care about the application implementation and 
 
 ### Tool implementation
 
-In the past, tools have responded to the [profiling hooks in Kokkos](https://github.com/kokkos/kokkos-tools/wiki/Profiling-Hooks). This effort adds to that, there are now a few more functions (note that I'm using the C names for types. In general you can replace Kokkos_Tuning_ with Kokkos::Tuning:: in C++ tools)
+In the past, tools have responded to the [profiling hooks in Kokkos](https://github.com/kokkos/kokkos-tools/wiki/Profiling-Hooks). This effort adds to that, there are now a few more functions (note that I'm using the C names for types. In general you can replace Kokkos_Tools_ with Kokkos::Tools:: in C++ tools)
+
 
 ```c++
-void kokkosp_declare_tuning_variable(const char* name, const size_t id, Kokkos_Tuning_VariableInfo info);
+void kokkosp_declare_output_type(const char* name, const size_t id, Kokkos_Tools_VariableInfo& info);
 ```
 
-Declares a tuning variable named `name` with uniqueId `id` and all the semantic information (except candidate values) stored in `info`.
+Declares a tuning variable named `name` with uniqueId `id` and all the semantic information stored in `info`. Note that the VariableInfo struct has a `void*` field called `toolProvidedInfo`. If you fill this in, every time you get a value of that type you'll also get back that same pointer.
 
 ```c++
-void kokkosp_declare_context_variable(const char*, const size_t, Kokkos_Tuning_VariableInfo info, Kokkos_Tuning_VariableInfo_SetOrRange);
+void kokkosp_declare_input_type(const char*, const size_t, Kokkos_Tools_VariableInfo& info);
 ```
 
-This is much like declaring a tuning variable, except the candidate values of context variables are declared immediately. In cases where they aren't known, `info.valueQuantity` will be set to `kokkos_value_unbounded`. This is fairly common, Kokkos can tell you that `kernel_name` is a string, but we can't tell you what strings a user might provide.
+This is almost exactly like declaring a tuning variable. The only difference is that in cases where the candidate values aren't known, `info.valueQuantity` will be set to `kokkos_value_unbounded`. This is fairly common, Kokkos can tell you that `kernel_name` is a string, but we can't tell you what strings a user might provide.
 
 ```c++
-void kokkosp_request_tuning_variable_values(
+void kokkosp_request_values(
     const size_t contextId,
-    const size_t numContextVariables, const Kokkos_Tuning_VariableValue* contextVariableValues,
-    const size_t numTuningVariables, Kokkos_Tuning_VariableValue* tuningVariableValues, Kokkos_Tuning_VariableInfo_SetOrRange* tuningVariableCandidateValues);
+    const size_t numContextVariables, const Kokkos_Tools_VariableValue* contextVariableValues,
+    const size_t numTuningVariables, Kokkos_Tools_VariableValue* tuningVariableValues);
 ```
 
-Here Kokkos is requesting the values of tuning variables, and most of the meat is here. The contextId tells us the scope across which these variables were used. Often you'll start a measurement/timer and associate it with this ID so that when the contextID ends, you can stop the timer and know how you did.
+Here Kokkos is requesting the values of tuning variables, and most of the meat is here. The contextId tells us the scope across which these variables were used.
 
-The next three arguments describe the context you're tuning in. You have the number of context variables, and an array of that size containing their values.
+The next two arguments describe the context you're tuning in. You have the number of context variables, and an array of that size containing their values. Note that the Kokkos_Tuning_VariableValue has a field called `metadata` containing all the info (type, semantics, and critically, candidates) about that variable.
 
-The next four arguments describe the Tuning Variables, first the number, then some default values which you overwrite to change how Kokkos will behave. Finally, you have the candidate values you can choose among.
+The two arguments following those describe the Tuning Variables. First the number of them, then an array of that size which you can overwrite. *Overwriting those values is how you give values back to the application*
 
 Critically, as tuningVariableValues comes preloaded with default values, if your function body is `return;` you will not crash Kokkos, only make us use our defaults. If you don't know, you are allowed to punt and let Kokkos do what it would.
+
+```c++
+void kokkosp_begin_context(size_t contextId);
+```
+
+This starts the context pointed at by contextId. If tools use measurements to drive tuning, this is where they'll do their starting measurement.
 
 ```c++
 void kokkosp_end_context(const size_t contextId);
@@ -150,61 +144,64 @@ void kokkosp_end_context(const size_t contextId);
 
 This simply says that the contextId in the argument is now over. If you provided tuning values associated with that context, those values can now be associated with a result.
 
-First, on the Kokkos side some changes had to happen. If you're writing a tool, skip to Tool Implementation
-
 ### App Implementation
 
 For 99% of applications, all you need to do to interact with Kokkos Tuning Tools in your code is nothing. The only exceptions are if you want the tuning to be aware of what's happening in your application (number of particles active, whether different physics are active) if
-you think that might change what the Tuning decides. If you're feeling especially brave, you can also use the Tuning interface to tune parameters within your own application. For making people aware of your application context, you need to know about four functions
+you think that might change what the Tuning decides. If you're feeling especially brave, you can also use the Tuning interface to tune parameters within your own application. For making people aware of your application context, you need to know about a few functions
+
 
 ```c++
-size_t getNewVariableId();
-```
-
-When you declare a variable, you need to give it a unique ID among variables. You need to use that ID when you're declaring a value for the variable as well. This is just a function to give you an ID.
-
-```c++
-size_t getNewContextId();
-size_t getCurrentContextId();
-```
-
-Similarly, you will associate values with "contexts" in order to decide when a given declaration of a value has gone out of scope. The first gets you a new context ID if you're starting some new set of values. If you need to recover the last context ID so you can append to that context, rather than overwriting it with a new one, you can use `getCurrentContextIDd()`.
-
-```c++
-void declareContextVariable(const std::string& variableName, size_t uniqID,
+size_t Kokkos::Tools::Experimental::declare_input_type(const std::string& variableName
                             VariableInfo info,
-                            Kokkos::Tuning::SetOrRange candidate_values);
+                            );
 ```
 
-This function tells a tool that you have some variable they should know about when tuning. uniqID field is described above. Info describes the semantics of your variable. This is discussed in great detail under "Semantics of Variables", but you need to say whether the values will be text, int, or float, whether they're categorical, ordinal,interval, or ratio data, and whether the candidate values are "unbounded" (if you don't know the full set of values), a set, or a range. If values are unbounded, you can just pass an empty set [TODO: should we extend the interface with an overload without SetOrRange?]
+This function tells a tool that you have some variable they should know about when tuning. The info describes the semantics of your variable. This is discussed in great detail under "Semantics of Variables", but you need to say whether the values will be text, int, or float, whether they're categorical, ordinal,interval, or ratio data, and whether the candidate values are "unbounded" (if you don't know the full set of values), a set, or a range. This returns a `size_t` that you should store, it's how you'll later identify what values you're providing or requesting from the tool. Note that this call doesn't actually tell the tools about values, it simply tells the tool about the nature of values you'll provide later.
+
 
 ```c++
-void declareContextVariableValues(size_t contextId, size_t count,
+size_t Kokkos::Tools::Experimental::get_new_context_id();
+size_t Kokkos::Tools::Experimental::get_current_context_id();
+```
+
+In this interface, you will associate values with "contexts" in order to decide when a given declaration of a value has gone out of scope. The first gets you a new context ID if you're starting some new set of values. If you need to recover the last context ID so you can append to that context, rather than overwriting it with a new one, you can use `get_current_context_id()`. You'll use that context id to start a context in the function
+
+```c++
+void Kokkos::Tools::Experimental::begin_context(size_t context_id);
+```
+
+This tells the tool that you're beginning a region in which you'll be setting and requesting values. If the tool optimizes for time, you're telling them to start their timer.
+
+
+```c++
+void Kokkos::Tools::Experimental::set_input_values(size_t contextId, size_t count,
                                   VariableValue* values);
 ```
 
-Here you tell tools the values for your context variables. The contextId is used to later tell when this has gone out of scope, the count is how many variables you're declaring, the uniqIds are an array (of size count) of the unique ID's of those variables, and finally values are the current values of those variables.
+Here you tell tools the values for your context variables. The contextId is used to later tell when this has gone out of scope, the count is how many variables you're declaring, and the values should come from calling `Kokkos::Tools::Experimental::make_variable_value` with the appropriate variable ID and value.
 
 ```c++
-void endContext(size_t contextId);
+void Kokkos::Tools::Experimental::end_context(size_t contextId);
 ```
 
-This tells the tool that values from this context are no longer valid. For those who want to declare tuning variables, you only need two more functions.
+This tells the tool that values from this context are no longer valid, and that the tool should stop their timers. 
+
+For those who want to declare and request tuning variables, you only need two more functions.
 
 ```c++
-void declareTuningVariable(const std::string& variableName, size_t uniqID,
+void Kokkos::Tools::Experimental::declare_output_type(const std::string& variableName
                            VariableInfo info);
 ```
 
-This is exactly like declareContextVariable, except you don't declare candidate values (you do that when you request values).
+This is exactly like declareContextVariable. The only difference is that the ID's this returns should be passed to request_output_values, and that the `candidates` field in the info _must_ list valid values for the tool to provide.
 
 ```c++
-void requestTuningVariableValues(size_t contextId, size_t count,
+void Kokkos::Tools::Experimental::request_output_values(size_t contextId, size_t count,
                                  VariableValue* values,
-                                 Kokkos::Tuning::SetOrRange* candidate_values);
+                                 );
 ```
 
-Here is where you request that the tool give you a value. You need a contextId so that the tool can know when you're done using the value and measure results. The count tells the tool how many variables it's providing values for. Values is an array of your default values for that parameter, it must not crash your program if unchanged. Finally, candidate_values contains the choices the tool might make for that given parameter.
+Here is where you request that the tool give you a set of values. You need a contextId so that the tool can know when you're done using the value and measure results. The count tells the tool how many variables it's providing values for. Values is an array of your default values for that parameter, it must not crash your program if unchanged.
 
 ### Kokkos implementation
 
