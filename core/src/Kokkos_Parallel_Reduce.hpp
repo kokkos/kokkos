@@ -854,7 +854,6 @@ struct ParallelReduceAdaptor {
   static inline void execute(const std::string& label, const PolicyType& policy,
                              const FunctorType& functor,
                              ReturnType& return_value) {
-#if defined(KOKKOS_ENABLE_PROFILING)
     uint64_t kpID = 0;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Impl::ParallelConstructName<FunctorType,
@@ -862,9 +861,6 @@ struct ParallelReduceAdaptor {
           name(label);
       Kokkos::Profiling::beginParallelReduce(name.get(), 0, &kpID);
     }
-#else
-    (void)label;
-#endif
 
     Kokkos::Impl::shared_allocation_tracking_disable();
 #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
@@ -881,11 +877,9 @@ struct ParallelReduceAdaptor {
     Kokkos::Impl::shared_allocation_tracking_enable();
     closure.execute();
 
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endParallelReduce(kpID);
     }
-#endif
   }
 };
 }  // namespace Impl

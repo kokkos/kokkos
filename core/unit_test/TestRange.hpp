@@ -87,7 +87,6 @@ struct TestRange {
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, ScheduleType>(0, N),
                          *this);
 
-#if defined(KOKKOS_ENABLE_PROFILING)
     {
       typedef TestRange<ExecSpace, ScheduleType> ThisType;
       std::string label("parallel_for");
@@ -98,13 +97,11 @@ struct TestRange {
           empty_label);
       ASSERT_EQ(empty_pcn.get(), typeid(ThisType).name());
     }
-#endif
 
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecSpace, ScheduleType, VerifyInitTag>(0, N),
         *this);
 
-#if defined(KOKKOS_ENABLE_PROFILING)
     {
       typedef TestRange<ExecSpace, ScheduleType> ThisType;
       std::string label("parallel_for");
@@ -116,7 +113,6 @@ struct TestRange {
       ASSERT_EQ(empty_pcn.get(), std::string(typeid(ThisType).name()) + "/" +
                                      typeid(VerifyInitTag).name());
     }
-#endif
 
     Kokkos::deep_copy(host_flags, m_flags);
 

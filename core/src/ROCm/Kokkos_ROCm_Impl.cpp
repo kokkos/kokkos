@@ -659,9 +659,7 @@ int ROCm::is_initialized() {
 void ROCm::initialize(const ROCm::SelectDevice config) {
   Kokkos::Impl::ROCmInternal::singleton().initialize(config.rocm_device_id);
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
-#endif
 }
 
 #if 0
@@ -688,9 +686,7 @@ ROCm::size_type ROCm::device_arch()
 void ROCm::finalize() {
   Kokkos::Impl::ROCmInternal::singleton().finalize();
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::finalize();
-#endif
 }
 
 ROCm::ROCm() : m_device(Kokkos::Impl::ROCmInternal::singleton().m_rocmDev) {

@@ -755,9 +755,7 @@ void ThreadsExec::finalize() {
   s_threads_process.m_pool_fan_size  = 0;
   s_threads_process.m_pool_state     = ThreadsExec::Inactive;
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::finalize();
-#endif
 }
 
 //----------------------------------------------------------------------------

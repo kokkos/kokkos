@@ -44,14 +44,13 @@
 
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Profiling.hpp>
-#if defined(KOKKOS_ENABLE_PROFILING)
+#if defined(KOKKOS_ENABLE_LIBDL)
 #include <dlfcn.h>
 #endif
 #include <vector>
 #include <array>
 #include <stack>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <cstring>
 #include <unordered_map>
 #include <unordered_set>
@@ -880,143 +879,3 @@ void declare_optimization_goal(const size_t context,
 }  // end namespace Tools
 
 }  // end namespace Kokkos
-
-#else
-#include <impl/Kokkos_Profiling_Interface.hpp>
-#include <cstring>
-
-namespace Kokkos {
-namespace Tools {
-
-bool profileLibraryLoaded() { return false; }
-
-void beginParallelFor(const std::string&, const uint32_t, uint64_t*) {}
-void endParallelFor(const uint64_t) {}
-void beginParallelScan(const std::string&, const uint32_t, uint64_t*) {}
-void endParallelScan(const uint64_t) {}
-void beginParallelReduce(const std::string&, const uint32_t, uint64_t*) {}
-void endParallelReduce(const uint64_t) {}
-
-void pushRegion(const std::string&) {}
-void popRegion() {}
-void createProfileSection(const std::string&, uint32_t*) {}
-void startSection(const uint32_t) {}
-void stopSection(const uint32_t) {}
-void destroyProfileSection(const uint32_t) {}
-
-void markEvent(const std::string&) {}
-
-void allocateData(const SpaceHandle, const std::string, const void*,
-                  const uint64_t) {}
-void deallocateData(const SpaceHandle, const std::string, const void*,
-                    const uint64_t) {}
-
-void beginDeepCopy(const SpaceHandle, const std::string, const void*,
-                   const SpaceHandle, const std::string, const void*,
-                   const uint64_t) {}
-void endDeepCopy() {}
-
-void initialize() {}
-void finalize() {}
-
-namespace Experimental {
-static EventSet current_callbacks;
-
-void set_init_callback(initFunction) {}
-void set_finalize_callback(finalizeFunction) {}
-void set_begin_parallel_for_callback(beginFunction) {}
-void set_end_parallel_for_callback(endFunction) {}
-void set_begin_parallel_reduce_callback(beginFunction) {}
-void set_end_parallel_reduce_callback(endFunction) {}
-void set_begin_parallel_scan_callback(beginFunction) {}
-void set_end_parallel_scan_callback(endFunction) {}
-void set_push_region_callback(pushFunction) {}
-void set_pop_region_callback(popFunction) {}
-void set_allocate_data_callback(allocateDataFunction) {}
-void set_deallocate_data_callback(deallocateDataFunction) {}
-void set_create_profile_section_callback(createProfileSectionFunction) {}
-void set_start_profile_section_callback(startProfileSectionFunction) {}
-void set_stop_profile_section_callback(stopProfileSectionFunction) {}
-void set_destroy_profile_section_callback(destroyProfileSectionFunction) {}
-void set_profile_event_callback(profileEventFunction) {}
-void set_begin_deep_copy_callback(beginDeepCopyFunction) {}
-void set_end_deep_copy_callback(endDeepCopyFunction) {}
-void set_declare_output_type_callback(outputTypeDeclarationFunction) {}
-void set_declare_input_type_callback(inputTypeDeclarationFunction) {}
-void set_request_output_values_callback(requestValueFunction) {}
-void set_declare_optimization_goal_callback(
-    optimizationGoalDeclarationFunction) {}
-void set_end_context_callback(contextEndFunction) {}
-void set_begin_context_callback(contextBeginFunction) {}
-
-void pause_tools() {}
-
-void resume_tools() {}
-
-EventSet get_callbacks() { return current_callbacks; }
-void set_callbacks(EventSet) {}
-}  // namespace Experimental
-}  // namespace Tools
-}  // namespace Kokkos
-
-namespace Kokkos {
-namespace Tools {
-namespace Experimental {
-static size_t& get_context_counter() {
-  static size_t x;
-  return x;
-}
-static size_t& get_variable_counter() {
-  static size_t x;
-  return ++x;
-}
-
-size_t get_new_context_id() { return ++get_context_counter(); }
-size_t get_current_context_id() { return get_context_counter(); }
-void decrement_current_context_id() { --get_context_counter(); }
-size_t get_new_variable_id() { return get_variable_counter(); }
-
-void declare_output_type(const std::string&, size_t, VariableInfo) {}
-
-void declare_input_type(const std::string&, size_t, VariableInfo) {}
-
-void set_input_values(size_t, size_t, VariableValue*) {}
-void request_output_values(size_t, size_t, VariableValue*) {}
-
-void end_context(size_t) {}
-void begin_context(size_t) {}
-
-bool have_tuning_tool() { return false; }
-
-VariableValue make_variable_value(size_t id, int64_t val) {
-  VariableValue variable_value;
-  variable_value.type_id         = id;
-  variable_value.value.int_value = val;
-  return variable_value;
-}
-VariableValue make_variable_value(size_t id, double val) {
-  VariableValue variable_value;
-  variable_value.type_id            = id;
-  variable_value.value.double_value = val;
-  return variable_value;
-}
-VariableValue make_variable_value(size_t id, const char* val) {
-  VariableValue variable_value;
-  variable_value.type_id            = id;
-  variable_value.value.string_value = val;
-  return variable_value;
-}
-
-size_t get_new_context_id();
-size_t get_current_context_id();
-void decrement_current_context_id();
-size_t get_new_variable_id();
-
-void declare_optimization_goal(const size_t, const OptimizationGoal&) {}
-
-}  // end namespace Experimental
-}  // end namespace Tools
-
-}  // end namespace Kokkos
-
-#endif

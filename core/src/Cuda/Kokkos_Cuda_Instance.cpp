@@ -747,9 +747,7 @@ void Cuda::impl_initialize(const Cuda::SelectDevice config,
                            size_t /*num_instances*/) {
   Impl::CudaInternal::singleton().initialize(config.cuda_device_id, 0);
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
-#endif
 }
 
 std::vector<unsigned> Cuda::detect_device_arch() {
@@ -782,9 +780,7 @@ Cuda::size_type Cuda::device_arch() {
 void Cuda::impl_finalize() {
   Impl::CudaInternal::singleton().finalize();
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::finalize();
-#endif
 }
 
 Cuda::Cuda() : m_space_instance(&Impl::CudaInternal::singleton()) {

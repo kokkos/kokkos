@@ -57,9 +57,7 @@
 #include <impl/Kokkos_ViewTracker.hpp>
 #include <impl/Kokkos_ViewCtor.hpp>
 #include <impl/Kokkos_Atomic_View.hpp>
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Tools.hpp>
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -2860,7 +2858,6 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
   void execute(bool arg) {
     destroy = arg;
     if (!space.in_parallel()) {
-#if defined(KOKKOS_ENABLE_PROFILING)
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::beginParallelFor(
@@ -2868,7 +2865,6 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
                      : "Kokkos::View::initialization"),
             0, &kpID);
       }
-#endif
 #ifdef KOKKOS_ENABLE_CUDA
       if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
         Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
@@ -2879,11 +2875,9 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
           *this, PolicyType(0, n));
       closure.execute();
       space.fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
-#endif
     } else {
       for (size_t i = 0; i < n; ++i) operator()(i);
     }
@@ -2915,13 +2909,11 @@ struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
 
   void construct_shared_allocation() {
     if (!space.in_parallel()) {
-#if defined(KOKKOS_ENABLE_PROFILING)
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::beginParallelFor("Kokkos::View::initialization", 0,
                                             &kpID);
       }
-#endif
 #ifdef KOKKOS_ENABLE_CUDA
       if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
         Kokkos::Impl::cuda_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
@@ -2932,11 +2924,9 @@ struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
           *this, PolicyType(0, n));
       closure.execute();
       space.fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
-#endif
     } else {
       for (size_t i = 0; i < n; ++i) operator()(i);
     }

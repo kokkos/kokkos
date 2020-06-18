@@ -60,10 +60,8 @@
 // type is not allowed As a result, recreate cuda_parallel_launch and associated
 // code
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
-#endif
 
 namespace Kokkos {
 namespace Impl {

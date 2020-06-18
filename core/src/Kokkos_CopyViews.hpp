@@ -1503,7 +1503,6 @@ inline void deep_copy(
   typedef View<DT, DP...> ViewType;
   using exec_space_type = typename ViewType::execution_space;
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::make_space_handle(ViewType::memory_space::name()),
@@ -1511,15 +1510,12 @@ inline void deep_copy(
         Kokkos::Profiling::make_space_handle(Kokkos::HostSpace::name()),
         "Scalar", &value, dst.span() * sizeof(typename ViewType::value_type));
   }
-#endif
 
   if (dst.data() == nullptr) {
     Kokkos::fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
     }
-#endif
     return;
   }
 
@@ -1549,11 +1545,9 @@ inline void deep_copy(
                              ViewTypeFlat::Rank, int64_t>(dst_flat, value,
                                                           exec_space_type());
     Kokkos::fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
     }
-#endif
     return;
   }
 
@@ -1607,11 +1601,9 @@ inline void deep_copy(
   }
   Kokkos::fence();
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::endDeepCopy();
   }
-#endif
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -1628,7 +1620,6 @@ inline void deep_copy(
   static_assert(src_traits::rank == 0,
                 "ERROR: Non-rank-zero view in deep_copy( value , View )");
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::make_space_handle(Kokkos::HostSpace::name()),
@@ -1637,25 +1628,20 @@ inline void deep_copy(
         src.label(), src.data(),
         src.span() * sizeof(typename src_traits::value_type));
   }
-#endif
 
   if (src.data() == nullptr) {
     Kokkos::fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
     }
-#endif
     return;
   }
 
   Kokkos::Impl::DeepCopy<HostSpace, src_memory_space>(&dst, src.data(),
                                                       sizeof(ST));
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::endDeepCopy();
   }
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -1680,7 +1666,6 @@ inline void deep_copy(
                              typename src_type::non_const_value_type>::value,
                 "deep_copy requires matching non-const destination type");
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::make_space_handle(dst_memory_space::name()),
@@ -1689,15 +1674,12 @@ inline void deep_copy(
         src.label(), src.data(),
         src.span() * sizeof(typename dst_type::value_type));
   }
-#endif
 
   if (dst.data() == nullptr && src.data() == nullptr) {
     Kokkos::fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
     }
-#endif
     return;
   }
 
@@ -1707,11 +1689,9 @@ inline void deep_copy(
         dst.data(), src.data(), sizeof(value_type));
     Kokkos::fence();
   }
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::endDeepCopy();
   }
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -1742,7 +1722,6 @@ inline void deep_copy(
   static_assert((unsigned(dst_type::rank) == unsigned(src_type::rank)),
                 "deep_copy requires Views of equal rank");
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::make_space_handle(dst_memory_space::name()),
@@ -1751,7 +1730,6 @@ inline void deep_copy(
         src.label(), src.data(),
         src.span() * sizeof(typename dst_type::value_type));
   }
-#endif
 
   if (dst.data() == nullptr || src.data() == nullptr) {
     // throw if dimension mismatch
@@ -1782,11 +1760,9 @@ inline void deep_copy(
       Kokkos::Impl::throw_runtime_exception(message);
     }
     Kokkos::fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
     }
-#endif
     return;
   }
 
@@ -1811,11 +1787,9 @@ inline void deep_copy(
       ((std::ptrdiff_t)dst_end == (std::ptrdiff_t)src_end) &&
       (dst.span_is_contiguous() && src.span_is_contiguous())) {
     Kokkos::fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
     }
-#endif
     return;
   }
 
@@ -1894,11 +1868,9 @@ inline void deep_copy(
     Impl::view_copy(dst, src);
     Kokkos::fence();
   }
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::endDeepCopy();
   }
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -2693,7 +2665,6 @@ inline void deep_copy(
   static_assert(std::is_same<typename dst_traits::non_const_value_type,
                              typename dst_traits::value_type>::value,
                 "deep_copy requires non-const type");
-#if defined(KOKKOS_ENABLE_PROFILING)
   typedef typename dst_traits::memory_space dst_memory_space;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
@@ -2702,7 +2673,6 @@ inline void deep_copy(
         Kokkos::Profiling::make_space_handle(Kokkos::HostSpace::name()),
         "(none)", &value, dst.span() * sizeof(typename dst_traits::value_type));
   }
-#endif
   if (dst.data() == nullptr) {
     space.fence();
   } else {
@@ -2713,11 +2683,9 @@ inline void deep_copy(
     Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
                            ExecSpace>(dst, value, space);
   }
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::endDeepCopy();
   }
-#endif
 }
 
 /** \brief  Deep copy a value from Host memory into a view. ExecSpace can not
@@ -2737,7 +2705,6 @@ inline void deep_copy(
   static_assert(std::is_same<typename dst_traits::non_const_value_type,
                              typename dst_traits::value_type>::value,
                 "deep_copy requires non-const type");
-#if defined(KOKKOS_ENABLE_PROFILING)
   typedef typename dst_traits::memory_space dst_memory_space;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
@@ -2746,7 +2713,6 @@ inline void deep_copy(
         Kokkos::Profiling::make_space_handle(Kokkos::HostSpace::name()),
         "(none)", &value, dst.span() * sizeof(typename dst_traits::value_type));
   }
-#endif
   if (dst.data() == nullptr) {
     space.fence();
   } else {
@@ -2760,11 +2726,9 @@ inline void deep_copy(
                            fill_exec_space>(dst, value, fill_exec_space());
     fill_exec_space().fence();
   }
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::endDeepCopy();
   }
-#endif
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -2781,7 +2745,6 @@ inline void deep_copy(
   typedef typename src_traits::memory_space src_memory_space;
   static_assert(src_traits::rank == 0,
                 "ERROR: Non-rank-zero view in deep_copy( value , View )");
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::make_space_handle(Kokkos::HostSpace::name()),
@@ -2789,25 +2752,20 @@ inline void deep_copy(
         Kokkos::Profiling::make_space_handle(src_memory_space::name()),
         src.label(), src.data(), sizeof(ST));
   }
-#endif
 
   if (src.data() == nullptr) {
     exec_space.fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
     }
-#endif
     return;
   }
 
   Kokkos::Impl::DeepCopy<HostSpace, src_memory_space, ExecSpace>(
       exec_space, &dst, src.data(), sizeof(ST));
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::endDeepCopy();
   }
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -2831,7 +2789,6 @@ inline void deep_copy(
                              typename src_traits::non_const_value_type>::value,
                 "deep_copy requires matching non-const destination type");
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::make_space_handle(dst_memory_space::name()),
@@ -2839,15 +2796,12 @@ inline void deep_copy(
         Kokkos::Profiling::make_space_handle(src_memory_space::name()),
         src.label(), src.data(), sizeof(DT));
   }
-#endif
 
   if (dst.data() == nullptr && src.data() == nullptr) {
     exec_space.fence();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
     }
-#endif
     return;
   }
 
@@ -2856,11 +2810,9 @@ inline void deep_copy(
         exec_space, dst.data(), src.data(),
         sizeof(typename dst_traits::value_type));
   }
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::endDeepCopy();
   }
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -2894,7 +2846,6 @@ inline void deep_copy(
   typedef typename dst_type::value_type dst_value_type;
   typedef typename src_type::value_type src_value_type;
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::beginDeepCopy(
         Kokkos::Profiling::make_space_handle(dst_memory_space::name()),
@@ -2902,7 +2853,6 @@ inline void deep_copy(
         Kokkos::Profiling::make_space_handle(src_memory_space::name()),
         src.label(), src.data(), dst.span() * sizeof(dst_value_type));
   }
-#endif
 
   dst_value_type* dst_start = dst.data();
   dst_value_type* dst_end   = dst.data() + dst.span();
@@ -2940,11 +2890,9 @@ inline void deep_copy(
 
       Kokkos::Impl::throw_runtime_exception(message);
     }
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endDeepCopy();
     }
-#endif
     return;
   }
 
@@ -3053,11 +3001,9 @@ inline void deep_copy(
           "deep_copy given views that would require a temporary allocation");
     }
   }
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::endDeepCopy();
   }
-#endif
 }
 
 } /* namespace Kokkos */

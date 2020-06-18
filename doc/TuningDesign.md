@@ -218,4 +218,4 @@ In the past, Kokkos and Kokkos-tools didn't share source code. Except for a "Spa
 
 All of our function pointer initialization and all that mess now go into Kokkos_Profiling.[cpp/hpp], all the types are in the Interface files. The interface files will be shared with kokkos/kokkos-tools.
 
-In terms of build changes, we now install the above .h file, and have a KOKKOS_ENABLE_TUNING option that will be separable from KOKKOS_ENABLE_PROFILING
+In terms of build changes, we now install the above .h file, and have a KOKKOS_ENABLE_TUNING option
