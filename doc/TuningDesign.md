@@ -1,4 +1,4 @@
-# Kokkos Tuning
+#Kokkos Tuning
 
 This is a design document describing the motivation, ideas, design, and prototype implementation of the Kokkos Tuning System
 
@@ -164,10 +164,14 @@ size_t Kokkos::Tools::Experimental::get_new_context_id();
 size_t Kokkos::Tools::Experimental::get_current_context_id();
 ```
 
-In this interface, you will associate values with "contexts" in order to decide when a given declaration of a value has gone out of scope. The first gets you a new context ID if you're starting some new set of values. If you need to recover the last context ID so you can append to that context, rather than overwriting it with a new one, you can use `get_current_context_id()`. You'll use that context id to start a context in the function
+    In this interface,
+    you will associate values with
+    "contexts" in order to decide when a given declaration of a value has gone
+        out of scope.The first gets you a new context
+            ID if you 're starting some new set of values. If you need to recover the last context ID so you can append to that context, rather than overwriting it with a new one, you can use `get_current_context_id()`. You' ll
+                use that context id to start a context in the function
 
-```c++
-void Kokkos::Tools::Experimental::begin_context(size_t context_id);
+```c++ void Kokkos::Tools::Experimental::begin_context(size_t context_id);
 ```
 
 This tells the tool that you're beginning a region in which you'll be setting and requesting values. If the tool optimizes for time, you're telling them to start their timer.
@@ -184,21 +188,22 @@ Here you tell tools the values for your context variables. The contextId is used
 void Kokkos::Tools::Experimental::end_context(size_t contextId);
 ```
 
-This tells the tool that values from this context are no longer valid, and that the tool should stop their timers. 
+    This tells the tool that values from this context are no longer valid,
+    and that the tool should stop their timers.
 
-For those who want to declare and request tuning variables, you only need two more functions.
+        For those who want to declare and request tuning variables,
+    you only need two more functions.
 
-```c++
-void Kokkos::Tools::Experimental::declare_output_type(const std::string& variableName
-                           VariableInfo info);
+```c++ void Kokkos::Tools::Experimental::declare_output_type(
+        const std::string&variableName VariableInfo info);
 ```
 
-This is exactly like declareContextVariable. The only difference is that the ID's this returns should be passed to request_output_values, and that the `candidates` field in the info _must_ list valid values for the tool to provide.
+    This is exactly like declareContextVariable.The only difference is that
+        the
+            ID's this returns should be passed to request_output_values, and that the `candidates` field in the info _must_ list valid values for the tool to provide.
 
-```c++
-void Kokkos::Tools::Experimental::request_output_values(size_t contextId, size_t count,
-                                 VariableValue* values,
-                                 );
+```c++ void Kokkos::Tools::Experimental::request_output_values(
+                size_t contextId, size_t count, VariableValue* values, );
 ```
 
 Here is where you request that the tool give you a set of values. You need a contextId so that the tool can know when you're done using the value and measure results. The count tells the tool how many variables it's providing values for. Values is an array of your default values for that parameter, it must not crash your program if unchanged.
