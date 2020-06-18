@@ -80,7 +80,6 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
   __device__ inline void operator()() const noexcept {
     // Spin until COMPLETED_TOKEN.
     // END_TOKEN indicates no work is currently available.
-
     for (std::int32_t w = Policy::END_TOKEN;
          Policy::COMPLETED_TOKEN != (w = m_policy.pop_work());) {
       if (Policy::END_TOKEN != w) {

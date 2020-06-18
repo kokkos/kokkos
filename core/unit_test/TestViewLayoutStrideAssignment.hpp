@@ -299,8 +299,6 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutleft_assignment) {
     ASSERT_EQ(dst.span(), src.span());
     ASSERT_EQ(test, true);
   }
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
   {  // Assignment of rank-8 LayoutLeft = LayoutStride
     int ndims   = 8;
     int dims[]  = {10, 9, 8, 7, 6, 5, 4, 3};
@@ -335,7 +333,6 @@ TEST(TEST_CATEGORY, view_layoutstride_left_to_layoutleft_assignment) {
     ASSERT_EQ(dst.span(), src.span());
     ASSERT_EQ(test, true);
   }
-#endif
 }
 
 TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutright_assignment) {
@@ -584,8 +581,6 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutright_assignment) {
     ASSERT_EQ(dst.span(), src.span());
     ASSERT_EQ(test, true);
   }
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
   {  // Assignment of rank-8 LayoutRight = LayoutStride
     int ndims   = 8;
     int dims[]  = {10, 9, 8, 7, 6, 5, 4, 3};
@@ -620,7 +615,6 @@ TEST(TEST_CATEGORY, view_layoutstride_right_to_layoutright_assignment) {
     ASSERT_EQ(dst.span(), src.span());
     ASSERT_EQ(test, true);
   }
-#endif
 }
 
 TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
@@ -757,8 +751,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
   {  // Assignment of rank-8 LayoutLeft = LayoutStride (LayoutRight compatible)
     int ndims   = 8;
     int dims[]  = {10, 9, 8, 7, 6, 5, 4, 3};
@@ -774,7 +766,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
-#endif
 }
 
 TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
@@ -911,8 +902,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
   {  // Assignment of rank-8 LayoutRight = LayoutStride (LayoutLeft compatible)
     int ndims   = 8;
     int dims[]  = {10, 9, 8, 7, 6, 5, 4, 3};
@@ -928,7 +917,6 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
     ASSERT_DEATH({ dst = src; },
                  "View assignment must have compatible layouts");
   }
-#endif
 }
 
 }  // namespace Test

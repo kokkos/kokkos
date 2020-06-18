@@ -165,7 +165,7 @@ void OpenMP::partition_master(F const& f, int num_partitions,
 #if _OPENMP >= 201811
   if (omp_get_max_active_levels() > 1) {
 #else
-  if (omp_get_nested() > 1) {
+  if (omp_get_nested()) {
 #endif
     using Exec = Impl::OpenMPExec;
 

@@ -16,13 +16,7 @@ KOKKOS_ADD_TEST_LIBRARY(
 # avoid deprecation warnings from MSVC
 TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_PTHREAD=0)
 IF(Kokkos_ENABLE_HIP)
-  # FIXME_HIP - remove the HCC path when HIP-Clang is more mature
-  IF(NOT "${INTERNAL_HAVE_COMPILER_HCC}" STREQUAL "1")
-    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--cuda-host-only")
-  ELSE()
-    # pass dummy workaround for hcc
-    SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--amdgpu-target=gfx906")
-  ENDIF()
+  SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--cuda-host-only")
 ENDIF()
 
 TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
@@ -165,12 +159,6 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
     openmptarget/TestOpenMPTarget_ViewOfClass.cpp
   )
-endif()
-
-if(Kokkos_ENABLE_HIP)
-  # FIXME Linktime error: undefined reference to
-  # Kokkos::Impl::ViewDimensin<0ul, ...>(unsigned int, ...)
-  list(REMOVE_ITEM Serial_SOURCES serial/TestSerial_ViewLayoutStrideAssignment.cpp)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
@@ -327,7 +315,6 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_AtomicOperations_complexdouble.cpp
     hip/TestHIP_TeamTeamSize.cpp
     hip/TestHIP_TeamVectorRange.cpp
-    hip/TestHIP_LocalDeepCopy.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -335,6 +322,7 @@ if(Kokkos_ENABLE_HIP)
     SOURCES
       UnitTestMainInit.cpp
       ${HIP_SOURCES}
+      hip/TestHIP_ScanUnit.cpp
       hip/TestHIPHostPinned_ViewAPI_a.cpp
       hip/TestHIPHostPinned_ViewAPI_b.cpp
       hip/TestHIPHostPinned_ViewAPI_c.cpp

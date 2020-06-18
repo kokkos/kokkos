@@ -443,8 +443,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using work_tag      = typename Policy::work_tag;
   using launch_bounds = typename Policy::launch_bounds;
 
-  // Algorithmic constraints: hipBlockDim_y is a power of two AND
-  // hipBlockDim_y  == hipBlockDim_z == 1 shared memory utilization:
+  // Algorithmic constraints: blockDim.y is a power of two AND
+  // blockDim.y  == blockDim.z == 1 shared memory utilization:
   //
   //  [ team   reduce space ]
   //  [ team   shared space ]
@@ -480,16 +480,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
       __shared__ int64_t base_thread_id;
-      if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0) {
-        threadid = (hipBlockIdx_x * hipBlockDim_z + hipThreadIdx_z) %
-                   (hip_lock_arrays.n / (hipBlockDim_x * hipBlockDim_y));
-        threadid *= hipBlockDim_x * hipBlockDim_y;
+      if (threadIdx.x == 0 && threadIdx.y == 0) {
+        threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
+                   (hip_lock_arrays.n / (blockDim.x * blockDim.y));
+        threadid *= blockDim.x * blockDim.y;
         int done = 0;
         while (!done) {
           done = (0 == atomicCAS(&hip_lock_arrays.scratch[threadid], 0, 1));
           if (!done) {
-            threadid += hipBlockDim_x * hipBlockDim_y;
-            if (int64_t(threadid + hipBlockDim_x * hipBlockDim_y) >=
+            threadid += blockDim.x * blockDim.y;
+            if (int64_t(threadid + blockDim.x * blockDim.y) >=
                 int64_t(hip_lock_arrays.n))
               threadid = 0;
           }
@@ -501,20 +501,19 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
 
     int const int_league_size = static_cast<int>(m_league_size);
-    for (int league_rank = hipBlockIdx_x; league_rank < int_league_size;
-         league_rank += hipGridDim_x) {
+    for (int league_rank = blockIdx.x; league_rank < int_league_size;
+         league_rank += gridDim.x) {
       this->template exec_team<work_tag>(typename Policy::member_type(
           ::Kokkos::Experimental::kokkos_impl_hip_shared_memory<void>(),
           m_shmem_begin, m_shmem_size,
-          static_cast<void*>(
-              static_cast<char*>(m_scratch_ptr[1]) +
-              ptrdiff_t(threadid / (hipBlockDim_x * hipBlockDim_y)) *
-                  m_scratch_size[1]),
+          static_cast<void*>(static_cast<char*>(m_scratch_ptr[1]) +
+                             ptrdiff_t(threadid / (blockDim.x * blockDim.y)) *
+                                 m_scratch_size[1]),
           m_scratch_size[1], league_rank, m_league_size));
     }
     if (m_scratch_size[1] > 0) {
       __syncthreads();
-      if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0)
+      if (threadIdx.x == 0 && threadIdx.y == 0)
         hip_lock_arrays.scratch[threadid] = 0;
     }
   }
@@ -658,8 +657,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using DummyShflReductionType  = double;
   using DummySHMEMReductionType = int;
 
-  // Algorithmic constraints: hipBlockDim_y is a power of two AND
-  // hipBlockDim_y == hipBlockDim_z == 1 shared memory utilization:
+  // Algorithmic constraints: blockDim.y is a power of two AND
+  // blockDim.y == blockDim.z == 1 shared memory utilization:
   //
   //  [ global reduce space ]
   //  [ team   reduce space ]
@@ -702,20 +701,18 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_scratch_size[1] > 0) {
       __shared__ int64_t base_thread_id;
       // FIXME_HIP This uses g_device_hip_lock_arrays which is not working
-      if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0) {
+      if (threadIdx.x == 0 && threadIdx.y == 0) {
         Impl::hip_abort("Error should not be here (not implemented yet)\n");
-        threadid =
-            (hipBlockIdx_x * hipBlockDim_z + hipThreadIdx_z) %
-            (g_device_hip_lock_arrays.n / (hipBlockDim_x * hipBlockDim_y));
-        threadid *= hipBlockDim_x * hipBlockDim_y;
+        threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
+                   (g_device_hip_lock_arrays.n / (blockDim.x * blockDim.y));
+        threadid *= blockDim.x * blockDim.y;
         int done = 0;
         while (!done) {
           done = (0 ==
                   atomicCAS(&g_device_hip_lock_arrays.scratch[threadid], 0, 1));
           if (!done) {
-            threadid += hipBlockDim_x * hipBlockDim_y;
-            if (static_cast<int64_t>(threadid +
-                                     hipBlockDim_x * hipBlockDim_y) >=
+            threadid += blockDim.x * blockDim.y;
+            if (static_cast<int64_t>(threadid + blockDim.x * blockDim.y) >=
                 static_cast<int64_t>(g_device_hip_lock_arrays.n))
               threadid = 0;
           }
@@ -731,7 +728,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         threadid);
     if (m_scratch_size[1] > 0) {
       __syncthreads();
-      if (hipThreadIdx_x == 0 && hipThreadIdx_y == 0) {
+      if (threadIdx.x == 0 && threadIdx.y == 0) {
         Impl::hip_abort("Error should not be here (not implemented yet)\n");
         g_device_hip_lock_arrays.scratch[threadid] = 0;
       }
@@ -749,12 +746,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     reference_type value = value_init::init(
         reducer_conditional::select(m_functor, m_reducer),
         Kokkos::Experimental::kokkos_impl_hip_shared_memory<size_type>() +
-            hipThreadIdx_y * word_count.value);
+            threadIdx.y * word_count.value);
 
     // Iterate this block through the league
     int const int_league_size = static_cast<int>(m_league_size);
-    for (int league_rank = hipBlockIdx_x; league_rank < int_league_size;
-         league_rank += hipGridDim_x) {
+    for (int league_rank = blockIdx.x; league_rank < int_league_size;
+         league_rank += gridDim.x) {
       this->template exec_team<work_tag>(
           member_type(
               Kokkos::Experimental::kokkos_impl_hip_shared_memory<char>() +
@@ -762,8 +759,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               m_shmem_begin, m_shmem_size,
               reinterpret_cast<void*>(
                   reinterpret_cast<char*>(m_scratch_ptr[1]) +
-                  static_cast<ptrdiff_t>(threadid /
-                                         (hipBlockDim_x * hipBlockDim_y)) *
+                  static_cast<ptrdiff_t>(threadid / (blockDim.x * blockDim.y)) *
                       m_scratch_size[1]),
               m_scratch_size[1], league_rank, m_league_size),
           value);
@@ -771,8 +767,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // Reduce with final value at blockDim.y - 1 location.
     if (hip_single_inter_block_reduce_scan<false, FunctorType, work_tag>(
-            reducer_conditional::select(m_functor, m_reducer), hipBlockIdx_x,
-            hipGridDim_x,
+            reducer_conditional::select(m_functor, m_reducer), blockIdx.x,
+            gridDim.x,
             Kokkos::Experimental::kokkos_impl_hip_shared_memory<size_type>(),
             m_scratch_space, m_scratch_flags)) {
       // This is the final block with the final result at the final threads'
@@ -780,12 +776,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       size_type* const shared =
           Kokkos::Experimental::kokkos_impl_hip_shared_memory<size_type>() +
-          (hipBlockDim_y - 1) * word_count.value;
+          (blockDim.y - 1) * word_count.value;
       size_type* const global = m_result_ptr_device_accessible
                                     ? reinterpret_cast<size_type*>(m_result_ptr)
                                     : m_scratch_space;
 
-      if (hipThreadIdx_y == 0) {
+      if (threadIdx.y == 0) {
         Kokkos::Impl::FunctorFinal<reducer_type_fwd, work_tag_fwd>::final(
             reducer_conditional::select(m_functor, m_reducer), shared);
       }
@@ -794,8 +790,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         __syncthreads();
       }
 
-      for (unsigned i = hipThreadIdx_y; i < word_count.value;
-           i += hipBlockDim_y) {
+      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
     }
@@ -809,8 +804,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // Iterate this block through the league
     int const int_league_size = static_cast<int>(m_league_size);
-    for (int league_rank = hipBlockIdx_x; league_rank < int_league_size;
-         league_rank += hipGridDim_x) {
+    for (int league_rank = blockIdx.x; league_rank < int_league_size;
+         league_rank += gridDim.x) {
       this->template exec_team<work_tag>(
           member_type(
               Kokkos::Experimental::kokkos_impl_hip_shared_memory<char>() +
@@ -818,8 +813,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               m_shmem_begin, m_shmem_size,
               reinterpret_cast<void*>(
                   reinterpret_cast<char*>(m_scratch_ptr[1]) +
-                  static_cast<ptrdiff_t>(threadid /
-                                         (hipBlockDim_x * hipBlockDim_y)) *
+                  static_cast<ptrdiff_t>(threadid / (blockDim.x * blockDim.y)) *
                       m_scratch_size[1]),
               m_scratch_size[1], league_rank, m_league_size),
           value);
@@ -835,8 +829,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (Impl::hip_inter_block_reduction<FunctorType, value_join, work_tag>(
             value, init,
             value_join(reducer_conditional::select(m_functor, m_reducer)),
-            m_scratch_space, result, m_scratch_flags, hipBlockDim_y)) {
-      unsigned int const id = hipThreadIdx_y * hipBlockDim_x + hipThreadIdx_x;
+            m_scratch_space, result, m_scratch_flags, blockDim.y)) {
+      unsigned int const id = threadIdx.y * blockDim.x + threadIdx.x;
       if (id == 0) {
         Kokkos::Impl::FunctorFinal<reducer_type_fwd, work_tag_fwd>::final(
             reducer_conditional::select(m_functor, m_reducer),

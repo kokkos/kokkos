@@ -564,11 +564,8 @@ namespace Test {
 TEST(TEST_CATEGORY, memory_pool) {
   TestMemoryPool::test_host_memory_pool_defaults<>();
   TestMemoryPool::test_host_memory_pool_stats<>();
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
   TestMemoryPool::test_memory_pool_v2<TEST_EXECSPACE>(false, false);
   TestMemoryPool::test_memory_pool_corners<TEST_EXECSPACE>(false, false);
-#endif
 #ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS
   TestMemoryPool::test_memory_pool_huge<TEST_EXECSPACE>();
 #endif

@@ -25,7 +25,7 @@ pipeline {
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=hipcc \
-                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument -Wno-braced-scalar-init -Wno-gnu-zero-variadic-macro-arguments" \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument -Wno-braced-scalar-init" \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
