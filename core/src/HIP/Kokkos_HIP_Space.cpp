@@ -199,6 +199,21 @@ HIPSpace::HIPSpace() : m_device(HIP().hip_device()) {}
 HIPHostPinnedSpace::HIPHostPinnedSpace() {}
 
 void* HIPSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+void* HIPSpace::allocate(
+
+    const char*
+#if defined(KOKKOS_ENABLE_PROFILING)
+        arg_label
+#endif
+    ,
+    const size_t arg_alloc_size,
+    const size_t
+#if defined(KOKKOS_ENABLE_PROFILING)
+        arg_logical_size
+#endif
+    ) const {
   void* ptr = nullptr;
 
   auto const error_code = hipMalloc(&ptr, arg_alloc_size);
@@ -210,11 +225,33 @@ void* HIPSpace::allocate(const size_t arg_alloc_size) const {
         arg_alloc_size, error_code,
         RawMemoryAllocationFailure::AllocationMechanism::HIPMalloc);
   }
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    const size_t reported_size =
+        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    Kokkos::Profiling::allocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
+        reported_size);
+  }
+#endif
 
   return ptr;
 }
 
 void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+void* HIPHostPinnedSpace::allocate(const char*
+#if defined(KOKKOS_ENABLE_PROFILING)
+                                       arg_label
+#endif
+                                   ,
+                                   const size_t arg_alloc_size,
+                                   const size_t
+#if defined(KOKKOS_ENABLE_PROFILING)
+                                       arg_logical_size
+#endif
+                                   ) const {
   void* ptr = nullptr;
 
   auto const error_code = hipHostMalloc(&ptr, arg_alloc_size);
@@ -226,17 +263,76 @@ void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
         arg_alloc_size, error_code,
         RawMemoryAllocationFailure::AllocationMechanism::HIPHostMalloc);
   }
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    const size_t reported_size =
+        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    Kokkos::Profiling::allocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
+        reported_size);
+  }
+#endif
 
   return ptr;
 }
-
 void HIPSpace::deallocate(void* const arg_alloc_ptr,
-                          const size_t /* arg_alloc_size */) const {
+                          const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+void HIPSpace::deallocate(const char*
+#if defined(KOKKOS_ENABLE_PROFILING)
+                              arg_label
+#endif
+                          ,
+                          void* const arg_alloc_ptr,
+                          const size_t
+#if defined(KOKKOS_ENABLE_PROFILING)
+                              arg_alloc_size
+#endif
+                          ,
+                          const size_t
+#if defined(KOKKOS_ENABLE_PROFILING)
+                              arg_logical_size
+#endif
+                          ) const {
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    const size_t reported_size =
+        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    Kokkos::Profiling::deallocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, arg_alloc_ptr,
+        reported_size);
+  }
+#endif
   HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
 }
 
 void HIPHostPinnedSpace::deallocate(void* const arg_alloc_ptr,
-                                    const size_t /* arg_alloc_size */) const {
+                                    const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+
+void HIPHostPinnedSpace::deallocate(const char* arg_label,
+                                    void* const arg_alloc_ptr,
+                                    const size_t
+#if defined(KOKKOS_ENABLE_PROFILING)
+                                        arg_alloc_size
+#endif
+                                    ,
+                                    const size_t
+#if defined(KOKKOS_ENABLE_PROFILING)
+                                        arg_logical_size
+#endif
+                                    ) const {
+#if defined(KOKKOS_ENABLE_PROFILING)
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    const size_t reported_size =
+        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    Kokkos::Profiling::deallocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, arg_alloc_ptr,
+        reported_size);
+  }
+#endif
   HIP_SAFE_CALL(hipHostFree(arg_alloc_ptr));
 }
 
@@ -298,35 +394,22 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
 
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                        void>::~SharedAllocationRecord() {
-#if defined(KOKKOS_ENABLE_PROFILING)
+  const char* label = nullptr;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
     Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
         &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
-
-    Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::make_space_handle(
-            Kokkos::Experimental::HIPSpace::name()),
-        header.m_label, data(), size());
+    label = header.label();
   }
-#endif
-
-  m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
-                     SharedAllocationRecord<void, void>::m_alloc_size);
+  auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
+  m_space.deallocate(label, SharedAllocationRecord<void, void>::m_alloc_ptr,
+                     alloc_size, (alloc_size - sizeof(SharedAllocationHeader)));
 }
 
 SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
                        void>::~SharedAllocationRecord() {
-#if defined(KOKKOS_ENABLE_PROFILING)
-  if (Kokkos::Profiling::profileLibraryLoaded()) {
-    Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::make_space_handle(
-            Kokkos::Experimental::HIPHostPinnedSpace::name()),
-        RecordBase::m_alloc_ptr->m_label, data(), size());
-  }
-#endif
-
-  m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
+  m_space.deallocate(RecordBase::m_alloc_ptr->m_label,
+                     SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
 }
 
@@ -346,13 +429,6 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
                                                        arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
-#if defined(KOKKOS_ENABLE_PROFILING)
-  if (Kokkos::Profiling::profileLibraryLoaded()) {
-    Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
-        data(), arg_alloc_size);
-  }
-#endif
 
   SharedAllocationHeader header;
 
@@ -385,13 +461,6 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
                                                        arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
-#if defined(KOKKOS_ENABLE_PROFILING)
-  if (Kokkos::Profiling::profileLibraryLoaded()) {
-    Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
-        data(), arg_alloc_size);
-  }
-#endif
   // Fill in the Header information, directly accessible via host pinned memory
 
   RecordBase::m_alloc_ptr->m_record = this;

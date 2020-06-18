@@ -66,8 +66,9 @@ SharedAllocationHeader *checked_allocation_with_header(MemorySpace const &space,
                                                        std::string const &label,
                                                        size_t alloc_size) {
   try {
-    return reinterpret_cast<SharedAllocationHeader *>(
-        space.allocate(alloc_size + sizeof(SharedAllocationHeader)));
+    return reinterpret_cast<SharedAllocationHeader *>(space.allocate(
+        label.c_str(), alloc_size + sizeof(SharedAllocationHeader),
+        alloc_size));
   } catch (Kokkos::Experimental::RawMemoryAllocationFailure const &failure) {
     auto generate_failure_message = [&](std::ostream &o) {
       o << "Kokkos failed to allocate memory for label \"" << label
