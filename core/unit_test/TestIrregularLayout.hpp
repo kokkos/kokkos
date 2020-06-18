@@ -62,7 +62,7 @@ namespace Kokkos {
 
 struct LayoutSelective {
   //! Tag this class as a kokkos array layout
-  typedef LayoutSelective array_layout;
+  using array_layout = LayoutSelective;
 
   size_t offset_list[OFFSET_LIST_MAX_SIZE];
   size_t list_size;
@@ -92,6 +92,7 @@ struct LayoutSelective {
     }
   }
 
+  KOKKOS_INLINE_FUNCTION
   size_t offset(size_t ndx) const {
     KOKKOS_ASSERT(ndx >= 0 && ndx < list_size);
     return offset_list[ndx];
@@ -124,7 +125,7 @@ struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  constexpr array_layout layout() const { return array_layout(); }
+  array_layout layout() const { return array_layout(); }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
     return m_dim.N0;
@@ -157,15 +158,13 @@ struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
   }
 
   //----------------------------------------
-  ViewOffset() { printf("constructing empty offset\n"); }
+  ViewOffset()                  = default;
   ViewOffset(const ViewOffset&) = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 
   ViewOffset(std::integral_constant<unsigned, 0> const&,
              Kokkos::LayoutSelective const& rhs)
-      : m_dim(rhs.list_size, 0, 0, 0, 0, 0, 0, 0), m_selective(rhs) {
-    printf("constructing new offset: %d \n", rhs.list_size);
-  }
+      : m_dim(rhs.list_size, 0, 0, 0, 0, 0, 0, 0), m_selective(rhs) {}
 };
 
 }  // namespace Impl
@@ -175,36 +174,61 @@ namespace Test {
 
 class InnerClass {
  public:
-  double data[100];
+  long data[100];
 
+  KOKKOS_INLINE_FUNCTION
   InnerClass() {
     for (int i = 0; i < 100; i++) {
-      data[i] = (double)i;
+      data[i] = (long)i;
     }
   }
-  void update(double d) {
+
+  KOKKOS_INLINE_FUNCTION
+  void update(long d) {
     for (int i = 0; i < 100; i++) {
       data[i] += d;
     }
   }
+
+  KOKKOS_INLINE_FUNCTION
+  void set(long d) {
+    for (int i = 0; i < 100; i++) {
+      data[i] = d;
+    }
+  }
 };
 
-typedef Kokkos::LayoutRight Layout;
-typedef Kokkos::LayoutSelective SubLayout;
+template <class ExecutionSpace>
+struct TestLayout {
+  using Layout    = Kokkos::LayoutRight;
+  using SubLayout = Kokkos::LayoutSelective;
 
-// Allocate y, x vectors and Matrix A on device.
-typedef Kokkos::View<InnerClass*, Layout> ViewVectorType;
-typedef Kokkos::View<InnerClass*, SubLayout, Kokkos::MemoryUnmanaged>
-    SubViewVectorType;
+  // Allocate y, x vectors and Matrix A on device.
+  using ViewVectorType = Kokkos::View<InnerClass*, Layout>;
+  using SubViewVectorType =
+      Kokkos::View<InnerClass*, SubLayout, Kokkos::MemoryUnmanaged>;
+  const int N = 100;
+
+  void run_test() {
+    ViewVectorType a("a", N);
+    Kokkos::parallel_for(
+        N, KOKKOS_LAMBDA(const int i) { a(i).update((double)i); });
+    size_t offsets[] = {20, 40};
+    SubLayout sl(offsets, 2);
+    SubViewVectorType b(a.data(), sl);
+    Kokkos::parallel_for(
+        2, KOKKOS_LAMBDA(const int i) { b(i).set(20 * (i + 1)); });
+
+    auto a_h = Kokkos::create_mirror_view(a);
+    Kokkos::deep_copy(a_h, a);
+    ASSERT_EQ(a_h(20).data[0], 20);
+    ASSERT_EQ(a_h(40).data[0], 40);
+  }
+};
 
 TEST(TEST_CATEGORY, view_irregular_layout) {
-  ViewVectorType a("a", 100);
-  for (int i = 0; i < 100; i++) {
-    a(i).update((double)i);
-  }
-  size_t offsets[] = {20, 40};
-  SubLayout sl(offsets, 2);
-  SubViewVectorType b(a.data(), sl);
+  TestLayout<TEST_EXECSPACE> tl;
+  tl.run_test();
 }
 
 }  // namespace Test

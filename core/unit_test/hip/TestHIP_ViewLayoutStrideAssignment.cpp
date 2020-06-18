@@ -44,3 +44,4 @@
 
 #include <hip/TestHIP_Category.hpp>
 #include <TestViewLayoutStrideAssignment.hpp>
+#include <TestIrregularLayout.hpp>
