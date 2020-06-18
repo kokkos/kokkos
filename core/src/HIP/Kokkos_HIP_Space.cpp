@@ -203,13 +203,8 @@ void* HIPSpace::allocate(const size_t arg_alloc_size) const {
 }
 void* HIPSpace::allocate(
 
-    const char*
-        arg_label
-    ,
-    const size_t arg_alloc_size,
-    const size_t
-        arg_logical_size
-    ) const {
+    const char* arg_label, const size_t arg_alloc_size,
+    const size_t arg_logical_size) const {
   void* ptr = nullptr;
 
   auto const error_code = hipMalloc(&ptr, arg_alloc_size);
@@ -235,13 +230,9 @@ void* HIPSpace::allocate(
 void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void* HIPHostPinnedSpace::allocate(const char*
-                                       arg_label
-                                   ,
+void* HIPHostPinnedSpace::allocate(const char* arg_label,
                                    const size_t arg_alloc_size,
-                                   const size_t
-                                       arg_logical_size
-                                   ) const {
+                                   const size_t arg_logical_size) const {
   void* ptr = nullptr;
 
   auto const error_code = hipHostMalloc(&ptr, arg_alloc_size);
@@ -267,16 +258,9 @@ void HIPSpace::deallocate(void* const arg_alloc_ptr,
                           const size_t arg_alloc_size) const {
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
-void HIPSpace::deallocate(const char*
-                              arg_label
-                          ,
-                          void* const arg_alloc_ptr,
-                          const size_t
-                              arg_alloc_size
-                          ,
-                          const size_t
-                              arg_logical_size
-                          ) const {
+void HIPSpace::deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                          const size_t arg_alloc_size,
+                          const size_t arg_logical_size) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
@@ -294,12 +278,8 @@ void HIPHostPinnedSpace::deallocate(void* const arg_alloc_ptr,
 
 void HIPHostPinnedSpace::deallocate(const char* arg_label,
                                     void* const arg_alloc_ptr,
-                                    const size_t
-                                        arg_alloc_size
-                                    ,
-                                    const size_t
-                                        arg_logical_size
-                                    ) const {
+                                    const size_t arg_alloc_size,
+                                    const size_t arg_logical_size) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;

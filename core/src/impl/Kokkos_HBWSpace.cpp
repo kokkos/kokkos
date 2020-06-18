@@ -94,9 +94,7 @@ void *HBWSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
 void *HBWSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
-                         const size_t
-                             arg_logical_size
-                         ) const {
+                         const size_t arg_logical_size) const {
   static_assert(sizeof(void *) == sizeof(uintptr_t),
                 "Error sizeof(void*) != sizeof(uintptr_t)");
 
@@ -166,9 +164,7 @@ void HBWSpace::deallocate(void *const arg_alloc_ptr,
 }
 void HBWSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
                           const size_t arg_alloc_size,
-                          const size_t
-                              arg_logical_size
-                          ) const {
+                          const size_t arg_logical_size) const {
   if (arg_alloc_ptr) {
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       const size_t reported_size =

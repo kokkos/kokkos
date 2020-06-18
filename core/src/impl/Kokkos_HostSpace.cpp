@@ -166,15 +166,10 @@ HostSpace::HostSpace(const HostSpace::AllocationMechanism &arg_alloc_mech)
 void *HostSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void *HostSpace::allocate(const char *
-                              arg_label
-                          ,
-                          const size_t arg_alloc_size,
+void *HostSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                           const size_t
 
-                              arg_logical_size
-                          ) const {
-
+                              arg_logical_size) const {
   const size_t reported_size =
       (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
   static_assert(sizeof(void *) == sizeof(uintptr_t),
@@ -298,17 +293,11 @@ void HostSpace::deallocate(void *const arg_alloc_ptr,
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
-void HostSpace::deallocate(const char *
-                               arg_label
-                           ,
-                           void *const arg_alloc_ptr,
-                           const size_t
-                               arg_alloc_size
-                           ,
+void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
+                           const size_t arg_alloc_size,
                            const size_t
 
-                               arg_logical_size
-                           ) const {
+                               arg_logical_size) const {
   if (arg_alloc_ptr) {
     size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;

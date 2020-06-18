@@ -201,13 +201,8 @@ CudaHostPinnedSpace::CudaHostPinnedSpace() {}
 void *CudaSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void *CudaSpace::allocate(const char *
-                              arg_label
-                          ,
-                          const size_t arg_alloc_size,
-                          const size_t
-                              arg_logical_size
-                          ) const {
+void *CudaSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
+                          const size_t arg_logical_size) const {
   void *ptr = nullptr;
 
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
@@ -234,13 +229,8 @@ void *CudaSpace::allocate(const char *
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void *CudaUVMSpace::allocate(const char *
-                                 arg_label
-                             ,
-                             const size_t arg_alloc_size,
-                             const size_t
-                                 arg_logical_size
-                             ) const {
+void *CudaUVMSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
+                             const size_t arg_logical_size) const {
   void *ptr = nullptr;
 
   Cuda::impl_static_fence();
@@ -280,13 +270,9 @@ void *CudaUVMSpace::allocate(const char *
 void *CudaHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void *CudaHostPinnedSpace::allocate(const char *
-                                        arg_label
-                                    ,
+void *CudaHostPinnedSpace::allocate(const char *arg_label,
                                     const size_t arg_alloc_size,
-                                    const size_t
-                                        arg_logical_size
-                                    ) const {
+                                    const size_t arg_logical_size) const {
   void *ptr = nullptr;
 
   auto error_code = cudaHostAlloc(&ptr, arg_alloc_size, cudaHostAllocDefault);
@@ -315,17 +301,9 @@ void CudaSpace::deallocate(void *const arg_alloc_ptr,
                            const size_t arg_alloc_size) const {
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
-void CudaSpace::deallocate(const char *
-                               arg_label
-                           ,
-                           void *const arg_alloc_ptr,
-                           const size_t
-                               arg_alloc_size
-                           ,
-                           const size_t
-                               arg_logical_size
-                           ) const {
-
+void CudaSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
+                           const size_t arg_alloc_size,
+                           const size_t arg_logical_size) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
@@ -344,17 +322,11 @@ void CudaUVMSpace::deallocate(void *const arg_alloc_ptr,
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
-void CudaUVMSpace::deallocate(const char *
-                                  arg_label
-                              ,
-                              void *const arg_alloc_ptr,
-                              const size_t
-                                  arg_alloc_size
+void CudaUVMSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
+                              const size_t arg_alloc_size
 
                               ,
-                              const size_t
-                                  arg_logical_size
-                              ) const {
+                              const size_t arg_logical_size) const {
   Cuda::impl_static_fence();
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
@@ -378,16 +350,10 @@ void CudaHostPinnedSpace::deallocate(void *const arg_alloc_ptr,
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
-void CudaHostPinnedSpace::deallocate(const char *
-                                         arg_label
-                                     ,
+void CudaHostPinnedSpace::deallocate(const char *arg_label,
                                      void *const arg_alloc_ptr,
-                                     const size_t
-                                         arg_alloc_size
-                                     ,
-                                     const size_t
-                                         arg_logical_size
-                                     ) const {
+                                     const size_t arg_alloc_size,
+                                     const size_t arg_logical_size) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
