@@ -59,7 +59,7 @@
 namespace Kokkos {
 namespace Impl {
 
-// Defined in implementation file to avoid having to
+// Defined in implementation file to avoid having to include iostream
 void safe_throw_allocation_with_header_failure(
     std::string const &space_name, std::string const &label,
     Kokkos::Experimental::RawMemoryAllocationFailure const &failure);
