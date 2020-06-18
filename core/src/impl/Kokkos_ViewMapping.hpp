@@ -3084,24 +3084,28 @@ class ViewMapping<
   reference_type reference() const { return m_impl_handle[0]; }
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
-      std::is_integral<I0>::value &&
-          !std::is_same<typename Traits::array_layout,
-                        Kokkos::LayoutStride>::value &&
-          std::is_same<is_regular, std::true_type>::value,
-      reference_type>::type
-  reference(const I0& i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      typename std::enable_if<(std::is_integral<I0>::value &&
+                               // if layout is neither stride nor irregular,
+                               // then just use the handle directly
+                               !(std::is_same<typename Traits::array_layout,
+                                              Kokkos::LayoutStride>::value ||
+                                 !is_regular::value)),
+                              reference_type>::type
+      reference(const I0& i0) const {
     return m_impl_handle[i0];
   }
 
   template <typename I0>
-  KOKKOS_FORCEINLINE_FUNCTION typename std::enable_if<
-      (std::is_integral<I0>::value &&
-       (std::is_same<typename Traits::array_layout,
-                     Kokkos::LayoutStride>::value ||
-        !std::is_same<is_regular, std::true_type>::value)),
-      reference_type>::type
-  reference(const I0& i0) const {
+  KOKKOS_FORCEINLINE_FUNCTION
+      typename std::enable_if<(std::is_integral<I0>::value &&
+                               // if the layout is strided or irregular, then
+                               // we have to use the offset
+                               (std::is_same<typename Traits::array_layout,
+                                             Kokkos::LayoutStride>::value ||
+                                !is_regular::value)),
+                              reference_type>::type
+      reference(const I0& i0) const {
     return m_impl_handle[m_impl_offset(i0)];
   }
 

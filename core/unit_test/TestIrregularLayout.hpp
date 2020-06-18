@@ -69,27 +69,44 @@ struct LayoutSelective {
 
   enum { is_extent_constructible = false };
 
+  KOKKOS_INLINE_FUNCTION
   LayoutSelective() {
     for (int i = 0; i < OFFSET_LIST_MAX_SIZE; i++) {
       offset_list[i] = i;
     }
   }
-  LayoutSelective(LayoutSelective const& rhs) {
-    list_size = rhs.list_size;
-    for (int i = 0; i < list_size; i++) {
-      offset_list[i] = rhs.offset_list[i];
+
+  KOKKOS_INLINE_FUNCTION
+  void assign(const size_t ol_[], const size_t size_) {
+    list_size = size_;
+    for (int i = 0; i < (int)list_size; i++) {
+      offset_list[i] = ol_[i];
     }
   }
-  LayoutSelective(LayoutSelective&&) = default;
-  LayoutSelective& operator=(LayoutSelective const&) = default;
-  LayoutSelective& operator=(LayoutSelective&&) = default;
+
+  KOKKOS_INLINE_FUNCTION
+  LayoutSelective(LayoutSelective const& rhs) {
+    assign(rhs.offset_list, rhs.list_size);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  LayoutSelective(LayoutSelective&& rhs) {
+    assign(rhs.offset_list, rhs.list_size);
+  }
+  KOKKOS_INLINE_FUNCTION
+  LayoutSelective& operator=(LayoutSelective const& rhs) {
+    assign(rhs.offset_list, rhs.list_size);
+    return *this;
+  }
+  KOKKOS_INLINE_FUNCTION
+  LayoutSelective& operator=(LayoutSelective&& rhs) {
+    assign(rhs.offset_list, rhs.list_size);
+    return *this;
+  }
 
   KOKKOS_INLINE_FUNCTION
   explicit LayoutSelective(const size_t ol_[], const size_t size_) {
-    list_size = size_;
-    for (int i = 0; i < list_size; i++) {
-      offset_list[i] = ol_[i];
-    }
+    assign(ol_, size_);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -116,7 +133,7 @@ struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
 
   // rank 1
   template <typename I0>
-  KOKKOS_INLINE_FUNCTION constexpr size_type operator()(I0 const& i0) const {
+  KOKKOS_INLINE_FUNCTION size_type operator()(I0 const& i0) const {
     return m_selective.offset(i0);
   }
 
@@ -162,6 +179,7 @@ struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
   ViewOffset(const ViewOffset&) = default;
   ViewOffset& operator=(const ViewOffset&) = default;
 
+  KOKKOS_INLINE_FUNCTION
   ViewOffset(std::integral_constant<unsigned, 0> const&,
              Kokkos::LayoutSelective const& rhs)
       : m_dim(rhs.list_size, 0, 0, 0, 0, 0, 0, 0), m_selective(rhs) {}
@@ -200,29 +218,50 @@ class InnerClass {
 
 template <class ExecutionSpace>
 struct TestLayout {
-  using Layout    = Kokkos::LayoutRight;
-  using SubLayout = Kokkos::LayoutSelective;
+  const int N       = 100;
+  size_t offsets[2] = {20, 40};
+  using Layout      = Kokkos::LayoutRight;
+  using SubLayout   = Kokkos::LayoutSelective;
 
   // Allocate y, x vectors and Matrix A on device.
-  using ViewVectorType = Kokkos::View<InnerClass*, Layout>;
-  using SubViewVectorType =
-      Kokkos::View<InnerClass*, SubLayout, Kokkos::MemoryUnmanaged>;
-  const int N = 100;
+  using ViewVectorType =
+      Kokkos::View<InnerClass*, Layout, typename ExecutionSpace::memory_space>;
+  using SubViewVectorType = Kokkos::View<InnerClass*, SubLayout,
+                                         typename ExecutionSpace::memory_space,
+                                         Kokkos::MemoryUnmanaged>;
+  struct InitTag {};
+  struct UpdateTag {};
+
+  ViewVectorType a;
+  SubLayout sl;
+  SubViewVectorType b;
+  TestLayout() : a("a", N), sl(offsets, 2), b(a.data(), sl) {}
 
   void run_test() {
-    ViewVectorType a("a", N);
-    Kokkos::parallel_for(
-        N, KOKKOS_LAMBDA(const int i) { a(i).update((double)i); });
-    size_t offsets[] = {20, 40};
-    SubLayout sl(offsets, 2);
-    SubViewVectorType b(a.data(), sl);
-    Kokkos::parallel_for(
-        2, KOKKOS_LAMBDA(const int i) { b(i).set(20 * (i + 1)); });
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace, InitTag>(0, N),
+                         *this);
 
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace, UpdateTag>(0, 2),
+                         *this);
+
+    validate_results();
+  }
+
+  // set all values
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const InitTag&, const int i) const { a(i).update((double)i); }
+
+  // update selective values
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const UpdateTag&, const int i) const {
+    b(i).set(200 * (i + 1));
+  }
+
+  void validate_results() {
     auto a_h = Kokkos::create_mirror_view(a);
     Kokkos::deep_copy(a_h, a);
-    ASSERT_EQ(a_h(20).data[0], 20);
-    ASSERT_EQ(a_h(40).data[0], 40);
+    ASSERT_EQ(a_h(20).data[0], 200);
+    ASSERT_EQ(a_h(40).data[0], 400);
   }
 };
 
