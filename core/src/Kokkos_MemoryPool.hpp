@@ -52,7 +52,7 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
-#include <iosfwd>
+#include <iostream>
 
 namespace Kokkos {
 namespace Impl {
