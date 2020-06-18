@@ -53,7 +53,9 @@
 #include <stdint.h>
 #endif
 
-#define KOKKOSP_INTERFACE_VERSION 20191080
+#define KOKKOSP_INTERFACE_VERSION 20200520
+
+// Profiling
 
 struct Kokkos_Profiling_KokkosPDeviceInfo {
   size_t deviceID;
@@ -94,6 +96,100 @@ typedef void (*Kokkos_Profiling_beginDeepCopyFunction)(
     Kokkos_Profiling_SpaceHandle, const char*, const void*, uint64_t);
 typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 
+// Tuning
+
+union Kokkos_Tools_VariableValue_ValueUnion {
+  int64_t int_value;
+  double double_value;
+  const char* string_value;
+};
+
+union Kokkos_Tools_VariableValue_ValueUnionSet {
+  int64_t* int_value;
+  double* double_value;
+  const char** string_value;
+};
+
+struct Kokkos_Tools_ValueSet {
+  size_t size;
+  union Kokkos_Tools_VariableValue_ValueUnionSet values;
+};
+
+enum Kokkos_Tools_OptimizationType {
+  Kokkos_Tools_Minimize,
+  Kokkos_Tools_Maximize
+};
+
+struct Kokkos_Tools_OptimzationGoal {
+  size_t type_id;
+  Kokkos_Tools_OptimizationType goal;
+};
+
+struct Kokkos_Tools_ValueRange {
+  union Kokkos_Tools_VariableValue_ValueUnion lower;
+  union Kokkos_Tools_VariableValue_ValueUnion upper;
+  union Kokkos_Tools_VariableValue_ValueUnion step;
+  bool openLower;
+  bool openUpper;
+};
+
+enum Kokkos_Tools_VariableInfo_ValueType {
+  kokkos_value_double,
+  kokkos_value_int64,
+  kokkos_value_string,
+};
+
+enum Kokkos_Tools_VariableInfo_StatisticalCategory {
+  kokkos_value_categorical,  // unordered distinct objects
+  kokkos_value_ordinal,      // ordered distinct objects
+  kokkos_value_interval,  // ordered distinct objects for which distance matters
+  kokkos_value_ratio  // ordered distinct objects for which distance matters,
+                      // division matters, and the concept of zero exists
+};
+
+enum Kokkos_Tools_VariableInfo_CandidateValueType {
+  kokkos_value_set,       // I am one of [2,3,4,5]
+  kokkos_value_range,     // I am somewhere in [2,12)
+  kokkos_value_unbounded  // I am [text/int/float], but we don't know at
+                          // declaration time what values are appropriate. Only
+                          // valid for Context Variables
+};
+
+union Kokkos_Tools_VariableInfo_SetOrRange {
+  struct Kokkos_Tools_ValueSet set;
+  struct Kokkos_Tools_ValueRange range;
+};
+
+struct Kokkos_Tools_VariableInfo {
+  enum Kokkos_Tools_VariableInfo_ValueType type;
+  enum Kokkos_Tools_VariableInfo_StatisticalCategory category;
+  enum Kokkos_Tools_VariableInfo_CandidateValueType valueQuantity;
+  union Kokkos_Tools_VariableInfo_SetOrRange candidates;
+  void* toolProvidedInfo;
+};
+
+struct Kokkos_Tools_VariableValue {
+  size_t type_id;
+  union Kokkos_Tools_VariableValue_ValueUnion value;
+  struct Kokkos_Tools_VariableInfo* metadata;
+};
+
+typedef void (*Kokkos_Tools_outputTypeDeclarationFunction)(
+    const char*, const size_t, Kokkos_Tools_VariableInfo& info);
+typedef void (*Kokkos_Tools_inputTypeDeclarationFunction)(
+    const char*, const size_t, Kokkos_Tools_VariableInfo& info);
+
+typedef void (*Kokkos_Tools_requestValueFunction)(
+    const size_t, const size_t, const Kokkos_Tools_VariableValue*,
+    const size_t count, Kokkos_Tools_VariableValue*);
+typedef void (*Kokkos_Tools_contextBeginFunction)(const size_t);
+typedef void (*Kokkos_Tools_contextEndFunction)(const size_t,
+                                                Kokkos_Tools_VariableValue);
+typedef void (*Kokkos_Tools_optimizationGoalDeclarationFunction)(
+    const size_t, const Kokkos_Tools_OptimzationGoal& goal);
+
+using function_pointer = void (*)();
+
 struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_initFunction init;
   Kokkos_Profiling_finalizeFunction finalize;
@@ -114,8 +210,17 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_profileEventFunction profile_event;
   Kokkos_Profiling_beginDeepCopyFunction begin_deep_copy;
   Kokkos_Profiling_endDeepCopyFunction end_deep_copy;
-  char padding[2048];  // allows us to add another 256 events to the Tools
-                       // interface without changing struct layout
+  char profiling_padding[16 * sizeof(function_pointer)];
+  Kokkos_Tools_outputTypeDeclarationFunction declare_output_type;
+  Kokkos_Tools_inputTypeDeclarationFunction declare_input_type;
+  Kokkos_Tools_requestValueFunction request_output_values;
+  Kokkos_Tools_contextBeginFunction begin_tuning_context;
+  Kokkos_Tools_contextEndFunction end_tuning_context;
+  Kokkos_Tools_optimizationGoalDeclarationFunction declare_optimization_goal;
+  char padding[234 *
+               sizeof(function_pointer)];  // allows us to add another 256
+                                           // events to the Tools interface
+                                           // without changing struct layout
 };
 
 #endif  // KOKKOS_PROFILING_C_INTERFACE_HPP

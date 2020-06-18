@@ -710,14 +710,14 @@ class HIP {
   Impl::HIPInternal* m_space_instance;
 };
 }  // namespace Experimental
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<Kokkos::Experimental::HIP> {
   static constexpr DeviceType id = DeviceType::HIP;
 };
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 }  // namespace Kokkos
 
 namespace Kokkos {

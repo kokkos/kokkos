@@ -52,6 +52,7 @@ ELSE()
 ENDIF()
 KOKKOS_ENABLE_OPTION(PROFILING ${PROFILING_DEFAULT} "Whether to create bindings for profiling tools")
 KOKKOS_ENABLE_OPTION(PROFILING_LOAD_PRINT OFF "Whether to print information about which profiling tools got loaded")
+KOKKOS_ENABLE_OPTION(TUNING               OFF "Whether to create bindings for tuning tools")
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
 
 IF (KOKKOS_ENABLE_CUDA)

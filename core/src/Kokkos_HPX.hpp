@@ -442,14 +442,14 @@ class HPX {
 };
 }  // namespace Experimental
 
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<Kokkos::Experimental::HPX> {
   static constexpr DeviceType id = DeviceType::HPX;
 };
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 
 namespace Impl {
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)

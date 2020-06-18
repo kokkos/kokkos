@@ -169,14 +169,14 @@ class OpenMP {
   uint32_t impl_instance_id() const noexcept { return 0; }
 };
 
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<OpenMP> {
   static constexpr DeviceType id = DeviceType::OpenMP;
 };
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

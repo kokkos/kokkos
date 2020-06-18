@@ -73,6 +73,7 @@ KOKKOS_INTERNAL_USE_MEMKIND := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),exper
 # Check for advanced settings.
 KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),compiler_warnings)
 KOKKOS_INTERNAL_OPT_RANGE_AGGRESSIVE_VECTORIZATION := $(call kokkos_has_string,$(KOKKOS_OPTIONS),aggressive_vectorization)
+KOKKOS_INTERNAL_ENABLE_TUNING := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_tuning)
 KOKKOS_INTERNAL_DISABLE_PROFILING := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_profiling)
 KOKKOS_INTERNAL_DISABLE_COMPLEX_ALIGN := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_complex_align)
 KOKKOS_INTERNAL_DISABLE_DUALVIEW_MODIFY_CHECK := $(call kokkos_has_string,$(KOKKOS_OPTIONS),disable_dualview_modify_check)
@@ -589,6 +590,10 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_ENABLE_PROFILING_LOAD_PRINT), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_PROFILING_LOAD_PRINT")
+endif
+
+ifeq ($(KOKKOS_INTERNAL_ENABLE_TUNING), 1)
+  tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_TUNING")
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
