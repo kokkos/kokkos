@@ -62,10 +62,6 @@
 
 #include <Kokkos_UniqueToken.hpp>
 
-#include <iostream>
-#include <sstream>
-#include <fstream>
-
 #include <omp.h>
 
 //----------------------------------------------------------------------------
