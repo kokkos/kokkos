@@ -41,43 +41,56 @@
 //@HEADER
 */
 
-/** @file Kokkos_MemorySpace.hpp
+/** @file Kokkos_MemorySpace.cpp
  *
  *  Operations common to memory space instances, or at least default
  *  implementations thereof.
  */
 
-#ifndef KOKKOS_IMPL_MEMORYSPACE_HPP
-#define KOKKOS_IMPL_MEMORYSPACE_HPP
+#include <impl/Kokkos_MemorySpace.hpp>
 
-#include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_SharedAlloc.hpp>
-#include <impl/Kokkos_Error.hpp>
-
+#include <iostream>
 #include <string>
+#include <sstream>
 
 namespace Kokkos {
 namespace Impl {
 
-// Defined in implementation file to avoid having to
 void safe_throw_allocation_with_header_failure(
-    std::string const &space_name, std::string const &label,
-    Kokkos::Experimental::RawMemoryAllocationFailure const &failure);
-
-template <class MemorySpace>
-SharedAllocationHeader *checked_allocation_with_header(MemorySpace const &space,
-                                                       std::string const &label,
-                                                       size_t alloc_size) {
+    std::string const& space_name, std::string const& label,
+    Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
+  auto generate_failure_message = [&](std::ostream& o) {
+    o << "Kokkos failed to allocate memory for label \"" << label
+      << "\".  Allocation using MemorySpace named \"" << space_name
+      << "\" failed with the following error:  ";
+    failure.print_error_message(o);
+    if (failure.failure_mode() ==
+        Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode::
+            AllocationNotAligned) {
+      // TODO: delete the misaligned memory?
+      o << "Warning: Allocation failed due to misalignment; memory may "
+           "be leaked."
+        << std::endl;
+    }
+    o.flush();
+  };
   try {
-    return reinterpret_cast<SharedAllocationHeader *>(
-        space.allocate(alloc_size + sizeof(SharedAllocationHeader)));
-  } catch (Kokkos::Experimental::RawMemoryAllocationFailure const &failure) {
-    safe_throw_allocation_with_header_failure(space.name(), label, failure);
+    std::ostringstream sstr;
+    generate_failure_message(sstr);
+    Kokkos::Impl::throw_runtime_exception(sstr.str());
+  } catch (std::bad_alloc const&) {
+    // Probably failed to allocate the string because we're so close to out
+    // of memory. Try printing to std::cerr instead
+    try {
+      generate_failure_message(std::cerr);
+    } catch (std::bad_alloc const&) {
+      // oh well, we tried...
+    }
+    Kokkos::Impl::throw_runtime_exception(
+        "Kokkos encountered an allocation failure, then another allocation "
+        "failure while trying to create the error message.");
   }
-  return nullptr;  // unreachable
 }
 
 }  // end namespace Impl
 }  // end namespace Kokkos
-
-#endif  // KOKKOS_IMPL_MEMORYSPACE_HPP
