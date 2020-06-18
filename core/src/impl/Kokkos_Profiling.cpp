@@ -47,14 +47,16 @@
 #if defined(KOKKOS_ENABLE_LIBDL)
 #include <dlfcn.h>
 #endif
-#include <vector>
-#include <array>
-#include <stack>
 
 #include <cstring>
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include <vector>
+#include <array>
+#include <stack>
+#include <iostream>
+
 namespace Kokkos {
 
 namespace Tools {

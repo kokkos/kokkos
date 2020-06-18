@@ -49,6 +49,8 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 
+#include <string>
+
 namespace Kokkos {
 namespace Tools {
 
