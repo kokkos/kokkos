@@ -69,8 +69,7 @@ void safe_throw_allocation_with_header_failure(
             AllocationNotAligned) {
       // TODO: delete the misaligned memory?
       o << "Warning: Allocation failed due to misalignment; memory may "
-           "be leaked."
-        << std::endl;
+           "be leaked.\n";
     }
     o.flush();
   };
