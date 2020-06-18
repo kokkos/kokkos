@@ -117,7 +117,6 @@ ENDIF()
 
 IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   SET(CUDA_ARCH_FLAG "--cuda-gpu-arch")
-  SET(AMDGPU_ARCH_FLAG "--amdgpu-target")
   GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS -x cuda)
   IF (KOKKOS_ENABLE_CUDA)
      SET(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND ON CACHE BOOL "enable CUDA Clang workarounds" FORCE)
@@ -136,6 +135,15 @@ IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
     GLOBAL_APPEND(KOKKOS_CUDAFE_OPTIONS --diag_suppress=esa_on_defaulted_function_ignored)
   ENDIF()
 ENDIF()
+
+
+#------------------------------- KOKKOS_HIP_OPTIONS ---------------------------
+#clear anything that might be in the cache
+GLOBAL_SET(KOKKOS_AMDGPU_OPTIONS)
+IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIP)
+  SET(AMDGPU_ARCH_FLAG "--amdgpu-target")
+ENDIF()
+
 
 IF (KOKKOS_ARCH_ARMV80)
   COMPILER_SPECIFIC_FLAGS(
