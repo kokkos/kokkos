@@ -164,10 +164,17 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if (defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) || \
-    (!defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__))
+#if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
+// CUDA aborts
+#define KOKKOS_ABORT_NORETURN [[noreturn]]
+#elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
+// HIP does not abort
+#define KOKKOS_ABORT_NORETURN
+#elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__)
+// Host aborts
 #define KOKKOS_ABORT_NORETURN [[noreturn]]
 #else
+// Everything else does not abort
 #define KOKKOS_ABORT_NORETURN
 #endif
 
