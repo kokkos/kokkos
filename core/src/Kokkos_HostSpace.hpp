@@ -103,8 +103,8 @@ namespace Kokkos {
 class HostSpace {
  public:
   //! Tag this class as a kokkos memory space
-  typedef HostSpace memory_space;
-  typedef size_t size_type;
+  using memory_space = HostSpace;
+  using size_type    = size_t;
 
   /// \typedef execution_space
   /// \brief Default execution space for this memory space.
@@ -113,7 +113,7 @@ class HostSpace {
   /// useful for things like initializing a View (which happens in
   /// parallel using the View's default execution space).
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
-  typedef Kokkos::OpenMP execution_space;
+  using execution_space = Kokkos::OpenMP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
   typedef Kokkos::Threads execution_space;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
@@ -132,7 +132,7 @@ class HostSpace {
 #endif
 
   //! This memory space preferred device_type
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
+  using device_type = Kokkos::Device<execution_space, memory_space>;
 
   /**\brief  Default memory space instance */
   HostSpace();
@@ -201,16 +201,13 @@ struct HostMirror {
   };
 
  public:
-  typedef typename std::conditional<
-      keep_exe && keep_mem /* Can keep whole space */
-      ,
-      S,
+  using Space = typename std::conditional<
+      keep_exe && keep_mem, S,
       typename std::conditional<
-          keep_mem /* Can keep memory space, use default Host execution space */
-          ,
+          keep_mem,
           Kokkos::Device<Kokkos::HostSpace::execution_space,
                          typename S::memory_space>,
-          Kokkos::HostSpace>::type>::type Space;
+          Kokkos::HostSpace>::type>::type;
 };
 
 }  // namespace Impl
@@ -229,7 +226,7 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
  private:
   friend Kokkos::HostSpace;
 
-  typedef SharedAllocationRecord<void, void> RecordBase;
+  using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;

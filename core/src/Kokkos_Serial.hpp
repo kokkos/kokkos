@@ -89,19 +89,19 @@ class Serial {
   //@{
 
   //! Tag this class as an execution space:
-  typedef Serial execution_space;
+  using execution_space = Serial;
   //! The size_type typedef best suited for this device.
-  typedef HostSpace::size_type size_type;
+  using size_type = HostSpace::size_type;
   //! This device's preferred memory space.
-  typedef HostSpace memory_space;
+  using memory_space = HostSpace;
   //! This execution space preferred device_type
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
+  using device_type = Kokkos::Device<execution_space, memory_space>;
 
   //! This device's preferred array layout.
-  typedef LayoutRight array_layout;
+  using array_layout = LayoutRight;
 
   /// \brief  Scratch memory space
-  typedef ScratchMemorySpace<Kokkos::Serial> scratch_memory_space;
+  using scratch_memory_space = ScratchMemorySpace<Kokkos::Serial>;
 
   //@}
 
@@ -229,12 +229,12 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
 
  public:
   //! Tag this class as a kokkos execution policy
-  typedef TeamPolicyInternal execution_policy;
+  using execution_policy = TeamPolicyInternal;
 
-  typedef PolicyTraits<Properties...> traits;
+  using traits = PolicyTraits<Properties...>;
 
   //! Execution space of this execution policy:
-  typedef Kokkos::Serial execution_space;
+  using execution_space = Kokkos::Serial;
 
   const typename traits::execution_space& space() const {
     static typename traits::execution_space m_space;
@@ -384,7 +384,7 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
     return *this;
   }
 
-  typedef Impl::HostThreadTeamMember<Kokkos::Serial> member_type;
+  using member_type = Impl::HostThreadTeamMember<Kokkos::Serial>;
 };
 } /* namespace Impl */
 } /* namespace Kokkos */
@@ -399,7 +399,7 @@ namespace Impl {
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
  private:
-  typedef Kokkos::RangePolicy<Traits...> Policy;
+  using Policy = Kokkos::RangePolicy<Traits...>;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -438,25 +438,25 @@ template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Serial> {
  private:
-  typedef Kokkos::RangePolicy<Traits...> Policy;
-  typedef typename Policy::work_tag WorkTag;
+  using Policy  = Kokkos::RangePolicy<Traits...>;
+  using WorkTag = typename Policy::work_tag;
 
-  typedef Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                             FunctorType, ReducerType>
-      ReducerConditional;
+  using ReducerConditional =
+      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
 
-  typedef typename ReducerConditional::type ReducerTypeFwd;
-  typedef
+  using ReducerTypeFwd = typename ReducerConditional::type;
+  using WorkTagFwd =
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type WorkTagFwd;
+                                  WorkTag, void>::type;
 
-  typedef FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>
-      Analysis;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
 
-  typedef Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd> ValueInit;
+  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
 
-  typedef typename Analysis::pointer_type pointer_type;
-  typedef typename Analysis::reference_type reference_type;
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -546,16 +546,16 @@ template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Serial> {
  private:
-  typedef Kokkos::RangePolicy<Traits...> Policy;
-  typedef typename Policy::work_tag WorkTag;
+  using Policy  = Kokkos::RangePolicy<Traits...>;
+  using WorkTag = typename Policy::work_tag;
 
-  typedef FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>
-      Analysis;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
 
-  typedef Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag> ValueInit;
+  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
 
-  typedef typename Analysis::pointer_type pointer_type;
-  typedef typename Analysis::reference_type reference_type;
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -606,16 +606,16 @@ template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Serial> {
  private:
-  typedef Kokkos::RangePolicy<Traits...> Policy;
-  typedef typename Policy::work_tag WorkTag;
+  using Policy  = Kokkos::RangePolicy<Traits...>;
+  using WorkTag = typename Policy::work_tag;
 
-  typedef FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>
-      Analysis;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType>;
 
-  typedef Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag> ValueInit;
+  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
 
-  typedef typename Analysis::pointer_type pointer_type;
-  typedef typename Analysis::reference_type reference_type;
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -682,12 +682,11 @@ template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                   Kokkos::Serial> {
  private:
-  typedef Kokkos::MDRangePolicy<Traits...> MDRangePolicy;
-  typedef typename MDRangePolicy::impl_range_policy Policy;
+  using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
+  using Policy        = typename MDRangePolicy::impl_range_policy;
 
-  typedef typename Kokkos::Impl::HostIterateTile<
-      MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag, void>
-      iterate_type;
+  using iterate_type = typename Kokkos::Impl::HostIterateTile<
+      MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag, void>;
 
   const FunctorType m_functor;
   const MDRangePolicy m_mdr_policy;
@@ -714,28 +713,27 @@ template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                      Kokkos::Serial> {
  private:
-  typedef Kokkos::MDRangePolicy<Traits...> MDRangePolicy;
-  typedef typename MDRangePolicy::impl_range_policy Policy;
+  using MDRangePolicy = Kokkos::MDRangePolicy<Traits...>;
+  using Policy        = typename MDRangePolicy::impl_range_policy;
 
-  typedef typename MDRangePolicy::work_tag WorkTag;
+  using WorkTag = typename MDRangePolicy::work_tag;
 
-  typedef Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                             FunctorType, ReducerType>
-      ReducerConditional;
-  typedef typename ReducerConditional::type ReducerTypeFwd;
-  typedef
+  using ReducerConditional =
+      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
+  using ReducerTypeFwd = typename ReducerConditional::type;
+  using WorkTagFwd =
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type WorkTagFwd;
+                                  WorkTag, void>::type;
 
-  typedef FunctorAnalysis<FunctorPatternInterface::REDUCE, MDRangePolicy,
-                          FunctorType>
-      Analysis;
+  using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
+                                   MDRangePolicy, FunctorType>;
 
-  typedef Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd> ValueInit;
+  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
 
-  typedef typename Analysis::pointer_type pointer_type;
-  typedef typename Analysis::value_type value_type;
-  typedef typename Analysis::reference_type reference_type;
+  using pointer_type   = typename Analysis::pointer_type;
+  using value_type     = typename Analysis::value_type;
+  using reference_type = typename Analysis::reference_type;
 
   using iterate_type =
       typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
@@ -829,8 +827,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   enum { TEAM_REDUCE_SIZE = 512 };
 
-  typedef TeamPolicyInternal<Kokkos::Serial, Properties...> Policy;
-  typedef typename Policy::member_type Member;
+  using Policy = TeamPolicyInternal<Kokkos::Serial, Properties...>;
+  using Member = typename Policy::member_type;
 
   const FunctorType m_functor;
   const int m_league;
@@ -883,26 +881,26 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   enum { TEAM_REDUCE_SIZE = 512 };
 
-  typedef TeamPolicyInternal<Kokkos::Serial, Properties...> Policy;
+  using Policy = TeamPolicyInternal<Kokkos::Serial, Properties...>;
 
-  typedef FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>
-      Analysis;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
 
-  typedef typename Policy::member_type Member;
-  typedef typename Policy::work_tag WorkTag;
+  using Member  = typename Policy::member_type;
+  using WorkTag = typename Policy::work_tag;
 
-  typedef Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                             FunctorType, ReducerType>
-      ReducerConditional;
-  typedef typename ReducerConditional::type ReducerTypeFwd;
-  typedef
+  using ReducerConditional =
+      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
+  using ReducerTypeFwd = typename ReducerConditional::type;
+  using WorkTagFwd =
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type WorkTagFwd;
+                                  WorkTag, void>::type;
 
-  typedef Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd> ValueInit;
+  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
 
-  typedef typename Analysis::pointer_type pointer_type;
-  typedef typename Analysis::reference_type reference_type;
+  using pointer_type   = typename Analysis::pointer_type;
+  using reference_type = typename Analysis::reference_type;
 
   const FunctorType m_functor;
   const int m_league;

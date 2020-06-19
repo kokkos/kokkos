@@ -1574,7 +1574,7 @@ struct HostIterateTile<
 
   template <int Rank>
   struct RankTag {
-    typedef RankTag type;
+    using type = RankTag<Rank>;
     enum { value = (int)Rank };
   };
 
@@ -1995,7 +1995,7 @@ struct HostIterateTile<
 
   template <int Rank>
   struct RankTag {
-    typedef RankTag type;
+    using type = RankTag<Rank>;
     enum { value = (int)Rank };
   };
 
@@ -2418,7 +2418,7 @@ struct HostIterateTile<
 
   template <int Rank>
   struct RankTag {
-    typedef RankTag type;
+    using type = RankTag<Rank>;
     enum { value = (int)Rank };
   };
 

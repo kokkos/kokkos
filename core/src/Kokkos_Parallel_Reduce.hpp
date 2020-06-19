@@ -70,10 +70,10 @@ template <class Scalar, class Space>
 struct Sum {
  public:
   // Required
-  typedef Sum reducer;
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using reducer    = Sum<Scalar, Space>;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -115,10 +115,10 @@ template <class Scalar, class Space>
 struct Prod {
  public:
   // Required
-  typedef Prod reducer;
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using reducer    = Prod<Scalar, Space>;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -160,10 +160,10 @@ template <class Scalar, class Space>
 struct Min {
  public:
   // Required
-  typedef Min reducer;
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using reducer    = Min<Scalar, Space>;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -207,10 +207,10 @@ template <class Scalar, class Space>
 struct Max {
  public:
   // Required
-  typedef Max reducer;
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using reducer    = Max<Scalar, Space>;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -255,10 +255,10 @@ template <class Scalar, class Space>
 struct LAnd {
  public:
   // Required
-  typedef LAnd reducer;
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using reducer    = LAnd<Scalar, Space>;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -301,10 +301,10 @@ template <class Scalar, class Space>
 struct LOr {
  public:
   // Required
-  typedef LOr reducer;
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using reducer    = LOr<Scalar, Space>;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -348,10 +348,10 @@ template <class Scalar, class Space>
 struct BAnd {
  public:
   // Required
-  typedef BAnd reducer;
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using reducer    = BAnd<Scalar, Space>;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -395,10 +395,10 @@ template <class Scalar, class Space>
 struct BOr {
  public:
   // Required
-  typedef BOr reducer;
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using reducer    = BOr<Scalar, Space>;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -459,15 +459,15 @@ struct ValLocScalar {
 template <class Scalar, class Index, class Space>
 struct MinLoc {
  private:
-  typedef typename std::remove_cv<Scalar>::type scalar_type;
-  typedef typename std::remove_cv<Index>::type index_type;
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using index_type  = typename std::remove_cv<Index>::type;
 
  public:
   // Required
-  typedef MinLoc reducer;
-  typedef ValLocScalar<scalar_type, index_type> value_type;
+  using reducer    = MinLoc<Scalar, Index, Space>;
+  using value_type = ValLocScalar<scalar_type, index_type>;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -511,15 +511,15 @@ struct MinLoc {
 template <class Scalar, class Index, class Space>
 struct MaxLoc {
  private:
-  typedef typename std::remove_cv<Scalar>::type scalar_type;
-  typedef typename std::remove_cv<Index>::type index_type;
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using index_type  = typename std::remove_cv<Index>::type;
 
  public:
   // Required
-  typedef MaxLoc reducer;
-  typedef ValLocScalar<scalar_type, index_type> value_type;
+  using reducer    = MaxLoc<Scalar, Index, Space>;
+  using value_type = ValLocScalar<scalar_type, index_type>;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -580,14 +580,14 @@ struct MinMaxScalar {
 template <class Scalar, class Space>
 struct MinMax {
  private:
-  typedef typename std::remove_cv<Scalar>::type scalar_type;
+  using scalar_type = typename std::remove_cv<Scalar>::type;
 
  public:
   // Required
-  typedef MinMax reducer;
-  typedef MinMaxScalar<scalar_type> value_type;
+  using reducer    = MinMax<Scalar, Space>;
+  using value_type = MinMaxScalar<scalar_type>;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -663,15 +663,15 @@ struct MinMaxLocScalar {
 template <class Scalar, class Index, class Space>
 struct MinMaxLoc {
  private:
-  typedef typename std::remove_cv<Scalar>::type scalar_type;
-  typedef typename std::remove_cv<Index>::type index_type;
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using index_type  = typename std::remove_cv<Index>::type;
 
  public:
   // Required
-  typedef MinMaxLoc reducer;
-  typedef MinMaxLocScalar<scalar_type, index_type> value_type;
+  using reducer    = MinMaxLoc<Scalar, Index, Space>;
+  using value_type = MinMaxLocScalar<scalar_type, index_type>;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
  private:
   result_view_type value;
@@ -738,14 +738,14 @@ template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
     typename std::enable_if<Kokkos::is_view<ReturnType>::value>::type,
     ReturnType, FunctorType> {
-  typedef ReturnType return_type;
-  typedef InvalidType reducer_type;
+  using return_type  = ReturnType;
+  using reducer_type = InvalidType;
 
-  typedef typename return_type::value_type value_type_scalar;
-  typedef typename return_type::value_type* const value_type_array;
+  using value_type_scalar = typename return_type::value_type;
+  using value_type_array  = typename return_type::value_type* const;
 
-  typedef typename if_c<return_type::rank == 0, value_type_scalar,
-                        value_type_array>::type value_type;
+  using value_type = typename if_c<return_type::rank == 0, value_type_scalar,
+                                   value_type_array>::type;
 
   static return_type& return_value(ReturnType& return_val, const FunctorType&) {
     return return_val;
@@ -759,12 +759,12 @@ struct ParallelReduceReturnValue<
                              !std::is_pointer<ReturnType>::value) &&
                             !Kokkos::is_reducer_type<ReturnType>::value>::type,
     ReturnType, FunctorType> {
-  typedef Kokkos::View<ReturnType, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>
-      return_type;
+  using return_type =
+      Kokkos::View<ReturnType, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
-  typedef InvalidType reducer_type;
+  using reducer_type = InvalidType;
 
-  typedef typename return_type::value_type value_type;
+  using value_type = typename return_type::value_type;
 
   static return_type return_value(ReturnType& return_val, const FunctorType&) {
     return return_type(&return_val);
@@ -776,13 +776,12 @@ struct ParallelReduceReturnValue<
     typename std::enable_if<(std::is_array<ReturnType>::value ||
                              std::is_pointer<ReturnType>::value)>::type,
     ReturnType, FunctorType> {
-  typedef Kokkos::View<typename std::remove_const<ReturnType>::type,
-                       Kokkos::HostSpace, Kokkos::MemoryUnmanaged>
-      return_type;
+  using return_type = Kokkos::View<typename std::remove_const<ReturnType>::type,
+                                   Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
-  typedef InvalidType reducer_type;
+  using reducer_type = InvalidType;
 
-  typedef typename return_type::value_type value_type[];
+  using value_type = typename return_type::value_type[];
 
   static return_type return_value(ReturnType& return_val,
                                   const FunctorType& functor) {
@@ -797,9 +796,9 @@ template <class ReturnType, class FunctorType>
 struct ParallelReduceReturnValue<
     typename std::enable_if<Kokkos::is_reducer_type<ReturnType>::value>::type,
     ReturnType, FunctorType> {
-  typedef ReturnType return_type;
-  typedef ReturnType reducer_type;
-  typedef typename return_type::value_type value_type;
+  using return_type  = ReturnType;
+  using reducer_type = ReturnType;
+  using value_type   = typename return_type::value_type;
 
   static return_type return_value(ReturnType& return_val, const FunctorType&) {
     return return_val;
@@ -814,7 +813,7 @@ struct ParallelReducePolicyType<
     typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type,
     PolicyType, FunctorType> {
-  typedef PolicyType policy_type;
+  using policy_type = PolicyType;
   static PolicyType policy(const PolicyType& policy_) { return policy_; }
 };
 
@@ -822,10 +821,11 @@ template <class PolicyType, class FunctorType>
 struct ParallelReducePolicyType<
     typename std::enable_if<std::is_integral<PolicyType>::value>::type,
     PolicyType, FunctorType> {
-  typedef typename Impl::FunctorPolicyExecutionSpace<
-      FunctorType, void>::execution_space execution_space;
+  using execution_space =
+      typename Impl::FunctorPolicyExecutionSpace<FunctorType,
+                                                 void>::execution_space;
 
-  typedef Kokkos::RangePolicy<execution_space> policy_type;
+  using policy_type = Kokkos::RangePolicy<execution_space>;
 
   static policy_type policy(const PolicyType& policy_) {
     return policy_type(0, policy_);
@@ -835,7 +835,7 @@ struct ParallelReducePolicyType<
 template <class FunctorType, class ExecPolicy, class ValueType,
           class ExecutionSpace>
 struct ParallelReduceFunctorType {
-  typedef FunctorType functor_type;
+  using functor_type = FunctorType;
   static const functor_type& functor(const functor_type& functor) {
     return functor;
   }
@@ -843,8 +843,8 @@ struct ParallelReduceFunctorType {
 
 template <class PolicyType, class FunctorType, class ReturnType>
 struct ParallelReduceAdaptor {
-  typedef Impl::ParallelReduceReturnValue<void, ReturnType, FunctorType>
-      return_value_adapter;
+  using return_value_adapter =
+      Impl::ParallelReduceReturnValue<void, ReturnType, FunctorType>;
 #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
   typedef Impl::ParallelReduceFunctorType<
       FunctorType, PolicyType, typename return_value_adapter::value_type,
@@ -1003,8 +1003,9 @@ inline void parallel_reduce(
 template <class FunctorType, class ReturnType>
 inline void parallel_reduce(const size_t& policy, const FunctorType& functor,
                             ReturnType& return_value) {
-  typedef typename Impl::ParallelReducePolicyType<
-      void, size_t, FunctorType>::policy_type policy_type;
+  using policy_type =
+      typename Impl::ParallelReducePolicyType<void, size_t,
+                                              FunctorType>::policy_type;
   Impl::ParallelReduceAdaptor<policy_type, FunctorType, ReturnType>::execute(
       "", policy_type(0, policy), functor, return_value);
   Impl::ParallelReduceFence<typename policy_type::execution_space, ReturnType>::
@@ -1015,8 +1016,9 @@ template <class FunctorType, class ReturnType>
 inline void parallel_reduce(const std::string& label, const size_t& policy,
                             const FunctorType& functor,
                             ReturnType& return_value) {
-  typedef typename Impl::ParallelReducePolicyType<
-      void, size_t, FunctorType>::policy_type policy_type;
+  using policy_type =
+      typename Impl::ParallelReducePolicyType<void, size_t,
+                                              FunctorType>::policy_type;
   Impl::ParallelReduceAdaptor<policy_type, FunctorType, ReturnType>::execute(
       label, policy_type(0, policy), functor, return_value);
   Impl::ParallelReduceFence<typename policy_type::execution_space, ReturnType>::
@@ -1056,8 +1058,9 @@ inline void parallel_reduce(
 template <class FunctorType, class ReturnType>
 inline void parallel_reduce(const size_t& policy, const FunctorType& functor,
                             const ReturnType& return_value) {
-  typedef typename Impl::ParallelReducePolicyType<
-      void, size_t, FunctorType>::policy_type policy_type;
+  using policy_type =
+      typename Impl::ParallelReducePolicyType<void, size_t,
+                                              FunctorType>::policy_type;
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<policy_type, FunctorType, ReturnType>::execute(
       "", policy_type(0, policy), functor, return_value_impl);
@@ -1069,8 +1072,9 @@ template <class FunctorType, class ReturnType>
 inline void parallel_reduce(const std::string& label, const size_t& policy,
                             const FunctorType& functor,
                             const ReturnType& return_value) {
-  typedef typename Impl::ParallelReducePolicyType<
-      void, size_t, FunctorType>::policy_type policy_type;
+  using policy_type =
+      typename Impl::ParallelReducePolicyType<void, size_t,
+                                              FunctorType>::policy_type;
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<policy_type, FunctorType, ReturnType>::execute(
       label, policy_type(0, policy), functor, return_value_impl);
@@ -1087,18 +1091,19 @@ inline void parallel_reduce(
     typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* =
         nullptr) {
-  typedef Kokkos::Impl::FunctorValueTraits<FunctorType, void> ValueTraits;
-  typedef typename Kokkos::Impl::if_c<
-      (ValueTraits::StaticValueSize != 0), typename ValueTraits::value_type,
-      typename ValueTraits::pointer_type>::type value_type;
+  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
+  using value_type =
+      typename Kokkos::Impl::if_c<(ValueTraits::StaticValueSize != 0),
+                                  typename ValueTraits::value_type,
+                                  typename ValueTraits::pointer_type>::type;
 
   static_assert(
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                             FunctorType>::has_final_member_function,
       "Calling parallel_reduce without either return value or final function.");
 
-  typedef Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>
-      result_view_type;
+  using result_view_type =
+      Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
   result_view_type result_view;
 
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType,
@@ -1112,18 +1117,19 @@ inline void parallel_reduce(
     typename std::enable_if<
         Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* =
         nullptr) {
-  typedef Kokkos::Impl::FunctorValueTraits<FunctorType, void> ValueTraits;
-  typedef typename Kokkos::Impl::if_c<
-      (ValueTraits::StaticValueSize != 0), typename ValueTraits::value_type,
-      typename ValueTraits::pointer_type>::type value_type;
+  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
+  using value_type =
+      typename Kokkos::Impl::if_c<(ValueTraits::StaticValueSize != 0),
+                                  typename ValueTraits::value_type,
+                                  typename ValueTraits::pointer_type>::type;
 
   static_assert(
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                             FunctorType>::has_final_member_function,
       "Calling parallel_reduce without either return value or final function.");
 
-  typedef Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>
-      result_view_type;
+  using result_view_type =
+      Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
   result_view_type result_view;
 
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType,
@@ -1133,12 +1139,14 @@ inline void parallel_reduce(
 
 template <class FunctorType>
 inline void parallel_reduce(const size_t& policy, const FunctorType& functor) {
-  typedef typename Impl::ParallelReducePolicyType<
-      void, size_t, FunctorType>::policy_type policy_type;
-  typedef Kokkos::Impl::FunctorValueTraits<FunctorType, void> ValueTraits;
-  typedef typename Kokkos::Impl::if_c<
-      (ValueTraits::StaticValueSize != 0), typename ValueTraits::value_type,
-      typename ValueTraits::pointer_type>::type value_type;
+  using policy_type =
+      typename Impl::ParallelReducePolicyType<void, size_t,
+                                              FunctorType>::policy_type;
+  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
+  using value_type =
+      typename Kokkos::Impl::if_c<(ValueTraits::StaticValueSize != 0),
+                                  typename ValueTraits::value_type,
+                                  typename ValueTraits::pointer_type>::type;
 
   static_assert(
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
@@ -1146,8 +1154,8 @@ inline void parallel_reduce(const size_t& policy, const FunctorType& functor) {
                             FunctorType>::has_final_member_function,
       "Calling parallel_reduce without either return value or final function.");
 
-  typedef Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>
-      result_view_type;
+  using result_view_type =
+      Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
   result_view_type result_view;
 
   Impl::ParallelReduceAdaptor<policy_type, FunctorType,
@@ -1159,12 +1167,14 @@ inline void parallel_reduce(const size_t& policy, const FunctorType& functor) {
 template <class FunctorType>
 inline void parallel_reduce(const std::string& label, const size_t& policy,
                             const FunctorType& functor) {
-  typedef typename Impl::ParallelReducePolicyType<
-      void, size_t, FunctorType>::policy_type policy_type;
-  typedef Kokkos::Impl::FunctorValueTraits<FunctorType, void> ValueTraits;
-  typedef typename Kokkos::Impl::if_c<
-      (ValueTraits::StaticValueSize != 0), typename ValueTraits::value_type,
-      typename ValueTraits::pointer_type>::type value_type;
+  using policy_type =
+      typename Impl::ParallelReducePolicyType<void, size_t,
+                                              FunctorType>::policy_type;
+  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
+  using value_type =
+      typename Kokkos::Impl::if_c<(ValueTraits::StaticValueSize != 0),
+                                  typename ValueTraits::value_type,
+                                  typename ValueTraits::pointer_type>::type;
 
   static_assert(
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
@@ -1172,8 +1182,8 @@ inline void parallel_reduce(const std::string& label, const size_t& policy,
                             FunctorType>::has_final_member_function,
       "Calling parallel_reduce without either return value or final function.");
 
-  typedef Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>
-      result_view_type;
+  using result_view_type =
+      Kokkos::View<value_type, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
   result_view_type result_view;
 
   Impl::ParallelReduceAdaptor<policy_type, FunctorType,
