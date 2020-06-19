@@ -48,9 +48,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined(__HIPCC__)
 
-#include <iostream>
 #include <algorithm>
-#include <cstdio>
 
 #include <utility>
 
