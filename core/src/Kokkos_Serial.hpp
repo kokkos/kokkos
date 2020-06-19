@@ -1011,7 +1011,7 @@ class UniqueToken<Serial, UniqueTokenScope::Instance> {
   /// This object should not be shared between instances
   UniqueToken(execution_space const& = execution_space()) noexcept {}
 
-  UniqueToken(size_type max_size, execution_space const& = execution_space()) {}
+  UniqueToken(size_type, execution_space const& = execution_space()) {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION

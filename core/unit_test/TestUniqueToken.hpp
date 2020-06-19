@@ -61,7 +61,7 @@ class TestUniqueToken {
   view_type errors;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(long i) const {
+  void operator()(long) const {
     Kokkos::Experimental::AcquireUniqueToken<execution_space, Scope> token_val(
         tokens);
     const int32_t t = token_val.value();
@@ -140,10 +140,11 @@ TEST(TEST_CATEGORY, unique_token_instance) {
 template <class Space>
 class TestAcquireTeamUniqueToken {
  public:
-  using execution_space  = typename Space::execution_space;
-  using view_type        = Kokkos::View<int*, execution_space>;
+  using execution_space = typename Space::execution_space;
+  using view_type       = Kokkos::View<int*, execution_space>;
   using scratch_view =
-      Kokkos::View<int, typename execution_space::scratch_memory_space, Kokkos::MemoryUnmanaged>;
+      Kokkos::View<int, typename execution_space::scratch_memory_space,
+                   Kokkos::MemoryUnmanaged>;
   using team_policy_type = Kokkos::TeamPolicy<execution_space>;
   using team_member_type = typename team_policy_type::member_type;
   using tokens_type      = Kokkos::Experimental::UniqueToken<execution_space>;
@@ -174,7 +175,7 @@ class TestAcquireTeamUniqueToken {
       ok = ok && 1 == Kokkos::atomic_fetch_add(&verify(t), -1);
     });
 
-    if(team.team_rank() == 0) {
+    if (team.team_rank() == 0) {
       team_rank_0_token_val() = t;
     }
     team.team_barrier();
@@ -202,7 +203,8 @@ class TestAcquireTeamUniqueToken {
       team_policy_type team_policy(n, team_size);
       team_policy.set_scratch_size(
           0, Kokkos::PerTeam(Kokkos::Experimental::AcquireTeamUniqueToken<
-                             team_policy_type>::shmem_size() + scratch_view::shmem_size()));
+                                 team_policy_type>::shmem_size() +
+                             scratch_view::shmem_size()));
 
       Kokkos::parallel_for(team_policy, self);
       Kokkos::fence();

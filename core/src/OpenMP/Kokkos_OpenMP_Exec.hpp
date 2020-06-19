@@ -61,6 +61,7 @@
 #include <Kokkos_Atomic.hpp>
 
 #include <Kokkos_UniqueToken.hpp>
+#include <impl/Kokkos_ConcurrentBitset.hpp>
 
 #include <omp.h>
 
@@ -233,8 +234,9 @@ class MasterLock<OpenMP> {
 template <>
 class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
  private:
-  uint32_t m_count;
-  Kokkos::View<uint32_t*, Kokkos::HostSpace> m_buffer_view;
+  using buffer_type = Kokkos::View<uint32_t*, Kokkos::HostSpace>;
+  int m_count;
+  buffer_type m_buffer_view;
   uint32_t volatile* m_buffer;
 
  public:
@@ -245,9 +247,9 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
   ///
   /// This object should not be shared between instances
   UniqueToken(execution_space const& = execution_space()) noexcept
-      : m_count(::Kokkos::OpenMP::impl_thread_pool_size())
-  {
-  }
+      : m_count(::Kokkos::OpenMP::impl_thread_pool_size()),
+        m_buffer_view(buffer_type()),
+        m_buffer(nullptr) {}
 
   UniqueToken(size_type max_size, execution_space const& = execution_space())
       : m_count(max_size),
@@ -292,6 +294,8 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     if (m_count < ::Kokkos::OpenMP::impl_thread_pool_size())
       ::Kokkos::Impl::concurrent_bitset::release(m_buffer, i);
+#else
+    (void)i;
 #endif
   }
 };

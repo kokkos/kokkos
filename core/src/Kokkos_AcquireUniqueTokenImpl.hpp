@@ -45,8 +45,8 @@
 #ifndef KOKKOS_ACQUIRE_UNIQUE_TOKEN_IMPL_HPP
 #define KOKKOS_ACQUIRE_UNIQUE_TOKEN_IMPL_HPP
 
+#include <Kokkos_Core.hpp>
 #include <Kokkos_UniqueToken.hpp>
-
 namespace Kokkos {
 namespace Experimental {
 
