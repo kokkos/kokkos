@@ -886,6 +886,11 @@ void declare_optimization_goal(const size_t context,
 #include <cstring>
 
 namespace Kokkos {
+
+namespace Profiling {
+bool profileLibraryLoaded() { return false; }
+}  // namespace Profiling
+
 namespace Tools {
 
 bool profileLibraryLoaded() { return false; }
