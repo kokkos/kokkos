@@ -850,7 +850,7 @@ class TestTripleNestedReduce {
 
 #endif
 
-#if !(defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND))
+#if !(defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ENABLE_HIP))
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(1)));

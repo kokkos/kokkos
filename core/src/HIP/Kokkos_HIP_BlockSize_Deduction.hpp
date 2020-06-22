@@ -231,13 +231,15 @@ int hip_get_opt_block_size(typename DriverType::functor_type const &f,
                                             shmem_extra_thread);
 }
 
+template<class T> void ignore( const T& ) { }
+
 template <typename FunctorType, typename LaunchBounds>
 int hip_get_opt_block_size(HIPInternal const *hip_instance,
                            hipFuncAttributes const &attr, FunctorType const &f,
                            size_t const vector_length, size_t const shmem_block,
                            size_t const shmem_thread) {
   return hip_internal_get_block_size<FunctorType, LaunchBounds>(
-      [](int x) { return true; }, hip_instance, attr, f, vector_length,
+      [](int x) { ignore(x); return true; }, hip_instance, attr, f, vector_length,
       shmem_block, shmem_thread);
 }
 
