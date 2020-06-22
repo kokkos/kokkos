@@ -478,7 +478,7 @@ void* SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
     allocate_tracked(const Kokkos::Experimental::HIPSpace& arg_space,
                      const std::string& arg_alloc_label,
                      const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void*)0;
+  if (!arg_alloc_size) return nullptr;
 
   SharedAllocationRecord* const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);
@@ -518,7 +518,7 @@ void* SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
     allocate_tracked(const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
                      const std::string& arg_alloc_label,
                      const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void*)0;
+  if (!arg_alloc_size) return nullptr;
 
   SharedAllocationRecord* const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);
@@ -531,7 +531,7 @@ void* SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
 void SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
                             void>::deallocate_tracked(void* const
                                                           arg_alloc_ptr) {
-  if (arg_alloc_ptr != 0) {
+  if (arg_alloc_ptr) {
     SharedAllocationRecord* const r = get_record(arg_alloc_ptr);
 
     RecordBase::decrement(r);
@@ -594,7 +594,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
       SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>;
 
   Header* const h =
-      alloc_ptr ? reinterpret_cast<Header*>(alloc_ptr) - 1 : (Header*)0;
+      alloc_ptr ? reinterpret_cast<Header*>(alloc_ptr) - 1 : nullptr;
 
   if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
     Kokkos::Impl::throw_runtime_exception(std::string(
