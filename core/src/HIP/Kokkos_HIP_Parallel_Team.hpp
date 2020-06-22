@@ -160,7 +160,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         static_cast<size_t>(vector_length()),
         static_cast<size_t>(team_scratch_size(0)) + 2 * sizeof(double),
         static_cast<size_t>(thread_scratch_size(0)) + sizeof(double));
-    return std::min(block_size / vector_length(), 1024);
+    return block_size / vector_length();
   }
 
   template <typename FunctorType>
