@@ -553,8 +553,7 @@ class ParallelScanHIPBase {
       // correctly, the unit tests fail with wrong results
       const int gridMaxComputeCapability_2x = 0x01fff;
 
-      const int block_size =
-          std::min(static_cast<int>(local_block_size(m_functor)), 1024);
+      const int block_size = static_cast<int>(local_block_size(m_functor));
       KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =
