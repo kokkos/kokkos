@@ -170,7 +170,7 @@ void abort(const char *const message) {
 #if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)
   Kokkos::Impl::cuda_abort(message);
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
-  HIP_ABORT(message);
+  Kokkos::Impl::hip_abort(message);
 #elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__)
   Kokkos::Impl::host_abort(message);
 #endif
