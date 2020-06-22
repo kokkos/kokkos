@@ -240,6 +240,7 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
+                                -DKokkos_ENABLE_PROFILING=OFF \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
