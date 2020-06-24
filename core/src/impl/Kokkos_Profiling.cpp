@@ -112,10 +112,10 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
     Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
-            Experimental::kernel_name_context_variable_id,
-            kernelPrefix.c_str()),
+            Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "parallel_for")};
+            Experimental::kernel_type_context_variable_id,
+            std::string("parallel_for"))};
     Experimental::set_input_values(context_id, 2, contextValues);
 #endif
   }
@@ -142,10 +142,10 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
     Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
-            Experimental::kernel_name_context_variable_id,
-            kernelPrefix.c_str()),
+            Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "parallel_for")};
+            Experimental::kernel_type_context_variable_id,
+            std::string("parallel_for"))};
     Experimental::set_input_values(context_id, 2, contextValues);
 #endif
   }
@@ -172,10 +172,10 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
     Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
-            Experimental::kernel_name_context_variable_id,
-            kernelPrefix.c_str()),
+            Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "parallel_for")};
+            Experimental::kernel_type_context_variable_id,
+            std::string("parallel_for"))};
     Experimental::set_input_values(context_id, 2, contextValues);
 #endif
   }
@@ -234,9 +234,11 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
     Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
-            Experimental::kernel_name_context_variable_id, "deep_copy_kernel"),
+            Experimental::kernel_name_context_variable_id,
+            std::string("deep_copy_kernel")),
         Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "deep_copy")};
+            Experimental::kernel_type_context_variable_id,
+            std::string("deep_copy"))};
     Experimental::set_input_values(context_id, 2, contextValues);
 #endif
   }
@@ -433,7 +435,7 @@ void initialize() {
   kernel_name.valueQuantity =
       Experimental::CandidateValueType::kokkos_value_unbounded;
 
-  std::array<const char*, 4> candidate_values = {
+  std::array<std::string, 4> candidate_values = {
       "parallel_for",
       "parallel_reduce",
       "parallel_scan",
@@ -807,21 +809,20 @@ VariableValue make_variable_value(size_t id, double val) {
   variable_value.value.double_value = val;
   return variable_value;
 }
-Experimental::VariableValue make_variable_value(size_t id, const char* val) {
+Experimental::VariableValue make_variable_value(size_t id,
+                                                const std::string& val) {
   VariableValue variable_value;
-  variable_value.type_id            = id;
-  variable_value.value.string_value = val;
+  variable_value.type_id = id;
+  strncpy(variable_value.value.string_value, val.c_str(), 63);
   return variable_value;
 }
-SetOrRange make_candidate_set(size_t size, const char** data) {
+SetOrRange make_candidate_set(size_t size, std::string* data) {
   SetOrRange value_set;
-  const char** data_copy = new const char*[size];
+  value_set.set.values.string_value = new tuning_string[size];
   for (size_t x = 0; x < size; ++x) {
-    data_copy[x] = new char[strnlen(data[x], 512)]{};
-    strncpy(const_cast<char*>(data_copy[x]), data[x], 512);
+    strncpy((value_set.set.values.string_value[x]), data[x].c_str(), 63);
   }
-  value_set.set.size                = size;
-  value_set.set.values.string_value = data_copy;
+  value_set.set.size = size;
   return value_set;
 }
 SetOrRange make_candidate_set(size_t size, int64_t* data) {
