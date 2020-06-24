@@ -132,29 +132,58 @@ class SYCL {
   /** \brief  Initialize the device.
    *
    */
+
+  struct SelectDevice2 {
+    SelectDevice2();
+    explicit SelectDevice2(cl::sycl::device d);
+    explicit SelectDevice2(const cl::sycl::device_selector& selector);
+    explicit SelectDevice2(size_t id);
+    explicit SelectDevice2(
+        const std::function<bool(const sycl::device&)>& pred);
+
+    cl::sycl::device get_device() const;
+
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const SelectDevice2& that) {
+      return that.info(os);
+    }
+
+    static std::ostream& list_devices(std::ostream& os);
+    static void list_devices();
+
+   private:
+    std::ostream& info(std::ostream& os) const;
+
+    cl::sycl::device m_device;
+  };
+
+  static void impl_initialize(SelectDevice2 = SelectDevice2());
+
   struct SelectDevice {
     int sycl_device_id;
 
+    explicit SelectDevice(int selector) : sycl_device_id(selector) {
+      auto devices = cl::sycl::device::get_devices();
+      if (selector < 0 || devices.size() <= selector) {
+        std::ostringstream oss;
+        oss << "Cannot select SYCL device #" << selector << " out of "
+            << devices.size() << " devices.";
+        Kokkos::abort(oss.str().c_str());
+      }
+    }
+
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU)
-    SelectDevice() : sycl_device_id(firstCPUDevice()) {}
+    SelectDevice() : SelectDevice(0) {}
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU)
-    SelectDevice() : sycl_device_id(firstGPUDevice()) {}
+    SelectDevice() : SelectDevice(0) {}
 #else
-    SelectDevice() : sycl_device_id(-1) {
+    SelectDevice() {
       static_assert(
           false,
           "Neither KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU or "
           "KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU is defined.");
     }
 #endif
-
-    explicit SelectDevice(int id)
-        : sycl_device_id(id)
-
-    {
-      if (id < 0 || cl::sycl::device::get_devices().size() < id)
-        Kokkos::abort("SYCL Device id out of range");
-    }
 
    private:
     static int firstGPUDevice() {
@@ -163,6 +192,9 @@ class SYCL {
           devices.begin(), devices.end(),
           [](const cl::sycl::device& device) { return device.is_gpu(); });
 
+      // NLIBER
+      std::cout << "devices.size(): " << devices.size()
+                << "  GPU found: " << (found - devices.begin()) << '\n';
       if (found == devices.end()) {
         Kokkos::abort("No GPU device found.");
       }
@@ -176,7 +208,12 @@ class SYCL {
           devices.begin(), devices.end(),
           [](const cl::sycl::device& device) { return device.is_cpu(); });
 
+      // NLIBER
+      std::cout << "devices.size(): " << devices.size()
+                << "  CPU found: " << (found - devices.begin()) << '\n';
       if (found == devices.end()) {
+        std::cerr << "No CPU device found.\n";
+        for (auto& d : devices) std::cout << d.is_cpu() << '\n';
         Kokkos::abort("No CPU device found.");
       }
 
@@ -186,7 +223,7 @@ class SYCL {
 
   int sycl_device() const;
 
-  static void impl_initialize(const SelectDevice = SelectDevice());
+  // NLIBER static void impl_initialize(const SelectDevice = SelectDevice());
 
   static int impl_is_initialized();
 
@@ -203,7 +240,7 @@ class SYCL {
 
  private:
   Impl::SYCLInternal* m_space_instance;
-};
+};  // namespace Experimental
 }  // namespace Experimental
 }  // namespace Kokkos
 

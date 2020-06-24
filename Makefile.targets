@@ -60,6 +60,8 @@ Kokkos_HIP_Locks.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
+Kokkos_SYCL.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL.cpp
 Kokkos_SYCL_Space.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL_Space.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL_Space.cpp
 Kokkos_SYCL_Instance.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/SYCL/Kokkos_SYCL_Instance.cpp

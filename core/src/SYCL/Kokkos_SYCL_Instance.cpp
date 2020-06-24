@@ -74,6 +74,32 @@ class SYCLDevice {
  public:
   explicit SYCLDevice(const cl::sycl::device& d) : device(d) {}
 
+  explicit SYCLDevice(const cl::sycl::device_selector& selector)
+      : device(selector.select_device()) {}
+
+  explicit SYCLDevice(size_t id) {
+    std::vector<cl::sycl::device> devices = cl::sycl::device::get_devices();
+    if (devices.size() <= id) {
+      std::ostringstream oss;
+      oss << "Cannot select SYCL Device #" << id << " out of " << devices.size()
+          << " devices";
+      Kokkos::abort(oss.str().c_str());
+    }
+  }
+
+  cl::sycl::device get_device() const { return device; }
+
+  static void listDevices(std::ostream& out) {
+    std::vector<cl::sycl::device> devices = cl::sycl::device::get_devices();
+    out << "The system contains " << devices.size() << " devices\n";
+
+    for (size_t d = 0; d != devices.size(); ++d) {
+      out << "Device: " << d << '\n' << SYCLDevice(devices[d]) << '\n';
+    }
+  }
+
+  static void listDevices() { listDevices(std::cout); }
+
   friend std::ostream& operator<<(std::ostream& os, SYCLDevice const& that) {
     using namespace cl::sycl::info;
     return os << "Name: " << that.device.get_info<device::name>()
@@ -208,7 +234,7 @@ class SYCLDevice {
     const C& container;
   };
 
-  const cl::sycl::device& device;
+  cl::sycl::device device;
 };
 };  // namespace
 
@@ -217,6 +243,7 @@ namespace Experimental {
 namespace Impl {
 
 int SYCLInternal::was_finalized = 0;
+
 //----------------------------------------------------------------------------
 void SYCLInternal::listDevices(std::ostream& out) const {
   auto devices = cl::sycl::device::get_devices();
@@ -259,6 +286,8 @@ void SYCLInternal::print_configuration(std::ostream& s, const bool) const {
 
 //----------------------------------------------------------------------------
 
+SYCLInternal::SYCLInternal() = default;
+
 SYCLInternal::~SYCLInternal() {
   if (m_scratchSpace || m_scratchFlags) {
     std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call "
@@ -279,11 +308,11 @@ SYCLInternal::~SYCLInternal() {
 }
 
 int SYCLInternal::verify_is_initialized(const char* const label) const {
-  if (m_syclDev < 0) {
+  if (!is_initialized()) {
     std::cerr << "Kokkos::Experimental::SYCL::" << label
               << " : ERROR device not initialized" << std::endl;
   }
-  return 0 <= m_syclDev;
+  return true;
 }
 
 SYCLInternal& SYCLInternal::singleton() {
@@ -294,7 +323,7 @@ SYCLInternal& SYCLInternal::singleton() {
   return *self;
 }
 
-void SYCLInternal::initialize(int sycl_device_id) {
+void SYCLInternal::initialize(cl::sycl::device d) {
   if (was_finalized)
     Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
 
@@ -326,22 +355,21 @@ void SYCLInternal::initialize(int sycl_device_id) {
     // const struct syclDeviceProp & syclProp =
     //  dev_info.m_syclProp[ sycl_device_id ];
 
-    m_syclDev = sycl_device_id;
-    //listDevices();
+    // m_syclDev = sycl_device_id;
+    // listDevices();
 
     // Kokkos::Impl::sycl_device_synchronize();
 
-    auto devices = cl::sycl::device::get_devices();
-    m_queue      = new cl::sycl::queue(devices[m_syclDev]);
-    std::cout << "Initialized with Device " << m_syclDev << '\n'
-              << SYCLDevice(m_queue->get_device()) << '\n';
+    // auto devices = cl::sycl::device::get_devices();
+    m_queue = std::make_unique<cl::sycl::queue>(d);
+    std::cout << SYCL::SelectDevice2(d) << '\n';
 
     /*
         // Query what compute capability architecture a kernel executes:
         m_syclArch = sycl_kernel_arch();
         if ( m_syclArch != syclProp.major * 100 + syclProp.minor * 10 ) {
-          std::cerr << "Kokkos::Experimental::SYCL::initialize WARNING: running
-       kernels compiled for compute capability "
+          std::cerr << "Kokkos::Experimental::SYCL::initialize WARNING:
+       running kernels compiled for compute capability "
                     << ( m_syclArch / 100 ) << "." << ( ( m_syclArch % 100 ) /
        10 )
                     << " on device with compute capability "
@@ -382,8 +410,7 @@ void SYCLInternal::initialize(int sycl_device_id) {
 
   } else {
     std::ostringstream msg;
-    msg << "Kokkos::Experimental::SYCL::initialize(" << sycl_device_id
-        << ") FAILED";
+    msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
 
     if (!ok_init) {
       msg << " : Already initialized";
@@ -416,6 +443,24 @@ void SYCLInternal::initialize(int sycl_device_id) {
   //  sizeof(SYCLLockArraysStruct) );
 }
 
+void SYCLInternal::initialize(const cl::sycl::device_selector& s) {
+  initialize(s.select_device());
+}
+
+void SYCLInternal::initialize(int sycl_device_id) {
+  using Devices   = std::vector<cl::sycl::device>;
+  Devices devices = cl::sycl::device::get_devices();
+  if (sycl_device_id < 0 || sycl_device_id >= devices.size()) {
+    std::ostringstream oss;
+    oss << "SYCL::initialize ERROR : Device #" << sycl_device_id
+        << " out of range (only " << devices.size()
+        << " possible SYCL devices.";
+    Kokkos::Impl::throw_runtime_exception(oss.str());
+  }
+
+  initialize(devices[sycl_device_id]);
+}
+
 // Initialize with the first GPU or accelerator
 void SYCLInternal::initialize() {
   auto devices = cl::sycl::device::get_devices();
@@ -425,10 +470,10 @@ void SYCLInternal::initialize() {
                             });
   // Didn't find a GPU or accelerator
   if (found == devices.end()) {
-    Kokkos::abort("No GPU or Accelerator was found!");
+    Kokkos::Impl::throw_runtime_exception("SYCL::initialize ERROR: No GPU or Accelerator was found!");
   }
 
-  return initialize(found - devices.begin());
+  return initialize(*found);
 }
 
 //----------------------------------------------------------------------------
@@ -443,7 +488,8 @@ Kokkos::Experimental::SYCL::size_type* SYCLInternal::scratch_flags(
     sizeScratchGrain < size ) {
 
 
-      m_scratchFlagsCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
+      m_scratchFlagsCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain
+    ;
 
       typedef Kokkos::Impl::SharedAllocationRecord<
     Kokkos::Experimental::SYCLSpace , void > Record ;
@@ -457,7 +503,8 @@ Kokkos::Experimental::SYCL::size_type* SYCLInternal::scratch_flags(
 
       m_scratchFlags = reinterpret_cast<size_type *>( r->data() );
 
-      syclMemset( m_scratchFlags , 0 , m_scratchFlagsCount * sizeScratchGrain );
+      syclMemset( m_scratchFlags , 0 , m_scratchFlagsCount * sizeScratchGrain
+    );
     }
   */
   return m_scratchFlags;
@@ -468,7 +515,8 @@ Kokkos::Experimental::SYCL::size_type* SYCLInternal::scratch_space(
   /*  if ( verify_is_initialized("scratch_space") && m_scratchSpaceCount *
     sizeScratchGrain < size ) {
 
-      m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain ;
+      m_scratchSpaceCount = ( size + sizeScratchGrain - 1 ) / sizeScratchGrain
+    ;
 
        typedef Kokkos::Impl::SharedAllocationRecord<
     Kokkos::Experimental::SYCLSpace , void > Record ;
@@ -514,7 +562,7 @@ void SYCLInternal::finalize() {
     m_scratchSpace      = 0;
     m_scratchFlags      = 0;
   }
-  delete m_queue;
+  m_queue.reset();
 }
 
 //----------------------------------------------------------------------------
@@ -564,6 +612,15 @@ int SYCL::impl_is_initialized() {
   return Impl::SYCLInternal::singleton().is_initialized();
 }
 
+void SYCL::impl_initialize(SYCL::SelectDevice2 d) {
+  Impl::SYCLInternal::singleton().initialize(d.get_device());
+#if defined(KOKKOS_ENABLE_PROFILING)
+  Kokkos::Profiling::initialize();
+#endif
+}
+
+// NLIBER
+#if 0
 void SYCL::impl_initialize(const SYCL::SelectDevice config) {
   Impl::SYCLInternal::singleton().initialize(config.sycl_device_id);
 
@@ -571,6 +628,7 @@ void SYCL::impl_initialize(const SYCL::SelectDevice config) {
   Kokkos::Profiling::initialize();
 #endif
 }
+#endif
 
 #if 0
 std::vector<unsigned>

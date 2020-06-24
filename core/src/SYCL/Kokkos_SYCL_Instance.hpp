@@ -12,24 +12,28 @@ namespace Impl {
 //----------------------------------------------------------------------------
 
 class SYCLInternal {
- private:
-  SYCLInternal(const SYCLInternal&);
-  SYCLInternal& operator=(const SYCLInternal&);
-
  public:
   typedef Kokkos::Experimental::SYCL::size_type size_type;
 
-  int m_syclDev;
-  int m_syclArch;
-  unsigned m_multiProcCount;
-  unsigned m_maxWorkgroup;
-  unsigned m_maxSharedWords;
-  size_type m_scratchSpaceCount;
-  size_type m_scratchFlagsCount;
-  size_type* m_scratchSpace;
-  size_type* m_scratchFlags;
+  SYCLInternal();
+  ~SYCLInternal();
 
-  cl::sycl::queue* m_queue;
+  SYCLInternal(const SYCLInternal&) = delete;
+  SYCLInternal& operator=(const SYCLInternal&) = delete;
+  SYCLInternal& operator=(SYCLInternal&&) = delete;
+  SYCLInternal(SYCLInternal&&) = delete;
+
+  int m_syclDev = -1;
+  int m_syclArch = -1;
+  unsigned m_multiProcCount = 0;
+  unsigned m_maxWorkgroup = 0;
+  unsigned m_maxSharedWords = 0;
+  size_type m_scratchSpaceCount = 0;
+  size_type m_scratchFlagsCount = 0;
+  size_type* m_scratchSpace = 0;
+  size_type* m_scratchFlags = 0;
+
+  std::unique_ptr<cl::sycl::queue> m_queue;
 
   static int was_finalized;
 
@@ -38,9 +42,11 @@ class SYCLInternal {
   int verify_is_initialized(const char* const label) const;
 
   int is_initialized() const {
-    return m_syclDev >= 0;
+    return m_queue != nullptr;
   }  // 0 != m_scratchSpace && 0 != m_scratchFlags ; }
 
+  void initialize(cl::sycl::device d);
+  void initialize(const cl::sycl::device_selector& s);
   void initialize(int sycl_device_id);
   void initialize();
   void finalize();
@@ -51,18 +57,6 @@ class SYCLInternal {
   void listDevices(std::ostream&) const;
   void listDevices() const;
 
-  ~SYCLInternal();
-
-  SYCLInternal()
-      : m_syclDev(-1),
-        m_syclArch(-1),
-        m_multiProcCount(0),
-        m_maxWorkgroup(0),
-        m_maxSharedWords(0),
-        m_scratchSpaceCount(0),
-        m_scratchFlagsCount(0),
-        m_scratchSpace(0),
-        m_scratchFlags(0) {}
 
   size_type* scratch_space(const size_type size);
   size_type* scratch_flags(const size_type size);
