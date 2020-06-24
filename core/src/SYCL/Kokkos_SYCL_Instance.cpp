@@ -619,17 +619,6 @@ void SYCL::impl_initialize(SYCL::SelectDevice2 d) {
 #endif
 }
 
-// NLIBER
-#if 0
-void SYCL::impl_initialize(const SYCL::SelectDevice config) {
-  Impl::SYCLInternal::singleton().initialize(config.sycl_device_id);
-
-#if defined(KOKKOS_ENABLE_PROFILING)
-  Kokkos::Profiling::initialize();
-#endif
-}
-#endif
-
 #if 0
 std::vector<unsigned>
 SYCL::detect_device_arch()

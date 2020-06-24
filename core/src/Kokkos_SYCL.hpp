@@ -159,68 +159,6 @@ class SYCL {
 
   static void impl_initialize(SelectDevice2 = SelectDevice2());
 
-  struct SelectDevice {
-    int sycl_device_id;
-
-    explicit SelectDevice(int selector) : sycl_device_id(selector) {
-      auto devices = cl::sycl::device::get_devices();
-      if (selector < 0 || devices.size() <= selector) {
-        std::ostringstream oss;
-        oss << "Cannot select SYCL device #" << selector << " out of "
-            << devices.size() << " devices.";
-        Kokkos::abort(oss.str().c_str());
-      }
-    }
-
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU)
-    SelectDevice() : SelectDevice(0) {}
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU)
-    SelectDevice() : SelectDevice(0) {}
-#else
-    SelectDevice() {
-      static_assert(
-          false,
-          "Neither KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU or "
-          "KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU is defined.");
-    }
-#endif
-
-   private:
-    static int firstGPUDevice() {
-      auto devices = cl::sycl::device::get_devices();
-      auto found   = std::find_if(
-          devices.begin(), devices.end(),
-          [](const cl::sycl::device& device) { return device.is_gpu(); });
-
-      // NLIBER
-      std::cout << "devices.size(): " << devices.size()
-                << "  GPU found: " << (found - devices.begin()) << '\n';
-      if (found == devices.end()) {
-        Kokkos::abort("No GPU device found.");
-      }
-
-      return found - devices.begin();
-    }
-
-    static int firstCPUDevice() {
-      auto devices = cl::sycl::device::get_devices();
-      auto found   = std::find_if(
-          devices.begin(), devices.end(),
-          [](const cl::sycl::device& device) { return device.is_cpu(); });
-
-      // NLIBER
-      std::cout << "devices.size(): " << devices.size()
-                << "  CPU found: " << (found - devices.begin()) << '\n';
-      if (found == devices.end()) {
-        std::cerr << "No CPU device found.\n";
-        for (auto& d : devices) std::cout << d.is_cpu() << '\n';
-        Kokkos::abort("No CPU device found.");
-      }
-
-      return found - devices.begin();
-    }
-  };
-
   int sycl_device() const;
 
   // NLIBER static void impl_initialize(const SelectDevice = SelectDevice());
