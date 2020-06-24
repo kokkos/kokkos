@@ -42,12 +42,22 @@ IF(KOKKOS_ENABLE_OPENMP)
     #link omp library from LLVM lib dir
     get_filename_component(LLVM_BIN_DIR ${CMAKE_CXX_COMPILER_AR} DIRECTORY)
     COMPILER_SPECIFIC_LIBS(Clang "${LLVM_BIN_DIR}/../lib/libomp.lib")
+  ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+    SET(KOKKOS_CXX_COMPILER_ID_BACKUP ${KOKKOS_CXX_COMPILER_ID})
+    SET(KOKKOS_CXX_COMPILER_ID ${KOKKOS_CXX_HOST_COMPILER_ID})
+    COMPILER_SPECIFIC_FLAGS(
+      Clang      -Xcompiler ${ClangOpenMPFlag}
+      PGI        -Xcompiler -mp
+      Cray       NO-VALUE-SPECIFIED
+      XL         -Xcompiler -qsmp=omp
+      DEFAULT    -Xcompiler -fopenmp
+    )
+    SET(KOKKOS_CXX_COMPILER_ID ${KOKKOS_CXX_COMPILER_ID_BACKUP})
   ELSE()
     COMPILER_SPECIFIC_FLAGS(
       Clang      ${ClangOpenMPFlag}
       AppleClang -Xpreprocessor -fopenmp
       PGI        -mp
-      NVIDIA     -Xcompiler -fopenmp
       Cray       NO-VALUE-SPECIFIED
       XL         -qsmp=omp
       DEFAULT    -fopenmp
