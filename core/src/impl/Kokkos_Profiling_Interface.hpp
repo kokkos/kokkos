@@ -179,8 +179,8 @@ using CandidateValueType  = Kokkos_Tools_VariableInfo_CandidateValueType;
 using SetOrRange          = Kokkos_Tools_VariableInfo_SetOrRange;
 using VariableInfo        = Kokkos_Tools_VariableInfo;
 using OptimizationGoal    = Kokkos_Tools_OptimzationGoal;
-
-using VariableValue = Kokkos_Tools_VariableValue;
+using TuningString        = Kokkos_Tools_Tuning_String;
+using VariableValue       = Kokkos_Tools_VariableValue;
 
 VariableValue make_variable_value(size_t id, bool val);
 VariableValue make_variable_value(size_t id, int64_t val);

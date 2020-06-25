@@ -97,17 +97,19 @@ typedef void (*Kokkos_Profiling_beginDeepCopyFunction)(
 typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 
 // Tuning
-using tuning_string = char[64];
+
+#define KOKKOS_TOOLS_TUNING_STRING_LENGTH 64
+typedef char Kokkos_Tools_Tuning_String[KOKKOS_TOOLS_TUNING_STRING_LENGTH];
 union Kokkos_Tools_VariableValue_ValueUnion {
   int64_t int_value;
   double double_value;
-  tuning_string string_value;
+  Kokkos_Tools_Tuning_String string_value;
 };
 
 union Kokkos_Tools_VariableValue_ValueUnionSet {
   int64_t* int_value;
   double* double_value;
-  tuning_string* string_value;
+  Kokkos_Tools_Tuning_String* string_value;
 };
 
 struct Kokkos_Tools_ValueSet {
