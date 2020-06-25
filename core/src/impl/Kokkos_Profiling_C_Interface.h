@@ -51,9 +51,10 @@
 #else
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #endif
 
-#define KOKKOSP_INTERFACE_VERSION 20200520
+#define KOKKOSP_INTERFACE_VERSION 20200725
 
 // Profiling
 
@@ -67,7 +68,7 @@ struct Kokkos_Profiling_SpaceHandle {
 
 typedef void (*Kokkos_Profiling_initFunction)(
     const int, const uint64_t, const uint32_t,
-    Kokkos_Profiling_KokkosPDeviceInfo*);
+    struct Kokkos_Profiling_KokkosPDeviceInfo*);
 typedef void (*Kokkos_Profiling_finalizeFunction)();
 typedef void (*Kokkos_Profiling_beginFunction)(const char*, const uint32_t,
                                                uint64_t*);
@@ -77,10 +78,10 @@ typedef void (*Kokkos_Profiling_pushFunction)(const char*);
 typedef void (*Kokkos_Profiling_popFunction)();
 
 typedef void (*Kokkos_Profiling_allocateDataFunction)(
-    const Kokkos_Profiling_SpaceHandle, const char*, const void*,
+    const struct Kokkos_Profiling_SpaceHandle, const char*, const void*,
     const uint64_t);
 typedef void (*Kokkos_Profiling_deallocateDataFunction)(
-    const Kokkos_Profiling_SpaceHandle, const char*, const void*,
+    const struct Kokkos_Profiling_SpaceHandle, const char*, const void*,
     const uint64_t);
 
 typedef void (*Kokkos_Profiling_createProfileSectionFunction)(const char*,
@@ -92,8 +93,8 @@ typedef void (*Kokkos_Profiling_destroyProfileSectionFunction)(const uint32_t);
 typedef void (*Kokkos_Profiling_profileEventFunction)(const char*);
 
 typedef void (*Kokkos_Profiling_beginDeepCopyFunction)(
-    Kokkos_Profiling_SpaceHandle, const char*, const void*,
-    Kokkos_Profiling_SpaceHandle, const char*, const void*, uint64_t);
+    struct Kokkos_Profiling_SpaceHandle, const char*, const void*,
+    struct Kokkos_Profiling_SpaceHandle, const char*, const void*, uint64_t);
 typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 
 // Tuning
@@ -122,7 +123,7 @@ enum Kokkos_Tools_OptimizationType {
 
 struct Kokkos_Tools_OptimzationGoal {
   size_t type_id;
-  Kokkos_Tools_OptimizationType goal;
+  enum Kokkos_Tools_OptimizationType goal;
 };
 
 struct Kokkos_Tools_ValueRange {
@@ -175,20 +176,20 @@ struct Kokkos_Tools_VariableValue {
 };
 
 typedef void (*Kokkos_Tools_outputTypeDeclarationFunction)(
-    const char*, const size_t, Kokkos_Tools_VariableInfo& info);
+    const char*, const size_t, struct Kokkos_Tools_VariableInfo* info);
 typedef void (*Kokkos_Tools_inputTypeDeclarationFunction)(
-    const char*, const size_t, Kokkos_Tools_VariableInfo& info);
+    const char*, const size_t, struct Kokkos_Tools_VariableInfo* info);
 
 typedef void (*Kokkos_Tools_requestValueFunction)(
-    const size_t, const size_t, const Kokkos_Tools_VariableValue*,
-    const size_t count, Kokkos_Tools_VariableValue*);
+    const size_t, const size_t, const struct Kokkos_Tools_VariableValue*,
+    const size_t count, struct Kokkos_Tools_VariableValue*);
 typedef void (*Kokkos_Tools_contextBeginFunction)(const size_t);
-typedef void (*Kokkos_Tools_contextEndFunction)(const size_t,
-                                                Kokkos_Tools_VariableValue);
+typedef void (*Kokkos_Tools_contextEndFunction)(
+    const size_t, struct Kokkos_Tools_VariableValue);
 typedef void (*Kokkos_Tools_optimizationGoalDeclarationFunction)(
-    const size_t, const Kokkos_Tools_OptimzationGoal& goal);
+    const size_t, const struct Kokkos_Tools_OptimzationGoal goal);
 
-using function_pointer = void (*)();
+typedef void (*function_pointer)();
 
 struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_initFunction init;
