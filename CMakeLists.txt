@@ -83,6 +83,13 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   ENDif()
   IF(NOT DEFINED ${PROJECT_NAME})
     PROJECT(Kokkos CXX)
+    IF (NOT CMAKE_BUILD_TYPE)
+      SET(DEFAULT_BUILD_TYPE "Release")
+      MESSAGE(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
+      SET(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING
+          "Choose the type of build, options are: Debug, Release, RelWithDebInfo and MinSizeRel."
+          FORCE)
+    ENDIF()
   ENDIF()
 ENDIF()
 
