@@ -43,19 +43,10 @@
 */
 
 #include <gtest/gtest.h>
-
+#include <Kokkos_Core.hpp>
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
-#include <time.h>
-
-#include <limits>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <sys/time.h>
-
-#include <Kokkos_Core.hpp>
 #define OFFSET_LIST_MAX_SIZE 100
 
 namespace Kokkos {
