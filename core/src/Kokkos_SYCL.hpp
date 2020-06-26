@@ -133,18 +133,18 @@ class SYCL {
    *
    */
 
-  struct SelectDevice2 {
-    SelectDevice2();
-    explicit SelectDevice2(cl::sycl::device d);
-    explicit SelectDevice2(const cl::sycl::device_selector& selector);
-    explicit SelectDevice2(size_t id);
-    explicit SelectDevice2(
+  struct SYCLDevice {
+    SYCLDevice();
+    explicit SYCLDevice(cl::sycl::device d);
+    explicit SYCLDevice(const cl::sycl::device_selector& selector);
+    explicit SYCLDevice(size_t id);
+    explicit SYCLDevice(
         const std::function<bool(const sycl::device&)>& pred);
 
     cl::sycl::device get_device() const;
 
     friend std::ostream& operator<<(std::ostream& os,
-                                    const SelectDevice2& that) {
+                                    const SYCLDevice& that) {
       return that.info(os);
     }
 
@@ -157,7 +157,7 @@ class SYCL {
     cl::sycl::device m_device;
   };
 
-  static void impl_initialize(SelectDevice2 = SelectDevice2());
+  static void impl_initialize(SYCLDevice = SYCLDevice());
 
   int sycl_device() const;
 

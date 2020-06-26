@@ -81,7 +81,7 @@ void SYCLInternal::listDevices(std::ostream& out) const {
   out << "The system contains " << devices.size() << " devices\n";
 
   for (size_t d = 0; d != devices.size(); ++d) {
-    out << "Device: " << d << '\n' << SYCL::SelectDevice2(devices[d]) << '\n';
+    out << "Device: " << d << '\n' << SYCL::SYCLDevice(devices[d]) << '\n';
   }
 }
 
@@ -193,7 +193,7 @@ void SYCLInternal::initialize(cl::sycl::device d) {
 
     // auto devices = cl::sycl::device::get_devices();
     m_queue = std::make_unique<cl::sycl::queue>(d);
-    std::cout << SYCL::SelectDevice2(d) << '\n';
+    std::cout << SYCL::SYCLDevice(d) << '\n';
 
     /*
         // Query what compute capability architecture a kernel executes:
@@ -443,7 +443,7 @@ int SYCL::impl_is_initialized() {
   return Impl::SYCLInternal::singleton().is_initialized();
 }
 
-void SYCL::impl_initialize(SYCL::SelectDevice2 d) {
+void SYCL::impl_initialize(SYCL::SYCLDevice d) {
   Impl::SYCLInternal::singleton().initialize(d.get_device());
 #if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
