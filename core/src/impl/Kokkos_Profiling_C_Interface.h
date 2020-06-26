@@ -54,7 +54,7 @@
 #include <stdbool.h>
 #endif
 
-#define KOKKOSP_INTERFACE_VERSION 20200725
+#define KOKKOSP_INTERFACE_VERSION 20200625
 
 // Profiling
 
