@@ -706,11 +706,12 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType,
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
       : a(a_), b(b_) {
-    Kokkos::parallel_for("Kokkos::ViewCopy-7D",
-                         policy_type(space, {0, 0, 0, 0, 0, 0},
-                                     {a.extent(0), a.extent(1), a.extent(3),
-                                      a.extent(4), a.extent(5), a.extent(6)}),
-                         *this);
+    Kokkos::parallel_for(
+        "Kokkos::ViewCopy-7D",
+        policy_type(space, {0, 0, 0, 0, 0, 0, 0},
+                    {a.extent(0), a.extent(1), a.extent(2), a.extent(3),
+                     a.extent(4), a.extent(5), a.extent(6)}),
+        *this);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -741,11 +742,12 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType,
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
       : a(a_), b(b_) {
-    Kokkos::parallel_for("Kokkos::ViewCopy-8D",
-                         policy_type(space, {0, 0, 0, 0, 0, 0},
-                                     {a.extent(0), a.extent(1), a.extent(3),
-                                      a.extent(5), a.extent(6), a.extent(7)}),
-                         *this);
+    Kokkos::parallel_for(
+        "Kokkos::ViewCopy-8D",
+        policy_type(space, {0, 0, 0, 0, 0, 0, 0, 0},
+                    {a.extent(0), a.extent(1), a.extent(2), a.extent(3),
+                     a.extent(4), a.extent(5), a.extent(6), a.extent(7)}),
+        *this);
   }
 
   KOKKOS_INLINE_FUNCTION
