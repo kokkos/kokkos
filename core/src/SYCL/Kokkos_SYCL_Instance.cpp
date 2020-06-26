@@ -154,7 +154,7 @@ SYCLInternal& SYCLInternal::singleton() {
   return *self;
 }
 
-void SYCLInternal::initialize(cl::sycl::device d) {
+void SYCLInternal::initialize(const cl::sycl::device& d) {
   if (was_finalized)
     Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
 

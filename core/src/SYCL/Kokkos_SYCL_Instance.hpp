@@ -45,7 +45,7 @@ class SYCLInternal {
     return m_queue != nullptr;
   }  // 0 != m_scratchSpace && 0 != m_scratchFlags ; }
 
-  void initialize(cl::sycl::device d);
+  void initialize(const cl::sycl::device& d);
   void initialize(const cl::sycl::device_selector& s);
   void initialize(int sycl_device_id);
   void initialize();
