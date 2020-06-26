@@ -816,7 +816,7 @@ SetOrRange make_candidate_set(size_t size, std::string* data) {
   SetOrRange value_set;
   value_set.set.values.string_value = new TuningString[size];
   for (size_t x = 0; x < size; ++x) {
-    strncpy((value_set.set.values.string_value[x]), data[x].c_str(),
+    strncpy(value_set.set.values.string_value[x], data[x].c_str(),
             KOKKOS_TOOLS_TUNING_STRING_LENGTH - 1);
   }
   value_set.set.size = size;
