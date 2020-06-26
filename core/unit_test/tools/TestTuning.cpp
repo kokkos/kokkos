@@ -49,6 +49,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 static size_t expectedNumberOfContextVariables;
 static int64_t expectedContextVariableValue;
@@ -86,7 +87,7 @@ int main() {
             candidate_value_vector.size(), candidate_value_vector.data());
     // test that ID's are transmitted to the tool
     Kokkos::Tools::Experimental::set_declare_output_type_callback(
-        [](const char* name, const size_t id,
+        [](const char*, const size_t,
            Kokkos::Tools::Experimental::VariableInfo& info) {
           if (info.type !=
               Kokkos::Tools::Experimental::ValueType::kokkos_value_int64) {
@@ -94,7 +95,7 @@ int main() {
           }
         });
     Kokkos::Tools::Experimental::set_declare_input_type_callback(
-        [](const char* name, const size_t id,
+        [](const char*, const size_t,
            Kokkos::Tools::Experimental::VariableInfo& info) {
           if (info.type !=
               Kokkos::Tools::Experimental::ValueType::kokkos_value_int64) {
@@ -115,9 +116,9 @@ int main() {
     Kokkos::Tools::Experimental::set_input_values(context, 1, contextValues);
 
     Kokkos::Tools::Experimental::set_request_output_values_callback(
-        [](const size_t context, const size_t num_context_variables,
+        [](const size_t, const size_t,
            const Kokkos::Tools::Experimental::VariableValue* context_values,
-           const size_t num_tuning_variables,
+           const size_t,
            Kokkos::Tools::Experimental::VariableValue* tuning_values) {
           auto candidate_values = tuning_values[0].metadata->candidates;
           if (context_values[0].value.int_value !=
@@ -168,10 +169,9 @@ int main() {
             secondContextVariableId, int64_t(1))};
 
     Kokkos::Tools::Experimental::set_request_output_values_callback(
-        [](const size_t context, const size_t num_context_variables,
-           const Kokkos::Tools::Experimental::VariableValue* context_values,
-           const size_t num_tuning_variables,
-           Kokkos::Tools::Experimental::VariableValue* tuning_values) {
+        [](const size_t, const size_t num_context_variables,
+           const Kokkos::Tools::Experimental::VariableValue*, const size_t,
+           Kokkos::Tools::Experimental::VariableValue*) {
           std::cout << "Expect " << expectedNumberOfContextVariables
                     << ", have " << num_context_variables << std::endl;
           if (num_context_variables != expectedNumberOfContextVariables) {

@@ -748,7 +748,7 @@ void request_output_values(size_t contextId, size_t count,
     context_values.push_back(feature_values[id]);
   }
   if (Experimental::current_callbacks.request_output_values != nullptr) {
-    for (int x = 0; x < count; ++x) {
+    for (size_t x = 0; x < count; ++x) {
       values[x].metadata = &variable_metadata[values[x].type_id];
     }
     (*Experimental::current_callbacks.request_output_values)(
@@ -804,8 +804,7 @@ VariableValue make_variable_value(size_t id, double val) {
   variable_value.value.double_value = val;
   return variable_value;
 }
-Experimental::VariableValue make_variable_value(size_t id,
-                                                const std::string& val) {
+VariableValue make_variable_value(size_t id, const std::string& val) {
   VariableValue variable_value;
   variable_value.type_id = id;
   strncpy(variable_value.value.string_value, val.c_str(),
@@ -1003,10 +1002,10 @@ VariableValue make_variable_value(size_t id, double val) {
   variable_value.value.double_value = val;
   return variable_value;
 }
-VariableValue make_variable_value(size_t id, const char* val) {
+VariableValue make_variable_value(size_t id, const std::string& val) {
   VariableValue variable_value;
   variable_value.type_id = id;
-  strncpy(variable_value.value.string_value, val,
+  strncpy(variable_value.value.string_value, val.c_str(),
           KOKKOS_TOOLS_TUNING_STRING_LENGTH - 1);
   return variable_value;
 }
