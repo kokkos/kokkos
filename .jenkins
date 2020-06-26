@@ -239,7 +239,7 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_PROFILING=OFF \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make -j8 && ctest --output-on-failure && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                 }
                 stage('Clang-Format') {

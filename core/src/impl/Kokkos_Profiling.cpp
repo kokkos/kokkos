@@ -699,7 +699,7 @@ size_t declare_output_type(const std::string& variableName, VariableInfo info) {
 #ifdef KOKKOS_ENABLE_TUNING
   if (Experimental::current_callbacks.declare_output_type != nullptr) {
     (*Experimental::current_callbacks.declare_output_type)(variableName.c_str(),
-                                                           variableId, info);
+                                                           variableId, &info);
   }
   variable_metadata[variableId] = info;
 #else
@@ -714,7 +714,7 @@ size_t declare_input_type(const std::string& variableName, VariableInfo info) {
 #ifdef KOKKOS_ENABLE_TUNING
   if (Experimental::current_callbacks.declare_input_type != nullptr) {
     (*Experimental::current_callbacks.declare_input_type)(variableName.c_str(),
-                                                          variableId, info);
+                                                          variableId, &info);
   }
   variable_metadata[variableId] = info;
 #else
