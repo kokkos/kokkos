@@ -978,9 +978,13 @@ size_t get_current_context_id() { return get_context_counter(); }
 void decrement_current_context_id() { --get_context_counter(); }
 size_t get_new_variable_id() { return get_variable_counter(); }
 
-void declare_output_type(const std::string&, size_t, VariableInfo) {}
+size_t declare_output_type(const std::string&, size_t, VariableInfo) {
+  return 0;
+}
 
-void declare_input_type(const std::string&, size_t, VariableInfo) {}
+size_t declare_input_type(const std::string&, size_t, VariableInfo) {
+  return 0;
+}
 
 void set_input_values(size_t, size_t, VariableValue*) {}
 void request_output_values(size_t, size_t, VariableValue*) {}
