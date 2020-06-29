@@ -64,6 +64,11 @@ namespace Experimental {
 #ifdef KOKKOS_ENABLE_TUNING
 static size_t kernel_name_context_variable_id;
 static size_t kernel_type_context_variable_id;
+static std::unordered_map<size_t, std::unordered_set<size_t>>
+    features_per_context;
+static std::unordered_set<size_t> active_features;
+static std::unordered_map<size_t, VariableValue> feature_values;
+static std::unordered_map<size_t, VariableInfo> variable_metadata;
 #endif
 
 static EventSet current_callbacks;
@@ -499,6 +504,20 @@ void finalize() {
 
     Experimental::pause_tools();
   }
+#ifdef KOKKOS_ENABLE_TUNING
+  // clean up string candidate set
+  for (auto& metadata_pair : Experimental::variable_metadata) {
+    auto metadata = metadata_pair.second;
+    if ((metadata.type == Experimental::ValueType::kokkos_value_string) &&
+        (metadata.valueQuantity ==
+         Experimental::CandidateValueType::kokkos_value_set)) {
+      auto candidate_set = metadata.candidates.set;
+      for (size_t index = 0; index < candidate_set.size; ++index) {
+        free(candidate_set.values.string_value[index]);
+      }
+    }
+  }
+#endif
 }
 
 }  // namespace Tools
@@ -686,11 +705,6 @@ size_t get_current_context_id() { return get_context_counter(); }
 void decrement_current_context_id() { --get_context_counter(); }
 size_t get_new_variable_id() { return get_variable_counter(); }
 
-static std::unordered_map<size_t, std::unordered_set<size_t>>
-    features_per_context;
-static std::unordered_set<size_t> active_features;
-static std::unordered_map<size_t, VariableValue> feature_values;
-static std::unordered_map<size_t, VariableInfo> variable_metadata;
 size_t declare_output_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
