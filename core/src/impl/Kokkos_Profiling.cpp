@@ -512,9 +512,7 @@ void finalize() {
         (metadata.valueQuantity ==
          Experimental::CandidateValueType::kokkos_value_set)) {
       auto candidate_set = metadata.candidates.set;
-      for (size_t index = 0; index < candidate_set.size; ++index) {
-        free(candidate_set.values.string_value[index]);
-      }
+      delete[] candidate_set.values.string_value;
     }
   }
 #endif
