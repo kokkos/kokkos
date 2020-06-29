@@ -102,7 +102,7 @@ struct LayoutSelective {
 
   KOKKOS_INLINE_FUNCTION
   size_t offset(size_t ndx) const {
-    KOKKOS_ASSERT(ndx >= 0 && ndx < list_size);
+    KOKKOS_ASSERT(ndx < list_size);
     return offset_list[ndx];
   }
 };
