@@ -4,23 +4,34 @@ SET(KOKKOS_CXX_COMPILER ${CMAKE_CXX_COMPILER})
 SET(KOKKOS_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID})
 SET(KOKKOS_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
 
-IF(Kokkos_ENABLE_CUDA)
+MACRO(kokkos_internal_have_compiler_nvcc)
   # Check if the compiler is nvcc (which really means nvcc_wrapper).
-  EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
+  EXECUTE_PROCESS(COMMAND ${ARGN} --version
                   OUTPUT_VARIABLE INTERNAL_COMPILER_VERSION
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
-
   STRING(REPLACE "\n" " - " INTERNAL_COMPILER_VERSION_ONE_LINE ${INTERNAL_COMPILER_VERSION} )
-
   STRING(FIND ${INTERNAL_COMPILER_VERSION_ONE_LINE} "nvcc" INTERNAL_COMPILER_VERSION_CONTAINS_NVCC)
-
-
-  STRING(REGEX REPLACE "^ +" ""
-         INTERNAL_HAVE_COMPILER_NVCC "${INTERNAL_HAVE_COMPILER_NVCC}")
+  STRING(REGEX REPLACE "^ +" "" INTERNAL_HAVE_COMPILER_NVCC "${INTERNAL_HAVE_COMPILER_NVCC}")
   IF(${INTERNAL_COMPILER_VERSION_CONTAINS_NVCC} GREATER -1)
     SET(INTERNAL_HAVE_COMPILER_NVCC true)
   ELSE()
     SET(INTERNAL_HAVE_COMPILER_NVCC false)
+  ENDIF()
+ENDMACRO()
+
+IF(Kokkos_ENABLE_CUDA)
+  # find kokkos_launch_compiler
+  FIND_PROGRAM(Kokkos_COMPILE_LAUNCHER
+      NAMES           kokkos_launch_compiler
+      HINTS           ${PROJECT_BINARY_DIR}
+      PATHS           ${PROJECT_BINARY_DIR}
+      PATH_SUFFIXES   bin)
+
+  # check if compiler was set to nvcc_wrapper
+  kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
+  # if launcher was found and not set to nvcc_wrapper, try with launcher
+  IF(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC)
+      kokkos_internal_have_compiler_nvcc(${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER})
   ENDIF()
 ENDIF()
 
