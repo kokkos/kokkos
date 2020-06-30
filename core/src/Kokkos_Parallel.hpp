@@ -61,7 +61,7 @@
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
 #include <iostream>
 #endif
 

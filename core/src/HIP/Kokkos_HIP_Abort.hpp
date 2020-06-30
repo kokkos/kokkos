@@ -53,12 +53,13 @@
 namespace Kokkos {
 namespace Impl {
 
-__device__ inline void hip_abort(char const *msg) {
-  printf("%s", msg);
-  // FIXME_HIP both abort and the __assertfail system call are currently
-  // implemented with __builtin_trap which causes the program to exit abnormally
-  // without printing the error message.
-  // abort();
+__device__ __attribute__((noinline)) void hip_abort(char const *msg) {
+#ifndef NDEBUG
+  // disable printf on release builds, as it has a non-trivial performance
+  // impact
+  printf("Aborting with message `%s'.\n", msg);
+#endif
+  abort();
 }
 
 }  // namespace Impl

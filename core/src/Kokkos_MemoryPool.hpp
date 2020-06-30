@@ -52,6 +52,8 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
+#include <iostream>
+
 namespace Kokkos {
 namespace Impl {
 /* Report violation of size constraints:

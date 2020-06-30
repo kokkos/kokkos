@@ -63,6 +63,11 @@ namespace Experimental {
 #ifdef KOKKOS_ENABLE_TUNING
 static size_t kernel_name_context_variable_id;
 static size_t kernel_type_context_variable_id;
+static std::unordered_map<size_t, std::unordered_set<size_t>>
+    features_per_context;
+static std::unordered_set<size_t> active_features;
+static std::unordered_map<size_t, VariableValue> feature_values;
+static std::unordered_map<size_t, VariableInfo> variable_metadata;
 #endif
 
 static EventSet current_callbacks;
@@ -111,8 +116,7 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
     Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
-            Experimental::kernel_name_context_variable_id,
-            kernelPrefix.c_str()),
+            Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
     Experimental::set_input_values(context_id, 2, contextValues);
@@ -141,8 +145,7 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
     Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
-            Experimental::kernel_name_context_variable_id,
-            kernelPrefix.c_str()),
+            Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
     Experimental::set_input_values(context_id, 2, contextValues);
@@ -171,8 +174,7 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
     Experimental::begin_context(context_id);
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
-            Experimental::kernel_name_context_variable_id,
-            kernelPrefix.c_str()),
+            Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
     Experimental::set_input_values(context_id, 2, contextValues);
@@ -432,7 +434,7 @@ void initialize() {
   kernel_name.valueQuantity =
       Experimental::CandidateValueType::kokkos_value_unbounded;
 
-  std::array<const char*, 4> candidate_values = {
+  std::array<std::string, 4> candidate_values = {
       "parallel_for",
       "parallel_reduce",
       "parallel_scan",
@@ -501,6 +503,18 @@ void finalize() {
 
     Experimental::pause_tools();
   }
+#ifdef KOKKOS_ENABLE_TUNING
+  // clean up string candidate set
+  for (auto& metadata_pair : Experimental::variable_metadata) {
+    auto metadata = metadata_pair.second;
+    if ((metadata.type == Experimental::ValueType::kokkos_value_string) &&
+        (metadata.valueQuantity ==
+         Experimental::CandidateValueType::kokkos_value_set)) {
+      auto candidate_set = metadata.candidates.set;
+      delete[] candidate_set.values.string_value;
+    }
+  }
+#endif
 }
 
 }  // namespace Tools
@@ -688,17 +702,12 @@ size_t get_current_context_id() { return get_context_counter(); }
 void decrement_current_context_id() { --get_context_counter(); }
 size_t get_new_variable_id() { return get_variable_counter(); }
 
-static std::unordered_map<size_t, std::unordered_set<size_t>>
-    features_per_context;
-static std::unordered_set<size_t> active_features;
-static std::unordered_map<size_t, VariableValue> feature_values;
-static std::unordered_map<size_t, VariableInfo> variable_metadata;
 size_t declare_output_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
   if (Experimental::current_callbacks.declare_output_type != nullptr) {
     (*Experimental::current_callbacks.declare_output_type)(variableName.c_str(),
-                                                           variableId, info);
+                                                           variableId, &info);
   }
   variable_metadata[variableId] = info;
 #else
@@ -713,7 +722,7 @@ size_t declare_input_type(const std::string& variableName, VariableInfo info) {
 #ifdef KOKKOS_ENABLE_TUNING
   if (Experimental::current_callbacks.declare_input_type != nullptr) {
     (*Experimental::current_callbacks.declare_input_type)(variableName.c_str(),
-                                                          variableId, info);
+                                                          variableId, &info);
   }
   variable_metadata[variableId] = info;
 #else
@@ -750,7 +759,7 @@ void request_output_values(size_t contextId, size_t count,
     context_values.push_back(feature_values[id]);
   }
   if (Experimental::current_callbacks.request_output_values != nullptr) {
-    for (int x = 0; x < count; ++x) {
+    for (size_t x = 0; x < count; ++x) {
       values[x].metadata = &variable_metadata[values[x].type_id];
     }
     (*Experimental::current_callbacks.request_output_values)(
@@ -806,21 +815,21 @@ VariableValue make_variable_value(size_t id, double val) {
   variable_value.value.double_value = val;
   return variable_value;
 }
-Experimental::VariableValue make_variable_value(size_t id, const char* val) {
+VariableValue make_variable_value(size_t id, const std::string& val) {
   VariableValue variable_value;
-  variable_value.type_id            = id;
-  variable_value.value.string_value = val;
+  variable_value.type_id = id;
+  strncpy(variable_value.value.string_value, val.c_str(),
+          KOKKOS_TOOLS_TUNING_STRING_LENGTH - 1);
   return variable_value;
 }
-SetOrRange make_candidate_set(size_t size, const char** data) {
+SetOrRange make_candidate_set(size_t size, std::string* data) {
   SetOrRange value_set;
-  const char** data_copy = new const char*[size];
+  value_set.set.values.string_value = new TuningString[size];
   for (size_t x = 0; x < size; ++x) {
-    data_copy[x] = new char[strnlen(data[x], 512)]{};
-    strncpy(const_cast<char*>(data_copy[x]), data[x], 512);
+    strncpy(value_set.set.values.string_value[x], data[x].c_str(),
+            KOKKOS_TOOLS_TUNING_STRING_LENGTH - 1);
   }
-  value_set.set.size                = size;
-  value_set.set.values.string_value = data_copy;
+  value_set.set.size = size;
   return value_set;
 }
 SetOrRange make_candidate_set(size_t size, int64_t* data) {

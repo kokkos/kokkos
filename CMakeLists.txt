@@ -1,4 +1,9 @@
 
+# Disable in-source builds to prevent source tree corruption.
+if( "${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}" )
+  message( FATAL_ERROR "FATAL: In-source builds are not allowed. You should create a separate directory for build files." )
+endif()
+
 # We want to determine if options are given with the wrong case
 # In order to detect which arguments are given to compare against
 # the list of valid arguments, at the beginning here we need to
@@ -76,14 +81,14 @@ IF(NOT KOKKOS_HAS_TRILINOS)
       SET(ENV{CXX} ${SPACK_CXX})
     ENDIF()
   ENDif()
-  IF(NOT DEFINED ${PROJECT_NAME})
-    IF(Kokkos_ENABLE_HIP)
-      SET(KOKKOS_INTERNAL_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --cuda-host-only")
-    ENDIF()
+  IF(NOT DEFINED PROJECT_NAME)
     PROJECT(Kokkos CXX)
-    IF(Kokkos_ENABLE_HIP)
-      SET(CMAKE_CXX_FLAGS ${KOKKOS_INTERNAL_CMAKE_CXX_FLAGS})
+    IF (NOT CMAKE_BUILD_TYPE)
+      SET(DEFAULT_BUILD_TYPE "RelWithDebInfo")
+      MESSAGE(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
+      SET(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE STRING
+          "Choose the type of build, options are: Debug, Release, RelWithDebInfo and MinSizeRel."
+          FORCE)
     ENDIF()
   ENDIF()
 ENDIF()
