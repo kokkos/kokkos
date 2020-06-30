@@ -85,7 +85,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
     ENDIF()
   ENDIF()
   # Always call the project command to define Kokkos_ variables
-  # and to make sure that C++ is an enabled langague
+  # and to make sure that C++ is an enabled language
   PROJECT(Kokkos CXX)
   IF(NOT HAS_PARENT)
     IF (NOT CMAKE_BUILD_TYPE)
