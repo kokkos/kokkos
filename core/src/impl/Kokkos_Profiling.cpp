@@ -296,6 +296,7 @@ void initialize() {
   is_initialized = 1;
 
   void* firstProfileLibrary = nullptr;
+#ifdef KOKKOS_ENABLE_LIBDL
 
   char* envProfileLibrary = getenv("KOKKOS_PROFILE_LIBRARY");
 
@@ -326,7 +327,6 @@ void initialize() {
       std::cout << "KokkosP: Library Loaded: " << profileLibraryName
                 << std::endl;
 #endif
-
       // dlsym returns a pointer to an object, while we want to assign to
       // pointer to function A direct cast will give warnings hence, we have to
       // workaround the issue by casting pointer to pointers.
@@ -417,10 +417,10 @@ void initialize() {
       Experimental::set_declare_optimization_goal_callback(
           *reinterpret_cast<Experimental::optimizationGoalDeclarationFunction*>(
               &p25));
-#endif
+#endif  // KOKKOS_ENABLE_TUNING
     }
   }
-
+#endif  // KOKKOS_ENABLE_LIBDL
   if (Experimental::current_callbacks.init != nullptr) {
     (*Experimental::current_callbacks.init)(
         0, (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
