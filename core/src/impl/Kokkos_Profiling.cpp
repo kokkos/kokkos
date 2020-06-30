@@ -295,8 +295,8 @@ void initialize() {
   if (is_initialized) return;
   is_initialized = 1;
 
-  void* firstProfileLibrary = nullptr;
 #ifdef KOKKOS_ENABLE_LIBDL
+  void* firstProfileLibrary = nullptr;
 
   char* envProfileLibrary = getenv("KOKKOS_PROFILE_LIBRARY");
 
@@ -488,8 +488,9 @@ void initialize() {
   Experimental::no_profiling.declare_output_type   = nullptr;
   Experimental::no_profiling.request_output_values = nullptr;
   Experimental::no_profiling.end_tuning_context    = nullptr;
-
+#ifdef KOKKOS_ENABLE_LIBDL
   free(envProfileCopy);
+#endif
 }
 
 void finalize() {
