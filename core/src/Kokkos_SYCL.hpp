@@ -219,6 +219,7 @@ struct VerifyExecutionCanAccessMemorySpace<
 
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <SYCL/Kokkos_SYCL_Parallel_Range.hpp>
+#include <SYCL/Kokkos_SYCL_Parallel_Reduce.hpp>
 
 #endif
 #endif
