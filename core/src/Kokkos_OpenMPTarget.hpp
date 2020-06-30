@@ -121,7 +121,7 @@ class OpenMPTarget {
 };
 }  // namespace Experimental
 
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
@@ -129,7 +129,7 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
       ::Kokkos::Profiling::Experimental::DeviceType::OpenMPTarget;
 };
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

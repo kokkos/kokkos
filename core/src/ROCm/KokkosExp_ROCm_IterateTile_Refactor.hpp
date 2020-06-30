@@ -48,9 +48,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined(__HCC__) && defined(KOKKOS_ENABLE_ROCM)
 
-#include <iostream>
 #include <algorithm>
-#include <cstdio>
 
 #include <utility>
 

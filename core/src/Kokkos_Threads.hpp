@@ -173,14 +173,14 @@ class Threads {
   //----------------------------------------
 };
 
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<Threads> {
   static constexpr DeviceType id = DeviceType::Threads;
 };
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

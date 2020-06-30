@@ -15,9 +15,6 @@ KOKKOS_ADD_TEST_LIBRARY(
 
 # avoid deprecation warnings from MSVC
 TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_PTHREAD=0)
-IF(Kokkos_ENABLE_HIP)
-  SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--cuda-host-only")
-ENDIF()
 
 TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
 #Gtest minimally requires C++11
@@ -400,7 +397,13 @@ if(Kokkos_ENABLE_PROFILING)
     printer-tool SHARED
     SOURCES tools/printing-tool.cpp
   )
-
+  if(KOKKOS_ENABLE_TUNING)
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_TuningBasics
+      SOURCES
+        tools/TestTuning.cpp
+    )
+  endif()
   KOKKOS_ADD_TEST_EXECUTABLE(
     ProfilingAllCalls
     tools/TestAllCalls.cpp
@@ -408,11 +411,13 @@ if(Kokkos_ENABLE_PROFILING)
 
   set(ADDRESS_REGEX "0x[0-9a-f]*")
   set(MEMSPACE_REGEX "[HC][ou][sd][ta][a-zA-Z]*")
+  set(SIZE_REGEX "[0-9]*")
+  set(SKIP_SCRATCH_INITIALIZATION_REGEX ".*")
 
   KOKKOS_ADD_TEST( NAME ProfilingTestLibraryLoad
     EXE  ProfilingAllCalls
     TOOL printer-tool
-    PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:[0-9]*:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:0:1::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:[0-9]*:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
+    PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization:0:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:${SIZE_REGEX}:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:0:1${SKIP_SCRATCH_INITIALIZATION_REGEX}::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:${SIZE_REGEX}:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
   )
 
 endif()

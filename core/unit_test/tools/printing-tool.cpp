@@ -2,6 +2,8 @@
 #include <inttypes.h>
 #include <iostream>
 
+struct Kokkos_Profiling_KokkosPDeviceInfo;
+
 struct SpaceHandle {
   char name[64];
 };
@@ -10,10 +12,10 @@ const int parallel_for_id    = 0;
 const int parallel_reduce_id = 1;
 const int parallel_scan_id   = 2;
 
-extern "C" void kokkosp_init_library(const int /*loadSeq*/,
-                                     const uint64_t /*interfaceVer*/,
-                                     const uint32_t /*devInfoCount*/,
-                                     void* /* deviceInfo */) {
+extern "C" void kokkosp_init_library(
+    const int /*loadSeq*/, const uint64_t /*interfaceVer*/,
+    const uint32_t /*devInfoCount*/,
+    Kokkos_Profiling_KokkosPDeviceInfo* /* deviceInfo */) {
   std::cout << "kokkosp_init_library::";
 }
 

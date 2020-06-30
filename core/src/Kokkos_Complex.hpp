@@ -47,7 +47,7 @@
 #include <Kokkos_Atomic.hpp>
 #include <Kokkos_NumericTraits.hpp>
 #include <complex>
-#include <iostream>
+#include <iosfwd>
 
 namespace Kokkos {
 

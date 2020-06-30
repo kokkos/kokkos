@@ -91,6 +91,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
@@ -114,18 +115,14 @@ pipeline {
                     steps {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && mkdir -p build && cd build && \
-                              cmake \
-                                -DCMAKE_BUILD_TYPE=Release \
-                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
-                                -DCMAKE_CXX_FLAGS=-Werror \
-                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_TESTS=ON \
-                                -DKokkos_ENABLE_CUDA=ON \
-                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
-                                -DKokkos_ENABLE_PROFILING=OFF \
+                              ../gnu_generate_makefile.bash \
+                                --with-options=compiler_warnings \
+                                --cxxflags="-Werror" \
+                                --with-cuda \
+                                --with-cuda-options=enable_lambda \
+                                --arch=Volta70 \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make test -j8'''
                     }
                     post {
                         always {
@@ -133,12 +130,12 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-10.1-NVCC-RDC') {
+                stage('CUDA-11.0-NVCC-C++17-RDC') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:11.0-devel-rc --build-arg ADDITIONAL_PACKAGES="g++-8" --build-arg CMAKE_VERSION=3.17.3'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
@@ -147,6 +144,7 @@ pipeline {
                         OMP_NUM_THREADS = 8
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
+                        NVCC_WRAPPER_DEFAULT_COMPILER = 'g++-8'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -157,10 +155,11 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
-                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=OFF \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
@@ -208,6 +207,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ENABLE_PROFILING=OFF \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
@@ -238,8 +238,9 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
+                                -DKokkos_ENABLE_PROFILING=OFF \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make -j8 && ctest --output-on-failure && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                 }
                 stage('Clang-Format') {
