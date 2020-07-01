@@ -46,7 +46,6 @@
 #define KOKKOS_OPENMPTARGET_PARALLEL_MDRANGE_HPP
 
 #include <omp.h>
-#include <iostream>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>

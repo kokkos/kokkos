@@ -49,9 +49,7 @@
 #include <impl/Kokkos_Spinwait.hpp>
 
 #include <Kokkos_Atomic.hpp>
-#include <iostream>
-#include <sstream>
-#include <fstream>
+
 namespace Kokkos {
 namespace Impl {
 

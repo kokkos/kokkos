@@ -47,9 +47,7 @@
 
 #include <cinttypes>
 #include <cstddef>
-#include <string>
 
-#include <iostream>
 #include <cstdlib>
 
 // NOTE: in this Kokkos::Profiling block, do not define anything that shouldn't

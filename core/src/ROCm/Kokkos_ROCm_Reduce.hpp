@@ -49,8 +49,6 @@
 #if !defined(KOKKOS_ROCM_AMP_REDUCE_INL)
 #define KOKKOS_ROCM_AMP_REDUCE_INL
 
-#include <iostream>
-
 #include <algorithm>
 #include <numeric>
 #include <cmath>
