@@ -78,14 +78,15 @@ void *hip_resize_scratch_space(std::int64_t bytes, bool force_shrink = false);
 
 template <typename DriverType>
 __global__ static void hip_parallel_launch_constant_memory() {
-// cannot use global constants in HCC
-#ifdef __HCC__
-  __device__ __constant__ unsigned long kokkos_impl_hip_constant_memory_buffer
-      [Kokkos::Experimental::Impl::HIPTraits::ConstantMemoryUsage /
-       sizeof(unsigned long)];
-#endif
+  const DriverType &driver = *(reinterpret_cast<const DriverType *>(
+      kokkos_impl_hip_constant_memory_buffer));
+  driver();
+}
 
-  const DriverType *const driver = (reinterpret_cast<const DriverType *>(
+template <typename DriverType, unsigned int maxTperB, unsigned int minBperSM>
+__global__ __launch_bounds__(
+    maxTperB, minBperSM) static void hip_parallel_launch_constant_memory() {
+  const DriverType &driver = *(reinterpret_cast<const DriverType *>(
       kokkos_impl_hip_constant_memory_buffer));
 
   driver->operator()();
