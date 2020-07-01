@@ -48,7 +48,6 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
-#include <sstream>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
 namespace Kokkos {

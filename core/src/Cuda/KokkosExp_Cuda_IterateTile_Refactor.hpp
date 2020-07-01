@@ -48,9 +48,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined(__CUDACC__) && defined(KOKKOS_ENABLE_CUDA)
 
-#include <iostream>
 #include <algorithm>
-#include <cstdio>
 
 #include <utility>
 

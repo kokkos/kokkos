@@ -45,9 +45,7 @@
 #ifndef KOKKOS_CUDA_TEAM_HPP
 #define KOKKOS_CUDA_TEAM_HPP
 
-#include <iostream>
 #include <algorithm>
-#include <stdio.h>
 
 #include <Kokkos_Macros.hpp>
 
