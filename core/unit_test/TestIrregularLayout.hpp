@@ -240,7 +240,7 @@ struct TestLayout {
 
   // set all values
   KOKKOS_INLINE_FUNCTION
-  void operator()(const InitTag&, const int i) const { a(i).update((double)i); }
+  void operator()(const InitTag&, const int i) const { a(i).update(i); }
 
   // update selective values
   KOKKOS_INLINE_FUNCTION
