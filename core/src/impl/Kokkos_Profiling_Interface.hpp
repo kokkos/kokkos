@@ -81,7 +81,7 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
 }  // namespace Tools
 }  // end namespace Kokkos
 
-#if defined(KOKKOS_ENABLE_PROFILING)
+#if defined(KOKKOS_ENABLE_LIBDL)
 // We check at configure time that libdl is available.
 #include <dlfcn.h>
 #endif

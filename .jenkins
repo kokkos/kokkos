@@ -207,7 +207,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
-                                -DKokkos_ENABLE_PROFILING=OFF \
+                                -DKokkos_ENABLE_LIBDL=OFF \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
@@ -238,7 +238,7 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
-                                -DKokkos_ENABLE_PROFILING=OFF \
+                                -DKokkos_ENABLE_LIBDL=OFF \
                               .. && \
                               make -j8 && ctest --output-on-failure && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }

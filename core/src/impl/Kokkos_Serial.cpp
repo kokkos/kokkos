@@ -170,9 +170,7 @@ void Serial::impl_finalize() {
     Impl::g_serial_thread_team_data.scratch_assign(nullptr, 0, 0, 0, 0, 0);
   }
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::finalize();
-#endif
 
   Impl::g_serial_is_initialized = false;
 }

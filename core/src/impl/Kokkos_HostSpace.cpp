@@ -47,9 +47,7 @@
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Tools.hpp>
-#endif
 
 /*--------------------------------------------------------------------------*/
 
@@ -168,23 +166,12 @@ HostSpace::HostSpace(const HostSpace::AllocationMechanism &arg_alloc_mech)
 void *HostSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
-void *HostSpace::allocate(const char *
-#if defined(KOKKOS_ENABLE_PROFILING)
-                              arg_label
-#endif
-                          ,
-                          const size_t arg_alloc_size,
+void *HostSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                           const size_t
 
-#if defined(KOKKOS_ENABLE_PROFILING)
-                              arg_logical_size
-#endif
-                          ) const {
-
-#if defined(KOKKOS_ENABLE_PROFILING)
+                              arg_logical_size) const {
   const size_t reported_size =
       (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-#endif
   static_assert(sizeof(void *) == sizeof(uintptr_t),
                 "Error sizeof(void*) != sizeof(uintptr_t)");
 
@@ -293,13 +280,11 @@ void *HostSpace::allocate(const char *
     throw Kokkos::Experimental::RawMemoryAllocationFailure(
         arg_alloc_size, alignment, failure_mode, alloc_mec);
   }
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
         Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
         reported_size);
   }
-#endif
   return ptr;
 }
 
@@ -308,25 +293,12 @@ void HostSpace::deallocate(void *const arg_alloc_ptr,
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
-void HostSpace::deallocate(const char *
-#if defined(KOKKOS_ENABLE_PROFILING)
-                               arg_label
-#endif
-                           ,
-                           void *const arg_alloc_ptr,
-                           const size_t
-#if defined(KOKKOS_IMPL_POSIX_MMAP_FLAGS) || defined(KOKKOS_ENABLE_PROFILING)
-                               arg_alloc_size
-#endif
-                           ,
+void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
+                           const size_t arg_alloc_size,
                            const size_t
 
-#if defined(KOKKOS_ENABLE_PROFILING)
-                               arg_logical_size
-#endif
-                           ) const {
+                               arg_logical_size) const {
   if (arg_alloc_ptr) {
-#if defined(KOKKOS_ENABLE_PROFILING)
     size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -334,7 +306,6 @@ void HostSpace::deallocate(const char *
           Kokkos::Profiling::make_space_handle(name()), arg_label,
           arg_alloc_ptr, reported_size);
     }
-#endif
     if (m_alloc_mech == STD_MALLOC) {
       void *alloc_ptr = *(reinterpret_cast<void **>(arg_alloc_ptr) - 1);
       free(alloc_ptr);

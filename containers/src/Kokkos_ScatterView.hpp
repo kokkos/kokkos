@@ -593,25 +593,19 @@ struct ReduceDuplicatesBase {
                        size_t stride_in, size_t start_in, size_t n_in,
                        std::string const& name)
       : src(src_in), dst(dest_in), stride(stride_in), start(start_in), n(n_in) {
-#if defined(KOKKOS_ENABLE_PROFILING)
     uint64_t kpID = 0;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
                                           &kpID);
     }
-#else
-    (void)name;
-#endif
     typedef RangePolicy<ExecSpace, size_t> policy_type;
     typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
     const closure_type closure(*(static_cast<Derived*>(this)),
                                policy_type(0, stride));
     closure.execute();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endParallelFor(kpID);
     }
-#endif
   }
 };
 
@@ -645,25 +639,19 @@ struct ResetDuplicatesBase {
   ResetDuplicatesBase(ValueType* data_in, size_t size_in,
                       std::string const& name)
       : data(data_in) {
-#if defined(KOKKOS_ENABLE_PROFILING)
     uint64_t kpID = 0;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
                                           &kpID);
     }
-#else
-    (void)name;
-#endif
     typedef RangePolicy<ExecSpace, size_t> policy_type;
     typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
     const closure_type closure(*(static_cast<Derived*>(this)),
                                policy_type(0, size_in));
     closure.execute();
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::endParallelFor(kpID);
     }
-#endif
   }
 };
 

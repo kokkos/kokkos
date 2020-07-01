@@ -39,7 +39,7 @@ include(FindPackageHandleStandardArgs)
 #   kokkos_check(
 #     [DEVICES <devices>...]   # Set of backends (e.g. "OpenMP" and/or "Cuda")
 #     [ARCH <archs>...]        # Target architectures (e.g. "Power9" and/or "Volta70")
-#     [OPTIONS <options>...]   # Optional settings (e.g. "PROFILING")
+#     [OPTIONS <options>...]   # Optional settings (e.g. "TUNING")
 #     [TPLS <tpls>...]         # Third party libraries
 #     [RETURN_VALUE <result>]  # Set a variable that indicates the result of the
 #                              # check instead of a fatal error

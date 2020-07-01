@@ -52,10 +52,8 @@
 
 #include <utility>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <typeinfo>
-#endif
 
 namespace Kokkos {
 namespace Impl {

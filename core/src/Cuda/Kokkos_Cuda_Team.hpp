@@ -62,10 +62,8 @@
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <Kokkos_Vectorization.hpp>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

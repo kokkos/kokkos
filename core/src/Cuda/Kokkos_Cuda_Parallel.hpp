@@ -63,10 +63,8 @@
 #include <Kokkos_Vectorization.hpp>
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
-#endif
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
