@@ -3,8 +3,7 @@
 // ************************************************************************
 //
 //                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
+//              Copyright (2019) Sandia Corporation
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
@@ -42,40 +41,55 @@
 //@HEADER
 */
 
+/** @file Kokkos_MemorySpace.cpp
+ *
+ *  Operations common to memory space instances, or at least default
+ *  implementations thereof.
+ */
+
+#include <impl/Kokkos_MemorySpace.hpp>
 
 #include <iostream>
+#include <string>
+#include <sstream>
 
-int main() {
-  cudaDeviceProp device_properties;
-  const cudaError_t error = cudaGetDeviceProperties(&device_properties,
-                                                    /*device*/ 0);
-  if (error != cudaSuccess) {
-    std::cout << "CUDA error: " << cudaGetErrorString(error) << '\n';
-    return error;
+namespace Kokkos {
+namespace Impl {
+
+void safe_throw_allocation_with_header_failure(
+    std::string const& space_name, std::string const& label,
+    Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
+  auto generate_failure_message = [&](std::ostream& o) {
+    o << "Kokkos failed to allocate memory for label \"" << label
+      << "\".  Allocation using MemorySpace named \"" << space_name
+      << "\" failed with the following error:  ";
+    failure.print_error_message(o);
+    if (failure.failure_mode() ==
+        Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode::
+            AllocationNotAligned) {
+      // TODO: delete the misaligned memory?
+      o << "Warning: Allocation failed due to misalignment; memory may "
+           "be leaked.\n";
+    }
+    o.flush();
+  };
+  try {
+    std::ostringstream sstr;
+    generate_failure_message(sstr);
+    Kokkos::Impl::throw_runtime_exception(sstr.str());
+  } catch (std::bad_alloc const&) {
+    // Probably failed to allocate the string because we're so close to out
+    // of memory. Try printing to std::cerr instead
+    try {
+      generate_failure_message(std::cerr);
+    } catch (std::bad_alloc const&) {
+      // oh well, we tried...
+    }
+    Kokkos::Impl::throw_runtime_exception(
+        "Kokkos encountered an allocation failure, then another allocation "
+        "failure while trying to create the error message.");
   }
-  unsigned int const compute_capability =
-      device_properties.major * 10 + device_properties.minor;
-#ifdef SM_ONLY
-  std::cout << compute_capability;
-#else
-  switch (compute_capability) {
-    case 30: std::cout << "Set -DKokkos_ARCH_KEPLER30=ON ." << std::endl; break;
-    case 32: std::cout << "Set -DKokkos_ARCH_KEPLER32=ON ." << std::endl; break;
-    case 35: std::cout << "Set -DKokkos_ARCH_KEPLER35=ON ." << std::endl; break;
-    case 37: std::cout << "Set -DKokkos_ARCH_KEPLER37=ON ." << std::endl; break;
-    case 50: std::cout << "Set -DKokkos_ARCH_MAXWELL50=ON ." << std::endl; break;
-    case 52: std::cout << "Set -DKokkos_ARCH_MAXWELL52=ON ." << std::endl; break;
-    case 53: std::cout << "Set -DKokkos_ARCH_MAXWELL53=ON ." << std::endl; break;
-    case 60: std::cout << "Set -DKokkos_ARCH_PASCAL60=ON ." << std::endl; break;
-    case 61: std::cout << "Set -DKokkos_ARCH_PASCAL61=ON ." << std::endl; break;
-    case 70: std::cout << "Set -DKokkos_ARCH_VOLTA70=ON ." << std::endl; break;
-    case 72: std::cout << "Set -DKokkos_ARCH_VOLTA72=ON ." << std::endl; break;
-    case 75: std::cout << "Set -DKokkos_ARCH_TURING75=ON ." << std::endl; break;
-    case 80: std::cout << "Set -DKokkos_ARCH_AMPERE80=ON ." << std::endl; break;
-    default:
-      std::cout << "Compute capability " << compute_capability
-                << " is not supported" << std::endl;
-  }
-#endif
-  return 0;
 }
+
+}  // end namespace Impl
+}  // end namespace Kokkos

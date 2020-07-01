@@ -356,15 +356,7 @@ void initialize_backends(const InitArguments& args) {
 }
 
 void initialize_profiling(const InitArguments&) {
-#if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::initialize();
-#else
-  if (getenv("KOKKOS_PROFILE_LIBRARY") != nullptr) {
-    std::cerr << "Kokkos::initialize() warning: Requested Kokkos Profiling, "
-                 "but Kokkos was built without Profiling support"
-              << std::endl;
-  }
-#endif
 }
 
 void pre_initialize_internal(const InitArguments& args) {
@@ -410,9 +402,7 @@ void finalize_internal(const bool all_spaces = false) {
     ++numSuccessfulCalls;
   }
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::finalize();
-#endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
   if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
@@ -1196,12 +1186,6 @@ void print_configuration(std::ostream& out, const bool detail) {
 #endif
   msg << "  KOKKOS_ENABLE_MPI: ";
 #ifdef KOKKOS_ENABLE_MPI
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_PROFILING: ";
-#ifdef KOKKOS_ENABLE_PROFILING
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;

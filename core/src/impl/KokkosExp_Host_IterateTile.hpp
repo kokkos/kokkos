@@ -57,9 +57,7 @@
 #define KOKKOS_ENABLE_IVDEP_MDRANGE
 #endif
 
-#include <iostream>
 #include <algorithm>
-#include <cstdio>
 
 namespace Kokkos {
 namespace Impl {

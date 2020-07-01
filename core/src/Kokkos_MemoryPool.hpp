@@ -52,6 +52,8 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
+#include <iostream>
+
 namespace Kokkos {
 namespace Impl {
 /* Report violation of size constraints:
@@ -72,6 +74,15 @@ void memory_pool_bounds_verification(size_t min_block_alloc_size,
 }  // namespace Kokkos
 
 namespace Kokkos {
+
+namespace Impl {
+
+void _print_memory_pool_state(std::ostream &s, uint32_t const *sb_state_ptr,
+                              int32_t sb_count, uint32_t sb_size_lg2,
+                              uint32_t sb_state_size, uint32_t state_shift,
+                              uint32_t state_used_mask);
+
+}  // end namespace Impl
 
 template <typename DeviceType>
 class MemoryPool {
@@ -231,24 +242,9 @@ class MemoryPool {
           sb_state_array, m_sb_state_array, alloc_size);
     }
 
-    const uint32_t *sb_state_ptr = sb_state_array;
-
-    s << "pool_size(" << (size_t(m_sb_count) << m_sb_size_lg2) << ")"
-      << " superblock_size(" << (1LU << m_sb_size_lg2) << ")" << std::endl;
-
-    for (int32_t i = 0; i < m_sb_count; ++i, sb_state_ptr += m_sb_state_size) {
-      if (*sb_state_ptr) {
-        const uint32_t block_count_lg2 = (*sb_state_ptr) >> state_shift;
-        const uint32_t block_size_lg2  = m_sb_size_lg2 - block_count_lg2;
-        const uint32_t block_count     = 1u << block_count_lg2;
-        const uint32_t block_used      = (*sb_state_ptr) & state_used_mask;
-
-        s << "Superblock[ " << i << " / " << m_sb_count << " ] {"
-          << " block_size(" << (1 << block_size_lg2) << ")"
-          << " block_count( " << block_used << " / " << block_count << " )"
-          << std::endl;
-      }
-    }
+    Impl::_print_memory_pool_state(s, sb_state_array, m_sb_count, m_sb_size_lg2,
+                                   m_sb_state_size, state_shift,
+                                   state_used_mask);
 
     if (!accessible) {
       host.deallocate(sb_state_array, alloc_size);

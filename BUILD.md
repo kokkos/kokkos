@@ -147,9 +147,6 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
 * Kokkos_ENABLE_LARGE_MEM_TESTS
     * Whether to perform extra large memory tests
     * BOOL_Default: OFF
-* Kokkos_ENABLE_PROFILING
-    * Whether to create bindings for profiling tools
-    * BOOL Default: ON
 * Kokkos_ENABLE_PROFILING_LOAD_PRINT
     * Whether to print information about which profiling tools gotloaded
     * BOOL Default: OFF

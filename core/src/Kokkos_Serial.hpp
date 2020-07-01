@@ -157,14 +157,14 @@ class Serial {
   //--------------------------------------------------------------------------
 };
 
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 template <>
 struct DeviceTypeTraits<Serial> {
   static constexpr DeviceType id = DeviceType::Serial;
 };
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

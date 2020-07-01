@@ -417,9 +417,7 @@ void OpenMP::impl_finalize() {
     Impl::g_openmp_hardware_max_threads = 1;
   }
 
-#if defined(KOKKOS_ENABLE_PROFILING)
   Kokkos::Profiling::finalize();
-#endif
 }
 
 //----------------------------------------------------------------------------

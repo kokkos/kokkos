@@ -48,16 +48,12 @@
 #include <Kokkos_Macros.hpp>
 #if defined(__HIPCC__)
 
-#include <iostream>
 #include <algorithm>
-#include <cstdio>
 
 #include <utility>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <typeinfo>
-#endif
 
 namespace Kokkos {
 namespace Impl {

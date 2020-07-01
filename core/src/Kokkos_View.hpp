@@ -55,9 +55,7 @@
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Tools.hpp>
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

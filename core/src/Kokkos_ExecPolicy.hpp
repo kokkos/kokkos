@@ -51,9 +51,7 @@
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Concepts.hpp>
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <typeinfo>
-#endif  // KOKKOS_ENABLE_PROFILING
 
 //----------------------------------------------------------------------------
 
@@ -842,7 +840,6 @@ KOKKOS_INLINE_FUNCTION_DELETED
     ThreadVectorRange(const TeamMemberType&, const iType& arg_begin,
                       const iType& arg_end) = delete;
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 namespace Impl {
 
 template <typename FunctorType, typename TagType,
@@ -879,7 +876,6 @@ struct ParallelConstructName<FunctorType, TagType, false> {
 };
 
 }  // namespace Impl
-#endif /* defined KOKKOS_ENABLE_PROFILING */
 
 }  // namespace Kokkos
 

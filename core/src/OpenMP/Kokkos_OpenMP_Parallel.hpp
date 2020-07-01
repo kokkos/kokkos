@@ -49,7 +49,6 @@
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 #include <omp.h>
-#include <iostream>
 #include <OpenMP/Kokkos_OpenMP_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 

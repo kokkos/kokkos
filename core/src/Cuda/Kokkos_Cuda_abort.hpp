@@ -64,14 +64,24 @@ extern __device__ void __assertfail(const void *message, const void *file,
 namespace Kokkos {
 namespace Impl {
 
-__device__ inline void cuda_abort(const char *const message) {
-#ifndef __APPLE__
+#if !defined(__APPLE__)
+[[noreturn]] __device__ inline void cuda_abort(const char *const message) {
   const char empty[] = "";
 
   __assertfail((const void *)message, (const void *)empty, (unsigned int)0,
                (const void *)empty, sizeof(char));
-#endif
+
+  // This loop is never executed. It's intended to suppress warnings that the
+  // function returns, even though it does not. This is necessary because
+  // __assertfail is not marked as [[noreturn]], even though it does not return.
+  while (true)
+    ;
 }
+#else
+__device__ inline void cuda_abort(const char *const message) {
+  // __assertfail is not supported on MAC
+}
+#endif
 
 }  // namespace Impl
 }  // namespace Kokkos

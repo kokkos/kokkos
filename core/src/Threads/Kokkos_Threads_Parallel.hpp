@@ -48,9 +48,6 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_THREADS)
 
-#include <vector>
-#include <iostream>
-
 #include <Kokkos_Parallel.hpp>
 
 #include <impl/Kokkos_FunctorAdapter.hpp>

@@ -48,8 +48,8 @@
 #include <Kokkos_Macros.hpp>
 #if defined(__CUDACC__) && defined(KOKKOS_ENABLE_CUDA)
 
-#include <iostream>
 #include <algorithm>
+#include <string>
 #include <cstdio>
 #include <cstdint>
 
@@ -63,10 +63,8 @@
 #include <Kokkos_Vectorization.hpp>
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
-#endif
 
 #include <KokkosExp_MDRangePolicy.hpp>
 

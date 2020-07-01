@@ -47,16 +47,14 @@
 
 #include <cinttypes>
 #include <cstddef>
-#include <string>
 
-#include <iostream>
 #include <cstdlib>
 
 // NOTE: in this Kokkos::Profiling block, do not define anything that shouldn't
 // exist should Profiling be disabled
 
 namespace Kokkos {
-namespace Profiling {
+namespace Tools {
 namespace Experimental {
 enum struct DeviceType {
   Serial,
@@ -78,10 +76,10 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
   return (device_id << instance_bits) + space.impl_instance_id();
 }
 }  // namespace Experimental
-}  // namespace Profiling
+}  // namespace Tools
 }  // end namespace Kokkos
 
-#if defined(KOKKOS_ENABLE_PROFILING)
+#if defined(KOKKOS_ENABLE_LIBDL)
 // We check at configure time that libdl is available.
 #include <dlfcn.h>
 #endif
@@ -90,16 +88,19 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
 #include <impl/Kokkos_Profiling_C_Interface.h>
 
 namespace Kokkos {
-namespace Profiling {
+namespace Tools {
 
 using SpaceHandle = Kokkos_Profiling_SpaceHandle;
 
-}  // end namespace Profiling
+}  // namespace Tools
 
-namespace Profiling {
+namespace Tools {
 
 namespace Experimental {
 using EventSet = Kokkos_Profiling_EventSet;
+static_assert(sizeof(EventSet) / sizeof(function_pointer) == 275,
+              "sizeof EventSet has changed, this is an error on the part of a "
+              "Kokkos developer");
 }  // namespace Experimental
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;
@@ -120,8 +121,76 @@ using profileEventFunction  = Kokkos_Profiling_profileEventFunction;
 using beginDeepCopyFunction = Kokkos_Profiling_beginDeepCopyFunction;
 using endDeepCopyFunction   = Kokkos_Profiling_endDeepCopyFunction;
 
-}  // end namespace Profiling
+}  // namespace Tools
 
 }  // namespace Kokkos
+
+// Profiling
+
+namespace Kokkos {
+
+namespace Profiling {
+
+/** The Profiling namespace is being renamed to Tools.
+ * This is reexposing the contents of what used to be the Profiling
+ * Interface with their original names, to avoid breaking old code
+ */
+
+namespace Experimental {
+
+using Kokkos::Tools::Experimental::device_id;
+using Kokkos::Tools::Experimental::DeviceType;
+using Kokkos::Tools::Experimental::DeviceTypeTraits;
+
+}  // namespace Experimental
+
+using Kokkos::Tools::allocateDataFunction;
+using Kokkos::Tools::beginDeepCopyFunction;
+using Kokkos::Tools::beginFunction;
+using Kokkos::Tools::createProfileSectionFunction;
+using Kokkos::Tools::deallocateDataFunction;
+using Kokkos::Tools::destroyProfileSectionFunction;
+using Kokkos::Tools::endDeepCopyFunction;
+using Kokkos::Tools::endFunction;
+using Kokkos::Tools::finalizeFunction;
+using Kokkos::Tools::initFunction;
+using Kokkos::Tools::popFunction;
+using Kokkos::Tools::profileEventFunction;
+using Kokkos::Tools::pushFunction;
+using Kokkos::Tools::SpaceHandle;
+using Kokkos::Tools::startProfileSectionFunction;
+using Kokkos::Tools::stopProfileSectionFunction;
+
+}  // namespace Profiling
+}  // namespace Kokkos
+
+// Tuning
+
+namespace Kokkos {
+namespace Tools {
+namespace Experimental {
+using ValueSet            = Kokkos_Tools_ValueSet;
+using ValueRange          = Kokkos_Tools_ValueRange;
+using StatisticalCategory = Kokkos_Tools_VariableInfo_StatisticalCategory;
+using ValueType           = Kokkos_Tools_VariableInfo_ValueType;
+using CandidateValueType  = Kokkos_Tools_VariableInfo_CandidateValueType;
+using SetOrRange          = Kokkos_Tools_VariableInfo_SetOrRange;
+using VariableInfo        = Kokkos_Tools_VariableInfo;
+using OptimizationGoal    = Kokkos_Tools_OptimzationGoal;
+using TuningString        = Kokkos_Tools_Tuning_String;
+using VariableValue       = Kokkos_Tools_VariableValue;
+
+using outputTypeDeclarationFunction =
+    Kokkos_Tools_outputTypeDeclarationFunction;
+using inputTypeDeclarationFunction = Kokkos_Tools_inputTypeDeclarationFunction;
+using requestValueFunction         = Kokkos_Tools_requestValueFunction;
+using contextBeginFunction         = Kokkos_Tools_contextBeginFunction;
+using contextEndFunction           = Kokkos_Tools_contextEndFunction;
+using optimizationGoalDeclarationFunction =
+    Kokkos_Tools_optimizationGoalDeclarationFunction;
+}  // end namespace Experimental
+}  // end namespace Tools
+
+}  // end namespace Kokkos
 
 #endif

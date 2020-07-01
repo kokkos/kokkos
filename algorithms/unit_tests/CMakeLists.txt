@@ -23,9 +23,6 @@ KOKKOS_ADD_TEST_LIBRARY(
 
 # avoid deprecation warnings from MSVC
 TARGET_COMPILE_DEFINITIONS(kokkosalgorithms_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_PTHREAD=0)
-IF(Kokkos_ENABLE_HIP)
-  SET_SOURCE_FILES_PROPERTIES(${GTEST_SOURCE_DIR}/gtest/gtest-all.cc COMPILE_FLAGS "--cuda-host-only")
-ENDIF()
 
 IF(NOT (Kokkos_ENABLE_CUDA AND WIN32))
 TARGET_COMPILE_FEATURES(kokkosalgorithms_gtest PUBLIC cxx_std_11)
