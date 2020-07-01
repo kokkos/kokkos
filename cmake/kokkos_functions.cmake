@@ -886,8 +886,8 @@ FUNCTION(kokkos_compilation)
     # find kokkos_launch_compiler
     FIND_PROGRAM(Kokkos_COMPILE_LAUNCHER
         NAMES           kokkos_launch_compiler
-        HINTS           ${PROJECT_BINARY_DIR}
-        PATHS           ${PROJECT_BINARY_DIR}
+        HINTS           ${PROJECT_SOURCE_DIR}
+        PATHS           ${PROJECT_SOURCE_DIR}
         PATH_SUFFIXES   bin)
 
     IF(NOT Kokkos_COMPILE_LAUNCHER)
@@ -896,8 +896,8 @@ FUNCTION(kokkos_compilation)
 
     IF(COMP_GLOBAL)
         # if global, don't bother setting others
-        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER}")
-        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER}")
+        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
+        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
     ELSE()
         FOREACH(_TYPE PROJECT DIRECTORY TARGET SOURCE)
             # make project/subproject scoping easy, e.g. KokkosCompilation(PROJECT) after project(...)
@@ -908,8 +908,8 @@ FUNCTION(kokkos_compilation)
             # set the properties if defined
             IF(COMP_${_TYPE})
                 # MESSAGE(STATUS "Using nvcc_wrapper :: ${_TYPE} :: ${COMP_${_TYPE}}")
-                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER}")
-                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER}")
+                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
+                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
             ENDIF()
         ENDFOREACH()
     ENDIF()

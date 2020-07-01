@@ -23,15 +23,17 @@ IF(Kokkos_ENABLE_CUDA)
   # find kokkos_launch_compiler
   FIND_PROGRAM(Kokkos_COMPILE_LAUNCHER
       NAMES           kokkos_launch_compiler
-      HINTS           ${PROJECT_BINARY_DIR}
-      PATHS           ${PROJECT_BINARY_DIR}
+      HINTS           ${PROJECT_SOURCE_DIR}
+      PATHS           ${PROJECT_SOURCE_DIR}
       PATH_SUFFIXES   bin)
 
-  # check if compiler was set to nvcc_wrapper
-  kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
-  # if launcher was found and not set to nvcc_wrapper, try with launcher
-  IF(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC)
-      kokkos_internal_have_compiler_nvcc(${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER})
+  # if launcher was found, set to launcher. Will handle CMAKE_CXX_COMPILER
+  # being set to either a regular C++ compiler or nvcc_wrapper
+  IF(Kokkos_COMPILE_LAUNCHER)
+      kokkos_internal_have_compiler_nvcc(${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER})
+  ELSE()
+    # check if compiler was set to nvcc_wrapper
+    kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
   ENDIF()
 ENDIF()
 

@@ -1,0 +1,71 @@
+#!/bin/bash -e
+#
+#   This script allows CMAKE_CXX_COMPILER to be a standard
+#   C++ compiler and Kokkos sets RULE_LAUNCH_COMPILE and
+#   RULE_LAUNCH_LINK in CMake so that all compiler and link
+#   commands are prefixed with this script followed by the
+#   C++ compiler. Thus if $1 == $2 then we know the command
+#   was intended for the C++ compiler and we discard both
+#   $1 and $2 and redirect the command to NVCC_WRAPPER.
+#   If $1 != $2 then we know that the command was not intended
+#   for the C++ compiler and we just discard $1 and launch
+#   the original command. Examples of when $2 will not equal
+#   $1 are 'ar', 'cmake', etc. during the linking phase
+#
+
+# if C++ is not passed, someone is probably trying to invoke it directly
+if [ -z "${1}" ]; then
+    echo -e "\n${BASH_SOURCE[0]} was invoked without the C++ compiler as the first argument."
+    echo "This script is not indended to be directly invoked by any mechanism other"
+    echo -e "than through a RULE_LAUNCH_COMPILE or RULE_LAUNCH_LINK property set in CMake\n"
+    exit 1
+fi
+
+# if there aren't two args, this isn't necessarily invalid, just a bit strange
+if [ -z "${2}" ]; then exit 0; fi
+
+# store the expect C++ compiler
+CXX_COMPILER=${1}
+# remove the expected C++ compiler from the arguments
+shift
+
+if [ "${CXX_COMPILER}" != "${1}" ]; then
+    eval $@
+else
+    # nvcc wrapper is always a script. Use this characteristic as a test
+    FILE_TYPE="$(file --brief --mime-type ${1} | awk -F '/' '{print $1}')"
+
+    # handle nvcc_wrapper being passed as C++ compiler
+    if [[ "$(basename ${1})" != "nvcc_wrapper" || "${FILE_TYPE}" != "text" ]]; then
+        # find the nvcc_wrapper from the same build/install
+        LOCAL_NVCC_WRAPPER="$(dirname ${BASH_SOURCE[0]})/nvcc_wrapper"
+
+        # find the nvcc_wrapper in the path
+        : ${BIN_NVCC_WRAPPER:-"$(which nvcc_wrapper)"}
+
+        # the nvcc_wrapper to be used if not specified in env
+        : ${NVCC_WRAPPER:=${BIN_NVCC_WRAPPER:-"${LOCAL_NVCC_WRAPPER}"}}
+
+        if [ -z "${NVCC_WRAPPER}" ]; then
+            echo "\nError: nvcc_wrapper not found. Please specify NVCC_WRAPPER or add it to PATH\n"
+            exit 1
+        fi
+
+        # set default nvcc wrapper compiler if not specified
+        : ${NVCC_WRAPPER_DEFAULT_COMPILER:=${CXX_COMPILER}}
+        export NVCC_WRAPPER_DEFAULT_COMPILER
+    else
+        : ${NVCC_WRAPPER:=${1}}
+    fi
+
+    # calls itself
+    if [ "${NVCC_WRAPPER}" = "${NVCC_WRAPPER_DEFAULT_COMPILER}" ]; then
+        echo -e "\nError: NVCC_WRAPPER == NVCC_WRAPPER_DEFAULT_COMPILER. Terminating to avoid infinite loop!\n"
+        exit 1
+    fi
+
+    # discard the compiler from the command
+    shift
+    # execute nvcc_wrapper
+    ${NVCC_WRAPPER} $@
+fi

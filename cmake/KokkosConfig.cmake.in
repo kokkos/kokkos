@@ -12,3 +12,10 @@ GET_FILENAME_COMPONENT(Kokkos_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 INCLUDE("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
 INCLUDE("${Kokkos_CMAKE_DIR}/KokkosConfigCommon.cmake")
 UNSET(Kokkos_CMAKE_DIR)
+
+# if CUDA was enabled and separable compilation was specified, e.g.
+#   find_package(Kokkos COMPONENTS separable_compilation)
+# then we set the RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK
+IF(@Kokkos_ENABLE_CUDA@ AND NOT "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
+    kokkos_compilation(GLOBAL)
+ENDIF()

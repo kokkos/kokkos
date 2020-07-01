@@ -96,9 +96,6 @@ IF(NOT KOKKOS_HAS_TRILINOS)
           FORCE)
     ENDIF()
   ENDIF()
-  set(Kokkos_NVCC_WRAPPER ${PROJECT_SOURCE_DIR}/bin/nvcc_wrapper)
-  CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/kokkos_launch_compiler.in
-    ${PROJECT_BINARY_DIR}/bin/kokkos_launch_compiler @ONLY)
 ENDIF()
 
 IF (NOT CMAKE_SIZEOF_VOID_P)
@@ -276,14 +273,8 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 # If the argument of DESTINATION is a relative path, CMake computes it
 # as relative to ${CMAKE_INSTALL_PATH}.
 INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-# set to CWD
-SET(Kokkos_NVCC_WRAPPER "\$(dirname \${BASH_SOURCE[0]})/nvcc_wrapper")
-# configure the install-tree kokkos_launch_compiler
-CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/cmake/kokkos_launch_compiler.in
-    ${PROJECT_BINARY_DIR}/install/bin/kokkos_launch_compiler @ONLY)
 # kokkos_launch_compiler is used by Kokkos to prefix compiler commands so that they forward to nvcc_wrapper
-INSTALL(PROGRAMS ${PROJECT_BINARY_DIR}/install/kokkos_launch_compiler DESTINATION ${CMAKE_INSTALL_BINDIR})
+INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/kokkos_launch_compiler DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 #  Finally - if we are a subproject - make sure the enabled devices are visible
 IF (HAS_PARENT)
