@@ -631,7 +631,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::complete(
         if (task_root_type::Aggregate != vx.m_task_type) {
           schedule_runnable(x);
         } else {
-#if !defined(__HCC_ACCELERATOR__)
+#if !defined(__HIP_DEVICE_COMPILE__)
           schedule_aggregate(x);
 #endif
         }
