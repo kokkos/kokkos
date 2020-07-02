@@ -32,33 +32,25 @@ shift
 if [ "${CXX_COMPILER}" != "${1}" ]; then
     eval $@
 else
-    # nvcc wrapper is always a script. Use this characteristic as a test
-    FILE_TYPE="$(file --brief --mime-type ${1} | awk -F '/' '{print $1}')"
+    # find the nvcc_wrapper from the same build/install
+    LOCAL_NVCC_WRAPPER="$(dirname ${BASH_SOURCE[0]})/nvcc_wrapper"
 
-    # handle nvcc_wrapper being passed as C++ compiler
-    if [[ "$(basename ${1})" != "nvcc_wrapper" || "${FILE_TYPE}" != "text" ]]; then
-        # find the nvcc_wrapper from the same build/install
-        LOCAL_NVCC_WRAPPER="$(dirname ${BASH_SOURCE[0]})/nvcc_wrapper"
+    # find the nvcc_wrapper in the path
+    : ${BIN_NVCC_WRAPPER:-"$(which nvcc_wrapper)"}
 
-        # find the nvcc_wrapper in the path
-        : ${BIN_NVCC_WRAPPER:-"$(which nvcc_wrapper)"}
+    # the nvcc_wrapper to be used if not specified in env
+    : ${NVCC_WRAPPER:=${BIN_NVCC_WRAPPER:-"${LOCAL_NVCC_WRAPPER}"}}
 
-        # the nvcc_wrapper to be used if not specified in env
-        : ${NVCC_WRAPPER:=${BIN_NVCC_WRAPPER:-"${LOCAL_NVCC_WRAPPER}"}}
-
-        if [ -z "${NVCC_WRAPPER}" ]; then
-            echo "\nError: nvcc_wrapper not found. Please specify NVCC_WRAPPER or add it to PATH\n"
-            exit 1
-        fi
-
-        # set default nvcc wrapper compiler if not specified
-        : ${NVCC_WRAPPER_DEFAULT_COMPILER:=${CXX_COMPILER}}
-        export NVCC_WRAPPER_DEFAULT_COMPILER
-    else
-        : ${NVCC_WRAPPER:=${1}}
+    if [ -z "${NVCC_WRAPPER}" ]; then
+        echo "\nError: nvcc_wrapper not found. Please specify NVCC_WRAPPER or add it to PATH\n"
+        exit 1
     fi
 
-    # calls itself
+    # set default nvcc wrapper compiler if not specified
+    : ${NVCC_WRAPPER_DEFAULT_COMPILER:=${CXX_COMPILER}}
+    export NVCC_WRAPPER_DEFAULT_COMPILER
+
+    # calling itself will cause an infinitely long build
     if [ "${NVCC_WRAPPER}" = "${NVCC_WRAPPER_DEFAULT_COMPILER}" ]; then
         echo -e "\nError: NVCC_WRAPPER == NVCC_WRAPPER_DEFAULT_COMPILER. Terminating to avoid infinite loop!\n"
         exit 1

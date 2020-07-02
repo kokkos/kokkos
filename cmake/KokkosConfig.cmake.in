@@ -17,5 +17,11 @@ UNSET(Kokkos_CMAKE_DIR)
 #   find_package(Kokkos COMPONENTS separable_compilation)
 # then we set the RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK
 IF(@Kokkos_ENABLE_CUDA@ AND NOT "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
-    kokkos_compilation(GLOBAL)
+    # run test to see if CMAKE_CXX_COMPILER=nvcc_wrapper
+    kokkos_compiler_is_nvcc(IS_NVCC ${CMAKE_CXX_COMPILER})
+    # if not not nvcc_wrapper, use RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK
+    IF(NOT IS_NVCC AND (NOT DEFINED Kokkos_LAUNCH_COMPILER OR Kokkos_LAUNCH_COMPILER))
+        kokkos_compilation(GLOBAL)
+    ENDIF()
+    UNSET(IS_NVCC) # be mindful of the environment, pollution is bad
 ENDIF()

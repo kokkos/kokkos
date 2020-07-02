@@ -27,13 +27,17 @@ IF(Kokkos_ENABLE_CUDA)
       PATHS           ${PROJECT_SOURCE_DIR}
       PATH_SUFFIXES   bin)
 
-  # if launcher was found, set to launcher. Will handle CMAKE_CXX_COMPILER
-  # being set to either a regular C++ compiler or nvcc_wrapper
-  IF(Kokkos_COMPILE_LAUNCHER)
-      kokkos_internal_have_compiler_nvcc(${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER})
-  ELSE()
-    # check if compiler was set to nvcc_wrapper
-    kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
+  # check if compiler was set to nvcc_wrapper
+  kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
+  # if launcher was found and nvcc_wrapper was not specified as
+  # compiler, set to use launcher. Will ensure CMAKE_CXX_COMPILER
+  # is replaced by nvcc_wrapper
+  IF(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC)
+    # the first argument to launcher is always the C++ compiler defined by cmake
+    # if the second argument matches the C++ compiler, it forwards the rest of the
+    # args to nvcc_wrapper
+    kokkos_internal_have_compiler_nvcc(${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER})
+    SET(INTERNAL_USE_COMPILER_LAUNCHER true)
   ENDIF()
 ENDIF()
 
@@ -49,6 +53,35 @@ IF(INTERNAL_HAVE_COMPILER_NVCC)
   STRING(SUBSTRING ${TEMP_CXX_COMPILER_VERSION} 1 -1 TEMP_CXX_COMPILER_VERSION)
   SET(KOKKOS_CXX_COMPILER_VERSION ${TEMP_CXX_COMPILER_VERSION} CACHE STRING INTERNAL FORCE)
   MESSAGE(STATUS "Compiler Version: ${KOKKOS_CXX_COMPILER_VERSION}")
+  IF(INTERNAL_USE_COMPILER_LAUNCHER)
+    IF(Kokkos_LAUNCH_COMPILER_INFO)
+        GET_FILENAME_COMPONENT(BASE_COMPILER_NAME ${CMAKE_CXX_COMPILER} NAME)
+        # does not have STATUS intentionally
+        MESSAGE("")
+        MESSAGE("Kokkos_LAUNCH_COMPILER_INFO (${Kokkos_COMPILE_LAUNCHER}):")
+        MESSAGE("  - Kokkos + CUDA backend requires the C++ files to be compiled as CUDA code.")
+        MESSAGE("  - kokkos_launch_compiler permits CMAKE_CXX_COMPILER to be set to a traditional C++ compiler when Kokkos_ENABLE_CUDA=ON")
+        MESSAGE("    by prefixing all the compile and link commands with the path to the script + CMAKE_CXX_COMPILER (${CMAKE_CXX_COMPILER}).")
+        MESSAGE("  - If any of the compile or link commands have CMAKE_CXX_COMPILER as the first argument, it replaces CMAKE_CXX_COMPILER with nvcc_wrapper.")
+        MESSAGE("  - If the compile or link command is not CMAKE_CXX_COMPILER, it just executes the command.")
+        MESSAGE("  - If using ccache, set CMAKE_CXX_COMPILER to nvcc_wrapper explicitly.")
+        MESSAGE("  - kokkos_compiler_launcher is available to downstream projects as well.")
+        MESSAGE("    - If CMAKE_CXX_COMPILER=nvcc_wrapper, all legacy behavior will be preserved during 'find_package(Kokkos)'")
+        MESSAGE("    - If CMAKE_CXX_COMPILER is not nvcc_wrapper, 'find_package(Kokkos)' will apply 'kokkos_compilation(GLOBAL)' unless separable compilation is enabled")
+        MESSAGE("      - This can be disabled via '-DKokkos_LAUNCH_COMPILER=OFF'")
+        MESSAGE("    - Use 'find_package(Kokkos COMPONENTS separable_compilation)' to enable separable compilation")
+        MESSAGE("      - Separable compilation allows you to control the scope of where the compiler transformation behavior (${BASE_COMPILER_NAME} -> nvcc_wrapper) is applied")
+        MESSAGE("      - The compiler transformation can be applied on a per-project, per-directory, per-target, and/or per-source-file basis")
+        MESSAGE("        - 'kokkos_compilation(PROJECT)' will apply the compiler transformation to all targets in a project/subproject")
+        MESSAGE("        - 'kokkos_compilation(TARGET <TARGET> [<TARGETS>...])' will apply the compiler transformation to the specified target(s)")
+        MESSAGE("        - 'kokkos_compilation(SOURCE <SOURCE> [<SOURCES>...])' will apply the compiler transformation to the specified source file(s)")
+        MESSAGE("        - 'kokkos_compilation(DIRECTORY <DIR> [<DIRS>...])' will apply the compiler transformation to the specified directories")
+        MESSAGE("")
+    ELSE()
+        MESSAGE(STATUS "kokkos_launch_compiler (${Kokkos_COMPILE_LAUNCHER}) is enabled... Set Kokkos_LAUNCH_COMPILER_INFO=ON for more info.")
+    ENDIF()
+    kokkos_compilation(GLOBAL)
+  ENDIF()
 ENDIF()
 
 IF(Kokkos_ENABLE_HIP)
