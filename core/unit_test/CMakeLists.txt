@@ -80,6 +80,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       ${dir}/Test${Tag}_AtomicOperations_complexfloat.cpp
       ${dir}/Test${Tag}_AtomicViews.cpp
       ${dir}/Test${Tag}_Atomics.cpp
+      ${dir}/Test${Tag}_BlockSizeDeduction.cpp
       ${dir}/Test${Tag}_Concepts.cpp
       ${dir}/Test${Tag}_Complex.cpp
       ${dir}/Test${Tag}_Crs.cpp
@@ -299,7 +300,6 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCuda_Spaces.cpp
       cuda/TestCuda_DebugSerialExecution.cpp
       cuda/TestCuda_DebugPinUVMSpace.cpp
-      cuda/TestCuda_BlockSizeDeduction.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
