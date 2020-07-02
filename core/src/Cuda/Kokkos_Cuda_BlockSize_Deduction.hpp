@@ -62,43 +62,19 @@ inline int cuda_max_active_blocks_per_sm(cudaDeviceProp const& properties,
   int const max_blocks_regs = regs_per_sm / (regs_per_thread * block_size);
 
   // Limits due to shared memory/SM
-  size_t const shmem_per_sm    = properties.sharedMemPerMultiprocessor;
-  size_t const shmem_per_block = properties.sharedMemPerBlock;
-  size_t const static_shmem    = attributes.sharedSizeBytes;
-  // Temporarily commented since was not used previously in block size deduction
-  // size_t const dynamic_shmem_per_block =
-  // attributes.maxDynamicSharedSizeBytes;
-  size_t const total_shmem = static_shmem + dynamic_shmem;
+  size_t const shmem_per_sm            = properties.sharedMemPerMultiprocessor;
+  size_t const shmem_per_block         = properties.sharedMemPerBlock;
+  size_t const static_shmem            = attributes.sharedSizeBytes;
+  size_t const dynamic_shmem_per_block = attributes.maxDynamicSharedSizeBytes;
+  size_t const total_shmem             = static_shmem + dynamic_shmem;
 
   int const max_blocks_shmem =
-      total_shmem > shmem_per_block
-          //      total_shmem > shmem_per_block || dynamic_shmem >
-          //      dynamic_shmem_per_block
+      total_shmem > shmem_per_block || dynamic_shmem > dynamic_shmem_per_block
           ? 0
           : (total_shmem > 0 ? (int)shmem_per_sm / total_shmem
                              : max_blocks_regs);
 
-  // Overall occupancy in blocks
-  return std::min(max_blocks_regs, max_blocks_shmem);
-}
-
-template <typename UnaryFunction, typename LaunchBounds>
-inline int cuda_deduce_block_size(bool early_termination,
-                                  cudaDeviceProp const& properties,
-                                  cudaFuncAttributes const& attributes,
-                                  UnaryFunction block_size_to_dynamic_shmem,
-                                  LaunchBounds) {
-  // Limits
-  int const max_threads_per_sm = properties.maxThreadsPerMultiProcessor;
-  // unsure if I need to do that or if this is already accounted for in the
-  // functor attributes
-  int const max_threads_per_block =
-      std::min(LaunchBounds::maxTperB == 0 ? (int)properties.maxThreadsPerBlock
-                                           : (int)LaunchBounds::maxTperB,
-               attributes.maxThreadsPerBlock);
-  int const min_blocks_per_sm =
-      LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
-
+  // Limits due to blocks/SM
 #if CUDA_VERSION >= 11000
   int const max_blocks_per_sm = properties.maxBlocksPerMultiProcessor;
 #else
@@ -118,6 +94,27 @@ inline int cuda_deduce_block_size(bool early_termination,
   }();
 #endif
 
+  // Overall occupancy in blocks
+  return std::min({max_blocks_regs, max_blocks_shmem, max_blocks_per_sm});
+}
+
+template <typename UnaryFunction, typename LaunchBounds>
+inline int cuda_deduce_block_size(bool early_termination,
+                                  cudaDeviceProp const& properties,
+                                  cudaFuncAttributes const& attributes,
+                                  UnaryFunction block_size_to_dynamic_shmem,
+                                  LaunchBounds) {
+  // Limits
+  int const max_threads_per_sm = properties.maxThreadsPerMultiProcessor;
+  // unsure if I need to do that or if this is already accounted for in the
+  // functor attributes
+  int const max_threads_per_block =
+      std::min(LaunchBounds::maxTperB == 0 ? (int)properties.maxThreadsPerBlock
+                                           : (int)LaunchBounds::maxTperB,
+               attributes.maxThreadsPerBlock);
+  int const min_blocks_per_sm =
+      LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
+
   // Recorded maximum
   int opt_block_size     = 0;
   int opt_threads_per_sm = 0;
@@ -136,8 +133,7 @@ inline int cuda_deduce_block_size(bool early_termination,
       threads_per_sm = blocks_per_sm * block_size;
     }
 
-    if (blocks_per_sm >= min_blocks_per_sm &&
-        blocks_per_sm <= max_blocks_per_sm) {
+    if (blocks_per_sm >= min_blocks_per_sm) {
       if (threads_per_sm >= opt_threads_per_sm) {
         opt_block_size     = block_size;
         opt_threads_per_sm = threads_per_sm;
