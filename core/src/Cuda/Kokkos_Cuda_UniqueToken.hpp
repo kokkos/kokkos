@@ -94,7 +94,7 @@ class UniqueToken<Cuda, UniqueTokenScope::Global> {
 
     if (result.first < 0) {
       Kokkos::abort(
-          "UniqueToken<Cuda> failure to release tokens, no tokens available");
+          "UniqueToken<Cuda> failure to acquire tokens, no tokens available");
     }
 
     return result.first;

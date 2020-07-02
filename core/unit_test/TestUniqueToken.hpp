@@ -193,7 +193,9 @@ class TestAcquireTeamUniqueToken {
         errors("TestAcquireTeamUniqueTokenErrors", 1) {}
 
   static void run() {
-    const int team_size = std::min(2, execution_space::concurrency());
+    const int max_team_size = team_policy_type(1, 1).team_size_max(
+        TestAcquireTeamUniqueToken(1), Kokkos::ParallelForTag());
+    const int team_size = std::min(2, max_team_size);
     TestAcquireTeamUniqueToken self(team_size);
 
     {

@@ -279,7 +279,7 @@ class UniqueToken<OpenMP, UniqueTokenScope::Instance> {
 
     if (result.first < 0) {
       ::Kokkos::abort(
-          "UniqueToken<OpenMP> failure to release tokens, no tokens available");
+          "UniqueToken<OpenMP> failure to acquire tokens, no tokens available");
     }
 
     return result.first;

@@ -130,7 +130,7 @@ class AcquireUniqueToken {
 
   KOKKOS_FUNCTION ~AcquireUniqueToken() { my_token.release(my_acquired_val); }
 
-  KOKKOS_INLINE_FUNCTION size_type value() const { return my_acquired_val; }
+  KOKKOS_FUNCTION size_type value() const { return my_acquired_val; }
 };
 
 /// \brief RAII helper for per-team unique token values.
@@ -142,8 +142,8 @@ template <typename TeamPolicy>
 class AcquireTeamUniqueToken {
  public:
   using exec_space       = typename TeamPolicy::execution_space;
-  using size_type        = typename exec_space::size_type;
   using token_type       = UniqueToken<exec_space>;
+  using size_type        = typename token_type::size_type;
   using team_member_type = typename TeamPolicy::member_type;
   using scratch_view =
       Kokkos::View<size_type, typename exec_space::scratch_memory_space,
@@ -158,7 +158,7 @@ class AcquireTeamUniqueToken {
  public:
   KOKKOS_FUNCTION AcquireTeamUniqueToken(token_type t, team_member_type team);
   KOKKOS_FUNCTION ~AcquireTeamUniqueToken();
-  KOKKOS_INLINE_FUNCTION size_type value() const { return my_acquired_val; }
+  KOKKOS_FUNCTION size_type value() const { return my_acquired_val; }
   static std::size_t shmem_size() { return scratch_view::shmem_size(); }
 };
 
