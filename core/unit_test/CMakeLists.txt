@@ -299,6 +299,7 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCuda_Spaces.cpp
       cuda/TestCuda_DebugSerialExecution.cpp
       cuda/TestCuda_DebugPinUVMSpace.cpp
+      cuda/TestCuda_BlockSizeDeduction.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
