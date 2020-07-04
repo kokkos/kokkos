@@ -244,6 +244,55 @@ pipeline {
                         }
                     }
                 }
+                stage('CUDA-11.0-NVCC-C++17-RDC-KCL') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:11.0-devel-rc --build-arg ADDITIONAL_PACKAGES="g++-8" --build-arg CMAKE_VERSION=3.17.3'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    environment {
+                        OMP_NUM_THREADS = 8
+                        OMP_PLACES = 'threads'
+                        OMP_PROC_BIND = 'spread'
+                        NVCC_WRAPPER_DEFAULT_COMPILER = 'g++-8'
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf install && mkdir -p install && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_OPENMP=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=OFF \
+                                -DKokkos_ENABLE_CUDA_UVM=ON \
+                                -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
+                                -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
+                              .. && \
+                              make -j8 install && \
+                              cd .. && \
+                              rm -rf build-tests && mkdir -p build-tests && cd build-tests && \
+                              export CMAKE_PREFIX_PATH=${PWD}/../install && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_INSTALL_TESTING=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
                 stage('CUDA-10.1-NVCC-DEBUG') {
                     agent {
                         dockerfile {
@@ -275,6 +324,37 @@ pipeline {
                               cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=14 .. && make -j8 && ctest --output-on-failure'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
+                stage('CUDA-10.1-NVCC-DEBUG-KCL') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel --build-arg CMAKE_VERSION=3.15.5'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    steps {
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEBUG=ON \
+                                -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ENABLE_LIBDL=OFF \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
