@@ -51,9 +51,7 @@
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
-#ifdef KOKKOS_COMPILER_INTEL
 #define KOKKOS_IMPL_MDRANGE_USE_NO_TILES
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
