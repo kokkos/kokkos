@@ -2853,12 +2853,12 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
   ViewValueFunctor& operator=(const ViewValueFunctor&) = default;
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
-                   size_t const arg_n, const std::string& arg_name)
+                   size_t const arg_n, std::string arg_name)
       : space(arg_space),
         ptr(arg_ptr),
         n(arg_n),
         destroy(false),
-        name(arg_name) {}
+        name(std::move(arg_name)) {}
 
   void execute(bool arg) {
     destroy = arg;
@@ -2911,8 +2911,8 @@ struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
   ViewValueFunctor& operator=(const ViewValueFunctor&) = default;
 
   ViewValueFunctor(ExecSpace const& arg_space, ValueType* const arg_ptr,
-                   size_t const arg_n, const std::string& arg_name)
-      : space(arg_space), ptr(arg_ptr), n(arg_n), name(arg_name) {}
+                   size_t const arg_n, std::string arg_name)
+      : space(arg_space), ptr(arg_ptr), n(arg_n), name(std::move(arg_name)) {}
 
   void construct_shared_allocation() {
     if (!space.in_parallel()) {
