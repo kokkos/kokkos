@@ -55,7 +55,7 @@ namespace Experimental {
 // both global and instance Unique Tokens are implemented in the same way
 template <>
 class UniqueToken<HIP, UniqueTokenScope::Global> {
- private:
+ protected:
   uint32_t volatile* m_buffer;
   uint32_t m_count;
 
@@ -108,9 +108,19 @@ class UniqueToken<HIP, UniqueTokenScope::Global> {
 template <>
 class UniqueToken<HIP, UniqueTokenScope::Instance>
     : public UniqueToken<HIP, UniqueTokenScope::Global> {
+  View<uint32_t*, HIPSpace> m_buffer_view;
+
  public:
   explicit UniqueToken(execution_space const& arg = execution_space())
       : UniqueToken<HIP, UniqueTokenScope::Global>(arg) {}
+
+  UniqueToken(size_type max_size, execution_space const& = execution_space())
+      : m_buffer_view(
+            "UniqueToken::m_buffer_view",
+            ::Kokkos::Impl::concurrent_bitset::buffer_bound(max_size)) {
+    m_buffer = m_buffer_view.data();
+    m_count  = max_size;
+  }
 };
 
 }  // namespace Experimental
