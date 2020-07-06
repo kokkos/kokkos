@@ -199,6 +199,8 @@
 
 #if defined(__INTEL_COMPILER)
 #define KOKKOS_COMPILER_INTEL __INTEL_COMPILER
+#elif defined(__INTEL_LLVM_COMPILER)
+#define KOKKOS_COMPILER_INTEL __INTEL_LLVM_COMPILER
 #elif defined(__ICC)
 // Old define
 #define KOKKOS_COMPILER_INTEL __ICC
