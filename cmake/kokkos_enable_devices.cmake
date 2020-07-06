@@ -68,8 +68,13 @@ ENDIF()
 
 KOKKOS_DEVICE_OPTION(OPENMPTARGET OFF DEVICE "Whether to build the OpenMP target backend")
 IF (KOKKOS_ENABLE_OPENMPTARGET)
+SET(ClangOpenMPFlag -fopenmp=libomp)
+  IF(KOKKOS_CLANG_IS_CRAY)
+    SET(ClangOpenMPFlag -fopenmp)
+  ENDIF()
+
   COMPILER_SPECIFIC_FLAGS(
-    Clang      -fopenmp -fopenmp=libomp
+    Clang      ${ClangOpenMPFlag}
     XL         -qsmp=omp -qoffload -qnoeh
     DEFAULT    -fopenmp
   )
