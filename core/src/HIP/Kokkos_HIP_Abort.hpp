@@ -55,7 +55,9 @@ namespace Impl {
 
 [[noreturn]] __device__ __attribute__((noinline)) void hip_abort(
     char const *msg) {
-#ifndef NDEBUG
+#ifdef NDEBUG
+  (void)msg;
+#else
   // disable printf on release builds, as it has a non-trivial performance
   // impact
   printf("Aborting with message `%s'.\n", msg);
