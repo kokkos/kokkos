@@ -61,6 +61,8 @@ template <class Reducer>
 struct OpenMPTargetReducerWrapper {
   typedef typename Reducer::value_type value_type;
 
+  // This pragma omp declare target should not be necessary, but Intel compiler fails without it
+  #pragma omp declare target
   KOKKOS_INLINE_FUNCTION
   static void join(value_type&, const value_type&) {
     printf(
@@ -81,6 +83,7 @@ struct OpenMPTargetReducerWrapper {
         "Using a generic unknown Reducer for the OpenMPTarget backend is not "
         "implemented.");
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Space>
@@ -89,6 +92,7 @@ struct OpenMPTargetReducerWrapper<Sum<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) { dest += src; }
@@ -102,6 +106,7 @@ struct OpenMPTargetReducerWrapper<Sum<Scalar, Space>> {
   static void init(value_type& val) {
     val = reduction_identity<value_type>::sum();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Space>
@@ -110,6 +115,7 @@ struct OpenMPTargetReducerWrapper<Prod<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) { dest *= src; }
@@ -123,6 +129,7 @@ struct OpenMPTargetReducerWrapper<Prod<Scalar, Space>> {
   static void init(value_type& val) {
     val = reduction_identity<value_type>::prod();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Space>
@@ -131,6 +138,7 @@ struct OpenMPTargetReducerWrapper<Min<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -146,6 +154,7 @@ struct OpenMPTargetReducerWrapper<Min<Scalar, Space>> {
   static void init(value_type& val) {
     val = reduction_identity<value_type>::min();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Space>
@@ -154,6 +163,7 @@ struct OpenMPTargetReducerWrapper<Max<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -170,6 +180,7 @@ struct OpenMPTargetReducerWrapper<Max<Scalar, Space>> {
   static void init(value_type& val) {
     val = reduction_identity<value_type>::max();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Space>
@@ -178,6 +189,7 @@ struct OpenMPTargetReducerWrapper<LAnd<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+  #pragma omp declare target
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
     dest = dest && src;
@@ -192,6 +204,7 @@ struct OpenMPTargetReducerWrapper<LAnd<Scalar, Space>> {
   static void init(value_type& val) {
     val = reduction_identity<value_type>::land();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Space>
@@ -202,6 +215,7 @@ struct OpenMPTargetReducerWrapper<LOr<Scalar, Space>> {
 
   typedef Kokkos::View<value_type, Space> result_view_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -217,6 +231,7 @@ struct OpenMPTargetReducerWrapper<LOr<Scalar, Space>> {
   static void init(value_type& val) {
     val = reduction_identity<value_type>::lor();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Space>
@@ -225,6 +240,7 @@ struct OpenMPTargetReducerWrapper<BAnd<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -240,6 +256,7 @@ struct OpenMPTargetReducerWrapper<BAnd<Scalar, Space>> {
   static void init(value_type& val) {
     val = reduction_identity<value_type>::band();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Space>
@@ -248,6 +265,7 @@ struct OpenMPTargetReducerWrapper<BOr<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -263,6 +281,7 @@ struct OpenMPTargetReducerWrapper<BOr<Scalar, Space>> {
   static void init(value_type& val) {
     val = reduction_identity<value_type>::bor();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Index, class Space>
@@ -275,6 +294,7 @@ struct OpenMPTargetReducerWrapper<MinLoc<Scalar, Index, Space>> {
   // Required
   typedef ValLocScalar<scalar_type, index_type> value_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -291,6 +311,7 @@ struct OpenMPTargetReducerWrapper<MinLoc<Scalar, Index, Space>> {
     val.val = reduction_identity<scalar_type>::min();
     val.loc = reduction_identity<index_type>::min();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Index, class Space>
@@ -303,6 +324,7 @@ struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
   // Required
   typedef ValLocScalar<scalar_type, index_type> value_type;
 
+  #pragma omp declare target
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
     if (src.val > dest.val) dest = src;
@@ -318,6 +340,7 @@ struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
     val.val = reduction_identity<scalar_type>::max();
     val.loc = reduction_identity<index_type>::min();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Space>
@@ -329,6 +352,7 @@ struct OpenMPTargetReducerWrapper<MinMax<Scalar, Space>> {
   // Required
   typedef MinMaxScalar<scalar_type> value_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -355,6 +379,7 @@ struct OpenMPTargetReducerWrapper<MinMax<Scalar, Space>> {
     val.max_val = reduction_identity<scalar_type>::max();
     val.min_val = reduction_identity<scalar_type>::min();
   }
+  #pragma omp end declare target
 };
 
 template <class Scalar, class Index, class Space>
@@ -367,6 +392,7 @@ struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
   // Required
   typedef MinMaxLocScalar<scalar_type, index_type> value_type;
 
+  #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -399,6 +425,7 @@ struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
     val.max_loc = reduction_identity<index_type>::min();
     val.min_loc = reduction_identity<index_type>::min();
   }
+  #pragma omp end declare target
 };
 /*
 template<class ReducerType>
@@ -602,7 +629,6 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
     map(tofrom: result) reduction(custom: result)
     for (int i = begin; i < end; i++) f(i, result);
     // clang-format on
-
     *result_ptr = result;
   }
 
