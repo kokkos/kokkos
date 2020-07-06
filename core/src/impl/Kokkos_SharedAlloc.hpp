@@ -48,6 +48,12 @@
 #include <cstdint>
 #include <string>
 
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ENABLE_CXX17)
+#define KOKKOS_IMPL_IF_ON_HOST if constexpr ( omp_is_initial_device() == true )
+#else
+#define KOKKOS_IMPL_IF_ON_HOST if (true)
+#endif
+
 namespace Kokkos {
 namespace Impl {
 
@@ -127,17 +133,17 @@ class SharedAllocationRecord<void, void> {
 #endif
 
   KOKKOS_IMPL_HOST_FUNCTION
-  static int tracking_enabled() { return t_tracking_enabled; }
+  static int tracking_enabled() { KOKKOS_IMPL_IF_ON_HOST { return t_tracking_enabled; } else { return 0; } }
 
   /**\brief A host process thread claims and disables the
    *        shared allocation tracking flag.
    */
-  static void tracking_disable() { t_tracking_enabled = 0; }
+  static void tracking_disable() { KOKKOS_IMPL_IF_ON_HOST { t_tracking_enabled = 0; } }
 
   /**\brief A host process thread releases and enables the
    *        shared allocation tracking flag.
    */
-  static void tracking_enable() { t_tracking_enabled = 1; }
+  static void tracking_enable() { KOKKOS_IMPL_IF_ON_HOST { t_tracking_enabled = 1; } }
 
   virtual ~SharedAllocationRecord() = default;
 
@@ -306,21 +312,21 @@ union SharedAllocationTracker {
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT \
   if (KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION)  \
-    Record::increment(m_record);
+    KOKKOS_IMPL_IF_ON_HOST Record::increment(m_record);
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT \
   if (KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_CONDITION)  \
-    Record::decrement(m_record);
+    KOKKOS_IMPL_IF_ON_HOST Record::decrement(m_record);
 
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_ENABLED Record::tracking_enabled()
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_INCREMENT \
-  if (!(m_record_bits & DO_NOT_DEREF_FLAG)) Record::increment(m_record);
+  if (!(m_record_bits & DO_NOT_DEREF_FLAG)) KOKKOS_IMPL_IF_ON_HOST Record::increment(m_record);
 
 #define KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT \
-  if (!(m_record_bits & DO_NOT_DEREF_FLAG)) Record::decrement(m_record);
+  if (!(m_record_bits & DO_NOT_DEREF_FLAG)) KOKKOS_IMPL_IF_ON_HOST Record::decrement(m_record);
 
 #else
 
