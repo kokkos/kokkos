@@ -42,18 +42,20 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda_Category.hpp>
+#include <hip/TestHIP_Category.hpp>
 #include <Test_InterOp_Streams.hpp>
 
 namespace Test {
-// Test Interoperability with Cuda Streams
-TEST(cuda, raw_cuda_streams) {
-  cudaStream_t stream;
-  cudaStreamCreate(&stream);
+// Test Interoperability with HIP Streams
+// The difference with the CUDA tests are: raw HIP vs raw CUDA and no launch
+// bound in HIP due to an error when computing the block size.
+TEST(hip, raw_hip_streams) {
+  hipStream_t stream;
+  hipStreamCreate(&stream);
   Kokkos::InitArguments arguments{-1, -1, -1, false};
   Kokkos::initialize(arguments);
   int* p;
-  cudaMalloc(&p, sizeof(int) * 100);
+  hipMalloc(&p, sizeof(int) * 100);
   using MemorySpace = typename TEST_EXECSPACE::memory_space;
 
   {
@@ -62,49 +64,45 @@ TEST(cuda, raw_cuda_streams) {
     Kokkos::deep_copy(space0, v, 5);
     int sum;
 
-    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Range",
+    Kokkos::parallel_for("Test::hip::raw_hip_stream::Range",
                          Kokkos::RangePolicy<TEST_EXECSPACE>(space0, 0, 100),
                          FunctorRange<MemorySpace>(v));
-    Kokkos::parallel_reduce(
-        "Test::cuda::raw_cuda_stream::RangeReduce",
-        Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::LaunchBounds<128, 2>>(
-            space0, 0, 100),
-        FunctorRangeReduce<MemorySpace>(v), sum);
+    Kokkos::parallel_reduce("Test::hip::raw_hip_stream::RangeReduce",
+                            Kokkos::RangePolicy<TEST_EXECSPACE>(space0, 0, 100),
+                            FunctorRangeReduce<MemorySpace>(v), sum);
     space0.fence();
     ASSERT_EQ(600, sum);
 
-    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::MDRange",
+    Kokkos::parallel_for("Test::hip::raw_hip_stream::MDRange",
                          Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(
                              space0, {0, 0}, {10, 10}),
                          FunctorMDRange<MemorySpace>(v));
     Kokkos::parallel_reduce(
-        "Test::cuda::raw_cuda_stream::MDRangeReduce",
-        Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
-                              Kokkos::LaunchBounds<128, 2>>(space0, {0, 0},
-                                                            {10, 10}),
+        "Test::hip::raw_hip_stream::MDRangeReduce",
+        Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(space0, {0, 0},
+                                                               {10, 10}),
         FunctorMDRangeReduce<MemorySpace>(v), sum);
     space0.fence();
     ASSERT_EQ(700, sum);
 
-    Kokkos::parallel_for("Test::cuda::raw_cuda_stream::Team",
+    Kokkos::parallel_for("Test::hip::raw_hip_stream::Team",
                          Kokkos::TeamPolicy<TEST_EXECSPACE>(space0, 10, 10),
                          FunctorTeam<MemorySpace, TEST_EXECSPACE>(v));
-    Kokkos::parallel_reduce(
-        "Test::cuda::raw_cuda_stream::Team",
-        Kokkos::TeamPolicy<TEST_EXECSPACE, Kokkos::LaunchBounds<128, 2>>(
-            space0, 10, 10),
-        FunctorTeamReduce<MemorySpace, TEST_EXECSPACE>(v), sum);
+    Kokkos::parallel_reduce("Test::hip::raw_hip_stream::Team",
+                            Kokkos::TeamPolicy<TEST_EXECSPACE>(space0, 10, 10),
+                            FunctorTeamReduce<MemorySpace, TEST_EXECSPACE>(v),
+                            sum);
     space0.fence();
     ASSERT_EQ(800, sum);
   }
   Kokkos::finalize();
   offset_streams<<<100, 64, 0, stream>>>(p);
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
-  cudaStreamDestroy(stream);
+  HIP_SAFE_CALL(hipDeviceSynchronize());
+  hipStreamDestroy(stream);
 
   int h_p[100];
-  cudaMemcpy(h_p, p, sizeof(int) * 100, cudaMemcpyDefault);
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  hipMemcpy(h_p, p, sizeof(int) * 100, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipDeviceSynchronize());
   int64_t sum        = 0;
   int64_t sum_expect = 0;
   for (int i = 0; i < 100; i++) {
