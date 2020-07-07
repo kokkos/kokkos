@@ -85,22 +85,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       typename Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
 
  public:
-  // TODO Add constraints
-  // F - Functor
-  // P - Policy
-  // R - View
-  template <typename F, typename P, typename R>
-  ParallelReduce(F const& f, P const& p, R const& r)
-      : m_functor(f), m_policy(p), m_result_ptr(r.data()) {
+  // V - View
+  template <typename V>
+  ParallelReduce(const FunctorType& f, const Policy& p, const V& v)
+      : m_functor(f), m_policy(p), m_result_ptr(v.data()) {
     std::cout << "ParallelReduce::ParallelReduce\n";
     std::cout << "FunctorType:\t" << cool::pretty_type<FunctorType>() << '\n';
-    std::cout << "F:          \t" << cool::pretty_type<F>() << '\n';
 
     std::cout << "Policy:\t" << cool::pretty_type<Policy>() << '\n';
-    std::cout << "P:     \t" << cool::pretty_type<P>() << '\n';
 
     std::cout << "ReducerType:\t" << cool::pretty_type<ReducerType>() << '\n';
-    std::cout << "R:          \t" << cool::pretty_type<R>() << '\n';
+    std::cout << "V:          \t" << cool::pretty_type<V>() << '\n';
 
     std::cout << "execution_space:\t" << cool::pretty_type<execution_space>()
               << '\n';
@@ -135,6 +130,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
  public:
+#if 0
   void execute() {
     std::cout << "execute()\n";
 
@@ -146,6 +142,39 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
         ReducerConditional::select(m_functor, m_reducer), m_result_ptr);
   }
+#endif
+  // NLIBER Intel reduce
+#if 1
+  void execute() {
+    using namespace cl::sycl;
+    std::cout << "execute()\n";
+
+    cl::sycl::queue& q =
+        *execution_space().impl_internal_space_instance()->m_queue;
+
+    q.submit([this](cl::sycl::handler& cgh) {
+      cl::sycl::nd_range<1> range(m_policy.end() - m_policy.begin(), 1);
+
+      auto functor = ReducerConditional::select(m_functor, m_reducer);
+
+      value_type identity = ValueInit::init(functor, m_result_ptr);
+      auto r =
+          cl::sycl::intel::reduction(m_result_ptr, identity, std::plus<>());
+
+      cgh.parallel_for(
+          nd_range<1>(m_policy.end() - m_policy.begin(), 16),
+          intel::reduction(m_result_ptr, identity, std::plus<>()),
+          [=](nd_item<1> it, auto& out) {
+            int i = it.get_global_id(0);
+            value_type partial = identity;
+            functor(i, partial);
+            out += partial;
+          });
+    });
+
+    q.wait();
+  }
+#endif
 
  private:
   FunctorType m_functor;
