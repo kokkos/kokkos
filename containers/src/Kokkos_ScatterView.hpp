@@ -333,10 +333,10 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
       : value(other.value) {}
 
   KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
-    value *= rhs;
+    Kokkos::atomic_mul(&value, rhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION void operator/=(ValueType const& rhs) {
-    value /= rhs;
+    Kokkos::atomic_div(&value, rhs);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
