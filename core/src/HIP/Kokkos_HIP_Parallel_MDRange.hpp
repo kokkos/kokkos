@@ -186,9 +186,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using Policy = Kokkos::MDRangePolicy<Traits...>;
 
  private:
-  using array_index_type = typename Policy::array_index_type;
-  using index_type       = typename Policy::index_type;
-
   using WorkTag      = typename Policy::work_tag;
   using Member       = typename Policy::member_type;
   using LaunchBounds = typename Policy::launch_bounds;
@@ -227,16 +224,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using DeviceIteratePattern = typename Kokkos::Impl::Reduce::DeviceIterateTile<
       Policy::rank, Policy, FunctorType, WorkTag, reference_type>;
 
-  // Shall we use the shfl based reduction or not (only use it for static sized
-  // types of more than 128bit
-  enum {
-    UseShflReduction = ((sizeof(value_type) > 2 * sizeof(double)) &&
-                        (ValueTraits::StaticValueSize != 0))
-  };
-  // Some crutch to do function overloading
+  // FIXME_HIP_PERFORMANCE Need a rule to choose when to use shared memory and
+  // when to use shuffle
+  static bool constexpr UseShflReduction =
+      (sizeof(value_type) > 2 * sizeof(double)) &&
+      (ValueTraits::StaticValueSize != 0);
+
  private:
-  using DummyShflReductionType  = double;
-  using DummySHMEMReductionType = int;
+  struct ShflReductionTag {};
+  struct SHMEMReductionTag {};
 
  public:
   inline __device__ void exec_range(reference_type update) const {
@@ -244,6 +240,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
   inline __device__ void operator()(void) const {
+    using ReductionTag =
+        typename std::conditional<UseShflReduction, ShflReductionTag,
+                                  SHMEMReductionTag>::type;
+    run(ReductionTag{});
+  }
+
+  __device__ inline void run(SHMEMReductionTag) const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(
@@ -259,7 +262,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       // Number of blocks is bounded so that the reduction can be limited to two
       // passes. Each thread block is given an approximately equal amount of
       // work to perform. Accumulate the values for this block. The accumulation
-      // ordering does not match the final pass, but is arithmatically
+      // ordering does not match the final pass, but is arithmetically
       // equivalent.
 
       this->exec_range(value);
@@ -292,6 +295,44 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
+      }
+    }
+  }
+
+  __device__ inline void run(ShflReductionTag) const {
+    value_type value;
+    ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &value);
+    // Number of blocks is bounded so that the reduction can be limited to two
+    // passes. Each thread block is given an approximately equal amount of work
+    // to  perform. Accumulate the values for this block. The accumulation
+    // ordering does not match the final pass, but is arithmetically equivalent.
+
+    const Member work_part =
+        ((m_policy.m_num_tiles + (gridDim.x - 1)) /
+         gridDim.x);  // portion of tiles handled by each block
+
+    this->exec_range(value);
+
+    pointer_type const result = m_scratch_space;
+
+    int max_active_thread = work_part < blockDim.y ? work_part : blockDim.y;
+    max_active_thread =
+        (max_active_thread == 0) ? blockDim.y : max_active_thread;
+
+    value_type init;
+    ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &init);
+    if (Impl::hip_inter_block_reduction<ReducerTypeFwd, ValueJoin, WorkTagFwd>(
+            value, init,
+            ValueJoin(ReducerConditional::select(m_functor, m_reducer)),
+            m_scratch_space, result, m_scratch_flags, max_active_thread)) {
+      const unsigned id = threadIdx.y * blockDim.x + threadIdx.x;
+      if (id == 0) {
+        Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
+            ReducerConditional::select(m_functor, m_reducer),
+            reinterpret_cast<void*>(&value));
+        pointer_type const final_result =
+            m_result_ptr_device_accessible ? m_result_ptr : result;
+        *final_result = value;
       }
     }
   }
