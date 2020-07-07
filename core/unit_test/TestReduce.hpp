@@ -490,7 +490,9 @@ TEST(TEST_CATEGORY, int_combined_reduce) {
   int64_t result2 = 0;
   int64_t result3 = 0;
 
-  Kokkos::parallel_reduce(nw, functor_type(nw), result1, result2, result3);
+  Kokkos::parallel_reduce("int_combined_reduce",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, nw),
+                          functor_type(nw), result1, result2, result3);
 
   ASSERT_EQ(nw, result1);
   ASSERT_EQ(nsum, result2);
@@ -510,7 +512,9 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
 
   auto result3_v = Kokkos::View<int64_t, Kokkos::HostSpace>{"result3_v"};
 
-  Kokkos::parallel_reduce(nw, functor_type(nw), result1_v, result2,
+  Kokkos::parallel_reduce("int_combined-reduce_mixed",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, nw),
+                          functor_type(nw), result1_v, result2,
                           Kokkos::Sum<int64_t, Kokkos::HostSpace>{result3_v});
 
   ASSERT_EQ(nw, result1_v());
