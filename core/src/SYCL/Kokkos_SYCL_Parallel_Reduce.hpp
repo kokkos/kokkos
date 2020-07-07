@@ -168,7 +168,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             int i = it.get_global_id(0);
             value_type partial = identity;
             functor(i, partial);
-            out += partial;
+            out.combine(partial);
           });
     });
 
