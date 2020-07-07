@@ -396,10 +396,13 @@ class ViewMapping<Traits, Kokkos::Array<> > {
         (m_impl_offset.span() * Array_N * MemorySpanSize + MemorySpanMask) &
         ~size_t(MemorySpanMask);
     const std::string &alloc_name =
-        ((Kokkos::Impl::ViewCtorProp<void, std::string> const &)arg_prop).value;
+        reinterpret_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const &>(
+            arg_prop)
+            .value;
     // Allocate memory from the memory space and create tracking record.
     record_type *const record = record_type::allocate(
-        ((Kokkos::Impl::ViewCtorProp<void, memory_space> const &)arg_prop)
+        reinterpret_cast<
+            Kokkos::Impl::ViewCtorProp<void, memory_space> const &>(arg_prop)
             .value,
         alloc_name, alloc_size);
 
@@ -410,8 +413,9 @@ class ViewMapping<Traits, Kokkos::Array<> > {
       if (alloc_prop::initialize) {
         // The functor constructs and destroys
         record->m_destroy = functor_type(
-            ((Kokkos::Impl::ViewCtorProp<void, execution_space> const &)
-                 arg_prop)
+            reinterpret_cast<
+                Kokkos::Impl::ViewCtorProp<void, execution_space> const &>(
+                arg_prop)
                 .value,
             (pointer_type)m_impl_handle, m_impl_offset.span() * Array_N,
             alloc_name);
