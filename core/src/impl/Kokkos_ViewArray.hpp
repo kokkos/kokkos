@@ -413,9 +413,8 @@ class ViewMapping<Traits, Kokkos::Array<> > {
       if (alloc_prop::initialize) {
         // The functor constructs and destroys
         record->m_destroy = functor_type(
-            reinterpret_cast<
-                Kokkos::Impl::ViewCtorProp<void, execution_space> const &>(
-                arg_prop)
+            static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const
+                            &>(arg_prop)
                 .value,
             (pointer_type)m_impl_handle, m_impl_offset.span() * Array_N,
             alloc_name);

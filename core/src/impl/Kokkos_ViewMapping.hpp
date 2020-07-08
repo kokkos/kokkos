@@ -3270,8 +3270,7 @@ class ViewMapping<
       // The ViewValueFunctor has both value construction and destruction
       // operators.
       record->m_destroy = functor_type(
-          reinterpret_cast<
-              Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
+          static_cast<Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
               arg_prop)
               .value,
           (value_type*)m_impl_handle, m_impl_offset.span(), alloc_name);
