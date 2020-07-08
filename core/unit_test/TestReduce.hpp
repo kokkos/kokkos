@@ -521,5 +521,4 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
   ASSERT_EQ(nsum, result2);
   ASSERT_EQ(nsum, result3_v());
 }
-
 }  // namespace Test
