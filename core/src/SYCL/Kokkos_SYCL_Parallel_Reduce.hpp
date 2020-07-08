@@ -146,30 +146,36 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   // NLIBER Intel reduce
 #if 1
   void execute() {
-    using namespace cl::sycl;
     std::cout << "execute()\n";
 
     cl::sycl::queue& q =
         *execution_space().impl_internal_space_instance()->m_queue;
 
     q.submit([this](cl::sycl::handler& cgh) {
-      cl::sycl::nd_range<1> range(m_policy.end() - m_policy.begin(), 1);
+      cl::sycl::nd_range<1> range(m_policy.end() - m_policy.begin(), 8);
 
       auto functor = ReducerConditional::select(m_functor, m_reducer);
 
       value_type identity = ValueInit::init(functor, m_result_ptr);
-      auto r =
+      auto reduction =
           cl::sycl::intel::reduction(m_result_ptr, identity, std::plus<>());
 
-      cgh.parallel_for(
-          nd_range<1>(m_policy.end() - m_policy.begin(), 16),
-          intel::reduction(m_result_ptr, identity, std::plus<>()),
-          [=](nd_item<1> it, auto& out) {
-            int i = it.get_global_id(0);
-            value_type partial = identity;
-            functor(i, partial);
-            out.combine(partial);
-          });
+#if 0
+      auto reduce = [=](cl::sycl::nd_item<1> item, auto& sum) {
+        int i              = item.get_global_id(0);
+        value_type partial = identity;
+        functor(i, partial);
+        sum.combine(partial);
+      };
+#endif
+
+      cgh.parallel_for(range, reduction,
+                       [=](cl::sycl::nd_item<1> item, auto& sum) {
+                         int i              = item.get_global_id(0);
+                         value_type partial = identity;
+                         functor(i, partial);
+                         sum.combine(partial);
+                       });
     });
 
     q.wait();
