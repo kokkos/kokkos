@@ -141,7 +141,7 @@ struct ViewCtorProp<typename std::enable_if<
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
-  typedef P type;
+  using type = P;
 
   ViewCtorProp(const type &) {}
 
@@ -156,7 +156,7 @@ struct ViewCtorProp<typename std::enable_if<is_view_label<Label>::value>::type,
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
-  typedef std::string type;
+  using type = std::string;
 
   ViewCtorProp(const type &arg) : value(arg) {}
   ViewCtorProp(type &&arg) : value(arg) {}
@@ -173,7 +173,7 @@ struct ViewCtorProp<typename std::enable_if<
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
-  typedef Space type;
+  using type = Space;
 
   ViewCtorProp(const type &arg) : value(arg) {}
 
@@ -186,7 +186,7 @@ struct ViewCtorProp<void, T *> {
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
-  typedef T *type;
+  using type = T *;
 
   KOKKOS_INLINE_FUNCTION
   ViewCtorProp(const type arg) : value(arg) {}
@@ -202,7 +202,7 @@ struct ViewCtorProp<T *> {
   ViewCtorProp(const ViewCtorProp &) = default;
   ViewCtorProp &operator=(const ViewCtorProp &) = default;
 
-  typedef T *type;
+  using type = T *;
 
   KOKKOS_INLINE_FUNCTION
   ViewCtorProp(const type arg) : value(arg) {}
@@ -227,17 +227,16 @@ using view_ctor_prop_base = ViewCtorProp<void, Arg>;
 template <typename... P>
 struct ViewCtorProp : public ViewCtorProp<void, P>... {
  private:
-  typedef Kokkos::Impl::has_condition<void, Kokkos::Impl::is_memory_space, P...>
-      var_memory_space;
+  using var_memory_space =
+      Kokkos::Impl::has_condition<void, Kokkos::Impl::is_memory_space, P...>;
 
-  typedef Kokkos::Impl::has_condition<void, Kokkos::Impl::is_execution_space,
-                                      P...>
-      var_execution_space;
+  using var_execution_space =
+      Kokkos::Impl::has_condition<void, Kokkos::Impl::is_execution_space, P...>;
 
   struct VOIDDUMMY {};
 
-  typedef Kokkos::Impl::has_condition<VOIDDUMMY, std::is_pointer, P...>
-      var_pointer;
+  using var_pointer =
+      Kokkos::Impl::has_condition<VOIDDUMMY, std::is_pointer, P...>;
 
  public:
   /* Flags for the common properties */
@@ -250,9 +249,9 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
     initialize = !Kokkos::Impl::has_type<WithoutInitializing_t, P...>::value
   };
 
-  typedef typename var_memory_space::type memory_space;
-  typedef typename var_execution_space::type execution_space;
-  typedef typename var_pointer::type pointer_type;
+  using memory_space    = typename var_memory_space::type;
+  using execution_space = typename var_execution_space::type;
+  using pointer_type    = typename var_pointer::type;
 
   /*  Copy from a matching argument list.
    *  Requires  std::is_same< P , ViewCtorProp< void , Args >::value ...

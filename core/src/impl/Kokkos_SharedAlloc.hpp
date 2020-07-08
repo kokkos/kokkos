@@ -56,7 +56,7 @@ class SharedAllocationRecord;
 
 class SharedAllocationHeader {
  private:
-  typedef SharedAllocationRecord<void, void> Record;
+  using Record = SharedAllocationRecord<void, void>;
 
   static constexpr unsigned maximum_label_length =
       (1u << 7 /* 128 */) - sizeof(Record*);
@@ -213,8 +213,8 @@ namespace {
 /* Taking the address of this function so make sure it is unique */
 template <class MemorySpace, class DestroyFunctor>
 void deallocate(SharedAllocationRecord<void, void>* record_ptr) {
-  typedef SharedAllocationRecord<MemorySpace, void> base_type;
-  typedef SharedAllocationRecord<MemorySpace, DestroyFunctor> this_type;
+  using base_type = SharedAllocationRecord<MemorySpace, void>;
+  using this_type = SharedAllocationRecord<MemorySpace, DestroyFunctor>;
 
   this_type* const ptr =
       static_cast<this_type*>(static_cast<base_type*>(record_ptr));
@@ -280,7 +280,7 @@ class SharedAllocationRecord<MemorySpace, void>
 
 union SharedAllocationTracker {
  private:
-  typedef SharedAllocationRecord<void, void> Record;
+  using Record = SharedAllocationRecord<void, void>;
 
   enum : uintptr_t { DO_NOT_DEREF_FLAG = 0x01ul };
 

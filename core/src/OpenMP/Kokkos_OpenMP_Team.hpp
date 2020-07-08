@@ -58,9 +58,9 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
     : public PolicyTraits<Properties...> {
  public:
   //! Tag this class as a kokkos execution policy
-  typedef TeamPolicyInternal execution_policy;
+  using execution_policy = TeamPolicyInternal<OpenMP, Properties...>;
 
-  typedef PolicyTraits<Properties...> traits;
+  using traits = PolicyTraits<Properties...>;
 
   const typename traits::execution_space& space() const {
     static typename traits::execution_space m_space;
@@ -293,7 +293,7 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
   }
 
  public:
-  typedef Impl::HostThreadTeamMember<Kokkos::OpenMP> member_type;
+  using member_type = Impl::HostThreadTeamMember<Kokkos::OpenMP>;
 };
 
 }  // namespace Impl

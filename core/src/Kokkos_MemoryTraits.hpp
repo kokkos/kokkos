@@ -71,7 +71,7 @@ enum MemoryTraitsFlags {
 template <unsigned T>
 struct MemoryTraits {
   //! Tag this class as a kokkos memory traits:
-  typedef MemoryTraits memory_traits;
+  using memory_traits = MemoryTraits<T>;
   enum : bool {
     is_unmanaged = (unsigned(0) != (T & unsigned(Kokkos::Unmanaged)))
   };
@@ -91,10 +91,10 @@ struct MemoryTraits {
 
 namespace Kokkos {
 
-typedef Kokkos::MemoryTraits<0> MemoryManaged;
-typedef Kokkos::MemoryTraits<Kokkos::Unmanaged> MemoryUnmanaged;
-typedef Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess>
-    MemoryRandomAccess;
+using MemoryManaged   = Kokkos::MemoryTraits<0>;
+using MemoryUnmanaged = Kokkos::MemoryTraits<Kokkos::Unmanaged>;
+using MemoryRandomAccess =
+    Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess>;
 
 }  // namespace Kokkos
 
