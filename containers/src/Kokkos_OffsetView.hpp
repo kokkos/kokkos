@@ -1823,10 +1823,10 @@ KOKKOS_INLINE_FUNCTION bool operator==(const OffsetView<LT, LP...>& lhs,
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Experimental {
+
 template <class DT, class... DP>
 inline void deep_copy(
-    const OffsetView<DT, DP...>& dst,
+    const Experimental::OffsetView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
@@ -1842,7 +1842,8 @@ inline void deep_copy(
 
 template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
-    const OffsetView<DT, DP...>& dst, const OffsetView<ST, SP...>& value,
+    const Experimental::OffsetView<DT, DP...>& dst,
+    const Experimental::OffsetView<ST, SP...>& value,
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
         nullptr) {
@@ -1856,7 +1857,8 @@ inline void deep_copy(
 }
 template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
-    const OffsetView<DT, DP...>& dst, const View<ST, SP...>& value,
+    const Experimental::OffsetView<DT, DP...>& dst,
+    const View<ST, SP...>& value,
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
         nullptr) {
@@ -1871,7 +1873,8 @@ inline void deep_copy(
 
 template <class DT, class... DP, class ST, class... SP>
 inline void deep_copy(
-    const View<DT, DP...>& dst, const OffsetView<ST, SP...>& value,
+    const View<DT, DP...>& dst,
+    const Experimental::OffsetView<ST, SP...>& value,
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
         nullptr) {
@@ -1882,6 +1885,7 @@ inline void deep_copy(
 
   Kokkos::deep_copy(dst, value.view());
 }
+
 namespace Impl {
 
 // Deduce Mirror Types
@@ -1940,7 +1944,7 @@ create_mirror(
     typename std::enable_if<
         !std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
                       Kokkos::LayoutStride>::value>::type* = 0) {
-  typedef OffsetView<T, P...> src_type;
+  typedef Experimental::OffsetView<T, P...> src_type;
   typedef typename src_type::HostMirror dst_type;
 
   return dst_type(
@@ -1960,7 +1964,7 @@ create_mirror(
     typename std::enable_if<
         std::is_same<typename Kokkos::ViewTraits<T, P...>::array_layout,
                      Kokkos::LayoutStride>::value>::type* = 0) {
-  typedef OffsetView<T, P...> src_type;
+  typedef Experimental::OffsetView<T, P...> src_type;
   typedef typename src_type::HostMirror dst_type;
 
   Kokkos::LayoutStride layout;
@@ -1990,14 +1994,13 @@ create_mirror(
 
 // Create a mirror in a new space (specialization for different space)
 template <class Space, class T, class... P>
-typename Kokkos::Experimental::Impl::MirrorOffsetType<Space, T, P...>::view_type
+typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type
 create_mirror(const Space&,
               const Kokkos::Experimental::OffsetView<T, P...>& src) {
-  return typename Kokkos::Experimental::Impl::MirrorOffsetType<
-      Space, T, P...>::view_type(src.label(), src.layout(),
-                                 {src.begin(0), src.begin(1), src.begin(2),
-                                  src.begin(3), src.begin(4), src.begin(5),
-                                  src.begin(6), src.begin(7)});
+  return typename Kokkos::Impl::MirrorOffsetType<Space, T, P...>::view_type(
+      src.label(), src.layout(),
+      {src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
+       src.begin(5), src.begin(6), src.begin(7)});
 }
 
 template <class T, class... P>
@@ -2029,13 +2032,12 @@ create_mirror_view(
               typename Kokkos::Experimental::OffsetView<T, P...>::data_type,
               typename Kokkos::Experimental::OffsetView<
                   T, P...>::HostMirror::data_type>::value)>::type* = 0) {
-  return Kokkos::Experimental::create_mirror(src);
+  return Kokkos::create_mirror(src);
 }
 
 // Create a mirror view in a new space (specialization for same space)
 template <class Space, class T, class... P>
-typename Kokkos::Experimental::Impl::MirrorOffsetViewType<Space, T,
-                                                          P...>::view_type
+typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type
 create_mirror_view(const Space&,
                    const Kokkos::Experimental::OffsetView<T, P...>& src,
                    typename std::enable_if<Impl::MirrorOffsetViewType<
@@ -2045,17 +2047,15 @@ create_mirror_view(const Space&,
 
 // Create a mirror view in a new space (specialization for different space)
 template <class Space, class T, class... P>
-typename Kokkos::Experimental::Impl::MirrorOffsetViewType<Space, T,
-                                                          P...>::view_type
+typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type
 create_mirror_view(const Space&,
                    const Kokkos::Experimental::OffsetView<T, P...>& src,
                    typename std::enable_if<!Impl::MirrorOffsetViewType<
                        Space, T, P...>::is_same_memspace>::type* = 0) {
-  return typename Kokkos::Experimental::Impl::MirrorOffsetViewType<
-      Space, T, P...>::view_type(src.label(), src.layout(),
-                                 {src.begin(0), src.begin(1), src.begin(2),
-                                  src.begin(3), src.begin(4), src.begin(5),
-                                  src.begin(6), src.begin(7)});
+  return typename Kokkos::Impl::MirrorOffsetViewType<Space, T, P...>::view_type(
+      src.label(), src.layout(),
+      {src.begin(0), src.begin(1), src.begin(2), src.begin(3), src.begin(4),
+       src.begin(5), src.begin(6), src.begin(7)});
 }
 //
 //  // Create a mirror view and deep_copy in a new space (specialization for
@@ -2091,7 +2091,6 @@ create_mirror_view(const Space&,
 //    return mirror;
 //  }
 
-}  // namespace Experimental
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
