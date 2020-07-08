@@ -193,7 +193,7 @@ TEST(cuda, raw_cuda_streams) {
   CUDA_SAFE_CALL(cudaDeviceSynchronize());
   cudaStreamDestroy(stream);
 
-  int* h_p = new int[100];
+  int h_p[100];
   cudaMemcpy(h_p, p, sizeof(int) * 100, cudaMemcpyDefault);
   CUDA_SAFE_CALL(cudaDeviceSynchronize());
   int64_t sum        = 0;

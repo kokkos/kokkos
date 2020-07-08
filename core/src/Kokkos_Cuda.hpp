@@ -52,6 +52,7 @@
 
 #include <iosfwd>
 #include <vector>
+#include <memory>
 
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_CudaSpace.hpp>
@@ -249,12 +250,12 @@ class Cuda {
   static const char* name();
 
   inline Impl::CudaInternal* impl_internal_space_instance() const {
-    return m_space_instance;
+    return m_space_instance.get();
   }
   uint32_t impl_instance_id() const noexcept { return 0; }
 
  private:
-  Impl::CudaInternal* m_space_instance;
+  std::shared_ptr<Impl::CudaInternal> m_space_instance;
 };
 
 namespace Tools {
