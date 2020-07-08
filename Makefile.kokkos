@@ -64,6 +64,7 @@ KOKKOS_INTERNAL_ENABLE_CXX1Y := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),
 KOKKOS_INTERNAL_ENABLE_CXX17 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++17)
 KOKKOS_INTERNAL_ENABLE_CXX1Z := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++1z)
 KOKKOS_INTERNAL_ENABLE_CXX2A := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++2a)
+KOKKOS_INTERNAL_ENABLE_CXX20 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++20)
 
 # Check for external libraries.
 KOKKOS_INTERNAL_USE_HWLOC := $(call kokkos_has_string,$(KOKKOS_USE_TPLS),hwloc)
@@ -128,6 +129,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   KOKKOS_DEVICELIST += OPENMPTARGET
+  KOKKOS_INTERNAL_HAVE_CXX17_OR_NEWER := $(shell expr $(KOKKOS_INTERNAL_ENABLE_CXX17) \
+                                                    + $(KOKKOS_INTERNAL_ENABLE_CXX20) \
+                                                    + $(KOKKOS_INTERNAL_ENABLE_CXX2A))
+  ifneq ($(KOKKOS_INTERNAL_HAVE_CXX17_OR_NEWER), 1)
+    $(error OpenMPTarget backend requires C++17 or newer)
+  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
@@ -269,7 +276,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_CXX11_FLAG := --c++11
   KOKKOS_INTERNAL_CXX14_FLAG := --c++14
-  #KOKKOS_INTERNAL_CXX17_FLAG := --c++17
+  KOKKOS_INTERNAL_CXX17_FLAG := --c++17
 else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
      KOKKOS_INTERNAL_CXX11_FLAG := -std=c++11
@@ -559,6 +566,11 @@ endif
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX2A), 1)
   #I cannot make CMake add this in a good way - so add it here
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX2A_FLAG)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX20")
+endif
+ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX20), 1)
+  #I cannot make CMake add this in a good way - so add it here
+  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX20_FLAG)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX20")
 endif
 
