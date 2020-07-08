@@ -649,8 +649,6 @@ void CudaInternal::finalize() {
   if (0 != m_scratchSpace || 0 != m_scratchFlags) {
     Impl::finalize_host_cuda_lock_arrays();
 
-    if (m_stream != 0) cudaStreamDestroy(m_stream);
-
     typedef Kokkos::Impl::SharedAllocationRecord<CudaSpace> RecordCuda;
     typedef Kokkos::Impl::SharedAllocationRecord<CudaHostPinnedSpace>
         RecordHost;
