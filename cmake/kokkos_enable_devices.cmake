@@ -74,7 +74,7 @@ SET(ClangOpenMPFlag -fopenmp=libomp)
   ENDIF()
 
   COMPILER_SPECIFIC_FLAGS(
-    Clang      ${ClangOpenMPFlag}
+    Clang      ${ClangOpenMPFlag} -Wno-openmp-mapping
     XL         -qsmp=omp -qoffload -qnoeh
     DEFAULT    -fopenmp
   )
