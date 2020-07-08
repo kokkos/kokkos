@@ -353,16 +353,16 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
 
   KOKKOS_INLINE_FUNCTION
   void join(ValueType& dest, const ValueType& src) const {
-    atomic_prod(dest, src);
+    atomic_prod(&dest, src);
   }
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile ValueType& dest, const volatile ValueType& src) const {
-    atomic_prod(dest, src);
+    atomic_prod(&dest, src);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
-    value *= rhs;
+    atomic_prod(&value, rhs);
   }
   KOKKOS_FORCEINLINE_FUNCTION void reset() {
     value = reduction_identity<ValueType>::prod();
