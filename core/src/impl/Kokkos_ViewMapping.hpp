@@ -2863,12 +2863,11 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
   void execute(bool arg) {
     destroy = arg;
     if (!space.in_parallel()) {
-      std::string functor_name = (destroy ? "Kokkos::View::destruction"
-                                          : "Kokkos::View::initialization");
-      functor_name += " [" + name + "]";
-
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
+        auto functor_name =
+            (destroy ? "Kokkos::View::destruction [" + name + "]"
+                     : "Kokkos::View::initialization [" + name + "]");
         Kokkos::Profiling::beginParallelFor(functor_name.c_str(), 0, &kpID);
       }
 #ifdef KOKKOS_ENABLE_CUDA
@@ -2916,10 +2915,10 @@ struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
 
   void construct_shared_allocation() {
     if (!space.in_parallel()) {
-      std::string functor_name = "Kokkos::View::initialization [" + name + "]";
-      uint64_t kpID            = 0;
+      uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::beginParallelFor(functor_name, 0, &kpID);
+        Kokkos::Profiling::beginParallelFor(
+            "Kokkos::View::initialization [" + name + "]", 0, &kpID);
       }
 #ifdef KOKKOS_ENABLE_CUDA
       if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
@@ -3251,13 +3250,13 @@ class ViewMapping<
         (m_impl_offset.span() * MemorySpanSize + MemorySpanMask) &
         ~size_t(MemorySpanMask);
     const std::string& alloc_name =
-        reinterpret_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
+        static_cast<Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
             arg_prop)
             .value;
     // Create shared memory tracking record with allocate memory from the memory
     // space
     record_type* const record = record_type::allocate(
-        reinterpret_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const&>(
+        static_cast<Kokkos::Impl::ViewCtorProp<void, memory_space> const&>(
             arg_prop)
             .value,
         alloc_name, alloc_size);
