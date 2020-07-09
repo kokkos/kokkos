@@ -1,4 +1,4 @@
-FROM nvidia/cuda:9.2-devel
+FROM nvidia/cuda:10.1-devel
 
 RUN apt-get update && apt-get install -y \
         bc \
