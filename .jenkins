@@ -69,7 +69,7 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-9.2-Clang') {
+                stage('CUDA-10.1-Clang') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.clang'
