@@ -28,6 +28,8 @@ RUN CMAKE_KEY=2D2CEF1034921684 && \
     rm cmake*
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
+ARG NPROC=8
+
 # Clone Kokkos fork of the LLVM Project and build Clang
 ENV LLVM_DIR=/opt/llvm
 RUN LLVM_VERSION=55b3bcf643685c63fcc529d434bed112fdf03939 && \
