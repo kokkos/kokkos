@@ -209,6 +209,11 @@ struct DefaultContribution<Kokkos::Experimental::HIP,
 template <typename ValueType, int Op, typename DeviceType, int contribution>
 struct ScatterValue;
 
+// FIXME All these scatter values need overhaul:
+//   - like should they be copyable at all?
+//   - what is the internal handle type
+//   - remove join
+//   - consistently use the update function in operators
 template <typename ValueType, typename DeviceType>
 struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
                     Kokkos::Experimental::ScatterNonAtomic> {
