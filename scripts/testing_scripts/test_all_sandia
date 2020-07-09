@@ -601,6 +601,7 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
                "clang/5.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/7.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/9.0.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/10.0.0 $BASE_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
                "pgi/19.4 $PGI_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
     )
   fi
