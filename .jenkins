@@ -72,7 +72,7 @@ pipeline {
                 stage('CUDA-10.1-Clang-Tidy') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.clang'
+                            filename 'Dockerfile.kokkosllvmproject'
                             dir 'scripts/docker'
                             additionalBuildArgs '--pull'
                             label 'nvidia-docker && volta'
