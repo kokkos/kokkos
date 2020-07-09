@@ -129,6 +129,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       m_functor(TagType{}, i, update);
   }
 
+  template <typename Tag>
+  static auto tagged_reducer(const ReducerTypeFwd& r, Tag*) {
+    return [r](int i, reference_type acc) { return r(Tag{}, i, acc); };
+  };
+
+  static ReducerTypeFwd tagged_reducer(const ReducerTypeFwd& r, void*) {
+    return r;
+  }
+
  public:
 #if 0
   void execute() {
@@ -145,6 +154,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 #endif
   // NLIBER Intel reduce
 #if 1
+
   void execute() {
     std::cout << "execute()\n";
 
@@ -154,26 +164,20 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     q.submit([this](cl::sycl::handler& cgh) {
       cl::sycl::nd_range<1> range(m_policy.end() - m_policy.begin(), 8);
 
-      auto functor = ReducerConditional::select(m_functor, m_reducer);
+      ReducerTypeFwd functor = ReducerConditional::select(m_functor, m_reducer);
 
       value_type identity = ValueInit::init(functor, m_result_ptr);
       auto reduction =
           cl::sycl::intel::reduction(m_result_ptr, identity, std::plus<>());
 
-#if 0
-      auto reduce = [=](cl::sycl::nd_item<1> item, auto& sum) {
-        int i              = item.get_global_id(0);
-        value_type partial = identity;
-        functor(i, partial);
-        sum.combine(partial);
-      };
-#endif
+      auto taggedFunctor =
+          tagged_reducer(functor, static_cast<WorkTag*>(nullptr));
 
       cgh.parallel_for(range, reduction,
                        [=](cl::sycl::nd_item<1> item, auto& sum) {
                          int i              = item.get_global_id(0);
                          value_type partial = identity;
-                         functor(i, partial);
+                         taggedFunctor(i, partial);
                          sum.combine(partial);
                        });
     });
@@ -351,7 +355,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       );*/
   }
 #endif
-};
+};  // namespace Impl
 
 }  // namespace Impl
 }  // namespace Kokkos
