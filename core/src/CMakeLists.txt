@@ -83,6 +83,7 @@ KOKKOS_ADD_LIBRARY(
   kokkoscore
   SOURCES ${KOKKOS_CORE_SRCS}
   HEADERS ${KOKKOS_CORE_HEADERS}
+  ADD_BUILD_OPTIONS # core should be given all the necessary compiler/linker flags
 )
 
 SET_TARGET_PROPERTIES(kokkoscore PROPERTIES VERSION ${Kokkos_VERSION})
