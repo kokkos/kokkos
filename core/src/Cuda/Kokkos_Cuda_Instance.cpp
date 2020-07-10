@@ -239,8 +239,6 @@ const CudaInternalDevices &CudaInternalDevices::singleton() {
 
 }  // namespace
 
-int CudaInternal::was_initialized = 0;
-int CudaInternal::was_finalized   = 0;
 //----------------------------------------------------------------------------
 
 void CudaInternal::print_configuration(std::ostream &s) const {
@@ -312,7 +310,7 @@ void CudaInternal::fence() const { cudaStreamSynchronize(m_stream); }
 void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
   if (was_finalized)
     Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
-  was_initialized = 1;
+  was_initialized = true;
   if (is_initialized()) return;
 
   enum { WordSize = sizeof(size_type) };
@@ -645,7 +643,7 @@ Cuda::size_type *CudaInternal::scratch_functor(
 //----------------------------------------------------------------------------
 
 void CudaInternal::finalize() {
-  was_finalized = 1;
+  was_finalized = true;
   if (0 != m_scratchSpace || 0 != m_scratchFlags) {
     Impl::finalize_host_cuda_lock_arrays();
 
