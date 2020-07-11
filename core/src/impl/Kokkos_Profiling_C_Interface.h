@@ -66,35 +66,50 @@ struct Kokkos_Profiling_SpaceHandle {
   char name[64];
 };
 
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_initFunction)(
     const int, const uint64_t, const uint32_t,
     struct Kokkos_Profiling_KokkosPDeviceInfo*);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_finalizeFunction)();
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_beginFunction)(const char*, const uint32_t,
                                                uint64_t*);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_endFunction)(uint64_t);
 
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_pushFunction)(const char*);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_popFunction)();
 
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_allocateDataFunction)(
     const struct Kokkos_Profiling_SpaceHandle, const char*, const void*,
     const uint64_t);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_deallocateDataFunction)(
     const struct Kokkos_Profiling_SpaceHandle, const char*, const void*,
     const uint64_t);
 
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_createProfileSectionFunction)(const char*,
                                                               uint32_t*);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_startProfileSectionFunction)(const uint32_t);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_stopProfileSectionFunction)(const uint32_t);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_destroyProfileSectionFunction)(const uint32_t);
 
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_profileEventFunction)(const char*);
 
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_beginDeepCopyFunction)(
     struct Kokkos_Profiling_SpaceHandle, const char*, const void*,
     struct Kokkos_Profiling_SpaceHandle, const char*, const void*, uint64_t);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 
 // Tuning

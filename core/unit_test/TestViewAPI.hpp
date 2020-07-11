@@ -65,7 +65,7 @@ size_t allocation_count(const Kokkos::View<T, P...> &view) {
 
 template <typename T, class DeviceType>
 struct TestViewOperator {
-  typedef typename DeviceType::execution_space execution_space;
+  using execution_space = typename DeviceType::execution_space;
 
   enum { N = 1000 };
   enum { D = 3 };
@@ -97,11 +97,11 @@ struct TestViewOperator_LeftAndRight;
 
 template <class DataType, class DeviceType>
 struct TestViewOperator_LeftAndRight<DataType, DeviceType, 8> {
-  typedef typename DeviceType::execution_space execution_space;
-  typedef typename DeviceType::memory_space memory_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using size_type       = typename execution_space::size_type;
 
-  typedef int value_type;
+  using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type &update,
@@ -193,11 +193,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 8> {
 
 template <class DataType, class DeviceType>
 struct TestViewOperator_LeftAndRight<DataType, DeviceType, 7> {
-  typedef typename DeviceType::execution_space execution_space;
-  typedef typename DeviceType::memory_space memory_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using size_type       = typename execution_space::size_type;
 
-  typedef int value_type;
+  using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type &update,
@@ -271,11 +271,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 7> {
 
 template <class DataType, class DeviceType>
 struct TestViewOperator_LeftAndRight<DataType, DeviceType, 6> {
-  typedef typename DeviceType::execution_space execution_space;
-  typedef typename DeviceType::memory_space memory_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using size_type       = typename execution_space::size_type;
 
-  typedef int value_type;
+  using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type &update,
@@ -347,11 +347,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 6> {
 
 template <class DataType, class DeviceType>
 struct TestViewOperator_LeftAndRight<DataType, DeviceType, 5> {
-  typedef typename DeviceType::execution_space execution_space;
-  typedef typename DeviceType::memory_space memory_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using size_type       = typename execution_space::size_type;
 
-  typedef int value_type;
+  using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type &update,
@@ -435,11 +435,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 5> {
 
 template <class DataType, class DeviceType>
 struct TestViewOperator_LeftAndRight<DataType, DeviceType, 4> {
-  typedef typename DeviceType::execution_space execution_space;
-  typedef typename DeviceType::memory_space memory_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using size_type       = typename execution_space::size_type;
 
-  typedef int value_type;
+  using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type &update,
@@ -505,11 +505,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 4> {
 
 template <class DataType, class DeviceType>
 struct TestViewOperator_LeftAndRight<DataType, DeviceType, 3> {
-  typedef typename DeviceType::execution_space execution_space;
-  typedef typename DeviceType::memory_space memory_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using size_type       = typename execution_space::size_type;
 
-  typedef int value_type;
+  using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type &update,
@@ -598,11 +598,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 3> {
 
 template <class DataType, class DeviceType>
 struct TestViewOperator_LeftAndRight<DataType, DeviceType, 2> {
-  typedef typename DeviceType::execution_space execution_space;
-  typedef typename DeviceType::memory_space memory_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using size_type       = typename execution_space::size_type;
 
-  typedef int value_type;
+  using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type &update,
@@ -674,11 +674,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 2> {
 
 template <class DataType, class DeviceType>
 struct TestViewOperator_LeftAndRight<DataType, DeviceType, 1> {
-  typedef typename DeviceType::execution_space execution_space;
-  typedef typename DeviceType::memory_space memory_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = typename DeviceType::execution_space;
+  using memory_space    = typename DeviceType::memory_space;
+  using size_type       = typename execution_space::size_type;
 
-  typedef int value_type;
+  using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type &update,
@@ -935,7 +935,7 @@ struct TestViewMirror {
 template <typename T, class DeviceType>
 class TestViewAPI {
  public:
-  typedef DeviceType device;
+  using device = DeviceType;
 
   enum { N0 = 1000, N1 = 3, N2 = 5, N3 = 7 };
 
@@ -947,7 +947,7 @@ class TestViewAPI {
   typedef Kokkos::View<const T * [N1][N2][N3], device> const_dView4;
   typedef Kokkos::View<T ****, device, Kokkos::MemoryUnmanaged>
       dView4_unmanaged;
-  typedef typename dView0::host_mirror_space host;
+  using host = typename dView0::host_mirror_space;
 
   static void run_test_view_operator_a() {
     {
@@ -987,7 +987,7 @@ class TestViewAPI {
 
   static void run_test_mirror() {
     typedef Kokkos::View<int, host> view_type;
-    typedef typename view_type::HostMirror mirror_type;
+    using mirror_type = typename view_type::HostMirror;
 
     static_assert(std::is_same<typename view_type::memory_space,
                                typename mirror_type::memory_space>::value,
@@ -1003,7 +1003,7 @@ class TestViewAPI {
   }
 
   static void run_test_scalar() {
-    typedef typename dView0::HostMirror hView0;
+    using hView0 = typename dView0::HostMirror;
 
     dView0 dx, dy;
     hView0 hx, hy;
@@ -1031,11 +1031,11 @@ class TestViewAPI {
     // usual "(void)" marker to avoid compiler warnings for unused
     // variables.
 
-    typedef typename dView0::HostMirror hView0;
-    typedef typename dView1::HostMirror hView1;
-    typedef typename dView2::HostMirror hView2;
-    typedef typename dView3::HostMirror hView3;
-    typedef typename dView4::HostMirror hView4;
+    using hView0 = typename dView0::HostMirror;
+    using hView1 = typename dView1::HostMirror;
+    using hView2 = typename dView2::HostMirror;
+    using hView3 = typename dView3::HostMirror;
+    using hView4 = typename dView4::HostMirror;
 
     {
       hView0 thing;

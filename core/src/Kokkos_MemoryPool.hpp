@@ -87,7 +87,7 @@ void _print_memory_pool_state(std::ostream &s, uint32_t const *sb_state_ptr,
 template <typename DeviceType>
 class MemoryPool {
  private:
-  typedef typename Kokkos::Impl::concurrent_bitset CB;
+  using CB = Kokkos::Impl::concurrent_bitset;
 
   enum : uint32_t { bits_per_int_lg2 = CB::bits_per_int_lg2 };
   enum : uint32_t { state_shift = CB::state_shift };
@@ -118,15 +118,15 @@ class MemoryPool {
    *  Thus A_block_size < B_block_size  <=>  A_block_state > B_block_state
    */
 
-  typedef typename DeviceType::memory_space base_memory_space;
+  using base_memory_space = typename DeviceType::memory_space;
 
   enum {
     accessible = Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                                  base_memory_space>::accessible
   };
 
-  typedef Kokkos::Impl::SharedAllocationTracker Tracker;
-  typedef Kokkos::Impl::SharedAllocationRecord<base_memory_space> Record;
+  using Tracker = Kokkos::Impl::SharedAllocationTracker;
+  using Record  = Kokkos::Impl::SharedAllocationRecord<base_memory_space>;
 
   Tracker m_tracker;
   uint32_t *m_sb_state_array;

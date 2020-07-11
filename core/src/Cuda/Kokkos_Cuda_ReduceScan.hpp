@@ -959,7 +959,7 @@ __device__ bool cuda_single_inter_block_reduce_scan(
     const Cuda::size_type block_count, Cuda::size_type* const shared_data,
     Cuda::size_type* const global_data, Cuda::size_type* const global_flags) {
   typedef FunctorValueTraits<FunctorType, ArgTag> ValueTraits;
-  if (!DoScan && ValueTraits::StaticValueSize)
+  if (!DoScan && ValueTraits::StaticValueSize > 0)
     return Kokkos::Impl::CudaReductionsFunctor<
         FunctorType, ArgTag, false, (ValueTraits::StaticValueSize > 16)>::
         scalar_inter_block_reduction(functor, block_id, block_count,

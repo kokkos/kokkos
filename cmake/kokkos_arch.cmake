@@ -59,6 +59,7 @@ KOKKOS_ARCH_OPTION(ZEN             HOST "AMD Zen architecture")
 KOKKOS_ARCH_OPTION(ZEN2            HOST "AMD Zen2 architecture")
 KOKKOS_ARCH_OPTION(VEGA900         GPU  "AMD GPU MI25 GFX900")
 KOKKOS_ARCH_OPTION(VEGA906         GPU  "AMD GPU MI50/MI60 GFX906")
+KOKKOS_ARCH_OPTION(INTEL_GEN       GPU  "Intel GPUs Gen9+")
 
 IF (KOKKOS_ENABLE_CUDA)
  #Regardless of version, make sure we define the general architecture name
@@ -424,6 +425,11 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
   IF (CLANG_AMDGPU_ARCH)
     COMPILER_SPECIFIC_FLAGS(
       Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${CLANG_AMDGPU_ARCH} -fopenmp-targets=amdgcn-amd-amdhsa
+    )
+  ENDIF()
+  IF (KOKKOS_ARCH_INTEL_GEN)
+    COMPILER_SPECIFIC_FLAGS(
+      IntelClang -fopenmp-targets=spir64 -D__STRICT_ANSI__
     )
   ENDIF()
 ENDIF()

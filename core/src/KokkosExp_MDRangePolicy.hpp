@@ -130,8 +130,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       RangePolicy<typename traits::execution_space,
                   typename traits::schedule_type, typename traits::index_type>;
 
-  typedef MDRangePolicy
-      execution_policy;  // needed for is_execution_space interrogation
+  using execution_policy =
+      MDRangePolicy<Properties...>;  // needed for is_execution_space
+                                     // interrogation
 
   template <class... OtherProperties>
   friend struct MDRangePolicy;
@@ -558,7 +559,7 @@ namespace Impl {
 template <unsigned long P, class... Properties>
 struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
                              MDRangePolicy<Properties...>> {
-  typedef MDRangePolicy<Properties...> policy_in_t;
+  using policy_in_t = MDRangePolicy<Properties...>;
   typedef MDRangePolicy<typename policy_in_t::traits::execution_space,
                         typename policy_in_t::traits::schedule_type,
                         typename policy_in_t::traits::work_tag,

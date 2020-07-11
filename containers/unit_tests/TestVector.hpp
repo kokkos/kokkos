@@ -63,6 +63,9 @@ struct test_vector_insert {
     int n = a.size();
 
     auto it = a.begin();
+    if (n > 0) {
+      ASSERT_EQ(a.data(), &a[0]);
+    }
     it += 15;
     ASSERT_EQ(*it, scalar_type(1));
 

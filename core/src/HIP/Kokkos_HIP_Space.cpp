@@ -679,15 +679,9 @@ int HIP::impl_is_initialized() {
 
 void HIP::impl_initialize(const HIP::SelectDevice config) {
   Impl::HIPInternal::singleton().initialize(config.hip_device_id);
-
-  Kokkos::Profiling::initialize();
 }
 
-void HIP::impl_finalize() {
-  Impl::HIPInternal::singleton().finalize();
-
-  Kokkos::Profiling::finalize();
-}
+void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
 
 HIP::HIP() : m_space_instance(&Impl::HIPInternal::singleton()) {
   Impl::HIPInternal::singleton().verify_is_initialized(

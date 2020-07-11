@@ -1,0 +1,2 @@
+Checks: '-*,kokkos-*'
+FormatStyle: file

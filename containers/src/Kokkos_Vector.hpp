@@ -221,6 +221,8 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   size_type span() const { return DV::span(); }
   bool empty() const { return _size == 0; }
 
+  iterator data() const { return DV::h_view.data(); }
+
   iterator begin() const { return DV::h_view.data(); }
 
   iterator end() const {

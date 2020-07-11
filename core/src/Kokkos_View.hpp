@@ -170,23 +170,23 @@ struct ViewTraits;
 
 template <>
 struct ViewTraits<void> {
-  typedef void execution_space;
-  typedef void memory_space;
-  typedef void HostMirrorSpace;
-  typedef void array_layout;
-  typedef void memory_traits;
-  typedef void specialize;
+  using execution_space = void;
+  using memory_space    = void;
+  using HostMirrorSpace = void;
+  using array_layout    = void;
+  using memory_traits   = void;
+  using specialize      = void;
 };
 
 template <class... Prop>
 struct ViewTraits<void, void, Prop...> {
   // Ignore an extraneous 'void'
-  typedef typename ViewTraits<void, Prop...>::execution_space execution_space;
-  typedef typename ViewTraits<void, Prop...>::memory_space memory_space;
-  typedef typename ViewTraits<void, Prop...>::HostMirrorSpace HostMirrorSpace;
-  typedef typename ViewTraits<void, Prop...>::array_layout array_layout;
-  typedef typename ViewTraits<void, Prop...>::memory_traits memory_traits;
-  typedef typename ViewTraits<void, Prop...>::specialize specialize;
+  using execution_space = typename ViewTraits<void, Prop...>::execution_space;
+  using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
+  using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
+  using array_layout    = typename ViewTraits<void, Prop...>::array_layout;
+  using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize      = typename ViewTraits<void, Prop...>::specialize;
 };
 
 template <class ArrayLayout, class... Prop>
@@ -195,12 +195,12 @@ struct ViewTraits<typename std::enable_if<
                   ArrayLayout, Prop...> {
   // Specify layout, keep subsequent space and memory traits arguments
 
-  typedef typename ViewTraits<void, Prop...>::execution_space execution_space;
-  typedef typename ViewTraits<void, Prop...>::memory_space memory_space;
-  typedef typename ViewTraits<void, Prop...>::HostMirrorSpace HostMirrorSpace;
-  typedef ArrayLayout array_layout;
-  typedef typename ViewTraits<void, Prop...>::memory_traits memory_traits;
-  typedef typename ViewTraits<void, Prop...>::specialize specialize;
+  using execution_space = typename ViewTraits<void, Prop...>::execution_space;
+  using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
+  using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
+  using array_layout    = ArrayLayout;
+  using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize      = typename ViewTraits<void, Prop...>::specialize;
 };
 
 template <class Space, class... Prop>
@@ -220,13 +220,13 @@ struct ViewTraits<
                        void>::value,
       "Only one View Execution or Memory Space template argument");
 
-  typedef typename Space::execution_space execution_space;
-  typedef typename Space::memory_space memory_space;
-  typedef typename Kokkos::Impl::HostMirror<Space>::Space::memory_space
-      HostMirrorSpace;
-  typedef typename execution_space::array_layout array_layout;
-  typedef typename ViewTraits<void, Prop...>::memory_traits memory_traits;
-  typedef typename ViewTraits<void, Prop...>::specialize specialize;
+  using execution_space = typename Space::execution_space;
+  using memory_space    = typename Space::memory_space;
+  using HostMirrorSpace =
+      typename Kokkos::Impl::HostMirror<Space>::Space::memory_space;
+  using array_layout  = typename execution_space::array_layout;
+  using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize    = typename ViewTraits<void, Prop...>::specialize;
 };
 
 template <class MemoryTraits, class... Prop>
@@ -246,84 +246,79 @@ struct ViewTraits<typename std::enable_if<Kokkos::Impl::is_memory_traits<
                        void>::value,
       "MemoryTrait is the final optional template argument for a View");
 
-  typedef void execution_space;
-  typedef void memory_space;
-  typedef void HostMirrorSpace;
-  typedef void array_layout;
-  typedef MemoryTraits memory_traits;
-  typedef void specialize;
+  using execution_space = void;
+  using memory_space    = void;
+  using HostMirrorSpace = void;
+  using array_layout    = void;
+  using memory_traits   = MemoryTraits;
+  using specialize      = void;
 };
 
 template <class DataType, class... Properties>
 struct ViewTraits {
  private:
   // Unpack the properties arguments
-  typedef ViewTraits<void, Properties...> prop;
+  using prop = ViewTraits<void, Properties...>;
 
-  typedef typename std::conditional<
+  using ExecutionSpace = typename std::conditional<
       !std::is_same<typename prop::execution_space, void>::value,
-      typename prop::execution_space, Kokkos::DefaultExecutionSpace>::type
-      ExecutionSpace;
+      typename prop::execution_space, Kokkos::DefaultExecutionSpace>::type;
 
-  typedef typename std::conditional<
+  using MemorySpace = typename std::conditional<
       !std::is_same<typename prop::memory_space, void>::value,
-      typename prop::memory_space, typename ExecutionSpace::memory_space>::type
-      MemorySpace;
+      typename prop::memory_space, typename ExecutionSpace::memory_space>::type;
 
-  typedef typename std::conditional<
+  using ArrayLayout = typename std::conditional<
       !std::is_same<typename prop::array_layout, void>::value,
-      typename prop::array_layout, typename ExecutionSpace::array_layout>::type
-      ArrayLayout;
+      typename prop::array_layout, typename ExecutionSpace::array_layout>::type;
 
-  typedef typename std::conditional<
+  using HostMirrorSpace = typename std::conditional<
       !std::is_same<typename prop::HostMirrorSpace, void>::value,
       typename prop::HostMirrorSpace,
-      typename Kokkos::Impl::HostMirror<ExecutionSpace>::Space>::type
-      HostMirrorSpace;
+      typename Kokkos::Impl::HostMirror<ExecutionSpace>::Space>::type;
 
-  typedef typename std::conditional<
+  using MemoryTraits = typename std::conditional<
       !std::is_same<typename prop::memory_traits, void>::value,
-      typename prop::memory_traits, typename Kokkos::MemoryManaged>::type
-      MemoryTraits;
+      typename prop::memory_traits, typename Kokkos::MemoryManaged>::type;
 
   // Analyze data type's properties,
   // May be specialized based upon the layout and value type
-  typedef Kokkos::Impl::ViewDataAnalysis<DataType, ArrayLayout> data_analysis;
+  using data_analysis = Kokkos::Impl::ViewDataAnalysis<DataType, ArrayLayout>;
 
  public:
   //------------------------------------
   // Data type traits:
 
-  typedef typename data_analysis::type data_type;
-  typedef typename data_analysis::const_type const_data_type;
-  typedef typename data_analysis::non_const_type non_const_data_type;
+  using data_type           = typename data_analysis::type;
+  using const_data_type     = typename data_analysis::const_type;
+  using non_const_data_type = typename data_analysis::non_const_type;
 
   //------------------------------------
   // Compatible array of trivial type traits:
 
-  typedef typename data_analysis::scalar_array_type scalar_array_type;
-  typedef
-      typename data_analysis::const_scalar_array_type const_scalar_array_type;
-  typedef typename data_analysis::non_const_scalar_array_type
-      non_const_scalar_array_type;
+  using scalar_array_type = typename data_analysis::scalar_array_type;
+  using const_scalar_array_type =
+      typename data_analysis::const_scalar_array_type;
+  using non_const_scalar_array_type =
+      typename data_analysis::non_const_scalar_array_type;
 
   //------------------------------------
   // Value type traits:
 
-  typedef typename data_analysis::value_type value_type;
-  typedef typename data_analysis::const_value_type const_value_type;
-  typedef typename data_analysis::non_const_value_type non_const_value_type;
+  using value_type           = typename data_analysis::value_type;
+  using const_value_type     = typename data_analysis::const_value_type;
+  using non_const_value_type = typename data_analysis::non_const_value_type;
 
   //------------------------------------
   // Mapping traits:
 
-  typedef ArrayLayout array_layout;
-  typedef typename data_analysis::dimension dimension;
+  using array_layout = ArrayLayout;
+  using dimension    = typename data_analysis::dimension;
 
-  typedef typename std::conditional<
+  using specialize = typename std::conditional<
       std::is_same<typename data_analysis::specialize, void>::value,
-      typename prop::specialize, typename data_analysis::specialize>::type
-      specialize; /* mapping specialization tag */
+      typename prop::specialize, typename data_analysis::specialize>::
+      type; /* mapping specialization tag */
 
   enum { rank = dimension::rank };
   enum { rank_dynamic = dimension::rank_dynamic };
@@ -331,13 +326,13 @@ struct ViewTraits {
   //------------------------------------
   // Execution space, memory space, memory access traits, and host mirror space.
 
-  typedef ExecutionSpace execution_space;
-  typedef MemorySpace memory_space;
-  typedef Kokkos::Device<ExecutionSpace, MemorySpace> device_type;
-  typedef MemoryTraits memory_traits;
-  typedef HostMirrorSpace host_mirror_space;
+  using execution_space   = ExecutionSpace;
+  using memory_space      = MemorySpace;
+  using device_type       = Kokkos::Device<ExecutionSpace, MemorySpace>;
+  using memory_traits     = MemoryTraits;
+  using host_mirror_space = HostMirrorSpace;
 
-  typedef typename MemorySpace::size_type size_type;
+  using size_type = typename MemorySpace::size_type;
 
   enum { is_hostspace = std::is_same<MemorySpace, HostSpace>::value };
   enum { is_managed = MemoryTraits::is_unmanaged == 0 };
@@ -536,8 +531,8 @@ constexpr Kokkos::Impl::AllowPadding_t AllowPadding =
 template <class... Args>
 inline Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>
 view_alloc(Args const&... args) {
-  typedef Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>
-      return_type;
+  using return_type =
+      Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>;
 
   static_assert(!return_type::has_pointer,
                 "Cannot give pointer-to-memory for view allocation");
@@ -549,8 +544,8 @@ template <class... Args>
 KOKKOS_INLINE_FUNCTION
     Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>
     view_wrap(Args const&... args) {
-  typedef Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>
-      return_type;
+  using return_type =
+      Impl::ViewCtorProp<typename Impl::ViewCtorProp<void, Args>::type...>;
 
   static_assert(!return_type::has_memory_space &&
                     !return_type::has_execution_space &&
@@ -604,51 +599,47 @@ class View : public ViewTraits<DataType, Properties...> {
  public:
   //----------------------------------------
   /** \brief  Compatible view of array of scalar types */
-  typedef View<typename traits::scalar_array_type,
-               typename traits::array_layout, typename traits::device_type,
-               typename traits::memory_traits>
-      array_type;
+  using array_type =
+      View<typename traits::scalar_array_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits>;
 
   /** \brief  Compatible view of const data type */
-  typedef View<typename traits::const_data_type, typename traits::array_layout,
-               typename traits::device_type, typename traits::memory_traits>
-      const_type;
+  using const_type =
+      View<typename traits::const_data_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits>;
 
   /** \brief  Compatible view of non-const data type */
-  typedef View<typename traits::non_const_data_type,
-               typename traits::array_layout, typename traits::device_type,
-               typename traits::memory_traits>
-      non_const_type;
+  using non_const_type =
+      View<typename traits::non_const_data_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits>;
 
   /** \brief  Compatible HostMirror view */
-  typedef View<typename traits::non_const_data_type,
-               typename traits::array_layout,
-               Device<DefaultHostExecutionSpace,
-                      typename traits::host_mirror_space::memory_space>>
-      HostMirror;
+  using HostMirror =
+      View<typename traits::non_const_data_type, typename traits::array_layout,
+           Device<DefaultHostExecutionSpace,
+                  typename traits::host_mirror_space::memory_space>>;
 
   /** \brief  Compatible HostMirror view */
-  typedef View<typename traits::non_const_data_type,
-               typename traits::array_layout,
-               typename traits::host_mirror_space>
-      host_mirror_type;
+  using host_mirror_type =
+      View<typename traits::non_const_data_type, typename traits::array_layout,
+           typename traits::host_mirror_space>;
 
   /** \brief Unified types */
-  typedef typename Impl::ViewUniformType<View, 0>::type uniform_type;
-  typedef
-      typename Impl::ViewUniformType<View, 0>::const_type uniform_const_type;
-  typedef typename Impl::ViewUniformType<View, 0>::runtime_type
-      uniform_runtime_type;
-  typedef typename Impl::ViewUniformType<View, 0>::runtime_const_type
-      uniform_runtime_const_type;
-  typedef typename Impl::ViewUniformType<View, 0>::nomemspace_type
-      uniform_nomemspace_type;
-  typedef typename Impl::ViewUniformType<View, 0>::const_nomemspace_type
-      uniform_const_nomemspace_type;
-  typedef typename Impl::ViewUniformType<View, 0>::runtime_nomemspace_type
-      uniform_runtime_nomemspace_type;
-  typedef typename Impl::ViewUniformType<View, 0>::runtime_const_nomemspace_type
-      uniform_runtime_const_nomemspace_type;
+  using uniform_type = typename Impl::ViewUniformType<View, 0>::type;
+  using uniform_const_type =
+      typename Impl::ViewUniformType<View, 0>::const_type;
+  using uniform_runtime_type =
+      typename Impl::ViewUniformType<View, 0>::runtime_type;
+  using uniform_runtime_const_type =
+      typename Impl::ViewUniformType<View, 0>::runtime_const_type;
+  using uniform_nomemspace_type =
+      typename Impl::ViewUniformType<View, 0>::nomemspace_type;
+  using uniform_const_nomemspace_type =
+      typename Impl::ViewUniformType<View, 0>::const_nomemspace_type;
+  using uniform_runtime_nomemspace_type =
+      typename Impl::ViewUniformType<View, 0>::runtime_nomemspace_type;
+  using uniform_runtime_const_nomemspace_type =
+      typename Impl::ViewUniformType<View, 0>::runtime_const_nomemspace_type;
 
   //----------------------------------------
   // Domain rank and extents
@@ -751,8 +742,8 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
   // Range span is the span which contains all members.
 
-  typedef typename map_type::reference_type reference_type;
-  typedef typename map_type::pointer_type pointer_type;
+  using reference_type = typename map_type::reference_type;
+  using pointer_type   = typename map_type::pointer_type;
 
   enum {
     reference_type_is_lvalue_reference =
@@ -1464,10 +1455,9 @@ class View : public ViewTraits<DataType, Properties...> {
           typename traits::specialize>::is_assignable_data_type>::type* =
           nullptr)
       : m_track(rhs), m_map() {
-    typedef typename View<RT, RP...>::traits SrcTraits;
-    typedef Kokkos::Impl::ViewMapping<traits, SrcTraits,
-                                      typename traits::specialize>
-        Mapping;
+    using SrcTraits = typename View<RT, RP...>::traits;
+    using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
+                                              typename traits::specialize>;
     static_assert(Mapping::is_assignable,
                   "Incompatible View copy construction");
     Mapping::assign(m_map, rhs.m_map, rhs.m_track.m_tracker);
@@ -1480,10 +1470,9 @@ class View : public ViewTraits<DataType, Properties...> {
           typename traits::specialize>::is_assignable_data_type,
       View>::type&
   operator=(const View<RT, RP...>& rhs) {
-    typedef typename View<RT, RP...>::traits SrcTraits;
-    typedef Kokkos::Impl::ViewMapping<traits, SrcTraits,
-                                      typename traits::specialize>
-        Mapping;
+    using SrcTraits = typename View<RT, RP...>::traits;
+    using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
+                                              typename traits::specialize>;
     static_assert(Mapping::is_assignable, "Incompatible View copy assignment");
     Mapping::assign(m_map, rhs.m_map, rhs.m_track.m_tracker);
     m_track.assign(rhs);
@@ -1498,15 +1487,12 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION View(const View<RT, RP...>& src_view, const Arg0 arg0,
                               Args... args)
       : m_track(src_view), m_map() {
-    typedef View<RT, RP...> SrcType;
+    using SrcType = View<RT, RP...>;
 
-    typedef Kokkos::Impl::ViewMapping<void /* deduce destination view type from
-                                              source view traits */
-                                      ,
-                                      typename SrcType::traits, Arg0, Args...>
-        Mapping;
+    using Mapping = Kokkos::Impl::ViewMapping<void, typename SrcType::traits,
+                                              Arg0, Args...>;
 
-    typedef typename Mapping::type DstType;
+    using DstType = typename Mapping::type;
 
     static_assert(
         Kokkos::Impl::ViewMapping<traits, typename DstType::traits,
@@ -1538,24 +1524,23 @@ class View : public ViewTraits<DataType, Properties...> {
           arg_layout)
       : m_track(), m_map() {
     // Append layout and spaces if not input
-    typedef Impl::ViewCtorProp<P...> alloc_prop_input;
+    using alloc_prop_input = Impl::ViewCtorProp<P...>;
 
     // use 'std::integral_constant<unsigned,I>' for non-types
     // to avoid duplicate class error.
-    typedef Impl::ViewCtorProp<
+    using alloc_prop = Impl::ViewCtorProp<
         P...,
         typename std::conditional<alloc_prop_input::has_label,
-                                  std::integral_constant<unsigned, 0>,
+                                  std::integral_constant<unsigned int, 0>,
                                   typename std::string>::type,
         typename std::conditional<
             alloc_prop_input::has_memory_space,
-            std::integral_constant<unsigned, 1>,
+            std::integral_constant<unsigned int, 1>,
             typename traits::device_type::memory_space>::type,
         typename std::conditional<
             alloc_prop_input::has_execution_space,
-            std::integral_constant<unsigned, 2>,
-            typename traits::device_type::execution_space>::type>
-        alloc_prop;
+            std::integral_constant<unsigned int, 2>,
+            typename traits::device_type::execution_space>::type>;
 
     static_assert(traits::is_managed,
                   "View allocation constructor requires managed memory");
@@ -1773,9 +1758,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const view_tracker_type& track,
       const Kokkos::Impl::ViewMapping<Traits, typename Traits::specialize>& map)
       : m_track(track), m_map() {
-    typedef Kokkos::Impl::ViewMapping<traits, Traits,
-                                      typename traits::specialize>
-        Mapping;
+    using Mapping =
+        Kokkos::Impl::ViewMapping<traits, Traits, typename traits::specialize>;
     static_assert(Mapping::is_assignable,
                   "Incompatible View copy construction");
     Mapping::assign(m_map, map, track.m_tracker);
@@ -1789,9 +1773,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const typename view_tracker_type::track_type& track,
       const Kokkos::Impl::ViewMapping<Traits, typename Traits::specialize>& map)
       : m_track(track), m_map() {
-    typedef Kokkos::Impl::ViewMapping<traits, Traits,
-                                      typename traits::specialize>
-        Mapping;
+    using Mapping =
+        Kokkos::Impl::ViewMapping<traits, Traits, typename traits::specialize>;
     static_assert(Mapping::is_assignable,
                   "Incompatible View copy construction");
     Mapping::assign(m_map, map, track);
@@ -1976,8 +1959,8 @@ template <class LT, class... LP, class RT, class... RP>
 KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
                                        const View<RT, RP...>& rhs) {
   // Same data, layout, dimensions
-  typedef ViewTraits<LT, LP...> lhs_traits;
-  typedef ViewTraits<RT, RP...> rhs_traits;
+  using lhs_traits = ViewTraits<LT, LP...>;
+  using rhs_traits = ViewTraits<RT, RP...>;
 
   return std::is_same<typename lhs_traits::const_value_type,
                       typename rhs_traits::const_value_type>::value &&

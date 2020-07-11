@@ -90,7 +90,7 @@ struct ChunkSize {
 template <class... Properties>
 class RangePolicy : public Impl::PolicyTraits<Properties...> {
  public:
-  typedef Impl::PolicyTraits<Properties...> traits;
+  using traits = Impl::PolicyTraits<Properties...>;
 
  private:
   typename traits::execution_space m_space;
@@ -104,9 +104,9 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 
  public:
   //! Tag this class as an execution policy
-  typedef RangePolicy execution_policy;
-  typedef typename traits::index_type member_type;
-  typedef typename traits::index_type index_type;
+  using execution_policy = RangePolicy<Properties...>;
+  using member_type      = typename traits::index_type;
+  using index_type       = typename traits::index_type;
 
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
     return m_space;
@@ -238,8 +238,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
    *  Typically used to partition a range over a group of threads.
    */
   struct WorkRange {
-    typedef typename RangePolicy::work_tag work_tag;
-    typedef typename RangePolicy::member_type member_type;
+    using work_tag    = typename RangePolicy<Properties...>::work_tag;
+    using member_type = typename RangePolicy<Properties...>::member_type;
 
     KOKKOS_INLINE_FUNCTION member_type begin() const { return m_begin; }
     KOKKOS_INLINE_FUNCTION member_type end() const { return m_end; }
@@ -287,10 +287,10 @@ namespace Impl {
 template <class ExecSpace, class... Properties>
 class TeamPolicyInternal : public Impl::PolicyTraits<Properties...> {
  private:
-  typedef Impl::PolicyTraits<Properties...> traits;
+  using traits = Impl::PolicyTraits<Properties...>;
 
  public:
-  typedef typename traits::index_type index_type;
+  using index_type = typename traits::index_type;
 
   //----------------------------------------
   /** \brief  Query maximum team size for a given functor.
@@ -531,18 +531,17 @@ class TeamPolicy
     : public Impl::TeamPolicyInternal<
           typename Impl::PolicyTraits<Properties...>::execution_space,
           Properties...> {
-  typedef Impl::TeamPolicyInternal<
+  using internal_policy = Impl::TeamPolicyInternal<
       typename Impl::PolicyTraits<Properties...>::execution_space,
-      Properties...>
-      internal_policy;
+      Properties...>;
 
   template <class... OtherProperties>
   friend class TeamPolicy;
 
  public:
-  typedef Impl::PolicyTraits<Properties...> traits;
+  using traits = Impl::PolicyTraits<Properties...>;
 
-  typedef TeamPolicy execution_policy;
+  using execution_policy = TeamPolicy<Properties...>;
 
   TeamPolicy& operator=(const TeamPolicy&) = default;
 
@@ -655,7 +654,7 @@ struct TeamThreadRangeBoundariesStruct {
   }
 
  public:
-  typedef iType index_type;
+  using index_type = iType;
   const iType start;
   const iType end;
   enum { increment = 1 };
@@ -701,7 +700,7 @@ struct TeamVectorRangeBoundariesStruct {
   }
 
  public:
-  typedef iType index_type;
+  using index_type = iType;
   const iType start;
   const iType end;
   enum { increment = 1 };
@@ -727,7 +726,7 @@ struct TeamVectorRangeBoundariesStruct {
 
 template <typename iType, class TeamMemberType>
 struct ThreadVectorRangeBoundariesStruct {
-  typedef iType index_type;
+  using index_type = iType;
   const index_type start;
   const index_type end;
   enum { increment = 1 };
@@ -890,29 +889,29 @@ struct PolicyPropertyAdaptor;
 template <unsigned long P, class... Properties>
 struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
                              RangePolicy<Properties...>> {
-  typedef RangePolicy<Properties...> policy_in_t;
-  typedef RangePolicy<typename policy_in_t::traits::execution_space,
-                      typename policy_in_t::traits::schedule_type,
-                      typename policy_in_t::traits::work_tag,
-                      typename policy_in_t::traits::index_type,
-                      typename policy_in_t::traits::iteration_pattern,
-                      typename policy_in_t::traits::launch_bounds,
-                      WorkItemProperty::ImplWorkItemProperty<P>>
-      policy_out_t;
+  using policy_in_t = RangePolicy<Properties...>;
+  using policy_out_t =
+      RangePolicy<typename policy_in_t::traits::execution_space,
+                  typename policy_in_t::traits::schedule_type,
+                  typename policy_in_t::traits::work_tag,
+                  typename policy_in_t::traits::index_type,
+                  typename policy_in_t::traits::iteration_pattern,
+                  typename policy_in_t::traits::launch_bounds,
+                  WorkItemProperty::ImplWorkItemProperty<P>>;
 };
 
 template <unsigned long P, class... Properties>
 struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
                              TeamPolicy<Properties...>> {
-  typedef TeamPolicy<Properties...> policy_in_t;
-  typedef TeamPolicy<typename policy_in_t::traits::execution_space,
-                     typename policy_in_t::traits::schedule_type,
-                     typename policy_in_t::traits::work_tag,
-                     typename policy_in_t::traits::index_type,
-                     typename policy_in_t::traits::iteration_pattern,
-                     typename policy_in_t::traits::launch_bounds,
-                     WorkItemProperty::ImplWorkItemProperty<P>>
-      policy_out_t;
+  using policy_in_t = TeamPolicy<Properties...>;
+  using policy_out_t =
+      TeamPolicy<typename policy_in_t::traits::execution_space,
+                 typename policy_in_t::traits::schedule_type,
+                 typename policy_in_t::traits::work_tag,
+                 typename policy_in_t::traits::index_type,
+                 typename policy_in_t::traits::iteration_pattern,
+                 typename policy_in_t::traits::launch_bounds,
+                 WorkItemProperty::ImplWorkItemProperty<P>>;
 };
 }  // namespace Impl
 

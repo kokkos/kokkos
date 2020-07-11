@@ -450,8 +450,8 @@ void *SharedAllocationRecord<Kokkos::HostSpace, void>::reallocate_tracked(
 
 SharedAllocationRecord<Kokkos::HostSpace, void> *
 SharedAllocationRecord<Kokkos::HostSpace, void>::get_record(void *alloc_ptr) {
-  typedef SharedAllocationHeader Header;
-  typedef SharedAllocationRecord<Kokkos::HostSpace, void> RecordHost;
+  using Header     = SharedAllocationHeader;
+  using RecordHost = SharedAllocationRecord<Kokkos::HostSpace, void>;
 
   SharedAllocationHeader const *const head =
       alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;

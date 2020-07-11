@@ -122,9 +122,9 @@ void test_offsetview_construction() {
   {  // test deep copy of scalar const value into mirro
     const int constVal = 6;
     typename offset_view_type::HostMirror hostOffsetView =
-        Kokkos::Experimental::create_mirror_view(ov);
+        Kokkos::create_mirror_view(ov);
 
-    Kokkos::Experimental::deep_copy(hostOffsetView, constVal);
+    Kokkos::deep_copy(hostOffsetView, constVal);
 
     for (int i = hostOffsetView.begin(0); i < hostOffsetView.end(0); ++i) {
       for (int j = hostOffsetView.begin(1); j < hostOffsetView.end(1); ++j) {
@@ -149,9 +149,9 @@ void test_offsetview_construction() {
 
   // test offsetview to offsetviewmirror deep copy
   typename offset_view_type::HostMirror hostOffsetView =
-      Kokkos::Experimental::create_mirror_view(ov);
+      Kokkos::create_mirror_view(ov);
 
-  Kokkos::Experimental::deep_copy(hostOffsetView, ov);
+  Kokkos::deep_copy(hostOffsetView, ov);
 
   for (int i = hostOffsetView.begin(0); i < hostOffsetView.end(0); ++i) {
     for (int j = hostOffsetView.begin(1); j < hostOffsetView.end(1); ++j) {
@@ -258,7 +258,7 @@ void test_offsetview_construction() {
 
   {  // test offsetview to view deep copy
     view_type aView("aView", ov.extent(0), ov.extent(1));
-    Kokkos::Experimental::deep_copy(aView, ov);
+    Kokkos::deep_copy(aView, ov);
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
     int sum = 0;
@@ -277,7 +277,7 @@ void test_offsetview_construction() {
     view_type aView("aView", ov.extent(0), ov.extent(1));
 
     Kokkos::deep_copy(aView, 99);
-    Kokkos::Experimental::deep_copy(ov, aView);
+    Kokkos::deep_copy(ov, aView);
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
     int sum = 0;

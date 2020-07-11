@@ -189,8 +189,8 @@ inline T atomic_exchange(volatile T* const dest,
                          typename std::enable_if<sizeof(T) == sizeof(int) ||
                                                      sizeof(T) == sizeof(long),
                                                  const T&>::type val) {
-  typedef typename Kokkos::Impl::if_c<sizeof(T) == sizeof(int), int, long>::type
-      type;
+  using type =
+      typename Kokkos::Impl::if_c<sizeof(T) == sizeof(int), int, long>::type;
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
@@ -281,8 +281,8 @@ inline void atomic_assign(volatile T* const dest,
                           typename std::enable_if<sizeof(T) == sizeof(int) ||
                                                       sizeof(T) == sizeof(long),
                                                   const T&>::type val) {
-  typedef typename Kokkos::Impl::if_c<sizeof(T) == sizeof(int), int, long>::type
-      type;
+  using type =
+      typename Kokkos::Impl::if_c<sizeof(T) == sizeof(int), int, long>::type;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);

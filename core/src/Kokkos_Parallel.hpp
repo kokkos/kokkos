@@ -81,7 +81,7 @@ namespace Impl {
  */
 template <class Functor, class Policy, class EnableFunctor, class EnablePolicy>
 struct FunctorPolicyExecutionSpace {
-  typedef Kokkos::DefaultExecutionSpace execution_space;
+  using execution_space = Kokkos::DefaultExecutionSpace;
 };
 
 template <class Functor, class Policy>
@@ -89,7 +89,7 @@ struct FunctorPolicyExecutionSpace<
     Functor, Policy,
     typename enable_if_type<typename Functor::device_type>::type,
     typename enable_if_type<typename Policy ::execution_space>::type> {
-  typedef typename Policy ::execution_space execution_space;
+  using execution_space = typename Policy::execution_space;
 };
 
 template <class Functor, class Policy>
@@ -97,14 +97,14 @@ struct FunctorPolicyExecutionSpace<
     Functor, Policy,
     typename enable_if_type<typename Functor::execution_space>::type,
     typename enable_if_type<typename Policy ::execution_space>::type> {
-  typedef typename Policy ::execution_space execution_space;
+  using execution_space = typename Policy::execution_space;
 };
 
 template <class Functor, class Policy, class EnableFunctor>
 struct FunctorPolicyExecutionSpace<
     Functor, Policy, EnableFunctor,
     typename enable_if_type<typename Policy::execution_space>::type> {
-  typedef typename Policy ::execution_space execution_space;
+  using execution_space = typename Policy::execution_space;
 };
 
 template <class Functor, class Policy, class EnablePolicy>
@@ -112,7 +112,7 @@ struct FunctorPolicyExecutionSpace<
     Functor, Policy,
     typename enable_if_type<typename Functor::device_type>::type,
     EnablePolicy> {
-  typedef typename Functor::device_type::execution_space execution_space;
+  using execution_space = typename Functor::device_type::execution_space;
 };
 
 template <class Functor, class Policy, class EnablePolicy>
@@ -120,7 +120,7 @@ struct FunctorPolicyExecutionSpace<
     Functor, Policy,
     typename enable_if_type<typename Functor::execution_space>::type,
     EnablePolicy> {
-  typedef typename Functor::execution_space execution_space;
+  using execution_space = typename Functor::execution_space;
 };
 
 }  // namespace Impl
@@ -183,9 +183,10 @@ inline void parallel_for(
 template <class FunctorType>
 inline void parallel_for(const size_t work_count, const FunctorType& functor,
                          const std::string& str = "") {
-  typedef typename Impl::FunctorPolicyExecutionSpace<
-      FunctorType, void>::execution_space execution_space;
-  typedef RangePolicy<execution_space> policy;
+  using execution_space =
+      typename Impl::FunctorPolicyExecutionSpace<FunctorType,
+                                                 void>::execution_space;
+  using policy = RangePolicy<execution_space>;
 
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -425,10 +426,11 @@ inline void parallel_scan(
 template <class FunctorType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor,
                           const std::string& str = "") {
-  typedef typename Kokkos::Impl::FunctorPolicyExecutionSpace<
-      FunctorType, void>::execution_space execution_space;
+  using execution_space =
+      typename Kokkos::Impl::FunctorPolicyExecutionSpace<FunctorType,
+                                                         void>::execution_space;
 
-  typedef Kokkos::RangePolicy<execution_space> policy;
+  using policy = Kokkos::RangePolicy<execution_space>;
 
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -501,10 +503,11 @@ template <class FunctorType, class ReturnType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor,
                           ReturnType& return_value,
                           const std::string& str = "") {
-  typedef typename Kokkos::Impl::FunctorPolicyExecutionSpace<
-      FunctorType, void>::execution_space execution_space;
+  using execution_space =
+      typename Kokkos::Impl::FunctorPolicyExecutionSpace<FunctorType,
+                                                         void>::execution_space;
 
-  typedef Kokkos::RangePolicy<execution_space> policy;
+  using policy = Kokkos::RangePolicy<execution_space>;
 
   uint64_t kpID = 0;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
