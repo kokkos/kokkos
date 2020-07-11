@@ -92,7 +92,7 @@ SET(ClangOpenMPFlag -fopenmp=libomp)
 #  )
    IF(KOKKOS_CXX_STANDARD LESS 17)
      MESSAGE(FATAL_ERROR "OpenMPTarget backend requires C++17 or newer")
-   ENDIF()  
+   ENDIF()
 ENDIF()
 
 IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)

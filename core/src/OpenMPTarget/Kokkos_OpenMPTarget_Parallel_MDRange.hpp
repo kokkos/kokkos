@@ -50,7 +50,10 @@
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
-#define KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+// WORKAROUND OPENMPTARGET: sometimes tile sizes don't make it correctly,
+// this was tracked down to a bug in clang with regards of mapping structs
+// with arrays of long in it. Arrays of int might be fine though ...
+#define KOKKOS_IMPL_MDRANGE_USE_NO_TILES  // undef EOF
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -754,5 +757,5 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
+#undef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
 #endif /* KOKKOS_OPENMPTARGET_PARALLEL_HPP */

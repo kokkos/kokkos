@@ -49,7 +49,7 @@ SET(SOURCES
   )
 
 IF(Kokkos_ENABLE_HIP)
-# FIXME requires TeamPolicy
+# FIXME HIP requires TeamPolicy
   LIST(REMOVE_ITEM SOURCES
     PerfTest_CustomReduction.cpp
     PerfTest_ExecSpacePartitioning.cpp
@@ -57,6 +57,7 @@ IF(Kokkos_ENABLE_HIP)
 ENDIF()
 
 IF(Kokkos_ENABLE_OPENMPTARGET)
+# FIXME OPENMPTARGET requires TeamPolicy Reductions and Custom Reduction
   LIST(REMOVE_ITEM SOURCES
     PerfTest_CustomReduction.cpp
     PerfTest_ExecSpacePartitioning.cpp
@@ -95,6 +96,7 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 )
 
 IF(NOT Kokkos_ENABLE_OPENMPTARGET)
+# FIXME OPENMPTARGET needs tasking
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     PerformanceTest_TaskDag
     SOURCES test_taskdag.cpp

@@ -61,6 +61,7 @@ template <class Reducer>
 struct OpenMPTargetReducerWrapper {
   typedef typename Reducer::value_type value_type;
 
+// WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
 // fails without it
 #pragma omp declare target
@@ -93,6 +94,9 @@ struct OpenMPTargetReducerWrapper<Sum<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -116,6 +120,9 @@ struct OpenMPTargetReducerWrapper<Prod<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -139,6 +146,9 @@ struct OpenMPTargetReducerWrapper<Min<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -164,6 +174,9 @@ struct OpenMPTargetReducerWrapper<Max<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -190,6 +203,9 @@ struct OpenMPTargetReducerWrapper<LAnd<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -216,6 +232,9 @@ struct OpenMPTargetReducerWrapper<LOr<Scalar, Space>> {
 
   typedef Kokkos::View<value_type, Space> result_view_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -241,6 +260,9 @@ struct OpenMPTargetReducerWrapper<BAnd<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -266,6 +288,9 @@ struct OpenMPTargetReducerWrapper<BOr<Scalar, Space>> {
   // Required
   typedef typename std::remove_cv<Scalar>::type value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -295,6 +320,9 @@ struct OpenMPTargetReducerWrapper<MinLoc<Scalar, Index, Space>> {
   // Required
   typedef ValLocScalar<scalar_type, index_type> value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -325,6 +353,9 @@ struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
   // Required
   typedef ValLocScalar<scalar_type, index_type> value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   KOKKOS_INLINE_FUNCTION
   static void join(value_type& dest, const value_type& src) {
@@ -353,6 +384,9 @@ struct OpenMPTargetReducerWrapper<MinMax<Scalar, Space>> {
   // Required
   typedef MinMaxScalar<scalar_type> value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION
@@ -393,6 +427,9 @@ struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
   // Required
   typedef MinMaxLocScalar<scalar_type, index_type> value_type;
 
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
 #pragma omp declare target
   // Required
   KOKKOS_INLINE_FUNCTION

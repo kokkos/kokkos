@@ -48,8 +48,10 @@
 #include <cstdint>
 #include <string>
 
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_ENABLE_CXX17)
-#define KOKKOS_IMPL_IF_ON_HOST if constexpr (omp_is_initial_device() == true)
+// undefined at end of file
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+// Note: OpenMPTarget enforces C++17 at configure time
+#define KOKKOS_IMPL_IF_ON_HOST if constexpr (omp_is_initial_device())
 #else
 #define KOKKOS_IMPL_IF_ON_HOST if (true)
 #endif
@@ -502,5 +504,5 @@ union SharedAllocationTracker {
 
 } /* namespace Impl */
 } /* namespace Kokkos */
-
+#undef KOKKOS_IMPL_IF_ON_HOST
 #endif
