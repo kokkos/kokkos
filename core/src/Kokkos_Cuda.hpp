@@ -259,7 +259,6 @@ class Cuda {
  private:
   Impl::CudaInternal* m_space_instance;
   int* m_counter;
-  bool m_use_stream;
 };
 
 namespace Tools {
