@@ -51,10 +51,6 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#ifndef KOKKOS_IMPL_COMPILING_LIBRARY
-#define KOKKOS_IMPL_COMPILING_LIBRARY false
-#endif
-
 namespace Kokkos {
 
 namespace Impl {
@@ -75,115 +71,11 @@ struct ViewFillLayoutSelector<Kokkos::LayoutRight> {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#include <impl/Kokkos_ViewFillCopyETIAvail.hpp>
-
 namespace Kokkos {
 namespace Impl {
 
-template <class ViewType, class Layout, class ExecSpace, typename iType,
-          bool ETIAvail>
-struct ViewFill<ViewType, Layout, ExecSpace, 0, iType, ETIAvail> {
-  ViewType a;
-  typename ViewType::const_value_type val;
-  using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType&, const ST&, const ExecSpace&);
-};
-
-template <class ViewType, class Layout, class ExecSpace, typename iType,
-          bool ETIAvail>
-struct ViewFill<ViewType, Layout, ExecSpace, 1, iType, ETIAvail> {
-  ViewType a;
-  typename ViewType::const_value_type val;
-  using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType&, const ST&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType&) const;
-};
-
-template <class ViewType, class Layout, class ExecSpace, typename iType,
-          bool ETIAvail>
-struct ViewFill<ViewType, Layout, ExecSpace, 2, iType, ETIAvail> {
-  ViewType a;
-  typename ViewType::const_value_type val;
-  using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType&, const ST&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType&, const iType&) const;
-};
-
-template <class ViewType, class Layout, class ExecSpace, typename iType,
-          bool ETIAvail>
-struct ViewFill<ViewType, Layout, ExecSpace, 3, iType, ETIAvail> {
-  ViewType a;
-  typename ViewType::const_value_type val;
-  using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType&, const ST&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType&, const iType&, const iType&) const;
-};
-
-template <class ViewType, class Layout, class ExecSpace, typename iType,
-          bool ETIAvail>
-struct ViewFill<ViewType, Layout, ExecSpace, 4, iType, ETIAvail> {
-  ViewType a;
-  typename ViewType::const_value_type val;
-  using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType&, const ST&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType&, const iType&, const iType&, const iType&) const;
-};
-
-template <class ViewType, class Layout, class ExecSpace, typename iType,
-          bool ETIAvail>
-struct ViewFill<ViewType, Layout, ExecSpace, 5, iType, ETIAvail> {
-  ViewType a;
-  typename ViewType::const_value_type val;
-  using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType&, const ST&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType&, const iType&, const iType&, const iType&,
-                  const iType&) const;
-};
-
-template <class ViewType, class Layout, class ExecSpace, typename iType,
-          bool ETIAvail>
-struct ViewFill<ViewType, Layout, ExecSpace, 6, iType, ETIAvail> {
-  ViewType a;
-  typename ViewType::const_value_type val;
-  using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType&, const ST&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType&, const iType&, const iType&, const iType&,
-                  const iType&, const iType&) const;
-};
-
-template <class ViewType, class Layout, class ExecSpace, typename iType,
-          bool ETIAvail>
-struct ViewFill<ViewType, Layout, ExecSpace, 7, iType, ETIAvail> {
-  ViewType a;
-  typename ViewType::const_value_type val;
-  using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType&, const ST&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType&, const iType&, const iType&, const iType&,
-                  const iType&, const iType&, const iType&) const;
-};
-
-template <class ViewType, class Layout, class ExecSpace, typename iType,
-          bool ETIAvail>
-struct ViewFill<ViewType, Layout, ExecSpace, 8, iType, ETIAvail> {
-  ViewType a;
-  typename ViewType::const_value_type val;
-  using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType&, const ST&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType&, const iType&, const iType&, const iType&,
-                  const iType&, const iType&, const iType&, const iType&) const;
-};
-
 template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 0, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewFill<ViewType, Layout, ExecSpace, 0, iType> {
   using ST = typename ViewType::non_const_value_type;
   ViewFill(const ViewType& a, const ST& val, const ExecSpace& space) {
     Kokkos::Impl::DeepCopy<typename ViewType::memory_space, Kokkos::HostSpace,
@@ -192,8 +84,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 0, iType,
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 1, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewFill<ViewType, Layout, ExecSpace, 1, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
   using policy_type = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
@@ -210,8 +101,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 1, iType,
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 2, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewFill<ViewType, Layout, ExecSpace, 2, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
@@ -233,8 +123,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 2, iType,
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 3, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewFill<ViewType, Layout, ExecSpace, 3, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
@@ -259,8 +148,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 3, iType,
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 4, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewFill<ViewType, Layout, ExecSpace, 4, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
@@ -287,8 +175,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 4, iType,
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 5, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewFill<ViewType, Layout, ExecSpace, 5, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
@@ -315,8 +202,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 5, iType,
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 6, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewFill<ViewType, Layout, ExecSpace, 6, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
@@ -343,8 +229,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 6, iType,
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 7, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewFill<ViewType, Layout, ExecSpace, 7, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
@@ -372,8 +257,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 7, iType,
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
-struct ViewFill<ViewType, Layout, ExecSpace, 8, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewFill<ViewType, Layout, ExecSpace, 8, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
 
@@ -402,96 +286,8 @@ struct ViewFill<ViewType, Layout, ExecSpace, 8, iType,
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType, bool ETIAvail>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 1, iType, ETIAvail> {
-  ViewTypeA a;
-  ViewTypeB b;
-  ViewCopy(const ViewTypeA&, const ViewTypeB&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const;
-};
-
-template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType, bool ETIAvail>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType, ETIAvail> {
-  ViewTypeA a;
-  ViewTypeB b;
-  ViewCopy(const ViewTypeA&, const ViewTypeB&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0, const iType& i1) const;
-};
-
-template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType, bool ETIAvail>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType, ETIAvail> {
-  ViewTypeA a;
-  ViewTypeB b;
-  ViewCopy(const ViewTypeA&, const ViewTypeB&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0, const iType& i1, const iType& i2) const;
-};
-
-template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType, bool ETIAvail>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 4, iType, ETIAvail> {
-  ViewTypeA a;
-  ViewTypeB b;
-  ViewCopy(const ViewTypeA&, const ViewTypeB&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0, const iType& i1, const iType& i2,
-                  const iType& i3) const;
-};
-
-template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType, bool ETIAvail>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 5, iType, ETIAvail> {
-  ViewTypeA a;
-  ViewTypeB b;
-  ViewCopy(const ViewTypeA&, const ViewTypeB&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0, const iType& i1, const iType& i2,
-                  const iType& i3, const iType& i4) const;
-};
-
-template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType, bool ETIAvail>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 6, iType, ETIAvail> {
-  ViewTypeA a;
-  ViewTypeB b;
-  ViewCopy(const ViewTypeA&, const ViewTypeB&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0, const iType& i1, const iType& i2,
-                  const iType& i3, const iType& i4, const iType& i5) const;
-};
-
-template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType, bool ETIAvail>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType, ETIAvail> {
-  ViewTypeA a;
-  ViewTypeB b;
-  ViewCopy(const ViewTypeA&, const ViewTypeB&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0, const iType& i1, const iType& i2,
-                  const iType& i3, const iType& i4, const iType& i5,
-                  const iType& i6) const;
-};
-
-template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType, bool ETIAvail>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType, ETIAvail> {
-  ViewTypeA a;
-  ViewTypeB b;
-  ViewCopy(const ViewTypeA&, const ViewTypeB&, const ExecSpace&);
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0, const iType& i1, const iType& i2,
-                  const iType& i3, const iType& i4, const iType& i5,
-                  const iType& i6, const iType& i7) const;
-};
-
-template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 1, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 1, iType> {
   ViewTypeA a;
   ViewTypeB b;
 
@@ -510,8 +306,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 1, iType,
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType> {
   ViewTypeA a;
   ViewTypeB b;
   static const Kokkos::Iterate outer_iteration_pattern =
@@ -539,8 +334,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType,
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType> {
   ViewTypeA a;
   ViewTypeB b;
 
@@ -570,8 +364,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType,
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 4, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 4, iType> {
   ViewTypeA a;
   ViewTypeB b;
 
@@ -603,8 +396,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 4, iType,
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 5, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 5, iType> {
   ViewTypeA a;
   ViewTypeB b;
 
@@ -636,8 +428,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 5, iType,
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 6, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 6, iType> {
   ViewTypeA a;
   ViewTypeB b;
 
@@ -669,8 +460,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 6, iType,
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType> {
   ViewTypeA a;
   ViewTypeB b;
 
@@ -703,8 +493,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType,
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType,
-                KOKKOS_IMPL_COMPILING_LIBRARY> {
+struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType> {
   ViewTypeA a;
   ViewTypeB b;
 
@@ -738,8 +527,6 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType,
 
 }  // namespace Impl
 }  // namespace Kokkos
-
-#include <impl/Kokkos_ViewFillCopyETIDecl.hpp>
 
 namespace Kokkos {
 namespace Impl {
