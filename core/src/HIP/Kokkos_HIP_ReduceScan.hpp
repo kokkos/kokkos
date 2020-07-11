@@ -77,8 +77,15 @@ __device__ inline void hip_intra_warp_reduction(
         Kokkos::Experimental::shfl_down(result, blockDim.x * shift, warp_size);
     // Only join if upper thread is active (this allows non power of two for
     // blockDim.y)
-    if (threadIdx.y + shift < max_active_thread) join(result, tmp);
+    if (threadIdx.y + shift < max_active_thread) {
+      join(result, tmp);
+    }
     shift *= 2;
+    // Not sure why there is a race condition here but we need to wait for the
+    // join operation to be finished to perform the next shuffle. Note that the
+    // problem was also found in the CUDA backend with CUDA clang
+    // (https://github.com/kokkos/kokkos/issues/941)
+    __syncthreads();
   }
 
   // Broadcast the result to all the threads in the warp
@@ -191,18 +198,12 @@ __device__ bool hip_inter_block_reduction(
 
       // Perform shfl reductions within the warp only join if contribution is
       // valid (allows gridDim.x non power of two and <warp_size)
-      if (static_cast<int>(blockDim.x * blockDim.y) > 1) {
-        value_type tmp = Kokkos::Experimental::shfl_down(value, 1, warp_size);
-        if (id + 1 < static_cast<int>(gridDim.x)) join(value, tmp);
-      }
-      // FIXME_HIP check that the ballot is necessary. Also active is not read.
-      int active = __ballot(1);
-      for (unsigned int i = 2; i < warp_size; i *= 2) {
+      for (unsigned int i = 1; i < warp_size; i *= 2) {
         if ((blockDim.x * blockDim.y) > i) {
           value_type tmp = Kokkos::Experimental::shfl_down(value, i, warp_size);
           if (id + i < gridDim.x) join(value, tmp);
         }
-        active += __ballot(1);
+        __syncthreads();
       }
     }
   }
@@ -231,6 +232,7 @@ __device__ inline void hip_intra_warp_reduction(
     // blockDim.y)
     if (threadIdx.y + shift < max_active_thread) reducer.join(result, tmp);
     shift *= 2;
+    __syncthreads();
   }
 
   result              = ::Kokkos::Experimental::shfl(result, 0, warp_size);
@@ -351,18 +353,12 @@ __device__ inline bool hip_inter_block_reduction(
 
       // Perform shfl reductions within the warp only join if contribution is
       // valid (allows gridDim.x non power of two and <warp_size)
-      if (static_cast<int>(blockDim.x * blockDim.y) > 1) {
-        value_type tmp = Kokkos::Experimental::shfl_down(value, 1, warp_size);
-        if (id + 1 < static_cast<int>(gridDim.x)) reducer.join(value, tmp);
-      }
-      // FIXME_HIP check that the ballot is necessary. Also active is not read.
-      int active = __ballot(1);
-      for (unsigned int i = 2; i < 64; i *= 2) {
+      for (unsigned int i = 1; i < warp_size; i *= 2) {
         if ((blockDim.x * blockDim.y) > i) {
           value_type tmp = Kokkos::Experimental::shfl_down(value, i, warp_size);
           if (id + i < gridDim.x) reducer.join(value, tmp);
         }
-        active += __ballot(1);
+        __syncthreads();
       }
     }
   }
@@ -374,6 +370,125 @@ __device__ inline bool hip_inter_block_reduction(
 
 template <class FunctorType, class ArgTag, bool DoScan, bool UseShfl>
 struct HIPReductionsFunctor;
+
+template <typename FunctorType, typename ArgTag>
+struct HIPReductionsFunctor<FunctorType, ArgTag, false, true> {
+  using ValueTraits  = FunctorValueTraits<FunctorType, ArgTag>;
+  using ValueJoin    = FunctorValueJoin<FunctorType, ArgTag>;
+  using ValueInit    = FunctorValueInit<FunctorType, ArgTag>;
+  using ValueOps     = FunctorValueOps<FunctorType, ArgTag>;
+  using pointer_type = typename ValueTraits::pointer_type;
+  using Scalar       = typename ValueTraits::value_type;
+
+  __device__ static inline void scalar_intra_warp_reduction(
+      FunctorType const& functor,
+      Scalar value,            // Contribution
+      bool const skip_vector,  // Skip threads if Kokkos vector lanes are not
+                               // part of the reduction
+      int const width,         // How much of the warp participates
+      Scalar& result) {
+    for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
+      Scalar tmp = Kokkos::Experimental::shfl_down(value, delta, width);
+      ValueJoin::join(functor, &value, &tmp);
+    }
+
+    Experimental::Impl::in_place_shfl(result, value, 0, width);
+  }
+
+  __device__ static inline void scalar_intra_block_reduction(
+      FunctorType const& functor, Scalar value, bool const skip,
+      Scalar* my_global_team_buffer_element, int const shared_elements,
+      Scalar* shared_team_buffer_element) {
+    unsigned int constexpr warp_size =
+        Kokkos::Experimental::Impl::HIPTraits::WarpSize;
+    int const warp_id = (threadIdx.y * blockDim.x) / warp_size;
+    Scalar* const my_shared_team_buffer_element =
+        shared_team_buffer_element + warp_id % shared_elements;
+
+    // Warp Level Reduction, ignoring Kokkos vector entries
+    scalar_intra_warp_reduction(functor, value, skip, warp_size, value);
+
+    if (warp_id < shared_elements) {
+      *my_shared_team_buffer_element = value;
+    }
+    // Wait for every warp to be done before using one warp to do the final
+    // cross warp reduction
+    __syncthreads();
+
+    int const num_warps = blockDim.x * blockDim.y / warp_size;
+    for (int w = shared_elements; w < num_warps; w += shared_elements) {
+      if (warp_id >= w && warp_id < w + shared_elements) {
+        if ((threadIdx.y * blockDim.x + threadIdx.x) % warp_size == 0)
+          ValueJoin::join(functor, my_shared_team_buffer_element, &value);
+      }
+      __syncthreads();
+    }
+
+    if (warp_id == 0) {
+      ValueInit::init(functor, &value);
+      for (unsigned int i = threadIdx.y * blockDim.x + threadIdx.x;
+           i < blockDim.y * blockDim.x / warp_size; i += warp_size) {
+        ValueJoin::join(functor, &value, &shared_team_buffer_element[i]);
+      }
+      scalar_intra_warp_reduction(functor, value, false, warp_size,
+                                  *my_global_team_buffer_element);
+    }
+  }
+
+  __device__ static inline bool scalar_inter_block_reduction(
+      FunctorType const& functor,
+      ::Kokkos::Experimental::HIP::size_type const /*block_id*/,
+      ::Kokkos::Experimental::HIP::size_type const block_count,
+      ::Kokkos::Experimental::HIP::size_type* const shared_data,
+      ::Kokkos::Experimental::HIP::size_type* const global_data,
+      ::Kokkos::Experimental::HIP::size_type* const global_flags) {
+    Scalar* const global_team_buffer_element =
+        reinterpret_cast<Scalar*>(global_data);
+    Scalar* const my_global_team_buffer_element =
+        global_team_buffer_element + blockIdx.x;
+    Scalar* shared_team_buffer_elements =
+        reinterpret_cast<Scalar*>(shared_data);
+    Scalar value = shared_team_buffer_elements[threadIdx.y];
+    unsigned int constexpr warp_size =
+        Kokkos::Experimental::Impl::HIPTraits::WarpSize;
+    int shared_elements = blockDim.x * blockDim.y / warp_size;
+    int global_elements = block_count;
+    __syncthreads();
+
+    scalar_intra_block_reduction(functor, value, true,
+                                 my_global_team_buffer_element, shared_elements,
+                                 shared_team_buffer_elements);
+    __threadfence();
+    __syncthreads();
+
+    // Use the last block that is done to do the do the reduction across the
+    // block
+    __shared__ unsigned int num_teams_done;
+    if (threadIdx.x + threadIdx.y == 0) {
+      __threadfence();
+      num_teams_done = Kokkos::atomic_fetch_add(global_flags, 1) + 1;
+    }
+    bool is_last_block = false;
+    // FIXME_HIP HIP does not support syncthreads_or. That's why we need to make
+    // num_teams_done __shared__
+    // if (__syncthreads_or(num_teams_done == gridDim.x)) {*/
+    __syncthreads();
+    if (num_teams_done == gridDim.x) {
+      is_last_block = true;
+      *global_flags = 0;
+      ValueInit::init(functor, &value);
+      for (int i = threadIdx.y * blockDim.x + threadIdx.x; i < global_elements;
+           i += blockDim.x * blockDim.y) {
+        ValueJoin::join(functor, &value, &global_team_buffer_element[i]);
+      }
+      scalar_intra_block_reduction(
+          functor, value, false, shared_team_buffer_elements + blockDim.y - 1,
+          shared_elements, shared_team_buffer_elements);
+    }
+
+    return is_last_block;
+  }
+};
 
 template <typename FunctorType, typename ArgTag>
 struct HIPReductionsFunctor<FunctorType, ArgTag, false, false> {
@@ -702,17 +817,12 @@ __device__ bool hip_single_inter_block_reduce_scan(
     ::Kokkos::Experimental::HIP::size_type* const global_data,
     ::Kokkos::Experimental::HIP::size_type* const global_flags) {
   using ValueTraits = FunctorValueTraits<FunctorType, ArgTag>;
-  if (!DoScan && /*FIXME*/ (bool)ValueTraits::StaticValueSize)
-    // FIXME_HIP For now we don't use shuffle
-    // return Kokkos::Impl::HIPReductionsFunctor<
-    //    FunctorType, ArgTag, false, (ValueTraits::StaticValueSize > 16)>::
-    //    scalar_inter_block_reduction(functor, block_id, block_count,
-    //                                 shared_data, global_data, global_flags);
+  if (!DoScan && static_cast<bool>(ValueTraits::StaticValueSize))
+    // FIXME_HIP I don't know where 16 comes from
     return Kokkos::Impl::HIPReductionsFunctor<
-        FunctorType, ArgTag, false,
-        false>::scalar_inter_block_reduction(functor, block_id, block_count,
-                                             shared_data, global_data,
-                                             global_flags);
+        FunctorType, ArgTag, false, (ValueTraits::StaticValueSize > 16)>::
+        scalar_inter_block_reduction(functor, block_id, block_count,
+                                     shared_data, global_data, global_flags);
   else {
     return hip_single_inter_block_reduce_scan2<DoScan, FunctorType, ArgTag>(
         functor, block_id, block_count, shared_data, global_data, global_flags);
