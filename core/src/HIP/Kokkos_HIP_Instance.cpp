@@ -213,9 +213,13 @@ void HIPInternal::initialize(int hip_device_id) {
     // Maximum number of blocks
     m_maxBlock = hipProp.maxGridSize[0];
 
+    // theoretically, we can get 40 WF's / CU, but only can sustain 32
+    m_maxBlocksPerSM = 32;
+    // FIXME_HIP - Nick to implement this upstream
+    m_regsPerSM          = 262144 / 32;
     m_shmemPerSM         = hipProp.maxSharedMemoryPerMultiProcessor;
     m_maxShmemPerBlock   = hipProp.sharedMemPerBlock;
-    m_maxThreadsPerSM    = hipProp.maxThreadsPerMultiProcessor;
+    m_maxThreadsPerSM    = m_maxBlocksPerSM * HIPTraits::WarpSize;
     m_maxThreadsPerBlock = hipProp.maxThreadsPerBlock;
 
     //----------------------------------
