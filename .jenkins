@@ -69,10 +69,10 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-9.2-Clang') {
+                stage('CUDA-10.1-Clang-Tidy') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.clang'
+                            filename 'Dockerfile.kokkosllvmproject'
                             dir 'scripts/docker'
                             additionalBuildArgs '--pull'
                             label 'nvidia-docker && volta'
@@ -84,6 +84,7 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS=-Werror \
