@@ -425,6 +425,8 @@ struct TestReduceCombinatoricalInstantiation {
     ASSERT_EQ(expected_result, result_view_const_um());
 
     value = 0;
+// WORKAROUND OPENMPTARGET Custom Reducers not implemented
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     CallParallelReduce(args...,
                        Test::ReduceCombinatorical::AddPlus<double>(value));
     if ((Kokkos::DefaultExecutionSpace::concurrency() > 1) &&
@@ -449,6 +451,7 @@ struct TestReduceCombinatoricalInstantiation {
     } else {
       ASSERT_EQ(expected_result, value);
     }
+#endif
   }
 
   template <class... Args>
@@ -483,6 +486,9 @@ struct TestReduceCombinatoricalInstantiation {
     AddReturnArgument(
         args...,
         Test::ReduceCombinatorical::FunctorScalar<ISTEAM>(result_view));
+// WORKAROUND OPENMPTARGET: reductions with functor join/init/final not
+// implemented
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     AddReturnArgument(
         args...,
         Test::ReduceCombinatorical::FunctorScalarInit<ISTEAM>(result_view));
@@ -519,6 +525,7 @@ struct TestReduceCombinatoricalInstantiation {
     Kokkos::fence();
     Kokkos::deep_copy(h_r, result_view);
     ASSERT_EQ(expected_result, h_r());
+#endif
   }
 
   template <class... Args>

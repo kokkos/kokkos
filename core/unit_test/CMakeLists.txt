@@ -147,6 +147,7 @@ endforeach()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM OpenMPTarget_SOURCES
+    openmptarget/TestOpenMPTarget_AtomicOperations_complexfloat.cpp
     openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
     openmptarget/TestOpenMPTarget_MDRange_a.cpp
     openmptarget/TestOpenMPTarget_MDRange_b.cpp
@@ -160,6 +161,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
     openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
     openmptarget/TestOpenMPTarget_ViewOfClass.cpp
+
   )
 endif()
 

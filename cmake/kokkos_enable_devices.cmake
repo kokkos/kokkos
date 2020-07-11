@@ -36,6 +36,9 @@ IF(KOKKOS_ENABLE_OPENMP)
   IF(KOKKOS_CLANG_IS_CRAY)
     SET(ClangOpenMPFlag -fopenmp)
   ENDIF()
+  IF(KOKKOS_CLANG_IS_INTEL)
+    SET(ClangOpenMPFlag -fiopenmp)
+  ENDIF()
   IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
     #expression /openmp yields error, so add a specific Clang flag
     COMPILER_SPECIFIC_OPTIONS(Clang /clang:-fopenmp)
@@ -75,6 +78,7 @@ SET(ClangOpenMPFlag -fopenmp=libomp)
 
   COMPILER_SPECIFIC_FLAGS(
     Clang      ${ClangOpenMPFlag} -Wno-openmp-mapping
+    IntelClang -fiopenmp -Wno-openmp-mapping
     XL         -qsmp=omp -qoffload -qnoeh
     DEFAULT    -fopenmp
   )
@@ -86,6 +90,9 @@ SET(ClangOpenMPFlag -fopenmp=libomp)
 #  COMPILER_SPECIFIC_LIBS(
 #    Clang -lopenmptarget
 #  )
+   IF(KOKKOS_CXX_STANDARD LESS 17)
+     MESSAGE(FATAL_ERROR "OpenMPTarget backend requires C++17 or newer")
+   ENDIF()
 ENDIF()
 
 IF(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
