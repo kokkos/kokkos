@@ -414,6 +414,11 @@ ENDFUNCTION()
 CHECK_AMDGPU_ARCH(VEGA900 gfx900) # Radeon Instinct MI25
 CHECK_AMDGPU_ARCH(VEGA906 gfx906) # Radeon Instinct MI50 and MI60
 
+IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
+  MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
+                     "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+ENDIF()
+
 IF (KOKKOS_ENABLE_OPENMPTARGET)
   SET(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
   IF (CLANG_CUDA_ARCH)
