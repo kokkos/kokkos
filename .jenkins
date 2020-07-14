@@ -258,7 +258,7 @@ pipeline {
                         OMP_NUM_THREADS = 8
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
-                        NVCC_WRAPPER_DEFAULT_COMPILER = 'g++-8'
+                        CXX = 'g++-8'
                     }
                     steps {
                         sh 'ccache --zero-stats'
