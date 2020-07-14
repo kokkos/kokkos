@@ -274,6 +274,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=OFF \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
                               make -j8 install && \
@@ -352,6 +353,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
