@@ -136,7 +136,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:11.0-devel-rc --build-arg ADDITIONAL_PACKAGES="g++-8" --build-arg CMAKE_VERSION=3.17.3'
+                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:11.0-devel-rc --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran" --build-arg CMAKE_VERSION=3.17.3'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
@@ -176,6 +176,14 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
+                              make -j8 && ctest --output-on-failure && \
+                              cd ../example/build_cmake_installed && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                              .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
                     post {
@@ -210,7 +218,10 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make -j8 && ctest --output-on-failure && \
+                              cd ../example/build_cmake_in_tree && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake .. && make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
