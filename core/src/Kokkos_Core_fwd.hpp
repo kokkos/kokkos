@@ -151,9 +151,9 @@ struct Device;
 
 #if defined(__clang_analyzer__)
 #define IMPL_DEFAULT_EXEC_SPACE_ANNOTATION \
-  [[clang::annontate("DefaultExecutionSpace")]]
+  [[clang::annotate("DefaultExecutionSpace")]]
 #define IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION \
-  [[clang::annontate("DefaultHostExecutionSpace")]]
+  [[clang::annotate("DefaultHostExecutionSpace")]]
 #else
 #define IMPL_DEFAULT_EXEC_SPACE_ANNOTATION
 #define IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION
@@ -164,7 +164,7 @@ namespace Kokkos {
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA)
 using DefaultExecutionSpace IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Cuda;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET)
-using DefaultExecutionSpace IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
+using DefaultExecutionSpace IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
     Experimental::OpenMPTarget;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
 using DefaultExecutionSpace IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
