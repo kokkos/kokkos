@@ -48,6 +48,7 @@
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_ExecPolicy.hpp>
 
 #include <string>
 
@@ -129,6 +130,73 @@ void resume_tools();
 EventSet get_callbacks();
 void set_callbacks(EventSet new_events);
 }  // namespace Experimental
+
+namespace Experimental {
+template <class ExecPolicy, class FunctorType>
+void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
+                        const std::string& label, uint64_t& kpID) {
+  if (Kokkos::Tools::profileLibraryLoaded()) {
+    Kokkos::Impl::ParallelConstructName<FunctorType,
+                                        typename ExecPolicy::work_tag>
+        name(label);
+    Kokkos::Tools::beginParallelFor(
+        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        &kpID);
+  }
+}
+
+template <class ExecPolicy, class FunctorType>
+void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
+                      const std::string& label, uint64_t& kpID) {
+  if (Kokkos::Tools::profileLibraryLoaded()) {
+    Kokkos::Tools::endParallelFor(kpID);
+  }
+}
+
+template <class ExecPolicy, class FunctorType>
+void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
+                         const std::string& label, uint64_t& kpID) {
+  if (Kokkos::Tools::profileLibraryLoaded()) {
+    Kokkos::Impl::ParallelConstructName<FunctorType,
+                                        typename ExecPolicy::work_tag>
+        name(label);
+    Kokkos::Tools::beginParallelScan(
+        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        &kpID);
+  }
+}
+
+template <class ExecPolicy, class FunctorType>
+void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
+                       const std::string& label, uint64_t& kpID) {
+  if (Kokkos::Tools::profileLibraryLoaded()) {
+    Kokkos::Tools::endParallelScan(kpID);
+  }
+}
+
+template <class ExecPolicy, class FunctorType>
+void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
+                           const std::string& label, uint64_t& kpID) {
+  if (Kokkos::Tools::profileLibraryLoaded()) {
+    Kokkos::Impl::ParallelConstructName<FunctorType,
+                                        typename ExecPolicy::work_tag>
+        name(label);
+    Kokkos::Tools::beginParallelReduce(
+        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
+        &kpID);
+  }
+}
+
+template <class ExecPolicy, class FunctorType>
+void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
+                         const std::string& label, uint64_t& kpID) {
+  if (Kokkos::Tools::profileLibraryLoaded()) {
+    Kokkos::Tools::endParallelReduce(kpID);
+  }
+}
+
+}  // namespace Experimental
+
 }  // namespace Tools
 namespace Profiling {
 

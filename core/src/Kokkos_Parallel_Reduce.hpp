@@ -855,12 +855,9 @@ struct ParallelReduceAdaptor {
                              const FunctorType& functor,
                              ReturnType& return_value) {
     uint64_t kpID = 0;
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Impl::ParallelConstructName<FunctorType,
-                                          typename PolicyType::work_tag>
-          name(label);
-      Kokkos::Profiling::beginParallelReduce(name.get(), 0, &kpID);
-    }
+
+    Kokkos::Tools::Experimental::begin_parallel_reduce(policy, functor, label,
+                                                       kpID);
 
     Kokkos::Impl::shared_allocation_tracking_disable();
 #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
@@ -877,9 +874,8 @@ struct ParallelReduceAdaptor {
     Kokkos::Impl::shared_allocation_tracking_enable();
     closure.execute();
 
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endParallelReduce(kpID);
-    }
+    Kokkos::Tools::Experimental::end_parallel_reduce(policy, functor, label,
+                                                     kpID);
   }
 };
 }  // namespace Impl
