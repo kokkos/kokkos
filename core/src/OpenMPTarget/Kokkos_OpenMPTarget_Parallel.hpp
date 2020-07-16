@@ -691,7 +691,7 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
 #pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
     map(tofrom: result) reduction(custom: result)
     for (int i = begin; i < end; i++) f(TagType(), i, result);
-//clang format on
+    // clang-format on
 
     *result_ptr = result;
   }
@@ -708,31 +708,35 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
-  using WorkTag = typename Policy::work_tag;
+  using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
-  using Member = typename Policy::member_type;
+  using Member    = typename Policy::member_type;
 
-  using ReducerConditional = Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                             FunctorType, ReducerType>;
+  using ReducerConditional =
+      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
-  using WorkTagFwd = typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+  using WorkTagFwd =
+      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                                   WorkTag, void>::type;
 
   // Static Assert WorkTag void if ReducerType not InvalidType
 
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
+  using ValueTraits =
+      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
   using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
   using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
 
   enum { HasJoin = ReduceFunctorHasJoin<FunctorType>::value };
   enum { UseReducer = is_reducer_type<ReducerType>::value };
 
-  using pointer_type = typename ValueTraits::pointer_type;
+  using pointer_type   = typename ValueTraits::pointer_type;
   using reference_type = typename ValueTraits::reference_type;
 
-  using ParReduceSpecialize = ParallelReduceSpecialize<
-      FunctorType, Policy, ReducerType, pointer_type,
-      typename ValueTraits::value_type, HasJoin, UseReducer>;
+  using ParReduceSpecialize =
+      ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
+                               typename ValueTraits::value_type, HasJoin,
+                               UseReducer>;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -779,16 +783,16 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
-  using WorkTag = typename Policy::work_tag;
+  using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
-  using Member = typename Policy::member_type;
+  using Member    = typename Policy::member_type;
 
   using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, WorkTag>;
-  using ValueInit = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
-  using ValueJoin = Kokkos::Impl::FunctorValueJoin<FunctorType, WorkTag>;
-  using ValueOps = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
+  using ValueInit   = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
+  using ValueJoin   = Kokkos::Impl::FunctorValueJoin<FunctorType, WorkTag>;
+  using ValueOps    = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
 
-  using pointer_type = typename ValueTraits::pointer_type;
+  using pointer_type   = typename ValueTraits::pointer_type;
   using reference_type = typename ValueTraits::reference_type;
 
   const FunctorType m_functor;
@@ -907,10 +911,11 @@ template <class FunctorType, class... Properties>
 class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   Kokkos::Experimental::OpenMPTarget> {
  private:
-  using Policy = Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget,
-                                           Properties...>;
+  using Policy =
+      Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget,
+                                       Properties...>;
   using WorkTag = typename Policy::work_tag;
-  using Member = typename Policy::member_type;
+  using Member  = typename Policy::member_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -1081,32 +1086,37 @@ template <class FunctorType, class ReducerType, class... Properties>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      ReducerType, Kokkos::Experimental::OpenMPTarget> {
  private:
-  using Policy = Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget,
-                                           Properties...>;
+  using Policy =
+      Kokkos::Impl::TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget,
+                                       Properties...>;
 
   using WorkTag = typename Policy::work_tag;
-  using Member = typename Policy::member_type;
+  using Member  = typename Policy::member_type;
 
-  using ReducerConditional = Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                             FunctorType, ReducerType>;
+  using ReducerConditional =
+      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
-  using WorkTagFwd = typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+  using WorkTagFwd =
+      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                                   WorkTag, void>::type;
 
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
+  using ValueTraits =
+      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
   using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
   using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
 
-  using pointer_type = typename ValueTraits::pointer_type;
+  using pointer_type   = typename ValueTraits::pointer_type;
   using reference_type = typename ValueTraits::reference_type;
-  using value_type = typename ValueTraits::value_type;
+  using value_type     = typename ValueTraits::value_type;
 
   enum { HasJoin = ReduceFunctorHasJoin<FunctorType>::value };
   enum { UseReducer = is_reducer_type<ReducerType>::value };
 
-  using ParForSpecialize = ParallelReduceSpecialize<
-      FunctorType, Policy, ReducerType, pointer_type,
-      typename ValueTraits::value_type, HasJoin, UseReducer>;
+  using ParForSpecialize =
+      ParallelReduceSpecialize<FunctorType, Policy, ReducerType, pointer_type,
+                               typename ValueTraits::value_type, HasJoin,
+                               UseReducer>;
 
   const FunctorType m_functor;
   const Policy m_policy;
