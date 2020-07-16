@@ -87,7 +87,7 @@ struct AddOper {
     return val1 + val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
@@ -99,7 +99,7 @@ struct SubOper {
     return val1 - val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
@@ -111,7 +111,7 @@ struct MulOper {
     return val1 * val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
@@ -123,7 +123,7 @@ struct DivOper {
     return val1 / val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
@@ -135,7 +135,7 @@ struct ModOper {
     return val1 % val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
@@ -147,7 +147,7 @@ struct AndOper {
     return val1 & val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
@@ -159,7 +159,7 @@ struct OrOper {
     return val1 | val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
@@ -171,7 +171,7 @@ struct XorOper {
     return val1 ^ val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
@@ -183,7 +183,7 @@ struct LShiftOper {
     return val1 << val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
@@ -195,7 +195,7 @@ struct RShiftOper {
     return val1 >> val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1& val1, const Scalar2& val2) {
+  static bool test(const Scalar1&, const Scalar2&) {
     return false;
   }
 };
