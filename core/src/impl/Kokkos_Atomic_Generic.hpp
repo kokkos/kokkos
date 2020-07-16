@@ -372,6 +372,228 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
 #endif
 }
 
+// MIN/MAX-specialized atomics that do early exit when no update required
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T atomic_fetch_minmax(
+    const Oper& op, volatile T* const dest,
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) == sizeof(unsigned long long int),
+                            const T>::type val) {
+  union U {
+    unsigned long long int i;
+    T t;
+    KOKKOS_INLINE_FUNCTION U() {}
+  } oldval, assume, newval;
+
+  oldval.t = *dest;
+
+  do {
+    assume.i = oldval.i;
+    newval.t = op.apply(assume.t, val);
+    oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
+                                               assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return oldval.t;
+}
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T atomic_minmax_fetch(
+    const Oper& op, volatile T* const dest,
+    typename std::enable_if<sizeof(T) != sizeof(int) &&
+                                sizeof(T) == sizeof(unsigned long long int),
+                            const T>::type val) {
+  union U {
+    unsigned long long int i;
+    T t;
+    KOKKOS_INLINE_FUNCTION U() {}
+  } oldval, assume, newval;
+
+  oldval.t = *dest;
+
+  do {
+    assume.i = oldval.i;
+    newval.t = op.apply(assume.t, val);
+    oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
+                                               assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return newval.t;
+}
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T atomic_fetch_minmax(
+    const Oper& op, volatile T* const dest,
+    typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
+  union U {
+    int i;
+    T t;
+    KOKKOS_INLINE_FUNCTION U() {}
+  } oldval, assume, newval;
+
+  oldval.t = *dest;
+
+  do {
+    assume.i = oldval.i;
+    newval.t = op.apply(assume.t, val);
+    oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return oldval.t;
+}
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T atomic_minmax_fetch(
+    const Oper& op, volatile T* const dest,
+    typename std::enable_if<sizeof(T) == sizeof(int), const T>::type val) {
+  union U {
+    int i;
+    T t;
+    KOKKOS_INLINE_FUNCTION U() {}
+  } oldval, assume, newval;
+
+  oldval.t = *dest;
+
+  do {
+    assume.i = oldval.i;
+    newval.t = op.apply(assume.t, val);
+    oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
+  } while (assume.i != oldval.i);
+
+  return newval.t;
+}
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T atomic_minmax_oper(
+    const Oper& op, volatile T* const dest,
+    typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8), const T>::type
+        val) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  while (!Impl::lock_address_host_space((void*)dest))
+    ;
+  T return_val = *dest;
+  *dest        = op.apply(return_val, val);
+  Impl::unlock_address_host_space((void*)dest);
+  return return_val;
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
+  // This is a way to (hopefully) avoid dead lock in a warp
+  T return_val;
+  int done                 = 0;
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
+  unsigned int mask        = KOKKOS_IMPL_CUDA_ACTIVEMASK;
+  unsigned int active      = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
+#else
+  unsigned int active = KOKKOS_IMPL_CUDA_BALLOT(1);
+#endif
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      if (Impl::lock_address_cuda_space((void*)dest)) {
+        return_val = *dest;
+        *dest      = op.apply(return_val, val);
+        Impl::unlock_address_cuda_space((void*)dest);
+        done = 1;
+      }
+    }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
+    done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, done);
+#else
+    done_active = KOKKOS_IMPL_CUDA_BALLOT(done);
+#endif
+  }
+  return return_val;
+#elif defined(__HIP_DEVICE_COMPILE__)
+  // FIXME_HIP
+  Kokkos::abort("atomic_minmax_oper not implemented for large types.");
+  T return_val             = *dest;
+  int done                 = 0;
+  unsigned int active      = __ballot(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      // if (Impl::lock_address_hip_space((void*)dest))
+      {
+        return_val = *dest;
+        *dest      = op.apply(return_val, val);
+        // Impl::unlock_address_hip_space((void*)dest);
+        done = 1;
+      }
+    }
+    done_active = __ballot(done);
+  }
+  return return_val;
+#endif
+}
+
+template <class Oper, typename T>
+KOKKOS_INLINE_FUNCTION T
+atomic_oper_minmax(const Oper& op, volatile T* const dest,
+                  typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
+#if defined(KOKKOS_ENABLE_ASM) && \
+    defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+                                              && (sizeof(T) != 16)
+#endif
+                                              ,
+                                          const T>::type& val) {
+
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+  while (!Impl::lock_address_host_space((void*)dest))
+    ;
+  T return_val = op.apply(*dest, val);
+  *dest        = return_val;
+  Impl::unlock_address_host_space((void*)dest);
+  return return_val;
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
+  T return_val;
+  // This is a way to (hopefully) avoid dead lock in a warp
+  int done                 = 0;
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
+  unsigned int mask        = KOKKOS_IMPL_CUDA_ACTIVEMASK;
+  unsigned int active      = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
+#else
+  unsigned int active = KOKKOS_IMPL_CUDA_BALLOT(1);
+#endif
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      if (Impl::lock_address_cuda_space((void*)dest)) {
+        return_val = op.apply(*dest, val);
+        *dest      = return_val;
+        Impl::unlock_address_cuda_space((void*)dest);
+        done = 1;
+      }
+    }
+#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
+    done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, done);
+#else
+    done_active = KOKKOS_IMPL_CUDA_BALLOT(done);
+#endif
+  }
+  return return_val;
+#elif defined(__HIP_DEVICE_COMPILE__)
+  // FIXME_HIP
+  Kokkos::abort("atomic_oper_minmax not implemented for large types.");
+  T return_val;
+  int done                 = 0;
+  unsigned int active      = __ballot(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      // if (Impl::lock_address_hip_space((void*)dest))
+      {
+        return_val = op.apply(*dest, val);
+        *dest      = return_val;
+        // Impl::unlock_address_hip_space((void*)dest);
+        done = 1;
+      }
+    }
+    done_active = __ballot(done);
+  }
+  return return_val;
+#endif
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -380,12 +602,12 @@ namespace Kokkos {
 // Fetch_Oper atomics: return value before operation
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_max(volatile T* const dest, const T val) {
-  return Impl::atomic_fetch_oper(Impl::MaxOper<T, const T>(), dest, val);
+  return Impl::atomic_fetch_minmax(Impl::MaxOper<T, const T>(), dest, val);
 }
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION T atomic_fetch_min(volatile T* const dest, const T val) {
-  return Impl::atomic_fetch_oper(Impl::MinOper<T, const T>(), dest, val);
+  return Impl::atomic_fetch_minmax(Impl::MinOper<T, const T>(), dest, val);
 }
 
 template <typename T>
