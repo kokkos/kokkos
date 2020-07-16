@@ -526,15 +526,15 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const typename Policy::member_type begin = m_policy.begin();
-    const typename Policy::member_type end   = m_policy.end();
+    const auto begin = m_policy.begin();
+    const auto end   = m_policy.end();
 
     if (end <= begin) return;
 
     FunctorType a_functor(m_functor);
 
 #pragma omp target teams distribute parallel for map(to : a_functor)
-    for (int i = begin; i < end; i++) a_functor(i);
+    for (auto i = begin; i < end; i++) a_functor(i);
   }
 
   template <class TagType>
@@ -544,8 +544,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const typename Policy::member_type begin = m_policy.begin();
-    const typename Policy::member_type end   = m_policy.end();
+    const auto begin = m_policy.begin();
+    const auto end   = m_policy.end();
 
     if (end <= begin) return;
 
@@ -553,7 +553,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 #pragma omp target teams distribute parallel for num_threads(128) \
     map(to                                                        \
         : a_functor)
-    for (int i = begin; i < end; i++) a_functor(TagType(), i);
+    for (auto i = begin; i < end; i++) a_functor(TagType(), i);
   }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
@@ -594,15 +594,15 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const typename PolicyType::member_type begin = p.begin();
-    const typename PolicyType::member_type end   = p.end();
+    const auto begin = p.begin();
+    const auto end   = p.end();
 
     if (end <= begin) return;
 
     ValueType result = ValueType();
 #pragma omp target teams distribute parallel for num_teams(512) \
                 map(to:f) map(tofrom:result) reduction(+: result)
-    for (int i = begin; i < end; i++) f(i, result);
+    for (auto i = begin; i < end; i++) f(i, result);
 
     *result_ptr = result;
   }
@@ -616,8 +616,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const typename PolicyType::member_type begin = p.begin();
-    const typename PolicyType::member_type end   = p.end();
+    const auto begin = p.begin();
+    const auto end   = p.end();
 
     if (end <= begin) return;
 
@@ -625,7 +625,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 #pragma omp target teams distribute parallel for \
                 num_teams(512) map(to:f) map(tofrom: result) \
                 reduction(+: result)
-    for (int i = begin; i < end; i++) f(TagType(), i, result);
+    for (auto i = begin; i < end; i++) f(TagType(), i, result);
 
     *result_ptr = result;
   }
@@ -665,7 +665,7 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
 // clang-format off
 #pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
     map(tofrom: result) reduction(custom: result)
-    for (int i = begin; i < end; i++) f(i, result);
+    for (auto i = begin; i < end; i++) f(i, result);
     // clang-format on
     *result_ptr = result;
   }
@@ -690,7 +690,7 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
 // clang-format off
 #pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
     map(tofrom: result) reduction(custom: result)
-    for (int i = begin; i < end; i++) f(TagType(), i, result);
+    for (auto i = begin; i < end; i++) f(TagType(), i, result);
     // clang-format on
 
     *result_ptr = result;
@@ -938,12 +938,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const int league_size   = m_policy.league_size();
-    const int team_size     = m_policy.team_size();
-    const int vector_length = m_policy.vector_length();
-    const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                           ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                           : league_size;
+    const auto league_size   = m_policy.league_size();
+    const auto team_size     = m_policy.team_size();
+    const auto vector_length = m_policy.vector_length();
+    const auto nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
+                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
+                            : league_size;
 
     OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,
                                      0, 0);
@@ -969,12 +969,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const int league_size   = m_policy.league_size();
-    const int team_size     = m_policy.team_size();
-    const int vector_length = m_policy.vector_length();
-    const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                           ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                           : league_size;
+    const auto league_size   = m_policy.league_size();
+    const auto team_size     = m_policy.team_size();
+    const auto vector_length = m_policy.vector_length();
+    const auto nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
+                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
+                            : league_size;
 
     FunctorType a_functor(m_functor);
 

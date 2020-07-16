@@ -109,7 +109,7 @@ void OpenMPTargetExec::resize_scratch(int64_t reduce_bytes,
                                       int64_t team_shared_bytes,
                                       int64_t thread_local_bytes) {
   Kokkos::Experimental::OpenMPTargetSpace space;
-  uint64_t total_size =
+  int64_t total_size =
       MAX_ACTIVE_TEAMS * reduce_bytes +         // Inter Team Reduction
       MAX_ACTIVE_TEAMS * team_reduce_bytes +    // Intra Team Reduction
       MAX_ACTIVE_TEAMS * team_shared_bytes +    // Team Local Scratch
