@@ -364,16 +364,6 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
       Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
   }
 
-  TeamPolicyInternal(int league_size_request, int team_size_request,
-                     int /* vector_length_request */ = 1)
-      : m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_league_size(league_size_request),
-        m_chunk_size(32) {
-    if (team_size_request > 1)
-      Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
-  }
-
   TeamPolicyInternal(int league_size_request,
                      const Kokkos::AUTO_t& /* team_size_request */
                      ,
