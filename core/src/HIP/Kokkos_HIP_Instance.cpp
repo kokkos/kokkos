@@ -97,8 +97,6 @@ const HIPInternalDevices &HIPInternalDevices::singleton() {
 
 namespace Impl {
 
-int HIPInternal::was_initialized = 0;
-int HIPInternal::was_finalized   = 0;
 //----------------------------------------------------------------------------
 
 void HIPInternal::print_configuration(std::ostream &s) const {
@@ -145,6 +143,7 @@ HIPInternal::~HIPInternal() {
   m_scratchSpace            = 0;
   m_scratchFlags            = 0;
   m_scratchConcurrentBitset = nullptr;
+  m_stream                  = 0;
 }
 
 int HIPInternal::verify_is_initialized(const char *const label) const {
@@ -163,13 +162,15 @@ HIPInternal &HIPInternal::singleton() {
   return *self;
 }
 
-void HIPInternal::initialize(int hip_device_id) {
+void HIPInternal::fence() const { hipStreamSynchronize(m_stream); }
+
+void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
 
   if (is_initialized()) return;
 
-  enum { WordSize = sizeof(size_type) };
+  int constexpr WordSize = sizeof(size_type);
 
   if (!HostSpace::execution_space::impl_is_initialized()) {
     const std::string msg(
@@ -194,8 +195,7 @@ void HIPInternal::initialize(int hip_device_id) {
 
     hipSetDevice(m_hipDev);
 
-    // FIXME_HIP for now always uses default stream
-    m_stream = 0;
+    m_stream = stream;
 
     // number of multiprocessors
     m_multiProcCount = hipProp.multiProcessorCount;
@@ -335,7 +335,7 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
 
 void HIPInternal::finalize() {
   HIP().fence();
-  was_finalized = 1;
+  was_finalized = true;
   if (0 != m_scratchSpace || 0 != m_scratchFlags) {
     using RecordHIP =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>;
@@ -356,6 +356,7 @@ void HIPInternal::finalize() {
     m_scratchSpace            = 0;
     m_scratchFlags            = 0;
     m_scratchConcurrentBitset = nullptr;
+    m_stream                  = 0;
   }
 }
 
