@@ -362,6 +362,13 @@ class TeamPolicyInternal : public Impl::PolicyTraits<Properties...> {
    */
   KOKKOS_INLINE_FUNCTION int team_size() const;
 
+  /** \brief Whether the policy has an automatically determined team size
+   */
+  KOKKOS_INLINE_FUNCTION bool auto_team_size() const;
+  /** \brief Whether the policy has an automatically determined vector length
+   */
+  KOKKOS_INLINE_FUNCTION bool auto_vector_length() const;
+
   inline typename traits::index_type chunk_size() const;
 
   inline TeamPolicyInternal& set_chunk_size(int chunk_size);

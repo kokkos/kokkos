@@ -99,6 +99,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   int m_team_scratch_size[2];
   int m_thread_scratch_size[2];
   int m_chunk_size;
+  bool m_tune_team;
+  bool m_tune_vector;
 
  public:
   //! Execution space of this execution policy
@@ -115,6 +117,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
     m_chunk_size             = p.m_chunk_size;
     m_space                  = p.m_space;
+    m_tune_team              = p.m_tune_team;
+    m_tune_vector            = p.m_tune_vector;
   }
 
   TeamPolicyInternal& operator=(const TeamPolicyInternal& p) {
@@ -127,6 +131,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
     m_chunk_size             = p.m_chunk_size;
     m_space                  = p.m_space;
+    m_tune_team              = p.m_tune_team;
+    m_tune_vector            = p.m_tune_vector;
     return *this;
   }
 
@@ -250,6 +256,12 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   inline int vector_length() const { return m_vector_length; }
   inline int team_size() const { return m_team_size; }
   inline int league_size() const { return m_league_size; }
+  inline bool auto_team_size() const { return m_tune_team; }
+  inline bool auto_vector_length() const { return m_tune_vector; }
+  inline void impl_set_team_size(size_t team_size) { m_team_size = team_size; }
+  inline void impl_set_vector_length(size_t vector_length) {
+    m_vector_length = vector_length;
+  }
   inline int scratch_size(int level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
@@ -271,7 +283,11 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(0),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {}
+        m_chunk_size(32),
+        m_tune_team(false),
+        ,
+        m_tune_vector(false),
+  {}
 
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal(const execution_space space_, int league_size_,
@@ -282,7 +298,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(verify_requested_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {
+        m_chunk_size(32),
+        m_tune_team(false),
+        m_tune_vector(false) {
     // Make sure league size is permissible
     if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
       Impl::throw_runtime_exception(
@@ -308,12 +326,60 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(verify_requested_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {
+        m_chunk_size(32),
+        m_tune_team(true),
+        m_tune_vector(false) {
     // Make sure league size is permissible
     if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
+  }
+
+  /** \brief  Specify league size, request team size */
+  TeamPolicyInternal(const execution_space space_, int league_size_,
+                     const Kokkos::AUTO_t& /* team_size_request */
+                     const Kokkos::AUTO_t& /* vector_length_request */
+                     )
+      : m_space(space_),
+        m_league_size(league_size_),
+        m_team_size(-1),
+        m_vector_length(verify_requested_vector_length(vector_length_request)),
+        m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(32),
+        m_tune_team(true),
+        m_tune_vector(true) {
+    // Make sure league size is permissible
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+      Impl::throw_runtime_exception(
+          "Requested too large league_size for TeamPolicy on Cuda execution "
+          "space.");
+  }
+
+  /** \brief  Specify league size, request team size */
+  TeamPolicyInternal(const execution_space space_, int league_size_,
+                     int team_size_request, const Kokkos::AUTO_t&)
+      : m_space(space_),
+        m_league_size(league_size_),
+        m_team_size(team_size_request),
+        m_vector_length(-1),
+        m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(32),
+        m_tune_team(false),
+        m_tune_vector(true) {
+    // Make sure league size is permissible
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+      Impl::throw_runtime_exception(
+          "Requested too large league_size for TeamPolicy on Cuda execution "
+          "space.");
+
+    if (team_size_request >= 1024) {
+      Impl::throw_runtime_exception(
+          std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. "
+                      "Team size x vector length must be smaller than 1024."));
+    }
   }
 
   TeamPolicyInternal(int league_size_, int team_size_request,
@@ -324,7 +390,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(verify_requested_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {
+        m_chunk_size(32),
+        m_tune_team(false),
+        m_tune_vector(false) {
     // Make sure league size is permissible
     if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
       Impl::throw_runtime_exception(
@@ -349,12 +417,60 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(verify_requested_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {
+        m_chunk_size(32),
+        m_tune_team(true),
+        m_tune_vector(true) {
     // Make sure league size is permissible
     if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
+  }
+
+  /** \brief  Specify league size, request team size */
+  TeamPolicyInternal(int league_size_,
+                     const Kokkos::AUTO_t& /* team_size_request */
+                     const Kokkos::AUTO_t& /* vector_length_request */
+                     )
+      : m_space(typename traits::execution_space()),
+        m_league_size(league_size_),
+        m_team_size(-1),
+        m_vector_length(-1),
+        m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(32),
+        m_tune_team(true),
+        m_tune_vector(true) {
+    // Make sure league size is permissible
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+      Impl::throw_runtime_exception(
+          "Requested too large league_size for TeamPolicy on Cuda execution "
+          "space.");
+  }
+
+  /** \brief  Specify league size, request team size */
+  TeamPolicyInternal(int league_size_, int team_size_request,
+                     const Kokkos::AUTO_t&)
+      : m_space(typename traits::execution_space()),
+        m_league_size(league_size_),
+        m_team_size(team_size_request),
+        m_vector_length(-1),
+        m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(32),
+        m_tune_team(false),
+        m_tune_vector(true) {
+    // Make sure league size is permissible
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+      Impl::throw_runtime_exception(
+          "Requested too large league_size for TeamPolicy on Cuda execution "
+          "space.");
+
+    if (m_vector_length >= 1024) {
+      Impl::throw_runtime_exception(std::string(
+          "Kokkos::TeamPolicy< Cuda > the vector length is too large. "
+          "Team size x vector length must be smaller than 1024."));
+    }
   }
 
   inline int chunk_size() const { return m_chunk_size; }

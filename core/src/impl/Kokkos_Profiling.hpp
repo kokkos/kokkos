@@ -49,9 +49,9 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_ExecPolicy.hpp>
-
+#include <Kokkos_Tuners.hpp>
 #include <string>
-
+#include <unordered_map>
 namespace Kokkos {
 namespace Tools {
 
@@ -132,6 +132,28 @@ void set_callbacks(EventSet new_events);
 }  // namespace Experimental
 
 namespace Experimental {
+
+// forward declaration
+size_t get_new_context_id();
+
+namespace Impl {
+
+static std::unordered_map<std::string,
+                          Kokkos::Tools::Experimental::TeamSizeTuner>
+    team_tuners;
+
+template <class ExecPolicy, class Functor>
+void tune_policy(const std::string& label, ExecPolicy& policy,
+                 const Functor& functor){};
+
+template <class Functor, class... Properties>
+void tune_policy(const std::string& label,
+                 Kokkos::TeamPolicy<Properties...> policy,
+                 const Functor& functor) {
+  if (policy.auto_team_size() || policy.auto_vector_length()) {
+  }
+}
+}  // namespace Impl
 template <class ExecPolicy, class FunctorType>
 void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
                         const std::string& label, uint64_t& kpID) {
@@ -142,6 +164,10 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
     Kokkos::Tools::beginParallelFor(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
+#ifdef KOKKOS_ENABLE_TUNING
+    size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
+    Impl::tune_policy(label, policy, functor);
+#endif
   }
 }
 

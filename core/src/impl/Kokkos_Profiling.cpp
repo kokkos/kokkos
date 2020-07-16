@@ -43,6 +43,7 @@
 */
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Tuners.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #if defined(KOKKOS_ENABLE_LIBDL)
 #include <dlfcn.h>
@@ -56,7 +57,6 @@
 #include <array>
 #include <stack>
 #include <iostream>
-
 namespace Kokkos {
 
 namespace Tools {
