@@ -87,9 +87,7 @@ struct AddOper {
     return val1 + val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Scalar1, class Scalar2>
@@ -99,9 +97,7 @@ struct SubOper {
     return val1 - val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Scalar1, class Scalar2>
@@ -111,9 +107,7 @@ struct MulOper {
     return val1 * val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Scalar1, class Scalar2>
@@ -123,9 +117,7 @@ struct DivOper {
     return val1 / val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Scalar1, class Scalar2>
@@ -135,9 +127,7 @@ struct ModOper {
     return val1 % val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Scalar1, class Scalar2>
@@ -147,9 +137,7 @@ struct AndOper {
     return val1 & val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Scalar1, class Scalar2>
@@ -159,9 +147,7 @@ struct OrOper {
     return val1 | val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Scalar1, class Scalar2>
@@ -171,9 +157,7 @@ struct XorOper {
     return val1 ^ val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Scalar1, class Scalar2>
@@ -183,9 +167,7 @@ struct LShiftOper {
     return val1 << val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Scalar1, class Scalar2>
@@ -195,9 +177,7 @@ struct RShiftOper {
     return val1 >> val2;
   }
   KOKKOS_FORCEINLINE_FUNCTION
-  static bool test(const Scalar1&, const Scalar2&) {
-    return false;
-  }
+  static bool test(const Scalar1&, const Scalar2&) { return false; }
 };
 
 template <class Oper, typename T>
