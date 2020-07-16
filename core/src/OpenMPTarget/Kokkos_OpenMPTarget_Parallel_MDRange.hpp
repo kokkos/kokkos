@@ -78,8 +78,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const int64_t begin = 0;
-    const int64_t end   = m_policy.m_num_tiles;
     FunctorType functor(m_functor);
     Policy policy = m_policy;
 
@@ -88,6 +86,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     execute_tile<Policy::rank>(unused, functor, policy);
 #else
+    const int64_t begin = 0;
+    const int64_t end   = m_policy.m_num_tiles;
+
 #pragma omp target teams distribute map(to : functor) num_teams(end - begin)
     {
       for (ptrdiff_t tile_idx = begin; tile_idx < end; tile_idx++) {
@@ -120,6 +121,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
 #ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    (void)offset;
     const int begin_0 = policy.m_lower[0];
 
     const int end_0 = policy.m_upper[0];
@@ -397,6 +399,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
 #ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    (void)offset;
     const int begin_0 = policy.m_lower[0];
     const int begin_1 = policy.m_lower[1];
     const int begin_2 = policy.m_lower[2];
@@ -475,6 +478,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
 #ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    (void)offset;
     const int begin_0 = policy.m_lower[0];
     const int begin_1 = policy.m_lower[1];
     const int begin_2 = policy.m_lower[2];

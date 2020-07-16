@@ -54,6 +54,8 @@
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 
+// FIXME_OPENMPTARGET currently unused
+/*
 namespace Kokkos {
 namespace Impl {
 namespace {
@@ -69,6 +71,7 @@ bool s_using_hwloc = false;
 }  // namespace
 }  // namespace Impl
 }  // namespace Kokkos
+*/
 
 namespace Kokkos {
 namespace Impl {

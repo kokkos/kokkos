@@ -573,8 +573,8 @@ template <class FunctorType, class PolicyType, class ReducerType,
           class PointerType, class ValueType, int FunctorHasJoin,
           int UseReducerType>
 struct ParallelReduceSpecialize {
-  static inline void execute(const FunctorType& f, const PolicyType& p,
-                             PointerType result_ptr) {
+  static inline void execute(const FunctorType& /*f*/, const PolicyType& /*p*/,
+                             PointerType /*result_ptr*/) {
     printf("Error: Invalid Specialization %i %i\n", FunctorHasJoin,
            UseReducerType);
   }
@@ -972,9 +972,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const int league_size   = m_policy.league_size();
     const int team_size     = m_policy.team_size();
     const int vector_length = m_policy.vector_length();
-    const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                           ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                           : league_size;
     FunctorType a_functor(m_functor);
 
     OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,

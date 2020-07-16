@@ -194,6 +194,8 @@ KOKKOS_IMPL_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
   Kokkos::Impl::hip_abort(message);
 #elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__)
   Kokkos::Impl::host_abort(message);
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+  (void)message;  // FIXME_OPENMPTARGET
 #endif
 }
 
