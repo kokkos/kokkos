@@ -301,10 +301,10 @@ class OpenMPTargetExecTeamMember {
       : m_team_shared(0, 0),
         m_team_scratch_size{shmem_size_L1, shmem_size_L2},
         m_team_rank(0),
-        m_vector_length(vector_length),
         m_team_size(team_size),
         m_league_rank(league_rank),
         m_league_size(league_size),
+        m_vector_length(vector_length),
         m_glb_scratch(glb_scratch) {
     const int omp_tid = omp_get_thread_num();
     m_league_rank     = league_rank;
