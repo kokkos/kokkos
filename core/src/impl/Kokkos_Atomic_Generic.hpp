@@ -62,6 +62,10 @@ struct MaxOper {
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return (val1 > val2 ? val1 : val2);
   }
+  KOKKOS_FORCEINLINE_FUNCTION
+  static bool test(const Scalar1& val1, const Scalar2& val2) {
+    return (val1 > val2);
+  }
 };
 
 template <class Scalar1, class Scalar2>
@@ -69,6 +73,10 @@ struct MinOper {
   KOKKOS_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return (val1 < val2 ? val1 : val2);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION
+  static bool test(const Scalar1& val1, const Scalar2& val2) {
+    return (val1 < val2);
   }
 };
 
@@ -387,6 +395,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_minmax(
   } oldval, assume, newval;
 
   oldval.t = *dest;
+  if (op.test(oldval.t, val)) return oldval.t;
 
   do {
     assume.i = oldval.i;
@@ -411,6 +420,7 @@ KOKKOS_INLINE_FUNCTION T atomic_minmax_fetch(
   } oldval, assume, newval;
 
   oldval.t = *dest;
+  if (op.test(oldval.t, val)) return oldval.t;
 
   do {
     assume.i = oldval.i;
@@ -433,6 +443,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_minmax(
   } oldval, assume, newval;
 
   oldval.t = *dest;
+  if (op.test(oldval.t, val)) return oldval.t;
 
   do {
     assume.i = oldval.i;
@@ -454,6 +465,7 @@ KOKKOS_INLINE_FUNCTION T atomic_minmax_fetch(
   } oldval, assume, newval;
 
   oldval.t = *dest;
+  if (op.test(oldval.t, val)) return oldval.t;
 
   do {
     assume.i = oldval.i;
