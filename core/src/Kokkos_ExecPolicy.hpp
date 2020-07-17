@@ -121,9 +121,6 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   // doesn't match.
   void operator()(const int&) const {}
 
-  RangePolicy(const RangePolicy&) = default;
-  RangePolicy(RangePolicy&&)      = default;
-
   template <class... OtherProperties>
   RangePolicy(const RangePolicy<OtherProperties...>& p)
       : m_space(p.m_space),
