@@ -539,8 +539,6 @@ class TeamPolicy
 
   using execution_policy = TeamPolicy<Properties...>;
 
-  TeamPolicy& operator=(const TeamPolicy&) = default;
-
   TeamPolicy() : internal_policy(0, AUTO) {}
 
   /** \brief  Construct policy with the given instance of the execution space */
