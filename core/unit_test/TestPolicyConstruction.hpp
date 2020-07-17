@@ -79,7 +79,7 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type,
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Static> >::value));
+                                Kokkos::Schedule<Kokkos::Static>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
@@ -94,13 +94,13 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type,
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Static> >::value));
+                                Kokkos::Schedule<Kokkos::Static>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::RangePolicy<ExecutionSpace,
-                                  Kokkos::Schedule<Kokkos::Dynamic> >
+                                  Kokkos::Schedule<Kokkos::Dynamic>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -111,14 +111,14 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type,
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::RangePolicy<ExecutionSpace,
                                   Kokkos::Schedule<Kokkos::Dynamic>,
-                                  Kokkos::IndexType<long> >
+                                  Kokkos::IndexType<long>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -128,13 +128,13 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::RangePolicy<Kokkos::IndexType<long>, ExecutionSpace,
-                                  Kokkos::Schedule<Kokkos::Dynamic> >
+                                  Kokkos::Schedule<Kokkos::Dynamic>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -144,7 +144,7 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
@@ -161,7 +161,7 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
@@ -178,7 +178,7 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
@@ -194,12 +194,12 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
     {
-      typedef Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic> > policy_t;
+      typedef Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>> policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
       typedef typename policy_t::schedule_type schedule_type;
@@ -210,13 +210,13 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type,
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::RangePolicy<Kokkos::Schedule<Kokkos::Dynamic>,
-                                  Kokkos::IndexType<long> >
+                                  Kokkos::IndexType<long>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -227,13 +227,13 @@ class TestRangePolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::RangePolicy<Kokkos::IndexType<long>,
-                                  Kokkos::Schedule<Kokkos::Dynamic> >
+                                  Kokkos::Schedule<Kokkos::Dynamic>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -244,7 +244,7 @@ class TestRangePolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
@@ -261,7 +261,7 @@ class TestRangePolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
@@ -278,13 +278,13 @@ class TestRangePolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
     {
       typedef Kokkos::RangePolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
-                                  Kokkos::IndexType<long> >
+                                  Kokkos::IndexType<long>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -295,7 +295,7 @@ class TestRangePolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
   }
@@ -361,7 +361,7 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type,
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Static> >::value));
+                                Kokkos::Schedule<Kokkos::Static>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
@@ -376,13 +376,13 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type,
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Static> >::value));
+                                Kokkos::Schedule<Kokkos::Static>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::TeamPolicy<ExecutionSpace,
-                                 Kokkos::Schedule<Kokkos::Dynamic> >
+                                 Kokkos::Schedule<Kokkos::Dynamic>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -393,14 +393,14 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type,
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::TeamPolicy<ExecutionSpace,
                                  Kokkos::Schedule<Kokkos::Dynamic>,
-                                 Kokkos::IndexType<long> >
+                                 Kokkos::IndexType<long>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -410,13 +410,13 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::TeamPolicy<Kokkos::IndexType<long>, ExecutionSpace,
-                                 Kokkos::Schedule<Kokkos::Dynamic> >
+                                 Kokkos::Schedule<Kokkos::Dynamic>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -426,7 +426,7 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
@@ -443,7 +443,7 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
@@ -460,7 +460,7 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
@@ -476,12 +476,12 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<execution_space, ExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
     {
-      typedef Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic> > policy_t;
+      typedef Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic>> policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
       typedef typename policy_t::schedule_type schedule_type;
@@ -492,13 +492,13 @@ class TestTeamPolicyConstruction {
       ASSERT_TRUE((std::is_same<index_type,
                                 typename execution_space::size_type>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic>,
-                                 Kokkos::IndexType<long> >
+                                 Kokkos::IndexType<long>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -509,13 +509,13 @@ class TestTeamPolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
     {
       typedef Kokkos::TeamPolicy<Kokkos::IndexType<long>,
-                                 Kokkos::Schedule<Kokkos::Dynamic> >
+                                 Kokkos::Schedule<Kokkos::Dynamic>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -526,7 +526,7 @@ class TestTeamPolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, void>::value));
     }
 
@@ -543,7 +543,7 @@ class TestTeamPolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
@@ -560,13 +560,13 @@ class TestTeamPolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
 
     {
       typedef Kokkos::TeamPolicy<SomeTag, Kokkos::Schedule<Kokkos::Dynamic>,
-                                 Kokkos::IndexType<long> >
+                                 Kokkos::IndexType<long>>
           policy_t;
       typedef typename policy_t::execution_space execution_space;
       typedef typename policy_t::index_type index_type;
@@ -577,7 +577,7 @@ class TestTeamPolicyConstruction {
           std::is_same<execution_space, Kokkos::DefaultExecutionSpace>::value));
       ASSERT_TRUE((std::is_same<index_type, long>::value));
       ASSERT_TRUE((std::is_same<schedule_type,
-                                Kokkos::Schedule<Kokkos::Dynamic> >::value));
+                                Kokkos::Schedule<Kokkos::Dynamic>>::value));
       ASSERT_TRUE((std::is_same<work_tag, SomeTag>::value));
     }
   }
@@ -681,16 +681,16 @@ class TestTeamPolicyConstruction {
   }
 
   void test_run_time_parameters() {
-    test_run_time_parameters_type<Kokkos::TeamPolicy<ExecutionSpace> >();
+    test_run_time_parameters_type<Kokkos::TeamPolicy<ExecutionSpace>>();
     test_run_time_parameters_type<
         Kokkos::TeamPolicy<ExecutionSpace, Kokkos::Schedule<Kokkos::Dynamic>,
-                           Kokkos::IndexType<long> > >();
+                           Kokkos::IndexType<long>>>();
     test_run_time_parameters_type<
         Kokkos::TeamPolicy<Kokkos::IndexType<long>, ExecutionSpace,
-                           Kokkos::Schedule<Kokkos::Dynamic> > >();
-    test_run_time_parameters_type<Kokkos::TeamPolicy<
-        Kokkos::Schedule<Kokkos::Dynamic>, Kokkos::IndexType<long>,
-        ExecutionSpace, SomeTag> >();
+                           Kokkos::Schedule<Kokkos::Dynamic>>>();
+    test_run_time_parameters_type<
+        Kokkos::TeamPolicy<Kokkos::Schedule<Kokkos::Dynamic>,
+                           Kokkos::IndexType<long>, ExecutionSpace, SomeTag>>();
   }
 };
 
