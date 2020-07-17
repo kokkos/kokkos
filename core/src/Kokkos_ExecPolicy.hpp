@@ -125,7 +125,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   RangePolicy(RangePolicy&&)      = default;
 
   template <class... OtherProperties>
-  RangePolicy(const RangePolicy<OtherProperties...> p) {
+  RangePolicy(const RangePolicy<OtherProperties...>& p) {
     m_space            = p.m_space;
     m_begin            = p.m_begin;
     m_end              = p.m_end;
