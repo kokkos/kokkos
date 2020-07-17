@@ -42,7 +42,6 @@
 //@HEADER
 */
 
-
 #include <iostream>
 
 int main() {
