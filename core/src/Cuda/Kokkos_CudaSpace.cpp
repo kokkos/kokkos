@@ -638,7 +638,7 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
 void *SharedAllocationRecord<Kokkos::CudaSpace, void>::allocate_tracked(
     const Kokkos::CudaSpace &arg_space, const std::string &arg_alloc_label,
     const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void *)nullptr;
+  if (!arg_alloc_size) return nullptr;
 
   SharedAllocationRecord *const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);
@@ -675,7 +675,7 @@ void *SharedAllocationRecord<Kokkos::CudaSpace, void>::reallocate_tracked(
 void *SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::allocate_tracked(
     const Kokkos::CudaUVMSpace &arg_space, const std::string &arg_alloc_label,
     const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void *)nullptr;
+  if (!arg_alloc_size) return nullptr;
 
   SharedAllocationRecord *const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);
@@ -713,7 +713,7 @@ void *
 SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::allocate_tracked(
     const Kokkos::CudaHostPinnedSpace &arg_space,
     const std::string &arg_alloc_label, const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void *)nullptr;
+  if (!arg_alloc_size) return nullptr;
 
   SharedAllocationRecord *const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);
@@ -765,16 +765,15 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::get_record(void *alloc_ptr) {
   Header head;
 
   Header const *const head_cuda =
-      alloc_ptr ? Header::get_header(alloc_ptr) : (Header *)nullptr;
+      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
 
   if (alloc_ptr) {
     Kokkos::Impl::DeepCopy<HostSpace, CudaSpace>(
         &head, head_cuda, sizeof(SharedAllocationHeader));
   }
 
-  RecordCuda *const record = alloc_ptr
-                                 ? static_cast<RecordCuda *>(head.m_record)
-                                 : (RecordCuda *)nullptr;
+  RecordCuda *const record =
+      alloc_ptr ? static_cast<RecordCuda *>(head.m_record) : nullptr;
 
   if (!alloc_ptr || record->m_alloc_ptr != head_cuda) {
     Kokkos::Impl::throw_runtime_exception(
@@ -791,7 +790,7 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void> *SharedAllocationRecord<
   using RecordCuda = SharedAllocationRecord<Kokkos::CudaUVMSpace, void>;
 
   Header *const h =
-      alloc_ptr ? reinterpret_cast<Header *>(alloc_ptr) - 1 : (Header *)nullptr;
+      alloc_ptr ? reinterpret_cast<Header *>(alloc_ptr) - 1 : nullptr;
 
   if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
     Kokkos::Impl::throw_runtime_exception(
@@ -809,7 +808,7 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
   using RecordCuda = SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>;
 
   Header *const h =
-      alloc_ptr ? reinterpret_cast<Header *>(alloc_ptr) - 1 : (Header *)nullptr;
+      alloc_ptr ? reinterpret_cast<Header *>(alloc_ptr) - 1 : nullptr;
 
   if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
     Kokkos::Impl::throw_runtime_exception(
