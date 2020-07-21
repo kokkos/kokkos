@@ -326,6 +326,12 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((p.end() == 15));
       ASSERT_TRUE((p.chunk_size() == 10));
     }
+    {
+      typedef Kokkos::RangePolicy<> policy_t;
+      policy_t p;
+      ASSERT_TRUE((p.begin() == 0));
+      ASSERT_TRUE((p.end() == 0));
+    }
   }
 };
 
