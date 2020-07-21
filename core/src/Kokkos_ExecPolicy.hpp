@@ -545,6 +545,8 @@ class TeamPolicy
 
   TeamPolicy& operator=(const TeamPolicy&) = default;
 
+  TeamPolicy() : internal_policy(0, AUTO) {}
+
   /** \brief  Construct policy with the given instance of the execution space */
   TeamPolicy(const typename traits::execution_space& space_,
              int league_size_request, int team_size_request,
