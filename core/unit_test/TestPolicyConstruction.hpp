@@ -669,6 +669,15 @@ class TestTeamPolicyConstruction {
     policy_t p8;  // default constructed
     ASSERT_EQ(p8.league_size(), 0);
     ASSERT_EQ(p8.scratch_size(0), 0);
+    p8 = p3;  // call assignment operator
+    ASSERT_EQ(p3.league_size(), league_size);
+    ASSERT_EQ(p3.team_size(), team_size);
+    ASSERT_EQ(p3.chunk_size(), chunk_size);
+    ASSERT_EQ(p3.scratch_size(0), scratch_size);
+    ASSERT_EQ(p8.league_size(), league_size);
+    ASSERT_EQ(p8.team_size(), team_size);
+    ASSERT_EQ(p8.chunk_size(), chunk_size);
+    ASSERT_EQ(p8.scratch_size(0), scratch_size);
   }
 
   void test_run_time_parameters() {
