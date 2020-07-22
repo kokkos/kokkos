@@ -77,6 +77,9 @@ extern bool show_warnings() noexcept;
 
 namespace Impl {
 
+constexpr const int cuda_max_hierarchical_parallelism = 1024;
+constexpr const int cuda_default_chunk_size           = 32;
+
 template <class... Properties>
 class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     : public PolicyTraits<Properties...> {
@@ -283,7 +286,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(0),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32),
+        m_chunk_size(Impl::cuda_default_chunk_size),
         m_tune_team(false),
 
         m_tune_vector(false) {}
@@ -297,7 +300,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(verify_requested_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32),
+        m_chunk_size(Impl::cuda_default_chunk_size),
         m_tune_team(false),
         m_tune_vector(false) {
     // Make sure league size is permissible
@@ -307,7 +310,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
           "space.");
 
     // Make sure total block size is permissible
-    if (m_team_size * m_vector_length > 1024) {
+    if (m_team_size * m_vector_length >
+        Impl::cuda_max_hierarchical_parallelism) {
       Impl::throw_runtime_exception(
           std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. "
                       "Team size x vector length must be smaller than 1024."));
@@ -325,7 +329,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(verify_requested_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32),
+        m_chunk_size(Impl::cuda_default_chunk_size),
         m_tune_team(true),
         m_tune_vector(false) {
     // Make sure league size is permissible
@@ -347,7 +351,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(-1),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32),
+        m_chunk_size(Impl::cuda_default_chunk_size),
         m_tune_team(true),
         m_tune_vector(true) {
     // Make sure league size is permissible
@@ -367,7 +371,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(-1),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32),
+        m_chunk_size(Impl::cuda_default_chunk_size),
         m_tune_team(false),
         m_tune_vector(true) {
     // Make sure league size is permissible
@@ -377,7 +381,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
           "space.");
     }
 
-    if (team_size_request >= 1024) {
+    if (team_size_request >= Impl::cuda_max_hierarchical_parallelism) {
       Impl::throw_runtime_exception(
           std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. "
                       "Team size x vector length must be smaller than 1024."));
@@ -392,7 +396,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(verify_requested_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32),
+        m_chunk_size(Impl::cuda_default_chunk_size),
         m_tune_team(false),
         m_tune_vector(false) {
     // Make sure league size is permissible
@@ -402,7 +406,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
           "space.");
     }
     // Make sure total block size is permissible
-    if (m_team_size * m_vector_length > 1024) {
+    if (m_team_size * m_vector_length >
+        Impl::cuda_max_hierarchical_parallelism) {
       Impl::throw_runtime_exception(
           std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. "
                       "Team size x vector length must be smaller than 1024."));
@@ -419,7 +424,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(verify_requested_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32),
+        m_chunk_size(Impl::cuda_default_chunk_size),
         m_tune_team(true),
         m_tune_vector(true) {
     // Make sure league size is permissible
@@ -441,7 +446,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(-1),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32),
+        m_chunk_size(Impl::cuda_default_chunk_size),
         m_tune_team(true),
         m_tune_vector(true) {
     // Make sure league size is permissible
@@ -461,7 +466,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(-1),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32),
+        m_chunk_size(Impl::cuda_default_chunk_size),
         m_tune_team(false),
         m_tune_vector(true) {
     // Make sure league size is permissible
@@ -470,7 +475,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
     }
-    if (m_vector_length >= 1024) {
+    if (m_vector_length >= Impl::cuda_max_hierarchical_parallelism) {
       Impl::throw_runtime_exception(std::string(
           "Kokkos::TeamPolicy< Cuda > the vector length is too large. "
           "Team size x vector length must be smaller than 1024."));

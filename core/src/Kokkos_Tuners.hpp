@@ -76,8 +76,8 @@ class TeamSizeTuner {
 
     variable_info.type =
         Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
-    variable_info.category =
-        Kokkos::Tools::Experimental::StatisticalCategory::kokkos_value_ratio;
+    variable_info.category = Kokkos::Tools::Experimental::StatisticalCategory::
+        kokkos_value_categorical;
     variable_info.valueQuantity =
         Kokkos::Tools::Experimental::CandidateValueType::kokkos_value_set;
     variable_info.candidates = Kokkos::Tools::Experimental::make_candidate_set(
@@ -191,6 +191,8 @@ class TeamSizeTuner {
   template <typename... Properties>
   void tune(Kokkos::TeamPolicy<Properties...>& policy,
             const size_t context_id) {
+    // index zero contains a reasonable default, so in the absence of
+    // a tool, this will return that reasonable default.
     Kokkos::Tools::Experimental::VariableValue value_index =
         Kokkos::Tools::Experimental::make_variable_value(type_id, 0);
     Kokkos::Tools::Experimental::request_output_values(context_id, 1,

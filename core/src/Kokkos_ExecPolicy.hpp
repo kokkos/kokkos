@@ -364,11 +364,11 @@ class TeamPolicyInternal : public Impl::PolicyTraits<Properties...> {
 
   /** \brief Whether the policy has an automatically determined team size
    */
-  KOKKOS_INLINE_FUNCTION bool auto_team_size() const;
+  inline bool auto_team_size() const;
   /** \brief Whether the policy has an automatically determined vector length
    */
 
-  KOKKOS_INLINE_FUNCTION bool auto_vector_length() const;
+  inline bool auto_vector_length() const;
 
   static int vector_length_max();
 
