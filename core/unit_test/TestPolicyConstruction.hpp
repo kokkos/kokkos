@@ -326,6 +326,12 @@ class TestRangePolicyConstruction {
       ASSERT_TRUE((p.end() == 15));
       ASSERT_TRUE((p.chunk_size() == 10));
     }
+    {
+      typedef Kokkos::RangePolicy<> policy_t;
+      policy_t p;
+      ASSERT_TRUE((p.begin() == 0));
+      ASSERT_TRUE((p.end() == 0));
+    }
   }
 };
 
@@ -655,6 +661,10 @@ class TestTeamPolicyConstruction {
     ASSERT_EQ(p7.team_size(), team_size);
     ASSERT_EQ(p7.chunk_size(), chunk_size);
     ASSERT_EQ(p7.scratch_size(0), scratch_size);
+
+    policy_t p8;  // default constructed
+    ASSERT_EQ(p8.league_size(), 0);
+    ASSERT_EQ(p8.scratch_size(0), 0);
   }
 
   void test_run_time_parameters() {
