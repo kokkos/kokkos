@@ -220,23 +220,11 @@ __device__ inline void hip_intra_warp_shuffle_reduction(
     const ReducerType& reducer, typename ReducerType::value_type& result,
     const uint32_t max_active_thread = blockDim.y) {
   using ValueType = typename ReducerType::value_type;
+  auto join_op    = [&](ValueType& result, ValueType const& tmp) {
+    reducer.join(result, tmp);
+  };
+  hip_intra_warp_shuffle_reduction(result, join_op, max_active_thread);
 
-  unsigned int shift = 1;
-
-  // Reduce over values from threads with different threadIdx.y
-  unsigned int constexpr warp_size =
-      Kokkos::Experimental::Impl::HIPTraits::WarpSize;
-  while (blockDim.x * shift < warp_size) {
-    const ValueType tmp =
-        Kokkos::Experimental::shfl_down(result, blockDim.x * shift, warp_size);
-    // Only join if upper thread is active (this allows non power of two for
-    // blockDim.y)
-    if (threadIdx.y + shift < max_active_thread) reducer.join(result, tmp);
-    shift *= 2;
-    __syncthreads();
-  }
-
-  result              = ::Kokkos::Experimental::shfl(result, 0, warp_size);
   reducer.reference() = result;
 }
 
@@ -246,32 +234,9 @@ template <typename ReducerType,
 __device__ inline void hip_inter_warp_shuffle_reduction(
     ReducerType const& reducer, typename ReducerType::value_type value,
     int const max_active_thread = blockDim.y) {
-  using ValueType          = typename ReducerType::value_type;
-  int constexpr step_width = 8;
-  // Depending on the ValueType __shared__ memory must be aligned up to 8 byte
-  // boundaries. The reason not to use ValueType directly is that for types
-  // with constructors it could lead to race conditions.
-  __shared__ double sh_result[(sizeof(ValueType) + 7) / 8 * step_width];
-  ValueType* result = reinterpret_cast<ValueType*>(&sh_result);
-  int const step = Kokkos::Experimental::Impl::HIPTraits::WarpSize / blockDim.x;
-  int shift      = step_width;
-  // Skip the code below if  threadIdx.y % step != 0
-  int const id = threadIdx.y % step == 0 ? threadIdx.y / step : INT_MAX;
-  if (id < step_width) {
-    result[id] = value;
-  }
-  __syncthreads();
-  while (shift <= max_active_thread / step) {
-    if (shift <= id && shift + step_width > id && threadIdx.x == 0) {
-      reducer.join(result[id % step_width], value);
-    }
-    __syncthreads();
-    shift += step_width;
-  }
-
-  value = result[0];
-  for (int i = 1; (i * step < max_active_thread) && i < step_width; ++i)
-    reducer.join(value, result[i]);
+  using ValueType = typename ReducerType::value_type;
+  auto join_op    = [&](ValueType& a, ValueType& b) { reducer.join(a, b); };
+  hip_inter_warp_shuffle_reduction(value, join_op, max_active_thread);
 
   reducer.reference() = value;
 }
