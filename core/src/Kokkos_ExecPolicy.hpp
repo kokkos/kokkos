@@ -125,13 +125,12 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   RangePolicy(RangePolicy&&)      = default;
 
   template <class... OtherProperties>
-  RangePolicy(const RangePolicy<OtherProperties...>& p) {
-    m_space            = p.m_space;
-    m_begin            = p.m_begin;
-    m_end              = p.m_end;
-    m_granularity      = p.m_granularity;
-    m_granularity_mask = p.m_granularity_mask;
-  }
+  RangePolicy(const RangePolicy<OtherProperties...>& p)
+      : m_space(p.m_space),
+        m_begin(p.m_begin),
+        m_end(p.m_end),
+        m_granularity(p.m_granularity),
+        m_granularity_mask(p.m_granularity_mask) {}
 
   inline RangePolicy() : m_space(), m_begin(0), m_end(0) {}
 
