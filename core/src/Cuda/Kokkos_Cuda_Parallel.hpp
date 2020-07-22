@@ -329,10 +329,11 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_tune_team(true),
         m_tune_vector(false) {
     // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count())) {
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
+    }
   }
 
   /** \brief  Specify league size, request team size */
@@ -350,10 +351,11 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_tune_team(true),
         m_tune_vector(true) {
     // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count())) {
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
+    }
   }
 
   /** \brief  Specify league size, request team size */
@@ -369,10 +371,11 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_tune_team(false),
         m_tune_vector(true) {
     // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count())) {
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
+    }
 
     if (team_size_request >= 1024) {
       Impl::throw_runtime_exception(
@@ -393,11 +396,11 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_tune_team(false),
         m_tune_vector(false) {
     // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count())) {
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
-
+    }
     // Make sure total block size is permissible
     if (m_team_size * m_vector_length > 1024) {
       Impl::throw_runtime_exception(
@@ -420,10 +423,11 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_tune_team(true),
         m_tune_vector(true) {
     // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count())) {
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
+    }
   }
 
   /** \brief  Specify league size, request team size */
@@ -441,10 +445,11 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_tune_team(true),
         m_tune_vector(true) {
     // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count())) {
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
+    }
   }
 
   /** \brief  Specify league size, request team size */
@@ -460,11 +465,11 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_tune_team(false),
         m_tune_vector(true) {
     // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
+    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count())) {
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on Cuda execution "
           "space.");
-
+    }
     if (m_vector_length >= 1024) {
       Impl::throw_runtime_exception(std::string(
           "Kokkos::TeamPolicy< Cuda > the vector length is too large. "
