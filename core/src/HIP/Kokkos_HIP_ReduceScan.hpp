@@ -147,10 +147,10 @@ __device__ bool hip_inter_block_reduction(
                                 ArgTag>::pointer_type const /*result*/,
     Kokkos::Experimental::HIP::size_type* const m_scratch_flags,
     int const max_active_thread = blockDim.y) {
-  typedef typename FunctorValueTraits<FunctorType, ArgTag>::pointer_type
-      pointer_type;
-  typedef
-      typename FunctorValueTraits<FunctorType, ArgTag>::value_type value_type;
+  using pointer_type =
+      typename FunctorValueTraits<FunctorType, ArgTag>::pointer_type;
+  using value_type =
+      typename FunctorValueTraits<FunctorType, ArgTag>::value_type;
 
   // Do the intra-block reduction with shfl operations and static shared memory
   hip_intra_block_reduction(value, join, max_active_thread);
@@ -218,7 +218,7 @@ template <typename ReducerType,
 __device__ inline void hip_intra_warp_reduction(
     const ReducerType& reducer, typename ReducerType::value_type& result,
     const uint32_t max_active_thread = blockDim.y) {
-  typedef typename ReducerType::value_type ValueType;
+  using ValueType = typename ReducerType::value_type;
 
   unsigned int shift = 1;
 
