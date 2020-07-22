@@ -177,7 +177,15 @@ void report_policy_results(const size_t tuning_context,
 }  // namespace Impl
 
 template <class ExecPolicy, class FunctorType>
-void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
+void begin_parallel_for(ExecPolicy&
+#ifdef KOKKOS_ENABLE_TUNING
+                            policy
+#endif
+                        ,
+#ifdef KOKKOS_ENABLE_TUNING
+                        FunctorType& functor
+#endif
+                        ,
                         const std::string& label, uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
@@ -195,8 +203,22 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
 }
 
 template <class ExecPolicy, class FunctorType>
-void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
-                      const std::string& label, uint64_t& kpID) {
+void end_parallel_for(ExecPolicy&
+#ifdef KOKKOS_ENABLE_TUNING
+                          policy
+#endif
+                      ,
+                      FunctorType&
+#ifdef KOKKOS_ENABLE_TUNING
+                          functor
+#endif
+                      ,
+                      const std::string&
+#ifdef KOKKOS_ENABLE_TUNING
+                          label
+#endif
+                      ,
+                      uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelFor(kpID);
   }
@@ -208,7 +230,16 @@ void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
 }
 
 template <class ExecPolicy, class FunctorType>
-void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
+void begin_parallel_scan(ExecPolicy&
+#ifdef KOKKOS_ENABLE_TUNING
+                             policy
+#endif
+                         ,
+                         FunctorType&
+#ifdef KOKKOS_ENABLE_TUNING
+                             functor
+#endif
+                         ,
                          const std::string& label, uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
@@ -226,8 +257,22 @@ void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 }
 
 template <class ExecPolicy, class FunctorType>
-void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
-                       const std::string& label, uint64_t& kpID) {
+void end_parallel_scan(ExecPolicy&
+#ifdef KOKKOS_ENABLE_TUNING
+                           policy
+#endif
+                       ,
+                       FunctorType&
+#ifdef KOKKOS_ENABLE_TUNING
+                           functor
+#endif
+                       ,
+                       const std::string&
+#ifdef KOKKOS_ENABLE_TUNING
+                           label
+#endif
+                       ,
+                       uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelScan(kpID);
   }
@@ -239,7 +284,16 @@ void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 }
 
 template <class ExecPolicy, class FunctorType>
-void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
+void begin_parallel_reduce(ExecPolicy&
+#ifdef KOKKOS_ENABLE_TUNING
+                               policy
+#endif
+                           ,
+                           FunctorType&
+#ifdef KOKKOS_ENABLE_TUNING
+                               functor
+#endif
+                           ,
                            const std::string& label, uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
@@ -257,8 +311,22 @@ void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
 }
 
 template <class ExecPolicy, class FunctorType>
-void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
-                         const std::string& label, uint64_t& kpID) {
+void end_parallel_reduce(ExecPolicy&
+#ifdef KOKKOS_ENABLE_TUNING
+                             policy
+#endif
+                         ,
+                         FunctorType&
+#ifdef KOKKOS_ENABLE_TUNING
+                             functor
+#endif
+                         ,
+                         const std::string&
+#ifdef KOKKOS_ENABLE_TUNING
+                             label
+#endif
+                         ,
+                         uint64_t& kpID) {
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelReduce(kpID);
   }

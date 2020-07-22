@@ -575,16 +575,12 @@ class TeamPolicy
              int league_size_request, const Kokkos::AUTO_t&,
              const Kokkos::AUTO_t&)
       : internal_policy(space_, league_size_request, Kokkos::AUTO(),
-                        Kokkos::AUTO()) {
-    first_arg = false;
-  }
+                        Kokkos::AUTO()) {}
   TeamPolicy(const typename traits::execution_space& space_,
              int league_size_request, const int team_size_request,
              const Kokkos::AUTO_t&)
       : internal_policy(space_, league_size_request, team_size_request,
-                        Kokkos::AUTO()) {
-    first_arg = false;
-  }
+                        Kokkos::AUTO()) {}
   /** \brief  Construct policy with the default instance of the execution space
    */
   TeamPolicy(int league_size_request, int team_size_request,
@@ -599,15 +595,11 @@ class TeamPolicy
 
   TeamPolicy(int league_size_request, const Kokkos::AUTO_t&,
              const Kokkos::AUTO_t&)
-      : internal_policy(league_size_request, Kokkos::AUTO(), Kokkos::AUTO()) {
-    first_arg = false;
-  }
+      : internal_policy(league_size_request, Kokkos::AUTO(), Kokkos::AUTO()) {}
   TeamPolicy(int league_size_request, const int team_size_request,
              const Kokkos::AUTO_t&)
       : internal_policy(league_size_request, team_size_request,
-                        Kokkos::AUTO()) {
-    first_arg = false;
-  }
+                        Kokkos::AUTO()) {}
 
   template <class... OtherProperties>
   TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {}
