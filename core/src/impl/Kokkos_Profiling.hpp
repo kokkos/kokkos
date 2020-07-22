@@ -143,9 +143,8 @@ static std::map<std::string, Kokkos::Tools::Experimental::TeamSizeTuner>
     team_tuners;
 
 template <class ExecPolicy, class Functor, typename TagType>
-void tune_policy(const size_t tuning_context, const std::string& label,
-                 ExecPolicy& policy, const Functor& functor,
-                 const TagType& tag){};
+void tune_policy(const size_t tuning_context, const std::string&, ExecPolicy&,
+                 const Functor&, const TagType&){};
 
 template <class Functor, class TagType, class... Properties>
 void tune_policy(const size_t tuning_context, const std::string& label,
@@ -162,15 +161,14 @@ void tune_policy(const size_t tuning_context, const std::string& label,
 }
 
 template <class ExecPolicy, class Functor, typename TagType>
-void report_policy_results(const size_t tuning_context,
-                           const std::string& label, ExecPolicy& policy,
-                           const Functor& functor, const TagType& tag){};
+void report_policy_results(const size_t, const std::string&, ExecPolicy&,
+                           const Functor&, const TagType&){};
 
 template <class Functor, class TagType, class... Properties>
 void report_policy_results(const size_t tuning_context,
                            const std::string& label,
                            Kokkos::TeamPolicy<Properties...> policy,
-                           const Functor& functor, const TagType& tag) {
+                           const Functor&, const TagType&) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
     auto& tuner = team_tuners[label];
     tuner.end(tuning_context);
