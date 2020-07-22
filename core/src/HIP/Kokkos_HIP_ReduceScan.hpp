@@ -64,7 +64,7 @@ namespace Impl {
 template <typename ValueType, typename JoinOp,
           typename std::enable_if<!Kokkos::is_reducer<ValueType>::value,
                                   int>::type = 0>
-__device__ inline void hip_intra_warp_reduction(
+__device__ inline void hip_intra_warp_shuffle_reduction(
     ValueType& result, JoinOp const& join,
     uint32_t const max_active_thread = blockDim.y) {
   unsigned int shift = 1;
@@ -95,7 +95,7 @@ __device__ inline void hip_intra_warp_reduction(
 template <typename ValueType, typename JoinOp,
           typename std::enable_if<!Kokkos::is_reducer<ValueType>::value,
                                   int>::type = 0>
-__device__ inline void hip_inter_warp_reduction(
+__device__ inline void hip_inter_warp_shuffle_reduction(
     ValueType& value, const JoinOp& join,
     const int max_active_thread = blockDim.y) {
   unsigned int constexpr warp_size =
@@ -130,15 +130,15 @@ __device__ inline void hip_inter_warp_reduction(
 template <typename ValueType, typename JoinOp,
           typename std::enable_if<!Kokkos::is_reducer<ValueType>::value,
                                   int>::type = 0>
-__device__ inline void hip_intra_block_reduction(
+__device__ inline void hip_intra_block_shuffle_reduction(
     ValueType& value, JoinOp const& join,
     int const max_active_thread = blockDim.y) {
-  hip_intra_warp_reduction(value, join, max_active_thread);
-  hip_inter_warp_reduction(value, join, max_active_thread);
+  hip_intra_warp_shuffle_reduction(value, join, max_active_thread);
+  hip_inter_warp_shuffle_reduction(value, join, max_active_thread);
 }
 
 template <class FunctorType, class JoinOp, class ArgTag = void>
-__device__ bool hip_inter_block_reduction(
+__device__ inline bool hip_inter_block_shuffle_reduction(
     typename FunctorValueTraits<FunctorType, ArgTag>::reference_type value,
     typename FunctorValueTraits<FunctorType, ArgTag>::reference_type neutral,
     JoinOp const& join,
@@ -152,8 +152,9 @@ __device__ bool hip_inter_block_reduction(
   using value_type =
       typename FunctorValueTraits<FunctorType, ArgTag>::value_type;
 
-  // Do the intra-block reduction with shfl operations and static shared memory
-  hip_intra_block_reduction(value, join, max_active_thread);
+  // Do the intra-block reduction with shfl operations for the intra warp
+  // reduction and static shared memory for the inter warp reduction
+  hip_intra_block_shuffle_reduction(value, join, max_active_thread);
 
   int const id = threadIdx.y * blockDim.x + threadIdx.x;
 
@@ -215,7 +216,7 @@ __device__ bool hip_inter_block_reduction(
 template <typename ReducerType,
           typename std::enable_if<Kokkos::is_reducer<ReducerType>::value,
                                   int>::type = 0>
-__device__ inline void hip_intra_warp_reduction(
+__device__ inline void hip_intra_warp_shuffle_reduction(
     const ReducerType& reducer, typename ReducerType::value_type& result,
     const uint32_t max_active_thread = blockDim.y) {
   using ValueType = typename ReducerType::value_type;
@@ -242,7 +243,7 @@ __device__ inline void hip_intra_warp_reduction(
 template <typename ReducerType,
           typename std::enable_if<Kokkos::is_reducer<ReducerType>::value,
                                   int>::type = 0>
-__device__ inline void hip_inter_warp_reduction(
+__device__ inline void hip_inter_warp_shuffle_reduction(
     ReducerType const& reducer, typename ReducerType::value_type value,
     int const max_active_thread = blockDim.y) {
   using ValueType          = typename ReducerType::value_type;
@@ -278,25 +279,26 @@ __device__ inline void hip_inter_warp_reduction(
 template <typename ReducerType,
           typename std::enable_if<Kokkos::is_reducer<ReducerType>::value,
                                   int>::type = 0>
-__device__ inline void hip_intra_block_reduction(
+__device__ inline void hip_intra_block_shuffle_reduction(
     ReducerType const& reducer, typename ReducerType::value_type value,
     int const max_active_thread = blockDim.y) {
-  hip_intra_warp_reduction(reducer, value, max_active_thread);
-  hip_inter_warp_reduction(reducer, value, max_active_thread);
+  hip_intra_warp_shuffle_reduction(reducer, value, max_active_thread);
+  hip_inter_warp_shuffle_reduction(reducer, value, max_active_thread);
 }
 
 template <typename ReducerType,
           typename std::enable_if<Kokkos::is_reducer<ReducerType>::value,
                                   int>::type = 0>
-__device__ inline void hip_intra_block_reduction(
+__device__ inline void hip_intra_block_shuffle_reduction(
     ReducerType const& reducer, int const max_active_thread = blockDim.y) {
-  hip_intra_block_reduction(reducer, reducer.reference(), max_active_thread);
+  hip_intra_block_shuffle_reduction(reducer, reducer.reference(),
+                                    max_active_thread);
 }
 
 template <typename ReducerType,
           typename std::enable_if<Kokkos::is_reducer<ReducerType>::value,
                                   int>::type = 0>
-__device__ inline bool hip_inter_block_reduction(
+__device__ inline bool hip_inter_block_shuffle_reduction(
     ReducerType const& reducer,
     Kokkos::Experimental::HIP::size_type* const m_scratch_space,
     Kokkos::Experimental::HIP::size_type* const m_scratch_flags,
@@ -304,8 +306,9 @@ __device__ inline bool hip_inter_block_reduction(
   using pointer_type = typename ReducerType::value_type*;
   using value_type   = typename ReducerType::value_type;
 
-  // Do the intra-block reduction with shfl operations and static shared memory
-  hip_intra_block_reduction(reducer, max_active_thread);
+  // Do the intra-block reduction with shfl operations for the intra warp
+  // reduction and static shared memory for the inter warp reduction
+  hip_intra_block_shuffle_reduction(reducer, max_active_thread);
 
   value_type value = reducer.reference();
 

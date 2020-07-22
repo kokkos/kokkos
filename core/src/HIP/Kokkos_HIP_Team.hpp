@@ -230,7 +230,7 @@ class HIPTeamMember {
       team_reduce(ReducerType const& reducer,
                   typename ReducerType::value_type& value) const noexcept {
 #ifdef __HIP_DEVICE_COMPILE__
-    hip_intra_block_reduction(reducer, value, blockDim.y);
+    hip_intra_block_shuffle_reduction(reducer, value, blockDim.y);
 #else
     (void)reducer;
     (void)value;

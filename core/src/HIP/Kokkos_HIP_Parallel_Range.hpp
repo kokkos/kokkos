@@ -287,7 +287,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     value_type init;
     ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &init);
-    if (Impl::hip_inter_block_reduction<ReducerTypeFwd, ValueJoin, WorkTagFwd>(
+    if (Impl::hip_inter_block_shuffle_reduction<ReducerTypeFwd, ValueJoin,
+                                                WorkTagFwd>(
             value, init,
             ValueJoin(ReducerConditional::select(m_functor, m_reducer)),
             m_scratch_space, result, m_scratch_flags, max_active_thread)) {
