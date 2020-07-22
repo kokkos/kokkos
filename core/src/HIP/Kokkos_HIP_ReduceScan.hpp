@@ -336,11 +336,11 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
   return last_block;
 }
 
-template <class FunctorType, class ArgTag, bool DoScan, bool UseShfl>
+template <class FunctorType, class ArgTag, bool UseShfl>
 struct HIPReductionsFunctor;
 
 template <typename FunctorType, typename ArgTag>
-struct HIPReductionsFunctor<FunctorType, ArgTag, false, true> {
+struct HIPReductionsFunctor<FunctorType, ArgTag, true> {
   using ValueTraits  = FunctorValueTraits<FunctorType, ArgTag>;
   using ValueJoin    = FunctorValueJoin<FunctorType, ArgTag>;
   using ValueInit    = FunctorValueInit<FunctorType, ArgTag>;
@@ -459,7 +459,7 @@ struct HIPReductionsFunctor<FunctorType, ArgTag, false, true> {
 };
 
 template <typename FunctorType, typename ArgTag>
-struct HIPReductionsFunctor<FunctorType, ArgTag, false, false> {
+struct HIPReductionsFunctor<FunctorType, ArgTag, false> {
   using ValueTraits  = FunctorValueTraits<FunctorType, ArgTag>;
   using ValueJoin    = FunctorValueJoin<FunctorType, ArgTag>;
   using ValueInit    = FunctorValueInit<FunctorType, ArgTag>;
@@ -788,7 +788,7 @@ __device__ bool hip_single_inter_block_reduce_scan(
   if (!DoScan && static_cast<bool>(ValueTraits::StaticValueSize))
     // FIXME_HIP I don't know where 16 comes from
     return Kokkos::Impl::HIPReductionsFunctor<
-        FunctorType, ArgTag, false, (ValueTraits::StaticValueSize > 16)>::
+        FunctorType, ArgTag, (ValueTraits::StaticValueSize > 16)>::
         scalar_inter_block_reduction(functor, block_id, block_count,
                                      shared_data, global_data, global_flags);
   else {
