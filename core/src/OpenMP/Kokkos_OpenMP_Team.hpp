@@ -108,6 +108,9 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
     int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
     return pool_size < max_host_team_size ? pool_size : max_host_team_size;
   }
+
+  int vector_length() const { return 1; }
+
   template <class FunctorType>
   int team_size_max(const FunctorType&, const ParallelReduceTag&) const {
     int pool_size          = traits::execution_space::impl_thread_pool_size(1);

@@ -307,6 +307,7 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
     return m_team_scratch_size[level] + m_thread_scratch_size[level];
   }
 
+  inline int vector_length() const { return 1; }
   inline static int vector_length_max() {
     return 1024;
   }  // Use arbitrary large number, is meant as a vectorizable length

@@ -285,9 +285,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_thread_scratch_size{0, 0},
         m_chunk_size(32),
         m_tune_team(false),
-        ,
-        m_tune_vector(false),
-  {}
+
+        m_tune_vector(false) {}
 
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal(const execution_space space_, int league_size_,
@@ -338,13 +337,13 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal(const execution_space space_, int league_size_,
-                     const Kokkos::AUTO_t& /* team_size_request */
+                     const Kokkos::AUTO_t& /* team_size_request */,
                      const Kokkos::AUTO_t& /* vector_length_request */
                      )
       : m_space(space_),
         m_league_size(league_size_),
         m_team_size(-1),
-        m_vector_length(verify_requested_vector_length(vector_length_request)),
+        m_vector_length(-1),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(32),
@@ -429,7 +428,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal(int league_size_,
-                     const Kokkos::AUTO_t& /* team_size_request */
+                     const Kokkos::AUTO_t& /* team_size_request */,
                      const Kokkos::AUTO_t& /* vector_length_request */
                      )
       : m_space(typename traits::execution_space()),

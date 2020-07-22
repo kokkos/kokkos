@@ -367,7 +367,12 @@ class TeamPolicyInternal : public Impl::PolicyTraits<Properties...> {
   KOKKOS_INLINE_FUNCTION bool auto_team_size() const;
   /** \brief Whether the policy has an automatically determined vector length
    */
+
   KOKKOS_INLINE_FUNCTION bool auto_vector_length() const;
+
+  static int vector_length_max();
+
+  KOKKOS_INLINE_FUNCTION int vector_length() const;
 
   inline typename traits::index_type chunk_size() const;
 
@@ -569,6 +574,20 @@ class TeamPolicy
     first_arg = false;
   }
 
+  TeamPolicy(const typename traits::execution_space& space_,
+             int league_size_request, const Kokkos::AUTO_t&,
+             const Kokkos::AUTO_t&)
+      : internal_policy(space_, league_size_request, Kokkos::AUTO(),
+                        Kokkos::AUTO()) {
+    first_arg = false;
+  }
+  TeamPolicy(const typename traits::execution_space& space_,
+             int league_size_request, const int team_size_request,
+             const Kokkos::AUTO_t&)
+      : internal_policy(space_, league_size_request, team_size_request,
+                        Kokkos::AUTO()) {
+    first_arg = false;
+  }
   /** \brief  Construct policy with the default instance of the execution space
    */
   TeamPolicy(int league_size_request, int team_size_request,
@@ -582,6 +601,18 @@ class TeamPolicy
              int vector_length_request = 1)
       : internal_policy(league_size_request, Kokkos::AUTO(),
                         vector_length_request) {
+    first_arg = false;
+  }
+
+  TeamPolicy(int league_size_request, const Kokkos::AUTO_t&,
+             const Kokkos::AUTO_t&)
+      : internal_policy(league_size_request, Kokkos::AUTO(), Kokkos::AUTO()) {
+    first_arg = false;
+  }
+  TeamPolicy(int league_size_request, const int team_size_request,
+             const Kokkos::AUTO_t&)
+      : internal_policy(league_size_request, team_size_request,
+                        Kokkos::AUTO()) {
     first_arg = false;
   }
 

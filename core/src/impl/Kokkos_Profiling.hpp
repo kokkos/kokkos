@@ -51,7 +51,7 @@
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Tuners.hpp>
 #include <string>
-#include <unordered_map>
+#include <map>
 namespace Kokkos {
 namespace Tools {
 
@@ -133,27 +133,51 @@ void set_callbacks(EventSet new_events);
 
 namespace Experimental {
 
-// forward declaration
+// forward declarations
 size_t get_new_context_id();
+size_t get_current_context_id();
 
 namespace Impl {
 
-static std::unordered_map<std::string,
-                          Kokkos::Tools::Experimental::TeamSizeTuner>
+static std::map<std::string, Kokkos::Tools::Experimental::TeamSizeTuner>
     team_tuners;
 
-template <class ExecPolicy, class Functor>
-void tune_policy(const std::string& label, ExecPolicy& policy,
-                 const Functor& functor){};
+template <class ExecPolicy, class Functor, typename TagType>
+void tune_policy(const size_t tuning_context, const std::string& label,
+                 ExecPolicy& policy, const Functor& functor,
+                 const TagType& tag){};
 
-template <class Functor, class... Properties>
-void tune_policy(const std::string& label,
-                 Kokkos::TeamPolicy<Properties...> policy,
-                 const Functor& functor) {
+template <class Functor, class TagType, class... Properties>
+void tune_policy(const size_t tuning_context, const std::string& label,
+                 Kokkos::TeamPolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
+    if (team_tuners.find(label) == team_tuners.end()) {
+      team_tuners.emplace(label, Kokkos::Tools::Experimental::TeamSizeTuner(
+                                     label, policy, functor, tag));
+    }
+    auto& tuner = team_tuners[label];
+    tuner.tune(policy, tuning_context);
+  }
+}
+
+template <class ExecPolicy, class Functor, typename TagType>
+void report_policy_results(const size_t tuning_context,
+                           const std::string& label, ExecPolicy& policy,
+                           const Functor& functor, const TagType& tag){};
+
+template <class Functor, class TagType, class... Properties>
+void report_policy_results(const size_t tuning_context,
+                           const std::string& label,
+                           Kokkos::TeamPolicy<Properties...> policy,
+                           const Functor& functor, const TagType& tag) {
+  if (policy.auto_team_size() || policy.auto_vector_length()) {
+    auto& tuner = team_tuners[label];
+    tuner.end(tuning_context);
   }
 }
 }  // namespace Impl
+
 template <class ExecPolicy, class FunctorType>
 void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
                         const std::string& label, uint64_t& kpID) {
@@ -164,11 +188,12 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
     Kokkos::Tools::beginParallelFor(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
-#ifdef KOKKOS_ENABLE_TUNING
-    size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
-    Impl::tune_policy(label, policy, functor);
-#endif
   }
+#ifdef KOKKOS_ENABLE_TUNING
+  size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
+  Impl::tune_policy(context_id, label, policy, functor,
+                    Kokkos::ParallelForTag{});
+#endif
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -177,6 +202,11 @@ void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelFor(kpID);
   }
+#ifdef KOKKOS_ENABLE_TUNING
+  size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
+  Impl::report_policy_results(context_id, label, policy, functor,
+                              Kokkos::ParallelForTag{});
+#endif
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -190,6 +220,11 @@ void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
   }
+#ifdef KOKKOS_ENABLE_TUNING
+  size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
+  Impl::tune_policy(context_id, label, policy, functor,
+                    Kokkos::ParallelScanTag{});
+#endif
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -198,6 +233,11 @@ void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelScan(kpID);
   }
+#ifdef KOKKOS_ENABLE_TUNING
+  size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
+  Impl::report_policy_results(context_id, label, policy, functor,
+                              Kokkos::ParallelScanTag{});
+#endif
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -211,6 +251,11 @@ void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
   }
+#ifdef KOKKOS_ENABLE_TUNING
+  size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
+  Impl::tune_policy(context_id, label, policy, functor,
+                    Kokkos::ParallelReduceTag{});
+#endif
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -219,6 +264,11 @@ void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Tools::endParallelReduce(kpID);
   }
+#ifdef KOKKOS_ENABLE_TUNING
+  size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
+  Impl::report_policy_results(context_id, label, policy, functor,
+                              Kokkos::ParallelReduceTag{});
+#endif
 }
 
 }  // namespace Experimental

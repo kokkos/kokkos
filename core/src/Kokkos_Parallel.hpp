@@ -161,15 +161,18 @@ inline void parallel_for(
         nullptr) {
   uint64_t kpID = 0;
 
-  Kokkos::Tools::Experimental::begin_parallel_for(policy, functor, str, kpID);
+  ExecPolicy inner_policy = policy;
+  Kokkos::Tools::Experimental::begin_parallel_for(inner_policy, functor, str,
+                                                  kpID);
 
   Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelFor<FunctorType, ExecPolicy> closure(functor, policy);
+  Impl::ParallelFor<FunctorType, ExecPolicy> closure(functor, inner_policy);
   Kokkos::Impl::shared_allocation_tracking_enable();
 
   closure.execute();
 
-  Kokkos::Tools::Experimental::end_parallel_for(policy, functor, str, kpID);
+  Kokkos::Tools::Experimental::end_parallel_for(inner_policy, functor, str,
+                                                kpID);
 }
 
 template <class FunctorType>
