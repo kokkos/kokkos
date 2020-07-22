@@ -56,6 +56,10 @@
 namespace Kokkos {
 namespace Impl {
 
+//----------------------------------------------------------------------------
+// Reduction-only implementation
+//----------------------------------------------------------------------------
+
 /* Algorithmic constraints:
  *   (a) threads with the same threadIdx.x have same value
  *   (b) blockDim.x == power of two
@@ -567,6 +571,8 @@ struct HIPReductionsFunctor<FunctorType, ArgTag, false> {
 };
 
 //----------------------------------------------------------------------------
+// Fused reduction and scan implementation
+//----------------------------------------------------------------------------
 /*
  *  Algorithmic constraints:
  *   (a) blockDim.y is a power of two
@@ -667,7 +673,7 @@ __device__ void hip_intra_block_reduce_scan(
  */
 
 template <bool DoScan, class FunctorType, class ArgTag>
-__device__ bool hip_single_inter_block_reduce_scan2(
+__device__ bool hip_single_inter_block_reduce_scan_impl(
     FunctorType const& functor,
     ::Kokkos::Experimental::HIP::size_type const block_id,
     ::Kokkos::Experimental::HIP::size_type const block_count,
@@ -783,14 +789,18 @@ __device__ bool hip_single_inter_block_reduce_scan(
     ::Kokkos::Experimental::HIP::size_type* const global_data,
     ::Kokkos::Experimental::HIP::size_type* const global_flags) {
   using ValueTraits = FunctorValueTraits<FunctorType, ArgTag>;
+  // If we are doing a reduction and StaticValueSize is true, we use the
+  // reduction-only path. Otherwise, we use the common path between reduction
+  // and scan.
   if (!DoScan && static_cast<bool>(ValueTraits::StaticValueSize))
-    // FIXME_HIP I don't know where 16 comes from
+    // FIXME_HIP_PERFORMANCE I don't know where 16 comes from. This inequality
+    // determines if we use shared memory (false) or shuffle (true)
     return Kokkos::Impl::HIPReductionsFunctor<
         FunctorType, ArgTag, (ValueTraits::StaticValueSize > 16)>::
         scalar_inter_block_reduction(functor, block_count, shared_data,
                                      global_data, global_flags);
   else {
-    return hip_single_inter_block_reduce_scan2<DoScan, FunctorType, ArgTag>(
+    return hip_single_inter_block_reduce_scan_impl<DoScan, FunctorType, ArgTag>(
         functor, block_id, block_count, shared_data, global_data, global_flags);
   }
 }
