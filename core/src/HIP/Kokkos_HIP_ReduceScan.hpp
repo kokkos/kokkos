@@ -405,7 +405,6 @@ struct HIPReductionsFunctor<FunctorType, ArgTag, true> {
 
   __device__ static inline bool scalar_inter_block_reduction(
       FunctorType const& functor,
-      ::Kokkos::Experimental::HIP::size_type const /*block_id*/,
       ::Kokkos::Experimental::HIP::size_type const block_count,
       ::Kokkos::Experimental::HIP::size_type* const shared_data,
       ::Kokkos::Experimental::HIP::size_type* const global_data,
@@ -516,7 +515,6 @@ struct HIPReductionsFunctor<FunctorType, ArgTag, false> {
 
   __device__ static inline bool scalar_inter_block_reduction(
       FunctorType const& functor,
-      ::Kokkos::Experimental::HIP::size_type const /*block_id*/,
       ::Kokkos::Experimental::HIP::size_type const block_count,
       ::Kokkos::Experimental::HIP::size_type* const shared_data,
       ::Kokkos::Experimental::HIP::size_type* const global_data,
@@ -789,8 +787,8 @@ __device__ bool hip_single_inter_block_reduce_scan(
     // FIXME_HIP I don't know where 16 comes from
     return Kokkos::Impl::HIPReductionsFunctor<
         FunctorType, ArgTag, (ValueTraits::StaticValueSize > 16)>::
-        scalar_inter_block_reduction(functor, block_id, block_count,
-                                     shared_data, global_data, global_flags);
+        scalar_inter_block_reduction(functor, block_count, shared_data,
+                                     global_data, global_flags);
   else {
     return hip_single_inter_block_reduce_scan2<DoScan, FunctorType, ArgTag>(
         functor, block_id, block_count, shared_data, global_data, global_flags);
