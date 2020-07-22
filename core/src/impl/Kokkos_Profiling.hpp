@@ -143,8 +143,8 @@ static std::map<std::string, Kokkos::Tools::Experimental::TeamSizeTuner>
     team_tuners;
 
 template <class ExecPolicy, class Functor, typename TagType>
-void tune_policy(const size_t tuning_context, const std::string&, ExecPolicy&,
-                 const Functor&, const TagType&){};
+void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
+                 const TagType&){};
 
 template <class Functor, class TagType, class... Properties>
 void tune_policy(const size_t tuning_context, const std::string& label,
