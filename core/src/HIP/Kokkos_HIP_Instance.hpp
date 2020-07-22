@@ -85,7 +85,9 @@ class HIPInternal {
   unsigned m_multiProcCount;
   unsigned m_maxWarpCount;
   unsigned m_maxBlock;
+  unsigned m_maxBlocksPerSM;
   unsigned m_maxSharedWords;
+  int m_regsPerSM;
   int m_shmemPerSM;
   int m_maxShmemPerBlock;
   int m_maxThreadsPerSM;
@@ -100,8 +102,7 @@ class HIPInternal {
 
   hipStream_t m_stream;
 
-  static int was_initialized;
-  static int was_finalized;
+  bool was_finalized = false;
 
   static HIPInternal &singleton();
 
@@ -111,10 +112,12 @@ class HIPInternal {
     return m_hipDev >= 0;
   }  // 0 != m_scratchSpace && 0 != m_scratchFlags ; }
 
-  void initialize(int hip_device_id);
+  void initialize(int hip_device_id, hipStream_t stream = 0);
   void finalize();
 
   void print_configuration(std::ostream &) const;
+
+  void fence() const;
 
   ~HIPInternal();
 
@@ -132,7 +135,8 @@ class HIPInternal {
         m_scratchSpaceCount(0),
         m_scratchFlagsCount(0),
         m_scratchSpace(0),
-        m_scratchFlags(0) {}
+        m_scratchFlags(0),
+        m_stream(0) {}
 
   size_type *scratch_space(const size_type size);
   size_type *scratch_flags(const size_type size);

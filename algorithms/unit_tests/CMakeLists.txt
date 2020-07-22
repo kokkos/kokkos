@@ -28,6 +28,11 @@ IF(NOT (Kokkos_ENABLE_CUDA AND WIN32))
 TARGET_COMPILE_FEATURES(kokkosalgorithms_gtest PUBLIC cxx_std_11)
 ENDIF()
 
+# Suppress clang-tidy diagnostics on code that we do not have control over
+IF(CMAKE_CXX_CLANG_TIDY)
+  SET_TARGET_PROPERTIES(kokkosalgorithms_gtest PROPERTIES CXX_CLANG_TIDY "")
+ENDIF()
+
 SET(SOURCES
   UnitTestMain.cpp
 )

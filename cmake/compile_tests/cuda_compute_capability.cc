@@ -42,7 +42,6 @@
 //@HEADER
 */
 
-
 #include <iostream>
 
 int main() {
@@ -59,6 +58,7 @@ int main() {
   std::cout << compute_capability;
 #else
   switch (compute_capability) {
+      // clang-format off
     case 30: std::cout << "Set -DKokkos_ARCH_KEPLER30=ON ." << std::endl; break;
     case 32: std::cout << "Set -DKokkos_ARCH_KEPLER32=ON ." << std::endl; break;
     case 35: std::cout << "Set -DKokkos_ARCH_KEPLER35=ON ." << std::endl; break;
@@ -75,6 +75,7 @@ int main() {
     default:
       std::cout << "Compute capability " << compute_capability
                 << " is not supported" << std::endl;
+      // clang-format on
   }
 #endif
   return 0;

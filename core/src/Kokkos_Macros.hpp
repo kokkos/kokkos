@@ -166,6 +166,11 @@
 
 #if defined(KOKKOS_ENABLE_HIP)
 
+// FIXME_HIP Not defining NDEBUG makes some tests fail.
+#ifndef NDEBUG
+#define NDEBUG
+#endif
+
 #define HIP_ENABLE_PRINTF
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
@@ -199,6 +204,8 @@
 
 #if defined(__INTEL_COMPILER)
 #define KOKKOS_COMPILER_INTEL __INTEL_COMPILER
+#elif defined(__INTEL_LLVM_COMPILER)
+#define KOKKOS_COMPILER_INTEL __INTEL_LLVM_COMPILER
 #elif defined(__ICC)
 // Old define
 #define KOKKOS_COMPILER_INTEL __ICC

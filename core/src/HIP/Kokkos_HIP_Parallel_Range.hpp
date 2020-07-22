@@ -52,6 +52,7 @@
 #include <HIP/Kokkos_HIP_BlockSize_Deduction.hpp>
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 #include <HIP/Kokkos_HIP_ReduceScan.hpp>
+#include <impl/Kokkos_Traits.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -167,18 +168,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags = nullptr;
 
-  // Shall we use the shfl based reduction or not (only use it for static sized
-  // types of more than 128bit)
-  enum {
-    UseShflReduction = false
-  };  //((sizeof(value_type)>2*sizeof(double)) && ValueTraits::StaticValueSize)
-      //};
-      // Some crutch to do function overloading
- private:
-  using DummyShflReductionType  = double;
-  using DummySHMEMReductionType = int;
+  // FIXME_HIP_PERFORMANCE Need a rule to choose when to use shared memory and
+  // when to use shuffle
+  static bool constexpr UseShflReduction =
+      ((sizeof(value_type) > 2 * sizeof(double)) &&
+       static_cast<bool>(ValueTraits::StaticValueSize));
 
- public:
+ private:
+  struct ShflReductionTag {};
+  struct SHMEMReductionTag {};
+
   // Make the exec_range calls call to Reduce::DeviceIterateTile
   template <class TagType>
   __device__ inline
@@ -194,7 +193,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     m_functor(TagType(), i, update);
   }
 
+ public:
   __device__ inline void operator()() const {
+    using ReductionTag =
+        typename std::conditional<UseShflReduction, ShflReductionTag,
+                                  SHMEMReductionTag>::type;
+    run(ReductionTag{});
+  }
+
+  __device__ inline void run(SHMEMReductionTag) const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(
@@ -253,6 +260,49 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
   }
 
+  __device__ inline void run(ShflReductionTag) const {
+    value_type value;
+    ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &value);
+    // Number of blocks is bounded so that the reduction can be limited to two
+    // passes. Each thread block is given an approximately equal amount of work
+    // to perform. Accumulate the values for this block. The accumulation
+    // ordering does not match the final pass, but is arithmetically equivalent.
+
+    WorkRange const range(m_policy, blockIdx.x, gridDim.x);
+
+    for (Member iwork = range.begin() + threadIdx.y, iwork_end = range.end();
+         iwork < iwork_end; iwork += blockDim.y) {
+      this->template exec_range<WorkTag>(iwork, value);
+    }
+
+    pointer_type const result = reinterpret_cast<pointer_type>(m_scratch_space);
+
+    int max_active_thread = static_cast<int>(range.end() - range.begin()) <
+                                    static_cast<int>(blockDim.y)
+                                ? range.end() - range.begin()
+                                : blockDim.y;
+
+    max_active_thread =
+        (max_active_thread == 0) ? blockDim.y : max_active_thread;
+
+    value_type init;
+    ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &init);
+    if (Impl::hip_inter_block_reduction<ReducerTypeFwd, ValueJoin, WorkTagFwd>(
+            value, init,
+            ValueJoin(ReducerConditional::select(m_functor, m_reducer)),
+            m_scratch_space, result, m_scratch_flags, max_active_thread)) {
+      unsigned int const id = threadIdx.y * blockDim.x + threadIdx.x;
+      if (id == 0) {
+        Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
+            ReducerConditional::select(m_functor, m_reducer),
+            reinterpret_cast<void*>(&value));
+        pointer_type const final_result =
+            m_result_ptr_device_accessible ? m_result_ptr : result;
+        *final_result = value;
+      }
+    }
+  }
+
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
     // FIXME_HIP I don't know where 8 comes from
@@ -293,8 +343,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);
       // Required grid.x <= block.y
-      const dim3 grid(
-          std::min(int(block.y), int((nwork + block.y - 1) / block.y)), 1, 1);
+      const dim3 grid(std::min(block.y, (nwork + block.y - 1) / block.y), 1, 1);
 
       const int shmem =
           UseShflReduction
@@ -553,10 +602,7 @@ class ParallelScanHIPBase {
       // correctly, the unit tests fail with wrong results
       const int gridMaxComputeCapability_2x = 0x01fff;
 
-      // FIXME_HIP block sizes greater than 256 don't work correctly,
-      // the unit tests fail with wrong results
-      const int block_size =
-          std::min(static_cast<int>(local_block_size(m_functor)), 256);
+      const int block_size = static_cast<int>(local_block_size(m_functor));
       KOKKOS_ASSERT(block_size > 0);
 
       const int grid_max =

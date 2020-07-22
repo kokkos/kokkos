@@ -117,8 +117,8 @@ class CudaInternal {
   uint32_t* m_scratchConcurrentBitset;
   cudaStream_t m_stream;
 
-  static int was_initialized;
-  static int was_finalized;
+  bool was_initialized = false;
+  bool was_finalized   = false;
 
   static CudaInternal& singleton();
 

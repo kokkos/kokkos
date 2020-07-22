@@ -175,8 +175,8 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 #endif
 
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
-// HIP does not abort
-#define KOKKOS_IMPL_ABORT_NORETURN
+// HIP aborts
+#define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
 #elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__HCC_ACCELERATOR__)
 // Host aborts
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]

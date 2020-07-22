@@ -759,8 +759,8 @@ KOKKOS_INLINE_FUNCTION
   // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
   // If the real part is +/-Inf and the imaginary part is -/+Inf,
   // this won't change the result.
-  typedef
-      typename std::common_type<RealType1, RealType2>::type common_real_type;
+  using common_real_type =
+      typename std::common_type<RealType1, RealType2>::type;
   const common_real_type s = std::fabs(real(y)) + std::fabs(imag(y));
 
   // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
@@ -807,7 +807,7 @@ std::istream& operator>>(std::istream& is, complex<RealType>& x) {
 
 template <class T>
 struct reduction_identity<Kokkos::complex<T> > {
-  typedef reduction_identity<T> t_red_ident;
+  using t_red_ident = reduction_identity<T>;
   KOKKOS_FORCEINLINE_FUNCTION constexpr static Kokkos::complex<T>
   sum() noexcept {
     return Kokkos::complex<T>(t_red_ident::sum(), t_red_ident::sum());

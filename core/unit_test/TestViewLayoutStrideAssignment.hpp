@@ -661,6 +661,10 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
     ASSERT_EQ(dst.span(), src.span());
     ASSERT_EQ(test, true);
   }
+// WORKAROUND OPENMPTARGET : death tests don't seem to work ...
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  return;
+#endif
   {  // Assignment of rank-2 LayoutLeft = LayoutStride (LayoutRight compatible)
     int ndims   = 2;
     int dims[]  = {10, 9};
@@ -812,6 +816,10 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
     ASSERT_EQ(dst.span(), src.span());
     ASSERT_EQ(test, true);
   }
+// WORKAROUND OPENMPTARGET : death tests don't seem to work ...
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  return;
+#endif
   {  // Assignment of rank-2 LayoutRight = LayoutStride (LayoutLeft compatible)
     int ndims   = 2;
     int dims[]  = {10, 9};

@@ -254,11 +254,15 @@ struct CudaParallelLaunch<
 #ifndef KOKKOS_ARCH_KEPLER
       // On Kepler the L1 has no benefit since it doesn't cache reads
       else {
-        CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-            cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
-                                                 MinBlocksPerSM>,
-            (prefer_shmem ? cudaFuncCachePreferShared
-                          : cudaFuncCachePreferL1)));
+        static bool cache_config_set = false;
+        if (!cache_config_set) {
+          CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
+              cuda_parallel_launch_constant_memory<
+                  DriverType, MaxThreadsPerBlock, MinBlocksPerSM>,
+              (prefer_shmem ? cudaFuncCachePreferShared
+                            : cudaFuncCachePreferL1)));
+          cache_config_set = true;
+        }
       }
 #else
       (void)prefer_shmem;
@@ -284,11 +288,15 @@ struct CudaParallelLaunch<
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    cudaFuncAttributes attr;
-    CUDA_SAFE_CALL(cudaFuncGetAttributes(
-        &attr,
-        cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
-                                             MinBlocksPerSM>));
+    static cudaFuncAttributes attr;
+    static bool attr_set = false;
+    if (!attr_set) {
+      CUDA_SAFE_CALL(cudaFuncGetAttributes(
+          &attr,
+          cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
+                                               MinBlocksPerSM>));
+      attr_set = true;
+    }
     return attr;
   }
 };
@@ -314,10 +322,14 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 #ifndef KOKKOS_ARCH_KEPLER
       // On Kepler the L1 has no benefit since it doesn't cache reads
       else {
-        CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-            cuda_parallel_launch_constant_memory<DriverType>,
-            (prefer_shmem ? cudaFuncCachePreferShared
-                          : cudaFuncCachePreferL1)));
+        static bool cache_config_set = false;
+        if (!cache_config_set) {
+          CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
+              cuda_parallel_launch_constant_memory<DriverType>,
+              (prefer_shmem ? cudaFuncCachePreferShared
+                            : cudaFuncCachePreferL1)));
+          cache_config_set = true;
+        }
       }
 #else
       (void)prefer_shmem;
@@ -342,9 +354,13 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    cudaFuncAttributes attr;
-    CUDA_SAFE_CALL(cudaFuncGetAttributes(
-        &attr, cuda_parallel_launch_constant_memory<DriverType>));
+    static cudaFuncAttributes attr;
+    static bool attr_set = false;
+    if (!attr_set) {
+      CUDA_SAFE_CALL(cudaFuncGetAttributes(
+          &attr, cuda_parallel_launch_constant_memory<DriverType>));
+      attr_set = true;
+    }
     return attr;
   }
 };
@@ -369,11 +385,15 @@ struct CudaParallelLaunch<
 #ifndef KOKKOS_ARCH_KEPLER
       // On Kepler the L1 has no benefit since it doesn't cache reads
       else {
-        CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-            cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                              MinBlocksPerSM>,
-            (prefer_shmem ? cudaFuncCachePreferShared
-                          : cudaFuncCachePreferL1)));
+        static bool cache_config_set = false;
+        if (!cache_config_set) {
+          CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
+              cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+                                                MinBlocksPerSM>,
+              (prefer_shmem ? cudaFuncCachePreferShared
+                            : cudaFuncCachePreferL1)));
+          cache_config_set = true;
+        }
       }
 #else
       (void)prefer_shmem;
@@ -394,10 +414,15 @@ struct CudaParallelLaunch<
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    cudaFuncAttributes attr;
-    CUDA_SAFE_CALL(cudaFuncGetAttributes(
-        &attr, cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                                 MinBlocksPerSM>));
+    static cudaFuncAttributes attr;
+    static bool attr_set = false;
+    if (!attr_set) {
+      CUDA_SAFE_CALL(cudaFuncGetAttributes(
+          &attr,
+          cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+                                            MinBlocksPerSM>));
+      attr_set = true;
+    }
     return attr;
   }
 };
@@ -420,10 +445,14 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 #ifndef KOKKOS_ARCH_KEPLER
       // On Kepler the L1 has no benefit since it doesn't cache reads
       else {
-        CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-            cuda_parallel_launch_local_memory<DriverType>,
-            (prefer_shmem ? cudaFuncCachePreferShared
-                          : cudaFuncCachePreferL1)));
+        static bool cache_config_set = false;
+        if (!cache_config_set) {
+          CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
+              cuda_parallel_launch_local_memory<DriverType>,
+              (prefer_shmem ? cudaFuncCachePreferShared
+                            : cudaFuncCachePreferL1)));
+          cache_config_set = true;
+        }
       }
 #else
       (void)prefer_shmem;
@@ -443,9 +472,13 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    cudaFuncAttributes attr;
-    CUDA_SAFE_CALL(cudaFuncGetAttributes(
-        &attr, cuda_parallel_launch_local_memory<DriverType>));
+    static cudaFuncAttributes attr;
+    static bool attr_set = false;
+    if (!attr_set) {
+      CUDA_SAFE_CALL(cudaFuncGetAttributes(
+          &attr, cuda_parallel_launch_local_memory<DriverType>));
+      attr_set = true;
+    }
     return attr;
   }
 };
@@ -467,11 +500,15 @@ struct CudaParallelLaunch<
 #ifndef KOKKOS_ARCH_KEPLER
       // On Kepler the L1 has no benefit since it doesn't cache reads
       else {
-        CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-            cuda_parallel_launch_global_memory<DriverType, MaxThreadsPerBlock,
-                                               MinBlocksPerSM>,
-            (prefer_shmem ? cudaFuncCachePreferShared
-                          : cudaFuncCachePreferL1)));
+        static bool cache_config_set = false;
+        if (!cache_config_set) {
+          CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
+              cuda_parallel_launch_global_memory<DriverType, MaxThreadsPerBlock,
+                                                 MinBlocksPerSM>,
+              (prefer_shmem ? cudaFuncCachePreferShared
+                            : cudaFuncCachePreferL1)));
+          cache_config_set = true;
+        }
       }
 #else
       (void)prefer_shmem;
@@ -497,11 +534,15 @@ struct CudaParallelLaunch<
     }
   }
   static cudaFuncAttributes get_cuda_func_attributes() {
-    cudaFuncAttributes attr;
-    CUDA_SAFE_CALL(cudaFuncGetAttributes(
-        &attr,
-        cuda_parallel_launch_global_memory<DriverType, MaxThreadsPerBlock,
-                                           MinBlocksPerSM>));
+    static cudaFuncAttributes attr;
+    static bool attr_set = false;
+    if (!attr_set) {
+      CUDA_SAFE_CALL(cudaFuncGetAttributes(
+          &attr,
+          cuda_parallel_launch_global_memory<DriverType, MaxThreadsPerBlock,
+                                             MinBlocksPerSM>));
+      attr_set = true;
+    }
     return attr;
   }
 };
@@ -521,10 +562,14 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 #ifndef KOKKOS_ARCH_KEPLER
       // On Kepler the L1 has no benefit since it doesn't cache reads
       else {
-        CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-            cuda_parallel_launch_global_memory<DriverType>,
-            (prefer_shmem ? cudaFuncCachePreferShared
-                          : cudaFuncCachePreferL1)));
+        static bool cache_config_set = false;
+        if (!cache_config_set) {
+          CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
+              cuda_parallel_launch_global_memory<DriverType>,
+              (prefer_shmem ? cudaFuncCachePreferShared
+                            : cudaFuncCachePreferL1)));
+          cache_config_set = true;
+        }
       }
 #else
       (void)prefer_shmem;
@@ -549,9 +594,13 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    cudaFuncAttributes attr;
-    CUDA_SAFE_CALL(cudaFuncGetAttributes(
-        &attr, cuda_parallel_launch_global_memory<DriverType>));
+    static cudaFuncAttributes attr;
+    static bool attr_set = false;
+    if (!attr_set) {
+      CUDA_SAFE_CALL(cudaFuncGetAttributes(
+          &attr, cuda_parallel_launch_global_memory<DriverType>));
+      attr_set = true;
+    }
     return attr;
   }
 };

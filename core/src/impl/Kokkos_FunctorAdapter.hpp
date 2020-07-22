@@ -187,10 +187,10 @@ struct IsNonTrivialReduceFunctor<FunctorType, true> {
 template <class FunctorType, class ArgTag,
           bool Dec = FunctorDeclaresValueType<FunctorType, ArgTag>::value>
 struct FunctorValueTraits {
-  typedef void value_type;
-  typedef void pointer_type;
-  typedef void reference_type;
-  typedef void functor_type;
+  using value_type     = void;
+  using pointer_type   = void;
+  using reference_type = void;
+  using functor_type   = void;
 
   enum { StaticValueSize = 0 };
 
@@ -205,10 +205,10 @@ struct FunctorValueTraits {
 
 template <class ArgTag>
 struct FunctorValueTraits<void, ArgTag, false> {
-  typedef void value_type;
-  typedef void pointer_type;
-  typedef void reference_type;
-  typedef void functor_type;
+  using value_type     = void;
+  using pointer_type   = void;
+  using reference_type = void;
+  using functor_type   = void;
 };
 
 /** \brief  FunctorType::value_type is explicitly declared so use it.
@@ -225,9 +225,9 @@ struct FunctorValueTraits<void, ArgTag, false> {
 template <class FunctorType, class ArgTag>
 struct FunctorValueTraits<FunctorType, ArgTag,
                           true /* == exists FunctorType::value_type */> {
-  typedef typename std::remove_extent<typename FunctorType::value_type>::type
-      value_type;
-  typedef FunctorType functor_type;
+  using value_type =
+      typename std::remove_extent<typename FunctorType::value_type>::type;
+  using functor_type = FunctorType;
 
   static_assert((sizeof(value_type) < sizeof(int)) ||
                     0 == (sizeof(value_type) % sizeof(int)),
@@ -243,13 +243,13 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   // If not an array then what is the sizeof(value_type)
   enum { StaticValueSize = IsArray ? 0 : sizeof(value_type) };
 
-  typedef value_type* pointer_type;
+  using pointer_type = value_type*;
 
   // The reference_type for an array is 'value_type *'
   // The reference_type for a single value is 'value_type &'
 
-  typedef typename Impl::if_c<IsArray, value_type*, value_type&>::type
-      reference_type;
+  using reference_type =
+      typename Impl::if_c<IsArray, value_type*, value_type&>::type;
 
   // Number of values if single value
   template <class F>
@@ -287,8 +287,8 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   struct REJECTTAG {
   };  // Reject tagged operator() when using non-tagged execution policy.
 
-  typedef typename Impl::if_c<std::is_same<ArgTag, void>::value, VOIDTAG,
-                              ArgTag>::type tag_type;
+  using tag_type = typename Impl::if_c<std::is_same<ArgTag, void>::value,
+                                       VOIDTAG, ArgTag>::type;
 
   //----------------------------------------
   // parallel_for operator without a tag:
@@ -1322,20 +1322,20 @@ struct FunctorValueTraits<FunctorType, ArgTag,
                                       const bool&) const) {}
   //----------------------------------------
 
-  typedef decltype(
-      deduce_reduce_type(tag_type(), &FunctorType::operator())) ValueType;
+  using ValueType =
+      decltype(deduce_reduce_type(tag_type(), &FunctorType::operator()));
 
   enum { IS_VOID = std::is_same<VOIDTAG, ValueType>::value };
   enum { IS_REJECT = std::is_same<REJECTTAG, ValueType>::value };
 
  public:
-  typedef typename Impl::if_c<IS_VOID || IS_REJECT, void, ValueType>::type
-      value_type;
-  typedef typename Impl::if_c<IS_VOID || IS_REJECT, void, ValueType*>::type
-      pointer_type;
-  typedef typename Impl::if_c<IS_VOID || IS_REJECT, void, ValueType&>::type
-      reference_type;
-  typedef FunctorType functor_type;
+  using value_type =
+      typename Impl::if_c<IS_VOID || IS_REJECT, void, ValueType>::type;
+  using pointer_type =
+      typename Impl::if_c<IS_VOID || IS_REJECT, void, ValueType*>::type;
+  using reference_type =
+      typename Impl::if_c<IS_VOID || IS_REJECT, void, ValueType&>::type;
+  using functor_type = FunctorType;
 
   static_assert(
       IS_VOID || IS_REJECT || 0 == (sizeof(ValueType) % sizeof(int)),
@@ -1367,8 +1367,8 @@ namespace Impl {
  */
 template <class FunctorType, class ArgTag>
 struct FunctorValueInitFunction {
-  typedef typename FunctorValueTraits<FunctorType, ArgTag>::reference_type
-      reference_type;
+  using reference_type =
+      typename FunctorValueTraits<FunctorType, ArgTag>::reference_type;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(ArgTag, reference_type) const);
@@ -1385,8 +1385,8 @@ struct FunctorValueInitFunction {
  */
 template <class FunctorType>
 struct FunctorValueInitFunction<FunctorType, void> {
-  typedef typename FunctorValueTraits<FunctorType, void>::reference_type
-      reference_type;
+  using reference_type =
+      typename FunctorValueTraits<FunctorType, void>::reference_type;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(reference_type) const);
@@ -1506,11 +1506,11 @@ template <class FunctorType, class ArgTag,
           bool IsArray =
               0 == FunctorValueTraits<FunctorType, ArgTag>::StaticValueSize>
 struct FunctorValueJoinFunction {
-  typedef
-      typename FunctorValueTraits<FunctorType, ArgTag>::value_type value_type;
+  using value_type =
+      typename FunctorValueTraits<FunctorType, ArgTag>::value_type;
 
-  typedef volatile value_type& vref_type;
-  typedef const volatile value_type& cvref_type;
+  using vref_type  = volatile value_type&;
+  using cvref_type = const volatile value_type&;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(ArgTag, vref_type, cvref_type) const);
@@ -1525,11 +1525,11 @@ struct FunctorValueJoinFunction {
 // Signatures for compatible FunctorType::join with tag and is an array
 template <class FunctorType, class ArgTag>
 struct FunctorValueJoinFunction<FunctorType, ArgTag, true> {
-  typedef
-      typename FunctorValueTraits<FunctorType, ArgTag>::value_type value_type;
+  using value_type =
+      typename FunctorValueTraits<FunctorType, ArgTag>::value_type;
 
-  typedef volatile value_type* vptr_type;
-  typedef const volatile value_type* cvptr_type;
+  using vptr_type  = volatile value_type*;
+  using cvptr_type = const volatile value_type*;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(ArgTag, vptr_type, cvptr_type) const);
@@ -1544,10 +1544,10 @@ struct FunctorValueJoinFunction<FunctorType, ArgTag, true> {
 // Signatures for compatible FunctorType::join without tag and not an array
 template <class FunctorType>
 struct FunctorValueJoinFunction<FunctorType, void, false> {
-  typedef typename FunctorValueTraits<FunctorType, void>::value_type value_type;
+  using value_type = typename FunctorValueTraits<FunctorType, void>::value_type;
 
-  typedef volatile value_type& vref_type;
-  typedef const volatile value_type& cvref_type;
+  using vref_type  = volatile value_type&;
+  using cvref_type = const volatile value_type&;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(void (FunctorType::*)(vref_type,
                                                                      cvref_type)
@@ -1558,10 +1558,10 @@ struct FunctorValueJoinFunction<FunctorType, void, false> {
 // Signatures for compatible FunctorType::join without tag and is an array
 template <class FunctorType>
 struct FunctorValueJoinFunction<FunctorType, void, true> {
-  typedef typename FunctorValueTraits<FunctorType, void>::value_type value_type;
+  using value_type = typename FunctorValueTraits<FunctorType, void>::value_type;
 
-  typedef volatile value_type* vptr_type;
-  typedef const volatile value_type* cvptr_type;
+  using vptr_type  = volatile value_type*;
+  using cvptr_type = const volatile value_type*;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(void (FunctorType::*)(vptr_type,
                                                                      cvptr_type)
@@ -1752,7 +1752,7 @@ namespace Impl {
 
 template <typename ValueType, class JoinOp, class Enable = void>
 struct JoinLambdaAdapter {
-  typedef ValueType value_type;
+  using value_type = ValueType;
   const JoinOp& lambda;
   KOKKOS_INLINE_FUNCTION
   JoinLambdaAdapter(const JoinOp& lambda_) : lambda(lambda_) {}
@@ -1781,7 +1781,7 @@ template <typename ValueType, class JoinOp>
 struct JoinLambdaAdapter<ValueType, JoinOp,
                          decltype(FunctorValueJoinFunction<
                                   JoinOp, void>::enable_if(&JoinOp::join))> {
-  typedef ValueType value_type;
+  using value_type = ValueType;
   static_assert(
       std::is_same<ValueType, typename JoinOp::value_type>::value,
       "JoinLambdaAdapter static_assert Fail: ValueType != JoinOp::value_type");
@@ -1814,7 +1814,7 @@ struct JoinLambdaAdapter<ValueType, JoinOp,
 
 template <typename ValueType>
 struct JoinAdd {
-  typedef ValueType value_type;
+  using value_type = ValueType;
 
   KOKKOS_DEFAULTED_FUNCTION
   JoinAdd() = default;
@@ -1890,8 +1890,8 @@ template <class FunctorType, class ArgTag,
           bool IsArray =
               0 == FunctorValueTraits<FunctorType, ArgTag>::StaticValueSize>
 struct FunctorFinalFunction {
-  typedef
-      typename FunctorValueTraits<FunctorType, ArgTag>::value_type value_type;
+  using value_type =
+      typename FunctorValueTraits<FunctorType, ArgTag>::value_type;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(ArgTag, value_type&) const);
@@ -1944,8 +1944,8 @@ struct FunctorFinalFunction {
 // Compatible functions for 'final' function and value_type is an array
 template <class FunctorType, class ArgTag>
 struct FunctorFinalFunction<FunctorType, ArgTag, true> {
-  typedef
-      typename FunctorValueTraits<FunctorType, ArgTag>::value_type value_type;
+  using value_type =
+      typename FunctorValueTraits<FunctorType, ArgTag>::value_type;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(ArgTag, value_type*) const);
@@ -1997,7 +1997,7 @@ struct FunctorFinalFunction<FunctorType, ArgTag, true> {
 
 template <class FunctorType>
 struct FunctorFinalFunction<FunctorType, void, false> {
-  typedef typename FunctorValueTraits<FunctorType, void>::value_type value_type;
+  using value_type = typename FunctorValueTraits<FunctorType, void>::value_type;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(value_type&) const);
@@ -2014,7 +2014,7 @@ struct FunctorFinalFunction<FunctorType, void, false> {
 
 template <class FunctorType>
 struct FunctorFinalFunction<FunctorType, void, true> {
-  typedef typename FunctorValueTraits<FunctorType, void>::value_type value_type;
+  using value_type = typename FunctorValueTraits<FunctorType, void>::value_type;
 
   KOKKOS_INLINE_FUNCTION static void enable_if(
       void (FunctorType::*)(value_type*) const);

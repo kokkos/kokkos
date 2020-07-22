@@ -73,7 +73,7 @@ enum { ARRAY_LAYOUT_MAX_RANK = 8 };
 /// major."
 struct LayoutLeft {
   //! Tag this class as a kokkos array layout
-  typedef LayoutLeft array_layout;
+  using array_layout = LayoutLeft;
 
   size_t dimension[ARRAY_LAYOUT_MAX_RANK];
 
@@ -107,7 +107,7 @@ struct LayoutLeft {
 /// two-dimensional array, "layout right" is also called "row major."
 struct LayoutRight {
   //! Tag this class as a kokkos array layout
-  typedef LayoutRight array_layout;
+  using array_layout = LayoutRight;
 
   size_t dimension[ARRAY_LAYOUT_MAX_RANK];
 
@@ -131,7 +131,7 @@ struct LayoutRight {
 ///         multi-index mapping into contiguous memory.
 struct LayoutStride {
   //! Tag this class as a kokkos array layout
-  typedef LayoutStride array_layout;
+  using array_layout = LayoutStride;
 
   size_t dimension[ARRAY_LAYOUT_MAX_RANK];
   size_t stride[ARRAY_LAYOUT_MAX_RANK];
@@ -241,9 +241,8 @@ struct LayoutTiled {
                , "LayoutTiled must be given power-of-two tile dimensions" );
 #endif
 
-  typedef LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3, ArgN4, ArgN5,
-                      ArgN6, ArgN7, IsPowerOfTwo>
-      array_layout;
+  using array_layout = LayoutTiled<OuterP, InnerP, ArgN0, ArgN1, ArgN2, ArgN3,
+                                   ArgN4, ArgN5, ArgN6, ArgN7, IsPowerOfTwo>;
   static constexpr Iterate outer_pattern = OuterP;
   static constexpr Iterate inner_pattern = InnerP;
 

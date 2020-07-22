@@ -1,0 +1,2 @@
+Checks: '-*,kokkos-*,modernize-use-using'
+FormatStyle: file

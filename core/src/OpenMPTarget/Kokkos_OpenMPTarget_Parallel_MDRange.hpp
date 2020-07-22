@@ -50,6 +50,11 @@
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
+// WORKAROUND OPENMPTARGET: sometimes tile sizes don't make it correctly,
+// this was tracked down to a bug in clang with regards of mapping structs
+// with arrays of long in it. Arrays of int might be fine though ...
+#define KOKKOS_IMPL_MDRANGE_USE_NO_TILES  // undef EOF
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -77,9 +82,16 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const int64_t end   = m_policy.m_num_tiles;
     FunctorType functor(m_functor);
     Policy policy = m_policy;
+
+#ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    typename Policy::point_type unused;
+
+    execute_tile<Policy::rank>(unused, functor, policy);
+#else
 #pragma omp target teams distribute map(to : functor) num_teams(end - begin)
     {
       for (ptrdiff_t tile_idx = begin; tile_idx < end; tile_idx++) {
+
 #pragma omp parallel
         {
           typename Policy::point_type offset;
@@ -100,12 +112,23 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         }
       }
     }
+#endif
   }
 
   template <int Rank>
   inline typename std::enable_if<Rank == 1>::type execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
+#ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    const int begin_0 = policy.m_lower[0];
+
+    const int end_0 = policy.m_upper[0];
+
+#pragma omp target teams distribute parallel for map(to : functor)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+      functor(i0);
+    }
+#else
     const ptrdiff_t begin_0 = offset[0];
     ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
     end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
@@ -113,12 +136,27 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
       functor(i0);
     }
+#endif
   }
 
   template <int Rank>
   inline typename std::enable_if<Rank == 2>::type execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
+#ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    const int begin_0 = policy.m_lower[0];
+    const int begin_1 = policy.m_lower[1];
+
+    const int end_0 = policy.m_upper[0];
+    const int end_1 = policy.m_upper[1];
+
+#pragma omp target teams distribute parallel for collapse(2) map(to : functor)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
+        functor(i0, i1);
+      }
+    }
+#else
     const ptrdiff_t begin_0 = offset[0];
     ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
     end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
@@ -130,12 +168,31 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #pragma omp for collapse(2)
     for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
       for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) functor(i0, i1);
+#endif
   }
 
   template <int Rank>
   inline typename std::enable_if<Rank == 3>::type execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
+#ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    const int begin_0 = policy.m_lower[0];
+    const int begin_1 = policy.m_lower[1];
+    const int begin_2 = policy.m_lower[2];
+
+    const int end_0 = policy.m_upper[0];
+    const int end_1 = policy.m_upper[1];
+    const int end_2 = policy.m_upper[2];
+
+#pragma omp target teams distribute parallel for collapse(3) map(to : functor)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) {
+          functor(i0, i1, i2);
+        }
+      }
+    }
+#else
     const ptrdiff_t begin_0 = offset[0];
     ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
     end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
@@ -152,12 +209,35 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
       for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
         for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) functor(i0, i1, i2);
+#endif
   }
 
   template <int Rank>
   inline typename std::enable_if<Rank == 4>::type execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
+#ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    const int begin_0 = policy.m_lower[0];
+    const int begin_1 = policy.m_lower[1];
+    const int begin_2 = policy.m_lower[2];
+    const int begin_3 = policy.m_lower[3];
+
+    const int end_0 = policy.m_upper[0];
+    const int end_1 = policy.m_upper[1];
+    const int end_2 = policy.m_upper[2];
+    const int end_3 = policy.m_upper[3];
+
+#pragma omp target teams distribute parallel for collapse(4) map(to : functor)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) {
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++) {
+            functor(i0, i1, i2, i3);
+          }
+        }
+      }
+    }
+#else
     const ptrdiff_t begin_0 = offset[0];
     ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
     end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
@@ -180,12 +260,39 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++)
           for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++)
             functor(i0, i1, i2, i3);
+#endif
   }
 
   template <int Rank>
   inline typename std::enable_if<Rank == 5>::type execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
+#ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    const int begin_0 = policy.m_lower[0];
+    const int begin_1 = policy.m_lower[1];
+    const int begin_2 = policy.m_lower[2];
+    const int begin_3 = policy.m_lower[3];
+    const int begin_4 = policy.m_lower[4];
+
+    const int end_0 = policy.m_upper[0];
+    const int end_1 = policy.m_upper[1];
+    const int end_2 = policy.m_upper[2];
+    const int end_3 = policy.m_upper[3];
+    const int end_4 = policy.m_upper[4];
+
+#pragma omp target teams distribute parallel for collapse(5) map(to : functor)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) {
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++) {
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++) {
+              functor(i0, i1, i2, i3, i4);
+            }
+          }
+        }
+      }
+    }
+#else
     const ptrdiff_t begin_0 = offset[0];
     ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
     end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
@@ -213,12 +320,43 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
           for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++)
             for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++)
               functor(i0, i1, i2, i3, i4);
+#endif
   }
 
   template <int Rank>
   inline typename std::enable_if<Rank == 6>::type execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
+#ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    const int begin_0 = policy.m_lower[0];
+    const int begin_1 = policy.m_lower[1];
+    const int begin_2 = policy.m_lower[2];
+    const int begin_3 = policy.m_lower[3];
+    const int begin_4 = policy.m_lower[4];
+    const int begin_5 = policy.m_lower[5];
+
+    const int end_0 = policy.m_upper[0];
+    const int end_1 = policy.m_upper[1];
+    const int end_2 = policy.m_upper[2];
+    const int end_3 = policy.m_upper[3];
+    const int end_4 = policy.m_upper[4];
+    const int end_5 = policy.m_upper[5];
+
+#pragma omp target teams distribute parallel for collapse(6) map(to : functor)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) {
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++) {
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++) {
+              for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++) {
+                functor(i0, i1, i2, i3, i4, i5);
+              }
+            }
+          }
+        }
+      }
+    }
+#else
     const ptrdiff_t begin_0 = offset[0];
     ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
     end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
@@ -251,12 +389,47 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++)
               for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++)
                 functor(i0, i1, i2, i3, i4, i5);
+#endif
   }
 
   template <int Rank>
   inline typename std::enable_if<Rank == 7>::type execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
+#ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    const int begin_0 = policy.m_lower[0];
+    const int begin_1 = policy.m_lower[1];
+    const int begin_2 = policy.m_lower[2];
+    const int begin_3 = policy.m_lower[3];
+    const int begin_4 = policy.m_lower[4];
+    const int begin_5 = policy.m_lower[5];
+    const int begin_6 = policy.m_lower[6];
+
+    const int end_0 = policy.m_upper[0];
+    const int end_1 = policy.m_upper[1];
+    const int end_2 = policy.m_upper[2];
+    const int end_3 = policy.m_upper[3];
+    const int end_4 = policy.m_upper[4];
+    const int end_5 = policy.m_upper[5];
+    const int end_6 = policy.m_upper[6];
+
+#pragma omp target teams distribute parallel for collapse(7) map(to : functor)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) {
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++) {
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++) {
+              for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++) {
+                for (ptrdiff_t i6 = begin_6; i6 < end_6; i6++) {
+                  functor(i0, i1, i2, i3, i4, i5, i6);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+#else
     const ptrdiff_t begin_0 = offset[0];
     ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
     end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
@@ -294,12 +467,51 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
               for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++)
                 for (ptrdiff_t i6 = begin_6; i6 < end_6; i6++)
                   functor(i0, i1, i2, i3, i4, i5, i6);
+#endif
   }
 
   template <int Rank>
   inline typename std::enable_if<Rank == 8>::type execute_tile(
       typename Policy::point_type offset, const FunctorType& functor,
       const Policy& policy) const {
+#ifdef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
+    const int begin_0 = policy.m_lower[0];
+    const int begin_1 = policy.m_lower[1];
+    const int begin_2 = policy.m_lower[2];
+    const int begin_3 = policy.m_lower[3];
+    const int begin_4 = policy.m_lower[4];
+    const int begin_5 = policy.m_lower[5];
+    const int begin_6 = policy.m_lower[6];
+    const int begin_7 = policy.m_lower[7];
+
+    const int end_0 = policy.m_upper[0];
+    const int end_1 = policy.m_upper[1];
+    const int end_2 = policy.m_upper[2];
+    const int end_3 = policy.m_upper[3];
+    const int end_4 = policy.m_upper[4];
+    const int end_5 = policy.m_upper[5];
+    const int end_6 = policy.m_upper[6];
+    const int end_7 = policy.m_upper[7];
+
+#pragma omp target teams distribute parallel for collapse(8) map(to : functor)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) {
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++) {
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++) {
+              for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++) {
+                for (ptrdiff_t i6 = begin_6; i6 < end_6; i6++) {
+                  for (ptrdiff_t i7 = begin_7; i7 < end_7; i7++) {
+                    functor(i0, i1, i2, i3, i4, i5, i6, i7);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+#else
     const ptrdiff_t begin_0 = offset[0];
     ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
     end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
@@ -342,6 +554,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                 for (ptrdiff_t i6 = begin_6; i6 < end_6; i6++)
                   for (ptrdiff_t i7 = begin_7; i7 < end_7; i7++)
                     functor(i0, i1, i2, i3, i4, i5, i6, i7);
+#endif
   }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
@@ -544,5 +757,5 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
+#undef KOKKOS_IMPL_MDRANGE_USE_NO_TILES
 #endif /* KOKKOS_OPENMPTARGET_PARALLEL_HPP */
