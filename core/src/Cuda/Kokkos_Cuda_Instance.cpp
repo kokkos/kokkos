@@ -447,8 +447,8 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 
       // Allocate and initialize uint32_t[ buffer_bound ]
 
-      typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>
-          Record;
+      using Record =
+          Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
 
       Record *const r =
           Record::allocate(Kokkos::CudaSpace(), "InternalScratchBitset",
@@ -543,7 +543,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 
 //----------------------------------------------------------------------------
 
-typedef Cuda::size_type ScratchGrain[Impl::CudaTraits::WarpSize];
+using ScratchGrain = Cuda::size_type[Impl::CudaTraits::WarpSize];
 enum { sizeScratchGrain = sizeof(ScratchGrain) };
 
 Cuda::size_type *CudaInternal::scratch_flags(const Cuda::size_type size) const {
@@ -551,8 +551,8 @@ Cuda::size_type *CudaInternal::scratch_flags(const Cuda::size_type size) const {
       m_scratchFlagsCount * sizeScratchGrain < size) {
     m_scratchFlagsCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
-    typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>
-        Record;
+    using Record =
+        Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
 
     if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
 
@@ -576,8 +576,8 @@ Cuda::size_type *CudaInternal::scratch_space(const Cuda::size_type size) const {
       m_scratchSpaceCount * sizeScratchGrain < size) {
     m_scratchSpaceCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
-    typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>
-        Record;
+    using Record =
+        Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
 
     if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
 
@@ -599,9 +599,8 @@ Cuda::size_type *CudaInternal::scratch_unified(
       m_scratchUnifiedCount * sizeScratchGrain < size) {
     m_scratchUnifiedCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
-    typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
-                                                 void>
-        Record;
+    using Record =
+        Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>;
 
     if (m_scratchUnified)
       Record::decrement(Record::get_record(m_scratchUnified));
@@ -623,8 +622,8 @@ Cuda::size_type *CudaInternal::scratch_functor(
   if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
     m_scratchFunctorSize = size;
 
-    typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>
-        Record;
+    using Record =
+        Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
 
     if (m_scratchFunctor)
       Record::decrement(Record::get_record(m_scratchFunctor));
@@ -647,9 +646,9 @@ void CudaInternal::finalize() {
   if (0 != m_scratchSpace || 0 != m_scratchFlags) {
     Impl::finalize_host_cuda_lock_arrays();
 
-    typedef Kokkos::Impl::SharedAllocationRecord<CudaSpace> RecordCuda;
-    typedef Kokkos::Impl::SharedAllocationRecord<CudaHostPinnedSpace>
-        RecordHost;
+    using RecordCuda = Kokkos::Impl::SharedAllocationRecord<CudaSpace>;
+    using RecordHost =
+        Kokkos::Impl::SharedAllocationRecord<CudaHostPinnedSpace>;
 
     RecordCuda::decrement(RecordCuda::get_record(m_scratchFlags));
     RecordCuda::decrement(RecordCuda::get_record(m_scratchSpace));

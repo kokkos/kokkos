@@ -51,20 +51,20 @@ namespace Test {
 template <class DeviceType, typename CoordScalarType = double,
           typename GradScalarType = float>
 struct HexGrad {
-  typedef DeviceType execution_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = DeviceType;
+  using size_type       = typename execution_space::size_type;
 
-  typedef HexGrad<DeviceType, CoordScalarType, GradScalarType> self_type;
+  using self_type = HexGrad<DeviceType, CoordScalarType, GradScalarType>;
 
   // 3D array : ( ParallelWork , Space , Node )
 
   enum { NSpace = 3, NNode = 8 };
 
-  typedef Kokkos::View<CoordScalarType * [NSpace][NNode], execution_space>
-      elem_coord_type;
+  using elem_coord_type =
+      Kokkos::View<CoordScalarType * [NSpace][NNode], execution_space>;
 
-  typedef Kokkos::View<GradScalarType * [NSpace][NNode], execution_space>
-      elem_grad_type;
+  using elem_grad_type =
+      Kokkos::View<GradScalarType * [NSpace][NNode], execution_space>;
 
   elem_coord_type coords;
   elem_grad_type grad_op;
@@ -179,7 +179,7 @@ struct HexGrad {
   //--------------------------------------------------------------------------
 
   struct Init {
-    typedef typename self_type::execution_space execution_space;
+    using execution_space = typename self_type::execution_space;
 
     elem_coord_type coords;
 
