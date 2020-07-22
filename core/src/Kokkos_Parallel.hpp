@@ -394,16 +394,20 @@ inline void parallel_scan(
     typename std::enable_if<
         Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
         nullptr) {
-  uint64_t kpID = 0;
-  Kokkos::Tools::Experimental::begin_parallel_scan(policy, functor, str, kpID);
+  uint64_t kpID           = 0;
+  ExecPolicy inner_policy = policy;
+  Kokkos::Tools::Experimental::begin_parallel_scan(inner_policy, functor, str,
+                                                   kpID);
 
   Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelScan<FunctorType, ExecutionPolicy> closure(functor, policy);
+  Impl::ParallelScan<FunctorType, ExecutionPolicy> closure(functor,
+                                                           inner_policy);
   Kokkos::Impl::shared_allocation_tracking_enable();
 
   closure.execute();
 
-  Kokkos::Tools::Experimental::end_parallel_scan(policy, functor, str, kpID);
+  Kokkos::Tools::Experimental::end_parallel_scan(inner_policy, functor, str,
+                                                 kpID);
 }
 
 template <class FunctorType>
@@ -453,17 +457,20 @@ inline void parallel_scan(
     typename std::enable_if<
         Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
         nullptr) {
-  uint64_t kpID = 0;
-  Kokkos::Tools::Experimental::begin_parallel_scan(policy, functor, str, kpID);
+  uint64_t kpID                = 0;
+  ExecutionPolicy inner_policy = policy;
+  Kokkos::Tools::Experimental::begin_parallel_scan(inner_policy, functor, str,
+                                                   kpID);
 
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy, ReturnType> closure(
-      functor, policy, return_value);
+      functor, inner_policy, return_value);
   Kokkos::Impl::shared_allocation_tracking_enable();
 
   closure.execute();
 
-  Kokkos::Tools::Experimental::end_parallel_scan(policy, functor, str, kpID);
+  Kokkos::Tools::Experimental::end_parallel_scan(inner_policy, functor, str,
+                                                 kpID);
 
   policy.space().fence();
 }

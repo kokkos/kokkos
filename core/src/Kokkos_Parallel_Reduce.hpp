@@ -856,26 +856,27 @@ struct ParallelReduceAdaptor {
                              ReturnType& return_value) {
     uint64_t kpID = 0;
 
-    Kokkos::Tools::Experimental::begin_parallel_reduce(policy, functor, label,
-                                                       kpID);
+    PolicyType inner_policy = policy;
+    Kokkos::Tools::Experimental::begin_parallel_reduce(inner_policy, functor,
+                                                       label, kpID);
 
     Kokkos::Impl::shared_allocation_tracking_disable();
 #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
     Impl::ParallelReduce<typename functor_adaptor::functor_type, PolicyType,
                          typename return_value_adapter::reducer_type>
-        closure(functor_adaptor::functor(functor), policy,
+        closure(functor_adaptor::functor(functor), inner_policy,
                 return_value_adapter::return_value(return_value, functor));
 #else
     Impl::ParallelReduce<FunctorType, PolicyType,
                          typename return_value_adapter::reducer_type>
-        closure(functor, policy,
+        closure(functor, inner_policy,
                 return_value_adapter::return_value(return_value, functor));
 #endif
     Kokkos::Impl::shared_allocation_tracking_enable();
     closure.execute();
 
-    Kokkos::Tools::Experimental::end_parallel_reduce(policy, functor, label,
-                                                     kpID);
+    Kokkos::Tools::Experimental::end_parallel_reduce(inner_policy, functor,
+                                                     label, kpID);
   }
 };
 }  // namespace Impl
