@@ -54,6 +54,7 @@
 
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 #include <HIP/Kokkos_HIP_ReduceScan.hpp>
+#include <HIP/Kokkos_HIP_Shuffle_Reduce.hpp>
 #include <HIP/Kokkos_HIP_BlockSize_Deduction.hpp>
 #include <Kokkos_Vectorization.hpp>
 

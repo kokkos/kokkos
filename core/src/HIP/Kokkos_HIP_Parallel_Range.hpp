@@ -52,6 +52,7 @@
 #include <HIP/Kokkos_HIP_BlockSize_Deduction.hpp>
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 #include <HIP/Kokkos_HIP_ReduceScan.hpp>
+#include <HIP/Kokkos_HIP_Shuffle_Reduce.hpp>
 #include <impl/Kokkos_Traits.hpp>
 
 namespace Kokkos {
