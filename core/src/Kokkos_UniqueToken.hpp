@@ -88,7 +88,7 @@ class UniqueToken {
 /// execution_space::concurrency()
 ///
 /// This object should behave like a ref-counted object, so that when the last
-/// instance is destroy resources are free if needed
+/// instance is destroyed, resources are free if needed
 template <typename ExecutionSpace>
 class UniqueToken<ExecutionSpace, UniqueTokenScope::Instance>
     : public UniqueToken<ExecutionSpace, UniqueTokenScope::Global> {
