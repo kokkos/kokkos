@@ -343,6 +343,12 @@ if(Kokkos_ENABLE_HIP)
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Init.cpp
   )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_HIPInterOpStreams
+    SOURCES
+      UnitTestMain.cpp
+      hip/TestHIP_InterOp_Streams.cpp
+  )
 endif()
 
 SET(DEFAULT_DEVICE_SOURCES
