@@ -694,7 +694,22 @@ class TestTeamPolicyConstruction {
   }
 };
 
+// semiregular is copyable and default initializable
+// (regular requires equality comparable)
+template <class Policy>
+void check_semiregular() {
+  static_assert(std::is_default_constructible<Policy>{}, "");
+  static_assert(std::is_copy_constructible<Policy>{}, "");
+  static_assert(std::is_move_constructible<Policy>{}, "");
+  static_assert(std::is_copy_assignable<Policy>{}, "");
+  static_assert(std::is_move_assignable<Policy>{}, "");
+  static_assert(std::is_destructible<Policy>{}, "");
+}
+
 TEST(TEST_CATEGORY, policy_construction) {
+  check_semiregular<Kokkos::RangePolicy<TEST_EXECSPACE>>();
+  check_semiregular<Kokkos::TeamPolicy<TEST_EXECSPACE>>();
+
   TestRangePolicyConstruction<TEST_EXECSPACE>();
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
 }
