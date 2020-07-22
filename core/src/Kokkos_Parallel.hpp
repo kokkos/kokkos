@@ -394,8 +394,8 @@ inline void parallel_scan(
     typename std::enable_if<
         Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
         nullptr) {
-  uint64_t kpID           = 0;
-  ExecPolicy inner_policy = policy;
+  uint64_t kpID                = 0;
+  ExecutionPolicy inner_policy = policy;
   Kokkos::Tools::Experimental::begin_parallel_scan(inner_policy, functor, str,
                                                    kpID);
 

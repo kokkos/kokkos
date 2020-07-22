@@ -66,6 +66,7 @@ size_t declare_output_type(const std::string&,
                            Kokkos::Tools::Experimental::VariableInfo);
 void request_output_values(size_t, size_t,
                            Kokkos::Tools::Experimental::VariableValue*);
+VariableValue make_variable_value(size_t, int64_t);
 void end_context(size_t context_id);
 class TeamSizeTuner {
  public:
@@ -190,7 +191,8 @@ class TeamSizeTuner {
   template <typename... Properties>
   void tune(Kokkos::TeamPolicy<Properties...>& policy,
             const size_t context_id) {
-    Kokkos::Tools::Experimental::VariableValue value_index{type_id, 0};
+    Kokkos::Tools::Experimental::VariableValue value_index =
+        Kokkos::Tools::Experimental::make_variable_value(type_id, 0);
     Kokkos::Tools::Experimental::request_output_values(context_id, 1,
                                                        &value_index);
     int index          = value_index.value.int_value;
