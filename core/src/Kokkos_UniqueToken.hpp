@@ -108,6 +108,9 @@ class UniqueToken<ExecutionSpace, UniqueTokenScope::Instance>
   UniqueToken(size_type max_size, execution_space const& = execution_space());
 };
 
+// NOTE There was an agreement amongst developers that "AcquireUniqueToken" is a
+// bad name but at this time no one has suggested a better alternative.
+
 /// \brief RAII helper for per-thread unique token values.
 ///
 /// The token value will be acquired at construction and automatically
