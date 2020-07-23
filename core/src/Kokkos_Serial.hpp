@@ -241,16 +241,6 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
     return m_space;
   }
 
-  TeamPolicyInternal& operator=(const TeamPolicyInternal& p) {
-    m_league_size            = p.m_league_size;
-    m_team_scratch_size[0]   = p.m_team_scratch_size[0];
-    m_thread_scratch_size[0] = p.m_thread_scratch_size[0];
-    m_team_scratch_size[1]   = p.m_team_scratch_size[1];
-    m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
-    m_chunk_size             = p.m_chunk_size;
-    return *this;
-  }
-
   template <class ExecSpace, class... OtherProperties>
   friend class TeamPolicyInternal;
 
