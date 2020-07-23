@@ -155,7 +155,7 @@ class HIPTeamMember {
   KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& val,
                                              const int& thread_id) const {
 #ifdef __HIP_DEVICE_COMPILE__
-    if (1 == blockDim.z) {  // team == block
+    if (blockDim.z == 1) {  // team == block
       __syncthreads();
       // Wait for shared data write until all threads arrive here
       if (threadIdx.x == 0u &&
@@ -178,28 +178,8 @@ class HIPTeamMember {
   template <class Closure, class ValueType>
   KOKKOS_INLINE_FUNCTION void team_broadcast(Closure const& f, ValueType& val,
                                              const int& thread_id) const {
-#ifdef __HIP_DEVICE_COMPILE__
     f(val);
-
-    if (1 == blockDim.z) {  // team == block
-      __syncthreads();
-      // Wait for shared data write until all threads arrive here
-      if (threadIdx.x == 0u &&
-          threadIdx.y == static_cast<uint32_t>(thread_id)) {
-        *(reinterpret_cast<ValueType*>(m_team_reduce)) = val;
-      }
-      __syncthreads();  // Wait for shared data read until root thread writes
-      val = *(reinterpret_cast<ValueType*>(m_team_reduce));
-    } else {               // team <= warp
-      ValueType tmp(val);  // input might not be a register variable
-      ::Kokkos::Experimental::Impl::in_place_shfl(
-          val, tmp, blockDim.x * thread_id, blockDim.x * blockDim.y);
-    }
-#else
-    (void)f;
-    (void)val;
-    (void)thread_id;
-#endif
+    team_broadcast(val, thread_id);
   }
 
   //--------------------------------------------------------------------------
@@ -372,7 +352,7 @@ class HIPTeamMember {
     const int wy = tid >> HIPTraits::WarpIndexShift;
 
     //------------------------
-    {  // Intra warp shuffle reduction from contributing CUDA threads
+    {  // Intra warp shuffle reduction from contributing HIP threads
 
       value_type tmp(reducer.reference());
 
