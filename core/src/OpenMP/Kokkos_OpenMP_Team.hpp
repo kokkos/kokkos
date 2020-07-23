@@ -235,10 +235,9 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0),
-        m_tune_team(true),
+        m_tune_team(false),
         m_tune_vector(true) {
-    init(league_size_request,
-         traits::execution_space::impl_thread_pool_size(2));
+    init(league_size_request, team_size_request);
   }
 
   TeamPolicyInternal(int league_size_request, int team_size_request,
