@@ -94,19 +94,6 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     m_space                  = p.m_space;
   }
 
-  TeamPolicyInternal& operator=(TeamPolicyInternal const& p) {
-    m_league_size            = p.m_league_size;
-    m_team_size              = p.m_team_size;
-    m_vector_length          = p.m_vector_length;
-    m_team_scratch_size[0]   = p.m_team_scratch_size[0];
-    m_team_scratch_size[1]   = p.m_team_scratch_size[1];
-    m_thread_scratch_size[0] = p.m_thread_scratch_size[0];
-    m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
-    m_chunk_size             = p.m_chunk_size;
-    m_space                  = p.m_space;
-    return *this;
-  }
-
   template <typename FunctorType>
   int team_size_max(FunctorType const& f, ParallelForTag const&) const {
     using closure_type =
