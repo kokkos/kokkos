@@ -197,8 +197,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
 
     // Allow only power-of-two vector_length
     if (!(is_integral_power_of_two(test_vector_length))) {
-      int test_pow2 = 1;
-      for (int i = 0; i < 5; i++) {
+      int test_pow2           = 1;
+      int constexpr warp_size = Experimental::Impl::HIPTraits::WarpSize;
+      while (test_pow2 < warp_size) {
         test_pow2 = test_pow2 << 1;
         if (test_pow2 > test_vector_length) {
           break;
