@@ -402,7 +402,7 @@ class HIPTeamMember {
       if (0 == wy) {
         // Start fan-in at power of two covering nentry
 
-        for (int i = (1 << (32 - __clz(nentry - 1))); (i >>= 1);) {
+        for (int i = (1 << (warp_size - __clz(nentry - 1))); (i >>= 1);) {
           const int k = wx + i;
           if (wx < i && k < nentry) {
             reducer.join((reinterpret_cast<pointer_type>(shmem)) + wx,
