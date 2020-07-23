@@ -114,9 +114,9 @@ struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
   using is_mapping_plugin = std::true_type;
   using is_regular        = std::false_type;
 
-  typedef size_t size_type;
-  typedef Dimension dimension_type;
-  typedef Kokkos::LayoutSelective array_layout;
+  using size_type      = size_t;
+  using dimension_type = Dimension;
+  using array_layout   = Kokkos::LayoutSelective;
 
   //----------------------------------------
   dimension_type m_dim;

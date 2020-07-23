@@ -73,14 +73,14 @@ TEST(TEST_CATEGORY, view_remap) {
 #endif
 #endif
 
-  typedef Kokkos::View<double * [N1][N2][N3], Kokkos::LayoutRight, EXECSPACE>
-      output_type;
+  using output_type =
+      Kokkos::View<double * [N1][N2][N3], Kokkos::LayoutRight, EXECSPACE>;
 
-  typedef Kokkos::View<int* * [N2][N3], Kokkos::LayoutLeft, EXECSPACE>
-      input_type;
+  using input_type =
+      Kokkos::View<int* * [N2][N3], Kokkos::LayoutLeft, EXECSPACE>;
 
-  typedef Kokkos::View<int * [N0][N2][N3], Kokkos::LayoutLeft, EXECSPACE>
-      diff_type;
+  using diff_type =
+      Kokkos::View<int * [N0][N2][N3], Kokkos::LayoutLeft, EXECSPACE>;
 
   output_type output("output", N0);
   input_type input("input", N0, N1);
