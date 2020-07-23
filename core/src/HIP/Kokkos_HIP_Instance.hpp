@@ -55,6 +55,7 @@ namespace Impl {
 
 struct HIPTraits {
   static int constexpr WarpSize       = 64;
+  static int constexpr WarpIndexMask  = 0x003f;
   static int constexpr WarpIndexShift = 6; /* WarpSize == 1 << WarpShift*/
 
   static int constexpr ConstantMemoryUsage        = 0x008000; /* 32k bytes */
