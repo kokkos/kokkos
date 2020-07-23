@@ -138,9 +138,9 @@ int main(int argc, char* argv[]) {
                     double& lval) { lval += 1; },
       result);
 
-  typedef Kokkos::View<double*, Kokkos::LayoutRight> view_type_1d;
-  typedef Kokkos::View<double**, Kokkos::LayoutRight> view_type_2d;
-  typedef Kokkos::View<double***, Kokkos::LayoutRight> view_type_3d;
+  using view_type_1d = Kokkos::View<double*, Kokkos::LayoutRight>;
+  using view_type_2d = Kokkos::View<double**, Kokkos::LayoutRight>;
+  using view_type_3d = Kokkos::View<double***, Kokkos::LayoutRight>;
 
   // Allocate view without initializing
   // Call a 'warmup' test with 1 repeat - this will initialize the corresponding
