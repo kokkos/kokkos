@@ -55,9 +55,9 @@ namespace Impl {
 
 template <typename Bitset, bool Set>
 struct TestBitset {
-  typedef Bitset bitset_type;
-  typedef typename bitset_type::execution_space execution_space;
-  typedef uint32_t value_type;
+  using bitset_type     = Bitset;
+  using execution_space = typename bitset_type::execution_space;
+  using value_type      = uint32_t;
 
   bitset_type m_bitset;
 
@@ -96,9 +96,9 @@ struct TestBitset {
 
 template <typename Bitset>
 struct TestBitsetTest {
-  typedef Bitset bitset_type;
-  typedef typename bitset_type::execution_space execution_space;
-  typedef uint32_t value_type;
+  using bitset_type     = Bitset;
+  using execution_space = typename bitset_type::execution_space;
+  using value_type      = uint32_t;
 
   bitset_type m_bitset;
 
@@ -128,9 +128,9 @@ struct TestBitsetTest {
 
 template <typename Bitset, bool Set>
 struct TestBitsetAny {
-  typedef Bitset bitset_type;
-  typedef typename bitset_type::execution_space execution_space;
-  typedef uint32_t value_type;
+  using bitset_type     = Bitset;
+  using execution_space = typename bitset_type::execution_space;
+  using value_type      = uint32_t;
 
   bitset_type m_bitset;
 
@@ -182,8 +182,8 @@ struct TestBitsetAny {
 
 template <typename Device>
 void test_bitset() {
-  typedef Kokkos::Bitset<Device> bitset_type;
-  typedef Kokkos::ConstBitset<Device> const_bitset_type;
+  using bitset_type       = Kokkos::Bitset<Device>;
+  using const_bitset_type = Kokkos::ConstBitset<Device>;
 
   {
     unsigned ts = 100u;
