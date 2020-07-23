@@ -177,13 +177,10 @@ void report_policy_results(const size_t tuning_context,
 }  // namespace Impl
 
 template <class ExecPolicy, class FunctorType>
-void begin_parallel_for(ExecPolicy&
+void begin_parallel_for(ExecPolicy& policy,
+                        FunctorType&
 #ifdef KOKKOS_ENABLE_TUNING
-                            policy
-#endif
-                        ,
-#ifdef KOKKOS_ENABLE_TUNING
-                        FunctorType& functor
+                            functor
 #endif
                         ,
                         const std::string& label, uint64_t& kpID) {
@@ -230,11 +227,7 @@ void end_parallel_for(ExecPolicy&
 }
 
 template <class ExecPolicy, class FunctorType>
-void begin_parallel_scan(ExecPolicy&
-#ifdef KOKKOS_ENABLE_TUNING
-                             policy
-#endif
-                         ,
+void begin_parallel_scan(ExecPolicy& policy,
                          FunctorType&
 #ifdef KOKKOS_ENABLE_TUNING
                              functor
@@ -284,11 +277,7 @@ void end_parallel_scan(ExecPolicy&
 }
 
 template <class ExecPolicy, class FunctorType>
-void begin_parallel_reduce(ExecPolicy&
-#ifdef KOKKOS_ENABLE_TUNING
-                               policy
-#endif
-                           ,
+void begin_parallel_reduce(ExecPolicy& policy,
                            FunctorType&
 #ifdef KOKKOS_ENABLE_TUNING
                                functor
