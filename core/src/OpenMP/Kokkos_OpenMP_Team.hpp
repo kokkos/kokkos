@@ -179,8 +179,10 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
   inline int league_size() const { return m_league_size; }
   inline bool auto_team_size() const { return m_tune_team; }
   inline bool auto_vector_length() const { return m_tune_vector; }
-  inline void impl_set_team_size(size_t team_size) { m_team_size = team_size; }
-  inline void impl_set_vector_length(size_t vector_length) {}
+  inline void impl_set_team_size(size_t new_team_size) {
+    m_team_size = new_team_size;
+  }
+  inline void impl_set_vector_length(size_t) {}
   inline size_t scratch_size(const int& level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
