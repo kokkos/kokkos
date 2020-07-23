@@ -42,55 +42,34 @@
 //@HEADER
 */
 
-/// @Kokkos_Feature_Level_Required:2
-// Unit test for atomic exchange, atomic add and atomic sub.
-// Atomic exchange test : we interchange value1 with value2 and check for
-// correctness. Atomic add test : we add value2 to value1 and check for
-// correctness. Atomic sub test : we subtract value2 from value1 and check for
-// correctmess.
+#ifndef KOKKOS_ACQUIRE_UNIQUE_TOKEN_IMPL_HPP
+#define KOKKOS_ACQUIRE_UNIQUE_TOKEN_IMPL_HPP
 
 #include <Kokkos_Core.hpp>
-#include <gtest/gtest.h>
+#include <Kokkos_UniqueToken.hpp>
+namespace Kokkos {
+namespace Experimental {
 
-namespace Test {
+template <typename TeamPolicy>
+KOKKOS_FUNCTION AcquireTeamUniqueToken<TeamPolicy>::AcquireTeamUniqueToken(
+    AcquireTeamUniqueToken<TeamPolicy>::token_type t, team_member_type team)
+    : my_token(t), my_team_acquired_val(team.team_scratch(0)), my_team(team) {
+  Kokkos::single(Kokkos::PerTeam(my_team),
+                 [&]() { my_team_acquired_val() = my_token.acquire(); });
+  my_team.team_barrier();
 
-struct TestIncrAtomic {
-  using value_type  = double;
-  value_type value1 = 1.5, value2 = 0.5;
-
-  void testExchange() {
-    value_type ret_value = Kokkos::atomic_exchange(&value1, value2);
-
-    ASSERT_EQ(value1, 0.5);
-    ASSERT_EQ(ret_value, 1.5);
-  }
-
-  void testAdd() {
-    Kokkos::atomic_add(&value1, value2);
-
-    ASSERT_EQ(value1, 2.0);
-  }
-
-  void testSub() {
-    Kokkos::atomic_sub(&value1, value2);
-
-    ASSERT_EQ(value1, 1.0);
-  }
-};
-
-TEST(TEST_CATEGORY, IncrTest_01_AtomicExchange) {
-  TestIncrAtomic test;
-  test.testExchange();
+  my_acquired_val = my_team_acquired_val();
 }
 
-TEST(TEST_CATEGORY, IncrTest_02_AtomicAdd) {
-  TestIncrAtomic test;
-  test.testAdd();
+template <typename TeamPolicy>
+KOKKOS_FUNCTION AcquireTeamUniqueToken<TeamPolicy>::~AcquireTeamUniqueToken() {
+  my_team.team_barrier();
+  Kokkos::single(Kokkos::PerTeam(my_team),
+                 [&]() { my_token.release(my_acquired_val); });
+  my_team.team_barrier();
 }
 
-TEST(TEST_CATEGORY, IncrTest_02_AtomicSub) {
-  TestIncrAtomic test;
-  test.testSub();
-}
+}  // namespace Experimental
+}  // namespace Kokkos
 
-}  // namespace Test
+#endif  // KOKKOS_UNIQUE_TOKEN_HPP
