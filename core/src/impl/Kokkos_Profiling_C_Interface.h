@@ -115,6 +115,7 @@ typedef void (*Kokkos_Profiling_endDeepCopyFunction)();
 // Tuning
 
 #define KOKKOS_TOOLS_TUNING_STRING_LENGTH 64
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef char Kokkos_Tools_Tuning_String[KOKKOS_TOOLS_TUNING_STRING_LENGTH];
 union Kokkos_Tools_VariableValue_ValueUnion {
   int64_t int_value;
@@ -192,20 +193,27 @@ struct Kokkos_Tools_VariableValue {
   struct Kokkos_Tools_VariableInfo* metadata;
 };
 
+// NOLINTNEXTLINE(modernize-use-using)
 typedef void (*Kokkos_Tools_outputTypeDeclarationFunction)(
     const char*, const size_t, struct Kokkos_Tools_VariableInfo* info);
+// NOLINTNEXTLINE(modernize-use-using)
 typedef void (*Kokkos_Tools_inputTypeDeclarationFunction)(
     const char*, const size_t, struct Kokkos_Tools_VariableInfo* info);
 
+// NOLINTNEXTLINE(modernize-use-using)
 typedef void (*Kokkos_Tools_requestValueFunction)(
     const size_t, const size_t, const struct Kokkos_Tools_VariableValue*,
     const size_t count, struct Kokkos_Tools_VariableValue*);
+// NOLINTNEXTLINE(modernize-use-using)
 typedef void (*Kokkos_Tools_contextBeginFunction)(const size_t);
+// NOLINTNEXTLINE(modernize-use-using)
 typedef void (*Kokkos_Tools_contextEndFunction)(
     const size_t, struct Kokkos_Tools_VariableValue);
+// NOLINTNEXTLINE(modernize-use-using)
 typedef void (*Kokkos_Tools_optimizationGoalDeclarationFunction)(
     const size_t, const struct Kokkos_Tools_OptimzationGoal goal);
 
+// NOLINTNEXTLINE(modernize-use-using)
 typedef void (*function_pointer)();
 
 struct Kokkos_Profiling_EventSet {
