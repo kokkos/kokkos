@@ -156,6 +156,14 @@ class AcquireTeamUniqueToken {
   team_member_type my_team;
 
  public:
+  // NOTE The implementations of the constructor and destructor use
+  // `Kokkos::single()` which is an inline function defined in each backend.
+  // This creates circular dependency issues.  Moving them to a separate header
+  // is less than ideal and should be revisited later.  Having a `UniqueToken`
+  // forward declaration was considered but the non-type template parameter
+  // makes things complicated because it would require moving the definition of
+  // `UniqueTokenScope` enumeration type and its enumerators away which would
+  // hurt readability.
   KOKKOS_FUNCTION AcquireTeamUniqueToken(token_type t, team_member_type team);
   KOKKOS_FUNCTION ~AcquireTeamUniqueToken();
   KOKKOS_FUNCTION size_type value() const { return my_acquired_val; }
