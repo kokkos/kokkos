@@ -281,8 +281,8 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
 
 //----------------------------------------------------------------------------
 
-typedef Kokkos::Experimental::HIP::size_type
-    ScratchGrain[Impl::HIPTraits::WarpSize];
+using ScratchGrain =
+    Kokkos::Experimental::HIP::size_type[Impl::HIPTraits::WarpSize];
 enum { sizeScratchGrain = sizeof(ScratchGrain) };
 
 Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
@@ -291,9 +291,9 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
       m_scratchSpaceCount * sizeScratchGrain < size) {
     m_scratchSpaceCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
-    typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                                                 void>
-        Record;
+    using Record =
+        Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
+                                             void>;
 
     static Record *const r = Record::allocate(
         Kokkos::Experimental::HIPSpace(), "InternalScratchSpace",
@@ -313,9 +313,9 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
       m_scratchFlagsCount * sizeScratchGrain < size) {
     m_scratchFlagsCount = (size + sizeScratchGrain - 1) / sizeScratchGrain;
 
-    typedef Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                                                 void>
-        Record;
+    using Record =
+        Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
+                                             void>;
 
     Record *const r = Record::allocate(
         Kokkos::Experimental::HIPSpace(), "InternalScratchFlags",

@@ -77,16 +77,16 @@ class Threads {
   //! \name Type declarations that all Kokkos devices must provide.
   //@{
   //! Tag this class as a kokkos execution space
-  typedef Threads execution_space;
-  typedef Kokkos::HostSpace memory_space;
+  using execution_space = Threads;
+  using memory_space    = Kokkos::HostSpace;
 
   //! This execution space preferred device_type
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
+  using device_type = Kokkos::Device<execution_space, memory_space>;
 
-  typedef Kokkos::LayoutRight array_layout;
-  typedef memory_space::size_type size_type;
+  using array_layout = Kokkos::LayoutRight;
+  using size_type    = memory_space::size_type;
 
-  typedef ScratchMemorySpace<Threads> scratch_memory_space;
+  using scratch_memory_space = ScratchMemorySpace<Threads>;
 
   //@}
   /*------------------------------------------------------------------------*/

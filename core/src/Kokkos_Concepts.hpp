@@ -339,16 +339,14 @@ struct is_space {
       memory_space, Kokkos::HostSpace>::type;
 
 #if defined(KOKKOS_ENABLE_CUDA)
-  typedef typename std::conditional<
+  using host_execution_space = typename std::conditional<
       std::is_same<execution_space, Kokkos::Cuda>::value,
-      Kokkos::DefaultHostExecutionSpace, execution_space>::type
-      host_execution_space;
+      Kokkos::DefaultHostExecutionSpace, execution_space>::type;
 #else
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
-  typedef typename std::conditional<
+  using host_execution_space = typename std::conditional<
       std::is_same<execution_space, Kokkos::Experimental::OpenMPTarget>::value,
-      Kokkos::DefaultHostExecutionSpace, execution_space>::type
-      host_execution_space;
+      Kokkos::DefaultHostExecutionSpace, execution_space>::type;
 #else
   using host_execution_space = execution_space;
 #endif

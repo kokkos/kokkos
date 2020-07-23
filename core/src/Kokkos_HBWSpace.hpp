@@ -97,8 +97,8 @@ namespace Experimental {
 class HBWSpace {
  public:
   //! Tag this class as a kokkos memory space
-  typedef HBWSpace memory_space;
-  typedef size_t size_type;
+  using memory_space = HBWSpace;
+  using size_type    = size_t;
 
   /// \typedef execution_space
   /// \brief Default execution space for this memory space.
@@ -107,22 +107,22 @@ class HBWSpace {
   /// useful for things like initializing a View (which happens in
   /// parallel using the View's default execution space).
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
-  typedef Kokkos::OpenMP execution_space;
+  using execution_space = Kokkos::OpenMP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
-  typedef Kokkos::Threads execution_space;
+  using execution_space = Kokkos::Threads;
 #elif defined(KOKKOS_ENABLE_OPENMP)
-  typedef Kokkos::OpenMP execution_space;
+  using execution_space = Kokkos::OpenMP;
 #elif defined(KOKKOS_ENABLE_THREADS)
-  typedef Kokkos::Threads execution_space;
+  using execution_space = Kokkos::Threads;
 #elif defined(KOKKOS_ENABLE_SERIAL)
-  typedef Kokkos::Serial execution_space;
+  using execution_space = Kokkos::Serial;
 #else
 #error \
     "At least one of the following host execution spaces must be defined: Kokkos::OpenMP, Kokkos::Threads, or Kokkos::Serial.  You might be seeing this message if you disabled the Kokkos::Serial device explicitly using the Kokkos_ENABLE_Serial:BOOL=OFF CMake option, but did not enable any of the other host execution space devices."
 #endif
 
   //! This memory space preferred device_type
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
+  using device_type = Kokkos::Device<execution_space, memory_space>;
 
   /**\brief  Default memory space instance */
   HBWSpace();
@@ -178,7 +178,7 @@ class SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
  private:
   friend Kokkos::Experimental::HBWSpace;
 
-  typedef SharedAllocationRecord<void, void> RecordBase;
+  using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;

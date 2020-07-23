@@ -260,8 +260,8 @@ class ThreadsExec {
 
   template <class FunctorType, class ArgTag>
   inline void fan_in_reduce(const FunctorType &f) const {
-    typedef Kokkos::Impl::FunctorValueJoin<FunctorType, ArgTag> Join;
-    typedef Kokkos::Impl::FunctorFinal<FunctorType, ArgTag> Final;
+    using Join  = Kokkos::Impl::FunctorValueJoin<FunctorType, ArgTag>;
+    using Final = Kokkos::Impl::FunctorFinal<FunctorType, ArgTag>;
 
     const int rev_rank = m_pool_size - (m_pool_rank + 1);
 
@@ -307,11 +307,11 @@ class ThreadsExec {
     //  3) Rendezvous         : All threads inclusive scan value are available
     //  4) ScanCompleted      : exclusive scan value copied
 
-    typedef Kokkos::Impl::FunctorValueTraits<FunctorType, ArgTag> Traits;
-    typedef Kokkos::Impl::FunctorValueJoin<FunctorType, ArgTag> Join;
-    typedef Kokkos::Impl::FunctorValueInit<FunctorType, ArgTag> Init;
+    using Traits = Kokkos::Impl::FunctorValueTraits<FunctorType, ArgTag>;
+    using Join   = Kokkos::Impl::FunctorValueJoin<FunctorType, ArgTag>;
+    using Init   = Kokkos::Impl::FunctorValueInit<FunctorType, ArgTag>;
 
-    typedef typename Traits::value_type scalar_type;
+    using scalar_type = typename Traits::value_type;
 
     const int rev_rank   = m_pool_size - (m_pool_rank + 1);
     const unsigned count = Traits::value_count(f);
@@ -413,11 +413,11 @@ class ThreadsExec {
 
   template <class FunctorType, class ArgTag>
   inline void scan_small(const FunctorType &f) {
-    typedef Kokkos::Impl::FunctorValueTraits<FunctorType, ArgTag> Traits;
-    typedef Kokkos::Impl::FunctorValueJoin<FunctorType, ArgTag> Join;
-    typedef Kokkos::Impl::FunctorValueInit<FunctorType, ArgTag> Init;
+    using Traits = Kokkos::Impl::FunctorValueTraits<FunctorType, ArgTag>;
+    using Join   = Kokkos::Impl::FunctorValueJoin<FunctorType, ArgTag>;
+    using Init   = Kokkos::Impl::FunctorValueInit<FunctorType, ArgTag>;
 
-    typedef typename Traits::value_type scalar_type;
+    using scalar_type = typename Traits::value_type;
 
     const int rev_rank   = m_pool_size - (m_pool_rank + 1);
     const unsigned count = Traits::value_count(f);
