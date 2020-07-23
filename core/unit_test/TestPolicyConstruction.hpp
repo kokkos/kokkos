@@ -698,12 +698,12 @@ class TestTeamPolicyConstruction {
 // (regular requires equality comparable)
 template <class Policy>
 void check_semiregular() {
-  static_assert(std::is_default_constructible<Policy>{}, "");
-  static_assert(std::is_copy_constructible<Policy>{}, "");
-  static_assert(std::is_move_constructible<Policy>{}, "");
-  static_assert(std::is_copy_assignable<Policy>{}, "");
-  static_assert(std::is_move_assignable<Policy>{}, "");
-  static_assert(std::is_destructible<Policy>{}, "");
+  static_assert(std::is_default_constructible<Policy>::value, "");
+  static_assert(std::is_copy_constructible<Policy>::value, "");
+  static_assert(std::is_move_constructible<Policy>::value, "");
+  static_assert(std::is_copy_assignable<Policy>::value, "");
+  static_assert(std::is_move_assignable<Policy>::value, "");
+  static_assert(std::is_destructible<Policy>::value, "");
 }
 
 TEST(TEST_CATEGORY, policy_construction) {
