@@ -801,7 +801,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     value_type init;
     value_init::init(reducer_conditional::select(m_functor, m_reducer), &init);
-    if (Impl::hip_inter_block_reduction<FunctorType, value_join, work_tag>(
+    if (Impl::hip_inter_block_shuffle_reduction<FunctorType, value_join,
+                                                work_tag>(
             value, init,
             value_join(reducer_conditional::select(m_functor, m_reducer)),
             m_scratch_space, result, m_scratch_flags, blockDim.y)) {

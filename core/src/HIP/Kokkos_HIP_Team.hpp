@@ -54,6 +54,7 @@
 
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 #include <HIP/Kokkos_HIP_ReduceScan.hpp>
+#include <HIP/Kokkos_HIP_Shuffle_Reduce.hpp>
 #include <HIP/Kokkos_HIP_BlockSize_Deduction.hpp>
 #include <Kokkos_Vectorization.hpp>
 
@@ -230,7 +231,7 @@ class HIPTeamMember {
       team_reduce(ReducerType const& reducer,
                   typename ReducerType::value_type& value) const noexcept {
 #ifdef __HIP_DEVICE_COMPILE__
-    hip_intra_block_reduction(reducer, value, blockDim.y);
+    hip_intra_block_shuffle_reduction(reducer, value, blockDim.y);
 #else
     (void)reducer;
     (void)value;
