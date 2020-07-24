@@ -133,8 +133,10 @@ atomic_exchange(volatile T* const dest,
   while (active != done_active) {
     if (!done) {
       if (Impl::lock_address_cuda_space((void*)dest)) {
+        Kokkos::memory_fence();
         return_val = *dest;
         *dest      = val;
+        Kokkos::memory_fence();
         Impl::unlock_address_cuda_space((void*)dest);
         done = 1;
       }
@@ -257,6 +259,7 @@ inline T atomic_exchange(
                             const T>::type& val) {
   while (!Impl::lock_address_host_space((void*)dest))
     ;
+  Kokkos::memory_fence();
   T return_val = *dest;
   // Don't use the following line of code here:
   //
@@ -272,6 +275,7 @@ inline T atomic_exchange(
 #ifndef KOKKOS_COMPILER_CLANG
   (void)tmp;
 #endif
+  Kokkos::memory_fence();
   Impl::unlock_address_host_space((void*)dest);
   return return_val;
 }
@@ -343,6 +347,7 @@ inline void atomic_assign(
                             const T>::type& val) {
   while (!Impl::lock_address_host_space((void*)dest))
     ;
+  Kokkos::memory_fence();
   // This is likely an aggregate type with a defined
   // 'volatile T & operator = ( const T & ) volatile'
   // member.  The volatile return value implicitly defines a
@@ -350,7 +355,7 @@ inline void atomic_assign(
   // Suppress warning by casting return to void.
   //(void)( *dest = val );
   *dest = val;
-
+  Kokkos::memory_fence();
   Impl::unlock_address_host_space((void*)dest);
 }
 //----------------------------------------------------------------------------

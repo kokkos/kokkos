@@ -121,17 +121,13 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
   // doesn't match.
   void operator()(const int&) const {}
 
-  RangePolicy(const RangePolicy&) = default;
-  RangePolicy(RangePolicy&&)      = default;
-
   template <class... OtherProperties>
-  RangePolicy(const RangePolicy<OtherProperties...> p) {
-    m_space            = p.m_space;
-    m_begin            = p.m_begin;
-    m_end              = p.m_end;
-    m_granularity      = p.m_granularity;
-    m_granularity_mask = p.m_granularity_mask;
-  }
+  RangePolicy(const RangePolicy<OtherProperties...>& p)
+      : m_space(p.m_space),
+        m_begin(p.m_begin),
+        m_end(p.m_end),
+        m_granularity(p.m_granularity),
+        m_granularity_mask(p.m_granularity_mask) {}
 
   inline RangePolicy() : m_space(), m_begin(0), m_end(0) {}
 
@@ -543,51 +539,38 @@ class TeamPolicy
 
   using execution_policy = TeamPolicy<Properties...>;
 
-  TeamPolicy& operator=(const TeamPolicy&) = default;
+  TeamPolicy() : internal_policy(0, AUTO) {}
 
   /** \brief  Construct policy with the given instance of the execution space */
   TeamPolicy(const typename traits::execution_space& space_,
              int league_size_request, int team_size_request,
              int vector_length_request = 1)
       : internal_policy(space_, league_size_request, team_size_request,
-                        vector_length_request) {
-    first_arg = false;
-  }
+                        vector_length_request) {}
 
   TeamPolicy(const typename traits::execution_space& space_,
              int league_size_request, const Kokkos::AUTO_t&,
              int vector_length_request = 1)
       : internal_policy(space_, league_size_request, Kokkos::AUTO(),
-                        vector_length_request) {
-    first_arg = false;
-  }
+                        vector_length_request) {}
 
   /** \brief  Construct policy with the default instance of the execution space
    */
   TeamPolicy(int league_size_request, int team_size_request,
              int vector_length_request = 1)
       : internal_policy(league_size_request, team_size_request,
-                        vector_length_request) {
-    first_arg = false;
-  }
+                        vector_length_request) {}
 
   TeamPolicy(int league_size_request, const Kokkos::AUTO_t&,
              int vector_length_request = 1)
       : internal_policy(league_size_request, Kokkos::AUTO(),
-                        vector_length_request) {
-    first_arg = false;
-  }
+                        vector_length_request) {}
 
   template <class... OtherProperties>
-  TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {
-    first_arg = p.first_arg;
-  }
+  TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {}
 
  private:
-  bool first_arg;
-  TeamPolicy(const internal_policy& p) : internal_policy(p) {
-    first_arg = false;
-  }
+  TeamPolicy(const internal_policy& p) : internal_policy(p) {}
 
  public:
   inline TeamPolicy& set_chunk_size(int chunk) {

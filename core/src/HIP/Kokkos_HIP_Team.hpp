@@ -54,6 +54,7 @@
 
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 #include <HIP/Kokkos_HIP_ReduceScan.hpp>
+#include <HIP/Kokkos_HIP_Shuffle_Reduce.hpp>
 #include <HIP/Kokkos_HIP_BlockSize_Deduction.hpp>
 #include <Kokkos_Vectorization.hpp>
 
@@ -190,7 +191,7 @@ class HIPTeamMember {
       typename std::enable_if<is_reducer<ReducerType>::value>::type
       team_reduce(ReducerType const& reducer,
                   typename ReducerType::value_type& value) const noexcept {
-    hip_intra_block_reduction(reducer, value, blockDim.y);
+    hip_intra_block_shuffle_reduction(reducer, value, blockDim.y);
   }
 
   //--------------------------------------------------------------------------
