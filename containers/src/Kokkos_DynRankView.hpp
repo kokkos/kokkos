@@ -2004,7 +2004,7 @@ inline typename DynRankView<T, P...>::HostMirror create_mirror_view(
               typename DynRankView<T, P...>::HostMirror::memory_space>::value &&
           std::is_same<typename DynRankView<T, P...>::data_type,
                        typename DynRankView<T, P...>::HostMirror::data_type>::
-              value)>::type* = 0) {
+              value)>::type* = nullptr) {
   return Kokkos::create_mirror(src);
 }
 
@@ -2023,7 +2023,8 @@ template <class Space, class T, class... P>
 typename Impl::MirrorDRViewType<Space, T, P...>::view_type create_mirror_view(
     const Space&, const Kokkos::DynRankView<T, P...>& src,
     typename std::enable_if<
-        !Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* = 0) {
+        !Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* =
+        nullptr) {
   return typename Impl::MirrorDRViewType<Space, T, P...>::view_type(
       src.label(), Impl::reconstructLayout(src.layout(), src.rank()));
 }
@@ -2050,7 +2051,8 @@ create_mirror_view_and_copy(
     const Space&, const Kokkos::DynRankView<T, P...>& src,
     std::string const& name = "",
     typename std::enable_if<
-        !Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* = 0) {
+        !Impl::MirrorDRViewType<Space, T, P...>::is_same_memspace>::type* =
+        nullptr) {
   using Mirror = typename Impl::MirrorDRViewType<Space, T, P...>::view_type;
   std::string label = name.empty() ? src.label() : name;
   auto mirror       = Mirror(Kokkos::ViewAllocateWithoutInitializing(label),

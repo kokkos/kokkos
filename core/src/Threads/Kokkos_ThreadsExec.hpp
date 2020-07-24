@@ -441,7 +441,7 @@ class ThreadsExec {
     } else {
       // Root thread does the thread-scan before releasing threads
 
-      scalar_type *ptr_prev = 0;
+      scalar_type *ptr_prev = nullptr;
 
       for (int rank = 0; rank < m_pool_size; ++rank) {
         scalar_type *const ptr =
