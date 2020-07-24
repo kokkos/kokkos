@@ -166,9 +166,11 @@
 
 #if defined(KOKKOS_ENABLE_HIP)
 
-// FIXME_HIP Not defining NDEBUG makes some tests fail.
+#if !(HIP_VERSION_MAJOR > 3 || HIP_VERSION_MINOR > 5 || \
+      HIP_VERSION_PATCH >= 20226)
 #ifndef NDEBUG
 #define NDEBUG
+#endif
 #endif
 
 #define HIP_ENABLE_PRINTF
