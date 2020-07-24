@@ -200,7 +200,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
       int test_pow2           = 1;
       int constexpr warp_size = Experimental::Impl::HIPTraits::WarpSize;
       while (test_pow2 < warp_size) {
-        test_pow2 = test_pow2 << 1;
+        test_pow2 <<= 1;
         if (test_pow2 > test_vector_length) {
           break;
         }

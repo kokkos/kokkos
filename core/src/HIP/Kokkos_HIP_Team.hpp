@@ -931,4 +931,4 @@ KOKKOS_INLINE_FUNCTION void single(
 
 #endif /* defined( __HIPCC__ ) */
 
-#endif /* #ifndef KOKKOS_CUDA_TEAM_HPP */
+#endif /* #ifndef KOKKOS_HIP_TEAM_HPP */
