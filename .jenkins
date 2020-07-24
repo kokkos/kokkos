@@ -31,7 +31,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-18.04:3.5'
                             label 'rocm-docker && vega'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
                     steps {
