@@ -930,7 +930,7 @@ struct VerifyExecutionCanAccessMemorySpace< Kokkos::Experimental::SYCLSpace , Ko
 /** Running in SYCLSpace attempting to access an unknown space: error */
 template< class OtherSpace >
 struct VerifyExecutionCanAccessMemorySpace<
-  typename enable_if< ! is_same<Kokkos::Experimental::SYCLSpace,OtherSpace>::value , Kokkos::Experimental::SYCLSpace >::type ,
+  typename std::enable_if< ! std::is_same<Kokkos::Experimental::SYCLSpace,OtherSpace>::value , Kokkos::Experimental::SYCLSpace >::type ,
   OtherSpace >
 {
   enum { value = false };

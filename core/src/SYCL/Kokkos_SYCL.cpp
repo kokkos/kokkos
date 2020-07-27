@@ -123,7 +123,7 @@ SYCL::SYCLDevice::SYCLDevice(const std::function<bool(const cl::sycl::device&)>&
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU)
 SYCL::SYCLDevice::SYCLDevice()
-    : SYCLDevice(cl::sycl::cpu_selector()) {}
+    : SYCLDevice(cl::sycl::default_selector()) {}
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU)
 SYCL::SYCLDevice::SYCLDevice()
     : SYCLDevice(cl::sycl::gpu_selector()) {}
