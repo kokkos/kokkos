@@ -219,7 +219,7 @@ class has_member_team_shmem_size {
 
  public:
   constexpr static bool value =
-      sizeof(test_for_member<Object>(0)) == sizeof(int32_t);
+      sizeof(test_for_member<Object>(nullptr)) == sizeof(int32_t);
 };
 
 template <class Object>

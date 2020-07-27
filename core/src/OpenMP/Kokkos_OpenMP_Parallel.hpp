@@ -642,7 +642,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
           m_functor, range.begin(), range.end(), update_sum, false);
 
       if (data.pool_rendezvous()) {
-        pointer_type ptr_prev = 0;
+        pointer_type ptr_prev = nullptr;
 
         const int n = omp_get_num_threads();
 
@@ -756,7 +756,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
           m_functor, range.begin(), range.end(), update_sum, false);
 
       if (data.pool_rendezvous()) {
-        pointer_type ptr_prev = 0;
+        pointer_type ptr_prev = nullptr;
 
         const int n = omp_get_num_threads();
 
