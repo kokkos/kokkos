@@ -127,3 +127,6 @@ KOKKOS_DEVICE_OPTION(SERIAL ${SERIAL_DEFAULT} HOST "Whether to build serial back
 KOKKOS_DEVICE_OPTION(HPX OFF HOST "Whether to build HPX backend (experimental)")
 
 KOKKOS_DEVICE_OPTION(HIP OFF DEVICE "Whether to build HIP backend")
+
+KOKKOS_DEVICE_OPTION(SYCL OFF DEVICE "Whether to build SYCL backend")
+

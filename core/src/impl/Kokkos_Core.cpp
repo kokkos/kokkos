@@ -363,7 +363,7 @@ void initialize_backends(const InitArguments& args) {
           Kokkos::Experimental::SYCL::SYCLDevice(cl::sycl::gpu_selector()));
     else
       Kokkos::Experimental::SYCL::impl_initialize(
-          Kokkos::Experimental::SYCL::SYCLDevice(cl::sycl::cpu_selector()));
+          Kokkos::Experimental::SYCL::SYCLDevice(cl::sycl::default_selector()));
   }
 #endif
 
@@ -515,7 +515,6 @@ void fence_internal() {
 
 #if defined(KOKKOS_ENABLE_SYCL)
     Kokkos::Experimental::SYCL().fence();
-  }
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP)

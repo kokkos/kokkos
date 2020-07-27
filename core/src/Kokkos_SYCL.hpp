@@ -100,6 +100,8 @@ class SYCL {
   SYCL& operator=(SYCL&&) = default;
   SYCL& operator=(const SYCL&) = default;
 
+  uint32_t impl_instance_id() const noexcept { return 0; }
+
   //@}
   //------------------------------------
   //! \name Functions that all Kokkos devices must implement.
@@ -215,6 +217,18 @@ struct VerifyExecutionCanAccessMemorySpace<
 };
 
 }  // namespace Impl
+
+namespace Tools {
+namespace Experimental {
+template <>
+struct DeviceTypeTraits<Kokkos::Experimental::SYCL> {
+  /// \brief An ID to differentiate (for example) Serial from OpenMP in Tooling
+  static constexpr DeviceType id = DeviceType::SYCL;
+};
+}  // namespace Experimental
+}  // namespace Tools
+
+
 }  // namespace Kokkos
 
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
