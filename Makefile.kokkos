@@ -5,7 +5,7 @@ KOKKOS_VERSION_MINOR = 1
 KOKKOS_VERSION_PATCH = 1
 KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MINOR)*100+$(KOKKOS_VERSION_PATCH) | bc)
 
-# Options: Cuda,HIP,SYCLROCm,OpenMP,Pthread,Serial
+# Options: Cuda,HIP,ROCm,OpenMP,Pthread,Serial,SYCL
 #KOKKOS_DEVICES ?= "OpenMP"
 KOKKOS_DEVICES ?= "Pthread"
 # Options: 
@@ -361,9 +361,9 @@ KOKKOS_INTERNAL_USE_ARCH_NVIDIA := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_KEPLE
                                               + $(KOKKOS_INTERNAL_USE_ARCH_MAXWELL53) \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL61)  \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_PASCAL60)  \
-											  + $(KOKKOS_INTERNAL_USE_ARCH_VOLTA70) \
-											  + $(KOKKOS_INTERNAL_USE_ARCH_VOLTA72) \
-											  + $(KOKKOS_INTERNAL_USE_ARCH_TURING75) \
+                                              + $(KOKKOS_INTERNAL_USE_ARCH_VOLTA70)   \
+                                              + $(KOKKOS_INTERNAL_USE_ARCH_VOLTA72)   \
+                                              + $(KOKKOS_INTERNAL_USE_ARCH_TURING75)  \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMPERE80))
 
 #SEK: This seems like a bug to me
@@ -623,15 +623,15 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
   ifneq ($(KOKKOS_CMAKE), yes)
-  ifneq ($(HWLOC_PATH),)
+    ifneq ($(HWLOC_PATH),)
       KOKKOS_CPPFLAGS += -I$(HWLOC_PATH)/include
       KOKKOS_LIBDIRS += -L$(HWLOC_PATH)/lib
-    KOKKOS_CXXLDFLAGS += -L$(HWLOC_PATH)/lib
-    KOKKOS_TPL_INCLUDE_DIRS += $(HWLOC_PATH)/include
-    KOKKOS_TPL_LIBRARY_DIRS += $(HWLOC_PATH)/lib
-  endif
-  KOKKOS_LIBS += -lhwloc
-  KOKKOS_TPL_LIBRARY_NAMES += hwloc
+      KOKKOS_CXXLDFLAGS += -L$(HWLOC_PATH)/lib
+      KOKKOS_TPL_INCLUDE_DIRS += $(HWLOC_PATH)/include
+      KOKKOS_TPL_LIBRARY_DIRS += $(HWLOC_PATH)/lib
+    endif
+    KOKKOS_LIBS += -lhwloc
+    KOKKOS_TPL_LIBRARY_NAMES += hwloc
   endif
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_HWLOC")
 endif
@@ -644,15 +644,15 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_MEMKIND), 1)
   ifneq ($(KOKKOS_CMAKE), yes)
-  ifneq ($(MEMKIND_PATH),)
+    ifneq ($(MEMKIND_PATH),)
       KOKKOS_CPPFLAGS += -I$(MEMKIND_PATH)/include
       KOKKOS_LIBDIRS += -L$(MEMKIND_PATH)/lib
-    KOKKOS_CXXLDFLAGS += -L$(MEMKIND_PATH)/lib
-    KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
-    KOKKOS_TPL_LIBRARY_DIRS += $(MEMKIND_PATH)/lib
-  endif
-  KOKKOS_LIBS += -lmemkind -lnuma
-  KOKKOS_TPL_LIBRARY_NAMES += memkind numa
+      KOKKOS_CXXLDFLAGS += -L$(MEMKIND_PATH)/lib
+      KOKKOS_TPL_INCLUDE_DIRS += $(MEMKIND_PATH)/include
+      KOKKOS_TPL_LIBRARY_DIRS += $(MEMKIND_PATH)/lib
+    endif
+    KOKKOS_LIBS += -lmemkind -lnuma
+    KOKKOS_TPL_LIBRARY_NAMES += memkind numa
   endif
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_HBWSPACE")
 endif
@@ -1295,8 +1295,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
     KOKKOS_CPPFLAGS += -fsycl -fsycl-unnamed-lambda -DSYCL_JUST_DONT_NAME_KERNELS
     KOKKOS_LDFLAGS += -fsycl
     KOKKOS_LIBS  += -lOpenCL -lsycl
-  endif 
-endif 
+  endif
+endif
 
 # Explicitly set the GCC Toolchain for Clang.
 ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
