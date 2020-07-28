@@ -55,10 +55,10 @@
 #include <HIP/Kokkos_HIP_Abort.hpp>
 #endif
 
-// SYCL defines a macro abort() when using nvcc, thus we get a collision with the abort function
-// defined here
+// SYCL defines a macro abort() when using nvcc, thus we get a collision with
+// the abort function defined here
 #ifdef KOKKOS_ENABLE_SYCL
-  #undef abort
+#undef abort
 #endif
 
 #ifndef KOKKOS_ABORT_MESSAGE_BUFFER_SIZE

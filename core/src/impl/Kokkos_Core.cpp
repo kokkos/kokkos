@@ -303,7 +303,7 @@ void initialize_backends(const InitArguments& args) {
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
   if (std::is_same<Kokkos::Experimental::OpenMPTarget,
-                    Kokkos::DefaultExecutionSpace>::value) {
+                   Kokkos::DefaultExecutionSpace>::value) {
     Kokkos::Experimental::OpenMPTarget().impl_initialize();
     // std::cout << "Kokkos::initialize() fyi: OpenMP enabled and initialized"
     // << std::endl ;
@@ -366,7 +366,6 @@ void initialize_backends(const InitArguments& args) {
           Kokkos::Experimental::SYCL::SYCLDevice(cl::sycl::default_selector()));
   }
 #endif
-
 }
 
 void initialize_profiling(const InitArguments&) {
@@ -502,11 +501,11 @@ void finalize_internal(const bool all_spaces = false) {
 
 void fence_internal() {
 #if defined(KOKKOS_ENABLE_CUDA)
-    Kokkos::Cuda::impl_static_fence();
+  Kokkos::Cuda::impl_static_fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_ROCM)
-    Kokkos::Experimental::ROCm().fence();
+  Kokkos::Experimental::ROCm().fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
@@ -514,11 +513,11 @@ void fence_internal() {
 #endif
 
 #if defined(KOKKOS_ENABLE_SYCL)
-    Kokkos::Experimental::SYCL().fence();
+  Kokkos::Experimental::SYCL().fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP)
-    Kokkos::OpenMP::impl_static_fence();
+  Kokkos::OpenMP::impl_static_fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_HPX)
@@ -526,11 +525,11 @@ void fence_internal() {
 #endif
 
 #if defined(KOKKOS_ENABLE_THREADS)
-    Kokkos::Threads::impl_static_fence();
+  Kokkos::Threads::impl_static_fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_SERIAL)
-    Kokkos::Serial::impl_static_fence();
+  Kokkos::Serial::impl_static_fence();
 #endif
 }
 
@@ -833,24 +832,24 @@ void parse_environment_variables(InitArguments& arguments) {
           "Raised by Kokkos::initialize(int narg, char* argc[]).");
     }
     int rdevices = -1;
-  if (env_ndevices_str != nullptr) {
-    auto env_ndevices = std::strtol(env_ndevices_str, &endptr, 10);
-    if (endptr == env_ndevices_str)
-      Impl::throw_runtime_exception(
-          "Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
-    if (errno == ERANGE)
-      Impl::throw_runtime_exception(
-          "Error: KOKKOS_NUM_DEVICES out of range of representable values by "
+    if (env_ndevices_str != nullptr) {
+      auto env_ndevices = std::strtol(env_ndevices_str, &endptr, 10);
+      if (endptr == env_ndevices_str)
+        Impl::throw_runtime_exception(
+            "Error: cannot convert KOKKOS_NUM_DEVICES to an integer. Raised by "
+            "Kokkos::initialize(int narg, char* argc[]).");
+      if (errno == ERANGE)
+        Impl::throw_runtime_exception(
+            "Error: KOKKOS_NUM_DEVICES out of range of representable values by "
             "an integer. Raised by Kokkos::initialize(int narg, char* "
             "argc[]).");
-    if ((ndevices != -1) && (env_ndevices != ndevices))
-      Impl::throw_runtime_exception(
-          "Error: expecting a match between --kokkos-ndevices and "
-          "KOKKOS_NUM_DEVICES if both are set. Raised by "
-          "Kokkos::initialize(int narg, char* argc[]).");
-    else
-      ndevices = env_ndevices;
+      if ((ndevices != -1) && (env_ndevices != ndevices))
+        Impl::throw_runtime_exception(
+            "Error: expecting a match between --kokkos-ndevices and "
+            "KOKKOS_NUM_DEVICES if both are set. Raised by "
+            "Kokkos::initialize(int narg, char* argc[]).");
+      else
+        ndevices = env_ndevices;
     } else {  // you set KOKKOS_RAND_DEVICES
       auto env_rdevices = std::strtol(env_rdevices_str, &endptr, 10);
       if (endptr == env_ndevices_str)

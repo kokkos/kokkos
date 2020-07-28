@@ -82,7 +82,7 @@
 #include <Kokkos_HIP.hpp>
 #endif
 
-#if defined( KOKKOS_ENABLE_SYCL )
+#if defined(KOKKOS_ENABLE_SYCL)
 #include <Kokkos_SYCL.hpp>
 #endif
 

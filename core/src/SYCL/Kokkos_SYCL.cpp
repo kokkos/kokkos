@@ -2,10 +2,11 @@
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 2.0
-//              Copyright (2014) Sandia Corporation
+//                        Kokkos v. 3.0
+//       Copyright (2020) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
 //
-// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+// Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -23,10 +24,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -106,13 +107,13 @@ SYCL::SYCLDevice::SYCLDevice(size_t id) {
 }
 
 // Not in a hot path, otherwise should be templatized instead of std::function
-SYCL::SYCLDevice::SYCLDevice(const std::function<bool(const cl::sycl::device&)>& pred)
-{
-  using Devices = std::vector<cl::sycl::device>;
+SYCL::SYCLDevice::SYCLDevice(
+    const std::function<bool(const cl::sycl::device&)>& pred) {
+  using Devices   = std::vector<cl::sycl::device>;
   Devices devices = cl::sycl::device::get_devices();
-  Devices::const_iterator found = std::find_if(devices.begin(), devices.end(), pred);
-  if (found == devices.end())
-  {
+  Devices::const_iterator found =
+      std::find_if(devices.begin(), devices.end(), pred);
+  if (found == devices.end()) {
     std::ostringstream oss;
     oss << "None of the " << devices.size() << " SYCL devices match pred.";
     Kokkos::Impl::throw_runtime_exception(oss.str());
@@ -122,11 +123,9 @@ SYCL::SYCLDevice::SYCLDevice(const std::function<bool(const cl::sycl::device&)>&
 }
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU)
-SYCL::SYCLDevice::SYCLDevice()
-    : SYCLDevice(cl::sycl::default_selector()) {}
+SYCL::SYCLDevice::SYCLDevice() : SYCLDevice(cl::sycl::default_selector()) {}
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU)
-SYCL::SYCLDevice::SYCLDevice()
-    : SYCLDevice(cl::sycl::gpu_selector()) {}
+SYCL::SYCLDevice::SYCLDevice() : SYCLDevice(cl::sycl::gpu_selector()) {}
 #endif
 
 cl::sycl::device SYCL::SYCLDevice::get_device() const { return m_device; }
@@ -262,4 +261,3 @@ std::ostream& SYCL::SYCLDevice::info(std::ostream& os) const {
 }  // namespace Kokkos
 
 #endif
-

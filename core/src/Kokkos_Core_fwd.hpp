@@ -134,15 +134,14 @@ class HIP;       ///< Execution space for HIP GPU
 }  // namespace Experimental
 #endif
 
-#if defined( KOKKOS_ENABLE_SYCL )
+#if defined(KOKKOS_ENABLE_SYCL)
 namespace Experimental {
-class SYCLHostUSMSpace ;            ///< Memory space on SYCL CPU as device
-class SYCLDeviceUSMSpace ;          ///< Memory space on SYCL GPU as device
-class SYCLSharedUSMSpace ;          ///< Memory space shared USM
-class SYCL ;                 ///< Execution space for SYCL GPU
-}
+class SYCLHostUSMSpace;    ///< Memory space on SYCL CPU as device
+class SYCLDeviceUSMSpace;  ///< Memory space on SYCL GPU as device
+class SYCLSharedUSMSpace;  ///< Memory space shared USM
+class SYCL;                ///< Execution space for SYCL GPU
+}  // namespace Experimental
 #endif
-
 
 template <class ExecutionSpace, class MemorySpace>
 struct Device;
@@ -220,9 +219,9 @@ namespace Impl {
     defined(KOKKOS_ENABLE_CUDA)
 typedef Kokkos::CudaSpace ActiveExecutionMemorySpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU)
-typedef Kokkos::Experimental::SYCLHostUSMSpace  ActiveExecutionMemorySpace ;
+typedef Kokkos::Experimental::SYCLHostUSMSpace ActiveExecutionMemorySpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU)
-typedef Kokkos::Experimental::SYCLDeviceUSMSpace  ActiveExecutionMemorySpace ;
+typedef Kokkos::Experimental::SYCLDeviceUSMSpace ActiveExecutionMemorySpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU)
 typedef Kokkos::HostSpace ActiveExecutionMemorySpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)

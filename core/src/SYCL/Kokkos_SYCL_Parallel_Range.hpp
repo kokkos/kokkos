@@ -58,4 +58,3 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
 };
 
 #endif  // KOKKOS_SYCL_PARALLEL_RANGE_HPP_
-

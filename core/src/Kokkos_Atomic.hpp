@@ -194,7 +194,7 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 #include <HIP/Kokkos_HIP_Atomic.hpp>
 #endif
 
-#if defined( KOKKOS_ENABLE_SYCL )
+#if defined(KOKKOS_ENABLE_SYCL)
 #include <SYCL/Kokkos_SYCL_Atomic.hpp>
 #endif
 
