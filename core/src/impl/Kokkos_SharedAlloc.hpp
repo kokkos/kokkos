@@ -50,8 +50,12 @@
 
 // undefined at end of file
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_COMPILER_PGI)
+#define KOKKOS_IMPL_IF_ON_HOST if (!__builtin_is_device_code())
+#else
 // Note: OpenMPTarget enforces C++17 at configure time
 #define KOKKOS_IMPL_IF_ON_HOST if constexpr (omp_is_initial_device())
+#endif
 #else
 #define KOKKOS_IMPL_IF_ON_HOST if (true)
 #endif

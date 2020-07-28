@@ -209,6 +209,15 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 #include "impl/Kokkos_Atomic_Assembly.hpp"
 
 //----------------------------------------------------------------------------
+// Memory fence
+//
+// All loads and stores from this thread will be globally consistent before
+// continuing
+//
+// void memory_fence() {...};
+#include "impl/Kokkos_Memory_Fence.hpp"
+
+//----------------------------------------------------------------------------
 // Atomic exchange
 //
 // template< typename T >
@@ -294,15 +303,6 @@ extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
 // { T tmp = *dest ; *dest = max(*dest, val); return tmp ; }
 
 #include "impl/Kokkos_Atomic_MinMax.hpp"
-
-//----------------------------------------------------------------------------
-// Memory fence
-//
-// All loads and stores from this thread will be globally consistent before
-// continuing
-//
-// void memory_fence() {...};
-#include "impl/Kokkos_Memory_Fence.hpp"
 
 //----------------------------------------------------------------------------
 // Provide volatile_load and safe_load

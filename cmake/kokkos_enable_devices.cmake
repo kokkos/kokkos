@@ -80,6 +80,7 @@ SET(ClangOpenMPFlag -fopenmp=libomp)
     Clang      ${ClangOpenMPFlag} -Wno-openmp-mapping
     IntelClang -fiopenmp -Wno-openmp-mapping
     XL         -qsmp=omp -qoffload -qnoeh
+    PGI        -mp=gpu
     DEFAULT    -fopenmp
   )
   COMPILER_SPECIFIC_DEFS(
