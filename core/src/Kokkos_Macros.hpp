@@ -166,13 +166,6 @@
 
 #if defined(KOKKOS_ENABLE_HIP)
 
-#if !(HIP_VERSION_MAJOR > 3 || HIP_VERSION_MINOR > 5 || \
-      HIP_VERSION_PATCH >= 20226)
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-#endif
-
 #define HIP_ENABLE_PRINTF
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
