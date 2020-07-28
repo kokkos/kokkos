@@ -94,10 +94,10 @@ KOKKOS_INTERNAL_USE_SERIAL := $(call kokkos_has_string,$(KOKKOS_DEVICES),Serial)
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 0)
   ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 0)
-      ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
-        KOKKOS_INTERNAL_USE_SERIAL := 1
-      endif
+    ifeq ($(KOKKOS_INTERNAL_USE_HPX), 0)
+      KOKKOS_INTERNAL_USE_SERIAL := 1
     endif
+  endif
 endif
 
 # Check for other Execution Spaces.
