@@ -136,7 +136,7 @@ struct SomeCorrelation {
 
   // The functor needs to define how much shared memory it requests given a
   // team_size.
-  size_t team_shmem_size(int team_size) const {
+  size_t team_shmem_size(int /*team_size*/) const {
     return shared_1d_int::shmem_size(data.extent(1));
   }
 };
