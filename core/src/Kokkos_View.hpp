@@ -1419,8 +1419,8 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   ~View() = default;
 
-  KOKKOS_INLINE_FUNCTION
-  View() : m_track(), m_map() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  View() = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   View(const View& rhs) = default;
