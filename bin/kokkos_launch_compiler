@@ -26,12 +26,31 @@ if [ -z "${2}" ]; then exit 0; fi
 
 # store the expect C++ compiler
 CXX_COMPILER=${1}
+
 # remove the expected C++ compiler from the arguments
 shift
 
+# after the above shift, $1 is now the exe for the compile or link command, e.g.
+#       kokkos_launch_compiler g++ gcc -c file.c -o file.o
+# becomes:
+#       kokkos_launch_compiler gcc -c file.c -o file.o
+# Check to see if the executable is the C++ compiler and if it is not, then
+# just execute the command.
+#
+# Summary:
+#       kokkos_launch_compiler g++ gcc -c file.c -o file.o
+# results in this command being executed:
+#       gcc -c file.c -o file.o
+# and
+#       kokkos_launch_compiler g++ g++ -c file.cpp -o file.o
+# results in this command being executed:
+#       nvcc_wrapper -c file.cpp -o file.o
 if [ "${CXX_COMPILER}" != "${1}" ]; then
+    # the executable is not C++ compiler so just execute the command w/o re-directing to nvcc_wrapper
     eval $@
 else
+    # the executable is the C++ compiler, so we need to re-direct to nvcc_wrapper
+
     # find the nvcc_wrapper from the same build/install
     LOCAL_NVCC_WRAPPER="$(dirname ${BASH_SOURCE[0]})/nvcc_wrapper"
 
