@@ -1288,7 +1288,7 @@ void print_configuration(std::ostream& out, const bool detail) {
 #ifdef KOKKOS_ENABLE_HIP
   Experimental::HIP::print_configuration(msg, detail);
 #endif
-#ifdef KOKKOS_ENABLE_HIP
+#ifdef KOKKOS_ENABLE_SYCL
   Experimental::SYCL::print_configuration(msg, detail);
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
