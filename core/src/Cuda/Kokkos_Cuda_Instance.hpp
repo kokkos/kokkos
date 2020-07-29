@@ -120,6 +120,11 @@ class CudaInternal {
   bool was_initialized = false;
   bool was_finalized   = false;
 
+  // FIXME_CUDA: these want to be per-device, not per-stream...  use of 'static'
+  //  here will break once there are multiple devices though
+  static unsigned long* constantMemHostStaging;
+  static cudaEvent_t constantMemReusable;
+
   static CudaInternal& singleton();
 
   int verify_is_initialized(const char* const label) const;
