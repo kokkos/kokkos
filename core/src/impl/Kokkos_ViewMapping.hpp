@@ -3164,21 +3164,13 @@ class ViewMapping<
 
   KOKKOS_DEFAULTED_FUNCTION ~ViewMapping() = default;
   KOKKOS_INLINE_FUNCTION ViewMapping() : m_impl_handle(), m_impl_offset() {}
-  KOKKOS_INLINE_FUNCTION ViewMapping(const ViewMapping& rhs)
-      : m_impl_handle(rhs.m_impl_handle), m_impl_offset(rhs.m_impl_offset) {}
-  KOKKOS_INLINE_FUNCTION ViewMapping& operator=(const ViewMapping& rhs) {
-    m_impl_handle = rhs.m_impl_handle;
-    m_impl_offset = rhs.m_impl_offset;
-    return *this;
-  }
 
-  KOKKOS_INLINE_FUNCTION ViewMapping(ViewMapping&& rhs)
-      : m_impl_handle(rhs.m_impl_handle), m_impl_offset(rhs.m_impl_offset) {}
-  KOKKOS_INLINE_FUNCTION ViewMapping& operator=(ViewMapping&& rhs) {
-    m_impl_handle = rhs.m_impl_handle;
-    m_impl_offset = rhs.m_impl_offset;
-    return *this;
-  }
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping(const ViewMapping&) = default;
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(const ViewMapping&) =
+      default;
+
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping(ViewMapping&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(ViewMapping&&) = default;
 
   //----------------------------------------
 
