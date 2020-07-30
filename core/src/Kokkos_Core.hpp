@@ -233,13 +233,13 @@ class ScopeGuard {
   ScopeGuard(const InitArguments& args = InitArguments()) {
     sg_init = false;
     if (!Kokkos::is_initialized()) {
-      initialize(args);
+      initialize(args  );
       sg_init = true;
     }
   }
 
   ~ScopeGuard() {
-    if (Kokkos::is_initialized() && sg_init) {
+    if (Kokkos::is_initialized( ) && sg_init) {
       finalize();
     }
   }
@@ -247,8 +247,8 @@ class ScopeGuard {
   // private:
   bool sg_init;
 
-  ScopeGuard& operator=(const ScopeGuard&) = delete;
-  ScopeGuard(const ScopeGuard&)            = delete;
+  ScopeGuard & operator=(const ScopeGuard&) = delete;
+  ScopeGuard(const ScopeGuard&)            = delete  ;
 };
 
 }  // namespace Kokkos
