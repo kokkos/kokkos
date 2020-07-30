@@ -69,6 +69,12 @@
 #define KOKKOS_ATOMIC_HPP
 
 #include <Kokkos_Macros.hpp>
+
+#ifdef KOKKOS_IMPL_ENABLE_DESUL_ATOMICS
+#include <Kokkos_Atomics_Desul_Wrapper.hpp>
+#include <Kokkos_Atomics_Desul_Volatile_Wrapper.hpp>
+#else
+
 #include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_Traits.hpp>
 
@@ -326,4 +332,5 @@ inline const char* atomic_query_version() {
 
 //----------------------------------------------------------------------------
 
+#endif /* !KOKKOS_IMPL_ENABLE_DESUL_ATOMICS */
 #endif /* KOKKOS_ATOMIC_HPP */

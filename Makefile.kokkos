@@ -1152,6 +1152,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   endif
 endif
 
+tmp := $(call kokkos_append_header,"$H""define KOKKOS_IMPL_ENABLE_DESUL_ATOMICS")
+
 
 KOKKOS_INTERNAL_LS_CONFIG := $(shell ls KokkosCore_config.h 2>&1)
 

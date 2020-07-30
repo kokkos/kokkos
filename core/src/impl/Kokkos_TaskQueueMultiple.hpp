@@ -59,9 +59,7 @@
 #include <impl/Kokkos_TaskResult.hpp>
 #include <impl/Kokkos_TaskQueue.hpp>
 
-#include <impl/Kokkos_Memory_Fence.hpp>
-#include <impl/Kokkos_Atomic_Increment.hpp>
-#include <impl/Kokkos_Atomic_Decrement.hpp>
+#include <Kokkos_Atomic.hpp>
 
 #include <string>
 #include <typeinfo>
