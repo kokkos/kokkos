@@ -23,8 +23,8 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
     GLOBAL_SET(KOKKOS_USE_CXX_EXTENSIONS OFF)
   ENDIF()
 
-  # Workaround CMake setting flags for PGI nvcc doesn't understand
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_HOST_COMPILER_ID STREQUAL PGI)
+  # When using nvcc, don't ask the host compiler for the standard flag.
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
     RETURN()
   ENDIF()
@@ -34,20 +34,11 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE ${FEATURE_NAME})
   ELSEIF(NOT KOKKOS_USE_CXX_EXTENSIONS AND ${STANDARD_NAME})
     MESSAGE(STATUS "Using ${${STANDARD_NAME}} for C++${standard} standard as feature")
-    IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND (KOKKOS_CXX_HOST_COMPILER_ID STREQUAL GNU OR KOKKOS_CXX_HOST_COMPILER_ID STREQUAL Clang))
-      SET(SUPPORTED_NVCC_FLAGS "-std=c++11;-std=c++14;-std=c++17")
-      IF (NOT ${${STANDARD_NAME}} IN_LIST SUPPORTED_NVCC_FLAGS)
-        MESSAGE(FATAL_ERROR "CMake wants to use ${${STANDARD_NAME}} which is not supported by NVCC. Using a more recent host compiler or a more recent CMake version might help.")
-      ENDIF()
-    ENDIF()
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE ${FEATURE_NAME})
   ELSEIF (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
     #MSVC doesn't need a command line flag, that doesn't mean it has no support
     MESSAGE(STATUS "Using no flag for C++${standard} standard as feature")
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE ${FEATURE_NAME})
-  ELSEIF((KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA") AND WIN32)
-    MESSAGE(STATUS "Using no flag for C++${standard} standard as feature")
-    GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
   ELSE()
     #nope, we can't do anything here
     MESSAGE(WARNING "C++${standard} is not supported as a compiler feature. We will choose custom flags for now, but this behavior has been deprecated. Please open an issue at https://github.com/kokkos/kokkos/issues reporting that ${KOKKOS_CXX_COMPILER_ID} ${KOKKOS_CXX_COMPILER_VERSION} failed for ${KOKKOS_CXX_STANDARD}, preferrably including your CMake command.")
@@ -94,22 +85,6 @@ ELSE()
 ENDIF()
 
 
-
-# Enforce that extensions are turned off for nvcc_wrapper.
-# For compiling CUDA code using nvcc_wrapper, we will use the host compiler's
-# flags for turning on C++11.  Since for compiler ID and versioning purposes
-# CMake recognizes the host compiler when calling nvcc_wrapper, this just
-# works.  Both NVCC and nvcc_wrapper only recognize '-std=c++11' which means
-# that we can only use host compilers for CUDA builds that use those flags.
-# It also means that extensions (gnu++11) can't be turned on for CUDA builds.
-
-IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
-  IF(NOT DEFINED CMAKE_CXX_EXTENSIONS)
-    SET(CMAKE_CXX_EXTENSIONS OFF)
-  ELSEIF(CMAKE_CXX_EXTENSIONS)
-    MESSAGE(FATAL_ERROR "NVCC doesn't support C++ extensions.  Set -DCMAKE_CXX_EXTENSIONS=OFF")
-  ENDIF()
-ENDIF()
 
 IF(KOKKOS_ENABLE_CUDA)
   # ENFORCE that the compiler can compile CUDA code.
