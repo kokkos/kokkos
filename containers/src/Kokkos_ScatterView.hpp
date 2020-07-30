@@ -476,6 +476,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMaxTag, DeviceType,
     value = reduction_identity<ValueType>::max();
   }
 };
+
 /* ScatterValue <OpTag=ScatterMaxTag, ContributionTag=ScatterAtomicTag> is the
    object returned by the access operator() of ScatterAccess. This class
    inherits from the Max<> reducer, and similar to that returned by an Atomic
