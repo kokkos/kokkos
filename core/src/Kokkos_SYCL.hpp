@@ -109,7 +109,7 @@ class SYCL {
   //@{
 
   KOKKOS_INLINE_FUNCTION static int in_parallel() {
-#if defined(__HCC_ACCELERATOR__)
+#if defined(__SYCL_ARCH__)
     return true;
 #else
     return false;
