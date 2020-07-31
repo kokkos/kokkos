@@ -48,7 +48,7 @@
 #include <impl/Kokkos_Timer.hpp>
 #include <cstdlib>
 
-typedef Kokkos::HostSpace::execution_space DefaultHostType;
+using DefaultHostType = Kokkos::HostSpace::execution_space;
 
 // Kokkos provides two different random number generators with a 64 bit and a
 // 1024 bit state. These generators are based on Vigna, Sebastiano (2014). "An
