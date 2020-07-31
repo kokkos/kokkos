@@ -1806,8 +1806,10 @@ inline void deep_copy(
     // memory then can byte-wise copy
     if (rank(src) == 0 && rank(dst) == 0) {
       using value_type = typename dst_type::value_type;
+      Kokkos::fence();
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
           dst.data(), src.data(), sizeof(value_type));
+      Kokkos::fence();
     } else if (std::is_same<
                    typename DstType::traits::value_type,
                    typename SrcType::traits::non_const_value_type>::value &&
@@ -1829,9 +1831,10 @@ inline void deep_copy(
                dst.extent(6) == src.extent(6) &&
                dst.extent(7) == src.extent(7)) {
       const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
-
+      Kokkos::fence();
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
           dst.data(), src.data(), nbytes);
+      Kokkos::fence();
     } else if (std::is_same<
                    typename DstType::traits::value_type,
                    typename SrcType::traits::non_const_value_type>::value &&
@@ -1858,9 +1861,10 @@ inline void deep_copy(
                dst.stride_6() == src.stride_6() &&
                dst.stride_7() == src.stride_7()) {
       const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
-
+      Kokkos::fence();
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
           dst.data(), src.data(), nbytes);
+      Kokkos::fence();
     } else if (DstExecCanAccessSrc) {
       // Copying data between views in accessible memory spaces and either
       // non-contiguous or incompatible shape.
@@ -1874,6 +1878,9 @@ inline void deep_copy(
       Kokkos::Impl::throw_runtime_exception(
           "deep_copy given views that would require a temporary allocation");
     }
+  }
+  else {
+    Kokkos::fence();
   }
 }
 
