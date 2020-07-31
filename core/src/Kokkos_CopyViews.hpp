@@ -1619,8 +1619,8 @@ inline void deep_copy(
     if ((void*)dst.data() != (void*)src.data()) {
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
           dst.data(), src.data(), nbytes);
+      Kokkos::fence();
     }
-    Kokkos::fence();
   } else {
     Kokkos::fence();
     Impl::view_copy(dst, src);
