@@ -7,6 +7,8 @@ jobs:
     name: clang-format
     if: ${{ github.event.comment.body == '@crtrott format' }}
     runs-on: ubuntu-latest
+    env:
+      CLANG_FORMAT: clang-format-8
     steps:
       - name: Check if message comes from a PR
         uses: octokit/request-action@v2.x
@@ -32,17 +34,14 @@ jobs:
           repository: ${{ fromJSON(steps.pr_info.outputs.data).head.repo.full_name }}
           ref: ${{ fromJSON(steps.pr_info.outputs.data).head.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install clang-format
-        if: ${{ fromJSON(steps.issue_info.outputs.data).pull_request }}
-        run: sudo apt-get install clang-format
       - name: Run clang-format
         if: ${{ fromJSON(steps.issue_info.outputs.data).pull_request }}
-        run: find . -type f -regex ".*\.\(c\|h\|cc\|cpp\|hpp\)" -print0 | xargs -0 clang-format -i -style=file
+        run: find . -type f -regex ".*\.\(c\|h\|cc\|cpp\|hpp\)" -print0 | xargs -0 ${CLANG_FORMAT} -i -style=file
       - name: Commit and push
         if: ${{ fromJSON(steps.issue_info.outputs.data).pull_request }}
         run: |
           git config --global user.name "Christian Trott"
           git config --global user.email "crtrott@sandia.gov"
           git add -u
-          git commit -m "Format code using $(clang-format --version)" || true
+          git commit -m "Format code using $(${CLANG_FORMAT} --version)" || true
           git push
