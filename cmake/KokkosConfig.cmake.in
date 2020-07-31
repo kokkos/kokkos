@@ -22,6 +22,7 @@ IF(@Kokkos_ENABLE_CUDA@ AND NOT "separable_compilation" IN_LIST Kokkos_FIND_COMP
     # if not nvcc_wrapper, use RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK
     IF(NOT IS_NVCC AND NOT CMAKE_CXX_COMPILER_ID STREQUAL Clang AND
         (NOT DEFINED Kokkos_LAUNCH_COMPILER OR Kokkos_LAUNCH_COMPILER))
+        MESSAGE(STATUS "kokkos_launch_compiler is enabled globally. All C++ compiler commands will be redirected to nvcc_wrapper")
         kokkos_compilation(GLOBAL)
     ENDIF()
     UNSET(IS_NVCC) # be mindful of the environment, pollution is bad
