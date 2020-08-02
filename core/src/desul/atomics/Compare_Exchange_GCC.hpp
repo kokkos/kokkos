@@ -22,29 +22,38 @@ void atomic_thread_fence(MemoryOrder, MemoryScope) {
   __atomic_thread_fence(GCCMemoryOrder<MemoryOrder>::value);
 }
 
+template <typename T, class MemoryOrder, class MemoryScope>
+T atomic_exchange(
+    T* dest, T value, MemoryOrder, MemoryScope) {
+  T return_val;
+  __atomic_exchange(
+     dest, &value, &return_val, GCCMemoryOrder<MemoryOrder>::value);
+  return return_val;
+}
+
 // Failure mode for atomic_compare_exchange_n cannot be RELEASE nor ACQREL so
 // Those two get handled separatly.
 template <typename T, class MemoryOrder, class MemoryScope>
 T atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
-  (void)__atomic_compare_exchange_n(
-      dest, &compare, value, false, GCCMemoryOrder<MemoryOrder>::value, GCCMemoryOrder<MemoryOrder>::value);
+  (void)__atomic_compare_exchange(
+      dest, &compare, &value, false, GCCMemoryOrder<MemoryOrder>::value, GCCMemoryOrder<MemoryOrder>::value);
   return compare;
 }
 
 template <typename T, class MemoryScope>
 T atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
-  (void)__atomic_compare_exchange_n(
-      dest, &compare, value, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
+  (void)__atomic_compare_exchange(
+      dest, &compare, &value, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
   return compare;
 }
 
 template <typename T, class MemoryScope>
 T atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderAcqRel, MemoryScope) {
-  (void)__atomic_compare_exchange_n(
-      dest, &compare, value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+  (void)__atomic_compare_exchange(
+      dest, &compare, &value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
   return compare;
 }
 }  // namespace desul

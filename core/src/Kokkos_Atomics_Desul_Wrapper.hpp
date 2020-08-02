@@ -8,6 +8,24 @@
 
 namespace Kokkos { 
 
+// These functions don't have any use/test in unit tests ...
+// ==========================================================
+inline const char* atomic_query_version() { return "KOKKOS_DESUL_ATOMICS"; }
+
+#if defined(KOKKOS_COMPILER_GNU) && !defined(__PGIC__) && \
+    !defined(__CUDA_ARCH__)
+
+#define KOKKOS_NONTEMPORAL_PREFETCH_LOAD(addr) __builtin_prefetch(addr, 0, 0)
+#define KOKKOS_NONTEMPORAL_PREFETCH_STORE(addr) __builtin_prefetch(addr, 1, 0)
+
+#else
+
+#define KOKKOS_NONTEMPORAL_PREFETCH_LOAD(addr) ((void)0)
+#define KOKKOS_NONTEMPORAL_PREFETCH_STORE(addr) ((void)0)
+
+#endif
+// ============================================================
+
 template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_load(T* const dest) { return desul::atomic_load(dest, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 

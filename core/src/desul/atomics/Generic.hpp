@@ -568,7 +568,8 @@ template <typename T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T atomic_load(T* const dest,
                                     MemoryOrder order,
                                     MemoryScope scope) {
-  return Impl::atomic_fetch_oper(Impl::LoadOper<T, const T>(), dest, T(), order, scope);
+  using T_nc = typename std::remove_const<T>::type;
+  return Impl::atomic_fetch_oper(Impl::LoadOper<T_nc, const T_nc>(), const_cast<T_nc*>(dest), T_nc(), order, scope);
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
@@ -664,13 +665,6 @@ DESUL_INLINE_FUNCTION void atomic_dec(T* const dest,
                                          MemoryOrder order,
                                          MemoryScope scope) {
   return atomic_sub(dest, T(1), order, scope);
-}
-
-template <typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T atomic_exchange(T* const dest, T value,
-                                         MemoryOrder order,
-                                         MemoryScope scope) {
-  return Impl::atomic_fetch_oper(Impl::StoreOper<T, const T>(), dest, value, order, scope);
 }
 
 // FIXME

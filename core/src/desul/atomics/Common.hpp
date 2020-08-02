@@ -11,6 +11,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include "desul/atomics/Macros.hpp"
 #include <cstdint>
 #include <atomic>
+#include <type_traits>
 
 namespace desul {
 struct alignas(16) Dummy16ByteValue {
