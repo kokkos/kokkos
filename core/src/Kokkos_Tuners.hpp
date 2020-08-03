@@ -91,8 +91,8 @@ class TeamSizeTuner {
   template <typename Functor, typename TagType, typename... Properties>
   TeamSizeTuner(const std::string& name,
                 Kokkos::TeamPolicy<Properties...>& policy,
-                const Functor& functor, int team_size_recommended,
-                int team_size_max, const TagType& tag) {
+                const Functor& /**functor*/, int team_size_recommended,
+                int team_size_max, const TagType& /**tag*/) {
     using PolicyType           = Kokkos::TeamPolicy<Properties...>;
     auto initial_vector_length = policy.vector_length();
     if (initial_vector_length < 1) {
