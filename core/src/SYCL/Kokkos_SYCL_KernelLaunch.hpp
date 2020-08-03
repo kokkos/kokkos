@@ -17,8 +17,11 @@ void sycl_launch_bind(Driver tmp, cl::sycl::handler& cgh) {
       cl::sycl::range<1>(tmp.m_policy.end() - tmp.m_policy.begin()), tmp);
 }
 
+
 template <class Driver>
 void sycl_launch(const Driver driver) {
+  isTriviallyCopyable<Driver>();
+  isTriviallyCopyable<decltype(driver.m_functor)>();
   driver.m_policy.space().impl_internal_space_instance()->m_queue->wait();
 #ifndef SYCL_USE_BIND_LAUNCH
   driver.m_policy.space().impl_internal_space_instance()->m_queue->submit(

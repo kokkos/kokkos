@@ -64,6 +64,11 @@
 #include <CL/sycl.hpp>
 
 /*--------------------------------------------------------------------------*/
+// Temp place for Trivially copyable check - velesko 
+template<class Obj>
+void isTriviallyCopyable() {
+  static_assert(std::is_trivially_copyable<Obj>::value);
+}
 
 /*--------------------------------------------------------------------------*/
 
