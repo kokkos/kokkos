@@ -150,6 +150,26 @@ template <class ExecPolicy, class Functor, typename TagType>
 void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
                  const TagType&) {}
 
+/**
+ * Tuning for parallel_fors and parallel_scans is a fairly simple process.
+ * 
+ * Tuning for a parallel_reduce turns out to be a little more complicated.
+ *
+ * If you're tuning a reducer, it might be a complex or a simple reducer
+ * (an example of simple would be one where the join is just "+".
+ *
+ * Unfortunately these two paths are very different in terms of which classes
+ * get instantiated. Thankfully, all of this complexity is encoded in the
+ * ReducerType. If it's a "simple" reducer, this will be Kokkos::InvalidType,
+ * otherwise it'll be something else.
+ *
+ * If the type is complex, for the code to be generally right you _must_
+ * pass an instance of that ReducerType to functions that determine
+ * eligible team sizes. If the type is simple, you can't construct one,
+ * you use the simpler 2-arg formulation of team_size_recommended/max.
+ *
+ */
+
 template <class Functor, class TagType, class... Properties>
 void tune_policy(const size_t tuning_context, const std::string& label,
                  Kokkos::TeamPolicy<Properties...>& policy,
@@ -174,9 +194,18 @@ void tune_policy(const size_t tuning_context, const std::string& label,
                  const Functor& functor, const TagType& tag) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
     if (team_tuners.find(label) == team_tuners.end()) {
+
+      // when we have a complex reducer, we need to pass an
+      // instance to team_size_recommended/max. Reducers
+      // aren't default constructible, but they are
+      // constructible from a reference to an
+      // instance of their value_type so we construct
+      // a value_type and temporary reducer here
+      
       using value_type = typename ReducerType::value_type;
       value_type value;
       ReducerType reducer_example = ReducerType(value);
+
       int team_size_max = policy.team_size_max(functor, reducer_example, tag);
       int team_size_recommended =
           policy.team_size_recommended(functor, reducer_example, tag);
