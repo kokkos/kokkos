@@ -91,7 +91,8 @@ class TeamSizeTuner {
   template <typename Functor, typename TagType, typename... Properties>
   TeamSizeTuner(const std::string& name,
                 Kokkos::TeamPolicy<Properties...>& policy,
-                const Functor& functor, const TagType& tag) {
+                const Functor& functor, int team_size_recommended,
+                int team_size_max, const TagType& tag) {
     using PolicyType           = Kokkos::TeamPolicy<Properties...>;
     auto initial_vector_length = policy.vector_length();
     if (initial_vector_length < 1) {
@@ -131,7 +132,7 @@ class TeamSizeTuner {
     // in all cases, start by pushing the default
     configuration_indices.push_back(0);  // default option index
     if (policy.auto_team_size()) {       // case 1 or 3
-      auto default_team_size = policy.team_size_recommended(functor, tag);
+      auto default_team_size = team_size_recommended;
       configurations.push_back(
           std::make_pair(default_team_size, policy.vector_length()));
     } else {  // case 2
@@ -158,7 +159,7 @@ class TeamSizeTuner {
          * These are the left and right hand sides of the "or" in this
          * conditional, respectively.
          */
-        auto max_team_size = policy.team_size_max(functor, tag);
+        auto max_team_size = team_size_max;
         if ((policy.auto_team_size()) ||
             (policy.team_size() <= max_team_size)) {
           allowed_vector_lengths.push_back(vector_length);
@@ -171,7 +172,7 @@ class TeamSizeTuner {
 
     for (const auto vector_length : allowed_vector_lengths) {
       policy.impl_set_vector_length(vector_length);
-      auto max_team_size = policy.team_size_max(functor, tag);
+      auto max_team_size = team_size_max;
       if (policy.auto_team_size()) {  // case 1 or 3, try all legal team sizes
         for (int team_size = max_team_size; team_size >= 1; team_size /= 2) {
           configuration_indices.push_back(index++);

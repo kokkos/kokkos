@@ -142,6 +142,10 @@ namespace Impl {
 static std::map<std::string, Kokkos::Tools::Experimental::TeamSizeTuner>
     team_tuners;
 
+template <class ReducerType, class ExecPolicy, class Functor, typename TagType>
+void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
+                 const TagType&) {}
+
 template <class ExecPolicy, class Functor, typename TagType>
 void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
                  const TagType&) {}
@@ -152,13 +156,59 @@ void tune_policy(const size_t tuning_context, const std::string& label,
                  const Functor& functor, const TagType& tag) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
     if (team_tuners.find(label) == team_tuners.end()) {
-      team_tuners.emplace(label, Kokkos::Tools::Experimental::TeamSizeTuner(
-                                     label, policy, functor, tag));
+      int team_size_max         = policy.team_size_max(functor, tag);
+      int team_size_recommended = policy.team_size_recommended(functor, tag);
+      team_tuners.emplace(label,
+                          Kokkos::Tools::Experimental::TeamSizeTuner(
+                              label, policy, functor, team_size_recommended,
+                              team_size_max, tag));
     }
     auto& tuner = team_tuners[label];
     tuner.tune(policy, tuning_context);
   }
 }
+
+template <class ReducerType, class Functor, class TagType, class... Properties>
+void tune_policy(const size_t tuning_context, const std::string& label,
+                 Kokkos::TeamPolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag) {
+  if (policy.auto_team_size() || policy.auto_vector_length()) {
+    if (team_tuners.find(label) == team_tuners.end()) {
+      using value_type = typename ReducerType::value_type;
+      value_type value;
+      ReducerType reducer_example = ReducerType(value);
+      int team_size_max = policy.team_size_max(functor, reducer_example, tag);
+      int team_size_recommended =
+          policy.team_size_recommended(functor, reducer_example, tag);
+      team_tuners.emplace(label,
+                          Kokkos::Tools::Experimental::TeamSizeTuner(
+                              label, policy, functor, team_size_recommended,
+                              team_size_max, tag));
+    }
+    auto& tuner = team_tuners[label];
+    tuner.tune(policy, tuning_context);
+  }
+}
+
+template <class ReducerType>
+struct ReductionSwitcher {
+  template <class Functor, class TagType, class ExecPolicy>
+  static void tune(const size_t tuning_context, const std::string& label,
+                   ExecPolicy& policy, const Functor& functor,
+                   const TagType& tag) {
+    tune_policy<ReducerType>(tuning_context, label, policy, functor, tag);
+  }
+};
+
+template <>
+struct ReductionSwitcher<Kokkos::InvalidType> {
+  template <class Functor, class TagType, class ExecPolicy>
+  static void tune(const size_t tuning_context, const std::string& label,
+                   ExecPolicy& policy, const Functor& functor,
+                   const TagType& tag) {
+    tune_policy(tuning_context, label, policy, functor, tag);
+  }
+};
 
 template <class ExecPolicy, class Functor, typename TagType>
 void report_policy_results(const size_t, const std::string&, ExecPolicy&,
@@ -276,7 +326,7 @@ void end_parallel_scan(ExecPolicy&
 #endif
 }
 
-template <class ExecPolicy, class FunctorType>
+template <class ReducerType, class ExecPolicy, class FunctorType>
 void begin_parallel_reduce(ExecPolicy& policy,
                            FunctorType&
 #ifdef KOKKOS_ENABLE_TUNING
@@ -294,12 +344,12 @@ void begin_parallel_reduce(ExecPolicy& policy,
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
-  Impl::tune_policy(context_id, label, policy, functor,
-                    Kokkos::ParallelReduceTag{});
+  Impl::ReductionSwitcher<ReducerType>::tune(context_id, label, policy, functor,
+                                             Kokkos::ParallelReduceTag{});
 #endif
 }
 
-template <class ExecPolicy, class FunctorType>
+template <class ReducerType, class ExecPolicy, class FunctorType>
 void end_parallel_reduce(ExecPolicy&
 #ifdef KOKKOS_ENABLE_TUNING
                              policy
