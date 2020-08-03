@@ -73,6 +73,7 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS="--gcc-toolchain=$GCC_DIR" \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
