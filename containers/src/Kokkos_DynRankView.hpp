@@ -1878,8 +1878,7 @@ inline void deep_copy(
       Kokkos::Impl::throw_runtime_exception(
           "deep_copy given views that would require a temporary allocation");
     }
-  }
-  else {
+  } else {
     Kokkos::fence();
   }
 }
