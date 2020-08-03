@@ -166,11 +166,6 @@
 
 #if defined(KOKKOS_ENABLE_HIP)
 
-// FIXME_HIP Not defining NDEBUG makes some tests fail.
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-
 #define HIP_ENABLE_PRINTF
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>

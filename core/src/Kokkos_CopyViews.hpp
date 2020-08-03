@@ -2537,7 +2537,8 @@ inline void deep_copy(
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
         (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
-         unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>::type* = 0) {
+         unsigned(ViewTraits<ST, SP...>::rank) == unsigned(0)))>::type* =
+        nullptr) {
   using src_traits = ViewTraits<ST, SP...>;
   using dst_traits = ViewTraits<DT, DP...>;
 
@@ -3167,7 +3168,7 @@ inline typename Kokkos::View<T, P...>::HostMirror create_mirror_view(
             typename Kokkos::View<T, P...>::HostMirror::memory_space>::value &&
         std::is_same<typename Kokkos::View<T, P...>::data_type,
                      typename Kokkos::View<T, P...>::HostMirror::data_type>::
-            value)>::type* = 0) {
+            value)>::type* = nullptr) {
   return Kokkos::create_mirror(src);
 }
 
@@ -3186,7 +3187,8 @@ template <class Space, class T, class... P>
 typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
     const Space&, const Kokkos::View<T, P...>& src,
     typename std::enable_if<
-        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* = 0) {
+        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
+        nullptr) {
   return typename Impl::MirrorViewType<Space, T, P...>::view_type(src.label(),
                                                                   src.layout());
 }
@@ -3214,7 +3216,8 @@ create_mirror_view_and_copy(
     const Space&, const Kokkos::View<T, P...>& src,
     std::string const& name = "",
     typename std::enable_if<
-        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* = 0) {
+        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
+        nullptr) {
   using Mirror      = typename Impl::MirrorViewType<Space, T, P...>::view_type;
   std::string label = name.empty() ? src.label() : name;
   auto mirror       = typename Mirror::non_const_type{
@@ -3242,7 +3245,8 @@ typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
     const Space&, const Kokkos::View<T, P...>& src,
     Kokkos::Impl::WithoutInitializing_t,
     typename std::enable_if<
-        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* = 0) {
+        !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
+        nullptr) {
   using Mirror = typename Impl::MirrorViewType<Space, T, P...>::view_type;
   return Mirror(Kokkos::ViewAllocateWithoutInitializing(src.label()),
                 src.layout());

@@ -42,61 +42,34 @@
 //@HEADER
 */
 
-// @Kokkos_Feature_Level_Required:13
-// Unit test for hierarchical parallelism
-// Create concurrent work hierarchically and verify if
-// sum of created processing units corresponds to expected value
+#ifndef KOKKOS_ACQUIRE_UNIQUE_TOKEN_IMPL_HPP
+#define KOKKOS_ACQUIRE_UNIQUE_TOKEN_IMPL_HPP
 
-#include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
+#include <Kokkos_UniqueToken.hpp>
+namespace Kokkos {
+namespace Experimental {
 
-using SCALAR_TYPE = int;
+template <typename TeamPolicy>
+KOKKOS_FUNCTION AcquireTeamUniqueToken<TeamPolicy>::AcquireTeamUniqueToken(
+    AcquireTeamUniqueToken<TeamPolicy>::token_type t, team_member_type team)
+    : my_token(t), my_team_acquired_val(team.team_scratch(0)), my_team(team) {
+  Kokkos::single(Kokkos::PerTeam(my_team),
+                 [&]() { my_team_acquired_val() = my_token.acquire(); });
+  my_team.team_barrier();
 
-namespace Test {
-
-template <class ExecSpace>
-struct Hierarchical_Red_B {
-  void run(const int pN, const int sX) {
-    using team_policy = Kokkos::TeamPolicy<ExecSpace>;
-    using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
-
-    using viewDataType = Kokkos::View<SCALAR_TYPE *, ExecSpace>;
-    viewDataType v("Vector", pN);
-
-    Kokkos::parallel_for(
-        "Team", team_policy(pN, Kokkos::AUTO),
-        KOKKOS_LAMBDA(const member_type &team) {
-          const int n     = team.league_rank();
-          SCALAR_TYPE out = 0;
-
-          Kokkos::parallel_reduce(
-              Kokkos::TeamVectorRange(team, sX),
-              [=](const int i, SCALAR_TYPE &tmp) {
-                tmp += n * v.extent(0) + i;
-              },
-              out);
-
-          Kokkos::single(Kokkos::PerTeam(team), [&]() { v(n) += out; });
-        });
-
-    Kokkos::fence();
-    auto v_H = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
-
-    SCALAR_TYPE check = 0;
-    SCALAR_TYPE ref   = 0;
-    for (int i = 0; i < pN; ++i) {
-      check += v_H(i);
-      ref += ((sX + i * pN) * (sX + i * pN - 1) - (i * pN * (i * pN - 1))) / 2;
-    }
-    ASSERT_EQ(check, ref);
-  }
-};
-
-TEST(TEST_CATEGORY, IncrTest_13b_Hierarchical_Red) {
-  Hierarchical_Red_B<TEST_EXECSPACE> test;
-  test.run(4, 16);
-  test.run(2, 39);
-  test.run(39, 3);
+  my_acquired_val = my_team_acquired_val();
 }
 
-}  // namespace Test
+template <typename TeamPolicy>
+KOKKOS_FUNCTION AcquireTeamUniqueToken<TeamPolicy>::~AcquireTeamUniqueToken() {
+  my_team.team_barrier();
+  Kokkos::single(Kokkos::PerTeam(my_team),
+                 [&]() { my_token.release(my_acquired_val); });
+  my_team.team_barrier();
+}
+
+}  // namespace Experimental
+}  // namespace Kokkos
+
+#endif  // KOKKOS_UNIQUE_TOKEN_HPP

@@ -53,14 +53,14 @@
 #define HLINE "-------------------------------------------------------------\n"
 
 #if defined(KOKKOS_ENABLE_CUDA)
-typedef Kokkos::View<double*, Kokkos::CudaSpace>::HostMirror StreamHostArray;
-typedef Kokkos::View<double*, Kokkos::CudaSpace> StreamDeviceArray;
+using StreamHostArray   = Kokkos::View<double*, Kokkos::CudaSpace>::HostMirror;
+using StreamDeviceArray = Kokkos::View<double*, Kokkos::CudaSpace>;
 #else
-typedef Kokkos::View<double*, Kokkos::HostSpace>::HostMirror StreamHostArray;
-typedef Kokkos::View<double*, Kokkos::HostSpace> StreamDeviceArray;
+using StreamHostArray   = Kokkos::View<double*, Kokkos::HostSpace>::HostMirror;
+using StreamDeviceArray = Kokkos::View<double*, Kokkos::HostSpace>;
 #endif
 
-typedef int StreamIndex;
+using StreamIndex = int;
 
 double now() {
   struct timeval now;

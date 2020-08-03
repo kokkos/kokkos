@@ -239,6 +239,9 @@ const CudaInternalDevices &CudaInternalDevices::singleton() {
 
 }  // namespace
 
+unsigned long *CudaInternal::constantMemHostStaging = nullptr;
+cudaEvent_t CudaInternal::constantMemReusable       = nullptr;
+
 //----------------------------------------------------------------------------
 
 void CudaInternal::print_configuration(std::ostream &s) const {
@@ -286,11 +289,11 @@ CudaInternal::~CudaInternal() {
   m_scratchUnifiedCount     = 0;
   m_scratchUnifiedSupported = 0;
   m_streamCount             = 0;
-  m_scratchSpace            = 0;
-  m_scratchFlags            = 0;
-  m_scratchUnified          = 0;
-  m_scratchConcurrentBitset = 0;
-  m_stream                  = 0;
+  m_scratchSpace            = nullptr;
+  m_scratchFlags            = nullptr;
+  m_scratchUnified          = nullptr;
+  m_scratchConcurrentBitset = nullptr;
+  m_stream                  = nullptr;
 }
 
 int CudaInternal::verify_is_initialized(const char *const label) const {
@@ -326,7 +329,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 
   const CudaInternalDevices &dev_info = CudaInternalDevices::singleton();
 
-  const bool ok_init = 0 == m_scratchSpace || 0 == m_scratchFlags;
+  const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
 
   const bool ok_id =
       0 <= cuda_device_id && cuda_device_id < dev_info.m_cudaDevCount;
@@ -536,7 +539,16 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 #endif
 
   // Init the array for used for arbitrarily sized atomics
-  if (stream == 0) Impl::initialize_host_cuda_lock_arrays();
+  if (stream == nullptr) Impl::initialize_host_cuda_lock_arrays();
+
+  // Allocate a staging buffer for constant mem in pinned host memory
+  // and an event to avoid overwriting driver for previous kernel launches
+  if (stream == nullptr) {
+    CUDA_SAFE_CALL(cudaMallocHost((void **)&constantMemHostStaging,
+                                  CudaTraits::ConstantMemoryUsage));
+
+    CUDA_SAFE_CALL(cudaEventCreate(&constantMemReusable));
+  }
 
   m_stream = stream;
 }
@@ -643,7 +655,7 @@ Cuda::size_type *CudaInternal::scratch_functor(
 
 void CudaInternal::finalize() {
   was_finalized = true;
-  if (0 != m_scratchSpace || 0 != m_scratchFlags) {
+  if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     Impl::finalize_host_cuda_lock_arrays();
 
     using RecordCuda = Kokkos::Impl::SharedAllocationRecord<CudaSpace>;
@@ -666,11 +678,17 @@ void CudaInternal::finalize() {
     m_scratchFlagsCount       = 0;
     m_scratchUnifiedCount     = 0;
     m_streamCount             = 0;
-    m_scratchSpace            = 0;
-    m_scratchFlags            = 0;
-    m_scratchUnified          = 0;
-    m_scratchConcurrentBitset = 0;
-    m_stream                  = 0;
+    m_scratchSpace            = nullptr;
+    m_scratchFlags            = nullptr;
+    m_scratchUnified          = nullptr;
+    m_scratchConcurrentBitset = nullptr;
+    m_stream                  = nullptr;
+  }
+
+  // only destroy these if we're finalizing the singleton
+  if (this == &singleton()) {
+    cudaFreeHost(constantMemHostStaging);
+    cudaEventDestroy(constantMemReusable);
   }
 }
 
@@ -740,7 +758,7 @@ int Cuda::impl_is_initialized() {
 
 void Cuda::impl_initialize(const Cuda::SelectDevice config,
                            size_t /*num_instances*/) {
-  Impl::CudaInternal::singleton().initialize(config.cuda_device_id, 0);
+  Impl::CudaInternal::singleton().initialize(config.cuda_device_id, nullptr);
 }
 
 std::vector<unsigned> Cuda::detect_device_arch() {

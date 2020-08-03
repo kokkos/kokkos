@@ -184,9 +184,10 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
 
     // Allow only power-of-two vector_length
     if (!(is_integral_power_of_two(test_vector_length))) {
-      int test_pow2 = 1;
-      for (int i = 0; i < 5; i++) {
-        test_pow2 = test_pow2 << 1;
+      int test_pow2           = 1;
+      int constexpr warp_size = Experimental::Impl::HIPTraits::WarpSize;
+      while (test_pow2 < warp_size) {
+        test_pow2 <<= 1;
         if (test_pow2 > test_vector_length) {
           break;
         }
@@ -801,7 +802,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     value_type init;
     value_init::init(reducer_conditional::select(m_functor, m_reducer), &init);
-    if (Impl::hip_inter_block_reduction<FunctorType, value_join, work_tag>(
+    if (Impl::hip_inter_block_shuffle_reduction<FunctorType, value_join,
+                                                work_tag>(
             value, init,
             value_join(reducer_conditional::select(m_functor, m_reducer)),
             m_scratch_space, result, m_scratch_flags, blockDim.y)) {

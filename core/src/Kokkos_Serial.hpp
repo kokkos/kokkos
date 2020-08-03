@@ -1043,6 +1043,11 @@ class UniqueToken<Serial, UniqueTokenScope::Instance> {
   /// This object should not be shared between instances
   UniqueToken(execution_space const& = execution_space()) noexcept {}
 
+  /// \brief create object size for requested size on given instance
+  ///
+  /// It is the users responsibility to only acquire size tokens concurrently
+  UniqueToken(size_type, execution_space const& = execution_space()) {}
+
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   int size() const noexcept { return 1; }

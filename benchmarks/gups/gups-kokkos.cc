@@ -50,14 +50,14 @@
 #define HLINE "-------------------------------------------------------------\n"
 
 #if defined(KOKKOS_ENABLE_CUDA)
-typedef Kokkos::View<int64_t*, Kokkos::CudaSpace>::HostMirror GUPSHostArray;
-typedef Kokkos::View<int64_t*, Kokkos::CudaSpace> GUPSDeviceArray;
+using GUPSHostArray   = Kokkos::View<int64_t*, Kokkos::CudaSpace>::HostMirror;
+using GUPSDeviceArray = Kokkos::View<int64_t*, Kokkos::CudaSpace>;
 #else
-typedef Kokkos::View<int64_t*, Kokkos::HostSpace>::HostMirror GUPSHostArray;
-typedef Kokkos::View<int64_t*, Kokkos::HostSpace> GUPSDeviceArray;
+using GUPSHostArray   = Kokkos::View<int64_t*, Kokkos::HostSpace>::HostMirror;
+using GUPSDeviceArray = Kokkos::View<int64_t*, Kokkos::HostSpace>;
 #endif
 
-typedef int GUPSIndex;
+using GUPSIndex = int;
 
 double now() {
   struct timeval now;

@@ -1222,9 +1222,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ViewType::memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0),
-        m_unified_space(0) {}
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
+        m_unified_space(nullptr) {}
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -1236,9 +1236,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0),
-        m_unified_space(0) {}
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
+        m_unified_space(nullptr) {}
 };
 
 // MDRangePolicy impl
@@ -1520,9 +1520,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ViewType::memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0),
-        m_unified_space(0) {}
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
+        m_unified_space(nullptr) {}
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -1534,9 +1534,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0),
-        m_unified_space(0) {}
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
+        m_unified_space(nullptr) {}
 };
 
 //----------------------------------------------------------------------------
@@ -1831,9 +1831,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ViewType::memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0),
-        m_unified_space(0),
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
+        m_unified_space(nullptr),
         m_team_begin(0),
         m_shmem_begin(0),
         m_shmem_size(0),
@@ -1930,9 +1930,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0),
-        m_unified_space(0),
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
+        m_unified_space(nullptr),
         m_team_begin(0),
         m_shmem_begin(0),
         m_shmem_size(0),
@@ -2297,8 +2297,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_scratch_space(0),
-        m_scratch_flags(0),
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
         m_final(false)
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
         ,
@@ -2600,8 +2600,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                         const Policy& arg_policy, ReturnType& arg_returnvalue)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_scratch_space(0),
-        m_scratch_flags(0),
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
         m_final(false),
         m_returnvalue(arg_returnvalue)
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION

@@ -60,13 +60,13 @@
 // a thread execute every line of the operator as long as there are no
 // restricitons on them. Code lines can be restricted using Kokkos::single to
 // either execute once PerThread or execute once PerTeam.
-typedef typename Kokkos::TeamPolicy<>::member_type team_member;
+using team_member = typename Kokkos::TeamPolicy<>::member_type;
 
 struct SomeCorrelation {
-  typedef int value_type;  // Specify value type for reduction target, sum
-  typedef Kokkos::DefaultExecutionSpace::scratch_memory_space shared_space;
-  typedef Kokkos::View<int*, shared_space, Kokkos::MemoryUnmanaged>
-      shared_1d_int;
+  using value_type   = int;  // Specify value type for reduction target, sum
+  using shared_space = Kokkos::DefaultExecutionSpace::scratch_memory_space;
+  using shared_1d_int =
+      Kokkos::View<int*, shared_space, Kokkos::MemoryUnmanaged>;
 
   Kokkos::View<const int***, Kokkos::LayoutRight> data;
   Kokkos::View<int> gsum;
