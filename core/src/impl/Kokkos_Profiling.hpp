@@ -152,7 +152,7 @@ void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
 
 /**
  * Tuning for parallel_fors and parallel_scans is a fairly simple process.
- * 
+ *
  * Tuning for a parallel_reduce turns out to be a little more complicated.
  *
  * If you're tuning a reducer, it might be a complex or a simple reducer
@@ -194,14 +194,13 @@ void tune_policy(const size_t tuning_context, const std::string& label,
                  const Functor& functor, const TagType& tag) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
     if (team_tuners.find(label) == team_tuners.end()) {
-
       // when we have a complex reducer, we need to pass an
       // instance to team_size_recommended/max. Reducers
       // aren't default constructible, but they are
       // constructible from a reference to an
       // instance of their value_type so we construct
       // a value_type and temporary reducer here
-      
+
       using value_type = typename ReducerType::value_type;
       value_type value;
       ReducerType reducer_example = ReducerType(value);
