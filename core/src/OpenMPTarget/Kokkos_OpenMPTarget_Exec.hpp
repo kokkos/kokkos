@@ -495,7 +495,10 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
         m_tune_vector_length(true) {
     init(league_size_request, team_size_request, 1);
   }
-
+  inline static size_t vector_length_max() {
+    return 32; /* TODO: this is bad. Need logic that is compiler and backend
+                  aware */
+  }
   inline int team_alloc() const { return m_team_alloc; }
   inline int team_iter() const { return m_team_iter; }
 
