@@ -77,6 +77,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   int m_team_scratch_size[2];
   int m_thread_scratch_size[2];
   int m_chunk_size;
+  bool m_tune_team_size;
+  bool m_tune_vector_length;
 
  public:
   using execution_space = Kokkos::Experimental::HIP;
@@ -173,7 +175,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
                              ReducerType>;
     return internal_team_size_recommended<closure_type>(f);
   }
-
+  inline bool auto_vector_length() const { return m_tune_vector_length; }
+  inline bool auto_team_size() const { return m_tune_team_size; }
   static int vector_length_max() {
     return ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
   }
@@ -203,7 +206,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         level == 0 ? 1024 * 40 :  // FIXME_HIP arbitrarily setting this to 48kB
             20 * 1024 * 1024);    // FIXME_HIP arbitrarily setting this to 20MB
   }
-
+  inline void impl_set_vector_length(size_t size) { m_vector_length = size; }
+  inline void impl_set_team_size(size_t size) { m_team_size = size; }
   int vector_length() const { return m_vector_length; }
 
   int team_size() const { return m_team_size; }
