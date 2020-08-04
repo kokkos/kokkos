@@ -565,11 +565,10 @@ DESUL_INLINE_FUNCTION T atomic_rshift_fetch(T* const dest,
 // Other atomics
 
 template <typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T atomic_load(T* const dest,
+DESUL_INLINE_FUNCTION T atomic_load(const T* const dest,
                                     MemoryOrder order,
                                     MemoryScope scope) {
-  using T_nc = typename std::remove_const<T>::type;
-  return Impl::atomic_fetch_oper(Impl::LoadOper<T_nc, const T_nc>(), const_cast<T_nc*>(dest), T_nc(), order, scope);
+  return Impl::atomic_fetch_oper(Impl::LoadOper<T, const T>(), const_cast<T*>(dest), T(), order, scope);
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>

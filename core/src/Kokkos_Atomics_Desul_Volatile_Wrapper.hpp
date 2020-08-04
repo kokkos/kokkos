@@ -1,7 +1,9 @@
 #ifndef KOKKOS_DESUL_ATOMICS_VOLATILE_WRAPPER_HPP_
 #define KOKKOS_DESUL_ATOMICS_VOLATILE_WRAPPER_HPP_
-#include<Kokkos_Macros.hpp>
-#include<desul/atomics.hpp>
+#include <Kokkos_Macros.hpp>
+#include <desul/atomics.hpp>
+
+// clang-format off
 namespace Kokkos { 
 
 template<class T> KOKKOS_INLINE_FUNCTION
@@ -153,4 +155,5 @@ T atomic_compare_exchange(volatile T* const dest, const T compare, const T desir
 }
 
 }
+// clang-format on
 #endif

@@ -1,11 +1,12 @@
 #ifndef KOKKOS_DESUL_ATOMICS_WRAPPER_HPP_
 #define KOKKOS_DESUL_ATOMICS_WRAPPER_HPP_
-#include<Kokkos_Macros.hpp>
-#include<desul/atomics.hpp>
+#include <Kokkos_Macros.hpp>
+#include <desul/atomics.hpp>
 
-#include<impl/Kokkos_Atomic_Memory_Order.hpp>
-#include<impl/Kokkos_Volatile_Load.hpp>
+#include <impl/Kokkos_Atomic_Memory_Order.hpp>
+#include <impl/Kokkos_Volatile_Load.hpp>
 
+// clang-format off
 namespace Kokkos { 
 
 // These functions don't have any use/test in unit tests ...
@@ -34,8 +35,7 @@ void atomic_store(T* const dest, const T val) { return desul::atomic_store(dest,
 
 KOKKOS_INLINE_FUNCTION
 void memory_fence() { 
-  desul::atomic_thread_fence(desul::MemoryOrderAcquire(), desul::MemoryScopeDevice()); 
-  desul::atomic_thread_fence(desul::MemoryOrderRelease(), desul::MemoryScopeDevice()); 
+  desul::atomic_thread_fence(desul::MemoryOrderSeqCst(), desul::MemoryScopeDevice()); 
 }
 
 KOKKOS_INLINE_FUNCTION
@@ -232,4 +232,5 @@ namespace Impl {
 }
 
 }
+// clang-format on
 #endif

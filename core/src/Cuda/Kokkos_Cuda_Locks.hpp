@@ -185,7 +185,7 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
 #else
 // Still Need COPY_CUDA_LOCK_ARRAYS for team scratch etc.
 #define KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE() \
-  KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE() \
+  KOKKOS_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE()         \
   DESUL_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE()
 #endif
 

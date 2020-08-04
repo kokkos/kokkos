@@ -22,10 +22,22 @@ __device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeDevice) {
 __device__ void atomic_thread_fence(MemoryOrderAcquire, MemoryScopeDevice) {
   __threadfence();
 }
+__device__ void atomic_thread_fence(MemoryOrderAcqRel, MemoryScopeDevice) {
+  __threadfence();
+}
+__device__ void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeDevice) {
+  __threadfence();
+}
 __device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeCore) {
   __threadfence_block();
 }
 __device__ void atomic_thread_fence(MemoryOrderAcquire, MemoryScopeCore) {
+  __threadfence_block();
+}
+__device__ void atomic_thread_fence(MemoryOrderAcqRel, MemoryScopeCore) {
+  __threadfence_block();
+}
+__device__ void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeCore) {
   __threadfence_block();
 }
 #if (__CUDA_ARCH__>=600) || !defined(__NVCC__)
@@ -33,6 +45,12 @@ __device__ void atomic_thread_fence(MemoryOrderRelease, MemoryScopeNode) {
   __threadfence_system();
 }
 __device__ void atomic_thread_fence(MemoryOrderAcquire, MemoryScopeNode) {
+  __threadfence_system();
+}
+__device__ void atomic_thread_fence(MemoryOrderAcqRel, MemoryScopeNode) {
+  __threadfence_system();
+}
+__device__ void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeNode) {
   __threadfence_system();
 }
 #endif
@@ -202,7 +220,6 @@ __device__ typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::typ
   unsigned int mask = DESUL_IMPL_ACTIVEMASK;
   unsigned int active = DESUL_IMPL_BALLOT_MASK(mask, 1);
   unsigned int done_active = 0;
-  printf("Huch\n");
   while (active != done_active) {
     if (!done) {
       if (Impl::lock_address_cuda((void*)dest, scope)) {
