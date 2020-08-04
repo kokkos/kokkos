@@ -876,7 +876,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor,
                            LaunchBounds>::get_cuda_func_attributes();
-    // DZP note: this is where we check
     m_team_size =
         m_team_size >= 0
             ? m_team_size
