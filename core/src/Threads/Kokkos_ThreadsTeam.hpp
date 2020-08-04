@@ -718,6 +718,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     init(league_size_request, team_size_request);
     (void)vector_length_request;
   }
+
   /** \brief  Specify league size, request team size and vector length*/
   TeamPolicyInternal(const typename traits::execution_space&,
                      int league_size_request,
@@ -734,6 +735,25 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
         m_tune_vector_length(true) {
     init(league_size_request,
          traits::execution_space::impl_thread_pool_size(2));
+  }
+
+  /** \brief  Specify league size, request team size*/
+  TeamPolicyInternal(const typename traits::execution_space&,
+                     int league_size_request,
+                     const Kokkos::AUTO_t& /* team_size_request */
+                     ,
+                     int vector_length_request)
+      : m_league_size(0),
+        m_team_size(0),
+        m_team_alloc(0),
+        m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(0),
+        m_tune_team_size(true),
+        m_tune_vector_length(false) {
+    init(league_size_request,
+         traits::execution_space::impl_thread_pool_size(2));
+    (void)vector_length_request;
   }
 
   /** \brief  Specify league size and team size, request vector length*/
