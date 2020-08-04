@@ -94,8 +94,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
     m_chunk_size             = p.m_chunk_size;
     m_space                  = p.m_space;
-    m.tune_team_size         = p.m_tune_team_size;
-    m.tune_vector_length     = p.m_tune_vector_length;
+    m_tune_team_size         = p.m_tune_team_size;
+    m_tune_vector_length     = p.m_tune_vector_length;
   }
 
   template <typename FunctorType>
