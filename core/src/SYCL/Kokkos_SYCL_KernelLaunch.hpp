@@ -17,7 +17,6 @@ void sycl_launch_bind(Driver tmp, cl::sycl::handler& cgh) {
       cl::sycl::range<1>(tmp.m_policy.end() - tmp.m_policy.begin()), tmp);
 }
 
-
 template <class Driver>
 void sycl_launch(const Driver driver) {
   isTriviallyCopyable<Driver>();
