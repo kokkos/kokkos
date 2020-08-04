@@ -430,6 +430,28 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
          vector_length_request);
   }
 
+  TeamPolicyInternal(typename traits::execution_space&, int league_size_request,
+                     const Kokkos::AUTO_t& /* team_size_request */
+                     ,
+                     const Kokkos::AUTO_t& /* vector_length_request */)
+      : m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(0),
+        m_tune_team_size(true),
+        m_tune_vector_length(true) {
+    init(league_size_request, default_team_size, 1);
+  }
+  TeamPolicyInternal(typename traits::execution_space&, int league_size_request,
+                     int team_size_request,
+                     const Kokkos::AUTO_t& /* vector_length_request */)
+      : m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(0),
+        m_tune_team_size(false),
+        m_tune_vector_length(true) {
+    init(league_size_request, team_size_request, 1);
+  }
+
   TeamPolicyInternal(int league_size_request, int team_size_request,
                      int vector_length_request = 1)
       : m_team_scratch_size{0, 0},
@@ -451,6 +473,27 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
         m_tune_vector_length(false) {
     init(league_size_request, default_team_size / vector_length_request,
          vector_length_request);
+  }
+
+  TeamPolicyInternal(int league_size_request,
+                     const Kokkos::AUTO_t& /* team_size_request */
+                     ,
+                     const Kokkos::AUTO_t& /* vector_length_request */)
+      : m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(0),
+        m_tune_team_size(true),
+        m_tune_vector_length(true) {
+    init(league_size_request, default_team_size, 1);
+  }
+  TeamPolicyInternal(int league_size_request, int team_size_request,
+                     const Kokkos::AUTO_t& /* vector_length_request */)
+      : m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(0),
+        m_tune_team_size(false),
+        m_tune_vector_length(true) {
+    init(league_size_request, team_size_request, 1);
   }
 
   inline int team_alloc() const { return m_team_alloc; }
