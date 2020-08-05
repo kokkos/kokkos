@@ -286,9 +286,9 @@ void *SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::
 SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
     *SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::get_record(
         void *alloc_ptr) {
-  typedef SharedAllocationHeader Header;
-  typedef SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
-      RecordHost;
+  using Header = SharedAllocationHeader;
+  using RecordHost =
+      SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>;
 
   SharedAllocationHeader const *const head =
       alloc_ptr ? Header::get_header(alloc_ptr) : (SharedAllocationHeader *)0;

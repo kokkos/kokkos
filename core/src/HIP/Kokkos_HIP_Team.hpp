@@ -66,7 +66,7 @@ namespace Impl {
 
 template <typename Type>
 struct HIPJoinFunctor {
-  typedef Type value_type;
+  using value_type = Type;
 
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type& update,
@@ -292,8 +292,8 @@ class HIPTeamMember {
       global_reduce(ReducerType const& reducer, int* const global_scratch_flags,
                     void* const global_scratch_space, void* const shmem,
                     int const shmem_size) {
-    typedef typename ReducerType::value_type value_type;
-    typedef value_type volatile* pointer_type;
+    using value_type   = typename ReducerType::value_type;
+    using pointer_type = value_type volatile*;
 
     // Number of shared memory entries for the reduction:
     const int nsh = shmem_size / sizeof(value_type);
@@ -498,7 +498,7 @@ namespace Impl {
 
 template <typename iType>
 struct TeamThreadRangeBoundariesStruct<iType, HIPTeamMember> {
-  typedef iType index_type;
+  using index_type = iType;
   const HIPTeamMember& member;
   const iType start;
   const iType end;
@@ -515,7 +515,7 @@ struct TeamThreadRangeBoundariesStruct<iType, HIPTeamMember> {
 
 template <typename iType>
 struct TeamVectorRangeBoundariesStruct<iType, HIPTeamMember> {
-  typedef iType index_type;
+  using index_type = iType;
   const HIPTeamMember& member;
   const iType start;
   const iType end;
@@ -533,7 +533,7 @@ struct TeamVectorRangeBoundariesStruct<iType, HIPTeamMember> {
 
 template <typename iType>
 struct ThreadVectorRangeBoundariesStruct<iType, HIPTeamMember> {
-  typedef iType index_type;
+  using index_type = iType;
   const index_type start;
   const index_type end;
 
@@ -569,7 +569,7 @@ template <typename iType1, typename iType2>
 KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
     typename std::common_type<iType1, iType2>::type, Impl::HIPTeamMember>
 TeamThreadRange(const Impl::HIPTeamMember& thread, iType1 begin, iType2 end) {
-  typedef typename std::common_type<iType1, iType2>::type iType;
+  using iType = typename std::common_type<iType1, iType2>::type;
   return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HIPTeamMember>(
       thread, iType(begin), iType(end));
 }
@@ -587,7 +587,7 @@ KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<
     typename std::common_type<iType1, iType2>::type, Impl::HIPTeamMember>
 TeamVectorRange(const Impl::HIPTeamMember& thread, const iType1& begin,
                 const iType2& end) {
-  typedef typename std::common_type<iType1, iType2>::type iType;
+  using iType = typename std::common_type<iType1, iType2>::type;
   return Impl::TeamVectorRangeBoundariesStruct<iType, Impl::HIPTeamMember>(
       thread, iType(begin), iType(end));
 }
