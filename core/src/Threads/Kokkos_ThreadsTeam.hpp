@@ -575,10 +575,10 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
   size_t m_team_scratch_size[2];
   size_t m_thread_scratch_size[2];
 
+  int m_chunk_size;
+
   bool m_tune_team_size;
   bool m_tune_vector_length;
-
-  int m_chunk_size;
 
   inline void init(const int league_size_request, const int team_size_request) {
     const int pool_size = traits::execution_space::impl_thread_pool_size(0);
@@ -691,10 +691,8 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 
   inline bool auto_team_size() const { return m_tune_team_size; }
   inline bool auto_vector_length() const { return m_tune_vector_length; }
-  inline void impl_set_team_size(size_t size) {
-    init(m_league_size, m_team_size);
-  }
-  inline void impl_set_vector_length(size_t size) {}
+  inline void impl_set_team_size(size_t size) { init(m_league_size, size); }
+  inline void impl_set_vector_length(size_t /**size*/) {}
   inline size_t scratch_size(const int& level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
