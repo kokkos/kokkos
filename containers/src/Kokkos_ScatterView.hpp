@@ -89,120 +89,120 @@ struct DefaultContribution;
 #ifdef KOKKOS_ENABLE_SERIAL
 template <>
 struct DefaultDuplication<Kokkos::Serial> {
-  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicated;
+  using type = Kokkos::Experimental::ScatterNonDuplicated;
 };
 
 template <>
 struct DefaultContribution<Kokkos::Serial,
                            Kokkos::Experimental::ScatterNonDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
+  using type = Kokkos::Experimental::ScatterNonAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Serial,
                            Kokkos::Experimental::ScatterDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
+  using type = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMP
 template <>
 struct DefaultDuplication<Kokkos::OpenMP> {
-  using duplication_tag = Kokkos::Experimental::ScatterDuplicated;
+  using type = Kokkos::Experimental::ScatterDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::OpenMP,
                            Kokkos::Experimental::ScatterNonDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
+  using type = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::OpenMP,
                            Kokkos::Experimental::ScatterDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
+  using type = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 template <>
 struct DefaultDuplication<Kokkos::Experimental::OpenMPTarget> {
-  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicated;
+  using type = Kokkos::Experimental::ScatterNonDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::OpenMPTarget,
                            Kokkos::Experimental::ScatterNonDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
+  using type = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::OpenMPTarget,
                            Kokkos::Experimental::ScatterDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
+  using type = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_HPX
 template <>
 struct DefaultDuplication<Kokkos::Experimental::HPX> {
-  using duplication_tag = Kokkos::Experimental::ScatterDuplicated;
+  using type = Kokkos::Experimental::ScatterDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::HPX,
                            Kokkos::Experimental::ScatterNonDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
+  using type = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::HPX,
                            Kokkos::Experimental::ScatterDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
+  using type = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_THREADS
 template <>
 struct DefaultDuplication<Kokkos::Threads> {
-  using duplication_tag = Kokkos::Experimental::ScatterDuplicated;
+  using type = Kokkos::Experimental::ScatterDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Threads,
                            Kokkos::Experimental::ScatterNonDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
+  using type = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Threads,
                            Kokkos::Experimental::ScatterDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
+  using type = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
 template <>
 struct DefaultDuplication<Kokkos::Cuda> {
-  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicated;
+  using type = Kokkos::Experimental::ScatterNonDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Cuda,
                            Kokkos::Experimental::ScatterNonDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
+  using type = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Cuda,
                            Kokkos::Experimental::ScatterDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
+  using type = Kokkos::Experimental::ScatterAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_HIP
 template <>
 struct DefaultDuplication<Kokkos::Experimental::HIP> {
-  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicated;
+  using type = Kokkos::Experimental::ScatterNonDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::HIP,
                            Kokkos::Experimental::ScatterNonDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
+  using type = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::HIP,
                            Kokkos::Experimental::ScatterDuplicated> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
+  using type = Kokkos::Experimental::ScatterAtomic;
 };
 #endif
 
@@ -722,15 +722,14 @@ namespace Kokkos {
 namespace Experimental {
 
 template <typename DataType,
-          typename Layout     = Kokkos::DefaultExecutionSpace::array_layout,
-          typename DeviceType = Kokkos::DefaultExecutionSpace,
-          typename Op         = Kokkos::Experimental::ScatterSum,
-          typename Duplication =
-              typename Kokkos::Impl::Experimental::DefaultDuplication<
-                  typename DeviceType::execution_space>::duplication_tag,
-          typename Contribution = typename Kokkos::Impl::Experimental::
-              DefaultContribution<typename DeviceType::execution_space,
-                                  Duplication>::contribution_tag>
+          typename Layout      = Kokkos::DefaultExecutionSpace::array_layout,
+          typename DeviceType  = Kokkos::DefaultExecutionSpace,
+          typename Op          = Kokkos::Experimental::ScatterSum,
+          typename Duplication = typename Kokkos::Impl::Experimental::
+              DefaultDuplication<typename DeviceType::execution_space>::type,
+          typename Contribution =
+              typename Kokkos::Impl::Experimental::DefaultContribution<
+                  typename DeviceType::execution_space, Duplication>::type>
 class ScatterView;
 
 template <typename DataType, typename Op, typename DeviceType, typename Layout,
@@ -1321,7 +1320,7 @@ ScatterView<
     typename Kokkos::Impl::if_c<
         std::is_same<Duplication, void>::value,
         typename Kokkos::Impl::Experimental::DefaultDuplication<
-            typename ViewTraits<RT, RP...>::execution_space>::duplication_tag,
+            typename ViewTraits<RT, RP...>::execution_space>::type,
         Duplication>::type,
     typename Kokkos::Impl::if_c<
         std::is_same<Contribution, void>::value,
@@ -1330,9 +1329,8 @@ ScatterView<
             typename Kokkos::Impl::if_c<
                 std::is_same<Duplication, void>::value,
                 typename Kokkos::Impl::Experimental::DefaultDuplication<
-                    typename ViewTraits<RT, RP...>::execution_space>::
-                    duplication_tag,
-                Duplication>::type>::contribution_tag,
+                    typename ViewTraits<RT, RP...>::execution_space>::type,
+                Duplication>::type>::type,
         Contribution>::type>
 create_scatter_view(View<RT, RP...> const& original_view) {
   return original_view;  // implicit ScatterView constructor call
@@ -1343,12 +1341,11 @@ ScatterView<
     RT, typename ViewTraits<RT, RP...>::array_layout,
     typename ViewTraits<RT, RP...>::device_type, Op,
     typename Kokkos::Impl::Experimental::DefaultDuplication<
-        typename ViewTraits<RT, RP...>::execution_space>::duplication_tag,
+        typename ViewTraits<RT, RP...>::execution_space>::type,
     typename Kokkos::Impl::Experimental::DefaultContribution<
         typename ViewTraits<RT, RP...>::execution_space,
         typename Kokkos::Impl::Experimental::DefaultDuplication<
-            typename ViewTraits<RT, RP...>::execution_space>::duplication_tag>::
-        contribution_tag>
+            typename ViewTraits<RT, RP...>::execution_space>::type>::type>
 create_scatter_view(Op, View<RT, RP...> const& original_view) {
   return original_view;  // implicit ScatterView constructor call
 }
