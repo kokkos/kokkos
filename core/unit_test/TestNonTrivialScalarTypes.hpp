@@ -315,7 +315,7 @@ struct array_reduce {
 namespace Kokkos {
 template <>
 struct reduction_identity<Test::my_complex> {
-  typedef reduction_identity<double> t_red_ident;
+  using t_red_ident = reduction_identity<double>;
   KOKKOS_FORCEINLINE_FUNCTION static Test::my_complex sum() {
     return Test::my_complex(t_red_ident::sum());
   }
@@ -326,7 +326,7 @@ struct reduction_identity<Test::my_complex> {
 
 template <class scalar_t, int N>
 struct reduction_identity<Test::array_reduce<scalar_t, N>> {
-  typedef reduction_identity<scalar_t> t_red_ident;
+  using t_red_ident = reduction_identity<scalar_t>;
   KOKKOS_FORCEINLINE_FUNCTION static Test::array_reduce<scalar_t, N> sum() {
     return Test::array_reduce<scalar_t, N>(t_red_ident::sum());
   }

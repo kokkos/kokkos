@@ -70,7 +70,7 @@ struct TestViewOperator {
   enum { N = 1000 };
   enum { D = 3 };
 
-  typedef Kokkos::View<T * [D], execution_space> view_type;
+  using view_type = Kokkos::View<T * [D], execution_space>;
 
   const view_type v1;
   const view_type v2;
@@ -112,11 +112,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 8> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type &update) { update = 0; }
 
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space> left_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>
-      right_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutStride, execution_space>
-      stride_view;
+  using left_view = Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space>;
+  using right_view =
+      Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>;
+  using stride_view =
+      Kokkos::View<DataType, Kokkos::LayoutStride, execution_space>;
 
   left_view left;
   right_view right;
@@ -208,9 +208,9 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 7> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type &update) { update = 0; }
 
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space> left_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>
-      right_view;
+  using left_view = Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space>;
+  using right_view =
+      Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>;
 
   left_view left;
   right_view right;
@@ -286,9 +286,9 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 6> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type &update) { update = 0; }
 
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space> left_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>
-      right_view;
+  using left_view = Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space>;
+  using right_view =
+      Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>;
 
   left_view left;
   right_view right;
@@ -362,11 +362,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 5> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type &update) { update = 0; }
 
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space> left_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>
-      right_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutStride, execution_space>
-      stride_view;
+  using left_view = Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space>;
+  using right_view =
+      Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>;
+  using stride_view =
+      Kokkos::View<DataType, Kokkos::LayoutStride, execution_space>;
 
   left_view left;
   right_view right;
@@ -450,9 +450,9 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 4> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type &update) { update = 0; }
 
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space> left_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>
-      right_view;
+  using left_view = Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space>;
+  using right_view =
+      Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>;
 
   left_view left;
   right_view right;
@@ -520,11 +520,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 3> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type &update) { update = 0; }
 
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space> left_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>
-      right_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutStride, execution_space>
-      stride_view;
+  using left_view = Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space>;
+  using right_view =
+      Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>;
+  using stride_view =
+      Kokkos::View<DataType, Kokkos::LayoutStride, execution_space>;
 
   left_view left;
   right_view right;
@@ -613,9 +613,9 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 2> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type &update) { update = 0; }
 
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space> left_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>
-      right_view;
+  using left_view = Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space>;
+  using right_view =
+      Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>;
 
   left_view left;
   right_view right;
@@ -689,11 +689,11 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 1> {
   KOKKOS_INLINE_FUNCTION
   static void init(value_type &update) { update = 0; }
 
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space> left_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>
-      right_view;
-  typedef Kokkos::View<DataType, Kokkos::LayoutStride, execution_space>
-      stride_view;
+  using left_view = Kokkos::View<DataType, Kokkos::LayoutLeft, execution_space>;
+  using right_view =
+      Kokkos::View<DataType, Kokkos::LayoutRight, execution_space>;
+  using stride_view =
+      Kokkos::View<DataType, Kokkos::LayoutStride, execution_space>;
 
   left_view left;
   right_view right;
@@ -870,9 +870,8 @@ struct TestViewMirror {
 
   template <class MemoryTraits, class Space>
   struct CopyUnInit {
-    typedef typename Kokkos::Impl::MirrorViewType<
-        Space, double *, Layout, Kokkos::HostSpace, MemoryTraits>::view_type
-        mirror_view_type;
+    using mirror_view_type = typename Kokkos::Impl::MirrorViewType<
+        Space, double *, Layout, Kokkos::HostSpace, MemoryTraits>::view_type;
 
     mirror_view_type a_d;
 
@@ -939,14 +938,14 @@ class TestViewAPI {
 
   enum { N0 = 1000, N1 = 3, N2 = 5, N3 = 7 };
 
-  typedef Kokkos::View<T, device> dView0;
-  typedef Kokkos::View<T *, device> dView1;
-  typedef Kokkos::View<T * [N1], device> dView2;
-  typedef Kokkos::View<T * [N1][N2], device> dView3;
-  typedef Kokkos::View<T * [N1][N2][N3], device> dView4;
-  typedef Kokkos::View<const T * [N1][N2][N3], device> const_dView4;
-  typedef Kokkos::View<T ****, device, Kokkos::MemoryUnmanaged>
-      dView4_unmanaged;
+  using dView0       = Kokkos::View<T, device>;
+  using dView1       = Kokkos::View<T *, device>;
+  using dView2       = Kokkos::View<T * [N1], device>;
+  using dView3       = Kokkos::View<T * [N1][N2], device>;
+  using dView4       = Kokkos::View<T * [N1][N2][N3], device>;
+  using const_dView4 = Kokkos::View<const T * [N1][N2][N3], device>;
+  using dView4_unmanaged =
+      Kokkos::View<T ****, device, Kokkos::MemoryUnmanaged>;
   using host = typename dView0::host_mirror_space;
 
   static void run_test_view_operator_a() {
@@ -986,7 +985,7 @@ class TestViewAPI {
   }
 
   static void run_test_mirror() {
-    typedef Kokkos::View<int, host> view_type;
+    using view_type   = Kokkos::View<int, host>;
     using mirror_type = typename view_type::HostMirror;
 
     static_assert(std::is_same<typename view_type::memory_space,
@@ -1026,7 +1025,7 @@ class TestViewAPI {
 
   static void run_test() {
     // mfh 14 Feb 2014: This test doesn't actually create instances of
-    // these types.  In order to avoid "declared but unused typedef"
+    // these types.  In order to avoid "unused type alias"
     // warnings, we declare empty instances of these types, with the
     // usual "(void)" marker to avoid compiler warnings for unused
     // variables.
@@ -1300,7 +1299,7 @@ class TestViewAPI {
     }
   }
 
-  typedef T DataType[2];
+  using DataType = T[2];
 
   static void check_auto_conversion_to_const(
       const Kokkos::View<const DataType, device> &arg_const,
@@ -1309,10 +1308,10 @@ class TestViewAPI {
   }
 
   static void run_test_const() {
-    typedef Kokkos::View<DataType, device> typeX;
-    typedef Kokkos::View<const DataType, device> const_typeX;
-    typedef Kokkos::View<const DataType, device, Kokkos::MemoryRandomAccess>
-        const_typeR;
+    using typeX       = Kokkos::View<DataType, device>;
+    using const_typeX = Kokkos::View<const DataType, device>;
+    using const_typeR =
+        Kokkos::View<const DataType, device, Kokkos::MemoryRandomAccess>;
 
     typeX x("X");
     const_typeX xc = x;
@@ -1337,7 +1336,7 @@ class TestViewAPI {
   }
 
   static void run_test_subview() {
-    typedef Kokkos::View<const T, device> sView;
+    using sView = Kokkos::View<const T, device>;
 
     dView0 d0("d0");
     dView1 d1("d1", N0);
@@ -1353,13 +1352,13 @@ class TestViewAPI {
   }
 
   static void run_test_subview_strided() {
-    typedef Kokkos::View<int ****, Kokkos::LayoutLeft, host> view_left_4;
-    typedef Kokkos::View<int ****, Kokkos::LayoutRight, host> view_right_4;
-    typedef Kokkos::View<int **, Kokkos::LayoutLeft, host> view_left_2;
-    typedef Kokkos::View<int **, Kokkos::LayoutRight, host> view_right_2;
+    using view_left_4  = Kokkos::View<int ****, Kokkos::LayoutLeft, host>;
+    using view_right_4 = Kokkos::View<int ****, Kokkos::LayoutRight, host>;
+    using view_left_2  = Kokkos::View<int **, Kokkos::LayoutLeft, host>;
+    using view_right_2 = Kokkos::View<int **, Kokkos::LayoutRight, host>;
 
-    typedef Kokkos::View<int *, Kokkos::LayoutStride, host> view_stride_1;
-    typedef Kokkos::View<int **, Kokkos::LayoutStride, host> view_stride_2;
+    using view_stride_1 = Kokkos::View<int *, Kokkos::LayoutStride, host>;
+    using view_stride_2 = Kokkos::View<int **, Kokkos::LayoutStride, host>;
 
     view_left_2 xl2("xl2", 100, 200);
     view_right_2 xr2("xr2", 100, 200);
@@ -1398,18 +1397,18 @@ class TestViewAPI {
   static void run_test_vector() {
     static const unsigned Length = 1000, Count = 8;
 
-    typedef Kokkos::View<T *, Kokkos::LayoutLeft, host> vector_type;
-    typedef Kokkos::View<T **, Kokkos::LayoutLeft, host> multivector_type;
+    using vector_type      = Kokkos::View<T *, Kokkos::LayoutLeft, host>;
+    using multivector_type = Kokkos::View<T **, Kokkos::LayoutLeft, host>;
 
-    typedef Kokkos::View<T *, Kokkos::LayoutRight, host> vector_right_type;
-    typedef Kokkos::View<T **, Kokkos::LayoutRight, host>
-        multivector_right_type;
+    using vector_right_type = Kokkos::View<T *, Kokkos::LayoutRight, host>;
+    using multivector_right_type =
+        Kokkos::View<T **, Kokkos::LayoutRight, host>;
 
-    typedef Kokkos::View<const T *, Kokkos::LayoutRight, host>
-        const_vector_right_type;
-    typedef Kokkos::View<const T *, Kokkos::LayoutLeft, host> const_vector_type;
-    typedef Kokkos::View<const T **, Kokkos::LayoutLeft, host>
-        const_multivector_type;
+    using const_vector_right_type =
+        Kokkos::View<const T *, Kokkos::LayoutRight, host>;
+    using const_vector_type = Kokkos::View<const T *, Kokkos::LayoutLeft, host>;
+    using const_multivector_type =
+        Kokkos::View<const T **, Kokkos::LayoutLeft, host>;
 
     multivector_type mv = multivector_type("mv", Length, Count);
     multivector_right_type mv_right =
