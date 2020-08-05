@@ -165,12 +165,12 @@ struct HIPParallelLaunch<
                                        MinBlocksPerSM>
           <<<grid, block, shmem, hip_instance->m_stream>>>(d_driver);
 
-      Kokkos::Experimental::HIP().fence();
+      hip_instance->fence();
       printf("Post Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
       HIP_SAFE_CALL(hipFree(d_driver));
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
-      Kokkos::Experimental::HIP().fence();
+      hip_instance->fence();
 #endif
     }
   }
@@ -210,11 +210,11 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       hip_parallel_launch_local_memory<DriverType, 1024, 1>
           <<<grid, block, shmem, hip_instance->m_stream>>>(d_driver);
 
-      Kokkos::Experimental::HIP().fence();
+      hip_instance->fence();
       HIP_SAFE_CALL(hipFree(d_driver));
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
-      Kokkos::Experimental::HIP().fence();
+      hip_instance->fence();
 #endif
     }
   }

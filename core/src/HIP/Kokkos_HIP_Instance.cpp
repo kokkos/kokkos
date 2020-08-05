@@ -162,7 +162,9 @@ HIPInternal &HIPInternal::singleton() {
   return *self;
 }
 
-void HIPInternal::fence() const { hipStreamSynchronize(m_stream); }
+void HIPInternal::fence() const {
+  HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
+}
 
 void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
   if (was_finalized)
