@@ -62,16 +62,16 @@ namespace Experimental {
  *  - These corresponds to subset of the reducers in parallel_reduce
  *  - See Implementations of ScatterValue for details.
  */
-struct ScatterSumTag {};
-struct ScatterProdTag {};
-struct ScatterMaxTag {};
-struct ScatterMinTag {};
+struct ScatterSum {};
+struct ScatterProd {};
+struct ScatterMax {};
+struct ScatterMin {};
 
-struct ScatterNonDuplicatedTag {};
-struct ScatterDuplicatedTag {};
+struct ScatterNonDuplicated {};
+struct ScatterDuplicated {};
 
-struct ScatterNonAtomicTag {};
-struct ScatterAtomicTag {};
+struct ScatterNonAtomic {};
+struct ScatterAtomic {};
 
 }  // namespace Experimental
 }  // namespace Kokkos
@@ -89,120 +89,120 @@ struct DefaultContribution;
 #ifdef KOKKOS_ENABLE_SERIAL
 template <>
 struct DefaultDuplication<Kokkos::Serial> {
-  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicatedTag;
+  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicated;
 };
 
 template <>
 struct DefaultContribution<Kokkos::Serial,
-                           Kokkos::Experimental::ScatterNonDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomicTag;
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Serial,
-                           Kokkos::Experimental::ScatterDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomicTag;
+                           Kokkos::Experimental::ScatterDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMP
 template <>
 struct DefaultDuplication<Kokkos::OpenMP> {
-  using duplication_tag = Kokkos::Experimental::ScatterDuplicatedTag;
+  using duplication_tag = Kokkos::Experimental::ScatterDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::OpenMP,
-                           Kokkos::Experimental::ScatterNonDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomicTag;
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::OpenMP,
-                           Kokkos::Experimental::ScatterDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomicTag;
+                           Kokkos::Experimental::ScatterDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 template <>
 struct DefaultDuplication<Kokkos::Experimental::OpenMPTarget> {
-  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicatedTag;
+  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::OpenMPTarget,
-                           Kokkos::Experimental::ScatterNonDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomicTag;
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::OpenMPTarget,
-                           Kokkos::Experimental::ScatterDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomicTag;
+                           Kokkos::Experimental::ScatterDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_HPX
 template <>
 struct DefaultDuplication<Kokkos::Experimental::HPX> {
-  using duplication_tag = Kokkos::Experimental::ScatterDuplicatedTag;
+  using duplication_tag = Kokkos::Experimental::ScatterDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::HPX,
-                           Kokkos::Experimental::ScatterNonDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomicTag;
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::HPX,
-                           Kokkos::Experimental::ScatterDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomicTag;
+                           Kokkos::Experimental::ScatterDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_THREADS
 template <>
 struct DefaultDuplication<Kokkos::Threads> {
-  using duplication_tag = Kokkos::Experimental::ScatterDuplicatedTag;
+  using duplication_tag = Kokkos::Experimental::ScatterDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Threads,
-                           Kokkos::Experimental::ScatterNonDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomicTag;
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Threads,
-                           Kokkos::Experimental::ScatterDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterNonAtomicTag;
+                           Kokkos::Experimental::ScatterDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterNonAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
 template <>
 struct DefaultDuplication<Kokkos::Cuda> {
-  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicatedTag;
+  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Cuda,
-                           Kokkos::Experimental::ScatterNonDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomicTag;
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Cuda,
-                           Kokkos::Experimental::ScatterDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomicTag;
+                           Kokkos::Experimental::ScatterDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
 };
 #endif
 
 #ifdef KOKKOS_ENABLE_HIP
 template <>
 struct DefaultDuplication<Kokkos::Experimental::HIP> {
-  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicatedTag;
+  using duplication_tag = Kokkos::Experimental::ScatterNonDuplicated;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::HIP,
-                           Kokkos::Experimental::ScatterNonDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomicTag;
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
 };
 template <>
 struct DefaultContribution<Kokkos::Experimental::HIP,
-                           Kokkos::Experimental::ScatterDuplicatedTag> {
-  using contribution_tag = Kokkos::Experimental::ScatterAtomicTag;
+                           Kokkos::Experimental::ScatterDuplicated> {
+  using contribution_tag = Kokkos::Experimental::ScatterAtomic;
 };
 #endif
 
@@ -215,15 +215,15 @@ template <typename ValueType, typename OpTag, typename DeviceType,
           typename ContributionTag>
 struct ScatterValue;
 
-/* ScatterValue <OpTag=ScatterSumTag, ContributionTag=ScatterNonAtomicTag> is
+/* ScatterValue <OpTag=ScatterSum, ContributionTag=ScatterNonAtomic> is
    the object returned by the access operator() of ScatterAccess. This class
    inherits from the Sum<> reducer and it wraps join(dest, src) with convenient
    operator+=, etc. Note the addition of update(ValueType const& rhs) and
    reset()  so that all reducers can have common functions See ReduceDuplicates
    and ResetDuplicates ) */
 template <typename ValueType, typename DeviceType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSumTag, DeviceType,
-                    Kokkos::Experimental::ScatterNonAtomicTag> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
+                    Kokkos::Experimental::ScatterNonAtomic> {
   ValueType& value;
 
  public:
@@ -249,14 +249,14 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSumTag, DeviceType,
   }
 };
 
-/* ScatterValue <OpTag=ScatterSumTag, ContributionTag=ScatterAtomicTag> is the
+/* ScatterValue <OpTag=ScatterSum, ContributionTag=ScatterAtomic> is the
  object returned by the access operator() of ScatterAccess. This class inherits
  from the Sum<> reducer, and similar to that returned by an Atomic View, it
  wraps Kokkos::atomic_add with convenient operator+=, etc. This version also has
  the update(rhs) and reset() functions. */
 template <typename ValueType, typename DeviceType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSumTag, DeviceType,
-                    Kokkos::Experimental::ScatterAtomicTag> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
+                    Kokkos::Experimental::ScatterAtomic> {
   ValueType& value;
 
  public:
@@ -297,15 +297,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSumTag, DeviceType,
   }
 };
 
-/* ScatterValue <OpTag=ScatterProdTag, ContributionTag=ScatterNonAtomicTag> is
+/* ScatterValue <OpTag=ScatterProd, ContributionTag=ScatterNonAtomic> is
    the object returned by the access operator() of ScatterAccess.  This class
    inherits from the Prod<> reducer, and it wraps join(dest, src) with
    convenient operator*=, etc. Note the addition of update(ValueType const& rhs)
    and reset()  so that all reducers can have common functions See
    ReduceDuplicates and ResetDuplicates ) */
 template <typename ValueType, typename DeviceType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProdTag, DeviceType,
-                    Kokkos::Experimental::ScatterNonAtomicTag> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
+                    Kokkos::Experimental::ScatterNonAtomic> {
   ValueType& value;
 
  public:
@@ -328,15 +328,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProdTag, DeviceType,
   }
 };
 
-/* ScatterValue <OpTag=ScatterProdTag, ContributionTag=ScatterAtomicTag> is the
+/* ScatterValue <OpTag=ScatterProd, ContributionTag=ScatterAtomic> is the
  object returned by the access operator() of ScatterAccess.  This class
  inherits from the Prod<> reducer, and similar to that returned by an Atomic
  View, it wraps and atomic_prod with convenient operator*=, etc. atomic_prod
  uses the atomic_compare_exchange. This version also has the update(rhs)
  and reset() functions. */
 template <typename ValueType, typename DeviceType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProdTag, DeviceType,
-                    Kokkos::Experimental::ScatterAtomicTag> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
+                    Kokkos::Experimental::ScatterAtomic> {
   ValueType& value;
 
  public:
@@ -382,15 +382,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProdTag, DeviceType,
   }
 };
 
-/* ScatterValue <OpTag=ScatterMinTag, ContributionTag=ScatterNonAtomicTag> is
+/* ScatterValue <OpTag=ScatterMin, ContributionTag=ScatterNonAtomic> is
    the object returned by the access operator() of ScatterAccess. This class
    inherits from the Min<> reducer and it wraps join(dest, src) with convenient
    update(rhs). Note the addition of update(ValueType const& rhs) and reset()
    are so that all reducers can have a common update function See
    ReduceDuplicates and ResetDuplicates ) */
 template <typename ValueType, typename DeviceType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMinTag, DeviceType,
-                    Kokkos::Experimental::ScatterNonAtomicTag> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
+                    Kokkos::Experimental::ScatterNonAtomic> {
   ValueType& value;
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
       : value(value_in) {}
@@ -406,15 +406,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMinTag, DeviceType,
   }
 };
 
-/* ScatterValue <OpTag=ScatterMinTag, ContributionTag=ScatterAtomicTag> is the
+/* ScatterValue <OpTag=ScatterMin, ContributionTag=ScatterAtomic> is the
    object returned by the access operator() of ScatterAccess. This class
    inherits from the Min<> reducer, and similar to that returned by an Atomic
    View, it wraps atomic_min with join(), etc. atomic_min uses the
    atomic_compare_exchange. This version also has the update(rhs) and reset()
    functions. */
 template <typename ValueType, typename DeviceType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMinTag, DeviceType,
-                    Kokkos::Experimental::ScatterAtomicTag> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
+                    Kokkos::Experimental::ScatterAtomic> {
   ValueType& value;
 
  public:
@@ -453,15 +453,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMinTag, DeviceType,
   }
 };
 
-/* ScatterValue <OpTag=ScatterMaxTag, ContributionTag=ScatterNonAtomicTag> is
+/* ScatterValue <OpTag=ScatterMax, ContributionTag=ScatterNonAtomic> is
    the object returned by the access operator() of ScatterAccess. This class
    inherits from the Max<> reducer and it wraps join(dest, src) with convenient
    update(rhs). Note the addition of update(ValueType const& rhs) and reset()
    are so that all reducers can have a common update function See
    ReduceDuplicates and ResetDuplicates ) */
 template <typename ValueType, typename DeviceType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMaxTag, DeviceType,
-                    Kokkos::Experimental::ScatterNonAtomicTag> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
+                    Kokkos::Experimental::ScatterNonAtomic> {
   ValueType& value;
 
  public:
@@ -477,15 +477,15 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMaxTag, DeviceType,
   }
 };
 
-/* ScatterValue <OpTag=ScatterMaxTag, ContributionTag=ScatterAtomicTag> is the
+/* ScatterValue <OpTag=ScatterMax, ContributionTag=ScatterAtomic> is the
    object returned by the access operator() of ScatterAccess. This class
    inherits from the Max<> reducer, and similar to that returned by an Atomic
    View, it wraps atomic_max with join(), etc. atomic_max uses the
    atomic_compare_exchange. This version also has the update(rhs) and reset()
    functions. */
 template <typename ValueType, typename DeviceType>
-struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMaxTag, DeviceType,
-                    Kokkos::Experimental::ScatterAtomicTag> {
+struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
+                    Kokkos::Experimental::ScatterAtomic> {
   ValueType& value;
 
  public:
@@ -665,7 +665,7 @@ struct ReduceDuplicates
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     for (size_t j = Base::start; j < Base::n; ++j) {
       ScatterValue<ValueType, OpTag, ExecSpace,
-                   Kokkos::Experimental::ScatterNonAtomicTag>
+                   Kokkos::Experimental::ScatterNonAtomic>
           sv(Base::dst[i]);
       sv.update(Base::src[i + Base::stride * j]);
     }
@@ -709,7 +709,7 @@ struct ResetDuplicates
       : Base(data_in, size_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     ScatterValue<ValueType, OpTag, ExecSpace,
-                 Kokkos::Experimental::ScatterNonAtomicTag>
+                 Kokkos::Experimental::ScatterNonAtomic>
         sv(Base::data[i]);
     sv.reset();
   }
@@ -725,7 +725,7 @@ namespace Experimental {
 template <typename DataType,
           typename Layout     = Kokkos::DefaultExecutionSpace::array_layout,
           typename DeviceType = Kokkos::DefaultExecutionSpace,
-          typename OpTag      = Kokkos::Experimental::ScatterSumTag,
+          typename OpTag      = Kokkos::Experimental::ScatterSum,
           typename DuplicationTag =
               typename Kokkos::Impl::Experimental::DefaultDuplication<
                   typename DeviceType::execution_space>::duplication_tag,
@@ -742,7 +742,7 @@ class ScatterAccess;
 // non-duplicated implementation
 template <typename DataType, typename OpTag, typename DeviceType,
           typename Layout, typename ContributionTag>
-class ScatterView<DataType, Layout, DeviceType, OpTag, ScatterNonDuplicatedTag,
+class ScatterView<DataType, Layout, DeviceType, OpTag, ScatterNonDuplicated,
                   ContributionTag> {
  public:
   using execution_space         = typename DeviceType::execution_space;
@@ -752,11 +752,11 @@ class ScatterView<DataType, Layout, DeviceType, OpTag, ScatterNonDuplicatedTag,
   using original_value_type     = typename original_view_type::value_type;
   using original_reference_type = typename original_view_type::reference_type;
   friend class ScatterAccess<DataType, OpTag, DeviceType, Layout,
-                             ScatterNonDuplicatedTag, ContributionTag,
-                             ScatterNonAtomicTag>;
+                             ScatterNonDuplicated, ContributionTag,
+                             ScatterNonAtomic>;
   friend class ScatterAccess<DataType, OpTag, DeviceType, Layout,
-                             ScatterNonDuplicatedTag, ContributionTag,
-                             ScatterAtomicTag>;
+                             ScatterNonDuplicated, ContributionTag,
+                             ScatterAtomic>;
   template <class, class, class, class, class, class>
   friend class ScatterView;
 
@@ -773,23 +773,23 @@ class ScatterView<DataType, Layout, DeviceType, OpTag, ScatterNonDuplicatedTag,
   template <typename OtherDataType, typename OtherDeviceType>
   KOKKOS_FUNCTION ScatterView(
       const ScatterView<OtherDataType, Layout, OtherDeviceType, OpTag,
-                        ScatterNonDuplicatedTag, ContributionTag>& other_view)
+                        ScatterNonDuplicated, ContributionTag>& other_view)
       : internal_view(other_view.internal_view) {}
 
   template <typename OtherDataType, typename OtherDeviceType>
   KOKKOS_FUNCTION void operator=(
       const ScatterView<OtherDataType, Layout, OtherDeviceType, OpTag,
-                        ScatterNonDuplicatedTag, ContributionTag>& other_view) {
+                        ScatterNonDuplicated, ContributionTag>& other_view) {
     internal_view = other_view.internal_view;
   }
 
   template <typename OverrideContrib = ContributionTag>
   KOKKOS_FORCEINLINE_FUNCTION
-      ScatterAccess<DataType, OpTag, DeviceType, Layout,
-                    ScatterNonDuplicatedTag, ContributionTag, OverrideContrib>
+      ScatterAccess<DataType, OpTag, DeviceType, Layout, ScatterNonDuplicated,
+                    ContributionTag, OverrideContrib>
       access() const {
     return ScatterAccess<DataType, OpTag, DeviceType, Layout,
-                         ScatterNonDuplicatedTag, ContributionTag,
+                         ScatterNonDuplicated, ContributionTag,
                          OverrideContrib>(*this);
   }
 
@@ -850,12 +850,11 @@ class ScatterView<DataType, Layout, DeviceType, OpTag, ScatterNonDuplicatedTag,
 template <typename DataType, typename OpTag, typename DeviceType,
           typename Layout, typename ContributionTag,
           typename OverrideContribution>
-class ScatterAccess<DataType, OpTag, DeviceType, Layout,
-                    ScatterNonDuplicatedTag, ContributionTag,
-                    OverrideContribution> {
+class ScatterAccess<DataType, OpTag, DeviceType, Layout, ScatterNonDuplicated,
+                    ContributionTag, OverrideContribution> {
  public:
   using view_type           = ScatterView<DataType, Layout, DeviceType, OpTag,
-                                ScatterNonDuplicatedTag, ContributionTag>;
+                                ScatterNonDuplicated, ContributionTag>;
   using original_value_type = typename view_type::original_value_type;
   using value_type          = Kokkos::Impl::Experimental::ScatterValue<
       original_value_type, OpTag, DeviceType, OverrideContribution>;
@@ -893,7 +892,7 @@ class ScatterAccess<DataType, OpTag, DeviceType, Layout,
 template <typename DataType, typename OpTag, typename DeviceType,
           typename ContributionTag>
 class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, OpTag,
-                  ScatterDuplicatedTag, ContributionTag> {
+                  ScatterDuplicated, ContributionTag> {
  public:
   using execution_space = typename DeviceType::execution_space;
   using memory_space    = typename DeviceType::memory_space;
@@ -903,11 +902,10 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, OpTag,
   using original_value_type     = typename original_view_type::value_type;
   using original_reference_type = typename original_view_type::reference_type;
   friend class ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutRight,
-                             ScatterDuplicatedTag, ContributionTag,
-                             ScatterNonAtomicTag>;
+                             ScatterDuplicated, ContributionTag,
+                             ScatterNonAtomic>;
   friend class ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutRight,
-                             ScatterDuplicatedTag, ContributionTag,
-                             ScatterAtomicTag>;
+                             ScatterDuplicated, ContributionTag, ScatterAtomic>;
   template <class, class, class, class, class, class>
   friend class ScatterView;
 
@@ -923,15 +921,14 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, OpTag,
   template <typename OtherDataType, typename OtherDeviceType>
   KOKKOS_FUNCTION ScatterView(
       const ScatterView<OtherDataType, Kokkos::LayoutRight, OtherDeviceType,
-                        OpTag, ScatterDuplicatedTag, ContributionTag>&
-          other_view)
+                        OpTag, ScatterDuplicated, ContributionTag>& other_view)
       : unique_token(other_view.unique_token),
         internal_view(other_view.internal_view) {}
 
   template <typename OtherDataType, typename OtherDeviceType>
   KOKKOS_FUNCTION void operator=(
       const ScatterView<OtherDataType, Kokkos::LayoutRight, OtherDeviceType,
-                        OpTag, ScatterDuplicatedTag, ContributionTag>&
+                        OpTag, ScatterDuplicated, ContributionTag>&
           other_view) {
     unique_token  = other_view.unique_token;
     internal_view = other_view.internal_view;
@@ -973,10 +970,10 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, OpTag,
   template <typename OverrideContribution = ContributionTag>
   KOKKOS_FORCEINLINE_FUNCTION
       ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutRight,
-                    ScatterDuplicatedTag, ContributionTag, OverrideContribution>
+                    ScatterDuplicated, ContributionTag, OverrideContribution>
       access() const {
     return ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutRight,
-                         ScatterDuplicatedTag, ContributionTag,
+                         ScatterDuplicated, ContributionTag,
                          OverrideContribution>(*this);
   }
 
@@ -1060,7 +1057,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, OpTag,
 template <typename DataType, typename OpTag, typename DeviceType,
           typename ContributionTag>
 class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, OpTag,
-                  ScatterDuplicatedTag, ContributionTag> {
+                  ScatterDuplicated, ContributionTag> {
  public:
   using execution_space = typename DeviceType::execution_space;
   using memory_space    = typename DeviceType::memory_space;
@@ -1070,11 +1067,10 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, OpTag,
   using original_value_type     = typename original_view_type::value_type;
   using original_reference_type = typename original_view_type::reference_type;
   friend class ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutLeft,
-                             ScatterDuplicatedTag, ContributionTag,
-                             ScatterNonAtomicTag>;
+                             ScatterDuplicated, ContributionTag,
+                             ScatterNonAtomic>;
   friend class ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutLeft,
-                             ScatterDuplicatedTag, ContributionTag,
-                             ScatterAtomicTag>;
+                             ScatterDuplicated, ContributionTag, ScatterAtomic>;
   template <class, class, class, class, class, class>
   friend class ScatterView;
 
@@ -1142,15 +1138,14 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, OpTag,
   template <typename OtherDataType, typename OtherDeviceType>
   KOKKOS_FUNCTION ScatterView(
       const ScatterView<OtherDataType, Kokkos::LayoutLeft, OtherDeviceType,
-                        OpTag, ScatterDuplicatedTag, ContributionTag>&
-          other_view)
+                        OpTag, ScatterDuplicated, ContributionTag>& other_view)
       : unique_token(other_view.unique_token),
         internal_view(other_view.internal_view) {}
 
   template <typename OtherDataType, typename OtherDeviceType>
   KOKKOS_FUNCTION void operator=(
       const ScatterView<OtherDataType, Kokkos::LayoutLeft, OtherDeviceType,
-                        OpTag, ScatterDuplicatedTag, ContributionTag>&
+                        OpTag, ScatterDuplicated, ContributionTag>&
           other_view) {
     unique_token  = other_view.unique_token;
     internal_view = other_view.internal_view;
@@ -1159,10 +1154,10 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, OpTag,
   template <typename OverrideContribution = ContributionTag>
   KOKKOS_FORCEINLINE_FUNCTION
       ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutLeft,
-                    ScatterDuplicatedTag, ContributionTag, OverrideContribution>
+                    ScatterDuplicated, ContributionTag, OverrideContribution>
       access() const {
     return ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutLeft,
-                         ScatterDuplicatedTag, ContributionTag,
+                         ScatterDuplicated, ContributionTag,
                          OverrideContribution>(*this);
   }
 
@@ -1270,11 +1265,11 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, OpTag,
 template <typename DataType, typename OpTag, typename DeviceType,
           typename Layout, typename ContributionTag,
           typename OverrideContribution>
-class ScatterAccess<DataType, OpTag, DeviceType, Layout, ScatterDuplicatedTag,
+class ScatterAccess<DataType, OpTag, DeviceType, Layout, ScatterDuplicated,
                     ContributionTag, OverrideContribution> {
  public:
   using view_type           = ScatterView<DataType, Layout, DeviceType, OpTag,
-                                ScatterDuplicatedTag, ContributionTag>;
+                                ScatterDuplicated, ContributionTag>;
   using original_value_type = typename view_type::original_value_type;
   using value_type          = Kokkos::Impl::Experimental::ScatterValue<
       original_value_type, OpTag, DeviceType, OverrideContribution>;
@@ -1326,7 +1321,7 @@ class ScatterAccess<DataType, OpTag, DeviceType, Layout, ScatterDuplicatedTag,
   thread_id_type thread_id;
 };
 
-template <typename OpTag          = Kokkos::Experimental::ScatterSumTag,
+template <typename OpTag          = Kokkos::Experimental::ScatterSum,
           typename DuplicationTag = void, typename ContributionTag = void,
           typename RT, typename... RP>
 ScatterView<
