@@ -251,6 +251,20 @@ do
     shared_args="$shared_args $std_flag"
     ;;
 
+  #convert PGI standard flags to something nvcc can handle
+  --c++11|--c++14|--c++17)
+    if [ -n "$std_flag" ]; then
+       warn_std_flag
+       shared_args=${shared_args/ $std_flag/}
+    fi
+    std_flag="-std=${1#--}"
+    shared_args="$shared_args $std_flag"
+    ;;
+
+  #ignore PGI forcing ISO C++-conforming code
+  -A)
+    ;;
+
   #strip of -std=c++98 due to nvcc warnings and Tribits will place both -std=c++11 and -std=c++98
   -std=c++98|--std=c++98)
     ;;
