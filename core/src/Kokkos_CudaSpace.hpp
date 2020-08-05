@@ -74,11 +74,11 @@ namespace Kokkos {
 class CudaSpace {
  public:
   //! Tag this class as a kokkos memory space
-  typedef CudaSpace memory_space;
-  typedef Kokkos::Cuda execution_space;
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
+  using memory_space    = CudaSpace;
+  using execution_space = Kokkos::Cuda;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
 
-  typedef unsigned int size_type;
+  using size_type = unsigned int;
 
   /*--------------------------------*/
 
@@ -163,10 +163,10 @@ namespace Kokkos {
 class CudaUVMSpace {
  public:
   //! Tag this class as a kokkos memory space
-  typedef CudaUVMSpace memory_space;
-  typedef Cuda execution_space;
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
-  typedef unsigned int size_type;
+  using memory_space    = CudaUVMSpace;
+  using execution_space = Cuda;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+  using size_type       = unsigned int;
 
   /** \brief  If UVM capability is available */
   static bool available();
@@ -229,10 +229,10 @@ class CudaHostPinnedSpace {
  public:
   //! Tag this class as a kokkos memory space
   /** \brief  Memory is in HostSpace so use the HostSpace::execution_space */
-  typedef HostSpace::execution_space execution_space;
-  typedef CudaHostPinnedSpace memory_space;
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
-  typedef unsigned int size_type;
+  using execution_space = HostSpace::execution_space;
+  using memory_space    = CudaHostPinnedSpace;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+  using size_type       = unsigned int;
 
   /*--------------------------------*/
 
@@ -833,7 +833,7 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
  private:
   friend class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>;
 
-  typedef SharedAllocationRecord<void, void> RecordBase;
+  using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
@@ -912,7 +912,7 @@ template <>
 class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
     : public SharedAllocationRecord<void, void> {
  private:
-  typedef SharedAllocationRecord<void, void> RecordBase;
+  using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
@@ -986,7 +986,7 @@ template <>
 class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
     : public SharedAllocationRecord<void, void> {
  private:
-  typedef SharedAllocationRecord<void, void> RecordBase;
+  using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;

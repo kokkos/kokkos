@@ -51,8 +51,8 @@ namespace Test {
 template <class Space, Kokkos::Experimental::UniqueTokenScope Scope>
 class TestUniqueToken {
  public:
-  typedef typename Space::execution_space execution_space;
-  typedef Kokkos::View<int*, execution_space> view_type;
+  using execution_space = typename Space::execution_space;
+  using view_type       = Kokkos::View<int*, execution_space>;
 
   Kokkos::Experimental::UniqueToken<execution_space, Scope> tokens;
 

@@ -61,8 +61,8 @@ namespace Test {
 
 template <typename Scalar, typename Device>
 void test_offsetview_construction() {
-  typedef Kokkos::Experimental::OffsetView<Scalar**, Device> offset_view_type;
-  typedef Kokkos::View<Scalar**, Device> view_type;
+  using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
+  using view_type        = Kokkos::View<Scalar**, Device>;
 
   Kokkos::Experimental::index_list_type range0 = {-1, 3};
   Kokkos::Experimental::index_list_type range1 = {-2, 2};
@@ -134,10 +134,9 @@ void test_offsetview_construction() {
     }
   }
 
-  typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>,
-                                Kokkos::IndexType<int> >
-      range_type;
-  typedef typename range_type::point_type point_type;
+  using range_type =
+      Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>, Kokkos::IndexType<int> >;
+  using point_type = typename range_type::point_type;
 
   range_type rangePolicy2D(point_type{{ovmin0, ovmin1}},
                            point_type{{ovend0, ovend1}});
@@ -198,10 +197,9 @@ void test_offsetview_construction() {
 
     Kokkos::deep_copy(view3D, 1);
 
-    typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<3>,
-                                  Kokkos::IndexType<int64_t> >
-        range3_type;
-    typedef typename range3_type::point_type point3_type;
+    using range3_type = Kokkos::MDRangePolicy<Device, Kokkos::Rank<3>,
+                                              Kokkos::IndexType<int64_t> >;
+    using point3_type = typename range3_type::point_type;
 
     typename point3_type::value_type begins0 = -10, begins1 = -20,
                                      begins2 = -30;
@@ -460,10 +458,9 @@ void test_offsetview_subview() {
       ASSERT_EQ(offsetSubview.end(1), 9);
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
-      typedef Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>,
-                                    Kokkos::IndexType<int> >
-          range_type;
-      typedef typename range_type::point_type point_type;
+      using range_type = Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>,
+                                               Kokkos::IndexType<int> >;
+      using point_type = typename range_type::point_type;
 
       const int b0 = offsetSubview.begin(0);
       const int b1 = offsetSubview.begin(1);

@@ -745,7 +745,7 @@ struct ViewDataType<T, ViewDimension<N, Args...>> {
  *    {const} value_type ***[#][#][#]
  *  Where the sum of counts of '*' and '[#]' is at most ten.
  *
- *  Provide typedef for the ViewDimension<...> and value_type.
+ *  Provide alias for ViewDimension<...> and value_type.
  */
 template <class T>
 struct ViewArrayAnalysis {
@@ -3706,17 +3706,6 @@ struct ViewMapping<
                                typename Kokkos::Impl::ParseViewExtents<
                                    typename SrcTraits::data_type>::type,
                                Args...>::type;
-  // typedef typename std::conditional< rank == 0 , value_type ,
-  //        typename std::conditional< rank == 1 , value_type * ,
-  //        typename std::conditional< rank == 2 , value_type ** ,
-  //        typename std::conditional< rank == 3 , value_type *** ,
-  //        typename std::conditional< rank == 4 , value_type **** ,
-  //        typename std::conditional< rank == 5 , value_type ***** ,
-  //        typename std::conditional< rank == 6 , value_type ****** ,
-  //        typename std::conditional< rank == 7 , value_type ******* ,
-  //                                               value_type ********
-  //        >::type >::type >::type >::type >::type >::type >::type >::type
-  //   data_type ;
 
  public:
   using traits_type = Kokkos::ViewTraits<data_type, array_layout,
@@ -3841,7 +3830,7 @@ struct OperatorBoundsErrorOnDevice<MapType, true> {
 /* Check #2: does the ViewMapping have the printable_label_typedef defined?
    See above that only the non-specialized standard-layout ViewMapping has
    this defined by default.
-   The existence of this typedef indicates the existence of MapType::is_managed
+   The existence of this alias indicates the existence of MapType::is_managed
  */
 template <class T, class Enable = void>
 struct has_printable_label_typedef : public std::false_type {};

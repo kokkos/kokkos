@@ -54,8 +54,8 @@ namespace Test {
 template <typename ScalarType, class DeviceType>
 class ReduceFunctor {
  public:
-  typedef DeviceType execution_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = DeviceType;
+  using size_type       = typename execution_space::size_type;
 
   struct value_type {
     ScalarType value[3];
@@ -97,7 +97,7 @@ class ReduceFunctor {
 template <class DeviceType>
 class ReduceFunctorFinal : public ReduceFunctor<int64_t, DeviceType> {
  public:
-  typedef typename ReduceFunctor<int64_t, DeviceType>::value_type value_type;
+  using value_type = typename ReduceFunctor<int64_t, DeviceType>::value_type;
 
   KOKKOS_INLINE_FUNCTION
   ReduceFunctorFinal(const size_t n) : ReduceFunctor<int64_t, DeviceType>(n) {}
@@ -114,13 +114,13 @@ template <typename ScalarType, class DeviceType>
 class RuntimeReduceFunctor {
  public:
   // Required for functor:
-  typedef DeviceType execution_space;
-  typedef ScalarType value_type[];
+  using execution_space = DeviceType;
+  using value_type      = ScalarType[];
   const unsigned value_count;
 
   // Unit test details:
 
-  typedef typename execution_space::size_type size_type;
+  using size_type = typename execution_space::size_type;
 
   const size_type nwork;
 
@@ -151,13 +151,13 @@ template <typename ScalarType, class DeviceType>
 class RuntimeReduceMinMax {
  public:
   // Required for functor:
-  typedef DeviceType execution_space;
-  typedef ScalarType value_type[];
+  using execution_space = DeviceType;
+  using value_type      = ScalarType[];
   const unsigned value_count;
 
   // Unit test details:
 
-  typedef typename execution_space::size_type size_type;
+  using size_type = typename execution_space::size_type;
 
   const size_type nwork;
   const ScalarType amin;
@@ -200,9 +200,9 @@ template <class DeviceType>
 class RuntimeReduceFunctorFinal
     : public RuntimeReduceFunctor<int64_t, DeviceType> {
  public:
-  typedef RuntimeReduceFunctor<int64_t, DeviceType> base_type;
-  typedef typename base_type::value_type value_type;
-  typedef int64_t scalar_type;
+  using base_type   = RuntimeReduceFunctor<int64_t, DeviceType>;
+  using value_type  = typename base_type::value_type;
+  using scalar_type = int64_t;
 
   RuntimeReduceFunctorFinal(const size_t theNwork, const size_t count)
       : base_type(theNwork, count) {}
@@ -245,8 +245,8 @@ namespace {
 template <typename ScalarType, class DeviceType>
 class TestReduce {
  public:
-  typedef DeviceType execution_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = DeviceType;
+  using size_type       = typename execution_space::size_type;
 
   TestReduce(const size_type& nwork) {
     run_test(nwork);
@@ -254,8 +254,8 @@ class TestReduce {
   }
 
   void run_test(const size_type& nwork) {
-    typedef Test::ReduceFunctor<ScalarType, execution_space> functor_type;
-    typedef typename functor_type::value_type value_type;
+    using functor_type = Test::ReduceFunctor<ScalarType, execution_space>;
+    using value_type   = typename functor_type::value_type;
 
     enum { Count = 3 };
     enum { Repeat = 100 };
@@ -278,8 +278,8 @@ class TestReduce {
   }
 
   void run_test_final(const size_type& nwork) {
-    typedef Test::ReduceFunctorFinal<execution_space> functor_type;
-    typedef typename functor_type::value_type value_type;
+    using functor_type = Test::ReduceFunctorFinal<execution_space>;
+    using value_type   = typename functor_type::value_type;
 
     enum { Count = 3 };
     enum { Repeat = 100 };
@@ -310,8 +310,8 @@ class TestReduce {
 template <typename ScalarType, class DeviceType>
 class TestReduceDynamic {
  public:
-  typedef DeviceType execution_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = DeviceType;
+  using size_type       = typename execution_space::size_type;
 
   TestReduceDynamic(const size_type nwork) {
     run_test_dynamic(nwork);
@@ -320,8 +320,8 @@ class TestReduceDynamic {
   }
 
   void run_test_dynamic(const size_type nwork) {
-    typedef Test::RuntimeReduceFunctor<ScalarType, execution_space>
-        functor_type;
+    using functor_type =
+        Test::RuntimeReduceFunctor<ScalarType, execution_space>;
 
     enum { Count = 3 };
     enum { Repeat = 100 };
@@ -349,7 +349,7 @@ class TestReduceDynamic {
   }
 
   void run_test_dynamic_minmax(const size_type nwork) {
-    typedef Test::RuntimeReduceMinMax<ScalarType, execution_space> functor_type;
+    using functor_type = Test::RuntimeReduceMinMax<ScalarType, execution_space>;
 
     enum { Count = 2 };
     enum { Repeat = 100 };
@@ -381,7 +381,7 @@ class TestReduceDynamic {
   }
 
   void run_test_dynamic_final(const size_type nwork) {
-    typedef Test::RuntimeReduceFunctorFinal<execution_space> functor_type;
+    using functor_type = Test::RuntimeReduceFunctorFinal<execution_space>;
 
     enum { Count = 3 };
     enum { Repeat = 100 };
@@ -412,17 +412,17 @@ class TestReduceDynamic {
 template <typename ScalarType, class DeviceType>
 class TestReduceDynamicView {
  public:
-  typedef DeviceType execution_space;
-  typedef typename execution_space::size_type size_type;
+  using execution_space = DeviceType;
+  using size_type       = typename execution_space::size_type;
 
   TestReduceDynamicView(const size_type nwork) { run_test_dynamic_view(nwork); }
 
   void run_test_dynamic_view(const size_type nwork) {
-    typedef Test::RuntimeReduceFunctor<ScalarType, execution_space>
-        functor_type;
+    using functor_type =
+        Test::RuntimeReduceFunctor<ScalarType, execution_space>;
 
-    typedef Kokkos::View<ScalarType*, DeviceType> result_type;
-    typedef typename result_type::HostMirror result_host_type;
+    using result_type      = Kokkos::View<ScalarType*, DeviceType>;
+    using result_host_type = typename result_type::HostMirror;
 
     const unsigned CountLimit = 23;
 

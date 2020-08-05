@@ -100,7 +100,7 @@ __inline__ __device__ T atomic_exchange(
     typename std::enable_if<sizeof(T) != sizeof(int) &&
                                 sizeof(T) == sizeof(unsigned long long int),
                             const T&>::type val) {
-  typedef unsigned long long int type;
+  using type = unsigned long long int;
 
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
@@ -164,7 +164,7 @@ __inline__ __device__ void atomic_assign(
     typename std::enable_if<sizeof(T) != sizeof(int) &&
                                 sizeof(T) == sizeof(unsigned long long int),
                             const T&>::type val) {
-  typedef unsigned long long int type;
+  using type = unsigned long long int;
   // (void) __ullAtomicExch( (type*) dest , *((type*)&val) );
   (void)atomicExch(((type*)dest), *((type*)&val));
 }

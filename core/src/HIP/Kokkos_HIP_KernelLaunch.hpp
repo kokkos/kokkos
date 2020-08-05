@@ -162,7 +162,7 @@ struct HIPParallelLaunch<
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
-      Kokkos::Experimental::HIP().fence();
+      hip_instance->fence();
 #endif
       HIP_SAFE_CALL(hipFree(d_driver));
     }
@@ -205,7 +205,7 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
-      Kokkos::Experimental::HIP().fence();
+      hip_instance->fence();
 #endif
       HIP_SAFE_CALL(hipFree(d_driver));
     }
