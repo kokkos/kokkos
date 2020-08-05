@@ -83,7 +83,7 @@ namespace Experimental {
 template <typename ExecSpace>
 struct DefaultDuplication;
 
-template <typename ExecSpace, typename duplication>
+template <typename ExecSpace, typename Duplication>
 struct DefaultContribution;
 
 #ifdef KOKKOS_ENABLE_SERIAL
@@ -780,13 +780,13 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
     internal_view = other_view.internal_view;
   }
 
-  template <typename OverrideContrib = Contribution>
+  template <typename OverrideContribution = Contribution>
   KOKKOS_FORCEINLINE_FUNCTION
       ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
-                    Contribution, OverrideContrib>
+                    Contribution, OverrideContribution>
       access() const {
     return ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
-                         Contribution, OverrideContrib>(*this);
+                         Contribution, OverrideContribution>(*this);
   }
 
   original_view_type subview() const { return internal_view; }
