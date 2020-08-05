@@ -117,9 +117,9 @@ TEST_F(openmp, unordered_map_performance_far) {
 TEST_F(openmp, scatter_view) {
   std::cout << "ScatterView data-duplicated test:\n";
   Perf::test_scatter_view<Kokkos::OpenMP, Kokkos::LayoutRight,
-                          Kokkos::Experimental::ScatterDuplicatedTag,
-                          Kokkos::Experimental::ScatterNonAtomicTag>(
-      10, 1000 * 1000);
+                          Kokkos::Experimental::ScatterDuplicated,
+                          Kokkos::Experimental::ScatterNonAtomic>(10,
+                                                                  1000 * 1000);
   // std::cout << "ScatterView atomics test:\n";
   // Perf::test_scatter_view<Kokkos::OpenMP, Kokkos::LayoutRight,
   //  Kokkos::Experimental::ScatterNonDuplicated,

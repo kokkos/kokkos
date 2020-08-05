@@ -57,7 +57,7 @@ void test_scatter_view(int m, int n) {
                                                               n);
   {
     auto scatter_view = Kokkos::Experimental::create_scatter_view<
-        Kokkos::Experimental::ScatterSumTag, Duplication, Contribution>(
+        Kokkos::Experimental::ScatterSum, Duplication, Contribution>(
         original_view);
     Kokkos::Experimental::UniqueToken<
         ExecSpace, Kokkos::Experimental::UniqueTokenScope::Global>
