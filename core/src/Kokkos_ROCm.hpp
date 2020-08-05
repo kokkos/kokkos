@@ -102,14 +102,14 @@ class ROCm {
   //@{
 
   //! Tag this class as a kokkos execution space
-  typedef ROCm execution_space;
-  typedef ROCmSpace memory_space;
-  typedef Kokkos::Device<execution_space, memory_space> device_type;
+  using execution_space = ROCm;
+  using memory_space    = ROCmSpace;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
 
-  typedef LayoutLeft array_layout;
-  typedef HostSpace::size_type size_type;
+  using array_layout = LayoutLeft;
+  using size_type    = HostSpace::size_type;
 
-  typedef ScratchMemorySpace<ROCm> scratch_memory_space;
+  using scratch_memory_space = ScratchMemorySpace<ROCm>;
 
   ~ROCm() {}
   ROCm();

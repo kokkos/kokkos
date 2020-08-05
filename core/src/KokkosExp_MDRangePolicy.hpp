@@ -560,14 +560,14 @@ template <unsigned long P, class... Properties>
 struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
                              MDRangePolicy<Properties...>> {
   using policy_in_t = MDRangePolicy<Properties...>;
-  typedef MDRangePolicy<typename policy_in_t::traits::execution_space,
-                        typename policy_in_t::traits::schedule_type,
-                        typename policy_in_t::traits::work_tag,
-                        typename policy_in_t::traits::index_type,
-                        typename policy_in_t::traits::iteration_pattern,
-                        typename policy_in_t::traits::launch_bounds,
-                        WorkItemProperty::ImplWorkItemProperty<P>>
-      policy_out_t;
+  using policy_out_t =
+      MDRangePolicy<typename policy_in_t::traits::execution_space,
+                    typename policy_in_t::traits::schedule_type,
+                    typename policy_in_t::traits::work_tag,
+                    typename policy_in_t::traits::index_type,
+                    typename policy_in_t::traits::iteration_pattern,
+                    typename policy_in_t::traits::launch_bounds,
+                    WorkItemProperty::ImplWorkItemProperty<P>>;
 };
 
 }  // namespace Impl

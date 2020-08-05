@@ -55,8 +55,8 @@ namespace Impl {
 
 template <typename Scalar, class Device>
 struct test_vector_insert {
-  typedef Scalar scalar_type;
-  typedef Device execution_space;
+  using scalar_type     = Scalar;
+  using execution_space = Device;
 
   template <typename Vector>
   void run_test(Vector& a) {
@@ -177,10 +177,10 @@ struct test_vector_insert {
 
 template <typename Scalar, class Device>
 struct test_vector_allocate {
-  typedef test_vector_allocate<Scalar, Device> self_type;
+  using self_type = test_vector_allocate<Scalar, Device>;
 
-  typedef Scalar scalar_type;
-  typedef Device execution_space;
+  using scalar_type     = Scalar;
+  using execution_space = Device;
 
   bool result = false;
 
@@ -208,10 +208,10 @@ struct test_vector_allocate {
 
 template <typename Scalar, class Device>
 struct test_vector_combinations {
-  typedef test_vector_combinations<Scalar, Device> self_type;
+  using self_type = test_vector_combinations<Scalar, Device>;
 
-  typedef Scalar scalar_type;
-  typedef Device execution_space;
+  using scalar_type     = Scalar;
+  using execution_space = Device;
 
   Scalar reference;
   Scalar result;

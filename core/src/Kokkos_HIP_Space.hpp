@@ -529,7 +529,7 @@ template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
     : public SharedAllocationRecord<void, void> {
  private:
-  typedef SharedAllocationRecord<void, void> RecordBase;
+  using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
@@ -580,7 +580,7 @@ template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
     : public SharedAllocationRecord<void, void> {
  private:
-  typedef SharedAllocationRecord<void, void> RecordBase;
+  using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
@@ -655,14 +655,15 @@ class HIP {
 
   using scratch_memory_space = ScratchMemorySpace<HIP>;
 
-  ~HIP() = default;
   HIP();
-  //  explicit HIP( const int instance_id );
+  HIP(hipStream_t stream);
 
-  HIP(HIP&&)      = default;
-  HIP(const HIP&) = default;
-  HIP& operator=(HIP&&) = default;
-  HIP& operator=(const HIP&) = default;
+  KOKKOS_FUNCTION HIP(HIP&& other) noexcept;
+  KOKKOS_FUNCTION HIP(HIP const& other);
+  KOKKOS_FUNCTION HIP& operator=(HIP&&) noexcept;
+  KOKKOS_FUNCTION HIP& operator=(HIP const&);
+
+  KOKKOS_FUNCTION ~HIP() noexcept;
 
   //@}
   //------------------------------------
@@ -677,9 +678,17 @@ class HIP {
 #endif
   }
 
-  /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
+  /** \brief Wait until all dispatched functors complete.
+   *
+   * The parallel_for or parallel_reduce dispatch of a functor may return
+   * asynchronously, before the functor completes. This method does not return
+   * until all dispatched functors on this device have completed.
+   */
   static void impl_static_fence();
+
   void fence() const;
+
+  hipStream_t hip_stream() const;
 
   /// \brief Print configuration information to the given output stream.
   static void print_configuration(std::ostream&, const bool detail = false);
@@ -718,6 +727,7 @@ class HIP {
 
  private:
   Impl::HIPInternal* m_space_instance;
+  int* m_counter;
 };
 }  // namespace Experimental
 namespace Tools {

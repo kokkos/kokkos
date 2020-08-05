@@ -50,8 +50,12 @@
 
 // undefined at end of file
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_COMPILER_PGI)
+#define KOKKOS_IMPL_IF_ON_HOST if (!__builtin_is_device_code())
+#else
 // Note: OpenMPTarget enforces C++17 at configure time
 #define KOKKOS_IMPL_IF_ON_HOST if constexpr (omp_is_initial_device())
+#endif
 #else
 #define KOKKOS_IMPL_IF_ON_HOST if (true)
 #endif
@@ -371,7 +375,7 @@ union SharedAllocationTracker {
   constexpr SharedAllocationRecord<MemorySpace, void>* get_record() const
       noexcept {
     return (m_record_bits & DO_NOT_DEREF_FLAG)
-               ? (SharedAllocationRecord<MemorySpace, void>*)0
+               ? nullptr
                : static_cast<SharedAllocationRecord<MemorySpace, void>*>(
                      m_record);
   }

@@ -35,8 +35,8 @@ struct CudaTraits {
     KernelArgumentLimit = 0x001000 /*  4k bytes */
   };
 
-  typedef unsigned long
-      ConstantGlobalBufferType[ConstantMemoryUsage / sizeof(unsigned long)];
+  using ConstantGlobalBufferType =
+      unsigned long[ConstantMemoryUsage / sizeof(unsigned long)];
 
   enum { ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */ };
 
@@ -84,7 +84,7 @@ class CudaInternal {
 #endif
 
  public:
-  typedef Cuda::size_type size_type;
+  using size_type = Cuda::size_type;
 
   int m_cudaDev;
 
@@ -120,15 +120,20 @@ class CudaInternal {
   bool was_initialized = false;
   bool was_finalized   = false;
 
+  // FIXME_CUDA: these want to be per-device, not per-stream...  use of 'static'
+  //  here will break once there are multiple devices though
+  static unsigned long* constantMemHostStaging;
+  static cudaEvent_t constantMemReusable;
+
   static CudaInternal& singleton();
 
   int verify_is_initialized(const char* const label) const;
 
   int is_initialized() const {
-    return 0 != m_scratchSpace && 0 != m_scratchFlags;
+    return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
   }
 
-  void initialize(int cuda_device_id, cudaStream_t stream = 0);
+  void initialize(int cuda_device_id, cudaStream_t stream = nullptr);
   void finalize();
 
   void print_configuration(std::ostream&) const;
@@ -162,12 +167,12 @@ class CudaInternal {
         m_scratchFunctorSize(0),
         m_scratchUnifiedSupported(0),
         m_streamCount(0),
-        m_scratchSpace(0),
-        m_scratchFlags(0),
-        m_scratchUnified(0),
-        m_scratchFunctor(0),
-        m_scratchConcurrentBitset(0),
-        m_stream(0) {}
+        m_scratchSpace(nullptr),
+        m_scratchFlags(nullptr),
+        m_scratchUnified(nullptr),
+        m_scratchFunctor(nullptr),
+        m_scratchConcurrentBitset(nullptr),
+        m_stream(nullptr) {}
 
   size_type* scratch_space(const size_type size) const;
   size_type* scratch_flags(const size_type size) const;

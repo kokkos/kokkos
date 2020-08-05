@@ -142,8 +142,8 @@ struct TestParallel_For {
     init();
 
     // Creates a range policy that uses dynamic scheduling.
-    typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
-        range_policy_t;
+    using range_policy_t =
+        Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >;
 
     // parallel-for functor with range-policy from 0 to num_elements iterations.
     Kokkos::parallel_for("RangePolicy_ParallelFor",

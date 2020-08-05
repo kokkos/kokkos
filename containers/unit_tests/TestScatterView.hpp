@@ -60,12 +60,12 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
                                   Kokkos::Experimental::ScatterSumTag,
                                   NumberType> {
  public:
-  typedef Kokkos::Experimental::ScatterView<
-      NumberType * [12], Layout, DeviceType,
-      Kokkos::Experimental::ScatterSumTag, Duplication, Contribution>
-      scatter_view_type;
+  using scatter_view_type =
+      Kokkos::Experimental::ScatterView<NumberType * [12], Layout, DeviceType,
+                                        Kokkos::Experimental::ScatterSumTag,
+                                        Duplication, Contribution>;
 
-  typedef Kokkos::View<NumberType * [12], Layout, DeviceType> orig_view_type;
+  using orig_view_type = Kokkos::View<NumberType * [12], Layout, DeviceType>;
 
   scatter_view_type scatter_view;
   int scatterSize;
@@ -167,12 +167,12 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
                                   Kokkos::Experimental::ScatterProdTag,
                                   NumberType> {
  public:
-  typedef Kokkos::Experimental::ScatterView<
-      NumberType * [3], Layout, DeviceType,
-      Kokkos::Experimental::ScatterProdTag, Duplication, Contribution>
-      scatter_view_type;
+  using scatter_view_type =
+      Kokkos::Experimental::ScatterView<NumberType * [3], Layout, DeviceType,
+                                        Kokkos::Experimental::ScatterProdTag,
+                                        Duplication, Contribution>;
 
-  typedef Kokkos::View<NumberType * [3], Layout, DeviceType> orig_view_type;
+  using orig_view_type = Kokkos::View<NumberType * [3], Layout, DeviceType>;
 
   scatter_view_type scatter_view;
   int scatterSize;
@@ -238,12 +238,12 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
                                   Kokkos::Experimental::ScatterMinTag,
                                   NumberType> {
  public:
-  typedef Kokkos::Experimental::ScatterView<
-      NumberType * [3], Layout, DeviceType, Kokkos::Experimental::ScatterMinTag,
-      Duplication, Contribution>
-      scatter_view_type;
+  using scatter_view_type =
+      Kokkos::Experimental::ScatterView<NumberType * [3], Layout, DeviceType,
+                                        Kokkos::Experimental::ScatterMinTag,
+                                        Duplication, Contribution>;
 
-  typedef Kokkos::View<NumberType * [3], Layout, DeviceType> orig_view_type;
+  using orig_view_type = Kokkos::View<NumberType * [3], Layout, DeviceType>;
 
   scatter_view_type scatter_view;
   int scatterSize;
@@ -309,12 +309,12 @@ struct test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
                                   Kokkos::Experimental::ScatterMaxTag,
                                   NumberType> {
  public:
-  typedef Kokkos::Experimental::ScatterView<
-      NumberType * [3], Layout, DeviceType, Kokkos::Experimental::ScatterMaxTag,
-      Duplication, Contribution>
-      scatter_view_type;
+  using scatter_view_type =
+      Kokkos::Experimental::ScatterView<NumberType * [3], Layout, DeviceType,
+                                        Kokkos::Experimental::ScatterMaxTag,
+                                        Duplication, Contribution>;
 
-  typedef Kokkos::View<NumberType * [3], Layout, DeviceType> orig_view_type;
+  using orig_view_type = Kokkos::View<NumberType * [3], Layout, DeviceType>;
 
   scatter_view_type scatter_view;
   int scatterSize;
@@ -382,12 +382,14 @@ struct test_default_scatter_view {
   using Duplication  = typename default_duplication::duplication_tag;
   using Contribution = typename Kokkos::Impl::Experimental::DefaultContribution<
       typename DeviceType::execution_space, Duplication>::contribution_tag;
-  typedef typename test_scatter_view_impl_cls<
-      DeviceType, Layout, Duplication, Contribution, OpTag,
-      NumberType>::scatter_view_type scatter_view_def;
-  typedef typename test_scatter_view_impl_cls<
-      DeviceType, Layout, Duplication, Contribution, OpTag,
-      NumberType>::orig_view_type orig_view_def;
+  using scatter_view_def =
+      typename test_scatter_view_impl_cls<DeviceType, Layout, Duplication,
+                                          Contribution, OpTag,
+                                          NumberType>::scatter_view_type;
+  using orig_view_def =
+      typename test_scatter_view_impl_cls<DeviceType, Layout, Duplication,
+                                          Contribution, OpTag,
+                                          NumberType>::orig_view_type;
 
   void run_test(int n) {
     // Test creation via create_scatter_view overload 1
@@ -426,12 +428,14 @@ template <typename DeviceType, typename Layout, typename Duplication,
           typename Contribution, typename OpTag, typename NumberType>
 struct test_scatter_view_config {
  public:
-  typedef typename test_scatter_view_impl_cls<
-      DeviceType, Layout, Duplication, Contribution, OpTag,
-      NumberType>::scatter_view_type scatter_view_def;
-  typedef typename test_scatter_view_impl_cls<
-      DeviceType, Layout, Duplication, Contribution, OpTag,
-      NumberType>::orig_view_type orig_view_def;
+  using scatter_view_def =
+      typename test_scatter_view_impl_cls<DeviceType, Layout, Duplication,
+                                          Contribution, OpTag,
+                                          NumberType>::scatter_view_type;
+  using orig_view_def =
+      typename test_scatter_view_impl_cls<DeviceType, Layout, Duplication,
+                                          Contribution, OpTag,
+                                          NumberType>::orig_view_type;
 
   void run_test(int n) {
     // test allocation

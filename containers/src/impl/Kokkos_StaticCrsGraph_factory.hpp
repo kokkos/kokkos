@@ -69,9 +69,9 @@ inline typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
 create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                    SizeType>& view) {
   // Force copy:
-  // typedef Impl::ViewAssignment< Impl::ViewDefault > alloc ; // unused
-  typedef StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>
-      staticcrsgraph_type;
+  // using alloc = Impl::ViewAssignment<Impl::ViewDefault>; // unused
+  using staticcrsgraph_type =
+      StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>;
 
   typename staticcrsgraph_type::HostMirror tmp;
   typename staticcrsgraph_type::row_map_type::HostMirror tmp_row_map =
@@ -114,16 +114,15 @@ namespace Kokkos {
 template <class StaticCrsGraphType, class InputSizeType>
 inline typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
     const std::string& label, const std::vector<InputSizeType>& input) {
-  typedef StaticCrsGraphType output_type;
-  // typedef std::vector< InputSizeType >  input_type ; // unused
+  using output_type = StaticCrsGraphType;
+  // using input_type = std::vector<InputSizeType>; // unused
 
-  typedef typename output_type::entries_type entries_type;
+  using entries_type = typename output_type::entries_type;
 
-  typedef View<typename output_type::size_type[],
-               typename output_type::array_layout,
-               typename output_type::execution_space,
-               typename output_type::memory_traits>
-      work_type;
+  using work_type = View<typename output_type::size_type[],
+                         typename output_type::array_layout,
+                         typename output_type::execution_space,
+                         typename output_type::memory_traits>;
 
   output_type output;
 
@@ -157,16 +156,15 @@ template <class StaticCrsGraphType, class InputSizeType>
 inline typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
     const std::string& label,
     const std::vector<std::vector<InputSizeType> >& input) {
-  typedef StaticCrsGraphType output_type;
-  typedef typename output_type::entries_type entries_type;
+  using output_type  = StaticCrsGraphType;
+  using entries_type = typename output_type::entries_type;
 
   static_assert(entries_type::rank == 1, "Graph entries view must be rank one");
 
-  typedef View<typename output_type::size_type[],
-               typename output_type::array_layout,
-               typename output_type::execution_space,
-               typename output_type::memory_traits>
-      work_type;
+  using work_type = View<typename output_type::size_type[],
+                         typename output_type::array_layout,
+                         typename output_type::execution_space,
+                         typename output_type::memory_traits>;
 
   output_type output;
 

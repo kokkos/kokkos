@@ -91,7 +91,7 @@ struct TestFib {
   using MemberType  = typename Scheduler::member_type;
   using FutureType  = Kokkos::BasicFuture<long, Scheduler>;
 
-  typedef long value_type;
+  using value_type = long;
 
   FutureType dep[2];
   const value_type n;
@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
 
   using Scheduler = Kokkos::TaskSchedulerMultiple<ExecSpace>;
 
-  typedef TestFib<Scheduler> Functor;
+  using Functor = TestFib<Scheduler>;
 
   Kokkos::initialize(argc, argv);
 

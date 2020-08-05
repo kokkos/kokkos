@@ -86,6 +86,8 @@
 #include <hpx/runtime/threads/threadmanager.hpp>
 #include <hpx/runtime/thread_pool_helpers.hpp>
 
+#include <Kokkos_UniqueToken.hpp>
+
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -523,17 +525,74 @@ namespace Kokkos {
 namespace Experimental {
 template <>
 class UniqueToken<HPX, UniqueTokenScope::Instance> {
+ private:
+  using buffer_type = Kokkos::View<uint32_t *, Kokkos::HostSpace>;
+  int m_count;
+  buffer_type m_buffer_view;
+  uint32_t volatile *m_buffer;
+
  public:
   using execution_space = HPX;
   using size_type       = int;
-  UniqueToken(execution_space const & = execution_space()) noexcept {}
 
-  // NOTE: Currently this assumes that there is no oversubscription.
-  // hpx::get_num_worker_threads can't be used directly because it may yield
-  // it's task (problematic if called after hpx::get_worker_thread_num).
-  int size() const noexcept { return HPX::impl_max_hardware_threads(); }
-  int acquire() const noexcept { return HPX::impl_hardware_thread_id(); }
-  void release(int) const noexcept {}
+  /// \brief create object size for concurrency on the given instance
+  ///
+  /// This object should not be shared between instances
+  UniqueToken(execution_space const & = execution_space()) noexcept
+      : m_count(execution_space::impl_max_hardware_threads()),
+        m_buffer_view(buffer_type()),
+        m_buffer(nullptr) {}
+
+  UniqueToken(size_type max_size, execution_space const & = execution_space())
+      : m_count(max_size > execution_space::impl_max_hardware_threads()
+                    ? execution_space::impl_max_hardware_threads()
+                    : max_size),
+        m_buffer_view(
+            max_size > execution_space::impl_max_hardware_threads()
+                ? buffer_type()
+                : buffer_type("UniqueToken::m_buffer_view",
+                              ::Kokkos::Impl::concurrent_bitset::buffer_bound(
+                                  m_count))),
+        m_buffer(m_buffer_view.data()) {}
+
+  /// \brief upper bound for acquired values, i.e. 0 <= value < size()
+  KOKKOS_INLINE_FUNCTION
+  int size() const noexcept { return m_count; }
+
+  /// \brief acquire value such that 0 <= value < size()
+  KOKKOS_INLINE_FUNCTION
+  int acquire() const noexcept {
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+    if (m_buffer == nullptr) {
+      return execution_space::impl_hardware_thread_id();
+    } else {
+      const ::Kokkos::pair<int, int> result =
+          ::Kokkos::Impl::concurrent_bitset::acquire_bounded(
+              m_buffer, m_count, ::Kokkos::Impl::clock_tic() % m_count);
+
+      if (result.first < 0) {
+        ::Kokkos::abort(
+            "UniqueToken<HPX> failure to acquire tokens, no tokens "
+            "available");
+      }
+      return result.first;
+    }
+#else
+    return 0;
+#endif
+  }
+
+  /// \brief release a value acquired by generate
+  KOKKOS_INLINE_FUNCTION
+  void release(int i) const noexcept {
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+    if (m_buffer != nullptr) {
+      ::Kokkos::Impl::concurrent_bitset::release(m_buffer, i);
+    }
+#else
+    (void)i;
+#endif
+  }
 };
 
 template <>

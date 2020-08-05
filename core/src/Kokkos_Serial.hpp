@@ -90,7 +90,7 @@ class Serial {
 
   //! Tag this class as an execution space:
   using execution_space = Serial;
-  //! The size_type typedef best suited for this device.
+  //! The size_type alias best suited for this device.
   using size_type = HostSpace::size_type;
   //! This device's preferred memory space.
   using memory_space = HostSpace;
@@ -239,16 +239,6 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
   const typename traits::execution_space& space() const {
     static typename traits::execution_space m_space;
     return m_space;
-  }
-
-  TeamPolicyInternal& operator=(const TeamPolicyInternal& p) {
-    m_league_size            = p.m_league_size;
-    m_team_scratch_size[0]   = p.m_team_scratch_size[0];
-    m_thread_scratch_size[0] = p.m_thread_scratch_size[0];
-    m_team_scratch_size[1]   = p.m_team_scratch_size[1];
-    m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
-    m_chunk_size             = p.m_chunk_size;
-    return *this;
   }
 
   template <class ExecSpace, class... OtherProperties>
@@ -1008,6 +998,11 @@ class UniqueToken<Serial, UniqueTokenScope::Instance> {
   ///
   /// This object should not be shared between instances
   UniqueToken(execution_space const& = execution_space()) noexcept {}
+
+  /// \brief create object size for requested size on given instance
+  ///
+  /// It is the users responsibility to only acquire size tokens concurrently
+  UniqueToken(size_type, execution_space const& = execution_space()) {}
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION

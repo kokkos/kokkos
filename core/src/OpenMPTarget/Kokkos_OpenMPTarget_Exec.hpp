@@ -94,8 +94,8 @@ class OpenMPTargetExecTeamMember {
   /** \brief  Thread states for team synchronization */
   enum { Active = 0, Rendezvous = 1 };
 
-  typedef Kokkos::Experimental::OpenMPTarget execution_space;
-  typedef execution_space::scratch_memory_space scratch_memory_space;
+  using execution_space      = Kokkos::Experimental::OpenMPTarget;
+  using scratch_memory_space = execution_space::scratch_memory_space;
 
   scratch_memory_space m_team_shared;
   int m_team_scratch_size[2];
@@ -170,8 +170,8 @@ class OpenMPTargetExecTeamMember {
         { }
     #else
         // Make sure there is enough scratch space:
-        typedef typename if_c< sizeof(ValueType) < TEAM_REDUCE_SIZE
-                             , ValueType , void >::type type ;
+        using type  = typename if_c< sizeof(ValueType) < TEAM_REDUCE_SIZE
+                             , ValueType , void >::type;
 
         type * const local_value = ((type*) m_exec.scratch_thread());
         if(team_rank() == thread_id)
@@ -187,12 +187,12 @@ class OpenMPTargetExecTeamMember {
                                                const JoinOp& op_in) const {
 #pragma omp barrier
 
-    typedef ValueType value_type;
+    using value_type = ValueType;
     const JoinLambdaAdapter<value_type, JoinOp> op(op_in);
 
     // Make sure there is enough scratch space:
-    typedef typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE, value_type,
-                          void>::type type;
+    using type = typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE,
+                               value_type, void>::type;
 
     const int n_values = TEAM_REDUCE_SIZE / sizeof(value_type);
     type* team_scratch =
@@ -230,8 +230,8 @@ class OpenMPTargetExecTeamMember {
   KOKKOS_INLINE_FUNCTION ArgType team_scan(const ArgType& value,
                                            ArgType* const global_accum) const {
     /*  // Make sure there is enough scratch space:
-      typedef typename if_c< sizeof(ArgType) < TEAM_REDUCE_SIZE , ArgType , void
-      >::type type ;
+      using type =
+        typename if_c<sizeof(ArgType) < TEAM_REDUCE_SIZE, ArgType, void>::type;
 
       volatile type * const work_value  = ((type*) m_exec.scratch_thread());
 
@@ -287,7 +287,7 @@ class OpenMPTargetExecTeamMember {
   // Private for the driver
 
  private:
-  typedef execution_space::scratch_memory_space space;
+  using space = execution_space::scratch_memory_space;
 
  public:
   inline OpenMPTargetExecTeamMember(
@@ -318,23 +318,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
     : public PolicyTraits<Properties...> {
  public:
   //! Tag this class as a kokkos execution policy
-  typedef TeamPolicyInternal execution_policy;
+  using execution_policy = TeamPolicyInternal;
 
-  typedef PolicyTraits<Properties...> traits;
-
-  TeamPolicyInternal& operator=(const TeamPolicyInternal& p) {
-    m_league_size            = p.m_league_size;
-    m_team_size              = p.m_team_size;
-    m_vector_length          = p.m_vector_length;
-    m_team_alloc             = p.m_team_alloc;
-    m_team_iter              = p.m_team_iter;
-    m_team_scratch_size[0]   = p.m_team_scratch_size[0];
-    m_thread_scratch_size[0] = p.m_thread_scratch_size[0];
-    m_team_scratch_size[1]   = p.m_team_scratch_size[1];
-    m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
-    m_chunk_size             = p.m_chunk_size;
-    return *this;
-  }
+  using traits = PolicyTraits<Properties...>;
 
   //----------------------------------------
 
@@ -515,7 +501,7 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   }
 
  public:
-  typedef Impl::OpenMPTargetExecTeamMember member_type;
+  using member_type = Impl::OpenMPTargetExecTeamMember;
 };
 }  // namespace Impl
 
@@ -720,8 +706,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const FunctorType& lambda) {
-  typedef Kokkos::Impl::FunctorValueTraits<FunctorType, void> ValueTraits;
-  typedef typename ValueTraits::value_type value_type;
+  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
+  using value_type  = typename ValueTraits::value_type;
 
   value_type scan_val = value_type();
 

@@ -534,48 +534,48 @@ struct DuplicatedDataType;
 
 template <typename T>
 struct DuplicatedDataType<T, Kokkos::LayoutRight> {
-  typedef T* value_type;  // For LayoutRight, add a star all the way on the left
+  using value_type = T*;  // For LayoutRight, add a star all the way on the left
 };
 
 template <typename T, size_t N>
 struct DuplicatedDataType<T[N], Kokkos::LayoutRight> {
-  typedef typename DuplicatedDataType<T, Kokkos::LayoutRight>::value_type
-      value_type[N];
+  using value_type =
+      typename DuplicatedDataType<T, Kokkos::LayoutRight>::value_type[N];
 };
 
 template <typename T>
 struct DuplicatedDataType<T[], Kokkos::LayoutRight> {
-  typedef typename DuplicatedDataType<T, Kokkos::LayoutRight>::value_type
-      value_type[];
+  using value_type =
+      typename DuplicatedDataType<T, Kokkos::LayoutRight>::value_type[];
 };
 
 template <typename T>
 struct DuplicatedDataType<T*, Kokkos::LayoutRight> {
-  typedef typename DuplicatedDataType<T, Kokkos::LayoutRight>::value_type*
-      value_type;
+  using value_type =
+      typename DuplicatedDataType<T, Kokkos::LayoutRight>::value_type*;
 };
 
 template <typename T>
 struct DuplicatedDataType<T, Kokkos::LayoutLeft> {
-  typedef T* value_type;
+  using value_type = T*;
 };
 
 template <typename T, size_t N>
 struct DuplicatedDataType<T[N], Kokkos::LayoutLeft> {
-  typedef typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type*
-      value_type;
+  using value_type =
+      typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type*;
 };
 
 template <typename T>
 struct DuplicatedDataType<T[], Kokkos::LayoutLeft> {
-  typedef typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type*
-      value_type;
+  using value_type =
+      typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type*;
 };
 
 template <typename T>
 struct DuplicatedDataType<T*, Kokkos::LayoutLeft> {
-  typedef typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type*
-      value_type;
+  using value_type =
+      typename DuplicatedDataType<T, Kokkos::LayoutLeft>::value_type*;
 };
 
 /* Insert integer argument pack into array */
@@ -595,8 +595,8 @@ void args_to_array(size_t* array, int pos, T dim0, Dims... dims) {
    subview where the index specified is the largest-stride one. */
 template <typename Layout, int rank, typename V, typename... Args>
 struct Slice {
-  typedef Slice<Layout, rank - 1, V, Kokkos::Impl::ALL_t, Args...> next;
-  typedef typename next::value_type value_type;
+  using next       = Slice<Layout, rank - 1, V, Kokkos::Impl::ALL_t, Args...>;
+  using value_type = typename next::value_type;
 
   static value_type get(V const& src, const size_t i, Args... args) {
     return next::get(src, i, Kokkos::ALL, args...);
@@ -605,9 +605,8 @@ struct Slice {
 
 template <typename V, typename... Args>
 struct Slice<Kokkos::LayoutRight, 1, V, Args...> {
-  typedef
-      typename Kokkos::Impl::ViewMapping<void, V, const size_t, Args...>::type
-          value_type;
+  using value_type =
+      typename Kokkos::Impl::ViewMapping<void, V, const size_t, Args...>::type;
   static value_type get(V const& src, const size_t i, Args... args) {
     return Kokkos::subview(src, i, args...);
   }
@@ -615,9 +614,8 @@ struct Slice<Kokkos::LayoutRight, 1, V, Args...> {
 
 template <typename V, typename... Args>
 struct Slice<Kokkos::LayoutLeft, 1, V, Args...> {
-  typedef
-      typename Kokkos::Impl::ViewMapping<void, V, Args..., const size_t>::type
-          value_type;
+  using value_type =
+      typename Kokkos::Impl::ViewMapping<void, V, Args..., const size_t>::type;
   static value_type get(V const& src, const size_t i, Args... args) {
     return Kokkos::subview(src, args..., i);
   }
@@ -628,7 +626,7 @@ struct ReduceDuplicates;
 
 template <typename ExecSpace, typename ValueType, typename OpTag>
 struct ReduceDuplicatesBase {
-  typedef ReduceDuplicates<ExecSpace, ValueType, OpTag> Derived;
+  using Derived = ReduceDuplicates<ExecSpace, ValueType, OpTag>;
   ValueType const* src;
   ValueType* dst;
   size_t stride;
@@ -643,8 +641,8 @@ struct ReduceDuplicatesBase {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
                                           &kpID);
     }
-    typedef RangePolicy<ExecSpace, size_t> policy_type;
-    typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
+    using policy_type  = RangePolicy<ExecSpace, size_t>;
+    using closure_type = Kokkos::Impl::ParallelFor<Derived, policy_type>;
     const closure_type closure(*(static_cast<Derived*>(this)),
                                policy_type(0, stride));
     closure.execute();
@@ -660,7 +658,7 @@ struct ReduceDuplicatesBase {
 template <typename ExecSpace, typename ValueType, typename OpTag>
 struct ReduceDuplicates
     : public ReduceDuplicatesBase<ExecSpace, ValueType, OpTag> {
-  typedef ReduceDuplicatesBase<ExecSpace, ValueType, OpTag> Base;
+  using Base = ReduceDuplicatesBase<ExecSpace, ValueType, OpTag>;
   ReduceDuplicates(ValueType const* src_in, ValueType* dst_in, size_t stride_in,
                    size_t start_in, size_t n_in, std::string const& name)
       : Base(src_in, dst_in, stride_in, start_in, n_in, name) {}
@@ -679,7 +677,7 @@ struct ResetDuplicates;
 
 template <typename ExecSpace, typename ValueType, typename OpTag>
 struct ResetDuplicatesBase {
-  typedef ResetDuplicates<ExecSpace, ValueType, OpTag> Derived;
+  using Derived = ResetDuplicates<ExecSpace, ValueType, OpTag>;
   ValueType* data;
   ResetDuplicatesBase(ValueType* data_in, size_t size_in,
                       std::string const& name)
@@ -689,8 +687,8 @@ struct ResetDuplicatesBase {
       Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
                                           &kpID);
     }
-    typedef RangePolicy<ExecSpace, size_t> policy_type;
-    typedef Kokkos::Impl::ParallelFor<Derived, policy_type> closure_type;
+    using policy_type  = RangePolicy<ExecSpace, size_t>;
+    using closure_type = Kokkos::Impl::ParallelFor<Derived, policy_type>;
     const closure_type closure(*(static_cast<Derived*>(this)),
                                policy_type(0, size_in));
     closure.execute();
@@ -706,7 +704,7 @@ struct ResetDuplicatesBase {
 template <typename ExecSpace, typename ValueType, typename OpTag>
 struct ResetDuplicates
     : public ResetDuplicatesBase<ExecSpace, ValueType, OpTag> {
-  typedef ResetDuplicatesBase<ExecSpace, ValueType, OpTag> Base;
+  using Base = ResetDuplicatesBase<ExecSpace, ValueType, OpTag>;
   ResetDuplicates(ValueType* data_in, size_t size_in, std::string const& name)
       : Base(data_in, size_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
@@ -747,12 +745,12 @@ template <typename DataType, typename OpTag, typename DeviceType,
 class ScatterView<DataType, Layout, DeviceType, OpTag, ScatterNonDuplicatedTag,
                   ContributionTag> {
  public:
-  using execution_space = typename DeviceType::execution_space;
-  using memory_space    = typename DeviceType::memory_space;
-  using device_type     = Kokkos::Device<execution_space, memory_space>;
-  typedef Kokkos::View<DataType, Layout, device_type> original_view_type;
-  typedef typename original_view_type::value_type original_value_type;
-  typedef typename original_view_type::reference_type original_reference_type;
+  using execution_space         = typename DeviceType::execution_space;
+  using memory_space            = typename DeviceType::memory_space;
+  using device_type             = Kokkos::Device<execution_space, memory_space>;
+  using original_view_type      = Kokkos::View<DataType, Layout, device_type>;
+  using original_value_type     = typename original_view_type::value_type;
+  using original_reference_type = typename original_view_type::reference_type;
   friend class ScatterAccess<DataType, OpTag, DeviceType, Layout,
                              ScatterNonDuplicatedTag, ContributionTag,
                              ScatterNonAtomicTag>;
@@ -803,7 +801,7 @@ class ScatterView<DataType, Layout, DeviceType, OpTag, ScatterNonDuplicatedTag,
 
   template <typename DT, typename... RP>
   void contribute_into(View<DT, RP...> const& dest) const {
-    typedef View<DT, RP...> dest_type;
+    using dest_type = View<DT, RP...>;
     static_assert(std::is_same<typename dest_type::array_layout, Layout>::value,
                   "ScatterView contribute destination has different layout");
     static_assert(
@@ -845,7 +843,7 @@ class ScatterView<DataType, Layout, DeviceType, OpTag, ScatterNonDuplicatedTag,
   }
 
  private:
-  typedef original_view_type internal_view_type;
+  using internal_view_type = original_view_type;
   internal_view_type internal_view;
 };
 
@@ -856,13 +854,11 @@ class ScatterAccess<DataType, OpTag, DeviceType, Layout,
                     ScatterNonDuplicatedTag, ContributionTag,
                     OverrideContribution> {
  public:
-  typedef ScatterView<DataType, Layout, DeviceType, OpTag,
-                      ScatterNonDuplicatedTag, ContributionTag>
-      view_type;
-  typedef typename view_type::original_value_type original_value_type;
-  typedef Kokkos::Impl::Experimental::ScatterValue<
-      original_value_type, OpTag, DeviceType, OverrideContribution>
-      value_type;
+  using view_type           = ScatterView<DataType, Layout, DeviceType, OpTag,
+                                ScatterNonDuplicatedTag, ContributionTag>;
+  using original_value_type = typename view_type::original_value_type;
+  using value_type          = Kokkos::Impl::Experimental::ScatterValue<
+      original_value_type, OpTag, DeviceType, OverrideContribution>;
 
   KOKKOS_INLINE_FUNCTION
   ScatterAccess() : view(view_type()) {}
@@ -902,10 +898,10 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, OpTag,
   using execution_space = typename DeviceType::execution_space;
   using memory_space    = typename DeviceType::memory_space;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  typedef Kokkos::View<DataType, Kokkos::LayoutRight, device_type>
-      original_view_type;
-  typedef typename original_view_type::value_type original_value_type;
-  typedef typename original_view_type::reference_type original_reference_type;
+  using original_view_type =
+      Kokkos::View<DataType, Kokkos::LayoutRight, device_type>;
+  using original_value_type     = typename original_view_type::value_type;
+  using original_reference_type = typename original_view_type::reference_type;
   friend class ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutRight,
                              ScatterDuplicatedTag, ContributionTag,
                              ScatterNonAtomicTag>;
@@ -915,12 +911,12 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, OpTag,
   template <class, class, class, class, class, class>
   friend class ScatterView;
 
-  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<
-      DataType, Kokkos::LayoutRight>
-      data_type_info;
-  typedef typename data_type_info::value_type internal_data_type;
-  typedef Kokkos::View<internal_data_type, Kokkos::LayoutRight, device_type>
-      internal_view_type;
+  using data_type_info =
+      typename Kokkos::Impl::Experimental::DuplicatedDataType<
+          DataType, Kokkos::LayoutRight>;
+  using internal_data_type = typename data_type_info::value_type;
+  using internal_view_type =
+      Kokkos::View<internal_data_type, Kokkos::LayoutRight, device_type>;
 
   ScatterView() = default;
 
@@ -999,7 +995,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, OpTag,
 
   template <typename DT, typename... RP>
   void contribute_into(View<DT, RP...> const& dest) const {
-    typedef View<DT, RP...> dest_type;
+    using dest_type = View<DT, RP...>;
     static_assert(std::is_same<typename dest_type::array_layout,
                                Kokkos::LayoutRight>::value,
                   "ScatterView deep_copy destination has different layout");
@@ -1054,9 +1050,8 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, OpTag,
   }
 
  protected:
-  typedef Kokkos::Experimental::UniqueToken<
-      execution_space, Kokkos::Experimental::UniqueTokenScope::Global>
-      unique_token_type;
+  using unique_token_type = Kokkos::Experimental::UniqueToken<
+      execution_space, Kokkos::Experimental::UniqueTokenScope::Global>;
 
   unique_token_type unique_token;
   internal_view_type internal_view;
@@ -1070,10 +1065,10 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, OpTag,
   using execution_space = typename DeviceType::execution_space;
   using memory_space    = typename DeviceType::memory_space;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  typedef Kokkos::View<DataType, Kokkos::LayoutLeft, device_type>
-      original_view_type;
-  typedef typename original_view_type::value_type original_value_type;
-  typedef typename original_view_type::reference_type original_reference_type;
+  using original_view_type =
+      Kokkos::View<DataType, Kokkos::LayoutLeft, device_type>;
+  using original_value_type     = typename original_view_type::value_type;
+  using original_reference_type = typename original_view_type::reference_type;
   friend class ScatterAccess<DataType, OpTag, DeviceType, Kokkos::LayoutLeft,
                              ScatterDuplicatedTag, ContributionTag,
                              ScatterNonAtomicTag>;
@@ -1083,12 +1078,12 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, OpTag,
   template <class, class, class, class, class, class>
   friend class ScatterView;
 
-  typedef typename Kokkos::Impl::Experimental::DuplicatedDataType<
-      DataType, Kokkos::LayoutLeft>
-      data_type_info;
-  typedef typename data_type_info::value_type internal_data_type;
-  typedef Kokkos::View<internal_data_type, Kokkos::LayoutLeft, device_type>
-      internal_view_type;
+  using data_type_info =
+      typename Kokkos::Impl::Experimental::DuplicatedDataType<
+          DataType, Kokkos::LayoutLeft>;
+  using internal_data_type = typename data_type_info::value_type;
+  using internal_view_type =
+      Kokkos::View<internal_data_type, Kokkos::LayoutLeft, device_type>;
 
   ScatterView() = default;
 
@@ -1186,7 +1181,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, OpTag,
 
   template <typename... RP>
   void contribute_into(View<RP...> const& dest) const {
-    typedef View<RP...> dest_type;
+    using dest_type = View<RP...>;
     static_assert(
         std::is_same<typename dest_type::value_type,
                      typename original_view_type::non_const_value_type>::value,
@@ -1255,9 +1250,8 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, OpTag,
   }
 
  protected:
-  typedef Kokkos::Experimental::UniqueToken<
-      execution_space, Kokkos::Experimental::UniqueTokenScope::Global>
-      unique_token_type;
+  using unique_token_type = Kokkos::Experimental::UniqueToken<
+      execution_space, Kokkos::Experimental::UniqueTokenScope::Global>;
 
   unique_token_type unique_token;
   internal_view_type internal_view;
@@ -1279,13 +1273,11 @@ template <typename DataType, typename OpTag, typename DeviceType,
 class ScatterAccess<DataType, OpTag, DeviceType, Layout, ScatterDuplicatedTag,
                     ContributionTag, OverrideContribution> {
  public:
-  typedef ScatterView<DataType, Layout, DeviceType, OpTag, ScatterDuplicatedTag,
-                      ContributionTag>
-      view_type;
-  typedef typename view_type::original_value_type original_value_type;
-  typedef Kokkos::Impl::Experimental::ScatterValue<
-      original_value_type, OpTag, DeviceType, OverrideContribution>
-      value_type;
+  using view_type           = ScatterView<DataType, Layout, DeviceType, OpTag,
+                                ScatterDuplicatedTag, ContributionTag>;
+  using original_value_type = typename view_type::original_value_type;
+  using value_type          = Kokkos::Impl::Experimental::ScatterValue<
+      original_value_type, OpTag, DeviceType, OverrideContribution>;
 
   KOKKOS_FORCEINLINE_FUNCTION
   ScatterAccess(view_type const& view_in)
@@ -1329,8 +1321,8 @@ class ScatterAccess<DataType, OpTag, DeviceType, Layout, ScatterDuplicatedTag,
   }
 
  private:
-  typedef typename view_type::unique_token_type unique_token_type;
-  typedef typename unique_token_type::size_type thread_id_type;
+  using unique_token_type = typename view_type::unique_token_type;
+  using thread_id_type    = typename unique_token_type::size_type;
   thread_id_type thread_id;
 };
 

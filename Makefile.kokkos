@@ -596,6 +596,8 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_TUNING), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_TUNING")
 endif
 
+tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_LIBDL")
+
 ifeq ($(KOKKOS_INTERNAL_USE_HWLOC), 1)
   ifneq ($(KOKKOS_CMAKE), yes)
     ifneq ($(HWLOC_PATH),)

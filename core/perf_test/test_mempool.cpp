@@ -56,7 +56,7 @@ using MemorySpace = Kokkos::DefaultExecutionSpace::memory_space;
 using MemoryPool = Kokkos::MemoryPool<ExecSpace>;
 
 struct TestFunctor {
-  typedef Kokkos::View<uintptr_t*, ExecSpace> ptrs_type;
+  using ptrs_type = Kokkos::View<uintptr_t*, ExecSpace>;
 
   enum : unsigned { chunk = 32 };
 
@@ -87,7 +87,7 @@ struct TestFunctor {
 
   //----------------------------------------
 
-  typedef long value_type;
+  using value_type = long;
 
   //----------------------------------------
 
@@ -107,7 +107,7 @@ struct TestFunctor {
   }
 
   bool test_fill() {
-    typedef Kokkos::RangePolicy<ExecSpace, TagFill> policy;
+    using policy = Kokkos::RangePolicy<ExecSpace, TagFill>;
 
     long result = 0;
 
@@ -134,7 +134,7 @@ struct TestFunctor {
   }
 
   void test_del() {
-    typedef Kokkos::RangePolicy<ExecSpace, TagDel> policy;
+    using policy = Kokkos::RangePolicy<ExecSpace, TagDel>;
 
     Kokkos::parallel_for(policy(0, range_iter), *this);
     Kokkos::fence();
@@ -164,7 +164,7 @@ struct TestFunctor {
   }
 
   bool test_alloc_dealloc() {
-    typedef Kokkos::RangePolicy<ExecSpace, TagAllocDealloc> policy;
+    using policy = Kokkos::RangePolicy<ExecSpace, TagAllocDealloc>;
 
     long error_count = 0;
 

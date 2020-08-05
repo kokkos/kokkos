@@ -52,7 +52,6 @@
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
-#include <Kokkos_UniqueToken.hpp>
 #include <Kokkos_MasterLock.hpp>
 
 //----------------------------------------------------------------------------
@@ -149,45 +148,67 @@ struct Device;
 /// Kokkos::Cuda, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP,
 /// Kokkos::Threads, Kokkos::Serial
 
+#if defined(__clang_analyzer__)
+#define KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION \
+  [[clang::annotate("DefaultExecutionSpace")]]
+#define KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION \
+  [[clang::annotate("DefaultHostExecutionSpace")]]
+#else
+#define KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION
+#define KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION
+#endif
+
 namespace Kokkos {
 
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA)
-typedef Cuda DefaultExecutionSpace;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Cuda;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET)
-typedef Experimental::OpenMPTarget DefaultExecutionSpace;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
+    Experimental::OpenMPTarget;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
-typedef Experimental::HIP DefaultExecutionSpace;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
+    Experimental::HIP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM)
-typedef Experimental::ROCm DefaultExecutionSpace;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
+    Experimental::ROCm;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
-using DefaultExecutionSpace = OpenMP;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = OpenMP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
-typedef Threads DefaultExecutionSpace;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Threads;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
-typedef Kokkos::Experimental::HPX DefaultExecutionSpace;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
+    Kokkos::Experimental::HPX;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
-typedef Serial DefaultExecutionSpace;
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Serial;
 #else
 #error \
     "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::HIP, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
 #endif
 
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
-using DefaultHostExecutionSpace = OpenMP;
+using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
+    OpenMP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
-typedef Threads DefaultHostExecutionSpace;
+using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
+    Threads;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
-typedef Kokkos::Experimental::HPX DefaultHostExecutionSpace;
+using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
+    Kokkos::Experimental::HPX;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL)
-typedef Serial DefaultHostExecutionSpace;
+using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
+    Serial;
 #elif defined(KOKKOS_ENABLE_OPENMP)
-typedef OpenMP DefaultHostExecutionSpace;
+using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
+    OpenMP;
 #elif defined(KOKKOS_ENABLE_THREADS)
-typedef Threads DefaultHostExecutionSpace;
+using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
+    Threads;
 #elif defined(KOKKOS_ENABLE_HPX)
-typedef Kokkos::Experimental::HPX DefaultHostExecutionSpace;
+using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
+    Kokkos::Experimental::HPX;
 #elif defined(KOKKOS_ENABLE_SERIAL)
-typedef Serial DefaultHostExecutionSpace;
+using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
+    Serial;
 #else
 #error \
     "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
@@ -206,15 +227,15 @@ namespace Impl {
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
     defined(KOKKOS_ENABLE_CUDA)
-typedef Kokkos::CudaSpace ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = Kokkos::CudaSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU)
-typedef Kokkos::HostSpace ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = Kokkos::HostSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
-typedef Kokkos::Experimental::HIPSpace ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = Kokkos::Experimental::HIPSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 using ActiveExecutionMemorySpace = Kokkos::HostSpace;
 #else
-typedef void ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = void;
 #endif
 
 template <class ActiveSpace, class MemorySpace>

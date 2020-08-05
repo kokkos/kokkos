@@ -166,11 +166,6 @@
 
 #if defined(KOKKOS_ENABLE_HIP)
 
-// FIXME_HIP Not defining NDEBUG makes some tests fail.
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-
 #define HIP_ENABLE_PRINTF
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
@@ -353,7 +348,7 @@
 #define KOKKOS_ENABLE_ASM 1
 #endif
 
-#if !defined(KOKKOS_FORCEINLINE_FUNCTION)
+#if !defined(KOKKOS_IMPL_FORCEINLINE_FUNCTION)
 #if !defined(_WIN32)
 #define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline __attribute__((always_inline))
 #define KOKKOS_IMPL_FORCEINLINE __attribute__((always_inline))
