@@ -115,17 +115,17 @@ class HostSpace {
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
   using execution_space = Kokkos::OpenMP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
-  typedef Kokkos::Threads execution_space;
+  using execution_space = Kokkos::Threads;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
-  typedef Kokkos::Experimental::HPX execution_space;
+  using execution_space = Kokkos::Experimental::HPX;
 #elif defined(KOKKOS_ENABLE_OPENMP)
-  typedef Kokkos::OpenMP execution_space;
+  using execution_space = Kokkos::OpenMP;
 #elif defined(KOKKOS_ENABLE_THREADS)
-  typedef Kokkos::Threads execution_space;
+  using execution_space = Kokkos::Threads;
 #elif defined(KOKKOS_ENABLE_HPX)
-  typedef Kokkos::Experimental::HPX execution_space;
+  using execution_space = Kokkos::Experimental::HPX;
 #elif defined(KOKKOS_ENABLE_SERIAL)
-  typedef Kokkos::Serial execution_space;
+  using execution_space = Kokkos::Serial;
 #else
 #error \
     "At least one of the following host execution spaces must be defined: Kokkos::OpenMP, Kokkos::Threads, or Kokkos::Serial.  You might be seeing this message if you disabled the Kokkos::Serial device explicitly using the Kokkos_ENABLE_Serial:BOOL=OFF CMake option, but did not enable any of the other host execution space devices."

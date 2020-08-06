@@ -239,6 +239,9 @@ const CudaInternalDevices &CudaInternalDevices::singleton() {
 
 }  // namespace
 
+unsigned long *CudaInternal::constantMemHostStaging = nullptr;
+cudaEvent_t CudaInternal::constantMemReusable       = nullptr;
+
 //----------------------------------------------------------------------------
 
 void CudaInternal::print_configuration(std::ostream &s) const {
@@ -538,6 +541,15 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
   // Init the array for used for arbitrarily sized atomics
   if (stream == nullptr) Impl::initialize_host_cuda_lock_arrays();
 
+  // Allocate a staging buffer for constant mem in pinned host memory
+  // and an event to avoid overwriting driver for previous kernel launches
+  if (stream == nullptr) {
+    CUDA_SAFE_CALL(cudaMallocHost((void **)&constantMemHostStaging,
+                                  CudaTraits::ConstantMemoryUsage));
+
+    CUDA_SAFE_CALL(cudaEventCreate(&constantMemReusable));
+  }
+
   m_stream = stream;
 }
 
@@ -671,6 +683,12 @@ void CudaInternal::finalize() {
     m_scratchUnified          = nullptr;
     m_scratchConcurrentBitset = nullptr;
     m_stream                  = nullptr;
+  }
+
+  // only destroy these if we're finalizing the singleton
+  if (this == &singleton()) {
+    cudaFreeHost(constantMemHostStaging);
+    cudaEventDestroy(constantMemReusable);
   }
 }
 

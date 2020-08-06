@@ -53,9 +53,9 @@ namespace Impl {
 
 template <typename MapType, bool Near = false>
 struct TestInsert {
-  typedef MapType map_type;
-  typedef typename map_type::execution_space execution_space;
-  typedef uint32_t value_type;
+  using map_type        = MapType;
+  using execution_space = typename map_type::execution_space;
+  using value_type      = uint32_t;
 
   map_type map;
   uint32_t inserts;
@@ -101,10 +101,10 @@ struct TestInsert {
 
 template <typename MapType, bool Near>
 struct TestErase {
-  typedef TestErase<MapType, Near> self_type;
+  using self_type = TestErase<MapType, Near>;
 
-  typedef MapType map_type;
-  typedef typename MapType::execution_space execution_space;
+  using map_type        = MapType;
+  using execution_space = typename MapType::execution_space;
 
   map_type m_map;
   uint32_t m_num_erase;
@@ -131,9 +131,9 @@ struct TestErase {
 
 template <typename MapType>
 struct TestFind {
-  typedef MapType map_type;
-  typedef typename MapType::execution_space::execution_space execution_space;
-  typedef uint32_t value_type;
+  using map_type        = MapType;
+  using execution_space = typename MapType::execution_space::execution_space;
+  using value_type      = uint32_t;
 
   map_type m_map;
   uint32_t m_num_insert;
@@ -180,9 +180,9 @@ struct TestFind {
 template <typename Device>
 void test_insert(uint32_t num_nodes, uint32_t num_inserts,
                  uint32_t num_duplicates, bool near) {
-  typedef Kokkos::UnorderedMap<uint32_t, uint32_t, Device> map_type;
-  typedef Kokkos::UnorderedMap<const uint32_t, const uint32_t, Device>
-      const_map_type;
+  using map_type = Kokkos::UnorderedMap<uint32_t, uint32_t, Device>;
+  using const_map_type =
+      Kokkos::UnorderedMap<const uint32_t, const uint32_t, Device>;
 
   const uint32_t expected_inserts =
       (num_inserts + num_duplicates - 1u) / num_duplicates;
@@ -232,7 +232,7 @@ void test_insert(uint32_t num_nodes, uint32_t num_inserts,
 
 template <typename Device>
 void test_failed_insert(uint32_t num_nodes) {
-  typedef Kokkos::UnorderedMap<uint32_t, uint32_t, Device> map_type;
+  using map_type = Kokkos::UnorderedMap<uint32_t, uint32_t, Device>;
 
   map_type map(num_nodes);
   Impl::TestInsert<map_type> test_insert(map, 2u * num_nodes, 1u);
@@ -244,13 +244,11 @@ void test_failed_insert(uint32_t num_nodes) {
 
 template <typename Device>
 void test_deep_copy(uint32_t num_nodes) {
-  typedef Kokkos::UnorderedMap<uint32_t, uint32_t, Device> map_type;
-  typedef Kokkos::UnorderedMap<const uint32_t, const uint32_t, Device>
-      const_map_type;
+  using map_type = Kokkos::UnorderedMap<uint32_t, uint32_t, Device>;
+  using const_map_type =
+      Kokkos::UnorderedMap<const uint32_t, const uint32_t, Device>;
 
-  typedef typename map_type::HostMirror host_map_type;
-  // typedef Kokkos::UnorderedMap<uint32_t, uint32_t, typename
-  // Device::host_mirror_execution_space > host_map_type;
+  using host_map_type = typename map_type::HostMirror;
 
   map_type map;
   map.rehash(num_nodes, false);

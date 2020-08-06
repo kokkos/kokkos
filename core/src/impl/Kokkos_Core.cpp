@@ -509,7 +509,7 @@ void fence_internal() {
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
-  Kokkos::Experimental::HIP().fence();
+  Kokkos::Experimental::HIP::impl_static_fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_SYCL)

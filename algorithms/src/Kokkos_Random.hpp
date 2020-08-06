@@ -94,9 +94,9 @@ namespace Kokkos {
     class Pool {
      public:
       //The Kokkos device type
-      typedef Device device_type;
+      using device_type = Device;
       //The actual generator type
-      typedef Generator<Device> generator_type;
+      using generator_type = Generator<Device>;
 
       //Default constructor: does not initialize a pool
       Pool();
@@ -124,7 +124,7 @@ namespace Kokkos {
     class Generator {
      public:
      //The Kokkos device type
-    typedef DeviceType device_type;
+    using device_type = DeviceType;
 
     //Max return values of respective [X]rand[S]() functions
     enum {MAX_URAND = 0xffffffffU};
@@ -381,7 +381,7 @@ struct rand<Generator, unsigned long> {
 // NOTE (mfh 26 oct 2014) This is a partial specialization for long
 // long, a C99 / C++11 signed type which is guaranteed to be at
 // least 64 bits.  Do NOT write a partial specialization for
-// int64_t!!!  This is just a typedef!  It could be either long or
+// int64_t!!!  This is just an alias!  It could be either long or
 // long long.  We don't know which a priori, and I've seen both.
 // The types long and long long are guaranteed to differ, so it's
 // always safe to specialize for both.
@@ -413,7 +413,7 @@ struct rand<Generator, long long> {
 // NOTE (mfh 26 oct 2014) This is a partial specialization for
 // unsigned long long, a C99 / C++11 unsigned type which is
 // guaranteed to be at least 64 bits.  Do NOT write a partial
-// specialization for uint64_t!!!  This is just a typedef!  It could
+// specialization for uint64_t!!!  This is just an alias!  It could
 // be either unsigned long or unsigned long long.  We don't know
 // which a priori, and I've seen both.  The types unsigned long and
 // unsigned long long are guaranteed to differ, so it's always safe
@@ -681,7 +681,7 @@ class Random_XorShift64 {
   friend class Random_XorShift64_Pool<DeviceType>;
 
  public:
-  typedef DeviceType device_type;
+  using device_type = DeviceType;
 
   constexpr static uint32_t MAX_URAND   = std::numeric_limits<uint32_t>::max();
   constexpr static uint64_t MAX_URAND64 = std::numeric_limits<uint64_t>::max();
@@ -819,15 +819,15 @@ template <class DeviceType = Kokkos::DefaultExecutionSpace>
 class Random_XorShift64_Pool {
  private:
   using execution_space = typename DeviceType::execution_space;
-  typedef View<int*, execution_space> locks_type;
-  typedef View<uint64_t*, DeviceType> state_data_type;
+  using locks_type      = View<int*, execution_space>;
+  using state_data_type = View<uint64_t*, DeviceType>;
   locks_type locks_;
   state_data_type state_;
   int num_states_;
 
  public:
-  typedef Random_XorShift64<DeviceType> generator_type;
-  typedef DeviceType device_type;
+  using generator_type = Random_XorShift64<DeviceType>;
+  using device_type    = DeviceType;
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift64_Pool() { num_states_ = 0; }
@@ -912,8 +912,8 @@ class Random_XorShift1024 {
   friend class Random_XorShift1024_Pool<DeviceType>;
 
  public:
-  typedef Random_XorShift1024_Pool<DeviceType> pool_type;
-  typedef DeviceType device_type;
+  using pool_type   = Random_XorShift1024_Pool<DeviceType>;
+  using device_type = DeviceType;
 
   constexpr static uint32_t MAX_URAND   = std::numeric_limits<uint32_t>::max();
   constexpr static uint64_t MAX_URAND64 = std::numeric_limits<uint64_t>::max();
@@ -1055,9 +1055,9 @@ template <class DeviceType = Kokkos::DefaultExecutionSpace>
 class Random_XorShift1024_Pool {
  private:
   using execution_space = typename DeviceType::execution_space;
-  typedef View<int*, execution_space> locks_type;
-  typedef View<int*, DeviceType> int_view_type;
-  typedef View<uint64_t * [16], DeviceType> state_data_type;
+  using locks_type      = View<int*, execution_space>;
+  using int_view_type   = View<int*, DeviceType>;
+  using state_data_type = View<uint64_t * [16], DeviceType>;
 
   locks_type locks_;
   state_data_type state_;
@@ -1066,9 +1066,9 @@ class Random_XorShift1024_Pool {
   friend class Random_XorShift1024<DeviceType>;
 
  public:
-  typedef Random_XorShift1024<DeviceType> generator_type;
+  using generator_type = Random_XorShift1024<DeviceType>;
 
-  typedef DeviceType device_type;
+  using device_type = DeviceType;
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024_Pool() { num_states_ = 0; }
@@ -1160,14 +1160,13 @@ struct fill_random_functor_begin_end;
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_range<ViewType, RandomPool, loops, 1, IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type range;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
                             typename ViewType::const_value_type range_)
@@ -1187,14 +1186,13 @@ struct fill_random_functor_range<ViewType, RandomPool, loops, 1, IndexType> {
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_range<ViewType, RandomPool, loops, 2, IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type range;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
                             typename ViewType::const_value_type range_)
@@ -1216,14 +1214,13 @@ struct fill_random_functor_range<ViewType, RandomPool, loops, 2, IndexType> {
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_range<ViewType, RandomPool, loops, 3, IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type range;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
                             typename ViewType::const_value_type range_)
@@ -1246,14 +1243,13 @@ struct fill_random_functor_range<ViewType, RandomPool, loops, 3, IndexType> {
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_range<ViewType, RandomPool, loops, 4, IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type range;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
                             typename ViewType::const_value_type range_)
@@ -1277,14 +1273,13 @@ struct fill_random_functor_range<ViewType, RandomPool, loops, 4, IndexType> {
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_range<ViewType, RandomPool, loops, 5, IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type range;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
                             typename ViewType::const_value_type range_)
@@ -1310,14 +1305,13 @@ struct fill_random_functor_range<ViewType, RandomPool, loops, 5, IndexType> {
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_range<ViewType, RandomPool, loops, 6, IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type range;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
                             typename ViewType::const_value_type range_)
@@ -1345,14 +1339,13 @@ struct fill_random_functor_range<ViewType, RandomPool, loops, 6, IndexType> {
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_range<ViewType, RandomPool, loops, 7, IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type range;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
                             typename ViewType::const_value_type range_)
@@ -1382,14 +1375,13 @@ struct fill_random_functor_range<ViewType, RandomPool, loops, 7, IndexType> {
 
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_range<ViewType, RandomPool, loops, 8, IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type range;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_range(ViewType a_, RandomPool rand_pool_,
                             typename ViewType::const_value_type range_)
@@ -1421,14 +1413,13 @@ struct fill_random_functor_range<ViewType, RandomPool, loops, 8, IndexType> {
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 1,
                                      IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_begin_end(ViewType a_, RandomPool rand_pool_,
                                 typename ViewType::const_value_type begin_,
@@ -1450,14 +1441,13 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 1,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 2,
                                      IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_begin_end(ViewType a_, RandomPool rand_pool_,
                                 typename ViewType::const_value_type begin_,
@@ -1481,14 +1471,13 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 2,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 3,
                                      IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_begin_end(ViewType a_, RandomPool rand_pool_,
                                 typename ViewType::const_value_type begin_,
@@ -1513,14 +1502,13 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 3,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 4,
                                      IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_begin_end(ViewType a_, RandomPool rand_pool_,
                                 typename ViewType::const_value_type begin_,
@@ -1546,14 +1534,13 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 4,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 5,
                                      IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_begin_end(ViewType a_, RandomPool rand_pool_,
                                 typename ViewType::const_value_type begin_,
@@ -1581,14 +1568,13 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 5,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 6,
                                      IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_begin_end(ViewType a_, RandomPool rand_pool_,
                                 typename ViewType::const_value_type begin_,
@@ -1618,14 +1604,13 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 6,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 7,
                                      IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_begin_end(ViewType a_, RandomPool rand_pool_,
                                 typename ViewType::const_value_type begin_,
@@ -1657,14 +1642,13 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 7,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 8,
                                      IndexType> {
-  typedef typename ViewType::execution_space execution_space;
+  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
 
-  typedef rand<typename RandomPool::generator_type,
-               typename ViewType::non_const_value_type>
-      Rand;
+  using Rand = rand<typename RandomPool::generator_type,
+                    typename ViewType::non_const_value_type>;
 
   fill_random_functor_begin_end(ViewType a_, RandomPool rand_pool_,
                                 typename ViewType::const_value_type begin_,

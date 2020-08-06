@@ -58,12 +58,12 @@ namespace Test {
 
 template <typename Scalar, class Space>
 struct TestDynamicView {
-  typedef typename Space::execution_space execution_space;
-  typedef typename Space::memory_space memory_space;
+  using execution_space = typename Space::execution_space;
+  using memory_space    = typename Space::memory_space;
 
-  typedef Kokkos::Experimental::DynamicView<Scalar*, Space> view_type;
+  using view_type = Kokkos::Experimental::DynamicView<Scalar*, Space>;
 
-  typedef double value_type;
+  using value_type = double;
 
   static void run(unsigned arg_total_size) {
     // Test: Create DynamicView, initialize size (via resize), run through
@@ -244,7 +244,7 @@ struct TestDynamicView {
 };
 
 TEST(TEST_CATEGORY, dynamic_view) {
-  typedef TestDynamicView<double, TEST_EXECSPACE> TestDynView;
+  using TestDynView = TestDynamicView<double, TEST_EXECSPACE>;
 
   for (int i = 0; i < 10; ++i) {
     TestDynView::run(100000 + 100 * i);

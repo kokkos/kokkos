@@ -1288,8 +1288,8 @@ struct DeviceIterateTile {
   using point_type       = typename RP::point_type;
 
   struct VoidDummy {};
-  typedef typename std::conditional<std::is_same<Tag, void>::value, VoidDummy,
-                                    Tag>::type usable_tag;
+  using usable_tag = typename std::conditional<std::is_same<Tag, void>::value,
+                                               VoidDummy, Tag>::type;
 
   DeviceIterateTile(const RP& rp, const Functor& func)
       : m_rp{rp}, m_func{func} {}

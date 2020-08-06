@@ -54,8 +54,8 @@ template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
                   Kokkos::Experimental::HIP> {
  public:
-  typedef Kokkos::WorkGraphPolicy<Traits...> Policy;
-  typedef ParallelFor<FunctorType, Policy, Kokkos::Experimental::HIP> Self;
+  using Policy = Kokkos::WorkGraphPolicy<Traits...>;
+  using Self   = ParallelFor<FunctorType, Policy, Kokkos::Experimental::HIP>;
 
  private:
   Policy m_policy;
