@@ -1423,16 +1423,16 @@ class View : public ViewTraits<DataType, Properties...> {
   View() = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  View(const View& /*rhs*/) = default;
+  View(const View&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  View(View&& /*rhs*/) = default;
+  View(View&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(const View& /*rhs*/) = default;
+  View& operator=(const View&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(View&& /*rhs*/) = default;
+  View& operator=(View&&) = default;
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
