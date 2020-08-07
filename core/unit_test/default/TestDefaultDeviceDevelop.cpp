@@ -49,8 +49,26 @@
 
 #include <default/TestDefaultDeviceType_Category.hpp>
 
+#include <Kokkos_Graph.hpp>
+
 namespace Test {
 
-TEST(defaultdevicetype, development_test) {}
+TEST(defaultdevicetype, development_test) {
+  Kokkos::View<int> count{"graph_kernel_count"};
+  const auto graph = Kokkos::Experimental::create_graph([=](auto root) {
+    auto f1 = root.then_parallel_for(
+        Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
+        KOKKOS_LAMBDA(long) { count()++; });
+    f1.then_parallel_for(
+        Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
+        KOKKOS_LAMBDA(long) { count()++; });
+  });
+
+  graph.submit();
+  auto count_host =
+      Kokkos::create_mirror_view_and_copy(graph.get_execution_space(), count);
+  graph.get_execution_space().fence();
+  ASSERT_EQ(count_host(), 2);
+}
 
 }  // namespace Test
