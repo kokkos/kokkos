@@ -1419,29 +1419,20 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   ~View() = default;
 
-  KOKKOS_INLINE_FUNCTION
-  View() : m_track(), m_map() {}
+  KOKKOS_DEFAULTED_FUNCTION
+  View() = default;
 
-  KOKKOS_INLINE_FUNCTION
-  View(const View& rhs) : m_track(rhs), m_map(rhs.m_map) {}
+  KOKKOS_DEFAULTED_FUNCTION
+  View(const View&) = default;
 
-  KOKKOS_INLINE_FUNCTION
-  View(View&& rhs)
-      : m_track(std::move(rhs.m_track)), m_map(std::move(rhs.m_map)) {}
+  KOKKOS_DEFAULTED_FUNCTION
+  View(View&&) = default;
 
-  KOKKOS_INLINE_FUNCTION
-  View& operator=(const View& rhs) {
-    m_track = rhs.m_track;
-    m_map   = rhs.m_map;
-    return *this;
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  View& operator=(const View&) = default;
 
-  KOKKOS_INLINE_FUNCTION
-  View& operator=(View&& rhs) {
-    m_track = std::move(rhs.m_track);
-    m_map   = std::move(rhs.m_map);
-    return *this;
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  View& operator=(View&&) = default;
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
