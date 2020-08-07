@@ -49,27 +49,6 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-
-/* For backward compatibility */
-
-struct ViewAllocateWithoutInitializing {
-  const std::string label;
-
-  ViewAllocateWithoutInitializing() : label() {}
-
-  explicit ViewAllocateWithoutInitializing(const std::string &arg_label)
-      : label(arg_label) {}
-
-  explicit ViewAllocateWithoutInitializing(const char *const arg_label)
-      : label(arg_label) {}
-};
-
-} /* namespace Kokkos */
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
 namespace Impl {
 
 struct WithoutInitializing_t {};
@@ -284,6 +263,27 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 };
 
 } /* namespace Impl */
+} /* namespace Kokkos */
+
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+
+/* For backward compatibility */
+
+struct ViewAllocateWithoutInitializing {
+  const std::string label;
+
+  ViewAllocateWithoutInitializing() : label() {}
+
+  explicit ViewAllocateWithoutInitializing(const std::string &arg_label)
+      : label(arg_label) {}
+
+  explicit ViewAllocateWithoutInitializing(const char *const arg_label)
+      : label(arg_label) {}
+};
+
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
