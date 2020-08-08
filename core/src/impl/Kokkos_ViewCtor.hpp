@@ -275,6 +275,7 @@ namespace Kokkos {
 // NOTE Cheap trick to avoid duplicated symbol error.  The alternative is
 // moving the definition to a .cpp file.
 template <typename AlwaysVoid = void>
+/*[[deprecated(Use Kokkos::alloc(Kokkos::WithoutInitializing, label) instead]]*/
 Impl::ViewCtorProp<std::string, Impl::WithoutInitializing_t>
 ViewAllocateWithoutInitializing(std::string label) {
   return {std::move(label), Impl::WithoutInitializing_t()};
