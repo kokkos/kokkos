@@ -272,17 +272,11 @@ namespace Kokkos {
 
 /* For backward compatibility */
 
-struct ViewAllocateWithoutInitializing {
-  const std::string label;
-
-  ViewAllocateWithoutInitializing() : label() {}
-
-  explicit ViewAllocateWithoutInitializing(const std::string &arg_label)
-      : label(arg_label) {}
-
-  explicit ViewAllocateWithoutInitializing(const char *const arg_label)
-      : label(arg_label) {}
-};
+template <typename AlwaysVoid = void>
+Impl::ViewCtorProp<std::string, Impl::WithoutInitializing_t>
+ViewAllocateWithoutInitializing(std::string label) {
+  return {std::move(label), Impl::WithoutInitializing_t()};
+}
 
 } /* namespace Kokkos */
 
