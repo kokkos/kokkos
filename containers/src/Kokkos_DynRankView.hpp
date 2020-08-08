@@ -1264,33 +1264,6 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                           arg_N4, arg_N5, arg_N6, arg_N7)) {}
 
-  // For backward compatibility
-  // NDE This ctor does not take ViewCtorProp argument - should not use
-  // alternative createLayout call
-  explicit inline DynRankView(const ViewAllocateWithoutInitializing& arg_prop,
-                              const typename traits::array_layout& arg_layout)
-      : DynRankView(
-            Kokkos::Impl::ViewCtorProp<std::string,
-                                       Kokkos::Impl::WithoutInitializing_t>(
-                arg_prop.label, Kokkos::WithoutInitializing),
-            arg_layout) {}
-
-  explicit inline DynRankView(const ViewAllocateWithoutInitializing& arg_prop,
-                              const size_t arg_N0 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N1 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N2 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N3 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N4 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-                              const size_t arg_N7 = KOKKOS_INVALID_INDEX)
-      : DynRankView(
-            Kokkos::Impl::ViewCtorProp<std::string,
-                                       Kokkos::Impl::WithoutInitializing_t>(
-                arg_prop.label, Kokkos::WithoutInitializing),
-            typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                          arg_N4, arg_N5, arg_N6, arg_N7)) {}
-
   //----------------------------------------
   // Memory span required to wrap these dimensions.
   static constexpr size_t required_allocation_size(
