@@ -272,6 +272,8 @@ namespace Kokkos {
 
 /* For backward compatibility */
 
+// NOTE Cheap trick to avoid duplicated symbol error.  The alternative is
+// moving the definition to a .cpp file.
 template <typename AlwaysVoid = void>
 Impl::ViewCtorProp<std::string, Impl::WithoutInitializing_t>
 ViewAllocateWithoutInitializing(std::string label) {
