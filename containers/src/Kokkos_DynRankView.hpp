@@ -2017,7 +2017,7 @@ create_mirror_view_and_copy(
         nullptr) {
   using Mirror = typename Impl::MirrorDRViewType<Space, T, P...>::view_type;
   std::string label = name.empty() ? src.label() : name;
-  auto mirror       = Mirror(Kokkos::ViewAllocateWithoutInitializing(label),
+  auto mirror       = Mirror(view_alloc(WithoutInitializing, label),
                        Impl::reconstructLayout(src.layout(), src.rank()));
   deep_copy(mirror, src);
   return mirror;

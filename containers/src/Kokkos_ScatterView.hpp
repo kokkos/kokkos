@@ -931,8 +931,8 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
   ScatterView(View<RT, RP...> const& original_view)
       : unique_token(),
         internal_view(
-            Kokkos::ViewAllocateWithoutInitializing(std::string("duplicated_") +
-                                                    original_view.label()),
+            view_alloc(WithoutInitializing,
+                       std::string("duplicated_") + original_view.label()),
             unique_token.size(),
             original_view.rank_dynamic > 0 ? original_view.extent(0)
                                            : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -955,7 +955,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
 
   template <typename... Dims>
   ScatterView(std::string const& name, Dims... dims)
-      : internal_view(Kokkos::ViewAllocateWithoutInitializing(name),
+      : internal_view(view_alloc(WithoutInitializing, name),
                       unique_token.size(), dims...) {
     reset();
   }
@@ -1094,8 +1094,8 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
                        KOKKOS_IMPL_CTOR_DEFAULT_ARG};
     arg_N[internal_view_type::rank - 1] = unique_token.size();
     internal_view                       = internal_view_type(
-        Kokkos::ViewAllocateWithoutInitializing(std::string("duplicated_") +
-                                                original_view.label()),
+        view_alloc(WithoutInitializing,
+                   std::string("duplicated_") + original_view.label()),
         arg_N[0], arg_N[1], arg_N[2], arg_N[3], arg_N[4], arg_N[5], arg_N[6],
         arg_N[7]);
     reset();
@@ -1121,9 +1121,9 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
                        KOKKOS_IMPL_CTOR_DEFAULT_ARG};
     Kokkos::Impl::Experimental::args_to_array(arg_N, 0, dims...);
     arg_N[internal_view_type::rank - 1] = unique_token.size();
-    internal_view                       = internal_view_type(
-        Kokkos::ViewAllocateWithoutInitializing(name), arg_N[0], arg_N[1],
-        arg_N[2], arg_N[3], arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
+    internal_view = internal_view_type(view_alloc(WithoutInitializing, name),
+                                       arg_N[0], arg_N[1], arg_N[2], arg_N[3],
+                                       arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
     reset();
   }
 

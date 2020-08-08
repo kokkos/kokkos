@@ -1063,8 +1063,8 @@ class TestDynViewAPI {
       (void)thing;
     }
 
-    dView0 d_uninitialized(Kokkos::ViewAllocateWithoutInitializing("uninit"),
-                           10, 20);
+    dView0 d_uninitialized(
+        Kokkos::view_alloc(Kokkos::WithoutInitializing, "uninit"), 10, 20);
     ASSERT_TRUE(d_uninitialized.data() != nullptr);
     ASSERT_EQ(d_uninitialized.rank(), 2);
     ASSERT_EQ(d_uninitialized.extent(0), 10);

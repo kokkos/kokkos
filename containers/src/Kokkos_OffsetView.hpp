@@ -2080,7 +2080,7 @@ create_mirror_view(const Space&,
 //    using Mirror = typename
 //    Kokkos::Experimental::Impl::MirrorViewType<Space,T,P ...>::view_type;
 //    std::string label = name.empty() ? src.label() : name;
-//    auto mirror = Mirror(ViewAllocateWithoutInitializing(label), src.layout(),
+//    auto mirror = Mirror(view_alloc(WithoutInitializing, label), src.layout(),
 //                         { src.begin(0), src.begin(1), src.begin(2),
 //                         src.begin(3), src.begin(4),
 //                             src.begin(5), src.begin(6), src.begin(7) });
