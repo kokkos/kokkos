@@ -47,6 +47,91 @@
 
 namespace Test {
 
+namespace Impl {
+
+void cuda_stream_scratch_test_one(
+    int N, int T, int M_base, Kokkos::View<int64_t, Kokkos::CudaSpace> counter,
+    Kokkos::Cuda cuda, int tid) {
+  int M = M_base + tid * 5;
+  Kokkos::TeamPolicy<Kokkos::Cuda> p(cuda, T, 64);
+  using team_t    = Kokkos::TeamPolicy<Kokkos::Cuda>::member_type;
+  using scratch_t = Kokkos::View<int64_t*, Kokkos::Cuda::scratch_memory_space>;
+
+  int bytes = scratch_t::shmem_size(M);
+
+  for (int r = 0; r < 15; r++) {
+    Kokkos::parallel_for(
+        "Run", p.set_scratch_size(1, Kokkos::PerTeam(bytes)),
+        KOKKOS_LAMBDA(const team_t& team) {
+          scratch_t scr(team.team_scratch(1), M);
+          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, M),
+                               [&](int i) { scr[i] = 0; });
+          team.team_barrier();
+          for (int i = 0; i < N; i++) {
+            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, M),
+                                 [&](int j) { scr[j] += 1; });
+          }
+          team.team_barrier();
+          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, M), [&](int i) {
+            if (scr[i] != N) Kokkos::atomic_increment(&counter());
+          });
+        });
+  }
+}
+
+void cuda_stream_scratch_test(
+    int N, int T, int M_base,
+    Kokkos::View<int64_t, Kokkos::CudaSpace> counter) {
+  int K = 4;
+  cudaStream_t stream[4];
+  Kokkos::Cuda cuda[4];
+  for (int i = 0; i < K; i++) {
+    cudaStreamCreate(&stream[i]);
+    cuda[i] = Kokkos::Cuda(stream[i]);
+  }
+  // Test that growing scratch size in subsequent calls doesn' crash things
+#if defined(KOKKOS_ENABLE_OPENMP)
+#pragma omp parallel
+  {
+    int tid = omp_get_thread_num();
+    // Limit how many threads submit
+    if (tid < 4) {
+      cuda_stream_scratch_test_one(N, T, M_base, counter, cuda[tid], tid);
+    }
+  }
+#else
+  for (int tid = 0; tid < K; tid++) {
+    cuda_stream_scratch_test_one(N, T, M_base, counter, cuda[tid], tid);
+  }
+#endif
+  // Test that if everything is large enough, multiple launches with different
+  // scratch sizes don't step on each other
+  for (int tid = K - 1; tid >= 0; tid--) {
+    cuda_stream_scratch_test_one(N, T, M_base, counter, cuda[tid], tid);
+  }
+
+  Kokkos::fence();
+  for (int i = 0; i < K; i++) {
+    cuda[i] = Kokkos::Cuda();
+    cudaStreamDestroy(stream[i]);
+  }
+}
+}  // namespace Impl
+
+TEST(cuda, team_scratch_1_streams) {
+  int N      = 1000000;
+  int T      = 10;
+  int M_base = 150;
+
+  Kokkos::View<int64_t, Kokkos::CudaSpace> counter("C");
+
+  Impl::cuda_stream_scratch_test(N, T, M_base, counter);
+
+  int64_t result;
+  Kokkos::deep_copy(result, counter);
+  ASSERT_EQ(0, result);
+}
+
 TEST(TEST_CATEGORY, team_shared_request) {
   TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
   TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
