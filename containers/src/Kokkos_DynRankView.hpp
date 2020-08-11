@@ -1656,8 +1656,6 @@ struct DynRankViewFill {
         *this, Policy(0, output.extent(0)));
 
     closure.execute();
-
-    execution_space().fence();
   }
 };
 
@@ -1741,7 +1739,9 @@ inline void deep_copy(
                    typename ViewTraits<DT, DP...>::value_type>::value,
       "deep_copy requires non-const type");
 
+  Kokkos::fence();
   Kokkos::Impl::DynRankViewFill<DynRankView<DT, DP...> >(dst, value);
+  Kokkos::fence();
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -1757,8 +1757,10 @@ inline void deep_copy(
 
   using src_traits       = ViewTraits<ST, SP...>;
   using src_memory_space = typename src_traits::memory_space;
+  Kokkos::fence();
   Kokkos::Impl::DeepCopy<HostSpace, src_memory_space>(&dst, src.data(),
                                                       sizeof(ST));
+  Kokkos::fence();
 }
 
 //----------------------------------------------------------------------------
@@ -1868,12 +1870,16 @@ inline void deep_copy(
     } else if (DstExecCanAccessSrc) {
       // Copying data between views in accessible memory spaces and either
       // non-contiguous or incompatible shape.
+      Kokkos::fence();
       Kokkos::Impl::DynRankViewRemap<dst_type, src_type>(dst, src);
+      Kokkos::fence();
     } else if (SrcExecCanAccessDst) {
       // Copying data between views in accessible memory spaces and either
       // non-contiguous or incompatible shape.
+      Kokkos::fence();
       Kokkos::Impl::DynRankViewRemap<dst_type, src_type, src_execution_space>(
           dst, src);
+      Kokkos::fence();
     } else {
       Kokkos::Impl::throw_runtime_exception(
           "deep_copy given views that would require a temporary allocation");
