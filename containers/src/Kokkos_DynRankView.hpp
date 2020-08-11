@@ -1652,10 +1652,8 @@ struct DynRankViewFill {
     using execution_space = typename OutputView::execution_space;
     using Policy          = Kokkos::RangePolicy<execution_space>;
 
-    const Kokkos::Impl::ParallelFor<DynRankViewFill, Policy> closure(
-        *this, Policy(0, output.extent(0)));
-
-    closure.execute();
+    Kokkos::parallel_for("Kokkos::DynRankViewFill", Policy(0, output.extent(0)),
+                         *this);
   }
 };
 
@@ -1696,10 +1694,8 @@ struct DynRankViewRemap {
         n6(std::min((size_t)arg_out.extent(6), (size_t)arg_in.extent(6))),
         n7(std::min((size_t)arg_out.extent(7), (size_t)arg_in.extent(7))) {
     using Policy = Kokkos::RangePolicy<ExecSpace>;
-    const Kokkos::Impl::ParallelFor<DynRankViewRemap, Policy> closure(
-        *this, Policy(0, n0));
-    closure.execute();
-    // ExecSpace().fence(); // ??
+
+    Kokkos::parallel_for("Kokkos::DynRankViewRemap", Policy(0, n0), *this);
   }
 
   KOKKOS_INLINE_FUNCTION
