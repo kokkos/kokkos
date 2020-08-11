@@ -84,7 +84,7 @@ namespace Impl {
 
 template <class Reducer>
 struct OpenMPTargetReducerWrapper {
-  typedef typename Reducer::value_type value_type;
+  using value_type = typename Reducer::value_type;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -117,7 +117,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<Sum<Scalar, Space>> {
  public:
   // Required
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -143,7 +143,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<Prod<Scalar, Space>> {
  public:
   // Required
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -169,7 +169,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<Min<Scalar, Space>> {
  public:
   // Required
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -197,7 +197,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<Max<Scalar, Space>> {
  public:
   // Required
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -226,7 +226,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<LAnd<Scalar, Space>> {
  public:
   // Required
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -253,9 +253,9 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<LOr<Scalar, Space>> {
  public:
   // Required
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
-  typedef Kokkos::View<value_type, Space> result_view_type;
+  using result_view_type = Kokkos::View<value_type, Space>;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -283,7 +283,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<BAnd<Scalar, Space>> {
  public:
   // Required
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -311,7 +311,7 @@ template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<BOr<Scalar, Space>> {
  public:
   // Required
-  typedef typename std::remove_cv<Scalar>::type value_type;
+  using value_type = typename std::remove_cv<Scalar>::type;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -338,12 +338,12 @@ struct OpenMPTargetReducerWrapper<BOr<Scalar, Space>> {
 template <class Scalar, class Index, class Space>
 struct OpenMPTargetReducerWrapper<MinLoc<Scalar, Index, Space>> {
  private:
-  typedef typename std::remove_cv<Scalar>::type scalar_type;
-  typedef typename std::remove_cv<Index>::type index_type;
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using index_type  = typename std::remove_cv<Index>::type;
 
  public:
   // Required
-  typedef ValLocScalar<scalar_type, index_type> value_type;
+  using value_type = ValLocScalar<scalar_type, index_type>;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -371,12 +371,12 @@ struct OpenMPTargetReducerWrapper<MinLoc<Scalar, Index, Space>> {
 template <class Scalar, class Index, class Space>
 struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
  private:
-  typedef typename std::remove_cv<Scalar>::type scalar_type;
-  typedef typename std::remove_cv<Index>::type index_type;
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using index_type  = typename std::remove_cv<Index>::type;
 
  public:
   // Required
-  typedef ValLocScalar<scalar_type, index_type> value_type;
+  using value_type = ValLocScalar<scalar_type, index_type>;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -403,11 +403,11 @@ struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
 template <class Scalar, class Space>
 struct OpenMPTargetReducerWrapper<MinMax<Scalar, Space>> {
  private:
-  typedef typename std::remove_cv<Scalar>::type scalar_type;
+  using scalar_type = typename std::remove_cv<Scalar>::type;
 
  public:
   // Required
-  typedef MinMaxScalar<scalar_type> value_type;
+  using value_type = MinMaxScalar<scalar_type>;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -445,12 +445,12 @@ struct OpenMPTargetReducerWrapper<MinMax<Scalar, Space>> {
 template <class Scalar, class Index, class Space>
 struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
  private:
-  typedef typename std::remove_cv<Scalar>::type scalar_type;
-  typedef typename std::remove_cv<Index>::type index_type;
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using index_type  = typename std::remove_cv<Index>::type;
 
  public:
   // Required
-  typedef MinMaxLocScalar<scalar_type, index_type> value_type;
+  using value_type = MinMaxLocScalar<scalar_type, index_type>;
 
 // WORKAROUND OPENMPTARGET
 // This pragma omp declare target should not be necessary, but Intel compiler
@@ -490,25 +490,6 @@ struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
   }
 #pragma omp end declare target
 };
-/*
-template<class ReducerType>
-class OpenMPTargetReducerWrapper {
-  public:
-    const ReducerType& reducer;
-    typedef typename ReducerType::value_type value_type;
-    value_type& value;
-
-    KOKKOS_INLINE_FUNCTION
-    void join(const value_type& upd) {
-      reducer.join(value,upd);
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void init(const value_type& upd) {
-      reducer.init(value,upd);
-    }
-};*/
-
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -525,8 +506,8 @@ class OpenMPTargetExecTeamMember {
   /** \brief  Thread states for team synchronization */
   enum { Active = 0, Rendezvous = 1 };
 
-  typedef Kokkos::Experimental::OpenMPTarget execution_space;
-  typedef execution_space::scratch_memory_space scratch_memory_space;
+  using execution_space      = Kokkos::Experimental::OpenMPTarget;
+  using scratch_memory_space = execution_space::scratch_memory_space;
 
   scratch_memory_space m_team_shared;
   int m_team_scratch_size[2];
@@ -622,12 +603,12 @@ class OpenMPTargetExecTeamMember {
                                                const JoinOp& op_in) const {
 #pragma omp barrier
 
-    typedef ValueType value_type;
+    using value_type = ValueType;
     const JoinLambdaAdapter<value_type, JoinOp> op(op_in);
 
     // Make sure there is enough scratch space:
-    typedef typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE, value_type,
-                          void>::type type;
+    using type = typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE,
+                               value_type, void>::type;
 
     const int n_values = TEAM_REDUCE_SIZE / sizeof(value_type);
     type* team_scratch =
@@ -722,7 +703,7 @@ class OpenMPTargetExecTeamMember {
   // Private for the driver
 
  private:
-  typedef execution_space::scratch_memory_space space;
+  using space = execution_space::scratch_memory_space;
 
  public:
   inline OpenMPTargetExecTeamMember(
@@ -755,9 +736,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
     : public PolicyTraits<Properties...> {
  public:
   //! Tag this class as a kokkos execution policy
-  typedef TeamPolicyInternal execution_policy;
+  using execution_policy = TeamPolicyInternal;
 
-  typedef PolicyTraits<Properties...> traits;
+  using traits = PolicyTraits<Properties...>;
 
   TeamPolicyInternal& operator=(const TeamPolicyInternal& p) {
     m_league_size            = p.m_league_size;
@@ -952,7 +933,7 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   }
 
  public:
-  typedef Impl::OpenMPTargetExecTeamMember member_type;
+  using member_type = Impl::OpenMPTargetExecTeamMember;
 };
 }  // namespace Impl
 
@@ -1201,8 +1182,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const FunctorType& lambda) {
-  typedef Kokkos::Impl::FunctorValueTraits<FunctorType, void> ValueTraits;
-  typedef typename ValueTraits::value_type value_type;
+  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
+  using value_type  = typename ValueTraits::value_type;
 
   value_type scan_val = value_type();
 
