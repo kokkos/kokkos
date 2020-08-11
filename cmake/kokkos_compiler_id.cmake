@@ -36,7 +36,8 @@ IF(Kokkos_ENABLE_CUDA)
     # the first argument to launcher is always the C++ compiler defined by cmake
     # if the second argument matches the C++ compiler, it forwards the rest of the
     # args to nvcc_wrapper
-    kokkos_internal_have_compiler_nvcc(${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER})
+    kokkos_internal_have_compiler_nvcc(
+      ${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER} -DKOKKOS_DEPENDENCE)
     SET(INTERNAL_USE_COMPILER_LAUNCHER true)
   ENDIF()
 ENDIF()

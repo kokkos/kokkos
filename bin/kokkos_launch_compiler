@@ -13,6 +13,16 @@
 #   $1 are 'ar', 'cmake', etc. during the linking phase
 #
 
+# check the arguments for the KOKKOS_DEPENDENCE compiler definition
+KOKKOS_DEPENDENCE=0
+for i in ${@}
+do
+    if [ -n "$(echo ${i} | grep 'KOKKOS_DEPENDENCE$')" ]; then
+        KOKKOS_DEPENDENCE=1
+        break
+    fi
+done
+
 # if C++ is not passed, someone is probably trying to invoke it directly
 if [ -z "${1}" ]; then
     echo -e "\n${BASH_SOURCE[0]} was invoked without the C++ compiler as the first argument."
@@ -24,7 +34,7 @@ fi
 # if there aren't two args, this isn't necessarily invalid, just a bit strange
 if [ -z "${2}" ]; then exit 0; fi
 
-# store the expect C++ compiler
+# store the expected C++ compiler
 CXX_COMPILER=${1}
 
 # remove the expected C++ compiler from the arguments
@@ -45,23 +55,17 @@ shift
 #       kokkos_launch_compiler g++ g++ -c file.cpp -o file.o
 # results in this command being executed:
 #       nvcc_wrapper -c file.cpp -o file.o
-if [ "${CXX_COMPILER}" != "${1}" ]; then
-    # the executable is not C++ compiler so just execute the command w/o re-directing to nvcc_wrapper
+if [[ "${KOKKOS_DEPENDENCE}" -eq "0" || "${CXX_COMPILER}" != "${1}" ]]; then
+    # the command does not depend on Kokkos so just execute the command w/o re-directing to nvcc_wrapper
     eval $@
 else
     # the executable is the C++ compiler, so we need to re-direct to nvcc_wrapper
 
     # find the nvcc_wrapper from the same build/install
-    LOCAL_NVCC_WRAPPER="$(dirname ${BASH_SOURCE[0]})/nvcc_wrapper"
-
-    # find the nvcc_wrapper in the path
-    : ${BIN_NVCC_WRAPPER:-"$(which nvcc_wrapper 2> /dev/null)"}
-
-    # the nvcc_wrapper to be used if not specified in env
-    : ${NVCC_WRAPPER:=${BIN_NVCC_WRAPPER:-"${LOCAL_NVCC_WRAPPER}"}}
+    NVCC_WRAPPER="$(dirname ${BASH_SOURCE[0]})/nvcc_wrapper"
 
     if [ -z "${NVCC_WRAPPER}" ]; then
-        echo "\nError: nvcc_wrapper not found. Please specify NVCC_WRAPPER or add it to PATH\n"
+        echo "\nError: nvcc_wrapper not found in $(dirname ${BASH_SOURCE[0]}).\n"
         exit 1
     fi
 
@@ -77,6 +81,7 @@ else
 
     # discard the compiler from the command
     shift
+
     # execute nvcc_wrapper
     ${NVCC_WRAPPER} $@
 fi

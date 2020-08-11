@@ -139,13 +139,15 @@ ENDIF()
 # I really wish these were regular variables
 # but scoping issues can make it difficult
 GLOBAL_SET(KOKKOS_COMPILE_OPTIONS)
-GLOBAL_SET(KOKKOS_LINK_OPTIONS)
+GLOBAL_SET(KOKKOS_LINK_OPTIONS -DKOKKOS_DEPENDENCE)
 GLOBAL_SET(KOKKOS_CUDA_OPTIONS)
 GLOBAL_SET(KOKKOS_CUDAFE_OPTIONS)
 GLOBAL_SET(KOKKOS_XCOMPILER_OPTIONS)
 # We need to append text here for making sure TPLs
 # we import are available for an installed Kokkos
 GLOBAL_SET(KOKKOS_TPL_EXPORTS)
+# this could probably be scoped to project
+GLOBAL_SET(KOKKOS_COMPILE_DEFINITIONS KOKKOS_DEPENDENCE)
 
 # Include a set of Kokkos-specific wrapper functions that
 # will either call raw CMake or TriBITS
