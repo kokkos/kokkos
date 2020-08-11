@@ -164,8 +164,9 @@ class OpenMPTargetExecTeamMember {
   }
 
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& value,
-                                             const int& thread_id) const {
+  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& /*value*/,
+                                             const int& /*thread_id*/) const {
+    // FIXME_OPENMPTARGET
     /*#if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
         { }
     #else
@@ -227,8 +228,9 @@ class OpenMPTargetExecTeamMember {
    *  non-deterministic.
    */
   template <typename ArgType>
-  KOKKOS_INLINE_FUNCTION ArgType team_scan(const ArgType& value,
-                                           ArgType* const global_accum) const {
+  KOKKOS_INLINE_FUNCTION ArgType
+  team_scan(const ArgType& /*value*/, ArgType* const /*global_accum*/) const {
+    // FIXME_OPENMPTARGET
     /*  // Make sure there is enough scratch space:
       using type =
         typename if_c<sizeof(ArgType) < TEAM_REDUCE_SIZE, ArgType, void>::type;
@@ -299,10 +301,10 @@ class OpenMPTargetExecTeamMember {
       : m_team_shared(0, 0),
         m_team_scratch_size{shmem_size_L1, shmem_size_L2},
         m_team_rank(0),
-        m_vector_length(vector_length),
         m_team_size(team_size),
         m_league_rank(league_rank),
         m_league_size(league_size),
+        m_vector_length(vector_length),
         m_glb_scratch(glb_scratch) {
     const int omp_tid = omp_get_thread_num();
     m_league_rank     = league_rank;
@@ -727,7 +729,7 @@ namespace Kokkos {
 template <class FunctorType>
 KOKKOS_INLINE_FUNCTION void single(
     const Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember>&
-        single_struct,
+    /*single_struct*/,
     const FunctorType& lambda) {
   lambda();
 }
@@ -743,7 +745,7 @@ KOKKOS_INLINE_FUNCTION void single(
 template <class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION void single(
     const Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember>&
-        single_struct,
+    /*single_struct*/,
     const FunctorType& lambda, ValueType& val) {
   lambda(val);
 }
