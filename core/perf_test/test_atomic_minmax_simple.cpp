@@ -78,8 +78,8 @@ void test(const int length) {
     Kokkos::fence();
 
     if (errors) {
-      std::cout << "Error in 100% min replacements: " << errors << std::endl;
-      std::cout << "inp(0)=" << inp(0) << std::endl;
+      std::cerr << "Error in 100% min replacements: " << errors << std::endl;
+      std::cerr << "inp(0)=" << inp(0) << std::endl;
     }
     std::cout << "Time for 100% min replacements: " << time << std::endl;
   }
@@ -108,8 +108,8 @@ void test(const int length) {
     Kokkos::fence();
 
     if (errors) {
-      std::cout << "Error in 100% max replacements: " << errors << std::endl;
-      std::cout << "inp(0)=" << inp(0) << std::endl;
+      std::cerr << "Error in 100% max replacements: " << errors << std::endl;
+      std::cerr << "inp(0)=" << inp(0) << std::endl;
     }
     std::cout << "Time for 100% max replacements: " << time << std::endl;
   }
@@ -141,8 +141,8 @@ void test(const int length) {
     Kokkos::fence();
 
     if (errors) {
-      std::cout << "Error in 100% max early exits: " << errors << std::endl;
-      std::cout << "inp(0)=" << inp(0) << std::endl;
+      std::cerr << "Error in 100% max early exits: " << errors << std::endl;
+      std::cerr << "inp(0)=" << inp(0) << std::endl;
     }
     std::cout << "Time for 100% max early exits: " << time << std::endl;
   }
@@ -174,8 +174,8 @@ void test(const int length) {
     Kokkos::fence();
 
     if (errors) {
-      std::cout << "Error in 100% min early exits: " << errors << std::endl;
-      std::cout << "inp(0)=" << inp(0) << std::endl;
+      std::cerr << "Error in 100% min early exits: " << errors << std::endl;
+      std::cerr << "inp(0)=" << inp(0) << std::endl;
       if (length > 9) std::cout << "inp(9)=" << inp(9) << std::endl;
     }
     std::cout << "Time for 100% min early exits: " << time << std::endl;
