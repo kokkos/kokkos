@@ -75,12 +75,6 @@ __device__ __constant__ unsigned long kokkos_impl_cuda_constant_memory_buffer
 
 #endif
 
-namespace Kokkos {
-namespace Impl {
-void* cuda_resize_scratch_space(std::int64_t bytes, bool force_shrink = false);
-}
-}  // namespace Kokkos
-
 template <typename T>
 inline __device__ T* kokkos_impl_cuda_shared_memory() {
   extern __shared__ Kokkos::CudaSpace::size_type sh[];
