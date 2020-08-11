@@ -68,12 +68,12 @@ struct _check_early_exit_impl {
 template <class Op, class Scalar1, class Scalar2>
 struct _check_early_exit_impl<
     Op, Scalar1, Scalar2,
-    decltype(bool(std::declval<Op const&>().check_early_exit(
-        std::declval<Scalar1 const&>(), std::declval<Scalar2 const&>())))> {
+    decltype(std::declval<Op const&>().check_early_exit(
+        std::declval<Scalar1 const&>(), std::declval<Scalar2 const&>()))> {
   KOKKOS_FORCEINLINE_FUNCTION
   static constexpr bool check(Op const& op, Scalar1 const& v1,
                               Scalar2 const& v2) {
-    return bool(op.check_early_exit(v1, v2));
+    return op.check_early_exit(v1, v2);
   }
 };
 
