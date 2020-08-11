@@ -65,6 +65,7 @@
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_TaskScheduler.hpp>
+#include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools.hpp>
