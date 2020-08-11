@@ -17,31 +17,6 @@
 using exec_space = Kokkos::DefaultExecutionSpace;
 
 template <typename T>
-void sanity(void) {
-  T a = 0;
-  T b = 1;
-  T c;
-
-  std::cout << "atomic_fetch_min:\n";
-  c = Kokkos::atomic_fetch_min(&a, b);
-  std::cout << "a=" << a << "\n";
-  std::cout << "b=" << b << "\n";
-  std::cout << "c=" << c << "\n";
-
-  std::cout << "atomic_fetch_max:\n";
-  c = Kokkos::atomic_fetch_max(&a, b);
-  std::cout << "a=" << a << "\n";
-  std::cout << "b=" << b << "\n";
-  std::cout << "c=" << c << "\n";
-
-  std::cout << "atomic_fetch_max:\n";
-  c = Kokkos::atomic_fetch_max(&a, b);
-  std::cout << "a=" << a << "\n";
-  std::cout << "b=" << b << "\n";
-  std::cout << "c=" << c << "\n";
-}
-
-template <typename T>
 void test(const int length) {
   Kokkos::Impl::Timer timer;
 
@@ -180,8 +155,6 @@ void test(const int length) {
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   {
-    sanity<int>();
-
     if (argc != 2) {
       std::cout << "arguments: <elements>" << std::endl;
       std::abort();
