@@ -86,8 +86,7 @@ void test(const int length) {
 
   // input is min values - all max atomics will replace
   {
-    T min = std::numeric_limits<T>::min();
-    if (min > 0) min = -1;  // for floats, min is positive epsilon...
+    T min = std::numeric_limits<T>::lowest();
 
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) { inp(i) = min; });
@@ -150,8 +149,7 @@ void test(const int length) {
 
   // input is min values - all min atomics will early exit
   {
-    T min = std::numeric_limits<T>::min();
-    if (min > 0) min = -1;  // for floats, min is positive epsilon...
+    T min = std::numeric_limits<T>::lowest();
 
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) { inp(i) = min; });
