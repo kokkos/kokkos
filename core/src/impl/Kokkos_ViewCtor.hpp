@@ -271,15 +271,30 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 namespace Kokkos {
 
 /* For backward compatibility */
+namespace Impl {
+struct ViewAllocateWithoutInitializingBackwardCompat {};
 
-// NOTE Cheap trick to avoid duplicated symbol error.  The alternative is
-// moving the definition to a .cpp file.
-template <typename AlwaysVoid = void>
+template <>
+struct ViewCtorProp<void, ViewAllocateWithoutInitializingBackwardCompat> {};
+
+// NOTE This specialization is meant to be used as the
+// ViewAllocateWithoutInitializing alias below. All it does is add a
+// constructor that takes the label as single argument.
+template <>
+struct ViewCtorProp<WithoutInitializing_t, std::string,
+                    ViewAllocateWithoutInitializingBackwardCompat>
+    : ViewCtorProp<WithoutInitializing_t, std::string>,
+      ViewCtorProp<void, ViewAllocateWithoutInitializingBackwardCompat> {
+  ViewCtorProp(std::string label)
+      : ViewCtorProp<WithoutInitializing_t, std::string>(
+            WithoutInitializing_t(), std::move(label)) {}
+};
+} /* namespace Impl */
+
 /*[[deprecated(Use Kokkos::alloc(Kokkos::WithoutInitializing, label) instead]]*/
-Impl::ViewCtorProp<std::string, Impl::WithoutInitializing_t>
-ViewAllocateWithoutInitializing(std::string label) {
-  return {std::move(label), Impl::WithoutInitializing_t()};
-}
+using ViewAllocateWithoutInitializing =
+    Impl::ViewCtorProp<Impl::WithoutInitializing_t, std::string,
+                       Impl::ViewAllocateWithoutInitializingBackwardCompat>;
 
 } /* namespace Kokkos */
 
