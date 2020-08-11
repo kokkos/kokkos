@@ -57,15 +57,10 @@ void test(const int length) {
         length, KOKKOS_LAMBDA(const int i) { inp(i) = max; });
     Kokkos::fence();
 
-    Kokkos::fence();
     timer.reset();
-
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) {
-          // std:: cout << "BEFORE inp(" << i << ")=" << inp(i) << "\n";
           T out = Kokkos::atomic_fetch_min(&(inp(i)), (T)i);
-          // std:: cout << "AFTER  inp(" << i << ")=" << inp(i) << ", out=" <<
-          // out << "\n";
         });
     Kokkos::fence();
     double time = timer.seconds();
