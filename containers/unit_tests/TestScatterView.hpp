@@ -620,12 +620,6 @@ void test_scatter_view(int n) {
 #ifdef KOKKOS_ENABLE_SERIAL
   }
 #endif
-  {
-    test_default_scatter_view<DeviceType, Kokkos::LayoutRight, ScatterType,
-                              NumberType>
-        test_default_sv;
-    test_default_sv.run_test(n);
-  }
   // with hundreds of threads we were running out of memory.
   // limit (n) so that duplication doesn't exceed 4GB
   constexpr std::size_t maximum_allowed_total_bytes =
@@ -637,6 +631,14 @@ void test_scatter_view(int n) {
   std::size_t const maximum_allowed_copy_values =
       maximum_allowed_copy_bytes / bytes_per_value;
   n = std::min(n, int(maximum_allowed_copy_values));
+
+  // if the default is duplicated, this needs to follow the limit
+  {
+    test_default_scatter_view<DeviceType, Kokkos::LayoutRight, ScatterType,
+                              NumberType>
+        test_default_sv;
+    test_default_sv.run_test(n);
+  }
   TestDuplicatedScatterView<DeviceType, ScatterType, NumberType> duptest(n);
 }
 
