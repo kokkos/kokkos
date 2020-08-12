@@ -92,6 +92,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       ${dir}/Test${Tag}_MDRange_c.cpp
       ${dir}/Test${Tag}_MDRange_d.cpp
       ${dir}/Test${Tag}_MDRange_e.cpp
+      ${dir}/Test${Tag}_MDRange_f.cpp
       ${dir}/Test${Tag}_Other.cpp
       ${dir}/Test${Tag}_RangePolicy.cpp
       ${dir}/Test${Tag}_RangePolicyRequire.cpp
@@ -154,6 +155,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     openmptarget/TestOpenMPTarget_MDRange_c.cpp
     openmptarget/TestOpenMPTarget_MDRange_d.cpp
     openmptarget/TestOpenMPTarget_MDRange_e.cpp
+    openmptarget/TestOpenMPTarget_MDRange_f.cpp
     openmptarget/TestOpenMPTarget_Other.cpp
     openmptarget/TestOpenMPTarget_Scan.cpp
     openmptarget/TestOpenMPTarget_Team.cpp
