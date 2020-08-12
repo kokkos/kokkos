@@ -1,4 +1,4 @@
-FROM gcc:4.8.4
+FROM gcc:5.3.0
 
 ARG CMAKE_VERSION=3.10.3
 ENV CMAKE_DIR=/opt/cmake
