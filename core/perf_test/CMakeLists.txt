@@ -90,6 +90,12 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 )
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
+  PerformanceTest_Atomic_MinMax
+  SOURCES test_atomic_minmax_simple.cpp
+  CATEGORIES PERFORMANCE
+)
+
+KOKKOS_ADD_EXECUTABLE_AND_TEST(
   PerformanceTest_Mempool
   SOURCES test_mempool.cpp
   CATEGORIES PERFORMANCE
