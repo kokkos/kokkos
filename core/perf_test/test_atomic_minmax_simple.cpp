@@ -155,11 +155,10 @@ void test(const int length) {
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   {
-    if (argc != 2) {
-      std::cout << "arguments: <elements>" << std::endl;
-      std::abort();
+    int length = 1000000;
+    if (argc == 2) {
+      length = std::atoi(argv[1]);
     }
-    int length = std::atoi(argv[1]);
 
     if (length < 1) return 0;
 
