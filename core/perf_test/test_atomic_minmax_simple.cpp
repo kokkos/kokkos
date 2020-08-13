@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
   {
     int length = 1000000;
     if (argc == 2) {
-      length = std::atoi(argv[1]);
+      length = std::stoi(argv[1]);
     }
 
     if (length < 1) return 0;
