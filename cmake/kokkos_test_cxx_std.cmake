@@ -29,7 +29,7 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
   ELSEIF(NOT KOKKOS_USE_CXX_EXTENSIONS AND ${STANDARD_NAME})
     MESSAGE(STATUS "Using ${${STANDARD_NAME}} for C++${standard} standard as feature")
     IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND (KOKKOS_CXX_HOST_COMPILER_ID STREQUAL GNU OR KOKKOS_CXX_HOST_COMPILER_ID STREQUAL Clang))
-      SET(SUPPORTED_NVCC_FLAGS "-std=c++11;-std=c++14;-std=c++17")
+      SET(SUPPORTED_NVCC_FLAGS "-std=c++14;-std=c++17")
       IF (NOT ${${STANDARD_NAME}} IN_LIST SUPPORTED_NVCC_FLAGS)
         MESSAGE(FATAL_ERROR "CMake wants to use ${${STANDARD_NAME}} which is not supported by NVCC. Using a more recent host compiler or a more recent CMake version might help.")
       ENDIF()
@@ -89,7 +89,7 @@ ENDIF()
 # For compiling CUDA code using nvcc_wrapper, we will use the host compiler's
 # flags for turning on C++11.  Since for compiler ID and versioning purposes
 # CMake recognizes the host compiler when calling nvcc_wrapper, this just
-# works.  Both NVCC and nvcc_wrapper only recognize '-std=c++11' which means
+# works.  Both NVCC and nvcc_wrapper only recognize '-std=c++14' which means
 # that we can only use host compilers for CUDA builds that use those flags.
 # It also means that extensions (gnu++11) can't be turned on for CUDA builds.
 

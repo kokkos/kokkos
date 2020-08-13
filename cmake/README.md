@@ -86,7 +86,7 @@ CMake understands the requests and knows that `cxx_std_11` is a subset of `cxx_s
 CMake then picks C++14 for library `B`.
 CMake would not have been able to do feature resolution if we had directly done:
 ````
-target_compile_options(A PUBLIC -std=c++11)
+target_compile_options(A PUBLIC -std=c++14)
 ````
 
 ### Adding Kokkos Options

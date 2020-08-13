@@ -20,8 +20,8 @@ KOKKOS_ARCH ?= ""
 KOKKOS_DEBUG ?= "no"
 # Options: hwloc,librt,experimental_memkind
 KOKKOS_USE_TPLS ?= ""
-# Options: c++11,c++14,c++1y,c++17,c++1z,c++2a
-KOKKOS_CXX_STANDARD ?= "c++11"
+# Options: c++14,c++1y,c++17,c++1z,c++2a
+KOKKOS_CXX_STANDARD ?= "c++14"
 # Options: aggressive_vectorization,disable_profiling,enable_large_mem_tests,disable_complex_align
 KOKKOS_OPTIONS ?= ""
 KOKKOS_CMAKE ?= "no"
@@ -56,7 +56,6 @@ kokkos_path_exists=$(if $(wildcard $1),1,0)
 # Check for general settings
 
 KOKKOS_INTERNAL_ENABLE_DEBUG := $(call kokkos_has_string,$(KOKKOS_DEBUG),yes)
-KOKKOS_INTERNAL_ENABLE_CXX11 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++11)
 KOKKOS_INTERNAL_ENABLE_CXX14 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++14)
 KOKKOS_INTERNAL_ENABLE_CXX1Y := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++1y)
 KOKKOS_INTERNAL_ENABLE_CXX17 := $(call kokkos_has_string,$(KOKKOS_CXX_STANDARD),c++17)
@@ -271,12 +270,10 @@ endif
 
 # Set C++11 flags.
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
-  KOKKOS_INTERNAL_CXX11_FLAG := --c++11
   KOKKOS_INTERNAL_CXX14_FLAG := --c++14
   KOKKOS_INTERNAL_CXX17_FLAG := --c++17
 else
   ifeq ($(KOKKOS_INTERNAL_COMPILER_XL), 1)
-     KOKKOS_INTERNAL_CXX11_FLAG := -std=c++11
      KOKKOS_INTERNAL_CXX14_FLAG := -std=c++14
      KOKKOS_INTERNAL_CXX1Y_FLAG := -std=c++1y
      #KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
@@ -284,23 +281,17 @@ else
      #KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
   else
     ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY), 1)
-      KOKKOS_INTERNAL_CXX11_FLAG := -hstd=c++11
       KOKKOS_INTERNAL_CXX14_FLAG := -hstd=c++14
       #KOKKOS_INTERNAL_CXX1Y_FLAG := -hstd=c++1y
       #KOKKOS_INTERNAL_CXX17_FLAG := -hstd=c++17
       #KOKKOS_INTERNAL_CXX1Z_FLAG := -hstd=c++1z
       #KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2a
     else
-      ifeq ($(KOKKOS_INTERNAL_COMPILER_HCC), 1)
-        KOKKOS_INTERNAL_CXX11_FLAG := 
-      else
-        KOKKOS_INTERNAL_CXX11_FLAG := --std=c++11
-        KOKKOS_INTERNAL_CXX14_FLAG := --std=c++14
-        KOKKOS_INTERNAL_CXX1Y_FLAG := --std=c++1y
-        KOKKOS_INTERNAL_CXX17_FLAG := --std=c++17
-        KOKKOS_INTERNAL_CXX1Z_FLAG := --std=c++1z
-        KOKKOS_INTERNAL_CXX2A_FLAG := --std=c++2a
-      endif
+      KOKKOS_INTERNAL_CXX14_FLAG := --std=c++14
+      KOKKOS_INTERNAL_CXX1Y_FLAG := --std=c++1y
+      KOKKOS_INTERNAL_CXX17_FLAG := --std=c++17
+      KOKKOS_INTERNAL_CXX1Z_FLAG := --std=c++1z
+      KOKKOS_INTERNAL_CXX2A_FLAG := --std=c++2a
     endif
   endif
 endif
@@ -532,12 +523,6 @@ endif
 
 #only add the c++ standard flags if this is not CMake
 tmp := $(call kokkos_append_header,"/* General Settings */")
-ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX11), 1)
-ifneq ($(KOKKOS_STANDALONE_CMAKE), yes)
-  KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX11_FLAG)
-endif
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_CXX11")
-endif
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX14), 1)
 ifneq ($(KOKKOS_STANDALONE_CMAKE), yes)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX14_FLAG)
@@ -1280,7 +1265,7 @@ ifneq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
 endif
 
 # With Cygwin functions such as fdopen and fileno are not defined
-# when strict ansi is enabled. strict ansi gets enabled with --std=c++11
+# when strict ansi is enabled. strict ansi gets enabled with --std=c++14
 # though. So we hard undefine it here. Not sure if that has any bad side effects
 # This is needed for gtest actually, not for Kokkos itself!
 ifeq ($(KOKKOS_INTERNAL_OS_CYGWIN), 1)
