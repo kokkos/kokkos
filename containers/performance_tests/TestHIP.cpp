@@ -43,7 +43,6 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_HIP)
 
 #include <cstdint>
 #include <string>
@@ -66,23 +65,13 @@
 
 namespace Performance {
 
-class hip : public ::testing::Test {
- protected:
-  static void SetUpTestCase() {
-    std::cout << std::setprecision(5) << std::scientific;
-    Kokkos::InitArguments args;  //(-1, -1, 0);
-    Kokkos::initialize(args);
-  }
-  static void TearDownTestCase() { Kokkos::finalize(); }
-};
-
-TEST_F(hip, dynrankview_perf) {
+TEST(TEST_CATEGORY, dynrankview_perf) {
   std::cout << "HIP" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
   test_dynrankview_op_perf<Kokkos::Experimental::HIP>(40960);
 }
 
-TEST_F(hip, global_2_local) {
+TEST(TEST_CATEGORY, global_2_local) {
   std::cout << "HIP" << std::endl;
   std::cout << "size, create, generate, fill, find" << std::endl;
   for (unsigned i = Performance::begin_id_size; i <= Performance::end_id_size;
@@ -90,15 +79,12 @@ TEST_F(hip, global_2_local) {
     test_global_to_local_ids<Kokkos::Experimental::HIP>(i);
 }
 
-TEST_F(hip, unordered_map_performance_near) {
+TEST(TEST_CATEGORY, unordered_map_performance_near) {
   Perf::run_performance_tests<Kokkos::Experimental::HIP, true>("hip-near");
 }
 
-TEST_F(hip, unordered_map_performance_far) {
+TEST(TEST_CATEGORY, unordered_map_performance_far) {
   Perf::run_performance_tests<Kokkos::Experimental::HIP, false>("hip-far");
 }
 
 }  // namespace Performance
-#else
-void KOKKOS_CONTAINERS_PERFORMANCE_TESTS_TESTHIP_PREVENT_EMPTY_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_HIP ) */
