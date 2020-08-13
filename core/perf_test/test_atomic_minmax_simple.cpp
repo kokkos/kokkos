@@ -160,7 +160,9 @@ int main(int argc, char* argv[]) {
       length = std::stoi(argv[1]);
     }
 
-    if (length < 1) return 0;
+    if (length < 1) {
+      throw std::invalid_argument("");
+    }
 
     std::cout << "================ int" << std::endl;
     test<int>(length);
