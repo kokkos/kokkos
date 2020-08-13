@@ -89,7 +89,7 @@ FUNCTION(KOKKOS_ADD_TEST)
     CMAKE_PARSE_ARGUMENTS(TEST
       ""
       "EXE;NAME;TOOL"
-      ""
+      "ARGS"
       ${ARGN})
     IF(TEST_EXE)
       SET(EXE_ROOT ${TEST_EXE})
@@ -102,6 +102,7 @@ FUNCTION(KOKKOS_ADD_TEST)
       NAME ${TEST_NAME}
       COMM serial mpi
       NUM_MPI_PROCS 1
+      ARGS ${TEST_ARGS}
       ${TEST_UNPARSED_ARGUMENTS}
     )
 
