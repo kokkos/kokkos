@@ -20,7 +20,7 @@ template <typename T>
 void test(const int length) {
   Kokkos::Impl::Timer timer;
 
-  typedef Kokkos::View<T*, exec_space> vector;
+  using vector = Kokkos::View<T*, exec_space>;
 
   vector inp("input", length);
 
@@ -35,7 +35,7 @@ void test(const int length) {
     timer.reset();
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) {
-          T out = Kokkos::atomic_fetch_min(&(inp(i)), (T)i);
+          (void)Kokkos::atomic_fetch_min(&(inp(i)), (T)i);
         });
     Kokkos::fence();
     double time = timer.seconds();
@@ -43,7 +43,7 @@ void test(const int length) {
     int errors(0);
     Kokkos::parallel_reduce(
         length,
-        KOKKOS_LAMBDA(const int i, int& inner) { inner += (inp(i) != i); },
+        KOKKOS_LAMBDA(const int i, int& inner) { inner += (inp(i) != (T)i); },
         errors);
     Kokkos::fence();
 
@@ -65,7 +65,7 @@ void test(const int length) {
     timer.reset();
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) {
-          T out = Kokkos::atomic_max_fetch(&(inp(i)), (T)i);
+          (void)Kokkos::atomic_max_fetch(&(inp(i)), (T)i);
         });
     Kokkos::fence();
     double time = timer.seconds();
@@ -73,7 +73,7 @@ void test(const int length) {
     int errors(0);
     Kokkos::parallel_reduce(
         length,
-        KOKKOS_LAMBDA(const int i, int& inner) { inner += (inp(i) != i); },
+        KOKKOS_LAMBDA(const int i, int& inner) { inner += (inp(i) != (T)i); },
         errors);
     Kokkos::fence();
 
@@ -95,7 +95,7 @@ void test(const int length) {
     timer.reset();
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) {
-          T out = Kokkos::atomic_max_fetch(&(inp(i)), (T)i);
+          (void)Kokkos::atomic_max_fetch(&(inp(i)), (T)i);
         });
     Kokkos::fence();
     double time = timer.seconds();
@@ -128,7 +128,7 @@ void test(const int length) {
     timer.reset();
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) {
-          T out = Kokkos::atomic_min_fetch(&(inp(i)), (T)i);
+          (void)Kokkos::atomic_min_fetch(&(inp(i)), (T)i);
         });
     Kokkos::fence();
     double time = timer.seconds();
