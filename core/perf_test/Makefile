@@ -66,7 +66,7 @@ TEST_TARGETS += test-taskdag
 #
 
 OBJ_ATOMICS_MINMAX = test_atomic_minmax_simple.o
-TARGETS += KokkosCore_PerformanceTest_AtomicsMinMax
+TARGETS += KokkosCore_PerformanceTest_Atomics_MinMax
 TEST_TARGETS += test-atomic-minmax
 
 #
