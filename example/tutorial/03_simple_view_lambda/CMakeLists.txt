@@ -6,5 +6,4 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 KOKKOS_ADD_EXECUTABLE(
   tutorial_03_simple_view_lambda
   SOURCES simple_view_lambda.cpp
-  COMM serial mpi
   )
