@@ -638,8 +638,9 @@ struct ReduceDuplicatesBase {
       : src(src_in), dst(dest_in), stride(stride_in), start(start_in), n(n_in) {
     uint64_t kpID = 0;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
-                                          &kpID);
+      Kokkos::Profiling::beginParallelFor(
+          std::string("Kokkos::ScatterView::ReduceDuplicates [") + name + "]",
+          0, &kpID);
     }
     using policy_type  = RangePolicy<ExecSpace, size_t>;
     using closure_type = Kokkos::Impl::ParallelFor<Derived, policy_type>;
@@ -684,8 +685,9 @@ struct ResetDuplicatesBase {
       : data(data_in) {
     uint64_t kpID = 0;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::beginParallelFor(std::string("reduce_") + name, 0,
-                                          &kpID);
+      Kokkos::Profiling::beginParallelFor(
+          std::string("Kokkos::ScatterView::ResetDuplicates [") + name + "]", 0,
+          &kpID);
     }
     using policy_type  = RangePolicy<ExecSpace, size_t>;
     using closure_type = Kokkos::Impl::ParallelFor<Derived, policy_type>;
