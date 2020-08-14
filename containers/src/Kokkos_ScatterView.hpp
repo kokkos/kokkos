@@ -636,20 +636,10 @@ struct ReduceDuplicatesBase {
                        size_t stride_in, size_t start_in, size_t n_in,
                        std::string const& name)
       : src(src_in), dst(dest_in), stride(stride_in), start(start_in), n(n_in) {
-    uint64_t kpID = 0;
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::beginParallelFor(
-          std::string("Kokkos::ScatterView::ReduceDuplicates [") + name + "]",
-          0, &kpID);
-    }
-    using policy_type  = RangePolicy<ExecSpace, size_t>;
-    using closure_type = Kokkos::Impl::ParallelFor<Derived, policy_type>;
-    const closure_type closure(*(static_cast<Derived*>(this)),
-                               policy_type(0, stride));
-    closure.execute();
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endParallelFor(kpID);
-    }
+    parallel_for(
+        std::string("Kokkos::ScatterView::ReduceDuplicates [") + name + "]",
+        RangePolicy<ExecSpace, size_t>(0, stride),
+        static_cast<Derived const&>(*this));
   }
 };
 
@@ -683,20 +673,10 @@ struct ResetDuplicatesBase {
   ResetDuplicatesBase(ValueType* data_in, size_t size_in,
                       std::string const& name)
       : data(data_in) {
-    uint64_t kpID = 0;
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::beginParallelFor(
-          std::string("Kokkos::ScatterView::ResetDuplicates [") + name + "]", 0,
-          &kpID);
-    }
-    using policy_type  = RangePolicy<ExecSpace, size_t>;
-    using closure_type = Kokkos::Impl::ParallelFor<Derived, policy_type>;
-    const closure_type closure(*(static_cast<Derived*>(this)),
-                               policy_type(0, size_in));
-    closure.execute();
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endParallelFor(kpID);
-    }
+    parallel_for(
+        std::string("Kokkos::ScatterView::ResetDuplicates [") + name + "]",
+        RangePolicy<ExecSpace, size_t>(0, size_in),
+        static_cast<Derived const&>(*this));
   }
 };
 
