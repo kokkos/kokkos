@@ -1450,7 +1450,7 @@ namespace Kokkos {
  * i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team.
- * This functionality requires C++11 support.*/
+ */
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::ROCmTeamMember>&
@@ -1465,8 +1465,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  * ValueType & val) for each i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team
- * and a summation of val is performed and put into result. This functionality
- * requires C++11 support.*/
+ * and a summation of val is performed and put into result.
+ */
 template <typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION
     typename std::enable_if<!Kokkos::is_reducer<ValueType>::value>::type
@@ -1487,8 +1487,8 @@ KOKKOS_INLINE_FUNCTION
  * ValueType & val) for each i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team
- * and a summation of val is performed and put into result. This functionality
- * requires C++11 support.*/
+ * and a summation of val is performed and put into result.
+ */
 template <typename iType, class Lambda, typename ReducerType>
 KOKKOS_INLINE_FUNCTION
     typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
@@ -1512,7 +1512,8 @@ KOKKOS_INLINE_FUNCTION
  * ValueType& update) and put into init_result. The input value of init_result
  * is used as initializer for temporary variables of ValueType. Therefore the
  * input value should be the neutral element with respect to the join operation
- * (e.g. '0 for +-' or '1 for *'). This functionality requires C++11 support.*/
+ * (e.g. '0 for +-' or '1 for *').
+ */
 template <typename iType, class Lambda, typename ValueType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::ROCmTeamMember>&
@@ -1548,7 +1549,7 @@ namespace Kokkos {
  * i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all vector lanes of the the calling thread.
- * This functionality requires C++11 support.*/
+ */
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::ROCmTeamMember>&
@@ -1563,8 +1564,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  * ValueType & val) for each i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
- * and a summation of val is performed and put into result. This functionality
- * requires C++11 support.*/
+ * and a summation of val is performed and put into result.
+ */
 template <typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION
     typename std::enable_if<!Kokkos::is_reducer<ValueType>::value>::type
@@ -1591,7 +1592,8 @@ KOKKOS_INLINE_FUNCTION
  * ValueType& update) and put into init_result. The input value of init_result
  * is used as initializer for temporary variables of ValueType. Therefore the
  * input value should be the neutral element with respect to the join operation
- * (e.g. '0 for +-' or '1 for *'). This functionality requires C++11 support.*/
+ * (e.g. '0 for +-' or '1 for *').
+ */
 template <typename iType, class Lambda, typename ValueType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::ROCmTeamMember>&
@@ -1609,8 +1611,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
  * ValueType & val) for each i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
- * and a summation of val is performed and put into result. This functionality
- * requires C++11 support.*/
+ * and a summation of val is performed and put into result.
+ */
 template <typename iType, class Lambda, typename ReducerType>
 KOKKOS_INLINE_FUNCTION
     typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
@@ -1633,7 +1635,8 @@ KOKKOS_INLINE_FUNCTION
  * ValueType& update) and put into init_result. The input value of init_result
  * is used as initializer for temporary variables of ValueType. Therefore the
  * input value should be the neutral element with respect to the join operation
- * (e.g. '0 for +-' or '1 for *'). This functionality requires C++11 support.*/
+ * (e.g. '0 for +-' or '1 for *').
+ */
 template <typename iType, class Lambda, typename ReducerType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::ROCmTeamMember>&
@@ -1658,7 +1661,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
  * needs to be added to val no matter whether final==true or not. In a serial
  * execution (i.e. team_size==1) the operator is only called once with
  * final==true. Scan_val will be set to the final sum value over all vector
- * lanes. This functionality requires C++11 support.*/
+ * lanes.
+ */
 template <typename iType, class FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::ROCmTeamMember>&

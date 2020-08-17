@@ -210,7 +210,6 @@ ThreadVectorRange(Impl::TaskExec<Kokkos::Experimental::ROCm>& thread,
  * i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team.
- * This functionality requires C++11 support.
  */
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
