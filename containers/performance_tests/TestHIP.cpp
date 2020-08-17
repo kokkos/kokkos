@@ -43,7 +43,6 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_ROCM)
 
 #include <cstdint>
 #include <string>
@@ -66,46 +65,26 @@
 
 namespace Performance {
 
-class rocm : public ::testing::Test {
- protected:
-  static void SetUpTestCase() {
-    std::cout << std::setprecision(5) << std::scientific;
-    Kokkos::HostSpace::execution_space::initialize();
-    Kokkos::Experimental::ROCm::initialize(
-        Kokkos::Experimental::ROCm::SelectDevice(0));
-  }
-  static void TearDownTestCase() {
-    Kokkos::Experimental::ROCm::finalize();
-    Kokkos::HostSpace::execution_space::finalize();
-  }
-};
-#if 0
-// issue 1089
-TEST_F( rocm, dynrankview_perf )
-{
-  std::cout << "ROCm" << std::endl;
+TEST(TEST_CATEGORY, dynrankview_perf) {
+  std::cout << "HIP" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
-  test_dynrankview_op_perf<Kokkos::Experimental::ROCm>( 40960 );
+  test_dynrankview_op_perf<Kokkos::Experimental::HIP>(40960);
 }
 
-TEST_F( rocm, global_2_local)
-{
-  std::cout << "ROCm" << std::endl;
+TEST(TEST_CATEGORY, global_2_local) {
+  std::cout << "HIP" << std::endl;
   std::cout << "size, create, generate, fill, find" << std::endl;
-  for (unsigned i=Performance::begin_id_size; i<=Performance::end_id_size; i *= Performance::id_step)
-    test_global_to_local_ids<Kokkos::Experimental::ROCm>(i);
+  for (unsigned i = Performance::begin_id_size; i <= Performance::end_id_size;
+       i *= Performance::id_step)
+    test_global_to_local_ids<Kokkos::Experimental::HIP>(i);
 }
 
-#endif
-TEST_F(rocm, unordered_map_performance_near) {
-  Perf::run_performance_tests<Kokkos::Experimental::ROCm, true>("rocm-near");
+TEST(TEST_CATEGORY, unordered_map_performance_near) {
+  Perf::run_performance_tests<Kokkos::Experimental::HIP, true>("hip-near");
 }
 
-TEST_F(rocm, unordered_map_performance_far) {
-  Perf::run_performance_tests<Kokkos::Experimental::ROCm, false>("rocm-far");
+TEST(TEST_CATEGORY, unordered_map_performance_far) {
+  Perf::run_performance_tests<Kokkos::Experimental::HIP, false>("hip-far");
 }
 
 }  // namespace Performance
-#else
-void KOKKOS_CONTAINERS_PERFORMANCE_TESTS_TESTROCM_PREVENT_EMPTY_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_ROCM ) */
