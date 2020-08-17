@@ -81,6 +81,7 @@ For specifics see the LICENSE file contained in the repository or distribution.
 * NVCC 9.2 for CUDA (with gcc 7.2.0)
 * NVCC 10.0 for CUDA (with gcc 7.4.0)
 * NVCC 10.1 for CUDA (with gcc 7.4.0)
+* NVCC 11.0 for CUDA (with gcc 8.4.0)
 
 ### Primary tested compilers on Power 8 are:
 * GCC 6.4.0 (OpenMP,Serial)
