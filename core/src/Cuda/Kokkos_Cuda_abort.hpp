@@ -65,6 +65,8 @@ namespace Kokkos {
 namespace Impl {
 
 #if !defined(__APPLE__)
+// required to workaround failures in random number generator unit tests with
+// pre-volta architectures
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
 __device__ inline void cuda_abort(const char *const message) {
 #else
@@ -78,6 +80,8 @@ __device__ inline void cuda_abort(const char *const message) {
   // This loop is never executed. It's intended to suppress warnings that the
   // function returns, even though it does not. This is necessary because
   // __assertfail is not marked as [[noreturn]], even though it does not return.
+  //  Disable with KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK to workaround failures
+  //  in random number generator unit tests with pre-volta architectures
 #if !defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
   while (true)
     ;
