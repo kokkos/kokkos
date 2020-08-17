@@ -268,7 +268,7 @@ else
   endif
 endif
 
-# Set C++11 flags.
+# Set C++ version flags.
 ifeq ($(KOKKOS_INTERNAL_COMPILER_PGI), 1)
   KOKKOS_INTERNAL_CXX14_FLAG := --c++14
   KOKKOS_INTERNAL_CXX17_FLAG := --c++17

@@ -87,11 +87,11 @@ ENDIF()
 
 # Enforce that extensions are turned off for nvcc_wrapper.
 # For compiling CUDA code using nvcc_wrapper, we will use the host compiler's
-# flags for turning on C++11.  Since for compiler ID and versioning purposes
+# flags for turning on C++14.  Since for compiler ID and versioning purposes
 # CMake recognizes the host compiler when calling nvcc_wrapper, this just
 # works.  Both NVCC and nvcc_wrapper only recognize '-std=c++14' which means
 # that we can only use host compilers for CUDA builds that use those flags.
-# It also means that extensions (gnu++11) can't be turned on for CUDA builds.
+# It also means that extensions (gnu++14) can't be turned on for CUDA builds.
 
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
   IF(NOT DEFINED CMAKE_CXX_EXTENSIONS)
