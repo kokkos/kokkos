@@ -108,7 +108,7 @@ struct test_dualview_combinations {
     if (with_init) {
       a = ViewType("A", n, m);
     } else {
-      a = ViewType(Kokkos::ViewAllocateWithoutInitializing("A"), n, m);
+      a = ViewType(Kokkos::view_alloc(Kokkos::WithoutInitializing, "A"), n, m);
     }
     Kokkos::deep_copy(a.d_view, 1);
 
