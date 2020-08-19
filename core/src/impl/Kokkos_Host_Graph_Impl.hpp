@@ -48,6 +48,8 @@
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Graph.hpp>
 
+#include <impl/Kokkos_Host_Graph_fwd.hpp>
+
 #include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_OpenMP.hpp>
@@ -60,139 +62,8 @@
 namespace Kokkos {
 namespace Impl {
 
-template <class ExecutionSpace>
-struct HostGraphImpl;
-
 //==============================================================================
-// <editor-fold desc="GraphNodeKernelImpl"> {{{1
-
-template <class ExecutionSpace>
-struct GraphNodeKernelHostImpl {
-  // TODO @graphs decide if this should use vtable or intrusive erasure via
-  //      function pointers like in the rest of the graph interface
-  virtual void execute_kernel() const = 0;
-};
-
-template <class ExecutionSpace, class Policy, class Functor>
-class GraphNodeKernelImpl<ExecutionSpace, Policy, Functor,
-                          Kokkos::ParallelForTag>
-    final : public ParallelFor<Functor, Policy, ExecutionSpace>,
-            public GraphNodeKernelHostImpl<ExecutionSpace> {
- public:
-  using base_t = ParallelFor<Functor, Policy, ExecutionSpace>;
-  using execute_kernel_vtable_base_t = GraphNodeKernelHostImpl<ExecutionSpace>;
-
-  // TODO @graph kernel name info propagation
-  template <class PolicyDeduced>
-  GraphNodeKernelImpl(std::string, ExecutionSpace const&, Functor arg_functor,
-                      PolicyDeduced&& arg_policy)
-      : base_t(std::move(arg_functor), (PolicyDeduced &&) arg_policy),
-        execute_kernel_vtable_base_t() {}
-
-  // FIXME @graph Forward through the instance once that works in the backends
-  template <class PolicyDeduced>
-  GraphNodeKernelImpl(ExecutionSpace const& ex, Functor arg_functor,
-                      PolicyDeduced&& arg_policy)
-      : GraphNodeKernelImpl("", ex, std::move(arg_functor),
-                            (PolicyDeduced &&) arg_policy) {}
-
-  void execute_kernel() const final { this->base_t::execute(); }
-};
-
-// </editor-fold> end GraphNodeKernelImpl }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="GraphNodeBackendSpecificDetails"> {{{1
-
-template <class ExecutionSpace>
-struct GraphNodeBackendSpecificDetails
-    : ExecutionSpaceInstanceStorage<ExecutionSpace> {
- private:
-  using execution_space_instance_storage_t =
-      ExecutionSpaceInstanceStorage<ExecutionSpace>;
-  using host_kernel_impl_t = GraphNodeKernelHostImpl<ExecutionSpace>;
-
-  std::shared_ptr<GraphNodeBackendSpecificDetails<ExecutionSpace>>
-      m_predecessor = {};
-
-  Kokkos::ObservingRawPtr<host_kernel_impl_t const> m_kernel_ptr = nullptr;
-
-  bool m_has_executed = false;
-
-  template <class>
-  friend struct HostGraphImpl;
-
- protected:
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="Ctors, destructor, and assignment"> {{{2
-
-  explicit GraphNodeBackendSpecificDetails(ExecutionSpace const& ex) noexcept
-      : execution_space_instance_storage_t(ex) {}
-
-  GraphNodeBackendSpecificDetails(ExecutionSpace const& ex,
-                                  _graph_node_is_root_ctor_tag) noexcept
-      : execution_space_instance_storage_t(ex), m_has_executed(true) {}
-
-  GraphNodeBackendSpecificDetails() noexcept = delete;
-
-  GraphNodeBackendSpecificDetails(GraphNodeBackendSpecificDetails const&) =
-      delete;
-
-  GraphNodeBackendSpecificDetails(GraphNodeBackendSpecificDetails&&) noexcept =
-      delete;
-
-  GraphNodeBackendSpecificDetails& operator   =(
-      GraphNodeBackendSpecificDetails const&) = delete;
-
-  GraphNodeBackendSpecificDetails& operator       =(
-      GraphNodeBackendSpecificDetails&&) noexcept = delete;
-
-  ~GraphNodeBackendSpecificDetails() = default;
-
-  // </editor-fold> end Ctors, destructor, and assignment }}}2
-  //----------------------------------------------------------------------------
-
- public:
-  void set_kernel(host_kernel_impl_t const& arg_kernel) {
-    KOKKOS_EXPECTS(m_kernel_ptr == nullptr)
-    m_kernel_ptr = &arg_kernel;
-  }
-
-  void set_predecessor(
-      std::shared_ptr<GraphNodeBackendSpecificDetails<ExecutionSpace>> const&
-          arg_pred_impl) {
-    // This method delegates responsibility for executing the predecessor to
-    // this node.  Each node can have at most one predecessor (which may be an
-    // aggregate).
-    KOKKOS_EXPECTS(!bool(m_predecessor))
-    KOKKOS_EXPECTS(bool(arg_pred_impl))
-    KOKKOS_EXPECTS(!m_has_executed)
-    m_predecessor = arg_pred_impl;
-  }
-
-  void execute_node() {
-    // This node could have already been executed as the predecessor of some
-    // other
-    KOKKOS_EXPECTS(bool(m_kernel_ptr) || m_has_executed)
-    // Just execute the predecessor here, since calling set_predecessor()
-    // delegates the responsibility for running it to us.
-    if (!m_has_executed) {
-      // I'm pretty sure this doesn't need to be atomic under our current
-      // supported semantics, but instinct I have feels like it should be...
-      m_has_executed = true;
-      if (m_predecessor) {
-        m_predecessor->execute_node();
-      }
-      m_kernel_ptr->execute_kernel();
-      m_kernel_ptr = nullptr;
-    }
-    KOKKOS_ENSURES(m_has_executed)
-  }
-};
-
-// </editor-fold> end GraphNodeBackendSpecificDetails }}}1
-//==============================================================================
+// <editor-fold desc="HostGraphImpl"> {{{1
 
 template <class ExecutionSpace>
 struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
@@ -204,6 +75,10 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   std::set<std::shared_ptr<node_details_t>> m_sinks;
 
  public:
+  using root_node_impl_t =
+      GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
+                    Experimental::TypeErasedTag>;
+
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
@@ -222,34 +97,61 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   // </editor-fold> end Constructors, destructor, and assignment }}}2
   //----------------------------------------------------------------------------
 
-  template <class NodeImpl>
-  //  requires NodeImpl is a specialization of GraphNodeImpl
-  void add_node(NodeImpl& arg_node) {
+  template <class NodeImplPtr>
+  //  requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
+  void add_node(NodeImplPtr arg_node_ptr) {
     // Since this is always called before any calls to add_predecessor involving
     // it, we can treat this node as a sink until we discover otherwise.
-    arg_node.node_details_t::set_kernel(arg_node.get_kernel());
-    auto node_ptr = arg_node.shared_from_this();
-    auto spot     = m_sinks.find(node_ptr);
+    arg_node_ptr->node_details_t::set_kernel(arg_node_ptr->get_kernel());
+    auto spot = m_sinks.find(arg_node_ptr);
     KOKKOS_ASSERT(spot == m_sinks.end())
-    m_sinks.insert(std::move(spot), std::move(node_ptr));
+    m_sinks.insert(std::move(spot), std::move(arg_node_ptr));
   }
 
-  template <class NodeImpl, class PredecessorRef>
+  template <class NodeImplPtr, class PredecessorRef>
   // requires PredecessorRef is a specialization of GraphNodeRef that has
   // already been added to this graph and NodeImpl is a specialization of
   // GraphNodeImpl that has already been added to this graph.
-  void add_predecessor(NodeImpl& arg_node, PredecessorRef arg_pred_ref) {
-    auto node_ptr_spot = m_sinks.find(arg_node.shared_from_this());
-    auto pred_ref_spot = m_sinks.find(GraphAccess::get_node_ptr(arg_pred_ref));
+  void add_predecessor(NodeImplPtr arg_node_ptr, PredecessorRef arg_pred_ref) {
+    // This is a lot of unnecessary reference count incrementing and
+    // decrementing but it doesn't matter because this is super coarse grained
+    // anyway.
+    auto node_ptr_spot = m_sinks.find(arg_node_ptr);
+    auto pred_ptr      = GraphAccess::get_node_ptr(arg_pred_ref);
+    auto pred_ref_spot = m_sinks.find(pred_ptr);
     KOKKOS_ASSERT(node_ptr_spot != m_sinks.end())
-    KOKKOS_ASSERT(pred_ref_spot != m_sinks.end())
-    // delegate responsibility for executing the predecessor to arg_node
-    // and then remove the predecessor from the set of sinks
-    (*node_ptr_spot)->set_predecessor(*pred_ref_spot);
-    m_sinks.erase(pred_ref_spot);
+    if (pred_ref_spot != m_sinks.end()) {
+      // delegate responsibility for executing the predecessor to arg_node
+      // and then remove the predecessor from the set of sinks
+      (*node_ptr_spot)->set_predecessor(std::move(*pred_ref_spot));
+      m_sinks.erase(pred_ref_spot);
+    } else {
+      // We still want to check that it's executed, even though someone else
+      // should have executed it before us
+      (*node_ptr_spot)->set_predecessor(std::move(pred_ptr));
+    }
+  }
+
+  template <class... PredecessorRefs>
+  // See requirements/expectations in GraphBuilder
+  auto create_aggregate_ptr(PredecessorRefs&&... refs) {
+    using aggregate_kernel_impl_t =
+        GraphNodeAggregateKernelHostImpl<ExecutionSpace>;
+    using aggregate_node_impl_t =
+        GraphNodeImpl<ExecutionSpace, aggregate_kernel_impl_t,
+                      Experimental::TypeErasedTag>;
+    return GraphAccess::make_node_shared_ptr_with_deleter(
+        new aggregate_node_impl_t{this->execution_space_instance(),
+                                  _graph_node_kernel_ctor_tag{},
+                                  aggregate_kernel_impl_t{}});
   }
 
   void submit() & {
+    // This reset is gross, but for the purposes of our simple host
+    // implementation...
+    for (auto& sink : m_sinks) {
+      sink->reset_has_executed();
+    }
     for (auto& sink : m_sinks) {
       sink->execute_node();
     }
@@ -260,6 +162,11 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   // std::shared_ptr::use_count(), but in case we do this is what it should
   // look like.
   void submit() && {
+    // This reset is gross, but for the purposes of our simple host
+    // implementation...
+    for (auto& sink : m_sinks) {
+      sink->reset_has_executed();
+    }
     for (auto& sink : m_sinks) {
       // Swap ownership onto the stack so that it can be destroyed immediately
       // after execution
@@ -275,19 +182,17 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   }
 
   auto create_root_node_ptr() {
-    // TODO @graphs encapsulate this better; it's too easy to mess up.
-    using root_node_impl_t =
-        GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
-                      Experimental::TypeErasedTag>;
-    auto rv = std::shared_ptr<root_node_impl_t>{
+    auto rv = Kokkos::Impl::GraphAccess::make_node_shared_ptr_with_deleter(
         new root_node_impl_t{get_execution_space(),
-                             _graph_node_is_root_ctor_tag{}},
-        typename root_node_impl_t::Deleter{}};
+                             _graph_node_is_root_ctor_tag{}});
     m_sinks.insert(rv);
     return rv;
   }
 };
 
+
+// </editor-fold> end HostGraphImpl }}}1
+//==============================================================================
 //==============================================================================
 // <editor-fold desc="Explicit specializations for host exec spaces"> {{{1
 
@@ -319,5 +224,8 @@ struct GraphImpl<Kokkos::OpenMP> : HostGraphImpl<Kokkos::OpenMP> {
 }  // end namespace Impl
 
 }  // end namespace Kokkos
+
+#include <impl/Kokkos_Host_GraphNodeKernel.hpp>
+#include <impl/Kokkos_Host_GraphNode_Impl.hpp>
 
 #endif  // KOKKOS_HOST_GRAPH_IMPL_HPP

@@ -51,17 +51,10 @@
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
+#include <impl/Kokkos_Utilities.hpp> // emulate_fold_comma_operator
 
 namespace Kokkos {
 namespace Impl {
-
-// TODO move this to a more general backporting facilities file
-
-// acts like void for comma fold emulation
-struct _fold_comma_emulation_return {};
-
-template <class... Ts>
-KOKKOS_INLINE_FUNCTION void emulate_fold_comma_operator(Ts&&...) noexcept {}
 
 //==============================================================================
 // <editor-fold desc="CombinedReducer reducer and value storage helpers"> {{{1

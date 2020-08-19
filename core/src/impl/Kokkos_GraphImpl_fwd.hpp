@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -43,57 +42,43 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#ifndef KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP
+#define KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP
 
-#include <Kokkos_Core.hpp>
+namespace Kokkos {
+namespace Impl {
 
-#include <default/TestDefaultDeviceType_Category.hpp>
+template <class ExecutionSpace, class Kernel, class Predecessor>
+struct GraphNodeImpl;
 
-#include <Kokkos_Graph.hpp>
+template <class ExecutionSpace>
+struct GraphImpl;
 
-namespace Test {
+template <class ExecutionSpace, class Policy, class Functor,
+    class KernelTypeTag, class... Args>
+class GraphNodeKernelImpl;
 
-TEST(defaultdevicetype, development_test) {
-  Kokkos::View<int> count{"graph_kernel_count"};
-  Kokkos::View<int> bugs{"graph_kernel_bugs"};
-  const auto graph = Kokkos::Experimental::create_graph([=](auto builder) {
-    auto root = builder.get_root();
+template <class ExecutionSpace>
+struct GraphNodeBackendSpecificDetails;
 
-    auto f1 = root.then_parallel_for(
-        Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(long) {
-          bugs() += int(count() != 0);
-          count()++;
-        });
-    auto f2 = f1.then_parallel_for(
-        Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(long) {
-          bugs() += int(count() < 1 || count() > 2);
-          count()++;
-        });
-    auto f3 = f1.then_parallel_for(
-        Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(long) {
-          bugs() += int(count() < 1 || count() > 2);
-          count()++;
-        });
-    builder.when_all(f2, f3).then_parallel_for(
-        Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), KOKKOS_LAMBDA(long) {
-          bugs() += int(count() != 3);
-          count()++;
-        });
-  });
+struct _graph_node_kernel_ctor_tag {};
+struct _graph_node_predecessor_ctor_tag {};
+struct _graph_node_is_root_ctor_tag {};
 
-  for(int i = 0; i < 2; ++i) {
-    Kokkos::deep_copy(graph.get_execution_space(), count, 0);
-    Kokkos::deep_copy(graph.get_execution_space(), bugs, 0);
-    graph.submit();
-    auto count_host =
-        Kokkos::create_mirror_view_and_copy(graph.get_execution_space(), count);
-    auto bugs_host =
-        Kokkos::create_mirror_view_and_copy(graph.get_execution_space(), bugs);
-    graph.get_execution_space().fence();
+struct GraphAccess;
 
-    ASSERT_EQ(count_host(), 4);
-    ASSERT_EQ(bugs_host(), 0);
-  }
-}
+// Customizable for backends
+template <class ExecutionSpace>
+struct GraphNodeBackendSpecificDetails;
 
-}  // namespace Test
+// Customizable for backends
+template <class ExecutionSpace, class Kernel, class PredecessorRef>
+struct GraphNodeBackendDetailsBeforeTypeErasure;
+
+// TODO move this to a more appropriate place
+struct AlwaysDeduceThisTemplateParameter;
+
+} // end namespace Impl
+} // end namespace Kokkos
+
+#endif  // KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP
