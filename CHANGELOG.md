@@ -1,6 +1,44 @@
 # Change Log
 
-## [3.1.1](https://github.com/kokkos/kokkos/tree/3.1.1) (2020-04-14)
+## [3.2.00](https://github.com/kokkos/kokkos/tree/3.2.00) (2020-08-19)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/3.1.01...3.2.00)
+
+**Implemented enhancements:**
+
+- Silent error (Validate storage level arg to set_scratch_size) [\#3097](https://github.com/kokkos/kokkos/issues/3097)
+- Remove KOKKKOS\_ENABLE\_PROFILING Option [\#3095](https://github.com/kokkos/kokkos/issues/3095)
+- Cuda 11 -\> allow C++17 [\#3083](https://github.com/kokkos/kokkos/issues/3083)
+- In source build failure not explained [\#3081](https://github.com/kokkos/kokkos/issues/3081)
+- Allow naming of Views for initialization kernel [\#3070](https://github.com/kokkos/kokkos/issues/3070)
+- DefaultInit tests failing when using CTest resource allocation feature [\#3040](https://github.com/kokkos/kokkos/issues/3040)
+- Add installation testing.  [\#3037](https://github.com/kokkos/kokkos/issues/3037)
+- nvcc\_wrapper needs to handle `-expt-relaxed-constexpr` flag [\#3017](https://github.com/kokkos/kokkos/issues/3017)
+- CPU core oversubscription warning on macOS with OpenMP backend [\#2996](https://github.com/kokkos/kokkos/issues/2996)
+- Default behavior of KOKKOS\_NUM\_DEVICES to use all devices available [\#2975](https://github.com/kokkos/kokkos/issues/2975)
+- Assert blocksize \> 0 [\#2974](https://github.com/kokkos/kokkos/issues/2974)
+- Add ability to assign kokkos profile function from executable  [\#2973](https://github.com/kokkos/kokkos/issues/2973)
+- ScatterView Support for the pre/post increment operator [\#2967](https://github.com/kokkos/kokkos/issues/2967)
+
+**Fixed bugs:**
+
+- Compiler issue: Cuda build with clang 10 has errors with the atomic unit tests [\#3237](https://github.com/kokkos/kokkos/issues/3237)
+- Incompatibility of flags for C++ standard with PGI v20.4 on Power9/NVIDIA V100 system [\#3252](https://github.com/kokkos/kokkos/issues/3252)
+- Error configuring as subproject [\#3140](https://github.com/kokkos/kokkos/issues/3140)
+- CMake fails with Nvidia compilers when the GPU architecture option is not supplied (Fix configure with OMPT and Cuda) [\#3207](https://github.com/kokkos/kokkos/issues/3207)
+- PGI compiler being passed the gcc -fopenmp flag [\#3125](https://github.com/kokkos/kokkos/issues/3125)
+- Cuda: Memory leak when using CUDA stream [\#3167](https://github.com/kokkos/kokkos/issues/3167)
+- RangePolicy has an implicitly deleted assignment operator [\#3192](https://github.com/kokkos/kokkos/issues/3192)
+- MemorySpace::allocate needs to have memory pool counting.  [\#3064](https://github.com/kokkos/kokkos/issues/3064)
+- Missing write fence for lock based atomics on CUDA [\#3038](https://github.com/kokkos/kokkos/issues/3038)
+- CUDA compute capability version check problem [\#3026](https://github.com/kokkos/kokkos/issues/3026)
+- Make DynRankView fencing consistent [\#3014](https://github.com/kokkos/kokkos/issues/3014)
+- nvcc\_wrapper cant handle -Xcompiler -o out.o [\#2993](https://github.com/kokkos/kokkos/issues/2993)
+- Reductions of non-trivial types of size 4 fail in CUDA shfl operations [\#2990](https://github.com/kokkos/kokkos/issues/2990)
+- complex\_double misalignment in reduce, clang+CUDA [\#2989](https://github.com/kokkos/kokkos/issues/2989)
+- Span of degenerated \(zero-length\) subviews is not zero in some special cases [\#2979](https://github.com/kokkos/kokkos/issues/2979)
+- Rank 1 custom layouts dont work as expected. [\#2840](https://github.com/kokkos/kokkos/issues/2840)
+
+## [3.1.01](https://github.com/kokkos/kokkos/tree/3.1.1) (2020-04-14)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.1.00...3.1.1)
 
 **Fixed bugs:**
