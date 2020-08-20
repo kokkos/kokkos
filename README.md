@@ -64,10 +64,6 @@ For specifics see the LICENSE file contained in the repository or distribution.
 * Intel 17.0.1
 * Intel 17.4.196
 * Intel 18.2.128
-* Clang 3.6.1
-* Clang 3.7.1
-* Clang 3.8.1
-* Clang 3.9.0
 * Clang 4.0.0
 * Clang 6.0.0 for CUDA (CUDA Toolkit 9.0)
 * Clang 7.0.0 for CUDA (CUDA Toolkit 9.1)
