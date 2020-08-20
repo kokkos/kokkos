@@ -11,7 +11,7 @@ if [ "$1" = bowman ]; then
 fi
 if [ "$1" = blake ]; then
   ICPCVER="$(icpc --version | grep icpc | cut -d ' ' -f 3)"
-  if [[ "${ICPCVER}" = 17.* ]]; then
+  if [[ "${ICPCVER}" = 17.* || "${ICPCVER}" = 18.0.128 ]]; then
     module swap gcc/4.9.3 gcc/6.4.0
     module list
   fi
