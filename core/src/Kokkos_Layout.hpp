@@ -167,9 +167,13 @@ struct LayoutStride {
     if (0 == check_input) {
       size_t n = 1;
       for (int r = 0; r < rank; ++r) {
-        tmp.stride[order[r]] = n;
-        n *= (dimen[order[r]]);
         tmp.dimension[r] = dimen[r];
+        for (int r1 = 0; r1 < rank; ++r1) {
+          if(order[r1]==r){
+            tmp.stride[r1] = n;
+            n *= (dimen[r1]);
+          }
+        }
       }
     }
     return tmp;
