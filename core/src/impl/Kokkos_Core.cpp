@@ -209,10 +209,7 @@ int get_gpu(const InitArguments& args) {
   }
   return use_gpu;
 }
-<<<<<<< HEAD
-=======
 #endif  // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_ROCM || KOKKOS_ENABLE_HIP
->>>>>>> release-candidate-3.2
 
 bool is_unsigned_int(const char* str) {
   const size_t len = strlen(str);
