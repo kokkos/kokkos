@@ -54,17 +54,13 @@ For specifics see the LICENSE file contained in the repository or distribution.
 # Requirements
 
 ### Primary tested compilers on X86 are:
-* GCC 4.8.4
-* GCC 4.9.3
-* GCC 5.1.0
+* GCC 5.3.0
 * GCC 5.4.0
 * GCC 5.5.0
 * GCC 6.1.0
 * GCC 7.2.0
 * GCC 7.3.0
 * GCC 8.1.0
-* Intel 15.0.2
-* Intel 16.0.1
 * Intel 17.0.1
 * Intel 17.4.196
 * Intel 18.2.128
@@ -90,7 +86,6 @@ For specifics see the LICENSE file contained in the repository or distribution.
 * NVCC 9.2.88 for CUDA (with gcc 7.2.0 and XL 16.1.0)
 
 ### Primary tested compilers on Intel KNL are:
-* Intel 16.4.258 (with gcc 4.7.2)
 * Intel 17.2.174 (with gcc 4.9.3)
 * Intel 18.2.199 (with gcc 4.9.3)
 
