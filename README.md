@@ -86,8 +86,8 @@ For specifics see the LICENSE file contained in the repository or distribution.
 * NVCC 9.2.88 for CUDA (with gcc 7.2.0 and XL 16.1.0)
 
 ### Primary tested compilers on Intel KNL are:
-* Intel 17.2.174 (with gcc 4.9.3)
-* Intel 18.2.199 (with gcc 4.9.3)
+* Intel 17.2.174 (with gcc 6.2.0 and 6.4.0)
+* Intel 18.2.199 (with gcc 6.2.0 and 6.4.0)
 
 ### Primary tested compilers on ARM (Cavium ThunderX2)
 * GCC 7.2.0
