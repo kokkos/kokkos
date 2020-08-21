@@ -50,6 +50,8 @@
 #include <impl/Kokkos_Host_Graph_fwd.hpp>
 
 #include <Kokkos_Graph.hpp>
+#include <Kokkos_Parallel.hpp>
+#include <Kokkos_Parallel_Reduce.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -64,28 +66,34 @@ struct GraphNodeKernelHostImpl {
   virtual void execute_kernel() const = 0;
 };
 
-template <class ExecutionSpace, class Policy, class Functor>
-class GraphNodeKernelImpl<ExecutionSpace, Policy, Functor,
-    Kokkos::ParallelForTag>
-final : public ParallelFor<Functor, Policy, ExecutionSpace>,
-        public GraphNodeKernelHostImpl<ExecutionSpace> {
+// TODO Indicate that this kernel specialization is only for the Host somehow?
+template <class ExecutionSpace, class PolicyType, class Functor, class PatternTag, class... Args>
+class GraphNodeKernelImpl
+    : public PatternImplSpecializationForTag<PatternTag, Functor, PolicyType,
+                                             Args..., ExecutionSpace>::type,
+      public GraphNodeKernelHostImpl<ExecutionSpace> {
  public:
-  using base_t = ParallelFor<Functor, Policy, ExecutionSpace>;
+  using base_t = typename PatternImplSpecializationForTag<PatternTag, Functor, PolicyType,
+                                                          Args...,
+      ExecutionSpace>::type;
   using execute_kernel_vtable_base_t = GraphNodeKernelHostImpl<ExecutionSpace>;
+  // We have to use this name here because that's how it was done way back when
+  // then implementations of Impl::Parallel*<> were written
+  using Policy = PolicyType;
 
   // TODO @graph kernel name info propagation
-  template <class PolicyDeduced>
+  template <class PolicyDeduced, class... ArgsDeduced>
   GraphNodeKernelImpl(std::string, ExecutionSpace const&, Functor arg_functor,
-                      PolicyDeduced&& arg_policy)
-      : base_t(std::move(arg_functor), (PolicyDeduced &&) arg_policy),
+                      PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
+      : base_t(std::move(arg_functor), (PolicyDeduced&&)arg_policy, (ArgsDeduced&&)args...),
         execute_kernel_vtable_base_t() {}
 
   // FIXME @graph Forward through the instance once that works in the backends
-  template <class PolicyDeduced>
+  template <class PolicyDeduced, class... ArgsDeduced>
   GraphNodeKernelImpl(ExecutionSpace const& ex, Functor arg_functor,
-                      PolicyDeduced&& arg_policy)
+                      PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
       : GraphNodeKernelImpl("", ex, std::move(arg_functor),
-                            (PolicyDeduced &&) arg_policy) {}
+                            (PolicyDeduced &&) arg_policy, (ArgsDeduced&&)args...) {}
 
   void execute_kernel() const final { this->base_t::execute(); }
 };
@@ -96,11 +104,15 @@ final : public ParallelFor<Functor, Policy, ExecutionSpace>,
 template <class ExecutionSpace>
 struct GraphNodeAggregateKernelHostImpl
     : GraphNodeKernelHostImpl<ExecutionSpace> {
-  void execute_kernel() const final { }
+  // Aggregates don't need a policy, but for the purposes of checking the static
+  // assertions about graph kerenls,
+  struct Policy {
+    using is_graph_kernel = std::true_type;
+  };
+  void execute_kernel() const final {}
 };
 
-
-} // end namespace Impl
-} // end namespace Kokkos
+}  // end namespace Impl
+}  // end namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_HOST_GRAPHNODEKERNEL_HPP

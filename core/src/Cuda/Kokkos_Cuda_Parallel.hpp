@@ -519,6 +519,7 @@ template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
  public:
   using Policy = Kokkos::MDRangePolicy<Traits...>;
+  using functor_type = FunctorType;
 
  private:
   using RP               = Policy;
@@ -636,7 +637,7 @@ template <class FunctorType, class... Properties>
 class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   Kokkos::Cuda> {
  public:
-  using Policy = TeamPolicyInternal<Kokkos::Cuda, Properties...>;
+  using Policy = TeamPolicy<Properties...>;
 
  private:
   using Member       = typename Policy::member_type;
@@ -845,6 +846,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using functor_type   = FunctorType;
   using size_type      = Kokkos::Cuda::size_type;
   using index_type     = typename Policy::index_type;
+  using reducer_type = ReducerType;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -1151,6 +1153,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using reference_type = typename ValueTraits::reference_type;
   using functor_type   = FunctorType;
   using size_type      = Cuda::size_type;
+  using reducer_type = ReducerType;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -1418,7 +1421,7 @@ template <class FunctorType, class ReducerType, class... Properties>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      ReducerType, Kokkos::Cuda> {
  public:
-  using Policy = TeamPolicyInternal<Kokkos::Cuda, Properties...>;
+  using Policy = TeamPolicy<Properties...>;
 
  private:
   using Member       = typename Policy::member_type;
@@ -1445,6 +1448,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   using functor_type = FunctorType;
   using size_type    = Cuda::size_type;
+  using reducer_type = ReducerType;
 
   enum { UseShflReduction = (true && (ValueTraits::StaticValueSize != 0)) };
 

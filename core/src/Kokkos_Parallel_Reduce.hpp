@@ -912,23 +912,34 @@ struct ReducerHasTestReferenceFunction {
   };
 };
 
-template <class ExecutionSpace, class T,
-          bool is_reducer = ReducerHasTestReferenceFunction<T>::value>
-struct ParallelReduceFence {
-  static void fence(const ExecutionSpace& execution_space, const T&) {
-    execution_space.fence();
-  }
-};
 template <class ExecutionSpace, class... Args>
-struct ParallelReduceFence<ExecutionSpace, View<Args...>, false> {
-  static void fence(const ExecutionSpace&, const View<Args...>){};
-};
-template <class ExecutionSpace, class T>
-struct ParallelReduceFence<ExecutionSpace, T, true> {
-  static void fence(const ExecutionSpace& execution_space, const T& reducer) {
-    if (reducer.references_scalar()) execution_space.fence();
+constexpr bool parallel_reduce_needs_fence(ExecutionSpace const&, Args&&...) {
+  return true;
+}
+
+template <class ExecutionSpace, class Reducer>
+constexpr std::enable_if_t<ReducerHasTestReferenceFunction<Reducer>::value,
+                           bool>
+parallel_reduce_needs_fence(ExecutionSpace const&, Reducer const& reducer) {
+  return reducer.references_scalar();
+}
+
+template <class ExecutionSpace, class ViewLike>
+constexpr std::enable_if_t<Kokkos::is_view<ViewLike>::value, bool>
+parallel_reduce_needs_fence(ExecutionSpace const&, ViewLike const&) {
+  return false;
+}
+
+template <class ExecutionSpace, class... Args>
+struct ParallelReduceFence {
+  template <class... ArgsDeduced>
+  static void fence(const ExecutionSpace& ex, ArgsDeduced&&... args) {
+    if (Impl::parallel_reduce_needs_fence(ex, (ArgsDeduced &&) args...)) {
+      ex.fence();
+    }
   }
 };
+
 }  // namespace Impl
 
 /** \brief  Parallel reduction

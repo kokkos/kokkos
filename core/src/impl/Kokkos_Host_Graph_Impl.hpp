@@ -48,6 +48,7 @@
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Graph.hpp>
 
+#include <impl/Kokkos_GraphImpl_fwd.hpp>
 #include <impl/Kokkos_Host_Graph_fwd.hpp>
 
 #include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
@@ -56,6 +57,7 @@
 // FIXME @graph other backends?
 
 #include <impl/Kokkos_OptionalRef.hpp>
+#include <impl/Kokkos_EBO.hpp>
 
 #include <set>
 
@@ -76,8 +78,8 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
 
  public:
   using root_node_impl_t =
-      GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
-                    Experimental::TypeErasedTag>;
+      GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
+                    Kokkos::Experimental::TypeErasedTag>;
 
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
@@ -97,9 +99,13 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   // </editor-fold> end Constructors, destructor, and assignment }}}2
   //----------------------------------------------------------------------------
 
-  template <class NodeImplPtr>
+  template <class NodeImpl>
   //  requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
-  void add_node(NodeImplPtr arg_node_ptr) {
+  void add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr) {
+    static_assert(
+        NodeImpl::kernel_type::Policy::is_graph_kernel::value,
+        "Something has gone horribly wrong, but it's too complicated to "
+        "explain here.  Buy Daisy a coffee and she'll explain it to you.");
     // Since this is always called before any calls to add_predecessor involving
     // it, we can treat this node as a sink until we discover otherwise.
     arg_node_ptr->node_details_t::set_kernel(arg_node_ptr->get_kernel());
@@ -113,9 +119,6 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   // already been added to this graph and NodeImpl is a specialization of
   // GraphNodeImpl that has already been added to this graph.
   void add_predecessor(NodeImplPtr arg_node_ptr, PredecessorRef arg_pred_ref) {
-    // This is a lot of unnecessary reference count incrementing and
-    // decrementing but it doesn't matter because this is super coarse grained
-    // anyway.
     auto node_ptr_spot = m_sinks.find(arg_node_ptr);
     auto pred_ptr      = GraphAccess::get_node_ptr(arg_pred_ref);
     auto pred_ref_spot = m_sinks.find(pred_ptr);
@@ -139,7 +142,7 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
         GraphNodeAggregateKernelHostImpl<ExecutionSpace>;
     using aggregate_node_impl_t =
         GraphNodeImpl<ExecutionSpace, aggregate_kernel_impl_t,
-                      Experimental::TypeErasedTag>;
+                      Kokkos::Experimental::TypeErasedTag>;
     return GraphAccess::make_node_shared_ptr_with_deleter(
         new aggregate_node_impl_t{this->execution_space_instance(),
                                   _graph_node_kernel_ctor_tag{},
@@ -190,9 +193,9 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   }
 };
 
-
 // </editor-fold> end HostGraphImpl }}}1
 //==============================================================================
+
 //==============================================================================
 // <editor-fold desc="Explicit specializations for host exec spaces"> {{{1
 

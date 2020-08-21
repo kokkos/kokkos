@@ -42,34 +42,67 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPL_KOKKOS_GRAPHNODECUSTOMIZATION_HPP
-#define KOKKOS_IMPL_KOKKOS_GRAPHNODECUSTOMIZATION_HPP
+#ifndef KOKKOS_KOKKOS_CUDA_GRAPHNODE_IMPL_HPP
+#define KOKKOS_KOKKOS_CUDA_GRAPHNODE_IMPL_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_Core_fwd.hpp>
+
+#ifdef KOKKOS_ENABLE_CUDA
+
 #include <Kokkos_Graph_fwd.hpp>
-#include <impl/Kokkos_GraphImpl_fwd.hpp>
+
+#include <impl/Kokkos_GraphImpl.hpp>  // GraphAccess needs to be complete
+
+#include <Kokkos_Cuda.hpp>
+#include <cuda_runtime_api.h>
 
 namespace Kokkos {
 namespace Impl {
 
-// Customizable for backends
-template <class ExecutionSpace, class Kernel, class PredecessorRef>
-struct GraphNodeBackendDetailsBeforeTypeErasure {
+template <>
+struct GraphNodeBackendSpecificDetails<Kokkos::Cuda> {
+  cudaGraphNode_t node = nullptr;
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="Ctors, destructor, and assignment"> {{{2
+
+  explicit GraphNodeBackendSpecificDetails() = default;
+
+  GraphNodeBackendSpecificDetails(_graph_node_is_root_ctor_tag) noexcept {}
+
+  GraphNodeBackendSpecificDetails(GraphNodeBackendSpecificDetails const&) =
+      delete;
+
+  GraphNodeBackendSpecificDetails(GraphNodeBackendSpecificDetails&&) noexcept =
+      delete;
+
+  GraphNodeBackendSpecificDetails& operator   =(
+      GraphNodeBackendSpecificDetails const&) = delete;
+
+  GraphNodeBackendSpecificDetails& operator       =(
+      GraphNodeBackendSpecificDetails&&) noexcept = delete;
+
+  ~GraphNodeBackendSpecificDetails() = default;
+
+  // </editor-fold> end Ctors, destructor, and assignment }}}2
+  //----------------------------------------------------------------------------
+};
+
+template <class Kernel, class PredecessorRef>
+struct GraphNodeBackendDetailsBeforeTypeErasure<Kokkos::Cuda, Kernel,
+                                                PredecessorRef> {
  protected:
   //----------------------------------------------------------------------------
   // <editor-fold desc="ctors, destructor, and assignment"> {{{2
 
-  // Required constructors in customizations:
-  GraphNodeBackendDetailsBeforeTypeErasure(ExecutionSpace const&, Kernel&,
-                                           PredecessorRef const&,
-                   GraphNodeBackendSpecificDetails<ExecutionSpace>& this_as_details
-                                           ) noexcept {}
   GraphNodeBackendDetailsBeforeTypeErasure(
-      ExecutionSpace const&, _graph_node_is_root_ctor_tag,
-      GraphNodeBackendSpecificDetails<ExecutionSpace>&
-      this_as_details) noexcept {}
+      Kokkos::Cuda const&, Kernel& kernel, PredecessorRef const&,
+      GraphNodeBackendSpecificDetails<Kokkos::Cuda>&) noexcept {}
 
+  GraphNodeBackendDetailsBeforeTypeErasure(
+      Kokkos::Cuda const&, _graph_node_is_root_ctor_tag,
+      GraphNodeBackendSpecificDetails<Kokkos::Cuda>& this_as_details) noexcept {
+  }
 
   // Not copyable or movable at the concept level, so the default
   // implementation shouldn't be either.
@@ -93,8 +126,10 @@ struct GraphNodeBackendDetailsBeforeTypeErasure {
   //----------------------------------------------------------------------------
 };
 
+}  // end namespace Impl
+}  // end namespace Kokkos
 
-} // end namespace Impl
-} // end namespace Kokkos
+#include <Cuda/Kokkos_Cuda_GraphNodeKernel.hpp>
 
-#endif  // KOKKOS_KOKKOS_GRAPHNODECUSTOMIZATION_HPP
+#endif  // defined(KOKKOS_ENABLE_CUDA)
+#endif  // KOKKOS_KOKKOS_CUDA_GRAPHNODE_IMPL_HPP

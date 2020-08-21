@@ -399,8 +399,16 @@ struct inclusive_scan_integer_sequence {
   static constexpr value_type value = helper::value;
 };
 
+template <class T>
+struct identity {
+  using type = T;
+};
+
 template <typename T>
-using identity_t = T;
+using identity_t = typename identity<T>::type;
+
+template <class...>
+struct type_list;
 
 //==============================================================================
 // <editor-fold desc="remove_cvref_t"> {{{1

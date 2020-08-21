@@ -49,6 +49,7 @@
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Graph_fwd.hpp>
+#include <Kokkos_PointerOwnership.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 
 #include <memory>  // std::make_shared
@@ -58,21 +59,22 @@ namespace Impl {
 
 struct GraphAccess {
   template <class ExecutionSpace>
-  static Experimental::Graph<ExecutionSpace> construct_graph(
+  static Kokkos::Experimental::Graph<ExecutionSpace> construct_graph(
       ExecutionSpace ex) {
     //----------------------------------------//
-    return Experimental::Graph<ExecutionSpace>{
+    return Kokkos::Experimental::Graph<ExecutionSpace>{
         std::make_shared<GraphImpl<ExecutionSpace>>(std::move(ex))};
     //----------------------------------------//
   }
   template <class ExecutionSpace>
-  static auto create_root_ref(Experimental::Graph<ExecutionSpace>& arg_graph) {
+  static auto create_root_ref(
+      Kokkos::Experimental::Graph<ExecutionSpace>& arg_graph) {
     auto const& graph_impl_ptr = arg_graph.m_impl_ptr;
 
     auto root_ptr = graph_impl_ptr->create_root_node_ptr();
 
-    return Experimental::GraphNodeRef<ExecutionSpace>{graph_impl_ptr,
-                                                      std::move(root_ptr)};
+    return Kokkos::Experimental::GraphNodeRef<ExecutionSpace>{
+        graph_impl_ptr, std::move(root_ptr)};
   }
 
   template <class RootNodeRef>
@@ -82,8 +84,8 @@ struct GraphAccess {
     using execution_space =
         typename std::remove_cv<typename std::remove_reference<
             RootNodeRef>::type>::type::execution_space;
-    return Experimental::GraphBuilder<execution_space>{(RootNodeRef &&)
-                                                           arg_root};
+    return Kokkos::Experimental::GraphBuilder<execution_space>{(RootNodeRef &&)
+                                                                   arg_root};
   }
 
   template <class NodeImpl>
@@ -105,7 +107,8 @@ struct GraphAccess {
           Kokkos::Impl::GraphNodeImpl<ExecutionSpace, Kernel, Predecessor>>
           pred_impl) {
     //----------------------------------------
-    return Experimental::GraphNodeRef<ExecutionSpace, Kernel, Predecessor>{
+    return Kokkos::Experimental::GraphNodeRef<ExecutionSpace, Kernel,
+                                              Predecessor>{
         std::move(graph_impl), std::move(pred_impl)};
     //----------------------------------------
   }
@@ -129,7 +132,28 @@ struct GraphAccess {
   //----------------------------------------------------------------------------
 };
 
+template <class Policy>
+struct _add_graph_kernel_tag;
+
+template <template <class...> class PolicyTemplate, class... PolicyTraits>
+struct _add_graph_kernel_tag<PolicyTemplate<PolicyTraits...>> {
+  using type = PolicyTemplate<PolicyTraits..., IsGraphKernelTag>;
+};
+
 }  // end namespace Impl
+
+namespace Experimental {  // but not for users, so...
+
+template <class Policy>
+// requires ExecutionPolicy<Policy>
+auto require(Policy const& policy, Kokkos::Impl::KernelInGraphProperty) {
+  static_assert(Kokkos::is_execution_policy<Policy>::value,
+                "Internal implementation error!");
+  return typename Kokkos::Impl::_add_graph_kernel_tag<Policy>::type{policy};
+}
+
+}  // end namespace Experimental
+
 }  // end namespace Kokkos
 
 #endif  // KOKKOS_IMPL_KOKKOS_GRAPHIMPL_HPP

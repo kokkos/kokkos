@@ -52,6 +52,7 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Graph_fwd.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
+#include <Kokkos_Parallel_Reduce.hpp>
 
 #include <memory>  // std::shared_ptr
 
@@ -110,7 +111,7 @@ class GraphNodeRef {
     using next_kernel_t = typename std::remove_cv<
         typename std::remove_reference<NextKernelDeduced>::type>::type;
     using return_t = GraphNodeRef<ExecutionSpace, next_kernel_t, GraphNodeRef>;
-    auto rv = Kokkos::Impl::GraphAccess::make_graph_node_ref(
+    auto rv        = Kokkos::Impl::GraphAccess::make_graph_node_ref(
         m_graph_impl,
         Kokkos::Impl::GraphAccess::make_node_shared_ptr_with_deleter(
             new typename return_t::node_impl_t{
@@ -152,14 +153,34 @@ class GraphNodeRef {
   //----------------------------------------------------------------------------
   // <editor-fold desc="then_parallel_for"> {{{2
 
-  template <class Policy, class Functor>
+  template <class Policy, class Functor,
+            typename std::enable_if<
+                Kokkos::is_execution_policy<typename std::remove_cv<
+                    typename std::remove_reference<Policy>::type>::type>::value,
+                int>::type = 0>
   // requires ExecutionPolicy<Policy> && DataParallelFunctor<Functor>
-  auto then_parallel_for(std::string arg_name, Policy&& policy,
+  auto then_parallel_for(std::string arg_name, Policy&& arg_policy,
                          Functor&& functor) {
     KOKKOS_EXPECTS(bool(m_graph_impl))
     KOKKOS_EXPECTS(bool(m_node_impl))
+    // KOKKOS_EXPECTS(
+    //   arg_policy.space() == m_graph_impl->get_execution_space());
+
+    using policy_t = typename std::remove_cv<
+        typename std::remove_reference<Policy>::type>::type;
+    static_assert(
+        std::is_same<typename policy_t::execution_space,
+                     execution_space>::value,
+        // TODO make this work when defaulted
+        //|| policy_t::execution_space_is_defaulted,
+        "Execution Space mismatch between execution policy and graph");
+
+    auto policy = Experimental::require((Policy &&) arg_policy,
+                                        Kokkos::Impl::KernelInGraphProperty{});
+
+    using next_policy_t = decltype(policy);
     using next_kernel_t =
-        Kokkos::Impl::GraphNodeKernelImpl<ExecutionSpace, std::decay_t<Policy>,
+        Kokkos::Impl::GraphNodeKernelImpl<ExecutionSpace, next_policy_t,
                                           std::decay_t<Functor>,
                                           Kokkos::ParallelForTag>;
     return this->_then_kernel(next_kernel_t{std::move(arg_name), policy.space(),
@@ -182,7 +203,7 @@ class GraphNodeRef {
   // requires DataParallelFunctor<Functor>
   auto then_parallel_for(std::string name, std::size_t n, Functor&& functor) {
     return this->then_parallel_for(std::move(name),
-                                   Kokkos::RangePolicy<ExecutionSpace>(0, n),
+                                   Kokkos::RangePolicy<execution_space>(0, n),
                                    (Functor &&) functor);
   }
 
@@ -195,26 +216,111 @@ class GraphNodeRef {
   // </editor-fold> end then_parallel_for }}}2
   //----------------------------------------------------------------------------
 
-  // TODO @graph fill in these overloads
-  // template <class Policy, class Functor,
-  //    typename std::enable_if<
-  //        Kokkos::is_execution_policy<typename std::remove_cv<
-  //            typename std::remove_reference<Policy>::type>::type>::value,
-  //        int>::type = 0>
-  //// requires ExecutionPolicy<Policy> && DataParallelFunctor<Functor>
-  // auto then_parallel_reduce(std::string arg_name, Policy&& policy,
-  //                       Functor&& functor) {
-  //  KOKKOS_EXPECTS(bool(m_graph_impl))
-  //  KOKKOS_EXPECTS(bool(m_node_impl))
-  //  using next_kernel_t =
-  //  Kokkos::Impl::GraphNodeKernelImpl<ExecutionSpace, std::decay_t<Policy>,
-  //      std::decay_t<Functor>,
-  //      Kokkos::ParallelForTag>;
-  //  return this->_then_kernel(next_kernel_t{std::move(arg_name),
-  //  policy.space(),
-  //                                          (Functor &&) functor,
-  //                                          (Policy &&) policy});
-  //}
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="then_parallel_reduce"> {{{2
+
+  template <class Policy, class Functor, class ReturnType,
+            typename std::enable_if<
+                Kokkos::is_execution_policy<typename std::remove_cv<
+                    typename std::remove_reference<Policy>::type>::type>::value,
+                int>::type = 0>
+  // requires ExecutionPolicy<Policy>
+  //    && DataParallelReductionFunctor<Functor, ReturnType>
+  auto then_parallel_reduce(std::string arg_name, Policy&& arg_policy,
+                            Functor&& functor, ReturnType&& return_value) {
+    KOKKOS_EXPECTS(bool(m_graph_impl))
+    KOKKOS_EXPECTS(bool(m_node_impl))
+    // KOKKOS_EXPECTS(
+    //   arg_policy.space() == m_graph_impl->get_execution_space());
+
+    using policy_t = typename std::remove_cv<
+        typename std::remove_reference<Policy>::type>::type;
+    static_assert(
+        std::is_same<typename policy_t::execution_space,
+                     execution_space>::value,
+        // TODO make this work when defaulted
+        // || policy_t::execution_space_is_defaulted,
+        "Execution Space mismatch between execution policy and graph");
+
+    if (Kokkos::Impl::parallel_reduce_needs_fence(
+            m_graph_impl->get_execution_space())) {
+      Kokkos::Impl::throw_runtime_exception(
+          "Parallel reductions in graphs can't operate on Reducers that "
+          "reference a scalar because they can't complete synchronously. Use a "
+          "Kokkos::View instead and keep in mind the result will only be "
+          "available once the graph is submitted (or in tasks that depend on "
+          "this one).");
+    }
+
+    //----------------------------------------
+    // This is a disaster, but I guess it's not a my disaster to fix...
+    using return_type_remove_cvref = typename std::remove_cv<
+        typename std::remove_reference<ReturnType>::type>::type;
+    static_assert(Kokkos::is_view<return_type_remove_cvref>::value ||
+                      Kokkos::is_reducer<return_type_remove_cvref>::value,
+                  "Output argument to parallel reduce in a graph must be a "
+                  "View or a Reducer");
+    using return_type =
+        // Yes, you do really have to do this...
+        std::conditional_t<Kokkos::is_reducer<return_type_remove_cvref>::value,
+                           return_type_remove_cvref,
+                           const return_type_remove_cvref>;
+    using functor_type = typename std::remove_cv<
+        typename std::remove_reference<Functor>::type>::type;
+    using return_value_adapter =
+        Kokkos::Impl::ParallelReduceReturnValue<void, return_type,
+                                                functor_type>;
+    using functor_adaptor = Kokkos::Impl::ParallelReduceFunctorType<
+        functor_type, Policy, typename return_value_adapter::value_type,
+        execution_space>;
+    // End of Kokkos reducer disaster
+    //----------------------------------------
+
+    auto policy = Experimental::require((Policy &&) arg_policy,
+                                        Kokkos::Impl::KernelInGraphProperty{});
+
+    using next_policy_t = decltype(policy);
+    using next_kernel_t = Kokkos::Impl::GraphNodeKernelImpl<
+        ExecutionSpace, next_policy_t, typename functor_adaptor::functor_type,
+        Kokkos::ParallelReduceTag, typename return_value_adapter::reducer_type>;
+
+    return this->_then_kernel(next_kernel_t{
+        std::move(arg_name), m_graph_impl->get_execution_space(),
+        (Functor &&) functor, (Policy &&) policy,
+        return_value_adapter::return_value(return_value, functor)});
+  }
+
+  template <class Policy, class Functor, class ReturnType,
+            typename std::enable_if<
+                Kokkos::is_execution_policy<typename std::remove_cv<
+                    typename std::remove_reference<Policy>::type>::type>::value,
+                int>::type = 0>
+  auto then_parallel_reduce(Policy&& arg_policy, Functor&& functor,
+                            ReturnType&& return_value) {
+    return this->then_parallel_reduce("", (Policy &&) arg_policy,
+                                      (Functor &&) functor,
+                                      (ReturnType &&) return_value);
+  }
+
+  template <class Functor, class ReturnType>
+  auto then_parallel_reduce(std::string label, size_t idx_end,
+                            Functor&& functor, ReturnType&& return_value) {
+    return this->then_parallel_reduce(
+        std::move(label), Kokkos::RangePolicy<execution_space>{0, idx_end},
+        (Functor &&) functor, (ReturnType &&) return_value);
+  }
+
+  template <class Functor, class ReturnType>
+  auto then_parallel_reduce(size_t idx_end, Functor&& functor,
+                            ReturnType&& return_value) {
+    return this->then_parallel_reduce("", idx_end, (Functor &&) functor,
+                                      (ReturnType &&) return_value);
+  }
+
+  // </editor-fold> end then_parallel_reduce }}}2
+  //----------------------------------------------------------------------------
+
+  // TODO @graph parallel scan, deep copy, etc.
 };
 
 }  // end namespace Experimental

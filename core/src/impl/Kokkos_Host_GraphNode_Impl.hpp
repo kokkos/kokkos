@@ -47,6 +47,8 @@
 
 #include <Kokkos_Macros.hpp>
 
+#include <impl/Kokkos_EBO.hpp>
+
 #include <Kokkos_Graph.hpp>
 
 namespace Kokkos {

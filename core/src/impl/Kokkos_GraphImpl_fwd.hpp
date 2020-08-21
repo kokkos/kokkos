@@ -55,7 +55,7 @@ template <class ExecutionSpace>
 struct GraphImpl;
 
 template <class ExecutionSpace, class Policy, class Functor,
-    class KernelTypeTag, class... Args>
+          class KernelTypeTag, class... Args>
 class GraphNodeKernelImpl;
 
 template <class ExecutionSpace>
@@ -78,7 +78,9 @@ struct GraphNodeBackendDetailsBeforeTypeErasure;
 // TODO move this to a more appropriate place
 struct AlwaysDeduceThisTemplateParameter;
 
-} // end namespace Impl
-} // end namespace Kokkos
+struct KernelInGraphProperty {};
+
+}  // end namespace Impl
+}  // end namespace Kokkos
 
 #endif  // KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP

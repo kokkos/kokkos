@@ -53,6 +53,8 @@
 #include <impl/Kokkos_SimpleTaskScheduler.hpp>  // ExecutionSpaceInstanceStorage
 #include <impl/Kokkos_GraphImpl.hpp>
 
+#include <impl/Kokkos_EBO.hpp>
+
 #include <memory>
 
 namespace Kokkos {
@@ -61,13 +63,15 @@ namespace Impl {
 // Base specialization for the case where both the predecessor and the kernel
 // type information is type-erased
 template <class ExecutionSpace>
-struct GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
-                     Experimental::TypeErasedTag>
+struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
+                     Kokkos::Experimental::TypeErasedTag>
     : GraphNodeBackendSpecificDetails<ExecutionSpace>,
       ExecutionSpaceInstanceStorage<ExecutionSpace> {
  public:
-  using node_ref_t = Kokkos::Experimental::GraphNodeRef<
-      ExecutionSpace, Experimental::TypeErasedTag, Experimental::TypeErasedTag>;
+  using node_ref_t =
+      Kokkos::Experimental::GraphNodeRef<ExecutionSpace,
+                                         Kokkos::Experimental::TypeErasedTag,
+                                         Kokkos::Experimental::TypeErasedTag>;
 
  protected:
   // For now, we're effectively storing our own mini-vtable here in the object
@@ -77,7 +81,7 @@ struct GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
   // though this is not really in a super performance-sensitive part of the
   // code, so it should be fine except for maybe the additional complexity in
   // the code.
-  using destroy_this_callback_t    = void (*)(GraphNodeImpl&);
+  using destroy_this_callback_t = void (*)(GraphNodeImpl&);
   using implementation_base_t = GraphNodeBackendSpecificDetails<ExecutionSpace>;
   using execution_space_storage_base_t =
       ExecutionSpaceInstanceStorage<ExecutionSpace>;
@@ -94,7 +98,7 @@ struct GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
   }
 
  protected:
-  GraphNodeImpl( destroy_this_callback_t arg_destroy_this,
+  GraphNodeImpl(destroy_this_callback_t arg_destroy_this,
                 ExecutionSpace const& ex) noexcept
       : implementation_base_t(),
         execution_space_storage_base_t(ex),
@@ -148,37 +152,38 @@ struct GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
 // Specialization for the case with the concrete type of the kernel, but the
 // predecessor erased.
 template <class ExecutionSpace, class Kernel>
-struct GraphNodeImpl<ExecutionSpace, Kernel, Experimental::TypeErasedTag>
-    : GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
-                    Experimental::TypeErasedTag> {
+struct GraphNodeImpl<ExecutionSpace, Kernel,
+                     Kokkos::Experimental::TypeErasedTag>
+    : GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
+                    Kokkos::Experimental::TypeErasedTag> {
  public:
-  using node_ref_t = Kokkos::Experimental::GraphNodeRef<
-      ExecutionSpace, Kernel, Experimental::TypeErasedTag>;
+  using node_ref_t =
+      Kokkos::Experimental::GraphNodeRef<ExecutionSpace, Kernel,
+                                         Kokkos::Experimental::TypeErasedTag>;
+  using kernel_type = Kernel;
+
  private:
   Kernel m_kernel;
 
-  using base_t = GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
-                               Experimental::TypeErasedTag>;
+  using base_t =
+      GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
+                    Kokkos::Experimental::TypeErasedTag>;
 
  public:
-
   static void destroy_this_fn(base_t& arg_this) noexcept {
     auto& this_ = static_cast<GraphNodeImpl&>(arg_this);
     this_.~GraphNodeImpl();
   }
-
 
   //----------------------------------------------------------------------------
   // <editor-fold desc="Ctors, destructors, and assignment"> {{{2
 
  protected:
   template <class KernelDeduced>
-  GraphNodeImpl(
-                typename base_t::destroy_this_callback_t arg_destroy_this,
+  GraphNodeImpl(typename base_t::destroy_this_callback_t arg_destroy_this,
                 ExecutionSpace const& ex, _graph_node_kernel_ctor_tag,
                 KernelDeduced&& arg_kernel)
-      : base_t(arg_destroy_this, ex),
-        m_kernel((KernelDeduced &&) arg_kernel) {}
+      : base_t(arg_destroy_this, ex), m_kernel((KernelDeduced &&) arg_kernel) {}
 
  public:
   template <class... Args>
@@ -189,8 +194,7 @@ struct GraphNodeImpl<ExecutionSpace, Kernel, Experimental::TypeErasedTag>
   template <class KernelDeduced>
   GraphNodeImpl(ExecutionSpace const& ex, _graph_node_kernel_ctor_tag,
                 KernelDeduced&& arg_kernel)
-      : base_t(&destroy_this_fn, ex),
-        m_kernel((KernelDeduced &&) arg_kernel) {}
+      : base_t(&destroy_this_fn, ex), m_kernel((KernelDeduced &&) arg_kernel) {}
 
   Kernel& get_kernel() & { return m_kernel; }
   Kernel const& get_kernel() const& { return m_kernel; }
@@ -212,26 +216,27 @@ struct GraphNodeImpl<ExecutionSpace, Kernel, Experimental::TypeErasedTag>
 // Specialization for the case where nothing is type-erased
 template <class ExecutionSpace, class Kernel, class PredecessorRef>
 struct GraphNodeImpl
-    : GraphNodeImpl<ExecutionSpace, Kernel, Experimental::TypeErasedTag>,
+    : GraphNodeImpl<ExecutionSpace, Kernel,
+                    Kokkos::Experimental::TypeErasedTag>,
       GraphNodeBackendDetailsBeforeTypeErasure<ExecutionSpace, Kernel,
                                                PredecessorRef> {
  public:
-  using node_ref_t = Kokkos::Experimental::GraphNodeRef<
-      ExecutionSpace, Kernel, PredecessorRef>;
+  using node_ref_t = Kokkos::Experimental::GraphNodeRef<ExecutionSpace, Kernel,
+                                                        PredecessorRef>;
+
  private:
   PredecessorRef m_predecessor_ref;
 
   using type_erased_base_t =
-      GraphNodeImpl<ExecutionSpace, Experimental::TypeErasedTag,
-                    Experimental::TypeErasedTag>;
-  using base_t =
-      GraphNodeImpl<ExecutionSpace, Kernel, Experimental::TypeErasedTag>;
+      GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
+                    Kokkos::Experimental::TypeErasedTag>;
+  using base_t = GraphNodeImpl<ExecutionSpace, Kernel,
+                               Kokkos::Experimental::TypeErasedTag>;
   using backend_details_base_t =
       GraphNodeBackendDetailsBeforeTypeErasure<ExecutionSpace, Kernel,
                                                PredecessorRef>;
 
  public:
-
   static void destroy_this_fn(type_erased_base_t& arg_this) noexcept {
     auto& this_ = static_cast<GraphNodeImpl&>(arg_this);
     this_.~GraphNodeImpl();
@@ -252,13 +257,13 @@ struct GraphNodeImpl
   GraphNodeImpl(ExecutionSpace const& ex, _graph_node_kernel_ctor_tag,
                 KernelDeduced&& arg_kernel, _graph_node_predecessor_ctor_tag,
                 PredecessorPtrDeduced&& arg_predecessor)
-      : base_t(&destroy_this_fn, ex,
-               _graph_node_kernel_ctor_tag{}, (KernelDeduced &&) arg_kernel),
+      : base_t(&destroy_this_fn, ex, _graph_node_kernel_ctor_tag{},
+               (KernelDeduced &&) arg_kernel),
         // The backend gets the ability to store (weak, non-owning) references
         // to the kernel in it's final resting place here if it wants. The
         // predecessor is already a pointer, so it doesn't matter that it isn't
         // already at its final address
-        backend_details_base_t(ex, this->base_t::get_kernel(), arg_predecessor),
+        backend_details_base_t(ex, this->base_t::get_kernel(), arg_predecessor, *this),
         m_predecessor_ref((PredecessorPtrDeduced &&) arg_predecessor) {}
 
   template <class... Args>
