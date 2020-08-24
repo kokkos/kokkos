@@ -73,8 +73,7 @@ void hipOccupancy(int *numBlocks, int blockSize, int sharedmem) {
 template <typename DriverType, bool constant>
 void hipOccupancy(int *numBlocks, int blockSize, int sharedmem) {
   // FIXME_HIP -- this should be the new HIPTraits::MaxThreadsPerBlock
-  hipOccupancy<DriverType, constant, 1024, 1>(
-      numBlocks, blockSize, sharedmem);
+  hipOccupancy<DriverType, constant, 1024, 1>(numBlocks, blockSize, sharedmem);
 }
 template <typename DriverType, typename LaunchBounds, bool Large>
 struct HIPGetMaxBlockSize;
@@ -198,9 +197,7 @@ struct HIPGetMaxBlockSize<DriverType, LaunchBounds, true> {
 #endif
     blocktype numBlocks = 0;
     // FIXME_HIP -- this should be the new HIPTraits::MaxThreadsPerBlock
-    int blockSize       = LaunchBounds::maxTperB == 0
-                                ? 1024
-                                : LaunchBounds::maxTperB;
+    int blockSize = LaunchBounds::maxTperB == 0 ? 1024 : LaunchBounds::maxTperB;
     int sharedmem =
         shmem_extra_block + shmem_extra_thread * (blockSize / vector_length) +
         ::Kokkos::Impl::FunctorTeamShmemSize<
