@@ -196,7 +196,10 @@ struct HIPGetMaxBlockSize<DriverType, LaunchBounds, true> {
     using blocktype = int;
 #endif
     blocktype numBlocks = 0;
-    int blockSize       = LaunchBounds::maxTperB;
+    // FIXME_HIP -- this should be the new HIPTraits::MaxThreadsPerBlock
+    int blockSize       = LaunchBounds::maxTperB == 0
+                                ? 1024
+                                : LaunchBounds::maxTperB;
     int sharedmem =
         shmem_extra_block + shmem_extra_thread * (blockSize / vector_length) +
         ::Kokkos::Impl::FunctorTeamShmemSize<
