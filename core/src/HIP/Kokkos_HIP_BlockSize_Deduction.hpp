@@ -55,6 +55,26 @@
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
+
+template <typename DriverType, bool, int MaxThreadsPerBlock, int MinBlocksPerSM>
+void hipOccupancy(int *numBlocks, int blockSize, int sharedmem) {
+  // FIXME_HIP - currently the "constant" path is unimplemented.
+  //             we should look at whether it's functional, and
+  //             perform some simple scaling studies to see when /
+  //             if the constant launcher outperforms the current
+  //             pass by pointer shared launcher
+  hipOccupancyMaxActiveBlocksPerMultiprocessor(
+      numBlocks,
+      hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+                                       MinBlocksPerSM>,
+      blockSize, sharedmem);
+}
+
+template <typename DriverType, bool constant>
+void hipOccupancy(int *numBlocks, int blockSize, int sharedmem) {
+  hipOccupancy<DriverType, constant, HIPTraits::MaxThreadsPerBlock, 1>(
+      numBlocks, blockSize, sharedmem);
+}
 template <typename DriverType, typename LaunchBounds, bool Large>
 struct HIPGetMaxBlockSize;
 
@@ -163,8 +183,8 @@ int hip_get_max_block_size(const HIPInternal *hip_instance,
       [](int x) { return x == 0; }, hip_instance, attr, f, vector_length,
       shmem_block, shmem_thread);
 }
-template <typename DriverType>
-struct HIPGetMaxBlockSize<DriverType, Kokkos::LaunchBounds<>, true> {
+template <typename DriverType, class LaunchBounds>
+struct HIPGetMaxBlockSize<DriverType, LaunchBounds, true> {
   static int get_block_size(typename DriverType::functor_type const &f,
                             size_t const vector_length,
                             size_t const shmem_extra_block,
@@ -176,15 +196,14 @@ struct HIPGetMaxBlockSize<DriverType, Kokkos::LaunchBounds<>, true> {
     using blocktype = int;
 #endif
     blocktype numBlocks = 0;
-    int blockSize       = 1024;
+    int blockSize = LaunchBounds::maxTperB;
     int sharedmem =
         shmem_extra_block + shmem_extra_thread * (blockSize / vector_length) +
         ::Kokkos::Impl::FunctorTeamShmemSize<
             typename DriverType::functor_type>::value(f, blockSize /
                                                              vector_length);
-    hipOccupancyMaxActiveBlocksPerMultiprocessor(
-        &numBlocks, hip_parallel_launch_constant_memory<DriverType>, blockSize,
-        sharedmem);
+
+    hipOccupancy<DriverType, true>(&numBlocks, blockSize, sharedmem);
 
     if (numBlocks > 0) return blockSize;
     while (blockSize > HIPTraits::WarpSize && numBlocks == 0) {
@@ -195,9 +214,7 @@ struct HIPGetMaxBlockSize<DriverType, Kokkos::LaunchBounds<>, true> {
               typename DriverType::functor_type>::value(f, blockSize /
                                                                vector_length);
 
-      hipOccupancyMaxActiveBlocksPerMultiprocessor(
-          &numBlocks, hip_parallel_launch_constant_memory<DriverType>,
-          blockSize, sharedmem);
+      hipOccupancy<DriverType, true>(&numBlocks, blockSize, sharedmem);
     }
     int blockSizeUpperBound = blockSize * 2;
     while (blockSize < blockSizeUpperBound && numBlocks > 0) {
@@ -208,9 +225,7 @@ struct HIPGetMaxBlockSize<DriverType, Kokkos::LaunchBounds<>, true> {
               typename DriverType::functor_type>::value(f, blockSize /
                                                                vector_length);
 
-      hipOccupancyMaxActiveBlocksPerMultiprocessor(
-          &numBlocks, hip_parallel_launch_constant_memory<DriverType>,
-          blockSize, sharedmem);
+      hipOccupancy<DriverType, true>(&numBlocks, blockSize, sharedmem);
     }
     return blockSize - HIPTraits::WarpSize;
   }
@@ -265,9 +280,7 @@ struct HIPGetOptBlockSize<DriverType, Kokkos::LaunchBounds<0, 0>, true> {
           ::Kokkos::Impl::FunctorTeamShmemSize<
               typename DriverType::functor_type>::value(f, blockSize /
                                                                vector_length);
-      hipOccupancyMaxActiveBlocksPerMultiprocessor(
-          &numBlocks, hip_parallel_launch_constant_memory<DriverType>,
-          blockSize, sharedmem);
+      hipOccupancy<DriverType, true>(&numBlocks, blockSize, sharedmem);
       if (maxOccupancy < numBlocks * blockSize) {
         maxOccupancy  = numBlocks * blockSize;
         bestBlockSize = blockSize;
@@ -297,9 +310,7 @@ struct HIPGetOptBlockSize<DriverType, Kokkos::LaunchBounds<0, 0>, false> {
               typename DriverType::functor_type>::value(f, blockSize /
                                                                vector_length);
 
-      hipOccupancyMaxActiveBlocksPerMultiprocessor(
-          &numBlocks, hip_parallel_launch_local_memory<DriverType>, blockSize,
-          sharedmem);
+      hipOccupancy<DriverType, false>(&numBlocks, blockSize, sharedmem);
 
       if (maxOccupancy < numBlocks * blockSize) {
         maxOccupancy  = numBlocks * blockSize;
@@ -340,11 +351,8 @@ struct HIPGetOptBlockSize<
           ::Kokkos::Impl::FunctorTeamShmemSize<
               typename DriverType::functor_type>::value(f, blockSize /
                                                                vector_length);
-      hipOccupancyMaxActiveBlocksPerMultiprocessor(
-          &numBlocks,
-          hip_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
-                                              MinBlocksPerSM>,
-          blockSize, sharedmem);
+      hipOccupancy<DriverType, true, MaxThreadsPerBlock, MinBlocksPerSM>(
+          &numBlocks, blockSize, sharedmem);
       if (numBlocks >= static_cast<int>(MinBlocksPerSM) &&
           blockSize <= static_cast<int>(MaxThreadsPerBlock)) {
         if (maxOccupancy < numBlocks * blockSize) {
@@ -384,11 +392,8 @@ struct HIPGetOptBlockSize<
               typename DriverType::functor_type>::value(f, blockSize /
                                                                vector_length);
 
-      hipOccupancyMaxActiveBlocksPerMultiprocessor(
-          &numBlocks,
-          hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                           MinBlocksPerSM>,
-          blockSize, sharedmem);
+      hipOccupancy<DriverType, false, MaxThreadsPerBlock, MinBlocksPerSM>(
+          &numBlocks, blockSize, sharedmem);
       if (numBlocks >= int(MinBlocksPerSM) &&
           blockSize <= int(MaxThreadsPerBlock)) {
         if (maxOccupancy < numBlocks * blockSize) {
