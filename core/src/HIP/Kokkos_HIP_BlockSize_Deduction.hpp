@@ -72,7 +72,8 @@ void hipOccupancy(int *numBlocks, int blockSize, int sharedmem) {
 
 template <typename DriverType, bool constant>
 void hipOccupancy(int *numBlocks, int blockSize, int sharedmem) {
-  hipOccupancy<DriverType, constant, HIPTraits::MaxThreadsPerBlock, 1>(
+  // FIXME_HIP -- this should be the new HIPTraits::MaxThreadsPerBlock
+  hipOccupancy<DriverType, constant, 1024, 1>(
       numBlocks, blockSize, sharedmem);
 }
 template <typename DriverType, typename LaunchBounds, bool Large>
