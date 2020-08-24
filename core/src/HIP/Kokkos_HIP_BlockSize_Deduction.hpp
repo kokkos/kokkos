@@ -63,11 +63,11 @@ void hipOccupancy(int *numBlocks, int blockSize, int sharedmem) {
   //             perform some simple scaling studies to see when /
   //             if the constant launcher outperforms the current
   //             pass by pointer shared launcher
-  hipOccupancyMaxActiveBlocksPerMultiprocessor(
+  HIP_SAFE_CALL(hipOccupancyMaxActiveBlocksPerMultiprocessor(
       numBlocks,
       hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
                                        MinBlocksPerSM>,
-      blockSize, sharedmem);
+      blockSize, sharedmem));
 }
 
 template <typename DriverType, bool constant>
