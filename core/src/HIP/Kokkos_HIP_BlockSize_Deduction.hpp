@@ -190,7 +190,7 @@ struct HIPGetMaxBlockSize<DriverType, LaunchBounds, true> {
                             size_t const shmem_extra_block,
                             size_t const shmem_extra_thread) {
     int numBlocks = 0;
-    int blockSize = 1024;
+    int blockSize = LaunchBounds::maxTperB == 0 ? 1024 : LaunchBounds::maxTperB;
     int sharedmem =
         shmem_extra_block + shmem_extra_thread * (blockSize / vector_length) +
         ::Kokkos::Impl::FunctorTeamShmemSize<
