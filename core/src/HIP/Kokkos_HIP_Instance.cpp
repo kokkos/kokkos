@@ -216,13 +216,14 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
     m_maxBlock = hipProp.maxGridSize[0];
 
     // theoretically, we can get 40 WF's / CU, but only can sustain 32
+    // see
+    // https://github.com/ROCm-Developer-Tools/HIP/blob/a0b5dfd625d99af7e288629747b40dd057183173/vdi/hip_platform.cpp#L742
     m_maxBlocksPerSM = 32;
     // FIXME_HIP - Nick to implement this upstream
-    m_regsPerSM          = 262144 / 32;
-    m_shmemPerSM         = hipProp.maxSharedMemoryPerMultiProcessor;
-    m_maxShmemPerBlock   = hipProp.sharedMemPerBlock;
-    m_maxThreadsPerSM    = m_maxBlocksPerSM * HIPTraits::WarpSize;
-    m_maxThreadsPerBlock = hipProp.maxThreadsPerBlock;
+    m_regsPerSM        = 262144 / m_maxBlocksPerSM;
+    m_shmemPerSM       = hipProp.maxSharedMemoryPerMultiProcessor;
+    m_maxShmemPerBlock = hipProp.sharedMemPerBlock;
+    m_maxThreadsPerSM  = m_maxBlocksPerSM * HIPTraits::WarpSize;
 
     //----------------------------------
     // Multiblock reduction uses scratch flags for counters
