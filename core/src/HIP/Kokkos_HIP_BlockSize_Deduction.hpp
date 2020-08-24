@@ -88,13 +88,7 @@ int hip_internal_get_block_size(const F &condition_check,
   const int max_blocks_per_sm   = hip_instance->m_maxBlocksPerSM;
   const int max_threads_per_sm  = hip_instance->m_maxThreadsPerSM;
 
-// FIXME_HIP this is broken in 3.5, but should be in 3.6
-#if (HIP_VERSION_MAJOR > 3 || HIP_VERSION_MINOR > 5 || \
-     HIP_VERSION_PATCH >= 20226)
   int block_size = std::min(attr.maxThreadsPerBlock, max_threads_per_block);
-#else
-  int block_size = max_threads_per_block;
-#endif
   KOKKOS_ASSERT(block_size > 0);
 
   int functor_shmem = ::Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
