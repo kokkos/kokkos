@@ -307,8 +307,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    // FIXME_HIP I don't know where 8 comes from
-    unsigned int n = ::Kokkos::Experimental::Impl::HIPTraits::WarpSize * 8;
+    unsigned int n =
+        ::Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock;
     int shmem_size =
         hip_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
             f, n);
