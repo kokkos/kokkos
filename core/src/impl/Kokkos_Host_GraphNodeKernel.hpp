@@ -80,6 +80,7 @@ class GraphNodeKernelImpl
   // We have to use this name here because that's how it was done way back when
   // then implementations of Impl::Parallel*<> were written
   using Policy = PolicyType;
+  using graph_kernel = GraphNodeKernelImpl;
 
   // TODO @graph kernel name info propagation
   template <class PolicyDeduced, class... ArgsDeduced>
@@ -109,6 +110,7 @@ struct GraphNodeAggregateKernelHostImpl
   struct Policy {
     using is_graph_kernel = std::true_type;
   };
+  using graph_kernel = GraphNodeAggregateKernelHostImpl;
   void execute_kernel() const final {}
 };
 

@@ -92,6 +92,7 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
 
  public:
   using Policy = PolicyType;
+  using graph_kernel = GraphNodeKernelImpl;
 
   // TODO Ensure the execution space of the graph is the same as the one
   //      attached to the policy?
@@ -143,7 +144,16 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
   }
 };
 
-struct CudaGraphNodeAggregateKernel : CudaGraphNodeKernelBase {};
+struct CudaGraphNodeAggregateKernel : CudaGraphNodeKernelBase {
+  using graph_kernel = CudaGraphNodeAggregateKernel;
+
+  // Aggregates don't need a policy, but for the purposes of checking the static
+  // assertions about graph kerenls,
+  struct Policy {
+    using is_graph_kernel = std::true_type;
+  };
+
+};
 
 template <class KernelType, class Tag=typename PatternTagForImplSpecialization<KernelType>::type>
 struct get_graph_node_kernel_type

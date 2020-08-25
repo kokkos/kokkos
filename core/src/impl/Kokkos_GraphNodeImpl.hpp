@@ -98,6 +98,10 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
   }
 
  protected:
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="protected ctors and destructors"> {{{2
+
   GraphNodeImpl(destroy_this_callback_t arg_destroy_this,
                 ExecutionSpace const& ex) noexcept
       : implementation_base_t(),
@@ -107,7 +111,14 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
   // Not publicly destructible so that we don't forget to use the vtable entry
   ~GraphNodeImpl() = default;
 
+  // </editor-fold> end protected ctors and destructors }}}2
+  //----------------------------------------------------------------------------
+
  public:
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="public(-ish) constructors"> {{{2
+
   template <class... Args>
   GraphNodeImpl(destroy_this_callback_t arg_destroy_this,
                 ExecutionSpace const& ex, _graph_node_is_root_ctor_tag,
@@ -124,11 +135,9 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
                 Args&&... args) noexcept
       : GraphNodeImpl(&destroy_this_fn, ex, _graph_node_is_root_ctor_tag{},
                       (Args &&) args...) {}
-  struct Deleter {
-    void operator()(GraphNodeImpl* ptr) const noexcept {
-      (*ptr->m_destroy_this)(*ptr);
-    }
-  };
+
+  // </editor-fold> end public(-ish) constructors }}}2
+  //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
   // <editor-fold desc="no other constructors"> {{{2
@@ -141,6 +150,12 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
 
   // </editor-fold> end no other constructors }}}2
   //----------------------------------------------------------------------------
+
+  struct Deleter {
+    void operator()(GraphNodeImpl* ptr) const noexcept {
+      (*ptr->m_destroy_this)(*ptr);
+    }
+  };
 
   ExecutionSpace const& execution_space_instance() const {
     return this->execution_space_storage_base_t::execution_space_instance();

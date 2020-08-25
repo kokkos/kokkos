@@ -67,20 +67,25 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="HostGraphImpl"> {{{1
 
+// TODO @graph In theory, this approach should work for every kind of backend
+//             that we haven't gotten around to specializing GraphImpl and
+//             such on. Should we just remove the artificial restriction that
+//             this is only for host backends?
 template <class ExecutionSpace>
 struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
- private:
-  using execution_space_instance_storage_base_t =
-      ExecutionSpaceInstanceStorage<ExecutionSpace>;
-  using node_details_t = GraphNodeBackendSpecificDetails<ExecutionSpace>;
-
-  std::set<std::shared_ptr<node_details_t>> m_sinks;
-
  public:
   using root_node_impl_t =
       GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
 
+ private:
+  using execution_space_instance_storage_base_t =
+      ExecutionSpaceInstanceStorage<ExecutionSpace>;
+
+  using node_details_t = GraphNodeBackendSpecificDetails<ExecutionSpace>;
+  std::set<std::shared_ptr<node_details_t>> m_sinks;
+
+ public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
@@ -98,6 +103,14 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
 
   // </editor-fold> end Constructors, destructor, and assignment }}}2
   //----------------------------------------------------------------------------
+
+  ExecutionSpace const& get_execution_space() const {
+    return this
+        ->execution_space_instance_storage_base_t::execution_space_instance();
+  }
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="required customizations"> {{{2
 
   template <class NodeImpl>
   //  requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
@@ -149,6 +162,14 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
                                   aggregate_kernel_impl_t{}});
   }
 
+  auto create_root_node_ptr() {
+    auto rv = Kokkos::Impl::GraphAccess::make_node_shared_ptr_with_deleter(
+        new root_node_impl_t{get_execution_space(),
+                             _graph_node_is_root_ctor_tag{}});
+    m_sinks.insert(rv);
+    return rv;
+  }
+
   void submit() & {
     // This reset is gross, but for the purposes of our simple host
     // implementation...
@@ -170,27 +191,17 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
     for (auto& sink : m_sinks) {
       sink->reset_has_executed();
     }
-    for (auto& sink : m_sinks) {
+    for (auto it = m_sinks.begin(); it != m_sinks.end();) {
       // Swap ownership onto the stack so that it can be destroyed immediately
       // after execution
-      std::shared_ptr<node_details_t> node_to_execute = nullptr;
-      sink.swap(node_to_execute);
+      std::shared_ptr<node_details_t> node_to_execute = std::move(*it);
+      m_sinks.erase(it++);
       std::move(*node_to_execute).execute_node();
     }
   }
 
-  ExecutionSpace const& get_execution_space() const {
-    return this
-        ->execution_space_instance_storage_base_t::execution_space_instance();
-  }
-
-  auto create_root_node_ptr() {
-    auto rv = Kokkos::Impl::GraphAccess::make_node_shared_ptr_with_deleter(
-        new root_node_impl_t{get_execution_space(),
-                             _graph_node_is_root_ctor_tag{}});
-    m_sinks.insert(rv);
-    return rv;
-  }
+  // </editor-fold> end required customizations }}}2
+  //----------------------------------------------------------------------------
 };
 
 // </editor-fold> end HostGraphImpl }}}1

@@ -912,20 +912,36 @@ struct ReducerHasTestReferenceFunction {
   };
 };
 
-template <class ExecutionSpace, class... Args>
-constexpr bool parallel_reduce_needs_fence(ExecutionSpace const&, Args&&...) {
+template <class ExecutionSpace, class Arg>
+constexpr std::enable_if_t<
+    // constraints only necessary because SFINAE lacks subsumption
+    !ReducerHasTestReferenceFunction<Arg>::value &&
+        !Kokkos::is_view<Arg>::value,
+    // return type:
+    bool>
+parallel_reduce_needs_fence(ExecutionSpace const&, Arg const&) {
   return true;
 }
 
 template <class ExecutionSpace, class Reducer>
-constexpr std::enable_if_t<ReducerHasTestReferenceFunction<Reducer>::value,
-                           bool>
+constexpr std::enable_if_t<
+    // equivalent to:
+    // (requires (Reducer const& r) {
+    //   { reducer.references_scalar() } -> std::convertible_to<bool>;
+    // })
+    ReducerHasTestReferenceFunction<Reducer>::value,
+    // return type:
+    bool>
 parallel_reduce_needs_fence(ExecutionSpace const&, Reducer const& reducer) {
   return reducer.references_scalar();
 }
 
 template <class ExecutionSpace, class ViewLike>
-constexpr std::enable_if_t<Kokkos::is_view<ViewLike>::value, bool>
+constexpr std::enable_if_t<
+    // requires Kokkos::ViewLike<ViewLike>
+    Kokkos::is_view<ViewLike>::value,
+    // return type:
+    bool>
 parallel_reduce_needs_fence(ExecutionSpace const&, ViewLike const&) {
   return false;
 }

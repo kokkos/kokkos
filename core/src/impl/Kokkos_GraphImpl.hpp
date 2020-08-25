@@ -100,9 +100,10 @@ struct GraphAccess {
         node_impl_ptr, typename new_node_impl_t::Deleter{}};
   }
 
-  template <class ExecutionSpace, class Kernel, class Predecessor>
+  template <class GraphImplWeakPtr, class ExecutionSpace, class Kernel,
+            class Predecessor>
   static auto make_graph_node_ref(
-      std::shared_ptr<Kokkos::Impl::GraphImpl<ExecutionSpace>> graph_impl,
+      GraphImplWeakPtr graph_impl,
       std::shared_ptr<
           Kokkos::Impl::GraphNodeImpl<ExecutionSpace, Kernel, Predecessor>>
           pred_impl) {
