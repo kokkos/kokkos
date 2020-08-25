@@ -70,11 +70,11 @@ class MemoryPoolAllocator {
   KOKKOS_DEFAULTED_FUNCTION
   MemoryPoolAllocator(MemoryPoolAllocator const&) = default;
   KOKKOS_DEFAULTED_FUNCTION
-  MemoryPoolAllocator(MemoryPoolAllocator&&) = default;
+  MemoryPoolAllocator(MemoryPoolAllocator&&) noexcept = default;
   KOKKOS_DEFAULTED_FUNCTION
   MemoryPoolAllocator& operator=(MemoryPoolAllocator const&) = default;
   KOKKOS_DEFAULTED_FUNCTION
-  MemoryPoolAllocator& operator=(MemoryPoolAllocator&&) = default;
+  MemoryPoolAllocator& operator=(MemoryPoolAllocator&&) noexcept = default;
   KOKKOS_DEFAULTED_FUNCTION
   ~MemoryPoolAllocator() = default;
 

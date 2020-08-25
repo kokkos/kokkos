@@ -92,7 +92,7 @@ struct CudaTextureFetch {
       : m_obj(rhs.m_obj), m_ptr(rhs.m_ptr), m_offset(rhs.m_offset) {}
 
   KOKKOS_INLINE_FUNCTION
-  CudaTextureFetch(CudaTextureFetch&& rhs)
+  CudaTextureFetch(CudaTextureFetch&& rhs) noexcept
       : m_obj(rhs.m_obj), m_ptr(rhs.m_ptr), m_offset(rhs.m_offset) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -104,7 +104,7 @@ struct CudaTextureFetch {
   }
 
   KOKKOS_INLINE_FUNCTION
-  CudaTextureFetch& operator=(CudaTextureFetch&& rhs) {
+  CudaTextureFetch& operator=(CudaTextureFetch&& rhs) noexcept {
     m_obj    = rhs.m_obj;
     m_ptr    = rhs.m_ptr;
     m_offset = rhs.m_offset;
@@ -160,7 +160,7 @@ struct CudaLDGFetch {
   CudaLDGFetch(const CudaLDGFetch& rhs) : m_ptr(rhs.m_ptr) {}
 
   KOKKOS_INLINE_FUNCTION
-  CudaLDGFetch(CudaLDGFetch&& rhs) : m_ptr(rhs.m_ptr) {}
+  CudaLDGFetch(CudaLDGFetch&& rhs) noexcept : m_ptr(rhs.m_ptr) {}
 
   KOKKOS_INLINE_FUNCTION
   CudaLDGFetch& operator=(const CudaLDGFetch& rhs) {
@@ -169,7 +169,7 @@ struct CudaLDGFetch {
   }
 
   KOKKOS_INLINE_FUNCTION
-  CudaLDGFetch& operator=(CudaLDGFetch&& rhs) {
+  CudaLDGFetch& operator=(CudaLDGFetch&& rhs) noexcept {
     m_ptr = rhs.m_ptr;
     return *this;
   }

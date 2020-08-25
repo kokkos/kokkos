@@ -79,13 +79,14 @@ struct fixed_size_circular_buffer {
   node_type* m_buffer[CircularBufferSize] = {nullptr};
 
  public:
-  fixed_size_circular_buffer()                                  = default;
-  fixed_size_circular_buffer(fixed_size_circular_buffer const&) = delete;
-  fixed_size_circular_buffer(fixed_size_circular_buffer&&)      = default;
+  fixed_size_circular_buffer()                                      = default;
+  fixed_size_circular_buffer(fixed_size_circular_buffer const&)     = delete;
+  fixed_size_circular_buffer(fixed_size_circular_buffer&&) noexcept = default;
   fixed_size_circular_buffer& operator=(fixed_size_circular_buffer const&) =
       delete;
-  fixed_size_circular_buffer& operator=(fixed_size_circular_buffer&&) = default;
-  ~fixed_size_circular_buffer()                                       = default;
+  fixed_size_circular_buffer& operator=(fixed_size_circular_buffer&&) noexcept =
+      default;
+  ~fixed_size_circular_buffer() = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
   static constexpr size_type size() noexcept {
@@ -123,12 +124,12 @@ struct non_owning_variable_size_circular_buffer {
   non_owning_variable_size_circular_buffer(
       non_owning_variable_size_circular_buffer const&) = delete;
   non_owning_variable_size_circular_buffer(
-      non_owning_variable_size_circular_buffer&&)      = default;
-  non_owning_variable_size_circular_buffer& operator   =(
+      non_owning_variable_size_circular_buffer&&) noexcept = default;
+  non_owning_variable_size_circular_buffer& operator       =(
       non_owning_variable_size_circular_buffer const&) = delete;
-  non_owning_variable_size_circular_buffer& operator   =(
-      non_owning_variable_size_circular_buffer&&) = default;
-  ~non_owning_variable_size_circular_buffer()          = default;
+  non_owning_variable_size_circular_buffer& operator       =(
+      non_owning_variable_size_circular_buffer&&) noexcept = default;
+  ~non_owning_variable_size_circular_buffer()              = default;
 
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr size_type size() const noexcept { return m_size; }

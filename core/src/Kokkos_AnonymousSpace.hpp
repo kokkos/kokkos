@@ -64,10 +64,10 @@ class AnonymousSpace {
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
   /**\brief  Default memory space instance */
-  AnonymousSpace()                          = default;
-  AnonymousSpace(AnonymousSpace &&rhs)      = default;
-  AnonymousSpace(const AnonymousSpace &rhs) = default;
-  AnonymousSpace &operator=(AnonymousSpace &&) = default;
+  AnonymousSpace()                              = default;
+  AnonymousSpace(AnonymousSpace &&rhs) noexcept = default;
+  AnonymousSpace(const AnonymousSpace &rhs)     = default;
+  AnonymousSpace &operator=(AnonymousSpace &&) noexcept = default;
   AnonymousSpace &operator=(const AnonymousSpace &) = default;
   ~AnonymousSpace()                                 = default;
 

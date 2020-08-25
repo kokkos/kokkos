@@ -121,7 +121,7 @@ struct EBOBaseImpl<T, true, CtorNotOnDevice> {
   constexpr EBOBaseImpl(EBOBaseImpl const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  constexpr EBOBaseImpl(EBOBaseImpl&&) = default;
+  constexpr EBOBaseImpl(EBOBaseImpl&&) noexcept = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   KOKKOS_CONSTEXPR_14
@@ -129,7 +129,7 @@ struct EBOBaseImpl<T, true, CtorNotOnDevice> {
 
   KOKKOS_DEFAULTED_FUNCTION
   KOKKOS_CONSTEXPR_14
-  EBOBaseImpl& operator=(EBOBaseImpl&&) = default;
+  EBOBaseImpl& operator=(EBOBaseImpl&&) noexcept = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   ~EBOBaseImpl() = default;
@@ -196,7 +196,7 @@ struct EBOBaseImpl<T, false, CTorsNotOnDevice> {
 
   KOKKOS_DEFAULTED_FUNCTION
   KOKKOS_CONSTEXPR_14
-  EBOBaseImpl& operator=(EBOBaseImpl&&) = default;
+  EBOBaseImpl& operator=(EBOBaseImpl&&) noexcept = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   ~EBOBaseImpl() = default;

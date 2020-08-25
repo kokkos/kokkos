@@ -423,13 +423,13 @@ union SharedAllocationTracker {
   // Move:
 
   KOKKOS_FORCEINLINE_FUNCTION
-  SharedAllocationTracker(SharedAllocationTracker&& rhs)
+  SharedAllocationTracker(SharedAllocationTracker&& rhs) noexcept
       : m_record_bits(rhs.m_record_bits) {
     rhs.m_record_bits = DO_NOT_DEREF_FLAG;
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  SharedAllocationTracker& operator=(SharedAllocationTracker&& rhs) {
+  SharedAllocationTracker& operator=(SharedAllocationTracker&& rhs) noexcept {
     auto swap_tmp     = m_record_bits;
     m_record_bits     = rhs.m_record_bits;
     rhs.m_record_bits = swap_tmp;

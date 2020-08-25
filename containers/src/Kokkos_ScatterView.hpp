@@ -229,7 +229,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterSum, DeviceType,
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
       : value(value_in) {}
-  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
+  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) noexcept
       : value(other.value) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator+=(ValueType const& rhs) {
     update(rhs);
@@ -311,7 +311,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
       : value(value_in) {}
-  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
+  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) noexcept
       : value(other.value) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
     value *= rhs;
@@ -342,7 +342,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterProd, DeviceType,
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
       : value(value_in) {}
-  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
+  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) noexcept
       : value(other.value) {}
 
   KOKKOS_FORCEINLINE_FUNCTION void operator*=(ValueType const& rhs) {
@@ -394,7 +394,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
   ValueType& value;
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
       : value(value_in) {}
-  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
+  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) noexcept
       : value(other.value) {}
 
  public:
@@ -420,7 +420,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMin, DeviceType,
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
       : value(value_in) {}
-  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
+  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) noexcept
       : value(other.value) {}
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -467,7 +467,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
       : value(value_in) {}
-  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
+  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) noexcept
       : value(other.value) {}
   KOKKOS_FORCEINLINE_FUNCTION void update(ValueType const& rhs) {
     value = rhs > value ? rhs : value;
@@ -491,7 +491,7 @@ struct ScatterValue<ValueType, Kokkos::Experimental::ScatterMax, DeviceType,
  public:
   KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ValueType& value_in)
       : value(value_in) {}
-  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other)
+  KOKKOS_FORCEINLINE_FUNCTION ScatterValue(ScatterValue&& other) noexcept
       : value(other.value) {}
 
   KOKKOS_FORCEINLINE_FUNCTION
@@ -1282,7 +1282,7 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
   // auto b = a.access();
   // that assignments turns into a move constructor call
   KOKKOS_FORCEINLINE_FUNCTION
-  ScatterAccess(ScatterAccess&& other)
+  ScatterAccess(ScatterAccess&& other) noexcept
       : view(other.view), thread_id(other.thread_id) {
     other.thread_id = ~thread_id_type(0);
   }

@@ -1206,7 +1206,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     ~value_type_wrapper() { delete[] m_value_buffer; }
 
-    value_type_wrapper(value_type_wrapper &&other)
+    value_type_wrapper(value_type_wrapper &&other) noexcept
         : m_value_size(0), m_value_buffer(nullptr) {
       if (this != &other) {
         m_value_buffer = other.m_value_buffer;
@@ -1230,7 +1230,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       return *this;
     }
 
-    value_type_wrapper &operator=(value_type_wrapper &&other) {
+    value_type_wrapper &operator=(value_type_wrapper &&other) noexcept {
       if (this != &other) {
         delete[] m_value_buffer;
         m_value_buffer = other.m_value_buffer;

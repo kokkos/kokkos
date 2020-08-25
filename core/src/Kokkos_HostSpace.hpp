@@ -136,9 +136,9 @@ class HostSpace {
 
   /**\brief  Default memory space instance */
   HostSpace();
-  HostSpace(HostSpace&& rhs)      = default;
-  HostSpace(const HostSpace& rhs) = default;
-  HostSpace& operator=(HostSpace&&) = default;
+  HostSpace(HostSpace&& rhs) noexcept = default;
+  HostSpace(const HostSpace& rhs)     = default;
+  HostSpace& operator=(HostSpace&&) noexcept = default;
   HostSpace& operator=(const HostSpace&) = default;
   ~HostSpace()                           = default;
 

@@ -80,11 +80,11 @@ struct CombinedReducerValueItemImpl {
   KOKKOS_DEFAULTED_FUNCTION constexpr CombinedReducerValueItemImpl(
       CombinedReducerValueItemImpl const&) = default;
   KOKKOS_DEFAULTED_FUNCTION constexpr CombinedReducerValueItemImpl(
-      CombinedReducerValueItemImpl&&) = default;
+      CombinedReducerValueItemImpl&&) noexcept = default;
   KOKKOS_DEFAULTED_FUNCTION KOKKOS_CONSTEXPR_14 CombinedReducerValueItemImpl&
   operator=(CombinedReducerValueItemImpl const&) = default;
   KOKKOS_DEFAULTED_FUNCTION KOKKOS_CONSTEXPR_14 CombinedReducerValueItemImpl&
-  operator=(CombinedReducerValueItemImpl&&) = default;
+  operator=(CombinedReducerValueItemImpl&&) noexcept = default;
   KOKKOS_DEFAULTED_FUNCTION
   ~CombinedReducerValueItemImpl() = default;
   explicit KOKKOS_FUNCTION CombinedReducerValueItemImpl(value_type arg_value)
@@ -115,13 +115,14 @@ struct CombinedReducerValueImpl<integer_sequence<size_t, Idxs...>,
   KOKKOS_DEFAULTED_FUNCTION
   constexpr CombinedReducerValueImpl(CombinedReducerValueImpl const&) = default;
   KOKKOS_DEFAULTED_FUNCTION
-  constexpr CombinedReducerValueImpl(CombinedReducerValueImpl&&) = default;
+  constexpr CombinedReducerValueImpl(CombinedReducerValueImpl&&) noexcept =
+      default;
   KOKKOS_DEFAULTED_FUNCTION
   KOKKOS_CONSTEXPR_14 CombinedReducerValueImpl& operator=(
       CombinedReducerValueImpl const&) = default;
   KOKKOS_DEFAULTED_FUNCTION
   KOKKOS_CONSTEXPR_14 CombinedReducerValueImpl& operator=(
-      CombinedReducerValueImpl&&) = default;
+      CombinedReducerValueImpl&&) noexcept = default;
   KOKKOS_DEFAULTED_FUNCTION
   ~CombinedReducerValueImpl() = default;
 
@@ -246,11 +247,11 @@ struct CombinedReducerImpl<integer_sequence<size_t, Idxs...>, Space,
   KOKKOS_DEFAULTED_FUNCTION constexpr CombinedReducerImpl(
       CombinedReducerImpl const&) = default;
   KOKKOS_DEFAULTED_FUNCTION constexpr CombinedReducerImpl(
-      CombinedReducerImpl&&) = default;
+      CombinedReducerImpl&&) noexcept = default;
   KOKKOS_DEFAULTED_FUNCTION KOKKOS_CONSTEXPR_14 CombinedReducerImpl& operator=(
       CombinedReducerImpl const&) = default;
   KOKKOS_DEFAULTED_FUNCTION KOKKOS_CONSTEXPR_14 CombinedReducerImpl& operator=(
-      CombinedReducerImpl&&) = default;
+      CombinedReducerImpl&&) noexcept = default;
 
   KOKKOS_DEFAULTED_FUNCTION ~CombinedReducerImpl() = default;
 
@@ -361,13 +362,13 @@ struct CombinedReductionFunctorWrapperImpl<integer_sequence<size_t, Idxs...>,
       CombinedReductionFunctorWrapperImpl const&) = default;
   KOKKOS_DEFAULTED_FUNCTION
   constexpr CombinedReductionFunctorWrapperImpl(
-      CombinedReductionFunctorWrapperImpl&&) = default;
+      CombinedReductionFunctorWrapperImpl&&) noexcept = default;
   KOKKOS_DEFAULTED_FUNCTION
   KOKKOS_CONSTEXPR_14 CombinedReductionFunctorWrapperImpl& operator=(
       CombinedReductionFunctorWrapperImpl const&) = default;
   KOKKOS_DEFAULTED_FUNCTION
   KOKKOS_CONSTEXPR_14 CombinedReductionFunctorWrapperImpl& operator=(
-      CombinedReductionFunctorWrapperImpl&&) = default;
+      CombinedReductionFunctorWrapperImpl&&) noexcept = default;
   KOKKOS_DEFAULTED_FUNCTION
   ~CombinedReductionFunctorWrapperImpl() = default;
 

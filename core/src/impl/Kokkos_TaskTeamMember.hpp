@@ -97,13 +97,13 @@ class TaskTeamMemberAdapter : public TeamMember {
   TaskTeamMemberAdapter(TaskTeamMemberAdapter const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  TaskTeamMemberAdapter(TaskTeamMemberAdapter&&) = default;
+  TaskTeamMemberAdapter(TaskTeamMemberAdapter&&) noexcept = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   TaskTeamMemberAdapter& operator=(TaskTeamMemberAdapter const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  TaskTeamMemberAdapter& operator=(TaskTeamMemberAdapter&&) = default;
+  TaskTeamMemberAdapter& operator=(TaskTeamMemberAdapter&&) noexcept = default;
 
   KOKKOS_DEFAULTED_FUNCTION ~TaskTeamMemberAdapter() = default;
 

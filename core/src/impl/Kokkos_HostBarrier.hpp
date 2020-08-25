@@ -183,9 +183,9 @@ class HostBarrier {
   KOKKOS_INLINE_FUNCTION
   void wait() const noexcept { wait(m_buffer, m_size, m_step); }
 
-  HostBarrier()              = default;
-  HostBarrier(HostBarrier&&) = default;
-  HostBarrier& operator=(HostBarrier&&) = default;
+  HostBarrier()                       = default;
+  HostBarrier(HostBarrier&&) noexcept = default;
+  HostBarrier& operator=(HostBarrier&&) noexcept = default;
 
   KOKKOS_INLINE_FUNCTION
   HostBarrier(int size, int* buffer)

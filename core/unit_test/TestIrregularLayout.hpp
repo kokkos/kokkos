@@ -81,7 +81,7 @@ struct LayoutSelective {
   }
 
   KOKKOS_INLINE_FUNCTION
-  LayoutSelective(LayoutSelective&& rhs) {
+  LayoutSelective(LayoutSelective&& rhs) noexcept {
     assign(rhs.offset_list, rhs.list_size);
   }
   KOKKOS_INLINE_FUNCTION
@@ -90,7 +90,7 @@ struct LayoutSelective {
     return *this;
   }
   KOKKOS_INLINE_FUNCTION
-  LayoutSelective& operator=(LayoutSelective&& rhs) {
+  LayoutSelective& operator=(LayoutSelective&& rhs) noexcept {
     assign(rhs.offset_list, rhs.list_size);
     return *this;
   }

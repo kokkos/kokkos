@@ -3169,8 +3169,9 @@ class ViewMapping<
   KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(const ViewMapping&) =
       default;
 
-  KOKKOS_DEFAULTED_FUNCTION ViewMapping(ViewMapping&&) = default;
-  KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(ViewMapping&&) = default;
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping(ViewMapping&&) noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION ViewMapping& operator=(ViewMapping&&) noexcept =
+      default;
 
   //----------------------------------------
 

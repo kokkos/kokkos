@@ -349,11 +349,11 @@ class ViewMapping<Traits, Kokkos::Array<>> {
     return *this;
   }
 
-  KOKKOS_INLINE_FUNCTION ViewMapping(ViewMapping &&rhs)
+  KOKKOS_INLINE_FUNCTION ViewMapping(ViewMapping &&rhs) noexcept
       : m_impl_handle(rhs.m_impl_handle),
         m_impl_offset(rhs.m_impl_offset),
         m_stride(rhs.m_stride) {}
-  KOKKOS_INLINE_FUNCTION ViewMapping &operator=(ViewMapping &&rhs) {
+  KOKKOS_INLINE_FUNCTION ViewMapping &operator=(ViewMapping &&rhs) noexcept {
     m_impl_handle = rhs.m_impl_handle;
     m_impl_offset = rhs.m_impl_offset;
     m_stride      = rhs.m_stride;

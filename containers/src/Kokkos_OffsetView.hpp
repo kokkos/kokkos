@@ -820,7 +820,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
         m_begins(rhs.m_begins) {}
 
   KOKKOS_INLINE_FUNCTION
-  OffsetView(OffsetView&& rhs)
+  OffsetView(OffsetView&& rhs) noexcept
       : m_track(std::move(rhs.m_track)),
         m_map(std::move(rhs.m_map)),
         m_begins(std::move(rhs.m_begins)) {}
@@ -834,7 +834,7 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  OffsetView& operator=(OffsetView&& rhs) {
+  OffsetView& operator=(OffsetView&& rhs) noexcept {
     m_track  = std::move(rhs.m_track);
     m_map    = std::move(rhs.m_map);
     m_begins = std::move(rhs.m_begins);

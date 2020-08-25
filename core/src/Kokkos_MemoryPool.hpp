@@ -253,9 +253,10 @@ class MemoryPool {
 
   //--------------------------------------------------------------------------
 
-  KOKKOS_DEFAULTED_FUNCTION MemoryPool(MemoryPool &&)      = default;
-  KOKKOS_DEFAULTED_FUNCTION MemoryPool(const MemoryPool &) = default;
-  KOKKOS_DEFAULTED_FUNCTION MemoryPool &operator=(MemoryPool &&) = default;
+  KOKKOS_DEFAULTED_FUNCTION MemoryPool(MemoryPool &&) noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION MemoryPool(const MemoryPool &)     = default;
+  KOKKOS_DEFAULTED_FUNCTION MemoryPool &operator=(MemoryPool &&) noexcept =
+      default;
   KOKKOS_DEFAULTED_FUNCTION MemoryPool &operator=(const MemoryPool &) = default;
 
   KOKKOS_INLINE_FUNCTION MemoryPool()

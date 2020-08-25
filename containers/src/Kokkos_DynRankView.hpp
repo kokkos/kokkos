@@ -1015,7 +1015,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
       : m_track(rhs.m_track), m_map(rhs.m_map), m_rank(rhs.m_rank) {}
 
   KOKKOS_INLINE_FUNCTION
-  DynRankView(DynRankView&& rhs)
+  DynRankView(DynRankView&& rhs) noexcept
       : m_track(rhs.m_track), m_map(rhs.m_map), m_rank(rhs.m_rank) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -1027,7 +1027,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  DynRankView& operator=(DynRankView&& rhs) {
+  DynRankView& operator=(DynRankView&& rhs) noexcept {
     m_track = rhs.m_track;
     m_map   = rhs.m_map;
     m_rank  = rhs.m_rank;

@@ -79,10 +79,10 @@ struct LayoutLeft {
 
   enum { is_extent_constructible = true };
 
-  LayoutLeft(LayoutLeft const&) = default;
-  LayoutLeft(LayoutLeft&&)      = default;
+  LayoutLeft(LayoutLeft const&)     = default;
+  LayoutLeft(LayoutLeft&&) noexcept = default;
   LayoutLeft& operator=(LayoutLeft const&) = default;
-  LayoutLeft& operator=(LayoutLeft&&) = default;
+  LayoutLeft& operator=(LayoutLeft&&) noexcept = default;
 
   KOKKOS_INLINE_FUNCTION
   explicit constexpr LayoutLeft(size_t N0 = 0, size_t N1 = 0, size_t N2 = 0,
@@ -113,10 +113,10 @@ struct LayoutRight {
 
   enum { is_extent_constructible = true };
 
-  LayoutRight(LayoutRight const&) = default;
-  LayoutRight(LayoutRight&&)      = default;
+  LayoutRight(LayoutRight const&)     = default;
+  LayoutRight(LayoutRight&&) noexcept = default;
   LayoutRight& operator=(LayoutRight const&) = default;
-  LayoutRight& operator=(LayoutRight&&) = default;
+  LayoutRight& operator=(LayoutRight&&) noexcept = default;
 
   KOKKOS_INLINE_FUNCTION
   explicit constexpr LayoutRight(size_t N0 = 0, size_t N1 = 0, size_t N2 = 0,
@@ -138,10 +138,10 @@ struct LayoutStride {
 
   enum { is_extent_constructible = false };
 
-  LayoutStride(LayoutStride const&) = default;
-  LayoutStride(LayoutStride&&)      = default;
+  LayoutStride(LayoutStride const&)     = default;
+  LayoutStride(LayoutStride&&) noexcept = default;
   LayoutStride& operator=(LayoutStride const&) = default;
-  LayoutStride& operator=(LayoutStride&&) = default;
+  LayoutStride& operator=(LayoutStride&&) noexcept = default;
 
   /** \brief  Compute strides from ordered dimensions.
    *
@@ -259,10 +259,10 @@ struct LayoutTiled {
 
   enum { is_extent_constructible = true };
 
-  LayoutTiled(LayoutTiled const&) = default;
-  LayoutTiled(LayoutTiled&&)      = default;
+  LayoutTiled(LayoutTiled const&)     = default;
+  LayoutTiled(LayoutTiled&&) noexcept = default;
   LayoutTiled& operator=(LayoutTiled const&) = default;
-  LayoutTiled& operator=(LayoutTiled&&) = default;
+  LayoutTiled& operator=(LayoutTiled&&) noexcept = default;
 
   KOKKOS_INLINE_FUNCTION
   explicit constexpr LayoutTiled(size_t argN0 = 0, size_t argN1 = 0,

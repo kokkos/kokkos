@@ -206,7 +206,8 @@ class BasicFuture<ValueType, SimpleTaskScheduler<ExecutionSpace, QueueType>> {
   }
 
   template <class T, class S>
-  KOKKOS_INLINE_FUNCTION BasicFuture& operator=(BasicFuture<T, S>&& rhs) {
+  KOKKOS_INLINE_FUNCTION BasicFuture& operator=(
+      BasicFuture<T, S>&& rhs) noexcept {
     static_assert(std::is_same<scheduler_type, void>::value ||
                       std::is_same<scheduler_type, S>::value,
                   "Assigned Futures must have the same scheduler");
@@ -402,7 +403,8 @@ class BasicFuture {
   }
 
   template <class T, class S>
-  KOKKOS_INLINE_FUNCTION BasicFuture& operator=(BasicFuture<T, S>&& rhs) {
+  KOKKOS_INLINE_FUNCTION BasicFuture& operator=(
+      BasicFuture<T, S>&& rhs) noexcept {
     static_assert(std::is_same<scheduler_type, void>::value ||
                       std::is_same<scheduler_type, S>::value,
                   "Assigned Futures must have the same scheduler");
