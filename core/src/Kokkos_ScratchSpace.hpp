@@ -78,9 +78,6 @@ class ScratchMemorySpace {
   mutable int m_offset;
   mutable int m_default_level;
 
-  ScratchMemorySpace();
-  ScratchMemorySpace& operator=(const ScratchMemorySpace&);
-
   enum { MASK = ALIGN - 1 };  // Alignment used by View::shmem_size
 
  public:
