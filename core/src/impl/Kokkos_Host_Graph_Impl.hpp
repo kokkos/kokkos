@@ -149,7 +149,11 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
 
   template <class... PredecessorRefs>
   // See requirements/expectations in GraphBuilder
-  auto create_aggregate_ptr(PredecessorRefs&&... refs) {
+  auto create_aggregate_ptr(PredecessorRefs&&...) {
+    // The attachment to predecessors, which is all we really need, happens
+    // in the generic layer, which calls through to add_predecessor for
+    // each predecessor ref, so all we need to do here is create the (trivial)
+    // aggregate node.
     using aggregate_kernel_impl_t =
         GraphNodeAggregateKernelHostImpl<ExecutionSpace>;
     using aggregate_node_impl_t =

@@ -257,10 +257,11 @@ Graph<ExecutionSpace> create_graph(ExecutionSpace ex, Closure&& arg_closure) {
   // Create a shared pointer to the graph:
   auto rv = Kokkos::Impl::GraphAccess::construct_graph(ex);
   // Create the graph builder instance:
-  auto builder = Kokkos::Impl::GraphAccess::create_graph_builder(
+  // GCC 5.3 thinks this is shadowed by user code if we name it `builder`??!?
+  auto kokkos_impl_builder = Kokkos::Impl::GraphAccess::create_graph_builder(
       Kokkos::Impl::GraphAccess::create_root_ref(rv));
   // Invoke the user's graph construction closure
-  ((Closure &&) arg_closure)(std::move(builder));
+  ((Closure &&) arg_closure)(std::move(kokkos_impl_builder));
   // and given them back the graph
   // KOKKOS_ENSURES(rv.m_impl_ptr.use_count() == 1)
   return rv;

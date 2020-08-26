@@ -136,6 +136,7 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
                 Args&&... args) noexcept
       : implementation_base_t(_graph_node_is_root_ctor_tag{},
                               (Args &&) args...),
+        execution_space_storage_base_t(ex),
         m_destroy_this(arg_destroy_this) {}
 
   // For the use case where the backend has no special kernel or predecessor
