@@ -140,8 +140,9 @@ struct GraphImpl<Kokkos::Cuda> {
     KOKKOS_EXPECTS(bool(arg_node_ptr));
     // The Kernel launch from the execute() method has been shimmed to insert
     // the node into the graph
-    auto& kernel    = arg_node_ptr->get_kernel();
-    auto& cuda_node = arg_node_ptr->node_details_t::node;
+    auto& kernel = arg_node_ptr->get_kernel();
+    // note: using arg_node_ptr->node_details_t::node caused an ICE in NVCC 10.1
+    auto& cuda_node = static_cast<node_details_t*>(arg_node_ptr.get())->node;
     KOKKOS_EXPECTS(!bool(cuda_node));
     kernel.set_cuda_graph_ptr(&m_graph);
     kernel.set_cuda_graph_node_ptr(&cuda_node);
