@@ -72,7 +72,7 @@ class GraphNodeRef {
 
   static_assert(
       std::is_same<Predecessor, TypeErasedTag>::value ||
-          Kokkos::Impl::is_specialization_of<GraphNodeRef, Predecessor>::value,
+          Kokkos::Impl::is_specialization_of<Predecessor, GraphNodeRef>::value,
       "Invalid predecessor template parameter given to GraphNodeRef");
 
   static_assert(
@@ -169,8 +169,8 @@ class GraphNodeRef {
     //   std::remove_cvref_t<NextKernelDeduced> is a specialization of
     //   Kokkos::Impl::GraphNodeKernelImpl:
     static_assert(Kokkos::Impl::is_specialization_of<
-                      Kokkos::Impl::GraphNodeKernelImpl,
-                      Kokkos::Impl::remove_cvref_t<NextKernelDeduced>>::value,
+                      Kokkos::Impl::remove_cvref_t<NextKernelDeduced>,
+                      Kokkos::Impl::GraphNodeKernelImpl>::value,
                   "Kokkos internal error");
 
     auto graph_ptr = m_graph_impl.lock();
