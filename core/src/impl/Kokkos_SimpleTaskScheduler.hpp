@@ -81,7 +81,7 @@ struct DefaultDestroy {
   void destroy_shared_allocation() { managed_object->~T(); }
 };
 
-} // namespace Impl
+}  // namespace Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

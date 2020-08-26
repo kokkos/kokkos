@@ -48,11 +48,9 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <impl/Kokkos_Tags.hpp>
-
+#include <impl/Kokkos_GraphImpl_fwd.hpp>
 namespace Kokkos {
 namespace Impl {
-
-struct IsGraphKernelTag {};
 
 template <typename ExecutionSpace = void, typename Schedule = void,
           typename WorkTag = void, typename IndexType = void,

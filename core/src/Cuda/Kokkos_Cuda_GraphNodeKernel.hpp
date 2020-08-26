@@ -91,7 +91,7 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
   mutable Kokkos::OwningRawPtr<base_t> m_driver_storage = nullptr;
 
  public:
-  using Policy = PolicyType;
+  using Policy       = PolicyType;
   using graph_kernel = GraphNodeKernelImpl;
 
   // TODO Ensure the execution space of the graph is the same as the one
@@ -152,27 +152,28 @@ struct CudaGraphNodeAggregateKernel : CudaGraphNodeKernelBase {
   struct Policy {
     using is_graph_kernel = std::true_type;
   };
-
 };
 
-template <class KernelType, class Tag=typename PatternTagForImplSpecialization<KernelType>::type>
+template <class KernelType,
+          class Tag =
+              typename PatternTagForImplSpecialization<KernelType>::type>
 struct get_graph_node_kernel_type
-    : identity<GraphNodeKernelImpl<
-          Kokkos::Cuda, typename KernelType::Policy,
-          typename KernelType::functor_type, Tag>> {};
+    : identity<GraphNodeKernelImpl<Kokkos::Cuda, typename KernelType::Policy,
+                                   typename KernelType::functor_type, Tag>> {};
 template <class KernelType>
 struct get_graph_node_kernel_type<KernelType, Kokkos::ParallelReduceTag>
-    : identity<GraphNodeKernelImpl<
-        Kokkos::Cuda, typename KernelType::Policy,
-        typename KernelType::functor_type, Kokkos::ParallelReduceTag, typename KernelType::reducer_type>> {};
-
+    : identity<GraphNodeKernelImpl<Kokkos::Cuda, typename KernelType::Policy,
+                                   typename KernelType::functor_type,
+                                   Kokkos::ParallelReduceTag,
+                                   typename KernelType::reducer_type>> {};
 
 //==============================================================================
 // <editor-fold desc="get_cuda_graph_*() helper functions"> {{{1
 
 template <class KernelType>
 auto* allocate_driver_storage_for_kernel(KernelType const& kernel) {
-  using graph_node_kernel_t = typename get_graph_node_kernel_type<KernelType>::type;
+  using graph_node_kernel_t =
+      typename get_graph_node_kernel_type<KernelType>::type;
   auto const& kernel_as_graph_kernel =
       static_cast<graph_node_kernel_t const&>(kernel);
   // TODO @graphs we need to somehow indicate the need for a fence in the
@@ -183,7 +184,8 @@ auto* allocate_driver_storage_for_kernel(KernelType const& kernel) {
 
 template <class KernelType>
 auto const& get_cuda_graph_from_kernel(KernelType const& kernel) {
-  using graph_node_kernel_t = typename get_graph_node_kernel_type<KernelType>::type;
+  using graph_node_kernel_t =
+      typename get_graph_node_kernel_type<KernelType>::type;
   auto const& kernel_as_graph_kernel =
       static_cast<graph_node_kernel_t const&>(kernel);
   cudaGraph_t const* graph_ptr = kernel_as_graph_kernel.get_cuda_graph_ptr();
@@ -193,7 +195,8 @@ auto const& get_cuda_graph_from_kernel(KernelType const& kernel) {
 
 template <class KernelType>
 auto& get_cuda_graph_node_from_kernel(KernelType const& kernel) {
-  using graph_node_kernel_t = typename get_graph_node_kernel_type<KernelType>::type;
+  using graph_node_kernel_t =
+      typename get_graph_node_kernel_type<KernelType>::type;
   auto const& kernel_as_graph_kernel =
       static_cast<graph_node_kernel_t const&>(kernel);
   auto* graph_node_ptr = kernel_as_graph_kernel.get_cuda_graph_node_ptr();

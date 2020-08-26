@@ -78,7 +78,6 @@ struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
   //----------------------------------------------------------------------------
 
  private:
-
   //----------------------------------------------------------------------------
   // <editor-fold desc="friends"> {{{2
 
@@ -90,7 +89,7 @@ struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
   //----------------------------------------------------------------------------
   // <editor-fold desc="private data members"> {{{2
 
-  using impl_t = Kokkos::Impl::GraphImpl<ExecutionSpace>;
+  using impl_t                       = Kokkos::Impl::GraphImpl<ExecutionSpace>;
   std::shared_ptr<impl_t> m_impl_ptr = nullptr;
 
   // </editor-fold> end private data members }}}2
@@ -109,12 +108,11 @@ struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
   //----------------------------------------------------------------------------
 
  public:
-
   ExecutionSpace const& get_execution_space() const {
     return m_impl_ptr->get_execution_space();
   }
 
-  void submit() const & {
+  void submit() const& {
     KOKKOS_EXPECTS(bool(m_impl_ptr))
     (*m_impl_ptr).submit();
   }
@@ -122,10 +120,9 @@ struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
   void submit() && {
     KOKKOS_EXPECTS(bool(m_impl_ptr))
     // The graph interface isn't thread-safe, so we can rely on this
-    if(m_impl_ptr.use_count() == 1) {
+    if (m_impl_ptr.use_count() == 1) {
       std::move(*m_impl_ptr).submit();
-    }
-    else {
+    } else {
       (*m_impl_ptr).submit();
     }
   }

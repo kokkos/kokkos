@@ -67,26 +67,28 @@ struct GraphNodeKernelHostImpl {
 };
 
 // TODO Indicate that this kernel specialization is only for the Host somehow?
-template <class ExecutionSpace, class PolicyType, class Functor, class PatternTag, class... Args>
+template <class ExecutionSpace, class PolicyType, class Functor,
+          class PatternTag, class... Args>
 class GraphNodeKernelImpl
     : public PatternImplSpecializationForTag<PatternTag, Functor, PolicyType,
                                              Args..., ExecutionSpace>::type,
       public GraphNodeKernelHostImpl<ExecutionSpace> {
  public:
-  using base_t = typename PatternImplSpecializationForTag<PatternTag, Functor, PolicyType,
-                                                          Args...,
-      ExecutionSpace>::type;
+  using base_t =
+      typename PatternImplSpecializationForTag<PatternTag, Functor, PolicyType,
+                                               Args..., ExecutionSpace>::type;
   using execute_kernel_vtable_base_t = GraphNodeKernelHostImpl<ExecutionSpace>;
   // We have to use this name here because that's how it was done way back when
   // then implementations of Impl::Parallel*<> were written
-  using Policy = PolicyType;
+  using Policy       = PolicyType;
   using graph_kernel = GraphNodeKernelImpl;
 
   // TODO @graph kernel name info propagation
   template <class PolicyDeduced, class... ArgsDeduced>
   GraphNodeKernelImpl(std::string, ExecutionSpace const&, Functor arg_functor,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
-      : base_t(std::move(arg_functor), (PolicyDeduced&&)arg_policy, (ArgsDeduced&&)args...),
+      : base_t(std::move(arg_functor), (PolicyDeduced &&) arg_policy,
+               (ArgsDeduced &&) args...),
         execute_kernel_vtable_base_t() {}
 
   // FIXME @graph Forward through the instance once that works in the backends
@@ -94,7 +96,8 @@ class GraphNodeKernelImpl
   GraphNodeKernelImpl(ExecutionSpace const& ex, Functor arg_functor,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
       : GraphNodeKernelImpl("", ex, std::move(arg_functor),
-                            (PolicyDeduced &&) arg_policy, (ArgsDeduced&&)args...) {}
+                            (PolicyDeduced &&) arg_policy,
+                            (ArgsDeduced &&) args...) {}
 
   void execute_kernel() const final { this->base_t::execute(); }
 };

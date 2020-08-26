@@ -45,6 +45,8 @@
 #ifndef KOKKOS_KOKKOS_GRAPH_FWD_HPP
 #define KOKKOS_KOKKOS_GRAPH_FWD_HPP
 
+#include <Kokkos_Macros.hpp>
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -57,13 +59,13 @@ template <class ExecutionSpace>
 struct GraphBuilder;
 
 template <class ExecutionSpace, class Kernel = TypeErasedTag,
-    class Predecessor = TypeErasedTag>
+          class Predecessor = TypeErasedTag>
 class GraphNodeRef;
 
 template <class... Predecessors>
 class GraphAggregatePredecessorList;
 
-} // end namespace Experimental
-} // end namespace Kokkos
+}  // end namespace Experimental
+}  // end namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_GRAPH_FWD_HPP

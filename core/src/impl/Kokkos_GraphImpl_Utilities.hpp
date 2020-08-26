@@ -57,11 +57,16 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="is_compatible_type_erasure"> {{{1
 
-template <class Src, class Dst>
+template <class Src, class Dst, class Enable = void>
 struct is_compatible_type_erasure : std::false_type {};
 
 template <class T>
 struct is_compatible_type_erasure<T, Kokkos::Experimental::TypeErasedTag>
+    : std::true_type {};
+
+template <>
+struct is_compatible_type_erasure<Kokkos::Experimental::TypeErasedTag,
+                                  Kokkos::Experimental::TypeErasedTag>
     : std::true_type {};
 
 template <class T>
@@ -74,8 +79,12 @@ struct is_compatible_type_erasure<T, T> : std::true_type {};
 // TODO @desul-integration make this variadic once we have a meta-conjunction
 template <template <class, class, class> class Template, class TSrc, class USrc,
           class VSrc, class TDst, class UDst, class VDst>
-struct is_compatible_type_erasure<Template<TSrc, USrc, VSrc>,
-                                  Template<TDst, UDst, VDst>>
+struct is_compatible_type_erasure<
+    Template<TSrc, USrc, VSrc>, Template<TDst, UDst, VDst>,
+    // Because gcc thinks this is ambiguous, we need to add this:
+    std::enable_if_t<!std::is_same<TSrc, TDst>::value ||
+                     !std::is_same<USrc, UDst>::value ||
+                     !std::is_same<VSrc, VDst>::value>>
     : std::integral_constant<
           bool, is_compatible_type_erasure<TSrc, TDst>::value &&
                     is_compatible_type_erasure<USrc, UDst>::value &&

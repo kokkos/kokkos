@@ -163,7 +163,7 @@ class GraphNodeRef {
   // TODO kernel name propagation and exposure
 
   template <class NextKernelDeduced>
-  auto _then_kernel(NextKernelDeduced&& arg_kernel) {
+  auto _then_kernel(NextKernelDeduced&& arg_kernel) const {
     // readability note:
     //   std::remove_cvref_t<NextKernelDeduced> is a specialization of
     //   Kokkos::Impl::GraphNodeKernelImpl:
@@ -247,7 +247,7 @@ class GraphNodeRef {
   /* implicit */
   GraphNodeRef(
       GraphNodeRef<execution_space, OtherKernel, OtherPredecessor> const& other)
-      : m_graph_impl(other.m_graph_impl), m_node_impl(other.m_node_impl){};
+      : m_graph_impl(other.m_graph_impl), m_node_impl(other.m_node_impl) {}
 
   // Note: because this is an implicit conversion (as is supposed to be the
   //       case with most type-erasing wrappers like this), we don't also need
@@ -271,7 +271,7 @@ class GraphNodeRef {
           // --------------------
           int>::type = 0>
   auto then_parallel_for(std::string arg_name, Policy&& arg_policy,
-                         Functor&& functor) {
+                         Functor&& functor) const {
     //----------------------------------------
     KOKKOS_EXPECTS(!m_graph_impl.expired())
     KOKKOS_EXPECTS(bool(m_node_impl))
@@ -313,14 +313,15 @@ class GraphNodeRef {
           is_execution_policy<Kokkos::Impl::remove_cvref_t<Policy>>::value,
           // --------------------
           int>::type = 0>
-  auto then_parallel_for(Policy&& policy, Functor&& functor) {
+  auto then_parallel_for(Policy&& policy, Functor&& functor) const {
     // needs to static assert constraint: DataParallelFunctor<Functor>
     return this->then_parallel_for("", (Policy &&) policy,
                                    (Functor &&) functor);
   }
 
   template <class Functor>
-  auto then_parallel_for(std::string name, std::size_t n, Functor&& functor) {
+  auto then_parallel_for(std::string name, std::size_t n,
+                         Functor&& functor) const {
     // needs to static assert constraint: DataParallelFunctor<Functor>
     return this->then_parallel_for(std::move(name),
                                    Kokkos::RangePolicy<execution_space>(0, n),
@@ -328,7 +329,7 @@ class GraphNodeRef {
   }
 
   template <class Functor>
-  auto then_parallel_for(std::size_t n, Functor&& functor) {
+  auto then_parallel_for(std::size_t n, Functor&& functor) const {
     // needs to static assert constraint: DataParallelFunctor<Functor>
     return this->then_parallel_for("", n, (Functor &&) functor);
   }
@@ -348,7 +349,8 @@ class GraphNodeRef {
           // --------------------
           int>::type = 0>
   auto then_parallel_reduce(std::string arg_name, Policy&& arg_policy,
-                            Functor&& functor, ReturnType&& return_value) {
+                            Functor&& functor,
+                            ReturnType&& return_value) const {
     auto graph_impl_ptr = m_graph_impl.lock();
     KOKKOS_EXPECTS(bool(graph_impl_ptr))
     KOKKOS_EXPECTS(bool(m_node_impl))
@@ -430,7 +432,7 @@ class GraphNodeRef {
           // --------------------
           int>::type = 0>
   auto then_parallel_reduce(Policy&& arg_policy, Functor&& functor,
-                            ReturnType&& return_value) {
+                            ReturnType&& return_value) const {
     return this->then_parallel_reduce("", (Policy &&) arg_policy,
                                       (Functor &&) functor,
                                       (ReturnType &&) return_value);
@@ -438,7 +440,8 @@ class GraphNodeRef {
 
   template <class Functor, class ReturnType>
   auto then_parallel_reduce(std::string label, size_t idx_end,
-                            Functor&& functor, ReturnType&& return_value) {
+                            Functor&& functor,
+                            ReturnType&& return_value) const {
     return this->then_parallel_reduce(
         std::move(label), Kokkos::RangePolicy<execution_space>{0, idx_end},
         (Functor &&) functor, (ReturnType &&) return_value);
@@ -446,7 +449,7 @@ class GraphNodeRef {
 
   template <class Functor, class ReturnType>
   auto then_parallel_reduce(size_t idx_end, Functor&& functor,
-                            ReturnType&& return_value) {
+                            ReturnType&& return_value) const {
     return this->then_parallel_reduce("", idx_end, (Functor &&) functor,
                                       (ReturnType &&) return_value);
   }

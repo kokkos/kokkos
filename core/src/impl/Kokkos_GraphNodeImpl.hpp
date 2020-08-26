@@ -60,6 +60,9 @@
 namespace Kokkos {
 namespace Impl {
 
+//==============================================================================
+// <editor-fold desc="Fully type-erased GraphNodeImpl"> {{{1
+
 // Base specialization for the case where both the predecessor and the kernel
 // type information is type-erased
 template <class ExecutionSpace>
@@ -89,16 +92,25 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
  private:
   destroy_this_callback_t m_destroy_this;
 
-  // For the use case where the backend has no special kernel or predecessor
-  // information to stuff in to the root node and thus this is the most-derived
-  // type
+ public:
+  // This gets called by the deleter we give to the shared_ptr. See discussion
+  // in the type-erased base of this class. We need this in addition to the ones
+  // below us for the use case where the backend has no special kernel or
+  // predecessor information to stuff in to the root node and thus this is the
+  // most-derived type.
   static void destroy_this_fn(GraphNodeImpl& arg_this) noexcept {
     auto const& this_ = static_cast<GraphNodeImpl const&>(arg_this);
     this_.~GraphNodeImpl();
   }
 
- protected:
+  // Deleter, for shared_ptr construction
+  struct Deleter {
+    void operator()(GraphNodeImpl* ptr) const noexcept {
+      (*ptr->m_destroy_this)(*ptr);
+    }
+  };
 
+ protected:
   //----------------------------------------------------------------------------
   // <editor-fold desc="protected ctors and destructors"> {{{2
 
@@ -115,7 +127,6 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
   //----------------------------------------------------------------------------
 
  public:
-
   //----------------------------------------------------------------------------
   // <editor-fold desc="public(-ish) constructors"> {{{2
 
@@ -151,18 +162,16 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
   // </editor-fold> end no other constructors }}}2
   //----------------------------------------------------------------------------
 
-  struct Deleter {
-    void operator()(GraphNodeImpl* ptr) const noexcept {
-      (*ptr->m_destroy_this)(*ptr);
-    }
-  };
-
   ExecutionSpace const& execution_space_instance() const {
     return this->execution_space_storage_base_t::execution_space_instance();
   }
 };
 
+// </editor-fold> end Fully type-erased GraphNodeImpl }}}1
 //==============================================================================
+
+//==============================================================================
+// <editor-fold desc="Type-erased predecessor GraphNodeImpl"> {{{1
 
 // Specialization for the case with the concrete type of the kernel, but the
 // predecessor erased.
@@ -171,20 +180,37 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
                      Kokkos::Experimental::TypeErasedTag>
     : GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag> {
- public:
-  using node_ref_t =
-      Kokkos::Experimental::GraphNodeRef<ExecutionSpace, Kernel,
-                                         Kokkos::Experimental::TypeErasedTag>;
-  using kernel_type = Kernel;
-
  private:
-  Kernel m_kernel;
-
   using base_t =
       GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
 
  public:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="public member types"> {{{2
+
+  using node_ref_t =
+      Kokkos::Experimental::GraphNodeRef<ExecutionSpace, Kernel,
+                                         Kokkos::Experimental::TypeErasedTag>;
+  using kernel_type = Kernel;
+
+  // </editor-fold> end public member types }}}2
+  //----------------------------------------------------------------------------
+
+ private:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="private data members"> {{{2
+
+  Kernel m_kernel;
+
+  // </editor-fold> end private data members }}}2
+  //----------------------------------------------------------------------------
+
+ public:
+  // This gets called by the deleter we give to the shared_ptr. See discussion
+  // in the type-erased base of this class. We need this in addition to the one
+  // below us because some backeneds may instantiate their root and/or
+  // aggregate nodes with this implementation type.
   static void destroy_this_fn(base_t& arg_this) noexcept {
     auto& this_ = static_cast<GraphNodeImpl&>(arg_this);
     this_.~GraphNodeImpl();
@@ -211,8 +237,8 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
                 KernelDeduced&& arg_kernel)
       : base_t(&destroy_this_fn, ex), m_kernel((KernelDeduced &&) arg_kernel) {}
 
-  Kernel& get_kernel() & { return m_kernel; }
-  Kernel const& get_kernel() const& { return m_kernel; }
+  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // <editor-fold desc="Rule of 6 for not copyable or movable"> {{{3
 
   // Not copyable or movable
   GraphNodeImpl()                         = delete;
@@ -222,11 +248,27 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
   GraphNodeImpl& operator=(GraphNodeImpl&&) noexcept = delete;
   ~GraphNodeImpl()                                   = default;
 
+  // </editor-fold> end Rule of 6 for not copyable or movable }}}3
+  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
   // </editor-fold> end Ctors, destructors, and assignment }}}2
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="member accessors"> {{{2
+
+  Kernel& get_kernel() & { return m_kernel; }
+  Kernel const& get_kernel() const& { return m_kernel; }
+
+  // </editor-fold> end member accessors }}}2
   //----------------------------------------------------------------------------
 };
 
+// </editor-fold> end Type-erased predecessor GraphNodeImpl }}}1
 //==============================================================================
+
+//==============================================================================
+// <editor-fold desc="Fully concrete GraphNodeImpl"> {{{1
 
 // Specialization for the case where nothing is type-erased
 template <class ExecutionSpace, class Kernel, class PredecessorRef>
@@ -235,23 +277,39 @@ struct GraphNodeImpl
                     Kokkos::Experimental::TypeErasedTag>,
       GraphNodeBackendDetailsBeforeTypeErasure<ExecutionSpace, Kernel,
                                                PredecessorRef> {
- public:
-  using node_ref_t = Kokkos::Experimental::GraphNodeRef<ExecutionSpace, Kernel,
-                                                        PredecessorRef>;
-
  private:
-  PredecessorRef m_predecessor_ref;
-
-  using type_erased_base_t =
-      GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
-                    Kokkos::Experimental::TypeErasedTag>;
   using base_t = GraphNodeImpl<ExecutionSpace, Kernel,
                                Kokkos::Experimental::TypeErasedTag>;
   using backend_details_base_t =
       GraphNodeBackendDetailsBeforeTypeErasure<ExecutionSpace, Kernel,
                                                PredecessorRef>;
+  // The fully type-erased base type, for the destroy function
+  using type_erased_base_t =
+      GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
+                    Kokkos::Experimental::TypeErasedTag>;
 
  public:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="public data members"> {{{2
+
+  using node_ref_t = Kokkos::Experimental::GraphNodeRef<ExecutionSpace, Kernel,
+                                                        PredecessorRef>;
+
+  // </editor-fold> end public data members }}}2
+  //----------------------------------------------------------------------------
+
+ private:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="private data members"> {{{2
+
+  PredecessorRef m_predecessor_ref;
+
+  // </editor-fold> end private data members }}}2
+  //----------------------------------------------------------------------------
+
+ public:
+  // This gets called by the deleter we give to the shared_ptr. See discussion
+  // in the type-erased base of this class.
   static void destroy_this_fn(type_erased_base_t& arg_this) noexcept {
     auto& this_ = static_cast<GraphNodeImpl&>(arg_this);
     this_.~GraphNodeImpl();
@@ -268,6 +326,7 @@ struct GraphNodeImpl
   GraphNodeImpl& operator=(GraphNodeImpl&&) noexcept = delete;
   ~GraphNodeImpl()                                   = default;
 
+  // Normal kernel-and-predecessor constructor
   template <class KernelDeduced, class PredecessorPtrDeduced>
   GraphNodeImpl(ExecutionSpace const& ex, _graph_node_kernel_ctor_tag,
                 KernelDeduced&& arg_kernel, _graph_node_predecessor_ctor_tag,
@@ -278,9 +337,11 @@ struct GraphNodeImpl
         // to the kernel in it's final resting place here if it wants. The
         // predecessor is already a pointer, so it doesn't matter that it isn't
         // already at its final address
-        backend_details_base_t(ex, this->base_t::get_kernel(), arg_predecessor, *this),
+        backend_details_base_t(ex, this->base_t::get_kernel(), arg_predecessor,
+                               *this),
         m_predecessor_ref((PredecessorPtrDeduced &&) arg_predecessor) {}
 
+  // Root-tagged constructor
   template <class... Args>
   GraphNodeImpl(ExecutionSpace const& ex, _graph_node_is_root_ctor_tag,
                 Args&&... args)
@@ -293,6 +354,8 @@ struct GraphNodeImpl
   //------------------------------------------------------------------------------
 };
 
+// </editor-fold> end Fully concrete GraphNodeImpl }}}1
+//==============================================================================
 }  // end namespace Impl
 }  // end namespace Kokkos
 

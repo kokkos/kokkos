@@ -280,10 +280,10 @@ class NoUniqueAddressMemberEmulation
 template <class ExecutionSpace>
 class ExecutionSpaceInstanceStorage
     : private NoUniqueAddressMemberEmulation<ExecutionSpace,
-        DefaultCtorNotOnDevice> {
+                                             DefaultCtorNotOnDevice> {
  private:
   using base_t =
-  NoUniqueAddressMemberEmulation<ExecutionSpace, DefaultCtorNotOnDevice>;
+      NoUniqueAddressMemberEmulation<ExecutionSpace, DefaultCtorNotOnDevice>;
 
  protected:
   constexpr explicit ExecutionSpaceInstanceStorage() : base_t() {}
@@ -317,10 +317,10 @@ class ExecutionSpaceInstanceStorage
 template <class MemorySpace>
 class MemorySpaceInstanceStorage
     : private NoUniqueAddressMemberEmulation<MemorySpace,
-        DefaultCtorNotOnDevice> {
+                                             DefaultCtorNotOnDevice> {
  private:
   using base_t =
-  NoUniqueAddressMemberEmulation<MemorySpace, DefaultCtorNotOnDevice>;
+      NoUniqueAddressMemberEmulation<MemorySpace, DefaultCtorNotOnDevice>;
 
  protected:
   MemorySpaceInstanceStorage() : base_t() {}

@@ -287,7 +287,9 @@ template <class DriverType, unsigned int MaxThreadsPerBlock,
 struct CudaParallelLaunchKernelFunc<
     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
     Experimental::CudaLaunchMechanism::LocalMemory> {
-  static void* get_kernel_func() {
+  static std::decay_t<decltype(cuda_parallel_launch_local_memory<
+                               DriverType, MaxThreadsPerBlock, MinBlocksPerSM>)>
+  get_kernel_func() {
     return cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
                                              MinBlocksPerSM>;
   }
@@ -475,7 +477,9 @@ template <class DriverType, unsigned int MaxThreadsPerBlock,
 struct CudaParallelLaunchKernelFunc<
     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
     Experimental::CudaLaunchMechanism::ConstantMemory> {
-  static void* get_kernel_func() {
+  static std::decay_t<decltype(cuda_parallel_launch_constant_memory<
+                               DriverType, MaxThreadsPerBlock, MinBlocksPerSM>)>
+  get_kernel_func() {
     return cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
                                                 MinBlocksPerSM>;
   }

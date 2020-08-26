@@ -51,7 +51,7 @@
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
-#include <impl/Kokkos_Utilities.hpp> // emulate_fold_comma_operator
+#include <impl/Kokkos_Utilities.hpp>  // emulate_fold_comma_operator
 
 namespace Kokkos {
 namespace Impl {
