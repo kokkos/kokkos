@@ -51,7 +51,6 @@
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 #include <impl/Kokkos_Host_Graph_fwd.hpp>
 
-#include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_OpenMP.hpp>
 // FIXME @graph other backends?
@@ -238,6 +237,8 @@ struct GraphImpl<Kokkos::OpenMP> : HostGraphImpl<Kokkos::OpenMP> {
 }  // end namespace Impl
 
 }  // end namespace Kokkos
+
+#include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
 
 #include <impl/Kokkos_Host_GraphNodeKernel.hpp>
 #include <impl/Kokkos_Host_GraphNode_Impl.hpp>

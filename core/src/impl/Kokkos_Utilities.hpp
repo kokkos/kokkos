@@ -338,7 +338,8 @@ template <typename T, T h0, T... tail, T... results>
 struct reverse_integer_sequence_helper<integer_sequence<T, h0, tail...>,
                                        integer_sequence<T, results...>>
     : public reverse_integer_sequence_helper<
-          integer_sequence<T, tail...>, integer_sequence<T, h0, results...>> {};
+          integer_sequence<T, tail...>, integer_sequence<T, h0, results...> > {
+};
 
 template <typename T, T... results>
 struct reverse_integer_sequence_helper<integer_sequence<T>,
@@ -366,8 +367,8 @@ struct exclusive_scan_integer_sequence_helper<
           integer_sequence<T, 0, (results + h0)...>> {};
 
 template <typename T, typename Result, T... results>
-struct exclusive_scan_integer_sequence_helper<integer_sequence<T>, Result,
-                                              integer_sequence<T, results...>> {
+struct exclusive_scan_integer_sequence_helper<
+    integer_sequence<T>, Result, integer_sequence<T, results...> > {
   using type               = integer_sequence<T, results...>;
   static constexpr T value = Result::value;
 };
@@ -398,8 +399,8 @@ struct inclusive_scan_integer_sequence_helper<
           integer_sequence<T, h0, (results + h0)...>> {};
 
 template <typename T, typename Result, T... results>
-struct inclusive_scan_integer_sequence_helper<integer_sequence<T>, Result,
-                                              integer_sequence<T, results...>> {
+struct inclusive_scan_integer_sequence_helper<
+    integer_sequence<T>, Result, integer_sequence<T, results...> > {
   using type               = integer_sequence<T, results...>;
   static constexpr T value = Result::value;
 };
@@ -414,7 +415,7 @@ struct inclusive_scan_integer_sequence {
   static constexpr value_type value = helper::value;
 };
 
-template <class T>
+template <typename T>
 struct identity {
   using type = T;
 };
@@ -473,36 +474,6 @@ emulate_fold_comma_operator(Ts&&...) noexcept {
           ((expr), ::Kokkos::Impl::_fold_comma_emulation_return{})...})
 
 // </editor-fold> end Folding emulation }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="remove_cvref_t"> {{{1
-
-template <class T>
-struct remove_cvref : identity<typename std::remove_cv<
-                          typename std::remove_reference<T>::type>::type> {};
-
-template <class T>
-using remove_cvref_t = typename remove_cvref<T>::type;
-
-// </editor-fold> end remove_cvref_t }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="is_specialization_of"> {{{1
-
-template <template <class...> class Template, class Type, class Enable = void>
-struct is_specialization_of : std::false_type {};
-
-template <template <class...> class Template, class... Args>
-struct is_specialization_of<Template, Template<Args...>> : std::true_type {};
-
-template <template <class...> class Template, class T>
-struct is_specialization_of<
-    Template, T, std::enable_if_t<!std::is_same<remove_cvref_t<T>, T>::value>>
-    : is_specialization_of<Template, remove_cvref_t<T>> {};
-
-// </editor-fold> end is_specialization_of }}}1
 //==============================================================================
 
 }  // namespace Impl

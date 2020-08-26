@@ -96,13 +96,12 @@ struct GraphNodeBackendDetailsBeforeTypeErasure<Kokkos::Cuda, Kernel,
   // <editor-fold desc="ctors, destructor, and assignment"> {{{2
 
   GraphNodeBackendDetailsBeforeTypeErasure(
-      Kokkos::Cuda const&, Kernel& kernel, PredecessorRef const&,
+      Kokkos::Cuda const&, Kernel&, PredecessorRef const&,
       GraphNodeBackendSpecificDetails<Kokkos::Cuda>&) noexcept {}
 
   GraphNodeBackendDetailsBeforeTypeErasure(
       Kokkos::Cuda const&, _graph_node_is_root_ctor_tag,
-      GraphNodeBackendSpecificDetails<Kokkos::Cuda>& this_as_details) noexcept {
-  }
+      GraphNodeBackendSpecificDetails<Kokkos::Cuda>&) noexcept {}
 
   // Not copyable or movable at the concept level, so the default
   // implementation shouldn't be either.

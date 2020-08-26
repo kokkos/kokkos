@@ -54,6 +54,7 @@
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <impl/Kokkos_GraphImpl_Utilities.hpp>
+#include <impl/Kokkos_GraphImpl.hpp>  // GraphAccess
 
 #include <memory>  // std::shared_ptr
 
@@ -439,7 +440,8 @@ class GraphNodeRef {
   }
 
   template <class Functor, class ReturnType>
-  auto then_parallel_reduce(std::string label, size_t idx_end,
+  auto then_parallel_reduce(std::string label,
+                            typename execution_space::size_type idx_end,
                             Functor&& functor,
                             ReturnType&& return_value) const {
     return this->then_parallel_reduce(
@@ -448,7 +450,8 @@ class GraphNodeRef {
   }
 
   template <class Functor, class ReturnType>
-  auto then_parallel_reduce(size_t idx_end, Functor&& functor,
+  auto then_parallel_reduce(typename execution_space::size_type idx_end,
+                            Functor&& functor,
                             ReturnType&& return_value) const {
     return this->then_parallel_reduce("", idx_end, (Functor &&) functor,
                                       (ReturnType &&) return_value);
