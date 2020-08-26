@@ -414,10 +414,12 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
   endif()
   if(KOKKOS_ENABLE_LIBDL)
 
-    KOKKOS_ADD_LIBRARY(
-    printer-tool SHARED
-    SOURCES tools/printing-tool.cpp
+    add_library(
+      printer-tool SHARED
+      tools/printing-tool.cpp
     )
+
+    KOKKOS_SET_LIBRARY_PROPERTIES(printer-tool)
 
     KOKKOS_ADD_TEST_EXECUTABLE(
       ProfilingAllCalls
