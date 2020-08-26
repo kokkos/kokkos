@@ -1044,6 +1044,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)), 1,
                 1);
 
+      // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
           UseShflReduction
               ? 0
@@ -1082,6 +1083,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     } else {
       if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         m_result_ptr);
       }
@@ -1347,6 +1349,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       // Required grid.x <= block.y
       const dim3 grid(std::min(int(block.y), int(nwork)), 1, 1);
 
+      // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
           UseShflReduction
               ? 0
@@ -1378,6 +1381,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       }
     } else {
       if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         m_result_ptr);
       }
@@ -1690,6 +1694,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       }
     } else {
       if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         m_result_ptr);
       }

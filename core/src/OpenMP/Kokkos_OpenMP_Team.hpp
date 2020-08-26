@@ -49,7 +49,7 @@
 #if defined(KOKKOS_ENABLE_OPENMP)
 
 #include <OpenMP/Kokkos_OpenMP_Exec.hpp>
-#include <impl/Kokkos_HostThreadTeam.hpp> // HostThreadTeamMember
+#include <impl/Kokkos_HostThreadTeam.hpp>  // HostThreadTeamMember
 
 namespace Kokkos {
 namespace Impl {

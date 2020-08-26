@@ -338,8 +338,7 @@ template <typename T, T h0, T... tail, T... results>
 struct reverse_integer_sequence_helper<integer_sequence<T, h0, tail...>,
                                        integer_sequence<T, results...>>
     : public reverse_integer_sequence_helper<
-          integer_sequence<T, tail...>, integer_sequence<T, h0, results...> > {
-};
+          integer_sequence<T, tail...>, integer_sequence<T, h0, results...>> {};
 
 template <typename T, T... results>
 struct reverse_integer_sequence_helper<integer_sequence<T>,
@@ -367,8 +366,8 @@ struct exclusive_scan_integer_sequence_helper<
           integer_sequence<T, 0, (results + h0)...>> {};
 
 template <typename T, typename Result, T... results>
-struct exclusive_scan_integer_sequence_helper<
-    integer_sequence<T>, Result, integer_sequence<T, results...> > {
+struct exclusive_scan_integer_sequence_helper<integer_sequence<T>, Result,
+                                              integer_sequence<T, results...>> {
   using type               = integer_sequence<T, results...>;
   static constexpr T value = Result::value;
 };
@@ -399,8 +398,8 @@ struct inclusive_scan_integer_sequence_helper<
           integer_sequence<T, h0, (results + h0)...>> {};
 
 template <typename T, typename Result, T... results>
-struct inclusive_scan_integer_sequence_helper<
-    integer_sequence<T>, Result, integer_sequence<T, results...> > {
+struct inclusive_scan_integer_sequence_helper<integer_sequence<T>, Result,
+                                              integer_sequence<T, results...>> {
   using type               = integer_sequence<T, results...>;
   static constexpr T value = Result::value;
 };

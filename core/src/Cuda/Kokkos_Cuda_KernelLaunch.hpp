@@ -189,6 +189,9 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
     cache_config_set = true;
   } else {
     KOKKOS_ASSERT(cache_config_preference_cached == prefer_shmem);
+    // use the variable in case we're not compiling with contracts
+    if (cache_config_preference_cached) {
+    };
   }
 #else
   // Use the parameters so we don't get a warning

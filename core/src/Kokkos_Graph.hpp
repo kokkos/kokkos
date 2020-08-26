@@ -46,7 +46,7 @@
 #define KOKKOS_GRAPH_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_Error.hpp> // KOKKOS_EXPECTS
+#include <impl/Kokkos_Error.hpp>  // KOKKOS_EXPECTS
 
 #include <Kokkos_Graph_fwd.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>

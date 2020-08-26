@@ -50,7 +50,7 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Graph_fwd.hpp>
 
-#include <Kokkos_Concepts.hpp> // is_execution_policy
+#include <Kokkos_Concepts.hpp>  // is_execution_policy
 #include <Kokkos_PointerOwnership.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 

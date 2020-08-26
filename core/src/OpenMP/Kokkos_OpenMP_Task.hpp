@@ -51,7 +51,7 @@
 #include <Kokkos_TaskScheduler_fwd.hpp>
 
 #include <impl/Kokkos_HostThreadTeam.hpp>
-#include <OpenMP/Kokkos_OpenMP_Exec.hpp> // t_openmp_instance
+#include <OpenMP/Kokkos_OpenMP_Exec.hpp>  // t_openmp_instance
 #include <Kokkos_OpenMP.hpp>
 
 #include <type_traits>

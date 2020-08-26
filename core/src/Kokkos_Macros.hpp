@@ -673,4 +673,16 @@
 #define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
 #endif
 
+#if (defined(__CLION_IDE__) || defined(__clang_analyzer__)) && \
+    defined(KOKKOS_ENABLE_CUDA)
+// CLion gets confused by Cuda Macros in what it thinks are C++ files
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
+#ifndef __CUDACC__
+#define __CUDACC__
+#endif
+#define __launch_bounds__(...)
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP
