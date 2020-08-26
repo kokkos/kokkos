@@ -415,11 +415,11 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
   if(KOKKOS_ENABLE_LIBDL)
 
     add_library(
-      printer-tool SHARED
+      kokkosprinter-tool SHARED
       tools/printing-tool.cpp
     )
 
-    KOKKOS_SET_LIBRARY_PROPERTIES(printer-tool)
+    KOKKOS_SET_LIBRARY_PROPERTIES(kokkosprinter-tool)
 
     KOKKOS_ADD_TEST_EXECUTABLE(
       ProfilingAllCalls
@@ -433,7 +433,7 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
 
     KOKKOS_ADD_TEST( NAME ProfilingTestLibraryLoad
       EXE  ProfilingAllCalls
-      TOOL printer-tool
+      TOOL kokkosprinter-tool
       PASS_REGULAR_EXPRESSION "kokkosp_init_library::kokkosp_allocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]source]:0:0::kokkosp_end_parallel_for:0::kokkosp_allocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_begin_parallel_for:Kokkos::View::initialization [[]destination]:0:0::kokkosp_end_parallel_for:0::kokkosp_begin_deep_copy:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_end_deep_copy::kokkosp_begin_parallel_for:parallel_for:${SIZE_REGEX}:0::kokkosp_end_parallel_for:0::kokkosp_begin_parallel_reduce:parallel_reduce:0:1${SKIP_SCRATCH_INITIALIZATION_REGEX}::kokkosp_end_parallel_reduce:1::kokkosp_begin_parallel_scan:parallel_scan:${SIZE_REGEX}:2::kokkosp_end_parallel_scan:2::kokkosp_push_profile_region:push_region::kokkosp_pop_profile_region::kokkosp_create_profile_section:created_section:3::kokkosp_start_profile_section:3::kokkosp_stop_profile_section:3::kokkosp_destroy_profile_section:3::kokkosp_profile_event:profiling_event::kokkosp_deallocate_data:${MEMSPACE_REGEX}:destination:${ADDRESS_REGEX}:40::kokkosp_deallocate_data:${MEMSPACE_REGEX}:source:${ADDRESS_REGEX}:40::kokkosp_finalize_library::"
     )
   endif() #KOKKOS_ENABLE_LIBDL
