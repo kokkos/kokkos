@@ -57,8 +57,8 @@ namespace Test {
 namespace Impl {
 template <typename Scalar, class Device>
 struct test_dualview_alloc {
-  typedef Scalar scalar_type;
-  typedef Device execution_space;
+  using scalar_type     = Scalar;
+  using execution_space = Device;
 
   template <typename ViewType>
   bool run_me(unsigned int n, unsigned int m) {
@@ -90,10 +90,10 @@ struct test_dualview_alloc {
 
 template <typename Scalar, class Device>
 struct test_dualview_combinations {
-  typedef test_dualview_combinations<Scalar, Device> self_type;
+  using self_type = test_dualview_combinations<Scalar, Device>;
 
-  typedef Scalar scalar_type;
-  typedef Device execution_space;
+  using scalar_type     = Scalar;
+  using execution_space = Device;
 
   Scalar reference;
   Scalar result;
@@ -108,7 +108,7 @@ struct test_dualview_combinations {
     if (with_init) {
       a = ViewType("A", n, m);
     } else {
-      a = ViewType(Kokkos::ViewAllocateWithoutInitializing("A"), n, m);
+      a = ViewType(Kokkos::view_alloc(Kokkos::WithoutInitializing, "A"), n, m);
     }
     Kokkos::deep_copy(a.d_view, 1);
 
@@ -142,7 +142,7 @@ struct test_dualview_combinations {
 
 template <typename Scalar, class ViewType>
 struct SumViewEntriesFunctor {
-  typedef Scalar value_type;
+  using value_type = Scalar;
 
   ViewType fv;
 
@@ -158,8 +158,8 @@ struct SumViewEntriesFunctor {
 
 template <typename Scalar, class Device>
 struct test_dual_view_deep_copy {
-  typedef Scalar scalar_type;
-  typedef Device execution_space;
+  using scalar_type     = Scalar;
+  using execution_space = Device;
 
   template <typename ViewType>
   void run_me(int n, const int m, const bool use_templ_sync) {
@@ -185,8 +185,8 @@ struct test_dual_view_deep_copy {
     // Check device view is initialized as expected
     scalar_type a_d_sum = 0;
     // Execute on the execution_space associated with t_dev's memory space
-    typedef typename ViewType::t_dev::memory_space::execution_space
-        t_dev_exec_space;
+    using t_dev_exec_space =
+        typename ViewType::t_dev::memory_space::execution_space;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<t_dev_exec_space>(0, n),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
@@ -252,8 +252,8 @@ struct test_dual_view_deep_copy {
 
 template <typename Scalar, class Device>
 struct test_dualview_resize {
-  typedef Scalar scalar_type;
-  typedef Device execution_space;
+  using scalar_type     = Scalar;
+  using execution_space = Device;
 
   template <typename ViewType>
   void run_me() {
@@ -276,8 +276,8 @@ struct test_dualview_resize {
     // Check device view is initialized as expected
     scalar_type a_d_sum = 0;
     // Execute on the execution_space associated with t_dev's memory space
-    typedef typename ViewType::t_dev::memory_space::execution_space
-        t_dev_exec_space;
+    using t_dev_exec_space =
+        typename ViewType::t_dev::memory_space::execution_space;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
@@ -306,8 +306,8 @@ struct test_dualview_resize {
     // Check device view is initialized as expected
     a_d_sum = 0;
     // Execute on the execution_space associated with t_dev's memory space
-    typedef typename ViewType::t_dev::memory_space::execution_space
-        t_dev_exec_space;
+    using t_dev_exec_space =
+        typename ViewType::t_dev::memory_space::execution_space;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),
@@ -333,8 +333,8 @@ struct test_dualview_resize {
 
 template <typename Scalar, class Device>
 struct test_dualview_realloc {
-  typedef Scalar scalar_type;
-  typedef Device execution_space;
+  using scalar_type     = Scalar;
+  using execution_space = Device;
 
   template <typename ViewType>
   void run_me() {
@@ -351,8 +351,8 @@ struct test_dualview_realloc {
     // Check device view is initialized as expected
     scalar_type a_d_sum = 0;
     // Execute on the execution_space associated with t_dev's memory space
-    typedef typename ViewType::t_dev::memory_space::execution_space
-        t_dev_exec_space;
+    using t_dev_exec_space =
+        typename ViewType::t_dev::memory_space::execution_space;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<t_dev_exec_space>(0, a.d_view.extent(0)),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(a.d_view),

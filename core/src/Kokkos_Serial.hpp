@@ -90,7 +90,7 @@ class Serial {
 
   //! Tag this class as an execution space:
   using execution_space = Serial;
-  //! The size_type typedef best suited for this device.
+  //! The size_type alias best suited for this device.
   using size_type = HostSpace::size_type;
   //! This device's preferred memory space.
   using memory_space = HostSpace;

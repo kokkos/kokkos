@@ -1619,8 +1619,8 @@ inline void deep_copy(
     if ((void*)dst.data() != (void*)src.data()) {
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
           dst.data(), src.data(), nbytes);
+      Kokkos::fence();
     }
-    Kokkos::fence();
   } else {
     Kokkos::fence();
     Impl::view_copy(dst, src);
@@ -3221,7 +3221,7 @@ create_mirror_view_and_copy(
   using Mirror      = typename Impl::MirrorViewType<Space, T, P...>::view_type;
   std::string label = name.empty() ? src.label() : name;
   auto mirror       = typename Mirror::non_const_type{
-      ViewAllocateWithoutInitializing(label), src.layout()};
+      view_alloc(WithoutInitializing, label), src.layout()};
   deep_copy(mirror, src);
   return mirror;
 }
@@ -3248,8 +3248,7 @@ typename Impl::MirrorViewType<Space, T, P...>::view_type create_mirror_view(
         !Impl::MirrorViewType<Space, T, P...>::is_same_memspace>::type* =
         nullptr) {
   using Mirror = typename Impl::MirrorViewType<Space, T, P...>::view_type;
-  return Mirror(Kokkos::ViewAllocateWithoutInitializing(src.label()),
-                src.layout());
+  return Mirror(view_alloc(WithoutInitializing, src.label()), src.layout());
 }
 
 } /* namespace Kokkos */

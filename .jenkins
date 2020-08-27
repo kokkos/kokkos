@@ -41,6 +41,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument -DNDEBUG" \
+                                -DCMAKE_CXX_STANDARD=14 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
@@ -70,7 +71,7 @@ pipeline {
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="--gcc-toolchain=$GCC_DIR" \
+                                -DCMAKE_CXX_FLAGS="--gcc-toolchain=$GCC_DIR -Werror" \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
@@ -105,6 +106,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=14 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -136,6 +138,7 @@ pipeline {
                               ../gnu_generate_makefile.bash \
                                 --with-options=compiler_warnings \
                                 --cxxflags="-Werror" \
+                                --cxxstandard=c++14 \
                                 --with-cuda \
                                 --with-cuda-options=enable_lambda \
                                 --arch=Volta70 \
@@ -191,6 +194,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
                               make -j8 && ctest --output-on-failure && \
@@ -200,6 +204,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=17 \
                               .. && \
                               make -j8 && ctest --output-on-failure'''
                     }
@@ -227,6 +232,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=14 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEBUG=ON \
                                 -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
@@ -238,7 +244,7 @@ pipeline {
                               make -j8 && ctest --output-on-failure && \
                               cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake .. && make -j8 && ctest --output-on-failure'''
+                              cmake -DCMAKE_CXX_STANDARD=14 .. && make -j8 && ctest --output-on-failure'''
                     }
                     post {
                         always {
@@ -246,7 +252,7 @@ pipeline {
                         }
                     }
                 }
-                stage('GCC-4.8.4') {
+                stage('GCC-5.3.0') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.gcc'
@@ -263,6 +269,7 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_CXX_STANDARD=14 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \

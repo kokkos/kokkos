@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -42,70 +43,5 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#if defined(KOKKOS_ENABLE_ROCM)
-
-#include <cstdint>
-#include <string>
-#include <iostream>
-#include <iomanip>
-#include <sstream>
-#include <fstream>
-
-#include <gtest/gtest.h>
-
-#include <Kokkos_Core.hpp>
-
-#include <TestDynRankView.hpp>
-
-#include <Kokkos_UnorderedMap.hpp>
-
-#include <TestGlobal2LocalIds.hpp>
-
-#include <TestUnorderedMapPerformance.hpp>
-
-namespace Performance {
-
-class rocm : public ::testing::Test {
- protected:
-  static void SetUpTestCase() {
-    std::cout << std::setprecision(5) << std::scientific;
-    Kokkos::HostSpace::execution_space::initialize();
-    Kokkos::Experimental::ROCm::initialize(
-        Kokkos::Experimental::ROCm::SelectDevice(0));
-  }
-  static void TearDownTestCase() {
-    Kokkos::Experimental::ROCm::finalize();
-    Kokkos::HostSpace::execution_space::finalize();
-  }
-};
-#if 0
-// issue 1089
-TEST_F( rocm, dynrankview_perf )
-{
-  std::cout << "ROCm" << std::endl;
-  std::cout << " DynRankView vs View: Initialization Only " << std::endl;
-  test_dynrankview_op_perf<Kokkos::Experimental::ROCm>( 40960 );
-}
-
-TEST_F( rocm, global_2_local)
-{
-  std::cout << "ROCm" << std::endl;
-  std::cout << "size, create, generate, fill, find" << std::endl;
-  for (unsigned i=Performance::begin_id_size; i<=Performance::end_id_size; i *= Performance::id_step)
-    test_global_to_local_ids<Kokkos::Experimental::ROCm>(i);
-}
-
-#endif
-TEST_F(rocm, unordered_map_performance_near) {
-  Perf::run_performance_tests<Kokkos::Experimental::ROCm, true>("rocm-near");
-}
-
-TEST_F(rocm, unordered_map_performance_far) {
-  Perf::run_performance_tests<Kokkos::Experimental::ROCm, false>("rocm-far");
-}
-
-}  // namespace Performance
-#else
-void KOKKOS_CONTAINERS_PERFORMANCE_TESTS_TESTROCM_PREVENT_EMPTY_LINK_ERROR() {}
-#endif /* #if defined( KOKKOS_ENABLE_ROCM ) */
+#include <openmp/TestOpenMP_Category.hpp>
+#include <TestMDRange_f.hpp>

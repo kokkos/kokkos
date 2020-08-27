@@ -57,12 +57,11 @@ template <class Scalar, class Space = Kokkos::HostSpace>
 struct AddPlus {
  public:
   // Required.
-  typedef AddPlus reducer;
-  typedef Scalar value_type;
+  using reducer    = AddPlus;
+  using value_type = Scalar;
 
-  typedef Kokkos::View<value_type, Space,
-                       Kokkos::MemoryTraits<Kokkos::Unmanaged> >
-      result_view_type;
+  using result_view_type =
+      Kokkos::View<value_type, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
 
  private:
   result_view_type result;
@@ -105,7 +104,7 @@ struct FunctorScalar<0> {
 
 template <>
 struct FunctorScalar<1> {
-  typedef Kokkos::TeamPolicy<>::member_type team_type;
+  using team_type = Kokkos::TeamPolicy<>::member_type;
 
   Kokkos::View<double> result;
 
@@ -135,7 +134,7 @@ struct FunctorScalarInit<0> {
 
 template <>
 struct FunctorScalarInit<1> {
-  typedef Kokkos::TeamPolicy<>::member_type team_type;
+  using team_type = Kokkos::TeamPolicy<>::member_type;
 
   Kokkos::View<double> result;
 
@@ -168,7 +167,7 @@ struct FunctorScalarFinal<0> {
 
 template <>
 struct FunctorScalarFinal<1> {
-  typedef Kokkos::TeamPolicy<>::member_type team_type;
+  using team_type = Kokkos::TeamPolicy<>::member_type;
 
   Kokkos::View<double> result;
 
@@ -203,7 +202,7 @@ struct FunctorScalarJoin<0> {
 
 template <>
 struct FunctorScalarJoin<1> {
-  typedef Kokkos::TeamPolicy<>::member_type team_type;
+  using team_type = Kokkos::TeamPolicy<>::member_type;
 
   Kokkos::View<double> result;
 
@@ -243,7 +242,7 @@ struct FunctorScalarJoinFinal<0> {
 
 template <>
 struct FunctorScalarJoinFinal<1> {
-  typedef Kokkos::TeamPolicy<>::member_type team_type;
+  using team_type = Kokkos::TeamPolicy<>::member_type;
 
   Kokkos::View<double> result;
 
@@ -286,7 +285,7 @@ struct FunctorScalarJoinInit<0> {
 
 template <>
 struct FunctorScalarJoinInit<1> {
-  typedef Kokkos::TeamPolicy<>::member_type team_type;
+  using team_type = Kokkos::TeamPolicy<>::member_type;
 
   Kokkos::View<double> result;
 
@@ -332,7 +331,7 @@ struct FunctorScalarJoinFinalInit<0> {
 
 template <>
 struct FunctorScalarJoinFinalInit<1> {
-  typedef Kokkos::TeamPolicy<>::member_type team_type;
+  using team_type = Kokkos::TeamPolicy<>::member_type;
 
   Kokkos::View<double> result;
 
@@ -361,7 +360,7 @@ struct Functor1 {
 };
 
 struct Functor2 {
-  typedef double value_type[];
+  using value_type = double[];
 
   const unsigned value_count;
 
@@ -480,7 +479,6 @@ struct TestReduceCombinatoricalInstantiation {
     Kokkos::View<double> result_view("FunctorView");
     auto h_r = Kokkos::create_mirror_view(result_view);
     Test::ReduceCombinatorical::FunctorScalar<ISTEAM> functor(result_view);
-    double expected_result = 1000.0 * 999.0 / 2.0;
 
     AddReturnArgument(args..., functor);
     AddReturnArgument(
@@ -489,6 +487,8 @@ struct TestReduceCombinatoricalInstantiation {
 // WORKAROUND OPENMPTARGET: reductions with functor join/init/final not
 // implemented
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
+    double expected_result = 1000.0 * 999.0 / 2.0;
+
     AddReturnArgument(
         args...,
         Test::ReduceCombinatorical::FunctorScalarInit<ISTEAM>(result_view));

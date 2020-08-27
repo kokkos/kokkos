@@ -133,8 +133,8 @@ struct getView<Kokkos::LayoutStride, Space> {
 
 template <class ViewType, class Space>
 struct fill_1D {
-  typedef typename Space::execution_space execution_space;
-  typedef typename ViewType::size_type size_type;
+  using execution_space = typename Space::execution_space;
+  using size_type       = typename ViewType::size_type;
 
   ViewType a;
   double val;
@@ -147,8 +147,8 @@ struct fill_1D {
 
 template <class ViewType, class Space>
 struct fill_2D {
-  typedef typename Space::execution_space execution_space;
-  typedef typename ViewType::size_type size_type;
+  using execution_space = typename Space::execution_space;
+  using size_type       = typename ViewType::size_type;
 
   ViewType a;
   double val;
@@ -165,8 +165,8 @@ struct fill_2D {
 
 template <class Layout, class Space>
 void test_auto_1d() {
-  typedef Kokkos::View<double**, Layout, Space> mv_type;
-  typedef typename mv_type::size_type size_type;
+  using mv_type   = Kokkos::View<double**, Layout, Space>;
+  using size_type = typename mv_type::size_type;
 
   const double ZERO = 0.0;
   const double ONE  = 1.0;
@@ -323,8 +323,8 @@ void make_subview(bool use_constructor, NewView& v, OrigView org,
 
 template <class Space>
 void test_left_0(bool constr) {
-  typedef Kokkos::View<int[2][3][4][5][2][3][4][5], Kokkos::LayoutLeft, Space>
-      view_static_8_type;
+  using view_static_8_type =
+      Kokkos::View<int[2][3][4][5][2][3][4][5], Kokkos::LayoutLeft, Space>;
 
   if (Kokkos::Impl::SpaceAccessibility<
           Kokkos::HostSpace, typename Space::memory_space>::accessible) {
@@ -417,8 +417,8 @@ void test_left_0() {
 
 template <class Space>
 void test_left_1(bool use_constr) {
-  typedef Kokkos::View<int*** * [2][3][4][5], Kokkos::LayoutLeft, Space>
-      view_type;
+  using view_type =
+      Kokkos::View<int*** * [2][3][4][5], Kokkos::LayoutLeft, Space>;
 
   if (Kokkos::Impl::SpaceAccessibility<
           Kokkos::HostSpace, typename Space::memory_space>::accessible) {
@@ -518,7 +518,7 @@ void test_left_1() {
 
 template <class Space>
 void test_left_2() {
-  typedef Kokkos::View<int****, Kokkos::LayoutLeft, Space> view_type;
+  using view_type = Kokkos::View<int****, Kokkos::LayoutLeft, Space>;
 
   if (Kokkos::Impl::SpaceAccessibility<
           Kokkos::HostSpace, typename Space::memory_space>::accessible) {
@@ -584,7 +584,7 @@ void test_left_2() {
 
 template <class Space>
 void test_left_3() {
-  typedef Kokkos::View<int**, Kokkos::LayoutLeft, Space> view_type;
+  using view_type = Kokkos::View<int**, Kokkos::LayoutLeft, Space>;
 
   if (Kokkos::Impl::SpaceAccessibility<
           Kokkos::HostSpace, typename Space::memory_space>::accessible) {
@@ -641,8 +641,8 @@ void test_left_3() {
 
 template <class Space>
 void test_right_0(bool use_constr) {
-  typedef Kokkos::View<int[2][3][4][5][2][3][4][5], Kokkos::LayoutRight, Space>
-      view_static_8_type;
+  using view_static_8_type =
+      Kokkos::View<int[2][3][4][5][2][3][4][5], Kokkos::LayoutRight, Space>;
 
   if (Kokkos::Impl::SpaceAccessibility<
           Kokkos::HostSpace, typename Space::memory_space>::accessible) {
@@ -719,8 +719,8 @@ void test_right_0() {
 
 template <class Space>
 void test_right_1(bool use_constr) {
-  typedef Kokkos::View<int*** * [2][3][4][5], Kokkos::LayoutRight, Space>
-      view_type;
+  using view_type =
+      Kokkos::View<int*** * [2][3][4][5], Kokkos::LayoutRight, Space>;
 
   if (Kokkos::Impl::SpaceAccessibility<
           Kokkos::HostSpace, typename Space::memory_space>::accessible) {
@@ -801,7 +801,7 @@ void test_right_1() {
 
 template <class Space>
 void test_right_3() {
-  typedef Kokkos::View<int**, Kokkos::LayoutRight, Space> view_type;
+  using view_type = Kokkos::View<int**, Kokkos::LayoutRight, Space>;
 
   if (Kokkos::Impl::SpaceAccessibility<
           Kokkos::HostSpace, typename Space::memory_space>::accessible) {

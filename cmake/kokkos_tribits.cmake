@@ -361,10 +361,15 @@ FUNCTION(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
   CMAKE_PARSE_ARGUMENTS(PARSE
     "ADD_BUILD_OPTIONS"
     ""
-    ""
+    "HEADERS"
     ${ARGN}
   )
   IF (KOKKOS_HAS_TRILINOS)
+    # We do not pass headers to trilinos. They would get installed
+    # to the default include folder, but we want headers installed
+    # preserving the directory structure, e.g. impl
+    # If headers got installed in both locations, it breaks some
+    # downstream packages
     TRIBITS_ADD_LIBRARY(${LIBRARY_NAME} ${PARSE_UNPARSED_ARGUMENTS})
     #Stolen from Tribits - it can add prefixes
     SET(TRIBITS_LIBRARY_NAME_PREFIX "${${PROJECT_NAME}_LIBRARY_NAME_PREFIX}")
@@ -379,8 +384,10 @@ FUNCTION(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
     #Do not set any transitive properties and keep everything working as before
     #KOKKOS_SET_LIBRARY_PROPERTIES(${TRIBITS_LIBRARY_NAME} PLAIN_STYLE)
   ELSE()
+    # Forward the headers, we want to know about all headers
+    # to make sure they appear correctly in IDEs
     KOKKOS_INTERNAL_ADD_LIBRARY(
-      ${LIBRARY_NAME} ${PARSE_UNPARSED_ARGUMENTS})
+      ${LIBRARY_NAME} ${PARSE_UNPARSED_ARGUMENTS} HEADERS ${PARSE_HEADERS})
     IF (PARSE_ADD_BUILD_OPTIONS)
       KOKKOS_SET_LIBRARY_PROPERTIES(${LIBRARY_NAME})
     ENDIF()

@@ -93,7 +93,8 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.destroy_profile_section == r.destroy_profile_section &&
          l.profile_event == r.profile_event &&
          l.begin_deep_copy == r.begin_deep_copy &&
-         l.end_deep_copy == r.end_deep_copy &&
+         l.end_deep_copy == r.end_deep_copy && l.begin_fence == r.begin_fence &&
+         l.end_fence == r.end_fence &&
          l.declare_input_type == r.declare_input_type &&
          l.declare_output_type == r.declare_output_type &&
          l.end_tuning_context == r.end_tuning_context &&
@@ -254,6 +255,20 @@ void endDeepCopy() {
   }
 }
 
+void beginFence(const std::string name, const uint32_t deviceId,
+                uint64_t* handle) {
+  if (Experimental::current_callbacks.begin_fence != nullptr) {
+    (*Experimental::current_callbacks.begin_fence)(name.c_str(), deviceId,
+                                                   handle);
+  }
+}
+
+void endFence(const uint64_t handle) {
+  if (Experimental::current_callbacks.end_fence != nullptr) {
+    (*Experimental::current_callbacks.end_fence)(handle);
+  }
+}
+
 void createProfileSection(const std::string& sectionName, uint32_t* secID) {
   if (Experimental::current_callbacks.create_profile_section != nullptr) {
     (*Experimental::current_callbacks.create_profile_section)(
@@ -379,46 +394,53 @@ void initialize() {
       Experimental::set_end_deep_copy_callback(
           *reinterpret_cast<endDeepCopyFunction*>(&p14));
 
-      auto p15 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
-      Experimental::set_create_profile_section_callback(
-          *(reinterpret_cast<createProfileSectionFunction*>(&p15)));
-      auto p16 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
-      Experimental::set_start_profile_section_callback(
-          *reinterpret_cast<startProfileSectionFunction*>(&p16));
-      auto p17 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
-      Experimental::set_stop_profile_section_callback(
-          *reinterpret_cast<stopProfileSectionFunction*>(&p17));
-      auto p18 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
-      Experimental::set_destroy_profile_section_callback(
-          *(reinterpret_cast<destroyProfileSectionFunction*>(&p18)));
+      auto p15 = dlsym(firstProfileLibrary, "kokkosp_begin_fence");
+      Experimental::set_begin_fence_callback(
+          *reinterpret_cast<beginFenceFunction*>(&p15));
+      auto p16 = dlsym(firstProfileLibrary, "kokkosp_end_fence");
+      Experimental::set_end_fence_callback(
+          *reinterpret_cast<endFenceFunction*>(&p16));
 
-      auto p19 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
+      auto p17 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
+      Experimental::set_create_profile_section_callback(
+          *(reinterpret_cast<createProfileSectionFunction*>(&p17)));
+      auto p18 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
+      Experimental::set_start_profile_section_callback(
+          *reinterpret_cast<startProfileSectionFunction*>(&p18));
+      auto p19 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
+      Experimental::set_stop_profile_section_callback(
+          *reinterpret_cast<stopProfileSectionFunction*>(&p19));
+      auto p20 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
+      Experimental::set_destroy_profile_section_callback(
+          *(reinterpret_cast<destroyProfileSectionFunction*>(&p20)));
+
+      auto p21 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
       Experimental::set_profile_event_callback(
-          *reinterpret_cast<profileEventFunction*>(&p19));
+          *reinterpret_cast<profileEventFunction*>(&p21));
 
 #ifdef KOKKOS_ENABLE_TUNING
-      auto p20 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
+      auto p22 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
       Experimental::set_declare_output_type_callback(
           *reinterpret_cast<Experimental::outputTypeDeclarationFunction*>(
-              &p20));
+              &p22));
 
-      auto p21 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
+      auto p23 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
       Experimental::set_declare_input_type_callback(
-          *reinterpret_cast<Experimental::inputTypeDeclarationFunction*>(&p21));
-      auto p22 = dlsym(firstProfileLibrary, "kokkosp_request_values");
+          *reinterpret_cast<Experimental::inputTypeDeclarationFunction*>(&p23));
+      auto p24 = dlsym(firstProfileLibrary, "kokkosp_request_values");
       Experimental::set_request_output_values_callback(
-          *reinterpret_cast<Experimental::requestValueFunction*>(&p22));
-      auto p23 = dlsym(firstProfileLibrary, "kokkosp_end_context");
+          *reinterpret_cast<Experimental::requestValueFunction*>(&p24));
+      auto p25 = dlsym(firstProfileLibrary, "kokkosp_end_context");
       Experimental::set_end_context_callback(
-          *reinterpret_cast<Experimental::contextEndFunction*>(&p23));
-      auto p24 = dlsym(firstProfileLibrary, "kokkosp_begin_context");
+          *reinterpret_cast<Experimental::contextEndFunction*>(&p25));
+      auto p26 = dlsym(firstProfileLibrary, "kokkosp_begin_context");
       Experimental::set_begin_context_callback(
-          *reinterpret_cast<Experimental::contextBeginFunction*>(&p24));
-      auto p25 =
+          *reinterpret_cast<Experimental::contextBeginFunction*>(&p26));
+      auto p27 =
           dlsym(firstProfileLibrary, "kokkosp_declare_optimization_goal");
       Experimental::set_declare_optimization_goal_callback(
           *reinterpret_cast<Experimental::optimizationGoalDeclarationFunction*>(
-              &p25));
+              &p27));
 #endif  // KOKKOS_ENABLE_TUNING
     }
   }
@@ -582,6 +604,12 @@ void set_begin_deep_copy_callback(beginDeepCopyFunction callback) {
 }
 void set_end_deep_copy_callback(endDeepCopyFunction callback) {
   current_callbacks.end_deep_copy = callback;
+}
+void set_begin_fence_callback(beginFenceFunction callback) {
+  current_callbacks.begin_fence = callback;
+}
+void set_end_fence_callback(endFenceFunction callback) {
+  current_callbacks.end_fence = callback;
 }
 
 void set_declare_output_type_callback(outputTypeDeclarationFunction callback) {

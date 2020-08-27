@@ -52,9 +52,9 @@ namespace {
 
 template <class ExecSpace, class ScheduleType>
 struct TestRange {
-  typedef int value_type;  ///< typedef required for the parallel_reduce
+  using value_type = int;  ///< alias required for the parallel_reduce
 
-  typedef Kokkos::View<value_type *, ExecSpace> view_type;
+  using view_type = Kokkos::View<value_type *, ExecSpace>;
 
   view_type m_flags;
   view_type result_view;
@@ -72,8 +72,9 @@ struct TestRange {
   int offset;
 #endif
   TestRange(const size_t N_)
-      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_),
-        result_view(Kokkos::ViewAllocateWithoutInitializing("results"), N_),
+      : m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"), N_),
+        result_view(Kokkos::view_alloc(Kokkos::WithoutInitializing, "results"),
+                    N_),
         N(N_) {
 #ifdef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
     offset = 13;
@@ -88,7 +89,7 @@ struct TestRange {
                          *this);
 
     {
-      typedef TestRange<ExecSpace, ScheduleType> ThisType;
+      using ThisType = TestRange<ExecSpace, ScheduleType>;
       std::string label("parallel_for");
       Kokkos::Impl::ParallelConstructName<ThisType, void> pcn(label);
       ASSERT_EQ(pcn.get(), label);
@@ -103,7 +104,7 @@ struct TestRange {
         *this);
 
     {
-      typedef TestRange<ExecSpace, ScheduleType> ThisType;
+      using ThisType = TestRange<ExecSpace, ScheduleType>;
       std::string label("parallel_for");
       Kokkos::Impl::ParallelConstructName<ThisType, VerifyInitTag> pcn(label);
       ASSERT_EQ(pcn.get(), label);
@@ -272,8 +273,8 @@ struct TestRange {
   void test_dynamic_policy() {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
     auto const N_no_implicit_capture = N;
-    typedef Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >
-        policy_t;
+    using policy_t =
+        Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >;
 
     {
       Kokkos::View<size_t *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> >

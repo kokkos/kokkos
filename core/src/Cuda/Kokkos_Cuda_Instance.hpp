@@ -35,8 +35,8 @@ struct CudaTraits {
     KernelArgumentLimit = 0x001000 /*  4k bytes */
   };
 
-  typedef unsigned long
-      ConstantGlobalBufferType[ConstantMemoryUsage / sizeof(unsigned long)];
+  using ConstantGlobalBufferType =
+      unsigned long[ConstantMemoryUsage / sizeof(unsigned long)];
 
   enum { ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */ };
 
@@ -84,7 +84,7 @@ class CudaInternal {
 #endif
 
  public:
-  typedef Cuda::size_type size_type;
+  using size_type = Cuda::size_type;
 
   int m_cudaDev;
 

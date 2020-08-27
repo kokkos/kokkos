@@ -529,7 +529,7 @@ template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
     : public SharedAllocationRecord<void, void> {
  private:
-  typedef SharedAllocationRecord<void, void> RecordBase;
+  using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
@@ -580,7 +580,7 @@ template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
     : public SharedAllocationRecord<void, void> {
  private:
-  typedef SharedAllocationRecord<void, void> RecordBase;
+  using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;

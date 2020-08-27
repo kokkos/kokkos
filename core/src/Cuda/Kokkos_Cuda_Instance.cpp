@@ -308,7 +308,9 @@ CudaInternal &CudaInternal::singleton() {
   static CudaInternal self;
   return self;
 }
-void CudaInternal::fence() const { cudaStreamSynchronize(m_stream); }
+void CudaInternal::fence() const {
+  CUDA_SAFE_CALL(cudaStreamSynchronize(m_stream));
+}
 
 void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
   if (was_finalized)

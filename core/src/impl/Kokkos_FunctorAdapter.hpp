@@ -216,10 +216,10 @@ struct FunctorValueTraits<void, ArgTag, false> {
  * Two options for declaration
  *
  *   1) A plain-old-data (POD) type
- *        typedef {pod_type} value_type ;
+ *        using value_type = {pod_type};
  *
  *   2) An array of POD of a runtime specified count.
- *        typedef {pod_type} value_type[] ;
+ *        using value_type = {pod_type}[];
  *        const unsigned     value_count ;
  */
 template <class FunctorType, class ArgTag>

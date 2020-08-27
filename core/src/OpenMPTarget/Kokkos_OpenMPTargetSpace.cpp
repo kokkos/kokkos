@@ -80,7 +80,7 @@ void *OpenMPTargetSpace::allocate(const size_t arg_alloc_size) const {
 }
 
 void OpenMPTargetSpace::deallocate(void *const arg_alloc_ptr,
-                                   const size_t arg_alloc_size) const {
+                                   const size_t /*arg_alloc_size*/) const {
   if (arg_alloc_ptr) {
     omp_target_free(arg_alloc_ptr, omp_get_default_device());
   }
@@ -193,9 +193,9 @@ void *SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
 SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
     *SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
                             void>::get_record(void *alloc_ptr) {
-  typedef SharedAllocationHeader Header;
-  typedef SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
-      RecordHost;
+  using Header = SharedAllocationHeader;
+  using RecordHost =
+      SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>;
 
   if (alloc_ptr) {
     Header head;
@@ -224,6 +224,9 @@ void SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
   SharedAllocationRecord<void, void>::print_host_accessible_records(
       s, "OpenMPTargetSpace", &s_root_record, detail);
 #else
+  (void)s;
+  (void)space;
+  (void)detail;
   throw_runtime_exception(
       "SharedAllocationRecord<OpenMPTargetSpace>::print_records"
       " only works with KOKKOS_DEBUG enabled");

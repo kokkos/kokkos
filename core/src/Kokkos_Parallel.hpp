@@ -135,12 +135,12 @@ namespace Kokkos {
  *
  * A "functor" is a class containing the function to execute in parallel,
  * data needed for that execution, and an optional \c execution_space
- * typedef.  Here is an example functor for parallel_for:
+ * alias.  Here is an example functor for parallel_for:
  *
  * \code
  *  class FunctorType {
  *  public:
- *    typedef  ...  execution_space ;
+ *    using execution_space = ...;
  *    void operator() ( WorkType iwork ) const ;
  *  };
  * \endcode
@@ -252,11 +252,11 @@ namespace Kokkos {
 /// class ScanFunctor {
 /// public:
 ///   // The Kokkos device type
-///   typedef ... execution_space;
+///   using execution_space = ...;
 ///   // Type of an entry of the array containing the result;
 ///   // also the type of each of the entries combined using
 ///   // operator() or join().
-///   typedef PodType value_type;
+///   using value_type = PodType;
 ///
 ///   void operator () (const ExecPolicy::member_type & i, value_type& update,
 ///   const bool final_pass) const; void init (value_type& update) const; void
@@ -272,9 +272,9 @@ namespace Kokkos {
 /// template<class SpaceType>
 /// class InclScanFunctor {
 /// public:
-///   typedef SpaceType execution_space;
-///   typedef int value_type;
-///   typedef typename SpaceType::size_type size_type;
+///   using execution_space = SpaceType;
+///   using value_type = int;
+///   using size_type = typename SpaceType::size_type;
 ///
 ///   InclScanFunctor( Kokkos::View<value_type*, execution_space> x
 ///                  , Kokkos::View<value_type*, execution_space> y ) : m_x(x),
@@ -311,9 +311,9 @@ namespace Kokkos {
 /// template<class SpaceType>
 /// class ExclScanFunctor {
 /// public:
-///   typedef SpaceType execution_space;
-///   typedef int value_type;
-///   typedef typename SpaceType::size_type size_type;
+///   using execution_space = SpaceType;
+///   using value_type = int;
+///   using size_type = typename SpaceType::size_type;
 ///
 ///   ExclScanFunctor (Kokkos::View<value_type*, execution_space> x) : x_ (x) {}
 ///
@@ -349,9 +349,9 @@ namespace Kokkos {
 /// template<class SpaceType>
 /// class OffsetScanFunctor {
 /// public:
-///   typedef SpaceType execution_space;
-///   typedef int value_type;
-///   typedef typename SpaceType::size_type size_type;
+///   using execution_space = SpaceType;
+///   using value_type = int;
+///   using size_type = typename SpaceType::size_type;
 ///
 ///   // lastIndex_ is the last valid index (zero-based) of x.
 ///   // If x has length zero, then lastIndex_ won't be used anyway.

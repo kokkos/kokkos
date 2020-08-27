@@ -64,7 +64,7 @@ namespace Kokkos {
 namespace Experimental {
 template <typename T>
 inline __device__ T *kokkos_impl_hip_shared_memory() {
-  extern __shared__ HIPSpace::size_type sh[];
+  HIP_DYNAMIC_SHARED(HIPSpace::size_type, sh);
   return (T *)sh;
 }
 }  // namespace Experimental
@@ -147,11 +147,6 @@ struct HIPParallelLaunch<
             "HIPParallelLaunch FAILED: shared memory request is too large");
       }
 
-      // Invoke the driver function on the device
-      printf("%i %i %i | %i %i %i | %i\n", grid.x, grid.y, grid.z, block.x,
-             block.y, block.z, shmem);
-      printf("Pre Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
-
       // FIXME_HIP -- there is currently an error copying (some) structs
       // by value to the device in HIP-Clang / VDI
       // As a workaround, we can malloc the DriverType and explictly copy over.
@@ -165,13 +160,11 @@ struct HIPParallelLaunch<
                                        MinBlocksPerSM>
           <<<grid, block, shmem, hip_instance->m_stream>>>(d_driver);
 
-      Kokkos::Experimental::HIP().fence();
-      printf("Post Launch Error: %s\n", hipGetErrorName(hipGetLastError()));
-      HIP_SAFE_CALL(hipFree(d_driver));
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
-      Kokkos::Experimental::HIP().fence();
+      hip_instance->fence();
 #endif
+      HIP_SAFE_CALL(hipFree(d_driver));
     }
   }
 
@@ -210,12 +203,11 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       hip_parallel_launch_local_memory<DriverType, 1024, 1>
           <<<grid, block, shmem, hip_instance->m_stream>>>(d_driver);
 
-      Kokkos::Experimental::HIP().fence();
-      HIP_SAFE_CALL(hipFree(d_driver));
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       HIP_SAFE_CALL(hipGetLastError());
-      Kokkos::Experimental::HIP().fence();
+      hip_instance->fence();
 #endif
+      HIP_SAFE_CALL(hipFree(d_driver));
     }
   }
 

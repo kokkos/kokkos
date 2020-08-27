@@ -227,15 +227,15 @@ namespace Impl {
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
     defined(KOKKOS_ENABLE_CUDA)
-typedef Kokkos::CudaSpace ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = Kokkos::CudaSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU)
-typedef Kokkos::HostSpace ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = Kokkos::HostSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
-typedef Kokkos::Experimental::HIPSpace ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = Kokkos::Experimental::HIPSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
 using ActiveExecutionMemorySpace = Kokkos::HostSpace;
 #else
-typedef void ActiveExecutionMemorySpace;
+using ActiveExecutionMemorySpace = void;
 #endif
 
 template <class ActiveSpace, class MemorySpace>

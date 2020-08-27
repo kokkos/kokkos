@@ -103,7 +103,7 @@ __inline__ __device__ T atomic_compare_exchange(
     typename std::enable_if<sizeof(T) != sizeof(int) &&
                                 sizeof(T) == sizeof(unsigned long long int),
                             const T&>::type val) {
-  typedef unsigned long long int type;
+  using type     = unsigned long long int;
   const type tmp = atomicCAS((type*)dest, *((type*)&compare), *((type*)&val));
   return *((T*)&tmp);
 }

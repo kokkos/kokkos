@@ -13,6 +13,7 @@ print_help() {
   echo "--kokkos-path=/Path/To/Kokkos: Path to the Kokkos root directory"
   echo "    Defaults to root repo containing this script"
   echo "--debug: Run tests in debug. Defaults to False"
+  echo "--boundscheck: Enable Kokkos_ENABLE_DEBUG_BOUNDS_CHECK to check View accesses within bounds."
   echo "--test-script: Test this script, not Kokkos"
   echo "--skip-hwloc: Do not do hwloc tests"
   echo "--num=N: Number of jobs to run in parallel"
@@ -21,7 +22,7 @@ print_help() {
   echo "--build-only: Just do builds, don't run anything"
   echo "--opt-flag=FLAG: Optimization flag (default: -O3)"
   echo "--cxxflags-extra=FLAGS: Extra flags to be added to CXX_FLAGS"
-  echo "--cxxstandard=OPT: c++11 (default), c++14, c++17, c++1y, c++1z, c++2a"
+  echo "--cxxstandard=OPT: c++14 (default), c++17, c++1y, c++1z, c++2a"
   echo "--ldflags-extra=FLAGS: Extra flags to be added to LD_FLAGS"
   echo "--arch=ARCHITECTURE: overwrite architecture flags"
   echo "--with-cuda-options=OPT: set KOKKOS_CUDA_OPTIONS"
@@ -158,7 +159,7 @@ CXX_FLAGS_EXTRA=""
 LD_FLAGS_EXTRA=""
 KOKKOS_OPTIONS=""
 
-CXX_STANDARD="11"
+CXX_STANDARD="14"
 
 #
 # Handle arguments.
@@ -177,6 +178,9 @@ do
       ;;
     --debug*)
       DEBUG=True
+      ;;
+    --boundscheck*)
+      KOKKOS_BOUNDS_CHECK="--boundscheck"
       ;;
     --build-only*)
       BUILD_ONLY=True
@@ -274,23 +278,14 @@ if [ "$MACHINE" = "sems" ]; then
     COMPILERS=("gcc/5.3.0 $BASE_MODULE_LIST "OpenMP" g++ $GCC_WARNING_FLAGS"
                "gcc/7.2.0 $BASE_MODULE_LIST "Serial" g++ $GCC_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST "OpenMP" icpc $INTEL_WARNING_FLAGS"
-               "clang/3.9.0 $BASE_MODULE_LIST "Pthread_Serial" clang++ $CLANG_WARNING_FLAGS"
                "cuda/9.2 $CUDA9_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/4.9.3 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+    COMPILERS=("gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/6.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "intel/15.0.2 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL15_WARNING_FLAGS"
-               "intel/16.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.7.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.8.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.9.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "cuda/9.2 $CUDA9_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   fi
@@ -318,18 +313,10 @@ elif [ "$MACHINE" = "kokkos-dev" ]; then
     )
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/4.9.3 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+    COMPILERS=("gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/6.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/7.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "intel/15.0.2 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL15_WARNING_FLAGS"
-               "intel/16.0.3 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.7.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.8.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.9.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/4.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/7.0.1 $CLANG7_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "cuda/9.2 $CUDA9_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
@@ -419,8 +406,7 @@ elif [ "$MACHINE" = "bowman" ]; then
   OLD_INTEL_BUILD_LIST="Pthread,Serial,Pthread_Serial"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("intel/16.4.258 $BASE_MODULE_LIST $OLD_INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/17.2.174 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+  COMPILERS=("intel/17.2.174 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
              "intel/18.2.199 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
   )
 
@@ -450,24 +436,28 @@ elif [ "$MACHINE" = "blake" ]; then
 
   module load cmake/3.12.3
 
-  BASE_MODULE_LIST="<COMPILER_NAME>/<COMPILER_VERSION>"
-  BASE_MODULE_LIST_INTEL="<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
+  BASE_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>"
+  BASE_MODULE_LIST_INTEL="cmake/3.12.3,<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
 
   if [ "$SPOT_CHECK" = "True" ]; then
 
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("intel/18.1.163 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
              "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "pgi/18.7.0 $BASE_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
   )
   else
-  COMPILERS=("intel/18.1.163 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "gcc/4.9.3 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+  COMPILERS=("intel/17.4.196 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "intel/18.0.128 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "intel/18.1.163 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "intel/19.1.144 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "intel/19.3.199 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "intel/19.5.281 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
              "gcc/5.5.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/8.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "pgi/18.7.0 $BASE_MODULE_LIST $GCC_BUILD_LIST pgc++ $PGI_WARNING_FLAGS"
+             "gcc/8.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/9.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
   )
 
   fi
@@ -504,10 +494,7 @@ elif [ "$MACHINE" = "apollo" ]; then
 
   if [ "$SPOT_CHECK" = "True" ]; then
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("gcc/4.8.4 $BASE_MODULE_LIST "OpenMP,Pthread" g++ $GCC_WARNING_FLAGS"
-               "gcc/5.3.0 $BASE_MODULE_LIST "Serial" g++ $GCC_WARNING_FLAGS"
-               "intel/16.0.1 $BASE_MODULE_LIST "OpenMP" icpc $INTEL_WARNING_FLAGS"
-               "clang/3.9.0 $BASE_MODULE_LIST "Pthread_Serial" clang++ $CLANG_WARNING_FLAGS"
+    COMPILERS=("gcc/5.3.0 $BASE_MODULE_LIST "OpenMP,Pthread,Serial" g++ $GCC_WARNING_FLAGS"
                "clang/6.0 $CLANG_MODULE_LIST "Cuda_Pthread,OpenMP" clang++ $CUDA_WARNING_FLAGS"
                "cuda/9.1 $CUDA9_MODULE_LIST "Cuda_OpenMP" $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "hpx/1.3.0 $HPX3_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
@@ -520,16 +507,9 @@ elif [ "$MACHINE" = "apollo" ]; then
                "cuda/10.2 $CUDA10X_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "clang/6.0 $CLANG_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
                "clang/7.0 $CLANG7_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
-               "clang/3.9.0 $CLANG_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
-               "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/4.9.3 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/6.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "intel/15.0.2 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL15_WARNING_FLAGS"
-               "intel/16.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "clang/3.5.2 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "hpx/1.2.1 $HPX_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
                "hpx/1.3.0 $HPX3_MODULE_LIST "HPX" g++ $PGI_WARNING_FLAGS"
     )
@@ -581,23 +561,15 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
                "cuda/9.2 $NVCC9_MODULE_LIST $BUILD_LIST_CUDA_NVCC $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
                "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CUDA_CLANG clang++ $CUDA_WARNING_FLAGS"
                "clang/8.0 $CLANG8_MODULE_LIST $BUILD_LIST_CLANG clang++ $CLANG_WARNING_FLAGS"
-               "gcc/4.8.4 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-               "gcc/4.9.3 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/6.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/7.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/8.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/9.1 $GCC91_MODULE_LIST "$GCC_BUILD_LIST" g++ $GCC_WARNING_FLAGS"
                "gcc/9.2.0 $BASE_MODULE_LIST "$GCC_BUILD_LIST" g++ $GCC_WARNING_FLAGS"
-               "intel/15.0.2 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL15_WARNING_FLAGS"
-               "intel/16.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/18.0.5 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
                "intel/19.0.5 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-               "clang/3.6.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.7.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.8.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
-               "clang/3.9.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/5.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/7.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
                "clang/9.0.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
@@ -851,12 +823,12 @@ single_build_and_test() {
 
     # KOKKOS_OPTIONS and KOKKOS_CUDA_OPTIONS are exported and detected by kokkos' generate_makefile.sh during install of kokkos; we pass them to the reproducer script instructions
     echo "  #   Use generate_makefile line below to call cmake which generates makefile for this build:" &> call_generate_makefile.sh
-    echo "        ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} --no-examples $extra_args" &>> call_generate_makefile.sh
+    echo "        ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} --no-examples ${KOKKOS_BOUNDS_CHECK} $extra_args" &>> call_generate_makefile.sh
 
     # store script command with generic path for faster copy/paste of reproducer into issues
-    echo "        \$KOKKOS_PATH/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=\$KOKKOS_PATH --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} --no-examples $extra_args" &> call_generate_makefile_genericpath.sh
+    echo "        \$KOKKOS_PATH/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=\$KOKKOS_PATH --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} ${KOKKOS_BOUNDS_CHECK} --no-examples $extra_args" &> call_generate_makefile_genericpath.sh
 
-    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} --no-examples $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+    run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} ${KOKKOS_BOUNDS_CHECK} --no-examples $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
     local -i build_start_time=$(date +%s)
     run_cmd make -j 48 all >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
     local -i build_end_time=$(date +%s)

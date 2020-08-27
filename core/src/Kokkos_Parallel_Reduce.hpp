@@ -846,10 +846,10 @@ struct ParallelReduceAdaptor {
   using return_value_adapter =
       Impl::ParallelReduceReturnValue<void, ReturnType, FunctorType>;
 #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
-  typedef Impl::ParallelReduceFunctorType<
-      FunctorType, PolicyType, typename return_value_adapter::value_type,
-      typename PolicyType::execution_space>
-      functor_adaptor;
+  using functor_adaptor =
+      Impl::ParallelReduceFunctorType<FunctorType, PolicyType,
+                                      typename return_value_adapter::value_type,
+                                      typename PolicyType::execution_space>;
 #endif
   static inline void execute(const std::string& label, const PolicyType& policy,
                              const FunctorType& functor,
@@ -940,26 +940,31 @@ struct ParallelReduceFence<ExecutionSpace, T, true> {
  * \code
  *  class FunctorType { // For POD value type
  *  public:
- *    typedef    ...     execution_space ;
- *    typedef <podType>  value_type ;
+ *    using execution_space = ...;
+ *    using value_type = <podType>;
  *    void operator()( <intType> iwork , <podType> & update ) const ;
  *    void init( <podType> & update ) const ;
  *    void join( volatile       <podType> & update ,
  *               volatile const <podType> & input ) const ;
  *
- *    typedef true_type has_final ;
+ *    using has_final = true_type;
  *    void final( <podType> & update ) const ;
  *  };
  * \endcode
  *
  * Example of a parallel_reduce functor for an array of POD (plain old data)
- * values: \code class FunctorType { // For array of POD value public: typedef
- * ...     execution_space ; typedef <podType>  value_type[] ; void operator()(
- * <intType> , <podType> update[] ) const ; void init( <podType> update[] )
- * const ; void join( volatile       <podType> update[] , volatile const
- * <podType> input[] ) const ;
+ * values:
+ * \code
+ *  class FunctorType { // For array of POD value
+ *  public:
+ *    using execution_space = ...;
+ *    using value_type = <podType>[];
+ *    void operator()( <intType> , <podType> update[] ) const ;
+ *    void init( <podType> update[] ) const ;
+ *    void join( volatile       <podType> update[] ,
+ *               volatile const <podType> input[] ) const ;
  *
- *    typedef true_type has_final ;
+ *    using has_final = true_type;
  *    void final( <podType> update[] ) const ;
  *  };
  * \endcode

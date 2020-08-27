@@ -969,7 +969,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           true);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        Kokkos::Experimental::HIP().fence();
+        m_policy.space().impl_internal_space_instance()->fence();
 
         if (m_result_ptr) {
           const int size = value_traits::value_size(
