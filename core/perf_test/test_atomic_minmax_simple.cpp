@@ -56,7 +56,6 @@ void test(const int length) {
 
   // input is min values - all max atomics will replace
   {
-
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) { inp(i) = min; });
     Kokkos::fence();
@@ -85,7 +84,6 @@ void test(const int length) {
 
   // input is max values - all max atomics will early exit
   {
-
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) { inp(i) = max; });
     Kokkos::fence();
@@ -117,7 +115,6 @@ void test(const int length) {
 
   // input is min values - all min atomics will early exit
   {
-
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) { inp(i) = min; });
     Kokkos::fence();
@@ -158,9 +155,8 @@ void test(const int length) {
     Kokkos::parallel_reduce(
         length,
         KOKKOS_LAMBDA(const int i, T& inner) {
-          inner = Kokkos::atomic_max_fetch(&(inp(0)), inner+1);
-          if (i == length - 1)
-            inner = Kokkos::atomic_max_fetch(&(inp(0)), max);
+          inner = Kokkos::atomic_max_fetch(&(inp(0)), inner + 1);
+          if (i == length - 1) inner = Kokkos::atomic_max_fetch(&(inp(0)), max);
         },
         current);
     // Kokkos::parallel_for(
@@ -187,9 +183,8 @@ void test(const int length) {
     Kokkos::parallel_reduce(
         length,
         KOKKOS_LAMBDA(const int i, T& inner) {
-          inner = Kokkos::atomic_min_fetch(&(inp(0)), inner-1);
-          if (i == length - 1)
-            inner = Kokkos::atomic_min_fetch(&(inp(0)), min);
+          inner = Kokkos::atomic_min_fetch(&(inp(0)), inner - 1);
+          if (i == length - 1) inner = Kokkos::atomic_min_fetch(&(inp(0)), min);
         },
         current);
     Kokkos::fence();
@@ -201,7 +196,6 @@ void test(const int length) {
     }
     std::cout << "Time for contentious min replacements: " << time << std::endl;
   }
-
 }
 
 int main(int argc, char* argv[]) {
