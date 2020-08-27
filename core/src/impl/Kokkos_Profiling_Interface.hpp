@@ -122,6 +122,8 @@ using beginDeepCopyFunction = Kokkos_Profiling_beginDeepCopyFunction;
 using endDeepCopyFunction   = Kokkos_Profiling_endDeepCopyFunction;
 using beginFenceFunction    = Kokkos_Profiling_beginFenceFunction;
 using endFenceFunction      = Kokkos_Profiling_endFenceFunction;
+using dualViewSyncFunction   = Kokkos_Profiling_dualViewSyncFunction;
+using dualViewModifyFunction = Kokkos_Profiling_dualViewModifyFunction;
 
 }  // namespace Tools
 

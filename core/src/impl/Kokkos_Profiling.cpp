@@ -94,7 +94,8 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.profile_event == r.profile_event &&
          l.begin_deep_copy == r.begin_deep_copy &&
          l.end_deep_copy == r.end_deep_copy && l.begin_fence == r.begin_fence &&
-         l.end_fence == r.end_fence &&
+         l.end_fence == r.end_fence && l.sync_dual_view == r.sync_dual_view &&
+         l.modify_dual_view == r.modify_dual_view &&
          l.declare_input_type == r.declare_input_type &&
          l.declare_output_type == r.declare_output_type &&
          l.end_tuning_context == r.end_tuning_context &&
@@ -542,6 +543,21 @@ void finalize() {
 #endif
 }
 
+void syncDualView(const std::string& label, const void* const ptr,
+                  bool on_device) {
+  if (Experimental::current_callbacks.sync_dual_view != nullptr) {
+    (*Experimental::current_callbacks.sync_dual_view)(label.c_str(), ptr,
+                                                      on_device);
+  }
+}
+void modifyDualView(const std::string& label, const void* const ptr,
+                    bool on_device) {
+  if (Experimental::current_callbacks.sync_dual_view != nullptr) {
+    (*Experimental::current_callbacks.sync_dual_view)(label.c_str(), ptr,
+                                                      on_device);
+  }
+}
+
 }  // namespace Tools
 
 namespace Tools {
@@ -610,6 +626,13 @@ void set_begin_fence_callback(beginFenceFunction callback) {
 }
 void set_end_fence_callback(endFenceFunction callback) {
   current_callbacks.end_fence = callback;
+}
+
+void set_dual_view_sync_callback(dualViewSyncFunction callback) {
+  current_callbacks.sync_dual_view = callback;
+}
+void set_dual_view_modify_callback(dualViewModifyFunction callback) {
+  current_callbacks.modify_dual_view = callback;
 }
 
 void set_declare_output_type_callback(outputTypeDeclarationFunction callback) {

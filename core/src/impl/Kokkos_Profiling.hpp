@@ -89,6 +89,10 @@ void endDeepCopy();
 void beginFence(const std::string name, const uint32_t deviceId,
                 uint64_t* handle);
 void endFence(const uint64_t handle);
+void syncDualView(const std::string& label, const void* const ptr,
+                  bool on_device);
+void modifyDualView(const std::string& label, const void* const ptr,
+                    bool on_device);
 
 void initialize();
 void finalize();
@@ -119,6 +123,8 @@ void set_begin_deep_copy_callback(beginDeepCopyFunction callback);
 void set_end_deep_copy_callback(endDeepCopyFunction callback);
 void set_begin_fence_callback(beginFenceFunction callback);
 void set_end_fence_callback(endFenceFunction callback);
+void set_dual_view_sync_callback(dualViewSyncFunction callback);
+void set_dual_view_modify_callback(dualViewModifyFunction callback);
 
 void set_declare_output_type_callback(outputTypeDeclarationFunction callback);
 void set_declare_input_type_callback(inputTypeDeclarationFunction callback);
@@ -167,7 +173,6 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
                    const std::string src_label, const void* src_ptr,
                    const uint64_t size);
 void endDeepCopy();
-
 void finalize();
 void initialize();
 SpaceHandle make_space_handle(const char* space_name);
