@@ -370,10 +370,10 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   int m_vector_length;
   int m_team_alloc;
   int m_team_iter;
-  bool m_tune_team_size;
-  bool m_tune_vector_length;
   size_t m_team_scratch_size[2];
   size_t m_thread_scratch_size[2];
+  bool m_tune_team_size;
+  bool m_tune_vector_length;
   constexpr const static size_t default_team_size = 256;
   int m_chunk_size;
 
