@@ -166,9 +166,12 @@ struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
   }
 
   //----------------------------------------
-  ViewOffset()                  = default;
-  ViewOffset(const ViewOffset&) = default;
+  ViewOffset()                      = default;
+  ViewOffset(const ViewOffset&)     = default;
+  ViewOffset(ViewOffset&&) noexcept = default;
   ViewOffset& operator=(const ViewOffset&) = default;
+  ViewOffset& operator=(ViewOffset&&) noexcept = default;
+  ~ViewOffset() noexcept                       = default;
 
   KOKKOS_INLINE_FUNCTION
   ViewOffset(std::integral_constant<unsigned, 0> const&,
