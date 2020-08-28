@@ -103,7 +103,8 @@ class TaskTeamMemberAdapter : public TeamMember {
   TaskTeamMemberAdapter& operator=(TaskTeamMemberAdapter const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  TaskTeamMemberAdapter& operator=(TaskTeamMemberAdapter&&) noexcept = default;
+  TaskTeamMemberAdapter& operator=(TaskTeamMemberAdapter&&) noexcept(
+      std::is_nothrow_move_assignable<TeamMember>::value) = default;
 
   KOKKOS_DEFAULTED_FUNCTION ~TaskTeamMemberAdapter() = default;
 
