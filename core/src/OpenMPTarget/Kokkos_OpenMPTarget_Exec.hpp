@@ -413,9 +413,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                      int team_size_request, int vector_length_request = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
         m_tune_team_size(false),
-        m_tune_vector_length(false) {
+        m_tune_vector_length(false),
+        m_chunk_size(0) {
     init(league_size_request, team_size_request, vector_length_request);
   }
 
@@ -425,9 +425,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                      int vector_length_request = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
         m_tune_team_size(true),
-        m_tune_vector_length(false) {
+        m_tune_vector_length(false),
+        m_chunk_size(0) {
     init(league_size_request, default_team_size / vector_length_request,
          vector_length_request);
   }
@@ -438,9 +438,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                      const Kokkos::AUTO_t& /* vector_length_request */)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
         m_tune_team_size(true),
-        m_tune_vector_length(true) {
+        m_tune_vector_length(true),
+        m_chunk_size(0) {
     init(league_size_request, default_team_size, 1);
   }
   TeamPolicyInternal(typename traits::execution_space&, int league_size_request,
@@ -448,9 +448,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                      const Kokkos::AUTO_t& /* vector_length_request */)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
         m_tune_team_size(false),
-        m_tune_vector_length(true) {
+        m_tune_vector_length(true),
+        m_chunk_size(0) {
     init(league_size_request, team_size_request, 1);
   }
 
@@ -458,9 +458,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                      int vector_length_request = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
         m_tune_team_size(false),
-        m_tune_vector_length(false) {
+        m_tune_vector_length(false),
+        m_chunk_size(0) {
     init(league_size_request, team_size_request, vector_length_request);
   }
 
@@ -470,9 +470,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                      int vector_length_request = 1)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
         m_tune_team_size(true),
-        m_tune_vector_length(false) {
+        m_tune_vector_length(false),
+        m_chunk_size(0) {
     init(league_size_request, default_team_size / vector_length_request,
          vector_length_request);
   }
@@ -483,18 +483,18 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                      const Kokkos::AUTO_t& /* vector_length_request */)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
         m_tune_team_size(true),
-        m_tune_vector_length(true) {
+        m_tune_vector_length(true),
+        m_chunk_size(0) {
     init(league_size_request, default_team_size, 1);
   }
   TeamPolicyInternal(int league_size_request, int team_size_request,
                      const Kokkos::AUTO_t& /* vector_length_request */)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0),
         m_tune_team_size(false),
-        m_tune_vector_length(true) {
+        m_tune_vector_length(true),
+        m_chunk_size(0) {
     init(league_size_request, team_size_request, 1);
   }
   inline static size_t vector_length_max() {
