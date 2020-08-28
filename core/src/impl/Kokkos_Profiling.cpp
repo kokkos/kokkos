@@ -560,8 +560,8 @@ void syncDualView(const std::string& label, const void* const ptr,
 void modifyDualView(const std::string& label, const void* const ptr,
                     bool on_device) {
   if (Experimental::current_callbacks.sync_dual_view != nullptr) {
-    (*Experimental::current_callbacks.sync_dual_view)(label.c_str(), ptr,
-                                                      on_device);
+    (*Experimental::current_callbacks.modify_dual_view)(label.c_str(), ptr,
+                                                        on_device);
   }
 }
 
