@@ -196,6 +196,12 @@ class ScratchMemorySpace {
         m_offset(0),
         m_default_level(0) {}
 
+  ScratchMemorySpace(const ScratchMemorySpace&) = default;
+  ScratchMemorySpace(ScratchMemorySpace&&)      = default;
+  ScratchMemorySpace& operator=(const ScratchMemorySpace&) = delete;
+  ScratchMemorySpace& operator=(ScratchMemorySpace&&) noexcept = default;
+  ~ScratchMemorySpace() noexcept                               = default;
+
   KOKKOS_INLINE_FUNCTION
   const ScratchMemorySpace& set_team_thread_mode(const int& level,
                                                  const int& multiplier,
