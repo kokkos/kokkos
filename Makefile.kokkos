@@ -449,7 +449,13 @@ H := \#
 # Do not append first line
 tmp := $(shell echo "/* ---------------------------------------------" > KokkosCore_config.tmp)
 tmp := $(call kokkos_append_header,"Makefile constructed configuration:")
-tmp := $(call kokkos_append_header,"$(shell date)")
+# SOURCE_DATE_EPOCH is a variable people/distros can set to make the build more reproducible by setting it to a positive integer (seconds since 1970-01-01)
+ifdef SOURCE_DATE_EPOCH
+    BUILD_DATE ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" 2>/dev/null || date -u -r "$(SOURCE_DATE_EPOCH)" 2>/dev/null || date -u)
+else
+    BUILD_DATE ?= $(shell date)
+endif
+tmp := $(call kokkos_append_header,"$(BUILD_DATE)")
 tmp := $(call kokkos_append_header,"----------------------------------------------*/")
 
 tmp := $(call kokkos_append_header,'$H''if !defined(KOKKOS_MACROS_HPP) || defined(KOKKOS_CORE_CONFIG_H)')
