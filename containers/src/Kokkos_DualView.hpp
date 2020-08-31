@@ -457,14 +457,14 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     }
     return dev;
   }
-  void impl_report_host_sync() {
+  void impl_report_host_sync() const noexcept {
     Kokkos::Tools::syncDualView(
         h_view.label(),
         reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(h_view.data()) -
                                 128),
         false);
   }
-  void impl_report_device_sync() {
+  void impl_report_device_sync() const noexcept {
     Kokkos::Tools::syncDualView(
         d_view.label(),
         reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(d_view.data()) -
