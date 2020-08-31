@@ -457,7 +457,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     }
     return dev;
   }
-  constexpr const int view_header_size = 128;
+  static constexpr const int view_header_size = 128;
   void impl_report_host_sync() const noexcept {
     Kokkos::Tools::syncDualView(
         h_view.label(),
@@ -643,14 +643,14 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     Kokkos::Tools::modifyDualView(
         d_view.label(),
         reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(d_view.data()) -
-                                128),
+                                view_header_size),
         true);
   }
   void impl_report_host_modification() {
     Kokkos::Tools::modifyDualView(
         h_view.label(),
         reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(h_view.data()) -
-                                128),
+                                view_header_size),
         false);
   }
   /// \brief Mark data as modified on the given device \c Device.
