@@ -457,18 +457,19 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     }
     return dev;
   }
+  constexpr const int view_header_size = 128;
   void impl_report_host_sync() const noexcept {
     Kokkos::Tools::syncDualView(
         h_view.label(),
         reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(h_view.data()) -
-                                128),
+                                view_header_size),
         false);
   }
   void impl_report_device_sync() const noexcept {
     Kokkos::Tools::syncDualView(
         d_view.label(),
         reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(d_view.data()) -
-                                128),
+                                view_header_size),
         true);
   }
   /// \brief Update data on device or host only if data in the other
