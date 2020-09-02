@@ -145,26 +145,23 @@ void test(const int length) {
     std::cout << "Time for 100% min early exits: " << time << std::endl;
   }
 
+  // limit iterations for contentious test, takes ~50x longer for same length
+  auto con_length = length / 5;
   // input is min values - some max atomics will replace
   {
-    // limit iterations for contentious test, takes ~50x longer for same length
-    auto length = length / 5;
-    inp(0)      = min;
+    inp(0) = min;
     Kokkos::fence();
 
     timer.reset();
     T current(0);
     Kokkos::parallel_reduce(
-        length,
+        con_length,
         KOKKOS_LAMBDA(const int i, T& inner) {
           inner = Kokkos::atomic_max_fetch(&(inp(0)), inner + 1);
-          if (i == length - 1) inner = Kokkos::atomic_max_fetch(&(inp(0)), max);
+          if (i == con_length - 1)
+            inner = Kokkos::atomic_max_fetch(&(inp(0)), max);
         },
         current);
-    // Kokkos::parallel_for(
-    //     length, KOKKOS_LAMBDA(const int i) {
-    //       (void)Kokkos::atomic_max_fetch(&(inp(0)), a(i));
-    //     });
     Kokkos::fence();
     double time = timer.seconds();
 
@@ -172,24 +169,23 @@ void test(const int length) {
       std::cerr << "Error in contentious max replacements: " << std::endl;
       std::cerr << "inp(0)=" << inp(0) << std::endl;
     }
-    std::cout << "Time for contentious max " << length
+    std::cout << "Time for contentious max " << con_length
               << " replacements: " << time << std::endl;
   }
 
   // input is max values - some min atomics will replace
   {
-    // limit iterations for contentious test, takes ~50x longer for same length
-    auto length = length / 5;
-    inp(0)      = max;
+    inp(0) = max;
     Kokkos::fence();
 
     timer.reset();
     T current(100000000);
     Kokkos::parallel_reduce(
-        length,
+        con_length,
         KOKKOS_LAMBDA(const int i, T& inner) {
           inner = Kokkos::atomic_min_fetch(&(inp(0)), inner - 1);
-          if (i == length - 1) inner = Kokkos::atomic_min_fetch(&(inp(0)), min);
+          if (i == con_length - 1)
+            inner = Kokkos::atomic_min_fetch(&(inp(0)), min);
         },
         current);
     Kokkos::fence();
@@ -199,7 +195,7 @@ void test(const int length) {
       std::cerr << "Error in contentious min replacements: " << std::endl;
       std::cerr << "inp(0)=" << inp(0) << std::endl;
     }
-    std::cout << "Time for contentious min " << length
+    std::cout << "Time for contentious min " << con_length
               << " replacements: " << time << std::endl;
   }
 }
