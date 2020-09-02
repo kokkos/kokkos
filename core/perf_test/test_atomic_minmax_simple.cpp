@@ -147,7 +147,9 @@ void test(const int length) {
 
   // input is min values - some max atomics will replace
   {
-    inp(0) = min;
+    // limit iterations for contentious test, takes ~50x longer for same length
+    auto length = length / 5;
+    inp(0)      = min;
     Kokkos::fence();
 
     timer.reset();
@@ -170,12 +172,15 @@ void test(const int length) {
       std::cerr << "Error in contentious max replacements: " << std::endl;
       std::cerr << "inp(0)=" << inp(0) << std::endl;
     }
-    std::cout << "Time for contentious max replacements: " << time << std::endl;
+    std::cout << "Time for contentious max " << length
+              << " replacements: " << time << std::endl;
   }
 
   // input is max values - some min atomics will replace
   {
-    inp(0) = max;
+    // limit iterations for contentious test, takes ~50x longer for same length
+    auto length = length / 5;
+    inp(0)      = max;
     Kokkos::fence();
 
     timer.reset();
@@ -194,7 +199,8 @@ void test(const int length) {
       std::cerr << "Error in contentious min replacements: " << std::endl;
       std::cerr << "inp(0)=" << inp(0) << std::endl;
     }
-    std::cout << "Time for contentious min replacements: " << time << std::endl;
+    std::cout << "Time for contentious min " << length
+              << " replacements: " << time << std::endl;
   }
 }
 
