@@ -174,8 +174,8 @@ Options can be enabled by specifying `-DKokkos_ENABLE_X`.
 
 ## Other Options
 * Kokkos_CXX_STANDARD
-    * The C++ standard for Kokkos to use: c++11, c++14, c++17, or c++20. This should be given in CMake style as 11, 14, 17, or 20.
-    * STRING Default: 11
+    * The C++ standard for Kokkos to use: c++14, c++17, or c++20. This should be given in CMake style as 14, 17, or 20.
+    * STRING Default: 14
 
 ## Third-party Libraries (TPLs)
 The following options control enabling TPLs:
