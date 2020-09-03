@@ -149,7 +149,10 @@ void test(const int length) {
   auto con_length = length / 5;
   // input is min values - some max atomics will replace
   {
-    inp(0) = min;
+    Kokkos::parallel_for(
+        1, KOKKOS_LAMBDA(const int i) {
+          inp(0) = min;
+        });
     Kokkos::fence();
 
     timer.reset();
@@ -175,7 +178,10 @@ void test(const int length) {
 
   // input is max values - some min atomics will replace
   {
-    inp(0) = max;
+    Kokkos::parallel_for(
+        1, KOKKOS_LAMBDA(const int i) {
+          inp(0) = min;
+        });
     Kokkos::fence();
 
     timer.reset();
