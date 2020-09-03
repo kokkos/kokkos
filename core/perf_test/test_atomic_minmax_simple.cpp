@@ -153,22 +153,25 @@ void test(const int length) {
         1, KOKKOS_LAMBDA(const int i) { inp(i) = min; });
     Kokkos::fence();
 
-    timer.reset();
     T current(0);
+    timer.reset();
     Kokkos::parallel_reduce(
         con_length,
         KOKKOS_LAMBDA(const int i, T& inner) {
           inner = Kokkos::atomic_max_fetch(&(inp(0)), inner + 1);
-          if (i == con_length - 1)
-            inner = Kokkos::atomic_max_fetch(&(inp(0)), max);
+          if (i == con_length - 1) {
+            Kokkos::atomic_max_fetch(&(inp(0)), max);
+            inner = max;
+          }
         },
-        current);
+        Kokkos::Max<T>(current));
     Kokkos::fence();
     double time = timer.seconds();
 
-    if (inp(0) < max) {
+    if (current < max) {
       std::cerr << "Error in contentious max replacements: " << std::endl;
-      std::cerr << "inp(0)=" << inp(0) << std::endl;
+      std::cerr << "final=" << current << " inp(0)=" << inp(0) << " max=" << max
+                << std::endl;
     }
     std::cout << "Time for contentious max " << con_length
               << " replacements: " << time << std::endl;
@@ -177,7 +180,7 @@ void test(const int length) {
   // input is max values - some min atomics will replace
   {
     Kokkos::parallel_for(
-        1, KOKKOS_LAMBDA(const int i) { inp(i) = min; });
+        1, KOKKOS_LAMBDA(const int i) { inp(i) = max; });
     Kokkos::fence();
 
     timer.reset();
@@ -186,16 +189,19 @@ void test(const int length) {
         con_length,
         KOKKOS_LAMBDA(const int i, T& inner) {
           inner = Kokkos::atomic_min_fetch(&(inp(0)), inner - 1);
-          if (i == con_length - 1)
-            inner = Kokkos::atomic_min_fetch(&(inp(0)), min);
+          if (i == con_length - 1) {
+            Kokkos::atomic_min_fetch(&(inp(0)), min);
+            inner = min;
+          }
         },
-        current);
+        Kokkos::Min<T>(current));
     Kokkos::fence();
     double time = timer.seconds();
 
-    if (inp(0) > min) {
+    if (current > min) {
       std::cerr << "Error in contentious min replacements: " << std::endl;
-      std::cerr << "inp(0)=" << inp(0) << std::endl;
+      std::cerr << "final=" << current << " inp(0)=" << inp(0) << " min=" << min
+                << std::endl;
     }
     std::cout << "Time for contentious min " << con_length
               << " replacements: " << time << std::endl;
