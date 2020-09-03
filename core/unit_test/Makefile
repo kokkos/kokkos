@@ -11,7 +11,6 @@ vpath %.cpp ${KOKKOS_PATH}/core/unit_test/openmptarget
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/hip
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/hpx
 vpath %.cpp ${KOKKOS_PATH}/core/unit_test/cuda
-vpath %.cpp ${KOKKOS_PATH}/core/unit_test/rocm
 
 
 TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
@@ -108,58 +107,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     TARGETS += KokkosCore_UnitTest_CudaInterOpInit
     TARGETS += KokkosCore_UnitTest_CudaInterOpStreams
     TEST_TARGETS += test-cuda
-endif
-
-ifeq ($(KOKKOS_INTERNAL_USE_ROCM), 1)
-    OBJ_ROCM = UnitTestMainInit.o gtest-all.o
-    OBJ_ROCM += TestROCm_Init.o
-    OBJ_ROCM += TestROCm_Complex.o
-    OBJ_ROCM += TestROCm_RangePolicy.o
-    OBJ_ROCM += TestROCm_AtomicOperations_int.o TestROCm_AtomicOperations_unsignedint.o TestROCm_AtomicOperations_longint.o
-    OBJ_ROCM += TestROCm_AtomicOperations_unsignedlongint.o TestROCm_AtomicOperations_longlongint.o TestROCm_AtomicOperations_double.o TestROCm_AtomicOperations_float.o
-    OBJ_ROCM += TestROCm_Atomics.o
-    OBJ_ROCM += TestROCm_AtomicViews.o
-    OBJ_ROCM += TestROCm_Other.o
-    OBJ_ROCM += TestROCm_MDRange_a.o TestROCm_MDRange_b.o TestROCm_MDRange_c.o TestROCm_MDRange_d.o TestROCm_MDRange_e.o
-    OBJ_ROCM += TestROCm_MDRangeReduce_a.o TestROCm_MDRangeReduce_b.o TestROCm_MDRangeReduce_c.o TestROCm_MDRangeReduce_d.o TestROCm_MDRangeReduce_e.o
-    OBJ_ROCM += TestROCm_Reductions.o
-    OBJ_ROCM += TestROCm_Reducers_a.o TestROCm_Reducers_b.o TestROCm_Reducers_c.o TestROCm_Reducers_d.o
-    OBJ_ROCM += TestROCm_Scan.o
-    OBJ_ROCM += TestROCm_SharedAlloc.o
-    OBJ_ROCM += TestROCm_SubView_a.o
-    OBJ_ROCM += TestROCm_SubView_b.o
-    OBJ_ROCM += TestROCm_SubView_c01.o
-    OBJ_ROCM += TestROCm_SubView_c02.o
-    OBJ_ROCM += TestROCm_SubView_c03.o
-    OBJ_ROCM += TestROCm_SubView_c04.o
-    OBJ_ROCM += TestROCm_SubView_c05.o
-    OBJ_ROCM += TestROCm_SubView_c06.o
-    OBJ_ROCM += TestROCm_SubView_c07.o
-    OBJ_ROCM += TestROCm_SubView_c08.o
-    OBJ_ROCM += TestROCm_SubView_c09.o
-    OBJ_ROCM += TestROCm_SubView_c10.o
-    OBJ_ROCM += TestROCm_SubView_c11.o
-    OBJ_ROCM += TestROCm_SubView_c12.o
-    OBJ_ROCM += TestROCm_SubView_c13.o
-    OBJ_ROCM += TestROCm_Team.o
-    OBJ_ROCM += TestROCm_TeamReductionScan.o
-    OBJ_ROCM += TestROCm_TeamScratch.o TestROCm_TeamTeamSize.o
-    OBJ_ROCM += TestROCm_ViewAPI_a.o TestROCm_ViewAPI_b.o TestROCm_ViewAPI_c.o TestROCm_ViewAPI_d.o TestROCm_ViewAPI_e.o
-    OBJ_ROCM += TestROCm_DeepCopyAlignment.o
-    OBJ_ROCM += TestROCm_ViewMapping_a.o
-    OBJ_ROCM += TestROCm_ViewMapping_b.o
-    OBJ_ROCM += TestROCm_ViewMapping_subview.o
-    OBJ_ROCM += TestROCmHostPinned_ViewCopy.o TestROCmHostPinned_ViewAPI_a.o TestROCmHostPinned_ViewAPI_b.o TestROCmHostPinned_ViewAPI_c.o TestROCmHostPinned_ViewAPI_d.o TestROCmHostPinned_ViewAPI_e.o
-    OBJ_ROCM += TestROCmHostPinned_View_64bit.o
-    OBJ_ROCM += TestROCmHostPinned_ViewMapping_a.o
-    OBJ_ROCM += TestROCmHostPinned_ViewMapping_b.o
-    OBJ_ROCM += TestROCmHostPinned_ViewMapping_subview.o
-    OBJ_ROCM += TestROCm_ViewOfClass.o
-    OBJ_ROCM += TestROCm_Spaces.o
-    OBJ_ROCM += TestROCm_Crs.o
-
-    TARGETS += KokkosCore_UnitTest_ROCm
-    TEST_TARGETS += test-rocm
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
@@ -420,9 +367,6 @@ KokkosCore_UnitTest_CudaInterOpInit: UnitTestMain.o gtest-all.o TestCuda_InterOp
 KokkosCore_UnitTest_CudaInterOpStreams: UnitTestMain.o gtest-all.o TestCuda_InterOp_Streams.o $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) UnitTestMain.o gtest-all.o TestCuda_InterOp_Streams.o $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_CudaInterOpStreams
 
-KokkosCore_UnitTest_ROCm: $(OBJ_ROCM) $(KOKKOS_LINK_DEPENDS)
-	$(LINK) $(EXTRA_PATH) $(OBJ_ROCM) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_ROCm
-
 KokkosCore_UnitTest_Threads: $(OBJ_THREADS) $(KOKKOS_LINK_DEPENDS)
 	$(LINK) $(EXTRA_PATH) $(OBJ_THREADS) $(KOKKOS_LIBS) $(LIB) $(KOKKOS_LDFLAGS) $(LDFLAGS) -o KokkosCore_UnitTest_Threads
 
@@ -476,9 +420,6 @@ test-cuda: KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_Cuda
 	./KokkosCore_UnitTest_CudaInterOpInit
 	./KokkosCore_UnitTest_CudaInterOpStreams
-
-test-rocm: KokkosCore_UnitTest_ROCm
-	./KokkosCore_UnitTest_ROCm
 
 test-threads: KokkosCore_UnitTest_Threads
 	./KokkosCore_UnitTest_Threads

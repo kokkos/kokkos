@@ -875,10 +875,7 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
 #if defined(KOKKOS_ENABLE_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value) {
 #endif
-#ifdef KOKKOS_ENABLE_ROCM  // ROCm doesn't support TeamSize 32x32
-    if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value)
-#endif
-      TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 32);
+    TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 32);
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 16);
 #if defined(KOKKOS_ENABLE_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
   }
@@ -886,10 +883,7 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 16);
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 33);
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 19);
-#ifdef KOKKOS_ENABLE_ROCM  // ROCm doesn't support team sizes not powers of two
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value)
-#endif
-    TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 7, 16);
+  TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 7, 16);
 }
 #endif
 

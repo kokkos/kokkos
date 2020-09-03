@@ -583,15 +583,6 @@ struct TestDuplicatedScatterView<
 };
 #endif
 
-#ifdef KOKKOS_ENABLE_ROCM
-// disable duplicated instantiation with ROCm until
-// UniqueToken can support it
-template <typename ScatterType>
-struct TestDuplicatedScatterView<Kokkos::Experimental::ROCm, ScatterType> {
-  TestDuplicatedScatterView(int) {}
-};
-#endif
-
 template <typename DeviceType, typename ScatterType,
           typename NumberType = double>
 void test_scatter_view(int n) {
@@ -711,4 +702,4 @@ TEST(TEST_CATEGORY, scatterview_devicetype) {
 
 }  // namespace Test
 
-#endif  // KOKKOS_TEST_UNORDERED_MAP_HPP
+#endif  // KOKKOS_TEST_SCATTER_VIEW_HPP

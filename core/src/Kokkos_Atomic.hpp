@@ -85,10 +85,6 @@
 
 #define KOKKOS_ENABLE_CUDA_ATOMICS
 
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_ROCM_GPU)
-
-#define KOKKOS_ENABLE_ROCM_ATOMICS
-
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU) || \
     defined(KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE)
 
@@ -176,16 +172,6 @@ inline const char* atomic_query_version() {
 // Implements Strongly-typed analogs of C++ standard memory orders
 #include "impl/Kokkos_Atomic_Memory_Order.hpp"
 
-#if defined(KOKKOS_ENABLE_ROCM)
-namespace Kokkos {
-namespace Impl {
-extern KOKKOS_INLINE_FUNCTION bool lock_address_rocm_space(void* ptr);
-
-extern KOKKOS_INLINE_FUNCTION void unlock_address_rocm_space(void* ptr);
-}  // namespace Impl
-}  // namespace Kokkos
-#include <ROCm/Kokkos_ROCm_Atomic.hpp>
-#endif
 #if defined(KOKKOS_ENABLE_HIP)
 #include <HIP/Kokkos_HIP_Atomic.hpp>
 #endif
