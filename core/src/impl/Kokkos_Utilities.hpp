@@ -414,7 +414,12 @@ struct inclusive_scan_integer_sequence {
 };
 
 template <typename T>
-using identity_t = T;
+struct identity {
+  using type = T;
+};
+
+template <typename T>
+using identity_t = typename identity<T>::type;
 
 //==============================================================================
 // <editor-fold desc="remove_cvref_t"> {{{1
