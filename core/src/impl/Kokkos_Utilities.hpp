@@ -418,6 +418,19 @@ template <typename T>
 using identity_t = T;
 
 //==============================================================================
+// <editor-fold desc="remove_cvref_t"> {{{1
+
+template <class T>
+struct remove_cvref : identity<typename std::remove_cv<
+                          typename std::remove_reference<T>::type>::type> {};
+
+template <class T>
+using remove_cvref_t = typename remove_cvref<T>::type;
+
+// </editor-fold> end remove_cvref_t }}}1
+//==============================================================================
+
+//==============================================================================
 // <editor-fold desc="is_specialization_of"> {{{1
 
 template <class Type, template <class...> class Template, class Enable = void>
