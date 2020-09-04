@@ -220,7 +220,12 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
     // https://github.com/ROCm-Developer-Tools/HIP/blob/a0b5dfd625d99af7e288629747b40dd057183173/vdi/hip_platform.cpp#L742
     m_maxBlocksPerSM = 32;
     // FIXME_HIP - Nick to implement this upstream
-    m_regsPerSM        = 262144 / m_maxBlocksPerSM;
+    //             Register count comes from Sec. 2.2. "Data Sharing" of the
+    //             Vega 7nm ISA document (see the diagram)
+    //             https://developer.amd.com/wp-content/resources/Vega_7nm_Shader_ISA.pdf
+    //             VGPRS = 4 (SIMD/CU) * 256 VGPR/SIMD * 64 registers / VGPR =
+    //             65536 VGPR/CU
+    m_regsPerSM        = 65536;
     m_shmemPerSM       = hipProp.maxSharedMemoryPerMultiProcessor;
     m_maxShmemPerBlock = hipProp.sharedMemPerBlock;
     m_maxThreadsPerSM  = m_maxBlocksPerSM * HIPTraits::WarpSize;
