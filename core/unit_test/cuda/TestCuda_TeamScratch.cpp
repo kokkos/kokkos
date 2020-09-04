@@ -49,33 +49,46 @@ namespace Test {
 
 namespace Impl {
 
+struct CudaStreamScratchTestFunctor {
+  using team_t    = Kokkos::TeamPolicy<Kokkos::Cuda>::member_type;
+  using scratch_t = Kokkos::View<int64_t*, Kokkos::Cuda::scratch_memory_space>;
+
+  Kokkos::View<int64_t, Kokkos::CudaSpace, Kokkos::MemoryTraits<Kokkos::Atomic>>
+      counter;
+  int N, M;
+  CudaStreamScratchTestFunctor(
+      Kokkos::View<int64_t, Kokkos::CudaSpace> counter_, int N_, int M_)
+      : counter(counter_), N(N_), M(M_) {}
+
+  KOKKOS_FUNCTION
+  void operator()(const team_t& team) const {
+    scratch_t scr(team.team_scratch(1), M);
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, M),
+                         [&](int i) { scr[i] = 0; });
+    team.team_barrier();
+    for (int i = 0; i < N; i++) {
+      Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, M),
+                           [&](int j) { scr[j] += 1; });
+    }
+    team.team_barrier();
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, M), [&](int i) {
+      if (scr[i] != N) counter()++;
+    });
+  }
+};
+
 void cuda_stream_scratch_test_one(
     int N, int T, int M_base, Kokkos::View<int64_t, Kokkos::CudaSpace> counter,
     Kokkos::Cuda cuda, int tid) {
   int M = M_base + tid * 5;
   Kokkos::TeamPolicy<Kokkos::Cuda> p(cuda, T, 64);
-  using team_t    = Kokkos::TeamPolicy<Kokkos::Cuda>::member_type;
   using scratch_t = Kokkos::View<int64_t*, Kokkos::Cuda::scratch_memory_space>;
 
   int bytes = scratch_t::shmem_size(M);
 
   for (int r = 0; r < 15; r++) {
-    Kokkos::parallel_for(
-        "Run", p.set_scratch_size(1, Kokkos::PerTeam(bytes)),
-        KOKKOS_LAMBDA(const team_t& team) {
-          scratch_t scr(team.team_scratch(1), M);
-          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, M),
-                               [&](int i) { scr[i] = 0; });
-          team.team_barrier();
-          for (int i = 0; i < N; i++) {
-            Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, M),
-                                 [&](int j) { scr[j] += 1; });
-          }
-          team.team_barrier();
-          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, M), [&](int i) {
-            if (scr[i] != N) Kokkos::atomic_increment(&counter());
-          });
-        });
+    Kokkos::parallel_for("Run", p.set_scratch_size(1, Kokkos::PerTeam(bytes)),
+                         CudaStreamScratchTestFunctor(counter, N, M));
   }
 }
 
@@ -133,21 +146,21 @@ TEST(cuda, team_scratch_1_streams) {
 }
 
 TEST(TEST_CATEGORY, team_shared_request) {
-  TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
-  TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
+  TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>();
+  TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>>();
 }
 
 TEST(TEST_CATEGORY, team_scratch_request) {
-  TestScratchTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
-  TestScratchTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
+  TestScratchTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>();
+  TestScratchTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>>();
 }
 
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 TEST(TEST_CATEGORY, team_lambda_shared_request) {
   TestLambdaSharedTeam<Kokkos::HostSpace, TEST_EXECSPACE,
-                       Kokkos::Schedule<Kokkos::Static> >();
+                       Kokkos::Schedule<Kokkos::Static>>();
   TestLambdaSharedTeam<Kokkos::HostSpace, TEST_EXECSPACE,
-                       Kokkos::Schedule<Kokkos::Dynamic> >();
+                       Kokkos::Schedule<Kokkos::Dynamic>>();
 }
 
 TEST(TEST_CATEGORY, scratch_align) { TestScratchAlignment<TEST_EXECSPACE>(); }
@@ -156,10 +169,9 @@ TEST(TEST_CATEGORY, scratch_align) { TestScratchAlignment<TEST_EXECSPACE>(); }
 TEST(TEST_CATEGORY, shmem_size) { TestShmemSize<TEST_EXECSPACE>(); }
 
 TEST(TEST_CATEGORY, multi_level_scratch) {
+  TestMultiLevelScratchTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>();
   TestMultiLevelScratchTeam<TEST_EXECSPACE,
-                            Kokkos::Schedule<Kokkos::Static> >();
-  TestMultiLevelScratchTeam<TEST_EXECSPACE,
-                            Kokkos::Schedule<Kokkos::Dynamic> >();
+                            Kokkos::Schedule<Kokkos::Dynamic>>();
 }
 
 }  // namespace Test

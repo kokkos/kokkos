@@ -664,17 +664,11 @@ void *CudaInternal::resize_team_scratch_space(std::int64_t bytes,
     m_team_scratch_ptr          = Kokkos::kokkos_malloc<Kokkos::CudaSpace>(
         "CudaSpace::ScratchMemory", m_team_scratch_current_size);
   }
-  if (bytes > m_team_scratch_current_size) {
+  if ((bytes > m_team_scratch_current_size) ||
+      ((bytes < m_team_scratch_current_size) && (force_shrink))) {
     m_team_scratch_current_size = bytes;
-    Kokkos::kokkos_free<Kokkos::CudaSpace>(m_team_scratch_ptr);
-    m_team_scratch_ptr = Kokkos::kokkos_malloc<Kokkos::CudaSpace>(
-        "CudaSpace::ScratchMemory", m_team_scratch_current_size);
-  }
-  if ((bytes < m_team_scratch_current_size) && (force_shrink)) {
-    m_team_scratch_current_size = bytes;
-    Kokkos::kokkos_free<Kokkos::CudaSpace>(m_team_scratch_ptr);
-    m_team_scratch_ptr = Kokkos::kokkos_malloc<Kokkos::CudaSpace>(
-        "CudaSpace::ScratchMemory", m_team_scratch_current_size);
+    m_team_scratch_ptr          = Kokkos::kokkos_realloc<Kokkos::CudaSpace>(
+        m_team_scratch_ptr, m_team_scratch_current_size);
   }
   return m_team_scratch_ptr;
 }
@@ -684,7 +678,10 @@ void *CudaInternal::resize_team_scratch_space(std::int64_t bytes,
 void CudaInternal::finalize() {
   was_finalized = true;
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
-    Impl::finalize_host_cuda_lock_arrays();
+    // Only finalize this if we're the singleton
+    if (this == &singleton()) {
+      Impl::finalize_host_cuda_lock_arrays();
+    }
 
     using RecordCuda = Kokkos::Impl::SharedAllocationRecord<CudaSpace>;
     using RecordHost =
