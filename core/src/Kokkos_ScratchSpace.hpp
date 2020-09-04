@@ -183,6 +183,9 @@ class ScratchMemorySpace {
     }
   }
 
+  KOKKOS_DEFAULTED_FUNCTION
+  ScratchMemorySpace() = default;
+
   template <typename IntType>
   KOKKOS_INLINE_FUNCTION ScratchMemorySpace(void* ptr_L0,
                                             const IntType& size_L0,
