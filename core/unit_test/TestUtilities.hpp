@@ -52,6 +52,24 @@
 
 namespace Test {
 
+void test_is_specialization_of() {
+  using Kokkos::Impl::is_specialization_of;
+  static_assert(is_specialization_of<Kokkos::pair<float, int>, Kokkos::pair>{},
+                "");
+  static_assert(!is_specialization_of<Kokkos::View<int*>, Kokkos::pair>{}, "");
+  static_assert(is_specialization_of<Kokkos::View<int*>, Kokkos::View>{}, "");
+  // NOTE Not removing cv-qualifiers
+  static_assert(!is_specialization_of<Kokkos::View<int*> const, Kokkos::View>{},
+                "");
+  // NOTE Would not compile because Kokkos::Array takes a non-type template
+  // parameter
+  // static_assert(is_specialization_of<Kokkos::Array<int, 4>, Kokkos::Array>{},
+  // "");
+  // But this is fine of course
+  static_assert(!is_specialization_of<Kokkos::Array<float, 2>, Kokkos::pair>{},
+                "");
+}
+
 inline void test_utilities() {
   using namespace Kokkos::Impl;
 

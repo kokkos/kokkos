@@ -417,6 +417,18 @@ struct inclusive_scan_integer_sequence {
 template <typename T>
 using identity_t = T;
 
+//==============================================================================
+// <editor-fold desc="is_specialization_of"> {{{1
+
+template <class Type, template <class...> class Template, class Enable = void>
+struct is_specialization_of : std::false_type {};
+
+template <template <class...> class Template, class... Args>
+struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
+
+// </editor-fold> end is_specialization_of }}}1
+//==============================================================================
+
 }  // namespace Impl
 }  // namespace Kokkos
 
