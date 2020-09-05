@@ -69,17 +69,14 @@ class ScratchMemorySpace {
   enum { ALIGN = 8 };
 
  private:
-  mutable char* m_iter_L0;
-  char* m_end_L0;
-  mutable char* m_iter_L1;
-  char* m_end_L1;
+  mutable char* m_iter_L0 = nullptr;
+  char* m_end_L0          = nullptr;
+  mutable char* m_iter_L1 = nullptr;
+  char* m_end_L1          = nullptr;
 
-  mutable int m_multiplier;
-  mutable int m_offset;
-  mutable int m_default_level;
-
-  ScratchMemorySpace();
-  ScratchMemorySpace& operator=(const ScratchMemorySpace&);
+  mutable int m_multiplier    = 0;
+  mutable int m_offset        = 0;
+  mutable int m_default_level = 0;
 
   enum { MASK = ALIGN - 1 };  // Alignment used by View::shmem_size
 
@@ -185,6 +182,9 @@ class ScratchMemorySpace {
       return tmp;
     }
   }
+
+  KOKKOS_DEFAULTED_FUNCTION
+  ScratchMemorySpace() = default;
 
   template <typename IntType>
   KOKKOS_INLINE_FUNCTION ScratchMemorySpace(void* ptr_L0,
