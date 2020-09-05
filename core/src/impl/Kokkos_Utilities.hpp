@@ -420,12 +420,17 @@ using identity_t = T;
 //==============================================================================
 // <editor-fold desc="remove_cvref_t"> {{{1
 
+#if defined(__cpp_lib_remove_cvref)
+// since C++20
+using std::remove_cvref;
+using std::remove_cvref_t;
+#else
 template <class T>
-struct remove_cvref : identity<typename std::remove_cv<
-                          typename std::remove_reference<T>::type>::type> {};
+struct remove_cvref : std::remove_cv_t<std::remove_reference_t<T>>::type {};
 
 template <class T>
 using remove_cvref_t = typename remove_cvref<T>::type;
+#endif
 
 // </editor-fold> end remove_cvref_t }}}1
 //==============================================================================
