@@ -73,9 +73,14 @@
 #include <impl/Kokkos_Traits.hpp>
 
 //----------------------------------------------------------------------------
-#if defined(_WIN32)
-#define KOKKOS_ENABLE_WINDOWS_ATOMICS
 
+// Need to fix this for pure clang on windows
+#if defined(_WIN32)
+#if defined(KOKKOS_COMPILER_CLANG)
+#define KOKKOS_ENABLE_GNU_ATOMICS
+#else
+#define KOKKOS_ENABLE_WINDOWS_ATOMICS
+#endif
 #if defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ENABLE_CUDA_ATOMICS
 #if defined(KOKKOS_COMPILER_CLANG)
@@ -83,7 +88,7 @@
 #endif
 #endif
 
-#else
+#else // _WIN32
 #if defined(KOKKOS_ENABLE_CUDA)
 
 // Compiling NVIDIA device code, must use Cuda atomics:
