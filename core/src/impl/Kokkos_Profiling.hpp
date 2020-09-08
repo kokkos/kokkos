@@ -176,7 +176,7 @@ void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
  */
 
 template <class Functor, class TagType, class... Properties>
-void tune_policy(const size_t tuning_context, const std::string& label,
+void tune_policy(const size_t /**tuning_context*/, const std::string& label,
                  Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
@@ -189,12 +189,12 @@ void tune_policy(const size_t tuning_context, const std::string& label,
                               team_size_max, tag));
     }
     auto& tuner = team_tuners[label];
-    tuner.tune(policy, tuning_context);
+    tuner.tune(policy);
   }
 }
 
 template <class ReducerType, class Functor, class TagType, class... Properties>
-void tune_policy(const size_t tuning_context, const std::string& label,
+void tune_policy(const size_t /**tuning_context*/, const std::string& label,
                  Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
@@ -219,7 +219,7 @@ void tune_policy(const size_t tuning_context, const std::string& label,
                               team_size_max, tag));
     }
     auto& tuner = team_tuners[label];
-    tuner.tune(policy, tuning_context);
+    tuner.tune(policy);
   }
 }
 
@@ -248,13 +248,13 @@ void report_policy_results(const size_t, const std::string&, ExecPolicy&,
                            const Functor&, const TagType&) {}
 
 template <class Functor, class TagType, class... Properties>
-void report_policy_results(const size_t tuning_context,
+void report_policy_results(const size_t /**tuning_context*/,
                            const std::string& label,
                            Kokkos::TeamPolicy<Properties...> policy,
                            const Functor&, const TagType&) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
     auto& tuner = team_tuners[label];
-    tuner.end(tuning_context);
+    tuner.end();
   }
 }
 }  // namespace Impl

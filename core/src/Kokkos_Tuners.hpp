@@ -312,7 +312,7 @@ class MultidimensionalSparseTuningProblem {
                                       std::vector<std::string> names)
       : m_space(HierarchyConstructor::build(space)) {
     assert(names.size() == space_dimensionality);
-    for (int x = 0; x < names.size(); ++x) {
+    for (unsigned long x = 0; x < names.size(); ++x) {
       VariableInfo info;
       info.type = Kokkos::Tools::Experimental::ValueType::kokkos_value_double;
       info.category = Kokkos::Tools::Experimental::StatisticalCategory::
@@ -362,8 +362,8 @@ class TeamSizeTuner {
   template <typename Functor, typename TagType, typename... Properties>
   TeamSizeTuner(const std::string& name,
                 Kokkos::TeamPolicy<Properties...>& policy,
-                const Functor& functor, int team_size_recommended,
-                int team_size_max, const TagType& tag) {
+                const Functor& functor, int /**team_size_recommended*/,
+                int /**team_size_max*/, const TagType& tag) {
     using PolicyType           = Kokkos::TeamPolicy<Properties...>;
     auto initial_vector_length = policy.vector_length();
     if (initial_vector_length < 1) {
@@ -449,8 +449,7 @@ class TeamSizeTuner {
   }
 
   template <typename... Properties>
-  void tune(Kokkos::TeamPolicy<Properties...>& policy,
-            const size_t context_id) {
+  void tune(Kokkos::TeamPolicy<Properties...>& policy) {
     auto configuration = tuner.begin();
     auto team_size     = std::get<1>(configuration);
     auto vector_length = std::get<0>(configuration);
@@ -459,7 +458,7 @@ class TeamSizeTuner {
       policy.impl_set_vector_length(vector_length);
     }
   }
-  void end(size_t context_id) { tuner.end(); }
+  void end() { tuner.end(); }
 
  private:
 };
