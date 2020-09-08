@@ -60,6 +60,35 @@ namespace Kokkos {
 namespace Impl {
 
 struct GraphAccess {
+  template <class ExecutionSpace>
+  static Kokkos::Experimental::Graph<ExecutionSpace> construct_graph(
+      ExecutionSpace ex) {
+    //----------------------------------------//
+    return Kokkos::Experimental::Graph<ExecutionSpace>{
+        std::make_shared<GraphImpl<ExecutionSpace>>(std::move(ex))};
+    //----------------------------------------//
+  }
+  template <class ExecutionSpace>
+  static auto create_root_ref(
+      Kokkos::Experimental::Graph<ExecutionSpace>& arg_graph) {
+    auto const& graph_impl_ptr = arg_graph.m_impl_ptr;
+
+    auto root_ptr = graph_impl_ptr->create_root_node_ptr();
+
+    return Kokkos::Experimental::GraphNodeRef<ExecutionSpace>{
+        graph_impl_ptr, std::move(root_ptr)};
+  }
+
+  template <class RootNodeRef>
+  // requires remove_cvref_t<RootNodeRef> is a specialization of GraphNodeRef
+  static auto create_graph_builder(RootNodeRef&& arg_root) {
+    // std::remove_cvref_t can't get here quickly enough...
+    using execution_space =
+        typename std::remove_cv<typename std::remove_reference<
+            RootNodeRef>::type>::type::execution_space;
+    return Kokkos::Experimental::GraphBuilder<execution_space>{(RootNodeRef &&)
+                                                                   arg_root};
+  }
   template <class GraphImplWeakPtr, class ExecutionSpace, class Kernel,
             class Predecessor>
   static auto make_graph_node_ref(
