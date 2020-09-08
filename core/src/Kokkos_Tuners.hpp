@@ -56,6 +56,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <cassert> 
+// TODO DZP: remove, for debugging
+#include <iostream>
+
 namespace Kokkos {
 namespace Tools {
 
@@ -284,8 +288,7 @@ private:
   size_t context; 
 public:
 
-  //using PointTuple = typename Impl::GetMultidimensionalPoint<StoredProblemSpace /** , doubles */ >::return_type;
-
+  MultidimensionalSparseTuningProblem() = default;
   MultidimensionalSparseTuningProblem(ProblemSpaceInput space, std::vector<std::string> names) : m_space(HierarchyConstructor::build(space)) {
     assert(names.size() == space_dimensionality);
     for(int x = 0; x < names.size() ; ++x){
@@ -315,24 +318,24 @@ public:
 
 }; 
 
-template<template<class...> class Container, size_t MaxDimensionSize = 100, class... TemplateArguments>
+template<size_t MaxDimensionSize = 100, template<class...> class Container, class... TemplateArguments>
 auto make_multidimensional_sparse_tuning_problem(const Container<TemplateArguments...>& in,std::vector<std::string> names){
   return MultidimensionalSparseTuningProblem<Container, MaxDimensionSize, TemplateArguments...>(in, names);
 }
 class TeamSizeTuner {
  private:
    using SpaceDescription = std::map<int64_t, std::vector<int64_t>>;
-   using TunerType = decltype(make_multidimensional_sparse_tuning_problem(std::declval<SpaceDescription>(), std::declval<std::vector<std::string>>()));
+   using TunerType = decltype(make_multidimensional_sparse_tuning_problem<20>(std::declval<SpaceDescription>(), std::declval<std::vector<std::string>>()));
    TunerType tuner;
  public:
-  TeamSizeTuner& operator=(const TeamSizeTuner& other) = default;
   TeamSizeTuner()                                      = default;
+  TeamSizeTuner& operator=(const TeamSizeTuner& other) = default;
   TeamSizeTuner(const TeamSizeTuner& other)            = default;
   template <typename Functor, typename TagType, typename... Properties>
   TeamSizeTuner(const std::string& name,
                 Kokkos::TeamPolicy<Properties...>& policy,
-                const Functor& /**functor*/, int team_size_recommended,
-                int team_size_max, const TagType& /**tag*/) {
+                const Functor& functor, int team_size_recommended,
+                int team_size_max, const TagType& tag) {
     using PolicyType           = Kokkos::TeamPolicy<Properties...>;
     auto initial_vector_length = policy.vector_length();
     if (initial_vector_length < 1) {
@@ -388,7 +391,7 @@ class TeamSizeTuner {
          * These are the left and right hand sides of the "or" in this
          * conditional, respectively.
          */
-        auto max_team_size = team_size_max;
+        auto max_team_size = policy.team_size_max(functor, tag);
         if ((policy.auto_team_size()) ||
             (policy.team_size() <= max_team_size)) {
           allowed_vector_lengths.push_back(vector_length);
@@ -401,7 +404,7 @@ class TeamSizeTuner {
     for (const auto vector_length : allowed_vector_lengths) {
       std::vector<int64_t> allowed_team_sizes;
       policy.impl_set_vector_length(vector_length);
-      auto max_team_size = team_size_max;
+      auto max_team_size = policy.team_size_max(functor, tag);
       if (policy.auto_team_size()) {  // case 1 or 3, try all legal team sizes
         for (int team_size = max_team_size; team_size >= 1; team_size /= 2) {
           allowed_team_sizes.push_back(team_size); 
@@ -411,7 +414,7 @@ class TeamSizeTuner {
       }
       space_description[vector_length] = allowed_team_sizes;
     }
-    tuner = make_multidimensional_sparse_tuning_problem(space_description, {std::string(name + "_vector_length"), std::string(name + "_team_size")});
+    tuner = make_multidimensional_sparse_tuning_problem<20>(space_description, {std::string(name + "_vector_length"), std::string(name + "_team_size")});
     policy.impl_set_vector_length(initial_vector_length);
   }
 
