@@ -58,6 +58,9 @@ struct GraphImpl;
 
 struct GraphAccess;
 
+// TODO move this to a more appropriate place
+struct AlwaysDeduceThisTemplateParameter;
+
 }  // end namespace Impl
 }  // end namespace Kokkos
 
