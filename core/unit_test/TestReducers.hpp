@@ -308,8 +308,12 @@ struct TestReducers {
     Scalar init  = 0;
 
     {
-      Scalar sum_scalar = init;
+      Scalar sum_scalar = Scalar(1);
       Kokkos::Sum<Scalar> reducer_scalar(sum_scalar);
+
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
+                              reducer_scalar);
+      ASSERT_EQ(sum_scalar, init);
 
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
                               reducer_scalar);
@@ -326,17 +330,40 @@ struct TestReducers {
 
     {
       Kokkos::View<Scalar, Kokkos::HostSpace> sum_view("View");
-      sum_view() = init;
+      sum_view() = Scalar(1);
       Kokkos::Sum<Scalar> reducer_view(sum_view);
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
+                              reducer_view);
+      Kokkos::fence();
+      Scalar sum_view_scalar = sum_view();
+      ASSERT_EQ(sum_view_scalar, init);
+
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
                               reducer_view);
       Kokkos::fence();
-
-      Scalar sum_view_scalar = sum_view();
+      sum_view_scalar = sum_view();
       ASSERT_EQ(sum_view_scalar, reference_sum);
 
       Scalar sum_view_view = reducer_view.reference();
       ASSERT_EQ(sum_view_view, reference_sum);
+    }
+
+    {
+      Kokkos::View<Scalar, typename ExecSpace::memory_space> sum_view("View");
+      Kokkos::deep_copy(sum_view, Scalar(1));
+      Kokkos::Sum<Scalar, typename ExecSpace::memory_space> reducer_view(sum_view);
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
+                              reducer_view);
+      Kokkos::fence();
+      Scalar sum_view_scalar;
+      Kokkos::deep_copy(sum_view_scalar, sum_view);
+      ASSERT_EQ(sum_view_scalar, init);
+
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
+                              reducer_view);
+      Kokkos::fence();
+      Kokkos::deep_copy(sum_view_scalar, sum_view);
+      ASSERT_EQ(sum_view_scalar, reference_sum);
     }
   }
 
@@ -358,8 +385,11 @@ struct TestReducers {
     Scalar init  = 1;
 
     {
-      Scalar prod_scalar = init;
+      Scalar prod_scalar = Scalar(0);
       Kokkos::Prod<Scalar> reducer_scalar(prod_scalar);
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
+                              reducer_scalar);
+      ASSERT_EQ(prod_scalar, init);
 
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
                               reducer_scalar);
@@ -376,17 +406,40 @@ struct TestReducers {
 
     {
       Kokkos::View<Scalar, Kokkos::HostSpace> prod_view("View");
-      prod_view() = init;
+      prod_view() = Scalar(0);
       Kokkos::Prod<Scalar> reducer_view(prod_view);
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
+                              reducer_view);
+      Kokkos::fence();
+      Scalar prod_view_scalar = prod_view();
+      ASSERT_EQ(prod_view_scalar, reference_prod);
+
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
                               reducer_view);
       Kokkos::fence();
-
-      Scalar prod_view_scalar = prod_view();
+      prod_view_scalar = prod_view();
       ASSERT_EQ(prod_view_scalar, reference_prod);
 
       Scalar prod_view_view = reducer_view.reference();
       ASSERT_EQ(prod_view_view, reference_prod);
+    }
+
+    {
+      Kokkos::View<Scalar, typename ExecSpace::memory_space> prod_view("View");
+      Kokkos::deep_copy(prod_view, Scalar(0));
+      Kokkos::Prod<Scalar,typename ExecSpace::memory_space> reducer_view(prod_view);
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
+                              reducer_view);
+      Kokkos::fence();
+      Scalar prod_view_scalar;
+      Kokkos::deep_copy(prod_view_scalar, prod_view);
+      ASSERT_EQ(prod_view_scalar, reference_prod);
+
+      Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
+                              reducer_view);
+      Kokkos::fence();
+      Kokkos::deep_copy(prod_view_scalar, prod_view);
+      ASSERT_EQ(prod_view_scalar, reference_prod);
     }
   }
 
