@@ -56,6 +56,9 @@ struct HostGraphImpl;
 template <class ExecutionSpace>
 struct GraphNodeKernelHostImpl;
 
+template <class ExecutionSpace>
+struct GraphNodeAggregateKernelHostImpl;
+
 }  // end namespace Impl
 }  // end namespace Kokkos
 

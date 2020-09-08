@@ -105,6 +105,18 @@ class GraphNodeKernelImpl
 // </editor-fold> end GraphNodeKernelImpl }}}1
 //==============================================================================
 
+template <class ExecutionSpace>
+struct GraphNodeAggregateKernelHostImpl
+    : GraphNodeKernelHostImpl<ExecutionSpace> {
+  // Aggregates don't need a policy, but for the purposes of checking the static
+  // assertions about graph kerenls,
+  struct Policy {
+    using is_graph_kernel = std::true_type;
+  };
+  using graph_kernel = GraphNodeAggregateKernelHostImpl;
+  void execute_kernel() const final {}
+};
+
 }  // end namespace Impl
 }  // end namespace Kokkos
 

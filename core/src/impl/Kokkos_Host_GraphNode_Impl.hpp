@@ -47,9 +47,8 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <impl/Kokkos_Host_Graph_fwd.hpp>
-
 #include <impl/Kokkos_EBO.hpp>
+#include <impl/Kokkos_Host_Graph_fwd.hpp>
 
 #include <Kokkos_Graph.hpp>
 
@@ -65,6 +64,8 @@ struct GraphNodeBackendSpecificDetails {
   using execution_space_instance_storage_t =
       ExecutionSpaceInstanceStorage<ExecutionSpace>;
   using host_kernel_impl_t = GraphNodeKernelHostImpl<ExecutionSpace>;
+  using aggregate_kernel_impl_t =
+      GraphNodeAggregateKernelHostImpl<ExecutionSpace>;
 
   std::vector<std::shared_ptr<GraphNodeBackendSpecificDetails<ExecutionSpace>>>
       m_predecessors = {};
@@ -108,6 +109,12 @@ struct GraphNodeBackendSpecificDetails {
   void set_kernel(host_kernel_impl_t const& arg_kernel) {
     KOKKOS_EXPECTS(m_kernel_ptr == nullptr)
     m_kernel_ptr = &arg_kernel;
+  }
+
+  void set_kernel(aggregate_kernel_impl_t const& arg_kernel) {
+    KOKKOS_EXPECTS(m_kernel_ptr == nullptr)
+    m_kernel_ptr   = &arg_kernel;
+    m_is_aggregate = true;
   }
 
   void set_predecessor(

@@ -147,6 +147,24 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
     }
   }
 
+  template <class... PredecessorRefs>
+  // See requirements/expectations in GraphBuilder
+  auto create_aggregate_ptr(PredecessorRefs&&...) {
+    // The attachment to predecessors, which is all we really need, happens
+    // in the generic layer, which calls through to add_predecessor for
+    // each predecessor ref, so all we need to do here is create the (trivial)
+    // aggregate node.
+    using aggregate_kernel_impl_t =
+        GraphNodeAggregateKernelHostImpl<ExecutionSpace>;
+    using aggregate_node_impl_t =
+        GraphNodeImpl<ExecutionSpace, aggregate_kernel_impl_t,
+                      Kokkos::Experimental::TypeErasedTag>;
+    return GraphAccess::make_node_shared_ptr_with_deleter(
+        new aggregate_node_impl_t{this->execution_space_instance(),
+                                  _graph_node_kernel_ctor_tag{},
+                                  aggregate_kernel_impl_t{}});
+  }
+
   auto create_root_node_ptr() {
     auto rv = Kokkos::Impl::GraphAccess::make_node_shared_ptr_with_deleter(
         new root_node_impl_t{get_execution_space(),

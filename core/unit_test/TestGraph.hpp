@@ -139,4 +139,103 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one_rvalue) {
   ASSERT_EQ(0, bugs_host());
 }
 
+TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_six) {
+  auto graph = Kokkos::Experimental::create_graph(ex, [=](auto builder) {
+    auto f_setup_count = builder.parallel_for(1, set_functor{count, 0});
+    auto f_setup_bugs  = builder.parallel_for(1, set_functor{bugs, 0});
+
+    //----------------------------------------
+    auto ready = builder.when_all(f_setup_count, f_setup_bugs);
+
+    //----------------------------------------
+    ready.then_parallel_for(1, count_functor{count, bugs, 0, 6});
+    //----------------------------------------
+    ready.then_parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>{0, 1},
+                            count_functor{count, bugs, 0, 6});
+    //----------------------------------------
+    ready.then_parallel_for(
+        Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 0}, {1, 1}},
+        count_functor{count, bugs, 0, 6});
+    //----------------------------------------
+    ready.then_parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>{1, 1},
+                            count_functor{count, bugs, 0, 6});
+    //----------------------------------------
+    ready.then_parallel_for(2, count_functor{count, bugs, 0, 6});
+    //----------------------------------------
+  });
+  graph.submit();
+  Kokkos::deep_copy(ex, count_host, count);
+  Kokkos::deep_copy(ex, bugs_host, bugs);
+  ex.fence();
+
+  ASSERT_EQ(6, count_host());
+  ASSERT_EQ(0, bugs_host());
+}
+
+TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
+  view_type reduction_out{"reduction_out"};
+  view_host reduction_host{"reduction_host"};
+  Kokkos::Experimental::create_graph(ex, [=](auto builder) {
+    //----------------------------------------
+    // Test when_all when redundant dependencies are given
+    auto f1 = builder.parallel_for(1, set_functor{count, 0});
+    auto f2 = f1.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+    auto f3 = f2.then_parallel_for(5, count_functor{count, bugs, 1, 5});
+    auto f4 = builder.when_all(f2, f3).then_parallel_for(
+        1, count_functor{count, bugs, 6, 6});
+    builder.when_all(f1, f4, f3)
+        .then_parallel_reduce(6, set_result_functor{count}, reduction_out);
+    //----------------------------------------
+  }).submit();
+  Kokkos::deep_copy(ex, bugs_host, bugs);
+  Kokkos::deep_copy(ex, count_host, count);
+  Kokkos::deep_copy(ex, reduction_host, reduction_out);
+  ex.fence();
+  ASSERT_EQ(0, bugs_host());
+  ASSERT_EQ(7, count_host());
+  ASSERT_EQ(42, reduction_host());
+  //----------------------------------------
+}
+
+// This test is disabled because we don't currently support copying to host,
+// even asynchronously. We _may_ want to do that eventually?
+TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
+  auto graph = Kokkos::Experimental::create_graph(
+      ex, [=, count_host = count_host](auto builder) {
+        //----------------------------------------
+        builder.parallel_for(1, set_functor{count, 0})
+            .then_parallel_for(1, count_functor{count, bugs, 0, 0})
+            .then_parallel_for(1, count_functor{count, bugs, 1, 1})
+            .then_parallel_reduce(1, set_result_functor{count}, count_host)
+            .then_parallel_reduce(
+                1, set_result_functor{bugs},
+                Kokkos::Sum<int, Kokkos::HostSpace>{bugs_host});
+        //----------------------------------------
+      });
+
+  //----------------------------------------
+  constexpr int repeats = 10;
+
+  for (int i = 0; i < repeats; ++i) {
+    graph.submit();
+    ex.fence();
+    EXPECT_EQ(2, count_host());
+    EXPECT_EQ(0, bugs_host());
+  }
+  //----------------------------------------
+}
+
+// This won't work with the way we're currently doing things
+TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_zero_work_reduce) {
+  auto graph = Kokkos::Experimental::create_graph(ex, [=](auto builder) {
+    builder.parallel_reduce(0, set_result_functor{bugs}, count);
+  });
+  graph.submit();
+  Kokkos::deep_copy(ex, count, 1);
+  graph.submit();  // should reset to 0, but doesn't
+  Kokkos::deep_copy(ex, count_host, count);
+  ex.fence();
+  ASSERT_EQ(count_host(), 0);
+}
+
 }  // end namespace Test
