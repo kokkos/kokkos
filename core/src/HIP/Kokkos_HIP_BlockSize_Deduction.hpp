@@ -249,7 +249,7 @@ struct HIPGetOptBlockSize<DriverType, Kokkos::LaunchBounds<0, 0>, true> {
     int maxOccupancy  = 0;
     int bestBlockSize = 0;
 
-    while (blockSize < 1024) {
+    while (blockSize < HIPTraits::MaxThreadsPerBlock) {
       blockSize *= 2;
 
       // calculate the occupancy with that optBlockSize and check whether its
@@ -283,7 +283,7 @@ struct HIPGetOptBlockSize<DriverType, Kokkos::LaunchBounds<0, 0>, false> {
     int maxOccupancy  = 0;
     int bestBlockSize = 0;
 
-    while (blockSize < 1024) {
+    while (blockSize < HIPTraits::MaxThreadsPerBlock) {
       blockSize *= 2;
       sharedmem =
           shmem_extra_block + shmem_extra_thread * (blockSize / vector_length) +
