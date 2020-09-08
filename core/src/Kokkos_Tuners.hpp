@@ -56,7 +56,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <cassert> 
+#include <cassert>
 // TODO DZP: remove, for debugging
 #include <iostream>
 
@@ -73,30 +73,29 @@ void request_output_values(size_t, size_t,
                            Kokkos::Tools::Experimental::VariableValue*);
 VariableValue make_variable_value(size_t, int64_t);
 VariableValue make_variable_value(size_t, double);
-SetOrRange make_candidate_range(double lower, double upper, double step, bool openLower, bool openUpper);
+SetOrRange make_candidate_range(double lower, double upper, double step,
+                                bool openLower, bool openUpper);
 size_t get_new_context_id();
 void begin_context(size_t context_id);
 void end_context(size_t context_id);
 namespace Impl {
 
 /** We're going to take in search space descriptions
-  * as nested maps, which aren't efficient to 
-  * iterate across by index. These are very similar
-  * to nested maps, but better for index-based lookup
-  */
-template<typename ValueType, typename ContainedType>
+ * as nested maps, which aren't efficient to
+ * iterate across by index. These are very similar
+ * to nested maps, but better for index-based lookup
+ */
+template <typename ValueType, typename ContainedType>
 struct ValueHierarchyNode;
 
-template<typename ValueType, typename ContainedType>
+template <typename ValueType, typename ContainedType>
 struct ValueHierarchyNode {
   std::vector<ValueType> root_values;
-  std::vector<ContainedType> sub_values; 
+  std::vector<ContainedType> sub_values;
   void add_root_value(const ValueType& in) noexcept {
     root_values.push_back(in);
   }
-  void add_sub_container(const ContainedType& in){
-    sub_values.push_back(in);
-  }
+  void add_sub_container(const ContainedType& in) { sub_values.push_back(in); }
   const ValueType& get_root_value(const size_t index) const {
     return root_values[index];
   }
@@ -105,8 +104,8 @@ struct ValueHierarchyNode {
   }
 };
 
-template<typename ValueType>
-struct ValueHierarchyNode <ValueType, void> {
+template <typename ValueType>
+struct ValueHierarchyNode<ValueType, void> {
   std::vector<ValueType> root_values;
   void add_root_value(const ValueType& in) noexcept {
     root_values.push_back(in);
@@ -117,218 +116,247 @@ struct ValueHierarchyNode <ValueType, void> {
 };
 
 /** For a given nested map type, we need a way to
-  * declare the equivalent ValueHierarchyNode
-  * structure
-  */
+ * declare the equivalent ValueHierarchyNode
+ * structure
+ */
 
-template<class NestedMap>
+template <class NestedMap>
 struct MapTypeConverter;
 
 // Vectors are our lowest-level, no nested values
-template<class T>
-struct MapTypeConverter < std::vector<T> > {
-   using type = ValueHierarchyNode<T,void>;
+template <class T>
+struct MapTypeConverter<std::vector<T>> {
+  using type = ValueHierarchyNode<T, void>;
 };
 
 // Maps contain both the "root" types and sub-vectors
-template<class K, class V>
-struct MapTypeConverter < std::map<K,V> > {
-   using type = ValueHierarchyNode<K, typename MapTypeConverter<V>::type>;
+template <class K, class V>
+struct MapTypeConverter<std::map<K, V>> {
+  using type = ValueHierarchyNode<K, typename MapTypeConverter<V>::type>;
 };
 
 /**
-  * We also need to be able to construct a ValueHierarchyNode set from a
-  * map
-  */
+ * We also need to be able to construct a ValueHierarchyNode set from a
+ * map
+ */
 
-template<class NestedMap>
+template <class NestedMap>
 struct ValueHierarchyConstructor;
 
-// Vectors are our lowest-level, no nested values. Just fill in the fundamental values
-template<class T>
-struct ValueHierarchyConstructor < std::vector<T> > {
-   using return_type = typename MapTypeConverter<std::vector<T>>::type;
-   static return_type build(const std::vector<T>& in){
-     return return_type { in };
-   }
+// Vectors are our lowest-level, no nested values. Just fill in the fundamental
+// values
+template <class T>
+struct ValueHierarchyConstructor<std::vector<T>> {
+  using return_type = typename MapTypeConverter<std::vector<T>>::type;
+  static return_type build(const std::vector<T>& in) { return return_type{in}; }
 };
 
-// For maps, we need to fill in the fundamental values, and construct child nodes
-template<class K, class V>
-struct ValueHierarchyConstructor < std::map<K,V> > {
-   using return_type = typename MapTypeConverter<std::map<K,V>>::type;
-   static return_type build(const std::map<K,V>& in){
-     return_type node_to_build;
-     for(auto & entry : in){
-       node_to_build.add_root_value(entry.first);
-       node_to_build.add_sub_container(ValueHierarchyConstructor<V>::build(entry.second));
-     }
-     return node_to_build;
-   } 
+// For maps, we need to fill in the fundamental values, and construct child
+// nodes
+template <class K, class V>
+struct ValueHierarchyConstructor<std::map<K, V>> {
+  using return_type = typename MapTypeConverter<std::map<K, V>>::type;
+  static return_type build(const std::map<K, V>& in) {
+    return_type node_to_build;
+    for (auto& entry : in) {
+      node_to_build.add_root_value(entry.first);
+      node_to_build.add_sub_container(
+          ValueHierarchyConstructor<V>::build(entry.second));
+    }
+    return node_to_build;
+  }
 };
-
 
 /**
-  * We're going to be declaring a sparse multidimensional 
-  * tuning space as a set of nested maps. The innermost level
-  * will be a vector. The dimensionality of such a space is the number of
-  * maps + 1.
-  *
-  * The following templates implement such logic recursively
-  */
-template< class InspectForDepth >
+ * We're going to be declaring a sparse multidimensional
+ * tuning space as a set of nested maps. The innermost level
+ * will be a vector. The dimensionality of such a space is the number of
+ * maps + 1.
+ *
+ * The following templates implement such logic recursively
+ */
+template <class InspectForDepth>
 struct get_space_dimensionality;
 
 // The dimensionality of a vector is 1
-template<class T>
-struct get_space_dimensionality < std::vector<T> > {
-   static constexpr const int value = 1; 
+template <class T>
+struct get_space_dimensionality<std::vector<T>> {
+  static constexpr const int value = 1;
 };
 
 // The dimensionality of a map is 1 (the map) plus the dimensionality
 // of the map's value type
-template<class K, class V>
-struct get_space_dimensionality < std::map<K,V> > {
-   static constexpr const int value = 1 + get_space_dimensionality<V>::value; 
+template <class K, class V>
+struct get_space_dimensionality<std::map<K, V>> {
+  static constexpr const int value = 1 + get_space_dimensionality<V>::value;
 };
 
 /**
-  * This is the ugly part of this implementation: mapping a set of doubles in [0.0,1.0)
-  * into a point in this multidimensional space. We're going to implement this concept 
-  * recursively, building up a tuple at each level.
-  */
+ * This is the ugly part of this implementation: mapping a set of doubles in
+ * [0.0,1.0) into a point in this multidimensional space. We're going to
+ * implement this concept recursively, building up a tuple at each level.
+ */
 
 // First, a helper to get the value in one dimension
-template<class Container>
+template <class Container>
 struct DimensionValueExtractor;
 
 // At any given level, just return your value at that level
-template<class RootType, class Subtype>
+template <class RootType, class Subtype>
 struct DimensionValueExtractor<ValueHierarchyNode<RootType, Subtype>> {
-  static RootType get(const ValueHierarchyNode<RootType,Subtype>& dimension, double fraction_to_traverse) {
+  static RootType get(const ValueHierarchyNode<RootType, Subtype>& dimension,
+                      double fraction_to_traverse) {
     size_t index = dimension.root_values.size() * fraction_to_traverse;
     return dimension.get_root_value(index);
   }
-
 };
 
 /** Now we're going to do the full "get a point in the space".
-  * At a root level, we'll take in a ValueHierarchyNode and a set of doubles
-  * representing the value in [0.0,1.0) we want to pick
-  */
+ * At a root level, we'll take in a ValueHierarchyNode and a set of doubles
+ * representing the value in [0.0,1.0) we want to pick
+ */
 
 // At the bottom level, we have one double and a base-level ValueHierarchyNode
-  
-template<class HierarchyNode, class... InterpolationIndices>
+
+template <class HierarchyNode, class... InterpolationIndices>
 struct GetMultidimensionalPoint;
 
-template<class ValueType>
-struct GetMultidimensionalPoint<ValueHierarchyNode<ValueType,void>, double> {
-  using node_type = ValueHierarchyNode<ValueType,void>;
+template <class ValueType>
+struct GetMultidimensionalPoint<ValueHierarchyNode<ValueType, void>, double> {
+  using node_type   = ValueHierarchyNode<ValueType, void>;
   using return_type = std::tuple<ValueType>;
-  static return_type build(const node_type& in, double index){
+  static return_type build(const node_type& in, double index) {
     return std::make_tuple(DimensionValueExtractor<node_type>::get(in, index));
   }
 };
 
-// At levels above the bottom, we tuple_cat the result of our child on the end of our own tuple
-template<class ValueType, class Subtype, class... Indices>
-struct GetMultidimensionalPoint<ValueHierarchyNode<ValueType,Subtype>, double, Indices...> {
-  using node_type = ValueHierarchyNode<ValueType,Subtype>;
-  using sub_tuple = typename  GetMultidimensionalPoint<Subtype,Indices...>::return_type;
-  using return_type = decltype(std::tuple_cat(std::declval<std::tuple<ValueType>>(),std::declval<sub_tuple>()));
-  static return_type build(const node_type& in, double fraction_to_traverse, Indices... indices) {
-    size_t index = in.sub_values.size() * fraction_to_traverse;
-    auto dimension_value = std::make_tuple(DimensionValueExtractor<node_type>::get(in, fraction_to_traverse));
-    return std::tuple_cat(dimension_value, GetMultidimensionalPoint<Subtype, Indices...>::build(in.get_sub_value(index),indices...));  
+// At levels above the bottom, we tuple_cat the result of our child on the end
+// of our own tuple
+template <class ValueType, class Subtype, class... Indices>
+struct GetMultidimensionalPoint<ValueHierarchyNode<ValueType, Subtype>, double,
+                                Indices...> {
+  using node_type = ValueHierarchyNode<ValueType, Subtype>;
+  using sub_tuple =
+      typename GetMultidimensionalPoint<Subtype, Indices...>::return_type;
+  using return_type = decltype(std::tuple_cat(
+      std::declval<std::tuple<ValueType>>(), std::declval<sub_tuple>()));
+  static return_type build(const node_type& in, double fraction_to_traverse,
+                           Indices... indices) {
+    size_t index         = in.sub_values.size() * fraction_to_traverse;
+    auto dimension_value = std::make_tuple(
+        DimensionValueExtractor<node_type>::get(in, fraction_to_traverse));
+    return std::tuple_cat(dimension_value,
+                          GetMultidimensionalPoint<Subtype, Indices...>::build(
+                              in.get_sub_value(index), indices...));
   }
 };
 
-template<typename PointType, class ArrayType, size_t... Is>
-auto get_point_helper(const PointType& in, const ArrayType& indices, std::index_sequence<Is...>){
-  using helper = GetMultidimensionalPoint<PointType, decltype(std::get<Is>(std::declval<ArrayType>()).value.double_value)...>;
+template <typename PointType, class ArrayType, size_t... Is>
+auto get_point_helper(const PointType& in, const ArrayType& indices,
+                      std::index_sequence<Is...>) {
+  using helper = GetMultidimensionalPoint<
+      PointType,
+      decltype(std::get<Is>(std::declval<ArrayType>()).value.double_value)...>;
   return helper::build(in, std::get<Is>(indices).value.double_value...);
 }
 
-template<typename PointType, typename ArrayType>
+template <typename PointType, typename ArrayType>
 struct GetPoint;
 
-template<typename PointType, size_t X>
-struct GetPoint<PointType, std::array<Kokkos::Tools::Experimental::VariableValue, X> > {
-  using index_set_type = std::array<Kokkos::Tools::Experimental::VariableValue, X>;
-  static auto build(const PointType& in, const index_set_type& indices){
+template <typename PointType, size_t X>
+struct GetPoint<PointType,
+                std::array<Kokkos::Tools::Experimental::VariableValue, X>> {
+  using index_set_type =
+      std::array<Kokkos::Tools::Experimental::VariableValue, X>;
+  static auto build(const PointType& in, const index_set_type& indices) {
     return get_point_helper(in, indices, std::make_index_sequence<X>{});
   }
 };
 
-template<typename PointType, typename ArrayType>
-auto get_point(const PointType& point, const ArrayType& indices){
-  return GetPoint<PointType,ArrayType>::build(point, indices);
+template <typename PointType, typename ArrayType>
+auto get_point(const PointType& point, const ArrayType& indices) {
+  return GetPoint<PointType, ArrayType>::build(point, indices);
 }
 
-} // Impl
+}  // namespace Impl
 
-template<template<class...> class Container, size_t MaxDimensionSize = 100, class... TemplateArguments>
+template <template <class...> class Container, size_t MaxDimensionSize = 100,
+          class... TemplateArguments>
 class MultidimensionalSparseTuningProblem {
-public:
+ public:
   using ProblemSpaceInput = Container<TemplateArguments...>;
-  static constexpr const int space_dimensionality = Impl::get_space_dimensionality<ProblemSpaceInput>::value; 
+  static constexpr const int space_dimensionality =
+      Impl::get_space_dimensionality<ProblemSpaceInput>::value;
   static constexpr const size_t max_space_dimension_size = MaxDimensionSize;
-  static constexpr const double tuning_min = 0.0;
-  static constexpr const double tuning_max = 0.999;
-  static constexpr const double tuning_step = tuning_max / max_space_dimension_size;
+  static constexpr const double tuning_min               = 0.0;
+  static constexpr const double tuning_max               = 0.999;
+  static constexpr const double tuning_step =
+      tuning_max / max_space_dimension_size;
 
-  using StoredProblemSpace = typename Impl::MapTypeConverter<ProblemSpaceInput>::type;
-  using HierarchyConstructor = typename Impl::ValueHierarchyConstructor<Container<TemplateArguments...>>;
-  
-  using ValueArray = std::array<Kokkos::Tools::Experimental::VariableValue, space_dimensionality>;
-private:
+  using StoredProblemSpace =
+      typename Impl::MapTypeConverter<ProblemSpaceInput>::type;
+  using HierarchyConstructor =
+      typename Impl::ValueHierarchyConstructor<Container<TemplateArguments...>>;
+
+  using ValueArray = std::array<Kokkos::Tools::Experimental::VariableValue,
+                                space_dimensionality>;
+
+ private:
   StoredProblemSpace m_space;
-  std::array<size_t,space_dimensionality> variable_ids;
-  size_t context; 
-public:
+  std::array<size_t, space_dimensionality> variable_ids;
+  size_t context;
 
+ public:
   MultidimensionalSparseTuningProblem() = default;
-  MultidimensionalSparseTuningProblem(ProblemSpaceInput space, std::vector<std::string> names) : m_space(HierarchyConstructor::build(space)) {
+  MultidimensionalSparseTuningProblem(ProblemSpaceInput space,
+                                      std::vector<std::string> names)
+      : m_space(HierarchyConstructor::build(space)) {
     assert(names.size() == space_dimensionality);
-    for(int x = 0; x < names.size() ; ++x){
+    for (int x = 0; x < names.size(); ++x) {
       VariableInfo info;
       info.type = Kokkos::Tools::Experimental::ValueType::kokkos_value_double;
-      info.category = Kokkos::Tools::Experimental::StatisticalCategory::kokkos_value_interval;
-      info.valueQuantity = Kokkos::Tools::Experimental::CandidateValueType::kokkos_value_range;
-      info.candidates = Kokkos::Tools::Experimental::make_candidate_range(tuning_min,tuning_max, tuning_step, true, true);
+      info.category = Kokkos::Tools::Experimental::StatisticalCategory::
+          kokkos_value_interval;
+      info.valueQuantity =
+          Kokkos::Tools::Experimental::CandidateValueType::kokkos_value_range;
+      info.candidates = Kokkos::Tools::Experimental::make_candidate_range(
+          tuning_min, tuning_max, tuning_step, true, true);
       variable_ids[x] = declare_output_type(names[x], info);
-    } 
+    }
   }
 
-  auto begin(){
+  auto begin() {
     context = Kokkos::Tools::Experimental::get_new_context_id();
     ValueArray values;
-    for(int x = 0 ; x<space_dimensionality; ++x){
-      values[x] = Kokkos::Tools::Experimental::make_variable_value(variable_ids[x], 0.0);
+    for (int x = 0; x < space_dimensionality; ++x) {
+      values[x] = Kokkos::Tools::Experimental::make_variable_value(
+          variable_ids[x], 0.0);
     }
     begin_context(context);
     request_output_values(context, space_dimensionality, values.data());
     return get_point(m_space, values);
   }
 
-  auto end(){
-    end_context(context);
-  }
+  auto end() { end_context(context); }
+};
 
-}; 
-
-template<size_t MaxDimensionSize = 100, template<class...> class Container, class... TemplateArguments>
-auto make_multidimensional_sparse_tuning_problem(const Container<TemplateArguments...>& in,std::vector<std::string> names){
-  return MultidimensionalSparseTuningProblem<Container, MaxDimensionSize, TemplateArguments...>(in, names);
+template <size_t MaxDimensionSize = 100, template <class...> class Container,
+          class... TemplateArguments>
+auto make_multidimensional_sparse_tuning_problem(
+    const Container<TemplateArguments...>& in, std::vector<std::string> names) {
+  return MultidimensionalSparseTuningProblem<Container, MaxDimensionSize,
+                                             TemplateArguments...>(in, names);
 }
 class TeamSizeTuner {
  private:
-   using SpaceDescription = std::map<int64_t, std::vector<int64_t>>;
-   using TunerType = decltype(make_multidimensional_sparse_tuning_problem<20>(std::declval<SpaceDescription>(), std::declval<std::vector<std::string>>()));
-   TunerType tuner;
+  using SpaceDescription = std::map<int64_t, std::vector<int64_t>>;
+  using TunerType = decltype(make_multidimensional_sparse_tuning_problem<20>(
+      std::declval<SpaceDescription>(),
+      std::declval<std::vector<std::string>>()));
+  TunerType tuner;
+
  public:
-  TeamSizeTuner()                                      = default;
+  TeamSizeTuner()        = default;
   TeamSizeTuner& operator=(const TeamSizeTuner& other) = default;
   TeamSizeTuner(const TeamSizeTuner& other)            = default;
   template <typename Functor, typename TagType, typename... Properties>
@@ -366,8 +394,8 @@ class TeamSizeTuner {
      *    have one vector length
      *
      */
-    SpaceDescription space_description; 
-    
+    SpaceDescription space_description;
+
     if (policy.auto_vector_length()) {
       policy.impl_set_vector_length(1);  // TODO: find a heuristic
     }
@@ -407,21 +435,22 @@ class TeamSizeTuner {
       auto max_team_size = policy.team_size_max(functor, tag);
       if (policy.auto_team_size()) {  // case 1 or 3, try all legal team sizes
         for (int team_size = max_team_size; team_size >= 1; team_size /= 2) {
-          allowed_team_sizes.push_back(team_size); 
+          allowed_team_sizes.push_back(team_size);
         }
       } else {  // case 2, just try the provided team size
-          allowed_team_sizes.push_back(policy.team_size());
+        allowed_team_sizes.push_back(policy.team_size());
       }
       space_description[vector_length] = allowed_team_sizes;
     }
-    tuner = make_multidimensional_sparse_tuning_problem<20>(space_description, {std::string(name + "_vector_length"), std::string(name + "_team_size")});
+    tuner = make_multidimensional_sparse_tuning_problem<20>(
+        space_description, {std::string(name + "_vector_length"),
+                            std::string(name + "_team_size")});
     policy.impl_set_vector_length(initial_vector_length);
   }
 
   template <typename... Properties>
   void tune(Kokkos::TeamPolicy<Properties...>& policy,
             const size_t context_id) {
-
     auto configuration = tuner.begin();
     auto team_size     = std::get<1>(configuration);
     auto vector_length = std::get<0>(configuration);
@@ -430,9 +459,7 @@ class TeamSizeTuner {
       policy.impl_set_vector_length(vector_length);
     }
   }
-  void end(size_t context_id) {
-    tuner.end();
-  }
+  void end(size_t context_id) { tuner.end(); }
 
  private:
 };
