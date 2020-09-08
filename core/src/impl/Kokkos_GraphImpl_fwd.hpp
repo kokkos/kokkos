@@ -56,7 +56,18 @@ struct GraphNodeImpl;
 template <class ExecutionSpace>
 struct GraphImpl;
 
+template <class ExecutionSpace, class Policy, class Functor,
+          class KernelTypeTag, class... Args>
+class GraphNodeKernelImpl;
+
+struct _graph_node_kernel_ctor_tag {};
+struct _graph_node_predecessor_ctor_tag {};
+
 struct GraphAccess;
+
+// Customizable for backends
+template <class ExecutionSpace>
+struct GraphNodeBackendSpecificDetails;
 
 // TODO move this to a more appropriate place
 struct AlwaysDeduceThisTemplateParameter;
