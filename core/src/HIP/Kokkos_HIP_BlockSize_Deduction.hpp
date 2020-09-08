@@ -78,7 +78,7 @@ int hip_internal_get_block_size(const F &condition_check,
   const int min_blocks_per_sm =
       LaunchBounds::minBperSM == 0 ? 1 : LaunchBounds::minBperSM;
   const int max_threads_per_block = LaunchBounds::maxTperB == 0
-                                        ? hip_instance->m_maxThreadsPerBlock
+                                        ? HIPTraits::MaxThreadsPerBlock
                                         : LaunchBounds::maxTperB;
 
   const int regs_per_wavefront  = attr.numRegs;

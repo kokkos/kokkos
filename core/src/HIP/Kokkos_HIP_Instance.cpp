@@ -222,8 +222,6 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
     m_shmemPerSM         = hipProp.maxSharedMemoryPerMultiProcessor;
     m_maxShmemPerBlock   = hipProp.sharedMemPerBlock;
     m_maxThreadsPerSM    = m_maxBlocksPerSM * HIPTraits::WarpSize;
-    m_maxThreadsPerBlock = hipProp.maxThreadsPerBlock;
-
     //----------------------------------
     // Multiblock reduction uses scratch flags for counters
     // and scratch space for partial reduction values.
