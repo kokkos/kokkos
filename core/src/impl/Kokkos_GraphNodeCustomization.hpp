@@ -42,49 +42,57 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP
-#define KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP
+#ifndef KOKKOS_IMPL_KOKKOS_GRAPHNODECUSTOMIZATION_HPP
+#define KOKKOS_IMPL_KOKKOS_GRAPHNODECUSTOMIZATION_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Graph_fwd.hpp>
+#include <impl/Kokkos_GraphImpl_fwd.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
-template <class ExecutionSpace, class Kernel, class Predecessor>
-struct GraphNodeImpl;
-
-template <class ExecutionSpace>
-struct GraphImpl;
-
-template <class ExecutionSpace, class Policy, class Functor,
-          class KernelTypeTag, class... Args>
-class GraphNodeKernelImpl;
-
-template <class ExecutionSpace>
-struct GraphNodeBackendSpecificDetails;
-
-struct _graph_node_kernel_ctor_tag {};
-struct _graph_node_predecessor_ctor_tag {};
-struct _graph_node_is_root_ctor_tag {};
-
-struct GraphAccess;
-
-// Customizable for backends
-template <class ExecutionSpace>
-struct GraphNodeBackendSpecificDetails;
-
 // Customizable for backends
 template <class ExecutionSpace, class Kernel, class PredecessorRef>
-struct GraphNodeBackendDetailsBeforeTypeErasure;
+struct GraphNodeBackendDetailsBeforeTypeErasure {
+ protected:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="ctors, destructor, and assignment"> {{{2
 
-// TODO move this to a more appropriate place
-struct AlwaysDeduceThisTemplateParameter;
+  // Required constructors in customizations:
+  GraphNodeBackendDetailsBeforeTypeErasure(
+      ExecutionSpace const&, Kernel&, PredecessorRef const&,
+      GraphNodeBackendSpecificDetails<ExecutionSpace>&
+      /* this_as_details */) noexcept {}
+  GraphNodeBackendDetailsBeforeTypeErasure(
+      ExecutionSpace const&, _graph_node_is_root_ctor_tag,
+      GraphNodeBackendSpecificDetails<ExecutionSpace>&
+      /* this_as_details */) noexcept {}
 
-struct KernelInGraphProperty {};
+  // Not copyable or movable at the concept level, so the default
+  // implementation shouldn't be either.
+  GraphNodeBackendDetailsBeforeTypeErasure() noexcept = delete;
 
-struct IsGraphKernelTag {};
+  GraphNodeBackendDetailsBeforeTypeErasure(
+      GraphNodeBackendDetailsBeforeTypeErasure const&) = delete;
+
+  GraphNodeBackendDetailsBeforeTypeErasure(
+      GraphNodeBackendDetailsBeforeTypeErasure&&) noexcept = delete;
+
+  GraphNodeBackendDetailsBeforeTypeErasure& operator   =(
+      GraphNodeBackendDetailsBeforeTypeErasure const&) = delete;
+
+  GraphNodeBackendDetailsBeforeTypeErasure& operator       =(
+      GraphNodeBackendDetailsBeforeTypeErasure&&) noexcept = delete;
+
+  ~GraphNodeBackendDetailsBeforeTypeErasure() = default;
+
+  // </editor-fold> end ctors, destructor, and assignment }}}2
+  //----------------------------------------------------------------------------
+};
 
 }  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP
+#endif  // KOKKOS_KOKKOS_GRAPHNODECUSTOMIZATION_HPP

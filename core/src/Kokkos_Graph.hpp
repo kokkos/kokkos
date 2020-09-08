@@ -279,4 +279,10 @@ Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
 }  // end namespace Experimental
 }  // namespace Kokkos
 
+// Even though these things are separable, include them here for now so that
+// the user only needs to include Kokkos_Graph.hpp to get the whole facility.
+#include <Kokkos_GraphNode.hpp>
+
+#include <impl/Kokkos_GraphNodeImpl.hpp>
+
 #endif  // KOKKOS_GRAPH_HPP
