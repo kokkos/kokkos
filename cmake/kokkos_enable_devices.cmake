@@ -25,6 +25,16 @@ IF (KOKKOS_ENABLE_PTHREAD)
   SET(KOKKOS_ENABLE_THREADS ON)
 ENDIF()
 
+# as CMAKE_CXX_SIMULATE_ID does not work, detect clang-cl to avoid clang++,
+# cl, and clang-cl clashes, requires CMake >= 3.15
+IF (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+  IF ("x${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "xGNU")
+    SET(KOKKOS_COMPILER_CLANG_MSVC OFF)
+  ELSE()
+    SET(KOKKOS_COMPILER_CLANG_MSVC ON)
+  ENDIF()
+ENDIF()
+
 IF(Trilinos_ENABLE_Kokkos AND Trilinos_ENABLE_OpenMP)
   SET(OMP_DEFAULT ON)
 ELSE()
@@ -39,13 +49,16 @@ IF(KOKKOS_ENABLE_OPENMP)
   IF(KOKKOS_CLANG_IS_INTEL)
     SET(ClangOpenMPFlag -fiopenmp)
   ENDIF()
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
-    #expression /openmp yields error, so add a specific Clang flag
-    COMPILER_SPECIFIC_OPTIONS(Clang /clang:-fopenmp)
-    #link omp library from LLVM lib dir
+  IF(KOKKOS_COMPILER_CLANG_MSVC)
+    #for clang-cl expression /openmp yields an error, so directly add the specific Clang flag
+    SET(ClangOpenMPFlag /clang:-fopenmp=libomp)
+  ENDIF()
+  IF(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+    #link omp library from LLVM lib dir, no matter if it is clang-cl or clang++
     get_filename_component(LLVM_BIN_DIR ${CMAKE_CXX_COMPILER_AR} DIRECTORY)
     COMPILER_SPECIFIC_LIBS(Clang "${LLVM_BIN_DIR}/../lib/libomp.lib")
-  ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+  ENDIF()
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
     COMPILER_SPECIFIC_FLAGS(
       COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
       Clang      -Xcompiler ${ClangOpenMPFlag}
@@ -71,7 +84,7 @@ ENDIF()
 
 KOKKOS_DEVICE_OPTION(OPENMPTARGET OFF DEVICE "Whether to build the OpenMP target backend")
 IF (KOKKOS_ENABLE_OPENMPTARGET)
-SET(ClangOpenMPFlag -fopenmp=libomp)
+  SET(ClangOpenMPFlag -fopenmp=libomp)
   IF(KOKKOS_CLANG_IS_CRAY)
     SET(ClangOpenMPFlag -fopenmp)
   ENDIF()
