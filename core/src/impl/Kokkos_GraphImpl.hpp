@@ -115,6 +115,18 @@ struct GraphAccess {
         std::move(graph_impl), std::move(pred_impl)};
     //----------------------------------------
   }
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="accessors for private members of public interface"> {{{2
+
+  template <class NodeRef>
+  // requires remove_cvref_t<NodeRef> is a specialization of GraphNodeRef
+  static auto get_node_ptr(NodeRef&& node_ref) {
+    return ((NodeRef &&) node_ref).get_node_ptr();
+  }
+
+  // </editor-fold> end accessors for private members of public interface }}}2
+  //----------------------------------------------------------------------------
 };
 
 template <class Policy>
