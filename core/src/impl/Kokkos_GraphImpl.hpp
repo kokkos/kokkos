@@ -60,6 +60,10 @@ namespace Kokkos {
 namespace Impl {
 
 struct GraphAccess {
+<<<<<<< HEAD
+=======
+
+>>>>>>> a3d736cf... Adds GraphBuilder class template
   template <class GraphImplWeakPtr, class ExecutionSpace, class Kernel,
             class Predecessor>
   static auto make_graph_node_ref(
@@ -73,9 +77,16 @@ struct GraphAccess {
         std::move(graph_impl), std::move(pred_impl)};
     //----------------------------------------
   }
+<<<<<<< HEAD
 };
 
 }  // namespace Impl
+=======
+
+};
+
+}  // end namespace Experimental
+>>>>>>> a3d736cf... Adds GraphBuilder class template
 
 }  // end namespace Kokkos
 
