@@ -42,14 +42,21 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_OMP_HPP
-#define KOKKOS_TEST_OMP_HPP
+#ifndef KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP
+#define KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP
 
-#include <gtest/gtest.h>
+#include <Kokkos_Macros.hpp>
 
-#define TEST_CATEGORY openmp
-#define TEST_CATEGORY_DEATH openmp_DeathTest
-#define TEST_EXECSPACE Kokkos::OpenMP
-#define TEST_CATEGORY_FIXTURE(name) openmp_##name
+namespace Kokkos {
+namespace Impl {
 
-#endif
+template <class ExecutionSpace>
+struct HostGraphImpl;
+
+template <class ExecutionSpace>
+struct GraphNodeKernelHostImpl;
+
+}  // end namespace Impl
+}  // end namespace Kokkos
+
+#endif  // KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP
