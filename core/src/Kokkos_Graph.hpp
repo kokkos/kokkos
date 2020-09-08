@@ -63,6 +63,76 @@ namespace Kokkos {
 namespace Experimental {
 
 //==============================================================================
+// <editor-fold desc="Graph"> {{{1
+
+template <class ExecutionSpace>
+struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
+ public:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="public member types"> {{{2
+
+  using execution_space = ExecutionSpace;
+  using graph           = Graph;
+  using graph_builder   = GraphBuilder<ExecutionSpace>;
+
+  // </editor-fold> end public member types }}}2
+  //----------------------------------------------------------------------------
+
+ private:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="friends"> {{{2
+
+  friend struct Kokkos::Impl::GraphAccess;
+
+  // </editor-fold> end friends }}}2
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="private data members"> {{{2
+
+  using impl_t                       = Kokkos::Impl::GraphImpl<ExecutionSpace>;
+  std::shared_ptr<impl_t> m_impl_ptr = nullptr;
+
+  // </editor-fold> end private data members }}}2
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="private ctors"> {{{2
+
+  // Note: only create_graph() uses this constructor, but we can't just make
+  // that a friend instead of GraphAccess because of the way that friend
+  // function template injection works.
+  explicit Graph(std::shared_ptr<impl_t> arg_impl_ptr)
+      : m_impl_ptr(std::move(arg_impl_ptr)) {}
+
+  // </editor-fold> end private ctors }}}2
+  //----------------------------------------------------------------------------
+
+ public:
+  ExecutionSpace const& get_execution_space() const {
+    return m_impl_ptr->get_execution_space();
+  }
+
+  void submit() const& {
+    KOKKOS_EXPECTS(bool(m_impl_ptr))
+    (*m_impl_ptr).submit();
+  }
+
+  void submit() && {
+    KOKKOS_EXPECTS(bool(m_impl_ptr))
+    // The graph interface isn't thread-safe, so we can rely on this
+    if (m_impl_ptr.use_count() == 1) {
+      std::move(*m_impl_ptr).submit();
+    } else {
+      (*m_impl_ptr).submit();
+    }
+  }
+};
+
+// </editor-fold> end Graph }}}1
+//==============================================================================
+
+//==============================================================================
 // <editor-fold desc="GraphBuilder"> {{{1
 
 template <class ExecutionSpace>
@@ -177,6 +247,33 @@ struct GraphBuilder {
 };
 
 // </editor-fold> end GraphBuilder }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="create_graph"> {{{1
+
+template <class ExecutionSpace, class Closure>
+Graph<ExecutionSpace> create_graph(ExecutionSpace ex, Closure&& arg_closure) {
+  // Create a shared pointer to the graph:
+  auto rv = Kokkos::Impl::GraphAccess::construct_graph(ex);
+  // Create the graph builder instance:
+  // GCC 5.3 thinks this is shadowed by user code if we name it `builder`??!?
+  auto kokkos_impl_builder = Kokkos::Impl::GraphAccess::create_graph_builder(
+      Kokkos::Impl::GraphAccess::create_root_ref(rv));
+  // Invoke the user's graph construction closure
+  ((Closure &&) arg_closure)(std::move(kokkos_impl_builder));
+  // and given them back the graph
+  // KOKKOS_ENSURES(rv.m_impl_ptr.use_count() == 1)
+  return rv;
+}
+
+template <class ExecutionSpace = DefaultExecutionSpace,
+          class Closure = Kokkos::Impl::AlwaysDeduceThisTemplateParameter>
+Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
+  return create_graph(ExecutionSpace{}, (Closure &&) arg_closure);
+}
+
+// </editor-fold> end create_graph }}}1
 //==============================================================================
 
 }  // end namespace Experimental
