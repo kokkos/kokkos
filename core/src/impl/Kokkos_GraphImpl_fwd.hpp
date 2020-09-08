@@ -50,6 +50,14 @@
 namespace Kokkos {
 namespace Impl {
 
+template <class ExecutionSpace, class Kernel, class Predecessor>
+struct GraphNodeImpl;
+
+template <class ExecutionSpace>
+struct GraphImpl;
+
+struct GraphAccess;
+
 struct KernelInGraphProperty {};
 
 struct IsGraphKernelTag {};

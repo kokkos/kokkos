@@ -42,62 +42,27 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPL_KOKKOS_GRAPHIMPL_HPP
-#define KOKKOS_IMPL_KOKKOS_GRAPHIMPL_HPP
+#ifndef KOKKOS_KOKKOS_GRAPH_FWD_HPP
+#define KOKKOS_KOKKOS_GRAPH_FWD_HPP
 
 #include <Kokkos_Macros.hpp>
 
-#include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_Graph_fwd.hpp>
-
-#include <Kokkos_Concepts.hpp>  // is_execution_policy
-#include <Kokkos_PointerOwnership.hpp>
-#include <impl/Kokkos_GraphImpl_fwd.hpp>
-
-#include <memory>  // std::make_shared
-
 namespace Kokkos {
-namespace Impl {
+namespace Experimental {
 
-struct GraphAccess {
-  template <class GraphImplWeakPtr, class ExecutionSpace, class Kernel,
-            class Predecessor>
-  static auto make_graph_node_ref(
-      GraphImplWeakPtr graph_impl,
-      std::shared_ptr<
-          Kokkos::Impl::GraphNodeImpl<ExecutionSpace, Kernel, Predecessor>>
-          pred_impl) {
-    //----------------------------------------
-    return Kokkos::Experimental::GraphNodeRef<ExecutionSpace, Kernel,
-                                              Predecessor>{
-        std::move(graph_impl), std::move(pred_impl)};
-    //----------------------------------------
-  }
-};
+struct TypeErasedTag {};
 
-template <class Policy>
-struct _add_graph_kernel_tag;
+template <class ExecutionSpace>
+struct Graph;
 
-template <template <class...> class PolicyTemplate, class... PolicyTraits>
-struct _add_graph_kernel_tag<PolicyTemplate<PolicyTraits...>> {
-  using type = PolicyTemplate<PolicyTraits..., IsGraphKernelTag>;
-};
+template <class ExecutionSpace>
+struct GraphBuilder;
 
-}  // end namespace Impl
-
-namespace Experimental {  // but not for users, so...
-
-template <class Policy>
-// requires ExecutionPolicy<Policy>
-constexpr auto require(Policy const& policy,
-                       Kokkos::Impl::KernelInGraphProperty) {
-  static_assert(Kokkos::is_execution_policy<Policy>::value,
-                "Internal implementation error!");
-  return typename Kokkos::Impl::_add_graph_kernel_tag<Policy>::type{policy};
-}
+template <class ExecutionSpace, class Kernel = TypeErasedTag,
+          class Predecessor = TypeErasedTag>
+class GraphNodeRef;
 
 }  // end namespace Experimental
-
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_IMPL_KOKKOS_GRAPHIMPL_HPP
+#endif  // KOKKOS_KOKKOS_GRAPH_FWD_HPP
