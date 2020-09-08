@@ -48,6 +48,7 @@
 #include <Kokkos_Macros.hpp>
 #include <cstdint>
 #include <type_traits>
+#include <initializer_list>  // in-order comma operator fold emulation
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -444,6 +445,26 @@ template <template <class...> class Template, class... Args>
 struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
 
 // </editor-fold> end is_specialization_of }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="Folding emulation"> {{{1
+
+// acts like void for comma fold emulation
+struct _fold_comma_emulation_return {};
+
+template <class... Ts>
+constexpr KOKKOS_INLINE_FUNCTION _fold_comma_emulation_return
+emulate_fold_comma_operator(Ts&&...) noexcept {
+  return _fold_comma_emulation_return{};
+}
+
+#define KOKKOS_IMPL_FOLD_COMMA_OPERATOR(expr)                                \
+  ::Kokkos::Impl::emulate_fold_comma_operator(                               \
+      ::std::initializer_list<::Kokkos::Impl::_fold_comma_emulation_return>{ \
+          ((expr), ::Kokkos::Impl::_fold_comma_emulation_return{})...})
+
+// </editor-fold> end Folding emulation }}}1
 //==============================================================================
 
 }  // namespace Impl
