@@ -61,6 +61,10 @@ struct GraphAccess;
 // TODO move this to a more appropriate place
 struct AlwaysDeduceThisTemplateParameter;
 
+struct KernelInGraphProperty {};
+
+struct IsGraphKernelTag {};
+
 }  // end namespace Impl
 }  // end namespace Kokkos
 
