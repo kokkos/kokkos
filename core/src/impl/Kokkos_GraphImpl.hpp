@@ -104,7 +104,27 @@ struct GraphAccess {
   }
 };
 
-}  // namespace Impl
+template <class Policy>
+struct _add_graph_kernel_tag;
+
+template <template <class...> class PolicyTemplate, class... PolicyTraits>
+struct _add_graph_kernel_tag<PolicyTemplate<PolicyTraits...>> {
+  using type = PolicyTemplate<PolicyTraits..., IsGraphKernelTag>;
+};
+
+}  // end namespace Impl
+
+namespace Experimental {  // but not for users, so...
+
+template <class Policy>
+// requires ExecutionPolicy<Policy>
+auto require(Policy const& policy, Kokkos::Impl::KernelInGraphProperty) {
+  static_assert(Kokkos::is_execution_policy<Policy>::value,
+                "Internal implementation error!");
+  return typename Kokkos::Impl::_add_graph_kernel_tag<Policy>::type{policy};
+}
+
+}  // end namespace Experimental
 
 }  // end namespace Kokkos
 
