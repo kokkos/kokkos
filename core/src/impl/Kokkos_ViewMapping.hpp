@@ -2696,8 +2696,8 @@ struct ViewDataHandle<
 #endif
                 && (!Traits::memory_traits::is_atomic))>::type> {
   using value_type  = typename Traits::value_type;
-  using handle_type = typename Traits::value_type*;
-  using return_type = typename Traits::value_type&;
+  using handle_type = typename Traits::value_type* KOKKOS_RESTRICT;
+  using return_type = typename Traits::value_type& KOKKOS_RESTRICT;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 
   KOKKOS_INLINE_FUNCTION
@@ -2726,7 +2726,8 @@ struct ViewDataHandle<
 #endif
                 && (!Traits::memory_traits::is_atomic))>::type> {
   using value_type  = typename Traits::value_type;
-  using handle_type = typename Traits::value_type*;
+  using handle_type = typename Traits::value_type* KOKKOS_IMPL_ALIGN_PTR(
+      KOKKOS_MEMORY_ALIGNMENT);
   using return_type = typename Traits::value_type&;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 
@@ -2767,8 +2768,9 @@ struct ViewDataHandle<
 #endif
         && (!Traits::memory_traits::is_atomic))>::type> {
   using value_type  = typename Traits::value_type;
-  using handle_type = typename Traits::value_type*;
-  using return_type = typename Traits::value_type&;
+  using handle_type = typename Traits::value_type* KOKKOS_RESTRICT
+      KOKKOS_IMPL_ALIGN_PTR(KOKKOS_MEMORY_ALIGNMENT);
+  using return_type = typename Traits::value_type& KOKKOS_RESTRICT;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 
   KOKKOS_INLINE_FUNCTION
