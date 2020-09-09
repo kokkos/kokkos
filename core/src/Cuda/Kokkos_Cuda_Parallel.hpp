@@ -522,7 +522,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
  public:
-  using Policy = Kokkos::MDRangePolicy<Traits...>;
+  using Policy       = Kokkos::MDRangePolicy<Traits...>;
+  using functor_type = FunctorType;
 
  private:
   using RP               = Policy;
@@ -639,7 +640,7 @@ template <class FunctorType, class... Properties>
 class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   Kokkos::Cuda> {
  public:
-  using Policy = TeamPolicyInternal<Kokkos::Cuda, Properties...>;
+  using Policy = TeamPolicy<Properties...>;
 
  private:
   using Member       = typename Policy::member_type;
@@ -850,6 +851,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using functor_type   = FunctorType;
   using size_type      = Kokkos::Cuda::size_type;
   using index_type     = typename Policy::index_type;
+  using reducer_type   = ReducerType;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -1060,6 +1062,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)), 1,
                 1);
 
+      // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
           UseShflReduction
               ? 0
@@ -1100,6 +1103,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     } else {
       if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         m_result_ptr);
       }
@@ -1178,6 +1182,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using reference_type = typename ValueTraits::reference_type;
   using functor_type   = FunctorType;
   using size_type      = Cuda::size_type;
+  using reducer_type   = ReducerType;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -1371,6 +1376,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       // Required grid.x <= block.y
       const dim3 grid(std::min(int(block.y), int(nwork)), 1, 1);
 
+      // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
           UseShflReduction
               ? 0
@@ -1402,6 +1408,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       }
     } else {
       if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         m_result_ptr);
       }
@@ -1445,7 +1452,7 @@ template <class FunctorType, class ReducerType, class... Properties>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      ReducerType, Kokkos::Cuda> {
  public:
-  using Policy = TeamPolicyInternal<Kokkos::Cuda, Properties...>;
+  using Policy = TeamPolicy<Properties...>;
 
  private:
   using Member       = typename Policy::member_type;
@@ -1472,6 +1479,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   using functor_type = FunctorType;
   using size_type    = Cuda::size_type;
+  using reducer_type = ReducerType;
 
   enum : bool {
     UseShflReduction = (true && (ValueTraits::StaticValueSize != 0))
@@ -1732,6 +1740,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       }
     } else {
       if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         m_result_ptr);
       }

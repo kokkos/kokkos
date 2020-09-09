@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -42,14 +43,5 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_CUDA_HPP
-#define KOKKOS_TEST_CUDA_HPP
-
-#include <gtest/gtest.h>
-
-#define TEST_CATEGORY cuda
-#define TEST_CATEGORY_DEATH cuda_DeathTest
-#define TEST_EXECSPACE Kokkos::Cuda
-#define TEST_CATEGORY_FIXTURE(name) cuda_##name
-
-#endif
+#include <cuda/TestCuda_Category.hpp>
+#include <TestGraph.hpp>

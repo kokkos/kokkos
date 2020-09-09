@@ -182,4 +182,13 @@ struct GraphBuilder {
 }  // end namespace Experimental
 }  // namespace Kokkos
 
+// Even though these things are separable, include them here for now so that
+// the user only needs to include Kokkos_Graph.hpp to get the whole facility.
+#include <Kokkos_GraphNode.hpp>
+
+#include <impl/Kokkos_GraphNodeImpl.hpp>
+#include <impl/Kokkos_Host_Graph_Impl.hpp>
+
+#include <Cuda/Kokkos_Cuda_Graph_Impl.hpp>
+
 #endif  // KOKKOS_GRAPH_HPP
