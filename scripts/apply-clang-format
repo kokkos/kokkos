@@ -19,7 +19,7 @@ if [ "${CLANG_FORMAT_MAJOR_VERSION}" -ne 8 ] || [ "${CLANG_FORMAT_MINOR_VERSION}
   exit 1
 fi
 
-BASE_DIR="$(cd "$(dirname "$0")" && pwd)"/..
+BASE_DIR="$(git rev-parse --show-toplevel)"
 cd $BASE_DIR
 
 TRACKED_FILES="$(git ls-files)"
