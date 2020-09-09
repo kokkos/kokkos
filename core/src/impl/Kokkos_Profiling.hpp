@@ -89,8 +89,33 @@ void endDeepCopy();
 void beginFence(const std::string name, const uint32_t deviceId,
                 uint64_t* handle);
 void endFence(const uint64_t handle);
+
+/**
+ * syncDualView declares to the tool that a given DualView
+ * has been synced.
+ *
+ * Arguments:
+ *
+ * label:     name of the View within the DualView
+ * ptr:       that View's data ptr
+ * to_device: true if the data is being synchronized to the device
+ * 		false otherwise
+ */
 void syncDualView(const std::string& label, const void* const ptr,
-                  bool on_device);
+                  bool to_device);
+/**
+ * modifyDualView declares to the tool that a given DualView
+ * has been modified. Note: this means that somebody *called*
+ * modify on the DualView, this doesn't get called any time
+ * somebody touches the data
+ *
+ * Arguments:
+ *
+ * label:     name of the View within the DualView
+ * ptr:       that View's data ptr
+ * on_device: true if the data is being modified on the device
+ * 		false otherwise
+ */
 void modifyDualView(const std::string& label, const void* const ptr,
                     bool on_device);
 
