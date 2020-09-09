@@ -664,7 +664,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     int dev = get_device_side<Device>();
 
     if (dev == 1) {  // if Device is the same as DualView's device type
-
       // Increment the device's modified count.
       modified_flags(1) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
