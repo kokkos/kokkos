@@ -23,11 +23,11 @@ void test(const int length) {
   using vector = Kokkos::View<T*, exec_space>;
 
   vector inp("input", length);
+  T max = std::numeric_limits<T>::max();
+  T min = std::numeric_limits<T>::lowest();
 
   // input is max values - all min atomics will replace
   {
-    T max = std::numeric_limits<T>::max();
-
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) { inp(i) = max; });
     Kokkos::fence();
@@ -56,8 +56,6 @@ void test(const int length) {
 
   // input is min values - all max atomics will replace
   {
-    T min = std::numeric_limits<T>::lowest();
-
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) { inp(i) = min; });
     Kokkos::fence();
@@ -86,8 +84,6 @@ void test(const int length) {
 
   // input is max values - all max atomics will early exit
   {
-    T max = std::numeric_limits<T>::max();
-
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) { inp(i) = max; });
     Kokkos::fence();
@@ -119,8 +115,6 @@ void test(const int length) {
 
   // input is min values - all min atomics will early exit
   {
-    T min = std::numeric_limits<T>::lowest();
-
     Kokkos::parallel_for(
         length, KOKKOS_LAMBDA(const int i) { inp(i) = min; });
     Kokkos::fence();
@@ -149,6 +143,68 @@ void test(const int length) {
       if (length > 9) std::cout << "inp(9)=" << inp(9) << std::endl;
     }
     std::cout << "Time for 100% min early exits: " << time << std::endl;
+  }
+
+  // limit iterations for contentious test, takes ~50x longer for same length
+  auto con_length = length / 5;
+  // input is min values - some max atomics will replace
+  {
+    Kokkos::parallel_for(
+        1, KOKKOS_LAMBDA(const int i) { inp(i) = min; });
+    Kokkos::fence();
+
+    T current(0);
+    timer.reset();
+    Kokkos::parallel_reduce(
+        con_length,
+        KOKKOS_LAMBDA(const int i, T& inner) {
+          inner = Kokkos::atomic_max_fetch(&(inp(0)), inner + 1);
+          if (i == con_length - 1) {
+            Kokkos::atomic_max_fetch(&(inp(0)), max);
+            inner = max;
+          }
+        },
+        Kokkos::Max<T>(current));
+    Kokkos::fence();
+    double time = timer.seconds();
+
+    if (current < max) {
+      std::cerr << "Error in contentious max replacements: " << std::endl;
+      std::cerr << "final=" << current << " inp(0)=" << inp(0) << " max=" << max
+                << std::endl;
+    }
+    std::cout << "Time for contentious max " << con_length
+              << " replacements: " << time << std::endl;
+  }
+
+  // input is max values - some min atomics will replace
+  {
+    Kokkos::parallel_for(
+        1, KOKKOS_LAMBDA(const int i) { inp(i) = max; });
+    Kokkos::fence();
+
+    timer.reset();
+    T current(100000000);
+    Kokkos::parallel_reduce(
+        con_length,
+        KOKKOS_LAMBDA(const int i, T& inner) {
+          inner = Kokkos::atomic_min_fetch(&(inp(0)), inner - 1);
+          if (i == con_length - 1) {
+            Kokkos::atomic_min_fetch(&(inp(0)), min);
+            inner = min;
+          }
+        },
+        Kokkos::Min<T>(current));
+    Kokkos::fence();
+    double time = timer.seconds();
+
+    if (current > min) {
+      std::cerr << "Error in contentious min replacements: " << std::endl;
+      std::cerr << "final=" << current << " inp(0)=" << inp(0) << " min=" << min
+                << std::endl;
+    }
+    std::cout << "Time for contentious min " << con_length
+              << " replacements: " << time << std::endl;
   }
 }
 
