@@ -173,7 +173,32 @@ void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
  * eligible team sizes. If the type is simple, you can't construct one,
  * you use the simpler 2-arg formulation of team_size_recommended/max.
  *
+ *
  */
+
+namespace Impl {
+
+struct SimpleTeamSizeCalculator {
+  template <typename Policy, typename Functor, typename Tag>
+  uint64_t get_max_team_size(const Policy& policy, const Functor& functor,
+                             const Tag& tag) {
+    return policy.team_size_max(functor, tag);
+  }
+};
+
+template <typename ReducerType>
+struct ComplexReducerSizeCalculator {
+  template <typename Policy, typename Functor, typename Tag>
+  uint64_t get_max_team_size(const Policy& policy, const Functor& functor,
+                             const Tag& tag) {
+    using value_type = typename ReducerType::value_type;
+    value_type value;
+    ReducerType reducer_example = ReducerType(value);
+    return policy.team_size_max(functor, reducer_example, tag);
+  }
+};
+
+};  // namespace Impl
 
 template <class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label,
@@ -183,10 +208,9 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label,
     if (team_tuners.find(label) == team_tuners.end()) {
       int team_size_max         = policy.team_size_max(functor, tag);
       int team_size_recommended = policy.team_size_recommended(functor, tag);
-      team_tuners.emplace(label,
-                          Kokkos::Tools::Experimental::TeamSizeTuner(
-                              label, policy, functor, team_size_recommended,
-                              team_size_max, tag));
+      team_tuners.emplace(label, Kokkos::Tools::Experimental::TeamSizeTuner(
+                                     label, policy, functor, tag,
+                                     Impl::SimpleTeamSizeCalculator{}));
     }
     auto& tuner = team_tuners[label];
     tuner.tune(policy);
@@ -206,17 +230,10 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label,
       // instance of their value_type so we construct
       // a value_type and temporary reducer here
 
-      using value_type = typename ReducerType::value_type;
-      value_type value;
-      ReducerType reducer_example = ReducerType(value);
-
-      int team_size_max = policy.team_size_max(functor, reducer_example, tag);
-      int team_size_recommended =
-          policy.team_size_recommended(functor, reducer_example, tag);
-      team_tuners.emplace(label,
-                          Kokkos::Tools::Experimental::TeamSizeTuner(
-                              label, policy, functor, team_size_recommended,
-                              team_size_max, tag));
+      team_tuners.emplace(
+          label, Kokkos::Tools::Experimental::TeamSizeTuner(
+                     label, policy, functor, tag,
+                     Impl::ComplexReducerSizeCalculator<ReducerType>{}));
     }
     auto& tuner = team_tuners[label];
     tuner.tune(policy);

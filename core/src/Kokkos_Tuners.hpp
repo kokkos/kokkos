@@ -354,16 +354,16 @@ class TeamSizeTuner {
       std::declval<SpaceDescription>(),
       std::declval<std::vector<std::string>>()));
   TunerType tuner;
-
  public:
   TeamSizeTuner()        = default;
   TeamSizeTuner& operator=(const TeamSizeTuner& other) = default;
   TeamSizeTuner(const TeamSizeTuner& other)            = default;
-  template <typename Functor, typename TagType, typename... Properties>
+  template <typename ViableConfigurationCalculator, typename Functor,
+            typename TagType, typename... Properties>
   TeamSizeTuner(const std::string& name,
                 Kokkos::TeamPolicy<Properties...>& policy,
-                const Functor& functor, int /**team_size_recommended*/,
-                int /**team_size_max*/, const TagType& tag) {
+                const Functor& functor, const TagType& tag,
+                ViableConfigurationCalculator calc) {
     using PolicyType           = Kokkos::TeamPolicy<Properties...>;
     auto initial_vector_length = policy.vector_length();
     if (initial_vector_length < 1) {
@@ -419,7 +419,8 @@ class TeamSizeTuner {
          * These are the left and right hand sides of the "or" in this
          * conditional, respectively.
          */
-        auto max_team_size = policy.team_size_max(functor, tag);
+        auto max_team_size =
+            calc.template get_max_team_size(policy, functor, tag);
         if ((policy.auto_team_size()) ||
             (policy.team_size() <= max_team_size)) {
           allowed_vector_lengths.push_back(vector_length);
@@ -432,7 +433,8 @@ class TeamSizeTuner {
     for (const auto vector_length : allowed_vector_lengths) {
       std::vector<int64_t> allowed_team_sizes;
       policy.impl_set_vector_length(vector_length);
-      auto max_team_size = policy.team_size_max(functor, tag);
+      auto max_team_size =
+          calc.template get_max_team_size(policy, functor, tag);
       if (policy.auto_team_size()) {  // case 1 or 3, try all legal team sizes
         for (int team_size = max_team_size; team_size >= 1; team_size /= 2) {
           allowed_team_sizes.push_back(team_size);
