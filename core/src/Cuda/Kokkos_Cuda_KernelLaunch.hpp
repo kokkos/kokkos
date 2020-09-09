@@ -56,6 +56,8 @@
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
 #include <Cuda/Kokkos_Cuda_Instance.hpp>
+#include <impl/Kokkos_GraphImpl_fwd.hpp>
+#include <Cuda/Kokkos_Cuda_GraphNodeKernel.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -315,6 +317,44 @@ struct CudaParallelLaunchKernelInfo<
          get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>(
         driver);
   }
+
+  inline static void create_parallel_launch_graph_node(
+      DriverType const& driver, dim3 const& grid, dim3 const& block, int shmem,
+      CudaInternal const* cuda_instance, bool prefer_shmem) {
+    //----------------------------------------
+    auto const& graph = Impl::get_cuda_graph_from_kernel(driver);
+    KOKKOS_EXPECTS(bool(graph));
+    auto& graph_node = Impl::get_cuda_graph_node_from_kernel(driver);
+    // Expect node not yet initialized
+    KOKKOS_EXPECTS(!bool(graph_node));
+
+    if (!Impl::is_empty_launch(grid, block)) {
+      Impl::check_shmem_request(cuda_instance, shmem);
+      Impl::configure_shmem_preference(base_t::get_kernel_func(), prefer_shmem);
+
+      // TODO global memory version!!!
+      void const* args[] = {&driver};
+
+      cudaKernelNodeParams params = {};
+
+      params.blockDim       = block;
+      params.gridDim        = grid;
+      params.sharedMemBytes = shmem;
+      params.func           = (void*)base_t::get_kernel_func();
+      params.kernelParams   = (void**)args;
+      params.extra          = nullptr;
+
+      CUDA_SAFE_CALL(cudaGraphAddKernelNode(
+          &graph_node, graph, /* dependencies = */ nullptr,
+          /* numDependencies = */ 0, &params));
+    } else {
+      // We still need an empty node for the dependency structure
+      CUDA_SAFE_CALL(cudaGraphAddEmptyNode(&graph_node, graph,
+                                           /* dependencies = */ nullptr,
+                                           /* numDependencies = */ 0));
+    }
+    KOKKOS_ENSURES(bool(graph_node))
+  }
 };
 
 // </editor-fold> end local memory }}}2
@@ -367,6 +407,53 @@ struct CudaParallelLaunchKernelInfo<
     (base_t::
          get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>(
         driver_ptr);
+  }
+
+  inline static void create_parallel_launch_graph_node(
+      DriverType const& driver, dim3 const& grid, dim3 const& block, int shmem,
+      CudaInternal const* cuda_instance, bool prefer_shmem) {
+    //----------------------------------------
+    auto const& graph = Impl::get_cuda_graph_from_kernel(driver);
+    KOKKOS_EXPECTS(bool(graph));
+    auto& graph_node = Impl::get_cuda_graph_node_from_kernel(driver);
+    // Expect node not yet initialized
+    KOKKOS_EXPECTS(!bool(graph_node));
+
+    if (!Impl::is_empty_launch(grid, block)) {
+      Impl::check_shmem_request(cuda_instance, shmem);
+      Impl::configure_shmem_preference(base_t::get_kernel_func(), prefer_shmem);
+
+      auto* driver_ptr = Impl::allocate_driver_storage_for_kernel(driver);
+
+      // Unlike in the non-graph case, we can get away with doing an async copy
+      // here because the `DriverType` instance is held in the GraphNodeImpl
+      // which is guaranteed to be alive until the graph instance itself is
+      // destroyed, where there should be a fence ensuring that the allocation
+      // associated with this kernel on the device side isn't deleted.
+      cudaMemcpyAsync(driver_ptr, &driver, sizeof(DriverType),
+                      cudaMemcpyDefault, cuda_instance->m_stream);
+
+      void const* args[] = {&driver_ptr};
+
+      cudaKernelNodeParams params = {};
+
+      params.blockDim       = block;
+      params.gridDim        = grid;
+      params.sharedMemBytes = shmem;
+      params.func           = (void*)base_t::get_kernel_func();
+      params.kernelParams   = (void**)args;
+      params.extra          = nullptr;
+
+      CUDA_SAFE_CALL(cudaGraphAddKernelNode(
+          &graph_node, graph, /* dependencies = */ nullptr,
+          /* numDependencies = */ 0, &params));
+    } else {
+      // We still need an empty node for the dependency structure
+      CUDA_SAFE_CALL(cudaGraphAddEmptyNode(&graph_node, graph,
+                                           /* dependencies = */ nullptr,
+                                           /* numDependencies = */ 0));
+    }
+    KOKKOS_ENSURES(bool(graph_node))
   }
 };
 
@@ -525,7 +612,7 @@ struct CudaParallelLaunchImpl<
 template <class DriverType, class LaunchBounds = Kokkos::LaunchBounds<>,
           Experimental::CudaLaunchMechanism LaunchMechanism =
               DeduceCudaLaunchMechanism<DriverType>::launch_mechanism,
-          bool DoGraph = false>
+          bool DoGraph = DriverType::Policy::is_graph_kernel::value>
 struct CudaParallelLaunch;
 
 // General launch mechanism
@@ -539,6 +626,20 @@ struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
   template <class... Args>
   CudaParallelLaunch(Args&&... args) {
     base_t::launch_kernel((Args &&) args...);
+  }
+};
+
+// Launch mechanism for creating graph nodes
+template <class DriverType, class LaunchBounds,
+          Experimental::CudaLaunchMechanism LaunchMechanism>
+struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
+                          /* DoGraph = */ true>
+    : CudaParallelLaunchImpl<DriverType, LaunchBounds, LaunchMechanism> {
+  using base_t =
+      CudaParallelLaunchImpl<DriverType, LaunchBounds, LaunchMechanism>;
+  template <class... Args>
+  CudaParallelLaunch(Args&&... args) {
+    base_t::create_parallel_launch_graph_node((Args &&) args...);
   }
 };
 
