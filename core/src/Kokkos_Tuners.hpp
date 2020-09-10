@@ -354,6 +354,7 @@ class TeamSizeTuner {
       std::declval<SpaceDescription>(),
       std::declval<std::vector<std::string>>()));
   TunerType tuner;
+
  public:
   TeamSizeTuner()        = default;
   TeamSizeTuner& operator=(const TeamSizeTuner& other) = default;
