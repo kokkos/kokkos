@@ -206,8 +206,6 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label,
                  const Functor& functor, const TagType& tag) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
     if (team_tuners.find(label) == team_tuners.end()) {
-      int team_size_max         = policy.team_size_max(functor, tag);
-      int team_size_recommended = policy.team_size_recommended(functor, tag);
       team_tuners.emplace(label, Kokkos::Tools::Experimental::TeamSizeTuner(
                                      label, policy, functor, tag,
                                      Impl::SimpleTeamSizeCalculator{}));
