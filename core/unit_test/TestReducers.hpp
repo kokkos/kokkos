@@ -351,7 +351,8 @@ struct TestReducers {
     {
       Kokkos::View<Scalar, typename ExecSpace::memory_space> sum_view("View");
       Kokkos::deep_copy(sum_view, Scalar(1));
-      Kokkos::Sum<Scalar, typename ExecSpace::memory_space> reducer_view(sum_view);
+      Kokkos::Sum<Scalar, typename ExecSpace::memory_space> reducer_view(
+          sum_view);
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
                               reducer_view);
       Kokkos::fence();
@@ -412,7 +413,7 @@ struct TestReducers {
                               reducer_view);
       Kokkos::fence();
       Scalar prod_view_scalar = prod_view();
-      ASSERT_EQ(prod_view_scalar, reference_prod);
+      ASSERT_EQ(prod_view_scalar, init);
 
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
                               reducer_view);
@@ -427,13 +428,14 @@ struct TestReducers {
     {
       Kokkos::View<Scalar, typename ExecSpace::memory_space> prod_view("View");
       Kokkos::deep_copy(prod_view, Scalar(0));
-      Kokkos::Prod<Scalar,typename ExecSpace::memory_space> reducer_view(prod_view);
+      Kokkos::Prod<Scalar, typename ExecSpace::memory_space> reducer_view(
+          prod_view);
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, 0), f,
                               reducer_view);
       Kokkos::fence();
       Scalar prod_view_scalar;
       Kokkos::deep_copy(prod_view_scalar, prod_view);
-      ASSERT_EQ(prod_view_scalar, reference_prod);
+      ASSERT_EQ(prod_view_scalar, init);
 
       Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), f,
                               reducer_view);
