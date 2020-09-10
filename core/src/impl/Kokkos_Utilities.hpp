@@ -430,7 +430,9 @@ using std::remove_cvref;
 using std::remove_cvref_t;
 #else
 template <class T>
-struct remove_cvref : std::remove_cv_t<std::remove_reference_t<T>>::type {};
+struct remove_cvref {
+  using type = std::remove_cv_t<std::remove_reference_t<T>>;
+};
 
 template <class T>
 using remove_cvref_t = typename remove_cvref<T>::type;
