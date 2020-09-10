@@ -72,8 +72,9 @@ struct TestRange {
   int offset;
 #endif
   TestRange(const size_t N_)
-      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_),
-        result_view(Kokkos::ViewAllocateWithoutInitializing("results"), N_),
+      : m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"), N_),
+        result_view(Kokkos::view_alloc(Kokkos::WithoutInitializing, "results"),
+                    N_),
         N(N_) {
 #ifdef KOKKOS_WORKAROUND_OPENMPTARGET_GCC
     offset = 13;

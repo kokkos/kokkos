@@ -168,8 +168,8 @@ int get_ctest_gpu(const char* local_rank_str) {
 
 namespace {
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
-    defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
 int get_gpu(const InitArguments& args) {
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
@@ -209,7 +209,7 @@ int get_gpu(const InitArguments& args) {
   }
   return use_gpu;
 }
-#endif  // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_ROCM || KOKKOS_ENABLE_HIP
+#endif  // KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_HIP
 
 bool is_unsigned_int(const char* str) {
   const size_t len = strlen(str);
@@ -231,14 +231,14 @@ void initialize_backends(const InitArguments& args) {
 
   // Protect declarations, to prevent "unused variable" warnings.
 #if defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
-    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HPX)
+    defined(KOKKOS_ENABLE_HPX)
   const int num_threads = args.num_threads;
 #endif
-#if defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_ENABLE_THREADS)
   const int use_numa = args.num_numa;
 #endif
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_ROCM) || \
-    defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   int use_gpu = get_gpu(args);
 #endif  // defined( KOKKOS_ENABLE_CUDA )
 
@@ -323,21 +323,6 @@ void initialize_backends(const InitArguments& args) {
     }
     // std::cout << "Kokkos::initialize() fyi: Cuda enabled and initialized" <<
     // std::endl ;
-  }
-#endif
-
-#if defined(KOKKOS_ENABLE_ROCM)
-  if (std::is_same<Kokkos::Experimental::ROCm,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      0 < use_gpu) {
-    if (use_gpu > -1) {
-      Kokkos::Experimental::ROCm::initialize(
-          Kokkos::Experimental::ROCm::SelectDevice(use_gpu));
-    } else {
-      Kokkos::Experimental::ROCm::initialize();
-    }
-    std::cout << "Kokkos::initialize() fyi: ROCm enabled and initialized"
-              << std::endl;
   }
 #endif
 
@@ -426,15 +411,6 @@ void finalize_internal(const bool all_spaces = false) {
   (void)all_spaces;
 #endif
 
-#if defined(KOKKOS_ENABLE_ROCM)
-  if (std::is_same<Kokkos::Experimental::ROCm,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      all_spaces) {
-    if (Kokkos::Experimental::ROCm::is_initialized())
-      Kokkos::Experimental::ROCm::finalize();
-  }
-#endif
-
 #if defined(KOKKOS_ENABLE_HIP)
   if (std::is_same<Kokkos::Experimental::HIP,
                    Kokkos::DefaultExecutionSpace>::value ||
@@ -502,10 +478,6 @@ void finalize_internal(const bool all_spaces = false) {
 void fence_internal() {
 #if defined(KOKKOS_ENABLE_CUDA)
   Kokkos::Cuda::impl_static_fence();
-#endif
-
-#if defined(KOKKOS_ENABLE_ROCM)
-  Kokkos::Experimental::ROCm().fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)

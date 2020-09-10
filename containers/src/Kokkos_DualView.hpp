@@ -245,21 +245,6 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
         h_view(create_mirror_view(d_view))  // without UVM, host View mirrors
   {}
 
-  explicit inline DualView(const ViewAllocateWithoutInitializing& arg_prop,
-                           const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                           const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                           const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                           const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                           const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                           const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                           const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                           const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : DualView(Impl::ViewCtorProp<std::string,
-                                    Kokkos::Impl::WithoutInitializing_t>(
-                     arg_prop.label, Kokkos::WithoutInitializing),
-                 arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
-                 arg_N7) {}
-
   //! Copy constructor (shallow copy)
   template <class SS, class LS, class DS, class MS>
   DualView(const DualView<SS, LS, DS, MS>& src)

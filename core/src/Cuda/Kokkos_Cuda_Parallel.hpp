@@ -1170,10 +1170,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
   // Shall we use the shfl based reduction or not (only use it for static sized
   // types of more than 128bit
-  enum {
-    UseShflReduction = ((sizeof(value_type) > 2 * sizeof(double)) &&
-                        (ValueTraits::StaticValueSize != 0))
-  };
+  static constexpr bool UseShflReduction = false;
+  //((sizeof(value_type)>2*sizeof(double)) && ValueTraits::StaticValueSize)
   // Some crutch to do function overloading
  private:
   using DummyShflReductionType  = double;

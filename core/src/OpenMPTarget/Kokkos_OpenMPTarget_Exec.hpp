@@ -164,8 +164,9 @@ class OpenMPTargetExecTeamMember {
   }
 
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& value,
-                                             const int& thread_id) const {
+  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& /*value*/,
+                                             const int& /*thread_id*/) const {
+    // FIXME_OPENMPTARGET
     /*#if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
         { }
     #else
@@ -227,8 +228,9 @@ class OpenMPTargetExecTeamMember {
    *  non-deterministic.
    */
   template <typename ArgType>
-  KOKKOS_INLINE_FUNCTION ArgType team_scan(const ArgType& value,
-                                           ArgType* const global_accum) const {
+  KOKKOS_INLINE_FUNCTION ArgType
+  team_scan(const ArgType& /*value*/, ArgType* const /*global_accum*/) const {
+    // FIXME_OPENMPTARGET
     /*  // Make sure there is enough scratch space:
       using type =
         typename if_c<sizeof(ArgType) < TEAM_REDUCE_SIZE, ArgType, void>::type;
@@ -299,10 +301,10 @@ class OpenMPTargetExecTeamMember {
       : m_team_shared(0, 0),
         m_team_scratch_size{shmem_size_L1, shmem_size_L2},
         m_team_rank(0),
-        m_vector_length(vector_length),
         m_team_size(team_size),
         m_league_rank(league_rank),
         m_league_size(league_size),
+        m_vector_length(vector_length),
         m_glb_scratch(glb_scratch) {
     const int omp_tid = omp_get_thread_num();
     m_league_rank     = league_rank;
@@ -564,7 +566,7 @@ namespace Kokkos {
  * i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team.
- * This functionality requires C++11 support.*/
+ */
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<
@@ -579,8 +581,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  * ValueType & val) for each i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team
- * and a summation of val is performed and put into result. This functionality
- * requires C++11 support.*/
+ * and a summation of val is performed and put into result.
+ */
 template <typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<
@@ -607,7 +609,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
  * ValueType& update) and put into init_result. The input value of init_result
  * is used as initializer for temporary variables of ValueType. Therefore the
  * input value should be the neutral element with respect to the join operation
- * (e.g. '0 for +-' or '1 for *'). This functionality requires C++11 support.*/
+ * (e.g. '0 for +-' or '1 for *').
+ */
 template <typename iType, class Lambda, typename ValueType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<
@@ -632,7 +635,7 @@ namespace Kokkos {
  * i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all vector lanes of the the calling thread.
- * This functionality requires C++11 support.*/
+ */
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::ThreadVectorRangeBoundariesStruct<
@@ -647,8 +650,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  * ValueType & val) for each i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
- * and a summation of val is performed and put into result. This functionality
- * requires C++11 support.*/
+ * and a summation of val is performed and put into result.
+ */
 template <typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<
@@ -671,7 +674,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
  * ValueType& update) and put into init_result. The input value of init_result
  * is used as initializer for temporary variables of ValueType. Therefore the
  * input value should be the neutral element with respect to the join operation
- * (e.g. '0 for +-' or '1 for *'). This functionality requires C++11 support.*/
+ * (e.g. '0 for +-' or '1 for *').
+ */
 template <typename iType, class Lambda, typename ValueType, class JoinType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<
@@ -700,7 +704,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
  * needs to be added to val no matter whether final==true or not. In a serial
  * execution (i.e. team_size==1) the operator is only called once with
  * final==true. Scan_val will be set to the final sum value over all vector
- * lanes. This functionality requires C++11 support.*/
+ * lanes.
+ */
 template <typename iType, class FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<
@@ -727,7 +732,7 @@ namespace Kokkos {
 template <class FunctorType>
 KOKKOS_INLINE_FUNCTION void single(
     const Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember>&
-        single_struct,
+    /*single_struct*/,
     const FunctorType& lambda) {
   lambda();
 }
@@ -743,7 +748,7 @@ KOKKOS_INLINE_FUNCTION void single(
 template <class FunctorType, class ValueType>
 KOKKOS_INLINE_FUNCTION void single(
     const Impl::VectorSingleStruct<Impl::OpenMPTargetExecTeamMember>&
-        single_struct,
+    /*single_struct*/,
     const FunctorType& lambda, ValueType& val) {
   lambda(val);
 }

@@ -108,7 +108,11 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   inline void execute() const {
     const typename Policy::index_type nwork = m_policy.end() - m_policy.begin();
 
-    const int block_size = 256;  // FIXME_HIP Choose block_size better
+    const int block_size =
+        LaunchBounds::maxTperB
+            ? LaunchBounds::maxTperB
+            : ::Kokkos::Experimental::Impl::HIPTraits::
+                  MaxThreadsPerBlock;  // FIXME_HIP Choose block_size better
     const dim3 block(1, block_size, 1);
     const dim3 grid(
         typename Policy::index_type((nwork + block.y - 1) / block.y), 1, 1);
@@ -307,8 +311,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    // FIXME_HIP I don't know where 8 comes from
-    unsigned int n = ::Kokkos::Experimental::Impl::HIPTraits::WarpSize * 8;
+    unsigned int n =
+        ::Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock;
     int shmem_size =
         hip_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
             f, n);

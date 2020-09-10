@@ -105,7 +105,7 @@ void *HBWSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
   constexpr uintptr_t alignment      = Kokkos::Impl::MEMORY_ALIGNMENT;
   constexpr uintptr_t alignment_mask = alignment - 1;
 
-  void *ptr = 0;
+  void *ptr = nullptr;
 
   if (arg_alloc_size) {
     if (m_alloc_mech == STD_MALLOC) {
@@ -130,12 +130,15 @@ void *HBWSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
     }
   }
 
-  if ((ptr == 0) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
+  if ((ptr == nullptr) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::HBWSpace::allocate[ ";
     switch (m_alloc_mech) {
       case STD_MALLOC: msg << "STD_MALLOC"; break;
+      case POSIX_MEMALIGN: msg << "POSIX_MEMALIGN"; break;
+      case POSIX_MMAP: msg << "POSIX_MMAP"; break;
+      case INTEL_MM_ALLOC: msg << "INTEL_MM_ALLOC"; break;
     }
     msg << " ]( " << arg_alloc_size << " ) FAILED";
     if (ptr == nullptr) {
@@ -152,7 +155,9 @@ void *HBWSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::allocateData(name(), arg_label, ptr, reported_size);
+    Kokkos::Profiling::allocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
+        reported_size);
   }
 
   return ptr;
@@ -169,8 +174,9 @@ void HBWSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       const size_t reported_size =
           (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-      Kokkos::Profiling::deallocateData(name(), arg_label, arg_alloc_ptr,
-                                        reported_size);
+      Kokkos::Profiling::deallocateData(
+          Kokkos::Profiling::make_space_handle(name()), arg_label,
+          arg_alloc_ptr, reported_size);
     }
 
     if (m_alloc_mech == STD_MALLOC) {
@@ -247,7 +253,7 @@ void *
 SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::allocate_tracked(
     const Kokkos::Experimental::HBWSpace &arg_space,
     const std::string &arg_alloc_label, const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void *)0;
+  if (!arg_alloc_size) return nullptr;
 
   SharedAllocationRecord *const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);
@@ -260,7 +266,7 @@ SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::allocate_tracked(
 void SharedAllocationRecord<Kokkos::Experimental::HBWSpace,
                             void>::deallocate_tracked(void *const
                                                           arg_alloc_ptr) {
-  if (arg_alloc_ptr != 0) {
+  if (arg_alloc_ptr != nullptr) {
     SharedAllocationRecord *const r = get_record(arg_alloc_ptr);
 
     RecordBase::decrement(r);
@@ -291,9 +297,9 @@ SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
       SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>;
 
   SharedAllocationHeader const *const head =
-      alloc_ptr ? Header::get_header(alloc_ptr) : (SharedAllocationHeader *)0;
+      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
   RecordHost *const record =
-      head ? static_cast<RecordHost *>(head->m_record) : (RecordHost *)0;
+      head ? static_cast<RecordHost *>(head->m_record) : nullptr;
 
   if (!alloc_ptr || record->m_alloc_ptr != head) {
     Kokkos::Impl::throw_runtime_exception(std::string(

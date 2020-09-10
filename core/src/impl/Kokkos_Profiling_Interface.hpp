@@ -121,6 +121,8 @@ using destroyProfileSectionFunction =
 using profileEventFunction  = Kokkos_Profiling_profileEventFunction;
 using beginDeepCopyFunction = Kokkos_Profiling_beginDeepCopyFunction;
 using endDeepCopyFunction   = Kokkos_Profiling_endDeepCopyFunction;
+using beginFenceFunction    = Kokkos_Profiling_beginFenceFunction;
+using endFenceFunction      = Kokkos_Profiling_endFenceFunction;
 
 }  // namespace Tools
 

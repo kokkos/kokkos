@@ -71,7 +71,8 @@ struct TestRangeRequire {
   int N;
   static const int offset = 13;
   TestRangeRequire(const size_t N_)
-      : m_flags(Kokkos::ViewAllocateWithoutInitializing("flags"), N_), N(N_) {}
+      : m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"), N_),
+        N(N_) {}
 
   void test_for() {
     typename view_type::HostMirror host_flags =

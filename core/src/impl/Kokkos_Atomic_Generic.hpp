@@ -56,11 +56,43 @@
 namespace Kokkos {
 namespace Impl {
 
+template <class Op, class Scalar1, class Scalar2, class Enable = bool>
+struct _check_early_exit_impl {
+  KOKKOS_FORCEINLINE_FUNCTION
+  static constexpr bool check(Op const&, Scalar1 const&,
+                              Scalar2 const&) noexcept {
+    return false;
+  }
+};
+
+template <class Op, class Scalar1, class Scalar2>
+struct _check_early_exit_impl<
+    Op, Scalar1, Scalar2,
+    decltype(std::declval<Op const&>().check_early_exit(
+        std::declval<Scalar1 const&>(), std::declval<Scalar2 const&>()))> {
+  KOKKOS_FORCEINLINE_FUNCTION
+  static constexpr bool check(Op const& op, Scalar1 const& v1,
+                              Scalar2 const& v2) {
+    return op.check_early_exit(v1, v2);
+  }
+};
+
+template <class Op, class Scalar1, class Scalar2>
+KOKKOS_FORCEINLINE_FUNCTION constexpr bool check_early_exit(
+    Op const& op, Scalar1 const& v1, Scalar2 const& v2) noexcept {
+  return _check_early_exit_impl<Op, Scalar1, Scalar2>::check(op, v1, v2);
+}
+
 template <class Scalar1, class Scalar2>
 struct MaxOper {
   KOKKOS_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return (val1 > val2 ? val1 : val2);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION
+  static constexpr bool check_early_exit(Scalar1 const& val1,
+                                         Scalar2 const& val2) noexcept {
+    return (val1 > val2);
   }
 };
 
@@ -69,6 +101,11 @@ struct MinOper {
   KOKKOS_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return (val1 < val2 ? val1 : val2);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION
+  static constexpr bool check_early_exit(Scalar1 const& val1,
+                                         Scalar2 const& val2) noexcept {
+    return (val1 < val2);
   }
 };
 
@@ -167,6 +204,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   oldval.t = *dest;
 
   do {
+    if (check_early_exit(Oper{}, oldval.t, val)) return oldval.t;
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
@@ -191,6 +229,7 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
   oldval.t = *dest;
 
   do {
+    if (check_early_exit(Oper{}, oldval.t, val)) return oldval.t;
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
@@ -213,6 +252,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   oldval.t = *dest;
 
   do {
+    if (check_early_exit(Oper{}, oldval.t, val)) return oldval.t;
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
@@ -234,6 +274,7 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
   oldval.t = *dest;
 
   do {
+    if (check_early_exit(Oper{}, oldval.t, val)) return oldval.t;
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);

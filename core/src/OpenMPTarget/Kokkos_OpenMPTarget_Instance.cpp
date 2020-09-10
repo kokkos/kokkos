@@ -6,8 +6,9 @@ namespace Impl {
 void OpenMPTargetInternal::fence() {}
 int OpenMPTargetInternal::concurrency() { return 128000; }
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
-void OpenMPTargetInternal::print_configuration(std::ostream& stream,
+void OpenMPTargetInternal::print_configuration(std::ostream& /*stream*/,
                                                const bool) {
+  // FIXME_OPENMPTARGET
   printf("Using OpenMPTarget\n");
 }
 

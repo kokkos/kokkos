@@ -229,10 +229,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
   // Shall we use the shfl based reduction or not (only use it for static sized
   // types of more than 128bit
-  enum {
-    UseShflReduction = ((sizeof(value_type) > 2 * sizeof(double)) &&
-                        (ValueTraits::StaticValueSize != 0))
-  };
+  static constexpr bool UseShflReduction = false;
+  // ((sizeof(value_type) > 2 * sizeof(double)) && (ValueTraits::StaticValueSize
+  // != 0))
   // Some crutch to do function overloading
  private:
   using DummyShflReductionType  = double;
@@ -299,7 +298,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   // Determine block size constrained by shared memory:
   // This is copy/paste from Kokkos_HIP_Parallel_Range
   inline unsigned local_block_size(const FunctorType& f) {
-    unsigned n     = Experimental::Impl::HIPTraits::WarpSize * 8;
+    unsigned int n =
+        ::Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock;
     int shmem_size = ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
         false, FunctorType, WorkTag>(f, n);
     while (
