@@ -180,8 +180,8 @@ namespace Impl {
 
 struct SimpleTeamSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
-  uint64_t get_max_team_size(const Policy& policy, const Functor& functor,
-                             const Tag& tag) {
+  int get_max_team_size(const Policy& policy, const Functor& functor,
+                        const Tag& tag) {
     return policy.team_size_max(functor, tag);
   }
 };
@@ -189,8 +189,8 @@ struct SimpleTeamSizeCalculator {
 template <typename ReducerType>
 struct ComplexReducerSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
-  uint64_t get_max_team_size(const Policy& policy, const Functor& functor,
-                             const Tag& tag) {
+  int get_max_team_size(const Policy& policy, const Functor& functor,
+                        const Tag& tag) {
     using value_type = typename ReducerType::value_type;
     value_type value;
     ReducerType reducer_example = ReducerType(value);
