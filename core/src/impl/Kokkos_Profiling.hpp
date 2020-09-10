@@ -198,7 +198,7 @@ struct ComplexReducerSizeCalculator {
   }
 };
 
-};  // namespace Impl
+}  // namespace Impl
 
 template <class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label,
