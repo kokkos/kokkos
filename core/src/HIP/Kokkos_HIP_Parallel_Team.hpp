@@ -745,12 +745,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Reduce with final value at blockDim.y - 1 location.
     bool do_final_reduce = m_league_size == 0;
     if (!do_final_reduce)
-      do_final_reduce = 
-         hip_single_inter_block_reduce_scan<false, FunctorType, work_tag>(
-            reducer_conditional::select(m_functor, m_reducer), blockIdx.x,
-            gridDim.x,
-            Kokkos::Experimental::kokkos_impl_hip_shared_memory<size_type>(),
-            m_scratch_space, m_scratch_flags);
+      do_final_reduce =
+          hip_single_inter_block_reduce_scan<false, FunctorType, work_tag>(
+              reducer_conditional::select(m_functor, m_reducer), blockIdx.x,
+              gridDim.x,
+              Kokkos::Experimental::kokkos_impl_hip_shared_memory<size_type>(),
+              m_scratch_space, m_scratch_flags);
     if (do_final_reduce) {
       // This is the final block with the final result at the final threads'
       // location
@@ -808,15 +808,16 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     value_type init;
     value_init::init(reducer_conditional::select(m_functor, m_reducer), &init);
     if (int_league_size == 0) {
-        Kokkos::Impl::FunctorFinal<reducer_type_fwd, work_tag_fwd>::final(
-            reducer_conditional::select(m_functor, m_reducer),
-            reinterpret_cast<void*>(&value));
-        *result = value;
+      Kokkos::Impl::FunctorFinal<reducer_type_fwd, work_tag_fwd>::final(
+          reducer_conditional::select(m_functor, m_reducer),
+          reinterpret_cast<void*>(&value));
+      *result = value;
     } else if (Impl::hip_inter_block_shuffle_reduction<FunctorType, value_join,
-                                                work_tag>(
-            value, init,
-            value_join(reducer_conditional::select(m_functor, m_reducer)),
-            m_scratch_space, result, m_scratch_flags, blockDim.y)) {
+                                                       work_tag>(
+                   value, init,
+                   value_join(
+                       reducer_conditional::select(m_functor, m_reducer)),
+                   m_scratch_space, result, m_scratch_flags, blockDim.y)) {
       unsigned int const id = threadIdx.y * blockDim.x + threadIdx.x;
       if (id == 0) {
         Kokkos::Impl::FunctorFinal<reducer_type_fwd, work_tag_fwd>::final(
@@ -828,7 +829,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline void execute() {
-    const int nwork = m_league_size * m_team_size;
+    const int nwork            = m_league_size * m_team_size;
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
                                  ReduceFunctorHasFinal<FunctorType>::value ||
                                  !m_result_ptr_host_accessible ||
@@ -918,11 +919,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   m_vector_size;
 
     // We can't early exit here because the result place might not be accessible
-    // or the functor/reducer init not callable on the host. But I am not sure all 
-    // the other code below is kosher with zero work length ...
+    // or the functor/reducer init not callable on the host. But I am not sure
+    // all the other code below is kosher with zero work length ...
     //
     // Return Init value if the number of worksets is zero
-    //if (m_league_size * m_team_size == 0) {
+    // if (m_league_size * m_team_size == 0) {
     //  value_init::init(reducer_conditional::select(m_functor, m_reducer),
     //                   arg_result.data());
     //  return;
@@ -1025,11 +1026,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   m_vector_size;
 
     // We can't early exit here because the result place might not be accessible
-    // or the functor/reducer init not callable on the host. But I am not sure all 
-    // the other code below is kosher with zero work length ...
+    // or the functor/reducer init not callable on the host. But I am not sure
+    // all the other code below is kosher with zero work length ...
     //
     // Return Init value if the number of worksets is zero
-    //if (arg_policy.league_size() == 0) {
+    // if (arg_policy.league_size() == 0) {
     //   value_init::init(reducer_conditional::select(m_functor, m_reducer),
     //                   m_result_ptr);
     //  return;
