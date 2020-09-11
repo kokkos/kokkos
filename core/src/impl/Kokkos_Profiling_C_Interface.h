@@ -115,6 +115,14 @@ typedef void (*Kokkos_Profiling_beginFenceFunction)(const char*, const uint32_t,
                                                     uint64_t*);
 typedef void (*Kokkos_Profiling_endFenceFunction)(uint64_t);
 
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Profiling_dualViewSyncFunction)(const char*,
+                                                      const void* const, bool);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Profiling_dualViewModifyFunction)(const char*,
+                                                        const void* const,
+                                                        bool);
+
 // Tuning
 
 #define KOKKOS_TOOLS_TUNING_STRING_LENGTH 64
@@ -233,7 +241,9 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_endDeepCopyFunction end_deep_copy;
   Kokkos_Profiling_beginFenceFunction begin_fence;
   Kokkos_Profiling_endFenceFunction end_fence;
-  char profiling_padding[14 * sizeof(function_pointer)];
+  Kokkos_Profiling_dualViewSyncFunction sync_dual_view;
+  Kokkos_Profiling_dualViewModifyFunction modify_dual_view;
+  char profiling_padding[12 * sizeof(function_pointer)];
   Kokkos_Tools_outputTypeDeclarationFunction declare_output_type;
   Kokkos_Tools_inputTypeDeclarationFunction declare_input_type;
   Kokkos_Tools_requestValueFunction request_output_values;
