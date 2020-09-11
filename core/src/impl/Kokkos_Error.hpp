@@ -112,16 +112,15 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
         m_failure_mode(arg_failure_mode),
         m_mechanism(arg_mechanism) {}
 
-  RawMemoryAllocationFailure() noexcept = delete;
+  RawMemoryAllocationFailure() = delete;
 
-  RawMemoryAllocationFailure(RawMemoryAllocationFailure const &) noexcept =
+  RawMemoryAllocationFailure(RawMemoryAllocationFailure const &) = default;
+  RawMemoryAllocationFailure(RawMemoryAllocationFailure &&)      = default;
+
+  RawMemoryAllocationFailure &operator=(RawMemoryAllocationFailure const &) =
       default;
-  RawMemoryAllocationFailure(RawMemoryAllocationFailure &&) noexcept = default;
-
-  RawMemoryAllocationFailure &operator             =(
-      RawMemoryAllocationFailure const &) noexcept = default;
-  RawMemoryAllocationFailure &operator             =(
-      RawMemoryAllocationFailure &&) noexcept = default;
+  RawMemoryAllocationFailure &operator=(RawMemoryAllocationFailure &&) =
+      default;
 
   ~RawMemoryAllocationFailure() noexcept override = default;
 

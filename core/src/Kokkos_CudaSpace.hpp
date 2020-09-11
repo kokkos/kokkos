@@ -83,9 +83,9 @@ class CudaSpace {
   /*--------------------------------*/
 
   CudaSpace();
-  CudaSpace(CudaSpace&& rhs) noexcept = default;
-  CudaSpace(const CudaSpace& rhs)     = default;
-  CudaSpace& operator=(CudaSpace&& rhs) noexcept = default;
+  CudaSpace(CudaSpace&& rhs)      = default;
+  CudaSpace(const CudaSpace& rhs) = default;
+  CudaSpace& operator=(CudaSpace&& rhs) = default;
   CudaSpace& operator=(const CudaSpace& rhs) = default;
   ~CudaSpace()                               = default;
 
@@ -180,9 +180,9 @@ class CudaUVMSpace {
   /*--------------------------------*/
 
   CudaUVMSpace();
-  CudaUVMSpace(CudaUVMSpace&& rhs) noexcept = default;
-  CudaUVMSpace(const CudaUVMSpace& rhs)     = default;
-  CudaUVMSpace& operator=(CudaUVMSpace&& rhs) noexcept = default;
+  CudaUVMSpace(CudaUVMSpace&& rhs)      = default;
+  CudaUVMSpace(const CudaUVMSpace& rhs) = default;
+  CudaUVMSpace& operator=(CudaUVMSpace&& rhs) = default;
   CudaUVMSpace& operator=(const CudaUVMSpace& rhs) = default;
   ~CudaUVMSpace()                                  = default;
 
@@ -237,9 +237,9 @@ class CudaHostPinnedSpace {
   /*--------------------------------*/
 
   CudaHostPinnedSpace();
-  CudaHostPinnedSpace(CudaHostPinnedSpace&& rhs) noexcept = default;
-  CudaHostPinnedSpace(const CudaHostPinnedSpace& rhs)     = default;
-  CudaHostPinnedSpace& operator=(CudaHostPinnedSpace&& rhs) noexcept = default;
+  CudaHostPinnedSpace(CudaHostPinnedSpace&& rhs)      = default;
+  CudaHostPinnedSpace(const CudaHostPinnedSpace& rhs) = default;
+  CudaHostPinnedSpace& operator=(CudaHostPinnedSpace&& rhs) = default;
   CudaHostPinnedSpace& operator=(const CudaHostPinnedSpace& rhs) = default;
   ~CudaHostPinnedSpace()                                         = default;
 

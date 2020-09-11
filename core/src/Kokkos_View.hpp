@@ -1426,13 +1426,13 @@ class View : public ViewTraits<DataType, Properties...> {
   View(const View&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  View(View&&) noexcept = default;
+  View(View&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   View& operator=(const View&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(View&&) noexcept = default;
+  View& operator=(View&&) = default;
 
   //----------------------------------------
   // Compatible view copy constructor and assignment

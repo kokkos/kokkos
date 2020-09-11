@@ -332,11 +332,11 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
   //----------------------------------------------------------------------
 
-  ~DynamicView()                      = default;
-  DynamicView()                       = default;
-  DynamicView(DynamicView&&) noexcept = default;
-  DynamicView(const DynamicView&)     = default;
-  DynamicView& operator=(DynamicView&&) noexcept = default;
+  ~DynamicView()                  = default;
+  DynamicView()                   = default;
+  DynamicView(DynamicView&&)      = default;
+  DynamicView(const DynamicView&) = default;
+  DynamicView& operator=(DynamicView&&) = default;
   DynamicView& operator=(const DynamicView&) = default;
 
   template <class RT, class... RP>
@@ -391,10 +391,10 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
 
     void destroy_shared_allocation() { execute(true); }
 
-    Destroy()                   = default;
-    Destroy(Destroy&&) noexcept = default;
-    Destroy(const Destroy&)     = default;
-    Destroy& operator=(Destroy&&) noexcept = default;
+    Destroy()               = default;
+    Destroy(Destroy&&)      = default;
+    Destroy(const Destroy&) = default;
+    Destroy& operator=(Destroy&&) = default;
     Destroy& operator=(const Destroy&) = default;
 
     Destroy(typename traits::value_type** arg_chunk,

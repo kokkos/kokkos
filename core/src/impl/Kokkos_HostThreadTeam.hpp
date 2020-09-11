@@ -454,10 +454,10 @@ class HostThreadTeamMember {
         m_league_rank(arg_league_rank),
         m_league_size(arg_league_size) {}
 
-  ~HostThreadTeamMember()                               = default;
-  HostThreadTeamMember()                                = delete;
-  HostThreadTeamMember(HostThreadTeamMember&&) noexcept = default;
-  HostThreadTeamMember(HostThreadTeamMember const&)     = default;
+  ~HostThreadTeamMember()                           = default;
+  HostThreadTeamMember()                            = delete;
+  HostThreadTeamMember(HostThreadTeamMember&&)      = default;
+  HostThreadTeamMember(HostThreadTeamMember const&) = default;
   // The move assignment operator is implicitly deleted
   // since there are const-qualified member variables and reference
   // member variables.

@@ -788,8 +788,8 @@ struct FunctorAnalysis {
       DeduceFinal<>::final(m_functor, dst);
     }
 
-    Reducer(Reducer const&)     = default;
-    Reducer(Reducer&&) noexcept = default;
+    Reducer(Reducer const&) = default;
+    Reducer(Reducer&&)      = default;
     Reducer& operator=(Reducer const&) = delete;
     Reducer& operator=(Reducer&&) = delete;
 

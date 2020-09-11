@@ -128,11 +128,11 @@ class FixedBlockSizeMemoryPool
 
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool() = default;
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool(
-      FixedBlockSizeMemoryPool&&) noexcept = default;
+      FixedBlockSizeMemoryPool&&) = default;
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool(
       FixedBlockSizeMemoryPool const&)                        = default;
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool& operator=(
-      FixedBlockSizeMemoryPool&&) noexcept = default;
+      FixedBlockSizeMemoryPool&&) = default;
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool& operator=(
       FixedBlockSizeMemoryPool const&) = default;
 
@@ -252,9 +252,9 @@ public:
   { /* forwarding ctor, must be empty */ }
 
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool() = default;
-  KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool(FixedBlockSizeMemoryPool&&) noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool(FixedBlockSizeMemoryPool&&)  = default;
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool(FixedBlockSizeMemoryPool const&) = default;
-  KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool& operator=(FixedBlockSizeMemoryPool&&) noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool& operator=(FixedBlockSizeMemoryPool&&)  = default;
   KOKKOS_DEFAULTED_FUNCTION FixedBlockSizeMemoryPool& operator=(FixedBlockSizeMemoryPool const&) = default;
 
 

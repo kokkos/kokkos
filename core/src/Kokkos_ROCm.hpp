@@ -115,9 +115,9 @@ class ROCm {
   ROCm();
   //  explicit ROCm( const int instance_id );
 
-  ROCm(ROCm&&) noexcept = default;
-  ROCm(const ROCm&)     = default;
-  ROCm& operator=(ROCm&&) noexcept = default;
+  ROCm(ROCm&&)      = default;
+  ROCm(const ROCm&) = default;
+  ROCm& operator=(ROCm&&) = default;
   ROCm& operator=(const ROCm&) = default;
 
   //@}

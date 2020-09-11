@@ -79,15 +79,14 @@ struct TaskPolicyWithPredecessor {
   TaskPolicyWithPredecessor(TaskPolicyWithPredecessor const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  TaskPolicyWithPredecessor(TaskPolicyWithPredecessor&&) noexcept = default;
+  TaskPolicyWithPredecessor(TaskPolicyWithPredecessor&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   TaskPolicyWithPredecessor& operator=(TaskPolicyWithPredecessor const&) =
       default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  TaskPolicyWithPredecessor& operator=(TaskPolicyWithPredecessor&&) noexcept =
-      default;
+  TaskPolicyWithPredecessor& operator=(TaskPolicyWithPredecessor&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   ~TaskPolicyWithPredecessor() = default;
@@ -134,14 +133,13 @@ struct TaskPolicyWithScheduler {
   TaskPolicyWithScheduler(TaskPolicyWithScheduler const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  TaskPolicyWithScheduler(TaskPolicyWithScheduler&&) noexcept = default;
+  TaskPolicyWithScheduler(TaskPolicyWithScheduler&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   TaskPolicyWithScheduler& operator=(TaskPolicyWithScheduler const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  TaskPolicyWithScheduler& operator=(TaskPolicyWithScheduler&&) noexcept =
-      default;
+  TaskPolicyWithScheduler& operator=(TaskPolicyWithScheduler&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   ~TaskPolicyWithScheduler() = default;

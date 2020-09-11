@@ -74,14 +74,14 @@ class
 
   //! Default constructor (initializes both real and imaginary parts to zero).
   KOKKOS_DEFAULTED_FUNCTION
-  complex() noexcept = default;
+  complex() = default;
 
   //! Copy constructor.
   KOKKOS_DEFAULTED_FUNCTION
-  complex(const complex&) noexcept = default;
+  complex(const complex&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  complex& operator=(const complex&) noexcept = default;
+  complex& operator=(const complex&) = default;
 
   /// \brief Conversion constructor from compatible RType
   template <class RType,

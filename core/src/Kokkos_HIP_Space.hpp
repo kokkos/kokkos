@@ -80,9 +80,9 @@ class HIPSpace {
   /*--------------------------------*/
 
   HIPSpace();
-  HIPSpace(HIPSpace&& rhs) noexcept = default;
-  HIPSpace(const HIPSpace& rhs)     = default;
-  HIPSpace& operator=(HIPSpace&& rhs) noexcept = default;
+  HIPSpace(HIPSpace&& rhs)      = default;
+  HIPSpace(const HIPSpace& rhs) = default;
+  HIPSpace& operator=(HIPSpace&& rhs) = default;
   HIPSpace& operator=(const HIPSpace& rhs) = default;
   ~HIPSpace()                              = default;
 
@@ -172,9 +172,9 @@ class HIPHostPinnedSpace {
   /*--------------------------------*/
 
   HIPHostPinnedSpace();
-  HIPHostPinnedSpace(HIPHostPinnedSpace&& rhs) noexcept = default;
-  HIPHostPinnedSpace(const HIPHostPinnedSpace& rhs)     = default;
-  HIPHostPinnedSpace& operator=(HIPHostPinnedSpace&& rhs) noexcept = default;
+  HIPHostPinnedSpace(HIPHostPinnedSpace&& rhs)      = default;
+  HIPHostPinnedSpace(const HIPHostPinnedSpace& rhs) = default;
+  HIPHostPinnedSpace& operator=(HIPHostPinnedSpace&& rhs) = default;
   HIPHostPinnedSpace& operator=(const HIPHostPinnedSpace& rhs) = default;
   ~HIPHostPinnedSpace()                                        = default;
 

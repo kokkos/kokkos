@@ -76,7 +76,7 @@ struct OptionalRef {
   OptionalRef(OptionalRef const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  OptionalRef(OptionalRef&&) noexcept = default;
+  OptionalRef(OptionalRef&&) = default;
 
   KOKKOS_INLINE_FUNCTION
   // MSVC requires that this copy constructor is not defaulted
@@ -94,7 +94,7 @@ struct OptionalRef {
   }
 
   KOKKOS_DEFAULTED_FUNCTION
-  OptionalRef& operator=(OptionalRef&&) noexcept = default;
+  OptionalRef& operator=(OptionalRef&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   ~OptionalRef() = default;

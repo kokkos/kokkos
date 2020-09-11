@@ -110,10 +110,10 @@ class Bitset {
   Bitset& operator=(const Bitset<Device>&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  Bitset(Bitset<Device>&&) noexcept = default;
+  Bitset(Bitset<Device>&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  Bitset& operator=(Bitset<Device>&&) noexcept = default;
+  Bitset& operator=(Bitset<Device>&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   ~Bitset() = default;

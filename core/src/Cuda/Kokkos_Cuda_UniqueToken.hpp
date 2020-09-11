@@ -73,13 +73,13 @@ class UniqueToken<Cuda, UniqueTokenScope::Global> {
   UniqueToken(const UniqueToken&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  UniqueToken(UniqueToken&&) noexcept = default;
+  UniqueToken(UniqueToken&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   UniqueToken& operator=(const UniqueToken&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  UniqueToken& operator=(UniqueToken&&) noexcept = default;
+  UniqueToken& operator=(UniqueToken&&) = default;
 
   /// \brief upper bound for acquired values, i.e. 0 <= value < size()
   KOKKOS_INLINE_FUNCTION

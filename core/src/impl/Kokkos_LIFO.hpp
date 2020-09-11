@@ -305,7 +305,7 @@ class SingleConsumeOperationLIFO : private LockBasedLIFOCommon<T> {
   using value_type = typename base_t::value_type;  // = T
 
   KOKKOS_DEFAULTED_FUNCTION
-  SingleConsumeOperationLIFO() noexcept = default;
+  SingleConsumeOperationLIFO() = default;
 
   SingleConsumeOperationLIFO(SingleConsumeOperationLIFO const&) = delete;
   SingleConsumeOperationLIFO(SingleConsumeOperationLIFO&&)      = delete;

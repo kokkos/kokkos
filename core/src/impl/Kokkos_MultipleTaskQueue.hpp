@@ -342,13 +342,13 @@ class MultipleTaskQueue final
     SchedulerInfo(SchedulerInfo const&) = default;
 
     KOKKOS_DEFAULTED_FUNCTION
-    SchedulerInfo(SchedulerInfo&&) noexcept = default;
+    SchedulerInfo(SchedulerInfo&&) = default;
 
     KOKKOS_DEFAULTED_FUNCTION
     SchedulerInfo& operator=(SchedulerInfo const&) = default;
 
     KOKKOS_DEFAULTED_FUNCTION
-    SchedulerInfo& operator=(SchedulerInfo&&) noexcept = default;
+    SchedulerInfo& operator=(SchedulerInfo&&) = default;
 
     KOKKOS_DEFAULTED_FUNCTION
     ~SchedulerInfo() = default;

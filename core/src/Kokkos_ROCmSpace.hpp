@@ -73,9 +73,9 @@ class ROCmSpace {
   /*--------------------------------*/
 
   ROCmSpace();
-  ROCmSpace(ROCmSpace&& rhs) noexcept = default;
-  ROCmSpace(const ROCmSpace& rhs)     = default;
-  ROCmSpace& operator=(ROCmSpace&& rhs) noexcept = default;
+  ROCmSpace(ROCmSpace&& rhs)      = default;
+  ROCmSpace(const ROCmSpace& rhs) = default;
+  ROCmSpace& operator=(ROCmSpace&& rhs) = default;
   ROCmSpace& operator=(const ROCmSpace& rhs) = default;
   ~ROCmSpace()                               = default;
 
@@ -165,9 +165,9 @@ class ROCmHostPinnedSpace {
   /*--------------------------------*/
 
   ROCmHostPinnedSpace();
-  ROCmHostPinnedSpace(ROCmHostPinnedSpace&& rhs) noexcept = default;
-  ROCmHostPinnedSpace(const ROCmHostPinnedSpace& rhs)     = default;
-  ROCmHostPinnedSpace& operator=(ROCmHostPinnedSpace&& rhs) noexcept = default;
+  ROCmHostPinnedSpace(ROCmHostPinnedSpace&& rhs)      = default;
+  ROCmHostPinnedSpace(const ROCmHostPinnedSpace& rhs) = default;
+  ROCmHostPinnedSpace& operator=(ROCmHostPinnedSpace&& rhs) = default;
   ROCmHostPinnedSpace& operator=(const ROCmHostPinnedSpace& rhs) = default;
   ~ROCmHostPinnedSpace()                                         = default;
 
