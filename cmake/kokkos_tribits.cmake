@@ -234,12 +234,21 @@ FUNCTION(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     ""
     ${ARGN})
 
-  IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13")
-    #great, this works the "right" way
+  IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18")
+    #I can use link options
+    #check for CXX linkage using the simple 3.18 way
+    TARGET_LINK_OPTIONS(
+      ${LIBRARY_NAME} PUBLIC
+      $<$<LINK_LANGUAGE:CXX>:${KOKKOS_LINK_OPTIONS}>
+    )
+  ELSEIF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13")
+    #I can use link options
+    #just assume CXX linkage
     TARGET_LINK_OPTIONS(
       ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
     )
   ELSE()
+    #assume CXX linkage, we have no good way to check otherwise
     IF (PARSE_PLAIN_STYLE)
       TARGET_LINK_LIBRARIES(
         ${LIBRARY_NAME} ${KOKKOS_LINK_OPTIONS}
