@@ -247,7 +247,6 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
       label = name.get();
     }
     if (team_tuners.find(label) == team_tuners.end()) {
-
       team_tuners.emplace(
           label, Kokkos::Tools::Experimental::TeamSizeTuner(
                      label, policy, functor, tag,
