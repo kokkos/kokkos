@@ -52,6 +52,7 @@
 #include <Kokkos_Tuners.hpp>
 #include <string>
 #include <map>
+#include <type_traits>
 namespace Kokkos {
 namespace Tools {
 
@@ -182,10 +183,17 @@ struct SimpleTeamSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
   int get_max_team_size(const Policy& policy, const Functor& functor,
                         const Tag& tag) {
-    return policy.team_size_max(functor, tag);
+    auto max = policy.team_size_max(functor, tag);
+    return max;
   }
 };
 
+// when we have a complex reducer, we need to pass an
+// instance to team_size_recommended/max. Reducers
+// aren't default constructible, but they are
+// constructible from a reference to an
+// instance of their value_type so we construct
+// a value_type and temporary reducer here
 template <typename ReducerType>
 struct ComplexReducerSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
@@ -201,10 +209,18 @@ struct ComplexReducerSizeCalculator {
 }  // namespace Impl
 
 template <class Functor, class TagType, class... Properties>
-void tune_policy(const size_t /**tuning_context*/, const std::string& label,
+void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
+    std::string label = label_in;
+    if (label_in.empty()) {
+      using policy_type =
+          typename std::remove_reference<decltype(policy)>::type;
+      using work_tag = typename policy_type::work_tag;
+      Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
+      label = name.get();
+    }
     if (team_tuners.find(label) == team_tuners.end()) {
       team_tuners.emplace(label, Kokkos::Tools::Experimental::TeamSizeTuner(
                                      label, policy, functor, tag,
@@ -212,21 +228,25 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label,
     }
     auto& tuner = team_tuners[label];
     tuner.tune(policy);
+    std::cout << "Policy deets for " << label << ": " << policy.team_size()
+              << ", " << policy.vector_length() << std::endl;
   }
 }
 
 template <class ReducerType, class Functor, class TagType, class... Properties>
-void tune_policy(const size_t /**tuning_context*/, const std::string& label,
+void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
+    std::string label = label_in;
+    if (label_in.empty()) {
+      using policy_type =
+          typename std::remove_reference<decltype(policy)>::type;
+      using work_tag = typename policy_type::work_tag;
+      Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
+      label = name.get();
+    }
     if (team_tuners.find(label) == team_tuners.end()) {
-      // when we have a complex reducer, we need to pass an
-      // instance to team_size_recommended/max. Reducers
-      // aren't default constructible, but they are
-      // constructible from a reference to an
-      // instance of their value_type so we construct
-      // a value_type and temporary reducer here
 
       team_tuners.emplace(
           label, Kokkos::Tools::Experimental::TeamSizeTuner(
@@ -264,10 +284,18 @@ void report_policy_results(const size_t, const std::string&, ExecPolicy&,
 
 template <class Functor, class TagType, class... Properties>
 void report_policy_results(const size_t /**tuning_context*/,
-                           const std::string& label,
+                           const std::string& label_in,
                            Kokkos::TeamPolicy<Properties...> policy,
                            const Functor&, const TagType&) {
   if (policy.auto_team_size() || policy.auto_vector_length()) {
+    std::string label = label_in;
+    if (label_in.empty()) {
+      using policy_type =
+          typename std::remove_reference<decltype(policy)>::type;
+      using work_tag = typename policy_type::work_tag;
+      Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
+      label = name.get();
+    }
     auto& tuner = team_tuners[label];
     tuner.end();
   }
