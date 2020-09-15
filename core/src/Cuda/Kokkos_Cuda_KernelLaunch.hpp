@@ -488,7 +488,7 @@ struct CudaParallelLaunchImpl<
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       CUDA_SAFE_CALL(cudaGetLastError());
-      Kokkos::Cuda().fence();
+      cuda_instance->fence();
 #endif
     }
   }
