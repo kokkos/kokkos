@@ -1582,7 +1582,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
 
     // Reduce with final value at blockDim.y - 1 location.
-    bool do_final_reduce = m_league_size == 0;
+    bool do_final_reduce = (m_league_size == 0);
     if (!do_final_reduce)
       do_final_reduce =
           cuda_single_inter_block_reduce_scan<false, FunctorType, WorkTag>(
@@ -1692,7 +1692,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       dim3 grid(block_count, 1, 1);
       const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
 
-      if ((nwork < 1)
+      if ((nwork == 0)
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
           || Kokkos::Impl::CudaInternal::cuda_use_serial_execution()
 #endif

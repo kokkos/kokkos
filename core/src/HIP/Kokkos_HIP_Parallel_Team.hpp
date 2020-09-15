@@ -743,7 +743,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
 
     // Reduce with final value at blockDim.y - 1 location.
-    bool do_final_reduce = m_league_size == 0;
+    bool do_final_reduce = (m_league_size == 0);
     if (!do_final_reduce)
       do_final_reduce =
           hip_single_inter_block_reduce_scan<false, FunctorType, work_tag>(
@@ -918,17 +918,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   m_policy.thread_scratch_size(0)) /
                   m_vector_size;
 
-    // We can't early exit here because the result place might not be accessible
-    // or the functor/reducer init not callable on the host. But I am not sure
-    // all the other code below is kosher with zero work length ...
-    //
-    // Return Init value if the number of worksets is zero
-    // if (m_league_size * m_team_size == 0) {
-    //  value_init::init(reducer_conditional::select(m_functor, m_reducer),
-    //                   arg_result.data());
-    //  return;
-    //}
-
     m_team_begin =
         UseShflReduction
             ? 0
@@ -1024,17 +1013,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   m_functor, m_vector_size, m_policy.team_scratch_size(0),
                   m_policy.thread_scratch_size(0)) /
                   m_vector_size;
-
-    // We can't early exit here because the result place might not be accessible
-    // or the functor/reducer init not callable on the host. But I am not sure
-    // all the other code below is kosher with zero work length ...
-    //
-    // Return Init value if the number of worksets is zero
-    // if (arg_policy.league_size() == 0) {
-    //   value_init::init(reducer_conditional::select(m_functor, m_reducer),
-    //                   m_result_ptr);
-    //  return;
-    //}
 
     m_team_begin =
         UseShflReduction

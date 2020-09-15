@@ -408,11 +408,13 @@ struct TestReduceCombinatoricalInstantiation {
     Kokkos::fence();
     ASSERT_EQ(expected_result, result_view());
 
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     result_view() = 99;
     CallParallelReduce(args..., result_view_device);
     Kokkos::fence();
     Kokkos::deep_copy(result_view, result_view_device);
     ASSERT_EQ(expected_result, result_view());
+#endif
 
     value = 99;
     CallParallelReduce(
@@ -437,6 +439,7 @@ struct TestReduceCombinatoricalInstantiation {
                        Test::ReduceCombinatorical::AddPlus<double>(value));
     if ((Kokkos::DefaultExecutionSpace::concurrency() > 1) &&
         (ExecSpace::concurrency() > 1) && (expected_result > 0)) {
+      ASSERT_TRUE(expected_result < value);
     } else if (((Kokkos::DefaultExecutionSpace::concurrency() > 1) ||
                 (ExecSpace::concurrency() > 1)) &&
                (expected_result > 0)) {
@@ -478,10 +481,10 @@ struct TestReduceCombinatoricalInstantiation {
   }
 
   template <class... Args>
-  static void AddLambdaRange(int N, Kokkos::InvalidType, Args... /*args*/) {}
+  static void AddLambdaRange(int, Kokkos::InvalidType, Args... /*args*/) {}
 
   template <class... Args>
-  static void AddLambdaTeam(int N, Kokkos::InvalidType, Args... /*args*/) {}
+  static void AddLambdaTeam(int, Kokkos::InvalidType, Args... /*args*/) {}
 
   template <int ISTEAM, class... Args>
   static void AddFunctor(int N, Args... args) {
@@ -574,8 +577,6 @@ struct TestReduceCombinatoricalInstantiation {
 
   template <class... Args>
   static void AddPolicy_2(int N, Args... args) {
-    Kokkos::RangePolicy<ExecSpace> policy(0, N);
-
     AddFunctorLambdaRange(N, args..., Kokkos::RangePolicy<ExecSpace>(0, N));
     AddFunctorLambdaRange(
         N, args...,
@@ -593,8 +594,6 @@ struct TestReduceCombinatoricalInstantiation {
 
   template <class... Args>
   static void AddPolicy_3(int N, Args... args) {
-    Kokkos::RangePolicy<ExecSpace> policy(0, N);
-
     AddFunctorLambdaTeam(N, args...,
                          Kokkos::TeamPolicy<ExecSpace>(N, Kokkos::AUTO));
     AddFunctorLambdaTeam(
@@ -619,7 +618,9 @@ struct TestReduceCombinatoricalInstantiation {
     std::string s("Std::String");
     AddPolicy_1(1000, s.c_str());
     AddPolicy_1(1000, "Char Constant");
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     AddPolicy_1(0, "Char Constant");
+#endif
   }
 
   static void execute_c1() {
@@ -633,7 +634,9 @@ struct TestReduceCombinatoricalInstantiation {
     std::string s("Std::String");
     AddPolicy_2(1000, s.c_str());
     AddPolicy_2(1000, "Char Constant");
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     AddPolicy_2(0, "Char Constant");
+#endif
   }
 
   static void execute_c2() {
@@ -641,18 +644,26 @@ struct TestReduceCombinatoricalInstantiation {
     AddPolicy_2(1000, s);
   }
 
-  static void execute_a3() { AddPolicy_3(1000); }
+  static void execute_a3() {
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
+    AddPolicy_3(1000);
+#endif
+  }
 
   static void execute_b3() {
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     std::string s("Std::String");
     AddPolicy_3(1000, s.c_str());
     AddPolicy_3(1000, "Char Constant");
     AddPolicy_3(0, "Char Constant");
+#endif
   }
 
   static void execute_c3() {
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     std::string s("Std::String");
     AddPolicy_3(1000, s);
+#endif
   }
 };
 
