@@ -290,15 +290,19 @@ struct CudaParallelLaunch<
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    static cudaFuncAttributes attr;
-    static bool attr_set = false;
-    if (!attr_set) {
+    // Race condition inside of cudaFuncGetAttributes if the same address is
+    // given requires using a local variable as input instead of a static Rely
+    // on static variable initialization to make sure only one thread executes
+    // the code and the result is visible.
+    auto wrap_get_attributes = []() -> cudaFuncAttributes {
+      cudaFuncAttributes attr_tmp;
       CUDA_SAFE_CALL(cudaFuncGetAttributes(
-          &attr,
+          &attr_tmp,
           cuda_parallel_launch_constant_memory<DriverType, MaxThreadsPerBlock,
                                                MinBlocksPerSM>));
-      attr_set = true;
-    }
+      return attr_tmp;
+    };
+    static cudaFuncAttributes attr = wrap_get_attributes();
     return attr;
   }
 };
@@ -364,13 +368,17 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    static cudaFuncAttributes attr;
-    static bool attr_set = false;
-    if (!attr_set) {
+    // Race condition inside of cudaFuncGetAttributes if the same address is
+    // given requires using a local variable as input instead of a static Rely
+    // on static variable initialization to make sure only one thread executes
+    // the code and the result is visible.
+    auto wrap_get_attributes = []() -> cudaFuncAttributes {
+      cudaFuncAttributes attr_tmp;
       CUDA_SAFE_CALL(cudaFuncGetAttributes(
-          &attr, cuda_parallel_launch_constant_memory<DriverType>));
-      attr_set = true;
-    }
+          &attr_tmp, cuda_parallel_launch_constant_memory<DriverType>));
+      return attr_tmp;
+    };
+    static cudaFuncAttributes attr = wrap_get_attributes();
     return attr;
   }
 };
@@ -424,15 +432,19 @@ struct CudaParallelLaunch<
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    static cudaFuncAttributes attr;
-    static bool attr_set = false;
-    if (!attr_set) {
+    // Race condition inside of cudaFuncGetAttributes if the same address is
+    // given requires using a local variable as input instead of a static Rely
+    // on static variable initialization to make sure only one thread executes
+    // the code and the result is visible.
+    auto wrap_get_attributes = []() -> cudaFuncAttributes {
+      cudaFuncAttributes attr_tmp;
       CUDA_SAFE_CALL(cudaFuncGetAttributes(
-          &attr,
+          &attr_tmp,
           cuda_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
                                             MinBlocksPerSM>));
-      attr_set = true;
-    }
+      return attr_tmp;
+    };
+    static cudaFuncAttributes attr = wrap_get_attributes();
     return attr;
   }
 };
@@ -482,13 +494,17 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    static cudaFuncAttributes attr;
-    static bool attr_set = false;
-    if (!attr_set) {
+    // Race condition inside of cudaFuncGetAttributes if the same address is
+    // given requires using a local variable as input instead of a static Rely
+    // on static variable initialization to make sure only one thread executes
+    // the code and the result is visible.
+    auto wrap_get_attributes = []() -> cudaFuncAttributes {
+      cudaFuncAttributes attr_tmp;
       CUDA_SAFE_CALL(cudaFuncGetAttributes(
-          &attr, cuda_parallel_launch_local_memory<DriverType>));
-      attr_set = true;
-    }
+          &attr_tmp, cuda_parallel_launch_local_memory<DriverType>));
+      return attr_tmp;
+    };
+    static cudaFuncAttributes attr = wrap_get_attributes();
     return attr;
   }
 };
@@ -544,15 +560,19 @@ struct CudaParallelLaunch<
     }
   }
   static cudaFuncAttributes get_cuda_func_attributes() {
-    static cudaFuncAttributes attr;
-    static bool attr_set = false;
-    if (!attr_set) {
+    // Race condition inside of cudaFuncGetAttributes if the same address is
+    // given requires using a local variable as input instead of a static Rely
+    // on static variable initialization to make sure only one thread executes
+    // the code and the result is visible.
+    auto wrap_get_attributes = []() -> cudaFuncAttributes {
+      cudaFuncAttributes attr_tmp;
       CUDA_SAFE_CALL(cudaFuncGetAttributes(
-          &attr,
+          &attr_tmp,
           cuda_parallel_launch_global_memory<DriverType, MaxThreadsPerBlock,
                                              MinBlocksPerSM>));
-      attr_set = true;
-    }
+      return attr_tmp;
+    };
+    static cudaFuncAttributes attr = wrap_get_attributes();
     return attr;
   }
 };
@@ -604,13 +624,17 @@ struct CudaParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    static cudaFuncAttributes attr;
-    static bool attr_set = false;
-    if (!attr_set) {
+    // Race condition inside of cudaFuncGetAttributes if the same address is
+    // given requires using a local variable as input instead of a static Rely
+    // on static variable initialization to make sure only one thread executes
+    // the code and the result is visible.
+    auto wrap_get_attributes = []() -> cudaFuncAttributes {
+      cudaFuncAttributes attr_tmp;
       CUDA_SAFE_CALL(cudaFuncGetAttributes(
-          &attr, cuda_parallel_launch_global_memory<DriverType>));
-      attr_set = true;
-    }
+          &attr_tmp, cuda_parallel_launch_global_memory<DriverType>));
+      return attr_tmp;
+    };
+    static cudaFuncAttributes attr = wrap_get_attributes();
     return attr;
   }
 };
