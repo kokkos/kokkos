@@ -441,7 +441,6 @@ H := \#
 # Do not append first line
 tmp := $(shell echo "/* ---------------------------------------------" > KokkosCore_config.tmp)
 tmp := $(call kokkos_append_header,"Makefile constructed configuration:")
-tmp := $(call kokkos_append_header,"$(shell date)")
 tmp := $(call kokkos_append_header,"----------------------------------------------*/")
 
 tmp := $(call kokkos_append_header,'$H''if !defined(KOKKOS_MACROS_HPP) || defined(KOKKOS_CORE_CONFIG_H)')
