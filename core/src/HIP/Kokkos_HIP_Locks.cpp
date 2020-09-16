@@ -102,9 +102,9 @@ void initialize_host_hip_lock_arrays() {
 
 void finalize_host_hip_lock_arrays() {
   if (g_host_hip_lock_arrays.atomic == nullptr) return;
-  hipFree(g_host_hip_lock_arrays.atomic);
+  HIP_SAFE_CALL(hipFree(g_host_hip_lock_arrays.atomic));
   g_host_hip_lock_arrays.atomic = nullptr;
-  hipFree(g_host_hip_lock_arrays.scratch);
+  HIP_SAFE_CALL(hipFree(g_host_hip_lock_arrays.scratch));
   g_host_hip_lock_arrays.scratch = nullptr;
   g_host_hip_lock_arrays.n       = 0;
 #ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
