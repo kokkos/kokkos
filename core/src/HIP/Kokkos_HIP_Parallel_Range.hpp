@@ -349,7 +349,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);
       // Required grid.x <= block.y
-      const dim3 grid(std::min(block.y, (nwork + block.y - 1) / block.y), 1, 1);
+      const dim3 grid(std::min(block.y, static_cast<uint32_t>(
+                                            (nwork + block.y - 1) / block.y)),
+                      1, 1);
 
       const int shmem =
           UseShflReduction
