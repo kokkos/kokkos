@@ -474,6 +474,9 @@ emulate_fold_comma_operator(Ts&&...) noexcept {
 // </editor-fold> end Folding emulation }}}1
 //==============================================================================
 
+template <class...>
+struct type_list {};
+
 }  // namespace Impl
 }  // namespace Kokkos
 
