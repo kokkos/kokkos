@@ -205,6 +205,12 @@ struct TestRange {
     ASSERT_EQ(size_t((N - 1) * (N) / 2), size_t(total));
 
     Kokkos::parallel_reduce(
+        "TestKernelReduce_long",
+        Kokkos::RangePolicy<ExecSpace, ScheduleType, long>(0, N), *this, total);
+    // sum( 0 .. N-1 )
+    ASSERT_EQ(size_t((N - 1) * (N) / 2), size_t(total));
+
+    Kokkos::parallel_reduce(
         Kokkos::RangePolicy<ExecSpace, ScheduleType, OffsetTag>(offset,
                                                                 N + offset),
         *this, total);
