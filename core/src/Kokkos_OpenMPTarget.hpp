@@ -136,8 +136,8 @@ namespace Impl {
 
 class OpenMPTargetSpaceInitializer : public ExecSpaceInitializerBase {
  public:
-  OpenMPTargetSpaceInitializer()          = default;
-  virtual ~OpenMPTargetSpaceInitializer() = default;
+  OpenMPTargetSpaceInitializer()  = default;
+  ~OpenMPTargetSpaceInitializer() = default;
   void initialize(const InitArguments& args);
   void finalize(const bool);
   void fence();

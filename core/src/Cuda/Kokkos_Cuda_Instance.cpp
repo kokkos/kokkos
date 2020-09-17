@@ -909,8 +909,6 @@ void CudaSpaceInitializer::initialize(const InitArguments &args) {
     } else {
       Kokkos::Cuda::impl_initialize();
     }
-    // std::cout << "Kokkos::initialize() fyi: Cuda enabled and initialized" <<
-    // std::endl ;
   }
 }
 

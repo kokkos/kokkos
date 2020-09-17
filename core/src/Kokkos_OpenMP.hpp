@@ -178,8 +178,8 @@ namespace Impl {
 
 class OpenMPSpaceInitializer : public ExecSpaceInitializerBase {
  public:
-  OpenMPSpaceInitializer()          = default;
-  virtual ~OpenMPSpaceInitializer() = default;
+  OpenMPSpaceInitializer()  = default;
+  ~OpenMPSpaceInitializer() = default;
   void initialize(const InitArguments& args);
   void finalize(const bool);
   void fence();

@@ -172,8 +172,8 @@ namespace Impl {
 
 class SerialSpaceInitializer : public ExecSpaceInitializerBase {
  public:
-  SerialSpaceInitializer()          = default;
-  virtual ~SerialSpaceInitializer() = default;
+  SerialSpaceInitializer()  = default;
+  ~SerialSpaceInitializer() = default;
   void initialize(const InitArguments& args);
   void finalize(const bool);
   void fence();

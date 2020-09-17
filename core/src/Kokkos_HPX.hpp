@@ -459,8 +459,8 @@ namespace Impl {
 
 class HPXSpaceInitializer : public ExecSpaceInitializerBase {
  public:
-  HPXSpaceInitializer()          = default;
-  virtual ~HPXSpaceInitializer() = default;
+  HPXSpaceInitializer()  = default;
+  ~HPXSpaceInitializer() = default;
   void initialize(const InitArguments &args);
   void finalize(const bool);
   void fence();

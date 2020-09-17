@@ -270,8 +270,8 @@ namespace Impl {
 
 class CudaSpaceInitializer : public ExecSpaceInitializerBase {
  public:
-  CudaSpaceInitializer()          = default;
-  virtual ~CudaSpaceInitializer() = default;
+  CudaSpaceInitializer()  = default;
+  ~CudaSpaceInitializer() = default;
   void initialize(const InitArguments& args);
   void finalize(const bool all_spaces);
   void fence();
