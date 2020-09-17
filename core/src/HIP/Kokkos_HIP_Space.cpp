@@ -211,8 +211,7 @@ void* HIPSpace::allocate(
   if (error_code != hipSuccess) {
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
-    auto dummy = hipGetLastError();
-    (void)dummy;
+    (void)hipGetLastError();
     throw HIPRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         RawMemoryAllocationFailure::AllocationMechanism::HIPMalloc);
@@ -240,8 +239,7 @@ void* HIPHostPinnedSpace::allocate(const char* arg_label,
   if (error_code != hipSuccess) {
     // This is the only way to clear the last error, which we should do here
     // since we're turning it into an exception here
-    auto dummy = hipGetLastError();
-    (void)dummy;
+    (void)hipGetLastError();
     throw HIPRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         RawMemoryAllocationFailure::AllocationMechanism::HIPHostMalloc);
