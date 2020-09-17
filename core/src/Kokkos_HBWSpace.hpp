@@ -100,7 +100,7 @@ class HBWSpace {
   using memory_space = HBWSpace;
   using size_type    = size_t;
 
-  /// \execution_space alias
+  /// \typedef execution_space
   /// \brief Default execution space for this memory space.
   ///
   /// Every memory space has a default execution space.  This is
