@@ -384,7 +384,6 @@ struct CombinedReductionFunctorWrapperImpl<integer_sequence<size_t, Idxs...>,
       IndexOrMemberOrTagType1&& arg_first,
       IndexOrMemberTypesThenValueType&&... args) const {
     this->template _call_op_impl<IndexOrMemberOrTagType1&&>(
-        type_list<IndexOrMemberOrTagType1&&>{},
         (IndexOrMemberOrTagType1 &&) arg_first,
         (IndexOrMemberTypesThenValueType &&) args...);
   }
@@ -407,20 +406,17 @@ struct CombinedReductionFunctorWrapperImpl<integer_sequence<size_t, Idxs...>,
             class... IdxOrMemberTypesThenValueType>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
       !std::is_same<remove_cvref_t<IdxOrMemberType1>, value_type>::value>
-  _call_op_impl(type_list<IdxOrMemberTypes&&...>, IdxOrMemberTypes&&... idxs,
-                IdxOrMemberType1&& idx,
+  _call_op_impl(IdxOrMemberTypes&&... idxs, IdxOrMemberType1&& idx,
                 IdxOrMemberTypesThenValueType&&... args) const {
     this->template _call_op_impl<IdxOrMemberTypes&&..., IdxOrMemberType1&&>(
-        type_list<IdxOrMemberTypes&&..., IdxOrMemberType1&&>{},
-        (IdxOrMemberTypes &&) idxs..., (IdxOrMemberType1)idx,
+        (IdxOrMemberTypes &&) idxs..., (IdxOrMemberType1 &&) idx,
         (IdxOrMemberTypesThenValueType &&) args...);
   }
 
   // base case
   template <class... IdxOrMemberTypes>
-  KOKKOS_FORCEINLINE_FUNCTION void _call_op_impl(
-      type_list<IdxOrMemberTypes&&...>, IdxOrMemberTypes&&... idxs,
-      value_type& out) const {
+  KOKKOS_FORCEINLINE_FUNCTION void _call_op_impl(IdxOrMemberTypes&&... idxs,
+                                                 value_type& out) const {
     m_functor((IdxOrMemberTypes &&) idxs...,
               out.template get<Idxs, typename Reducers::value_type>()...);
   }
