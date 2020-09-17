@@ -299,6 +299,7 @@ do
       ;;
     --boundscheck)
       KOKKOS_BOUNDS_CHECK=ON
+      ;;
     --cmake-flags*)
       PASSTHRU_CMAKE_FLAGS="${key#*=}"
       ;;
