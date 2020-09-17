@@ -108,6 +108,7 @@ IF (KOKKOS_ENABLE_CUDA)
   IF(WIN32)
     GLOBAL_APPEND(KOKKOS_COMPILE_OPTIONS -x cu)
   ENDIF()
+## Cuda has extra setup requirements, turn on Kokkos_Setup_Cuda.hpp in macros
   LIST(APPEND DEVICE_SETUP_LIST Cuda)
 ENDIF()
 
@@ -129,6 +130,8 @@ KOKKOS_DEVICE_OPTION(SERIAL ${SERIAL_DEFAULT} HOST "Whether to build serial back
 KOKKOS_DEVICE_OPTION(HPX OFF HOST "Whether to build HPX backend (experimental)")
 
 KOKKOS_DEVICE_OPTION(HIP OFF DEVICE "Whether to build HIP backend")
+
+## HIP has extra setup requirements, turn on Kokkos_Setup_HIP.hpp in macros
 IF (KOKKOS_ENABLE_HIP)
   LIST(APPEND DEVICE_SETUP_LIST HIP)
 ENDIF()
