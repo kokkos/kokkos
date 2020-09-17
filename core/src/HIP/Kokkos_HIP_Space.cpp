@@ -161,7 +161,7 @@ DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
 void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
   hipStream_t s = get_deep_copy_stream();
   HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
-  hipStreamSynchronize(s);
+  HIP_SAFE_CALL(hipStreamSynchronize(s));
 }
 
 }  // namespace Impl
@@ -209,9 +209,9 @@ void* HIPSpace::allocate(
 
   auto const error_code = hipMalloc(&ptr, arg_alloc_size);
   if (error_code != hipSuccess) {
-    hipGetLastError();  // This is the only way to clear the last error, which
-                        // we should do here since we're turning it into an
-                        // exception here
+    // This is the only way to clear the last error, which we should do here
+    // since we're turning it into an exception here
+    (void)hipGetLastError();
     throw HIPRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         RawMemoryAllocationFailure::AllocationMechanism::HIPMalloc);
@@ -237,9 +237,9 @@ void* HIPHostPinnedSpace::allocate(const char* arg_label,
 
   auto const error_code = hipHostMalloc(&ptr, arg_alloc_size);
   if (error_code != hipSuccess) {
-    hipGetLastError();  // This is the only way to clear the last error, which
-                        // we should do here since we're turning it into an
-                        // exception here
+    // This is the only way to clear the last error, which we should do here
+    // since we're turning it into an exception here
+    (void)hipGetLastError();
     throw HIPRawMemoryAllocationFailure(
         arg_alloc_size, error_code,
         RawMemoryAllocationFailure::AllocationMechanism::HIPHostMalloc);

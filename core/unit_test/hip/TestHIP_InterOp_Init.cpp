@@ -58,7 +58,7 @@ __global__ void offset(int* p) {
 // HIP.
 TEST(hip, raw_hip_interop) {
   int* p;
-  hipMalloc(&p, sizeof(int) * 100);
+  HIP_SAFE_CALL(hipMalloc(&p, sizeof(int) * 100));
   Kokkos::InitArguments arguments{-1, -1, -1, false};
   Kokkos::initialize(arguments);
 
@@ -71,7 +71,7 @@ TEST(hip, raw_hip_interop) {
   HIP_SAFE_CALL(hipDeviceSynchronize());
 
   int* h_p = new int[100];
-  hipMemcpy(h_p, p, sizeof(int) * 100, hipMemcpyDefault);
+  HIP_SAFE_CALL(hipMemcpy(h_p, p, sizeof(int) * 100, hipMemcpyDefault));
   HIP_SAFE_CALL(hipDeviceSynchronize());
   int64_t sum        = 0;
   int64_t sum_expect = 0;
