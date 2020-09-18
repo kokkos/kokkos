@@ -107,7 +107,7 @@ void hip_stream_scratch_test(
     HIP_SAFE_CALL(hipStreamCreate(&stream[i]));
     hip[i] = Kokkos::Experimental::HIP(stream[i]);
   }
-// Test that growing scratch size in subsequent calls doesn' crash things
+// Test that growing scratch size in subsequent calls doesn't crash things
 #if defined(KOKKOS_ENABLE_OPENMP)
 #pragma omp parallel
   {
