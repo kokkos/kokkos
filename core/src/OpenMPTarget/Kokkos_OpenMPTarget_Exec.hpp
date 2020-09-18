@@ -50,6 +50,442 @@
 
 #include <Kokkos_Atomic.hpp>
 
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+namespace Kokkos {
+namespace Impl {
+
+template <class Reducer>
+struct OpenMPTargetReducerWrapper {
+  using value_type = typename Reducer::value_type;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type&, const value_type&) {
+    printf(
+        "Using a generic unknown Reducer for the OpenMPTarget backend is not "
+        "implemented.");
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type&, const volatile value_type&) {
+    printf(
+        "Using a generic unknown Reducer for the OpenMPTarget backend is not "
+        "implemented.");
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type&) {
+    printf(
+        "Using a generic unknown Reducer for the OpenMPTarget backend is not "
+        "implemented.");
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Space>
+struct OpenMPTargetReducerWrapper<Sum<Scalar, Space>> {
+ public:
+  // Required
+  using value_type = typename std::remove_cv<Scalar>::type;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) { dest += src; }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    dest += src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val = reduction_identity<value_type>::sum();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Space>
+struct OpenMPTargetReducerWrapper<Prod<Scalar, Space>> {
+ public:
+  // Required
+  using value_type = typename std::remove_cv<Scalar>::type;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) { dest *= src; }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    dest *= src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val = reduction_identity<value_type>::prod();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Space>
+struct OpenMPTargetReducerWrapper<Min<Scalar, Space>> {
+ public:
+  // Required
+  using value_type = typename std::remove_cv<Scalar>::type;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    if (src < dest) dest = src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    if (src < dest) dest = src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val = reduction_identity<value_type>::min();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Space>
+struct OpenMPTargetReducerWrapper<Max<Scalar, Space>> {
+ public:
+  // Required
+  using value_type = typename std::remove_cv<Scalar>::type;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    if (src > dest) dest = src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    if (src > dest) dest = src;
+  }
+
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val = reduction_identity<value_type>::max();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Space>
+struct OpenMPTargetReducerWrapper<LAnd<Scalar, Space>> {
+ public:
+  // Required
+  using value_type = typename std::remove_cv<Scalar>::type;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    dest = dest && src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    dest = dest && src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val = reduction_identity<value_type>::land();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Space>
+struct OpenMPTargetReducerWrapper<LOr<Scalar, Space>> {
+ public:
+  // Required
+  using value_type = typename std::remove_cv<Scalar>::type;
+
+  using result_view_type = Kokkos::View<value_type, Space>;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    dest = dest || src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    dest = dest || src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val = reduction_identity<value_type>::lor();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Space>
+struct OpenMPTargetReducerWrapper<BAnd<Scalar, Space>> {
+ public:
+  // Required
+  using value_type = typename std::remove_cv<Scalar>::type;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    dest = dest & src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    dest = dest & src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val = reduction_identity<value_type>::band();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Space>
+struct OpenMPTargetReducerWrapper<BOr<Scalar, Space>> {
+ public:
+  // Required
+  using value_type = typename std::remove_cv<Scalar>::type;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    dest = dest | src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    dest = dest | src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val = reduction_identity<value_type>::bor();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Index, class Space>
+struct OpenMPTargetReducerWrapper<MinLoc<Scalar, Index, Space>> {
+ private:
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using index_type  = typename std::remove_cv<Index>::type;
+
+ public:
+  // Required
+  using value_type = ValLocScalar<scalar_type, index_type>;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    if (src.val < dest.val) dest = src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    if (src.val < dest.val) dest = src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val.val = reduction_identity<scalar_type>::min();
+    val.loc = reduction_identity<index_type>::min();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Index, class Space>
+struct OpenMPTargetReducerWrapper<MaxLoc<Scalar, Index, Space>> {
+ private:
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using index_type  = typename std::remove_cv<Index>::type;
+
+ public:
+  // Required
+  using value_type = ValLocScalar<scalar_type, index_type>;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    if (src.val > dest.val) dest = src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    if (src.val > dest.val) dest = src;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val.val = reduction_identity<scalar_type>::max();
+    val.loc = reduction_identity<index_type>::min();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Space>
+struct OpenMPTargetReducerWrapper<MinMax<Scalar, Space>> {
+ private:
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+
+ public:
+  // Required
+  using value_type = MinMaxScalar<scalar_type>;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    if (src.min_val < dest.min_val) {
+      dest.min_val = src.min_val;
+    }
+    if (src.max_val > dest.max_val) {
+      dest.max_val = src.max_val;
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    if (src.min_val < dest.min_val) {
+      dest.min_val = src.min_val;
+    }
+    if (src.max_val > dest.max_val) {
+      dest.max_val = src.max_val;
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val.max_val = reduction_identity<scalar_type>::max();
+    val.min_val = reduction_identity<scalar_type>::min();
+  }
+#pragma omp end declare target
+};
+
+template <class Scalar, class Index, class Space>
+struct OpenMPTargetReducerWrapper<MinMaxLoc<Scalar, Index, Space>> {
+ private:
+  using scalar_type = typename std::remove_cv<Scalar>::type;
+  using index_type  = typename std::remove_cv<Index>::type;
+
+ public:
+  // Required
+  using value_type = MinMaxLocScalar<scalar_type, index_type>;
+
+// WORKAROUND OPENMPTARGET
+// This pragma omp declare target should not be necessary, but Intel compiler
+// fails without it
+#pragma omp declare target
+  // Required
+  KOKKOS_INLINE_FUNCTION
+  static void join(value_type& dest, const value_type& src) {
+    if (src.min_val < dest.min_val) {
+      dest.min_val = src.min_val;
+      dest.min_loc = src.min_loc;
+    }
+    if (src.max_val > dest.max_val) {
+      dest.max_val = src.max_val;
+      dest.max_loc = src.max_loc;
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void join(volatile value_type& dest, const volatile value_type& src) {
+    if (src.min_val < dest.min_val) {
+      dest.min_val = src.min_val;
+      dest.min_loc = src.min_loc;
+    }
+    if (src.max_val > dest.max_val) {
+      dest.max_val = src.max_val;
+      dest.max_loc = src.max_loc;
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  static void init(value_type& val) {
+    val.max_val = reduction_identity<scalar_type>::max();
+    val.min_val = reduction_identity<scalar_type>::min();
+    val.max_loc = reduction_identity<index_type>::min();
+    val.min_loc = reduction_identity<index_type>::min();
+  }
+#pragma omp end declare target
+};
+/*
+template<class ReducerType>
+class OpenMPTargetReducerWrapper {
+  public:
+    const ReducerType& reducer;
+    using value_type = typename ReducerType::value_type;
+    value_type& value;
+
+    KOKKOS_INLINE_FUNCTION
+    void join(const value_type& upd) {
+      reducer.join(value,upd);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void init(const value_type& upd) {
+      reducer.init(value,upd);
+    }
+};*/
+
+}  // namespace Impl
+}  // namespace Kokkos
+
 namespace Kokkos {
 namespace Impl {
 
@@ -106,6 +542,7 @@ class OpenMPTargetExecTeamMember {
   int m_vector_length;
   int m_vector_lane;
   void* m_glb_scratch;
+  void* m_reduce_scratch;
 
   /*
   // Fan-in team threads, root of the fan-in which does not block returns true
@@ -158,6 +595,9 @@ class OpenMPTargetExecTeamMember {
   KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size; }
   KOKKOS_INLINE_FUNCTION int team_rank() const { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const { return m_team_size; }
+  KOKKOS_INLINE_FUNCTION void* impl_reduce_scratch() const {
+    return m_reduce_scratch;
+  }
 
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
 #pragma omp barrier
@@ -306,10 +746,12 @@ class OpenMPTargetExecTeamMember {
         m_league_size(league_size),
         m_vector_length(vector_length),
         m_glb_scratch(glb_scratch) {
-    const int omp_tid = omp_get_thread_num();
-    m_league_rank     = league_rank;
-    m_team_rank       = omp_tid / m_vector_length;
-    m_vector_lane     = omp_tid % m_vector_length;
+    const int omp_tid      = omp_get_thread_num();
+    const int omp_team_num = omp_get_team_num();
+    m_reduce_scratch = (char*)glb_scratch + omp_team_num * TEAM_REDUCE_SIZE;
+    m_league_rank    = league_rank;
+    m_team_rank      = omp_tid;
+    m_vector_lane    = 0;
   }
 
   static inline int team_reduce_size() { return TEAM_REDUCE_SIZE; }
@@ -380,9 +822,19 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                    const int vector_length_request) {
     m_league_size = league_size_request;
 
-    m_team_size = team_size_request;
+    // Minimum team size should be 32 at-least with the clang compiler.
+    team_size_request < 32 ? m_team_size = 32 : m_team_size = team_size_request;
 
-    m_vector_length = vector_length_request;
+    //    if(team_size_request < 32)
+    //    {
+    //      Kokkos::abort("Minimum team size for OpenMPTarget backend is 32.");
+    //      m_team_size = 32;
+    //    }
+    //    else m_team_size = team_size_request;
+
+    //    m_vector_length = vector_length_request;
+    vector_length_request < 32 ? m_vector_length = 32
+                               : m_vector_length = vector_length_request;
 
     set_auto_chunk_size();
   }
@@ -547,6 +999,24 @@ ThreadVectorRange(const Impl::OpenMPTargetExecTeamMember& thread,
       iType, Impl::OpenMPTargetExecTeamMember>(thread, arg_begin, arg_end);
 }
 
+template <typename iType>
+KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<
+    iType, Impl::OpenMPTargetExecTeamMember>
+TeamVectorRange(const Impl::OpenMPTargetExecTeamMember& thread,
+                const iType& count) {
+  return Impl::TeamVectorRangeBoundariesStruct<
+      iType, Impl::OpenMPTargetExecTeamMember>(thread, count);
+}
+
+template <typename iType>
+KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<
+    iType, Impl::OpenMPTargetExecTeamMember>
+TeamVectorRange(const Impl::OpenMPTargetExecTeamMember& thread,
+                const iType& arg_begin, const iType& arg_end) {
+  return Impl::TeamVectorRangeBoundariesStruct<
+      iType, Impl::OpenMPTargetExecTeamMember>(thread, arg_begin, arg_end);
+}
+
 KOKKOS_INLINE_FUNCTION
 Impl::ThreadSingleStruct<Impl::OpenMPTargetExecTeamMember> PerTeam(
     const Impl::OpenMPTargetExecTeamMember& thread) {
@@ -572,9 +1042,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda) {
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment)
-    lambda(i);
+#pragma omp for nowait schedule(static, 1)
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
 }
 
 /** \brief  Inter-thread vector parallel_reduce. Executes lambda(iType i,
@@ -590,15 +1059,20 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Lambda& lambda, ValueType& result) {
   result = ValueType();
 
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
+  ValueType* tmp_scratch =
+      (ValueType*)loop_boundaries.team.impl_reduce_scratch();
+#pragma omp barrier
+  tmp_scratch[0] = ValueType();
+#pragma omp barrier
+
+#pragma omp for reduction(+ : tmp_scratch[:1]) schedule(static, 1)
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     ValueType tmp = ValueType();
     lambda(i, tmp);
-    result += tmp;
+    tmp_scratch[0] += tmp;
   }
 
-  // result =
-  // loop_boundaries.thread.team_reduce(result,Impl::JoinAdd<ValueType>());
+  result = tmp_scratch[0];
 }
 
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
@@ -641,9 +1115,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda) {
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment)
-    lambda(i);
+#pragma omp simd
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
 }
 
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
@@ -657,13 +1130,24 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, ValueType& result) {
-  result = ValueType();
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    result += tmp;
-  }
+  //  result = ValueType();
+  /*
+    ValueType* tmp_scratch =
+        (ValueType*)loop_boundaries.team.impl_reduce_scratch();
+    // FIXME - A barrier is necessary here but that blocks the code execution.
+  //#pragma omp barrier
+    tmp_scratch[0] = ValueType();
+  //#pragma omp barrier
+
+  #pragma omp simd reduction(+ : tmp_scratch[:1])
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      ValueType tmp = ValueType();
+      lambda(i, tmp);
+      tmp_scratch[0] += tmp;
+    }
+
+    result = tmp_scratch[0];
+    */
 }
 
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
@@ -685,8 +1169,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     ValueType tmp = ValueType();
     lambda(i, tmp);
     join(result, tmp);
@@ -709,6 +1192,110 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 template <typename iType, class FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<
+        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+    const FunctorType& lambda) {
+  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
+  using value_type  = typename ValueTraits::value_type;
+
+  value_type scan_val = value_type();
+
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, scan_val, true);
+  }
+}
+
+}  // namespace Kokkos
+
+namespace Kokkos {
+/** \brief  Intra-team vector parallel_for. Executes lambda(iType i) for each
+ * i=0..N-1.
+ *
+ * The range i=0..N-1 is mapped to all vector lanes of the the calling thread.
+ */
+template <typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::TeamVectorRangeBoundariesStruct<
+        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+    const Lambda& lambda) {
+#pragma omp simd
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
+}
+
+/** \brief  Intra-team vector parallel_reduce. Executes lambda(iType i,
+ * ValueType & val) for each i=0..N-1.
+ *
+ * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
+ * and a summation of val is performed and put into result.
+ */
+template <typename iType, class Lambda, typename ValueType>
+KOKKOS_INLINE_FUNCTION void parallel_reduce(
+    const Impl::TeamVectorRangeBoundariesStruct<
+        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+    const Lambda& lambda, ValueType& result) {
+  result = ValueType();
+
+  ValueType* tmp_scratch =
+      (ValueType*)loop_boundaries.team.impl_reduce_scratch();
+#pragma omp barrier
+  tmp_scratch[0] = ValueType();
+#pragma omp barrier
+
+#pragma omp simd reduction(+ : tmp_scratch[:1])
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+    ValueType tmp = ValueType();
+    lambda(i, tmp);
+    tmp_scratch[0] += tmp;
+  }
+  result = tmp_scratch[0];
+}
+
+/** \brief  Intra-team vector parallel_reduce. Executes lambda(iType i,
+ * ValueType & val) for each i=0..N-1.
+ *
+ * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
+ * and a reduction of val is performed using JoinType(ValueType& val, const
+ * ValueType& update) and put into init_result. The input value of init_result
+ * is used as initializer for temporary variables of ValueType. Therefore the
+ * input value should be the neutral element with respect to the join operation
+ * (e.g. '0 for +-' or '1 for *').
+ */
+template <typename iType, class Lambda, typename ValueType, class JoinType>
+KOKKOS_INLINE_FUNCTION void parallel_reduce(
+    const Impl::TeamVectorRangeBoundariesStruct<
+        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+    const Lambda& lambda, const JoinType& join, ValueType& init_result) {
+  ValueType result = init_result;
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    ValueType tmp = ValueType();
+    lambda(i, tmp);
+    join(result, tmp);
+  }
+  init_result = result;
+}
+
+/** \brief  Intra-team vector parallel exclusive prefix sum. Executes
+ * lambda(iType i, ValueType & val, bool final) for each i=0..N-1.
+ *
+ * The range i=0..N-1 is mapped to all vector lanes in the thread and a scan
+ * operation is performed. Depending on the target execution space the operator
+ * might be called twice: once with final=false and once with final=true. When
+ * final==true val contains the prefix sum value. The contribution of this "i"
+ * needs to be added to val no matter whether final==true or not. In a serial
+ * execution (i.e. team_size==1) the operator is only called once with
+ * final==true. Scan_val will be set to the final sum value over all vector
+ * lanes.
+ */
+template <typename iType, class FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::TeamVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const FunctorType& lambda) {
   using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
