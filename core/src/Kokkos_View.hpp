@@ -821,7 +821,7 @@ class View : public ViewTraits<DataType, Properties...> {
           "Kokkos::View ERROR: attempt to access a View from the device in an "
           "inappropriate space.");
 #endif
-    };
+    }
   };
 
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
