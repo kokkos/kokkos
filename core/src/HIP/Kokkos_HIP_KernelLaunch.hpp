@@ -74,8 +74,6 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-void *hip_resize_scratch_space(std::int64_t bytes, bool force_shrink = false);
-
 template <typename DriverType>
 __global__ static void hip_parallel_launch_constant_memory() {
   const DriverType &driver = *(reinterpret_cast<const DriverType *>(
