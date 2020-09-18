@@ -793,15 +793,19 @@ class View : public ViewTraits<DataType, Properties...> {
                              Space, typename traits::memory_space>::accessible>
   struct verify_space {
     template <typename... Args>
-    KOKKOS_FORCEINLINE_FUNCTION static void check(Args&&... args) {}
+    KOKKOS_FORCEINLINE_FUNCTION static void check(Args&&...) {}
   };
 
   template <class Space>
   struct verify_space<Space, false> {
     template <typename Tracker, typename MapType, typename... IdxType>
-    KOKKOS_FORCEINLINE_FUNCTION static void check(const Tracker& tracker,
-                                                  const MapType& map,
-                                                  const IdxType... idx) {
+    KOKKOS_FORCEINLINE_FUNCTION static void check(const Tracker&
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+                                                      tracker
+#endif
+                                                  ,
+                                                  const MapType&,
+                                                  const IdxType...) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       std::string error_msg =
           "Kokkos::View ERROR: attempt to access View " +
