@@ -140,17 +140,6 @@ __global__ __launch_bounds__(
   driver->operator()();
 }
 
-template <class DriverType>
-__global__ static void cuda_parallel_launch_constant_or_global_memory(
-    const DriverType* driver_ptr) {
-  const DriverType& driver =
-      driver_ptr != nullptr
-          ? *driver_ptr
-          : *((const DriverType*)kokkos_impl_cuda_constant_memory_buffer);
-
-  driver();
-}
-
 //==============================================================================
 // <editor-fold desc="Some helper functions for launch code readability"> {{{1
 
