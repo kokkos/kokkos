@@ -856,6 +856,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
+  const bool m_result_ptr_host_accessible;
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
   size_type* m_unified_space;
@@ -922,10 +923,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
 
     // Reduce with final value at blockDim.y - 1 location.
-    if (cuda_single_inter_block_reduce_scan<false, ReducerTypeFwd, WorkTagFwd>(
-            ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
-            gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
-            m_scratch_space, m_scratch_flags)) {
+    // Shortcut for length zero reduction
+    bool do_final_reduction = m_policy.begin() == m_policy.end();
+    if (!do_final_reduction)
+      do_final_reduction =
+          cuda_single_inter_block_reduce_scan<false, ReducerTypeFwd,
+                                              WorkTagFwd>(
+              ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
+              gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
+              m_scratch_space, m_scratch_flags);
+
+    if (do_final_reduction) {
       // This is the final block with the final result at the final threads'
       // location
 
@@ -1023,9 +1031,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   inline void execute() {
-    const index_type nwork = m_policy.end() - m_policy.begin();
-    if (nwork) {
+    const index_type nwork     = m_policy.end() - m_policy.begin();
+    const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
+                                 ReduceFunctorHasFinal<FunctorType>::value ||
+                                 !m_result_ptr_host_accessible ||
+                                 !std::is_same<ReducerType, InvalidType>::value;
+    if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
+
       KOKKOS_ASSERT(block_size > 0);
 
       m_scratch_space = cuda_internal_scratch_space(
@@ -1051,12 +1064,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                                           WorkTag>(m_functor,
                                                                    block.y);
 
+      if ((nwork == 0)
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-      if (Kokkos::Impl::CudaInternal::cuda_use_serial_execution()) {
+          || Kokkos::Impl::CudaInternal::cuda_use_serial_execution()
+#endif
+      ) {
         block = dim3(1, 1, 1);
         grid  = dim3(1, 1, 1);
       }
-#endif
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem,
@@ -1064,7 +1079,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        Cuda().fence();
+        m_policy.space().fence();
 
         if (m_result_ptr) {
           if (m_unified_space) {
@@ -1100,6 +1115,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ViewType::memory_space>::accessible),
+        m_result_ptr_host_accessible(
+            MemorySpaceAccess<Kokkos::HostSpace,
+                              typename ViewType::memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr) {}
@@ -1112,6 +1130,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_result_ptr(reducer.view().data()),
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
+                              typename ReducerType::result_view_type::
+                                  memory_space>::accessible),
+        m_result_ptr_host_accessible(
+            MemorySpaceAccess<Kokkos::HostSpace,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible),
         m_scratch_space(nullptr),
@@ -1467,6 +1489,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const ReducerType m_reducer;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
+  const bool m_result_ptr_host_accessible;
   size_type* m_scratch_space;
   size_type* m_scratch_flags;
   size_type* m_unified_space;
@@ -1561,10 +1584,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
 
     // Reduce with final value at blockDim.y - 1 location.
-    if (cuda_single_inter_block_reduce_scan<false, FunctorType, WorkTag>(
-            ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
-            gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
-            m_scratch_space, m_scratch_flags)) {
+    bool do_final_reduce = (m_league_size == 0);
+    if (!do_final_reduce)
+      do_final_reduce =
+          cuda_single_inter_block_reduce_scan<false, FunctorType, WorkTag>(
+              ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
+              gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
+              m_scratch_space, m_scratch_flags);
+    if (do_final_reduce) {
       // This is the final block with the final result at the final threads'
       // location
 
@@ -1617,7 +1644,13 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     value_type init;
     ValueInit::init(ReducerConditional::select(m_functor, m_reducer), &init);
-    if (Impl::cuda_inter_block_reduction<FunctorType, ValueJoin, WorkTag>(
+
+    if (int_league_size == 0) {
+      Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
+          ReducerConditional::select(m_functor, m_reducer), (void*)&value);
+      *result = value;
+    } else if (
+        Impl::cuda_inter_block_reduction<FunctorType, ValueJoin, WorkTag>(
             value, init,
             ValueJoin(ReducerConditional::select(m_functor, m_reducer)),
             m_scratch_space, result, m_scratch_flags, blockDim.y)
@@ -1637,8 +1670,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline void execute() {
-    const int nwork = m_league_size * m_team_size;
-    if (nwork) {
+    const int nwork            = m_league_size * m_team_size;
+    const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
+                                 ReduceFunctorHasFinal<FunctorType>::value ||
+                                 !m_result_ptr_host_accessible ||
+                                 !std::is_same<ReducerType, InvalidType>::value;
+    if ((nwork > 0) || need_device_set) {
       const int block_count =
           UseShflReduction ? std::min(m_league_size, size_type(1024 * 32))
                            : std::min(int(m_league_size), m_team_size);
@@ -1657,12 +1694,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       dim3 grid(block_count, 1, 1);
       const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
 
+      if ((nwork == 0)
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-      if (Kokkos::Impl::CudaInternal::cuda_use_serial_execution()) {
+          || Kokkos::Impl::CudaInternal::cuda_use_serial_execution()
+#endif
+      ) {
         block = dim3(1, 1, 1);
         grid  = dim3(1, 1, 1);
       }
-#endif
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem_size_total,
@@ -1670,7 +1709,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
           true);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        Cuda().fence();
+        m_policy.space().fence();
 
         if (m_result_ptr) {
           if (m_unified_space) {
@@ -1706,6 +1745,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ViewType::memory_space>::accessible),
+        m_result_ptr_host_accessible(
+            MemorySpaceAccess<Kokkos::HostSpace,
+                              typename ViewType::memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr),
@@ -1727,13 +1769,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   m_functor, m_vector_size, m_policy.team_scratch_size(0),
                   m_policy.thread_scratch_size(0)) /
                   m_vector_size;
-
-    // Return Init value if the number of worksets is zero
-    if (m_league_size * m_team_size == 0) {
-      ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                      arg_result.data());
-      return;
-    }
 
     m_team_begin =
         UseShflReduction
@@ -1808,6 +1843,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             MemorySpaceAccess<Kokkos::CudaSpace,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible),
+        m_result_ptr_host_accessible(
+            MemorySpaceAccess<Kokkos::HostSpace,
+                              typename ReducerType::result_view_type::
+                                  memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
         m_unified_space(nullptr),
@@ -1829,13 +1868,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   m_functor, m_vector_size, m_policy.team_scratch_size(0),
                   m_policy.thread_scratch_size(0)) /
                   m_vector_size;
-
-    // Return Init value if the number of worksets is zero
-    if (arg_policy.league_size() == 0) {
-      ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
-                      m_result_ptr);
-      return;
-    }
 
     m_team_begin =
         UseShflReduction
