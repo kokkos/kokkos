@@ -792,14 +792,31 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class Space, bool = Kokkos::Impl::MemorySpaceAccess<
                              Space, typename traits::memory_space>::accessible>
   struct verify_space {
-    KOKKOS_FORCEINLINE_FUNCTION static void check() {}
+    template <typename... Args>
+    KOKKOS_FORCEINLINE_FUNCTION static void check(Args&&... args) {}
   };
 
   template <class Space>
   struct verify_space<Space, false> {
-    KOKKOS_FORCEINLINE_FUNCTION static void check() {
+    template <typename Tracker, typename MapType, typename... IdxType>
+    KOKKOS_FORCEINLINE_FUNCTION static void check(const Tracker& tracker,
+                                                  const MapType& map,
+                                                  const IdxType... idx) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+      std::string error_msg =
+          "Kokkos::View ERROR: attempt to access View " +
+          std::string(
+              tracker.m_tracker
+                  .template get_label<typename traits::memory_space>()) +
+          " in memory space " +
+          std::string(typename traits::memory_space{}.name()) +
+          " from execution space " + std::string(Space{}.name());
+      Kokkos::abort(error_msg.c_str());
+#else
       Kokkos::abort(
-          "Kokkos::View ERROR: attempt to access inaccessible memory space");
+          "Kokkos::View ERROR: attempt to access a View from the device in an "
+          "inappropriate space.");
+#endif
     };
   };
 
@@ -807,18 +824,18 @@ class View : public ViewTraits<DataType, Properties...> {
 
 #define KOKKOS_IMPL_SINK(ARG) ARG
 
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)             \
-  View::template verify_space<                            \
-      Kokkos::Impl::ActiveExecutionMemorySpace>::check(); \
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                                  \
+  View::template verify_space<Kokkos::Impl::ActiveExecutionMemorySpace>::check \
+      ARG;                                                                     \
   Kokkos::Impl::view_verify_operator_bounds<typename traits::memory_space> ARG;
 
 #else
 
-#define KOKKOS_IMPL_SINK(ARG)
+#define KOKKOS_IMPL_SINK(ARG) ARG
 
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG) \
-  View::template verify_space<                \
-      Kokkos::Impl::ActiveExecutionMemorySpace>::check();
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                                  \
+  View::template verify_space<Kokkos::Impl::ActiveExecutionMemorySpace>::check \
+      ARG;
 
 #endif
 
