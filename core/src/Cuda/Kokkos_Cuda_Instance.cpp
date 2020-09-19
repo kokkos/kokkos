@@ -132,7 +132,7 @@ int cuda_kernel_arch() {
 bool cuda_launch_blocking() {
   const char *env = getenv("CUDA_LAUNCH_BLOCKING");
 
-  if (env == 0) return false;
+  if (env == nullptr) return false;
 
   return std::stoi(env);
 }
@@ -509,14 +509,14 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
   const char *env_force_device_alloc =
       getenv("CUDA_MANAGED_FORCE_DEVICE_ALLOC");
   bool force_device_alloc;
-  if (env_force_device_alloc == 0)
+  if (env_force_device_alloc == nullptr)
     force_device_alloc = false;
   else
     force_device_alloc = std::stoi(env_force_device_alloc) != 0;
 
   const char *env_visible_devices = getenv("CUDA_VISIBLE_DEVICES");
   bool visible_devices_one        = true;
-  if (env_visible_devices == 0) visible_devices_one = false;
+  if (env_visible_devices == nullptr) visible_devices_one = false;
 
   if (Kokkos::show_warnings() &&
       (!visible_devices_one && !force_device_alloc)) {
