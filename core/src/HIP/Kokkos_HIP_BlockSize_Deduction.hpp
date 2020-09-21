@@ -101,7 +101,7 @@ int hip_internal_get_block_size(const F &condition_check,
                                         ? HIPTraits::MaxThreadsPerBlock
                                         : LaunchBounds::maxTperB;
 
-  const int regs_per_wavefront  = attr.numRegs;
+  const int regs_per_wavefront  = std::max(attr.numRegs, 1);
   const int regs_per_sm         = hip_instance->m_regsPerSM;
   const int shmem_per_sm        = hip_instance->m_shmemPerSM;
   const int max_shmem_per_block = hip_instance->m_maxShmemPerBlock;
@@ -116,13 +116,14 @@ int hip_internal_get_block_size(const F &condition_check,
   int block_size = max_threads_per_block;
 #endif
   KOKKOS_ASSERT(block_size > 0);
+  const int blocks_per_warp =
+      (block_size + HIPTraits::WarpSize - 1) / HIPTraits::WarpSize;
 
   int functor_shmem = ::Kokkos::Impl::FunctorTeamShmemSize<FunctorType>::value(
       f, block_size / vector_length);
   int total_shmem = shmem_block + shmem_thread * (block_size / vector_length) +
                     functor_shmem + attr.sharedSizeBytes;
-  int max_blocks_regs =
-      regs_per_sm / (regs_per_wavefront * (block_size / HIPTraits::WarpSize));
+  int max_blocks_regs = regs_per_sm / (regs_per_wavefront * blocks_per_warp);
   int max_blocks_shmem =
       (total_shmem < max_shmem_per_block)
           ? (total_shmem > 0 ? shmem_per_sm / total_shmem : max_blocks_regs)
@@ -146,8 +147,7 @@ int hip_internal_get_block_size(const F &condition_check,
         f, block_size / vector_length);
     total_shmem = shmem_block + shmem_thread * (block_size / vector_length) +
                   functor_shmem + attr.sharedSizeBytes;
-    max_blocks_regs =
-        regs_per_sm / (regs_per_wavefront * (block_size / HIPTraits::WarpSize));
+    max_blocks_regs = regs_per_sm / (regs_per_wavefront * blocks_per_warp);
     max_blocks_shmem =
         (total_shmem < max_shmem_per_block)
             ? (total_shmem > 0 ? shmem_per_sm / total_shmem : max_blocks_regs)

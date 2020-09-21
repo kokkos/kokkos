@@ -118,9 +118,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       dim3 const block(m_policy.m_tile[0] * m_policy.m_tile[1],
                        m_policy.m_tile[2], m_policy.m_tile[3]);
       dim3 const grid(
-          std::min(static_cast<index_type>(m_policy.m_tile_end[0] *
-                                           m_policy.m_tile_end[1]),
-                   static_cast<index_type>(maxblocks)),
+          std::min(static_cast<uint32_t>(m_policy.m_tile_end[0] *
+                                         m_policy.m_tile_end[1]),
+                   static_cast<uint32_t>(maxblocks)),
           std::min((m_policy.m_upper[2] - m_policy.m_lower[2] + block.y - 1) /
                        block.y,
                    maxblocks),
@@ -343,7 +343,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);
       // Required grid.x <= block.y
-      const dim3 grid(std::min(int(block.y), int(nwork)), 1, 1);
+      const dim3 grid(std::min(static_cast<uint32_t>(block.y),
+                               static_cast<uint32_t>(nwork)),
+                      1, 1);
 
       const int shmem =
           UseShflReduction

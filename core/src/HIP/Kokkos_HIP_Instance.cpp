@@ -195,7 +195,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
     m_hipDev     = hip_device_id;
     m_deviceProp = hipProp;
 
-    hipSetDevice(m_hipDev);
+    HIP_SAFE_CALL(hipSetDevice(m_hipDev));
 
     m_stream = stream;
 
@@ -332,7 +332,8 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
 
     m_scratchFlags = reinterpret_cast<size_type *>(r->data());
 
-    hipMemset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain);
+    HIP_SAFE_CALL(
+        hipMemset(m_scratchFlags, 0, m_scratchFlagsCount * sizeScratchGrain));
   }
 
   return m_scratchFlags;

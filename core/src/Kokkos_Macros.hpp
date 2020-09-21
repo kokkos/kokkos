@@ -171,6 +171,9 @@
 #include <hip/hip_runtime_api.h>
 
 #define KOKKOS_LAMBDA [=] __host__ __device__
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+#define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
+#endif
 #endif  // #if defined(KOKKOS_ENABLE_HIP)
 
 //----------------------------------------------------------------------------
@@ -287,9 +290,6 @@
 #define KOKKOS_IMPL_FUNCTION __device__ __host__
 #define KOKKOS_IMPL_HOST_FUNCTION __host__
 #define KOKKOS_IMPL_DEVICE_FUNCTION __device__
-#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
-#define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
-#endif
 #endif  // #if defined( KOKKOS_ENABLE_HIP )
 
 #if defined(KOKKOS_ENABLE_SYCL)

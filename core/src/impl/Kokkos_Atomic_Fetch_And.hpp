@@ -69,18 +69,6 @@ __inline__ __device__ unsigned int atomic_fetch_and(
   return atomicAnd((unsigned int*)dest, val);
 }
 
-// 08/05/20 Overload to work around https://bugs.llvm.org/show_bug.cgi?id=46922
-__inline__ __device__ unsigned long atomic_fetch_and(
-    volatile unsigned long* const dest, const unsigned long val) {
-  return atomic_fetch_and<unsigned long>(dest, val);
-}
-
-// 08/05/20 Overload to work around https://bugs.llvm.org/show_bug.cgi?id=46922
-__inline__ __device__ long atomic_fetch_and(volatile long* const dest,
-                                            long val) {
-  return atomic_fetch_and<long>(dest, val);
-}
-
 #if defined(__CUDA_ARCH__) && (350 <= __CUDA_ARCH__)
 __inline__ __device__ unsigned long long int atomic_fetch_and(
     volatile unsigned long long int* const dest,
@@ -90,6 +78,23 @@ __inline__ __device__ unsigned long long int atomic_fetch_and(
 #endif
 #endif
 #endif
+
+// 08/05/20 Overload to work around https://bugs.llvm.org/show_bug.cgi?id=46922
+
+#if (defined(KOKKOS_ENABLE_CUDA) &&                   \
+     (defined(__CUDA_ARCH__) ||                       \
+      defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND))) || \
+    (defined(KOKKOS_ENABLE_HIP))
+__inline__ __device__ unsigned long atomic_fetch_and(
+    volatile unsigned long* const dest, const unsigned long val) {
+  return atomic_fetch_and<unsigned long>(dest, val);
+}
+__inline__ __device__ long atomic_fetch_and(volatile long* const dest,
+                                            long val) {
+  return atomic_fetch_and<long>(dest, val);
+}
+#endif
+
 //----------------------------------------------------------------------------
 #if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)

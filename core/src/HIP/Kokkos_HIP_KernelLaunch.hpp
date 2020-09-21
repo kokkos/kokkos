@@ -170,12 +170,15 @@ struct HIPParallelLaunch<
   }
 
   static hipFuncAttributes get_hip_func_attributes() {
-    hipFuncAttributes attr;
-    hipFuncGetAttributes(
-        &attr,
-        reinterpret_cast<void const *>(
-            hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
-                                             MinBlocksPerSM>));
+    static hipFuncAttributes attr = []() {
+      hipFuncAttributes attr;
+      HIP_SAFE_CALL(hipFuncGetAttributes(
+          &attr,
+          reinterpret_cast<void const *>(
+              hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
+                                               MinBlocksPerSM>)));
+      return attr;
+    }();
     return attr;
   }
 };
@@ -213,10 +216,13 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
   }
 
   static hipFuncAttributes get_hip_func_attributes() {
-    hipFuncAttributes attr;
-    hipFuncGetAttributes(
-        &attr, reinterpret_cast<void *>(
-                   &hip_parallel_launch_local_memory<DriverType, 1024, 1>));
+    static hipFuncAttributes attr = []() {
+      hipFuncAttributes attr;
+      HIP_SAFE_CALL(hipFuncGetAttributes(
+          &attr, reinterpret_cast<void const *>(
+                     hip_parallel_launch_local_memory<DriverType, 1024, 1>)));
+      return attr;
+    }();
     return attr;
   }
 };
