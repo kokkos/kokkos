@@ -93,7 +93,7 @@ class Serial {
   //! Tag this class as an execution space:
   using execution_space = Serial;
   //! This device's preferred memory space.
-  using memory_space = Kokkos::Impl::DefaultHostMemorySpace;
+  using memory_space = Kokkos::HostSpace;
   //! The size_type alias best suited for this device.
   using size_type = memory_space::size_type;
   //! This execution space preferred device_type

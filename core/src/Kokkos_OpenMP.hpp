@@ -83,7 +83,7 @@ class OpenMP {
   //! Tag this class as a kokkos execution space
   using execution_space = OpenMP;
 
-  using memory_space = Kokkos::Impl::DefaultHostMemorySpace;
+  using memory_space = Kokkos::HostSpace;
 
   //! This execution space preferred device_type
   using device_type          = Kokkos::Device<execution_space, memory_space>;

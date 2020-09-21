@@ -121,7 +121,13 @@ class Cuda {
   //! Tag this class as a kokkos execution space
   using execution_space = Cuda;
 
-  using memory_space = Kokkos::Impl::DefaultDeviceMemorySpace;
+#if defined(KOKKOS_ENABLE_CUDA_UVM)
+  //! This execution space's preferred memory space.
+  using memory_space = CudaUVMSpace;
+#else
+  //! This execution space's preferred memory space.
+  using memory_space = CudaSpace;
+#endif
 
   //! This execution space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
