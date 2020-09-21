@@ -122,7 +122,7 @@ int initialize_space_factory(std::string name) {
   ExecSpaceManager::get_instance().register_space_factory(name,
                                                           std::move(space_ptr));
   return 1;
-};
+}
 
 }  // namespace Impl
 void initialize(int& narg, char* arg[]);
