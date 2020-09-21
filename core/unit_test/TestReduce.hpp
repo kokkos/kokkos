@@ -520,8 +520,8 @@ TEST(TEST_CATEGORY, mdrange_combined_reduce) {
 
   Kokkos::parallel_reduce(
       "int_combined_reduce_mdrange",
-      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<3>>({0, 0, 0},
-                                                             {nw, 1, 1}),
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<3>>({{0, 0, 0}},
+                                                             {{nw, 1, 1}}),
       functor_type(nw), result1, result2, result3);
 
   ASSERT_EQ(nw, result1);
