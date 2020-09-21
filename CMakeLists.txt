@@ -193,12 +193,6 @@ ELSE()
   SET(KOKKOS_IS_SUBDIRECTORY FALSE)
 ENDIF()
 
-
-
-KOKKOS_OPTION(PLUGIN_PATH "" STRING "Code Plugins Path-Directories of all TPL Plugs (backend extensions)")
-FOREACH (PLUGIN ${Kokkos_PLUGIN_PATH})
-  INCLUDE(${PLUGIN}/CMakeLists.txt)
-ENDFOREACH()
 #------------------------------------------------------------------------------
 #
 # A) Forward declare the package so that certain options are also defined for

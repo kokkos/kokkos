@@ -169,14 +169,6 @@ if(Kokkos_ENABLE_OPENMPTARGET)
 endif()
 
 
-FOREACH (PLUGIN ${Kokkos_PLUGIN_PATH})
-  IF (EXISTS ${PLUGIN}/core/unit_test/CMakeLists.txt)
-     INCLUDE(${PLUGIN}/core/unit_test/CMakeLists.txt)
-  ELSE()
-     MESSAGE(WARNING "${PLUGIN} does not include any tests. Skipping.")
-  ENDIF()
-ENDFOREACH()
-
 if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial1
