@@ -247,12 +247,15 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
       : m_space(space_),
         m_league_size(league_size_),
         m_team_size(team_size_request),
-        m_vector_length(verify_requested_vector_length(vector_length_request)),
+        m_vector_length(
+            (vector_length_request > 0)
+                ? verify_requested_vector_length(vector_length_request)
+                : (verify_requested_vector_length(1))),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
-        m_tune_team_size(false),
-        m_tune_vector_length(false) {
+        m_tune_team_size(bool(team_size_request <= 0)),
+        m_tune_vector_length(bool(vector_length_request <= 0)) {
     // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
