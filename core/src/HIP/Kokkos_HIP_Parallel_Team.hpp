@@ -253,7 +253,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
         m_tune_team_size(false),
         m_tune_vector_length(false) {
-    // Make sure league size is permissable
+    // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
             ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
@@ -261,7 +261,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
           "Requested too large league_size for TeamPolicy on HIP execution "
           "space.");
 
-    // Make sure total block size is permissable
+    // Make sure total block size is permissible
     if (m_team_size * m_vector_length > 1024) {
       Impl::throw_runtime_exception(
           std::string("Kokkos::TeamPolicy< HIP > the team size is too large. "
@@ -282,7 +282,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
         m_tune_team_size(true),
         m_tune_vector_length(false) {
-    // Make sure league size is permissable
+    // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
             ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
@@ -313,7 +313,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on HIP execution "
           "space.");
-    // Make sure total block size is permissable
+    // Make sure total block size is permissible
     if (m_team_size > 1024) {
       Impl::throw_runtime_exception(
           std::string("Kokkos::TeamPolicy< HIP > the team size is too large. "
@@ -336,7 +336,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
         m_tune_team_size(true),
         m_tune_vector_length(true) {
-    // Make sure league size is permissable
+    // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
             ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
@@ -356,7 +356,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
         m_tune_team_size(false),
         m_tune_vector_length(false) {
-    // Make sure league size is permissable
+    // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
             ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
@@ -364,7 +364,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
           "Requested too large league_size for TeamPolicy on HIP execution "
           "space.");
 
-    // Make sure total block size is permissable
+    // Make sure total block size is permissible
     if (m_team_size * m_vector_length > 1024) {
       Impl::throw_runtime_exception(
           std::string("Kokkos::TeamPolicy< HIP > the team size is too large. "
@@ -384,7 +384,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
         m_tune_team_size(true),
         m_tune_vector_length(false) {
-    // Make sure league size is permissable
+    // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
             ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
@@ -407,14 +407,14 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
         m_tune_team_size(false),
         m_tune_vector_length(true) {
-    // Make sure league size is permissable
+    // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
             ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
       Impl::throw_runtime_exception(
           "Requested too large league_size for TeamPolicy on HIP execution "
           "space.");
-    // Make sure total block size is permissable
+    // Make sure total block size is permissible
     if (m_team_size > 1024) {
       Impl::throw_runtime_exception(
           std::string("Kokkos::TeamPolicy< HIP > the team size is too large. "
@@ -437,7 +437,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
         m_tune_team_size(true),
         m_tune_vector_length(true) {
-    // Make sure league size is permissable
+    // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
             ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
