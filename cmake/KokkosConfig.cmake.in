@@ -1,3 +1,9 @@
+# No need for policy push/pop. CMake also manages a new entry for scripts
+# loaded by include() and find_package() commands except when invoked with
+# the NO_POLICY_SCOPE option
+# CMP0057 + NEW -> IN_LIST operator in IF(...)
+CMAKE_POLICY(SET CMP0057 NEW)
+
 # Compute paths
 @PACKAGE_INIT@
 
