@@ -761,10 +761,12 @@ void HIPSpaceInitializer::finalize(const bool) {
   }
 }
 
-void HIPSpaceInitializer::fence() { Kokkos::Experimental::HIP::impl_static_fence(); }
+void HIPSpaceInitializer::fence() {
+  Kokkos::Experimental::HIP::impl_static_fence();
+}
 
 void HIPSpaceInitializer::print_configuration(std::ostringstream& msg,
-                                                 const bool detail) {
+                                              const bool detail) {
   msg << "Devices:" << std::endl;
   msg << "  KOKKOS_ENABLE_HIP: ";
   msg << "yes" << std::endl;

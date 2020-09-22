@@ -277,7 +277,6 @@ void initialize_backends(const InitArguments& args) {
 #endif
 
   Impl::ExecSpaceManager::get_instance().initialize_spaces(args);
-
 }
 
 void initialize_profiling(const InitArguments&) {
@@ -335,10 +334,7 @@ void finalize_internal(const bool all_spaces = false) {
   g_show_warnings  = true;
 }
 
-void fence_internal() {
-
-  Impl::ExecSpaceManager::get_instance().static_fence();
-}
+void fence_internal() { Impl::ExecSpaceManager::get_instance().static_fence(); }
 
 bool check_arg(char const* arg, char const* expected) {
   std::size_t arg_len = std::strlen(arg);
@@ -814,7 +810,6 @@ void print_configuration(std::ostream& out, const bool detail) {
 #else
   msg << "  KOKKOS_ENABLE_ISA_X86_64: no" << std::endl;
 #endif
-
 
   msg << "Default Device:" << typeid(Kokkos::DefaultExecutionSpace).name()
       << std::endl;
