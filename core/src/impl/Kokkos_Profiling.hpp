@@ -150,7 +150,7 @@ static std::map<std::string, Kokkos::Tools::Experimental::TeamSizeTuner>
 
 template <class ReducerType, class ExecPolicy, class Functor, typename TagType>
 void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
-                 const TagType&) {}
+                 TagType) {}
 
 template <class ExecPolicy, class Functor, typename TagType>
 void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
@@ -333,6 +333,8 @@ void begin_parallel_for(ExecPolicy& policy,
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
   Impl::tune_policy(context_id, label, policy, functor,
                     Kokkos::ParallelForTag{});
+#else
+(void)functor;
 #endif
 }
 

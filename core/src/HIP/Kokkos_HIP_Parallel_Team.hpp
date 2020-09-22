@@ -306,7 +306,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
         m_tune_team_size(false),
         m_tune_vector_length(true) {
-    // Make sure league size is permissable
+    // Make sure league size is permissible
     if (league_size_ >=
         static_cast<int>(
             ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
