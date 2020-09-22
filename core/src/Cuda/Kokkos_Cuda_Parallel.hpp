@@ -275,7 +275,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_tune_team(false),
         m_tune_vector(false) {}
 
-  /** \brief  Specify league size, request team size */
+  /** \brief  Specify league size, specify team size, specify vector length */
   TeamPolicyInternal(const execution_space space_, int league_size_,
                      int team_size_request, int vector_length_request = 1)
       : m_space(space_),
@@ -305,21 +305,21 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     }
   }
 
-  /** \brief  Specify league size, request team size */
+  /** \brief  Specify league size, request team size, specify vector length */
   TeamPolicyInternal(const execution_space space_, int league_size_,
                      const Kokkos::AUTO_t& /* team_size_request */
                      ,
                      int vector_length_request = 1)
       : TeamPolicyInternal(space_, league_size_, -1, vector_length_request) {}
 
-  /** \brief  Specify league size, request team size */
+  /** \brief  Specify league size, request team size and vector length */
   TeamPolicyInternal(const execution_space space_, int league_size_,
                      const Kokkos::AUTO_t& /* team_size_request */,
                      const Kokkos::AUTO_t& /* vector_length_request */
                      )
       : TeamPolicyInternal(space_, league_size_, -1, -1) {}
 
-  /** \brief  Specify league size, request team size */
+  /** \brief  Specify league size, specify team size, request vector length */
   TeamPolicyInternal(const execution_space space_, int league_size_,
                      int team_size_request, const Kokkos::AUTO_t&)
       : TeamPolicyInternal(space_, league_size_, team_size_request, -1) {}
