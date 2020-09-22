@@ -295,6 +295,12 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCudaUVM_ViewMapping_b.cpp
       cuda/TestCudaUVM_ViewMapping_subview.cpp
       cuda/TestCuda_Spaces.cpp
+  )
+
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_CudaTimingBased
+    SOURCES
+      UnitTestMainInit.cpp
       cuda/TestCuda_DebugSerialExecution.cpp
       cuda/TestCuda_DebugPinUVMSpace.cpp
   )
