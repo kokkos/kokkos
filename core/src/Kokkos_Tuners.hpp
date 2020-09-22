@@ -57,8 +57,6 @@
 #include <vector>
 #include <map>
 #include <cassert>
-// TODO DZP: remove, for debugging
-#include <iostream>
 
 namespace Kokkos {
 namespace Tools {
@@ -401,10 +399,6 @@ class TeamSizeTuner {
      *
      */
     SpaceDescription space_description;
-
-    if (policy.auto_vector_length()) {
-      policy.impl_set_vector_length(1);  // TODO: find a heuristic
-    }
 
     auto max_vector_length = PolicyType::vector_length_max();
     std::vector<int64_t> allowed_vector_lengths;
