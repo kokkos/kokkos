@@ -228,8 +228,6 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
     }
     auto& tuner = team_tuners[label];
     tuner.tune(policy);
-    std::cout << "Policy deets for " << label << ": " << policy.team_size()
-              << ", " << policy.vector_length() << std::endl;
   }
 }
 
