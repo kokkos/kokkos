@@ -822,20 +822,15 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
                    const int vector_length_request) {
     m_league_size = league_size_request;
 
-    // Minimum team size should be 32 at-least with the clang compiler.
-    team_size_request < 32 ? m_team_size = 32 : m_team_size = team_size_request;
+    // Minimum team size should be 32 for OpenMPTarget backend.
+    if (team_size_request < 32) {
+      printf(
+          "OpenMPTarget backend requires a minimum of 32 threads per team.\n");
+      exit(EXIT_FAILURE);
+    } else
+      m_team_size = team_size_request;
 
-    //    if(team_size_request < 32)
-    //    {
-    //      Kokkos::abort("Minimum team size for OpenMPTarget backend is 32.");
-    //      m_team_size = 32;
-    //    }
-    //    else m_team_size = team_size_request;
-
-    //    m_vector_length = vector_length_request;
-    vector_length_request < 32 ? m_vector_length = 32
-                               : m_vector_length = vector_length_request;
-
+    m_vector_length = vector_length_request;
     set_auto_chunk_size();
   }
 
@@ -1130,24 +1125,22 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, ValueType& result) {
-  //  result = ValueType();
-  /*
-    ValueType* tmp_scratch =
-        (ValueType*)loop_boundaries.team.impl_reduce_scratch();
-    // FIXME - A barrier is necessary here but that blocks the code execution.
-  //#pragma omp barrier
-    tmp_scratch[0] = ValueType();
-  //#pragma omp barrier
+  result = ValueType();
 
-  #pragma omp simd reduction(+ : tmp_scratch[:1])
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-      ValueType tmp = ValueType();
-      lambda(i, tmp);
-      tmp_scratch[0] += tmp;
-    }
+  ValueType* tmp_scratch =
+      (ValueType*)loop_boundaries.team.impl_reduce_scratch();
+#pragma omp barrier
+  tmp_scratch[1] = ValueType();
+#pragma omp barrier
 
-    result = tmp_scratch[0];
-    */
+#pragma omp simd reduction(+ : tmp_scratch [1:2])
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+    ValueType tmp = ValueType();
+    lambda(i, tmp);
+    tmp_scratch[1] += tmp;
+  }
+
+  result = tmp_scratch[1];
 }
 
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
@@ -1214,7 +1207,7 @@ namespace Kokkos {
 /** \brief  Intra-team vector parallel_for. Executes lambda(iType i) for each
  * i=0..N-1.
  *
- * The range i=0..N-1 is mapped to all vector lanes of the the calling thread.
+ * The range i=0..N-1 is mapped to all vector lanes of the the calling team.
  */
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
@@ -1228,7 +1221,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 /** \brief  Intra-team vector parallel_reduce. Executes lambda(iType i,
  * ValueType & val) for each i=0..N-1.
  *
- * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
+ * The range i=0..N-1 is mapped to all vector lanes of the the calling team
  * and a summation of val is performed and put into result.
  */
 template <typename iType, class Lambda, typename ValueType>
@@ -1252,66 +1245,6 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   }
   result = tmp_scratch[0];
 }
-
-/** \brief  Intra-team vector parallel_reduce. Executes lambda(iType i,
- * ValueType & val) for each i=0..N-1.
- *
- * The range i=0..N-1 is mapped to all vector lanes of the the calling thread
- * and a reduction of val is performed using JoinType(ValueType& val, const
- * ValueType& update) and put into init_result. The input value of init_result
- * is used as initializer for temporary variables of ValueType. Therefore the
- * input value should be the neutral element with respect to the join operation
- * (e.g. '0 for +-' or '1 for *').
- */
-template <typename iType, class Lambda, typename ValueType, class JoinType>
-KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    const Impl::TeamVectorRangeBoundariesStruct<
-        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-    const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-  ValueType result = init_result;
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    join(result, tmp);
-  }
-  init_result = result;
-}
-
-/** \brief  Intra-team vector parallel exclusive prefix sum. Executes
- * lambda(iType i, ValueType & val, bool final) for each i=0..N-1.
- *
- * The range i=0..N-1 is mapped to all vector lanes in the thread and a scan
- * operation is performed. Depending on the target execution space the operator
- * might be called twice: once with final=false and once with final=true. When
- * final==true val contains the prefix sum value. The contribution of this "i"
- * needs to be added to val no matter whether final==true or not. In a serial
- * execution (i.e. team_size==1) the operator is only called once with
- * final==true. Scan_val will be set to the final sum value over all vector
- * lanes.
- */
-template <typename iType, class FunctorType>
-KOKKOS_INLINE_FUNCTION void parallel_scan(
-    const Impl::TeamVectorRangeBoundariesStruct<
-        iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
-    const FunctorType& lambda) {
-  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
-  using value_type  = typename ValueTraits::value_type;
-
-  value_type scan_val = value_type();
-
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    lambda(i, scan_val, true);
-  }
-}
-
 }  // namespace Kokkos
 
 namespace Kokkos {

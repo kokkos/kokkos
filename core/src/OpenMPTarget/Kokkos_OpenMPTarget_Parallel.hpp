@@ -516,7 +516,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     FunctorType a_functor(m_functor);
 #pragma omp target teams distribute map(to                        \
                                         : a_functor, scratch_ptr) \
-    num_teams(nteams)
+    num_teams(nteams) thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
 #pragma omp parallel num_threads(team_size)
       {
@@ -548,9 +548,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 #pragma omp target teams distribute map(to                        \
                                         : a_functor, scratch_ptr) \
-    num_teams(nteams)
+    num_teams(nteams) thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
-#pragma omp parallel
+#pragma omp parallel num_threads(team_size)
       {
         typename Policy::member_type team(i / (team_size * vector_length),
                                           league_size, team_size, vector_length,
@@ -602,7 +602,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
          map(to:f,scratch_ptr) map(tofrom:result) reduction(+: result)
     for (int i = 0; i < league_size; i++) {
       ValueType inner_result = ValueType();
-#pragma omp parallel reduction(+ : inner_result)
+#pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
       {
         typename PolicyType::member_type team(i, league_size, team_size,
                                               vector_length, scratch_ptr, 0, 0);
@@ -636,15 +636,20 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     ValueType result = ValueType();
-#pragma omp target teams distribute parallel for num_teams(nteams) num_threads(team_size*vector_length) \
-         map(to:f,scratch_ptr) map(tofrom:result) reduction(+: result) schedule(static,1)
-    for (int i = 0; i < league_size * team_size * vector_length; i++) {
-      typename PolicyType::member_type team(i / (team_size * vector_length),
-                                            league_size, team_size,
-                                            vector_length, scratch_ptr, 0, 0);
-      f(TagType(), team, result);
-      if (team.vector_lane != 0) result = 0;
+
+#pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
+         map(to:f,scratch_ptr) map(tofrom:result) reduction(+: result)
+    for (int i = 0; i < league_size; i++) {
+      ValueType inner_result = ValueType();
+#pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
+      {
+        typename PolicyType::member_type team(i, league_size, team_size,
+                                              vector_length, scratch_ptr, 0, 0);
+        f(TagType(), team, result);
+      }
+      result = inner_result;
     }
+
     *result_ptr = result;
   }
 
@@ -724,8 +729,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_result_ptr(reducer.view().data()),
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
-                         arg_functor, arg_policy.team_size())) {
-  }
+                         arg_functor, arg_policy.team_size())) {}
 };
 
 }  // namespace Impl
