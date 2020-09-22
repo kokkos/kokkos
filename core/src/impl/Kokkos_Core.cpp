@@ -276,25 +276,8 @@ void initialize_backends(const InitArguments& args) {
   setenv("MEMKIND_HBW_NODES", "1", 0);
 #endif
 
-  // Protect declarations, to prevent "unused variable" warnings.
-#if defined(KOKKOS_ENABLE_HIP)
-  int use_gpu = get_gpu(args);
-#endif  // defined( KOKKOS_ENABLE_HIP )
-
   Impl::ExecSpaceManager::get_instance().initialize_spaces(args);
 
-#if defined(KOKKOS_ENABLE_HIP)
-  if (std::is_same<Kokkos::Experimental::HIP,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      0 < use_gpu) {
-    if (use_gpu > -1) {
-      Kokkos::Experimental::HIP::impl_initialize(
-          Kokkos::Experimental::HIP::SelectDevice(use_gpu));
-    } else {
-      Kokkos::Experimental::HIP::impl_initialize();
-    }
-  }
-#endif
 }
 
 void initialize_profiling(const InitArguments&) {
@@ -346,15 +329,6 @@ void finalize_internal(const bool all_spaces = false) {
 
   Kokkos::Profiling::finalize();
 
-#if defined(KOKKOS_ENABLE_HIP)
-  if (std::is_same<Kokkos::Experimental::HIP,
-                   Kokkos::DefaultExecutionSpace>::value ||
-      all_spaces) {
-    if (Kokkos::Experimental::HIP::impl_is_initialized())
-      Kokkos::Experimental::HIP::impl_finalize();
-  }
-#endif
-
   Impl::ExecSpaceManager::get_instance().finalize_spaces(all_spaces);
 
   g_is_initialized = false;
@@ -362,12 +336,7 @@ void finalize_internal(const bool all_spaces = false) {
 }
 
 void fence_internal() {
-#if defined(KOKKOS_ENABLE_HIP)
-  Kokkos::Experimental::HIP::impl_static_fence();
-#endif
 
-#if defined(KOKKOS_ENABLE_THREADS)
-#endif
   Impl::ExecSpaceManager::get_instance().static_fence();
 }
 
@@ -846,13 +815,6 @@ void print_configuration(std::ostream& out, const bool detail) {
   msg << "  KOKKOS_ENABLE_ISA_X86_64: no" << std::endl;
 #endif
 
-  msg << "Devices:" << std::endl;
-  msg << "  KOKKOS_ENABLE_HIP: ";
-#ifdef KOKKOS_ENABLE_HIP
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
 
   msg << "Default Device:" << typeid(Kokkos::DefaultExecutionSpace).name()
       << std::endl;
@@ -977,24 +939,6 @@ void print_configuration(std::ostream& out, const bool detail) {
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;
-#endif
-
-#ifdef KOKKOS_ENABLE_HIP
-  msg << "HIP Options:" << std::endl;
-  msg << "  KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE: ";
-#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-#endif
-
-  msg << "\nRuntime Configuration:" << std::endl;
-#ifdef KOKKOS_ENABLE_HIP
-  Experimental::HIP::print_configuration(msg, detail);
-#endif
-#if defined(KOKKOS_ENABLE_THREADS)
-  Threads::print_configuration(msg, detail);
 #endif
 
   Impl::ExecSpaceManager::get_instance().print_configuration(msg, detail);
