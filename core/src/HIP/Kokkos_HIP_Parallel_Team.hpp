@@ -276,53 +276,16 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   TeamPolicyInternal(const execution_space space_, int league_size_,
                      const Kokkos::AUTO_t& /* team_size_request */,
                      int vector_length_request = 1)
-      : m_space(space_),
-        m_league_size(league_size_),
-        m_team_size(-1),
-        m_vector_length(verify_requested_vector_length(vector_length_request)),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
-        m_tune_team_size(true),
-        m_tune_vector_length(false) {
-    // Make sure league size is permissible
-    if (league_size_ >=
-        static_cast<int>(
-            ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on HIP execution "
-          "space.");
-  }
+      : TeamPolicyInternal(space_, league_size_, -1, vector_length_request) {}
   // FLAG
   /** \brief  Specify league size and team size, request vector length*/
   TeamPolicyInternal(const execution_space space_, int league_size_,
                      int team_size_request,
                      const Kokkos::AUTO_t& /* vector_length_request */
-
                      )
-      : m_space(space_),
-        m_league_size(league_size_),
-        m_team_size(team_size_request),
-        m_vector_length(-1),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
-        m_tune_team_size(false),
-        m_tune_vector_length(true) {
-    // Make sure league size is permissible
-    if (league_size_ >=
-        static_cast<int>(
-            ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on HIP execution "
-          "space.");
-    // Make sure total block size is permissible
-    if (m_team_size > 1024) {
-      Impl::throw_runtime_exception(
-          std::string("Kokkos::TeamPolicy< HIP > the team size is too large. "
-                      "Team size x vector length must be smaller than 1024."));
-    }
-  }
+      : TeamPolicyInternal(space_, league_size_, team_size_request, -1)
+
+  {}
 
   /** \brief  Specify league size, request team size and vector length*/
   TeamPolicyInternal(const execution_space space_, int league_size_,
@@ -330,100 +293,30 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
                      const Kokkos::AUTO_t& /* vector_length_request */
 
                      )
-      : m_space(space_),
-        m_league_size(league_size_),
-        m_team_size(-1),
-        m_vector_length(-1),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
-        m_tune_team_size(true),
-        m_tune_vector_length(true) {
-    // Make sure league size is permissible
-    if (league_size_ >=
-        static_cast<int>(
-            ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on HIP execution "
-          "space.");
-  }
+      : TeamPolicyInternal(space_, league_size_, -1, -1)
+
+  {}
 
   TeamPolicyInternal(int league_size_, int team_size_request,
                      int vector_length_request = 1)
-      : m_space(typename traits::execution_space()),
-        m_league_size(league_size_),
-        m_team_size(team_size_request),
-        m_vector_length(verify_requested_vector_length(vector_length_request)),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
-        m_tune_team_size(false),
-        m_tune_vector_length(false) {
-    // Make sure league size is permissible
-    if (league_size_ >=
-        static_cast<int>(
-            ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on HIP execution "
-          "space.");
-
-    // Make sure total block size is permissible
-    if (m_team_size * m_vector_length > 1024) {
-      Impl::throw_runtime_exception(
-          std::string("Kokkos::TeamPolicy< HIP > the team size is too large. "
-                      "Team size x vector length must be smaller than 1024."));
-    }
-  }
+      : TeamPolicyInternal(typename traits::execution_space(), league_size_,
+                           team_size_request, vector_length_request) {}
 
   TeamPolicyInternal(int league_size_,
                      const Kokkos::AUTO_t& /* team_size_request */,
                      int vector_length_request = 1)
-      : m_space(typename traits::execution_space()),
-        m_league_size(league_size_),
-        m_team_size(-1),
-        m_vector_length(verify_requested_vector_length(vector_length_request)),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
-        m_tune_team_size(true),
-        m_tune_vector_length(false) {
-    // Make sure league size is permissible
-    if (league_size_ >=
-        static_cast<int>(
-            ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on HIP execution "
-          "space.");
-  }
+      : TeamPolicyInternal(typename traits::execution_space(), league_size_, -1,
+                           vector_length_request) {}
 
   /** \brief  Specify league size and team size, request vector length*/
   TeamPolicyInternal(int league_size_, int team_size_request,
                      const Kokkos::AUTO_t& /* vector_length_request */
 
                      )
-      : m_space(typename traits::execution_space()),
-        m_league_size(league_size_),
-        m_team_size(team_size_request),
-        m_vector_length(-1),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
-        m_tune_team_size(false),
-        m_tune_vector_length(true) {
-    // Make sure league size is permissible
-    if (league_size_ >=
-        static_cast<int>(
-            ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on HIP execution "
-          "space.");
-    // Make sure total block size is permissible
-    if (m_team_size > 1024) {
-      Impl::throw_runtime_exception(
-          std::string("Kokkos::TeamPolicy< HIP > the team size is too large. "
-                      "Team size x vector length must be smaller than 1024."));
-    }
-  }
+      : TeamPolicyInternal(typename traits::execution_space(), league_size_,
+                           team_size_request, -1)
+
+  {}
 
   /** \brief  Specify league size, request team size and vector length*/
   TeamPolicyInternal(int league_size_,
@@ -431,23 +324,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
                      const Kokkos::AUTO_t& /* vector_length_request */
 
                      )
-      : m_space(typename traits::execution_space()),
-        m_league_size(league_size_),
-        m_team_size(-1),
-        m_vector_length(-1),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(::Kokkos::Experimental::Impl::HIPTraits::WarpSize),
-        m_tune_team_size(true),
-        m_tune_vector_length(true) {
-    // Make sure league size is permissible
-    if (league_size_ >=
-        static_cast<int>(
-            ::Kokkos::Experimental::Impl::hip_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on HIP execution "
-          "space.");
-  }
+      : TeamPolicyInternal(typename traits::execution_space(), league_size_, -1,
+                           -1) {}
 
   int chunk_size() const { return m_chunk_size; }
 
