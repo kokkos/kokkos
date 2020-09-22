@@ -277,36 +277,9 @@ void initialize_backends(const InitArguments& args) {
 #endif
 
   // Protect declarations, to prevent "unused variable" warnings.
-#if defined(KOKKOS_ENABLE_THREADS)
-  const int num_threads = args.num_threads;
-#endif
-#if defined(KOKKOS_ENABLE_THREADS)
-  const int use_numa = args.num_numa;
-#endif
 #if defined(KOKKOS_ENABLE_HIP)
   int use_gpu = get_gpu(args);
 #endif  // defined( KOKKOS_ENABLE_HIP )
-
-#if defined(KOKKOS_ENABLE_THREADS)
-  if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
-      std::is_same<Kokkos::Threads,
-                   Kokkos::HostSpace::execution_space>::value) {
-    if (num_threads > 0) {
-      if (use_numa > 0) {
-        Kokkos::Threads::impl_initialize(num_threads, use_numa);
-      } else {
-        Kokkos::Threads::impl_initialize(num_threads);
-      }
-    } else {
-      Kokkos::Threads::impl_initialize();
-    }
-    // std::cout << "Kokkos::initialize() fyi: Pthread enabled and initialized"
-    // << std::endl ;
-  } else {
-    // std::cout << "Kokkos::initialize() fyi: Pthread enabled but not
-    // initialized" << std::endl ;
-  }
-#endif
 
   Impl::ExecSpaceManager::get_instance().initialize_spaces(args);
 
@@ -382,16 +355,6 @@ void finalize_internal(const bool all_spaces = false) {
   }
 #endif
 
-#if defined(KOKKOS_ENABLE_THREADS)
-  if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
-      std::is_same<Kokkos::Threads,
-                   Kokkos::HostSpace::execution_space>::value ||
-      all_spaces) {
-    if (Kokkos::Threads::impl_is_initialized())
-      Kokkos::Threads::impl_finalize();
-  }
-#endif
-
   Impl::ExecSpaceManager::get_instance().finalize_spaces(all_spaces);
 
   g_is_initialized = false;
@@ -404,7 +367,6 @@ void fence_internal() {
 #endif
 
 #if defined(KOKKOS_ENABLE_THREADS)
-  Kokkos::Threads::impl_static_fence();
 #endif
   Impl::ExecSpaceManager::get_instance().static_fence();
 }
@@ -887,12 +849,6 @@ void print_configuration(std::ostream& out, const bool detail) {
   msg << "Devices:" << std::endl;
   msg << "  KOKKOS_ENABLE_HIP: ";
 #ifdef KOKKOS_ENABLE_HIP
-  msg << "yes" << std::endl;
-#else
-  msg << "no" << std::endl;
-#endif
-  msg << "  KOKKOS_ENABLE_THREADS: ";
-#ifdef KOKKOS_ENABLE_THREADS
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;

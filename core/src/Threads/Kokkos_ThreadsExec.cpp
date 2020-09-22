@@ -794,6 +794,57 @@ int Threads::impl_thread_pool_rank() {
 const char *Threads::name() { return "Threads"; }
 } /* namespace Kokkos */
 
+namespace Impl {
+
+int g_threads_space_factory_initialized =
+    initialize_space_factory<ThreadsSpaceInitializer>("050_Threads");
+
+void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
+  const int num_threads = args.num_threads;
+  const int use_numa    = args.num_numa;
+  if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
+      std::is_same<Kokkos::Threads,
+                   Kokkos::HostSpace::execution_space>::value) {
+    if (num_threads > 0) {
+      if (use_numa > 0) {
+        Kokkos::Threads::impl_initialize(num_threads, use_numa);
+      } else {
+        Kokkos::Threads::impl_initialize(num_threads);
+      }
+    } else {
+      Kokkos::Threads::impl_initialize();
+    }
+    // std::cout << "Kokkos::initialize() fyi: Pthread enabled and initialized"
+    // << std::endl ;
+  } else {
+    // std::cout << "Kokkos::initialize() fyi: Pthread enabled but not
+    // initialized" << std::endl ;
+  }
+}
+
+void ThreadsSpaceInitializer::finalize(const bool) {
+  if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
+      std::is_same<Kokkos::Threads,
+                   Kokkos::HostSpace::execution_space>::value ||
+      all_spaces) {
+    if (Kokkos::Threads::impl_is_initialized())
+      Kokkos::Threads::impl_finalize();
+  }
+}
+
+void ThreadsSpaceInitializer::fence() { Kokkos::Threads::impl_static_fence(); }
+
+void ThreadsSpaceInitializer::print_configuration(std::ostringstream &msg,
+                                                  const bool detail) {
+  msg << "Host Parallel Execution Space:" << std::endl;
+  msg << "  KOKKOS_ENABLE_THREADS: ";
+  msg << "yes" << std::endl;
+
+  msg << "\nThreads Runtime Configuration:" << std::endl;
+  Threads::print_configuration(msg, detail);
+}
+
+}  // namespace Impl
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 #else

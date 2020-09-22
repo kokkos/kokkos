@@ -181,6 +181,20 @@ struct DeviceTypeTraits<Threads> {
 };
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Impl {
+
+class ThreadsSpaceInitializer : public ExecSpaceInitializerBase {
+ public:
+  ThreadsSpaceInitializer()  = default;
+  ~ThreadsSpaceInitializer() = default;
+  void initialize(const InitArguments& args);
+  void finalize(const bool);
+  void fence();
+  void print_configuration(std::ostringstream& msg, const bool detail);
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
