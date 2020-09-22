@@ -67,6 +67,7 @@ namespace Experimental {
 
 // forward declarations
 SetOrRange make_candidate_set(size_t size, int64_t* data);
+bool have_tuning_tool();
 size_t declare_output_type(const std::string&,
                            Kokkos::Tools::Experimental::VariableInfo);
 void request_output_values(size_t, size_t,
@@ -457,15 +458,21 @@ class TeamSizeTuner {
 
   template <typename... Properties>
   void tune(Kokkos::TeamPolicy<Properties...>& policy) {
-    auto configuration = tuner.begin();
-    auto team_size     = std::get<1>(configuration);
-    auto vector_length = std::get<0>(configuration);
-    if (vector_length > 0) {
-      policy.impl_set_team_size(team_size);
-      policy.impl_set_vector_length(vector_length);
+    if (Kokkos::Tools::Experimental::have_tuning_tool()) {
+      auto configuration = tuner.begin();
+      auto team_size     = std::get<1>(configuration);
+      auto vector_length = std::get<0>(configuration);
+      if (vector_length > 0) {
+        policy.impl_set_team_size(team_size);
+        policy.impl_set_vector_length(vector_length);
+      }
     }
   }
-  void end() { tuner.end(); }
+  void end() {
+    if (Kokkos::Tools::Experimental::have_tuning_tool()) {
+      tuner.end();
+    }
+  }
 
  private:
 };

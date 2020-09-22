@@ -182,8 +182,14 @@ namespace Impl {
 struct SimpleTeamSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
   int get_max_team_size(const Policy& policy, const Functor& functor,
-                        const Tag& tag) {
+                        const Tag tag) {
     auto max = policy.team_size_max(functor, tag);
+    return max;
+  }
+  template <typename Policy, typename Functor, typename Tag>
+  int get_recommended_team_size(const Policy& policy, const Functor& functor,
+                                const Tag tag) {
+    auto max = policy.team_size_recommended(functor, tag);
     return max;
   }
 };
@@ -198,11 +204,19 @@ template <typename ReducerType>
 struct ComplexReducerSizeCalculator {
   template <typename Policy, typename Functor, typename Tag>
   int get_max_team_size(const Policy& policy, const Functor& functor,
-                        const Tag& tag) {
+                        const Tag tag) {
     using value_type = typename ReducerType::value_type;
     value_type value;
     ReducerType reducer_example = ReducerType(value);
     return policy.team_size_max(functor, reducer_example, tag);
+  }
+  template <typename Policy, typename Functor, typename Tag>
+  int get_recommended_team_size(const Policy& policy, const Functor& functor,
+                                const Tag tag) {
+    using value_type = typename ReducerType::value_type;
+    value_type value;
+    ReducerType reducer_example = ReducerType(value);
+    return policy.team_size_recommended(functor, reducer_example, tag);
   }
 };
 
