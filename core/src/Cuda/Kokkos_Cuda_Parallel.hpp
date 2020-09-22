@@ -77,7 +77,6 @@ extern bool show_warnings() noexcept;
 
 namespace Impl {
 
-
 template <class... Properties>
 class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     : public PolicyTraits<Properties...> {
