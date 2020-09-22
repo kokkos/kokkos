@@ -244,8 +244,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   inline int vector_length() const { return m_vector_length; }
   inline int team_size() const { return m_team_size; }
   inline int league_size() const { return m_league_size; }
-  inline bool auto_team_size() const { return m_tune_team; }
-  inline bool auto_vector_length() const { return m_tune_vector; }
+  inline bool impl_auto_team_size() const { return m_tune_team; }
+  inline bool impl_auto_vector_length() const { return m_tune_vector; }
   inline void impl_set_team_size(size_t team_size) { m_team_size = team_size; }
   inline void impl_set_vector_length(size_t vector_length) {
     m_vector_length = vector_length;

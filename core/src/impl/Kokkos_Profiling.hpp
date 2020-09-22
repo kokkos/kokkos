@@ -226,7 +226,7 @@ template <class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
-  if (policy.auto_team_size() || policy.auto_vector_length()) {
+  if (policy.impl_auto_team_size() || policy.impl_auto_vector_length()) {
     std::string label = label_in;
     if (label_in.empty()) {
       using policy_type =
@@ -249,7 +249,7 @@ template <class ReducerType, class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
-  if (policy.auto_team_size() || policy.auto_vector_length()) {
+  if (policy.impl_auto_team_size() || policy.impl_auto_vector_length()) {
     std::string label = label_in;
     if (label_in.empty()) {
       using policy_type =
@@ -298,7 +298,7 @@ void report_policy_results(const size_t /**tuning_context*/,
                            const std::string& label_in,
                            Kokkos::TeamPolicy<Properties...> policy,
                            const Functor&, const TagType&) {
-  if (policy.auto_team_size() || policy.auto_vector_length()) {
+  if (policy.impl_auto_team_size() || policy.impl_auto_vector_length()) {
     std::string label = label_in;
     if (label_in.empty()) {
       using policy_type =

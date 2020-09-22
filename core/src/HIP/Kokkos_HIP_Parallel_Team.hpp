@@ -177,8 +177,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
                              ReducerType>;
     return internal_team_size_recommended<closure_type>(f);
   }
-  inline bool auto_vector_length() const { return m_tune_vector_length; }
-  inline bool auto_team_size() const { return m_tune_team_size; }
+  inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
+  inline bool impl_auto_team_size() const { return m_tune_team_size; }
   static int vector_length_max() {
     return ::Kokkos::Experimental::Impl::HIPTraits::WarpSize;
   }

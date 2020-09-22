@@ -403,7 +403,7 @@ class TeamSizeTuner {
     auto max_vector_length = PolicyType::vector_length_max();
     std::vector<int64_t> allowed_vector_lengths;
 
-    if (policy.auto_vector_length()) {  // case 1 or 2
+    if (policy.impl_auto_vector_length()) {  // case 1 or 2
       for (int vector_length = max_vector_length; vector_length >= 1;
            vector_length /= 2) {
         policy.impl_set_vector_length(vector_length);
@@ -421,7 +421,7 @@ class TeamSizeTuner {
          */
         auto max_team_size =
             calc.template get_max_team_size(policy, functor, tag);
-        if ((policy.auto_team_size()) ||
+        if ((policy.impl_auto_team_size()) ||
             (policy.team_size() <= max_team_size)) {
           allowed_vector_lengths.push_back(vector_length);
         }
@@ -435,7 +435,8 @@ class TeamSizeTuner {
       policy.impl_set_vector_length(vector_length);
       auto max_team_size =
           calc.template get_max_team_size(policy, functor, tag);
-      if (policy.auto_team_size()) {  // case 1 or 3, try all legal team sizes
+      if (policy.impl_auto_team_size()) {  // case 1 or 3, try all legal team
+                                           // sizes
         for (int team_size = max_team_size; team_size >= 1; team_size /= 2) {
           allowed_team_sizes.push_back(team_size);
         }

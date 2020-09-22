@@ -288,8 +288,8 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
   //----------------------------------------
 
   inline int team_size() const { return 1; }
-  inline bool auto_team_size() const { return false; }
-  inline bool auto_vector_length() const { return false; }
+  inline bool impl_auto_team_size() const { return false; }
+  inline bool impl_auto_vector_length() const { return false; }
   inline void impl_set_team_size(size_t) {}
   inline void impl_set_vector_length(size_t) {}
   inline int league_size() const { return m_league_size; }

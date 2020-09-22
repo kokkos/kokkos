@@ -389,8 +389,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   }
 
  public:
-  inline bool auto_team_size() const { return m_tune_team_size; }
-  inline bool auto_vector_length() const { return m_tune_vector_length; }
+  inline bool impl_auto_team_size() const { return m_tune_team_size; }
+  inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline void impl_set_team_size(const size_t size) { m_team_size = size; }
   inline void impl_set_vector_length(const size_t length) {
     m_tune_vector_length = length;

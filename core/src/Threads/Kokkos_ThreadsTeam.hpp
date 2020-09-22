@@ -688,8 +688,8 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
   inline int team_alloc() const { return m_team_alloc; }
   inline int league_size() const { return m_league_size; }
 
-  inline bool auto_team_size() const { return m_tune_team_size; }
-  inline bool auto_vector_length() const { return m_tune_vector_length; }
+  inline bool impl_auto_team_size() const { return m_tune_team_size; }
+  inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline void impl_set_team_size(size_t size) { init(m_league_size, size); }
   inline void impl_set_vector_length(size_t /**size*/) {}
   inline size_t scratch_size(const int& level, int team_size_ = -1) const {

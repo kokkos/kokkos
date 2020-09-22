@@ -360,11 +360,10 @@ class TeamPolicyInternal : public Impl::PolicyTraits<Properties...> {
 
   /** \brief Whether the policy has an automatically determined team size
    */
-  inline bool auto_team_size() const;
+  inline bool impl_auto_team_size() const;
   /** \brief Whether the policy has an automatically determined vector length
    */
-
-  inline bool auto_vector_length() const;
+  inline bool impl_auto_vector_length() const;
 
   static int vector_length_max();
 

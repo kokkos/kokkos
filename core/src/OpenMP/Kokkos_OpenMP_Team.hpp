@@ -177,8 +177,8 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
  public:
   inline int team_size() const { return m_team_size; }
   inline int league_size() const { return m_league_size; }
-  inline bool auto_team_size() const { return m_tune_team; }
-  inline bool auto_vector_length() const { return m_tune_vector; }
+  inline bool impl_auto_team_size() const { return m_tune_team; }
+  inline bool impl_auto_vector_length() const { return m_tune_vector; }
   inline void impl_set_team_size(size_t new_team_size) {
     m_team_size = new_team_size;
   }
