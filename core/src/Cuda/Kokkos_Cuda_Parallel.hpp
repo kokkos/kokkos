@@ -295,7 +295,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
     // Make sure total block size is permissible
     if (m_team_size * m_vector_length >
-        Impl::CudaTraits::MaxHierarchicalParallelism) {
+        int(Impl::CudaTraits::MaxHierarchicalParallelism)) {
       Impl::throw_runtime_exception(
           std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. "
                       "Team size x vector length must be smaller than 1024."));
