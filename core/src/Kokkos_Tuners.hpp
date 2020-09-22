@@ -107,6 +107,8 @@ struct ValueHierarchyNode {
 template <typename ValueType>
 struct ValueHierarchyNode<ValueType, void> {
   std::vector<ValueType> root_values;
+  explicit ValueHierarchyNode(std::vector<ValueType> rv)
+      : root_values(std::move(rv)) {}
   void add_root_value(const ValueType& in) noexcept {
     root_values.push_back(in);
   }
@@ -309,7 +311,7 @@ class MultidimensionalSparseTuningProblem {
  public:
   MultidimensionalSparseTuningProblem() = default;
   MultidimensionalSparseTuningProblem(ProblemSpaceInput space,
-                                      std::vector<std::string> names)
+                                      const std::vector<std::string>& names)
       : m_space(HierarchyConstructor::build(space)) {
     assert(names.size() == space_dimensionality);
     for (unsigned long x = 0; x < names.size(); ++x) {
@@ -359,6 +361,8 @@ class TeamSizeTuner {
   TeamSizeTuner()        = default;
   TeamSizeTuner& operator=(const TeamSizeTuner& other) = default;
   TeamSizeTuner(const TeamSizeTuner& other)            = default;
+  TeamSizeTuner& operator=(TeamSizeTuner&& other) = default;
+  TeamSizeTuner(TeamSizeTuner&& other)            = default;
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
   TeamSizeTuner(const std::string& name,
