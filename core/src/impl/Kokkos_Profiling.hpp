@@ -334,7 +334,7 @@ void begin_parallel_for(ExecPolicy& policy,
   Impl::tune_policy(context_id, label, policy, functor,
                     Kokkos::ParallelForTag{});
 #else
-(void)functor;
+  (void)functor;
 #endif
 }
 
