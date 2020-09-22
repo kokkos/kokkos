@@ -173,8 +173,6 @@ void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
  * pass an instance of that ReducerType to functions that determine
  * eligible team sizes. If the type is simple, you can't construct one,
  * you use the simpler 2-arg formulation of team_size_recommended/max.
- *
- *
  */
 
 namespace Impl {
