@@ -256,13 +256,17 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
       Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
       label = name.get();
     }
-    if (team_tuners.find(label) == team_tuners.end()) {
-      team_tuners.emplace(
-          label, Kokkos::Tools::Experimental::TeamSizeTuner(
-                     label, policy, functor, tag,
-                     Impl::ComplexReducerSizeCalculator<ReducerType>{}));
-    }
-    auto& tuner = team_tuners[label];
+    auto& tuner = [&]() {
+      auto my_tuner = team_tuners.find(label);
+      if (my_tuner == team_tuners.end()) {
+        return team_tuners
+            .emplace(label, Kokkos::Tools::Experimental::TeamSizeTuner(
+                                label, policy, functor, tag,
+                                Impl::SimpleTeamSizeCalculator{}))
+            .first;
+      }
+      return my_tuner;
+    }();
     tuner.tune(policy);
   }
 }
