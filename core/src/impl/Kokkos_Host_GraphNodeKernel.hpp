@@ -60,7 +60,7 @@ namespace Impl {
 // <editor-fold desc="GraphNodeKernelImpl"> {{{1
 
 template <class ExecutionSpace>
-struct GraphNodeKernelHostImpl {
+struct GraphNodeKernelDefaultImpl {
   // TODO @graphs decide if this should use vtable or intrusive erasure via
   //      function pointers like in the rest of the graph interface
   virtual void execute_kernel() const = 0;
@@ -72,12 +72,13 @@ template <class ExecutionSpace, class PolicyType, class Functor,
 class GraphNodeKernelImpl
     : public PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
                                               Args..., ExecutionSpace>::type,
-      public GraphNodeKernelHostImpl<ExecutionSpace> {
+      public GraphNodeKernelDefaultImpl<ExecutionSpace> {
  public:
   using base_t =
       typename PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
                                                 Args..., ExecutionSpace>::type;
-  using execute_kernel_vtable_base_t = GraphNodeKernelHostImpl<ExecutionSpace>;
+  using execute_kernel_vtable_base_t =
+      GraphNodeKernelDefaultImpl<ExecutionSpace>;
   // We have to use this name here because that's how it was done way back when
   // then implementations of Impl::Parallel*<> were written
   using Policy       = PolicyType;
@@ -106,14 +107,14 @@ class GraphNodeKernelImpl
 //==============================================================================
 
 template <class ExecutionSpace>
-struct GraphNodeAggregateKernelHostImpl
-    : GraphNodeKernelHostImpl<ExecutionSpace> {
+struct GraphNodeAggregateKernelDefaultImpl
+    : GraphNodeKernelDefaultImpl<ExecutionSpace> {
   // Aggregates don't need a policy, but for the purposes of checking the static
   // assertions about graph kerenls,
   struct Policy {
     using is_graph_kernel = std::true_type;
   };
-  using graph_kernel = GraphNodeAggregateKernelHostImpl;
+  using graph_kernel = GraphNodeAggregateKernelDefaultImpl;
   void execute_kernel() const final {}
 };
 

@@ -64,14 +64,10 @@ namespace Kokkos {
 namespace Impl {
 
 //==============================================================================
-// <editor-fold desc="HostGraphImpl"> {{{1
+// <editor-fold desc="GraphImpl default implementation"> {{{1
 
-// TODO @graph In theory, this approach should work for every kind of backend
-//             that we haven't gotten around to specializing GraphImpl and
-//             such on. Should we just remove the artificial restriction that
-//             this is only for host backends?
 template <class ExecutionSpace>
-struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
+struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
  public:
   using root_node_impl_t =
       GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
@@ -90,14 +86,14 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
 
   // Not moveable or copyable; it spends its whole live as a shared_ptr in the
   // Graph object
-  HostGraphImpl()                     = default;
-  HostGraphImpl(HostGraphImpl const&) = delete;
-  HostGraphImpl(HostGraphImpl&&)      = delete;
-  HostGraphImpl& operator=(HostGraphImpl const&) = delete;
-  HostGraphImpl& operator=(HostGraphImpl&&) = delete;
-  ~HostGraphImpl()                          = default;
+  GraphImpl()                 = default;
+  GraphImpl(GraphImpl const&) = delete;
+  GraphImpl(GraphImpl&&)      = delete;
+  GraphImpl& operator=(GraphImpl const&) = delete;
+  GraphImpl& operator=(GraphImpl&&) = delete;
+  ~GraphImpl()                      = default;
 
-  explicit HostGraphImpl(ExecutionSpace arg_space)
+  explicit GraphImpl(ExecutionSpace arg_space)
       : execution_space_instance_storage_base_t(std::move(arg_space)) {}
 
   // </editor-fold> end Constructors, destructor, and assignment }}}2
@@ -155,7 +151,7 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
     // each predecessor ref, so all we need to do here is create the (trivial)
     // aggregate node.
     using aggregate_kernel_impl_t =
-        GraphNodeAggregateKernelHostImpl<ExecutionSpace>;
+        GraphNodeAggregateKernelDefaultImpl<ExecutionSpace>;
     using aggregate_node_impl_t =
         GraphNodeImpl<ExecutionSpace, aggregate_kernel_impl_t,
                       Kokkos::Experimental::TypeErasedTag>;
@@ -207,35 +203,7 @@ struct HostGraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   //----------------------------------------------------------------------------
 };
 
-// </editor-fold> end HostGraphImpl }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="Explicit specializations for host exec spaces"> {{{1
-
-#ifdef KOKKOS_ENABLE_SERIAL
-template <>
-struct GraphImpl<Kokkos::Serial> : HostGraphImpl<Kokkos::Serial> {
- private:
-  using base_t = HostGraphImpl<Kokkos::Serial>;
-
- public:
-  using base_t::base_t;
-};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENMP
-template <>
-struct GraphImpl<Kokkos::OpenMP> : HostGraphImpl<Kokkos::OpenMP> {
- private:
-  using base_t = HostGraphImpl<Kokkos::OpenMP>;
-
- public:
-  using base_t::base_t;
-};
-#endif
-
-// </editor-fold> end Explicit specializations for host exec spaces }}}1
+// </editor-fold> end GraphImpl default implementation }}}1
 //==============================================================================
 
 }  // end namespace Impl

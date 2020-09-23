@@ -51,13 +51,10 @@ namespace Kokkos {
 namespace Impl {
 
 template <class ExecutionSpace>
-struct HostGraphImpl;
+struct GraphNodeKernelDefaultImpl;
 
 template <class ExecutionSpace>
-struct GraphNodeKernelHostImpl;
-
-template <class ExecutionSpace>
-struct GraphNodeAggregateKernelHostImpl;
+struct GraphNodeAggregateKernelDefaultImpl;
 
 }  // end namespace Impl
 }  // end namespace Kokkos

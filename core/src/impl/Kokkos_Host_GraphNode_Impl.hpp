@@ -63,9 +63,9 @@ struct GraphNodeBackendSpecificDetails {
  private:
   using execution_space_instance_storage_t =
       ExecutionSpaceInstanceStorage<ExecutionSpace>;
-  using host_kernel_impl_t = GraphNodeKernelHostImpl<ExecutionSpace>;
+  using host_kernel_impl_t = GraphNodeKernelDefaultImpl<ExecutionSpace>;
   using aggregate_kernel_impl_t =
-      GraphNodeAggregateKernelHostImpl<ExecutionSpace>;
+      GraphNodeAggregateKernelDefaultImpl<ExecutionSpace>;
 
   std::vector<std::shared_ptr<GraphNodeBackendSpecificDetails<ExecutionSpace>>>
       m_predecessors = {};
