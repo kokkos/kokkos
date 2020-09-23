@@ -742,7 +742,7 @@ struct DeviceTypeTraits<Kokkos::Experimental::HIP> {
 
 namespace Experimental {
 
-class HIPSpaceInitializer : public ExecSpaceInitializerBase {
+class HIPSpaceInitializer : public Impl::ExecSpaceInitializerBase {
  public:
   HIPSpaceInitializer()  = default;
   ~HIPSpaceInitializer() = default;
