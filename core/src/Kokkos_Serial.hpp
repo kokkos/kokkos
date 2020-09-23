@@ -322,19 +322,14 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
       : TeamPolicyInternal(space, league_size_request, -1,
                            vector_length_request) {}
 
-  TeamPolicyInternal(int league_size_request, int team_size_request,
-                     int vector_length_request = 1)
-      : TeamPolicyInternal(space, league_size_request, team_size_request,
-                           vector_length_request) {}
-
-  TeamPolicyInternal(const execution_space&, int league_size_request,
+  TeamPolicyInternal(const execution_space& space, int league_size_request,
                      const Kokkos::AUTO_t& /* team_size_request */
                      ,
                      const Kokkos::AUTO_t& /* vector_length_request */
                      )
       : TeamPolicyInternal(space, league_size_request, -1, -1) {}
 
-  TeamPolicyInternal(const execution_space&, int league_size_request,
+  TeamPolicyInternal(const execution_space& space, int league_size_request,
                      int team_size_request,
                      const Kokkos::AUTO_t& /* vector_length_request */
                      )
@@ -355,6 +350,12 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
                            vector_length_request) {}
   TeamPolicyInternal(int league_size_request, int team_size_request,
                      const Kokkos::AUTO_t& vector_length_request)
+      : TeamPolicyInternal(typename traits::execution_space(),
+                           league_size_request, team_size_request,
+                           vector_length_request) {}
+
+  TeamPolicyInternal(int league_size_request, int team_size_request,
+                     int vector_length_request = 1)
       : TeamPolicyInternal(typename traits::execution_space(),
                            league_size_request, team_size_request,
                            vector_length_request) {}
