@@ -67,7 +67,7 @@
 // Temp place for Trivially copyable check - velesko
 template <class Obj>
 constexpr void isTriviallyCopyable() {
-  static_assert(std::is_trivially_copyable<Obj>::value);
+  static_assert(std::is_trivially_copyable<Obj>::value, "");
 
   static_assert(std::is_copy_constructible<Obj>::value ||
                     std::is_move_constructible<Obj>::value ||

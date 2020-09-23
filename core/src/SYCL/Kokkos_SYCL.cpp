@@ -240,12 +240,14 @@ std::ostream& SYCL::SYCLDevice::info(std::ostream& os) const {
             << "\nQueue Profiling: "
             << m_device.get_info<device::queue_profiling>()
             << "\nBuilt In Kernels: "
-            << Container(m_device.get_info<device::built_in_kernels>())
+            << Container<std::vector<std::string>>(
+                   m_device.get_info<device::built_in_kernels>())
             << "\nVendor: " << m_device.get_info<device::vendor>()
             << "\nProfile: " << m_device.get_info<device::profile>()
             << "\nVersion: " << m_device.get_info<device::version>()
             << "\nExtensions: "
-            << Container(m_device.get_info<device::extensions>())
+            << Container<std::vector<std::string>>(
+                   m_device.get_info<device::extensions>())
             << "\nPrintf Buffer Size: "
             << m_device.get_info<device::printf_buffer_size>()
             << "\nPreferred Interop User Sync: "

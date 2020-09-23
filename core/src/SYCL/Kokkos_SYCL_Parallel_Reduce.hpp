@@ -70,11 +70,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   using WorkTag = typename Policy::work_tag;
   using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same_v<InvalidType, ReducerType>, FunctorType,
-                         ReducerType>;
+      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
+                         FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
-      std::conditional_t<std::is_same_v<InvalidType, ReducerType>, WorkTag,
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
                          void>;
   using ValueInit =
       typename Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
@@ -82,19 +82,28 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
  public:
   // V - View
   template <typename V>
-  ParallelReduce(const FunctorType& f, const Policy& p, const V& v)
+  ParallelReduce(
+      const FunctorType& f, const Policy& p, const V& v,
+      typename std::enable_if<Kokkos::is_view<V>::value, void*>::type = nullptr)
       : m_functor(f), m_policy(p), m_result_ptr(v.data()) {}
+
+  ParallelReduce(const FunctorType& f, const Policy& p,
+                 const ReducerType& reducer)
+      : m_functor(f),
+        m_policy(p),
+        m_reducer(reducer),
+        m_result_ptr(reducer.view().data()) {}
 
  private:
   template <typename TagType>
-  std::enable_if_t<std::is_void_v<TagType>> exec(reference_type update) {
+  std::enable_if_t<std::is_void<TagType>::value> exec(reference_type update) {
     using member_type = typename Policy::member_type;
     member_type e     = m_policy.end();
     for (member_type i = m_policy.begin(); i < e; ++i) m_functor(i, update);
   }
 
   template <typename TagType>
-  std::enable_if_t<!std::is_void_v<TagType>> exec(reference_type update) {
+  std::enable_if_t<!std::is_void<TagType>::value> exec(reference_type update) {
     using member_type = typename Policy::member_type;
     member_type e     = m_policy.end();
     for (member_type i = m_policy.begin(); i < e; ++i)
