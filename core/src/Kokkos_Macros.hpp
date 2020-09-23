@@ -105,12 +105,6 @@
 
 #define KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 
-#if defined(KOKKOS_ENABLE_HIP)
-#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
-#define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
-#endif
-#endif  // #if defined(KOKKOS_ENABLE_HIP)
-
 #include <KokkosCore_Config_SetupBackend.hpp>
 
 //----------------------------------------------------------------------------
@@ -192,34 +186,6 @@
 #define KOKKOS_COMPILER_MSVC _MSC_VER
 #endif
 
-<<<<<<< HEAD
-//#endif // #if !defined( __CUDA_ARCH__ )
-//----------------------------------------------------------------------------
-// Language info: C++, CUDA, OPENMP
-
-#if defined(KOKKOS_ENABLE_CUDA)
-// Compiling Cuda code to 'ptx'
-
-#define KOKKOS_IMPL_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
-#define KOKKOS_IMPL_FORCEINLINE __forceinline__
-#define KOKKOS_IMPL_INLINE_FUNCTION __device__ __host__ inline
-#define KOKKOS_IMPL_FUNCTION __device__ __host__
-#define KOKKOS_IMPL_HOST_FUNCTION __host__
-#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
-#if defined(KOKKOS_COMPILER_NVCC)
-#define KOKKOS_INLINE_FUNCTION_DELETED inline
-#else
-#define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
-#endif
-#if (CUDA_VERSION < 10000)
-#define KOKKOS_DEFAULTED_FUNCTION __host__ __device__ inline
-#else
-#define KOKKOS_DEFAULTED_FUNCTION inline
-#endif
-#define KOKKOS_IMPL_HOST_FUNCTION __host__
-#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
-#endif
-
 #if defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_IMPL_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
 #define KOKKOS_IMPL_INLINE_FUNCTION __device__ __host__ inline
@@ -230,8 +196,6 @@
 #define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #endif  // #if defined( KOKKOS_ENABLE_HIP )
 
-=======
->>>>>>> cherry pick from refactor-backend-development-III onto current develop
 #if defined(_OPENMP)
 //  Compiling with OpenMP.
 //  The value of _OPENMP is an integer value YYYYMM
