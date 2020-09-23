@@ -357,6 +357,8 @@ TEST(defaultdevicetypeinit, commandline_args_nthreads_numa) {
 }
 #endif
 
+// FIXME_SYCL CI doesn't have a GPU yet
+#ifndef KOKKOS_ENABLE_SYCL
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_06
 TEST(defaultdevicetypeinit, commandline_args_nthreads_numa_device) {
   Kokkos::InitArguments argstruct;
@@ -431,6 +433,7 @@ TEST(defaultdevicetypeinit, commandline_args_nthreads_numa_device_other) {
   delete[] args;
 }
 #endif
+#endif
 
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_11
 TEST(defaultdevicetypeinit, initstruct_default) {
@@ -453,6 +456,8 @@ TEST(defaultdevicetypeinit, initstruct_nthreads_numa) {
 }
 #endif
 
+// FIXME_SYCL CI doesn't have a GPU yet
+#ifndef KOKKOS_ENABLE_SYCL
 #ifdef KOKKOS_DEFAULTDEVICETYPE_INIT_TEST_14
 TEST(defaultdevicetypeinit, initstruct_device) {
   Kokkos::InitArguments args = Impl::init_initstruct(false, false, true);
@@ -472,6 +477,7 @@ TEST(defaultdevicetypeinit, initstruct_nthreads_numa_device) {
   Kokkos::InitArguments args = Impl::init_initstruct(true, true, true);
   Impl::test_initstruct_args(args);
 }
+#endif
 #endif
 
 }  // namespace Test
