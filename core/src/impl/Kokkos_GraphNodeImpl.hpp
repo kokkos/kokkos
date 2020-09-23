@@ -52,6 +52,7 @@
 
 #include <impl/Kokkos_SimpleTaskScheduler.hpp>  // ExecutionSpaceInstanceStorage
 #include <impl/Kokkos_GraphImpl.hpp>
+#include <impl/Kokkos_GraphNodeCustomization.hpp>
 
 #include <impl/Kokkos_EBO.hpp>
 
@@ -77,51 +78,19 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
                                          Kokkos::Experimental::TypeErasedTag>;
 
  protected:
-  // For now, we're effectively storing our own mini-vtable here in the object
-  // representation rather than making a vtable entry in the binary for every
-  // kernel used with graphs in the whole application, which we think might
-  // not be scalable. We need to test whether this is necessary at scale,
-  // though this is not really in a super performance-sensitive part of the
-  // code, so it should be fine except for maybe the additional complexity in
-  // the code.
-  using destroy_this_callback_t = void (*)(GraphNodeImpl&);
   using implementation_base_t = GraphNodeBackendSpecificDetails<ExecutionSpace>;
   using execution_space_storage_base_t =
       ExecutionSpaceInstanceStorage<ExecutionSpace>;
 
- private:
-  destroy_this_callback_t m_destroy_this;
-
  public:
-  // This gets called by the deleter we give to the shared_ptr. See discussion
-  // in the type-erased base of this class. We need this in addition to the ones
-  // below us for the use case where the backend has no special kernel or
-  // predecessor information to stuff in to the root node and thus this is the
-  // most-derived type.
-  static void destroy_this_fn(GraphNodeImpl& arg_this) noexcept {
-    auto const& this_ = static_cast<GraphNodeImpl const&>(arg_this);
-    this_.~GraphNodeImpl();
-  }
-
-  // Deleter, for shared_ptr construction
-  struct Deleter {
-    void operator()(GraphNodeImpl* ptr) const noexcept {
-      (*ptr->m_destroy_this)(*ptr);
-    }
-  };
+  virtual ~GraphNodeImpl() = default;
 
  protected:
   //----------------------------------------------------------------------------
   // <editor-fold desc="protected ctors and destructors"> {{{2
 
-  GraphNodeImpl(destroy_this_callback_t arg_destroy_this,
-                ExecutionSpace const& ex) noexcept
-      : implementation_base_t(),
-        execution_space_storage_base_t(ex),
-        m_destroy_this(arg_destroy_this) {}
-
-  // Not publicly destructible so that we don't forget to use the vtable entry
-  ~GraphNodeImpl() = default;
+  explicit GraphNodeImpl(ExecutionSpace const& ex) noexcept
+      : implementation_base_t(), execution_space_storage_base_t(ex) {}
 
   // </editor-fold> end protected ctors and destructors }}}2
   //----------------------------------------------------------------------------
@@ -131,22 +100,11 @@ struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
   // <editor-fold desc="public(-ish) constructors"> {{{2
 
   template <class... Args>
-  GraphNodeImpl(destroy_this_callback_t arg_destroy_this,
-                ExecutionSpace const& ex, _graph_node_is_root_ctor_tag,
+  GraphNodeImpl(ExecutionSpace const& ex, _graph_node_is_root_ctor_tag,
                 Args&&... args) noexcept
       : implementation_base_t(_graph_node_is_root_ctor_tag{},
                               (Args &&) args...),
-        execution_space_storage_base_t(ex),
-        m_destroy_this(arg_destroy_this) {}
-
-  // For the use case where the backend has no special kernel or predecessor
-  // information to stuff in to the root node and thus this is the most-derived
-  // type
-  template <class... Args>
-  GraphNodeImpl(ExecutionSpace const& ex, _graph_node_is_root_ctor_tag,
-                Args&&... args) noexcept
-      : GraphNodeImpl(&destroy_this_fn, ex, _graph_node_is_root_ctor_tag{},
-                      (Args &&) args...) {}
+        execution_space_storage_base_t(ex) {}
 
   // </editor-fold> end public(-ish) constructors }}}2
   //----------------------------------------------------------------------------
@@ -208,35 +166,18 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
   //----------------------------------------------------------------------------
 
  public:
-  // This gets called by the deleter we give to the shared_ptr. See discussion
-  // in the type-erased base of this class. We need this in addition to the one
-  // below us because some backeneds may instantiate their root and/or
-  // aggregate nodes with this implementation type.
-  static void destroy_this_fn(base_t& arg_this) noexcept {
-    auto& this_ = static_cast<GraphNodeImpl&>(arg_this);
-    this_.~GraphNodeImpl();
-  }
-
   //----------------------------------------------------------------------------
   // <editor-fold desc="Ctors, destructors, and assignment"> {{{2
-
- protected:
-  template <class KernelDeduced>
-  GraphNodeImpl(typename base_t::destroy_this_callback_t arg_destroy_this,
-                ExecutionSpace const& ex, _graph_node_kernel_ctor_tag,
-                KernelDeduced&& arg_kernel)
-      : base_t(arg_destroy_this, ex), m_kernel((KernelDeduced &&) arg_kernel) {}
-
- public:
-  template <class... Args>
-  GraphNodeImpl(ExecutionSpace const& ex, _graph_node_is_root_ctor_tag,
-                Args&&... args)
-      : base_t(ex, _graph_node_is_root_ctor_tag{}, (Args &&) args...) {}
 
   template <class KernelDeduced>
   GraphNodeImpl(ExecutionSpace const& ex, _graph_node_kernel_ctor_tag,
                 KernelDeduced&& arg_kernel)
-      : base_t(&destroy_this_fn, ex), m_kernel((KernelDeduced &&) arg_kernel) {}
+      : base_t(ex), m_kernel((KernelDeduced &&) arg_kernel) {}
+
+  template <class... Args>
+  GraphNodeImpl(ExecutionSpace const& ex, _graph_node_is_root_ctor_tag,
+                Args&&... args)
+      : base_t(ex, _graph_node_is_root_ctor_tag{}, (Args &&) args...) {}
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // <editor-fold desc="Rule of 6 for not copyable or movable"> {{{3
@@ -247,7 +188,7 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
   GraphNodeImpl(GraphNodeImpl&&) noexcept = delete;
   GraphNodeImpl& operator=(GraphNodeImpl const&) = delete;
   GraphNodeImpl& operator=(GraphNodeImpl&&) noexcept = delete;
-  ~GraphNodeImpl()                                   = default;
+  ~GraphNodeImpl() override                          = default;
 
   // </editor-fold> end Rule of 6 for not copyable or movable }}}3
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -309,13 +250,6 @@ struct GraphNodeImpl
   //----------------------------------------------------------------------------
 
  public:
-  // This gets called by the deleter we give to the shared_ptr. See discussion
-  // in the type-erased base of this class.
-  static void destroy_this_fn(type_erased_base_t& arg_this) noexcept {
-    auto& this_ = static_cast<GraphNodeImpl&>(arg_this);
-    this_.~GraphNodeImpl();
-  }
-
   //----------------------------------------------------------------------------
   // <editor-fold desc="Ctors, destructors, and assignment"> {{{2
 
@@ -325,14 +259,14 @@ struct GraphNodeImpl
   GraphNodeImpl(GraphNodeImpl&&)      = delete;
   GraphNodeImpl& operator=(GraphNodeImpl const&) = delete;
   GraphNodeImpl& operator=(GraphNodeImpl&&) noexcept = delete;
-  ~GraphNodeImpl()                                   = default;
+  ~GraphNodeImpl() override                          = default;
 
   // Normal kernel-and-predecessor constructor
   template <class KernelDeduced, class PredecessorPtrDeduced>
   GraphNodeImpl(ExecutionSpace const& ex, _graph_node_kernel_ctor_tag,
                 KernelDeduced&& arg_kernel, _graph_node_predecessor_ctor_tag,
                 PredecessorPtrDeduced&& arg_predecessor)
-      : base_t(&destroy_this_fn, ex, _graph_node_kernel_ctor_tag{},
+      : base_t(ex, _graph_node_kernel_ctor_tag{},
                (KernelDeduced &&) arg_kernel),
         // The backend gets the ability to store (weak, non-owning) references
         // to the kernel in it's final resting place here if it wants. The
@@ -346,8 +280,7 @@ struct GraphNodeImpl
   template <class... Args>
   GraphNodeImpl(ExecutionSpace const& ex, _graph_node_is_root_ctor_tag,
                 Args&&... args)
-      : base_t(&destroy_this_fn, ex, _graph_node_is_root_ctor_tag{},
-               (Args &&) args...),
+      : base_t(ex, _graph_node_is_root_ctor_tag{}, (Args &&) args...),
         backend_details_base_t(ex, _graph_node_is_root_ctor_tag{}, *this),
         m_predecessor_ref() {}
 

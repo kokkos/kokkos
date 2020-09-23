@@ -71,12 +71,12 @@ template <class ExecutionSpace, class PolicyType, class Functor,
           class PatternTag, class... Args>
 class GraphNodeKernelImpl
     : public PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
-                                             Args..., ExecutionSpace>::type,
+                                              Args..., ExecutionSpace>::type,
       public GraphNodeKernelHostImpl<ExecutionSpace> {
  public:
   using base_t =
       typename PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
-                                               Args..., ExecutionSpace>::type;
+                                                Args..., ExecutionSpace>::type;
   using execute_kernel_vtable_base_t = GraphNodeKernelHostImpl<ExecutionSpace>;
   // We have to use this name here because that's how it was done way back when
   // then implementations of Impl::Parallel*<> were written

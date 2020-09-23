@@ -118,7 +118,7 @@ struct TEST_CATEGORY_FIXTURE(count_bugs) : public ::testing::Test {
 
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one) {
   auto graph = Kokkos::Experimental::create_graph([=](auto root) {
-    root.parallel_for(1, count_functor{count, bugs, 0, 0});
+    root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
   });
   graph.submit();
   Kokkos::deep_copy(ex, count_host, count);
@@ -130,7 +130,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one) {
 
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one_rvalue) {
   Kokkos::Experimental::create_graph(ex, [=](auto root) {
-    root.get_root().then_parallel_for(1, count_functor{count, bugs, 0, 0});
+    root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
   }).submit();
   Kokkos::deep_copy(ex, count_host, count);
   Kokkos::deep_copy(ex, bugs_host, bugs);
@@ -181,9 +181,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
     auto f1 = root.then_parallel_for(1, set_functor{count, 0});
     auto f2 = f1.then_parallel_for(1, count_functor{count, bugs, 0, 0});
     auto f3 = f2.then_parallel_for(5, count_functor{count, bugs, 1, 5});
-    auto f4 = root.when_all(f2, f3).then_parallel_for(
-        1, count_functor{count, bugs, 6, 6});
-    root.when_all(f1, f4, f3)
+    auto f4 =
+        when_all(f2, f3).then_parallel_for(1, count_functor{count, bugs, 6, 6});
+    when_all(f1, f4, f3)
         .then_parallel_reduce(6, set_result_functor{count}, reduction_out);
     //----------------------------------------
   }).submit();

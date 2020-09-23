@@ -87,8 +87,7 @@ struct GraphAccess {
     // shared_ptr we're creating
     using new_node_impl_t = typename std::remove_cv<NodeImpl>::type;
     // We can't use make_shared because we have a custom deleter
-    return std::shared_ptr<new_node_impl_t>{
-        node_impl_ptr, typename new_node_impl_t::Deleter{}};
+    return std::shared_ptr<new_node_impl_t>{node_impl_ptr};
   }
 
   template <class GraphImplWeakPtr, class ExecutionSpace, class Kernel,
@@ -116,8 +115,8 @@ struct GraphAccess {
 
   template <class NodeRef>
   // requires remove_cvref_t<NodeRef> is a specialization of GraphNodeRef
-  static auto get_graph_impl_ptr(NodeRef&& node_ref) {
-    return ((NodeRef &&) node_ref).get_graph_impl();
+  static auto get_graph_weak_ptr(NodeRef&& node_ref) {
+    return ((NodeRef &&) node_ref).get_graph_weak_ptr();
   }
 
   // </editor-fold> end accessors for private members of public interface }}}2

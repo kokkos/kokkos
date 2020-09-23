@@ -146,10 +146,9 @@ auto when_all(PredecessorRefs&&... arg_pred_refs) {
   //                                desul
   static_assert(sizeof...(PredecessorRefs) > 0,
                 "when_all() needs at least one predecessor.");
-  auto& graph_ptr_impl =
-      Kokkos::Impl::GraphAccess::get_graph_impl_ptr(
+  auto graph_ptr_impl =
+      Kokkos::Impl::GraphAccess::get_graph_weak_ptr(
           std::get<0>(std::forward_as_tuple(arg_pred_refs...)))
-          .get_graph_weak_ptr()
           .lock();
   auto node_ptr_impl = graph_ptr_impl->create_aggregate_ptr(arg_pred_refs...);
   graph_ptr_impl->add_node(node_ptr_impl);
