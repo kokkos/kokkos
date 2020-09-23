@@ -78,7 +78,7 @@ template <class ExecutionSpace, class Kernel, class PredecessorRef>
 struct GraphNodeBackendDetailsBeforeTypeErasure;
 
 // TODO move this to a more appropriate place
-struct AlwaysDeduceThisTemplateParameter;
+struct DoNotExplicitlySpecifyThisTemplateParameter;
 
 struct KernelInGraphProperty {};
 

@@ -179,8 +179,9 @@ Graph<ExecutionSpace> create_graph(ExecutionSpace ex, Closure&& arg_closure) {
   return rv;
 }
 
-template <class ExecutionSpace = DefaultExecutionSpace,
-          class Closure = Kokkos::Impl::AlwaysDeduceThisTemplateParameter>
+template <
+    class ExecutionSpace = DefaultExecutionSpace,
+    class Closure = Kokkos::Impl::DoNotExplicitlySpecifyThisTemplateParameter>
 Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
   return create_graph(ExecutionSpace{}, (Closure &&) arg_closure);
 }
