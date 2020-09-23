@@ -3624,7 +3624,7 @@ struct SubViewDataType : SubViewDataTypeImpl<void, ValueType, Exts, Args...> {};
 //----------------------------------------------------------------------------
 
 template <class SrcTraits, class... Args>
-struct ViewMapping<
+class ViewMapping<
     typename std::enable_if<(
         std::is_same<typename SrcTraits::specialize, void>::value &&
         (std::is_same<typename SrcTraits::array_layout,
