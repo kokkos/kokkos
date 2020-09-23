@@ -189,10 +189,10 @@ class ThreadsSpaceInitializer : public ExecSpaceInitializerBase {
  public:
   ThreadsSpaceInitializer()  = default;
   ~ThreadsSpaceInitializer() = default;
-  void initialize(const InitArguments& args);
-  void finalize(const bool);
-  void fence();
-  void print_configuration(std::ostringstream& msg, const bool detail);
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
+  void fence() final;
+  void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
 }  // namespace Impl

@@ -87,7 +87,7 @@ void OpenMPTargetSpaceInitializer::fence() {
   Kokkos::Experimental::OpenMPTarget::fence();
 }
 
-void OpenMPTargetSpaceInitializer::print_configuration(std::ostringstream& msg,
+void OpenMPTargetSpaceInitializer::print_configuration(std::ostream& msg,
                                                        const bool detail) {
   msg << "OpenMPTarget Execution Space:" << std::endl;
   msg << "  KOKKOS_ENABLE_OPENMPTARGET: ";

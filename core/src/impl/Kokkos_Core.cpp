@@ -86,43 +86,30 @@ ExecSpaceManager& ExecSpaceManager::get_instance() {
 
 void ExecSpaceManager::register_space_factory(
     const std::string name, std::unique_ptr<ExecSpaceInitializerBase> space) {
-  printf("registering exec space: %s \n", name.c_str());
   exec_space_factory_list[name] = std::move(space);
 }
 
 void ExecSpaceManager::initialize_spaces(const Kokkos::InitArguments& args) {
-  for (std::map<std::string,
-                std::unique_ptr<ExecSpaceInitializerBase>>::iterator it =
-           exec_space_factory_list.begin();
-       it != exec_space_factory_list.end(); it++) {
-    it->second->initialize(args);
+  for (auto& to_init : exec_space_factory_list) {
+    to_init.second->initialize(args);
   }
 }
 
 void ExecSpaceManager::finalize_spaces(const bool all_spaces) {
-  for (std::map<std::string,
-                std::unique_ptr<ExecSpaceInitializerBase>>::iterator it =
-           exec_space_factory_list.begin();
-       it != exec_space_factory_list.end(); it++) {
-    it->second->finalize(all_spaces);
+  for (auto& to_finalize : exec_space_factory_list) {
+    to_finalize.second->finalize(all_spaces);
   }
 }
 
 void ExecSpaceManager::static_fence() {
-  for (std::map<std::string,
-                std::unique_ptr<ExecSpaceInitializerBase>>::iterator it =
-           exec_space_factory_list.begin();
-       it != exec_space_factory_list.end(); it++) {
-    it->second->fence();
+  for (auto& to_fence : exec_space_factory_list) {
+    to_fence.second->fence();
   }
 }
-void ExecSpaceManager::print_configuration(std::ostringstream& msg,
+void ExecSpaceManager::print_configuration(std::ostream& msg,
                                            const bool detail) {
-  for (std::map<std::string,
-                std::unique_ptr<ExecSpaceInitializerBase>>::iterator it =
-           exec_space_factory_list.begin();
-       it != exec_space_factory_list.end(); it++) {
-    it->second->print_configuration(msg, detail);
+  for (auto& to_print : exec_space_factory_list) {
+    to_print.second->print_configuration(msg, detail);
   }
 }
 
@@ -215,7 +202,7 @@ int get_ctest_gpu(const char* local_rank_str) {
   return std::stoi(id.c_str());
 }
 
-// extern function to extrat gpu # from args
+// extern function to extract gpu # from args
 int get_gpu(const InitArguments& args) {
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
@@ -255,9 +242,7 @@ int get_gpu(const InitArguments& args) {
   }
   return use_gpu;
 }
-
 namespace {
-
 bool is_unsigned_int(const char* str) {
   const size_t len = strlen(str);
   for (size_t i = 0; i < len; ++i) {

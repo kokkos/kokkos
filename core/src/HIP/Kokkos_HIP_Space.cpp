@@ -734,6 +734,8 @@ hipDeviceProp_t const& HIP::hip_device_prop() {
 
 const char* HIP::name() { return "HIP"; }
 
+extern int get_gpu(const InitArguments& args);
+
 int g_hip_space_factory_initialized =
     Kokkos::Impl::Initialize_space_factory<HIPSpaceInitializer>("150_HIP");
 
@@ -765,7 +767,7 @@ void HIPSpaceInitializer::fence() {
   Kokkos::Experimental::HIP::impl_static_fence();
 }
 
-void HIPSpaceInitializer::print_configuration(std::ostringstream& msg,
+void HIPSpaceInitializer::print_configuration(std::ostream& msg,
                                               const bool detail) {
   msg << "Devices:" << std::endl;
   msg << "  KOKKOS_ENABLE_HIP: ";

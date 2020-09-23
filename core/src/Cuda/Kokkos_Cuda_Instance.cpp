@@ -922,7 +922,7 @@ void CudaSpaceInitializer::finalize(bool all_spaces) {
 
 void CudaSpaceInitializer::fence() { Kokkos::Cuda::impl_static_fence(); }
 
-void CudaSpaceInitializer::print_configuration(std::ostringstream &msg,
+void CudaSpaceInitializer::print_configuration(std::ostream &msg,
                                                const bool detail) {
   msg << "Device Execution Space:" << std::endl;
   msg << "  KOKKOS_ENABLE_CUDA: ";

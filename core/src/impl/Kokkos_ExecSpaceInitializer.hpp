@@ -45,20 +45,19 @@
 #ifndef KOKKOS_EXEC_SPACE_INITIALIZER_HPP
 #define KOKKOS_EXEC_SPACE_INITIALIZER_HPP
 
-#include <sstream>
+#include <iosfwd>
 
 namespace Kokkos {
 namespace Impl {
 
 class ExecSpaceInitializerBase {
  public:
-  virtual void initialize(const InitArguments &args)  = 0;
-  virtual void finalize(const bool all_spaces)        = 0;
-  virtual void fence()                                = 0;
-  virtual void print_configuration(std::ostringstream &msg,
-                                   const bool detail) = 0;
-  ExecSpaceInitializerBase()                          = default;
-  virtual ~ExecSpaceInitializerBase()                 = default;
+  virtual void initialize(const InitArguments &args)                     = 0;
+  virtual void finalize(const bool all_spaces)                           = 0;
+  virtual void fence()                                                   = 0;
+  virtual void print_configuration(std::ostream &msg, const bool detail) = 0;
+  ExecSpaceInitializerBase()          = default;
+  virtual ~ExecSpaceInitializerBase() = default;
 };
 
 }  // namespace Impl

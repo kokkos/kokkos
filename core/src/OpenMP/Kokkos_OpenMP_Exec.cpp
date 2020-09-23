@@ -475,7 +475,7 @@ void OpenMPSpaceInitializer::finalize(const bool) {
 
 void OpenMPSpaceInitializer::fence() { Kokkos::OpenMP::impl_static_fence(); }
 
-void OpenMPSpaceInitializer::print_configuration(std::ostringstream &msg,
+void OpenMPSpaceInitializer::print_configuration(std::ostream &msg,
                                                  const bool detail) {
   msg << "Host Parallel Execution Space:" << std::endl;
   msg << "  KOKKOS_ENABLE_OPENMP: ";

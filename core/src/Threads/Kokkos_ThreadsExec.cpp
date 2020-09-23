@@ -834,7 +834,7 @@ void ThreadsSpaceInitializer::finalize(const bool) {
 
 void ThreadsSpaceInitializer::fence() { Kokkos::Threads::impl_static_fence(); }
 
-void ThreadsSpaceInitializer::print_configuration(std::ostringstream &msg,
+void ThreadsSpaceInitializer::print_configuration(std::ostream &msg,
                                                   const bool detail) {
   msg << "Host Parallel Execution Space:" << std::endl;
   msg << "  KOKKOS_ENABLE_THREADS: ";

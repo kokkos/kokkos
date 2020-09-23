@@ -199,7 +199,7 @@ void SerialSpaceInitializer::finalize(const bool) {
 
 void SerialSpaceInitializer::fence() { Kokkos::Serial::impl_static_fence(); }
 
-void SerialSpaceInitializer::print_configuration(std::ostringstream& msg,
+void SerialSpaceInitializer::print_configuration(std::ostream& msg,
                                                  const bool detail) {
   msg << "Host Serial Execution Space:" << std::endl;
   msg << "  KOKKOS_ENABLE_SERIAL: ";

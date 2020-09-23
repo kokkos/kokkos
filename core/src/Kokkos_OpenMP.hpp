@@ -83,7 +83,12 @@ class OpenMP {
   //! Tag this class as a kokkos execution space
   using execution_space = OpenMP;
 
-  using memory_space = Kokkos::HostSpace;
+  using memory_space =
+#ifdef KOKKOS_ENABLE_HBWSPACE
+      Experimental::HBWSpace;
+#else
+      HostSpace;
+#endif
 
   //! This execution space preferred device_type
   using device_type          = Kokkos::Device<execution_space, memory_space>;
@@ -180,10 +185,10 @@ class OpenMPSpaceInitializer : public ExecSpaceInitializerBase {
  public:
   OpenMPSpaceInitializer()  = default;
   ~OpenMPSpaceInitializer() = default;
-  void initialize(const InitArguments& args);
-  void finalize(const bool);
-  void fence();
-  void print_configuration(std::ostringstream& msg, const bool detail);
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
+  void fence() final;
+  void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
 }  // namespace Impl

@@ -168,7 +168,6 @@ if(Kokkos_ENABLE_OPENMPTARGET)
   )
 endif()
 
-
 if(Kokkos_ENABLE_SERIAL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_Serial1

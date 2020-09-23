@@ -192,7 +192,7 @@ void HPXSpaceInitializer::finalize(const bool all_spaces) {
 
 void HPXSpaceInitializer::fence() { Kokkos::Experimental::HPX().fence(); }
 
-void HPXSpaceInitializer::print_configuration(std::ostringstream &msg,
+void HPXSpaceInitializer::print_configuration(std::ostream &msg,
                                               const bool detail) {
   msg << "HPX Execution Space:" << std::endl;
   msg << "  KOKKOS_ENABLE_HPX: ";
