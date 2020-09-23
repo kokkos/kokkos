@@ -256,9 +256,12 @@ struct TestLayout {
   }
 };
 
+// FIXME_SYCL
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, view_irregular_layout) {
   TestLayout<TEST_EXECSPACE> tl;
   tl.run_test();
 }
+#endif
 
 }  // namespace Test

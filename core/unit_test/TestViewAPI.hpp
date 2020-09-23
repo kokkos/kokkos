@@ -1290,6 +1290,8 @@ class TestViewAPI {
       Kokkos::deep_copy(h, d);
     }
 
+    // FIXME_SYCL
+#ifndef KOKKOS_ENABLE_SYCL
     // Check Deep Copy of two empty 2D views
     {
       Kokkos::View<double * [3], Kokkos::LayoutRight> d;
@@ -1297,6 +1299,7 @@ class TestViewAPI {
       Kokkos::deep_copy(d, h);
       Kokkos::deep_copy(h, d);
     }
+#endif
   }
 
   using DataType = T[2];

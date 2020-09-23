@@ -45,6 +45,8 @@
 #include <gtest/gtest.h>
 #include "TestResize.hpp"
 
+// FIXME_SYCL
+#if !defined(KOKKOS_ENABLE_SYCL)
 namespace Test {
 
 TEST(kokkosresize, host_space_access) {
@@ -55,3 +57,4 @@ TEST(kokkosresize, host_space_access) {
 }
 
 }  // namespace Test
+#endif

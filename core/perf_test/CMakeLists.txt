@@ -56,9 +56,11 @@ IF(Kokkos_ENABLE_HIP)
   )
 ENDIF()
 
+# FIXME_SYCL
 IF(Kokkos_ENABLE_SYCL)
   LIST(REMOVE_ITEM SOURCES
     PerfTestGramSchmidt.cpp
+    PerfTestHexGrad.cpp
     PerfTest_CustomReduction.cpp
     PerfTest_ExecSpacePartitioning.cpp
     PerfTest_ViewCopy_a123.cpp
@@ -121,26 +123,30 @@ IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL "MSVC")
   )
 ENDIF()
 
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  PerformanceTest_Atomic
-  SOURCES test_atomic.cpp
-  CATEGORIES PERFORMANCE
-)
-
-IF(NOT KOKKOS_ENABLE_SYCL)
-IF(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
+# FIXME_SYCL
+IF(NOT Kokkos_ENABLE_SYCL)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    PerformanceTest_Atomic_MinMax
-    SOURCES test_atomic_minmax_simple.cpp
+    PerformanceTest_Atomic
+    SOURCES test_atomic.cpp
     CATEGORIES PERFORMANCE
   )
 ENDIF()
 
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  PerformanceTest_Mempool
-  SOURCES test_mempool.cpp
-  CATEGORIES PERFORMANCE
-)
+# FIXME_SYCL
+IF(NOT KOKKOS_ENABLE_SYCL)
+  IF(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      PerformanceTest_Atomic_MinMax
+      SOURCES test_atomic_minmax_simple.cpp
+      CATEGORIES PERFORMANCE
+    )
+  ENDIF()
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    PerformanceTest_Mempool
+    SOURCES test_mempool.cpp
+    CATEGORIES PERFORMANCE
+  )
 ENDIF()
 
 IF(NOT Kokkos_ENABLE_OPENMPTARGET)
