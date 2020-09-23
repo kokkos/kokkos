@@ -346,8 +346,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
     done_active = __ballot(done);
   }
   return return_val;
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU) || \
-    defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU)
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL)
   // FIXME_SYCL
   return 0;
 #endif

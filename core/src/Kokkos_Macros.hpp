@@ -581,15 +581,11 @@
 
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
-#elif defined(__SYCLCC__) &&                                    \
-    (defined(__HCC_ACCELERATOR__) || defined(__CUDA_ARCH__)) && \
-    defined(KOKKOS_ENABLE_SYCL)
-#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU
+#elif defined(__SYCL_DEVICE_ONLY__) && defined(KOKKOS_ENABLE_SYCL)
+#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
 #elif defined(__HIPCC__) && defined(__HIP_DEVICE_COMPILE__) && \
     defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
-#elif defined(KOKKOS_ENABLE_SYCL)
-#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU
 #else
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
 #endif

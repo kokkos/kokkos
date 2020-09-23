@@ -122,11 +122,7 @@ SYCL::SYCLDevice::SYCLDevice(
   m_device = *found;
 }
 
-#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_CPU)
 SYCL::SYCLDevice::SYCLDevice() : SYCLDevice(cl::sycl::default_selector()) {}
-#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL_GPU)
-SYCL::SYCLDevice::SYCLDevice() : SYCLDevice(cl::sycl::gpu_selector()) {}
-#endif
 
 cl::sycl::device SYCL::SYCLDevice::get_device() const { return m_device; }
 
