@@ -264,11 +264,13 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
     auto tuner_iter = [&]() {
       auto my_tuner = team_tuners.find(label);
       if (my_tuner == team_tuners.end()) {
-        return (team_tuners
-                    .emplace(label, Kokkos::Tools::Experimental::TeamSizeTuner(
-                                        label, policy, functor, tag,
-                                        Impl::SimpleTeamSizeCalculator{}))
-                    .first);
+        return (
+            team_tuners
+                .emplace(label,
+                         Kokkos::Tools::Experimental::TeamSizeTuner(
+                             label, policy, functor, tag,
+                             Impl::ComplexReducerSizeCalculator<ReducerType>{}))
+                .first);
       }
       return my_tuner;
     }();
