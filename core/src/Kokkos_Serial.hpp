@@ -317,7 +317,7 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
   }
 
   TeamPolicyInternal(const execution_space& space, int league_size_request,
-                     const Kokkos::AUTO_t& team_size_request,
+                     const Kokkos::AUTO_t& /**team_size_request*/,
                      int vector_length_request = 1)
       : TeamPolicyInternal(space, league_size_request, -1,
                            vector_length_request) {}
