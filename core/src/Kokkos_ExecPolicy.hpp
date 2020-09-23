@@ -910,33 +910,33 @@ require(const PolicyType p, WorkItemProperty::ImplWorkItemProperty<P>) {
 namespace Impl {
 
 template <class PatternTag, class... Args>
-struct PatternImplSpecializationForTag;
+struct PatternImplSpecializationFromTag;
 
 template <class... Args>
-struct PatternImplSpecializationForTag<Kokkos::ParallelForTag, Args...>
+struct PatternImplSpecializationFromTag<Kokkos::ParallelForTag, Args...>
     : identity<ParallelFor<Args...>> {};
 
 template <class... Args>
-struct PatternImplSpecializationForTag<Kokkos::ParallelReduceTag, Args...>
+struct PatternImplSpecializationFromTag<Kokkos::ParallelReduceTag, Args...>
     : identity<ParallelReduce<Args...>> {};
 
 template <class... Args>
-struct PatternImplSpecializationForTag<Kokkos::ParallelScanTag, Args...>
+struct PatternImplSpecializationFromTag<Kokkos::ParallelScanTag, Args...>
     : identity<ParallelScan<Args...>> {};
 
 template <class PatternImpl>
-struct PatternTagForImplSpecialization;
+struct PatternTagFromImplSpecialization;
 
 template <class... Args>
-struct PatternTagForImplSpecialization<ParallelFor<Args...>>
+struct PatternTagFromImplSpecialization<ParallelFor<Args...>>
     : identity<ParallelForTag> {};
 
 template <class... Args>
-struct PatternTagForImplSpecialization<ParallelReduce<Args...>>
+struct PatternTagFromImplSpecialization<ParallelReduce<Args...>>
     : identity<ParallelReduceTag> {};
 
 template <class... Args>
-struct PatternTagForImplSpecialization<ParallelScan<Args...>>
+struct PatternTagFromImplSpecialization<ParallelScan<Args...>>
     : identity<ParallelScanTag> {};
 
 }  // end namespace Impl
