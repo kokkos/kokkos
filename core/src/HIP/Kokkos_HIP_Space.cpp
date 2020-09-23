@@ -735,7 +735,7 @@ hipDeviceProp_t const& HIP::hip_device_prop() {
 const char* HIP::name() { return "HIP"; }
 
 int g_hip_space_factory_initialized =
-    initialize_space_factory<HIPSpaceInitializer>("150_HIP");
+    Kokkos::Impl::Initialize_space_factory<HIPSpaceInitializer>("150_HIP");
 
 void HIPSpaceInitializer::initialize(const InitArguments& args) {
   int use_gpu = get_gpu(args);
