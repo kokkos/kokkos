@@ -47,7 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <impl/Kokkos_Host_Graph_fwd.hpp>
+#include <impl/Kokkos_Default_Graph_fwd.hpp>
 
 #include <Kokkos_Graph.hpp>
 #include <Kokkos_Parallel.hpp>

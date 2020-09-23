@@ -197,5 +197,5 @@ Graph<ExecutionSpace> create_graph(Closure&& arg_closure) {
 #include <Kokkos_GraphNode.hpp>
 
 #include <impl/Kokkos_GraphNodeImpl.hpp>
-#include <impl/Kokkos_Host_Graph_Impl.hpp>
+#include <impl/Kokkos_Default_Graph_Impl.hpp>
 #endif  // KOKKOS_GRAPH_HPP

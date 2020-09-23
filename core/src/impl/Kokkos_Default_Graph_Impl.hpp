@@ -49,7 +49,7 @@
 #include <Kokkos_Graph.hpp>
 
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
-#include <impl/Kokkos_Host_Graph_fwd.hpp>
+#include <impl/Kokkos_Default_Graph_fwd.hpp>
 
 #include <Kokkos_Serial.hpp>
 #include <Kokkos_OpenMP.hpp>
@@ -212,7 +212,7 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
 
 #include <OpenMP/Kokkos_OpenMP_Parallel.hpp>
 
-#include <impl/Kokkos_Host_GraphNodeKernel.hpp>
-#include <impl/Kokkos_Host_GraphNode_Impl.hpp>
+#include <impl/Kokkos_Default_GraphNodeKernel.hpp>
+#include <impl/Kokkos_Default_GraphNode_Impl.hpp>
 
 #endif  // KOKKOS_HOST_GRAPH_IMPL_HPP
