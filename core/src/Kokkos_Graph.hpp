@@ -167,6 +167,10 @@ auto when_all(PredecessorRefs&&... arg_pred_refs) {
 template <class ExecutionSpace, class Closure>
 Graph<ExecutionSpace> create_graph(ExecutionSpace ex, Closure&& arg_closure) {
   // Create a shared pointer to the graph:
+  // We need an attorney class here so we have an implementation friend to
+  // create a Graph class without graph having public constructors. We can't
+  // just make `create_graph` itself a friend because of the way that friend
+  // function template injection works.
   auto rv = Kokkos::Impl::GraphAccess::construct_graph(ex);
   // Invoke the user's graph construction closure
   ((Closure &&) arg_closure)(Kokkos::Impl::GraphAccess::create_root_ref(rv));
