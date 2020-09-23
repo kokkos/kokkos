@@ -79,17 +79,6 @@ struct GraphAccess {
         graph_impl_ptr, std::move(root_ptr)};
   }
 
-  template <class RootNodeRef>
-  // requires remove_cvref_t<RootNodeRef> is a specialization of GraphNodeRef
-  static auto create_graph_builder(RootNodeRef&& arg_root) {
-    // std::remove_cvref_t can't get here quickly enough...
-    using execution_space =
-        typename std::remove_cv<typename std::remove_reference<
-            RootNodeRef>::type>::type::execution_space;
-    return Kokkos::Experimental::GraphBuilder<execution_space>{(RootNodeRef &&)
-                                                                   arg_root};
-  }
-
   template <class NodeImpl>
   static auto make_node_shared_ptr_with_deleter(
       Kokkos::OwningRawPtr<NodeImpl> node_impl_ptr) {
@@ -123,6 +112,12 @@ struct GraphAccess {
   // requires remove_cvref_t<NodeRef> is a specialization of GraphNodeRef
   static auto get_node_ptr(NodeRef&& node_ref) {
     return ((NodeRef &&) node_ref).get_node_ptr();
+  }
+
+  template <class NodeRef>
+  // requires remove_cvref_t<NodeRef> is a specialization of GraphNodeRef
+  static auto get_graph_impl_ptr(NodeRef&& node_ref) {
+    return ((NodeRef &&) node_ref).get_graph_impl();
   }
 
   // </editor-fold> end accessors for private members of public interface }}}2

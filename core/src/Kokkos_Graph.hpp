@@ -133,120 +133,33 @@ struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
 //==============================================================================
 
 //==============================================================================
-// <editor-fold desc="GraphBuilder"> {{{1
+// <editor-fold desc="when_all"> {{{1
 
-template <class ExecutionSpace>
-struct GraphBuilder {
- public:
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="public member types"> {{{2
+template <class... PredecessorRefs>
+// constraints (not intended for subsumption, though...)
+//   ((remove_cvref_t<PredecessorRefs> is a specialization of
+//        GraphNodeRef with get_root().get_graph_impl() as its GraphImpl)
+//      && ...)
+auto when_all(PredecessorRefs&&... arg_pred_refs) {
+  // TODO @graph @desul-integration check the constraints and preconditions
+  //                                once we have folded conjunctions from
+  //                                desul
+  static_assert(sizeof...(PredecessorRefs) > 0,
+                "when_all() needs at least one predecessor.");
+  auto& graph_ptr_impl =
+      Kokkos::Impl::GraphAccess::get_graph_impl_ptr(
+          std::get<0>(std::forward_as_tuple(arg_pred_refs...)))
+          .get_graph_weak_ptr()
+          .lock();
+  auto node_ptr_impl = graph_ptr_impl->create_aggregate_ptr(arg_pred_refs...);
+  graph_ptr_impl->add_node(node_ptr_impl);
+  KOKKOS_IMPL_FOLD_COMMA_OPERATOR(
+      graph_ptr_impl->add_predecessor(node_ptr_impl, arg_pred_refs) /* ... */);
+  return Kokkos::Impl::GraphAccess::make_graph_node_ref(
+      std::move(graph_ptr_impl), std::move(node_ptr_impl));
+}
 
-  using execution_space = ExecutionSpace;
-  using graph           = Graph<ExecutionSpace>;
-  using graph_builder   = GraphBuilder;
-
-  // </editor-fold> end public member types }}}2
-  //----------------------------------------------------------------------------
-
- private:
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="friends"> {{{2
-
-  friend struct Kokkos::Impl::GraphAccess;
-
-  // </editor-fold> end friends }}}2
-  //----------------------------------------------------------------------------
-
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="private data members"> {{{2
-
-  using graph_impl_t    = Kokkos::Impl::GraphImpl<ExecutionSpace>;
-  using root_node_ref_t = typename graph_impl_t::root_node_impl_t::node_ref_t;
-  root_node_ref_t m_root;
-
-  // </editor-fold> end private data members }}}2
-  //----------------------------------------------------------------------------
-
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="private ctors"> {{{2
-
-  // Note: only create_graph() uses this constructor, but we can't just make
-  // that a friend instead of GraphAccess because of the way that friend
-  // function template injection works.
-  explicit GraphBuilder(root_node_ref_t arg_root)
-      : m_root(std::move(arg_root)) {}
-
-  // </editor-fold> end private ctors }}}2
-  //----------------------------------------------------------------------------
-
- public:
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="ctors, destructor, and assignment"> {{{2
-
-  // Rule of 6 for copy constructible
-
-  GraphBuilder() noexcept               = default;
-  GraphBuilder(GraphBuilder const&)     = default;
-  GraphBuilder(GraphBuilder&&) noexcept = default;
-  GraphBuilder& operator=(GraphBuilder const&) = default;
-  GraphBuilder& operator=(GraphBuilder&&) noexcept = default;
-
-  ~GraphBuilder() = default;
-
-  // </editor-fold> end ctors, destructor, and assignment }}}2
-  //----------------------------------------------------------------------------
-
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="public accessors"> {{{2
-
-  constexpr auto const& get_root() const { return m_root; }
-
-  // </editor-fold> end public accessors }}}2
-  //----------------------------------------------------------------------------
-
-  template <class... PredecessorRefs>
-  // constraints (not intended for subsumption, though...)
-  //   ((remove_cvref_t<PredecessorRefs> is a specialization of
-  //        GraphNodeRef with get_root().get_graph_impl() as its GraphImpl)
-  //      && ...)
-  auto when_all(PredecessorRefs&&... arg_pred_refs) const {
-    // TODO @graph @desul-integration check the constraints and preconditions
-    //                                once we have folded conjunctions from
-    //                                desul
-    auto graph_ptr_impl = get_root().get_graph_ptr();
-    auto node_ptr_impl = graph_ptr_impl->create_aggregate_ptr(arg_pred_refs...);
-    graph_ptr_impl->add_node(node_ptr_impl);
-    KOKKOS_IMPL_FOLD_COMMA_OPERATOR(graph_ptr_impl->add_predecessor(
-        node_ptr_impl, arg_pred_refs) /* ... */);
-    return Kokkos::Impl::GraphAccess::make_graph_node_ref(
-        graph_ptr_impl, std::move(node_ptr_impl));
-  }
-
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="Methods forward to their then_* analogs on root"> {{{2
-
-  template <class... Args>
-  auto parallel_for(Args&&... args) const {
-    return get_root().then_parallel_for((Args &&) args...);
-  }
-  template <class... Args>
-  auto parallel_reduce(Args&&... args) const {
-    return get_root().then_parallel_reduce((Args &&) args...);
-  }
-  template <class... Args>
-  auto parallel_scan(Args&&... args) const {
-    return get_root().then_parallel_scan((Args &&) args...);
-  }
-  template <class... Args>
-  auto deep_copy(Args&&... args) const {
-    return get_root().then_deep_copy((Args &&) args...);
-  }
-
-  // </editor-fold> end Methods forward to their then_* analogs on root }}}2
-  //----------------------------------------------------------------------------
-};
-
-// </editor-fold> end GraphBuilder }}}1
+// </editor-fold> end when_all }}}1
 //==============================================================================
 
 //==============================================================================
@@ -256,12 +169,8 @@ template <class ExecutionSpace, class Closure>
 Graph<ExecutionSpace> create_graph(ExecutionSpace ex, Closure&& arg_closure) {
   // Create a shared pointer to the graph:
   auto rv = Kokkos::Impl::GraphAccess::construct_graph(ex);
-  // Create the graph builder instance:
-  // GCC 5.3 thinks this is shadowed by user code if we name it `builder`??!?
-  auto kokkos_impl_builder = Kokkos::Impl::GraphAccess::create_graph_builder(
-      Kokkos::Impl::GraphAccess::create_root_ref(rv));
   // Invoke the user's graph construction closure
-  ((Closure &&) arg_closure)(std::move(kokkos_impl_builder));
+  ((Closure &&) arg_closure)(Kokkos::Impl::GraphAccess::create_root_ref(rv));
   // and given them back the graph
   // KOKKOS_ENSURES(rv.m_impl_ptr.use_count() == 1)
   return rv;

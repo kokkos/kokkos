@@ -117,8 +117,8 @@ struct TEST_CATEGORY_FIXTURE(count_bugs) : public ::testing::Test {
 };
 
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one) {
-  auto graph = Kokkos::Experimental::create_graph([=](auto builder) {
-    builder.parallel_for(1, count_functor{count, bugs, 0, 0});
+  auto graph = Kokkos::Experimental::create_graph([=](auto root) {
+    root.parallel_for(1, count_functor{count, bugs, 0, 0});
   });
   graph.submit();
   Kokkos::deep_copy(ex, count_host, count);
@@ -129,8 +129,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one) {
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one_rvalue) {
-  Kokkos::Experimental::create_graph(ex, [=](auto builder) {
-    builder.get_root().then_parallel_for(1, count_functor{count, bugs, 0, 0});
+  Kokkos::Experimental::create_graph(ex, [=](auto root) {
+    root.get_root().then_parallel_for(1, count_functor{count, bugs, 0, 0});
   }).submit();
   Kokkos::deep_copy(ex, count_host, count);
   Kokkos::deep_copy(ex, bugs_host, bugs);
@@ -140,12 +140,12 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one_rvalue) {
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_six) {
-  auto graph = Kokkos::Experimental::create_graph(ex, [=](auto builder) {
-    auto f_setup_count = builder.parallel_for(1, set_functor{count, 0});
-    auto f_setup_bugs  = builder.parallel_for(1, set_functor{bugs, 0});
+  auto graph = Kokkos::Experimental::create_graph(ex, [=](auto root) {
+    auto f_setup_count = root.then_parallel_for(1, set_functor{count, 0});
+    auto f_setup_bugs  = root.then_parallel_for(1, set_functor{bugs, 0});
 
     //----------------------------------------
-    auto ready = builder.when_all(f_setup_count, f_setup_bugs);
+    auto ready = when_all(f_setup_count, f_setup_bugs);
 
     //----------------------------------------
     ready.then_parallel_for(1, count_functor{count, bugs, 0, 6});
@@ -175,15 +175,15 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_six) {
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
   view_type reduction_out{"reduction_out"};
   view_host reduction_host{"reduction_host"};
-  Kokkos::Experimental::create_graph(ex, [=](auto builder) {
+  Kokkos::Experimental::create_graph(ex, [=](auto root) {
     //----------------------------------------
     // Test when_all when redundant dependencies are given
-    auto f1 = builder.parallel_for(1, set_functor{count, 0});
+    auto f1 = root.then_parallel_for(1, set_functor{count, 0});
     auto f2 = f1.then_parallel_for(1, count_functor{count, bugs, 0, 0});
     auto f3 = f2.then_parallel_for(5, count_functor{count, bugs, 1, 5});
-    auto f4 = builder.when_all(f2, f3).then_parallel_for(
+    auto f4 = root.when_all(f2, f3).then_parallel_for(
         1, count_functor{count, bugs, 6, 6});
-    builder.when_all(f1, f4, f3)
+    root.when_all(f1, f4, f3)
         .then_parallel_reduce(6, set_result_functor{count}, reduction_out);
     //----------------------------------------
   }).submit();
@@ -201,9 +201,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
 // even asynchronously. We _may_ want to do that eventually?
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
   auto graph = Kokkos::Experimental::create_graph(
-      ex, [=, count_host = count_host](auto builder) {
+      ex, [=, count_host = count_host](auto root) {
         //----------------------------------------
-        builder.parallel_for(1, set_functor{count, 0})
+        root.then_parallel_for(1, set_functor{count, 0})
             .then_parallel_for(1, count_functor{count, bugs, 0, 0})
             .then_parallel_for(1, count_functor{count, bugs, 1, 1})
             .then_parallel_reduce(1, set_result_functor{count}, count_host)
@@ -227,8 +227,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
 
 // This won't work with the way we're currently doing things
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_zero_work_reduce) {
-  auto graph = Kokkos::Experimental::create_graph(ex, [=](auto builder) {
-    builder.parallel_reduce(0, set_result_functor{bugs}, count);
+  auto graph = Kokkos::Experimental::create_graph(ex, [=](auto root) {
+    root.then_parallel_reduce(0, set_result_functor{bugs}, count);
   });
   graph.submit();
   Kokkos::deep_copy(ex, count, 1);
