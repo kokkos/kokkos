@@ -73,9 +73,11 @@ struct ViewTracker {
   KOKKOS_INLINE_FUNCTION
   ViewTracker() : m_tracker() {}
 
+#ifndef __SYCL_DEVICE_ONLY
   KOKKOS_INLINE_FUNCTION
   ViewTracker(const ViewTracker& vt) noexcept
       : m_tracker(vt.m_tracker, view_traits::is_managed) {}
+#endif
 
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const ParentView& vt) noexcept : m_tracker() {
@@ -103,6 +105,7 @@ struct ViewTracker {
 #endif
   }
 
+#ifndef __SYCL_DEVICE_ONLY
   KOKKOS_INLINE_FUNCTION
   ViewTracker& operator=(const ViewTracker& rhs) noexcept {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
@@ -117,6 +120,7 @@ struct ViewTracker {
 #endif
     return *this;
   }
+#endif
 
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const track_type& tt) noexcept
