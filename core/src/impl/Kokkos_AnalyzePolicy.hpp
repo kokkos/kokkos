@@ -48,7 +48,7 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <impl/Kokkos_Tags.hpp>
-
+#include <impl/Kokkos_GraphImpl_fwd.hpp>
 namespace Kokkos {
 namespace Impl {
 
@@ -56,11 +56,12 @@ template <typename ExecutionSpace = void, typename Schedule = void,
           typename WorkTag = void, typename IndexType = void,
           typename IterationPattern = void, typename LaunchBounds = void,
           typename MyWorkItemProperty =
-              Kokkos::Experimental::WorkItemProperty::None_t>
+              Kokkos::Experimental::WorkItemProperty::None_t,
+          typename IsGraphKernel = std::false_type>
 struct PolicyTraitsBase {
-  using type =
-      PolicyTraitsBase<ExecutionSpace, Schedule, WorkTag, IndexType,
-                       IterationPattern, LaunchBounds, MyWorkItemProperty>;
+  using type = PolicyTraitsBase<ExecutionSpace, Schedule, WorkTag, IndexType,
+                                IterationPattern, LaunchBounds,
+                                MyWorkItemProperty, IsGraphKernel>;
 
   using execution_space    = ExecutionSpace;
   using schedule_type      = Schedule;
@@ -69,6 +70,7 @@ struct PolicyTraitsBase {
   using iteration_pattern  = IterationPattern;
   using launch_bounds      = LaunchBounds;
   using work_item_property = MyWorkItemProperty;
+  using is_graph_kernel    = IsGraphKernel;
 };
 
 template <typename PolicyBase, typename Property>
@@ -81,7 +83,8 @@ struct SetWorkItemProperty {
       typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       typename PolicyBase::iteration_pattern,
-      typename PolicyBase::launch_bounds, Property>;
+      typename PolicyBase::launch_bounds, Property,
+      typename PolicyBase::is_graph_kernel>;
 };
 
 template <typename PolicyBase, typename ExecutionSpace>
@@ -94,7 +97,8 @@ struct SetExecutionSpace {
                        typename PolicyBase::index_type,
                        typename PolicyBase::iteration_pattern,
                        typename PolicyBase::launch_bounds,
-                       typename PolicyBase::work_item_property>;
+                       typename PolicyBase::work_item_property,
+                       typename PolicyBase::is_graph_kernel>;
 };
 
 template <typename PolicyBase, typename Schedule>
@@ -106,7 +110,8 @@ struct SetSchedule {
                                 typename PolicyBase::index_type,
                                 typename PolicyBase::iteration_pattern,
                                 typename PolicyBase::launch_bounds,
-                                typename PolicyBase::work_item_property>;
+                                typename PolicyBase::work_item_property,
+                                typename PolicyBase::is_graph_kernel>;
 };
 
 template <typename PolicyBase, typename WorkTag>
@@ -118,7 +123,8 @@ struct SetWorkTag {
                                 typename PolicyBase::index_type,
                                 typename PolicyBase::iteration_pattern,
                                 typename PolicyBase::launch_bounds,
-                                typename PolicyBase::work_item_property>;
+                                typename PolicyBase::work_item_property,
+                                typename PolicyBase::is_graph_kernel>;
 };
 
 template <typename PolicyBase, typename IndexType>
@@ -130,7 +136,8 @@ struct SetIndexType {
                                 typename PolicyBase::work_tag, IndexType,
                                 typename PolicyBase::iteration_pattern,
                                 typename PolicyBase::launch_bounds,
-                                typename PolicyBase::work_item_property>;
+                                typename PolicyBase::work_item_property,
+                                typename PolicyBase::is_graph_kernel>;
 };
 
 template <typename PolicyBase, typename IterationPattern>
@@ -141,7 +148,8 @@ struct SetIterationPattern {
       typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       IterationPattern, typename PolicyBase::launch_bounds,
-      typename PolicyBase::work_item_property>;
+      typename PolicyBase::work_item_property,
+      typename PolicyBase::is_graph_kernel>;
 };
 
 template <typename PolicyBase, typename LaunchBounds>
@@ -152,45 +160,64 @@ struct SetLaunchBounds {
       typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       typename PolicyBase::iteration_pattern, LaunchBounds,
-      typename PolicyBase::work_item_property>;
+      typename PolicyBase::work_item_property,
+      typename PolicyBase::is_graph_kernel>;
+};
+
+template <typename PolicyBase>
+struct SetIsGraphKernel {
+  using type = PolicyTraitsBase<
+      typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
+      typename PolicyBase::work_tag, typename PolicyBase::index_type,
+      typename PolicyBase::iteration_pattern,
+      typename PolicyBase::launch_bounds,
+      typename PolicyBase::work_item_property, std::true_type>;
 };
 
 template <typename Base, typename... Traits>
 struct AnalyzePolicy;
 
+// TODO DSH rewrite this to be more extensible once we have metaprogramming from
+//      desul
 template <typename Base, typename T, typename... Traits>
 struct AnalyzePolicy<Base, T, Traits...>
     : public AnalyzePolicy<
-          typename std::conditional<
+          typename std::conditional_t<
               is_execution_space<T>::value, SetExecutionSpace<Base, T>,
-              typename std::conditional<
+              std::conditional_t<
                   is_schedule_type<T>::value, SetSchedule<Base, T>,
-                  typename std::conditional<
+                  std::conditional_t<
                       is_index_type<T>::value, SetIndexType<Base, T>,
-                      typename std::conditional<
+                      std::conditional_t<
                           std::is_integral<T>::value,
-                          SetIndexType<Base, IndexType<T> >,
-                          typename std::conditional<
+                          SetIndexType<Base, IndexType<T>>,
+                          std::conditional_t<
                               is_iteration_pattern<T>::value,
                               SetIterationPattern<Base, T>,
-                              typename std::conditional<
+                              std::conditional_t<
                                   is_launch_bounds<T>::value,
                                   SetLaunchBounds<Base, T>,
-                                  typename std::conditional<
+                                  std::conditional_t<
                                       Kokkos::Experimental::
                                           is_work_item_property<T>::value,
                                       SetWorkItemProperty<Base, T>,
-                                      typename std::conditional<
-                                          !std::is_void<T>::value,
-                                          SetWorkTag<Base, T>, Base>::type>::
-                                      type>::type>::type>::type>::type>::type>::
-              type::type,
+                                      std::conditional_t<
+                                          std::is_same<T,
+                                                       IsGraphKernelTag>::value,
+                                          SetIsGraphKernel<Base>,
+
+                                          std::conditional_t<
+                                              !std::is_void<T>::value,
+                                              SetWorkTag<Base, T>,
+                                              Base>>>>>>>>>::type,
           Traits...> {};
 
 template <typename Base>
 struct AnalyzePolicy<Base> {
+  static constexpr auto execution_space_is_defaulted =
+      std::is_void<typename Base::execution_space>::value;
   using execution_space =
-      typename std::conditional<is_void<typename Base::execution_space>::value,
+      typename std::conditional<execution_space_is_defaulted,
                                 DefaultExecutionSpace,
                                 typename Base::execution_space>::type;
 
@@ -221,9 +248,11 @@ struct AnalyzePolicy<Base> {
 
   using work_item_property = typename Base::work_item_property;
 
-  using type =
-      PolicyTraitsBase<execution_space, schedule_type, work_tag, index_type,
-                       iteration_pattern, launch_bounds, work_item_property>;
+  using is_graph_kernel = typename Base::is_graph_kernel;
+
+  using type = PolicyTraitsBase<execution_space, schedule_type, work_tag,
+                                index_type, iteration_pattern, launch_bounds,
+                                work_item_property, is_graph_kernel>;
 };
 
 template <typename... Traits>
