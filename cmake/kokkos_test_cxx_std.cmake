@@ -113,7 +113,7 @@ IF(KOKKOS_ENABLE_CUDA)
       MESSAGE(FATAL_ERROR "Compiling CUDA code with clang doesn't support C++ extensions.  Set -DCMAKE_CXX_EXTENSIONS=OFF")
     ENDIF()
   ELSEIF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
-    MESSAGE(FATAL_ERROR "Invalid compiler for CUDA.  The compiler must be nvcc_wrapper or Clang, but compiler ID was ${KOKKOS_CXX_COMPILER_ID}")
+    MESSAGE(FATAL_ERROR "Invalid compiler for CUDA.  The compiler must be nvcc_wrapper or Clang or use kokkos_launch_compiler, but compiler ID was ${KOKKOS_CXX_COMPILER_ID}")
   ENDIF()
 ENDIF()
 
