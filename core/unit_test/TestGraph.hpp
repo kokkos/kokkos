@@ -145,7 +145,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_six) {
     auto f_setup_bugs  = root.then_parallel_for(1, set_functor{bugs, 0});
 
     //----------------------------------------
-    auto ready = when_all(f_setup_count, f_setup_bugs);
+    auto ready = Kokkos::Experimental::when_all(f_setup_count, f_setup_bugs);
 
     //----------------------------------------
     ready.then_parallel_for(1, count_functor{count, bugs, 0, 6});
@@ -181,9 +181,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
     auto f1 = root.then_parallel_for(1, set_functor{count, 0});
     auto f2 = f1.then_parallel_for(1, count_functor{count, bugs, 0, 0});
     auto f3 = f2.then_parallel_for(5, count_functor{count, bugs, 1, 5});
-    auto f4 =
-        when_all(f2, f3).then_parallel_for(1, count_functor{count, bugs, 6, 6});
-    when_all(f1, f4, f3)
+    auto f4 = Kokkos::Experimental::when_all(f2, f3).then_parallel_for(
+        1, count_functor{count, bugs, 6, 6});
+    Kokkos::Experimental::when_all(f1, f4, f3)
         .then_parallel_reduce(6, set_result_functor{count}, reduction_out);
     //----------------------------------------
   }).submit();
