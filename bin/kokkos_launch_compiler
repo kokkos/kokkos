@@ -65,7 +65,7 @@ else
     NVCC_WRAPPER="$(dirname ${BASH_SOURCE[0]})/nvcc_wrapper"
 
     if [ -z "${NVCC_WRAPPER}" ]; then
-        echo "\nError: nvcc_wrapper not found in $(dirname ${BASH_SOURCE[0]}).\n"
+        echo -e "\nError: nvcc_wrapper not found in $(dirname ${BASH_SOURCE[0]}).\n"
         exit 1
     fi
 
