@@ -201,7 +201,8 @@ struct TestTaskDependence {
   void operator()(typename sched_type::member_type& member) {
     auto& sched = member.scheduler();
     enum { CHUNK = 8 };
-    const int n = CHUNK < m_count ? CHUNK : m_count;
+    const int n =
+        static_cast<int>(CHUNK) < m_count ? static_cast<int>(CHUNK) : m_count;
 
     if (1 < m_count) {
       const int increment = (m_count + n - 1) / n;

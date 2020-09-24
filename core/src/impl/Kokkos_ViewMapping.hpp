@@ -194,41 +194,49 @@ struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION ViewDimension
   KOKKOS_INLINE_FUNCTION
   constexpr size_t extent(const unsigned r) const noexcept {
     return r == 0
-               ? N0
+               ? static_cast<size_t>(N0)
                : (r == 1
-                      ? N1
+                      ? static_cast<size_t>(N1)
                       : (r == 2
-                             ? N2
+                             ? static_cast<size_t>(N2)
                              : (r == 3
-                                    ? N3
+                                    ? static_cast<size_t>(N3)
                                     : (r == 4
-                                           ? N4
+                                           ? static_cast<size_t>(N4)
                                            : (r == 5
-                                                  ? N5
+                                                  ? static_cast<size_t>(N5)
                                                   : (r == 6
-                                                         ? N6
-                                                         : (r == 7 ? N7
-                                                                   : 0)))))));
+                                                         ? static_cast<size_t>(
+                                                               N6)
+                                                         : (r == 7
+                                                                ? static_cast<
+                                                                      size_t>(
+                                                                      N7)
+                                                                : 0)))))));
   }
 
   static KOKKOS_INLINE_FUNCTION constexpr size_t static_extent(
       const unsigned r) noexcept {
     return r == 0
-               ? ArgN0
+               ? static_cast<size_t>(ArgN0)
                : (r == 1
-                      ? ArgN1
+                      ? static_cast<size_t>(ArgN1)
                       : (r == 2
-                             ? ArgN2
+                             ? static_cast<size_t>(ArgN2)
                              : (r == 3
-                                    ? ArgN3
+                                    ? static_cast<size_t>(ArgN3)
                                     : (r == 4
-                                           ? ArgN4
+                                           ? static_cast<size_t>(ArgN4)
                                            : (r == 5
-                                                  ? ArgN5
+                                                  ? static_cast<size_t>(ArgN5)
                                                   : (r == 6
-                                                         ? ArgN6
-                                                         : (r == 7 ? ArgN7
-                                                                   : 0)))))));
+                                                         ? static_cast<size_t>(
+                                                               ArgN6)
+                                                         : (r == 7
+                                                                ? static_cast<
+                                                                      size_t>(
+                                                                      ArgN7)
+                                                                : 0)))))));
   }
 
   template <size_t N>
@@ -2059,31 +2067,39 @@ struct ViewOffset<
         m_stride(
             Padding<TrivialScalarSize>::
                 stride(/* 2 <= rank */
-                       m_dim.N1 *
+                       static_cast<size_t>(m_dim.N1) *
                        (dimension_type::rank == 2
                             ? 1
-                            : m_dim.N2 *
+                            : static_cast<size_t>(m_dim.N2) *
                                   (dimension_type::rank == 3
                                        ? 1
-                                       : m_dim.N3 *
+                                       : static_cast<size_t>(m_dim.N3) *
                                              (dimension_type::rank == 4
                                                   ? 1
-                                                  : m_dim.N4 *
+                                                  : static_cast<size_t>(
+                                                        m_dim.N4) *
                                                         (dimension_type::rank ==
                                                                  5
                                                              ? 1
-                                                             : m_dim.N5 *
+                                                             : static_cast<
+                                                                   size_t>(
+                                                                   m_dim.N5) *
                                                                    (dimension_type::
                                                                                 rank ==
                                                                             6
                                                                         ? 1
-                                                                        : m_dim.N6 *
+                                                                        : static_cast<
+                                                                              size_t>(
+                                                                              m_dim
+                                                                                  .N6) *
                                                                               (dimension_type::
                                                                                            rank ==
                                                                                        7
                                                                                    ? 1
-                                                                                   : m_dim
-                                                                                         .N7)))))))) {
+                                                                                   : static_cast<
+                                                                                         size_t>(
+                                                                                         m_dim
+                                                                                             .N7))))))))) {
   }
 
   template <class DimRHS>
@@ -2104,18 +2120,21 @@ struct ViewOffset<
               rhs.m_dim.N4, rhs.m_dim.N5, rhs.m_dim.N6, rhs.m_dim.N7),
         m_stride(rhs.stride_0()) {
     if (((dimension_type::rank == 2)
-             ? rhs.m_stride.S1
+             ? static_cast<size_t>(rhs.m_stride.S1)
              : ((dimension_type::rank == 3)
-                    ? rhs.m_stride.S2
+                    ? static_cast<size_t>(rhs.m_stride.S2)
                     : ((dimension_type::rank == 4)
-                           ? rhs.m_stride.S3
+                           ? static_cast<size_t>(rhs.m_stride.S3)
                            : ((dimension_type::rank == 5)
-                                  ? rhs.m_stride.S4
+                                  ? static_cast<size_t>(rhs.m_stride.S4)
                                   : ((dimension_type::rank == 6)
-                                         ? rhs.m_stride.S5
+                                         ? static_cast<size_t>(rhs.m_stride.S5)
                                          : ((dimension_type::rank == 7)
-                                                ? rhs.m_stride.S6
-                                                : rhs.m_stride.S7)))))) != 1) {
+                                                ? static_cast<size_t>(
+                                                      rhs.m_stride.S6)
+                                                : static_cast<size_t>(
+                                                      rhs.m_stride.S7))))))) !=
+        1) {
       Kokkos::abort(
           "Kokkos::Impl::ViewOffset assignment of LayoutRight from "
           "LayoutStride requires right-most stride == 1");
