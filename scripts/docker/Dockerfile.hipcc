@@ -1,4 +1,4 @@
-ARG BASE=rocm/dev-ubuntu-18.04:3.5
+ARG BASE=rocm/dev-ubuntu-20.04:3.8
 FROM $BASE
 
 RUN apt-get update && apt-get install -y \
