@@ -52,6 +52,9 @@
 
 #include <Kokkos_Graph.hpp>
 
+#include <vector>
+#include <memory>
+
 namespace Kokkos {
 namespace Impl {
 
