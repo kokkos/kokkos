@@ -500,10 +500,8 @@ struct CudaParallelLaunchImpl<
     // the code and the result is visible.
     auto wrap_get_attributes = []() -> cudaFuncAttributes {
       cudaFuncAttributes attr_tmp;
-      CUDA_SAFE_CALL(cudaFuncGetAttributes(
-          &attr_tmp,
-          cuda_parallel_launch_global_memory<DriverType, MaxThreadsPerBlock,
-                                             MinBlocksPerSM>));
+      CUDA_SAFE_CALL(
+          cudaFuncGetAttributes(&attr_tmp, base_t::get_kernel_func()));
       return attr_tmp;
     };
     static cudaFuncAttributes attr = wrap_get_attributes();
