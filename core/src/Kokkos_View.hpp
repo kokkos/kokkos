@@ -74,8 +74,8 @@ struct ViewDataAnalysis;
 template <class, class...>
 class ViewMapping {
  public:
-  enum { is_assignable_data_type = false };
-  enum { is_assignable = false };
+  enum : bool { is_assignable_data_type = false };
+  enum : bool { is_assignable = false };
 };
 
 template <typename IntType>

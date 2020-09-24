@@ -75,7 +75,7 @@ struct get_type<I, T, Pack...> {
 
 template <typename T, typename... Pack>
 struct has_type {
-  enum { value = false };
+  enum : bool { value = false };
 };
 
 template <typename T, typename S, typename... Pack>
@@ -90,13 +90,13 @@ struct has_type<T, S, Pack...> {
       "Error: more than one member of the argument pack matches the type");
 
  public:
-  enum { value = self_value || next::value };
+  enum : bool { value = self_value || next::value };
 };
 
 template <typename DefaultType, template <typename> class Condition,
           typename... Pack>
 struct has_condition {
-  enum { value = false };
+  enum : bool { value = false };
   using type = DefaultType;
 };
 
@@ -113,7 +113,7 @@ struct has_condition<DefaultType, Condition, S, Pack...> {
       "Error: more than one member of the argument pack satisfies condition");
 
  public:
-  enum { value = self_value || next::value };
+  enum : bool { value = self_value || next::value };
 
   using type =
       typename std::conditional<self_value, S, typename next::type>::type;
@@ -121,7 +121,7 @@ struct has_condition<DefaultType, Condition, S, Pack...> {
 
 template <class... Args>
 struct are_integral {
-  enum { value = true };
+  enum : bool { value = true };
 };
 
 template <typename T, class... Args>
@@ -159,7 +159,7 @@ struct enable_if_type {
 
 template <bool Cond, typename TrueType, typename FalseType>
 struct if_c {
-  enum { value = Cond };
+  enum : bool { value = Cond };
 
   using type = FalseType;
 
@@ -194,7 +194,7 @@ struct if_c {
 
 template <typename TrueType, typename FalseType>
 struct if_c<true, TrueType, FalseType> {
-  enum { value = true };
+  enum : bool { value = true };
 
   using type = TrueType;
 
@@ -229,7 +229,7 @@ struct if_c<true, TrueType, FalseType> {
 
 template <typename TrueType>
 struct if_c<false, TrueType, void> {
-  enum { value = false };
+  enum : bool { value = false };
 
   using type       = void;
   using value_type = void;
@@ -237,7 +237,7 @@ struct if_c<false, TrueType, void> {
 
 template <typename FalseType>
 struct if_c<true, void, FalseType> {
-  enum { value = true };
+  enum : bool { value = true };
 
   using type       = void;
   using value_type = void;

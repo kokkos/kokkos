@@ -317,23 +317,23 @@ namespace Impl {
 
 template <class T>
 struct is_integral_extent_type {
-  enum { value = std::is_same<T, Kokkos::Impl::ALL_t>::value ? 1 : 0 };
+  enum : bool { value = std::is_same<T, Kokkos::Impl::ALL_t>::value ? 1 : 0 };
 };
 
 template <class iType>
 struct is_integral_extent_type<std::pair<iType, iType>> {
-  enum { value = std::is_integral<iType>::value ? 1 : 0 };
+  enum : bool { value = std::is_integral<iType>::value ? 1 : 0 };
 };
 
 template <class iType>
 struct is_integral_extent_type<Kokkos::pair<iType, iType>> {
-  enum { value = std::is_integral<iType>::value ? 1 : 0 };
+  enum : bool { value = std::is_integral<iType>::value ? 1 : 0 };
 };
 
 // Assuming '2 == initializer_list<iType>::size()'
 template <class iType>
 struct is_integral_extent_type<std::initializer_list<iType>> {
-  enum { value = std::is_integral<iType>::value ? 1 : 0 };
+  enum : bool { value = std::is_integral<iType>::value ? 1 : 0 };
 };
 
 template <unsigned I, class... Args>
@@ -342,7 +342,7 @@ struct is_integral_extent {
   using type = typename std::remove_cv<typename std::remove_reference<
       typename Kokkos::Impl::get_type<I, Args...>::type>::type>::type;
 
-  enum { value = is_integral_extent_type<type>::value };
+  enum : bool { value = is_integral_extent_type<type>::value };
 
   static_assert(value || std::is_integral<type>::value ||
                     std::is_same<type, void>::value,
@@ -420,21 +420,21 @@ template <int RankDest, int RankSrc, int CurrentArg, class... SubViewArgs>
 struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride, Kokkos::LayoutLeft,
                                    RankDest, RankSrc, CurrentArg,
                                    SubViewArgs...> {
-  enum { value = true };
+  enum : bool { value = true };
 };
 
 template <int RankDest, int RankSrc, int CurrentArg, class... SubViewArgs>
 struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride, Kokkos::LayoutRight,
                                    RankDest, RankSrc, CurrentArg,
                                    SubViewArgs...> {
-  enum { value = true };
+  enum : bool { value = true };
 };
 
 template <int RankDest, int RankSrc, int CurrentArg, class... SubViewArgs>
 struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride, Kokkos::LayoutStride,
                                    RankDest, RankSrc, CurrentArg,
                                    SubViewArgs...> {
-  enum { value = true };
+  enum : bool { value = true };
 };
 
 template <unsigned DomainRank, unsigned RangeRank>

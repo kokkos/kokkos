@@ -895,7 +895,7 @@ void push_finalize_hook(std::function<void()> f) { finalize_hooks.push(f); }
 void finalize() { Impl::finalize_internal(); }
 
 void finalize_all() {
-  enum { all_spaces = true };
+  enum : bool { all_spaces = true };
   Impl::finalize_internal(all_spaces);
 }
 
