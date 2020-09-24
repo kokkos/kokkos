@@ -326,8 +326,6 @@ if(Kokkos_ENABLE_HIP)
   # FIXME_HIP
   LIST(REMOVE_ITEM HIP_SOURCES
     hip/TestHIP_AtomicOperations_complexdouble.cpp
-    hip/TestHIP_TeamTeamSize.cpp
-    hip/TestHIP_TeamVectorRange.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
