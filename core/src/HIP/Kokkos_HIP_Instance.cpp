@@ -284,8 +284,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
   }
 
   // Init the array for used for arbitrarily sized atomics
-  // FIXME_HIP uncomment this when global variable works
-  // if (m_stream == 0) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
+  if (m_stream == 0) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
 }
 
 //----------------------------------------------------------------------------
