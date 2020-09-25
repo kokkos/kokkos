@@ -102,7 +102,7 @@ void cuda_stream_scratch_test(
     cudaStreamCreate(&stream[i]);
     cuda[i] = Kokkos::Cuda(stream[i]);
   }
-  // Test that growing scratch size in subsequent calls doesn' crash things
+  // Test that growing scratch size in subsequent calls doesn't crash things
 #if defined(KOKKOS_ENABLE_OPENMP)
 #pragma omp parallel
   {

@@ -34,7 +34,7 @@ ENDIF()
 
 SET(KOKKOS_CUDA_FEATURE_LEVEL 999)
 SET(KOKKOS_CUDA_NAME Cuda)
-SET(KOKKOS_HIP_FEATURE_LEVEL 12)
+SET(KOKKOS_HIP_FEATURE_LEVEL 999)
 SET(KOKKOS_HIP_NAME Experimental::HIP)
 SET(KOKKOS_HPX_FEATURE_LEVEL 999)
 SET(KOKKOS_HPX_NAME Experimental::HPX)
@@ -300,6 +300,12 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCudaUVM_ViewMapping_b.cpp
       cuda/TestCudaUVM_ViewMapping_subview.cpp
       cuda/TestCuda_Spaces.cpp
+  )
+
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_CudaTimingBased
+    SOURCES
+      UnitTestMainInit.cpp
       cuda/TestCuda_DebugSerialExecution.cpp
       cuda/TestCuda_DebugPinUVMSpace.cpp
   )
@@ -322,8 +328,6 @@ if(Kokkos_ENABLE_HIP)
   # FIXME_HIP
   LIST(REMOVE_ITEM HIP_SOURCES
     hip/TestHIP_AtomicOperations_complexdouble.cpp
-    hip/TestHIP_TeamTeamSize.cpp
-    hip/TestHIP_TeamVectorRange.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(

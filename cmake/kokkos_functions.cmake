@@ -871,3 +871,94 @@ FUNCTION(KOKKOS_CHECK_DEPRECATED_OPTIONS)
     ENDIF()
   ENDFOREACH()
 ENDFUNCTION()
+
+# this function checks whether the current CXX compiler supports building CUDA
+FUNCTION(kokkos_cxx_compiler_cuda_test _VAR)
+    # don't run this test every time
+    IF(DEFINED ${_VAR})
+        RETURN()
+    ENDIF()
+
+    FILE(WRITE ${PROJECT_BINARY_DIR}/compile_tests/compiles_cuda.cpp
+"
+#include <cuda.h>
+#include <cstdlib>
+
+__global__
+void kernel(int sz, double* data)
+{
+    auto _beg = blockIdx.x * blockDim.x + threadIdx.x;
+    for(int i = _beg; i < sz; ++i)
+        data[i] += static_cast<double>(i);
+}
+
+int main()
+{
+    double* data = nullptr;
+    int blocks = 64;
+    int grids = 64;
+    auto ret = cudaMalloc(&data, blocks * grids * sizeof(double));
+    if(ret != cudaSuccess)
+        return EXIT_FAILURE;
+    kernel<<<grids, blocks>>>(blocks * grids, data);
+    cudaDeviceSynchronize();
+    return EXIT_SUCCESS;
+}
+")
+
+    TRY_COMPILE(_RET
+        ${PROJECT_BINARY_DIR}/compile_tests
+        SOURCES ${PROJECT_BINARY_DIR}/compile_tests/compiles_cuda.cpp)
+
+    SET(${_VAR} ${_RET} CACHE STRING "CXX compiler supports building CUDA")
+ENDFUNCTION()
+
+# this function is provided to easily select which files use nvcc_wrapper:
+#
+#       GLOBAL      --> all files
+#       TARGET      --> all files in a target
+#       SOURCE      --> specific source files
+#       DIRECTORY   --> all files in directory
+#       PROJECT     --> all files/targets in a project/subproject
+#
+FUNCTION(kokkos_compilation)
+    # check whether the compiler already supports building CUDA
+    KOKKOS_CXX_COMPILER_CUDA_TEST(Kokkos_CXX_COMPILER_COMPILES_CUDA)
+    # if CUDA compile test has already been performed, just return
+    IF(Kokkos_CXX_COMPILER_COMPILES_CUDA)
+        RETURN()
+    ENDIF()
+
+    CMAKE_PARSE_ARGUMENTS(COMP "GLOBAL;PROJECT" "" "DIRECTORY;TARGET;SOURCE" ${ARGN})
+
+    # find kokkos_launch_compiler
+    FIND_PROGRAM(Kokkos_COMPILE_LAUNCHER
+        NAMES           kokkos_launch_compiler
+        HINTS           ${PROJECT_SOURCE_DIR}
+        PATHS           ${PROJECT_SOURCE_DIR}
+        PATH_SUFFIXES   bin)
+
+    IF(NOT Kokkos_COMPILE_LAUNCHER)
+        MESSAGE(FATAL_ERROR "Kokkos could not find 'kokkos_launch_compiler'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/launcher'")
+    ENDIF()
+
+    IF(COMP_GLOBAL)
+        # if global, don't bother setting others
+        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
+        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
+    ELSE()
+        FOREACH(_TYPE PROJECT DIRECTORY TARGET SOURCE)
+            # make project/subproject scoping easy, e.g. KokkosCompilation(PROJECT) after project(...)
+            IF("${_TYPE}" STREQUAL "PROJECT" AND COMP_${_TYPE})
+                LIST(APPEND COMP_DIRECTORY ${PROJECT_SOURCE_DIR})
+                UNSET(COMP_${_TYPE})
+            ENDIF()
+            # set the properties if defined
+            IF(COMP_${_TYPE})
+                # MESSAGE(STATUS "Using nvcc_wrapper :: ${_TYPE} :: ${COMP_${_TYPE}}")
+                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
+                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
+            ENDIF()
+        ENDFOREACH()
+    ENDIF()
+ENDFUNCTION()

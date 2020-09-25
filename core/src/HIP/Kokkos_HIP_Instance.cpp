@@ -197,7 +197,9 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
 
     HIP_SAFE_CALL(hipSetDevice(m_hipDev));
 
-    m_stream = stream;
+    m_stream                    = stream;
+    m_team_scratch_current_size = 0;
+    m_team_scratch_ptr          = nullptr;
 
     // number of multiprocessors
     m_multiProcCount = hipProp.multiProcessorCount;
@@ -282,8 +284,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
   }
 
   // Init the array for used for arbitrarily sized atomics
-  // FIXME_HIP uncomment this when global variable works
-  // if (m_stream == 0) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
+  if (m_stream == 0) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
 }
 
 //----------------------------------------------------------------------------
@@ -339,10 +340,26 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
   return m_scratchFlags;
 }
 
+void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
+                                             bool force_shrink) {
+  if (m_team_scratch_current_size == 0) {
+    m_team_scratch_current_size = bytes;
+    m_team_scratch_ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
+        "HIPSpace::ScratchMemory", m_team_scratch_current_size);
+  }
+  if ((bytes > m_team_scratch_current_size) ||
+      ((bytes < m_team_scratch_current_size) && (force_shrink))) {
+    m_team_scratch_current_size = bytes;
+    m_team_scratch_ptr = Kokkos::kokkos_realloc<Kokkos::Experimental::HIPSpace>(
+        m_team_scratch_ptr, m_team_scratch_current_size);
+  }
+  return m_team_scratch_ptr;
+}
+
 //----------------------------------------------------------------------------
 
 void HIPInternal::finalize() {
-  HIP().fence();
+  this->fence();
   was_finalized = true;
   if (0 != m_scratchSpace || 0 != m_scratchFlags) {
     using RecordHIP =
@@ -352,19 +369,24 @@ void HIPInternal::finalize() {
     RecordHIP::decrement(RecordHIP::get_record(m_scratchSpace));
     RecordHIP::decrement(RecordHIP::get_record(m_scratchConcurrentBitset));
 
-    m_hipDev                  = -1;
-    m_hipArch                 = -1;
-    m_multiProcCount          = 0;
-    m_maxWarpCount            = 0;
-    m_maxBlock                = 0;
-    m_maxSharedWords          = 0;
-    m_maxShmemPerBlock        = 0;
-    m_scratchSpaceCount       = 0;
-    m_scratchFlagsCount       = 0;
-    m_scratchSpace            = 0;
-    m_scratchFlags            = 0;
-    m_scratchConcurrentBitset = nullptr;
-    m_stream                  = 0;
+    if (m_team_scratch_current_size > 0)
+      Kokkos::kokkos_free<Kokkos::Experimental::HIPSpace>(m_team_scratch_ptr);
+
+    m_hipDev                    = -1;
+    m_hipArch                   = -1;
+    m_multiProcCount            = 0;
+    m_maxWarpCount              = 0;
+    m_maxBlock                  = 0;
+    m_maxSharedWords            = 0;
+    m_maxShmemPerBlock          = 0;
+    m_scratchSpaceCount         = 0;
+    m_scratchFlagsCount         = 0;
+    m_scratchSpace              = 0;
+    m_scratchFlags              = 0;
+    m_scratchConcurrentBitset   = nullptr;
+    m_stream                    = 0;
+    m_team_scratch_current_size = 0;
+    m_team_scratch_ptr          = nullptr;
   }
 }
 

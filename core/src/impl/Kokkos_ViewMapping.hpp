@@ -96,22 +96,28 @@ struct rank_dynamic<Val, Args...> {
 #define KOKKOS_IMPL_VIEW_DIMENSION(R)                                       \
   template <size_t V, unsigned>                                             \
   struct ViewDimension##R {                                                 \
-    enum : size_t { ArgN##R = (V != KOKKOS_INVALID_INDEX ? V : 1) };        \
-    enum : size_t { N##R = (V != KOKKOS_INVALID_INDEX ? V : 1) };           \
+    static constexpr size_t ArgN##R = (V != KOKKOS_INVALID_INDEX ? V : 1);  \
+    static constexpr size_t N##R    = (V != KOKKOS_INVALID_INDEX ? V : 1);  \
     KOKKOS_INLINE_FUNCTION explicit ViewDimension##R(size_t) {}             \
     ViewDimension##R()                        = default;                    \
     ViewDimension##R(const ViewDimension##R&) = default;                    \
     ViewDimension##R& operator=(const ViewDimension##R&) = default;         \
   };                                                                        \
+  template <size_t V, unsigned RD>                                          \
+  constexpr size_t ViewDimension##R<V, RD>::ArgN##R;                        \
+  template <size_t V, unsigned RD>                                          \
+  constexpr size_t ViewDimension##R<V, RD>::N##R;                           \
   template <unsigned RD>                                                    \
   struct ViewDimension##R<0u, RD> {                                         \
-    enum : size_t { ArgN##R = 0 };                                          \
+    static constexpr size_t ArgN##R = 0;                                    \
     typename std::conditional<(RD < 3), size_t, unsigned>::type N##R;       \
     ViewDimension##R()                        = default;                    \
     ViewDimension##R(const ViewDimension##R&) = default;                    \
     ViewDimension##R& operator=(const ViewDimension##R&) = default;         \
     KOKKOS_INLINE_FUNCTION explicit ViewDimension##R(size_t V) : N##R(V) {} \
-  };
+  };                                                                        \
+  template <unsigned RD>                                                    \
+  constexpr size_t ViewDimension##R<0u, RD>::ArgN##R;
 
 KOKKOS_IMPL_VIEW_DIMENSION(0)
 KOKKOS_IMPL_VIEW_DIMENSION(1)

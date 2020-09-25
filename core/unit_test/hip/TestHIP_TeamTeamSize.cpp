@@ -42,31 +42,5 @@
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
-#include <Kokkos_HIP_Space.hpp>
-#include <HIP/Kokkos_HIP_KernelLaunch.hpp>
-
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
-
-void *hip_resize_scratch_space(std::int64_t bytes, bool force_shrink) {
-  static void *ptr                 = nullptr;
-  static std::int64_t current_size = 0;
-  if (bytes > current_size) {
-    current_size = bytes;
-    if (ptr) Kokkos::kokkos_free<::Kokkos::Experimental::HIPSpace>(ptr);
-    ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
-        "HIPSpace::ScratchMemory", current_size);
-  }
-  if ((bytes < current_size) && (force_shrink)) {
-    current_size = bytes;
-    Kokkos::kokkos_free<::Kokkos::Experimental::HIPSpace>(ptr);
-    ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
-        "HIPSpace::ScratchMemory", current_size);
-  }
-  return ptr;
-}
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+#include <hip/TestHIP_Category.hpp>
+#include <TestTeamTeamSize.hpp>

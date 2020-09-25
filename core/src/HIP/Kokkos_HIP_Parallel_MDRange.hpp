@@ -360,7 +360,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
-        Experimental::HIP().fence();
+        m_policy.space().fence();
 
         if (m_result_ptr) {
           const int size = ValueTraits::value_size(

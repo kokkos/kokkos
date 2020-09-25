@@ -94,8 +94,11 @@ class HIPInternal {
   int m_shmemPerSM;
   int m_maxShmemPerBlock;
   int m_maxThreadsPerSM;
+
+  // Scratch Spaces for Reductions
   size_type m_scratchSpaceCount;
   size_type m_scratchFlagsCount;
+
   size_type *m_scratchSpace;
   size_type *m_scratchFlags;
   uint32_t *m_scratchConcurrentBitset = nullptr;
@@ -103,6 +106,10 @@ class HIPInternal {
   hipDeviceProp_t m_deviceProp;
 
   hipStream_t m_stream;
+
+  // Team Scratch Level 1 Space
+  mutable int64_t m_team_scratch_current_size;
+  mutable void *m_team_scratch_ptr;
 
   bool was_finalized = false;
 
@@ -137,10 +144,17 @@ class HIPInternal {
         m_scratchFlagsCount(0),
         m_scratchSpace(0),
         m_scratchFlags(0),
-        m_stream(0) {}
+        m_stream(0),
+        m_team_scratch_current_size(0),
+        m_team_scratch_ptr(nullptr) {}
 
+  // Resizing of reduction related scratch spaces
   size_type *scratch_space(const size_type size);
   size_type *scratch_flags(const size_type size);
+
+  // Resizing of team level 1 scratch
+  void *resize_team_scratch_space(std::int64_t bytes,
+                                  bool force_shrink = false);
 };
 
 }  // namespace Impl

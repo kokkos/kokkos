@@ -54,43 +54,12 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-3.7') {
+                stage('HIP-ROCm-3.8-C++14') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-20.04:3.7'
-                            label 'rocm-docker && vega'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
-                        }
-                    }
-                    steps {
-                        sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
-                              cmake \
-                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-                                -DCMAKE_CXX_COMPILER=hipcc \
-                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
-                                -DCMAKE_CXX_STANDARD=17 \
-                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_TESTS=ON \
-                                -DKokkos_ENABLE_HIP=ON \
-                                -DKokkos_ARCH_VEGA906=ON \
-                              .. && \
-                              make -j8 && ctest --output-on-failure'''
-                    }
-                    post {
-                        always {
-                            sh 'ccache --show-stats'
-                        }
-                    }
-                }
-                stage('HIP-ROCm-3.5') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.hipcc'
-                            dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-18.04:3.5'
+                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-20.04:3.8'
                             label 'rocm-docker && vega'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -116,6 +85,37 @@ pipeline {
                         }
                     }
                 }
+                stage('HIP-ROCm-3.8-C++17') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.hipcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-20.04:3.8'
+                            label 'rocm-docker && vega'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
+                        }
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                                -DCMAKE_CXX_COMPILER=hipcc \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
+                                -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_HIP=ON \
+                                -DKokkos_ARCH_VEGA906=ON \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
                 stage('OPENMPTARGET-Clang') {
                     agent {
                         dockerfile {
@@ -123,7 +123,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--pull'
                             label 'nvidia-docker && volta'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
                     steps {
@@ -154,7 +154,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--pull'
                             label 'nvidia-docker && volta'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
                     steps {
@@ -189,7 +189,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:9.2-devel'
                             label 'nvidia-docker && volta'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
                     steps {
@@ -218,7 +218,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:11.0-devel --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran" --build-arg CMAKE_VERSION=3.17.3'
                             label 'nvidia-docker && volta'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
                     environment {
@@ -233,8 +233,7 @@ pipeline {
                               rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
-                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_COMPILER=g++-8 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
@@ -243,6 +242,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=OFF \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
                               make -j8 install && \
@@ -261,8 +261,7 @@ pipeline {
                               cd ../example/build_cmake_installed && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake \
-                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
+                                -DCMAKE_CXX_COMPILER=g++-8 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
@@ -281,7 +280,7 @@ pipeline {
                             dir 'scripts/docker'
                             additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel --build-arg CMAKE_VERSION=3.15.5'
                             label 'nvidia-docker && volta'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
                     steps {

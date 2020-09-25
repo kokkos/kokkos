@@ -636,31 +636,6 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 #endif
 }
 
-/*--------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------*/
-
-void* hip_resize_scratch_space(size_t bytes, bool force_shrink) {
-  static void* ptr           = NULL;
-  static size_t current_size = 0;
-  if (current_size == 0) {
-    current_size = bytes;
-    ptr          = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
-        "HIPSpace::ScratchMemory", current_size);
-  }
-  if (bytes > current_size) {
-    current_size = bytes;
-    ptr          = Kokkos::kokkos_realloc<Kokkos::Experimental::HIPSpace>(ptr,
-                                                                 current_size);
-  }
-  if ((bytes < current_size) && (force_shrink)) {
-    current_size = bytes;
-    Kokkos::kokkos_free<Kokkos::Experimental::HIPSpace>(ptr);
-    ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
-        "HIPSpace::ScratchMemory", current_size);
-  }
-  return ptr;
-}
-
 }  // namespace Impl
 }  // namespace Kokkos
 

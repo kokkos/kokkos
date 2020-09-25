@@ -558,11 +558,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_scratch_ptr[1] =
         m_team_size <= 0
             ? nullptr
-            : ::Kokkos::Experimental::Impl::hip_resize_scratch_space(
-                  static_cast<ptrdiff_t>(m_scratch_size[1]) *
-                  static_cast<ptrdiff_t>(
-                      ::Kokkos::Experimental::HIP::concurrency() /
-                      (m_team_size * m_vector_size)));
+            : m_policy.space()
+                  .impl_internal_space_instance()
+                  ->resize_team_scratch_space(
+                      static_cast<ptrdiff_t>(m_scratch_size[1]) *
+                      static_cast<ptrdiff_t>(
+                          ::Kokkos::Experimental::HIP::concurrency() /
+                          (m_team_size * m_vector_size)));
 
     int const shmem_size_total = m_shmem_begin + m_shmem_size;
     if (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
@@ -677,9 +679,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
       __shared__ int64_t base_thread_id;
-      // FIXME_HIP This uses g_device_hip_lock_arrays which is not working
       if (threadIdx.x == 0 && threadIdx.y == 0) {
-        Impl::hip_abort("Error should not be here (not implemented yet)\n");
         threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
                    (g_device_hip_lock_arrays.n / (blockDim.x * blockDim.y));
         threadid *= blockDim.x * blockDim.y;
@@ -706,7 +706,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_scratch_size[1] > 0) {
       __syncthreads();
       if (threadIdx.x == 0 && threadIdx.y == 0) {
-        Impl::hip_abort("Error should not be here (not implemented yet)\n");
         g_device_hip_lock_arrays.scratch[threadid] = 0;
       }
     }
@@ -931,12 +930,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
     m_scratch_ptr[1] =
-        m_team_size <= 0 ? nullptr
-                         : Kokkos::Experimental::Impl::hip_resize_scratch_space(
-                               static_cast<std::int64_t>(m_scratch_size[1]) *
-                               (static_cast<std::int64_t>(
-                                   Kokkos::Experimental::HIP::concurrency() /
-                                   (m_team_size * m_vector_size))));
+        m_team_size <= 0
+            ? nullptr
+            : m_policy.space()
+                  .impl_internal_space_instance()
+                  ->resize_team_scratch_space(
+                      static_cast<std::int64_t>(m_scratch_size[1]) *
+                      (static_cast<std::int64_t>(
+                          Kokkos::Experimental::HIP::concurrency() /
+                          (m_team_size * m_vector_size))));
 
     // The global parallel_reduce does not support vector_length other than 1 at
     // the moment
@@ -1027,12 +1029,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
     m_scratch_ptr[1] =
-        m_team_size <= 0 ? nullptr
-                         : Kokkos::Experimental::Impl::hip_resize_scratch_space(
-                               static_cast<ptrdiff_t>(m_scratch_size[1]) *
-                               static_cast<ptrdiff_t>(
-                                   Kokkos::Experimental::HIP::concurrency() /
-                                   (m_team_size * m_vector_size)));
+        m_team_size <= 0
+            ? nullptr
+            : m_policy.space()
+                  .impl_internal_space_instance()
+                  ->resize_team_scratch_space(
+                      static_cast<ptrdiff_t>(m_scratch_size[1]) *
+                      static_cast<ptrdiff_t>(
+                          Kokkos::Experimental::HIP::concurrency() /
+                          (m_team_size * m_vector_size)));
 
     // The global parallel_reduce does not support vector_length other than 1 at
     // the moment
