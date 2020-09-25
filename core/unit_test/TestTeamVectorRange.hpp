@@ -477,8 +477,11 @@ bool Test(int test) {
            test_scalar<long long int, ExecutionSpace>(317, team_size, test);
   passed = passed && test_scalar<float, ExecutionSpace>(317, team_size, test);
   passed = passed && test_scalar<double, ExecutionSpace>(317, team_size, test);
+  // FIXME_HIP
+#ifndef KOKKOS_ENABLE_HIP
   passed =
       passed && test_scalar<my_complex, ExecutionSpace>(317, team_size, test);
+#endif
 
   return passed;
 }

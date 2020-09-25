@@ -679,9 +679,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
       __shared__ int64_t base_thread_id;
-      // FIXME_HIP This uses g_device_hip_lock_arrays which is not working
       if (threadIdx.x == 0 && threadIdx.y == 0) {
-        Impl::hip_abort("Error should not be here (not implemented yet)\n");
         threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
                    (g_device_hip_lock_arrays.n / (blockDim.x * blockDim.y));
         threadid *= blockDim.x * blockDim.y;
@@ -708,7 +706,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_scratch_size[1] > 0) {
       __syncthreads();
       if (threadIdx.x == 0 && threadIdx.y == 0) {
-        Impl::hip_abort("Error should not be here (not implemented yet)\n");
         g_device_hip_lock_arrays.scratch[threadid] = 0;
       }
     }
