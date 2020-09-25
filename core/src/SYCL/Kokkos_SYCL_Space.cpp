@@ -630,13 +630,9 @@ void* SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace,
   SharedAllocationRecord* const r_new =
       allocate(r_old->m_space, r_old->get_label(), size);
 
-#if NLIBER
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLHostUSMSpace,
                          Kokkos::Experimental::SYCLHostUSMSpace>(
       r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
-#else
-  assert(false);
-#endif
 
   SharedAllocationRecord<void, void>::increment(r_new);
   SharedAllocationRecord<void, void>::decrement(r_old);
@@ -658,15 +654,10 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace,
   Header const* const head_rocm =
       alloc_ptr ? Header::get_header(alloc_ptr) : (Header*)0;
 
-#define NLIBER 1
-#if NLIBER
   if (alloc_ptr) {
     Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::SYCLHostUSMSpace>(
         &head, head_rocm, sizeof(SharedAllocationHeader));
   }
-#else
-  assert(false);
-#endif
 
   RecordROCm* const record =
       alloc_ptr ? static_cast<RecordROCm*>(head.m_record) : (RecordROCm*)0;
