@@ -754,7 +754,7 @@ void HIPSpaceInitializer::initialize(const InitArguments& args) {
   }
 }
 
-void HIPSpaceInitializer::finalize(const bool) {
+void HIPSpaceInitializer::finalize(const bool all_spaces) {
   if (std::is_same<Kokkos::Experimental::HIP,
                    Kokkos::DefaultExecutionSpace>::value ||
       all_spaces) {
