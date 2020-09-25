@@ -360,7 +360,7 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
 //----------------------------------------------------------------------------
 
 void HIPInternal::finalize() {
-  HIP().fence();
+  this->fence();
   was_finalized = true;
   if (0 != m_scratchSpace || 0 != m_scratchFlags) {
     using RecordHIP =
