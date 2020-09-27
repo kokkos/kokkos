@@ -737,7 +737,6 @@ hipDeviceProp_t const& HIP::hip_device_prop() {
 
 const char* HIP::name() { return "HIP"; }
 
-
 int g_hip_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<HIPSpaceInitializer>("150_HIP");
 
