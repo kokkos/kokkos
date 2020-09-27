@@ -642,6 +642,9 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 namespace Kokkos {
+namespace Impl {
+extern int get_gpu(const InitArguments& args);
+}
 namespace Experimental {
 
 int HIP::concurrency() {
@@ -734,7 +737,6 @@ hipDeviceProp_t const& HIP::hip_device_prop() {
 
 const char* HIP::name() { return "HIP"; }
 
-extern int get_gpu(const InitArguments& args);
 
 int g_hip_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<HIPSpaceInitializer>("150_HIP");
