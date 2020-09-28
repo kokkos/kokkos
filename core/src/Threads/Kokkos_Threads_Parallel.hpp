@@ -329,7 +329,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
     if (policy.team_size() < 0) {
       policy.impl_set_team_size(
-          m_policy.team_size_recommended(m_functor, ParallelForTag{}));
+          policy.team_size_recommended(m_functor, ParallelForTag{}));
     }
     return policy;
   }
@@ -781,7 +781,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       policy.impl_set_vector_length(1);
     }
     if (policy.team_size() < 0) {
-      policy.impl_set_team_size(m_policy.team_size_recommended(
+      policy.impl_set_team_size(policy.team_size_recommended(
           m_functor, m_reducer, ParallelReduceTag{}));
     }
     return policy;
