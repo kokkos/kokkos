@@ -792,7 +792,6 @@ int Threads::impl_thread_pool_rank() {
 #endif
 
 const char *Threads::name() { return "Threads"; }
-} /* namespace Kokkos */
 
 namespace Impl {
 
@@ -822,7 +821,7 @@ void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
   }
 }
 
-void ThreadsSpaceInitializer::finalize(const bool) {
+void ThreadsSpaceInitializer::finalize(const bool all_spaces) {
   if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::Threads,
                    Kokkos::HostSpace::execution_space>::value ||
@@ -841,10 +840,11 @@ void ThreadsSpaceInitializer::print_configuration(std::ostream &msg,
   msg << "yes" << std::endl;
 
   msg << "\nThreads Runtime Configuration:" << std::endl;
-  Threads::print_configuration(msg, detail);
+  Kokkos::Threads::print_configuration(msg, detail);
 }
 
 }  // namespace Impl
+} /* namespace Kokkos */
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 #else
