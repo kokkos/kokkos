@@ -710,8 +710,8 @@ void parse_command_line_arguments(int& narg, char* arg[],
 )";
       std::cout << help_message << std::endl;
 
-      // Remove the --kokkos-help argument from the list but leave --ndevices
-      if (strcmp(arg[iarg], "--kokkos-help") == 0) {
+      // Remove the --kokkos-help argument from the list but leave --help
+      if (check_arg(arg[iarg], "--kokkos-help")) {
         for (int k = iarg; k < narg - 1; k++) {
           arg[k] = arg[k + 1];
         }
