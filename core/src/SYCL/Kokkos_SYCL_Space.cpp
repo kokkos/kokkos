@@ -59,9 +59,7 @@
 
 #include <impl/Kokkos_Error.hpp>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#endif
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -427,7 +425,6 @@ void SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace,
                        void>::~SharedAllocationRecord() {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
 #ifdef NLIBER
@@ -437,13 +434,11 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace,
 #else
     assert(false);
 #endif
-
     Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(
+        Kokkos::Profiling::make_space_handle(
             Kokkos::Experimental::SYCLDeviceUSMSpace::name()),
         header.m_label, data(), size());
   }
-#endif
 
   m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
@@ -451,7 +446,6 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace,
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
                        void>::~SharedAllocationRecord() {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
 #ifdef NLIBER
@@ -464,11 +458,10 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
 #endif
 
     Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(
+        Kokkos::Profiling::make_space_handle(
             Kokkos::Experimental::SYCLDeviceUSMSpace::name()),
         header.m_label, data(), size());
   }
-#endif
 
   m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
@@ -476,7 +469,6 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace,
                        void>::~SharedAllocationRecord() {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
 #ifdef NLIBER
@@ -489,11 +481,10 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace,
 #endif
 
     Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(
+        Kokkos::Profiling::make_space_handle(
             Kokkos::Experimental::SYCLSharedUSMSpace::name()),
         header.m_label, data(), size());
   }
-#endif
 
   m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
@@ -515,12 +506,11 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLHostUSMSpace, void>::
               space.allocate(sizeof(SharedAllocationHeader) + size)),
           sizeof(SharedAllocationHeader) + size, dealloc),
       m_space(space) {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(space.name()), label, data(), size);
+        Kokkos::Profiling::make_space_handle(space.name()), label, data(),
+        size);
   }
-#endif
 
   SharedAllocationHeader header;
 
@@ -550,12 +540,11 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
               space.allocate(sizeof(SharedAllocationHeader) + size)),
           sizeof(SharedAllocationHeader) + size, dealloc),
       m_space(space) {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(space.name()), label, data(), size);
+        Kokkos::Profiling::make_space_handle(space.name()), label, data(),
+        size);
   }
-#endif
 
   SharedAllocationHeader header;
 
@@ -586,12 +575,11 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::
               space.allocate(sizeof(SharedAllocationHeader) + size)),
           sizeof(SharedAllocationHeader) + size, dealloc),
       m_space(space) {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(space.name()), label, data(), size);
+        Kokkos::Profiling::make_space_handle(space.name()), label, data(),
+        size);
   }
-#endif
 
   SharedAllocationHeader header;
 
@@ -732,17 +720,16 @@ void SharedAllocationRecord<Kokkos::Experimental::SYCLHostPinnedSpace, void>::
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLSpace,
                        void>::~SharedAllocationRecord() {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
     Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLSpace, HostSpace>(
         &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
 
     Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(Kokkos::Experimental::SYCLSpace::name()),
+        Kokkos::Profiling::make_space_handle(
+            Kokkos::Experimental::SYCLSpace::name()),
         header.m_label, data(), size());
   }
-#endif
 
   m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
@@ -750,14 +737,12 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSpace,
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLHostPinnedSpace,
                        void>::~SharedAllocationRecord() {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::SpaceHandle(
+        Kokkos::Profiling::make_space_handle(
             Kokkos::Experimental::SYCLHostPinnedSpace::name()),
         RecordBase::m_alloc_ptr->m_label, data(), size());
   }
-#endif
 
   m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size);
@@ -779,13 +764,11 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSpace, void>::
               sizeof(SharedAllocationHeader) + arg_alloc_size)),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(arg_space.name()), arg_label, data(),
-        arg_alloc_size);
+        Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
+        data(), arg_alloc_size);
   }
-#endif
 
   SharedAllocationHeader header;
 
@@ -818,13 +801,11 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLHostPinnedSpace, void>::
               sizeof(SharedAllocationHeader) + arg_alloc_size)),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
-#if defined(KOKKOS_ENABLE_PROFILING)
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::SpaceHandle(arg_space.name()), arg_label, data(),
-        arg_alloc_size);
+        Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
+        data(), arg_alloc_size);
   }
-#endif
   // Fill in the Header information, directly accessible via host pinned memory
 
   RecordBase::m_alloc_ptr->m_record = this;

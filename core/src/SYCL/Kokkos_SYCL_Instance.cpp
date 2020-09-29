@@ -444,9 +444,6 @@ int SYCL::impl_is_initialized() {
 
 void SYCL::impl_initialize(SYCL::SYCLDevice d) {
   Impl::SYCLInternal::singleton().initialize(d.get_device());
-#if defined(KOKKOS_ENABLE_PROFILING)
-  Kokkos::Profiling::initialize();
-#endif
 }
 
 #if 0
@@ -470,13 +467,7 @@ SYCL::size_type SYCL::device_arch()
 }
 #endif
 
-void SYCL::impl_finalize() {
-  Impl::SYCLInternal::singleton().finalize();
-
-#if defined(KOKKOS_ENABLE_PROFILING)
-  Kokkos::Profiling::finalize();
-#endif
-}
+void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
 SYCL::SYCL() : m_space_instance(&Impl::SYCLInternal::singleton()) {
   Impl::SYCLInternal::singleton().verify_is_initialized(
