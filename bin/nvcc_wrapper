@@ -242,7 +242,7 @@ do
     fi
     shared_args="$shared_args $std_flag"
     ;;
-  --std=c++14|-std=c++14)
+  --std=c++11|-std=c++11|--std=c++14|-std=c++14)
     if [ -n "$std_flag" ]; then
        warn_std_flag
        shared_args=${shared_args/ $std_flag/}
@@ -252,7 +252,7 @@ do
     ;;
 
   #convert PGI standard flags to something nvcc can handle
-  --c++14|--c++17)
+  --c++11|--c++14|--c++17)
     if [ -n "$std_flag" ]; then
        warn_std_flag
        shared_args=${shared_args/ $std_flag/}
