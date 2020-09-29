@@ -20,17 +20,27 @@ get_kokkos_device_list() {
   PARSE_DEVICES_LST=$(echo $KOKKOS_DEVICES | tr "," "\n")
   PARSE_DEVICES_LST=$(echo $PARSE_DEVICES_LST | tr "_" "\n")
   for DEVICE_ in $PARSE_DEVICES_LST
-  do 
+  do
      UC_DEVICE=$(echo $DEVICE_ | tr "[:lower:]" "[:upper:]")
+     if [ "${UC_DEVICE}" == "CUDA" ]; then
+       WITH_CUDA_BACKEND=ON
+     fi
+     if [ "${UC_DEVICE}" == "HIP" ]; then
+       WITH_HIP_BACKEND=ON
+     fi
      KOKKOS_DEVICE_CMD="-DKokkos_ENABLE_${UC_DEVICE}=ON ${KOKKOS_DEVICE_CMD}"
   done
+  if [ "${WITH_CUDA_BACKEND}" == "ON" ] && [ "${WITH_HIP_BACKEND}" == "ON" ]; then
+     echo "Invalid configuration - Cuda and Hip cannot be simultaneously enabled"
+     exit
+  fi
 }
 
 get_kokkos_arch_list() {
   KOKKOS_ARCH_CMD=
   PARSE_ARCH_LST=$(echo $KOKKOS_ARCH | tr "," "\n")
   for ARCH_ in $PARSE_ARCH_LST
-  do 
+  do
      UC_ARCH=$(echo $ARCH_ | tr "[:lower:]" "[:upper:]")
      KOKKOS_ARCH_CMD="-DKokkos_ARCH_${UC_ARCH}=ON ${KOKKOS_ARCH_CMD}"
   done
@@ -41,11 +51,11 @@ get_kokkos_cuda_option_list() {
   KOKKOS_CUDA_OPTION_CMD=
   PARSE_CUDA_LST=$(echo $KOKKOS_CUDA_OPTIONS | tr "," "\n")
   for CUDA_ in $PARSE_CUDA_LST
-  do 
+  do
      CUDA_OPT_NAME=
      if [ "${CUDA_}" == "enable_lambda" ]; then
         CUDA_OPT_NAME=CUDA_LAMBDA
-     elif  [ "${CUDA_}" == "rdc" ]; then	
+     elif  [ "${CUDA_}" == "rdc" ]; then
         CUDA_OPT_NAME=CUDA_RELOCATABLE_DEVICE_CODE
      elif  [ "${CUDA_}" == "force_uvm" ]; then
         CUDA_OPT_NAME=CUDA_UVM
@@ -60,12 +70,30 @@ get_kokkos_cuda_option_list() {
   done
 }
 
+get_kokkos_hip_option_list() {
+  echo parsing KOKKOS_HIP_OPTIONS=$KOKKOS_HIP_OPTIONS
+  KOKKOS_HIP_OPTION_CMD=
+  PARSE_HIP_LST=$(echo $KOKKOS_HIP_OPTIONS | tr "," "\n")
+  for HIP_ in $PARSE_HIP_LST
+  do
+     HIP_OPT_NAME=
+     if  [ "${HIP_}" == "rdc" ]; then
+        HIP_OPT_NAME=HIP_RELOCATABLE_DEVICE_CODE
+     else
+        echo "${HIP_} is not a valid hip option..."
+     fi
+     if [ "${HIP_OPT_NAME}" != "" ]; then
+        KOKKOS_HIP_OPTION_CMD="-DKokkos_ENABLE_${HIP_OPT_NAME}=ON ${KOKKOS_HIP_OPTION_CMD}"
+     fi
+  done
+}
+
 get_kokkos_option_list() {
   echo parsing KOKKOS_OPTIONS=$KOKKOS_OPTIONS
   KOKKOS_OPTION_CMD=
   PARSE_OPTIONS_LST=$(echo $KOKKOS_OPTIONS | tr "," "\n")
   for OPT_ in $PARSE_OPTIONS_LST
-  do 
+  do
      UC_OPT_=$(echo $OPT_ | tr "[:lower:]" "[:upper:]")
      if [[ "$UC_OPT_" == *DISABLE* ]]; then
         FLIP_OPT_=${UC_OPT_/DISABLE/ENABLE}
@@ -86,16 +114,21 @@ display_help_text() {
       echo "--prefix=/Install/Path:               Path to install the Kokkos library."
       echo ""
       echo "--with-cuda[=/Path/To/Cuda]:          Enable Cuda and set path to Cuda Toolkit."
+      echo "--with-hip[=/Path/To/Hip]:            Enable Hip and set path to ROCM Toolkit."
       echo "--with-openmp:                        Enable OpenMP backend."
       echo "--with-pthread:                       Enable Pthreads backend."
       echo "--with-serial:                        Enable Serial backend."
       echo "--with-devices:                       Explicitly add a set of backends."
       echo ""
       echo "--arch=[OPT]:  Set target architectures. Options are:"
-      echo "               [AMD]"
+      echo "               [AMD: CPU]"
       echo "                 AMDAVX          = AMD CPU"
       echo "                 ZEN             = AMD Zen-Core CPU"
       echo "                 ZEN2            = AMD Zen2-Core CPU"
+      echo "               [AMD: GPU]"
+      echo "                 VEGA900         = AMD GPU MI25 GFX900"
+      echo "                 VEGA906         = AMD GPU MI50/MI60 GFX906"
+      echo "                 VEGA908         = AMD GPU"
       echo "               [ARM]"
       echo "                 ARMV80          = ARMv8.0 Compatible CPU"
       echo "                 ARMV81          = ARMv8.1 Compatible CPU"
@@ -153,9 +186,11 @@ display_help_text() {
       echo "                                "
       echo "--with-cuda-options=[OPT]:    Additional options to CUDA:"
       echo "                                force_uvm, use_ldg, enable_lambda, rdc"
+      echo "--with-hip-options=[OPT]:     Additional options to HIP:"
+      echo "                                rdc"
       echo "--with-hpx-options=[OPT]:     Additional options to HPX:"
       echo "                                enable_async_dispatch"
-      echo "--gcc-toolchain=/Path/To/GccRoot:  Set the gcc toolchain to use with clang (e.g. /usr)" 
+      echo "--gcc-toolchain=/Path/To/GccRoot:  Set the gcc toolchain to use with clang (e.g. /usr)"
       echo "--make-j=[NUM]:               DEPRECATED: call make with appropriate"
       echo "                                -j flag"
 
@@ -163,6 +198,10 @@ display_help_text() {
 
 KOKKOS_DO_TESTS=ON
 KOKKOS_DO_EXAMPLES=OFF
+
+# For tracking if Cuda and Hip devices are enabled simultaneously
+WITH_CUDA_BACKEND=OFF
+WITH_HIP_BACKEND=OFF
 
 while [[ $# > 0 ]]
 do
@@ -191,6 +230,19 @@ do
       update_kokkos_devices Cuda
       CUDA_PATH="${key#*=}"
       ;;
+    --with-hip)
+      update_kokkos_devices Hip
+      HIP_PATH_HIPCC=$(command -v hipcc)
+      HIP_PATH=${HIP_PATH_HIPCC%/bin/hipcc}
+      ;;
+    # Catch this before '--with-hip*'
+    --with-hip-options*)
+      KOKKOS_HIP_OPTIONS="${key#*=}"
+      ;;
+    --with-hip*)
+      update_kokkos_devices Hip
+      HIP_PATH="${key#*=}"
+      ;;
     --with-openmp)
       update_kokkos_devices OpenMP
       ;;
@@ -213,7 +265,7 @@ do
       DEVICES="${key#*=}"
       PARSE_DEVICES=$(echo $DEVICES | tr "," "\n")
       for DEVICE_ in $PARSE_DEVICES
-      do 
+      do
          update_kokkos_devices $DEVICE_
       done
       ;;
@@ -276,7 +328,7 @@ do
         echo "Invalid compiler by --compiler command: '${COMPILER}'"
         exit
       fi
-      # ... valid compiler, ensure absolute path set 
+      # ... valid compiler, ensure absolute path set
       WCOMPATH=$(command -v $COMPILER)
       COMPDIR=$(dirname $WCOMPATH)
       COMPNAME=$(basename $WCOMPATH)
@@ -299,7 +351,6 @@ do
 
   shift
 done
-
 
 if [ "$COMPILER" == "" ]; then
     COMPILER_CMD=
@@ -344,7 +395,7 @@ if [ ! -e ${KOKKOS_PATH}/CMakeLists.txt ]; then
          exit 0
       fi
    else
-      echo "KOKKOS_PATH does not appear to be set properly. please specify in location of CMakeLists.txt"   
+      echo "KOKKOS_PATH does not appear to be set properly. please specify in location of CMakeLists.txt"
       display_help_text
       exit 0
    fi
@@ -354,6 +405,7 @@ get_kokkos_device_list
 get_kokkos_option_list
 get_kokkos_arch_list
 get_kokkos_cuda_option_list
+get_kokkos_hip_option_list
 
 ## if HPX is enabled, we need to enforce cxx standard = 14
 if [[ ${KOKKOS_DEVICE_CMD} == *Kokkos_ENABLE_HPX* ]]; then
@@ -375,8 +427,8 @@ if [[ ${COMPILER} == *clang* ]]; then
 
    if [ ! "${CUDA_PATH}" == "" ]; then
       KOKKOS_CXXFLAGS="${KOKKOS_CXXFLAGS} --cuda-path=${CUDA_PATH}"
-   fi 
+   fi
 fi
- 
-echo cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=${KOKKOS_DO_TESTS} -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_DEBUG_CMD} ${KOKKOS_BC_CMD} ${KOKKOS_HWLOC_CMD} ${KOKKOS_HWLOC_PATH_CMD} ${KOKKOS_MEMKIND_CMD} ${KOKKOS_MEMKIND_PATH_CMD} ${KOKKOS_PATH}
-cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS//\"}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS//\"}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=${KOKKOS_DO_TESTS} -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_DEBUG_CMD} ${KOKKOS_BC_CMD} ${KOKKOS_HWLOC_CMD} ${KOKKOS_HWLOC_PATH_CMD} ${KOKKOS_MEMKIND_CMD} ${KOKKOS_MEMKIND_PATH_CMD} ${KOKKOS_PATH}
+
+echo cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=${KOKKOS_DO_TESTS} -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} ${KOKKOS_HIP_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_DEBUG_CMD} ${KOKKOS_BC_CMD} ${KOKKOS_HWLOC_CMD} ${KOKKOS_HWLOC_PATH_CMD} ${KOKKOS_MEMKIND_CMD} ${KOKKOS_MEMKIND_PATH_CMD} ${KOKKOS_PATH}
+cmake $COMPILER_CMD  -DCMAKE_CXX_FLAGS="${KOKKOS_CXXFLAGS//\"}" -DCMAKE_EXE_LINKER_FLAGS="${KOKKOS_LDFLAGS//\"}" -DCMAKE_INSTALL_PREFIX=${PREFIX} ${KOKKOS_DEVICE_CMD} ${KOKKOS_ARCH_CMD} -DKokkos_ENABLE_TESTS=${KOKKOS_DO_TESTS} -DKokkos_ENABLE_EXAMPLES=${KOKKOS_DO_EXAMPLES} ${KOKKOS_OPTION_CMD} ${KOKKOS_CUDA_OPTION_CMD} ${KOKKOS_HIP_OPTION_CMD} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_EXTENSIONS=OFF ${STANDARD_CMD} ${KOKKOS_DEBUG_CMD} ${KOKKOS_BC_CMD} ${KOKKOS_HWLOC_CMD} ${KOKKOS_HWLOC_PATH_CMD} ${KOKKOS_MEMKIND_CMD} ${KOKKOS_MEMKIND_PATH_CMD} ${KOKKOS_PATH}
