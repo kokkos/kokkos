@@ -85,18 +85,21 @@ void USM_memcpy(void* dst, const void* src, size_t n) {
 DeepCopy<Kokkos::Experimental::SYCLSpace, Kokkos::Experimental::SYCLSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
 DeepCopy<HostSpace, Kokkos::Experimental::SYCLSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
 DeepCopy<Kokkos::Experimental::SYCLSpace, HostSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
@@ -105,6 +108,7 @@ DeepCopy<Kokkos::Experimental::SYCLSpace, Kokkos::Experimental::SYCLSpace,
                                                    instance,
                                                void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
@@ -113,6 +117,7 @@ DeepCopy<HostSpace, Kokkos::Experimental::SYCLSpace,
                                                    instance,
                                                void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
@@ -121,6 +126,7 @@ DeepCopy<Kokkos::Experimental::SYCLSpace, HostSpace,
                                                    instance,
                                                void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
@@ -128,18 +134,21 @@ DeepCopy<Kokkos::Experimental::SYCLHostPinnedSpace,
          Kokkos::Experimental::SYCLHostPinnedSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
 DeepCopy<HostSpace, Kokkos::Experimental::SYCLHostPinnedSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
 DeepCopy<Kokkos::Experimental::SYCLHostPinnedSpace, HostSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
@@ -149,6 +158,7 @@ DeepCopy<Kokkos::Experimental::SYCLHostPinnedSpace,
                                                    instance,
                                                void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
@@ -157,6 +167,7 @@ DeepCopy<HostSpace, Kokkos::Experimental::SYCLHostPinnedSpace,
                                                    instance,
                                                void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 
@@ -165,6 +176,7 @@ DeepCopy<Kokkos::Experimental::SYCLHostPinnedSpace, HostSpace,
                                                    instance,
                                                void* dst, const void* src,
                                                size_t n) {
+  std::abort();
   //  syclMemcpy(dst , src , n , syclMemcpyDefault );
 }
 

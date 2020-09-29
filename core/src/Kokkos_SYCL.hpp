@@ -209,7 +209,7 @@ class SYCL {
 
  private:
   Impl::SYCLInternal* m_space_instance;
-};  // namespace Experimental
+};
 }  // namespace Experimental
 }  // namespace Kokkos
 
