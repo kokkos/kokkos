@@ -49,10 +49,10 @@ Kokkos_Cuda_Locks.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/Cuda/Kokkos_C
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
+Kokkos_HIP_Space.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_Space.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_Space.cpp
 Kokkos_HIP_Instance.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_Instance.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_Instance.cpp
-Kokkos_HIP_KernelLaunch.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_KernelLaunch.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_KernelLaunch.cpp
 Kokkos_HIP_Locks.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_Locks.cpp
 	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP_Locks.cpp
 endif
