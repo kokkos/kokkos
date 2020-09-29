@@ -284,6 +284,7 @@ SYCLHostPinnedSpace::SYCLHostPinnedSpace() {}
 
 void* SYCLSpace::allocate(const size_t arg_alloc_size) const {
   void* ptr = NULL;
+  std::abort();
   // syclMalloc( &ptr, arg_alloc_size );
   return ptr;
 }
@@ -291,17 +292,20 @@ void* SYCLSpace::allocate(const size_t arg_alloc_size) const {
 void* Experimental::SYCLHostPinnedSpace::allocate(
     const size_t arg_alloc_size) const {
   void* ptr = NULL;
+  std::abort();
   // syclHostMalloc( &ptr, arg_alloc_size );
   return ptr;
 }
 
 void SYCLSpace::deallocate(void* const arg_alloc_ptr,
                            const size_t /* arg_alloc_size */) const {
+  std::abort();
   // syclFree(arg_alloc_ptr);
 }
 
 void Experimental::SYCLHostPinnedSpace::deallocate(
     void* const arg_alloc_ptr, const size_t /* arg_alloc_size */) const {
+  std::abort();
   // syclHostFree(arg_alloc_ptr);
 }
 

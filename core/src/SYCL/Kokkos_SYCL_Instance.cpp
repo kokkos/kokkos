@@ -161,7 +161,7 @@ void SYCLInternal::initialize(const cl::sycl::device& d) {
 
   if (is_initialized()) return;
 
-  enum { WordSize = sizeof(size_type) };
+  int constexpr WordSize = sizeof(size_type);
 
   if (!HostSpace::execution_space::impl_is_initialized()) {
     const std::string msg(
@@ -435,11 +435,8 @@ namespace Experimental {
 //{ return Impl::SYCLInternalDevices::singleton().m_syclDevCount ; }
 
 int SYCL::concurrency() {
-#if defined(KOKKOS_ARCH_KAVERI)
-  return 8 * 64 * 40;  // 20480 kaveri
-#else
-  return 32 * 8 * 40;  // 81920 fiji and hawaii
-#endif
+  // FIXME_SYCL
+  return 1;
 }
 int SYCL::impl_is_initialized() {
   return Impl::SYCLInternal::singleton().is_initialized();

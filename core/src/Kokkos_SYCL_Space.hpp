@@ -563,6 +563,7 @@ struct DeepCopy<Kokkos::Experimental::SYCLSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
+    std::abort();
     //    exec.fence();
     //    hc::completion_future fut = DeepCopyAsyncSYCL (dst,src,n);
     //    fut.wait();
@@ -635,6 +636,7 @@ struct DeepCopy<Kokkos::Experimental::SYCLHostUSMSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
+    std::abort();
     //    exec.fence();
     //    hc::completion_future fut = DeepCopyAsyncSYCL (dst,src,n);
     //    fut.wait();
@@ -710,6 +712,7 @@ struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
+    std::abort();
     //    exec.fence();
     //    hc::completion_future fut = DeepCopyAsyncSYCL (dst,src,n);
     //    fut.wait();
@@ -785,6 +788,7 @@ struct DeepCopy<Kokkos::Experimental::SYCLSharedUSMSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
+    std::abort();
     //    exec.fence();
     //    hc::completion_future fut = DeepCopyAsyncSYCL (dst,src,n);
     //    fut.wait();
@@ -859,6 +863,7 @@ struct DeepCopy<Kokkos::Experimental::SYCLSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
+    std::abort();
     //    exec.fence();
     //    hc::completion_future fut = DeepCopyAsyncSYCL (dst,src,n);
     //    fut.wait();
@@ -876,6 +881,7 @@ struct DeepCopy<Kokkos::Experimental::SYCLHostPinnedSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
+    std::abort();
     //    exec.fence();
     //    hc::completion_future fut = DeepCopyAsyncSYCL (dst,src,n);
     //    fut.wait();

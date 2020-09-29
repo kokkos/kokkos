@@ -181,7 +181,9 @@ atomic_fetch_add(volatile T* const dest,
 #endif
 //----------------------------------------------------------------------------
 #if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
-#if defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
+#if defined(KOKKOS_ENABLE_GNU_ATOMICS) ||   \
+    defined(KOKKOS_ENABLE_INTEL_ATOMICS) || \
+    defined(KOKKOS_ENABLE_SYCL_ATOMICS)
 
 #if defined(KOKKOS_ENABLE_ASM) && (defined(KOKKOS_ENABLE_ISA_X86_64) || \
                                    defined(KOKKOS_KNL_USE_ASM_WORKAROUND))
