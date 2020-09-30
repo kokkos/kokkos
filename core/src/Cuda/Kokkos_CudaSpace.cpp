@@ -146,9 +146,9 @@ void CudaSpace::access_error(const void *const) {
 
 bool CudaUVMSpace::available() {
 #if defined(CUDA_VERSION) && !defined(__APPLE__)
-  enum { UVM_available = true };
+  enum : bool { UVM_available = true };
 #else
-  enum { UVM_available = false };
+  enum : bool { UVM_available = false };
 #endif
   return UVM_available;
 }

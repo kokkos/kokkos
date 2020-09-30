@@ -186,7 +186,7 @@ struct ViewCtorProp<T *> {
   KOKKOS_INLINE_FUNCTION
   ViewCtorProp(const type arg) : value(arg) {}
 
-  enum { has_pointer = true };
+  enum : bool { has_pointer = true };
   using pointer_type = type;
   type value;
 };

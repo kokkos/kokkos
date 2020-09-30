@@ -257,16 +257,16 @@ static_assert(
 
 template <>
 struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::Experimental::HBWSpace> {
-  enum { assignable = true };
-  enum { accessible = true };
-  enum { deepcopy = true };
+  enum : bool { assignable = true };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = true };
 };
 
 template <>
 struct MemorySpaceAccess<Kokkos::Experimental::HBWSpace, Kokkos::HostSpace> {
-  enum { assignable = false };
-  enum { accessible = true };
-  enum { deepcopy = true };
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = true };
 };
 
 }  // namespace Impl
@@ -321,7 +321,7 @@ namespace Impl {
 template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
                                            Kokkos::Experimental::HBWSpace> {
-  enum { value = true };
+  enum : bool { value = true };
   inline static void verify(void) {}
   inline static void verify(const void*) {}
 };
@@ -329,7 +329,7 @@ struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
 template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::Experimental::HBWSpace,
                                            Kokkos::HostSpace> {
-  enum { value = true };
+  enum : bool { value = true };
   inline static void verify(void) {}
   inline static void verify(const void*) {}
 };

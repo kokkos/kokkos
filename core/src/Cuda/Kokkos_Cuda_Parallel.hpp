@@ -1470,7 +1470,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using functor_type = FunctorType;
   using size_type    = Cuda::size_type;
 
-  enum { UseShflReduction = (true && (ValueTraits::StaticValueSize != 0)) };
+  enum : bool {
+    UseShflReduction = (true && (ValueTraits::StaticValueSize != 0))
+  };
 
  private:
   using DummyShflReductionType  = double;
