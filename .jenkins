@@ -24,6 +24,36 @@ pipeline {
 
         stage('Build') {
             parallel {
+                stage('SYCL-OneAPI') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.sycl'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--pull --build-arg BASE=intel/oneapi-basekit:devel-ubuntu18.04'
+                            label 'docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache'
+                        }
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=clang++ \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=OFF \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_SYCL=ON \
+                                -DCMAKE_CXX_STANDARD=17 \
+                              .. && \
+                              make -j8 && ctest --output-on-failure'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                        }
+                    }
+                }
                 stage('HIP-ROCm-3.8-C++14') {
                     agent {
                         dockerfile {
