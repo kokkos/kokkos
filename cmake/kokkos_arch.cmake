@@ -359,6 +359,16 @@ IF (Kokkos_ENABLE_HIP)
 ENDIF()
 
 
+IF (Kokkos_ENABLE_SYCL)
+  COMPILER_SPECIFIC_FLAGS(
+    DEFAULT -fsycl
+  )
+  COMPILER_SPECIFIC_OPTIONS(
+    DEFAULT -fsycl-unnamed-lambda
+  )
+ENDIF()
+
+
 SET(CUDA_ARCH_ALREADY_SPECIFIED "")
 FUNCTION(CHECK_CUDA_ARCH ARCH FLAG)
   IF(KOKKOS_ARCH_${ARCH})
@@ -486,7 +496,7 @@ ENDIF()
 #Let's just always print things
 MESSAGE(STATUS "Execution Spaces:")
 
-FOREACH (_BACKEND CUDA OPENMPTARGET HIP)
+FOREACH (_BACKEND CUDA OPENMPTARGET HIP SYCL)
   IF(KOKKOS_ENABLE_${_BACKEND})
     IF(_DEVICE_PARALLEL)
       MESSAGE(FATAL_ERROR "Multiple device parallel execution spaces are not allowed! "
