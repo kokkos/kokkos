@@ -832,7 +832,9 @@ void request_output_values(size_t contextId, size_t count,
 #endif
 }
 
+#ifdef KOKKOS_ENABLE_TUNING
 static std::unordered_map<size_t, size_t> optimization_goals;
+#endif
 
 void begin_context(size_t contextId) {
   if (Experimental::current_callbacks.begin_tuning_context != nullptr) {

@@ -179,7 +179,7 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
 // HIP aborts
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
-#elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
+#elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__SYCL_DEVICE_ONLY__)
 // Host aborts
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
 #else
@@ -194,10 +194,10 @@ KOKKOS_IMPL_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
   Kokkos::Impl::cuda_abort(message);
 #elif defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)
   Kokkos::Impl::hip_abort(message);
-#elif !defined(KOKKOS_ENABLE_OPENMPTARGET)
+#elif !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(__SYCL_DEVICE_ONLY__)
   Kokkos::Impl::host_abort(message);
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  (void)message;  // FIXME_OPENMPTARGET
+#else
+  (void)message;  // FIXME_OPENMPTARGET, FIXME_SYCL
 #endif
 }
 
