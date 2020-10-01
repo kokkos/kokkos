@@ -149,4 +149,4 @@ void OpenMPTargetSpaceInitializer::print_configuration(std::ostream& msg,
 }  // namespace Impl
 }  // Namespace Kokkos
 
-#endif // defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(_OPENMP)
+#endif  // defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(_OPENMP)

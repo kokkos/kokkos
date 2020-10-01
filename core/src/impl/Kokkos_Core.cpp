@@ -89,6 +89,10 @@ void ExecSpaceManager::register_space_factory(
 }
 
 void ExecSpaceManager::initialize_spaces(const Kokkos::InitArguments& args) {
+  // Note: the names of the execution spaces, used as keys in the map, encode
+  // the ordering of the initialization code from the old initializtion stuff.
+  // Eventually, we may want to do something less brittle than this, but for now
+  // we're just preserving compatibility with the old implementation.
   for (auto& to_init : exec_space_factory_list) {
     to_init.second->initialize(args);
   }

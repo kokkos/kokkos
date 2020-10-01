@@ -86,4 +86,4 @@ class OpenMPTargetInternal {
 }  // Namespace Experimental
 }  // Namespace Kokkos
 
-#endif // KOKKOS_OPENMPTARGET_INSTANCE_HPP
+#endif  // KOKKOS_OPENMPTARGET_INSTANCE_HPP
