@@ -9,44 +9,49 @@
 # that in TriBITS KokkosAlgorithms can be disabled...
 #INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../algorithms/src")
 
-SET(SOURCES
-  PerfTestMain.cpp
-  PerfTestGramSchmidt.cpp
-  PerfTestHexGrad.cpp
-  PerfTest_CustomReduction.cpp
-  PerfTest_ExecSpacePartitioning.cpp
-  PerfTest_ViewCopy_a123.cpp
-  PerfTest_ViewCopy_b123.cpp
-  PerfTest_ViewCopy_c123.cpp
-  PerfTest_ViewCopy_d123.cpp
-  PerfTest_ViewCopy_a45.cpp
-  PerfTest_ViewCopy_b45.cpp
-  PerfTest_ViewCopy_c45.cpp
-  PerfTest_ViewCopy_d45.cpp
-  PerfTest_ViewCopy_a6.cpp
-  PerfTest_ViewCopy_b6.cpp
-  PerfTest_ViewCopy_c6.cpp
-  PerfTest_ViewCopy_d6.cpp
-  PerfTest_ViewCopy_a7.cpp
-  PerfTest_ViewCopy_b7.cpp
-  PerfTest_ViewCopy_c7.cpp
-  PerfTest_ViewCopy_d7.cpp
-  PerfTest_ViewCopy_a8.cpp
-  PerfTest_ViewCopy_b8.cpp
-  PerfTest_ViewCopy_c8.cpp
-  PerfTest_ViewCopy_d8.cpp
-  PerfTest_ViewAllocate.cpp
-  PerfTest_ViewFill_123.cpp
-  PerfTest_ViewFill_45.cpp
-  PerfTest_ViewFill_6.cpp
-  PerfTest_ViewFill_7.cpp
-  PerfTest_ViewFill_8.cpp
-  PerfTest_ViewResize_123.cpp
-  PerfTest_ViewResize_45.cpp
-  PerfTest_ViewResize_6.cpp
-  PerfTest_ViewResize_7.cpp
-  PerfTest_ViewResize_8.cpp
-  )
+# FIXME_SYCL
+IF(Kokkos_ENABLE_SYCL)
+  SET (SOURCES PerfTestMain.cpp)
+ELSE()
+  SET(SOURCES
+    PerfTestMain.cpp
+    PerfTestGramSchmidt.cpp
+    PerfTestHexGrad.cpp
+    PerfTest_CustomReduction.cpp
+    PerfTest_ExecSpacePartitioning.cpp
+    PerfTest_ViewCopy_a123.cpp
+    PerfTest_ViewCopy_b123.cpp
+    PerfTest_ViewCopy_c123.cpp
+    PerfTest_ViewCopy_d123.cpp
+    PerfTest_ViewCopy_a45.cpp
+    PerfTest_ViewCopy_b45.cpp
+    PerfTest_ViewCopy_c45.cpp
+    PerfTest_ViewCopy_d45.cpp
+    PerfTest_ViewCopy_a6.cpp
+    PerfTest_ViewCopy_b6.cpp
+    PerfTest_ViewCopy_c6.cpp
+    PerfTest_ViewCopy_d6.cpp
+    PerfTest_ViewCopy_a7.cpp
+    PerfTest_ViewCopy_b7.cpp
+    PerfTest_ViewCopy_c7.cpp
+    PerfTest_ViewCopy_d7.cpp
+    PerfTest_ViewCopy_a8.cpp
+    PerfTest_ViewCopy_b8.cpp
+    PerfTest_ViewCopy_c8.cpp
+    PerfTest_ViewCopy_d8.cpp
+    PerfTest_ViewAllocate.cpp
+    PerfTest_ViewFill_123.cpp
+    PerfTest_ViewFill_45.cpp
+    PerfTest_ViewFill_6.cpp
+    PerfTest_ViewFill_7.cpp
+    PerfTest_ViewFill_8.cpp
+    PerfTest_ViewResize_123.cpp
+    PerfTest_ViewResize_45.cpp
+    PerfTest_ViewResize_6.cpp
+    PerfTest_ViewResize_7.cpp
+    PerfTest_ViewResize_8.cpp
+    )
+ENDIF()
 
 IF(Kokkos_ENABLE_HIP)
 # FIXME HIP requires TeamPolicy
@@ -83,11 +88,13 @@ IF(NOT KOKKOS_CXX_COMPILER_ID STREQUAL "MSVC")
   )
 ENDIF()
 
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  PerformanceTest_Atomic
-  SOURCES test_atomic.cpp
-  CATEGORIES PERFORMANCE
-)
+# FIXME_SYCL
+IF(NOT Kokkos_ENABLE_SYCL)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    PerformanceTest_Atomic
+    SOURCES test_atomic.cpp
+    CATEGORIES PERFORMANCE
+  )
 
 IF(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -102,6 +109,7 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   SOURCES test_mempool.cpp
   CATEGORIES PERFORMANCE
 )
+ENDIF()
 
 IF(NOT Kokkos_ENABLE_OPENMPTARGET)
 # FIXME OPENMPTARGET needs tasking
