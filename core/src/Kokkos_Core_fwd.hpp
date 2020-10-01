@@ -126,6 +126,15 @@ class HIP;       ///< Execution space for HIP GPU
 }  // namespace Experimental
 #endif
 
+#if defined(KOKKOS_ENABLE_SYCL)
+namespace Experimental {
+// class SYCLHostUSMSpace;    ///< Memory space on SYCL CPU as device
+class SYCLDeviceUSMSpace;  ///< Memory space on SYCL GPU as device
+// class SYCLSharedUSMSpace;  ///< Memory space shared USM
+class SYCL;  ///< Execution space for SYCL GPU
+}  // namespace Experimental
+#endif
+
 template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
@@ -161,6 +170,9 @@ using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
     Experimental::HIP;
+#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL)
+using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
+    Experimental::SYCL;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = OpenMP;
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
@@ -172,7 +184,7 @@ using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION = Serial;
 #else
 #error \
-    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::HIP, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
+    "At least one of the following execution spaces must be defined in order to use Kokkos: Kokkos::Cuda, Kokkos::Experimental::HIP, Kokkos::Experimental::SYCL, Kokkos::Experimental::OpenMPTarget, Kokkos::OpenMP, Kokkos::Threads, Kokkos::Experimental::HPX, or Kokkos::Serial."
 #endif
 
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
@@ -218,6 +230,10 @@ namespace Impl {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
     defined(KOKKOS_ENABLE_CUDA)
 using ActiveExecutionMemorySpace = Kokkos::CudaSpace;
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL)
+using ActiveExecutionMemorySpace = Kokkos::Experimental::SYCLDeviceUSMSpace;
+// FIXME_SYCL
+// using ActiveExecutionMemorySpace = Kokkos::Experimental::SYCLHostUSMSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU)
 using ActiveExecutionMemorySpace = Kokkos::Experimental::HIPSpace;
 #elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)

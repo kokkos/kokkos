@@ -97,9 +97,10 @@
 
 //----------------------------------------------------------------------------
 
-#if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) && \
-    !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_HPX) &&   \
-    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HIP)
+#if !defined(KOKKOS_ENABLE_THREADS) && !defined(KOKKOS_ENABLE_CUDA) &&     \
+    !defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_HPX) &&       \
+    !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_HIP) && \
+    !defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_INTERNAL_NOT_PARALLEL
 #endif
 
@@ -290,6 +291,16 @@
 #define KOKKOS_IMPL_HOST_FUNCTION __host__
 #define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 #endif  // #if defined( KOKKOS_ENABLE_HIP )
+
+#if defined(KOKKOS_ENABLE_SYCL)
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION inline
+#define KOKKOS_IMPL_INLINE_FUNCTION inline
+#define KOKKOS_IMPL_FUNCTION
+#define KOKKOS_LAMBDA [=]
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+#define KOKKOS_CLASS_LAMBDA [ =, *this ]
+#endif
+#endif  // #if defined(KOKKOS_ENABLE_SYCL)
 
 #if defined(_OPENMP)
 //  Compiling with OpenMP.
@@ -523,6 +534,7 @@
 
 #if 1 < ((defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA) ? 1 : 0) +         \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP) ? 1 : 0) +          \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL) ? 1 : 0) +         \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET) ? 1 : 0) + \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP) ? 1 : 0) +       \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS) ? 1 : 0) +      \
@@ -532,9 +544,10 @@
 #endif
 
 // If default is not specified then chose from enabled execution spaces.
-// Priority: CUDA, HIP, OPENMPTARGET, OPENMP, THREADS, HPX, SERIAL
+// Priority: CUDA, HIP, SYCL, OPENMPTARGET, OPENMP, THREADS, HPX, SERIAL
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
+#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
@@ -549,6 +562,8 @@
 // as valid overload criteria
 #define KOKKOS_IMPL_ENABLE_OVERLOAD_HOST_DEVICE
 #endif
+#elif defined(KOKKOS_ENABLE_SYCL)
+#define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET
 #elif defined(KOKKOS_ENABLE_OPENMP)
@@ -566,6 +581,8 @@
 
 #if defined(__CUDACC__) && defined(__CUDA_ARCH__) && defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
+#elif defined(__SYCL_DEVICE_ONLY__) && defined(KOKKOS_ENABLE_SYCL)
+#define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
 #elif defined(__HIPCC__) && defined(__HIP_DEVICE_COMPILE__) && \
     defined(KOKKOS_ENABLE_HIP)
 #define KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
@@ -590,10 +607,8 @@
 #if defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
 #define KOKKOS_ENABLE_TASKDAG
 #endif
-#else
-#ifndef KOKKOS_ENABLE_HIP
+#elif !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_ENABLE_TASKDAG
-#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)

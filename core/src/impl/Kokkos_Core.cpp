@@ -168,7 +168,8 @@ int get_ctest_gpu(const char* local_rank_str) {
 
 namespace {
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
 int get_gpu(const InitArguments& args) {
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
@@ -236,7 +237,8 @@ void initialize_backends(const InitArguments& args) {
 #if defined(KOKKOS_ENABLE_THREADS)
   const int use_numa = args.num_numa;
 #endif
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   int use_gpu = get_gpu(args);
 #endif  // defined( KOKKOS_ENABLE_CUDA )
 
@@ -336,6 +338,16 @@ void initialize_backends(const InitArguments& args) {
     }
   }
 #endif
+
+#if defined(KOKKOS_ENABLE_SYCL)
+  if (std::is_same<Kokkos::Experimental::SYCL,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      0 < use_gpu) {
+    // FIXME_SYCL choose a specific device
+    Kokkos::Experimental::SYCL::impl_initialize(
+        Kokkos::Experimental::SYCL::SYCLDevice(cl::sycl::default_selector()));
+  }
+#endif
 }
 
 void initialize_profiling(const InitArguments&) {
@@ -404,6 +416,16 @@ void finalize_internal(const bool all_spaces = false) {
       Kokkos::Experimental::HIP::impl_finalize();
   }
 #endif
+
+#if defined(KOKKOS_ENABLE_SYCL)
+  if (std::is_same<Kokkos::Experimental::SYCL,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      all_spaces) {
+    if (Kokkos::Experimental::SYCL::impl_is_initialized())
+      Kokkos::Experimental::SYCL::impl_finalize();
+  }
+#endif
+
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
   if (std::is_same<Kokkos::Experimental::OpenMPTarget,
                    Kokkos::DefaultExecutionSpace>::value ||
@@ -457,6 +479,10 @@ void fence_internal() {
 
 #if defined(KOKKOS_ENABLE_HIP)
   Kokkos::Experimental::HIP::impl_static_fence();
+#endif
+
+#if defined(KOKKOS_ENABLE_SYCL)
+  Kokkos::Experimental::SYCL().fence();
 #endif
 
 #if defined(KOKKOS_ENABLE_OPENMP)
@@ -964,6 +990,12 @@ void print_configuration(std::ostream& out, const bool detail) {
 #else
   msg << "no" << std::endl;
 #endif
+  msg << "  KOKKOS_ENABLE_SYCL: ";
+#ifdef KOKKOS_ENABLE_SYCL
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
   msg << "  KOKKOS_ENABLE_OPENMP: ";
 #ifdef KOKKOS_ENABLE_OPENMP
   msg << "yes" << std::endl;
@@ -998,6 +1030,12 @@ void print_configuration(std::ostream& out, const bool detail) {
 #endif
   msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP: ";
 #ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+  msg << "  KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL: ";
+#ifdef KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
   msg << "yes" << std::endl;
 #else
   msg << "no" << std::endl;
@@ -1218,6 +1256,11 @@ void print_configuration(std::ostream& out, const bool detail) {
 #endif
 #ifdef KOKKOS_ENABLE_HIP
   Experimental::HIP::print_configuration(msg, detail);
+#endif
+#ifdef KOKKOS_ENABLE_SYCL
+  // FIXME_SYCL
+  std::abort();
+  // Experimental::SYCL::print_configuration(msg, detail);
 #endif
 #ifdef KOKKOS_ENABLE_OPENMP
   OpenMP::print_configuration(msg, detail);
