@@ -45,6 +45,9 @@
 #ifndef KOKKOS_HIP_ATOMIC_HPP
 #define KOKKOS_HIP_ATOMIC_HPP
 
+#include <impl/Kokkos_Atomic_Memory_Order.hpp>
+#include <impl/Kokkos_Memory_Fence.hpp>
+
 #if defined(KOKKOS_ENABLE_HIP_ATOMICS)
 namespace Kokkos {
 // HIP can do:
@@ -569,6 +572,62 @@ __inline__ __device__ unsigned long long int atomic_fetch_and(
     unsigned long long int const val) {
   return atomicAnd(const_cast<unsigned long long int *>(dest), val);
 }
+
+namespace Impl {
+
+template <typename T>
+__inline__ __device__ void _atomic_store(T *ptr, T val,
+                                         memory_order_relaxed_t) {
+  (void)atomic_exchange(ptr, val);
+}
+
+template <typename T>
+__inline__ __device__ void _atomic_store(T *ptr, T val,
+                                         memory_order_seq_cst_t) {
+  memory_fence();
+  atomic_store(ptr, val, memory_order_relaxed);
+  memory_fence();
+}
+
+template <typename T>
+__inline__ __device__ void _atomic_store(T *ptr, T val,
+                                         memory_order_release_t) {
+  memory_fence();
+  atomic_store(ptr, val, memory_order_relaxed);
+}
+
+template <typename T>
+__inline__ __device__ void _atomic_store(T *ptr, T val) {
+  atomic_store(ptr, val, memory_order_relaxed);
+}
+
+template <typename T>
+__inline__ __device__ T _atomic_load(T *ptr, memory_order_relaxed_t) {
+  T dummy{};
+  return atomic_compare_exchange(ptr, dummy, dummy);
+}
+
+template <typename T>
+__inline__ __device__ T _atomic_load(T *ptr, memory_order_seq_cst_t) {
+  memory_fence();
+  T rv = atomic_load(ptr, memory_order_relaxed);
+  memory_fence();
+  return rv;
+}
+
+template <typename T>
+__inline__ __device__ T _atomic_load(T *ptr, memory_order_acquire_t) {
+  T rv = atomic_load(ptr, memory_order_relaxed);
+  memory_fence();
+  return rv;
+}
+
+template <typename T>
+__inline__ __device__ T _atomic_load(T *ptr) {
+  return atomic_load(ptr, memory_order_relaxed);
+}
+
+}  // namespace Impl
 }  // namespace Kokkos
 #endif
 
