@@ -52,7 +52,20 @@
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
+
 int SYCLInternal::was_finalized = 0;
+
+SYCLInternal::~SYCLInternal() {
+  if (m_scratchSpace || m_scratchFlags) {
+    std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call "
+                 "Kokkos::Experimental::SYCL::finalize()"
+              << std::endl;
+    std::cerr.flush();
+  }
+
+  m_scratchSpace = nullptr;
+  m_scratchFlags = nullptr;
+}
 
 int SYCLInternal::verify_is_initialized(const char* const label) const {
   if (!is_initialized()) {

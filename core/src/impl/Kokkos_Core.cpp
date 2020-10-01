@@ -482,6 +482,8 @@ void fence_internal() {
 #endif
 
 #if defined(KOKKOS_ENABLE_SYCL)
+  // FIXME_SYCL should be
+  // Kokkos::Experimental::SYCL::impl_static.fence();
   Kokkos::Experimental::SYCL().fence();
 #endif
 
