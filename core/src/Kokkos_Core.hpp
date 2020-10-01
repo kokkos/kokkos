@@ -111,9 +111,6 @@ class ExecSpaceManager {
   void static_fence();
   void print_configuration(std::ostream& msg, const bool detail);
   static ExecSpaceManager& get_instance();
-
- protected:
-  static ExecSpaceManager g_space_initializer;
 };
 
 template <class SpaceInitializerType>

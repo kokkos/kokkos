@@ -78,10 +78,9 @@ std::stack<hook_function_type, std::list<hook_function_type>> finalize_hooks;
 namespace Kokkos {
 namespace Impl {
 
-ExecSpaceManager ExecSpaceManager::g_space_initializer;
-
 ExecSpaceManager& ExecSpaceManager::get_instance() {
-  return g_space_initializer;
+  static ExecSpaceManager space_initializer = {};
+  return space_initializer;
 }
 
 void ExecSpaceManager::register_space_factory(
