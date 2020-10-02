@@ -186,16 +186,6 @@
 #define KOKKOS_COMPILER_MSVC _MSC_VER
 #endif
 
-#if defined(KOKKOS_ENABLE_HIP)
-#define KOKKOS_IMPL_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
-#define KOKKOS_IMPL_INLINE_FUNCTION __device__ __host__ inline
-#define KOKKOS_DEFAULTED_FUNCTION __device__ __host__ inline
-#define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
-#define KOKKOS_IMPL_FUNCTION __device__ __host__
-#define KOKKOS_IMPL_HOST_FUNCTION __host__
-#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
-#endif  // #if defined( KOKKOS_ENABLE_HIP )
-
 #if defined(_OPENMP)
 //  Compiling with OpenMP.
 //  The value of _OPENMP is an integer value YYYYMM
