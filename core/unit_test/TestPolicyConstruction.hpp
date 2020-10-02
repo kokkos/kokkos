@@ -571,6 +571,9 @@ class TestTeamPolicyConstruction {
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;
 #endif
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    team_size = 32;
+#endif
     int chunk_size         = 4;
     int per_team_scratch   = 1024;
     int per_thread_scratch = 16;
