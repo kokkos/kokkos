@@ -643,7 +643,7 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 /*--------------------------------------------------------------------------*/
 namespace Kokkos {
 namespace Impl {
-extern int get_gpu(const InitArguments& args);
+int get_gpu(const InitArguments& args);
 }
 namespace Experimental {
 
