@@ -737,11 +737,15 @@ hipDeviceProp_t const& HIP::hip_device_prop() {
 
 const char* HIP::name() { return "HIP"; }
 
+}  // namespace Experimental
+
+namespace Impl {
+
 int g_hip_space_factory_initialized =
-    Kokkos::Impl::initialize_space_factory<HIPSpaceInitializer>("150_HIP");
+    initialize_space_factory<HIPSpaceInitializer>("150_HIP");
 
 void HIPSpaceInitializer::initialize(const InitArguments& args) {
-  int use_gpu = Kokkos::Impl::get_gpu(args);
+  int use_gpu = Impl::get_gpu(args);
 
   if (std::is_same<Kokkos::Experimental::HIP,
                    Kokkos::DefaultExecutionSpace>::value ||
@@ -786,5 +790,5 @@ void HIPSpaceInitializer::print_configuration(std::ostream& msg,
   Experimental::HIP::print_configuration(msg, detail);
 }
 
-}  // namespace Experimental
+}  // namespace Impl
 }  // namespace Kokkos

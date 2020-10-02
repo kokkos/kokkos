@@ -740,7 +740,7 @@ struct DeviceTypeTraits<Kokkos::Experimental::HIP> {
 }  // namespace Experimental
 }  // namespace Tools
 
-namespace Experimental {
+namespace Impl {
 
 class HIPSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
  public:
@@ -752,7 +752,7 @@ class HIPSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
-}  // namespace Experimental
+}  // namespace Impl
 }  // namespace Kokkos
 
 namespace Kokkos {
