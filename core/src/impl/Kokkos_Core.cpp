@@ -205,7 +205,7 @@ int get_ctest_gpu(const char* local_rank_str) {
   return std::stoi(id.c_str());
 }
 
-// extern function to extract gpu # from args
+// function to extract gpu # from args
 int get_gpu(const InitArguments& args) {
   int use_gpu           = args.device_id;
   const int ndevices    = args.ndevices;
