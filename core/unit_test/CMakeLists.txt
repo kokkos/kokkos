@@ -164,7 +164,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
     openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
     openmptarget/TestOpenMPTarget_ViewOfClass.cpp
-
+    openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
   )
 endif()
 

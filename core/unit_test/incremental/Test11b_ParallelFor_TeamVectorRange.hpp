@@ -54,7 +54,7 @@ namespace Test {
 
 template <class ExecSpace>
 struct Hierarchical_ForLoop_B {
-  void run(const int pN, const int sX, const int sY) {
+  void run(const int64_t pN, const int64_t sX, const int64_t sY) {
     using team_policy = Kokkos::TeamPolicy<ExecSpace>;
     using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
@@ -81,8 +81,8 @@ struct Hierarchical_ForLoop_B {
     Kokkos::fence();
     auto v_H = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);
 
-    int check   = 0;
-    const int s = sY * sX;
+    int64_t check   = 0;
+    const int64_t s = sY * sX;
     for (int i = 0; i < sX; ++i)
       for (int j = 0; j < sY; ++j) check += v_H(i, j);
     ASSERT_EQ(check, s * (s - 1) / 2);
