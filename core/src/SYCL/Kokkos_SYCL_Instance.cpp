@@ -72,14 +72,12 @@ int SYCLInternal::verify_is_initialized(const char* const label) const {
     std::cerr << "Kokkos::Experimental::SYCL::" << label
               << " : ERROR device not initialized" << std::endl;
   }
-  return true;
+  return is_initialized();
 }
+
 SYCLInternal& SYCLInternal::singleton() {
-  static SYCLInternal* self = nullptr;
-  if (!self) {
-    self = new SYCLInternal();
-  }
-  return *self;
+  static SYCLInternal self;
+  return self;
 }
 
 // FIME_SYCL
