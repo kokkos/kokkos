@@ -895,7 +895,7 @@ const cudaDeviceProp &Cuda::cuda_device_prop() const {
 
 namespace Impl {
 
-extern int get_gpu(const InitArguments &args);
+int get_gpu(const InitArguments &args);
 
 int g_cuda_space_factory_initialized =
     initialize_space_factory<CudaSpaceInitializer>("150_Cuda");
