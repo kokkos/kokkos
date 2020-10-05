@@ -62,6 +62,7 @@
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_Tags.hpp>
+#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -270,6 +271,20 @@ struct DeviceTypeTraits<Cuda> {
 };
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Impl {
+
+class CudaSpaceInitializer : public ExecSpaceInitializerBase {
+ public:
+  CudaSpaceInitializer()  = default;
+  ~CudaSpaceInitializer() = default;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool all_spaces) final;
+  void fence() final;
+  void print_configuration(std::ostream& msg, const bool detail) final;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

@@ -64,6 +64,7 @@
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 
 #include <vector>
 
@@ -177,6 +178,20 @@ struct DeviceTypeTraits<OpenMP> {
 };
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Impl {
+
+class OpenMPSpaceInitializer : public ExecSpaceInitializerBase {
+ public:
+  OpenMPSpaceInitializer()  = default;
+  ~OpenMPSpaceInitializer() = default;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
+  void fence() final;
+  void print_configuration(std::ostream& msg, const bool detail) final;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

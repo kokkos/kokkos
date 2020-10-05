@@ -60,6 +60,7 @@
 #include <Kokkos_ScratchSpace.hpp>
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 
 #include <hip/hip_runtime_api.h>
 /*--------------------------------------------------------------------------*/
@@ -738,6 +739,20 @@ struct DeviceTypeTraits<Kokkos::Experimental::HIP> {
 };
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Impl {
+
+class HIPSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
+ public:
+  HIPSpaceInitializer()  = default;
+  ~HIPSpaceInitializer() = default;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
+  void fence() final;
+  void print_configuration(std::ostream& msg, const bool detail) final;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 namespace Kokkos {

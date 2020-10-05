@@ -61,6 +61,7 @@
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
+#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
@@ -130,6 +131,20 @@ struct DeviceTypeTraits<::Kokkos::Experimental::OpenMPTarget> {
 };
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Impl {
+
+class OpenMPTargetSpaceInitializer : public ExecSpaceInitializerBase {
+ public:
+  OpenMPTargetSpaceInitializer()  = default;
+  ~OpenMPTargetSpaceInitializer() = default;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
+  void fence() final;
+  void print_configuration(std::ostream& msg, const bool detail) final;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

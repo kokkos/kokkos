@@ -53,6 +53,7 @@
 
 #include <cstddef>
 #include <iosfwd>
+#include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
@@ -64,6 +65,7 @@
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 #include <impl/Kokkos_Tools.hpp>
+#include <impl/Kokkos_ExecSpaceInitializer.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
@@ -90,10 +92,10 @@ class Serial {
 
   //! Tag this class as an execution space:
   using execution_space = Serial;
-  //! The size_type alias best suited for this device.
-  using size_type = HostSpace::size_type;
   //! This device's preferred memory space.
-  using memory_space = HostSpace;
+  using memory_space = Kokkos::HostSpace;
+  //! The size_type alias best suited for this device.
+  using size_type = memory_space::size_type;
   //! This execution space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
@@ -165,6 +167,20 @@ struct DeviceTypeTraits<Serial> {
 };
 }  // namespace Experimental
 }  // namespace Tools
+
+namespace Impl {
+
+class SerialSpaceInitializer : public ExecSpaceInitializerBase {
+ public:
+  SerialSpaceInitializer()  = default;
+  ~SerialSpaceInitializer() = default;
+  void initialize(const InitArguments& args) final;
+  void finalize(const bool) final;
+  void fence() final;
+  void print_configuration(std::ostream& msg, const bool detail) final;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -513,7 +529,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   "Kokkos::Serial reduce result must be a View");
 
     static_assert(
-        std::is_same<typename HostViewType::memory_space, HostSpace>::value,
+        Kokkos::Impl::MemorySpaceAccess<typename HostViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
         "Kokkos::Serial reduce result must be a View in HostSpace");
   }
 
@@ -783,7 +800,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                   "Kokkos::Serial reduce result must be a View");
 
     static_assert(
-        std::is_same<typename HostViewType::memory_space, HostSpace>::value,
+        Kokkos::Impl::MemorySpaceAccess<typename HostViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
         "Kokkos::Serial reduce result must be a View in HostSpace");
   }
 
@@ -959,7 +977,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   "Reduction result on Kokkos::Serial must be a Kokkos::View");
 
     static_assert(
-        std::is_same<typename ViewType::memory_space, Kokkos::HostSpace>::value,
+        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
+                                        Kokkos::HostSpace>::accessible,
         "Reduction result on Kokkos::Serial must be a Kokkos::View in "
         "HostSpace");
   }

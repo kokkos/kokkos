@@ -63,8 +63,10 @@ enum struct DeviceType {
   HIP,
   OpenMPTarget,
   HPX,
-  Threads
+  Threads,
+  Unknown
 };
+
 template <typename ExecutionSpace>
 struct DeviceTypeTraits;
 

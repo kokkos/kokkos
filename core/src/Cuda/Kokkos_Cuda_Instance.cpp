@@ -893,6 +893,92 @@ const cudaDeviceProp &Cuda::cuda_device_prop() const {
   return m_space_instance->m_deviceProp;
 }
 
+namespace Impl {
+
+int get_gpu(const InitArguments &args);
+
+int g_cuda_space_factory_initialized =
+    initialize_space_factory<CudaSpaceInitializer>("150_Cuda");
+
+void CudaSpaceInitializer::initialize(const InitArguments &args) {
+  int use_gpu = get_gpu(args);
+  if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
+      0 < use_gpu) {
+    if (use_gpu > -1) {
+      Kokkos::Cuda::impl_initialize(Kokkos::Cuda::SelectDevice(use_gpu));
+    } else {
+      Kokkos::Cuda::impl_initialize();
+    }
+  }
+}
+
+void CudaSpaceInitializer::finalize(bool all_spaces) {
+  if ((std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
+       all_spaces) &&
+      Kokkos::Cuda::impl_is_initialized()) {
+    Kokkos::Cuda::impl_finalize();
+  }
+}
+
+void CudaSpaceInitializer::fence() { Kokkos::Cuda::impl_static_fence(); }
+
+void CudaSpaceInitializer::print_configuration(std::ostream &msg,
+                                               const bool detail) {
+  msg << "Device Execution Space:" << std::endl;
+  msg << "  KOKKOS_ENABLE_CUDA: ";
+  msg << "yes" << std::endl;
+
+  msg << "Cuda Atomics:" << std::endl;
+  msg << "  KOKKOS_ENABLE_CUDA_ATOMICS: ";
+#ifdef KOKKOS_ENABLE_CUDA_ATOMICS
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+
+  msg << "Cuda Options:" << std::endl;
+  msg << "  KOKKOS_ENABLE_CUDA_LAMBDA: ";
+#ifdef KOKKOS_ENABLE_CUDA_LAMBDA
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+  msg << "  KOKKOS_ENABLE_CUDA_LDG_INTRINSIC: ";
+#ifdef KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+  msg << "  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE: ";
+#ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+  msg << "  KOKKOS_ENABLE_CUDA_UVM: ";
+#ifdef KOKKOS_ENABLE_CUDA_UVM
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+  msg << "  KOKKOS_ENABLE_CUSPARSE: ";
+#ifdef KOKKOS_ENABLE_CUSPARSE
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+  msg << "  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: ";
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+
+  msg << "\nCuda Runtime Configuration:" << std::endl;
+  Cuda::print_configuration(msg, detail);
+}
+}  // namespace Impl
+
 }  // namespace Kokkos
 
 namespace Kokkos {

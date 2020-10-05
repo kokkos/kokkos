@@ -642,6 +642,9 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 namespace Kokkos {
+namespace Impl {
+int get_gpu(const InitArguments& args);
+}
 namespace Experimental {
 
 int HIP::concurrency() {
@@ -735,4 +738,57 @@ hipDeviceProp_t const& HIP::hip_device_prop() {
 const char* HIP::name() { return "HIP"; }
 
 }  // namespace Experimental
+
+namespace Impl {
+
+int g_hip_space_factory_initialized =
+    initialize_space_factory<HIPSpaceInitializer>("150_HIP");
+
+void HIPSpaceInitializer::initialize(const InitArguments& args) {
+  int use_gpu = Impl::get_gpu(args);
+
+  if (std::is_same<Kokkos::Experimental::HIP,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      0 < use_gpu) {
+    if (use_gpu > -1) {
+      Kokkos::Experimental::HIP::impl_initialize(
+          Kokkos::Experimental::HIP::SelectDevice(use_gpu));
+    } else {
+      Kokkos::Experimental::HIP::impl_initialize();
+    }
+  }
+}
+
+void HIPSpaceInitializer::finalize(const bool all_spaces) {
+  if (std::is_same<Kokkos::Experimental::HIP,
+                   Kokkos::DefaultExecutionSpace>::value ||
+      all_spaces) {
+    if (Kokkos::Experimental::HIP::impl_is_initialized())
+      Kokkos::Experimental::HIP::impl_finalize();
+  }
+}
+
+void HIPSpaceInitializer::fence() {
+  Kokkos::Experimental::HIP::impl_static_fence();
+}
+
+void HIPSpaceInitializer::print_configuration(std::ostream& msg,
+                                              const bool detail) {
+  msg << "Devices:" << std::endl;
+  msg << "  KOKKOS_ENABLE_HIP: ";
+  msg << "yes" << std::endl;
+
+  msg << "HIP Options:" << std::endl;
+  msg << "  KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE: ";
+#ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
+  msg << "yes" << std::endl;
+#else
+  msg << "no" << std::endl;
+#endif
+
+  msg << "\nRuntime Configuration:" << std::endl;
+  Experimental::HIP::print_configuration(msg, detail);
+}
+
+}  // namespace Impl
 }  // namespace Kokkos

@@ -42,48 +42,30 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_OPENMPTARGET_INSTANCE_HPP
-#define KOKKOS_OPENMPTARGET_INSTANCE_HPP
+#ifndef KOKKOS_SETUP_HIP_HPP_
+#define KOKKOS_SETUP_HIP_HPP_
 
-#include <Kokkos_Core.hpp>
+#if defined(KOKKOS_ENABLE_HIP)
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+#define KOKKOS_IMPL_HIP_CLANG_WORKAROUND
 
-class OpenMPTargetInternal {
- private:
-  OpenMPTargetInternal()                            = default;
-  OpenMPTargetInternal(const OpenMPTargetInternal&) = default;
-  OpenMPTargetInternal& operator=(const OpenMPTargetInternal&) = default;
+#define HIP_ENABLE_PRINTF
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
 
- public:
-  void fence();
+#define KOKKOS_LAMBDA [=] __host__ __device__
+#if defined(KOKKOS_ENABLE_CXX17) || defined(KOKKOS_ENABLE_CXX20)
+#define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
+#endif
 
-  /** \brief  Return the maximum amount of concurrency.  */
-  int concurrency();
+#define KOKKOS_IMPL_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
+#define KOKKOS_IMPL_INLINE_FUNCTION __device__ __host__ inline
+#define KOKKOS_DEFAULTED_FUNCTION __device__ __host__ inline
+#define KOKKOS_INLINE_FUNCTION_DELETED __device__ __host__ inline
+#define KOKKOS_IMPL_FUNCTION __device__ __host__
+#define KOKKOS_IMPL_HOST_FUNCTION __host__
+#define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 
-  //! Print configuration information to the given output stream.
-  void print_configuration(std::ostream&, const bool detail = false);
+#endif  // #if defined( KOKKOS_ENABLE_HIP )
 
-  static const char* name();
-
-  //! Free any resources being consumed by the device.
-  void impl_finalize();
-
-  //! Has been initialized
-  int impl_is_initialized();
-
-  //! Initialize, telling the CUDA run-time library which device to use.
-  void impl_initialize();
-
-  static OpenMPTargetInternal* impl_singleton();
-
- private:
-  bool m_is_initialized = false;
-};
-}  // Namespace Impl
-}  // Namespace Experimental
-}  // Namespace Kokkos
-
-#endif  // KOKKOS_OPENMPTARGET_INSTANCE_HPP
+#endif

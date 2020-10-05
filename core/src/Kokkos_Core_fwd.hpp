@@ -87,51 +87,16 @@ namespace Kokkos {
 class HostSpace;  ///< Memory space for main process and CPU execution spaces
 class AnonymousSpace;
 
-#ifdef KOKKOS_ENABLE_HBWSPACE
-namespace Experimental {
-class HBWSpace;  /// Memory space for hbw_malloc from memkind (e.g. for KNL
-                 /// processor)
-}
-#endif
-
-#if defined(KOKKOS_ENABLE_SERIAL)
-class Serial;  ///< Execution space main process on CPU.
-#endif
-
-#if defined(KOKKOS_ENABLE_HPX)
-namespace Experimental {
-class HPX;  ///< Execution space with HPX back-end.
-}
-#endif
-
-#if defined(KOKKOS_ENABLE_THREADS)
-class Threads;  ///< Execution space with pthreads back-end.
-#endif
-
-#if defined(KOKKOS_ENABLE_OPENMP)
-class OpenMP;  ///< OpenMP execution space.
-#endif
-
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-namespace Experimental {
-class OpenMPTarget;  ///< OpenMPTarget execution space.
-class OpenMPTargetSpace;
-}  // namespace Experimental
-#endif
-
-#if defined(KOKKOS_ENABLE_HIP)
-namespace Experimental {
-class HIPSpace;  ///< Memory space on HIP GPU
-class HIP;       ///< Execution space for HIP GPU
-}  // namespace Experimental
-#endif
-
 template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
+// forward declare here so that backend initializer calls can use it.
+struct InitArguments;
+
 }  // namespace Kokkos
 
-#include "Cuda/Kokkos_Cuda_fwd.hpp"
+// Include backend forward statements as determined by build options
+#include <KokkosCore_Config_FwdBackend.hpp>
 
 //----------------------------------------------------------------------------
 // Set the default execution space.
@@ -237,6 +202,10 @@ struct VerifyExecutionCanAccessMemorySpace<Space, Space> {
   KOKKOS_INLINE_FUNCTION static void verify(void) {}
   KOKKOS_INLINE_FUNCTION static void verify(const void *) {}
 };
+
+// Base class for exec space initializer factories
+class ExecSpaceInitializerBase;
+
 }  // namespace Impl
 
 }  // namespace Kokkos
