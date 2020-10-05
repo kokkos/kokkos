@@ -46,6 +46,7 @@
 #define KOKKOS_SYCLSPACE_HPP
 
 #include <Kokkos_Core_fwd.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 #ifdef KOKKOS_ENABLE_SYCL
 
@@ -71,6 +72,108 @@ class SYCLDeviceUSMSpace {
   int m_device;
 };
 }  // namespace Experimental
+
+namespace Impl {
+template <>
+struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                Kokkos::Experimental::SYCLDeviceUSMSpace,
+                Kokkos::Experimental::SYCL> {
+  DeepCopy(void* dst, const void* src, size_t);
+  DeepCopy(const Kokkos::Experimental::SYCL&, void* dst, const void* src,
+           size_t);
+};
+
+template <>
+struct DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+                Kokkos::Experimental::SYCL> {
+  DeepCopy(void* dst, const void* src, size_t);
+  DeepCopy(const Kokkos::Experimental::SYCL&, void* dst, const void* src,
+           size_t);
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+                ExecutionSpace> {
+  inline DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+                   Kokkos::Experimental::SYCL>(dst, src, n);
+  }
+
+  inline DeepCopy(const ExecutionSpace& /*exec*/, void* /*dst*/,
+                  const void* /*src*/, size_t /*n*/) {
+    // FIXME_SYCL
+    std::abort();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace,
+                ExecutionSpace> {
+  inline DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace,
+                   Kokkos::Experimental::SYCL>(dst, src, n);
+  }
+
+  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
+                  size_t n) {
+    exec.fence();
+    DeepCopy(dst, src, n);
+  }
+};
+
+template <>
+class SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>
+    : public SharedAllocationRecord<void, void> {
+ private:
+  using RecordBase = SharedAllocationRecord<void, void>;
+
+  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
+  SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
+
+  static void deallocate(RecordBase*);
+
+#ifdef KOKKOS_DEBUG
+  static RecordBase s_root_record;
+#endif
+
+  const Kokkos::Experimental::SYCLDeviceUSMSpace m_space;
+
+ protected:
+  ~SharedAllocationRecord();
+
+  SharedAllocationRecord(
+      const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &deallocate);
+
+ public:
+  std::string get_label() const;
+
+  static SharedAllocationRecord* allocate(
+      const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size);
+
+  /**\brief  Allocate tracked memory in the space */
+  static void* allocate_tracked(
+      const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size);
+
+  /**\brief  Reallocate tracked memory in the space */
+  static void* reallocate_tracked(void* const arg_alloc_ptr,
+                                  const size_t arg_alloc_size);
+
+  /**\brief  Deallocate tracked memory in the space */
+  static void deallocate_tracked(void* const arg_alloc_ptr);
+
+  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
+
+  static void print_records(std::ostream&,
+                            const Kokkos::Experimental::SYCLDeviceUSMSpace&,
+                            bool detail = false);
+};
+
+}  // namespace Impl
+
 }  // namespace Kokkos
 
 #endif

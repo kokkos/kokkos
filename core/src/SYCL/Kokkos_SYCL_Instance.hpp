@@ -63,6 +63,7 @@ class SYCLInternal {
   SYCLInternal& operator=(SYCLInternal&&) = delete;
   SYCLInternal(SYCLInternal&&)            = delete;
 
+  int m_syclDev             = -1;
   size_type* m_scratchSpace = nullptr;
   size_type* m_scratchFlags = nullptr;
 
