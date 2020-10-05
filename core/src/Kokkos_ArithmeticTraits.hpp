@@ -94,6 +94,14 @@ template <class> struct epsilon_helper;
 template <> struct epsilon_helper<float> { static constexpr float value = FLT_EPSILON; };
 template <> struct epsilon_helper<double> { static constexpr double value = DBL_EPSILON; };
 template <> struct epsilon_helper<long double> { static constexpr long double value = LDBL_EPSILON; };
+template <class> struct round_error_helper;
+template <> struct round_error_helper<float> { static constexpr float value = 0.5F; };
+template <> struct round_error_helper<double> { static constexpr double value = 0.5; };
+template <> struct round_error_helper<long double> { static constexpr long double value = 0.5L; };
+template <class> struct norm_min_helper;
+template <> struct norm_min_helper<float> { static constexpr float value = FLT_MIN; };
+template <> struct norm_min_helper<double> { static constexpr double value = DBL_MIN; };
+template <> struct norm_min_helper<long double> { static constexpr long double value = LDBL_MIN; };
 template <class> struct digits_helper;
 template <> struct digits_helper<bool> { static constexpr int value = 1; };
 template <> struct digits_helper<char> { static constexpr int value = CHAR_BIT - std::is_signed<char>::value; };
@@ -152,6 +160,10 @@ template <class T>
 struct finite_max : Impl::finite_max_helper<T> {};
 template <class T>
 struct epsilon : Impl::epsilon_helper<T> {};
+template <class T>
+struct round_error : Impl::round_error_helper<T> {};
+template <class T>
+struct norm_min : Impl::norm_min_helper<T> {};
 
 // Numeric characteristics traits
 template <class T>
