@@ -369,7 +369,7 @@ class TeamSizeTuner {
                 const Functor& functor, const TagType& tag,
                 ViableConfigurationCalculator calc) {
     using PolicyType           = Kokkos::TeamPolicy<Properties...>;
-    auto initial_vector_length = policy.vector_length();
+    auto initial_vector_length = policy.impl_vector_length();
     if (initial_vector_length < 1) {
       policy.impl_set_vector_length(1);
     }
@@ -427,7 +427,7 @@ class TeamSizeTuner {
         }
       }
     } else {  // case 3, there's only one vector length to care about
-      allowed_vector_lengths.push_back(policy.vector_length());
+      allowed_vector_lengths.push_back(policy.impl_vector_length());
     }
 
     for (const auto vector_length : allowed_vector_lengths) {

@@ -324,7 +324,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
   template <typename Policy>
   Policy fix_policy(Policy policy) {
-    if (policy.vector_length() < 0) {
+    if (policy.impl_vector_length() < 0) {
       policy.impl_set_vector_length(1);
     }
     if (policy.team_size() < 0) {
@@ -777,7 +777,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   template <typename Policy>
   Policy fix_policy(Policy policy) {
-    if (policy.vector_length() < 0) {
+    if (policy.impl_vector_length() < 0) {
       policy.impl_set_vector_length(1);
     }
     if (policy.team_size() < 0) {

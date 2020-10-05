@@ -108,10 +108,10 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     int const block_size = ::Kokkos::Experimental::Impl::hip_get_max_block_size<
         FunctorType, typename traits::launch_bounds>(
         space().impl_internal_space_instance(), attr, f,
-        static_cast<size_t>(vector_length()),
+        static_cast<size_t>(impl_vector_length()),
         static_cast<size_t>(team_scratch_size(0)) + 2 * sizeof(double),
         static_cast<size_t>(thread_scratch_size(0)) + sizeof(double));
-    return block_size / vector_length();
+    return block_size / impl_vector_length();
   }
 
   template <class FunctorType>
@@ -148,10 +148,10 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     int const block_size = ::Kokkos::Experimental::Impl::hip_get_opt_block_size<
         FunctorType, typename traits::launch_bounds>(
         space().impl_internal_space_instance(), attr, f,
-        static_cast<size_t>(vector_length()),
+        static_cast<size_t>(impl_vector_length()),
         static_cast<size_t>(team_scratch_size(0)) + 2 * sizeof(double),
         static_cast<size_t>(thread_scratch_size(0)) + sizeof(double));
-    return block_size / vector_length();
+    return block_size / impl_vector_length();
   }
 
   template <typename FunctorType>
@@ -210,7 +210,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   }
   inline void impl_set_vector_length(size_t size) { m_vector_length = size; }
   inline void impl_set_team_size(size_t size) { m_team_size = size; }
-  int vector_length() const { return m_vector_length; }
+  int impl_vector_length() const { return m_vector_length; }
+  KOKKOS_DEPRECATED int vector_length() const { return impl_vector_length(); }
 
   int team_size() const { return m_team_size; }
 
@@ -374,7 +375,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
         typename traits::launch_bounds>::get_hip_func_attributes();
     const int block_size = std::forward<BlockSizeCallable>(block_size_callable)(
         space().impl_internal_space_instance(), attr, f,
-        static_cast<size_t>(vector_length()),
+        static_cast<size_t>(impl_vector_length()),
         static_cast<size_t>(team_scratch_size(0)) + 2 * sizeof(double),
         static_cast<size_t>(thread_scratch_size(0)) + sizeof(double) +
             ((functor_value_traits::StaticValueSize != 0)
@@ -386,7 +387,7 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
     int p2 = 1;
     while (p2 <= block_size) p2 *= 2;
     p2 /= 2;
-    return p2 / vector_length();
+    return p2 / impl_vector_length();
   }
 
   template <class ClosureType, class FunctorType>
@@ -536,7 +537,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_policy(arg_policy),
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.vector_length()) {
+        m_vector_size(arg_policy.impl_vector_length()) {
     hipFuncAttributes attr = ::Kokkos::Experimental::Impl::HIPParallelLaunch<
         ParallelFor, launch_bounds>::get_hip_func_attributes();
     m_team_size =
@@ -584,10 +585,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             ::Kokkos::Experimental::Impl::hip_get_max_block_size<FunctorType,
                                                                  launch_bounds>(
                 m_policy.space().impl_internal_space_instance(), attr,
-                arg_functor, arg_policy.vector_length(),
+                arg_functor, arg_policy.impl_vector_length(),
                 arg_policy.team_scratch_size(0),
                 arg_policy.thread_scratch_size(0)) /
-            arg_policy.vector_length())) {
+            arg_policy.impl_vector_length())) {
       Kokkos::Impl::throw_runtime_exception(std::string(
           "Kokkos::Impl::ParallelFor< HIP > requested too large team size."));
     }
@@ -887,7 +888,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.vector_length()) {
+        m_vector_size(arg_policy.impl_vector_length()) {
     hipFuncAttributes attr = Kokkos::Experimental::Impl::HIPParallelLaunch<
         ParallelReduce, launch_bounds>::get_hip_func_attributes();
     m_team_size =
@@ -929,7 +930,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // The global parallel_reduce does not support vector_length other than 1 at
     // the moment
-    if ((arg_policy.vector_length() > 1) && !UseShflReduction)
+    if ((arg_policy.impl_vector_length() > 1) && !UseShflReduction)
       Impl::throw_runtime_exception(
           "Kokkos::parallel_reduce with a TeamPolicy using a vector length of "
           "greater than 1 is not currently supported for HIP for dynamic "
@@ -986,7 +987,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.vector_length()) {
+        m_vector_size(arg_policy.impl_vector_length()) {
     hipFuncAttributes attr = Kokkos::Experimental::Impl::HIPParallelLaunch<
         ParallelReduce, launch_bounds>::get_hip_func_attributes();
     m_team_size =
@@ -1028,7 +1029,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // The global parallel_reduce does not support vector_length other than 1 at
     // the moment
-    if ((arg_policy.vector_length() > 1) && !UseShflReduction)
+    if ((arg_policy.impl_vector_length() > 1) && !UseShflReduction)
       Impl::throw_runtime_exception(
           "Kokkos::parallel_reduce with a TeamPolicy using a vector length of "
           "greater than 1 is not currently supported for HIP for dynamic "

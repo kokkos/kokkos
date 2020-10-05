@@ -395,7 +395,10 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   inline void impl_set_vector_length(const size_t length) {
     m_tune_vector_length = length;
   }
-  inline int vector_length() const { return m_vector_length; }
+  inline int impl_vector_length() const { return m_vector_length; }
+  KOKKOS_DEPRECATED inline int vector_length() const {
+    return impl_vector_length();
+  }
   inline int team_size() const { return m_team_size; }
   inline int league_size() const { return m_league_size; }
   inline size_t scratch_size(const int& level, int team_size_ = -1) const {

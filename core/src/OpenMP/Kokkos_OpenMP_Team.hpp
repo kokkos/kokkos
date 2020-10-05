@@ -94,7 +94,7 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
     return pool_size < max_host_team_size ? pool_size : max_host_team_size;
   }
 
-  int vector_length() const { return 1; }
+  int impl_vector_length() const { return 1; }
 
   template <class FunctorType>
   int team_size_max(const FunctorType&, const ParallelReduceTag&) const {

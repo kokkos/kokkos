@@ -940,7 +940,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const auto league_size   = m_policy.league_size();
     const auto team_size     = m_policy.team_size();
-    const auto vector_length = m_policy.vector_length();
+    const auto vector_length = m_policy.impl_vector_length();
     const auto nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
                             ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                             : league_size;
@@ -971,7 +971,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const auto league_size   = m_policy.league_size();
     const auto team_size     = m_policy.team_size();
-    const auto vector_length = m_policy.vector_length();
+    const auto vector_length = m_policy.impl_vector_length();
     const auto nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
                             ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                             : league_size;
@@ -1020,7 +1020,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
-    const int vector_length = p.vector_length();
+    const int vector_length = p.impl_vector_length();
     const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                            : league_size;
@@ -1055,7 +1055,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
-    const int vector_length = p.vector_length();
+    const int vector_length = p.impl_vector_length();
     const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                            : league_size;

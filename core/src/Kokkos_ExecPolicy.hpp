@@ -367,7 +367,7 @@ class TeamPolicyInternal : public Impl::PolicyTraits<Properties...> {
 
   static int vector_length_max();
 
-  KOKKOS_INLINE_FUNCTION int vector_length() const;
+  KOKKOS_INLINE_FUNCTION int impl_vector_length() const;
 
   inline typename traits::index_type chunk_size() const;
 

@@ -684,7 +684,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
   //----------------------------------------
 
   inline int team_size() const { return m_team_size; }
-  inline int vector_length() const { return 1; }
+  inline int impl_vector_length() const { return 1; }
   inline int team_alloc() const { return m_team_alloc; }
   inline int league_size() const { return m_league_size; }
 
