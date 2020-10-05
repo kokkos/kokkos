@@ -50,7 +50,6 @@
 #ifdef KOKKOS_ENABLE_SYCL
 #include <CL/sycl.hpp>
 #include <Kokkos_SYCL_Space.hpp>
-#include <SYCL/Kokkos_SYCL_Parallel_Range.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
