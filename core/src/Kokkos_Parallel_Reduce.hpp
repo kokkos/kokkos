@@ -857,7 +857,7 @@ struct ParallelReduceAdaptor {
     uint64_t kpID = 0;
 
     PolicyType inner_policy = policy;
-    Kokkos::Tools::Experimental::begin_parallel_reduce<
+    Kokkos::Tools::Impl::begin_parallel_reduce<
         typename return_value_adapter::reducer_type>(inner_policy, functor,
                                                      label, kpID);
 
@@ -876,7 +876,7 @@ struct ParallelReduceAdaptor {
     Kokkos::Impl::shared_allocation_tracking_enable();
     closure.execute();
 
-    Kokkos::Tools::Experimental::end_parallel_reduce<
+    Kokkos::Tools::Impl::end_parallel_reduce<
         typename return_value_adapter::reducer_type>(inner_policy, functor,
                                                      label, kpID);
   }

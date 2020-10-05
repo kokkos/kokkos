@@ -138,10 +138,12 @@ void set_callbacks(EventSet new_events);
 }  // namespace Experimental
 
 namespace Experimental {
-
 // forward declarations
 size_t get_new_context_id();
 size_t get_current_context_id();
+}  // namespace Experimental
+
+namespace Impl {
 
 namespace Impl {
 
@@ -433,7 +435,7 @@ void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
 #endif
 }
 
-}  // namespace Experimental
+}  // namespace Impl
 
 }  // namespace Tools
 namespace Profiling {

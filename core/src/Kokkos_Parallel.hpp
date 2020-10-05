@@ -162,8 +162,7 @@ inline void parallel_for(
   uint64_t kpID = 0;
 
   ExecPolicy inner_policy = policy;
-  Kokkos::Tools::Experimental::begin_parallel_for(inner_policy, functor, str,
-                                                  kpID);
+  Kokkos::Tools::Impl::begin_parallel_for(inner_policy, functor, str, kpID);
 
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelFor<FunctorType, ExecPolicy> closure(functor, inner_policy);
@@ -171,8 +170,7 @@ inline void parallel_for(
 
   closure.execute();
 
-  Kokkos::Tools::Experimental::end_parallel_for(inner_policy, functor, str,
-                                                kpID);
+  Kokkos::Tools::Impl::end_parallel_for(inner_policy, functor, str, kpID);
 }
 
 template <class FunctorType>
@@ -187,8 +185,7 @@ inline void parallel_for(const size_t work_count, const FunctorType& functor,
 
   policy execution_policy = policy(0, work_count);
 
-  Kokkos::Tools::Experimental::begin_parallel_for(execution_policy, functor,
-                                                  str, kpID);
+  Kokkos::Tools::Impl::begin_parallel_for(execution_policy, functor, str, kpID);
 
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelFor<FunctorType, policy> closure(functor, execution_policy);
@@ -196,8 +193,7 @@ inline void parallel_for(const size_t work_count, const FunctorType& functor,
 
   closure.execute();
 
-  Kokkos::Tools::Experimental::end_parallel_for(execution_policy, functor, str,
-                                                kpID);
+  Kokkos::Tools::Impl::end_parallel_for(execution_policy, functor, str, kpID);
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -396,8 +392,7 @@ inline void parallel_scan(
         nullptr) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
-  Kokkos::Tools::Experimental::begin_parallel_scan(inner_policy, functor, str,
-                                                   kpID);
+  Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
 
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScan<FunctorType, ExecutionPolicy> closure(functor,
@@ -406,8 +401,7 @@ inline void parallel_scan(
 
   closure.execute();
 
-  Kokkos::Tools::Experimental::end_parallel_scan(inner_policy, functor, str,
-                                                 kpID);
+  Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
 }
 
 template <class FunctorType>
@@ -421,16 +415,15 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
 
   uint64_t kpID = 0;
   policy execution_policy(0, work_count);
-  Kokkos::Tools::Experimental::begin_parallel_scan(execution_policy, functor,
-                                                   str, kpID);
+  Kokkos::Tools::Impl::begin_parallel_scan(execution_policy, functor, str,
+                                           kpID);
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScan<FunctorType, policy> closure(functor, execution_policy);
   Kokkos::Impl::shared_allocation_tracking_enable();
 
   closure.execute();
 
-  Kokkos::Tools::Experimental::end_parallel_scan(execution_policy, functor, str,
-                                                 kpID);
+  Kokkos::Tools::Impl::end_parallel_scan(execution_policy, functor, str, kpID);
 }
 
 template <class ExecutionPolicy, class FunctorType>
@@ -459,8 +452,7 @@ inline void parallel_scan(
         nullptr) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
-  Kokkos::Tools::Experimental::begin_parallel_scan(inner_policy, functor, str,
-                                                   kpID);
+  Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
 
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy, ReturnType> closure(
@@ -469,8 +461,7 @@ inline void parallel_scan(
 
   closure.execute();
 
-  Kokkos::Tools::Experimental::end_parallel_scan(inner_policy, functor, str,
-                                                 kpID);
+  Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
 
   policy.space().fence();
 }
@@ -487,8 +478,8 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
 
   policy execution_policy(0, work_count);
   uint64_t kpID = 0;
-  Kokkos::Tools::Experimental::begin_parallel_scan(execution_policy, functor,
-                                                   str, kpID);
+  Kokkos::Tools::Impl::begin_parallel_scan(execution_policy, functor, str,
+                                           kpID);
 
   Kokkos::Impl::shared_allocation_tracking_disable();
   Impl::ParallelScanWithTotal<FunctorType, policy, ReturnType> closure(
@@ -497,8 +488,7 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
 
   closure.execute();
 
-  Kokkos::Tools::Experimental::end_parallel_scan(execution_policy, functor, str,
-                                                 kpID);
+  Kokkos::Tools::Impl::end_parallel_scan(execution_policy, functor, str, kpID);
 
   execution_space().fence();
 }
