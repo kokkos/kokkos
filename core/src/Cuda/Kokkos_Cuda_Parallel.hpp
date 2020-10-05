@@ -238,10 +238,10 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   //----------------------------------------
 
-  KOKKOS_DEPRECATED inline int impl_vector_length() const {
-    return m_vector_length;
+  KOKKOS_DEPRECATED inline int vector_length() const {
+    return impl_vector_length();
   }
-  inline int vector_length() const { return impl_vector_length(); }
+  inline int impl_vector_length() const { return m_vector_length; }
   inline int team_size() const { return m_team_size; }
   inline int league_size() const { return m_league_size; }
   inline bool impl_auto_team_size() const { return m_tune_team; }
