@@ -119,7 +119,7 @@ struct LoadOper {
   static Scalar1 apply(const Scalar1& val1, const Scalar2&) { return val1; }
 };
 
-constexpr bool atomic_always_lock_free(std::size_t size) {
+constexpr bool atomic_always_lock_free(size_t size) {
   return size == 4 || size == 8
 #if defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP)
          || size == 16
@@ -136,169 +136,71 @@ DESUL_INLINE_FUNCTION bool atomic_is_lock_free() noexcept {
       ;
 }
 
+template<size_t N>
+struct atomic_compare_exchange_type;
+
+template<>
+struct atomic_compare_exchange_type<4> {
+  using type = int32_t;
+};
+
+template<>
+struct atomic_compare_exchange_type<8> {
+  using type = int64_t;
+};
+
+template<>
+struct atomic_compare_exchange_type<16> {
+  using type = Dummy16ByteValue;
+};
+
 template <class Oper, typename T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T
 atomic_fetch_oper(const Oper& op,
                   T* const dest,
-                  typename std::enable_if<sizeof(T) == 4, const T>::type val,
+                  typename std::enable_if<atomic_always_lock_free(sizeof(T)), const T>::type val,
                   MemoryOrder order,
                   MemoryScope scope) {
-  union U {
-    int32_t i;
-    T t;
-    DESUL_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
+  using cas_t = typename atomic_compare_exchange_type<sizeof(T)>::type;
+  cas_t oldval = reinterpret_cast<cas_t&>(*dest);
+  cas_t assume = oldval;
 
   do {
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = desul::atomic_compare_exchange(
-        (int32_t*)dest, assume.i, newval.i, order, scope);
-  } while (assume.i != oldval.i);
+    assume = oldval;
+    T newval = op.apply(reinterpret_cast<T&>(assume), val);
+    oldval = desul::atomic_compare_exchange(
+        reinterpret_cast<cas_t*>(dest), assume, reinterpret_cast<cas_t&>(newval), order, scope);
+  } while (assume != oldval);
 
-  return oldval.t;
+  return reinterpret_cast<T&>(oldval);
 }
 
 template <class Oper, typename T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T
 atomic_oper_fetch(const Oper& op,
                   T* const dest,
-                  typename std::enable_if<sizeof(T) == 4, const T>::type val,
+                  typename std::enable_if<atomic_always_lock_free(sizeof(T)), const T>::type val,
                   MemoryOrder order,
                   MemoryScope scope) {
-  union U {
-    int32_t i;
-    T t;
-    DESUL_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
-
+  using cas_t = typename atomic_compare_exchange_type<sizeof(T)>::type;
+  cas_t oldval = reinterpret_cast<cas_t&>(*dest);
+  T newval = val;
+  cas_t assume = oldval;
   do {
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = desul::atomic_compare_exchange(
-        (int32_t*)dest, assume.i, newval.i, order, scope);
-  } while (assume.i != oldval.i);
+    assume = oldval;
+    newval = op.apply(reinterpret_cast<T&>(assume), val);
+    oldval = desul::atomic_compare_exchange(
+        reinterpret_cast<cas_t*>(dest), assume, reinterpret_cast<cas_t&>(newval), order, scope);
+  } while (assume != oldval);
 
-  return newval.t;
+  return newval;
 }
 
 template <class Oper, typename T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T
 atomic_fetch_oper(const Oper& op,
                   T* const dest,
-                  typename std::enable_if<sizeof(T) == 8, const T>::type val,
-                  MemoryOrder order,
-                  MemoryScope scope) {
-  union U {
-    int64_t i;
-    T t;
-    DESUL_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
-
-  do {
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = desul::atomic_compare_exchange(
-        (int64_t*)dest, assume.i, newval.i, order, scope);
-  } while (assume.i != oldval.i);
-
-  return oldval.t;
-}
-
-template <class Oper, typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T
-atomic_oper_fetch(const Oper& op,
-                  T* const dest,
-                  typename std::enable_if<sizeof(T) == 8, const T>::type val,
-                  MemoryOrder order,
-                  MemoryScope scope) {
-  union U {
-    int64_t i;
-    T t;
-    DESUL_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
-
-  do {
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = desul::atomic_compare_exchange(
-        (int64_t*)dest, assume.i, newval.i, order, scope);
-  } while (assume.i != oldval.i);
-
-  return newval.t;
-}
-
-#if defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP)
-
-template <class Oper, typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T
-atomic_fetch_oper(const Oper& op,
-                  T* const dest,
-                  typename std::enable_if<sizeof(T) == 16, const T>::type val,
-                  MemoryOrder order,
-                  MemoryScope scope) {
-  union U {
-    Dummy16ByteValue i;
-    T t;
-    DESUL_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
-
-  do {
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = desul::atomic_compare_exchange(
-        (Dummy16ByteValue*)dest, assume.i, newval.i, order, scope);
-  } while (assume.i != oldval.i);
-
-  return oldval.t;
-}
-
-template <class Oper, typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T
-atomic_oper_fetch(const Oper& op,
-                  T* const dest,
-                  typename std::enable_if<sizeof(T) == 16, const T>::type val,
-                  MemoryOrder order,
-                  MemoryScope scope) {
-  union U {
-    Dummy16ByteValue i;
-    T t;
-    DESUL_INLINE_FUNCTION U() {}
-  } oldval, assume, newval;
-
-  oldval.t = *dest;
-
-  do {
-    assume.i = oldval.i;
-    newval.t = op.apply(assume.t, val);
-    oldval.i = desul::atomic_compare_exchange(
-        (Dummy16ByteValue*)dest, assume.i, newval.i, order, scope);
-  } while (assume.i != oldval.i);
-
-  return newval.t;
-}
-#endif
-
-template <class Oper, typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T
-atomic_fetch_oper(const Oper& op,
-                  T* const dest,
-                  typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
-#if defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP)
-                                              && (sizeof(T) != 16)
-#endif
-                                              ,
-                                          const T>::type val,
+                  typename std::enable_if<!atomic_always_lock_free(sizeof(T)), const T>::type val,
                   MemoryOrder /*order*/,
                   MemoryScope scope) {
 #if defined(DESUL_HAVE_FORWARD_PROGRESS)
@@ -342,12 +244,7 @@ template <class Oper, typename T, class MemoryOrder, class MemoryScope>
 DESUL_INLINE_FUNCTION T
 atomic_oper_fetch(const Oper& op,
                   T* const dest,
-                  typename std::enable_if<(sizeof(T) != 4) && (sizeof(T) != 8)
-#if defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP)
-                                              && (sizeof(T) != 16)
-#endif
-                                              ,
-                                          const T>::type& val,
+                  typename std::enable_if<!atomic_always_lock_free(sizeof(T)), const T>::type val,
                   MemoryOrder /*order*/,
                   MemoryScope scope) {
 #if defined(DESUL_HAVE_FORWARD_PROGRESS)
@@ -382,7 +279,7 @@ atomic_oper_fetch(const Oper& op,
   }
   return return_val;
 #else
-  static_assert(false, "Unimplemented lock based attomic\n");
+  static_assert(false, "Unimplemented lock based atomic\n");
   return val;
 #endif
 }
