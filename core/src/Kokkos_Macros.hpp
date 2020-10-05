@@ -502,21 +502,9 @@
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 
-#if (defined(KOKKOS_ENABLE_CXX14) || defined(KOKKOS_ENABLE_CXX17) || \
-     defined(KOKKOS_ENABLE_CXX20))
 #define KOKKOS_CONSTEXPR_14 constexpr
 #define KOKKOS_DEPRECATED [[deprecated]]
 #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
-#else
-#define KOKKOS_CONSTEXPR_14
-#if defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG)
-#define KOKKOS_DEPRECATED
-#define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE __attribute__((deprecated))
-#else
-#define KOKKOS_DEPRECATED
-#define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
-#endif
-#endif
 
 // DJS 05/28/2019: Bugfix: Issue 2155
 // Use KOKKOS_ENABLE_CUDA_LDG_INTRINSIC to avoid memory leak in RandomAccess
