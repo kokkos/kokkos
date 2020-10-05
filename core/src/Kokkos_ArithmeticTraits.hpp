@@ -46,8 +46,11 @@
 #define KOKKOS_ARITHMETIC_TRAITS_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <cfloat>
+#include <climits>
 #include <cmath>
 #include <cstdint>
+#include <type_traits>
 
 namespace Kokkos {
 namespace Experimental {
@@ -91,6 +94,52 @@ template <class> struct epsilon_helper;
 template <> struct epsilon_helper<float> { static constexpr float value = FLT_EPSILON; };
 template <> struct epsilon_helper<double> { static constexpr double value = DBL_EPSILON; };
 template <> struct epsilon_helper<long double> { static constexpr long double value = LDBL_EPSILON; };
+template <class> struct digits_helper;
+template <> struct digits_helper<bool> { static constexpr int value = 1; };
+template <> struct digits_helper<char> { static constexpr int value = CHAR_BIT - std::is_signed<char>::value; };
+template <> struct digits_helper<unsigned char> { static constexpr int value = CHAR_BIT; };
+template <> struct digits_helper<short> { static constexpr int value = CHAR_BIT*sizeof(short)-1; };
+template <> struct digits_helper<unsigned short> { static constexpr int value = CHAR_BIT*sizeof(short); };
+template <> struct digits_helper<int> { static constexpr int value = CHAR_BIT*sizeof(int)-1; };
+template <> struct digits_helper<unsigned int> { static constexpr int value = CHAR_BIT*sizeof(int); };
+template <> struct digits_helper<long int> { static constexpr int value = CHAR_BIT*sizeof(long int)-1; };
+template <> struct digits_helper<unsigned long int> { static constexpr int value = CHAR_BIT*sizeof(long int); };
+template <> struct digits_helper<long long int> { static constexpr int value = CHAR_BIT*sizeof(long long int)-1; };
+template <> struct digits_helper<unsigned long long int> { static constexpr int value = CHAR_BIT*sizeof(long long int); };
+template <> struct digits_helper<float> { static constexpr int value = FLT_MANT_DIG; };
+template <> struct digits_helper<double> { static constexpr int value = DBL_MANT_DIG; };
+template <> struct digits_helper<long double> { static constexpr int value = LDBL_MANT_DIG; };
+template <class> struct radix_helper;
+template <> struct radix_helper<bool> { static constexpr int value = 2; };
+template <> struct radix_helper<char> { static constexpr int value = 2; };
+template <> struct radix_helper<unsigned char> { static constexpr int value = 2; };
+template <> struct radix_helper<short> { static constexpr int value = 2; };
+template <> struct radix_helper<unsigned short> { static constexpr int value = 2; };
+template <> struct radix_helper<int> { static constexpr int value = 2; };
+template <> struct radix_helper<unsigned int> { static constexpr int value = 2; };
+template <> struct radix_helper<long int> { static constexpr int value = 2; };
+template <> struct radix_helper<unsigned long int> { static constexpr int value = 2; };
+template <> struct radix_helper<long long int> { static constexpr int value = 2; };
+template <> struct radix_helper<unsigned long long int> { static constexpr int value = 2; };
+template <> struct radix_helper<float> { static constexpr int value = FLT_RADIX; };
+template <> struct radix_helper<double> { static constexpr int value = FLT_RADIX; };
+template <> struct radix_helper<long double> { static constexpr int value = FLT_RADIX; };
+template <class> struct min_exponent_helper;
+template <> struct min_exponent_helper<float> { static constexpr int value = FLT_MIN_EXP; };
+template <> struct min_exponent_helper<double> { static constexpr int value = DBL_MIN_EXP; };
+template <> struct min_exponent_helper<long double> { static constexpr int value = LDBL_MIN_EXP; };
+template <class> struct min_exponent10_helper;
+template <> struct min_exponent10_helper<float> { static constexpr int value = FLT_MIN_10_EXP; };
+template <> struct min_exponent10_helper<double> { static constexpr int value = DBL_MIN_10_EXP; };
+template <> struct min_exponent10_helper<long double> { static constexpr int value = LDBL_MIN_10_EXP; };
+template <class> struct max_exponent_helper;
+template <> struct max_exponent_helper<float> { static constexpr int value = FLT_MAX_EXP; };
+template <> struct max_exponent_helper<double> { static constexpr int value = DBL_MAX_EXP; };
+template <> struct max_exponent_helper<long double> { static constexpr int value = LDBL_MAX_EXP; };
+template <class> struct max_exponent10_helper;
+template <> struct max_exponent10_helper<float> { static constexpr int value = FLT_MAX_10_EXP; };
+template <> struct max_exponent10_helper<double> { static constexpr int value = DBL_MAX_10_EXP; };
+template <> struct max_exponent10_helper<long double> { static constexpr int value = LDBL_MAX_10_EXP; };
 // clang-format on
 }  // namespace Impl
 
@@ -103,6 +152,21 @@ template <class T>
 struct finite_max : Impl::finite_max_helper<T> {};
 template <class T>
 struct epsilon : Impl::epsilon_helper<T> {};
+
+// Numeric characteristics traits
+template <class T>
+struct digits : Impl::digits_helper<T> {};
+template <class T>
+struct radix : Impl::radix_helper<T> {};
+template <class T>
+struct min_exponent : Impl::min_exponent_helper<T> {};
+template <class T>
+struct min_exponent10 : Impl::min_exponent10_helper<T> {};
+template <class T>
+struct max_exponent : Impl::max_exponent_helper<T> {};
+template <class T>
+struct max_exponent10 : Impl::max_exponent10_helper<T> {};
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
