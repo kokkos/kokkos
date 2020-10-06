@@ -169,7 +169,7 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
     return rv;
   }
 
-  void submit() & {
+  void submit() {
     // This reset is gross, but for the purposes of our simple host
     // implementation...
     for (auto& sink : m_sinks) {
@@ -177,25 +177,6 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
     }
     for (auto& sink : m_sinks) {
       sink->execute_node();
-    }
-  }
-
-  // I don't know if we have enough information to do call this overload
-  // without incorrectly relying on the determinism of
-  // std::shared_ptr::use_count(), but in case we do this is what it should
-  // look like.
-  void submit() && {
-    // This reset is gross, but for the purposes of our simple host
-    // implementation...
-    for (auto& sink : m_sinks) {
-      sink->reset_has_executed();
-    }
-    for (auto it = m_sinks.begin(); it != m_sinks.end();) {
-      // Swap ownership onto the stack so that it can be destroyed immediately
-      // after execution
-      std::shared_ptr<node_details_t> node_to_execute = std::move(*it);
-      m_sinks.erase(it++);
-      std::move(*node_to_execute).execute_node();
     }
   }
 
