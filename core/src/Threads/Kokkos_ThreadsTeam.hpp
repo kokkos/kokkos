@@ -576,6 +576,9 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 
   int m_chunk_size;
 
+  bool m_tune_team_size;
+  bool m_tune_vector_length;
+
   inline void init(const int league_size_request, const int team_size_request) {
     const int pool_size = traits::execution_space::impl_thread_pool_size(0);
     const int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
@@ -631,6 +634,8 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     m_team_scratch_size[1]   = p.m_team_scratch_size[1];
     m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
     m_chunk_size             = p.m_chunk_size;
+    m_tune_team_size         = p.m_tune_team_size;
+    m_tune_vector_length     = p.m_tune_vector_length;
   }
 
   //----------------------------------------
@@ -679,8 +684,14 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
   //----------------------------------------
 
   inline int team_size() const { return m_team_size; }
+  inline int impl_vector_length() const { return 1; }
   inline int team_alloc() const { return m_team_alloc; }
   inline int league_size() const { return m_league_size; }
+
+  inline bool impl_auto_team_size() const { return m_tune_team_size; }
+  inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
+  inline void impl_set_team_size(size_t size) { init(m_league_size, size); }
+  inline void impl_set_vector_length(size_t /**size*/) {}
   inline size_t scratch_size(const int& level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
@@ -698,51 +709,62 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
         m_team_alloc(0),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(0) {
+        m_chunk_size(0),
+        m_tune_team_size(false),
+        m_tune_vector_length(false) {
     init(league_size_request, team_size_request);
     (void)vector_length_request;
   }
 
-  /** \brief  Specify league size, request team size */
-  TeamPolicyInternal(const typename traits::execution_space&,
+  /** \brief  Specify league size, request team size and vector length*/
+  TeamPolicyInternal(const typename traits::execution_space& space,
                      int league_size_request,
                      const Kokkos::AUTO_t& /* team_size_request */
                      ,
-                     int /* vector_length_request */ = 1)
-      : m_league_size(0),
-        m_team_size(0),
-        m_team_alloc(0),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(0) {
-    init(league_size_request,
-         traits::execution_space::impl_thread_pool_size(2));
-  }
+                     const Kokkos::AUTO_t& /* vector_length_request */)
+      : TeamPolicyInternal(space, league_size_request, -1, -1) {}
+
+  /** \brief  Specify league size, request team size*/
+  TeamPolicyInternal(const typename traits::execution_space& space,
+                     int league_size_request,
+                     const Kokkos::AUTO_t& /* team_size_request */
+                     ,
+                     int vector_length_request)
+      : TeamPolicyInternal(space, league_size_request, -1,
+                           vector_length_request) {}
+
+  /** \brief  Specify league size and team size, request vector length*/
+  TeamPolicyInternal(const typename traits::execution_space& space,
+                     int league_size_request, int team_size_request,
+                     const Kokkos::AUTO_t& /* vector_length_request */)
+      : TeamPolicyInternal(space, league_size_request, team_size_request, -1) {}
 
   TeamPolicyInternal(int league_size_request, int team_size_request,
-                     int /* vector_length_request */ = 1)
-      : m_league_size(0),
-        m_team_size(0),
-        m_team_alloc(0),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(0) {
-    init(league_size_request, team_size_request);
-  }
+                     int vector_length_request = 1)
+      : TeamPolicyInternal(typename traits::execution_space(),
+                           league_size_request, team_size_request,
+                           vector_length_request) {}
 
   TeamPolicyInternal(int league_size_request,
                      const Kokkos::AUTO_t& /* team_size_request */
                      ,
-                     int /* vector_length_request */ = 1)
-      : m_league_size(0),
-        m_team_size(0),
-        m_team_alloc(0),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(0) {
-    init(league_size_request,
-         traits::execution_space::impl_thread_pool_size(2));
-  }
+                     int vector_length_request = 1)
+      : TeamPolicyInternal(typename traits::execution_space(),
+                           league_size_request, -1, vector_length_request) {}
+
+  /** \brief  Specify league size, request team size and vector length*/
+  TeamPolicyInternal(int league_size_request,
+                     const Kokkos::AUTO_t& /* team_size_request */
+                     ,
+                     const Kokkos::AUTO_t& /* vector_length_request */)
+      : TeamPolicyInternal(typename traits::execution_space(),
+                           league_size_request, -1, -1) {}
+
+  /** \brief  Specify league size and team size, request vector length*/
+  TeamPolicyInternal(int league_size_request, int team_size_request,
+                     const Kokkos::AUTO_t& /* vector_length_request */)
+      : TeamPolicyInternal(typename traits::execution_space(),
+                           league_size_request, team_size_request, -1) {}
 
   inline int chunk_size() const { return m_chunk_size; }
 

@@ -585,11 +585,11 @@ struct TestReduceCombinatoricalInstantiation {
     AddFunctorLambdaRange(
         N, args...,
         Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Static> >(0, N)
-            .set_chunk_size(10));
+            .set_chunk_size(16));
     AddFunctorLambdaRange(
         N, args...,
         Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >(0, N)
-            .set_chunk_size(10));
+            .set_chunk_size(16));
   }
 
   template <class... Args>
@@ -604,12 +604,12 @@ struct TestReduceCombinatoricalInstantiation {
         N, args...,
         Kokkos::TeamPolicy<ExecSpace, Kokkos::Schedule<Kokkos::Static> >(
             N, Kokkos::AUTO)
-            .set_chunk_size(10));
+            .set_chunk_size(16));
     AddFunctorLambdaTeam(
         N, args...,
         Kokkos::TeamPolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >(
             N, Kokkos::AUTO)
-            .set_chunk_size(10));
+            .set_chunk_size(16));
   }
 
   static void execute_a1() { AddPolicy_1(1000); }

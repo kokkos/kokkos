@@ -118,6 +118,18 @@ struct TestTeamPolicy {
         TestTeamPolicy());
   }
 
+  static void test_constructors() {
+    constexpr const int smallest_work = 1;
+    Kokkos::TeamPolicy<ExecSpace, NoOpTag> none_auto(
+        smallest_work, smallest_work, smallest_work);
+    Kokkos::TeamPolicy<ExecSpace, NoOpTag> both_auto(
+        smallest_work, Kokkos::AUTO(), Kokkos::AUTO());
+    Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_vector(
+        smallest_work, smallest_work, Kokkos::AUTO());
+    Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_team(
+        smallest_work, Kokkos::AUTO(), smallest_work);
+  }
+
   static void test_for(const size_t league_size) {
     TestTeamPolicy functor(league_size);
     using policy_type = Kokkos::TeamPolicy<ScheduleType, ExecSpace>;
@@ -135,6 +147,7 @@ struct TestTeamPolicy {
                          functor);
 
     test_small_league_size();
+    test_constructors();
   }
 
   struct ReduceTag {};

@@ -99,6 +99,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
   int m_team_scratch_size[2];
   int m_thread_scratch_size[2];
   int m_chunk_size;
+  bool m_tune_team;
+  bool m_tune_vector;
 
  public:
   //! Execution space of this execution policy
@@ -115,6 +117,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     m_thread_scratch_size[1] = p.m_thread_scratch_size[1];
     m_chunk_size             = p.m_chunk_size;
     m_space                  = p.m_space;
+    m_tune_team              = p.m_tune_team;
+    m_tune_vector            = p.m_tune_vector;
   }
 
   //----------------------------------------
@@ -130,10 +134,10 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         Kokkos::Impl::cuda_get_max_block_size<FunctorType,
                                               typename traits::launch_bounds>(
             space().impl_internal_space_instance(), attr, f,
-            (size_t)vector_length(),
+            (size_t)impl_vector_length(),
             (size_t)team_scratch_size(0) + 2 * sizeof(double),
             (size_t)thread_scratch_size(0) + sizeof(double));
-    return block_size / vector_length();
+    return block_size / impl_vector_length();
   }
 
   template <class FunctorType>
@@ -171,10 +175,10 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         Kokkos::Impl::cuda_get_opt_block_size<FunctorType,
                                               typename traits::launch_bounds>(
             space().impl_internal_space_instance(), attr, f,
-            (size_t)vector_length(),
+            (size_t)impl_vector_length(),
             (size_t)team_scratch_size(0) + 2 * sizeof(double),
             (size_t)thread_scratch_size(0) + sizeof(double));
-    return block_size / vector_length();
+    return block_size / impl_vector_length();
   }
 
   template <class FunctorType>
@@ -234,9 +238,18 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   //----------------------------------------
 
-  inline int vector_length() const { return m_vector_length; }
+  KOKKOS_DEPRECATED inline int vector_length() const {
+    return impl_vector_length();
+  }
+  inline int impl_vector_length() const { return m_vector_length; }
   inline int team_size() const { return m_team_size; }
   inline int league_size() const { return m_league_size; }
+  inline bool impl_auto_team_size() const { return m_tune_team; }
+  inline bool impl_auto_vector_length() const { return m_tune_vector; }
+  inline void impl_set_team_size(size_t team_size) { m_team_size = team_size; }
+  inline void impl_set_vector_length(size_t vector_length) {
+    m_vector_length = vector_length;
+  }
   inline int scratch_size(int level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = m_team_size;
     return m_team_scratch_size[level] +
@@ -258,18 +271,25 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_vector_length(0),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {}
+        m_chunk_size(Impl::CudaTraits::WarpSize),
+        m_tune_team(false),
+        m_tune_vector(false) {}
 
-  /** \brief  Specify league size, request team size */
+  /** \brief  Specify league size, specify team size, specify vector length */
   TeamPolicyInternal(const execution_space space_, int league_size_,
                      int team_size_request, int vector_length_request = 1)
       : m_space(space_),
         m_league_size(league_size_),
         m_team_size(team_size_request),
-        m_vector_length(verify_requested_vector_length(vector_length_request)),
+        m_vector_length(
+            (vector_length_request > 0)
+                ? verify_requested_vector_length(vector_length_request)
+                : verify_requested_vector_length(1)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {
+        m_chunk_size(Impl::CudaTraits::WarpSize),
+        m_tune_team(bool(team_size_request <= 0)),
+        m_tune_vector(bool(vector_length_request <= 0)) {
     // Make sure league size is permissible
     if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
       Impl::throw_runtime_exception(
@@ -277,72 +297,56 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
           "space.");
 
     // Make sure total block size is permissible
-    if (m_team_size * m_vector_length > 1024) {
+    if (m_team_size * m_vector_length >
+        int(Impl::CudaTraits::MaxHierarchicalParallelism)) {
       Impl::throw_runtime_exception(
           std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. "
                       "Team size x vector length must be smaller than 1024."));
     }
   }
 
-  /** \brief  Specify league size, request team size */
+  /** \brief  Specify league size, request team size, specify vector length */
   TeamPolicyInternal(const execution_space space_, int league_size_,
                      const Kokkos::AUTO_t& /* team_size_request */
                      ,
                      int vector_length_request = 1)
-      : m_space(space_),
-        m_league_size(league_size_),
-        m_team_size(-1),
-        m_vector_length(verify_requested_vector_length(vector_length_request)),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {
-    // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on Cuda execution "
-          "space.");
-  }
+      : TeamPolicyInternal(space_, league_size_, -1, vector_length_request) {}
+
+  /** \brief  Specify league size, request team size and vector length */
+  TeamPolicyInternal(const execution_space space_, int league_size_,
+                     const Kokkos::AUTO_t& /* team_size_request */,
+                     const Kokkos::AUTO_t& /* vector_length_request */
+                     )
+      : TeamPolicyInternal(space_, league_size_, -1, -1) {}
+
+  /** \brief  Specify league size, specify team size, request vector length */
+  TeamPolicyInternal(const execution_space space_, int league_size_,
+                     int team_size_request, const Kokkos::AUTO_t&)
+      : TeamPolicyInternal(space_, league_size_, team_size_request, -1) {}
 
   TeamPolicyInternal(int league_size_, int team_size_request,
                      int vector_length_request = 1)
-      : m_space(typename traits::execution_space()),
-        m_league_size(league_size_),
-        m_team_size(team_size_request),
-        m_vector_length(verify_requested_vector_length(vector_length_request)),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {
-    // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on Cuda execution "
-          "space.");
+      : TeamPolicyInternal(typename traits::execution_space(), league_size_,
+                           team_size_request, vector_length_request) {}
 
-    // Make sure total block size is permissible
-    if (m_team_size * m_vector_length > 1024) {
-      Impl::throw_runtime_exception(
-          std::string("Kokkos::TeamPolicy< Cuda > the team size is too large. "
-                      "Team size x vector length must be smaller than 1024."));
-    }
-  }
-
-  TeamPolicyInternal(int league_size_,
-                     const Kokkos::AUTO_t& /* team_size_request */
-                     ,
+  TeamPolicyInternal(int league_size_, const Kokkos::AUTO_t& team_size_request,
                      int vector_length_request = 1)
-      : m_space(typename traits::execution_space()),
-        m_league_size(league_size_),
-        m_team_size(-1),
-        m_vector_length(verify_requested_vector_length(vector_length_request)),
-        m_team_scratch_size{0, 0},
-        m_thread_scratch_size{0, 0},
-        m_chunk_size(32) {
-    // Make sure league size is permissible
-    if (league_size_ >= int(Impl::cuda_internal_maximum_grid_count()))
-      Impl::throw_runtime_exception(
-          "Requested too large league_size for TeamPolicy on Cuda execution "
-          "space.");
-  }
+      : TeamPolicyInternal(typename traits::execution_space(), league_size_,
+                           team_size_request, vector_length_request)
+
+  {}
+
+  /** \brief  Specify league size, request team size */
+  TeamPolicyInternal(int league_size_, const Kokkos::AUTO_t& team_size_request,
+                     const Kokkos::AUTO_t& vector_length_request)
+      : TeamPolicyInternal(typename traits::execution_space(), league_size_,
+                           team_size_request, vector_length_request) {}
+
+  /** \brief  Specify league size, request team size */
+  TeamPolicyInternal(int league_size_, int team_size_request,
+                     const Kokkos::AUTO_t& vector_length_request)
+      : TeamPolicyInternal(typename traits::execution_space(), league_size_,
+                           team_size_request, vector_length_request) {}
 
   inline int chunk_size() const { return m_chunk_size; }
 
@@ -394,7 +398,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
             get_cuda_func_attributes();
     const int block_size = std::forward<BlockSizeCallable>(block_size_callable)(
         space().impl_internal_space_instance(), attr, f,
-        (size_t)vector_length(),
+        (size_t)impl_vector_length(),
         (size_t)team_scratch_size(0) + 2 * sizeof(double),
         (size_t)thread_scratch_size(0) + sizeof(double) +
             ((functor_value_traits::StaticValueSize != 0)
@@ -406,7 +410,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     int p2 = 1;
     while (p2 <= block_size) p2 *= 2;
     p2 /= 2;
-    return p2 / vector_length();
+    return p2 / impl_vector_length();
   }
 
   template <class ClosureType, class FunctorType>
@@ -749,7 +753,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_policy(arg_policy),
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.vector_length()) {
+        m_vector_size(arg_policy.impl_vector_length()) {
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor,
                            LaunchBounds>::get_cuda_func_attributes();
@@ -796,10 +800,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (int(m_team_size) >
         int(Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
                 m_policy.space().impl_internal_space_instance(), attr,
-                arg_functor, arg_policy.vector_length(),
+                arg_functor, arg_policy.impl_vector_length(),
                 arg_policy.team_scratch_size(0),
                 arg_policy.thread_scratch_size(0)) /
-            arg_policy.vector_length())) {
+            arg_policy.impl_vector_length())) {
       Kokkos::Impl::throw_runtime_exception(std::string(
           "Kokkos::Impl::ParallelFor< Cuda > requested too large team size."));
     }
@@ -1759,7 +1763,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.vector_length()) {
+        m_vector_size(arg_policy.impl_vector_length()) {
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelReduce,
                            LaunchBounds>::get_cuda_func_attributes();
@@ -1797,7 +1801,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // The global parallel_reduce does not support vector_length other than 1 at
     // the moment
-    if ((arg_policy.vector_length() > 1) && !UseShflReduction)
+    if ((arg_policy.impl_vector_length() > 1) && !UseShflReduction)
       Impl::throw_runtime_exception(
           "Kokkos::parallel_reduce with a TeamPolicy using a vector length of "
           "greater than 1 is not currently supported for CUDA for dynamic "
@@ -1858,7 +1862,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_scratch_ptr{nullptr, nullptr},
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.vector_length()) {
+        m_vector_size(arg_policy.impl_vector_length()) {
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelReduce,
                            LaunchBounds>::get_cuda_func_attributes();
@@ -1895,7 +1899,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // The global parallel_reduce does not support vector_length other than 1 at
     // the moment
-    if ((arg_policy.vector_length() > 1) && !UseShflReduction)
+    if ((arg_policy.impl_vector_length() > 1) && !UseShflReduction)
       Impl::throw_runtime_exception(
           "Kokkos::parallel_reduce with a TeamPolicy using a vector length of "
           "greater than 1 is not currently supported for CUDA for dynamic "

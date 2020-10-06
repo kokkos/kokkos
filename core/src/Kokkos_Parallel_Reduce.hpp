@@ -855,31 +855,30 @@ struct ParallelReduceAdaptor {
                              const FunctorType& functor,
                              ReturnType& return_value) {
     uint64_t kpID = 0;
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Impl::ParallelConstructName<FunctorType,
-                                          typename PolicyType::work_tag>
-          name(label);
-      Kokkos::Profiling::beginParallelReduce(name.get(), 0, &kpID);
-    }
+
+    PolicyType inner_policy = policy;
+    Kokkos::Tools::Impl::begin_parallel_reduce<
+        typename return_value_adapter::reducer_type>(inner_policy, functor,
+                                                     label, kpID);
 
     Kokkos::Impl::shared_allocation_tracking_disable();
 #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
     Impl::ParallelReduce<typename functor_adaptor::functor_type, PolicyType,
                          typename return_value_adapter::reducer_type>
-        closure(functor_adaptor::functor(functor), policy,
+        closure(functor_adaptor::functor(functor), inner_policy,
                 return_value_adapter::return_value(return_value, functor));
 #else
     Impl::ParallelReduce<FunctorType, PolicyType,
                          typename return_value_adapter::reducer_type>
-        closure(functor, policy,
+        closure(functor, inner_policy,
                 return_value_adapter::return_value(return_value, functor));
 #endif
     Kokkos::Impl::shared_allocation_tracking_enable();
     closure.execute();
 
-    if (Kokkos::Profiling::profileLibraryLoaded()) {
-      Kokkos::Profiling::endParallelReduce(kpID);
-    }
+    Kokkos::Tools::Impl::end_parallel_reduce<
+        typename return_value_adapter::reducer_type>(inner_policy, functor,
+                                                     label, kpID);
   }
 };
 }  // namespace Impl
