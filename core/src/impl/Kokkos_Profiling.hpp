@@ -145,8 +145,6 @@ size_t get_current_context_id();
 
 namespace Impl {
 
-namespace Impl {
-
 static std::map<std::string, Kokkos::Tools::Experimental::TeamSizeTuner>
     team_tuners;
 
@@ -322,7 +320,6 @@ void report_policy_results(const size_t /**tuning_context*/,
     tuner.end();
   }
 }
-}  // namespace Impl
 
 template <class ExecPolicy, class FunctorType>
 void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
@@ -337,8 +334,7 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
-  Impl::tune_policy(context_id, label, policy, functor,
-                    Kokkos::ParallelForTag{});
+  tune_policy(context_id, label, policy, functor, Kokkos::ParallelForTag{});
 #else
   (void)functor;
 #endif
@@ -352,8 +348,8 @@ void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
-  Impl::report_policy_results(context_id, label, policy, functor,
-                              Kokkos::ParallelForTag{});
+  report_policy_results(context_id, label, policy, functor,
+                        Kokkos::ParallelForTag{});
 #else
   (void)policy;
   (void)functor;
@@ -374,8 +370,7 @@ void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
-  Impl::tune_policy(context_id, label, policy, functor,
-                    Kokkos::ParallelScanTag{});
+  tune_policy(context_id, label, policy, functor, Kokkos::ParallelScanTag{});
 #else
   (void)functor;
 #endif
@@ -389,8 +384,8 @@ void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
-  Impl::report_policy_results(context_id, label, policy, functor,
-                              Kokkos::ParallelScanTag{});
+  report_policy_results(context_id, label, policy, functor,
+                        Kokkos::ParallelScanTag{});
 #else
   (void)policy;
   (void)functor;
@@ -411,8 +406,8 @@ void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
-  Impl::ReductionSwitcher<ReducerType>::tune(context_id, label, policy, functor,
-                                             Kokkos::ParallelReduceTag{});
+  ReductionSwitcher<ReducerType>::tune(context_id, label, policy, functor,
+                                       Kokkos::ParallelReduceTag{});
 #else
   (void)functor;
 #endif
@@ -426,8 +421,8 @@ void end_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_current_context_id();
-  Impl::report_policy_results(context_id, label, policy, functor,
-                              Kokkos::ParallelReduceTag{});
+  report_policy_results(context_id, label, policy, functor,
+                        Kokkos::ParallelReduceTag{});
 #else
   (void)policy;
   (void)functor;
