@@ -35,6 +35,19 @@ class SYCLInternal {
 
   std::unique_ptr<cl::sycl::queue> m_queue;
 
+  // An indirect kernel is one where the functor to be executed is explicitly
+  // created in USM shared memory before being executed, to get around the
+  // trivially copyable limitation of SYCL.
+  //
+  // m_indirectKernel just manages the memory as a reuseable buffer.  It is
+  // stored in an optional because the allocator contains a queue
+  using IndirectKernelAllocator =
+      sycl::usm_allocator<std::byte, sycl::usm::alloc::shared>;
+  using IndirectKernelMemory =
+      std::vector<IndirectKernelAllocator::value_type, IndirectKernelAllocator>;
+  using IndirectKernel = std::optional<IndirectKernelMemory>;
+  IndirectKernel m_indirectKernel;
+
   static int was_finalized;
 
   static SYCLInternal& singleton();
@@ -43,7 +56,7 @@ class SYCLInternal {
 
   int is_initialized() const {
     return m_queue != nullptr;
-  }  // 0 != m_scratchSpace && 0 != m_scratchFlags ; }
+  }
 
   void initialize(const cl::sycl::device& d);
   void initialize(const cl::sycl::device_selector& s);
@@ -66,3 +79,4 @@ class SYCLInternal {
 }  // namespace Kokkos
 
 #endif
+
