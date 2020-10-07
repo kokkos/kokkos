@@ -42,16 +42,36 @@
 //@HEADER
 */
 
-#include <TestViewAPI.hpp>
+#ifndef KOKKOS_SYCLSPACE_HPP
+#define KOKKOS_SYCLSPACE_HPP
 
-namespace Test {
+#include <Kokkos_Core_fwd.hpp>
 
-TEST(TEST_CATEGORY, view_api_c) {
-  // FIXME_SYCL requires deep_copy on the default memory space
-#ifndef KOKKOS_ENABLE_SYCL
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_deep_copy_empty();
+#ifdef KOKKOS_ENABLE_SYCL
+
+namespace Kokkos {
+namespace Experimental {
+
+class SYCLDeviceUSMSpace {
+ public:
+  using execution_space = SYCL;
+  using memory_space    = SYCLDeviceUSMSpace;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+  using size_type       = unsigned int;
+
+  SYCLDeviceUSMSpace();
+
+  void* allocate(const std::size_t arg_alloc_size) const;
+  void deallocate(void* const arg_alloc_ptr,
+                  const std::size_t arg_alloc_size) const;
+
+  static constexpr const char* name() { return "SYCLDeviceUSM"; };
+
+ private:
+  int m_device;
+};
+}  // namespace Experimental
+}  // namespace Kokkos
+
 #endif
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_b();
-}
-
-}  // namespace Test
+#endif

@@ -42,16 +42,15 @@
 //@HEADER
 */
 
-#include <TestViewAPI.hpp>
+#ifndef KOKKOS_SYCL_FWD_HPP_
+#define KOKKOS_SYCL_FWD_HPP_
 
-namespace Test {
-
-TEST(TEST_CATEGORY, view_api_c) {
-  // FIXME_SYCL requires deep_copy on the default memory space
-#ifndef KOKKOS_ENABLE_SYCL
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_deep_copy_empty();
+#if defined(KOKKOS_ENABLE_SYCL)
+namespace Kokkos {
+namespace Experimental {
+class SYCLDeviceUSMSpace;  ///< Memory space on SYCL device
+class SYCL;                ///< Execution space for SYCL
+}  // namespace Experimental
+}  // namespace Kokkos
 #endif
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_b();
-}
-
-}  // namespace Test
+#endif

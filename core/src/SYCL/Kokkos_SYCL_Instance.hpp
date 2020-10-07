@@ -42,16 +42,46 @@
 //@HEADER
 */
 
-#include <TestViewAPI.hpp>
+#ifndef KOKKOS_SYCL_INSTANCE_HPP_
+#define KOKKOS_SYCL_INSTANCE_HPP_
 
-namespace Test {
+#include <Kokkos_SYCL.hpp>
 
-TEST(TEST_CATEGORY, view_api_c) {
-  // FIXME_SYCL requires deep_copy on the default memory space
-#ifndef KOKKOS_ENABLE_SYCL
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_deep_copy_empty();
+namespace Kokkos {
+namespace Experimental {
+namespace Impl {
+
+class SYCLInternal {
+ public:
+  using size_type = Kokkos::Experimental::SYCL::size_type;
+
+  SYCLInternal() = default;
+  ~SYCLInternal();
+
+  SYCLInternal(const SYCLInternal&) = delete;
+  SYCLInternal& operator=(const SYCLInternal&) = delete;
+  SYCLInternal& operator=(SYCLInternal&&) = delete;
+  SYCLInternal(SYCLInternal&&)            = delete;
+
+  size_type* m_scratchSpace = nullptr;
+  size_type* m_scratchFlags = nullptr;
+
+  std::unique_ptr<cl::sycl::queue> m_queue;
+
+  static int was_finalized;
+
+  static SYCLInternal& singleton();
+
+  int verify_is_initialized(const char* const label) const;
+
+  void initialize(const cl::sycl::device& d);
+
+  int is_initialized() const { return m_queue != nullptr; }
+
+  void finalize();
+};
+
+}  // namespace Impl
+}  // namespace Experimental
+}  // namespace Kokkos
 #endif
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_b();
-}
-
-}  // namespace Test

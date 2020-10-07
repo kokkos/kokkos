@@ -46,6 +46,8 @@
 
 #include <Kokkos_Core.hpp>
 
+// FIXME_SYCL needs parallel_for
+#ifndef KOKKOS_ENABLE_SYCL
 #if !defined(KOKKOS_ENABLE_CUDA) || defined(__CUDACC__)
 
 #include <default/TestDefaultDeviceType_Category.hpp>
@@ -58,5 +60,5 @@ TEST(defaultdevicetype, reduce_instantiation_a1) {
 }
 
 }  // namespace Test
-
+#endif
 #endif

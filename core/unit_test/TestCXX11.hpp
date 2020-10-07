@@ -115,7 +115,8 @@ double AddTestFunctor() {
   return result;
 }
 
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+// FIXME_SYCL requires parallel_for
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA) && !defined(KOKKOS_ENABLE_SYCL)
 template <class DeviceType, bool PWRTest>
 double AddTestLambda() {
   Kokkos::View<double**, DeviceType> a("A", 100, 5);
@@ -252,7 +253,8 @@ double ReduceTestFunctor() {
   return result;
 }
 
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+// FIXME_SYCL requires parallel_reduce
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA) && !defined(KOKKOS_ENABLE_SYCL)
 template <class DeviceType, bool PWRTest>
 double ReduceTestLambda() {
   using policy_type = Kokkos::TeamPolicy<DeviceType>;

@@ -42,16 +42,11 @@
 //@HEADER
 */
 
-#include <TestViewAPI.hpp>
+#ifndef KOKKOS_DECLARE_SYCL_HPP
+#define KOKKOS_DECLARE_SYCL_HPP
 
-namespace Test {
-
-TEST(TEST_CATEGORY, view_api_c) {
-  // FIXME_SYCL requires deep_copy on the default memory space
-#ifndef KOKKOS_ENABLE_SYCL
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_deep_copy_empty();
+#if defined(KOKKOS_ENABLE_SYCL)
+#include <Kokkos_SYCL.hpp>
 #endif
-  TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_b();
-}
 
-}  // namespace Test
+#endif

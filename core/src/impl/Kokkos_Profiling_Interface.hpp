@@ -64,6 +64,7 @@ enum struct DeviceType {
   OpenMPTarget,
   HPX,
   Threads,
+  SYCL,
   Unknown
 };
 
