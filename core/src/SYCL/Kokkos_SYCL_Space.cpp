@@ -109,14 +109,48 @@ namespace Experimental {
 SYCLDeviceUSMSpace::SYCLDeviceUSMSpace() : m_device(SYCL().sycl_device()) {}
 
 void* SYCLDeviceUSMSpace::allocate(const size_t arg_alloc_size) const {
+  return allocate("[unlabeled]", arg_alloc_size);
+}
+
+void* SYCLDeviceUSMSpace::allocate(const char* arg_label,
+                                   const size_t arg_alloc_size,
+                                   const size_t arg_logical_size) const {
   const cl::sycl::queue& queue =
       *SYCL().impl_internal_space_instance()->m_queue;
   void* const hostPtr = cl::sycl::malloc_device(arg_alloc_size, queue);
+
+  if (hostPtr == nullptr)
+    throw RawMemoryAllocationFailure(
+        arg_alloc_size, 1, RawMemoryAllocationFailure::FailureMode::Unknown,
+        RawMemoryAllocationFailure::AllocationMechanism::SYCLMalloc);
+
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    const size_t reported_size =
+        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    Kokkos::Profiling::allocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, hostPtr,
+        reported_size);
+  }
+
   return hostPtr;
 }
 
 void SYCLDeviceUSMSpace::deallocate(void* const arg_alloc_ptr,
-                                    const size_t /*arg_alloc_size*/) const {
+                                    const size_t arg_alloc_size) const {
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+}
+
+void SYCLDeviceUSMSpace::deallocate(const char* arg_label,
+                                    void* const arg_alloc_ptr,
+                                    const size_t arg_alloc_size,
+                                    const size_t arg_logical_size) const {
+  if (Kokkos::Profiling::profileLibraryLoaded()) {
+    const size_t reported_size =
+        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    Kokkos::Profiling::deallocateData(
+        Kokkos::Profiling::make_space_handle(name()), arg_label, arg_alloc_ptr,
+        reported_size);
+  }
   const cl::sycl::queue& queue =
       *SYCL().impl_internal_space_instance()->m_queue;
   cl::sycl::free(arg_alloc_ptr, queue);

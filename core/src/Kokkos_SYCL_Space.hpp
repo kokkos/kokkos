@@ -63,8 +63,14 @@ class SYCLDeviceUSMSpace {
   SYCLDeviceUSMSpace();
 
   void* allocate(const std::size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
+
   void deallocate(void* const arg_alloc_ptr,
                   const std::size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size,
+                  const size_t arg_logical_size = 0) const;
 
   static constexpr const char* name() { return "SYCLDeviceUSM"; };
 
