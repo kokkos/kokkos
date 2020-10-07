@@ -291,6 +291,7 @@ ENDMACRO()
 ##                        other files provided through plugins
 MACRO(KOKKOS_INSTALL_ADDITIONAL_FILES)
    INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION ${CMAKE_INSTALL_BINDIR})
+   INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/hpcbind DESTINATION ${CMAKE_INSTALL_BINDIR})
    # kokkos_launch_compiler is used by Kokkos to prefix compiler commands so that they forward to nvcc_wrapper
    INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/kokkos_launch_compiler DESTINATION ${CMAKE_INSTALL_BINDIR})
    INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_config.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
