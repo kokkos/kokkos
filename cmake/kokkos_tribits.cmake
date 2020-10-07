@@ -287,18 +287,22 @@ MACRO(KOKKOS_CONFIGURE_CORE)
 ENDMACRO()
 
 ## KOKKOS_INSTALL_ADDITIONAL_FILES - instruct cmake to install files in target destination.
-##                        Includes generated header files, nvcc_wrapper and
-##                        other files provided through plugins
+##                        Includes generated header files, scripts such as nvcc_wrapper and hpcbind,
+##                        as well as other files provided through plugins.
 MACRO(KOKKOS_INSTALL_ADDITIONAL_FILES)
-   INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION ${CMAKE_INSTALL_BINDIR})
-   INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/hpcbind DESTINATION ${CMAKE_INSTALL_BINDIR})
-   # kokkos_launch_compiler is used by Kokkos to prefix compiler commands so that they forward to nvcc_wrapper
-   INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/kokkos_launch_compiler DESTINATION ${CMAKE_INSTALL_BINDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_config.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_Config_FwdBackend.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_Config_SetupBackend.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_Config_DeclareBackend.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_Config_PostInclude.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  # kokkos_launch_compiler is used by Kokkos to prefix compiler commands so that they forward to nvcc_wrapper
+  INSTALL(PROGRAMS
+          "${PROJECT_SOURCE_DIR}/bin/nvcc_wrapper"
+          "${PROJECT_SOURCE_DIR}/bin/hpcbind"
+          "${PROJECT_SOURCE_DIR}/bin/kokkos_launch_compiler"
+          DESTINATION ${CMAKE_INSTALL_BINDIR})
+  INSTALL(FILES
+          "${PROJECT_BINARY_DIR}/KokkosCore_config.h"
+          "${PROJECT_BINARY_DIR}/KokkosCore_Config_FwdBackend.hpp"
+          "${PROJECT_BINARY_DIR}/KokkosCore_Config_SetupBackend.hpp"
+          "${PROJECT_BINARY_DIR}/KokkosCore_Config_DeclareBackend.hpp"
+          "${PROJECT_BINARY_DIR}/KokkosCore_Config_PostInclude.hpp"
+          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 ENDMACRO()
 
 FUNCTION(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
