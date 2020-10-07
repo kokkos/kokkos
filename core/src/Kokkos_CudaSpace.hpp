@@ -844,7 +844,7 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
       const unsigned sizeof_alias, void* const alloc_ptr,
       const size_t alloc_size);
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   static RecordBase s_root_record;
 #endif
 

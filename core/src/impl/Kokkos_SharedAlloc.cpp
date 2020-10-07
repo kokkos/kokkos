@@ -50,7 +50,7 @@ namespace Impl {
 KOKKOS_THREAD_LOCAL int SharedAllocationRecord<void, void>::t_tracking_enabled =
     1;
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 bool SharedAllocationRecord<void, void>::is_sane(
     SharedAllocationRecord<void, void>* arg_record) {
   SharedAllocationRecord* const root = arg_record ? arg_record->m_root : 0;
@@ -122,12 +122,12 @@ bool SharedAllocationRecord<void, void>::is_sane(
     SharedAllocationRecord<void, void>*) {
   Kokkos::Impl::throw_runtime_exception(
       "Kokkos::Impl::SharedAllocationRecord::is_sane only works with "
-      "KOKKOS_DEBUG enabled");
+      "KOKKOS_ENABLE_DEBUG enabled");
   return false;
 }
-#endif  //#ifdef KOKKOS_DEBUG
+#endif  //#ifdef KOKKOS_ENABLE_DEBUG
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>* SharedAllocationRecord<void, void>::find(
     SharedAllocationRecord<void, void>* const arg_root,
     void* const arg_data_ptr) {
@@ -161,7 +161,8 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<void, void>::find(
 SharedAllocationRecord<void, void>* SharedAllocationRecord<void, void>::find(
     SharedAllocationRecord<void, void>* const, void* const) {
   Kokkos::Impl::throw_runtime_exception(
-      "Kokkos::Impl::SharedAllocationRecord::find only works with KOKKOS_DEBUG "
+      "Kokkos::Impl::SharedAllocationRecord::find only works with "
+      "KOKKOS_ENABLE_DEBUG "
       "enabled");
   return nullptr;
 }
@@ -171,7 +172,7 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<void, void>::find(
  *         use_count is zero.
  */
 SharedAllocationRecord<void, void>::SharedAllocationRecord(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
     SharedAllocationRecord<void, void>* arg_root,
 #endif
     SharedAllocationHeader* arg_alloc_ptr, size_t arg_alloc_size,
@@ -179,7 +180,7 @@ SharedAllocationRecord<void, void>::SharedAllocationRecord(
     : m_alloc_ptr(arg_alloc_ptr),
       m_alloc_size(arg_alloc_size),
       m_dealloc(arg_dealloc)
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
       ,
       m_root(arg_root),
       m_prev(0),
@@ -188,7 +189,7 @@ SharedAllocationRecord<void, void>::SharedAllocationRecord(
       ,
       m_count(0) {
   if (nullptr != arg_alloc_ptr) {
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
     // Insert into the root double-linked list for tracking
     //
     // before:  arg_root->m_next == next ; next->m_prev == arg_root
@@ -243,7 +244,7 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
       Kokkos::Impl::throw_runtime_exception(s);
     }
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
     // before:  arg_record->m_prev->m_next == arg_record  &&
     //          arg_record->m_next->m_prev == arg_record
     //
@@ -297,7 +298,7 @@ SharedAllocationRecord<void, void>* SharedAllocationRecord<
   return arg_record;
 }
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 void SharedAllocationRecord<void, void>::print_host_accessible_records(
     std::ostream& s, const char* const space_name,
     const SharedAllocationRecord* const root, const bool detail) {
@@ -359,7 +360,7 @@ void SharedAllocationRecord<void, void>::print_host_accessible_records(
     const bool) {
   Kokkos::Impl::throw_runtime_exception(
       "Kokkos::Impl::SharedAllocationRecord::print_host_accessible_records"
-      " only works with KOKKOS_DEBUG enabled");
+      " only works with KOKKOS_ENABLE_DEBUG enabled");
 }
 #endif
 

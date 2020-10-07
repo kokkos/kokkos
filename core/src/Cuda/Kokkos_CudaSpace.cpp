@@ -375,7 +375,7 @@ void CudaHostPinnedSpace::deallocate(const char *arg_label,
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record;
 
@@ -551,7 +551,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record,
 #endif
           Impl::checked_allocation_with_header(arg_space, arg_label,
@@ -582,7 +582,7 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::s_root_record,
 #endif
           Impl::checked_allocation_with_header(arg_space, arg_label,
@@ -610,7 +610,7 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::CudaHostPinnedSpace,
                                   void>::s_root_record,
 #endif
@@ -830,7 +830,7 @@ void SharedAllocationRecord<Kokkos::CudaSpace, void>::print_records(
     std::ostream &s, const Kokkos::CudaSpace &, bool detail) {
   (void)s;
   (void)detail;
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void> *r = &s_root_record;
 
   char buffer[256];
@@ -896,7 +896,7 @@ void SharedAllocationRecord<Kokkos::CudaSpace, void>::print_records(
 #else
   Kokkos::Impl::throw_runtime_exception(
       "SharedAllocationHeader<CudaSpace>::print_records only works with "
-      "KOKKOS_DEBUG enabled");
+      "KOKKOS_ENABLE_DEBUG enabled");
 #endif
 }
 
@@ -904,13 +904,13 @@ void SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::print_records(
     std::ostream &s, const Kokkos::CudaUVMSpace &, bool detail) {
   (void)s;
   (void)detail;
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void>::print_host_accessible_records(
       s, "CudaUVM", &s_root_record, detail);
 #else
   Kokkos::Impl::throw_runtime_exception(
       "SharedAllocationHeader<CudaSpace>::print_records only works with "
-      "KOKKOS_DEBUG enabled");
+      "KOKKOS_ENABLE_DEBUG enabled");
 #endif
 }
 
@@ -918,13 +918,13 @@ void SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::print_records(
     std::ostream &s, const Kokkos::CudaHostPinnedSpace &, bool detail) {
   (void)s;
   (void)detail;
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void>::print_host_accessible_records(
       s, "CudaHostPinned", &s_root_record, detail);
 #else
   Kokkos::Impl::throw_runtime_exception(
       "SharedAllocationHeader<CudaSpace>::print_records only works with "
-      "KOKKOS_DEBUG enabled");
+      "KOKKOS_ENABLE_DEBUG enabled");
 #endif
 }
 

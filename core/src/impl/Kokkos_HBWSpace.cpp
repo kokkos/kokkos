@@ -195,7 +195,7 @@ void HBWSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::s_root_record;
 #endif
@@ -228,7 +228,7 @@ SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::Experimental::HBWSpace,
                                   void>::s_root_record,
 #endif
@@ -314,13 +314,13 @@ SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
 void SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>::
     print_records(std::ostream &s, const Kokkos::Experimental::HBWSpace &space,
                   bool detail) {
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void>::print_host_accessible_records(
       s, "HBWSpace", &s_root_record, detail);
 #else
   throw_runtime_exception(
       "SharedAllocationRecord<HBWSpace>::print_records"
-      " only works with KOKKOS_DEBUG enabled");
+      " only works with KOKKOS_ENABLE_DEBUG enabled");
 #endif
 }
 

@@ -108,7 +108,7 @@ void test_shared_alloc() {
 
     Kokkos::fence();
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
     // Sanity check for the whole set of allocation records to which this record
     // belongs.
     RecordBase::is_sane(r[0]);
@@ -118,7 +118,7 @@ void test_shared_alloc() {
     Kokkos::parallel_for(range, [=](size_t i) {
       while (nullptr !=
              (r[i] = static_cast<RecordMemS*>(RecordBase::decrement(r[i])))) {
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
         if (r[i]->use_count() == 1) RecordBase::is_sane(r[i]);
 #endif
       }
@@ -152,14 +152,14 @@ void test_shared_alloc() {
 
     Kokkos::fence();
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
     RecordBase::is_sane(r[0]);
 #endif
 
     Kokkos::parallel_for(range, [=](size_t i) {
       while (nullptr !=
              (r[i] = static_cast<RecordMemS*>(RecordBase::decrement(r[i])))) {
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
         if (r[i]->use_count() == 1) RecordBase::is_sane(r[i]);
 #endif
       }

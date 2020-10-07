@@ -299,7 +299,7 @@ void HIPHostPinnedSpace::deallocate(const char* arg_label,
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::s_root_record;
 
@@ -375,7 +375,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                                   void>::s_root_record,
 #endif
@@ -407,7 +407,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
                                   void>::s_root_record,
 #endif
@@ -563,7 +563,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
 void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
     print_records(std::ostream& s, const Kokkos::Experimental::HIPSpace& space,
                   bool detail) {
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void>* r = &s_root_record;
 
   char buffer[256];
@@ -632,7 +632,7 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
   (void)detail;
   throw_runtime_exception(
       "Kokkos::Impl::SharedAllocationRecord<HIPSpace>::print_records"
-      " only works with KOKKOS_DEBUG enabled");
+      " only works with KOKKOS_ENABLE_DEBUG enabled");
 #endif
 }
 
