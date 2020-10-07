@@ -113,19 +113,9 @@ struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
     return m_impl_ptr->get_execution_space();
   }
 
-  void submit() const& {
+  void submit() const {
     KOKKOS_EXPECTS(bool(m_impl_ptr))
     (*m_impl_ptr).submit();
-  }
-
-  void submit() && {
-    KOKKOS_EXPECTS(bool(m_impl_ptr))
-    // The graph interface isn't thread-safe, so we can rely on this
-    if (m_impl_ptr.use_count() == 1) {
-      std::move(*m_impl_ptr).submit();
-    } else {
-      (*m_impl_ptr).submit();
-    }
   }
 };
 
