@@ -127,7 +127,7 @@ void SYCLDeviceUSMSpace::deallocate(void* const arg_alloc_ptr,
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void> SharedAllocationRecord<
     Kokkos::Experimental::SYCLDeviceUSMSpace, void>::s_root_record;
 #endif
@@ -140,7 +140,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
                                   void>::s_root_record,
 #endif
@@ -176,7 +176,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void> SharedAllocationRecord<
     Kokkos::Experimental::SYCLDeviceUSMSpace, void>::s_root_record;
 #endif
@@ -301,7 +301,7 @@ void SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
     print_records(std::ostream& s,
                   const Kokkos::Experimental::SYCLDeviceUSMSpace& space,
                   bool detail) {
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void>* r = &s_root_record;
 
   char buffer[256];
@@ -372,7 +372,7 @@ void SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
   (void)detail;
   throw_runtime_exception(
       "Kokkos::Impl::SharedAllocationRecord<SYCLDeviceUSMSpace>::print_records"
-      " only works with KOKKOS_DEBUG enabled");
+      " only works with KOKKOS_ENABLE_DEBUG enabled");
 #endif
 }
 

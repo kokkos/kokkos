@@ -132,7 +132,7 @@ class SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>
 
   static void deallocate(RecordBase*);
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   static RecordBase s_root_record;
 #endif
 
