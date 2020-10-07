@@ -159,26 +159,26 @@ __inline__ __device__ void atomic_assign(
 
 // atomic_compare_exchange -----------------------------------------------------
 
-inline __device__ int atomic_compare_exchange(volatile int *dest, int compare,
+inline __device__ int atomic_compare_exchange(volatile int *const dest, int compare,
                                               const int &val) {
   return atomicCAS(const_cast<int *>(dest), compare, val);
 }
 
 inline __device__ unsigned int atomic_compare_exchange(
-    volatile unsigned int *dest, unsigned int compare,
+    volatile unsigned int *const dest, unsigned int compare,
     const unsigned int &val) {
   return atomicCAS(const_cast<unsigned int *>(dest), compare, val);
 }
 
 inline __device__ unsigned long long int atomic_compare_exchange(
-    volatile unsigned long long int *dest, unsigned long long int compare,
+    volatile unsigned long long int *const dest, unsigned long long int compare,
     const unsigned long long int &val) {
   return atomicCAS(const_cast<unsigned long long int *>(dest), compare, val);
 }
 
 template <class T>
 __inline__ __device__ T atomic_compare_exchange(
-    volatile T *dest, T compare,
+    volatile T *const dest, T compare,
     typename std::enable_if<sizeof(T) == sizeof(int), const T &>::type val) {
   // FIXME_HIP UB
   union U {
@@ -195,7 +195,7 @@ __inline__ __device__ T atomic_compare_exchange(
 
 template <class T>
 __inline__ __device__ T atomic_compare_exchange(
-    volatile T *dest, T compare,
+    volatile T *const dest, T compare,
     typename std::enable_if<sizeof(T) == sizeof(unsigned long long int),
                             const T &>::type val) {
   // FIXME_HIP UB
