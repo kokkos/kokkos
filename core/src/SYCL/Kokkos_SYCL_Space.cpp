@@ -46,6 +46,7 @@
 #include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
+#include <impl/Kokkos_MemorySpace.hpp>
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -144,8 +145,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
           &SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
                                   void>::s_root_record,
 #endif
-          reinterpret_cast<SharedAllocationHeader*>(
-              space.allocate(sizeof(SharedAllocationHeader) + size)),
+          Kokkos::Impl::checked_allocation_with_header(space, label, size),
           sizeof(SharedAllocationHeader) + size, dealloc),
       m_space(space) {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
@@ -175,11 +175,6 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
 
 namespace Kokkos {
 namespace Impl {
-
-#ifdef KOKKOS_ENABLE_DEBUG
-SharedAllocationRecord<void, void> SharedAllocationRecord<
-    Kokkos::Experimental::SYCLDeviceUSMSpace, void>::s_root_record;
-#endif
 
 std::string SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
                                    void>::get_label() const {
@@ -299,7 +294,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
 // Iterate records to print orphaned memory ...
 void SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
     print_records(std::ostream& s,
-                  const Kokkos::Experimental::SYCLDeviceUSMSpace& space,
+                  const Kokkos::Experimental::SYCLDeviceUSMSpace&,
                   bool detail) {
 #ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void>* r = &s_root_record;
@@ -337,7 +332,7 @@ void SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
                reinterpret_cast<uintptr_t>(r->m_alloc_ptr), r->m_alloc_size,
                r->m_count, reinterpret_cast<uintptr_t>(r->m_dealloc),
                head.m_label);
-      std::cout << buffer;
+      s << buffer;
       r = r->m_next;
     } while (r != &s_root_record);
   } else {
@@ -362,7 +357,7 @@ void SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
       } else {
         snprintf(buffer, 256, "SYCL [ 0 + 0 ]\n");
       }
-      std::cout << buffer;
+      s << buffer;
       r = r->m_next;
     } while (r != &s_root_record);
   }
