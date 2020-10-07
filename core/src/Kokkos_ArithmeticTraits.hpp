@@ -151,33 +151,35 @@ template <> struct max_exponent10_helper<long double> { static constexpr int val
 // clang-format on
 }  // namespace Impl
 
+#if defined(KOKKOS_ENABLE_CXX17)
+#define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT)      \
+  template <class T>                         \
+  struct TRAIT : Impl::TRAIT##_helper<T> {}; \
+  template <class T>                         \
+  inline constexpr auto TRAIT##_v = TRAIT<T>::value;
+#else
+#define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT) \
+  template <class T>                    \
+  struct TRAIT : Impl::TRAIT##_helper<T> {};
+#endif
+
 // Numeric distinguished value traits
-template <class T>
-struct infinity : Impl::infinity_helper<T> {};
-template <class T>
-struct finite_min : Impl::finite_min_helper<T> {};
-template <class T>
-struct finite_max : Impl::finite_max_helper<T> {};
-template <class T>
-struct epsilon : Impl::epsilon_helper<T> {};
-template <class T>
-struct round_error : Impl::round_error_helper<T> {};
-template <class T>
-struct norm_min : Impl::norm_min_helper<T> {};
+KOKKOS_IMPL_DEFINE_TRAIT(infinity)
+KOKKOS_IMPL_DEFINE_TRAIT(finite_min)
+KOKKOS_IMPL_DEFINE_TRAIT(finite_max)
+KOKKOS_IMPL_DEFINE_TRAIT(epsilon)
+KOKKOS_IMPL_DEFINE_TRAIT(round_error)
+KOKKOS_IMPL_DEFINE_TRAIT(norm_min)
 
 // Numeric characteristics traits
-template <class T>
-struct digits : Impl::digits_helper<T> {};
-template <class T>
-struct radix : Impl::radix_helper<T> {};
-template <class T>
-struct min_exponent : Impl::min_exponent_helper<T> {};
-template <class T>
-struct min_exponent10 : Impl::min_exponent10_helper<T> {};
-template <class T>
-struct max_exponent : Impl::max_exponent_helper<T> {};
-template <class T>
-struct max_exponent10 : Impl::max_exponent10_helper<T> {};
+KOKKOS_IMPL_DEFINE_TRAIT(digits)
+KOKKOS_IMPL_DEFINE_TRAIT(radix)
+KOKKOS_IMPL_DEFINE_TRAIT(min_exponent)
+KOKKOS_IMPL_DEFINE_TRAIT(min_exponent10)
+KOKKOS_IMPL_DEFINE_TRAIT(max_exponent)
+KOKKOS_IMPL_DEFINE_TRAIT(max_exponent10)
+
+#undef KOKKOS_IMPL_DEFINE_TRAIT
 
 }  // namespace Experimental
 }  // namespace Kokkos
