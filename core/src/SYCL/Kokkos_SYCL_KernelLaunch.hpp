@@ -45,17 +45,17 @@ void sycl_indirect_launch(const Policy& policy, const Functor& functor) {
   Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMemory& kernelMem =
       *instance.m_indirectKernel;
 
-  // Allocate USM shared memory for the functor
-  kernelMem.resize(std::max(kernelMem.size(), sizeof(Functor)));
-
-  // Placement new a copy of functor into USM shared memory
+  // Put a copy of the functor into USM
   //
-  // Store it in a unique_ptr to call its destructor on scope exit
-  std::unique_ptr<Functor, Kokkos::Impl::destruct_delete> kernelFunctorPtr(
-      new (kernelMem.data()) Functor(functor));
+  // Note:  if sycl::usm::alloc::device == kernelMem.kind and functor
+  // is neither an implicit-lifetime nor trivially-copyable type, dereferencing
+  // the pointer returned technically invokes UB.  This is done because USM device
+  // memory is presumably much faster than USM shared memory but we cannot
+  // copy construct into the former.
+  auto kernelFunctorPtr = kernelMem.copy_from(functor);
 
   // Use reference_wrapper (because it is both trivially copyable and invocable)
-  // and launch it
+  // to wrap the dereferenced pointer and launch it
   sycl_direct_launch(policy, std::reference_wrapper(*kernelFunctorPtr));
 }
 
