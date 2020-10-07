@@ -117,13 +117,14 @@ struct TEST_CATEGORY_FIXTURE(count_bugs) : public ::testing::Test {
 };
 
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), launch_one) {
-  auto graph = Kokkos::Experimental::create_graph([=](auto root) {
-    root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
-  });
+  auto graph =
+      Kokkos::Experimental::create_graph<TEST_EXECSPACE>([=](auto root) {
+        root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+      });
   graph.submit();
-  Kokkos::deep_copy(ex, count_host, count);
-  Kokkos::deep_copy(ex, bugs_host, bugs);
-  ex.fence();
+  Kokkos::deep_copy(graph.get_execution_space(), count_host, count);
+  Kokkos::deep_copy(graph.get_execution_space(), bugs_host, bugs);
+  graph.get_execution_space().fence();
   ASSERT_EQ(1, count_host());
   ASSERT_EQ(0, bugs_host());
 }
