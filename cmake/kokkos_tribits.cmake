@@ -7,9 +7,9 @@ INCLUDE(GNUInstallDirs)
 MESSAGE(STATUS "The project name is: ${PROJECT_NAME}")
 
 FUNCTION(VERIFY_EMPTY CONTEXT)
-if(${ARGN})
-MESSAGE(FATAL_ERROR "Kokkos does not support all of Tribits. Unhandled arguments in ${CONTEXT}:\n${ARGN}")
-endif()
+  if(${ARGN})
+    MESSAGE(FATAL_ERROR "Kokkos does not support all of Tribits. Unhandled arguments in ${CONTEXT}:\n${ARGN}")
+  endif()
 ENDFUNCTION()
 
 #Leave this here for now - but only do for tribits
@@ -146,7 +146,7 @@ CMAKE_PARSE_ARGUMENTS(PARSE
   ""
   "SOURCES;CATEGORIES;ARGS"
   ${ARGN})
-  VERIFY_EMPTY(KOKKOS_ADD_EXECUTABLE_AND_TEST ${PARSE_UNPARSED_ARGUMENTS})
+VERIFY_EMPTY(KOKKOS_ADD_EXECUTABLE_AND_TEST ${PARSE_UNPARSED_ARGUMENTS})
 IF (KOKKOS_HAS_TRILINOS)
   IF(DEFINED PARSE_ARGS)
     STRING(REPLACE ";" " " PARSE_ARGS "${PARSE_ARGS}")
