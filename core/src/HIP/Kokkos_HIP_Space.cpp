@@ -561,7 +561,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
 
 // Iterate records to print orphaned memory ...
 void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
-    print_records(std::ostream& s, const Kokkos::Experimental::HIPSpace& space,
+    print_records(std::ostream& s, const Kokkos::Experimental::HIPSpace&,
                   bool detail) {
 #ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void>* r = &s_root_record;
@@ -598,7 +598,7 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
                reinterpret_cast<uintptr_t>(r->m_alloc_ptr), r->m_alloc_size,
                r->m_count, reinterpret_cast<uintptr_t>(r->m_dealloc),
                head.m_label);
-      std::cout << buffer;
+      s << buffer;
       r = r->m_next;
     } while (r != &s_root_record);
   } else {
@@ -622,13 +622,12 @@ void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
       } else {
         snprintf(buffer, 256, "HIP [ 0 + 0 ]\n");
       }
-      std::cout << buffer;
+      s << buffer;
       r = r->m_next;
     } while (r != &s_root_record);
   }
 #else
   (void)s;
-  (void)space;
   (void)detail;
   throw_runtime_exception(
       "Kokkos::Impl::SharedAllocationRecord<HIPSpace>::print_records"

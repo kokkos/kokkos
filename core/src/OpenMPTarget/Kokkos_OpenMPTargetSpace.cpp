@@ -218,7 +218,7 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
 // Iterate records to print orphaned memory ...
 void SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
     print_records(std::ostream &s,
-                  const Kokkos::Experimental::OpenMPTargetSpace &space,
+                  const Kokkos::Experimental::OpenMPTargetSpace &,
                   bool detail) {
 #ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void>::print_host_accessible_records(
