@@ -61,10 +61,15 @@ class SYCLInternal {
     // returns the new capacity
     size_t reserve(size_t n) {
       if (m_capacity < n) {
-        void* malloced = sycl::malloc(n, m_q, kind);
-        if (!malloced) throw std::bad_alloc();
+        // First free what we have (in case malloc can reuse it)
         sycl::free(m_data, m_q);
-        m_data     = malloced;
+
+        m_data = sycl::malloc(n, m_q, kind);
+        if (!m_data) {
+          m_capacity = 0;
+          throw std::bad_alloc();
+        }
+
         m_capacity = n;
       }
 
