@@ -127,7 +127,7 @@ class SYCLInternal {
   // An indirect kernel is one where the functor to be executed is explicitly
   // copied to USM device memory before being executed, to get around the
   // trivially copyable limitation of SYCL.
-  using IndirectKernelMemory = USMObject<sycl::usm::alloc::shared>;
+  using IndirectKernelMemory = USMObject<sycl::usm::alloc::device>;
   using IndirectKernel       = std::optional<IndirectKernelMemory>;
   IndirectKernel m_indirectKernel;
 
