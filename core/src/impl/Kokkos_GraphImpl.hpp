@@ -105,14 +105,22 @@ struct GraphAccess {
   // <editor-fold desc="accessors for private members of public interface"> {{{2
 
   template <class NodeRef>
-  // requires remove_cvref_t<NodeRef> is a specialization of GraphNodeRef
   static auto get_node_ptr(NodeRef&& node_ref) {
+    static_assert(
+        is_specialization_of<remove_cvref_t<NodeRef>,
+                             Kokkos::Experimental::GraphNodeRef>::value,
+        "Kokkos Internal Implementation error (bad argument to "
+        "`GraphAccess::get_node_ptr()`)");
     return ((NodeRef &&) node_ref).get_node_ptr();
   }
 
   template <class NodeRef>
-  // requires remove_cvref_t<NodeRef> is a specialization of GraphNodeRef
   static auto get_graph_weak_ptr(NodeRef&& node_ref) {
+    static_assert(
+        is_specialization_of<remove_cvref_t<NodeRef>,
+                             Kokkos::Experimental::GraphNodeRef>::value,
+        "Kokkos Internal Implementation error (bad argument to "
+        "`GraphAccess::get_graph_weak_ptr()`)");
     return ((NodeRef &&) node_ref).get_graph_weak_ptr();
   }
 
