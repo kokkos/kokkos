@@ -53,21 +53,28 @@
 namespace Kokkos {
 namespace Impl {
 namespace {
-void USM_memcpy(cl::sycl::queue& q, void* dst, const void* src, size_t n) {
-  cl::sycl::event e = q.memcpy(dst, src, n);
-  e.wait();
+auto USM_memcpy(cl::sycl::queue& q, void* dst, const void* src, size_t n) {
+  return q.memcpy(dst, src, n);
 }
 
 void USM_memcpy(Kokkos::Experimental::Impl::SYCLInternal& space, void* dst,
                 const void* src, size_t n) {
-  USM_memcpy(*space.m_queue, dst, src, n);
+  (void)USM_memcpy(*space.m_queue, dst, src, n);
 }
 
 void USM_memcpy(void* dst, const void* src, size_t n) {
-  USM_memcpy(Kokkos::Experimental::Impl::SYCLInternal::singleton(), dst, src,
-             n);
+  Kokkos::Experimental::Impl::SYCLInternal::singleton().m_queue->wait();
+  USM_memcpy(*Kokkos::Experimental::Impl::SYCLInternal::singleton().m_queue,
+             dst, src, n)
+      .wait();
 }
 }  // namespace
+
+void Default_USM_memcpy(void* dst, const void* src, size_t n) {
+  USM_memcpy(*Kokkos::Experimental::Impl::SYCLInternal::singleton().m_queue,
+             dst, src, n)
+      .wait();
+}
 
 DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
          Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::Experimental::SYCL>::
@@ -83,7 +90,7 @@ DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
   USM_memcpy(dst, src, n);
 }
 
-DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(const Kokkos::Experimental::SYCL&
                                                    instance,
                                                void* dst, const void* src,
@@ -92,6 +99,20 @@ DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
 }
 
 DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(dst, src, n);
+}
+
+DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
+         Kokkos::Experimental::SYCL>::DeepCopy(const Kokkos::Experimental::SYCL&
+                                                   instance,
+                                               void* dst, const void* src,
+                                               size_t n) {
+  USM_memcpy(*instance.impl_internal_space_instance(), dst, src, n);
+}
+
+DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
          Kokkos::Experimental::SYCL>::DeepCopy(void* dst, const void* src,
                                                size_t n) {
   USM_memcpy(dst, src, n);
@@ -237,8 +258,9 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
                        void>::~SharedAllocationRecord() {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
-    Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace>(
-        &header, RecordBase::m_alloc_ptr, sizeof(SharedAllocationHeader));
+    Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                           Kokkos::HostSpace>(&header, RecordBase::m_alloc_ptr,
+                                              sizeof(SharedAllocationHeader));
 
     Kokkos::Profiling::deallocateData(
         Kokkos::Profiling::make_space_handle(
@@ -308,7 +330,8 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
       alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
 
   if (alloc_ptr) {
-    Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace>(
+    Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
+                           Kokkos::Experimental::SYCLDeviceUSMSpace>(
         &head, head_sycl, sizeof(SharedAllocationHeader));
   }
 
@@ -340,7 +363,7 @@ void SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
   if (detail) {
     do {
       if (r->m_alloc_ptr) {
-        Kokkos::Impl::DeepCopy<HostSpace,
+        Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
                                Kokkos::Experimental::SYCLDeviceUSMSpace>(
             &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
       } else {
@@ -372,7 +395,7 @@ void SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
   } else {
     do {
       if (r->m_alloc_ptr) {
-        Kokkos::Impl::DeepCopy<HostSpace,
+        Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
                                Kokkos::Experimental::SYCLDeviceUSMSpace>(
             &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
 
