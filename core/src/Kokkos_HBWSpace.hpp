@@ -172,7 +172,7 @@ class SharedAllocationRecord<Kokkos::Experimental::HBWSpace, void>
 
   static void deallocate(RecordBase*);
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   /**\brief  Root record for tracked allocations from this HBWSpace instance */
   static RecordBase s_root_record;
 #endif

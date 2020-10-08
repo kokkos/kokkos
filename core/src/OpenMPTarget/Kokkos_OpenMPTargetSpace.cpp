@@ -94,7 +94,7 @@ void OpenMPTargetSpace::deallocate(void *const arg_alloc_ptr,
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void> SharedAllocationRecord<
     Kokkos::Experimental::OpenMPTargetSpace, void>::s_root_record;
 #endif
@@ -125,7 +125,7 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
                                   void>::s_root_record,
 #endif
@@ -218,9 +218,9 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
 // Iterate records to print orphaned memory ...
 void SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
     print_records(std::ostream &s,
-                  const Kokkos::Experimental::OpenMPTargetSpace &space,
+                  const Kokkos::Experimental::OpenMPTargetSpace &,
                   bool detail) {
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
   SharedAllocationRecord<void, void>::print_host_accessible_records(
       s, "OpenMPTargetSpace", &s_root_record, detail);
 #else
@@ -229,7 +229,7 @@ void SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
   (void)detail;
   throw_runtime_exception(
       "SharedAllocationRecord<OpenMPTargetSpace>::print_records"
-      " only works with KOKKOS_DEBUG enabled");
+      " only works with KOKKOS_ENABLE_DEBUG enabled");
 #endif
 }
 

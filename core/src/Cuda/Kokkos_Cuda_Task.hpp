@@ -390,7 +390,7 @@ class TaskQueueSpecializationConstrained<
       ((int*)&task_ptr)[0] = KOKKOS_IMPL_CUDA_SHFL(((int*)&task_ptr)[0], 0, 32);
       ((int*)&task_ptr)[1] = KOKKOS_IMPL_CUDA_SHFL(((int*)&task_ptr)[1], 0, 32);
 
-#if defined(KOKKOS_DEBUG)
+#if defined(KOKKOS_ENABLE_DEBUG)
       KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN("TaskQueue CUDA task_ptr");
 #endif
 

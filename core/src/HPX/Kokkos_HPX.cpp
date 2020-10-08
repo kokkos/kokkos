@@ -79,7 +79,7 @@ void HPX::impl_initialize(int thread_count) {
   if (rt == nullptr) {
     std::vector<std::string> config = {
         "hpx.os_threads=" + std::to_string(thread_count),
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
         "--hpx:attach-debugger=exception",
 #endif
     };
@@ -110,7 +110,7 @@ void HPX::impl_initialize() {
   hpx::runtime *rt = hpx::get_runtime_ptr();
   if (rt == nullptr) {
     std::vector<std::string> config = {
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
         "--hpx:attach-debugger=exception",
 #endif
     };

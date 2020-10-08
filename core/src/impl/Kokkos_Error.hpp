@@ -207,7 +207,7 @@ KOKKOS_IMPL_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
 //----------------------------------------------------------------------------
 
 #if !defined(NDEBUG) || defined(KOKKOS_ENFORCE_CONTRACTS) || \
-    defined(KOKKOS_DEBUG)
+    defined(KOKKOS_ENABLE_DEBUG)
 #define KOKKOS_EXPECTS(...)                                               \
   {                                                                       \
     if (!bool(__VA_ARGS__)) {                                             \
