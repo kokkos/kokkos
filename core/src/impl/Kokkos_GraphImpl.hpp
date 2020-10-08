@@ -85,7 +85,7 @@ struct GraphAccess {
     // NodeImpl instances aren't movable, so we have to create them on the call
     // side and take a pointer here. We assume ownership and pass it on to the
     // shared_ptr we're creating
-    using new_node_impl_t = typename std::remove_cv<NodeImpl>::type;
+    using new_node_impl_t = std::remove_cv_t<NodeImpl>;
     // We can't use make_shared because we have a custom deleter
     return std::shared_ptr<new_node_impl_t>{node_impl_ptr};
   }
