@@ -222,7 +222,7 @@ class GraphNodeRef {
 
   template <
       class OtherKernel, class OtherPredecessor,
-      typename std::enable_if<
+      typename std::enable_if_t<
           // Not a copy/move constructor
           !std::is_same<GraphNodeRef, GraphNodeRef<execution_space, OtherKernel,
                                                    OtherPredecessor>>::value &&
@@ -232,7 +232,7 @@ class GraphNodeRef {
               // must be an allowed type erasure of the predecessor
               Kokkos::Impl::is_compatible_type_erasure<
                   OtherPredecessor, graph_predecessor>::value,
-          int>::type = 0>
+          int> = 0>
   /* implicit */
   GraphNodeRef(
       GraphNodeRef<execution_space, OtherKernel, OtherPredecessor> const& other)
