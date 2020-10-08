@@ -226,8 +226,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
   //----------------------------------------
 }
 
-// This won't work with the way we're currently doing things
-TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_zero_work_reduce) {
+TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), zero_work_reduce) {
   auto graph = Kokkos::Experimental::create_graph(ex, [=](auto root) {
     root.then_parallel_reduce(0, set_result_functor{bugs}, count);
   });
