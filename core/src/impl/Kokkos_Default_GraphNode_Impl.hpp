@@ -47,7 +47,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <impl/Kokkos_EBO.hpp>
 #include <impl/Kokkos_Default_Graph_fwd.hpp>
 
 #include <Kokkos_Graph.hpp>
