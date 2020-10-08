@@ -183,12 +183,12 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
   // <editor-fold desc="Rule of 6 for not copyable or movable"> {{{3
 
   // Not copyable or movable
-  GraphNodeImpl()                         = delete;
-  GraphNodeImpl(GraphNodeImpl const&)     = delete;
-  GraphNodeImpl(GraphNodeImpl&&) noexcept = delete;
+  GraphNodeImpl()                     = delete;
+  GraphNodeImpl(GraphNodeImpl const&) = delete;
+  GraphNodeImpl(GraphNodeImpl&&)      = delete;
   GraphNodeImpl& operator=(GraphNodeImpl const&) = delete;
-  GraphNodeImpl& operator=(GraphNodeImpl&&) noexcept = delete;
-  ~GraphNodeImpl() override                          = default;
+  GraphNodeImpl& operator=(GraphNodeImpl&&) = delete;
+  ~GraphNodeImpl() override                 = default;
 
   // </editor-fold> end Rule of 6 for not copyable or movable }}}3
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -260,8 +260,8 @@ struct GraphNodeImpl
   GraphNodeImpl(GraphNodeImpl const&) = delete;
   GraphNodeImpl(GraphNodeImpl&&)      = delete;
   GraphNodeImpl& operator=(GraphNodeImpl const&) = delete;
-  GraphNodeImpl& operator=(GraphNodeImpl&&) noexcept = delete;
-  ~GraphNodeImpl() override                          = default;
+  GraphNodeImpl& operator=(GraphNodeImpl&&) = delete;
+  ~GraphNodeImpl() override                 = default;
 
   // Normal kernel-and-predecessor constructor
   template <class KernelDeduced, class PredecessorPtrDeduced>
