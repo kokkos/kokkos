@@ -162,7 +162,7 @@ class GraphNodeRef {
                   "Kokkos internal error");
 
     auto graph_ptr = m_graph_impl.lock();
-    KOKKOS_EXPECTS(graph_ptr);
+    KOKKOS_EXPECTS(bool(graph_ptr))
 
     using next_kernel_t = Kokkos::Impl::remove_cvref_t<NextKernelDeduced>;
 
