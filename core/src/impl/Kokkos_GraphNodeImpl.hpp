@@ -64,7 +64,7 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="Fully type-erased GraphNodeImpl"> {{{1
 
-// Base specialization for the case where both the predecessor and the kernel
+// Base specialization for the case where both the kernel and the predecessor
 // type information is type-erased
 template <class ExecutionSpace>
 struct GraphNodeImpl<ExecutionSpace, Kokkos::Experimental::TypeErasedTag,
