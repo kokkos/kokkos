@@ -54,9 +54,10 @@
 #include <map>
 #include <type_traits>
 namespace Kokkos {
-// forward declaration
 
+// forward declaration
 bool tune_internals() noexcept;
+
 namespace Tools {
 
 bool profileLibraryLoaded();
