@@ -199,8 +199,10 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
   //----------------------------------------------------------------------------
   // <editor-fold desc="member accessors"> {{{2
 
+  // Reference qualified to prevent dangling reference to data member
   Kernel& get_kernel() & { return m_kernel; }
   Kernel const& get_kernel() const& { return m_kernel; }
+  Kernel&& get_kernel() && = delete;
 
   // </editor-fold> end member accessors }}}2
   //----------------------------------------------------------------------------
