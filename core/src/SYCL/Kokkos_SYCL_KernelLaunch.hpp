@@ -42,17 +42,17 @@ void sycl_indirect_launch(const Policy& policy, const Functor& functor) {
   const Kokkos::Experimental::SYCL& space = policy.space();
   Kokkos::Experimental::Impl::SYCLInternal& instance =
       *space.impl_internal_space_instance();
-  Kokkos::Experimental::Impl::SYCLInternal::IndirectKernel& kernelMem =
-      instance.m_indirectKernel;
+  Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
+      indirectKernelMem = instance.m_indirectKernelMem;
 
   // Put a copy of the functor into USM
   //
-  // Note:  if sycl::usm::alloc::device == kernelMem.kind and functor
+  // Note:  if sycl::usm::alloc::device == indirectKernelMem.kind and functor
   // is neither an implicit-lifetime nor trivially-copyable type, dereferencing
-  // the pointer returned technically invokes UB.  This is done because USM device
-  // memory is presumably much faster than USM shared memory but we cannot
-  // copy construct into the former.
-  auto kernelFunctorPtr = kernelMem.copy_from(functor);
+  // the pointer returned technically invokes UB.  This is done because USM
+  // device memory is presumably much faster than USM shared memory but we
+  // cannot copy construct into the former.
+  auto kernelFunctorPtr = indirectKernelMem.copy_from(functor);
 
   // Use reference_wrapper (because it is both trivially copyable and invocable)
   // to wrap the dereferenced pointer and launch it

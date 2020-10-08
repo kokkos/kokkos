@@ -35,33 +35,40 @@ class SYCLInternal {
 
   std::unique_ptr<cl::sycl::queue> m_queue;
 
-  // USMObject is a reusable buffer for a single object
+  // USMObjectMem is a reusable buffer for a single object
   // in USM memory
   template <sycl::usm::alloc Kind>
-  class USMObject {
+  class USMObjectMem {
    public:
     static constexpr sycl::usm::alloc kind = Kind;
 
-    friend void swap(USMObject& lhs, USMObject& rhs) noexcept {
+    friend void swap(USMObjectMem& lhs, USMObjectMem& rhs) noexcept {
       using std::swap;
       swap(lhs.m_q, rhs.m_q);
       swap(lhs.m_data, rhs.m_data);
       swap(lhs.m_capacity, rhs.m_capacity);
     }
 
-    USMObject()                 = default;
-    USMObject(USMObject const&) = delete;
-    USMObject& operator=(USMObject const&) = delete;
+    USMObjectMem()                    = default;
+    USMObjectMem(USMObjectMem const&) = delete;
+    USMObjectMem& operator=(USMObjectMem const&) = delete;
 
-    USMObject(USMObject&& that) noexcept { swap(*this, that); }
+    USMObjectMem(USMObjectMem&& that) noexcept
+        : m_q(std::move(that.m_q)),
+          m_data(that.m_data),
+          m_capacity(that.m_capacity) {
+      that.m_data     = nullptr;
+      that.m_capacity = 0;
+    }
 
-    USMObject& operator=(USMObject&& that) noexcept {
+    USMObjectMem& operator=(USMObjectMem&& that) noexcept {
       swap(*this, that);
       return *this;
     }
 
-    explicit USMObject(sycl::queue q) noexcept : m_q(std::move(q)) {}
-    ~USMObject() { sycl::free(m_data, m_q); }
+    ~USMObjectMem() { sycl::free(m_data, m_q); }
+
+    explicit USMObjectMem(sycl::queue q) noexcept : m_q(std::move(q)) {}
 
     sycl::queue queue() const noexcept { return m_q; }
 
@@ -145,8 +152,8 @@ class SYCLInternal {
   // An indirect kernel is one where the functor to be executed is explicitly
   // copied to USM device memory before being executed, to get around the
   // trivially copyable limitation of SYCL.
-  using IndirectKernel = USMObject<sycl::usm::alloc::device>;
-  IndirectKernel m_indirectKernel;
+  using IndirectKernelMem = USMObjectMem<sycl::usm::alloc::device>;
+  IndirectKernelMem m_indirectKernelMem;
 
   static int was_finalized;
 
