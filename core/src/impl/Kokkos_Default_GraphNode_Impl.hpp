@@ -66,7 +66,7 @@ struct GraphNodeBackendSpecificDetails {
   using execution_space_instance_storage_t =
       ExecutionSpaceInstanceStorage<ExecutionSpace>;
   using default_kernel_impl_t = GraphNodeKernelDefaultImpl<ExecutionSpace>;
-  using aggregate_kernel_impl_t =
+  using default_aggregate_kernel_impl_t =
       GraphNodeAggregateKernelDefaultImpl<ExecutionSpace>;
 
   std::vector<std::shared_ptr<GraphNodeBackendSpecificDetails<ExecutionSpace>>>
@@ -114,7 +114,7 @@ struct GraphNodeBackendSpecificDetails {
     m_kernel_ptr = &arg_kernel;
   }
 
-  void set_kernel(aggregate_kernel_impl_t const& arg_kernel) {
+  void set_kernel(default_aggregate_kernel_impl_t const& arg_kernel) {
     KOKKOS_EXPECTS(m_kernel_ptr == nullptr)
     m_kernel_ptr   = &arg_kernel;
     m_is_aggregate = true;
