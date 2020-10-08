@@ -50,9 +50,11 @@
 #ifdef KOKKOS_ENABLE_SYCL
 #include <CL/sycl.hpp>
 #include <Kokkos_SYCL_Space.hpp>
+#include <SYCL/Kokkos_SYCL_Parallel_Range.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -172,6 +174,17 @@ class SYCLSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
 
 }  // namespace Impl
 }  // namespace Experimental
+
+namespace Tools {
+namespace Experimental {
+template <>
+struct DeviceTypeTraits<Kokkos::Experimental::SYCL> {
+  /// \brief An ID to differentiate (for example) Serial from OpenMP in Tooling
+  static constexpr DeviceType id = DeviceType::SYCL;
+};
+}  // namespace Experimental
+}  // namespace Tools
+
 }  // namespace Kokkos
 
 #endif

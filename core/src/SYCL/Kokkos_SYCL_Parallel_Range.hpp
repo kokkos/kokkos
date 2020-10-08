@@ -42,48 +42,58 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_SYCL_INSTANCE_HPP_
-#define KOKKOS_SYCL_INSTANCE_HPP_
+#ifndef KOKKOS_SYCL_PARALLEL_RANGE_HPP_
+#define KOKKOS_SYCL_PARALLEL_RANGE_HPP_
 
-#include <memory>
-#include <CL/sycl.hpp>
+#include <SYCL/Kokkos_SYCL_KernelLaunch.hpp>
+//#include <algorithm>
+//#include <functional>
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
-
-class SYCLInternal {
+template <class FunctorType, class ExecPolicy>
+class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
+                                Kokkos::Experimental::SYCL> {
  public:
-  using size_type = unsigned int;
+  typedef ExecPolicy Policy;
 
-  SYCLInternal() = default;
-  ~SYCLInternal();
+ private:
+  typedef typename Policy::member_type Member;
+  typedef typename Policy::work_tag WorkTag;
+  typedef typename Policy::launch_bounds LaunchBounds;
 
-  SYCLInternal(const SYCLInternal&) = delete;
-  SYCLInternal& operator=(const SYCLInternal&) = delete;
-  SYCLInternal& operator=(SYCLInternal&&) = delete;
-  SYCLInternal(SYCLInternal&&)            = delete;
+ public:
+  const FunctorType m_functor;
+  const Policy m_policy;
 
-  int m_syclDev             = -1;
-  size_type* m_scratchSpace = nullptr;
-  size_type* m_scratchFlags = nullptr;
+ private:
+  ParallelFor()        = delete;
+  ParallelFor& operator=(const ParallelFor&) = delete;
 
-  std::unique_ptr<cl::sycl::queue> m_queue;
+  template <class TagType>
+  typename std::enable_if<std::is_same<TagType, void>::value>::type exec_range(
+      const Member i) const {
+    m_functor(i);
+  }
 
-  static int was_finalized;
+  template <class TagType>
+  typename std::enable_if<!std::is_same<TagType, void>::value>::type exec_range(
+      const Member i) const {
+    m_functor(TagType(), i);
+  }
 
-  static SYCLInternal& singleton();
+ public:
+  typedef FunctorType functor_type;
 
-  int verify_is_initialized(const char* const label) const;
+  inline void operator()(cl::sycl::item<1> item) const {
+    int id = item.get_linear_id();
+    m_functor(id);
+  }
 
-  void initialize(const cl::sycl::device& d);
+  inline void execute() const {
+    Kokkos::Experimental::Impl::sycl_launch(*this);
+  }
 
-  int is_initialized() const { return m_queue != nullptr; }
-
-  void finalize();
+  ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
+      : m_functor(arg_functor), m_policy(arg_policy) {}
 };
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
-#endif
+#endif  // KOKKOS_SYCL_PARALLEL_RANGE_HPP_
