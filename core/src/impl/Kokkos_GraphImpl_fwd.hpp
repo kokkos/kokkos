@@ -60,9 +60,6 @@ template <class ExecutionSpace, class Policy, class Functor,
           class KernelTypeTag, class... Args>
 class GraphNodeKernelImpl;
 
-template <class ExecutionSpace>
-struct GraphNodeBackendSpecificDetails;
-
 struct _graph_node_kernel_ctor_tag {};
 struct _graph_node_predecessor_ctor_tag {};
 struct _graph_node_is_root_ctor_tag {};
