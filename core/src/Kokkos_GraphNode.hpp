@@ -283,8 +283,7 @@ class GraphNodeRef {
 
     // needs to static assert constraint: DataParallelFunctor<Functor>
 
-    using policy_t = typename std::remove_cv<
-        typename std::remove_reference<Policy>::type>::type;
+    using policy_t = Kokkos::Impl::remove_cvref_t<Policy>;
     // constraint check: same execution space type (or defaulted, maybe?)
     static_assert(
         std::is_same<typename policy_t::execution_space,
