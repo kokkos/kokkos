@@ -98,30 +98,28 @@ struct DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
 };
 
 template <class ExecutionSpace>
-struct DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+struct DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
                 ExecutionSpace> {
-  inline DeepCopy(void* dst, const void* src, size_t n) {
-    (void)DeepCopy<HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
                    Kokkos::Experimental::SYCL>(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& /*exec*/, void* /*dst*/,
-                  const void* /*src*/, size_t /*n*/) {
-    // FIXME_SYCL
-    std::abort();
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    DeepCopy(dst, src, n);
   }
 };
 
 template <class ExecutionSpace>
-struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace,
+struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
                 ExecutionSpace> {
-  inline DeepCopy(void* dst, const void* src, size_t n) {
-    (void)DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace,
+  DeepCopy(void* dst, const void* src, size_t n) {
+    (void)DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
                    Kokkos::Experimental::SYCL>(dst, src, n);
   }
 
-  inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
-                  size_t n) {
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     exec.fence();
     DeepCopy(dst, src, n);
   }
