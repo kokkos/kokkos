@@ -73,7 +73,6 @@ struct KOKKOS_ATTRIBUTE_NODISCARD Graph {
 
   using execution_space = ExecutionSpace;
   using graph           = Graph;
-  using graph_builder   = GraphBuilder<ExecutionSpace>;
 
   // </editor-fold> end public member types }}}2
   //----------------------------------------------------------------------------
