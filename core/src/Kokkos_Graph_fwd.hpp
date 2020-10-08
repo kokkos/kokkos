@@ -55,9 +55,6 @@ struct TypeErasedTag {};
 template <class ExecutionSpace>
 struct Graph;
 
-template <class ExecutionSpace>
-struct GraphBuilder;
-
 template <class ExecutionSpace, class Kernel = TypeErasedTag,
           class Predecessor = TypeErasedTag>
 class GraphNodeRef;
