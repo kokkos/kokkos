@@ -274,7 +274,7 @@ void initialize_profiling(const InitArguments&) {
 
 void pre_initialize_internal(const InitArguments& args) {
   if (args.disable_warnings) g_show_warnings = false;
-  if (args.tune_kokkos_internals) g_tune_internals = false;
+  if (args.tune_kokkos_internals) g_tune_internals = true;
 }
 
 void post_initialize_internal(const InitArguments& args) {
