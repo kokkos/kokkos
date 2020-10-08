@@ -731,7 +731,13 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
   int m_chunk_size;
 
  public:
+  //! Tag this class as a kokkos execution policy
+  using execution_policy = TeamPolicyInternal;
+
   using member_type = HPXTeamMember;
+
+  //! Execution space of this execution policy:
+  using execution_space = Kokkos::Experimental::HPX;
 
   // NOTE: Max size is 1 for simplicity. In most cases more than 1 is not
   // necessary on CPU. Implement later if there is a need.
@@ -867,6 +873,44 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
     init(league_size_request, 1);
+  }
+
+  TeamPolicyInternal(const typename traits::execution_space &space,
+                     int league_size_request,
+                     const Kokkos::AUTO_t &, /* team_size_request */
+                     const Kokkos::AUTO_t & /* vector_length_request */)
+      : m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(0) {
+    init(league_size_request, 1);
+  }
+
+  TeamPolicyInternal(const typename traits::execution_space &space,
+                     int league_size_request, int team_size_request,
+                     const Kokkos::AUTO_t & /* vector_length_request */
+                     )
+      : m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(0) {
+    init(league_size_request, team_size_request);
+  }
+
+  TeamPolicyInternal(int league_size_request,
+                     const Kokkos::AUTO_t &, /* team_size_request */
+                     const Kokkos::AUTO_t & /* vector_length_request */)
+      : m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(0) {
+    init(league_size_request, 1);
+  }
+
+  TeamPolicyInternal(int league_size_request, int team_size_request,
+                     const Kokkos::AUTO_t & /* vector_length_request */
+                     )
+      : m_team_scratch_size{0, 0},
+        m_thread_scratch_size{0, 0},
+        m_chunk_size(0) {
+    init(league_size_request, team_size_request);
   }
 
   TeamPolicyInternal(int league_size_request, int team_size_request,
