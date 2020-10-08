@@ -374,6 +374,9 @@ class GraphNodeRef {
     // This is also just an expectation, but it's one that we expect the user
     // to interact with (even in release mode), so we should throw an exception
     // with an explanation rather than just doing a contract assertion.
+    // We can't static_assert this because of the way that Reducers store
+    // whether or not they point to a View as a runtime boolean rather than part
+    // of the type.
     if (Kokkos::Impl::parallel_reduce_needs_fence(
             graph_impl_ptr->get_execution_space(), return_value)) {
       Kokkos::Impl::throw_runtime_exception(
