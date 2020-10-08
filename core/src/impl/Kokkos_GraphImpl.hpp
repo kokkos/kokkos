@@ -79,15 +79,12 @@ struct GraphAccess {
         graph_impl_ptr, std::move(root_ptr)};
   }
 
-  template <class NodeImpl>
-  static auto make_node_shared_ptr_with_deleter(
-      Kokkos::OwningRawPtr<NodeImpl> node_impl_ptr) {
-    // NodeImpl instances aren't movable, so we have to create them on the call
-    // side and take a pointer here. We assume ownership and pass it on to the
-    // shared_ptr we're creating
-    using new_node_impl_t = std::remove_cv_t<NodeImpl>;
-    // We can't use make_shared because we have a custom deleter
-    return std::shared_ptr<new_node_impl_t>{node_impl_ptr};
+  template <class NodeType, class... Args>
+  static auto make_node_shared_ptr(Args&&... args) {
+    static_assert(
+        Kokkos::Impl::is_specialization_of<NodeType, GraphNodeImpl>::value,
+        "Kokkos Internal Error in graph interface");
+    return std::make_shared<NodeType>((Args &&) args...);
   }
 
   template <class GraphImplWeakPtr, class ExecutionSpace, class Kernel,

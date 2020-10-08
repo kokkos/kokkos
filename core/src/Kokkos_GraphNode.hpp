@@ -182,13 +182,13 @@ class GraphNodeRef {
 
     auto rv = Kokkos::Impl::GraphAccess::make_graph_node_ref(
         m_graph_impl,
-        Kokkos::Impl::GraphAccess::make_node_shared_ptr_with_deleter(
-            new typename return_t::node_impl_t{
-                m_node_impl->execution_space_instance(),
-                Kokkos::Impl::_graph_node_kernel_ctor_tag{},
-                (NextKernelDeduced &&) arg_kernel,
-                // *this is the predecessor
-                Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this}));
+        Kokkos::Impl::GraphAccess::make_node_shared_ptr<
+            typename return_t::node_impl_t>(
+            m_node_impl->execution_space_instance(),
+            Kokkos::Impl::_graph_node_kernel_ctor_tag{},
+            (NextKernelDeduced &&) arg_kernel,
+            // *this is the predecessor
+            Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
 
     // Add the node itself to the backend's graph data structure, now that
     // everything is set up.
