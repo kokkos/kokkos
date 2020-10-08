@@ -42,10 +42,23 @@ class SYCLInternal {
    public:
     static constexpr sycl::usm::alloc kind = Kind;
 
+    friend void swap(USMObject& lhs, USMObject& rhs) noexcept {
+      using std::swap;
+      swap(lhs.m_q, rhs.m_q);
+      swap(lhs.m_data, rhs.m_data);
+      swap(lhs.m_capacity, rhs.m_capacity);
+    }
+
+    USMObject()                 = default;
     USMObject(USMObject const&) = delete;
-    USMObject(USMObject&&)      = delete;
-    USMObject& operator=(USMObject&&) = delete;
     USMObject& operator=(USMObject const&) = delete;
+
+    USMObject(USMObject&& that) noexcept { swap(*this, that); }
+
+    USMObject& operator=(USMObject&& that) noexcept {
+      swap(*this, that);
+      return *this;
+    }
 
     explicit USMObject(sycl::queue q) noexcept : m_q(std::move(q)) {}
     ~USMObject() { sycl::free(m_data, m_q); }
@@ -132,8 +145,7 @@ class SYCLInternal {
   // An indirect kernel is one where the functor to be executed is explicitly
   // copied to USM device memory before being executed, to get around the
   // trivially copyable limitation of SYCL.
-  using IndirectKernelMemory = USMObject<sycl::usm::alloc::device>;
-  using IndirectKernel       = std::optional<IndirectKernelMemory>;
+  using IndirectKernel = USMObject<sycl::usm::alloc::device>;
   IndirectKernel m_indirectKernel;
 
   static int was_finalized;
@@ -159,7 +171,7 @@ class SYCLInternal {
 
   size_type* scratch_space(const size_type size);
   size_type* scratch_flags(const size_type size);
-};
+};  // namespace Impl
 
 }  // namespace Impl
 }  // namespace Experimental

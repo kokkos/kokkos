@@ -42,8 +42,8 @@ void sycl_indirect_launch(const Policy& policy, const Functor& functor) {
   const Kokkos::Experimental::SYCL& space = policy.space();
   Kokkos::Experimental::Impl::SYCLInternal& instance =
       *space.impl_internal_space_instance();
-  Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMemory& kernelMem =
-      *instance.m_indirectKernel;
+  Kokkos::Experimental::Impl::SYCLInternal::IndirectKernel& kernelMem =
+      instance.m_indirectKernel;
 
   // Put a copy of the functor into USM
   //
