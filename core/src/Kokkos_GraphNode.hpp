@@ -107,14 +107,6 @@ class GraphNodeRef {
 
   template <class, class, class>
   friend class GraphNodeRef;
-  template <class>
-  friend struct GraphBuilder;
-  template <class, class, class>
-  friend struct Kokkos::Impl::GraphNodeImpl;
-  template <class>
-  friend struct Kokkos::Impl::GraphImpl;
-  template <class>
-  friend struct Kokkos::Impl::GraphNodeBackendSpecificDetails;
   friend struct Kokkos::Impl::GraphAccess;
 
   // </editor-fold> end Friends }}}2
