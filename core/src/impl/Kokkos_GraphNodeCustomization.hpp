@@ -72,19 +72,19 @@ struct GraphNodeBackendDetailsBeforeTypeErasure {
 
   // Not copyable or movable at the concept level, so the default
   // implementation shouldn't be either.
-  GraphNodeBackendDetailsBeforeTypeErasure() noexcept = delete;
+  GraphNodeBackendDetailsBeforeTypeErasure() = delete;
 
   GraphNodeBackendDetailsBeforeTypeErasure(
       GraphNodeBackendDetailsBeforeTypeErasure const&) = delete;
 
   GraphNodeBackendDetailsBeforeTypeErasure(
-      GraphNodeBackendDetailsBeforeTypeErasure&&) noexcept = delete;
+      GraphNodeBackendDetailsBeforeTypeErasure&&) = delete;
 
   GraphNodeBackendDetailsBeforeTypeErasure& operator   =(
       GraphNodeBackendDetailsBeforeTypeErasure const&) = delete;
 
-  GraphNodeBackendDetailsBeforeTypeErasure& operator       =(
-      GraphNodeBackendDetailsBeforeTypeErasure&&) noexcept = delete;
+  GraphNodeBackendDetailsBeforeTypeErasure& operator=(
+      GraphNodeBackendDetailsBeforeTypeErasure&&) = delete;
 
   ~GraphNodeBackendDetailsBeforeTypeErasure() = default;
 
