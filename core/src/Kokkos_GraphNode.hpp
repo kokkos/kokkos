@@ -142,10 +142,6 @@ class GraphNodeRef {
   std::shared_ptr<node_impl_t> get_node_ptr() && {
     return std::move(m_node_impl);
   }
-  graph_impl_t& get_graph_impl() const { return *m_graph_impl; }
-  std::shared_ptr<graph_impl_t> get_graph_ptr() const {
-    return m_graph_impl.lock();
-  }
   std::weak_ptr<graph_impl_t> get_graph_weak_ptr() const {
     return m_graph_impl;
   }
