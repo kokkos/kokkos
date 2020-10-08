@@ -65,14 +65,14 @@ struct GraphNodeBackendSpecificDetails {
  private:
   using execution_space_instance_storage_t =
       ExecutionSpaceInstanceStorage<ExecutionSpace>;
-  using host_kernel_impl_t = GraphNodeKernelDefaultImpl<ExecutionSpace>;
+  using default_kernel_impl_t = GraphNodeKernelDefaultImpl<ExecutionSpace>;
   using aggregate_kernel_impl_t =
       GraphNodeAggregateKernelDefaultImpl<ExecutionSpace>;
 
   std::vector<std::shared_ptr<GraphNodeBackendSpecificDetails<ExecutionSpace>>>
       m_predecessors = {};
 
-  Kokkos::ObservingRawPtr<host_kernel_impl_t const> m_kernel_ptr = nullptr;
+  Kokkos::ObservingRawPtr<default_kernel_impl_t const> m_kernel_ptr = nullptr;
 
   bool m_has_executed = false;
   bool m_is_aggregate = false;
@@ -87,7 +87,8 @@ struct GraphNodeBackendSpecificDetails {
 
   explicit GraphNodeBackendSpecificDetails() = default;
 
-  GraphNodeBackendSpecificDetails(_graph_node_is_root_ctor_tag) noexcept
+  explicit GraphNodeBackendSpecificDetails(
+      _graph_node_is_root_ctor_tag) noexcept
       : m_has_executed(true), m_is_root(true) {}
 
   GraphNodeBackendSpecificDetails(GraphNodeBackendSpecificDetails const&) =
@@ -108,7 +109,7 @@ struct GraphNodeBackendSpecificDetails {
   //----------------------------------------------------------------------------
 
  public:
-  void set_kernel(host_kernel_impl_t const& arg_kernel) {
+  void set_kernel(default_kernel_impl_t const& arg_kernel) {
     KOKKOS_EXPECTS(m_kernel_ptr == nullptr)
     m_kernel_ptr = &arg_kernel;
   }
@@ -149,7 +150,7 @@ struct GraphNodeBackendSpecificDetails {
     KOKKOS_ENSURES(m_has_executed)
   }
 
-  // This is gross, but for the purposes of our simple host implementation...
+  // This is gross, but for the purposes of our simple default implementation...
   void reset_has_executed() {
     for (auto const& predecessor : m_predecessors) {
       predecessor->reset_has_executed();
