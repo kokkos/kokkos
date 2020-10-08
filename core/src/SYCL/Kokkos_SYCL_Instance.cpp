@@ -195,7 +195,7 @@ void SYCLInternal::initialize(const cl::sycl::device& d) {
     // auto devices = cl::sycl::device::get_devices();
     m_queue = std::make_unique<cl::sycl::queue>(d);
     std::cout << SYCL::SYCLDevice(d) << '\n';
-    m_indirectKernel.emplace(IndirectKernelAllocator(*m_queue));
+    m_indirectKernelMem = IndirectKernelMem(*m_queue);
 
     /*
         // Query what compute capability architecture a kernel executes:
@@ -397,7 +397,7 @@ void SYCLInternal::finalize() {
     m_scratchFlags      = 0;
   }
 
-  m_indirectKernel.reset();
+  m_indirectKernelMem = IndirectKernelMem();
   m_queue.reset();
 }
 
