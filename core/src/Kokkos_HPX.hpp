@@ -789,6 +789,14 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     return 1;
   }
 
+  static int vector_length_max() { return 1; }
+
+  inline int impl_vector_length() noexcept { return 1; }
+  inline bool impl_auto_team_size() noexcept { return false; }
+  inline bool impl_auto_vector_length() noexcept { return false; }
+  inline void impl_set_vector_length(int) noexcept {}
+  inline void impl_set_team_size(int) noexcept {}
+
  private:
   inline void init(const int league_size_request, const int team_size_request) {
     m_league_size           = league_size_request;
