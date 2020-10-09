@@ -81,61 +81,6 @@ class SYCLDeviceUSMSpace {
 
 namespace Impl {
 
-void Default_USM_memcpy(void* dst, const void* src, size_t n);
-
-template <>
-struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                Kokkos::Experimental::SYCLDeviceUSMSpace,
-                Kokkos::Experimental::SYCL> {
-  DeepCopy(void* dst, const void* src, size_t);
-  DeepCopy(const Kokkos::Experimental::SYCL&, void* dst, const void* src,
-           size_t);
-};
-
-template <>
-struct DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
-                Kokkos::Experimental::SYCL> {
-  DeepCopy(void* dst, const void* src, size_t);
-  DeepCopy(const Kokkos::Experimental::SYCL&, void* dst, const void* src,
-           size_t);
-};
-
-template <>
-struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
-                Kokkos::Experimental::SYCL> {
-  DeepCopy(void* dst, const void* src, size_t);
-  DeepCopy(const Kokkos::Experimental::SYCL&, void* dst, const void* src,
-           size_t);
-};
-
-template <class ExecutionSpace>
-struct DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
-                ExecutionSpace> {
-  DeepCopy(void* dst, const void* src, size_t n) {
-    (void)DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
-                   Kokkos::Experimental::SYCL>(dst, src, n);
-  }
-
-  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
-    Default_USM_memcpy(dst, src, n);
-  }
-};
-
-template <class ExecutionSpace>
-struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
-                ExecutionSpace> {
-  DeepCopy(void* dst, const void* src, size_t n) {
-    (void)DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
-                   Kokkos::Experimental::SYCL>(dst, src, n);
-  }
-
-  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
-    Default_USM_memcpy(dst, src, n);
-  }
-};
-
 template <>
 class SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>
     : public SharedAllocationRecord<void, void> {

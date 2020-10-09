@@ -43,6 +43,7 @@
 */
 
 #include <Kokkos_SYCL_Space.hpp>
+#include <Kokkos_SYCL_DeepCopy.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
@@ -69,12 +70,6 @@ void USM_memcpy(void* dst, const void* src, size_t n) {
       .wait();
 }
 }  // namespace
-
-void Default_USM_memcpy(void* dst, const void* src, size_t n) {
-  USM_memcpy(*Kokkos::Experimental::Impl::SYCLInternal::singleton().m_queue,
-             dst, src, n)
-      .wait();
-}
 
 DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
          Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::Experimental::SYCL>::
@@ -420,7 +415,6 @@ void SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
   }
 #else
   (void)s;
-  (void)space;
   (void)detail;
   throw_runtime_exception(
       "Kokkos::Impl::SharedAllocationRecord<SYCLDeviceUSMSpace>::print_records"
