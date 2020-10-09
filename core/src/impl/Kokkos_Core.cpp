@@ -381,13 +381,13 @@ unsigned get_process_id() {
 
 void parse_command_line_arguments(int& narg, char* arg[],
                                   InitArguments& arguments) {
-  auto& num_threads           = arguments.num_threads;
-  auto& numa                  = arguments.num_numa;
-  auto& device                = arguments.device_id;
-  auto& ndevices              = arguments.ndevices;
-  auto& skip_device           = arguments.skip_device;
-  auto& disable_warnings      = arguments.disable_warnings;
-  auto& tune_internals        = arguments.tune_internals;
+  auto& num_threads      = arguments.num_threads;
+  auto& numa             = arguments.num_numa;
+  auto& device           = arguments.device_id;
+  auto& ndevices         = arguments.ndevices;
+  auto& skip_device      = arguments.skip_device;
+  auto& disable_warnings = arguments.disable_warnings;
+  auto& tune_internals   = arguments.tune_internals;
 
   bool kokkos_threads_found  = false;
   bool kokkos_numa_found     = false;
@@ -557,13 +557,13 @@ void parse_command_line_arguments(int& narg, char* arg[],
 }
 
 void parse_environment_variables(InitArguments& arguments) {
-  auto& num_threads           = arguments.num_threads;
-  auto& numa                  = arguments.num_numa;
-  auto& device                = arguments.device_id;
-  auto& ndevices              = arguments.ndevices;
-  auto& skip_device           = arguments.skip_device;
-  auto& disable_warnings      = arguments.disable_warnings;
-  auto& tune_internals        = arguments.tune_internals;
+  auto& num_threads      = arguments.num_threads;
+  auto& numa             = arguments.num_numa;
+  auto& device           = arguments.device_id;
+  auto& ndevices         = arguments.ndevices;
+  auto& skip_device      = arguments.skip_device;
+  auto& disable_warnings = arguments.disable_warnings;
+  auto& tune_internals   = arguments.tune_internals;
   char* endptr;
   auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
   if (env_num_threads_str != nullptr) {
