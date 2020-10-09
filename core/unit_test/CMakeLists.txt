@@ -184,6 +184,12 @@ if(Kokkos_ENABLE_SERIAL)
     UnitTestMainInit.cpp
     ${Serial_SOURCES2}
   )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SerialGraph
+    SOURCES
+    UnitTestMainInit.cpp
+    serial/TestSerial_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_PTHREAD)
@@ -207,6 +213,12 @@ if(Kokkos_ENABLE_OPENMP)
     SOURCES
       UnitTestMain.cpp
       openmp/TestOpenMP_InterOp.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPGraph
+    SOURCES
+      UnitTestMainInit.cpp
+      openmp/TestOpenMP_Graph.cpp
   )
 endif()
 
