@@ -524,7 +524,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       --kokkos-disable-warnings      : disable kokkos warning messages
       --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
                                        tuning features through the tuning system. If
-				       left off, Kokkos uses heuristics
+				         left off, Kokkos uses heuristics
       --kokkos-threads=INT           : specify total number of threads or
                                        number of threads per NUMA region if
                                        used in conjunction with '--numa' option.
