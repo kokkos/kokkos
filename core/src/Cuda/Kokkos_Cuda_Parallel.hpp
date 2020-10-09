@@ -536,14 +536,15 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
  public:
   inline int max_tile_size_product() const noexcept {
     cudaFuncAttributes attr =
-      CudaParallelLaunch<ParallelFor,
-        LaunchBounds>::get_cuda_func_attributes();
+        CudaParallelLaunch<ParallelFor,
+                           LaunchBounds>::get_cuda_func_attributes();
     auto const& prop = m_rp.space().cuda_device_prop();
     // Limits due do registers/SM
-    int const regs_per_sm     = prop.regsPerMultiprocessor;
-    int const regs_per_thread = attr.numRegs;
+    int const regs_per_sm        = prop.regsPerMultiprocessor;
+    int const regs_per_thread    = attr.numRegs;
     int const max_threads_per_sm = regs_per_sm / regs_per_thread;
-      return std::min(max_threads_per_sm,int(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
+    return std::min(max_threads_per_sm,
+                    int(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
   }
   inline __device__ void operator()(void) const {
     Kokkos::Impl::Refactor::DeviceIterateTile<Policy::rank, Policy, FunctorType,
@@ -1219,14 +1220,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
  public:
   inline int max_tile_size_product() const noexcept {
     cudaFuncAttributes attr =
-      CudaParallelLaunch<ParallelReduce,
-        LaunchBounds>::get_cuda_func_attributes();
+        CudaParallelLaunch<ParallelReduce,
+                           LaunchBounds>::get_cuda_func_attributes();
     auto const& prop = m_policy.space().cuda_device_prop();
     // Limits due do registers/SM
-    int const regs_per_sm     = prop.regsPerMultiprocessor;
-    int const regs_per_thread = attr.numRegs;
+    int const regs_per_sm        = prop.regsPerMultiprocessor;
+    int const regs_per_thread    = attr.numRegs;
     int const max_threads_per_sm = regs_per_sm / regs_per_thread;
-      return std::min(max_threads_per_sm,int(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
+    return std::min(max_threads_per_sm,
+                    int(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
   }
   inline __device__ void exec_range(reference_type update) const {
     Kokkos::Impl::Reduce::DeviceIterateTile<Policy::rank, Policy, FunctorType,
