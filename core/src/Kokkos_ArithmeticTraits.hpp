@@ -63,6 +63,7 @@ template <> struct infinity_helper<long double> { static constexpr long double v
 template <class> struct finite_min_helper;
 template <> struct finite_min_helper<bool> { static constexpr bool value = false; };
 template <> struct finite_min_helper<char> { static constexpr char value = CHAR_MIN; };
+template <> struct finite_min_helper<signed char> { static constexpr signed char value = SCHAR_MIN; };
 template <> struct finite_min_helper<unsigned char> { static constexpr unsigned char value = 0; };
 template <> struct finite_min_helper<short> { static constexpr short value = SHRT_MIN; };
 template <> struct finite_min_helper<unsigned short> { static constexpr unsigned short value = 0; };
@@ -78,6 +79,7 @@ template <> struct finite_min_helper<long double> { static constexpr long double
 template <class> struct finite_max_helper;
 template <> struct finite_max_helper<bool> { static constexpr bool value = true; };
 template <> struct finite_max_helper<char> { static constexpr char value = CHAR_MAX; };
+template <> struct finite_max_helper<signed char> { static constexpr signed char value = SCHAR_MAX; };
 template <> struct finite_max_helper<unsigned char> { static constexpr unsigned char value = UCHAR_MAX; };
 template <> struct finite_max_helper<short> { static constexpr short value = SHRT_MAX; };
 template <> struct finite_max_helper<unsigned short> { static constexpr unsigned short value = USHRT_MAX; };
@@ -105,6 +107,7 @@ template <> struct norm_min_helper<long double> { static constexpr long double v
 template <class> struct digits_helper;
 template <> struct digits_helper<bool> { static constexpr int value = 1; };
 template <> struct digits_helper<char> { static constexpr int value = CHAR_BIT - std::is_signed<char>::value; };
+template <> struct digits_helper<signed char> { static constexpr int value = CHAR_BIT - 1; };
 template <> struct digits_helper<unsigned char> { static constexpr int value = CHAR_BIT; };
 template <> struct digits_helper<short> { static constexpr int value = CHAR_BIT*sizeof(short)-1; };
 template <> struct digits_helper<unsigned short> { static constexpr int value = CHAR_BIT*sizeof(short); };
@@ -120,6 +123,7 @@ template <> struct digits_helper<long double> { static constexpr int value = LDB
 template <class> struct radix_helper;
 template <> struct radix_helper<bool> { static constexpr int value = 2; };
 template <> struct radix_helper<char> { static constexpr int value = 2; };
+template <> struct radix_helper<signed char> { static constexpr int value = 2; };
 template <> struct radix_helper<unsigned char> { static constexpr int value = 2; };
 template <> struct radix_helper<short> { static constexpr int value = 2; };
 template <> struct radix_helper<unsigned short> { static constexpr int value = 2; };
