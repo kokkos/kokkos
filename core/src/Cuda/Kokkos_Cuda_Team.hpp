@@ -935,6 +935,85 @@ KOKKOS_INLINE_FUNCTION
 
 //----------------------------------------------------------------------------
 
+/** \brief  Inter-thread parallel exclusive prefix sum.
+ *
+ *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
+ *
+ *  The range [0..N) is mapped to all vector lanes in the
+ *  thread and a scan operation is performed.
+ *  The last call to closure has final == true.
+ */
+template <typename iType, class Closure>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::CudaTeamMember>&
+        loop_bounds,
+    const Closure& closure) {
+#ifdef __CUDA_ARCH__
+  // Extract value_type from closure
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
+
+  const auto increment = blockDim.y;
+  const auto start     = loop_bounds.start + threadIdx.y;
+  if (1 < loop_bounds.member.team_size()) {
+    // make sure all threads perform all loop iterations
+    const iType bound = loop_bounds.end + loop_bounds.start + threadIdx.y;
+    const int lane    = threadIdx.y * blockDim.x;
+
+    value_type accum       = 0;
+    value_type val         = 0;
+    value_type y           = 0;
+    value_type local_total = 0;
+
+    auto _shfl_warp_bcast = [](value_type& val, int src_lane, int width) {
+      return (width > 1) ? Kokkos::shfl(val, src_lane, width) : val;
+    };
+
+    for (iType i = start; i < bound; i += increment) {
+      val = 0;
+      if (i < loop_bounds.end) closure(i, val, false);
+
+      // intra-blockDim.y exclusive scan on 'val'
+      // accum = accumulated, sum in total for this iteration
+
+      // INCLUSIVE scan
+      for (int offset = blockDim.x; offset < Impl::CudaTraits::WarpSize;
+           offset <<= 1) {
+        y = Kokkos::shfl_up(val, offset, Impl::CudaTraits::WarpSize);
+        if (lane >= offset) {
+          val += y;
+        }
+      }
+
+      // pass accum to all threads
+      local_total = _shfl_warp_bcast(
+          val, threadIdx.x + Impl::CudaTraits::WarpSize - blockDim.x,
+          Impl::CudaTraits::WarpSize);
+
+      // make EXCLUSIVE scan by shifting values over one
+      val = Kokkos::shfl_up(val, blockDim.x, Impl::CudaTraits::WarpSize);
+      if (threadIdx.y == 0) {
+        val = 0;
+      }
+
+      val += accum;
+      if (i < loop_bounds.end) closure(i, val, true);
+      accum += local_total;
+    }
+  } else {
+    value_type accum = 0;
+    for (iType i = start; i < loop_bounds.end; i += increment) {
+      closure(i, accum, true);
+    }
+  }
+#else
+  (void)loop_bounds;
+  (void)closure;
+#endif
+}
+
+//----------------------------------------------------------------------------
+
 /** \brief  Intra-thread vector parallel exclusive prefix sum.
  *
  *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
