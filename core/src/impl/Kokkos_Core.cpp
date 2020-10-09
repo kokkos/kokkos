@@ -274,7 +274,7 @@ void initialize_profiling(const InitArguments&) {
 
 void pre_initialize_internal(const InitArguments& args) {
   if (args.disable_warnings) g_show_warnings = false;
-  if (args.tune_kokkos_internals) g_tune_internals = true;
+  if (args.tune_internals) g_tune_internals = true;
 }
 
 void post_initialize_internal(const InitArguments& args) {
@@ -387,7 +387,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& ndevices              = arguments.ndevices;
   auto& skip_device           = arguments.skip_device;
   auto& disable_warnings      = arguments.disable_warnings;
-  auto& tune_kokkos_internals = arguments.tune_kokkos_internals;
+  auto& tune_internals        = arguments.tune_internals;
 
   bool kokkos_threads_found  = false;
   bool kokkos_numa_found     = false;
@@ -503,7 +503,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       }
       narg--;
     } else if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
-      tune_kokkos_internals = true;
+      tune_internals = true;
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
@@ -563,7 +563,7 @@ void parse_environment_variables(InitArguments& arguments) {
   auto& ndevices              = arguments.ndevices;
   auto& skip_device           = arguments.skip_device;
   auto& disable_warnings      = arguments.disable_warnings;
-  auto& tune_kokkos_internals = arguments.tune_kokkos_internals;
+  auto& tune_internals        = arguments.tune_internals;
   char* endptr;
   auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
   if (env_num_threads_str != nullptr) {
@@ -724,8 +724,8 @@ void parse_environment_variables(InitArguments& arguments) {
       c = toupper(c);
     }
     if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1"))
-      tune_kokkos_internals = true;
-    else if (!tune_kokkos_internals)
+      tune_internals = true;
+    else if (!tune_internals)
       Impl::throw_runtime_exception(
           "Error: expecting a match between --kokkos-tune-internals and "
           "KOKKOS_TUNE_INTERNALS if both are set. Raised by "

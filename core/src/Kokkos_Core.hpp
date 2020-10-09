@@ -81,16 +81,16 @@ struct InitArguments {
   int ndevices;
   int skip_device;
   bool disable_warnings;
-  bool tune_kokkos_internals;
+  bool tune_internals;
   InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false,
-                bool tki = false)
+                bool ti = false)
       : num_threads{nt},
         num_numa{nn},
         device_id{dv},
         ndevices{-1},
         skip_device{9999},
         disable_warnings{dw},
-        tune_kokkos_internals{tki} {}
+        tune_internals{ti} {}
 };
 
 namespace Impl {
