@@ -92,7 +92,8 @@ class RawMemoryAllocationFailure : public std::bad_alloc {
     CudaMallocManaged,
     CudaHostAlloc,
     HIPMalloc,
-    HIPHostMalloc
+    HIPHostMalloc,
+    SYCLMalloc
   };
 
  private:

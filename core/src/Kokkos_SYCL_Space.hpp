@@ -46,6 +46,7 @@
 #define KOKKOS_SYCLSPACE_HPP
 
 #include <Kokkos_Core_fwd.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 #ifdef KOKKOS_ENABLE_SYCL
 
@@ -62,8 +63,14 @@ class SYCLDeviceUSMSpace {
   SYCLDeviceUSMSpace();
 
   void* allocate(const std::size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const;
+
   void deallocate(void* const arg_alloc_ptr,
                   const std::size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size,
+                  const size_t arg_logical_size = 0) const;
 
   static constexpr const char* name() { return "SYCLDeviceUSM"; };
 
@@ -71,6 +78,62 @@ class SYCLDeviceUSMSpace {
   int m_device;
 };
 }  // namespace Experimental
+
+namespace Impl {
+
+template <>
+class SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>
+    : public SharedAllocationRecord<void, void> {
+ private:
+  using RecordBase = SharedAllocationRecord<void, void>;
+
+  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
+  SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
+
+  static void deallocate(RecordBase*);
+
+#ifdef KOKKOS_ENABLE_DEBUG
+  static RecordBase s_root_record;
+#endif
+
+  const Kokkos::Experimental::SYCLDeviceUSMSpace m_space;
+
+ protected:
+  ~SharedAllocationRecord();
+
+  SharedAllocationRecord(
+      const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &deallocate);
+
+ public:
+  std::string get_label() const;
+
+  static SharedAllocationRecord* allocate(
+      const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size);
+
+  /**\brief  Allocate tracked memory in the space */
+  static void* allocate_tracked(
+      const Kokkos::Experimental::SYCLDeviceUSMSpace& arg_space,
+      const std::string& arg_label, const size_t arg_alloc_size);
+
+  /**\brief  Reallocate tracked memory in the space */
+  static void* reallocate_tracked(void* const arg_alloc_ptr,
+                                  const size_t arg_alloc_size);
+
+  /**\brief  Deallocate tracked memory in the space */
+  static void deallocate_tracked(void* const arg_alloc_ptr);
+
+  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
+
+  static void print_records(std::ostream&,
+                            const Kokkos::Experimental::SYCLDeviceUSMSpace&,
+                            bool detail = false);
+};
+
+}  // namespace Impl
+
 }  // namespace Kokkos
 
 #endif
