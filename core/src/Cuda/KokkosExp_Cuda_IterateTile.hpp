@@ -59,7 +59,6 @@
 // type is not allowed As a result, recreate cuda_parallel_launch and associated
 // code
 
-#include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
 
 namespace Kokkos {

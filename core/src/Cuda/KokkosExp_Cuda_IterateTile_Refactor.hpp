@@ -58,7 +58,6 @@
 // type is not allowed use existing Kokkos functionality, e.g. max blocks, once
 // resolved
 
-#include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
 
 namespace Kokkos {

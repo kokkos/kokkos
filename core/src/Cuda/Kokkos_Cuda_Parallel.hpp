@@ -534,11 +534,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   const Policy m_rp;
 
  public:
-  inline int max_tile_size_product() const noexcept {
+  template <typename Policy, typename Functor>
+  inline static int max_tile_size_product(const Policy& pol, const Functor&) {
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor,
                            LaunchBounds>::get_cuda_func_attributes();
-    auto const& prop = m_rp.space().cuda_device_prop();
+    auto const& prop = pol.space().cuda_device_prop();
     // Limits due do registers/SM
     int const regs_per_sm        = prop.regsPerMultiprocessor;
     int const regs_per_thread    = attr.numRegs;
@@ -1218,11 +1219,12 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using DummySHMEMReductionType = int;
 
  public:
-  inline int max_tile_size_product() const noexcept {
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy& pol, const Functor&) {
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelReduce,
                            LaunchBounds>::get_cuda_func_attributes();
-    auto const& prop = m_policy.space().cuda_device_prop();
+    auto const& prop = pol.space().cuda_device_prop();
     // Limits due do registers/SM
     int const regs_per_sm        = prop.regsPerMultiprocessor;
     int const regs_per_thread    = attr.numRegs;
