@@ -639,7 +639,8 @@ struct TestReduceCombinatoricalInstantiation {
     std::string s("Std::String");
     AddPolicy_1(1000, s.c_str());
     AddPolicy_1(1000, "Char Constant");
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
+    // FIXME_SYCL
+#if !(defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_SYCL))
     AddPolicy_1(0, "Char Constant");
 #endif
   }
@@ -655,7 +656,8 @@ struct TestReduceCombinatoricalInstantiation {
     std::string s("Std::String");
     AddPolicy_2(1000, s.c_str());
     AddPolicy_2(1000, "Char Constant");
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
+    // FIXME_SYCL
+#if !(defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_SYCL))
     AddPolicy_2(0, "Char Constant");
 #endif
   }

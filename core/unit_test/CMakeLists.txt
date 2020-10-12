@@ -58,7 +58,7 @@ SET(KOKKOS_THREADS_NAME Threads)
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
-foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
+foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
     set(DEVICE "PTHREAD")
@@ -412,6 +412,82 @@ if(Kokkos_ENABLE_HIP)
     SOURCES
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Streams.cpp
+  )
+endif()
+
+if(Kokkos_ENABLE_SYCL)
+  list(REMOVE_ITEM SYCL_SOURCES
+       sycl/TestSYCL_AtomicOperations_int.cpp
+       sycl/TestSYCL_AtomicOperations_unsignedint.cpp
+       sycl/TestSYCL_AtomicOperations_longint.cpp
+       sycl/TestSYCL_AtomicOperations_unsignedlongint.cpp
+       sycl/TestSYCL_AtomicOperations_longlongint.cpp
+       sycl/TestSYCL_AtomicOperations_double.cpp
+       sycl/TestSYCL_AtomicOperations_float.cpp
+       sycl/TestSYCL_AtomicOperations_complexdouble.cpp
+       sycl/TestSYCL_AtomicOperations_complexfloat.cpp
+       sycl/TestSYCL_AtomicViews.cpp
+       sycl/TestSYCL_Atomics.cpp
+       sycl/TestSYCL_Atomics.cpp
+       sycl/TestSYCL_AtomicViews.cpp
+       sycl/TestSYCL_BlockSizeDeduction.cpp
+       sycl/TestSYCL_Crs.cpp
+       sycl/TestSYCL_DeepCopyAlignment.cpp
+       sycl/TestSYCL_Init.cpp
+       sycl/TestSYCL_LocalDeepCopy.cpp
+       sycl/TestSYCL_MDRange_a.cpp
+       sycl/TestSYCL_MDRange_b.cpp
+       sycl/TestSYCL_MDRange_c.cpp
+       sycl/TestSYCL_MDRange_d.cpp
+       sycl/TestSYCL_MDRange_e.cpp
+       sycl/TestSYCL_MDRange_f.cpp
+       sycl/TestSYCL_Other.cpp
+       sycl/TestSYCL_RangePolicy.cpp
+       sycl/TestSYCL_RangePolicyRequire.cpp
+       sycl/TestSYCL_Reductions.cpp
+       sycl/TestSYCL_Reducers_a.cpp
+       sycl/TestSYCL_Reducers_b.cpp
+       sycl/TestSYCL_Reducers_c.cpp
+       sycl/TestSYCL_Reducers_d.cpp
+       sycl/TestSYCL_Reductions_DeviceView.cpp
+       sycl/TestSYCL_Scan.cpp
+       sycl/TestSYCL_SharedAlloc.cpp
+       sycl/TestSYCL_SubView_a.cpp
+       sycl/TestSYCL_SubView_b.cpp
+       sycl/TestSYCL_SubView_c01.cpp
+       sycl/TestSYCL_SubView_c02.cpp
+       sycl/TestSYCL_SubView_c03.cpp
+       sycl/TestSYCL_SubView_c04.cpp
+       sycl/TestSYCL_SubView_c05.cpp
+       sycl/TestSYCL_SubView_c06.cpp
+       sycl/TestSYCL_SubView_c07.cpp
+       sycl/TestSYCL_SubView_c08.cpp
+       sycl/TestSYCL_SubView_c10.cpp
+       sycl/TestSYCL_SubView_c09.cpp
+       sycl/TestSYCL_SubView_c11.cpp
+       sycl/TestSYCL_SubView_c12.cpp
+       sycl/TestSYCL_SubView_c13.cpp
+       sycl/TestSYCL_Team.cpp
+       sycl/TestSYCL_TeamReductionScan.cpp
+       sycl/TestSYCL_TeamScratch.cpp
+       sycl/TestSYCL_TeamTeamSize.cpp
+       sycl/TestSYCL_TeamVectorRange.cpp
+       sycl/TestSYCL_UniqueToken.cpp
+       sycl/TestSYCL_ViewAPI_a.cpp
+       sycl/TestSYCL_ViewAPI_d.cpp
+       sycl/TestSYCL_ViewAPI_e.cpp
+       sycl/TestSYCL_ViewLayoutStrideAssignment.cpp
+       sycl/TestSYCL_ViewMapping_a.cpp
+       sycl/TestSYCL_WorkGraph.cpp
+       sycl/TestSYCL_ViewMapping_b.cpp
+       sycl/TestSYCL_ViewResize.cpp
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCL
+    SOURCES
+      UnitTestMainInit.cpp
+      ${SYCL_SOURCES}
   )
 endif()
 
