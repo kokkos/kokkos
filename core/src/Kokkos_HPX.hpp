@@ -1164,6 +1164,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       : m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)) {}
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy &, const Functor &) {
+    return 1024;
+  }
 };
 }  // namespace Impl
 }  // namespace Kokkos
@@ -1696,6 +1700,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()),
         m_force_synchronous(!reducer.view().impl_track().has_record()) {}
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy &, const Functor &) {
+    return 1024;
+  }
 };
 }  // namespace Impl
 }  // namespace Kokkos
