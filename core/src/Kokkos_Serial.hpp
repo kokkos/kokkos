@@ -729,7 +729,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
  public:
   inline void execute() const { this->exec(); }
-  inline int max_tile_size_product() const noexcept { return 1024; }
+  template <typename Policy, typename Functor>
+  inline static int max_tile_size_product(const Policy&, const Functor&) {
+    return 1024;
+  }
   inline ParallelFor(const FunctorType& arg_functor,
                      const MDRangePolicy& arg_policy)
       : m_functor(arg_functor),
@@ -781,7 +784,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
  public:
-  inline int max_tile_size_product() const noexcept { return 1024; }
+  template <typename Policy, typename Functor>
+  inline static int max_tile_size_product(const Policy&, const Functor&) {
+    return 1024;
+  }
   inline void execute() const {
     const size_t pool_reduce_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
