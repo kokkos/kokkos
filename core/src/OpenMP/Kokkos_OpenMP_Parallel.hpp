@@ -228,10 +228,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)) {}
+  template <typename Policy, typename Functor>
+  inline static int max_tile_size_product(const Policy&, const Functor&) {
+    return 1024;
+  }
 };
-inline static int max_tile_size_product(const Policy&, const Functor&) {
-  return 1024;
-}
 
 }  // namespace Impl
 }  // namespace Kokkos
@@ -570,6 +571,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       , "Reduction result on Kokkos::OpenMP must be a Kokkos::View in HostSpace"
       );*/
   }
+  template <typename Policy, typename Functor>
   inline static int max_tile_size_product(const Policy&, const Functor&) {
     return 1024;
   }
