@@ -105,7 +105,7 @@ struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     exec.fence();
-    DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SYCLDeviceUSMSpace,
+    DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
              Kokkos::Experimental::SYCL>(Kokkos::Experimental::SYCL(), dst, src,
                                          n);
     Kokkos::Experimental::SYCL().fence();
