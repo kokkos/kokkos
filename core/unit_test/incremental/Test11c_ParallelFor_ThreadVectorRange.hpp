@@ -54,8 +54,7 @@ namespace Test {
 
 template <class ExecSpace>
 struct Hierarchical_ForLoop_C {
-  void run(const int64_t pN, const int64_t sX, const int64_t sY,
-           const int64_t sZ) {
+  void run(const int pN, const int sX, const int sY, const int sZ) {
     using team_policy = Kokkos::TeamPolicy<ExecSpace>;
     using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 

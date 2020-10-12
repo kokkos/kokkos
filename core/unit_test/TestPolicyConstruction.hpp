@@ -572,7 +572,9 @@ class TestTeamPolicyConstruction {
     team_size = 1;
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-    team_size = 32;
+    if (std::is_same<typename policy_t::execution_space,
+                     Kokkos::Experimental::OpenMPTarget>::value)
+      team_size = 32;
 #endif
     int chunk_size         = 4;
     int per_team_scratch   = 1024;
