@@ -90,6 +90,11 @@ replace_pragma_ident=0
 # Mark first host compiler argument
 first_xcompiler_arg=1
 
+# Allow for setting temp dir without setting TMPDIR in parent (see https://docs.olcf.ornl.gov/systems/summit_user_guide.html#setting-tmpdir-causes-jsm-jsrun-errors-job-state-flip-flop)
+if [[ ! -z ${_NVCC_WRAPPER_TMPDIR_OVERRIDE+x} ]]
+then
+  export TMPDIR=${_NVCC_WRAPPER_TMPDIR_OVERRIDE}
+fi
 temp_dir=${TMPDIR:-/tmp}
 
 # optimization flag added as a command-line argument
