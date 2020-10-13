@@ -76,7 +76,7 @@ class HIPSpace {
   using execution_space = Kokkos::Experimental::HIP;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
 
-  using size_type = unsigned int;
+  using size_type = int;
 
   /*--------------------------------*/
 
@@ -168,7 +168,7 @@ class HIPHostPinnedSpace {
   using execution_space = HostSpace::execution_space;
   using memory_space    = HIPHostPinnedSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  using size_type       = unsigned int;
+  using size_type       = int;
 
   /*--------------------------------*/
 

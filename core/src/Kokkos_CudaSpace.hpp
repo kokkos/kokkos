@@ -78,7 +78,7 @@ class CudaSpace {
   using execution_space = Kokkos::Cuda;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
 
-  using size_type = unsigned int;
+  using size_type = int;
 
   /*--------------------------------*/
 
@@ -166,7 +166,7 @@ class CudaUVMSpace {
   using memory_space    = CudaUVMSpace;
   using execution_space = Cuda;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  using size_type       = unsigned int;
+  using size_type       = int;
 
   /** \brief  If UVM capability is available */
   static bool available();
@@ -232,7 +232,7 @@ class CudaHostPinnedSpace {
   using execution_space = HostSpace::execution_space;
   using memory_space    = CudaHostPinnedSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  using size_type       = unsigned int;
+  using size_type       = int;
 
   /*--------------------------------*/
 

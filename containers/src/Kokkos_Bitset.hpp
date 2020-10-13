@@ -74,7 +74,7 @@ template <typename Device>
 class Bitset {
  public:
   using execution_space = Device;
-  using size_type       = unsigned int;
+  using size_type       = int;
 
   enum { BIT_SCAN_REVERSE = 1u };
   enum { MOVE_HINT_BACKWARD = 2u };
@@ -309,7 +309,7 @@ template <typename Device>
 class ConstBitset {
  public:
   using execution_space = Device;
-  using size_type       = unsigned int;
+  using size_type       = int;
 
  private:
   enum { block_size = static_cast<unsigned>(sizeof(unsigned) * CHAR_BIT) };

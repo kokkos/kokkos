@@ -58,7 +58,7 @@ class SYCLDeviceUSMSpace {
   using execution_space = SYCL;
   using memory_space    = SYCLDeviceUSMSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  using size_type       = unsigned int;
+  using size_type       = int;
 
   SYCLDeviceUSMSpace();
 
