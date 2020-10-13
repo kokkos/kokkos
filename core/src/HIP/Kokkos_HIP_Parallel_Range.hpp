@@ -410,7 +410,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ViewType& arg_result,
                  typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = NULL)
+                                         void*>::type = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
