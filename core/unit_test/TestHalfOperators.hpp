@@ -114,7 +114,11 @@ struct Functor_TestHalfOperators {
   void operator()(int) const {
     half_t tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
-    half_device_type half_tmp;
+#if defined(HALF_IMPL_TYPE)
+    half_t::impl_type half_tmp;
+#else
+    half_t half_tmp;
+#endif  // HALF_IMPL_TYPE
 
     tmp_lhs              = lhs;
     actual_lhs(ASSIGN)   = cast_from_half<double>(tmp_lhs);
@@ -225,7 +229,8 @@ struct Functor_TestHalfOperators {
     expected_lhs(PASS_BY_REF) = d_lhs;
 
     half_tmp = lhs;
-    tmp_ptr  = &(tmp_lhs = half_tmp);
+    // half_tmp = cast_from_half<float>(lhs);
+    tmp_ptr = &(tmp_lhs = half_tmp);
     if (tmp_ptr != &tmp_lhs)
       Kokkos::abort("Error in half_t address-of operator");
     actual_lhs(AO___HALF)   = cast_from_half<double>(*tmp_ptr);
