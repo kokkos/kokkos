@@ -49,6 +49,10 @@
 #include <complex>
 #include <iosfwd>
 
+#ifdef KOKKOS_ENABLE_SYCL
+#include <CL/sycl.hpp>
+#endif
+
 namespace Kokkos {
 
 /// \class complex
