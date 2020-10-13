@@ -181,10 +181,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   static int max_tile_size_product(const Policy& pol, const Functor&) {
     using closure_type =
         ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
-                    Kokkos::Experimental::HIP>
-            hipFuncAttributes attr =
-                Kokkos::Experimental::Impl::HIPParallelLaunch<
-                    closure_type, LaunchBounds>::get_hip_func_attributes();
+                    Kokkos::Experimental::HIP>;
+    hipFuncAttributes attr = Kokkos::Experimental::Impl::HIPParallelLaunch<
+        closure_type, LaunchBounds>::get_hip_func_attributes();
     auto const& prop = pol.space().hip_device_prop();
     // Limits due do registers/SM
     int const regs_per_sm        = prop.regsPerMultiprocessor;
@@ -427,10 +426,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   static int max_tile_size_product(const Policy& pol, const Functor&) {
     using closure_type =
         ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
-                       ReducerType, Kokkos::Experimental::HIP>
-            hipFuncAttributes attr =
-                Kokkos::Experimental::Impl::HIPParallelLaunch<
-                    closure_type, LaunchBounds>::get_hip_func_attributes();
+                       ReducerType, Kokkos::Experimental::HIP>;
+    hipFuncAttributes attr = Kokkos::Experimental::Impl::HIPParallelLaunch<
+        closure_type, LaunchBounds>::get_hip_func_attributes();
     auto const& prop = pol.space().hip_device_prop();
     // Limits due do registers/SM
     int const regs_per_sm        = prop.regsPerMultiprocessor;
