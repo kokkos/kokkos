@@ -140,10 +140,10 @@ HIPInternal::~HIPInternal() {
   m_maxShmemPerBlock        = 0;
   m_scratchSpaceCount       = 0;
   m_scratchFlagsCount       = 0;
-  m_scratchSpace            = 0;
-  m_scratchFlags            = 0;
+  m_scratchSpace            = nullptr;
+  m_scratchFlags            = nullptr;
   m_scratchConcurrentBitset = nullptr;
-  m_stream                  = 0;
+  m_stream                  = nullptr;
 }
 
 int HIPInternal::verify_is_initialized(const char *const label) const {
@@ -183,7 +183,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
 
   const HIPInternalDevices &dev_info = HIPInternalDevices::singleton();
 
-  const bool ok_init = 0 == m_scratchSpace || 0 == m_scratchFlags;
+  const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
 
   // Need at least a GPU device
   const bool ok_id =
@@ -284,7 +284,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
   }
 
   // Init the array for used for arbitrarily sized atomics
-  if (m_stream == 0) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
+  if (m_stream == nullptr) ::Kokkos::Impl::initialize_host_hip_lock_arrays();
 }
 
 //----------------------------------------------------------------------------
@@ -361,7 +361,7 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
 void HIPInternal::finalize() {
   this->fence();
   was_finalized = true;
-  if (0 != m_scratchSpace || 0 != m_scratchFlags) {
+  if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     using RecordHIP =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace>;
 
@@ -381,10 +381,10 @@ void HIPInternal::finalize() {
     m_maxShmemPerBlock          = 0;
     m_scratchSpaceCount         = 0;
     m_scratchFlagsCount         = 0;
-    m_scratchSpace              = 0;
-    m_scratchFlags              = 0;
+    m_scratchSpace              = nullptr;
+    m_scratchFlags              = nullptr;
     m_scratchConcurrentBitset   = nullptr;
-    m_stream                    = 0;
+    m_stream                    = nullptr;
     m_team_scratch_current_size = 0;
     m_team_scratch_ptr          = nullptr;
   }

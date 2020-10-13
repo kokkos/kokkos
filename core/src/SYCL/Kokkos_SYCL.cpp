@@ -94,6 +94,10 @@ void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
 void SYCL::fence() const { m_space_instance->m_queue->wait(); }
 
+int SYCL::sycl_device() const {
+  return impl_internal_space_instance()->m_syclDev;
+}
+
 SYCL::SYCLDevice::SYCLDevice(cl::sycl::device d) : m_device(std::move(d)) {}
 
 SYCL::SYCLDevice::SYCLDevice(const cl::sycl::device_selector& selector)

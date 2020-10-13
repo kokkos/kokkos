@@ -935,5 +935,40 @@ require(const PolicyType p, WorkItemProperty::ImplWorkItemProperty<P>) {
       WorkItemProperty::ImplWorkItemProperty<P>, PolicyType>::policy_out_t(p);
 }
 }  // namespace Experimental
+
+namespace Impl {
+
+template <class PatternTag, class... Args>
+struct PatternImplSpecializationFromTag;
+
+template <class... Args>
+struct PatternImplSpecializationFromTag<Kokkos::ParallelForTag, Args...>
+    : identity<ParallelFor<Args...>> {};
+
+template <class... Args>
+struct PatternImplSpecializationFromTag<Kokkos::ParallelReduceTag, Args...>
+    : identity<ParallelReduce<Args...>> {};
+
+template <class... Args>
+struct PatternImplSpecializationFromTag<Kokkos::ParallelScanTag, Args...>
+    : identity<ParallelScan<Args...>> {};
+
+template <class PatternImpl>
+struct PatternTagFromImplSpecialization;
+
+template <class... Args>
+struct PatternTagFromImplSpecialization<ParallelFor<Args...>>
+    : identity<ParallelForTag> {};
+
+template <class... Args>
+struct PatternTagFromImplSpecialization<ParallelReduce<Args...>>
+    : identity<ParallelReduceTag> {};
+
+template <class... Args>
+struct PatternTagFromImplSpecialization<ParallelScan<Args...>>
+    : identity<ParallelScanTag> {};
+
+}  // end namespace Impl
+
 }  // namespace Kokkos
 #endif /* #define KOKKOS_EXECPOLICY_HPP */

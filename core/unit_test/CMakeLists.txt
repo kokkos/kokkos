@@ -44,7 +44,7 @@ SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 10)
 SET(KOKKOS_OPENMPTARGET_NAME Experimental::OpenMPTarget)
 SET(KOKKOS_SERIAL_FEATURE_LEVEL 999)
 SET(KOKKOS_SERIAL_NAME Serial)
-SET(KOKKOS_SYCL_FEATURE_LEVEL 2)
+SET(KOKKOS_SYCL_FEATURE_LEVEL 3)
 SET(KOKKOS_SYCL_NAME Experimental::SYCL)
 SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
 SET(KOKKOS_THREADS_NAME Threads)
@@ -184,6 +184,12 @@ if(Kokkos_ENABLE_SERIAL)
     UnitTestMainInit.cpp
     ${Serial_SOURCES2}
   )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SerialGraph
+    SOURCES
+    UnitTestMainInit.cpp
+    serial/TestSerial_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_PTHREAD)
@@ -207,6 +213,12 @@ if(Kokkos_ENABLE_OPENMP)
     SOURCES
       UnitTestMain.cpp
       openmp/TestOpenMP_InterOp.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_OpenMPGraph
+    SOURCES
+      UnitTestMainInit.cpp
+      openmp/TestOpenMP_Graph.cpp
   )
 endif()
 

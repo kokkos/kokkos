@@ -42,46 +42,21 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP
-#define KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP
+#ifndef KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP
+#define KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP
 
 #include <Kokkos_Macros.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
-template <class ExecutionSpace, class Kernel, class Predecessor>
-struct GraphNodeImpl;
+template <class ExecutionSpace>
+struct GraphNodeKernelDefaultImpl;
 
 template <class ExecutionSpace>
-struct GraphImpl;
-
-template <class ExecutionSpace, class Policy, class Functor,
-          class KernelTypeTag, class... Args>
-class GraphNodeKernelImpl;
-
-struct _graph_node_kernel_ctor_tag {};
-struct _graph_node_predecessor_ctor_tag {};
-struct _graph_node_is_root_ctor_tag {};
-
-struct GraphAccess;
-
-// Customizable for backends
-template <class ExecutionSpace>
-struct GraphNodeBackendSpecificDetails;
-
-// Customizable for backends
-template <class ExecutionSpace, class Kernel, class PredecessorRef>
-struct GraphNodeBackendDetailsBeforeTypeErasure;
-
-// TODO move this to a more appropriate place
-struct DoNotExplicitlySpecifyThisTemplateParameter;
-
-struct KernelInGraphProperty {};
-
-struct IsGraphKernelTag {};
+struct GraphNodeAggregateKernelDefaultImpl;
 
 }  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_IMPL_KOKKOS_GRAPHIMPL_FWD_HPP
+#endif  // KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP

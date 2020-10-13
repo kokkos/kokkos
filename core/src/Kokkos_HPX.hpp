@@ -789,6 +789,14 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     return 1;
   }
 
+  static int vector_length_max() { return 1; }
+
+  inline int impl_vector_length() noexcept { return 1; }
+  inline bool impl_auto_team_size() noexcept { return false; }
+  inline bool impl_auto_vector_length() noexcept { return false; }
+  inline void impl_set_vector_length(int) noexcept {}
+  inline void impl_set_team_size(int) noexcept {}
+
  private:
   inline void init(const int league_size_request, const int team_size_request) {
     m_league_size           = league_size_request;
@@ -1192,6 +1200,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                                   WorkTag, void>::type;
   using ValueInit  = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
+  using ValueFinal = Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>;
   using ValueJoin  = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
   using ValueOps   = Kokkos::Impl::FunctorValueOps<ReducerTypeFwd, WorkTagFwd>;
   using value_type = typename Analysis::value_type;
@@ -1315,6 +1324,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   void execute() const {
+    if (m_policy.end() <= m_policy.begin()) {
+      if (m_result_ptr) {
+        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                        m_result_ptr);
+        ValueFinal::final(ReducerConditional::select(m_functor, m_reducer),
+                          m_result_ptr);
+      }
+      return;
+    }
     dispatch_execute_task(this, m_policy.space(), m_force_synchronous);
   }
 
@@ -1520,9 +1538,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using WorkTagFwd =
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                                   WorkTag, void>::type;
-  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
-  using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
-  using ValueOps  = Kokkos::Impl::FunctorValueOps<ReducerTypeFwd, WorkTagFwd>;
+  using ValueInit  = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
+  using ValueFinal = Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>;
+  using ValueJoin  = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
+  using ValueOps   = Kokkos::Impl::FunctorValueOps<ReducerTypeFwd, WorkTagFwd>;
   using pointer_type   = typename Analysis::pointer_type;
   using value_type     = typename Analysis::value_type;
   using reference_type = typename Analysis::reference_type;
@@ -2125,9 +2144,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using WorkTagFwd =
       typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
                                   WorkTag, void>::type;
-  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
-  using ValueJoin = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
-  using ValueOps  = Kokkos::Impl::FunctorValueOps<ReducerTypeFwd, WorkTagFwd>;
+  using ValueInit  = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
+  using ValueFinal = Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>;
+  using ValueJoin  = Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
+  using ValueOps   = Kokkos::Impl::FunctorValueOps<ReducerTypeFwd, WorkTagFwd>;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
@@ -2197,7 +2217,18 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
  public:
-  void execute() const { dispatch_execute_task(this, m_policy.space()); }
+  void execute() const {
+    if (m_policy.league_size() * m_policy.team_size() == 0) {
+      if (m_result_ptr) {
+        ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
+                        m_result_ptr);
+        ValueFinal::final(ReducerConditional::select(m_functor, m_reducer),
+                          m_result_ptr);
+      }
+      return;
+    }
+    dispatch_execute_task(this, m_policy.space());
+  }
 
   inline void execute_task() const {
     // See [note 1] for an explanation.
