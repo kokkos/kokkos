@@ -188,7 +188,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     int const max_threads_per_sm = regs_per_sm / regs_per_thread;
     return std::min(
         max_threads_per_sm,
-        int(Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock));
+        static_cast<int>(
+            Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock));
   }
 };
 
@@ -429,7 +430,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     int const max_threads_per_sm = regs_per_sm / regs_per_thread;
     return std::min(
         max_threads_per_sm,
-        int(Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock));
+        static_cast<int>(
+            Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock));
   }
 };
 }  // namespace Impl
