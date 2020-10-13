@@ -64,8 +64,8 @@ namespace Impl {
 
 namespace {
 hipStream_t get_deep_copy_stream() {
-  static hipStream_t s = 0;
-  if (s == 0) {
+  static hipStream_t s = nullptr;
+  if (s == nullptr) {
     HIP_SAFE_CALL(hipStreamCreate(&s));
   }
   return s;
@@ -445,7 +445,7 @@ void* SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 void SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                             void>::deallocate_tracked(void* const
                                                           arg_alloc_ptr) {
-  if (arg_alloc_ptr != 0) {
+  if (arg_alloc_ptr != nullptr) {
     SharedAllocationRecord* const r = get_record(arg_alloc_ptr);
 
     RecordBase::decrement(r);
@@ -521,7 +521,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::get_record(
   Header head;
 
   Header const* const head_hip =
-      alloc_ptr ? Header::get_header(alloc_ptr) : (Header*)0;
+      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
 
   if (alloc_ptr) {
     Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace>(
@@ -529,7 +529,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::get_record(
   }
 
   RecordHIP* const record =
-      alloc_ptr ? static_cast<RecordHIP*>(head.m_record) : (RecordHIP*)0;
+      alloc_ptr ? static_cast<RecordHIP*>(head.m_record) : nullptr;
 
   if (!alloc_ptr || record->m_alloc_ptr != head_hip) {
     Kokkos::Impl::throw_runtime_exception(std::string(
