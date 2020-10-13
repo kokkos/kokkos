@@ -730,7 +730,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
  public:
   inline void execute() const { this->exec(); }
   template <typename Policy, typename Functor>
-  inline static int max_tile_size_product(const Policy&, const Functor&) {
+  static int max_tile_size_product(const Policy&, const Functor&) {
     return 1024;
   }
   inline ParallelFor(const FunctorType& arg_functor,
@@ -785,7 +785,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
  public:
   template <typename Policy, typename Functor>
-  inline static int max_tile_size_product(const Policy&, const Functor&) {
+  static int max_tile_size_product(const Policy&, const Functor&) {
     return 1024;
   }
   inline void execute() const {

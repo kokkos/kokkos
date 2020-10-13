@@ -535,7 +535,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
  public:
   template <typename Policy, typename Functor>
-  inline static int max_tile_size_product(const Policy& pol, const Functor&) {
+  static int max_tile_size_product(const Policy& pol, const Functor&) {
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor,
                            LaunchBounds>::get_cuda_func_attributes();

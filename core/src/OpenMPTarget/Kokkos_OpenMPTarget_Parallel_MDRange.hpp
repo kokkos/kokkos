@@ -572,7 +572,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   // heuristic here. We need something better once we can query these kinds of
   // properties
   template <typename Policy, typename Functor>
-  inline static int max_tile_size_product(const Policy&, const Functor&) {
+  static int max_tile_size_product(const Policy&, const Functor&) {
     return 256;
   }
 };
@@ -769,7 +769,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 heuristic
   // here. We need something better once we can query these kinds of properties
   template<typename Policy, typename Functor>
-  inline static int max_tile_size_product(const Policy&, const Functor&) {
+static int max_tile_size_product(const Policy&, const Functor&) {
     return 256;
   }
 };*/

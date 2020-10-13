@@ -178,7 +178,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       : m_functor(arg_functor), m_policy(arg_policy) {}
 
   template <typename Policy, typename Functor>
-  inline static int max_tile_size_product(const Policy& pol, const Functor&) {
+  static int max_tile_size_product(const Policy& pol, const Functor&) {
     hipFuncAttributes attr = Kokkos::Experimental::Impl::HIPParallelLaunch<
         ParallelFor, LaunchBounds>::get_hip_func_attributes();
     auto const& prop = pol.space().hip_device_prop();
@@ -420,7 +420,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr) {}
   template <typename Policy, typename Functor>
-  inline static int max_tile_size_product(const Policy& pol, const Functor&) {
+  static int max_tile_size_product(const Policy& pol, const Functor&) {
     hipFuncAttributes attr = Kokkos::Experimental::Impl::HIPParallelLaunch<
         ParallelFor, LaunchBounds>::get_hip_func_attributes();
     auto const& prop = pol.space().hip_device_prop();
