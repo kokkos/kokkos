@@ -79,16 +79,14 @@ struct GraphAccess {
         graph_impl_ptr, std::move(root_ptr)};
   }
 
-  template <class RootNodeRef>
-  // requires remove_cvref_t<RootNodeRef> is a specialization of GraphNodeRef
-  static auto create_graph_builder(RootNodeRef&& arg_root) {
-    // std::remove_cvref_t can't get here quickly enough...
-    using execution_space =
-        typename std::remove_cv<typename std::remove_reference<
-            RootNodeRef>::type>::type::execution_space;
-    return Kokkos::Experimental::GraphBuilder<execution_space>{(RootNodeRef &&)
-                                                                   arg_root};
+  template <class NodeType, class... Args>
+  static auto make_node_shared_ptr(Args&&... args) {
+    static_assert(
+        Kokkos::Impl::is_specialization_of<NodeType, GraphNodeImpl>::value,
+        "Kokkos Internal Error in graph interface");
+    return std::make_shared<NodeType>((Args &&) args...);
   }
+
   template <class GraphImplWeakPtr, class ExecutionSpace, class Kernel,
             class Predecessor>
   static auto make_graph_node_ref(
@@ -102,6 +100,32 @@ struct GraphAccess {
         std::move(graph_impl), std::move(pred_impl)};
     //----------------------------------------
   }
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="accessors for private members of public interface"> {{{2
+
+  template <class NodeRef>
+  static auto get_node_ptr(NodeRef&& node_ref) {
+    static_assert(
+        is_specialization_of<remove_cvref_t<NodeRef>,
+                             Kokkos::Experimental::GraphNodeRef>::value,
+        "Kokkos Internal Implementation error (bad argument to "
+        "`GraphAccess::get_node_ptr()`)");
+    return ((NodeRef &&) node_ref).get_node_ptr();
+  }
+
+  template <class NodeRef>
+  static auto get_graph_weak_ptr(NodeRef&& node_ref) {
+    static_assert(
+        is_specialization_of<remove_cvref_t<NodeRef>,
+                             Kokkos::Experimental::GraphNodeRef>::value,
+        "Kokkos Internal Implementation error (bad argument to "
+        "`GraphAccess::get_graph_weak_ptr()`)");
+    return ((NodeRef &&) node_ref).get_graph_weak_ptr();
+  }
+
+  // </editor-fold> end accessors for private members of public interface }}}2
+  //----------------------------------------------------------------------------
 };
 
 template <class Policy>
@@ -118,7 +142,8 @@ namespace Experimental {  // but not for users, so...
 
 template <class Policy>
 // requires ExecutionPolicy<Policy>
-auto require(Policy const& policy, Kokkos::Impl::KernelInGraphProperty) {
+constexpr auto require(Policy const& policy,
+                       Kokkos::Impl::KernelInGraphProperty) {
   static_assert(Kokkos::is_execution_policy<Policy>::value,
                 "Internal implementation error!");
   return typename Kokkos::Impl::_add_graph_kernel_tag<Policy>::type{policy};

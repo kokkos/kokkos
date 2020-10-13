@@ -184,9 +184,8 @@ struct GraphImpl<Kokkos::Cuda> {
   auto create_root_node_ptr() {
     KOKKOS_EXPECTS(bool(m_graph))
     KOKKOS_EXPECTS(!bool(m_graph_exec))
-    auto rv = Kokkos::Impl::GraphAccess::make_node_shared_ptr_with_deleter(
-        new root_node_impl_t{get_execution_space(),
-                             _graph_node_is_root_ctor_tag{}});
+    auto rv = std::make_shared<root_node_impl_t>(
+        get_execution_space(), _graph_node_is_root_ctor_tag{});
     CUDA_SAFE_CALL(cudaGraphAddEmptyNode(&(rv->node_details_t::node), m_graph,
                                          /* dependencies = */ nullptr,
                                          /* numDependencies = */ 0));
@@ -201,10 +200,9 @@ struct GraphImpl<Kokkos::Cuda> {
     // in the generic layer, which calls through to add_predecessor for
     // each predecessor ref, so all we need to do here is create the (trivial)
     // aggregate node.
-    return GraphAccess::make_node_shared_ptr_with_deleter(
-        new aggregate_node_impl_t{m_execution_space,
-                                  _graph_node_kernel_ctor_tag{},
-                                  aggregate_kernel_impl_t{}});
+    return std::make_shared<aggregate_node_impl_t>(
+        m_execution_space, _graph_node_kernel_ctor_tag{},
+        aggregate_kernel_impl_t{});
   }
 };
 

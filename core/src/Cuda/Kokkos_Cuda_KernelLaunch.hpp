@@ -147,18 +147,11 @@ inline bool is_empty_launch(dim3 const& grid, dim3 const& block) {
   return (grid.x == 0) || ((block.x * block.y * block.z) == 0);
 }
 
-//==============================================================================
-// <editor-fold desc="Some helper functions for launch code readability"> {{{1
-
-inline bool is_empty_launch(dim3 const& grid, dim3 const& block) {
-  return (grid.x == 0) || ((block.x * block.y * block.z) == 0);
-}
-
 inline void check_shmem_request(CudaInternal const* cuda_instance, int shmem) {
   if (cuda_instance->m_maxShmemPerBlock < shmem) {
     Kokkos::Impl::throw_runtime_exception(
-        std::string("CudaParallelLaunch (graph node) FAILED: shared memory"
-                    "request is too large"));
+        std::string("CudaParallelLaunch (or graph node creation) FAILED: shared"
+                    " memory request is too large"));
   }
 }
 
@@ -167,20 +160,13 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
                                        bool prefer_shmem) {
 #ifndef KOKKOS_ARCH_KEPLER
   // On Kepler the L1 has no benefit since it doesn't cache reads
-  static bool cache_config_set = false;
-  static bool cache_config_preference_cached;
-  if (!cache_config_set) {
-    cache_config_preference_cached = prefer_shmem;
+  static bool cache_config_preference_cached = [&] {
     CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
         func,
         (prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1)));
-    cache_config_set = true;
-  } else {
-    KOKKOS_ASSERT(cache_config_preference_cached == prefer_shmem);
-    // use the variable in case we're not compiling with contracts
-    if (cache_config_preference_cached) {
-    };
-  }
+    return prefer_shmem;
+  }();
+  (void)cache_config_preference_cached;
 #else
   // Use the parameters so we don't get a warning
   (void)func;
@@ -257,7 +243,7 @@ struct DeduceCudaLaunchMechanism {
 //==============================================================================
 
 //==============================================================================
-// <editor-fold desc="CudaParallelLaunchKernelInfo"> {{{1
+// <editor-fold desc="CudaParallelLaunchKernelInvoker"> {{{1
 
 // Base classes that summarize the differences between the different launch
 // mechanisms
@@ -268,7 +254,7 @@ struct CudaParallelLaunchKernelFunc;
 
 template <class DriverType, class LaunchBounds,
           Experimental::CudaLaunchMechanism LaunchMechanism>
-struct CudaParallelLaunchKernelInfo;
+struct CudaParallelLaunchKernelInvoker;
 
 //------------------------------------------------------------------------------
 // <editor-fold desc="Local memory"> {{{2
@@ -299,7 +285,7 @@ struct CudaParallelLaunchKernelFunc<
 //------------------------------------------------------------------------------
 
 template <class DriverType, class LaunchBounds>
-struct CudaParallelLaunchKernelInfo<
+struct CudaParallelLaunchKernelInvoker<
     DriverType, LaunchBounds, Experimental::CudaLaunchMechanism::LocalMemory>
     : CudaParallelLaunchKernelFunc<
           DriverType, LaunchBounds,
@@ -332,7 +318,6 @@ struct CudaParallelLaunchKernelInfo<
       Impl::check_shmem_request(cuda_instance, shmem);
       Impl::configure_shmem_preference(base_t::get_kernel_func(), prefer_shmem);
 
-      // TODO global memory version!!!
       void const* args[] = {&driver};
 
       cudaKernelNodeParams params = {};
@@ -387,7 +372,7 @@ struct CudaParallelLaunchKernelFunc<
 //------------------------------------------------------------------------------
 
 template <class DriverType, class LaunchBounds>
-struct CudaParallelLaunchKernelInfo<
+struct CudaParallelLaunchKernelInvoker<
     DriverType, LaunchBounds, Experimental::CudaLaunchMechanism::GlobalMemory>
     : CudaParallelLaunchKernelFunc<
           DriverType, LaunchBounds,
@@ -490,7 +475,7 @@ struct CudaParallelLaunchKernelFunc<
 //------------------------------------------------------------------------------
 
 template <class DriverType, class LaunchBounds>
-struct CudaParallelLaunchKernelInfo<
+struct CudaParallelLaunchKernelInvoker<
     DriverType, LaunchBounds, Experimental::CudaLaunchMechanism::ConstantMemory>
     : CudaParallelLaunchKernelFunc<
           DriverType, LaunchBounds,
@@ -538,7 +523,7 @@ struct CudaParallelLaunchKernelInfo<
     // somehow go and prove was not creating a dependency cycle, and I don't
     // even know if there's an efficient way to do that, let alone in the
     // structure we currenty have).
-    using global_launch_impl_t = CudaParallelLaunchKernelInfo<
+    using global_launch_impl_t = CudaParallelLaunchKernelInvoker<
         DriverType, LaunchBounds,
         Experimental::CudaLaunchMechanism::GlobalMemory>;
     global_launch_impl_t::create_parallel_launch_graph_node(
@@ -549,7 +534,7 @@ struct CudaParallelLaunchKernelInfo<
 // </editor-fold> end Constant Memory }}}2
 //------------------------------------------------------------------------------
 
-// </editor-fold> end CudaParallelLaunchKernelInfo }}}1
+// </editor-fold> end CudaParallelLaunchKernelInvoker }}}1
 //==============================================================================
 
 //==============================================================================
@@ -565,10 +550,10 @@ template <class DriverType, unsigned int MaxThreadsPerBlock,
 struct CudaParallelLaunchImpl<
     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
     LaunchMechanism>
-    : CudaParallelLaunchKernelInfo<
+    : CudaParallelLaunchKernelInvoker<
           DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
           LaunchMechanism> {
-  using base_t = CudaParallelLaunchKernelInfo<
+  using base_t = CudaParallelLaunchKernelInvoker<
       DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
       LaunchMechanism>;
 
@@ -593,12 +578,17 @@ struct CudaParallelLaunchImpl<
   }
 
   static cudaFuncAttributes get_cuda_func_attributes() {
-    static cudaFuncAttributes attr;
-    static bool attr_set = false;
-    if (!attr_set) {
-      CUDA_SAFE_CALL(cudaFuncGetAttributes(&attr, base_t::get_kernel_func()));
-      attr_set = true;
-    }
+    // Race condition inside of cudaFuncGetAttributes if the same address is
+    // given requires using a local variable as input instead of a static Rely
+    // on static variable initialization to make sure only one thread executes
+    // the code and the result is visible.
+    auto wrap_get_attributes = []() -> cudaFuncAttributes {
+      cudaFuncAttributes attr_tmp;
+      CUDA_SAFE_CALL(
+          cudaFuncGetAttributes(&attr_tmp, base_t::get_kernel_func()));
+      return attr_tmp;
+    };
+    static cudaFuncAttributes attr = wrap_get_attributes();
     return attr;
   }
 };

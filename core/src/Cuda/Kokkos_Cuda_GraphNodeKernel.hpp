@@ -69,13 +69,13 @@ struct CudaGraphNodeKernelBase {};
 template <class PolicyType, class Functor, class PatternTag, class... Args>
 class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
                           Args...>
-    : public PatternImplSpecializationForTag<PatternTag, Functor, PolicyType,
-                                             Args..., Kokkos::Cuda>::type,
+    : public PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
+                                              Args..., Kokkos::Cuda>::type,
       public CudaGraphNodeKernelBase {
  private:
   using base_t =
-      typename PatternImplSpecializationForTag<PatternTag, Functor, PolicyType,
-                                               Args..., Kokkos::Cuda>::type;
+      typename PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
+                                                Args..., Kokkos::Cuda>::type;
   using size_type = Kokkos::Cuda::size_type;
   // These are really functioning as optional references, though I'm not sure
   // that the cudaGraph_t one needs to be since it's a pointer under the
@@ -156,7 +156,7 @@ struct CudaGraphNodeAggregateKernel : CudaGraphNodeKernelBase {
 
 template <class KernelType,
           class Tag =
-              typename PatternTagForImplSpecialization<KernelType>::type>
+              typename PatternTagFromImplSpecialization<KernelType>::type>
 struct get_graph_node_kernel_type
     : identity<GraphNodeKernelImpl<Kokkos::Cuda, typename KernelType::Policy,
                                    typename KernelType::functor_type, Tag>> {};
