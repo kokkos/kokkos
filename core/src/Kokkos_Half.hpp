@@ -61,8 +61,8 @@
 #define KOKKOS_IMPL_HALF_TYPE_DEFINED
 namespace Kokkos {
 namespace Experimental {
-
-using half_t                       = float;
+using half_device_type             = float;
+using half_t                       = half_device_type;
 constexpr const bool half_is_float = true;
 
 // cast_to_half

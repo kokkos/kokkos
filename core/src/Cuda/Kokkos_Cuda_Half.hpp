@@ -49,6 +49,7 @@
 #ifdef KOKKOS_ENABLE_CUDA
 #include <cuda_fp16.h>
 #include <cstdint>
+#include <cstdio>
 
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 // Make sure no one else tries to define half_t
@@ -56,7 +57,361 @@
 
 namespace Kokkos {
 namespace Experimental {
-using half_t                       = __half;
+
+using half_device_type = __half;
+
+// Forward declarations
+class half_t;
+
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(float val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(double val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(short val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(int val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(long val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(long long val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(unsigned short val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(unsigned int val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(unsigned long val);
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(unsigned long long val);
+
+class half_t {
+  half_device_type val;
+
+ public:
+  // Conversion operator for __half(bar) = half_t(foo)
+  KOKKOS_FUNCTION
+  operator half_device_type() const { return val; }
+
+// NOTE: Changing below to 1 produces constructor overload error
+#if 0
+  // Conversion operator for bool(bar) = half_t(foo)
+  KOKKOS_FUNCTION
+  operator bool() const {
+    return static_cast<bool>(__half2float(val) == 0.0F);
+  }
+#endif
+
+  KOKKOS_FUNCTION
+  half_t(half_device_type rhs = 0) : val(rhs) {}
+
+  // Cast rhs to half for assignment to lhs of type half_t
+  template <class T>
+  KOKKOS_FUNCTION half_t(T rhs) : half_t(cast_to_half(rhs)) {}
+
+  // Unary operators
+  KOKKOS_FUNCTION
+  half_t operator+() const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t unary operator+\n");
+    tmp.val = +tmp.val;
+#else
+    // printf("float unary operator+\n");
+    tmp.val = __float2half(+__half2float(tmp.val));
+#endif
+    return tmp;
+  }
+
+  KOKKOS_FUNCTION
+  half_t operator-() const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t unary operator-\n");
+    tmp.val = -tmp.val;
+#else
+    // printf("float unary operator-\n");
+    tmp.val = __float2half(-__half2float(tmp.val));
+#endif
+    return tmp;
+  }
+
+  // Prefix operators
+  KOKKOS_FUNCTION
+  half_t& operator++() {
+#ifdef __CUDA_ARCH__
+    // printf("half_t prefix operator++\n");
+    ++val;
+#else
+    // printf("float prefix operator++\n");
+    float tmp = __half2float(val);
+    ++tmp;
+    val = __float2half(tmp);
+#endif
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  half_t& operator--() {
+#ifdef __CUDA_ARCH__
+    // printf("half_t prefix operator--\n");
+    --val;
+#else
+    // printf("float prefix operator--\n");
+    float tmp = __half2float(val);
+    --tmp;
+    val = __float2half(tmp);
+#endif
+    return *this;
+  }
+
+  // Postfix operators
+  KOKKOS_FUNCTION
+  half_t operator++(int) {
+    half_t tmp = *this;
+    operator++();
+    return tmp;
+  }
+
+  KOKKOS_FUNCTION
+  half_t operator--(int) {
+    half_t tmp = *this;
+    operator--();
+    return tmp;
+  }
+
+  // Binary operators
+  KOKKOS_FUNCTION
+  half_t& operator=(half_device_type rhs) {
+    // printf("half_device_type operator=\n");
+    val = rhs;
+    return *this;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION half_t operator=(T rhs) {
+    // printf("T operator=\n");
+    val = cast_to_half(rhs).val;
+    return *this;
+  }
+
+  // Compound operators
+  KOKKOS_FUNCTION
+  half_t& operator+=(half_t rhs) {
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator+=\n");
+    val += rhs.val;
+#else
+    // printf("float operator+=\n");
+    val = __float2half(__half2float(val) + __half2float(rhs.val));
+#endif
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  half_t& operator-=(half_t rhs) {
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator-=\n");
+    val -= rhs.val;
+#else
+    // printf("float operator-=\n");
+    val = __float2half(__half2float(val) - __half2float(rhs.val));
+#endif
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  half_t& operator*=(half_t rhs) {
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator*=\n");
+    val *= rhs.val;
+#else
+    // printf("float operator*=\n");
+    val = __float2half(__half2float(val) * __half2float(rhs.val));
+#endif
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  half_t& operator/=(half_t rhs) {
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator/=\n");
+    val /= rhs.val;
+#else
+    // printf("float operator/=\n");
+    val = __float2half(__half2float(val) / __half2float(rhs.val));
+#endif
+    return *this;
+  }
+
+  // Binary Arithmetic
+  KOKKOS_FUNCTION
+  half_t operator+(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator+\n");
+    tmp.val += rhs.val;
+#else
+    // printf("float operator+\n");
+    tmp.val = __float2half(__half2float(tmp.val) + __half2float(rhs.val));
+#endif
+    return tmp;
+  }
+
+  KOKKOS_FUNCTION
+  half_t operator-(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator-\n");
+    tmp.val -= rhs.val;
+#else
+    // printf("float operator-\n");
+    tmp.val = __float2half(__half2float(tmp.val) - __half2float(rhs.val));
+#endif
+    return tmp;
+  }
+
+  KOKKOS_FUNCTION
+  half_t operator*(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator*\n");
+    tmp.val *= rhs.val;
+#else
+    // printf("float operator*\n");
+    tmp.val = __float2half(__half2float(tmp.val) * __half2float(rhs.val));
+#endif
+    return tmp;
+  }
+
+  KOKKOS_FUNCTION
+  half_t operator/(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator/\n");
+    tmp.val /= rhs.val;
+#else
+    // printf("float operator/\n");
+    tmp.val = __float2half(__half2float(tmp.val) / __half2float(rhs.val));
+#endif
+    return tmp;
+  }
+
+  // Logical operators
+  KOKKOS_FUNCTION
+  half_t operator!() const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator!\n");
+    tmp.val = !tmp.val;
+#else
+    // printf("float operator!\n");
+    tmp.val = __float2half(!__half2float(tmp.val));
+#endif
+    return tmp;
+  }
+
+#if 1
+  // NOTE: Loses short-circuit evaluation
+  KOKKOS_FUNCTION
+  bool operator&&(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator&&\n");
+    return tmp.val && rhs.val;
+#else
+    // printf("float operator&&\n");
+    return __half2float(tmp.val) && __half2float(rhs.val);
+#endif
+  }
+
+  // NOTE: Loses short-circuit evaluation
+  KOKKOS_FUNCTION
+  bool operator||(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator||\n");
+    return tmp.val || rhs.val;
+#else
+    // printf("float operator||\n");
+    return __half2float(tmp.val) || __half2float(rhs.val);
+#endif
+  }
+#endif
+
+  // Comparison operators
+  KOKKOS_FUNCTION
+  bool operator==(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator==\n");
+    return tmp.val == rhs.val;
+#else
+    // printf("float operator==\n");
+    return __half2float(tmp.val) == __half2float(rhs.val);
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  bool operator!=(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator!=\n");
+    return tmp.val != rhs.val;
+#else
+    // printf("float operator!=\n");
+    return __half2float(tmp.val) != __half2float(rhs.val);
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  bool operator<(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator<\n");
+    return tmp.val < rhs.val;
+#else
+    // printf("float operator<\n");
+    return __half2float(tmp.val) < __half2float(rhs.val);
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  bool operator>(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator>\n");
+    return tmp.val > rhs.val;
+#else
+    // printf("float operator>\n");
+    return __half2float(tmp.val) > __half2float(rhs.val);
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  bool operator<=(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator<=\n");
+    return tmp.val <= rhs.val;
+#else
+    // printf("float operator<=\n");
+    return __half2float(tmp.val) <= __half2float(rhs.val);
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  bool operator>=(half_t rhs) const {
+    half_t tmp = *this;
+#ifdef __CUDA_ARCH__
+    // printf("half_t operator>=\n");
+    return tmp.val >= rhs.val;
+#else
+    // printf("float operator>=\n");
+    return __half2float(tmp.val) >= __half2float(rhs.val);
+#endif
+  }
+};
+
 constexpr const bool half_is_float = false;
 
 // CUDA before 11.1 only has the half <-> float conversions marked host device
