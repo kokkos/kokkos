@@ -47,7 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_CUDA_ENABLE_GRAPHS)
 
 #include <Kokkos_Graph_fwd.hpp>
 
