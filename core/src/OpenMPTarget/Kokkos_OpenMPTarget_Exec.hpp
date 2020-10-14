@@ -49,6 +49,7 @@
 #include <impl/Kokkos_Spinwait.hpp>
 
 #include <Kokkos_Atomic.hpp>
+#include "Kokkos_OpenMPTarget_Abort.hpp"
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -824,9 +825,8 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
 
     // Minimum team size should be 32 for OpenMPTarget backend.
     if (team_size_request < 32) {
-      printf(
+      Kokkos::Impl::OpenMPTarget_abort(
           "OpenMPTarget backend requires a minimum of 32 threads per team.\n");
-      exit(EXIT_FAILURE);
     } else
       m_team_size = team_size_request;
 
