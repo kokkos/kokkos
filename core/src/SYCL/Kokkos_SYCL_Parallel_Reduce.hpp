@@ -116,43 +116,41 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       m_functor(TagType{}, i, update);
   }
 
-  template <typename Tag>
-  static auto tagged_reducer(const ReducerTypeFwd& r, Tag*) {
-    return [r](int i, reference_type acc) { return r(Tag{}, i, acc); };
-  };
+  template <typename PolicyType, typename Functor>
+  void sycl_direct_launch(const PolicyType& policy,
+                          const Functor& functor) const {
+    // Convenience references
+    const Kokkos::Experimental::SYCL& space = policy.space();
+    Kokkos::Experimental::Impl::SYCLInternal& instance =
+        *space.impl_internal_space_instance();
+    cl::sycl::queue& q = *instance.m_queue;
 
-  static ReducerTypeFwd tagged_reducer(const ReducerTypeFwd& r, void*) {
-    return r;
-  }
-
-  template <typename Functor>
-  void sycl_direct_launch(const Functor& functor) {
-    cl::sycl::queue& q =
-        *execution_space().impl_internal_space_instance()->m_queue;
-
-    q.submit([this, functor](cl::sycl::handler& cgh) {
-      const auto n = m_policy.end() - m_policy.begin();
-      cl::sycl::nd_range<1> range(n, 1);
+    q.submit([this, functor, policy](cl::sycl::handler& cgh) {
+      // FIXME_SYCL a local size larger than 1 doesn't work for all cases
+      cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
 
       value_type identity = 0;
       ValueInit::init(functor, m_result_ptr);
-      auto reduction = cl::sycl::intel::reduction(m_result_ptr, value_type(0),
-                                                  std::plus<>());
+      auto reduction =
+          cl::sycl::intel::reduction(m_result_ptr, identity, std::plus<>());
 
-      cgh.parallel_for(range, reduction,
-                       [=](cl::sycl::nd_item<1> item, auto& sum) {
-                         int i              = item.get_global_id(0);
-                         value_type partial = identity;
-                         functor(i, partial);
-                         sum.combine(partial);
-                       });
+      cgh.parallel_for(
+          range, reduction, [=](cl::sycl::nd_item<1> item, auto& sum) {
+            const typename Policy::index_type id = item.get_global_id(0);
+            value_type partial                   = identity;
+            if constexpr (std::is_same<WorkTag, void>::value)
+              functor(id, partial);
+            else
+              functor(WorkTag(), id, partial);
+            sum.combine(partial);
+          });
     });
 
     q.wait();
   }
 
   template <typename Functor>
-  void sycl_indirect_launch(const Functor& functor) {
+  void sycl_indirect_launch(const Functor& functor) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -170,19 +168,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         kernelFunctorPtr(new (kernelMem.data()) ReducerTypeFwd(functor));
 
     auto kernelFunctor = std::reference_wrapper(*kernelFunctorPtr);
-    sycl_direct_launch(kernelFunctor);
+    sycl_direct_launch(m_policy, kernelFunctor);
   }
 
  public:
-  void execute() {
+  void execute() const {
     ReducerTypeFwd functor = ReducerConditional::select(m_functor, m_reducer);
-    auto taggedFunctor =
-        tagged_reducer(functor, static_cast<WorkTag*>(nullptr));
 
-    if constexpr (std::is_trivially_copyable_v<decltype(taggedFunctor)>)
-      sycl_direct_launch(taggedFunctor);
+    if constexpr (std::is_trivially_copyable_v<decltype(functor)>)
+      sycl_direct_launch(m_policy, functor);
     else
-      sycl_indirect_launch(taggedFunctor);
+      sycl_indirect_launch(functor);
   }
 
  private:
