@@ -171,22 +171,22 @@ endforeach()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
   list(REMOVE_ITEM OpenMPTarget_SOURCES
-    openmptarget/TestOpenMPTarget_AtomicOperations_complexfloat.cpp
-    openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
-    openmptarget/TestOpenMPTarget_MDRange_a.cpp
-    openmptarget/TestOpenMPTarget_MDRange_b.cpp
-    openmptarget/TestOpenMPTarget_MDRange_c.cpp
-    openmptarget/TestOpenMPTarget_MDRange_d.cpp
-    openmptarget/TestOpenMPTarget_MDRange_e.cpp
-    openmptarget/TestOpenMPTarget_MDRange_f.cpp
-    openmptarget/TestOpenMPTarget_Other.cpp
-    openmptarget/TestOpenMPTarget_Scan.cpp
-    openmptarget/TestOpenMPTarget_Team.cpp
-    openmptarget/TestOpenMPTarget_TeamScratch.cpp
-    openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
-    openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
-    openmptarget/TestOpenMPTarget_ViewOfClass.cpp
-    openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexfloat.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_a.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_b.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_c.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_d.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_e.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_f.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Other.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Scan.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Team.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScratch.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewOfClass.cpp
   )
 endif()
 
@@ -359,7 +359,7 @@ endif()
 if(Kokkos_ENABLE_HIP)
   # FIXME_HIP
   LIST(REMOVE_ITEM HIP_SOURCES
-    hip/TestHIP_AtomicOperations_complexdouble.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/hip/TestHIP_AtomicOperations_complexdouble.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
