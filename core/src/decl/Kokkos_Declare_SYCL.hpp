@@ -47,6 +47,8 @@
 
 #if defined(KOKKOS_ENABLE_SYCL)
 #include <Kokkos_SYCL.hpp>
+#include <Kokkos_SYCL_DeepCopy.hpp>
+#include <SYCL/Kokkos_SYCL_Parallel_Range.hpp>
 #endif
 
 #endif

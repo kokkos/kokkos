@@ -45,7 +45,8 @@
 #ifndef KOKKOS_SYCL_INSTANCE_HPP_
 #define KOKKOS_SYCL_INSTANCE_HPP_
 
-#include <Kokkos_SYCL.hpp>
+#include <memory>
+#include <CL/sycl.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -53,7 +54,7 @@ namespace Impl {
 
 class SYCLInternal {
  public:
-  using size_type = Kokkos::Experimental::SYCL::size_type;
+  using size_type = int;
 
   SYCLInternal() = default;
   ~SYCLInternal();
@@ -68,6 +69,19 @@ class SYCLInternal {
   size_type* m_scratchFlags = nullptr;
 
   std::unique_ptr<cl::sycl::queue> m_queue;
+
+  // An indirect kernel is one where the functor to be executed is explicitly
+  // created in USM shared memory before being executed, to get around the
+  // trivially copyable limitation of SYCL.
+  //
+  // m_indirectKernel just manages the memory as a reuseable buffer.  It is
+  // stored in an optional because the allocator contains a queue
+  using IndirectKernelAllocator =
+      sycl::usm_allocator<std::byte, sycl::usm::alloc::shared>;
+  using IndirectKernelMemory =
+      std::vector<IndirectKernelAllocator::value_type, IndirectKernelAllocator>;
+  using IndirectKernel = std::optional<IndirectKernelMemory>;
+  IndirectKernel m_indirectKernel;
 
   static int was_finalized;
 
