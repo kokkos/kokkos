@@ -72,6 +72,7 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
+                        sh 'echo "/opt/rocm/llvm/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig'
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
