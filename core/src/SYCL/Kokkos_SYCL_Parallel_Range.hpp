@@ -63,8 +63,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
   ParallelFor()        = delete;
   ParallelFor& operator=(const ParallelFor&) = delete;
 
-  static void sycl_direct_launch(const Policy& policy,
-                                 const FunctorType& functor) {
+  template <typename PolicyType, typename Functor>
+  static void sycl_direct_launch(const PolicyType& policy,
+                                 const Functor& functor) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -77,7 +78,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
       cl::sycl::range<1> range(policy.end() - policy.begin());
 
       cgh.parallel_for(range, [=](cl::sycl::item<1> item) {
-        const typename Policy::index_type id = item.get_linear_id();
+        const typename PolicyType::index_type id = item.get_linear_id();
         if constexpr (std::is_same<WorkTag, void>::value)
           functor(id);
         else
