@@ -1040,6 +1040,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
                                  ReduceFunctorHasFinal<FunctorType>::value ||
                                  !m_result_ptr_host_accessible ||
+                                 Policy::is_graph_kernel::value ||
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
@@ -1687,6 +1688,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
                                  ReduceFunctorHasFinal<FunctorType>::value ||
                                  !m_result_ptr_host_accessible ||
+                                 Policy::is_graph_kernel::value ||
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
       const int block_count =
