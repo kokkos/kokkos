@@ -40,7 +40,7 @@ SET(KOKKOS_HPX_FEATURE_LEVEL 999)
 SET(KOKKOS_HPX_NAME Experimental::HPX)
 SET(KOKKOS_OPENMP_FEATURE_LEVEL 999)
 SET(KOKKOS_OPENMP_NAME OpenMP)
-SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 10)
+SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 11)
 SET(KOKKOS_OPENMPTARGET_NAME Experimental::OpenMPTarget)
 SET(KOKKOS_SERIAL_FEATURE_LEVEL 999)
 SET(KOKKOS_SERIAL_NAME Serial)
@@ -166,7 +166,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
     openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
     openmptarget/TestOpenMPTarget_ViewOfClass.cpp
-
+    openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
   )
 endif()
 
