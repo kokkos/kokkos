@@ -67,86 +67,106 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
   endif()
   string(TOLOWER ${Tag} dir)
 
-  # Needed to split this for Windows NVCC, since it ends up putting everything on the
-  # command line in an intermediate compilation step even if CMake generated a response
-  # file. That then exceeded the shell comand line max length.
-  SET(${Tag}_SOURCES1
-      ${dir}/Test${Tag}_AtomicOperations_int.cpp
-      ${dir}/Test${Tag}_AtomicOperations_unsignedint.cpp
-      ${dir}/Test${Tag}_AtomicOperations_longint.cpp
-      ${dir}/Test${Tag}_AtomicOperations_unsignedlongint.cpp
-      ${dir}/Test${Tag}_AtomicOperations_longlongint.cpp
-      ${dir}/Test${Tag}_AtomicOperations_double.cpp
-      ${dir}/Test${Tag}_AtomicOperations_float.cpp
-      ${dir}/Test${Tag}_AtomicOperations_complexdouble.cpp
-      ${dir}/Test${Tag}_AtomicOperations_complexfloat.cpp
-      ${dir}/Test${Tag}_AtomicViews.cpp
-      ${dir}/Test${Tag}_Atomics.cpp
-      ${dir}/Test${Tag}_BlockSizeDeduction.cpp
-      ${dir}/Test${Tag}_Concepts.cpp
-      ${dir}/Test${Tag}_Complex.cpp
-      ${dir}/Test${Tag}_Crs.cpp
-      ${dir}/Test${Tag}_DeepCopyAlignment.cpp
-      ${dir}/Test${Tag}_FunctorAnalysis.cpp
-      ${dir}/Test${Tag}_Init.cpp
-      ${dir}/Test${Tag}_LocalDeepCopy.cpp
-      ${dir}/Test${Tag}_MDRange_a.cpp
-      ${dir}/Test${Tag}_MDRange_b.cpp
-      ${dir}/Test${Tag}_MDRange_c.cpp
-      ${dir}/Test${Tag}_MDRange_d.cpp
-      ${dir}/Test${Tag}_MDRange_e.cpp
-      ${dir}/Test${Tag}_MDRange_f.cpp
-      ${dir}/Test${Tag}_Other.cpp
-      ${dir}/Test${Tag}_RangePolicy.cpp
-      ${dir}/Test${Tag}_RangePolicyRequire.cpp
-      ${dir}/Test${Tag}_Reductions.cpp
-      ${dir}/Test${Tag}_Reducers_a.cpp
-      ${dir}/Test${Tag}_Reducers_b.cpp
-      ${dir}/Test${Tag}_Reducers_c.cpp
-      ${dir}/Test${Tag}_Reducers_d.cpp
-      ${dir}/Test${Tag}_Reductions_DeviceView.cpp
-      ${dir}/Test${Tag}_Scan.cpp
-      ${dir}/Test${Tag}_SharedAlloc.cpp
-  )
+  if(Kokkos_ENABLE_${DEVICE})
+    set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
+    file(MAKE_DIRECTORY ${dir})
+    # Needed to split this for Windows NVCC, since it ends up putting everything on the
+    # command line in an intermediate compilation step even if CMake generated a response
+    # file. That then exceeded the shell comand line max length.
+    set(${Tag}_SOURCES1)
+    foreach(Name
+        AtomicOperations_int
+        AtomicOperations_unsignedint
+        AtomicOperations_longint
+        AtomicOperations_unsignedlongint
+        AtomicOperations_longlongint
+        AtomicOperations_double
+        AtomicOperations_float
+        AtomicOperations_complexdouble
+        AtomicOperations_complexfloat
+        AtomicViews
+        Atomics
+        BlockSizeDeduction
+        Concepts
+        Complex
+        Crs
+        DeepCopyAlignment
+        FunctorAnalysis
+        Init
+        LocalDeepCopy
+        MDRange_a
+        MDRange_b
+        MDRange_c
+        MDRange_d
+        MDRange_e
+        MDRange_f
+        Other
+        RangePolicy
+        RangePolicyRequire
+        Reductions
+        Reducers_a
+        Reducers_b
+        Reducers_c
+        Reducers_d
+        Reductions_DeviceView
+        Scan
+        SharedAlloc
+        )
+      set(file ${dir}/Test${Tag}_${Name}.cpp)
+      file(WRITE ${file}
+          "#include <Test${Tag}_Category.hpp>\n"
+          "#include <Test${Name}.hpp>\n"
+      )
+      list(APPEND ${Tag}_SOURCES1 ${file})
+    endforeach()
 
-  SET(${Tag}_SOURCES2
-      ${dir}/Test${Tag}_SubView_a.cpp
-      ${dir}/Test${Tag}_SubView_b.cpp
-      ${dir}/Test${Tag}_SubView_c01.cpp
-      ${dir}/Test${Tag}_SubView_c02.cpp
-      ${dir}/Test${Tag}_SubView_c03.cpp
-      ${dir}/Test${Tag}_SubView_c04.cpp
-      ${dir}/Test${Tag}_SubView_c05.cpp
-      ${dir}/Test${Tag}_SubView_c06.cpp
-      ${dir}/Test${Tag}_SubView_c07.cpp
-      ${dir}/Test${Tag}_SubView_c08.cpp
-      ${dir}/Test${Tag}_SubView_c09.cpp
-      ${dir}/Test${Tag}_SubView_c10.cpp
-      ${dir}/Test${Tag}_SubView_c11.cpp
-      ${dir}/Test${Tag}_SubView_c12.cpp
-      ${dir}/Test${Tag}_SubView_c13.cpp
-      ${dir}/Test${Tag}_Team.cpp
-      ${dir}/Test${Tag}_TeamReductionScan.cpp
-      ${dir}/Test${Tag}_TeamScratch.cpp
-      ${dir}/Test${Tag}_TeamTeamSize.cpp
-      ${dir}/Test${Tag}_TeamVectorRange.cpp
-      ${dir}/Test${Tag}_UniqueToken.cpp
-      ${dir}/Test${Tag}_ViewAPI_a.cpp
-      ${dir}/Test${Tag}_ViewAPI_b.cpp
-      ${dir}/Test${Tag}_ViewAPI_c.cpp
-      ${dir}/Test${Tag}_ViewAPI_d.cpp
-      ${dir}/Test${Tag}_ViewAPI_e.cpp
-      ${dir}/Test${Tag}_ViewLayoutStrideAssignment.cpp
-      ${dir}/Test${Tag}_ViewMapping_a.cpp
-      ${dir}/Test${Tag}_ViewMapping_b.cpp
-      ${dir}/Test${Tag}_ViewMapping_subview.cpp
-      ${dir}/Test${Tag}_ViewOfClass.cpp
-      ${dir}/Test${Tag}_WorkGraph.cpp
-      ${dir}/Test${Tag}_View_64bit.cpp
-      ${dir}/Test${Tag}_ViewResize.cpp
-  )
-  SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
+    SET(${Tag}_SOURCES2)
+    foreach(Name
+      SubView_a
+      SubView_b
+      SubView_c01
+      SubView_c02
+      SubView_c03
+      SubView_c04
+      SubView_c05
+      SubView_c06
+      SubView_c07
+      SubView_c08
+      SubView_c09
+      SubView_c10
+      SubView_c11
+      SubView_c12
+      SubView_c13
+      Team
+      TeamReductionScan
+      TeamScratch
+      TeamTeamSize
+      TeamVectorRange
+      UniqueToken
+      ViewAPI_a
+      ViewAPI_b
+      ViewAPI_c
+      ViewAPI_d
+      ViewAPI_e
+      ViewLayoutStrideAssignment
+      ViewMapping_a
+      ViewMapping_b
+      ViewMapping_subview
+      ViewOfClass
+      WorkGraph
+      View_64bit
+      ViewResize
+      )
+      set(file ${dir}/Test${Tag}_${Name}.cpp)
+      file(WRITE ${file}
+          "#include <Test${Tag}_Category.hpp>\n"
+          "#include <Test${Name}.hpp>\n"
+      )
+      list(APPEND ${Tag}_SOURCES2 ${file})
+    endforeach()
 
+    SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
+  endif()
 endforeach()
 
 if(Kokkos_ENABLE_OPENMPTARGET)
