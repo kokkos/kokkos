@@ -137,7 +137,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       SubView_c11
       SubView_c12
       SubView_c13
-      Team
+      TeamBasic
       TeamReductionScan
       TeamScratch
       TeamTeamSize
