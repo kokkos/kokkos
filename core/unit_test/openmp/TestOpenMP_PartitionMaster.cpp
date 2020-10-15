@@ -44,6 +44,9 @@
 */
 
 #include <openmp/TestOpenMP_Category.hpp>
+#include <Kokkos_Core.hpp>
+
+#include <mutex>
 
 namespace Test {
 
