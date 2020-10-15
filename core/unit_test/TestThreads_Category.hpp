@@ -42,13 +42,14 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_HIP_HPP
-#define KOKKOS_TEST_HIP_HPP
+#ifndef KOKKOS_TEST_THREADS_HPP
+#define KOKKOS_TEST_THREADS_HPP
 
 #include <gtest/gtest.h>
 
-#define TEST_CATEGORY hip
-#define TEST_CATEGORY_NUMBER 6
-#define TEST_EXECSPACE Kokkos::Experimental::HIP
+#define TEST_CATEGORY threads
+#define TEST_CATEGORY_NUMBER 1
+#define TEST_CATEGORY_DEATH threads_DeathTest
+#define TEST_EXECSPACE Kokkos::Threads
 
 #endif
