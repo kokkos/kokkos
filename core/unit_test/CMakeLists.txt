@@ -433,7 +433,6 @@ if(Kokkos_ENABLE_SYCL)
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_BlockSizeDeduction.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Crs.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_DeepCopyAlignment.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Init.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_LocalDeepCopy.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_a.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_b.cpp
@@ -452,35 +451,13 @@ if(Kokkos_ENABLE_SYCL)
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reductions_DeviceView.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Scan.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SharedAlloc.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_a.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_b.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c01.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c02.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c03.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c04.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c05.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c06.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c07.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c08.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c10.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c09.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c11.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c12.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c13.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamBasic.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamReductionScan.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamScratch.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamTeamSize.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamVectorRange.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_UniqueToken.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewAPI_a.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewAPI_d.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewAPI_e.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewLayoutStrideAssignment.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewMapping_a.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_WorkGraph.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewMapping_b.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewResize.cpp
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
