@@ -341,6 +341,7 @@ if(Kokkos_ENABLE_CUDA)
     SOURCES
       UnitTestMainInit.cpp
       cuda/TestCuda_Task.cpp
+      cuda/TestCuda_TeamScratchStreams.cpp
       cuda/TestCudaHostPinned_SharedAlloc.cpp
       cuda/TestCudaHostPinned_ViewCopy.cpp
       cuda/TestCudaHostPinned_ViewAPI_a.cpp
@@ -398,6 +399,7 @@ if(Kokkos_ENABLE_HIP)
       UnitTestMainInit.cpp
       ${HIP_SOURCES}
       hip/TestHIP_ScanUnit.cpp
+      hip/TestHIP_TeamScratchStreams.cpp
       hip/TestHIPHostPinned_ViewAPI_a.cpp
       hip/TestHIPHostPinned_ViewAPI_b.cpp
       hip/TestHIPHostPinned_ViewAPI_c.cpp

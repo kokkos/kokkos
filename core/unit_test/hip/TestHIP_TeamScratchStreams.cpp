@@ -43,7 +43,7 @@
 */
 
 #include <hip/TestHIP_Category.hpp>
-#include <TestTeam.hpp>
+#include <Kokkos_Core.hpp>
 
 namespace Test {
 
@@ -149,37 +149,4 @@ TEST(hip, team_scratch_1_streams) {
   Kokkos::deep_copy(result, counter);
   ASSERT_EQ(0, result);
 }
-
-TEST(TEST_CATEGORY, team_shared_request) {
-  TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>();
-  TestSharedTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>>();
-}
-
-// FIXME_HIP the parallel_reduce in this test requires a team size larger than
-// 256
-// TEST(TEST_CATEGORY, team_scratch_request) {
-//  TestScratchTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >();
-//  TestScratchTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >();
-//}
-
-TEST(TEST_CATEGORY, team_lambda_shared_request) {
-  TestLambdaSharedTeam<Kokkos::HostSpace, TEST_EXECSPACE,
-                       Kokkos::Schedule<Kokkos::Static>>();
-  TestLambdaSharedTeam<Kokkos::HostSpace, TEST_EXECSPACE,
-                       Kokkos::Schedule<Kokkos::Dynamic>>();
-}
-
-TEST(TEST_CATEGORY, scratch_align) { TestScratchAlignment<TEST_EXECSPACE>(); }
-
-TEST(TEST_CATEGORY, shmem_size) { TestShmemSize<TEST_EXECSPACE>(); }
-
-// FIXME_HIP the parallel_for and the parallel_reduce in this test requires a
-// team size larger than 256
-// TEST(TEST_CATEGORY, multi_level_scratch) {
-//  TestMultiLevelScratchTeam<TEST_EXECSPACE,
-//                            Kokkos::Schedule<Kokkos::Static> >();
-//  TestMultiLevelScratchTeam<TEST_EXECSPACE,
-//                            Kokkos::Schedule<Kokkos::Dynamic> >();
-//}
-
 }  // namespace Test
