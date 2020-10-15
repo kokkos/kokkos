@@ -387,6 +387,7 @@ if(Kokkos_ENABLE_OPENMP)
     SOURCES
     UnitTestMainInit.cpp
     ${OpenMP_SOURCES}
+    openmp/TestOpenMP_PartitionMaster.cpp
     openmp/TestOpenMP_Task.cpp
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
