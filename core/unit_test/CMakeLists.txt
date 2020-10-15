@@ -253,6 +253,79 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       list(APPEND ${Tag}_SOURCES2 ${file})
     endforeach()
 
+    set(TagHostAccessible ${Tag})
+    if (tag STREQUAL "Cuda")
+      set(TagHostAccessible CudaUVM)
+    elseif(tag STREQUAL "HIP")
+      set(TagHostAccessible HIPHostPinned)
+    end()
+    foreach(Name
+      SubView_c01
+      SubView_c02
+      SubView_c03
+      SubView_c04
+      SubView_c05
+      SubView_c06
+      SubView_c07
+      SubView_c08
+      SubView_c09
+      SubView_c10
+      SubView_c11
+      SubView_c12
+      SubView_c13
+      )
+      set(file ${dir}/Test${Tag}_${Name}.cpp)
+      file(WRITE ${file}
+              "/*\n"
+"//@HEADER\n"
+"// ************************************************************************\n"
+"//\n"
+"//                        Kokkos v. 3.0\n"
+"//       Copyright (2020) National Technology & Engineering\n"
+"//               Solutions of Sandia, LLC (NTESS).\n"
+"//\n"
+"// Under the terms of Contract DE-NA0003525 with NTESS,\n"
+"// the U.S. Government retains certain rights in this software.\n"
+"//\n"
+"// Redistribution and use in source and binary forms, with or without\n"
+"// modification, are permitted provided that the following conditions are\n"
+"// met:\n"
+"//\n"
+"// 1. Redistributions of source code must retain the above copyright\n"
+"// notice, this list of conditions and the following disclaimer.\n"
+"//\n"
+"// 2. Redistributions in binary form must reproduce the above copyright\n"
+"// notice, this list of conditions and the following disclaimer in the\n"
+"// documentation and/or other materials provided with the distribution.\n"
+"//\n"
+"// 3. Neither the name of the Corporation nor the names of the\n"
+"// contributors may be used to endorse or promote products derived from\n"
+"// this software without specific prior written permission.\n"
+"//\n"
+"// THIS SOFTWARE IS PROVIDED BY NTESS \"AS IS\" AND ANY\n"
+"// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n"
+"// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n"
+"// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE\n"
+"// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n"
+"// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n"
+"// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n"
+"// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF\n"
+"// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\n"
+"// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\n"
+"// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+"//\n"
+"// Questions? Contact Christian R. Trott (crtrott@sandia.gov)\n"
+"//\n"
+"// ************************************************************************\n"
+"//@HEADER\n"
+"*/\n"
+          "\n"
+	  "#include <${LOWER_DEVICE}/Test${TagHostAccessible}_Category.hpp>\n"
+          "#include <Test${Name}.hpp>\n"
+)
+      list(APPEND ${Tag}_SOURCES2 ${file})
+    endforeach()
+
     SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
     #endif()
 endforeach()
