@@ -48,6 +48,7 @@
 #include <Kokkos_Core_fwd.hpp>
 
 #ifdef KOKKOS_ENABLE_SYCL
+#include <Kokkos_Concepts.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
@@ -79,6 +80,30 @@ class SYCLDeviceUSMSpace {
   int m_device;
 };
 }  // namespace Experimental
+
+namespace Impl {
+static_assert(Kokkos::Impl::MemorySpaceAccess<
+                  Kokkos::Experimental::SYCLDeviceUSMSpace,
+                  Kokkos::Experimental::SYCLDeviceUSMSpace>::assignable,
+              "");
+
+template <>
+struct MemorySpaceAccess<Kokkos::HostSpace,
+                         Kokkos::Experimental::SYCLDeviceUSMSpace> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = true };
+};
+
+template <>
+struct MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                         Kokkos::HostSpace> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = true };
+};
+
+}  // namespace Impl
 
 namespace Impl {
 
