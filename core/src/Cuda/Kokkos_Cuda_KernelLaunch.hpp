@@ -304,6 +304,7 @@ struct CudaParallelLaunchKernelInvoker<
         driver);
   }
 
+#ifdef KOKKOS_CUDA_ENABLE_GRAPHS
   inline static void create_parallel_launch_graph_node(
       DriverType const& driver, dim3 const& grid, dim3 const& block, int shmem,
       CudaInternal const* cuda_instance, bool prefer_shmem) {
@@ -340,6 +341,7 @@ struct CudaParallelLaunchKernelInvoker<
     }
     KOKKOS_ENSURES(bool(graph_node))
   }
+#endif
 };
 
 // </editor-fold> end local memory }}}2
@@ -394,6 +396,7 @@ struct CudaParallelLaunchKernelInvoker<
         driver_ptr);
   }
 
+#ifdef KOKKOS_CUDA_ENABLE_GRAPHS
   inline static void create_parallel_launch_graph_node(
       DriverType const& driver, dim3 const& grid, dim3 const& block, int shmem,
       CudaInternal const* cuda_instance, bool prefer_shmem) {
@@ -440,6 +443,7 @@ struct CudaParallelLaunchKernelInvoker<
     }
     KOKKOS_ENSURES(bool(graph_node))
   }
+#endif
 };
 
 // </editor-fold> end Global Memory }}}2
@@ -511,6 +515,7 @@ struct CudaParallelLaunchKernelInvoker<
                                    cudaStream_t(cuda_instance->m_stream)));
   }
 
+#ifdef KOKKOS_CUDA_ENABLE_GRAPHS
   inline static void create_parallel_launch_graph_node(
       DriverType const& driver, dim3 const& grid, dim3 const& block, int shmem,
       CudaInternal const* cuda_instance, bool prefer_shmem) {
@@ -529,6 +534,7 @@ struct CudaParallelLaunchKernelInvoker<
     global_launch_impl_t::create_parallel_launch_graph_node(
         driver, grid, block, shmem, cuda_instance, prefer_shmem);
   }
+#endif
 };
 
 // </editor-fold> end Constant Memory }}}2
@@ -602,7 +608,11 @@ struct CudaParallelLaunchImpl<
 template <class DriverType, class LaunchBounds = Kokkos::LaunchBounds<>,
           Experimental::CudaLaunchMechanism LaunchMechanism =
               DeduceCudaLaunchMechanism<DriverType>::launch_mechanism,
-          bool DoGraph = DriverType::Policy::is_graph_kernel::value>
+          bool DoGraph = DriverType::Policy::is_graph_kernel::value
+#ifndef KOKKOS_CUDA_ENABLE_GRAPHS
+                         && false
+#endif
+          >
 struct CudaParallelLaunch;
 
 // General launch mechanism
@@ -619,6 +629,7 @@ struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
   }
 };
 
+#ifdef KOKKOS_CUDA_ENABLE_GRAPHS
 // Launch mechanism for creating graph nodes
 template <class DriverType, class LaunchBounds,
           Experimental::CudaLaunchMechanism LaunchMechanism>
@@ -632,6 +643,7 @@ struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
     base_t::create_parallel_launch_graph_node((Args &&) args...);
   }
 };
+#endif
 
 // </editor-fold> end CudaParallelLaunch }}}1
 //==============================================================================
