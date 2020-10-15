@@ -58,25 +58,43 @@ TEST(TEST_CATEGORY, team_scan) {
 }
 
 TEST(TEST_CATEGORY, team_long_reduce) {
-  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
-  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
-  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(3);
-  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(3);
-  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(
-      100000);
-  TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(
-      100000);
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  // WORKAROUND OPENMPTARGET: Not implemented
+  if constexpr (!std::is_same<TEST_EXECSPACE,
+                              Kokkos::Experimental::OpenMPTarget>::value)
+#endif
+  {
+    TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
+    TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
+    TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(3);
+    TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(3);
+    TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(
+        100000);
+    TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(
+        100000);
+  }
 }
 
 TEST(TEST_CATEGORY, team_double_reduce) {
-  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
-  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
-  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(3);
-  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(3);
-  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(
-      100000);
-  TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(
-      100000);
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  // WORKAROUND OPENMPTARGET: Not implemented
+  if constexpr (!std::is_same<TEST_EXECSPACE,
+                              Kokkos::Experimental::OpenMPTarget>::value)
+#endif
+  {
+    TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(
+        0);
+    TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(
+        0);
+    TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(
+        3);
+    TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(
+        3);
+    TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(
+        100000);
+    TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(
+        100000);
+  }
 }
 
 }  // namespace Test

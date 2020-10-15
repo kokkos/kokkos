@@ -44,6 +44,14 @@
 
 #ifndef KOKKOS_TEST_REDUCTIONS_HPP
 #define KOKKOS_TEST_REDUCTIONS_HPP
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+// WORKAROUND OPENMPTARGET: Not implemented
+if constexpr (!std::is_same<TEST_EXECSPACE,
+                            Kokkos::Experimental::OpenMPTarget>::value) {
 #include <TestReduce.hpp>
+}
+#else
+#include <TestReduce.hpp>
+#endif
 #include <TestCXX11Deduction.hpp>
 #endif
