@@ -239,7 +239,7 @@ TEST(TEST_CATEGORY, impl_shared_alloc) {
   test_shared_alloc<Kokkos::Experimental::HIPSpace,
                     Kokkos::DefaultHostExecutionSpace>();
 #else
-  undefined
+  test_shared_alloc<TEST_EXECSPACE, Kokkos::DefaultHostExecutionSpace>();
 #endif
 }
 
