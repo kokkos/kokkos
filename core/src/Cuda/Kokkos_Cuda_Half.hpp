@@ -63,6 +63,8 @@ class half_t;
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val);
 KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(bool val);
+KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(double val);
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(short val);
@@ -81,6 +83,43 @@ half_t cast_to_half(unsigned long val);
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned long long val);
 
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
+    cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, bool>::value, T>
+    cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, double>::value, T>
+    cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, short>::value, T>
+    cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, int>::value, T>
+    cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long>::value, T>
+    cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long long>::value, T>
+    cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<std::is_same<T, unsigned short>::value, T>
+        cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, unsigned int>::value, T>
+    cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<std::is_same<T, unsigned long>::value, T>
+        cast_from_half(half_t);
+template <class T>
+KOKKOS_INLINE_FUNCTION
+    std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
+        cast_from_half(half_t);
+
 class half_t {
  public:
   using impl_type = HALF_IMPL_TYPE;
@@ -89,24 +128,38 @@ class half_t {
   impl_type val;
 
  public:
-  // Conversion operator for __half(bar) = half_t(foo)
   KOKKOS_FUNCTION
-  operator impl_type() const { return val; }
+  half_t() : val(0) {}
+
+  // Don't support implicit conversion back to impl_type.
+  // impl_type is a storage only type on host.
+  KOKKOS_FUNCTION
+  explicit operator impl_type() { return val; }
 
   KOKKOS_FUNCTION
-  explicit operator bool() const {
-    return static_cast<bool>(__half2float(val) == 0.0F);
-  }
-
+  half_t(impl_type rhs) : val(rhs) {}
   KOKKOS_FUNCTION
-  half_t(const half_t&) = default;
-
+  half_t(float rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(impl_type rhs = cast_to_half(0)) : val(rhs) {}
-
-  // Cast rhs to half for assignment to lhs of type half_t
-  template <class T>
-  KOKKOS_FUNCTION half_t(T rhs) : half_t(cast_to_half(rhs)) {}
+  half_t(bool rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(double rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(short rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(int rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(long rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(long long rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(unsigned short rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(unsigned int rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(unsigned long rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(unsigned long long rhs) : val(cast_to_half(rhs).val) {}
 
   // Unary operators
   KOKKOS_FUNCTION
@@ -227,54 +280,50 @@ class half_t {
 
   // Binary Arithmetic
   KOKKOS_FUNCTION
-  half_t operator+(half_t rhs) const {
-    half_t tmp = *this;
+  half_t friend operator+(half_t lhs, half_t rhs) {
 #ifdef __CUDA_ARCH__
-    tmp.val += rhs.val;
+    lhs.val += rhs.val;
 #else
-    tmp.val = __float2half(__half2float(tmp.val) + __half2float(rhs.val));
+    lhs.val = __float2half(__half2float(lhs.val) + __half2float(rhs.val));
 #endif
-    return tmp;
+    return lhs;
   }
 
   KOKKOS_FUNCTION
-  half_t operator-(half_t rhs) const {
-    half_t tmp = *this;
+  half_t friend operator-(half_t lhs, half_t rhs) {
 #ifdef __CUDA_ARCH__
-    tmp.val -= rhs.val;
+    lhs.val -= rhs.val;
 #else
-    tmp.val = __float2half(__half2float(tmp.val) - __half2float(rhs.val));
+    lhs.val = __float2half(__half2float(lhs.val) - __half2float(rhs.val));
 #endif
-    return tmp;
+    return lhs;
   }
 
   KOKKOS_FUNCTION
-  half_t operator*(half_t rhs) const {
-    half_t tmp = *this;
+  half_t friend operator*(half_t lhs, half_t rhs) {
 #ifdef __CUDA_ARCH__
-    tmp.val *= rhs.val;
+    lhs.val *= rhs.val;
 #else
-    tmp.val = __float2half(__half2float(tmp.val) * __half2float(rhs.val));
+    lhs.val = __float2half(__half2float(lhs.val) * __half2float(rhs.val));
 #endif
-    return tmp;
+    return lhs;
   }
 
   KOKKOS_FUNCTION
-  half_t operator/(half_t rhs) const {
-    half_t tmp = *this;
+  half_t friend operator/(half_t lhs, half_t rhs) {
 #ifdef __CUDA_ARCH__
-    tmp.val /= rhs.val;
+    lhs.val /= rhs.val;
 #else
-    tmp.val = __float2half(__half2float(tmp.val) / __half2float(rhs.val));
+    lhs.val = __float2half(__half2float(lhs.val) / __half2float(rhs.val));
 #endif
-    return tmp;
+    return lhs;
   }
 
   // Logical operators
   KOKKOS_FUNCTION
   bool operator!() const {
 #ifdef __CUDA_ARCH__
-    return !val;
+    return static_cast<bool>(!val);
 #else
     return !__half2float(val);
 #endif
@@ -284,7 +333,7 @@ class half_t {
   KOKKOS_FUNCTION
   bool operator&&(half_t rhs) const {
 #ifdef __CUDA_ARCH__
-    return val && rhs.val;
+    return static_cast<bool>(val && rhs.val);
 #else
     return __half2float(val) && __half2float(rhs.val);
 #endif
@@ -294,7 +343,7 @@ class half_t {
   KOKKOS_FUNCTION
   bool operator||(half_t rhs) const {
 #ifdef __CUDA_ARCH__
-    return val || rhs.val;
+    return static_cast<bool>(val || rhs.val);
 #else
     return __half2float(val) || __half2float(rhs.val);
 #endif
@@ -304,7 +353,7 @@ class half_t {
   KOKKOS_FUNCTION
   bool operator==(half_t rhs) const {
 #ifdef __CUDA_ARCH__
-    return val == rhs.val;
+    return static_cast<bool>(val == rhs.val);
 #else
     return __half2float(val) == __half2float(rhs.val);
 #endif
@@ -313,7 +362,7 @@ class half_t {
   KOKKOS_FUNCTION
   bool operator!=(half_t rhs) const {
 #ifdef __CUDA_ARCH__
-    return val != rhs.val;
+    return static_cast<bool>(val != rhs.val);
 #else
     return __half2float(val) != __half2float(rhs.val);
 #endif
@@ -322,7 +371,7 @@ class half_t {
   KOKKOS_FUNCTION
   bool operator<(half_t rhs) const {
 #ifdef __CUDA_ARCH__
-    return val < rhs.val;
+    return static_cast<bool>(val < rhs.val);
 #else
     return __half2float(val) < __half2float(rhs.val);
 #endif
@@ -331,7 +380,7 @@ class half_t {
   KOKKOS_FUNCTION
   bool operator>(half_t rhs) const {
 #ifdef __CUDA_ARCH__
-    return val > rhs.val;
+    return static_cast<bool>(val > rhs.val);
 #else
     return __half2float(val) > __half2float(rhs.val);
 #endif
@@ -340,7 +389,7 @@ class half_t {
   KOKKOS_FUNCTION
   bool operator<=(half_t rhs) const {
 #ifdef __CUDA_ARCH__
-    return val <= rhs.val;
+    return static_cast<bool>(val <= rhs.val);
 #else
     return __half2float(val) <= __half2float(rhs.val);
 #endif
@@ -349,7 +398,7 @@ class half_t {
   KOKKOS_FUNCTION
   bool operator>=(half_t rhs) const {
 #ifdef __CUDA_ARCH__
-    return val >= rhs.val;
+    return static_cast<bool>(val >= rhs.val);
 #else
     return __half2float(val) >= __half2float(rhs.val);
 #endif
@@ -367,65 +416,68 @@ KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(half_t val) { return val; }
 
 KOKKOS_INLINE_FUNCTION
-half_t cast_to_half(float val) { return __float2half(val); }
+half_t cast_to_half(float val) { return half_t(__float2half(val)); }
+
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(bool val) { return cast_to_half(static_cast<float>(val)); }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(double val) {
   // double2half was only introduced in CUDA 11 too
-  return __float2half(static_cast<float>(val));
+  return half_t(__float2half(static_cast<float>(val)));
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(short val) {
 #ifdef __CUDA_ARCH__
-  return __short2half_rn(val);
+  return half_t(__short2half_rn(val));
 #else
-  return __float2half(static_cast<float>(val));
+  return half_t(__float2half(static_cast<float>(val)));
 #endif
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned short val) {
 #ifdef __CUDA_ARCH__
-  return __ushort2half_rn(val);
+  return half_t(__ushort2half_rn(val));
 #else
-  return __float2half(static_cast<float>(val));
+  return half_t(__float2half(static_cast<float>(val)));
 #endif
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(int val) {
 #ifdef __CUDA_ARCH__
-  return __int2half_rn(val);
+  return half_t(__int2half_rn(val));
 #else
-  return __float2half(static_cast<float>(val));
+  return half_t(__float2half(static_cast<float>(val)));
 #endif
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned int val) {
 #ifdef __CUDA_ARCH__
-  return __uint2half_rn(val);
+  return half_t(__uint2half_rn(val));
 #else
-  return __float2half(static_cast<float>(val));
+  return half_t(__float2half(static_cast<float>(val)));
 #endif
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(long long val) {
 #ifdef __CUDA_ARCH__
-  return __ll2half_rn(val);
+  return half_t(__ll2half_rn(val));
 #else
-  return __float2half(static_cast<float>(val));
+  return half_t(__float2half(static_cast<float>(val)));
 #endif
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned long long val) {
 #ifdef __CUDA_ARCH__
-  return __ull2half_rn(val);
+  return half_t(__ull2half_rn(val));
 #else
-  return __float2half(static_cast<float>(val));
+  return half_t(__float2half(static_cast<float>(val)));
 #endif
 }
 
@@ -442,22 +494,28 @@ half_t cast_to_half(unsigned long val) {
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
 cast_from_half(half_t val) {
-  return __half2float(val);
+  return __half2float(half_t::impl_type(val));
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, bool>::value, T>
+cast_from_half(half_t val) {
+  return static_cast<T>(cast_from_half<float>(val));
 }
 
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, double>::value, T>
 cast_from_half(half_t val) {
-  return static_cast<T>(__half2float(val));
+  return static_cast<T>(__half2float(half_t::impl_type(val)));
 }
 
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, short>::value, T>
 cast_from_half(half_t val) {
 #ifdef __CUDA_ARCH__
-  return __half2short_rz(val);
+  return __half2short_rz(half_t::impl_type(val));
 #else
-  return static_cast<T>(__half2float(val));
+  return static_cast<T>(__half2float(half_t::impl_type(val)));
 #endif
 }
 
@@ -466,18 +524,18 @@ KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same<T, unsigned short>::value, T>
     cast_from_half(half_t val) {
 #ifdef __CUDA_ARCH__
-  return __half2ushort_rz(val);
+  return __half2ushort_rz(half_t::impl_type(val));
 #else
-  return static_cast<T>(__half2float(val));
+  return static_cast<T>(__half2float(half_t::impl_type(val)));
 #endif
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, int>::value, T>
 cast_from_half(half_t val) {
 #ifdef __CUDA_ARCH__
-  return __half2int_rz(val);
+  return __half2int_rz(half_t::impl_type(val));
 #else
-  return static_cast<T>(__half2float(val));
+  return static_cast<T>(__half2float(half_t::impl_type(val)));
 #endif
 }
 
@@ -485,9 +543,9 @@ template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, unsigned>::value, T>
 cast_from_half(half_t val) {
 #ifdef __CUDA_ARCH__
-  return __half2uint_rz(val);
+  return __half2uint_rz(half_t::impl_type(val));
 #else
-  return static_cast<T>(__half2float(val));
+  return static_cast<T>(__half2float(half_t::impl_type(val)));
 #endif
 }
 
@@ -495,9 +553,9 @@ template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long long>::value, T>
 cast_from_half(half_t val) {
 #ifdef __CUDA_ARCH__
-  return __half2ll_rz(val);
+  return __half2ll_rz(half_t::impl_type(val));
 #else
-  return static_cast<T>(__half2float(val));
+  return static_cast<T>(__half2float(half_t::impl_type(val)));
 #endif
 }
 
@@ -506,9 +564,9 @@ KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
     cast_from_half(half_t val) {
 #ifdef __CUDA_ARCH__
-  return __half2ull_rz(val);
+  return __half2ull_rz(half_t::impl_type(val));
 #else
-  return static_cast<T>(__half2float(val));
+  return static_cast<T>(__half2float(half_t::impl_type(val)));
 #endif
 }
 

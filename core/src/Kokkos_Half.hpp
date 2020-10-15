@@ -68,6 +68,8 @@ constexpr const bool half_is_float = true;
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val) { return half_t(val); }
 KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(bool val) { return half_t(val); }
+KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(double val) { return half_t(val); }
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(short val) { return half_t(val); }
@@ -90,15 +92,15 @@ half_t cast_to_half(unsigned long long val) { return half_t(val); }
 // Using an explicit list here too, since the other ones are explicit and for
 // example don't include char
 template <class T>
-KOKKOS_INLINE_FUNCTION typename std::enable_if<
-    std::is_same<T, float>::value || std::is_same<T, double>::value ||
-        std::is_same<T, short>::value ||
+KOKKOS_INLINE_FUNCTION std::enable_if_t<
+    std::is_same<T, float>::value || std::is_same<T, bool>::value ||
+        std::is_same<T, double>::value || std::is_same<T, short>::value ||
         std::is_same<T, unsigned short>::value || std::is_same<T, int>::value ||
         std::is_same<T, unsigned int>::value || std::is_same<T, long>::value ||
         std::is_same<T, unsigned long>::value ||
         std::is_same<T, long long>::value ||
         std::is_same<T, unsigned long long>::value,
-    T>::type
+    T>
 cast_from_half(half_t val) {
   return T(val);
 }
