@@ -170,7 +170,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       set(TagHostAccessible CudaUVM)
     elseif(tag STREQUAL "HIP")
       set(TagHostAccessible HIPHostPinned)
-    end()
+    endif()
     foreach(Name
       SubView_c01
       SubView_c02
