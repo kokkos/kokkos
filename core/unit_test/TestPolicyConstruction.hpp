@@ -699,4 +699,21 @@ TEST(TEST_CATEGORY, policy_construction) {
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
 }
 
+template <template <class...> class Policy, class... Args>
+void check_converting_constructor_add_work_tag(Policy<Args...> const& policy) {
+  // Not the greatest but at least checking it compiles
+  struct WorkTag {};
+  Policy<Args..., WorkTag> policy_with_tag = policy;
+  (void)policy_with_tag;
+}
+
+TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
+  check_converting_constructor_add_work_tag(
+      Kokkos::RangePolicy<TEST_EXECSPACE>{});
+  check_converting_constructor_add_work_tag(
+      Kokkos::TeamPolicy<TEST_EXECSPACE>{});
+  check_converting_constructor_add_work_tag(
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 1}, {2, 3}});
+}
+
 }  // namespace Test
