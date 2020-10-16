@@ -835,6 +835,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
     set_auto_chunk_size();
   }
 
+  template <typename ExecSpace, typename... OtherProperties>
+  friend class TeamPolicyInternal;
+
  public:
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
@@ -857,6 +860,19 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   inline Kokkos::Experimental::OpenMPTarget space() const {
     return Kokkos::Experimental::OpenMPTarget();
   }
+
+  template <class... OtherProperties>
+  TeamPolicyInternal(const TeamPolicyInternal<OtherProperties...>& p)
+      : m_league_size(p.m_league_size),
+        m_team_size(p.m_team_size),
+        m_vector_length(p.m_vector_length),
+        m_team_alloc(p.m_team_alloc),
+        m_team_iter(p.m_team_iter),
+        m_team_scratch_size(p.m_team_scratch_size),
+        m_thread_scratch_size(p.m_thread_scratch_size),
+        m_tune_team_size(p.m_tune_team_size),
+        m_tune_vector_length(p.m_tune_vector_length),
+        m_chunk_size(p.m_chunk_size) {}
 
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal(typename traits::execution_space&, int league_size_request,
