@@ -44,6 +44,7 @@
 
 #ifndef KOKKOS_TEST_REDUCTIONS_HPP
 #define KOKKOS_TEST_REDUCTIONS_HPP
+#include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 // WORKAROUND OPENMPTARGET: Not implemented
 if constexpr (!std::is_same<TEST_EXECSPACE,
