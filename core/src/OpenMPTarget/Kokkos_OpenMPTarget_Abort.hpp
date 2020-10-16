@@ -52,7 +52,7 @@ namespace Kokkos {
 namespace Impl {
 
 KOKKOS_INLINE_FUNCTION void OpenMPTarget_abort(char const *msg) {
-  printf("%s.\n", msg);
+  fprintf(stderr, "%s.\n", msg);
   std::abort();
 }
 
