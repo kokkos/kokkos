@@ -403,7 +403,6 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIPHostPinned_ViewAPI_c.cpp
       hip/TestHIPHostPinned_ViewAPI_d.cpp
       hip/TestHIPHostPinned_ViewAPI_e.cpp
-      hip/TestHIPHostPinned_ViewCopy.cpp
       hip/TestHIPHostPinned_ViewMapping_a.cpp
       hip/TestHIPHostPinned_ViewMapping_b.cpp
       hip/TestHIPHostPinned_ViewMapping_subview.cpp
