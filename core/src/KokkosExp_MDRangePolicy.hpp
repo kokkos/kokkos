@@ -196,6 +196,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
     return m_space;
   }
+
+  MDRangePolicy() = default;
+
   template <typename LT, typename UT, typename TT = array_index_type>
   MDRangePolicy(std::initializer_list<LT> const& lower,
                 std::initializer_list<UT> const& upper,
