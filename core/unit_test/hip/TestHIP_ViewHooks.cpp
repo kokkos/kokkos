@@ -42,5 +42,5 @@
 //@HEADER
 */
 
-#include <cuda/TestHIP_Category.hpp>
+#include <hip/TestHIP_Category.hpp>
 #include <TestViewHooks.hpp>

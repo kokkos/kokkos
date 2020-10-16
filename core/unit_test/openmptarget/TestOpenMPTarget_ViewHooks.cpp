@@ -42,5 +42,5 @@
 //@HEADER
 */
 
-#include <cuda/TestOpenMPTarget_Category.hpp>
+#include <openmptarget/TestOpenMPTarget_Category.hpp>
 #include <TestViewHooks.hpp>
