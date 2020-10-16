@@ -134,8 +134,42 @@ class half_t {
   // Don't support implicit conversion back to impl_type.
   // impl_type is a storage only type on host.
   KOKKOS_FUNCTION
-  explicit operator impl_type() { return val; }
+  explicit operator impl_type() const { return val; }
+  KOKKOS_FUNCTION
+  explicit operator float() const { return cast_from_half<float>(*this); }
+  KOKKOS_FUNCTION
+  explicit operator bool() const { return cast_from_half<bool>(*this); }
+  KOKKOS_FUNCTION
+  explicit operator double() const { return cast_from_half<double>(*this); }
+  KOKKOS_FUNCTION
+  explicit operator short() const { return cast_from_half<short>(*this); }
+  KOKKOS_FUNCTION
+  explicit operator int() const { return cast_from_half<int>(*this); }
+  KOKKOS_FUNCTION
+  explicit operator long() const { return cast_from_half<long>(*this); }
+  KOKKOS_FUNCTION
+  explicit operator long long() const {
+    return cast_from_half<long long>(*this);
+  }
+  KOKKOS_FUNCTION
+  explicit operator unsigned short() const {
+    return cast_from_half<unsigned short>(*this);
+  }
+  KOKKOS_FUNCTION
+  explicit operator unsigned int() const {
+    return cast_from_half<unsigned int>(*this);
+  }
+  KOKKOS_FUNCTION
+  explicit operator unsigned long() const {
+    return cast_from_half<unsigned long>(*this);
+  }
+  KOKKOS_FUNCTION
+  explicit operator unsigned long long() const {
+    return cast_from_half<unsigned long long>(*this);
+  }
 
+  KOKKOS_FUNCTION
+  half_t(const half_t&) = default;
   KOKKOS_FUNCTION
   half_t(impl_type rhs) : val(rhs) {}
   KOKKOS_FUNCTION
