@@ -62,6 +62,17 @@ else
    STACK_TRACE_TERMINATE_FILTER :=
 endif
 
+TESTS = AtomicOperations_int AtomicOperations_unsignedint AtomicOperations_longint AtomicOperations_unsignedlongint AtomicOperations_longlongint AtomicOperations_double AtomicOperations_float AtomicOperations_complexdouble AtomicOperations_complexfloat AtomicViews Atomics BlockSizeDeduction Concepts Complex Crs DeepCopyAlignment FunctorAnalysis Init LocalDeepCopy MDRange_a MDRange_b MDRange_c MDRange_d MDRange_e MDRange_f Other RangePolicy RangePolicyRequire Reductions Reducers_a Reducers_b Reducers_c Reducers_d Reductions_DeviceView Scan SharedAlloc SubView_a SubView_b SubView_c01 SubView_c02 SubView_c03 SubView_c04 SubView_c05 SubView_c06 SubView_c07 SubView_c08 SubView_c09 SubView_c10 SubView_c11 SubView_c12 SubView_c13 TeamBasic TeamReductionScan TeamScratch TeamTeamSize TeamVectorRange UniqueToken ViewAPI_a ViewAPI_b ViewAPI_c ViewAPI_d ViewAPI_e ViewLayoutStrideAssignment ViewMapping_a ViewMapping_b ViewMapping_subview ViewOfClass WorkGraph View_64bit ViewResize
+
+tmp := $(foreach device, $(KOKKOS_DEVICELIST), \
+  tmp2 := $(foreach test, $(TESTS), \
+    $(if $(filter Test$(device)_$(test).cpp, $(shell ls Test$(device)_$(test).cpp 2>/dev/null)),,\
+      $(shell echo "\#include<Test"$(device)"_Category.hpp>" > Test$(device)_$(test).cpp); \
+      $(shell echo "\#include<Test"$(test)".hpp>" >> Test$(device)_$(test).cpp); \
+     )\
+  ) \
+)
+
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA = UnitTestMainInit.o gtest-all.o
     OBJ_CUDA += TestCuda_Init.o
@@ -70,9 +81,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o TestCuda_ViewAPI_e.o
     OBJ_CUDA += TestCuda_DeepCopyAlignment.o
     OBJ_CUDA += TestCuda_ViewMapping_a.o TestCuda_ViewMapping_b.o TestCuda_ViewMapping_subview.o TestCuda_ViewResize.o TestCuda_ViewLayoutStrideAssignment.o
-    OBJ_CUDA += TestCudaUVM_ViewCopy.o TestCudaUVM_ViewAPI_a.o TestCudaUVM_ViewAPI_b.o TestCudaUVM_ViewAPI_c.o TestCudaUVM_ViewAPI_d.o TestCudaUVM_ViewAPI_e.o
+    OBJ_CUDA += TestCudaUVM_ViewAPI_a.o TestCudaUVM_ViewAPI_b.o TestCudaUVM_ViewAPI_c.o TestCudaUVM_ViewAPI_d.o TestCudaUVM_ViewAPI_e.o
     OBJ_CUDA += TestCudaUVM_ViewMapping_a.o TestCudaUVM_ViewMapping_b.o TestCudaUVM_ViewMapping_subview.o
-    OBJ_CUDA += TestCudaHostPinned_ViewCopy.o TestCudaHostPinned_ViewAPI_a.o TestCudaHostPinned_ViewAPI_b.o TestCudaHostPinned_ViewAPI_c.o TestCudaHostPinned_ViewAPI_d.o TestCudaHostPinned_ViewAPI_e.o
+    OBJ_CUDA += TestCudaHostPinned_ViewAPI_a.o TestCudaHostPinned_ViewAPI_b.o TestCudaHostPinned_ViewAPI_c.o TestCudaHostPinned_ViewAPI_d.o TestCudaHostPinned_ViewAPI_e.o
     OBJ_CUDA += TestCudaHostPinned_ViewMapping_a.o TestCudaHostPinned_ViewMapping_b.o TestCudaHostPinned_ViewMapping_subview.o
     OBJ_CUDA += TestCuda_View_64bit.o
     OBJ_CUDA += TestCuda_ViewOfClass.o
@@ -90,7 +101,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA += TestCuda_AtomicOperations_unsignedlongint.o TestCuda_AtomicOperations_longlongint.o TestCuda_AtomicOperations_double.o TestCuda_AtomicOperations_float.o
     OBJ_CUDA += TestCuda_AtomicOperations_complexfloat.o TestCuda_AtomicOperations_complexdouble.o
     OBJ_CUDA += TestCuda_AtomicViews.o TestCuda_Atomics.o
-    OBJ_CUDA += TestCuda_Team.o TestCuda_TeamScratch.o
+    OBJ_CUDA += TestCuda_TeamBasic.o TestCuda_TeamScratch.o
     OBJ_CUDA += TestCuda_TeamReductionScan.o TestCuda_TeamTeamSize.o
     OBJ_CUDA += TestCuda_TeamVectorRange.o
     OBJ_CUDA += TestCuda_Other.o
@@ -132,7 +143,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
     OBJ_THREADS += TestThreads_AtomicOperations_unsignedlongint.o TestThreads_AtomicOperations_longlongint.o TestThreads_AtomicOperations_double.o TestThreads_AtomicOperations_float.o
     OBJ_THREADS += TestThreads_AtomicOperations_complexfloat.o TestThreads_AtomicOperations_complexdouble.o
     OBJ_THREADS += TestThreads_AtomicViews.o TestThreads_Atomics.o
-    OBJ_THREADS += TestThreads_Team.o TestThreads_TeamScratch.o TestThreads_TeamTeamSize.o
+    OBJ_THREADS += TestThreads_TeamBasic.o TestThreads_TeamScratch.o TestThreads_TeamTeamSize.o
     OBJ_THREADS += TestThreads_TeamReductionScan.o
     OBJ_THREADS += TestThreads_TeamVectorRange.o
     OBJ_THREADS += TestThreads_Other.o
@@ -168,7 +179,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
     OBJ_OPENMP += TestOpenMP_AtomicOperations_unsignedlongint.o TestOpenMP_AtomicOperations_longlongint.o TestOpenMP_AtomicOperations_double.o TestOpenMP_AtomicOperations_float.o
     OBJ_OPENMP += TestOpenMP_AtomicOperations_complexfloat.o TestOpenMP_AtomicOperations_complexdouble.o
     OBJ_OPENMP += TestOpenMP_AtomicViews.o TestOpenMP_Atomics.o
-    OBJ_OPENMP += TestOpenMP_Team.o TestOpenMP_TeamScratch.o
+    OBJ_OPENMP += TestOpenMP_TeamBasic.o TestOpenMP_TeamScratch.o
     OBJ_OPENMP += TestOpenMP_TeamReductionScan.o TestOpenMP_TeamTeamSize.o
     OBJ_OPENMP += TestOpenMP_TeamVectorRange.o
     OBJ_OPENMP += TestOpenMP_Other.o
@@ -212,7 +223,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
     #OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicOperations_complexdouble.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_AtomicViews.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_Atomics.o # Commented Out Arbitrary Type Atomics
-    #OBJ_OPENMPTARGET += TestOpenMPTarget_Team.o # There is still a static function in this
+    #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamBasic.o # There is still a static function in this
     #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamScratch.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamReductionScan.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_Other.o
@@ -231,7 +242,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
 	OBJ_HIP += TestHIP_Reductions.o
 	OBJ_HIP += TestHIP_MDRange_a.o TestHIP_MDRange_b.o TestHIP_MDRange_c.o TestHIP_MDRange_d.o TestHIP_MDRange_e.o
 	OBJ_HIP += TestHIP_Spaces.o
-	OBJ_HIP += TestHIPHostPinned_ViewCopy.o TestHIPHostPinned_ViewAPI_a.o TestHIPHostPinned_ViewAPI_b.o TestHIPHostPinned_ViewAPI_c.o TestHIPHostPinned_ViewAPI_d.o TestHIPHostPinned_ViewAPI_e.o
+	OBJ_HIP += TestHIPHostPinned_ViewAPI_a.o TestHIPHostPinned_ViewAPI_b.o TestHIPHostPinned_ViewAPI_c.o TestHIPHostPinned_ViewAPI_d.o TestHIPHostPinned_ViewAPI_e.o
 	OBJ_HIP += TestHIPHostPinned_ViewMapping_a.o TestHIPHostPinned_ViewMapping_b.o TestHIPHostPinned_ViewMapping_subview.o
 
 	TARGETS += KokkosCore_UnitTest_HIP
@@ -261,7 +272,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX += TestHPX_AtomicOperations_int.o TestHPX_AtomicOperations_unsignedint.o TestHPX_AtomicOperations_longint.o
 	OBJ_HPX += TestHPX_AtomicOperations_unsignedlongint.o TestHPX_AtomicOperations_longlongint.o TestHPX_AtomicOperations_double.o TestHPX_AtomicOperations_float.o
 	OBJ_HPX += TestHPX_AtomicViews.o TestHPX_Atomics.o
-	OBJ_HPX += TestHPX_Team.o
+	OBJ_HPX += TestHPX_TeamBasic.o
 	OBJ_HPX += TestHPX_TeamVectorRange.o
 	OBJ_HPX += TestHPX_TeamScratch.o
 	OBJ_HPX += TestHPX_TeamReductionScan.o
@@ -302,7 +313,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
     OBJ_SERIAL += TestSerial_AtomicOperations_unsignedlongint.o TestSerial_AtomicOperations_longlongint.o TestSerial_AtomicOperations_double.o TestSerial_AtomicOperations_float.o
     OBJ_SERIAL += TestSerial_AtomicOperations_complexfloat.o TestSerial_AtomicOperations_complexdouble.o
     OBJ_SERIAL += TestSerial_AtomicViews.o TestSerial_Atomics.o
-    OBJ_SERIAL += TestSerial_Team.o TestSerial_TeamScratch.o
+    OBJ_SERIAL += TestSerial_TeamBasic.o TestSerial_TeamScratch.o
     OBJ_SERIAL += TestSerial_TeamVectorRange.o
     OBJ_SERIAL += TestSerial_TeamReductionScan.o TestSerial_TeamTeamSize.o
     OBJ_SERIAL += TestSerial_Other.o

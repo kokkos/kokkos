@@ -52,7 +52,7 @@ if constexpr (!std::is_same<TEST_EXECSPACE,
 #include <TestReduce.hpp>
 }
 #else
-#include <TestReduce.hpp>
+//#include <TestReduce.hpp>
 #endif
 #include <TestCXX11Deduction.hpp>
 #endif
