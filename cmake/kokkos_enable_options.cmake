@@ -52,7 +52,7 @@ KOKKOS_ENABLE_OPTION(VIEW_HOOKS           OFF "Whether to enable View Hooks")
 
 IF(KOKKOS_ENABLE_VIEW_HOOKS)
    IF(KOKKOS_CXX_STANDARD LESS 14)
-      MESSAGE(FATAL_ERROR "OpenMPTarget backend requires C++17 or newer")
+      MESSAGE(FATAL_ERROR "The View Hooks option requires C++14 or newer")
    ENDIF()
 ENDIF()
 
