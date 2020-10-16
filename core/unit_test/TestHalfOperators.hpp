@@ -64,14 +64,26 @@ enum OP_TESTS {
   PREFIX_DEC,
   POSTFIX_INC,
   POSTFIX_DEC,
-  CADD,
-  CSUB,
-  CMUL,
-  CDIV,
-  ADD,
-  SUB,
-  MUL,
-  DIV,
+  CADD_H_H,
+  CADD_H_S,
+  CSUB_H_H,
+  CSUB_H_S,
+  CMUL_H_H,
+  CMUL_H_S,
+  CDIV_H_H,
+  CDIV_H_S,
+  ADD_H_H,
+  ADD_H_S,
+  ADD_S_H,
+  SUB_H_H,
+  SUB_H_S,
+  SUB_S_H,
+  MUL_H_H,
+  MUL_H_S,
+  MUL_S_H,
+  DIV_H_H,
+  DIV_H_S,
+  DIV_S_H,
   NEG,
   AND,
   OR,
@@ -83,7 +95,7 @@ enum OP_TESTS {
   GE,
   TW,
   PASS_BY_REF,
-  AO___HALF,
+  AO_IMPL_HALF,
   AO_HALF_T,
   N_OP_TESTS
 };
@@ -156,44 +168,93 @@ struct Functor_TestHalfOperators {
 
     // if (h_lhs != tmp_lhs) {
     //  printf("tmp_lhs = %f, h_lhs = %f\n", __half2float(tmp_lhs),
-    //  __half2float(h_lhs)); Kokkos::abort("Error in half_t postfix operators");
+    //  __half2float(h_lhs)); Kokkos::abort("Error in half_t postfix
+    //  operators");
     //}
 
     tmp_lhs = h_lhs;
     tmp_lhs += h_rhs;
-    actual_lhs(CADD)   = cast_from_half<double>(tmp_lhs);
-    expected_lhs(CADD) = d_lhs;
-    expected_lhs(CADD) += d_rhs;
+    actual_lhs(CADD_H_H)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CADD_H_H) = d_lhs;
+    expected_lhs(CADD_H_H) += d_rhs;
+
+    tmp_lhs = h_lhs;
+    tmp_lhs += static_cast<float>(d_rhs);
+    actual_lhs(CADD_H_S)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CADD_H_S) = d_lhs;
+    expected_lhs(CADD_H_S) += d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs -= h_rhs;
-    actual_lhs(CSUB)   = cast_from_half<double>(tmp_lhs);
-    expected_lhs(CSUB) = d_lhs;
-    expected_lhs(CSUB) -= d_rhs;
+    actual_lhs(CSUB_H_H)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CSUB_H_H) = d_lhs;
+    expected_lhs(CSUB_H_H) -= d_rhs;
+
+    tmp_lhs = h_lhs;
+    tmp_lhs -= static_cast<float>(d_rhs);
+    actual_lhs(CSUB_H_S)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CSUB_H_S) = d_lhs;
+    expected_lhs(CSUB_H_S) -= d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs *= h_rhs;
-    actual_lhs(CMUL)   = cast_from_half<double>(tmp_lhs);
-    expected_lhs(CMUL) = d_lhs;
-    expected_lhs(CMUL) *= d_rhs;
+    actual_lhs(CMUL_H_H)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CMUL_H_H) = d_lhs;
+    expected_lhs(CMUL_H_H) *= d_rhs;
+
+    tmp_lhs = h_lhs;
+    tmp_lhs *= static_cast<float>(d_rhs);
+    actual_lhs(CMUL_H_S)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CMUL_H_S) = d_lhs;
+    expected_lhs(CMUL_H_S) *= d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs /= h_rhs;
-    actual_lhs(CDIV)   = cast_from_half<double>(tmp_lhs);
-    expected_lhs(CDIV) = d_lhs;
-    expected_lhs(CDIV) /= d_rhs;
+    actual_lhs(CDIV_H_H)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CDIV_H_H) = d_lhs;
+    expected_lhs(CDIV_H_H) /= d_rhs;
 
-    actual_lhs(ADD)   = cast_from_half<double>(h_lhs + h_rhs);
-    expected_lhs(ADD) = d_lhs + d_rhs;
+    tmp_lhs = h_lhs;
+    tmp_lhs /= static_cast<float>(d_rhs);
+    actual_lhs(CDIV_H_S)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CDIV_H_S) = d_lhs;
+    expected_lhs(CDIV_H_S) /= d_rhs;
 
-    actual_lhs(SUB)   = cast_from_half<double>(h_lhs - h_rhs);
-    expected_lhs(SUB) = d_lhs - d_rhs;
+    actual_lhs(ADD_H_H)   = cast_from_half<double>(h_lhs + h_rhs);
+    expected_lhs(ADD_H_H) = d_lhs + d_rhs;
+    actual_lhs(ADD_H_S) =
+        cast_from_half<double>(h_lhs + static_cast<float>(d_rhs));
+    expected_lhs(ADD_H_S) = d_lhs + d_rhs;
+    actual_lhs(ADD_S_H) =
+        cast_from_half<double>(static_cast<float>(d_lhs) + h_rhs);
+    expected_lhs(ADD_S_H) = d_lhs + d_rhs;
 
-    actual_lhs(MUL)   = cast_from_half<double>(h_lhs * h_rhs);
-    expected_lhs(MUL) = d_lhs * d_rhs;
+    actual_lhs(SUB_H_H)   = cast_from_half<double>(h_lhs - h_rhs);
+    expected_lhs(SUB_H_H) = d_lhs - d_rhs;
+    actual_lhs(SUB_H_S) =
+        cast_from_half<double>(h_lhs - static_cast<float>(d_rhs));
+    expected_lhs(SUB_H_S) = d_lhs - d_rhs;
+    actual_lhs(SUB_S_H) =
+        cast_from_half<double>(static_cast<float>(d_lhs) - h_rhs);
+    expected_lhs(SUB_S_H) = d_lhs - d_rhs;
 
-    actual_lhs(DIV)   = cast_from_half<double>(h_lhs / h_rhs);
-    expected_lhs(DIV) = d_lhs / d_rhs;
+    actual_lhs(MUL_H_H)   = cast_from_half<double>(h_lhs * h_rhs);
+    expected_lhs(MUL_H_H) = d_lhs * d_rhs;
+    actual_lhs(MUL_H_S) =
+        cast_from_half<double>(h_lhs * static_cast<float>(d_rhs));
+    expected_lhs(MUL_H_S) = d_lhs * d_rhs;
+    actual_lhs(MUL_S_H) =
+        cast_from_half<double>(static_cast<float>(d_lhs) * h_rhs);
+    expected_lhs(MUL_S_H) = d_lhs * d_rhs;
+
+    actual_lhs(DIV_H_H)   = cast_from_half<double>(h_lhs / h_rhs);
+    expected_lhs(DIV_H_H) = d_lhs / d_rhs;
+    actual_lhs(DIV_H_S) =
+        cast_from_half<double>(h_lhs / static_cast<float>(d_rhs));
+    expected_lhs(DIV_H_S) = d_lhs / d_rhs;
+    actual_lhs(DIV_S_H) =
+        cast_from_half<double>(static_cast<float>(d_lhs) / h_rhs);
+    expected_lhs(DIV_S_H) = d_lhs / d_rhs;
 
     actual_lhs(NEG)   = cast_from_half<double>(!h_lhs);
     expected_lhs(NEG) = !d_lhs;
@@ -228,13 +289,12 @@ struct Functor_TestHalfOperators {
     actual_lhs(PASS_BY_REF)   = cast_from_half<double>(accept_ref(h_lhs));
     expected_lhs(PASS_BY_REF) = d_lhs;
 
-    half_tmp = h_lhs;
-    // half_tmp = cast_from_half<float>(h_lhs);
-    tmp_ptr = &(tmp_lhs = half_tmp);
+    half_tmp = cast_from_half<float>(h_lhs);
+    tmp_ptr  = &(tmp_lhs = half_tmp);
     if (tmp_ptr != &tmp_lhs)
       Kokkos::abort("Error in half_t address-of operator");
-    actual_lhs(AO___HALF)   = cast_from_half<double>(*tmp_ptr);
-    expected_lhs(AO___HALF) = d_lhs;
+    actual_lhs(AO_IMPL_HALF)   = cast_from_half<double>(*tmp_ptr);
+    expected_lhs(AO_IMPL_HALF) = d_lhs;
 
     tmp2_lhs = h_lhs;
     tmp_ptr  = &(tmp_lhs = tmp2_lhs);
@@ -247,7 +307,7 @@ struct Functor_TestHalfOperators {
 
 void __test_half_operators(half_t h_lhs, half_t h_rhs) {
   double epsilon = half_is_float ? FLT_EPSILON : FP16_EPSILON;
-  Functor_TestHalfOperators<ViewType> f_device(h_lhs, h_rhs);    // Run on device
+  Functor_TestHalfOperators<ViewType> f_device(h_lhs, h_rhs);  // Run on device
   Functor_TestHalfOperators<ViewTypeHost> f_host(h_lhs, h_rhs);  // Run on host
   typename ViewType::HostMirror f_device_actual_lhs =
       Kokkos::create_mirror_view(f_device.actual_lhs);
