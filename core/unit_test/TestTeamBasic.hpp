@@ -140,10 +140,16 @@ TEST(TEST_CATEGORY, team_broadcast_float) {
   TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                     float>::test_teambroadcast(16, 1.3);
 
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
-                    float>::test_teambroadcast(1000, 1.3);
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
-                    float>::test_teambroadcast(1000, 1.3);
+  // FIXME_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
+#endif
+  {
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                      float>::test_teambroadcast(1000, 1.3);
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                      float>::test_teambroadcast(1000, 1.3);
+  }
 }
 
 TEST(TEST_CATEGORY, team_broadcast_double) {
@@ -162,10 +168,17 @@ TEST(TEST_CATEGORY, team_broadcast_double) {
   TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                     double>::test_teambroadcast(16, 1.3);
 
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
-                    double>::test_teambroadcast(1000, 1.3);
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
-                    double>::test_teambroadcast(1000, 1.3);
+// FIXME_CUDA
+#ifdef KOKKOS_ENABLE_CUDA
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
+#endif
+  {
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                      double>::test_teambroadcast(1000, 1.3);
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+
+                      double>::test_teambroadcast(1000, 1.3);
+  }
 }
 
 }  // namespace Test
