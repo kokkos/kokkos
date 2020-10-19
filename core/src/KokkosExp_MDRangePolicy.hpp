@@ -294,7 +294,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       }
     }
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-    else  // Cuda
+    else  // Cuda or HIP
     {
       index_type span;
       int increment  = 1;
@@ -314,7 +314,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       for (int i = rank_start; i != rank_end; i += increment) {
         span = m_upper[i] - m_lower[i];
         if (m_tile[i] <= 0) {
-          // TODO: determine what is a good default tile size for cuda and HIP
+          // TODO: determine what is a good default tile size for Cuda and HIP
           // may be rank dependent
           if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
               ((int)inner_direction == (int)Left && (i > 0))) {
@@ -338,9 +338,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         if (is_cuda_exec_space) {
           printf(" Tile dimensions exceed Cuda limits\n");
           Kokkos::abort(
-              " Cuda ExecSpace Error: MDRange tile dims exceed maximum number "
-              "of "
-              "threads per block - choose smaller tile dims");
+              "Cuda ExecSpace Error: MDRange tile dims exceed maximum number "
+              "of threads per block - choose smaller tile dims");
         } else {
           printf(" Tile dimensions exceed HIP limits\n");
           Kokkos::abort(
