@@ -202,7 +202,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), when_all_cycle) {
 // even asynchronously. We _may_ want to do that eventually?
 TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), DISABLED_repeat_chain) {
   auto graph = Kokkos::Experimental::create_graph(
-      ex, [=, count_host = count_host](auto root) {
+      ex, [&, count_host = count_host](auto root) {
         //----------------------------------------
         root.then_parallel_for(1, set_functor{count, 0})
             .then_parallel_for(1, count_functor{count, bugs, 0, 0})
