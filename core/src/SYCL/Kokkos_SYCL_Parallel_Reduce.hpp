@@ -87,7 +87,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       typename std::enable_if<Kokkos::is_view<V>::value, void*>::type = nullptr)
       : m_functor(f), m_policy(p), m_result_ptr(v.data()) {
     // FIXME_SYCL custom reducer not yet implemented
-    if (m_result_ptr == nullptr) std::abort();
+    if (m_result_ptr == nullptr)
+      Kokkos::abort("Custom reducer not yet implemented for SYCL backend");
   }
 
   ParallelReduce(const FunctorType& f, const Policy& p,
@@ -97,7 +98,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()) {
     // FIXME_SYCL custom reducer not yet implemented
-    if (m_result_ptr == nullptr) std::abort();
+    if (m_result_ptr == nullptr)
+      Kokkos::abort("Custom reducer not yet implemented for SYCL backend");
   }
 
  private:
