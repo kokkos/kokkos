@@ -52,6 +52,7 @@
 #include <impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Parallel.hpp>
+#include <type_traits>
 
 #if defined(__CUDACC__) && defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/KokkosExp_Cuda_IterateTile.hpp>
@@ -216,7 +217,10 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   MDRangePolicy() = default;
 
   template <typename LT, std::size_t LN, typename UT, std::size_t UN,
-            typename TT = array_index_type, std::size_t TN = rank>
+            typename TT = array_index_type, std::size_t TN = rank,
+            typename = std::enable_if_t<std::is_integral<LT>::value &&
+                                        std::is_integral<UT>::value &&
+                                        std::is_integral<TT>::value>>
   MDRangePolicy(const LT (&lower)[LN], const UT (&upper)[UN],
                 const TT (&tile)[TN] = {})
       : MDRangePolicy(
@@ -229,7 +233,10 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   }
 
   template <typename LT, std::size_t LN, typename UT, std::size_t UN,
-            typename TT = array_index_type, std::size_t TN = rank>
+            typename TT = array_index_type, std::size_t TN = rank,
+            typename = std::enable_if_t<std::is_integral<LT>::value &&
+                                        std::is_integral<UT>::value &&
+                                        std::is_integral<TT>::value>>
   MDRangePolicy(const typename traits::execution_space& work_space,
                 const LT (&lower)[LN], const UT (&upper)[UN],
                 const TT (&tile)[TN] = {})
