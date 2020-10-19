@@ -124,19 +124,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
     foreach(Name
       SubView_a
       SubView_b
-      SubView_c01
-      SubView_c02
-      SubView_c03
-      SubView_c04
-      SubView_c05
-      SubView_c06
-      SubView_c07
-      SubView_c08
-      SubView_c09
-      SubView_c10
-      SubView_c11
-      SubView_c12
-      SubView_c13
       TeamBasic
       TeamReductionScan
       TeamScratch
