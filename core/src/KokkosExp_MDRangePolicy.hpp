@@ -111,6 +111,22 @@ struct Rank {
   static constexpr Iterate inner_direction = InnerDir;
 };
 
+namespace Impl {
+// NOTE prefer C array U[M] to std::initalizer_list<U> so that the number of
+// elements can be deduced (https://stackoverflow.com/q/40241370)
+template <class Array, class U, std::size_t M>
+constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
+  using T = typename Array::value_type;
+  Array a;
+  constexpr std::size_t N = Array::size();
+  static_assert(M <= N, "");
+  auto* ptr = a.data();
+  for (auto x : init)
+    *ptr++ = static_cast<T>(x);  // allow narrowing conversions
+  return a;
+}
+}  // namespace Impl
+
 // multi-dimensional iteration pattern
 template <typename... Properties>
 struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
