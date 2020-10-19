@@ -155,12 +155,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   // as template parameter to the MDRangePolicy or static_cast the individual
   // values
 
-  point_type m_lower;
-  point_type m_upper;
-  tile_type m_tile;
-  point_type m_tile_end;
-  index_type m_num_tiles;
-  index_type m_prod_tile_dims;
+  point_type m_lower          = {};
+  point_type m_upper          = {};
+  tile_type m_tile            = {};
+  point_type m_tile_end       = {};
+  index_type m_num_tiles      = 1;
+  index_type m_prod_tile_dims = 1;
 
   /*
     // NDE enum impl definition alternative - replace static constexpr int ?
