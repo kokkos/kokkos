@@ -697,10 +697,11 @@ KOKKOS_INLINE_FUNCTION RealType real(const complex<RealType>& x) noexcept {
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType abs(const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  return cl::sycl::hypot(x.real(), x.imag());
+  using cl::sycl::hypot;
 #else
-  return std::hypot(x.real(), x.imag());
+  using std::hypot;
 #endif
+  return hypot(x.real(), x.imag());
 }
 
 //! Power of a complex number
@@ -709,15 +710,18 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> pow(const complex<RealType>& x,
                                                      const RealType& e) {
   RealType r = abs(x);
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  RealType phi = cl::sycl::atan(x.imag() / x.real());
-  return cl::sycl::pow(r, e) *
-         Kokkos::complex<RealType>(cl::sycl::cos(phi * e),
-                                   cl::sycl::sin(phi * e));
+  using cl::sycl::atan;
+  using cl::sycl::cos;
+  using cl::sycl::pow;
+  using cl::sycl::sin;
 #else
-  RealType phi = std::atan(x.imag() / x.real());
-  return std::pow(r, e) *
-         Kokkos::complex<RealType>(std::cos(phi * e), std::sin(phi * e));
+  using std::atan;
+  using std::cos;
+  using std::pow;
+  using std::sin;
 #endif
+  RealType phi = atan(x.imag() / x.real());
+  return pow(r, e) * Kokkos::complex<RealType>(cos(phi * e), sin(phi * e));
 }
 
 //! Square root of a complex number. This is intended to match the stdc++
