@@ -215,43 +215,42 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   MDRangePolicy() = default;
 
-  template <typename LT, typename UT, typename TT = array_index_type>
-  MDRangePolicy(std::initializer_list<LT> const& lower,
-                std::initializer_list<UT> const& upper,
-                std::initializer_list<TT> const& tile = {})
-      : m_space() {
-    init(lower, upper, tile);
+  template <typename LT, std::size_t LN, typename UT, std::size_t UN,
+            typename TT = array_index_type, std::size_t TN = rank>
+  MDRangePolicy(const LT (&lower)[LN], const UT (&upper)[UN],
+                const TT (&tile)[TN] = {})
+      : MDRangePolicy(
+            Impl::to_array_potentially_narrowing<decltype(m_lower)>(lower),
+            Impl::to_array_potentially_narrowing<decltype(m_upper)>(upper),
+            Impl::to_array_potentially_narrowing<decltype(m_tile)>(tile)) {
+    static_assert(
+        LN == rank && UN == rank && TN <= rank,
+        "MDRangePolicy: Constructor initializer lists have wrong size");
   }
 
-  template <typename LT, typename UT, typename TT = array_index_type>
+  template <typename LT, std::size_t LN, typename UT, std::size_t UN,
+            typename TT = array_index_type, std::size_t TN = rank>
   MDRangePolicy(const typename traits::execution_space& work_space,
-                std::initializer_list<LT> const& lower,
-                std::initializer_list<UT> const& upper,
-                std::initializer_list<TT> const& tile = {})
-      : m_space(work_space) {
-    init(lower, upper, tile);
+                const LT (&lower)[LN], const UT (&upper)[UN],
+                const TT (&tile)[TN] = {})
+      : MDRangePolicy(
+            work_space,
+            Impl::to_array_potentially_narrowing<decltype(m_lower)>(lower),
+            Impl::to_array_potentially_narrowing<decltype(m_upper)>(upper),
+            Impl::to_array_potentially_narrowing<decltype(m_tile)>(tile)) {
+    static_assert(
+        LN == rank && UN == rank && TN <= rank,
+        "MDRangePolicy: Constructor initializer lists have wrong size");
   }
 
   MDRangePolicy(point_type const& lower, point_type const& upper,
                 tile_type const& tile = tile_type{})
-      : m_space(),
-        m_lower(lower),
-        m_upper(upper),
-        m_tile(tile),
-        m_num_tiles(1),
-        m_prod_tile_dims(1) {
-    init();
-  }
+      : MDRangePolicy(typename traits::execution_space(), lower, upper, tile) {}
 
   MDRangePolicy(const typename traits::execution_space& work_space,
                 point_type const& lower, point_type const& upper,
                 tile_type const& tile = tile_type{})
-      : m_space(work_space),
-        m_lower(lower),
-        m_upper(upper),
-        m_tile(tile),
-        m_num_tiles(1),
-        m_prod_tile_dims(1) {
+      : m_space(work_space), m_lower(lower), m_upper(upper), m_tile(tile) {
     init();
   }
 
