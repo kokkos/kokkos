@@ -153,9 +153,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
     endforeach()
 
     set(TagHostAccessible ${Tag})
-    if (tag STREQUAL "Cuda")
+    if (Tag STREQUAL "Cuda")
       set(TagHostAccessible CudaUVM)
-    elseif(tag STREQUAL "HIP")
+    elseif(Tag STREQUAL "HIP")
       set(TagHostAccessible HIPHostPinned)
     endif()
     foreach(Name
