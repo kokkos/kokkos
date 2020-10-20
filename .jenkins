@@ -47,7 +47,7 @@ pipeline {
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -78,7 +78,7 @@ pipeline {
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -109,7 +109,7 @@ pipeline {
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -141,7 +141,7 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -176,7 +176,7 @@ pipeline {
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -259,7 +259,7 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
-                              make -j8 && ctest --output-on-failure && \
+                              make -j8 && ctest --verbose && \
                               cd ../example/build_cmake_installed && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake \
@@ -267,7 +267,7 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && ctest --output-on-failure'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -302,10 +302,10 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
                               .. && \
-                              make -j8 && ctest --output-on-failure && \
+                              make -j8 && ctest --verbose && \
                               cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=14 .. && make -j8 && ctest --output-on-failure'''
+                              cmake -DCMAKE_CXX_STANDARD=14 .. && make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -337,7 +337,7 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
                               .. && \
-                              make -j8 && ctest --output-on-failure && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
+                              make -j8 && ctest --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                 }
             }
