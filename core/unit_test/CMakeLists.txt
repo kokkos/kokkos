@@ -122,8 +122,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
 
     SET(${Tag}_SOURCES2)
     foreach(Name
-      SubView_a
-      SubView_b
       TeamBasic
       TeamReductionScan
       TeamScratch
@@ -159,6 +157,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       set(TagHostAccessible HIPHostPinned)
     endif()
     foreach(Name
+      SubView_a
+      SubView_b
       SubView_c01
       SubView_c02
       SubView_c03
