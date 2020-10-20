@@ -1132,10 +1132,8 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, ValueType& result) {
-  result = ValueType();
-
   ValueType* tmp_scratch =
-      (ValueType*)loop_boundaries.team.impl_reduce_scratch();
+      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
 #pragma omp barrier
   tmp_scratch[0] = ValueType();
 #pragma omp barrier
@@ -1205,22 +1203,14 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, ValueType& result) {
-  result = ValueType();
-
-  ValueType* tmp_scratch =
-      (ValueType*)loop_boundaries.team.impl_reduce_scratch();
-#pragma omp barrier
-  tmp_scratch[1] = ValueType();
-#pragma omp barrier
-
-#pragma omp simd reduction(+ : tmp_scratch [1:2])
+  ValueType vector_reduce = ValueType();
+#pragma omp simd reduction(+ : vector_reduce)
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     ValueType tmp = ValueType();
     lambda(i, tmp);
-    tmp_scratch[1] += tmp;
+    vector_reduce += tmp;
   }
-
-  result = tmp_scratch[1];
+  result = vector_reduce;
 }
 
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
@@ -1309,15 +1299,13 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, ValueType& result) {
-  result = ValueType();
-
   ValueType* tmp_scratch =
-      (ValueType*)loop_boundaries.team.impl_reduce_scratch();
+      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
 #pragma omp barrier
   tmp_scratch[0] = ValueType();
 #pragma omp barrier
 
-#pragma omp simd reduction(+ : tmp_scratch[:1])
+#pragma omp for simd reduction(+ : tmp_scratch[:1])
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     ValueType tmp = ValueType();
     lambda(i, tmp);
