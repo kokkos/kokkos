@@ -62,18 +62,38 @@ else
    STACK_TRACE_TERMINATE_FILTER :=
 endif
 
-TESTS = AtomicOperations_int AtomicOperations_unsignedint AtomicOperations_longint AtomicOperations_unsignedlongint AtomicOperations_longlongint AtomicOperations_double AtomicOperations_float AtomicOperations_complexdouble AtomicOperations_complexfloat AtomicViews Atomics BlockSizeDeduction Concepts Complex Crs DeepCopyAlignment FunctorAnalysis Init LocalDeepCopy MDRange_a MDRange_b MDRange_c MDRange_d MDRange_e MDRange_f Other RangePolicy RangePolicyRequire Reductions Reducers_a Reducers_b Reducers_c Reducers_d Reductions_DeviceView Scan SharedAlloc SubView_a SubView_b SubView_c01 SubView_c02 SubView_c03 SubView_c04 SubView_c05 SubView_c06 SubView_c07 SubView_c08 SubView_c09 SubView_c10 SubView_c11 SubView_c12 SubView_c13 TeamBasic TeamReductionScan TeamScratch TeamTeamSize TeamVectorRange UniqueToken ViewAPI_a ViewAPI_b ViewAPI_c ViewAPI_d ViewAPI_e ViewLayoutStrideAssignment ViewMapping_a ViewMapping_b ViewMapping_subview ViewOfClass WorkGraph View_64bit ViewResize
+TESTS = AtomicOperations_int AtomicOperations_unsignedint AtomicOperations_longint AtomicOperations_unsignedlongint AtomicOperations_longlongint AtomicOperations_double AtomicOperations_float AtomicOperations_complexdouble AtomicOperations_complexfloat AtomicViews Atomics BlockSizeDeduction Concepts Complex Crs DeepCopyAlignment FunctorAnalysis Init LocalDeepCopy MDRange_a MDRange_b MDRange_c MDRange_d MDRange_e MDRange_f Other RangePolicy RangePolicyRequire Reductions Reducers_a Reducers_b Reducers_c Reducers_d Reductions_DeviceView Scan SharedAlloc TeamBasic TeamReductionScan TeamScratch TeamTeamSize TeamVectorRange UniqueToken ViewAPI_a ViewAPI_b ViewAPI_c ViewAPI_d ViewAPI_e ViewLayoutStrideAssignment ViewMapping_a ViewMapping_b ViewMapping_subview ViewOfClass WorkGraph View_64bit ViewResize
 
 tmp := $(foreach device, $(KOKKOS_DEVICELIST), \
   tmp2 := $(foreach test, $(TESTS), \
     $(if $(filter Test$(device)_$(test).cpp, $(shell ls Test$(device)_$(test).cpp 2>/dev/null)),,\
-      $(shell echo "\#include<Test"$(device)"_Category.hpp>" > Test$(device)_$(test).cpp); \
-      $(shell echo "\#include<Test"$(test)".hpp>" >> Test$(device)_$(test).cpp); \
-     )\
+      $(shell echo "\#include <Test"$(device)"_Category.hpp>" > Test$(device)_$(test).cpp); \
+      $(shell echo "\#include <Test"$(test)".hpp>" >> Test$(device)_$(test).cpp); \
+     ) \
   ) \
 )
 
+SUBVIEW_TESTS = SubView_a SubView_b SubView_c01 SubView_c02 SubView_c03 SubView_c04 SubView_c05 SubView_c06 SubView_c07 SubView_c08 SubView_c09 SubView_c10 SubView_c11 SubView_c12 SubView_c13
+
+KOKKOS_SUBVIEW_DEVICELIST := $(filter-out Cuda, $(KOKKOS_DEVICELIST))
+
+tmp := $(foreach device, $(KOKKOS_SUBVIEW_DEVICELIST), \
+  tmp2 := $(foreach test, $(SUBVIEW_TESTS), \
+    $(if $(filter Test$(device)_$(test).cpp, $(shell ls Test$(device)_$(test).cpp 2>/dev/null)),, \
+      $(shell echo "\#include <Test"$(device)"_Category.hpp>" > Test$(device)_$(test).cpp); \
+      $(shell echo "\#include <Test"$(test)".hpp>" >> Test$(device)_$(test).cpp); \
+     ) \
+  )\
+)
+
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
+    tmp2 := $(foreach test, $(SUBVIEW_TESTS), \
+      $(if $(filter TestCuda_$(test).cpp, $(shell ls TestCuda_$(test).cpp 2>/dev/null)),,\
+        $(shell echo "\#include <TestCudaUVM_Category.hpp>" > TestCuda_$(test).cpp); \
+        $(shell echo "\#include <Test"$(test)".hpp>" >> TestCuda_$(test).cpp); \
+      )\
+    )
+
     OBJ_CUDA = UnitTestMainInit.o gtest-all.o
     OBJ_CUDA += TestCuda_Init.o
     OBJ_CUDA += TestCuda_SharedAlloc.o TestCudaUVM_SharedAlloc.o TestCudaHostPinned_SharedAlloc.o
@@ -113,6 +133,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA += TestCuda_LocalDeepCopy.o
     OBJ_CUDA += TestCuda_DebugSerialExecution.o
     OBJ_CUDA += TestCuda_DebugPinUVMSpace.o
+    OBJ_CUDA += TestCuda_TeamScratchStreams.o
 
     TARGETS += KokkosCore_UnitTest_Cuda
     TARGETS += KokkosCore_UnitTest_CudaInterOpInit
