@@ -1008,31 +1008,19 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   ~DynRankView() = default;
 
   KOKKOS_INLINE_FUNCTION
-  DynRankView() : m_map(), m_track(), m_rank() {}  // Default ctor
+  DynRankView() : m_map(), m_track(), m_rank() {}
 
-  KOKKOS_INLINE_FUNCTION
-  DynRankView(const DynRankView& rhs)
-      : m_map(rhs.m_map), m_track(rhs.m_track), m_rank(rhs.m_rank) {}
+  KOKKOS_DEFAULTED_FUNCTION
+  DynRankView(const DynRankView& rhs) = default;
 
-  KOKKOS_INLINE_FUNCTION
-  DynRankView(DynRankView&& rhs)
-      : m_map(rhs.m_map), m_track(rhs.m_track), m_rank(rhs.m_rank) {}
+  KOKKOS_DEFAULTED_FUNCTION
+  DynRankView(DynRankView&& rhs) = default;
 
-  KOKKOS_INLINE_FUNCTION
-  DynRankView& operator=(const DynRankView& rhs) {
-    m_track = rhs.m_track;
-    m_map   = rhs.m_map;
-    m_rank  = rhs.m_rank;
-    return *this;
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  DynRankView& operator=(const DynRankView& rhs) = default;
 
-  KOKKOS_INLINE_FUNCTION
-  DynRankView& operator=(DynRankView&& rhs) {
-    m_track = rhs.m_track;
-    m_map   = rhs.m_map;
-    m_rank  = rhs.m_rank;
-    return *this;
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  DynRankView& operator=(DynRankView&& rhs) = default;
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
