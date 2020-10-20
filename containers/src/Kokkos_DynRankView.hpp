@@ -1008,7 +1008,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   ~DynRankView() = default;
 
   KOKKOS_INLINE_FUNCTION
-  DynRankView() : m_map(), m_track(), m_rank() {}
+  DynRankView() : m_map(), m_track(), m_rank() {}  // Default ctor
 
   KOKKOS_DEFAULTED_FUNCTION
   DynRankView(const DynRankView& rhs) = default;
