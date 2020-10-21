@@ -53,6 +53,8 @@
 #if defined(KOKKOS_ENABLE_CUDA) && !defined(__CUDACC__)
 #error \
     "KOKKOS_ENABLE_CUDA defined but the compiler is not defining the __CUDACC__ macro as expected"
+// Some tooling environments will still function better if we do this here.
+#define __CUDACC__
 #endif /* defined(KOKKOS_ENABLE_CUDA) && !defined(__CUDACC__) */
 
 // Compiling with a CUDA compiler.
