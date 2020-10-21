@@ -637,8 +637,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   static int constexpr UseShflReduction = (value_traits::StaticValueSize != 0);
 
  private:
-  using DummyShflReductionType  = double;
-  using DummySHMEMReductionType = int;
+  struct ShflReductionTag {};
+  struct SHMEMReductionTag {};
 
   // Algorithmic constraints: blockDim.y is a power of two AND
   // blockDim.y == blockDim.z == 1 shared memory utilization:
@@ -705,9 +705,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       threadid = base_thread_id;
     }
 
-    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType,
-                           DummySHMEMReductionType>::select(1, 1.0),
-        threadid);
+    using ReductionTag =
+        typename std::conditional<UseShflReduction, ShflReductionTag,
+                                  SHMEMReductionTag>::type;
+    run(ReductionTag{}, threadid);
+
     if (m_scratch_size[1] > 0) {
       __syncthreads();
       if (threadIdx.x == 0 && threadIdx.y == 0) {
@@ -716,7 +718,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
   }
 
-  __device__ inline void run(DummySHMEMReductionType const&,
+  __device__ inline void run(SHMEMReductionTag const&,
                              int const& threadid) const {
     integral_nonzero_constant<size_type, value_traits::StaticValueSize /
                                              sizeof(size_type)> const
@@ -781,9 +783,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
   }
 
-  __device__ inline void run(DummyShflReductionType const&,
+  __device__ inline void run(ShflReductionTag const&,
                              int const& threadid) const {
-    // FIXME_HIP implementation close to the function above
     value_type value;
     value_init::init(reducer_conditional::select(m_functor, m_reducer), &value);
 
