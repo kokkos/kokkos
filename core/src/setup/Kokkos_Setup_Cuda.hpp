@@ -45,7 +45,16 @@
 #ifndef KOKKOS_CUDA_SETUP_HPP_
 #define KOKKOS_CUDA_SETUP_HPP_
 
-#if defined(KOKKOS_ENABLE_CUDA) && defined(__CUDACC__)
+#if !defined(KOKKOS_ENABLE_CUDA)
+#error \
+    "KOKKOS_ENABLE_CUDA was not defined, but Kokkos_Setup_Cuda.hpp was included anyway."
+#endif
+
+#if defined(KOKKOS_ENABLE_CUDA) && !defined(__CUDACC__)
+#error \
+    "KOKKOS_ENABLE_CUDA defined but the compiler is not defining the __CUDACC__ macro as expected"
+#endif /* defined(KOKKOS_ENABLE_CUDA) && !defined(__CUDACC__) */
+
 // Compiling with a CUDA compiler.
 //
 //  Include <cuda.h> to pick up the CUDA_VERSION macro defined as:
@@ -100,11 +109,6 @@
 #endif
 #endif
 
-#endif  // #if defined( KOKKOS_ENABLE_CUDA ) && defined( __CUDACC__ )
-
-#if defined(KOKKOS_ENABLE_CUDA)
-// Compiling Cuda code to 'ptx'
-
 #define KOKKOS_IMPL_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
 #define KOKKOS_IMPL_FORCEINLINE __forceinline__
 #define KOKKOS_IMPL_INLINE_FUNCTION __device__ __host__ inline
@@ -123,6 +127,5 @@
 #endif
 #define KOKKOS_IMPL_HOST_FUNCTION __host__
 #define KOKKOS_IMPL_DEVICE_FUNCTION __device__
-#endif
 
-#endif
+#endif /* KOKKOS_CUDA_SETUP_HPP_ */
