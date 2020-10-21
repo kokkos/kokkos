@@ -204,7 +204,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   oldval.t = *dest;
 
   do {
-    if (check_early_exit(Oper{}, oldval.t, val)) return oldval.t;
+    if (check_early_exit(op, oldval.t, val)) return oldval.t;
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
@@ -229,7 +229,7 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
   oldval.t = *dest;
 
   do {
-    if (check_early_exit(Oper{}, oldval.t, val)) return oldval.t;
+    if (check_early_exit(op, oldval.t, val)) return oldval.t;
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((unsigned long long int*)dest,
@@ -252,7 +252,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   oldval.t = *dest;
 
   do {
-    if (check_early_exit(Oper{}, oldval.t, val)) return oldval.t;
+    if (check_early_exit(op, oldval.t, val)) return oldval.t;
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
@@ -274,7 +274,7 @@ KOKKOS_INLINE_FUNCTION T atomic_oper_fetch(
   oldval.t = *dest;
 
   do {
-    if (check_early_exit(Oper{}, oldval.t, val)) return oldval.t;
+    if (check_early_exit(op, oldval.t, val)) return oldval.t;
     assume.i = oldval.i;
     newval.t = op.apply(assume.t, val);
     oldval.i = Kokkos::atomic_compare_exchange((int*)dest, assume.i, newval.i);
