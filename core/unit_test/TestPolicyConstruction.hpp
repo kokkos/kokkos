@@ -691,29 +691,34 @@ void check_semiregular() {
   static_assert(std::is_destructible<Policy>::value, "");
 }
 
+template <template <class...> class Policy, class... Args>
+void check_conversions() {
+  struct WorkTag {};
+  static_assert(
+      std::is_convertible<Policy<Args...>, Policy<Args..., WorkTag>>::value,
+      "");
+  static_assert(
+      std::is_convertible<Policy<Args..., WorkTag>, Policy<Args...>>::value,
+      "");
+  using IndexType = Kokkos::IndexType<long long int>;
+  static_assert(
+      std::is_convertible<Policy<Args...>, Policy<Args..., IndexType>>::value,
+      "");
+  static_assert(
+      std::is_convertible<Policy<Args..., IndexType>, Policy<Args...>>::value,
+      "");
+}
+
 TEST(TEST_CATEGORY, policy_construction) {
   check_semiregular<Kokkos::RangePolicy<TEST_EXECSPACE>>();
   check_semiregular<Kokkos::TeamPolicy<TEST_EXECSPACE>>();
 
+  check_conversions<Kokkos::RangePolicy, TEST_EXECSPACE>();
+  check_conversions<Kokkos::TeamPolicy, TEST_EXECSPACE>();
+  check_conversions<Kokkos::MDRangePolicy, TEST_EXECSPACE, Kokkos::Rank<2>>();
+
   TestRangePolicyConstruction<TEST_EXECSPACE>();
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
-}
-
-template <template <class...> class Policy, class... Args>
-void check_converting_constructor_add_work_tag(Policy<Args...> const& policy) {
-  // Not the greatest but at least checking it compiles
-  struct WorkTag {};
-  Policy<Args..., WorkTag> policy_with_tag = policy;
-  (void)policy_with_tag;
-}
-
-TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
-  check_converting_constructor_add_work_tag(
-      Kokkos::RangePolicy<TEST_EXECSPACE>{});
-  check_converting_constructor_add_work_tag(
-      Kokkos::TeamPolicy<TEST_EXECSPACE>{});
-  check_converting_constructor_add_work_tag(
-      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 1}, {2, 3}});
 }
 
 }  // namespace Test
