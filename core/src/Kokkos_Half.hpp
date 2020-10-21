@@ -45,12 +45,13 @@
 #ifndef KOKKOS_HALF_HPP_
 #define KOKKOS_HALF_HPP_
 
-#include <type_traits>
-#include <cstdint>
 #include <Kokkos_Macros.hpp>
 
 // Include special backend specific versions here
+// TODO: figure out why this include fails in Clang
+#if !(defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 900)
 #include <Cuda/Kokkos_Cuda_Half.hpp>
+#endif // KOKKOS_COMPILER_CLANG
 
 // Potentially include special compiler specific versions here
 // e.g. for Intel
