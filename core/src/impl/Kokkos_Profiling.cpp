@@ -651,9 +651,8 @@ void set_dual_view_modify_callback(dualViewModifyFunction callback) {
 
 #if defined(KOKKOS_ENABLE_VIEW_HOOKS)
 void hook_argument_translator(Kokkos::Experimental::ViewHolderBase& view) {
-  current_callbacks.view_hook(
-      make_space_handle("TODO: implement once Jeff does his thing"),
-      view.label().c_str(), view.data(), view.span());
+  current_callbacks.view_hook(view.space_handle(), view.label().c_str(),
+                              view.data(), view.span());
 }
 using view_hook_type =
     decltype(Kokkos::Experimental::ViewHooks::create_view_hook_caller(
