@@ -53,7 +53,7 @@
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Parallel.hpp>
 
-#if defined(__CUDACC__) && defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/KokkosExp_Cuda_IterateTile.hpp>
 #include <Cuda/KokkosExp_Cuda_IterateTile_Refactor.hpp>
 #endif

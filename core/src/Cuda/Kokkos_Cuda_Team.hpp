@@ -50,7 +50,7 @@
 #include <Kokkos_Macros.hpp>
 
 /* only compile this file if CUDA is enabled for Kokkos */
-#if defined(__CUDACC__) && defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA)
 
 #include <utility>
 #include <Kokkos_Parallel.hpp>
@@ -1089,6 +1089,6 @@ KOKKOS_INLINE_FUNCTION void single(
 
 }  // namespace Kokkos
 
-#endif /* defined( __CUDACC__ ) */
+#endif /* defined(KOKKOS_ENABLE_CUDA) */
 
 #endif /* #ifndef KOKKOS_CUDA_TEAM_HPP */
