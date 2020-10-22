@@ -129,7 +129,7 @@ class half_t {
 
  public:
   KOKKOS_FUNCTION
-  half_t() : val(0) {}
+  half_t() : val(0.0F) {}
 
   // Don't support implicit conversion back to impl_type.
   // impl_type is a storage only type on host.
