@@ -45,6 +45,7 @@
 #ifndef KOKKOS_HALF_HPP_
 #define KOKKOS_HALF_HPP_
 
+#include <type_traits>
 #include <Kokkos_Macros.hpp>
 
 // Include special backend specific versions here
