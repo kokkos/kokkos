@@ -53,6 +53,9 @@
 #include <string>
 #include <map>
 #include <type_traits>
+#ifdef KOKKOS_ENABLE_VIEW_HOOKS
+#include <impl/Kokkos_ViewHooks.hpp>
+#endif
 namespace Kokkos {
 namespace Tools {
 
@@ -382,7 +385,6 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
 #else
   (void)functor;
 #endif
-  Kokkos::Tools::Impl::begin_parallel_for(inner_policy, functor, str, kpID);
   invoke_view_hooks(functor);
 }
 
