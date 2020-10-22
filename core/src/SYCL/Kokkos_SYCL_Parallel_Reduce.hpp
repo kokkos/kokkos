@@ -127,12 +127,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         *space.impl_internal_space_instance();
     cl::sycl::queue& q = *instance.m_queue;
 
+    value_type host_result;
+    ValueInit::init(functor, &host_result);
+    q.memcpy(m_result_ptr, &host_result, sizeof(host_result));
+
     q.submit([this, functor, policy](cl::sycl::handler& cgh) {
       // FIXME_SYCL a local size larger than 1 doesn't work for all cases
       cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
 
-      value_type identity = 0;
-      ValueInit::init(functor, m_result_ptr);
+      value_type identity{};
+
       auto reduction =
           cl::sycl::intel::reduction(m_result_ptr, identity, std::plus<>());
 
