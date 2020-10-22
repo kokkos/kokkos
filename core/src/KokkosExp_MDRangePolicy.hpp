@@ -122,6 +122,10 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   constexpr std::size_t N = a.size();
   static_assert(M <= N, "");
   auto* ptr = a.data();
+  // NOTE equivalent to
+  // std::transform(std::begin(init), std::end(init), a.data(),
+  //                [](U x) { return static_cast<T>(x); });
+  // except that std::transform is not constexpr.
   for (auto x : init)
     *ptr++ = static_cast<T>(x);  // allow narrowing conversions
   return a;
