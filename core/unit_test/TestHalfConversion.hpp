@@ -69,8 +69,8 @@ void test_half_conversion_type() {
 
   Kokkos::deep_copy(b, b_v);
   ASSERT_TRUE((double(b - base) / double(base)) < epsilon);
-#endif // KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-#endif // __SYCL__
+#endif  // KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+#endif  // __SYCL__
 }
 
 void test_half_conversion() {
