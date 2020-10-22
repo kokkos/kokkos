@@ -1020,7 +1020,7 @@ struct TestReducers {
 
   static void execute_integer() {
     test_sum(10001);
-    test_prod(35);
+    test_prod(sizeof(Scalar) > 4 ? 35 : 19);  // avoid int overflow
     test_min(10003);
     test_minloc(10003);
     test_max(10007);
