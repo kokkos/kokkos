@@ -42,7 +42,11 @@
 //@HEADER
 */
 
-#include <hip/TestHIP_Category.hpp>
-#include <TestViewAPI_e.hpp>
-#include <TestViewCopy.hpp>
-#include <TestLambdaCapture.hpp>
+#include <Kokkos_Core.hpp>
+
+namespace Kokkos {
+namespace Experimental {
+std::map<std::string, ViewHookCallerBase *> ViewHooks::s_map_callers;
+ViewHookCallerBase::~ViewHookCallerBase() {}
+}  // namespace Experimental
+}  // namespace Kokkos

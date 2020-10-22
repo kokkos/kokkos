@@ -43,6 +43,4 @@
 */
 
 #include <hip/TestHIP_Category.hpp>
-#include <TestViewAPI_e.hpp>
-#include <TestViewCopy.hpp>
-#include <TestLambdaCapture.hpp>
+#include <TestViewHooks.hpp>

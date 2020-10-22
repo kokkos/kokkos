@@ -393,6 +393,27 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   SOURCES ${DEFAULT_DEVICE_SOURCES}
 )
 
+IF (KOKKOS_ENABLE_VIEW_HOOKS)
+FOREACH(Tag Threads;Serial;OpenMP;Cuda;HIP;OpenMPTarget;HPX)
+  # Because there is always an exception to the rule
+  IF(Tag STREQUAL "Threads")
+    SET(DEVICE "PTHREAD")
+  ELSE()
+    STRING(TOUPPER ${Tag} DEVICE)
+  ENDIF()
+  STRING(TOLOWER ${Tag} dir)
+
+  IF(Kokkos_ENABLE_${DEVICE})
+     KOKKOS_ADD_EXECUTABLE_AND_TEST(
+        UnitTest_ViewHooksTest_${Tag}
+        SOURCES
+            UnitTestMainInit.cpp
+            ${dir}/Test${Tag}_ViewHooks.cpp
+        )
+   ENDIF()
+ENDFOREACH()
+ENDIF()
+
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_PushFinalizeHook
   SOURCES

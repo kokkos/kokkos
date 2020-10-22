@@ -165,9 +165,6 @@ namespace Kokkos {
  *   - View< DataType , MemoryTraits >
  */
 
-template <class DataType, class... Properties>
-struct ViewTraits;
-
 template <>
 struct ViewTraits<void> {
   using execution_space = void;
@@ -593,8 +590,8 @@ class View : public ViewTraits<DataType, Properties...> {
   template <typename V>
   friend struct Kokkos::Impl::ViewTracker;
 
-  view_tracker_type m_track;
   map_type m_map;
+  view_tracker_type m_track;
 
  public:
   //----------------------------------------
@@ -774,6 +771,16 @@ class View : public ViewTraits<DataType, Properties...> {
     return m_track.m_tracker;
   }
   //----------------------------------------
+  template <class HandleType>
+  inline void assign_data_handle(HandleType handle) {
+    m_map.m_impl_handle = handle;
+  }
+
+  template <class RecordType>
+  inline void assign_record(RecordType& rec) {
+    m_track.m_tracker.clear();
+    m_track.m_tracker.assign_allocated_record_to_uninitialized(rec);
+  }
 
  private:
   static constexpr bool is_layout_left =
@@ -1422,8 +1429,12 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
-  KOKKOS_DEFAULTED_FUNCTION
-  View(const View&) = default;
+  KOKKOS_INLINE_FUNCTION
+  View(const View& rhs) : m_map(rhs.m_map), m_track(*this, rhs) {}
+
+  KOKKOS_INLINE_FUNCTION
+  View(const View& rhs, bool _skip_hooks)
+      : m_map(rhs.m_map), m_track(*this, rhs, _skip_hooks) {}
 
   KOKKOS_DEFAULTED_FUNCTION
   View(View&&) = default;
@@ -1445,7 +1456,7 @@ class View : public ViewTraits<DataType, Properties...> {
           traits, typename View<RT, RP...>::traits,
           typename traits::specialize>::is_assignable_data_type>::type* =
           nullptr)
-      : m_track(rhs), m_map() {
+      : m_map(), m_track(rhs) {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
                                               typename traits::specialize>;
@@ -1477,7 +1488,7 @@ class View : public ViewTraits<DataType, Properties...> {
   template <class RT, class... RP, class Arg0, class... Args>
   KOKKOS_INLINE_FUNCTION View(const View<RT, RP...>& src_view, const Arg0 arg0,
                               Args... args)
-      : m_track(src_view), m_map() {
+      : m_map(), m_track(src_view) {
     using SrcType = View<RT, RP...>;
 
     using Mapping = Kokkos::Impl::ViewMapping<void, typename SrcType::traits,
@@ -1513,7 +1524,7 @@ class View : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<!Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout)
-      : m_track(), m_map() {
+      : m_map(), m_track() {
     // Append layout and spaces if not input
     using alloc_prop_input = Impl::ViewCtorProp<P...>;
 
@@ -1591,9 +1602,9 @@ class View : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout)
-      : m_track()  // No memory tracking
-        ,
-        m_map(arg_prop, arg_layout) {
+      : m_map(arg_prop, arg_layout),
+        m_track()  // No memory tracking
+  {
     static_assert(
         std::is_same<pointer_type,
                      typename Impl::ViewCtorProp<P...>::pointer_type>::value,
@@ -1713,7 +1724,7 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION View(
       const view_tracker_type& track,
       const Kokkos::Impl::ViewMapping<Traits, typename Traits::specialize>& map)
-      : m_track(track), m_map() {
+      : m_map(), m_track(track) {
     using Mapping =
         Kokkos::Impl::ViewMapping<traits, Traits, typename traits::specialize>;
     static_assert(Mapping::is_assignable,
@@ -1728,7 +1739,7 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_INLINE_FUNCTION View(
       const typename view_tracker_type::track_type& track,
       const Kokkos::Impl::ViewMapping<Traits, typename Traits::specialize>& map)
-      : m_track(track), m_map() {
+      : m_map(), m_track(track) {
     using Mapping =
         Kokkos::Impl::ViewMapping<traits, Traits, typename traits::specialize>;
     static_assert(Mapping::is_assignable,
