@@ -52,7 +52,7 @@
 // TODO: figure out why this include fails in Clang
 #if !(defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 900)
 #include <Cuda/Kokkos_Cuda_Half.hpp>
-#endif // KOKKOS_COMPILER_CLANG
+#endif  // KOKKOS_COMPILER_CLANG
 
 // Potentially include special compiler specific versions here
 // e.g. for Intel
