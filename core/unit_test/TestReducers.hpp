@@ -1018,9 +1018,12 @@ struct TestReducers {
     test_minmaxloc(10007);
   }
 
+  // NOTE test_prod generates N random numbers between 1 and 4.
+  // Although unlikely, the test below could still in principle overflow.
+  // For reference log(numeric_limits<int>)/log(4) is 15.5
   static void execute_integer() {
     test_sum(10001);
-    test_prod(sizeof(Scalar) > 4 ? 35 : 19);  // avoid int overflow
+    test_prod(sizeof(Scalar) > 4 ? 35 : 19);  // avoid int overflow (see above)
     test_min(10003);
     test_minloc(10003);
     test_max(10007);
