@@ -51,6 +51,7 @@
 #include <type_traits>
 #include <map>
 #include <string>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 
 // default implementation for view holder specialization
 namespace Kokkos {
@@ -84,16 +85,16 @@ namespace Experimental {
 
 class ViewHolderBase {
  public:
-  virtual size_t span() const                      = 0;
-  virtual bool span_is_contiguous() const          = 0;
-  virtual void *data() const                       = 0;
-  virtual void *rec_ptr() const                    = 0;
-  virtual std::string label() const noexcept       = 0;
-  virtual bool is_data_type_const() const noexcept = 0;
-
-  virtual ViewHolderBase *clone() const      = 0;
-  virtual size_t data_type_size() const      = 0;
-  virtual bool is_hostspace() const noexcept = 0;
+  virtual size_t span() const                                          = 0;
+  virtual bool span_is_contiguous() const                              = 0;
+  virtual void *data() const                                           = 0;
+  virtual void *rec_ptr() const                                        = 0;
+  virtual std::string label() const noexcept                           = 0;
+  virtual Kokkos::Profiling::SpaceHandle space_handle() const noexcept = 0;
+  virtual bool is_data_type_const() const noexcept                     = 0;
+  virtual ViewHolderBase *clone() const                                = 0;
+  virtual size_t data_type_size() const                                = 0;
+  virtual bool is_hostspace() const noexcept                           = 0;
 
   // the following are implemented in specialization classes.
   // View Holder is only a pass through implementation
@@ -144,6 +145,9 @@ class ViewHolderCopy : public ViewHolderBase {
   ViewHolderCopy *clone() const override { return new ViewHolderCopy(*this); }
 
   std::string label() const noexcept override { return m_view.label(); }
+  Kokkos::Profiling::SpaceHandle space_handle() const noexcept override {
+    return Kokkos::Profiling::make_space_handle(memory_space::name());
+  }
   virtual bool is_data_type_const() const noexcept override {
     return (std::is_const<typename view_type::value_type>::value);
   }
@@ -208,6 +212,9 @@ class ViewHolderRef : public ViewHolderBase {
   ViewHolderRef *clone() const override { return new ViewHolderRef(*this); }
 
   std::string label() const noexcept override { return m_view.label(); }
+  Kokkos::Profiling::SpaceHandle space_handle() const noexcept override {
+    return Kokkos::Profiling::make_space_handle(memory_space::name());
+  }
   virtual bool is_data_type_const() const noexcept override {
     return (std::is_const<typename view_type::value_type>::value);
   }
