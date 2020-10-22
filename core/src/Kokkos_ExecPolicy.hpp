@@ -129,7 +129,12 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
         m_granularity(p.m_granularity),
         m_granularity_mask(p.m_granularity_mask) {}
 
-  inline RangePolicy() : m_space(), m_begin(0), m_end(0) {}
+  inline RangePolicy()
+      : m_space(),
+        m_begin(0),
+        m_end(0),
+        m_granularity(0),
+        m_granularity_mask(0) {}
 
   /** \brief  Total range */
   inline RangePolicy(const typename traits::execution_space& work_space,
