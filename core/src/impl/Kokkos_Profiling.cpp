@@ -48,7 +48,9 @@
 #if defined(KOKKOS_ENABLE_LIBDL)
 #include <dlfcn.h>
 #endif
-
+#if defined(KOKKOS_ENABLE_VIEW_HOOKS)
+#include <impl/Kokkos_ViewHooks.hpp>
+#endif
 #include <cstring>
 #include <unordered_map>
 #include <unordered_set>
@@ -101,6 +103,7 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.begin_tuning_context == r.begin_tuning_context &&
          l.request_output_values == r.request_output_values &&
          l.declare_optimization_goal == r.declare_optimization_goal;
+  l.view_hook == r.view_hook;
 }
 }  // namespace Experimental
 bool profileLibraryLoaded() {
@@ -424,30 +427,35 @@ void initialize() {
       auto p23 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
       Experimental::set_profile_event_callback(
           *reinterpret_cast<profileEventFunction*>(&p23));
+#ifdef KOKKOS_ENABLE_VIEW_HOOKS
+      auto p24 = dlsym(firstProfileLibrary, "kokkosp_view_hook");
+      Experimental::set_view_hook_callback(
+          *reinterpret_cast<viewHookFunction*>(&p24));
 
+#endif
 #ifdef KOKKOS_ENABLE_TUNING
-      auto p24 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
+      auto p25 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
       Experimental::set_declare_output_type_callback(
           *reinterpret_cast<Experimental::outputTypeDeclarationFunction*>(
-              &p24));
+              &p25));
 
-      auto p25 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
+      auto p26 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
       Experimental::set_declare_input_type_callback(
-          *reinterpret_cast<Experimental::inputTypeDeclarationFunction*>(&p25));
-      auto p26 = dlsym(firstProfileLibrary, "kokkosp_request_values");
+          *reinterpret_cast<Experimental::inputTypeDeclarationFunction*>(&p26));
+      auto p27 = dlsym(firstProfileLibrary, "kokkosp_request_values");
       Experimental::set_request_output_values_callback(
-          *reinterpret_cast<Experimental::requestValueFunction*>(&p26));
-      auto p27 = dlsym(firstProfileLibrary, "kokkosp_end_context");
+          *reinterpret_cast<Experimental::requestValueFunction*>(&p27));
+      auto p28 = dlsym(firstProfileLibrary, "kokkosp_end_context");
       Experimental::set_end_context_callback(
-          *reinterpret_cast<Experimental::contextEndFunction*>(&p27));
-      auto p28 = dlsym(firstProfileLibrary, "kokkosp_begin_context");
+          *reinterpret_cast<Experimental::contextEndFunction*>(&p28));
+      auto p29 = dlsym(firstProfileLibrary, "kokkosp_begin_context");
       Experimental::set_begin_context_callback(
-          *reinterpret_cast<Experimental::contextBeginFunction*>(&p28));
-      auto p29 =
+          *reinterpret_cast<Experimental::contextBeginFunction*>(&p29));
+      auto p30 =
           dlsym(firstProfileLibrary, "kokkosp_declare_optimization_goal");
       Experimental::set_declare_optimization_goal_callback(
           *reinterpret_cast<Experimental::optimizationGoalDeclarationFunction*>(
-              &p29));
+              &p30));
 #endif  // KOKKOS_ENABLE_TUNING
     }
   }
@@ -639,6 +647,42 @@ void set_dual_view_sync_callback(dualViewSyncFunction callback) {
 }
 void set_dual_view_modify_callback(dualViewModifyFunction callback) {
   current_callbacks.modify_dual_view = callback;
+}
+
+#if defined(KOKKOS_ENABLE_VIEW_HOOKS)
+void hook_argument_translator(Kokkos::Experimental::ViewHolderBase& view) {
+  current_callbacks.view_hook(
+      make_space_handle("TODO: implement once Jeff does his thing"),
+      view.label().c_str(), view.data(), view.span());
+}
+using view_hook_type =
+    decltype(Kokkos::Experimental::ViewHooks::create_view_hook_caller(
+        hook_argument_translator));
+static view_hook_type kokkosp_view_hook;
+#endif
+void set_view_hook_callback(viewHookFunction callback) {
+  // this one is a bit more complex.
+  // first we clear the ViewHook map of our entry.
+  // This is because if we get passed nullptr (as in
+  // a pause_tools call), if we don't erase our hook,
+  // ViewHooks will still call us, slowing down code.
+  //
+  // So first we clear, then, if we have a non-null
+  // callback, we set it
+#if defined(KOKKOS_ENABLE_VIEW_HOOKS)
+  current_callbacks.view_hook = callback;
+  Kokkos::Experimental::ViewHooks::clear("kokkosp.internal.view_hook",
+                                         kokkosp_view_hook);
+  if (callback != nullptr) {
+    kokkosp_view_hook =
+        Kokkos::Experimental::ViewHooks::create_view_hook_caller(
+            hook_argument_translator);
+    Kokkos::Experimental::ViewHooks::set("kokkosp.internal.view_hook",
+                                         kokkosp_view_hook);
+  }
+#else
+  (void)callback;
+#endif
 }
 
 void set_declare_output_type_callback(outputTypeDeclarationFunction callback) {
