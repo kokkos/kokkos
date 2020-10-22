@@ -127,7 +127,7 @@ using beginFenceFunction     = Kokkos_Profiling_beginFenceFunction;
 using endFenceFunction       = Kokkos_Profiling_endFenceFunction;
 using dualViewSyncFunction   = Kokkos_Profiling_dualViewSyncFunction;
 using dualViewModifyFunction = Kokkos_Profiling_dualViewModifyFunction;
-
+using viewHookFunction       = Kokkos_Profiling_viewHookFunction;
 }  // namespace Tools
 
 }  // namespace Kokkos

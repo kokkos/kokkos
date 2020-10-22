@@ -48,6 +48,7 @@ KOKKOS_ENABLE_OPTION(COMPILER_WARNINGS    OFF "Whether to print all compiler war
 KOKKOS_ENABLE_OPTION(PROFILING_LOAD_PRINT OFF "Whether to print information about which profiling tools got loaded")
 KOKKOS_ENABLE_OPTION(TUNING               OFF "Whether to create bindings for tuning tools")
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
+KOKKOS_ENABLE_OPTION(VIEW_HOOKS           OFF "Whether to enable View Hooks")
 
 IF (KOKKOS_ENABLE_CUDA)
   SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_COMPILER_VERSION_MAJOR}${KOKKOS_COMPILER_VERSION_MINOR}")

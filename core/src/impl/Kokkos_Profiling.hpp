@@ -152,6 +152,7 @@ void set_begin_fence_callback(beginFenceFunction callback);
 void set_end_fence_callback(endFenceFunction callback);
 void set_dual_view_sync_callback(dualViewSyncFunction callback);
 void set_dual_view_modify_callback(dualViewModifyFunction callback);
+void set_view_hook_callback(viewHookFunction callback);
 
 void set_declare_output_type_callback(outputTypeDeclarationFunction callback);
 void set_declare_input_type_callback(inputTypeDeclarationFunction callback);
