@@ -72,7 +72,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
     file(MAKE_DIRECTORY ${dir})
     # Needed to split this for Windows NVCC, since it ends up putting everything on the
     # command line in an intermediate compilation step even if CMake generated a response
-    # file. That then exceeded the shell comand line max length.
+    # file. That then exceeded the shell command line max length.
     set(${Tag}_SOURCES1)
     foreach(Name
         AtomicOperations_int
