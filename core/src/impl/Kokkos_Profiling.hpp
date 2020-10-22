@@ -352,6 +352,19 @@ void report_policy_results(const size_t /**tuning_context*/,
   }
 }
 
+// this function explicitly copies the functor, in order to trigger the
+// ViewHooks after the begin_parallel_x callbacks (and before the end_parallel_x
+// callbacks)
+template <typename FunctorType>
+void invoke_view_hooks(FunctorType& functor) {
+#if defined(KOKKOS_ENABLE_VIEW_HOOKS) && \
+    defined(KOKKOS_ENABLE_VIEW_HOOKS_LOCATION_TRACKING)
+  if (Kokkos::Experimental::ViewHooks::is_set()) {
+    FunctorType functor_copy = functor;
+  }
+#endif
+}
+
 template <class ExecPolicy, class FunctorType>
 void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
                         const std::string& label, uint64_t& kpID) {
@@ -369,6 +382,8 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
 #else
   (void)functor;
 #endif
+  Kokkos::Tools::Impl::begin_parallel_for(inner_policy, functor, str, kpID);
+  invoke_view_hooks(functor);
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -405,6 +420,7 @@ void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 #else
   (void)functor;
 #endif
+  invoke_view_hooks(functor);
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -442,6 +458,7 @@ void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
 #else
   (void)functor;
 #endif
+  invoke_view_hooks(functor);
 }
 
 template <class ReducerType, class ExecPolicy, class FunctorType>

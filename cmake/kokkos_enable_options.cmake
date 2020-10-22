@@ -49,6 +49,7 @@ KOKKOS_ENABLE_OPTION(PROFILING_LOAD_PRINT OFF "Whether to print information abou
 KOKKOS_ENABLE_OPTION(TUNING               OFF "Whether to create bindings for tuning tools")
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
 KOKKOS_ENABLE_OPTION(VIEW_HOOKS           OFF "Whether to enable View Hooks")
+KOKKOS_ENABLE_OPTION(VIEW_HOOKS_LOCATION_TRACKING OFF "Whether to invoke View Hooks after telling Tools what kernel you're in (requires KOKKOS_ENABLE_VIEW_HOOKS=ON)")
 
 IF (KOKKOS_ENABLE_CUDA)
   SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_COMPILER_VERSION_MAJOR}${KOKKOS_COMPILER_VERSION_MINOR}")
@@ -110,7 +111,9 @@ ENDIF()
 IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   MESSAGE(FATAL_ERROR "Relocatable device code is currently not supported with Clang - must use nvcc_wrapper or turn off RDC")
 ENDIF()
-
+IF (KOKKOS_ENABLE_VIEW_HOOKS_LOCATION TRACKING AND NOT KOKKOS_ENABLE_VIEW_HOOKS)
+  MESSAGE(FATAL_ERROR "View hook location tracking requires KOKKOS_ENABLE_VIEW_HOOKS=ON")
+ENDIF()
 IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE AND BUILD_SHARED_LIBS)
   MESSAGE(FATAL_ERROR "Relocatable device code requires static libraries.")
 ENDIF()
