@@ -365,6 +365,8 @@ void invoke_view_hooks(FunctorType& functor) {
   if (Kokkos::Experimental::ViewHooks::is_set()) {
     FunctorType functor_copy = functor;
   }
+#else
+  (void)functor;
 #endif
 }
 
