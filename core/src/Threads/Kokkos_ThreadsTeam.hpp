@@ -593,6 +593,13 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 
     m_team_size = team_size_request < team_max ? team_size_request : team_max;
 
+    // FIXME This is a temporary fix until we handle this more gracefully.
+    // Assign recommended team size if the team size is garbage.
+    // Default constructed team policy led to -1 which causes int overflow in
+    // set_auto_chunk_size()
+    if (m_team_size <= 0)
+      m_team_size = traits::execution_space::impl_thread_pool_size(2);
+
     // Round team size up to a multiple of 'team_gain'
     const int team_size_grain =
         team_grain * ((m_team_size + team_grain - 1) / team_grain);
