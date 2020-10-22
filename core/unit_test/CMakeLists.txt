@@ -551,7 +551,7 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_CMakePassCmdLineArgs
   SOURCES UnitTest_CMakePassCmdLineArgs.cpp
-  ARGS one 2 THREE
+  ARGS "one 2 THREE"
 )
 
 add_subdirectory(headers_self_contained)
