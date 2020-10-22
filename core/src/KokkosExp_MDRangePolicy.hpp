@@ -160,7 +160,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   point_type m_tile_end;
   index_type m_num_tiles;
   index_type m_prod_tile_dims;
-  bool m_tune_tile_size;
+  bool m_tune_tile_size = false;
 
   /*
     // NDE enum impl definition alternative - replace static constexpr int ?
