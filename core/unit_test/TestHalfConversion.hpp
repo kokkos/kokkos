@@ -57,7 +57,7 @@ void test_half_conversion_type() {
 
 // TODO: figure out why SYCL crashes with this here.
 // This may be fixed by https://github.com/kokkos/kokkos/pull/3480.
-#ifndef __SYCL__
+#ifndef KOKKOS_ENABLE_SYCL
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   Kokkos::View<T> b_v("b_v");
   Kokkos::parallel_for(
@@ -70,7 +70,7 @@ void test_half_conversion_type() {
   Kokkos::deep_copy(b, b_v);
   ASSERT_TRUE((double(b - base) / double(base)) < epsilon);
 #endif  // KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-#endif  // __SYCL__
+#endif  // KOKKOS_ENABLE_SYCL
 }
 
 void test_half_conversion() {
