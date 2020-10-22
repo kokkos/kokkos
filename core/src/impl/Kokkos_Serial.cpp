@@ -156,7 +156,7 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
       Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
     }
 
-    m_thread_team_data.scratch_assign(((char*)ptr), alloc_bytes,
+    m_thread_team_data.scratch_assign(static_cast<char*>(ptr), alloc_bytes,
                                       pool_reduce_bytes, team_reduce_bytes,
                                       team_shared_bytes, thread_local_bytes);
 

@@ -464,8 +464,8 @@ void initialize(const std::string& profileLibrary) {
 
   char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
-  char* envProfileCopy =
-      (char*)malloc(sizeof(char) * (strlen(envProfileLibrary) + 1));
+  char* envProfileCopy = static_cast<char*>(
+      malloc(sizeof(char) * (strlen(envProfileLibrary) + 1)));
   sprintf(envProfileCopy, "%s", envProfileLibrary);
 
   char* profileLibraryName = strtok(envProfileCopy, ";");

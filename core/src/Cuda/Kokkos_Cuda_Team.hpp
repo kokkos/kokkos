@@ -533,7 +533,7 @@ class CudaTeamMember {
                  void* scratch_level_1_ptr, const int scratch_level_1_size,
                  const int arg_league_rank, const int arg_league_size)
       : m_team_reduce(shared),
-        m_team_shared(((char*)shared) + shared_begin, shared_size,
+        m_team_shared(static_cast<char*>(shared) + shared_begin, shared_size,
                       scratch_level_1_ptr, scratch_level_1_size),
         m_team_reduce_size(shared_begin),
         m_league_rank(arg_league_rank),

@@ -261,8 +261,8 @@ TEST(cuda, space_access) {
 
 TEST(cuda, uvm) {
   if (Kokkos::CudaUVMSpace::available()) {
-    int *uvm_ptr = (int *)Kokkos::kokkos_malloc<Kokkos::CudaUVMSpace>(
-        "uvm_ptr", sizeof(int));
+    int *uvm_ptr = static_cast<int *>(
+        Kokkos::kokkos_malloc<Kokkos::CudaUVMSpace>("uvm_ptr", sizeof(int)));
 
     *uvm_ptr = 42;
 
