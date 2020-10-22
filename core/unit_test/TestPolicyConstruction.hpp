@@ -709,6 +709,17 @@ void check_conversions() {
       "");
 }
 
+template <class Policy>
+void call_default_constructor() {
+  // Not the greatest but makes sure that we call the policy default
+  // constructor. See https://github.com/kokkos/kokkos/pull/3512 that found UB
+  // in TeamPolicyInternal<Threads, ...>::TeamPolicyInternal().
+  // It will do until we add some more proper testing that actually checks that
+  // the deafult constructed policy is "well-formed".
+  Policy p;
+  (void)p;
+}
+
 TEST(TEST_CATEGORY, policy_construction) {
   check_semiregular<Kokkos::RangePolicy<TEST_EXECSPACE>>();
   check_semiregular<Kokkos::TeamPolicy<TEST_EXECSPACE>>();
@@ -716,6 +727,11 @@ TEST(TEST_CATEGORY, policy_construction) {
   check_conversions<Kokkos::RangePolicy, TEST_EXECSPACE>();
   check_conversions<Kokkos::TeamPolicy, TEST_EXECSPACE>();
   check_conversions<Kokkos::MDRangePolicy, TEST_EXECSPACE, Kokkos::Rank<2>>();
+
+  call_default_constructor<Kokkos::RangePolicy<TEST_EXECSPACE>>();
+  call_default_constructor<Kokkos::TeamPolicy<TEST_EXECSPACE>>();
+  call_default_constructor<
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>>();
 
   TestRangePolicyConstruction<TEST_EXECSPACE>();
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
