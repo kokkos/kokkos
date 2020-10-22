@@ -89,7 +89,7 @@ void serial_resize_thread_team_data(size_t pool_reduce_bytes,
                         (old_thread_local < thread_local_bytes);
 
   if (allocate) {
-    Kokkos::HostSpace space;
+    Kokkos::Serial::memory_space space;
 
     if (old_alloc_bytes) {
       g_serial_thread_team_data.disband_team();
@@ -163,7 +163,7 @@ void Serial::impl_finalize() {
     Impl::g_serial_thread_team_data.disband_team();
     Impl::g_serial_thread_team_data.disband_pool();
 
-    Kokkos::HostSpace space;
+    Kokkos::Serial::memory_space space;
 
     space.deallocate(Impl::g_serial_thread_team_data.scratch_buffer(),
                      Impl::g_serial_thread_team_data.scratch_bytes());

@@ -549,10 +549,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     static_assert(Kokkos::is_view<HostViewType>::value,
                   "Kokkos::Serial reduce result must be a View");
 
-    static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename HostViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
-        "Kokkos::Serial reduce result must be a View in HostSpace");
+    static_assert(Kokkos::Impl::MemorySpaceAccess<
+                      typename HostViewType::memory_space,
+                      typename Kokkos::Serial::memory_space>::accessible,
+                  "Kokkos::Serial reduce result must be a View in "
+                  "Serial::memory_space (i.e. HostSpace)");
   }
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
@@ -820,10 +821,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     static_assert(Kokkos::is_view<HostViewType>::value,
                   "Kokkos::Serial reduce result must be a View");
 
-    static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename HostViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
-        "Kokkos::Serial reduce result must be a View in HostSpace");
+    static_assert(Kokkos::Impl::MemorySpaceAccess<
+                      typename HostViewType::memory_space,
+                      typename Kokkos::Serial::memory_space>::accessible,
+                  "Kokkos::Serial reduce result must be a View in "
+                  "Serial::memory_space (i.e. HostSpace)");
   }
 
   inline ParallelReduce(const FunctorType& arg_functor,
@@ -997,11 +999,11 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Reduction result on Kokkos::Serial must be a Kokkos::View");
 
-    static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
-        "Reduction result on Kokkos::Serial must be a Kokkos::View in "
-        "HostSpace");
+    static_assert(Kokkos::Impl::MemorySpaceAccess<
+                      typename ViewType::memory_space,
+                      typename Kokkos::Serial::memory_space>::accessible,
+                  "Kokkos::Serial reduce result must be a View in "
+                  "Serial::memory_space (i.e. HostSpace)");
   }
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,

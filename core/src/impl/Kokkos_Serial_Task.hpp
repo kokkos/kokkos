@@ -67,7 +67,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Serial, QueueType> > {
   // of the methods, obviously)
 
   using execution_space = Kokkos::Serial;
-  using memory_space    = Kokkos::HostSpace;
+  using memory_space    = typename execution_space::memory_space;
   using scheduler_type  = SimpleTaskScheduler<Kokkos::Serial, QueueType>;
   using member_type =
       TaskTeamMemberAdapter<HostThreadTeamMember<Kokkos::Serial>,
@@ -134,7 +134,7 @@ class TaskQueueSpecializationConstrained<
   // of the methods, obviously)
 
   using execution_space = Kokkos::Serial;
-  using memory_space    = Kokkos::HostSpace;
+  using memory_space    = typename execution_space::memory_space;
   using scheduler_type  = Scheduler;
   using member_type =
       TaskTeamMemberAdapter<HostThreadTeamMember<Kokkos::Serial>,
