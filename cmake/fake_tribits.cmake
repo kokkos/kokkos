@@ -125,7 +125,6 @@ FUNCTION(KOKKOS_ADD_TEST)
     IF (TEST_ARGS)
       SET(TEST_NUMBER 0)
       FOREACH (ARG_STR ${TEST_ARGS})
-        message("adding test with args ${ARG_STR}")
         # This is passed as a single string blob to match TriBITS behavior
         # We need this to be turned into a list
         STRING(REPLACE " " ";" ARG_STR_LIST ${ARG_STR})
