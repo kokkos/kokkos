@@ -125,7 +125,6 @@ FUNCTION(KOKKOS_ADD_TEST)
     IF (TEST_ARGS)
       SET(TEST_NUMBER 0)
       FOREACH (ARG_STR ${TEST_ARGS})
-        message("adding test with args ${ARG_STR}")
         # This is passed as a single string blob to match TriBITS behavior
         # We need this to be turned into a list
         STRING(REPLACE " " ";" ARG_STR_LIST ${ARG_STR})
@@ -140,10 +139,10 @@ FUNCTION(KOKKOS_ADD_TEST)
       ENDFOREACH()
     ELSE()
       IF(WIN32)
-        ADD_TEST(NAME ${TEST_NAME}${TEST_NUMBER} WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
+        ADD_TEST(NAME ${TEST_NAME} WORKING_DIRECTORY ${LIBRARY_OUTPUT_PATH}
                  COMMAND ${EXE}${CMAKE_EXECUTABLE_SUFFIX})
       ELSE()
-        ADD_TEST(NAME ${TEST_NAME}${TEST_NUMBER} COMMAND ${EXE})
+        ADD_TEST(NAME ${TEST_NAME} COMMAND ${EXE})
       ENDIF()
       LIST(APPEND TESTS_ADDED "${TEST_NAME}")
     ENDIF()
