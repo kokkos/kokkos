@@ -102,8 +102,8 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.end_tuning_context == r.end_tuning_context &&
          l.begin_tuning_context == r.begin_tuning_context &&
          l.request_output_values == r.request_output_values &&
-         l.declare_optimization_goal == r.declare_optimization_goal;
-  l.view_hook == r.view_hook;
+         l.declare_optimization_goal == r.declare_optimization_goal &&
+         l.view_hook == r.view_hook;
 }
 }  // namespace Experimental
 bool profileLibraryLoaded() {
