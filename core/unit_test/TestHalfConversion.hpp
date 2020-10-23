@@ -55,8 +55,7 @@ void test_half_conversion_type() {
   T b                            = Kokkos::Experimental::cast_from_half<T>(a);
   ASSERT_TRUE((double(b - base) / double(base)) < epsilon);
 
-// TODO: figure out why SYCL crashes with this here.
-// This may be fixed by https://github.com/kokkos/kokkos/pull/3480.
+// TODO: Remove ifndef once https://github.com/kokkos/kokkos/pull/3480 merges
 #ifndef KOKKOS_ENABLE_SYCL
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   Kokkos::View<T> b_v("b_v");
