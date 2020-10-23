@@ -127,18 +127,21 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         *space.impl_internal_space_instance();
     cl::sycl::queue& q = *instance.m_queue;
 
+    auto result_ptr = static_cast<pointer_type>(
+        sycl::malloc(sizeof(*m_result_ptr), q, sycl::usm::alloc::shared));
+
     value_type host_result;
     ValueInit::init(functor, &host_result);
-    q.memcpy(m_result_ptr, &host_result, sizeof(host_result));
+    q.memcpy(result_ptr, &host_result, sizeof(host_result));
 
-    q.submit([this, functor, policy](cl::sycl::handler& cgh) {
+    q.submit([this, functor, policy, result_ptr](cl::sycl::handler& cgh) {
       // FIXME_SYCL a local size larger than 1 doesn't work for all cases
       cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
 
-      value_type identity{};
+      constexpr value_type identity{};
 
       auto reduction =
-          cl::sycl::intel::reduction(m_result_ptr, identity, std::plus<>());
+          cl::sycl::intel::reduction(result_ptr, identity, std::plus<>());
 
       cgh.parallel_for(
           range, reduction, [=](cl::sycl::nd_item<1> item, auto& sum) {
@@ -153,6 +156,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     });
 
     q.wait();
+
+    *m_result_ptr = *result_ptr;
+    sycl::free(result_ptr, q);
   }
 
   template <typename Functor>
