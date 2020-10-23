@@ -169,8 +169,6 @@ class half_t {
   }
 
   KOKKOS_FUNCTION
-  half_t(const half_t&) = default;
-  KOKKOS_FUNCTION
   half_t(impl_type rhs) : val(rhs) {}
   KOKKOS_FUNCTION
   half_t(float rhs) : val(cast_to_half(rhs).val) {}
