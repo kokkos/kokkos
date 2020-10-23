@@ -694,6 +694,7 @@ void check_semiregular() {
 TEST(TEST_CATEGORY, policy_construction) {
   check_semiregular<Kokkos::RangePolicy<TEST_EXECSPACE>>();
   check_semiregular<Kokkos::TeamPolicy<TEST_EXECSPACE>>();
+  check_semiregular<Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>>();
 
   TestRangePolicyConstruction<TEST_EXECSPACE>();
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
@@ -713,7 +714,7 @@ TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
   check_converting_constructor_add_work_tag(
       Kokkos::TeamPolicy<TEST_EXECSPACE>{});
   check_converting_constructor_add_work_tag(
-      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{{0, 1}, {2, 3}});
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
 }
 
 }  // namespace Test
