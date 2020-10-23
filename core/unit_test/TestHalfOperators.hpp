@@ -329,22 +329,23 @@ void __test_half_operators(half_t h_lhs, half_t h_rhs) {
 
   // Check whether half_t is trivially copyable
   ASSERT_TRUE(std::is_trivially_copyable<half_t>::value);
-  constexpr size_t n = 4;
-  half_t h_arr[n / 2];
-  char c_arr[n];
-  char* h_arr_ptr = nullptr;
-  int i;
+  constexpr size_t n       = 2;
+  constexpr size_t n_bytes = sizeof(half_t) * n;
+  const half_t h_arr0 = 0x89ab, h_arr1 = 0xcdef;
+  half_t h_arr[n];
+  char c_arr[n_bytes], *h_arr_ptr = nullptr;
+  size_t i;
 
-  h_arr[0]  = 0x89ab;
-  h_arr[1]  = 0xcdef;
+  h_arr[0]  = h_arr0;
+  h_arr[1]  = h_arr1;
   h_arr_ptr = reinterpret_cast<char*>(h_arr);
 
-  std::memcpy(c_arr, h_arr, n);
-  for (i = 0; i < n; i++) ASSERT_TRUE(c_arr[i] == h_arr_ptr[i]);
+  std::memcpy(c_arr, h_arr, n_bytes);
+  for (i = 0; i < n_bytes; i++) ASSERT_TRUE(c_arr[i] == h_arr_ptr[i]);
 
-  std::memcpy(h_arr, c_arr, n);
-  ASSERT_TRUE(h_arr[0] == 0x89ab);
-  ASSERT_TRUE(h_arr[1] == 0xcdef);
+  std::memcpy(h_arr, c_arr, n_bytes);
+  ASSERT_TRUE(h_arr[0] == h_arr0);
+  ASSERT_TRUE(h_arr[1] == h_arr1);
 }
 
 void test_half_operators() {
