@@ -2867,10 +2867,11 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
   void execute(bool arg) {
     destroy = arg;
     PolicyType policy(0, n);
+    std::string functor_name;
     if (!space.in_parallel()) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
-        auto functor_name =
+        functor_name =
             (destroy ? "Kokkos::View::destruction [" + name + "]"
                      : "Kokkos::View::initialization [" + name + "]");
         Kokkos::Tools::Impl::begin_parallel_for(policy, *this, functor_name,
@@ -2887,9 +2888,6 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
       closure.execute();
       space.fence();
       if (Kokkos::Profiling::profileLibraryLoaded()) {
-        auto functor_name =
-            (destroy ? "Kokkos::View::destruction [" + name + "]"
-                     : "Kokkos::View::initialization [" + name + "]");
         Kokkos::Tools::Impl::end_parallel_for(policy, *this, functor_name,
                                               kpID);
       }
