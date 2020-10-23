@@ -426,8 +426,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
       Kokkos::Impl::ViewMapping<traits, typename traits::specialize>;
   using track_type = Kokkos::Impl::SharedAllocationTracker;
 
-  track_type m_track;
   map_type m_map;
+  track_type m_track;
   unsigned m_rank;
 
  public:
@@ -1008,38 +1008,26 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   ~DynRankView() = default;
 
   KOKKOS_INLINE_FUNCTION
-  DynRankView() : m_track(), m_map(), m_rank() {}  // Default ctor
+  DynRankView() : m_map(), m_track(), m_rank() {}  // Default ctor
 
-  KOKKOS_INLINE_FUNCTION
-  DynRankView(const DynRankView& rhs)
-      : m_track(rhs.m_track), m_map(rhs.m_map), m_rank(rhs.m_rank) {}
+  KOKKOS_DEFAULTED_FUNCTION
+  DynRankView(const DynRankView& rhs) = default;
 
-  KOKKOS_INLINE_FUNCTION
-  DynRankView(DynRankView&& rhs)
-      : m_track(rhs.m_track), m_map(rhs.m_map), m_rank(rhs.m_rank) {}
+  KOKKOS_DEFAULTED_FUNCTION
+  DynRankView(DynRankView&& rhs) = default;
 
-  KOKKOS_INLINE_FUNCTION
-  DynRankView& operator=(const DynRankView& rhs) {
-    m_track = rhs.m_track;
-    m_map   = rhs.m_map;
-    m_rank  = rhs.m_rank;
-    return *this;
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  DynRankView& operator=(const DynRankView& rhs) = default;
 
-  KOKKOS_INLINE_FUNCTION
-  DynRankView& operator=(DynRankView&& rhs) {
-    m_track = rhs.m_track;
-    m_map   = rhs.m_map;
-    m_rank  = rhs.m_rank;
-    return *this;
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  DynRankView& operator=(DynRankView&& rhs) = default;
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
   // may assign unmanaged from managed.
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION DynRankView(const DynRankView<RT, RP...>& rhs)
-      : m_track(rhs.m_track, traits::is_managed), m_map(), m_rank(rhs.m_rank) {
+      : m_map(), m_track(rhs.m_track, traits::is_managed), m_rank(rhs.m_rank) {
     using SrcTraits = typename DynRankView<RT, RP...>::traits;
     using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits,
                                               typename traits::specialize>;
@@ -1065,7 +1053,7 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
   // Copy/Assign View to DynRankView
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION DynRankView(const View<RT, RP...>& rhs)
-      : m_track(), m_map(), m_rank(rhs.Rank) {
+      : m_map(), m_track(), m_rank(rhs.Rank) {
     using SrcTraits = typename View<RT, RP...>::traits;
     using Mapping =
         Kokkos::Impl::ViewMapping<traits, SrcTraits,
@@ -1107,8 +1095,8 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout)
-      : m_track(),
-        m_map(),
+      : m_map(),
+        m_track(),
         m_rank(Impl::DynRankDimTraits<typename traits::specialize>::
                    template computeRank<typename traits::array_layout, P...>(
                        arg_prop, arg_layout)) {
@@ -1185,11 +1173,10 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
       typename std::enable_if<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
                               typename traits::array_layout>::type const&
           arg_layout)
-      : m_track()  // No memory tracking
-        ,
-        m_map(arg_prop,
+      : m_map(arg_prop,
               Impl::DynRankDimTraits<typename traits::specialize>::
                   template createLayout<traits, P...>(arg_prop, arg_layout)),
+        m_track(),  // No memory tracking
         m_rank(Impl::DynRankDimTraits<typename traits::specialize>::
                    template computeRank<typename traits::array_layout, P...>(
                        arg_prop, arg_layout)) {
