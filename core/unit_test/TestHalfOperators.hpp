@@ -326,6 +326,25 @@ void __test_half_operators(half_t h_lhs, half_t h_rhs) {
     ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
                 epsilon);
   }
+
+  // Check whether half_t is trivially copyable
+  ASSERT_TRUE(std::is_trivially_copyable<half_t>::value);
+  constexpr size_t n = 4;
+  half_t h_arr[n / 2];
+  char c_arr[n];
+  char* h_arr_ptr = nullptr;
+  int i;
+
+  h_arr[0]  = 0x89ab;
+  h_arr[1]  = 0xcdef;
+  h_arr_ptr = reinterpret_cast<char*>(h_arr);
+
+  std::memcpy(c_arr, h_arr, n);
+  for (i = 0; i < n; i++) ASSERT_TRUE(c_arr[i] == h_arr_ptr[i]);
+
+  std::memcpy(h_arr, c_arr, n);
+  ASSERT_TRUE(h_arr[0] == 0x89ab);
+  ASSERT_TRUE(h_arr[1] == 0xcdef);
 }
 
 void test_half_operators() {
