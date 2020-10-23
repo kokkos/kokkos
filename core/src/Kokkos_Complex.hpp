@@ -933,7 +933,12 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> asin(
 template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> acos(
     const complex<RealType>& x) {
+#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
+  using cl::sycl::acos;
+
+#else
   using std::acos;
+#endif
   Kokkos::complex<RealType> t = asin(x);
   RealType pi_2               = acos(RealType(0.0));
   return Kokkos::complex<RealType>(pi_2 - t.real(), -t.imag());
