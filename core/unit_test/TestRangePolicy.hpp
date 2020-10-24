@@ -42,5 +42,7 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaUVM_Category.hpp>
-#include <TestSharedAlloc.hpp>
+#ifndef KOKKOS_TEST_RANGEPOLICY_HPP
+#define KOKKOS_TEST_RANGEPOLICY_HPP
+#include <TestRange.hpp>
+#endif

@@ -42,5 +42,15 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaUVM_Category.hpp>
-#include <TestSharedAlloc.hpp>
+#ifndef KOKKOS_TEST_SUBVIEW_C13_HPP
+#define KOKKOS_TEST_SUBVIEW_C13_HPP
+#include <TestViewSubview.hpp>
+
+namespace Test {
+
+TEST(TEST_CATEGORY, view_test_unmanaged_subview_reset) {
+  TestViewSubview::test_unmanaged_subview_reset<TEST_EXECSPACE>();
+}
+
+}  // namespace Test
+#endif

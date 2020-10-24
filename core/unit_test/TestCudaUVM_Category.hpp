@@ -42,5 +42,13 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaUVM_Category.hpp>
-#include <TestSharedAlloc.hpp>
+#ifndef KOKKOS_TEST_CUDAUVM_HPP
+#define KOKKOS_TEST_CUDAUVM_HPP
+
+#include <gtest/gtest.h>
+
+#define TEST_CATEGORY cuda_uvm
+#define TEST_CATEGORY_DEATH cuda_uvm_DeathTest
+#define TEST_EXECSPACE Kokkos::CudaUVMSpace
+
+#endif

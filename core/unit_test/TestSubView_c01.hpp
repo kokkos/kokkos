@@ -42,5 +42,15 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaUVM_Category.hpp>
-#include <TestSharedAlloc.hpp>
+#ifndef KOKKOS_TEST_SUBVIEW_C01_HPP
+#define KOKKOS_TEST_SUBVIEW_C01_HPP
+#include <TestViewSubview.hpp>
+
+namespace Test {
+
+TEST(TEST_CATEGORY, view_subview_1d_assign) {
+  TestViewSubview::test_1d_assign<TEST_EXECSPACE>();
+}
+
+}  // namespace Test
+#endif

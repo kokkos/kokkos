@@ -42,5 +42,13 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaUVM_Category.hpp>
-#include <TestSharedAlloc.hpp>
+#ifndef KOKKOS_TEST_HIP_HPP
+#define KOKKOS_TEST_HIP_HPP
+
+#include <gtest/gtest.h>
+
+#define TEST_CATEGORY hip
+#define TEST_CATEGORY_NUMBER 6
+#define TEST_EXECSPACE Kokkos::Experimental::HIP
+
+#endif

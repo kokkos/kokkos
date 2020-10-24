@@ -42,5 +42,11 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaUVM_Category.hpp>
-#include <TestSharedAlloc.hpp>
+#ifndef KOKKOS_TEST_REDUCTIONS_HPP
+#define KOKKOS_TEST_REDUCTIONS_HPP
+#include <Kokkos_Macros.hpp>
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
+#include <TestReduce.hpp>
+#endif
+#include <TestCXX11Deduction.hpp>
+#endif

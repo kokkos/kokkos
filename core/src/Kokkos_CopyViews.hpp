@@ -2498,7 +2498,7 @@ inline void deep_copy(
     typename std::enable_if<
         Kokkos::Impl::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize,
-                     void>::value>::type* = 0) {
+                     void>::value>::type* = nullptr) {
   using src_traits       = ViewTraits<ST, SP...>;
   using src_memory_space = typename src_traits::memory_space;
   static_assert(src_traits::rank == 0,

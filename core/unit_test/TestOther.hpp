@@ -42,5 +42,13 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaUVM_Category.hpp>
-#include <TestSharedAlloc.hpp>
+#ifndef KOKKOS_TEST_OTHER_HPP
+#define KOKKOS_TEST_OTHER_HPP
+#include <TestTemplateMetaFunctions.hpp>
+#include <TestAggregate.hpp>
+#include <TestMemoryPool.hpp>
+#include <TestCXX11.hpp>
+
+#include <TestViewCtorPropEmbeddedDim.hpp>
+#include <TestViewLayoutTiled.hpp>
+#endif

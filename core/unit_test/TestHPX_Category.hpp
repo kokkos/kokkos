@@ -42,5 +42,14 @@
 //@HEADER
 */
 
-#include <cuda/TestCudaUVM_Category.hpp>
-#include <TestSharedAlloc.hpp>
+#ifndef KOKKOS_TEST_HPX_HPP
+#define KOKKOS_TEST_HPX_HPP
+
+#include <gtest/gtest.h>
+
+#define TEST_CATEGORY hpx
+#define TEST_CATEGORY_NUMBER 3
+#define TEST_CATEGORY_DEATH hpx_DeathTest
+#define TEST_EXECSPACE Kokkos::Experimental::HPX
+
+#endif
