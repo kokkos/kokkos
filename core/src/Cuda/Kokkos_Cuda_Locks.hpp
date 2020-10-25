@@ -53,7 +53,7 @@
 
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
-#ifdef KOKKOS_IMPL_ENABLE_DESUL_ATOMICS
+#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
 #include <desul/atomics/Lock_Array_Cuda.hpp>
 #endif
 
@@ -169,7 +169,7 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
     lock_array_copied = 1;                                            \
   }
 
-#ifndef KOKKOS_IMPL_ENABLE_DESUL_ATOMICS
+#ifndef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
 
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 #define KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE()
@@ -189,9 +189,7 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
   DESUL_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE()
 #endif
 
-#endif
-
-#endif /* defined( __CUDACC__ ) */
+#endif /* defined( KOKKOS_ENABLE_IMPL_DESUL_ATOMICS ) */
 
 #endif /* defined( KOKKOS_ENABLE_CUDA ) */
 
