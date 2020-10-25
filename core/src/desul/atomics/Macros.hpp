@@ -1,4 +1,4 @@
-/* 
+/*
 Copyright (c) 2019, Lawrence Livermore National Security, LLC
 and DESUL project contributors. See the COPYRIGHT file for details.
 Source: https://github.com/desul/desul
@@ -11,7 +11,11 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 // Macros
 
-#if defined(__GNUC__) && (!defined(__CUDA_ARCH__) || !defined(__NVCC__))
+#if defined(__GNUC__) && \
+    (!defined(__CUDA_ARCH__) || !defined(__NVCC__)) && \
+    (!defined(__HIP_DEVICE_COMPILE) || !defined(__HIP_PLATFORM_HCC__)) && \
+    !defined(DESUL_HAVE_OPENMP_ATOMICS) && \
+    !defined(DESUL_HAVE_SERIAL_ATOMICS)
 #define DESUL_HAVE_GCC_ATOMICS
 #endif
 
@@ -23,11 +27,15 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_HAVE_CUDA_ATOMICS
 #endif
 
-#ifdef __CUDA_ARCH__
+#ifdef __HIPCC__
+#define DESUL_HAVE_HIP_ATOMICS
+#endif
+
+#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
 #define DESUL_HAVE_GPU_LIKE_PROGRESS
 #endif
 
-#ifdef DESUL_HAVE_CUDA_ATOMICS
+#if defined(DESUL_HAVE_CUDA_ATOMICS) || defined(DESUL_HAVE_HIP_ATOMICS)
 #define DESUL_FORCEINLINE_FUNCTION inline __host__ __device__
 #define DESUL_INLINE_FUNCTION inline __host__ __device__
 #define DESUL_FUNCTION __host__ __device__
@@ -37,7 +45,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_FUNCTION
 #endif
 
-#if !defined(__CUDA_ARCH__)
+#if !defined(DESUL_HAVE_GPU_LIKE_PROGRESS)
 #define DESUL_HAVE_FORWARD_PROGRESS
 #endif
 

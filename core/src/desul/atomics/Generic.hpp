@@ -25,6 +25,10 @@ struct MaxOper {
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return (val1 > val2 ? val1 : val2);
   }
+  DESUL_FORCEINLINE_FUNCTION
+  static constexpr bool check_early_exit(Scalar1 const& val1, Scalar2 const& val2) {
+    return val1 > val2;
+  }
 };
 
 template <class Scalar1, class Scalar2>
@@ -33,7 +37,34 @@ struct MinOper {
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
     return (val1 < val2 ? val1 : val2);
   }
+  DESUL_FORCEINLINE_FUNCTION
+  static constexpr bool check_early_exit(Scalar1 const& val1, Scalar2 const& val2) {
+    return val1 < val2;
+  }
 };
+
+template <typename Op, typename Scalar1, typename Scalar2, typename = bool>
+struct may_exit_early : std::false_type {};
+
+template <typename Op, typename Scalar1, typename Scalar2>
+struct may_exit_early<Op,
+                      Scalar1,
+                      Scalar2,
+                      decltype(Op::check_early_exit(std::declval<Scalar1 const&>(),
+                                                    std::declval<Scalar2 const&>()))>
+    : std::true_type {};
+
+template <typename Op, typename Scalar1, typename Scalar2>
+constexpr typename std::enable_if<may_exit_early<Op, Scalar1, Scalar2>{}, bool>::type
+check_early_exit(Op const&, Scalar1 const& val1, Scalar2 const& val2) {
+  return Op::check_early_exit(val1, val2);
+}
+
+template <typename Op, typename Scalar1, typename Scalar2>
+constexpr typename std::enable_if<!may_exit_early<Op, Scalar1, Scalar2>{}, bool>::type
+check_early_exit(Op const&, Scalar1 const&, Scalar2 const&) {
+  return false;
+}
 
 template <class Scalar1, class Scalar2>
 struct AddOper {
@@ -119,46 +150,16 @@ struct LoadOper {
   static Scalar1 apply(const Scalar1& val1, const Scalar2&) { return val1; }
 };
 
-constexpr bool atomic_always_lock_free(size_t size) {
-  return size == 4 || size == 8
-#if defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP)
-         || size == 16
-#endif
-      ;
-}
 
-template <std::size_t Size, std::size_t Align>
-DESUL_INLINE_FUNCTION bool atomic_is_lock_free() noexcept {
-  return Size == 4 || Size == 8
-#if defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP)
-         || Size == 16
-#endif
-      ;
-}
-
-template<size_t N>
-struct atomic_compare_exchange_type;
-
-template<>
-struct atomic_compare_exchange_type<4> {
-  using type = int32_t;
-};
-
-template<>
-struct atomic_compare_exchange_type<8> {
-  using type = int64_t;
-};
-
-template<>
-struct atomic_compare_exchange_type<16> {
-  using type = Dummy16ByteValue;
-};
-
-template <class Oper, typename T, class MemoryOrder, class MemoryScope>
+template <class Oper, typename T, class MemoryOrder, class MemoryScope,
+  // equivalent to:
+  //   requires atomic_always_lock_free(sizeof(T))
+  std::enable_if_t<atomic_always_lock_free(sizeof(T)), int> = 0
+>
 DESUL_INLINE_FUNCTION T
 atomic_fetch_oper(const Oper& op,
                   T* const dest,
-                  typename std::enable_if<atomic_always_lock_free(sizeof(T)), const T>::type val,
+                  dont_deduce_this_parameter_t<const T> val,
                   MemoryOrder order,
                   MemoryScope scope) {
   using cas_t = typename atomic_compare_exchange_type<sizeof(T)>::type;
@@ -166,6 +167,7 @@ atomic_fetch_oper(const Oper& op,
   cas_t assume = oldval;
 
   do {
+    if (Impl::check_early_exit(op, reinterpret_cast<T&>(oldval), val)) return reinterpret_cast<T&>(oldval);
     assume = oldval;
     T newval = op.apply(reinterpret_cast<T&>(assume), val);
     oldval = desul::atomic_compare_exchange(
@@ -175,11 +177,15 @@ atomic_fetch_oper(const Oper& op,
   return reinterpret_cast<T&>(oldval);
 }
 
-template <class Oper, typename T, class MemoryOrder, class MemoryScope>
+template <class Oper, typename T, class MemoryOrder, class MemoryScope,
+  // equivalent to:
+  //   requires atomic_always_lock_free(sizeof(T))
+  std::enable_if_t<atomic_always_lock_free(sizeof(T)), int> = 0
+>
 DESUL_INLINE_FUNCTION T
 atomic_oper_fetch(const Oper& op,
                   T* const dest,
-                  typename std::enable_if<atomic_always_lock_free(sizeof(T)), const T>::type val,
+                  dont_deduce_this_parameter_t<const T> val,
                   MemoryOrder order,
                   MemoryScope scope) {
   using cas_t = typename atomic_compare_exchange_type<sizeof(T)>::type;
@@ -187,6 +193,7 @@ atomic_oper_fetch(const Oper& op,
   T newval = val;
   cas_t assume = oldval;
   do {
+    if (Impl::check_early_exit(op, reinterpret_cast<T&>(oldval), val)) return reinterpret_cast<T&>(oldval);
     assume = oldval;
     newval = op.apply(reinterpret_cast<T&>(assume), val);
     oldval = desul::atomic_compare_exchange(
@@ -196,11 +203,15 @@ atomic_oper_fetch(const Oper& op,
   return newval;
 }
 
-template <class Oper, typename T, class MemoryOrder, class MemoryScope>
+template <class Oper, typename T, class MemoryOrder, class MemoryScope,
+  // equivalent to:
+  //   requires !atomic_always_lock_free(sizeof(T))
+  std::enable_if_t<!atomic_always_lock_free(sizeof(T)), int> = 0
+>
 DESUL_INLINE_FUNCTION T
 atomic_fetch_oper(const Oper& op,
                   T* const dest,
-                  typename std::enable_if<!atomic_always_lock_free(sizeof(T)), const T>::type val,
+                  dont_deduce_this_parameter_t<const T> val,
                   MemoryOrder /*order*/,
                   MemoryScope scope) {
 #if defined(DESUL_HAVE_FORWARD_PROGRESS)
@@ -217,6 +228,24 @@ atomic_fetch_oper(const Oper& op,
   // This is a way to avoid dead lock in a warp or wave front
   T return_val;
   int done = 0;
+#ifdef __HIPCC__
+  unsigned int active = DESUL_IMPL_BALLOT_MASK(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      if (Impl::lock_address_hip((void*)dest, scope)) {
+        atomic_thread_fence(MemoryOrderAcquire(), scope);
+        return_val = *dest;
+        *dest = op.apply(return_val, val);
+        atomic_thread_fence(MemoryOrderRelease(), scope);
+        Impl::unlock_address_hip((void*)dest, scope);
+        done = 1;
+      }
+    }
+    done_active = DESUL_IMPL_BALLOT_MASK(done);
+  }
+  return return_val;
+#else
   unsigned int mask = DESUL_IMPL_ACTIVEMASK;
   unsigned int active = DESUL_IMPL_BALLOT_MASK(mask, 1);
   unsigned int done_active = 0;
@@ -234,17 +263,22 @@ atomic_fetch_oper(const Oper& op,
     done_active = DESUL_IMPL_BALLOT_MASK(mask, done);
   }
   return return_val;
+#endif
 #else
   static_assert(false, "Unimplemented lock based attomic\n");
   return val;
 #endif
 }
 
-template <class Oper, typename T, class MemoryOrder, class MemoryScope>
+template <class Oper, typename T, class MemoryOrder, class MemoryScope,
+  // equivalent to:
+  //   requires !atomic_always_lock_free(sizeof(T))
+  std::enable_if_t<!atomic_always_lock_free(sizeof(T)), int> = 0
+>
 DESUL_INLINE_FUNCTION T
 atomic_oper_fetch(const Oper& op,
                   T* const dest,
-                  typename std::enable_if<!atomic_always_lock_free(sizeof(T)), const T>::type val,
+                  dont_deduce_this_parameter_t<const T> val,
                   MemoryOrder /*order*/,
                   MemoryScope scope) {
 #if defined(DESUL_HAVE_FORWARD_PROGRESS)
@@ -261,6 +295,24 @@ atomic_oper_fetch(const Oper& op,
   // This is a way to avoid dead lock in a warp or wave front
   T return_val;
   int done = 0;
+#ifdef __HIPCC__
+  unsigned int active = DESUL_IMPL_BALLOT_MASK(1);
+  unsigned int done_active = 0;
+  while (active != done_active) {
+    if (!done) {
+      if (Impl::lock_address_hip((void*)dest, scope)) {
+        atomic_thread_fence(MemoryOrderAcquire(), scope);
+        return_val = op.apply(*dest, val);
+        *dest = return_val;
+        atomic_thread_fence(MemoryOrderRelease(), scope);
+        Impl::unlock_address_hip((void*)dest, scope);
+        done = 1;
+      }
+    }
+    done_active = DESUL_IMPL_BALLOT_MASK(done);
+  }
+  return return_val;
+#else
   unsigned int mask = DESUL_IMPL_ACTIVEMASK;
   unsigned int active = DESUL_IMPL_BALLOT_MASK(mask, 1);
   unsigned int done_active = 0;
@@ -278,6 +330,7 @@ atomic_oper_fetch(const Oper& op,
     done_active = DESUL_IMPL_BALLOT_MASK(mask, done);
   }
   return return_val;
+#endif
 #else
   static_assert(false, "Unimplemented lock based atomic\n");
   return val;
@@ -568,12 +621,13 @@ template <typename T,
           class SuccessMemoryOrder,
           class FailureMemoryOrder,
           class MemoryScope>
-DESUL_INLINE_FUNCTION bool atomic_compare_exchange_strong(T* const dest,
-                                                          T& expected,
-                                                          T desired,
-                                                          SuccessMemoryOrder success,
-                                                          FailureMemoryOrder failure,
-                                                          MemoryScope scope) {
+DESUL_INLINE_FUNCTION bool atomic_compare_exchange_strong(
+    T* const dest,
+    T& expected,
+    T desired,
+    SuccessMemoryOrder success,
+    FailureMemoryOrder /*failure*/,
+    MemoryScope scope) {
   T const old = atomic_compare_exchange(dest, expected, desired, success, scope);
   if (old != expected) {
     expected = old;
@@ -599,6 +653,8 @@ DESUL_INLINE_FUNCTION bool atomic_compare_exchange_weak(T* const dest,
 
 }  // namespace desul
 
-#include <desul/atomics/GCC.hpp>
 #include <desul/atomics/CUDA.hpp>
+#include <desul/atomics/GCC.hpp>
+#include <desul/atomics/HIP.hpp>
+#include <desul/atomics/OpenMP.hpp>
 #endif
