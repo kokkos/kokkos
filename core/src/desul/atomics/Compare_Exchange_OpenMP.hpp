@@ -95,6 +95,17 @@ std::enable_if_t<Impl::atomic_always_lock_free(sizeof(T)),T> atomic_compare_exch
      reinterpret_cast<cas_t&>(value));
   return reinterpret_cast<T&>(retval);
 }
+template <typename T, class MemoryOrder, class MemoryScope>
+std::enable_if_t<!Impl::atomic_always_lock_free(sizeof(T)) && (sizeof(T)==16),T> atomic_compare_exchange(
+    T* dest, T compare, T value, MemoryOrder, MemoryScope) {
+  if constexpr (omp_is_initial_device()) {
+    (void)__atomic_compare_exchange(
+      dest, &compare, &value, false, GCCMemoryOrder<MemoryOrder>::value, GCCMemoryOrder<MemoryOrder>::value);
+    return compare;
+  } else {
+    return value;
+  }
+}
 
 }  // namespace desul
 #endif

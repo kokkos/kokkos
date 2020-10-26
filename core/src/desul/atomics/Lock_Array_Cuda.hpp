@@ -22,6 +22,9 @@ namespace Impl {
 #ifdef __CUDA_ARCH__
 #define DESUL_IMPL_BALLOT_MASK(m, x) __ballot_sync(m, x)
 #define DESUL_IMPL_ACTIVEMASK __activemask()
+#else
+#define DESUL_IMPL_BALLOT_MASK(m, x) 0
+#define DESUL_IMPL_ACTIVEMASK 0
 #endif
 
 /// \brief This global variable in Host space is the central definition
