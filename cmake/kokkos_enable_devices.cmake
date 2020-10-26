@@ -25,12 +25,14 @@ IF (KOKKOS_ENABLE_PTHREAD)
   SET(KOKKOS_ENABLE_THREADS ON)
 ENDIF()
 
-# as CMAKE_CXX_SIMULATE_ID does not work, detect clang-cl to avoid clang++,
-# cl, and clang-cl clashes, requires CMake >= 3.15
-IF (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+# detect clang++ / cl / clang-cl clashes
+IF (CMAKE_CXX_COMPILER_ID STREQUAL Clang AND "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
+  # this specific test requires CMake >= 3.15
   IF ("x${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "xGNU")
+    # use pure clang++ instead of clang-cl
     SET(KOKKOS_COMPILER_CLANG_MSVC OFF)
   ELSE()
+    # it defaults to clang-cl
     SET(KOKKOS_COMPILER_CLANG_MSVC ON)
   ENDIF()
 ENDIF()
