@@ -141,7 +141,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       constexpr value_type identity{};
 
       auto reduction =
-          cl::sycl::intel::reduction(result_ptr, identity, std::plus<>());
+          cl::sycl::ONEAPI::reduction(result_ptr, identity, std::plus<>());
 
       cgh.parallel_for(
           range, reduction, [=](cl::sycl::nd_item<1> item, auto& sum) {
