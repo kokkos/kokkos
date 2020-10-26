@@ -514,9 +514,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     FunctorType a_functor(m_functor);
-#pragma omp target teams distribute map(to                        \
-                                        : a_functor, scratch_ptr) \
-    num_teams(nteams) thread_limit(team_size)
+#pragma omp target teams distribute map(to           \
+                                        : a_functor) \
+    is_device_ptr(scratch_ptr) num_teams(nteams) thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
 #pragma omp parallel num_threads(team_size)
       {
@@ -546,9 +546,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,
                                      0, 0);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
-#pragma omp target teams distribute map(to                        \
-                                        : a_functor, scratch_ptr) \
-    num_teams(nteams) thread_limit(team_size)
+#pragma omp target teams distribute map(to           \
+                                        : a_functor) \
+    is_device_ptr(scratch_ptr) num_teams(nteams) thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
 #pragma omp parallel num_threads(team_size)
       {
@@ -599,7 +599,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     ValueType result = ValueType();
 
 #pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
-         map(to:f,scratch_ptr) map(tofrom:result) reduction(+: result)
+         map(to:f) map(tofrom:result) reduction(+: result) \
+    is_device_ptr(scratch_ptr)
     for (int i = 0; i < league_size; i++) {
       ValueType inner_result = ValueType();
 #pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
@@ -638,7 +639,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     ValueType result = ValueType();
 
 #pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
-         map(to:f,scratch_ptr) map(tofrom:result) reduction(+: result)
+         map(to:f) map(tofrom:result) reduction(+: result) \
+    is_device_ptr(scratch_ptr)
     for (int i = 0; i < league_size; i++) {
       ValueType inner_result = ValueType();
 #pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
