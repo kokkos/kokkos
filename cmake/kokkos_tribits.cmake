@@ -6,6 +6,12 @@ INCLUDE(GNUInstallDirs)
 
 MESSAGE(STATUS "The project name is: ${PROJECT_NAME}")
 
+FUNCTION(VERIFY_EMPTY CONTEXT)
+  if(${ARGN})
+    MESSAGE(FATAL_ERROR "Kokkos does not support all of Tribits. Unhandled arguments in ${CONTEXT}:\n${ARGN}")
+  endif()
+ENDFUNCTION()
+
 #Leave this here for now - but only do for tribits
 #This breaks the standalone CMake
 IF (KOKKOS_HAS_TRILINOS)
@@ -135,32 +141,37 @@ FUNCTION(KOKKOS_ADD_EXECUTABLE ROOT_NAME)
 ENDFUNCTION()
 
 FUNCTION(KOKKOS_ADD_EXECUTABLE_AND_TEST ROOT_NAME)
+CMAKE_PARSE_ARGUMENTS(PARSE
+  ""
+  ""
+  "SOURCES;CATEGORIES;ARGS"
+  ${ARGN})
+VERIFY_EMPTY(KOKKOS_ADD_EXECUTABLE_AND_TEST ${PARSE_UNPARSED_ARGUMENTS})
+
 IF (KOKKOS_HAS_TRILINOS)
+  IF(DEFINED PARSE_ARGS)
+    STRING(REPLACE ";" " " PARSE_ARGS "${PARSE_ARGS}")
+  ENDIF()
   TRIBITS_ADD_EXECUTABLE_AND_TEST(
     ${ROOT_NAME}
+    SOURCES ${PARSE_SOURCES}
     TESTONLYLIBS kokkos_gtest
-    ${ARGN}
     NUM_MPI_PROCS 1
     COMM serial mpi
+    ARGS ${PARSE_ARGS}
+    CATEGORIES ${PARSE_CATEGORIES}
+    SOURCES ${PARSE_SOURCES}
     FAIL_REGULAR_EXPRESSION "  FAILED  "
+    ARGS ${PARSE_ARGS}
   )
 ELSE()
-  CMAKE_PARSE_ARGUMENTS(PARSE
-    ""
-    ""
-    "SOURCES;CATEGORIES;ARGS"
-    ${ARGN})
-  VERIFY_EMPTY(KOKKOS_ADD_EXECUTABLE_AND_TEST ${PARSE_UNPARSED_ARGUMENTS})
   KOKKOS_ADD_TEST_EXECUTABLE(${ROOT_NAME}
     SOURCES ${PARSE_SOURCES}
   )
-  IF(DEFINED PARSE_ARGS)
-    SET(OPTIONAL_ARGS ARGS "${PARSE_ARGS}")
-  ENDIF()
   KOKKOS_ADD_TEST(NAME ${ROOT_NAME}
     EXE ${ROOT_NAME}
     FAIL_REGULAR_EXPRESSION "  FAILED  "
-    ${OPTIONAL_ARGS}
+    ARGS ${PARSE_ARGS}
   )
 ENDIF()
 ENDFUNCTION()
@@ -287,17 +298,22 @@ MACRO(KOKKOS_CONFIGURE_CORE)
 ENDMACRO()
 
 ## KOKKOS_INSTALL_ADDITIONAL_FILES - instruct cmake to install files in target destination.
-##                        Includes generated header files, nvcc_wrapper and
-##                        other files provided through plugins
+##                        Includes generated header files, scripts such as nvcc_wrapper and hpcbind,
+##                        as well as other files provided through plugins.
 MACRO(KOKKOS_INSTALL_ADDITIONAL_FILES)
-   INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper DESTINATION ${CMAKE_INSTALL_BINDIR})
-   # kokkos_launch_compiler is used by Kokkos to prefix compiler commands so that they forward to nvcc_wrapper
-   INSTALL(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/bin/kokkos_launch_compiler DESTINATION ${CMAKE_INSTALL_BINDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_config.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_Config_FwdBackend.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_Config_SetupBackend.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_Config_DeclareBackend.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-   INSTALL(FILES "${PROJECT_BINARY_DIR}/KokkosCore_Config_PostInclude.hpp" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  # kokkos_launch_compiler is used by Kokkos to prefix compiler commands so that they forward to nvcc_wrapper
+  INSTALL(PROGRAMS
+          "${PROJECT_SOURCE_DIR}/bin/nvcc_wrapper"
+          "${PROJECT_SOURCE_DIR}/bin/hpcbind"
+          "${PROJECT_SOURCE_DIR}/bin/kokkos_launch_compiler"
+          DESTINATION ${CMAKE_INSTALL_BINDIR})
+  INSTALL(FILES
+          "${PROJECT_BINARY_DIR}/KokkosCore_config.h"
+          "${PROJECT_BINARY_DIR}/KokkosCore_Config_FwdBackend.hpp"
+          "${PROJECT_BINARY_DIR}/KokkosCore_Config_SetupBackend.hpp"
+          "${PROJECT_BINARY_DIR}/KokkosCore_Config_DeclareBackend.hpp"
+          "${PROJECT_BINARY_DIR}/KokkosCore_Config_PostInclude.hpp"
+          DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 ENDMACRO()
 
 FUNCTION(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)

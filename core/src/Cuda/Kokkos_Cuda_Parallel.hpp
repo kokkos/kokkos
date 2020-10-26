@@ -46,7 +46,7 @@
 #define KOKKOS_CUDA_PARALLEL_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined(__CUDACC__) && defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA)
 
 #include <algorithm>
 #include <string>
@@ -2762,5 +2762,5 @@ struct ParallelReduceFunctorType<FunctorTypeIn, ExecPolicy, ValueType, Cuda> {
 
 }  // namespace Kokkos
 
-#endif /* defined( __CUDACC__ ) */
+#endif /* defined(KOKKOS_ENABLE_CUDA) */
 #endif /* #ifndef KOKKOS_CUDA_PARALLEL_HPP */

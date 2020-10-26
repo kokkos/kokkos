@@ -270,7 +270,7 @@ class HIPTeamMember {
    */
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type team_scan(const Type& value) const {
-    return this->template team_scan<Type>(value, 0);
+    return this->template team_scan<Type>(value, nullptr);
   }
 
   //----------------------------------------

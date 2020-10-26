@@ -637,8 +637,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   static int constexpr UseShflReduction = (value_traits::StaticValueSize != 0);
 
  private:
-  using DummyShflReductionType  = double;
-  using DummySHMEMReductionType = int;
+  struct ShflReductionTag {};
+  struct SHMEMReductionTag {};
 
   // Algorithmic constraints: blockDim.y is a power of two AND
   // blockDim.y == blockDim.z == 1 shared memory utilization:
@@ -679,6 +679,25 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_functor(TagType(), member, update);
   }
 
+  __device__ inline void iterate_through_league(int const threadid,
+                                                reference_type value) const {
+    int const int_league_size = static_cast<int>(m_league_size);
+    for (int league_rank = blockIdx.x; league_rank < int_league_size;
+         league_rank += gridDim.x) {
+      this->template exec_team<work_tag>(
+          member_type(
+              Kokkos::Experimental::kokkos_impl_hip_shared_memory<char>() +
+                  m_team_begin,
+              m_shmem_begin, m_shmem_size,
+              reinterpret_cast<void*>(
+                  reinterpret_cast<char*>(m_scratch_ptr[1]) +
+                  static_cast<ptrdiff_t>(threadid / (blockDim.x * blockDim.y)) *
+                      m_scratch_size[1]),
+              m_scratch_size[1], league_rank, m_league_size),
+          value);
+    }
+  }
+
  public:
   __device__ inline void operator()() const {
     int64_t threadid = 0;
@@ -705,9 +724,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       threadid = base_thread_id;
     }
 
-    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType,
-                           DummySHMEMReductionType>::select(1, 1.0),
-        threadid);
+    using ReductionTag = std::conditional_t<UseShflReduction, ShflReductionTag,
+                                            SHMEMReductionTag>;
+    run(ReductionTag{}, threadid);
+
     if (m_scratch_size[1] > 0) {
       __syncthreads();
       if (threadIdx.x == 0 && threadIdx.y == 0) {
@@ -716,8 +736,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
   }
 
-  __device__ inline void run(DummySHMEMReductionType const&,
-                             int const& threadid) const {
+  __device__ inline void run(SHMEMReductionTag, int const threadid) const {
     integral_nonzero_constant<size_type, value_traits::StaticValueSize /
                                              sizeof(size_type)> const
         word_count(value_traits::value_size(
@@ -730,21 +749,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             threadIdx.y * word_count.value);
 
     // Iterate this block through the league
-    int const int_league_size = static_cast<int>(m_league_size);
-    for (int league_rank = blockIdx.x; league_rank < int_league_size;
-         league_rank += gridDim.x) {
-      this->template exec_team<work_tag>(
-          member_type(
-              Kokkos::Experimental::kokkos_impl_hip_shared_memory<char>() +
-                  m_team_begin,
-              m_shmem_begin, m_shmem_size,
-              reinterpret_cast<void*>(
-                  reinterpret_cast<char*>(m_scratch_ptr[1]) +
-                  static_cast<ptrdiff_t>(threadid / (blockDim.x * blockDim.y)) *
-                      m_scratch_size[1]),
-              m_scratch_size[1], league_rank, m_league_size),
-          value);
-    }
+    iterate_through_league(threadid, value);
 
     // Reduce with final value at blockDim.y - 1 location.
     bool do_final_reduce = (m_league_size == 0);
@@ -781,28 +786,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
   }
 
-  __device__ inline void run(DummyShflReductionType const&,
-                             int const& threadid) const {
-    // FIXME_HIP implementation close to the function above
+  __device__ inline void run(ShflReductionTag, int const threadid) const {
     value_type value;
     value_init::init(reducer_conditional::select(m_functor, m_reducer), &value);
 
     // Iterate this block through the league
-    int const int_league_size = static_cast<int>(m_league_size);
-    for (int league_rank = blockIdx.x; league_rank < int_league_size;
-         league_rank += gridDim.x) {
-      this->template exec_team<work_tag>(
-          member_type(
-              Kokkos::Experimental::kokkos_impl_hip_shared_memory<char>() +
-                  m_team_begin,
-              m_shmem_begin, m_shmem_size,
-              reinterpret_cast<void*>(
-                  reinterpret_cast<char*>(m_scratch_ptr[1]) +
-                  static_cast<ptrdiff_t>(threadid / (blockDim.x * blockDim.y)) *
-                      m_scratch_size[1]),
-              m_scratch_size[1], league_rank, m_league_size),
-          value);
-    }
+    iterate_through_league(threadid, value);
 
     pointer_type const result =
         m_result_ptr_device_accessible
@@ -811,7 +800,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     value_type init;
     value_init::init(reducer_conditional::select(m_functor, m_reducer), &init);
-    if (int_league_size == 0) {
+    if (m_league_size == 0) {
       Kokkos::Impl::FunctorFinal<reducer_type_fwd, work_tag_fwd>::final(
           reducer_conditional::select(m_functor, m_reducer),
           reinterpret_cast<void*>(&value));
@@ -901,8 +890,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_result_ptr_host_accessible(
             MemorySpaceAccess<Kokkos::HostSpace,
                               typename ViewType::memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0),
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
         m_team_begin(0),
         m_shmem_begin(0),
         m_shmem_size(0),
@@ -1000,8 +989,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
             MemorySpaceAccess<Kokkos::HostSpace,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0),
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr),
         m_team_begin(0),
         m_shmem_begin(0),
         m_shmem_size(0),

@@ -121,7 +121,7 @@ class HIPInternal {
     return m_hipDev >= 0;
   }  // 0 != m_scratchSpace && 0 != m_scratchFlags ; }
 
-  void initialize(int hip_device_id, hipStream_t stream = 0);
+  void initialize(int hip_device_id, hipStream_t stream = nullptr);
   void finalize();
 
   void print_configuration(std::ostream &) const;
@@ -142,9 +142,9 @@ class HIPInternal {
         m_maxThreadsPerSM(0),
         m_scratchSpaceCount(0),
         m_scratchFlagsCount(0),
-        m_scratchSpace(0),
-        m_scratchFlags(0),
-        m_stream(0),
+        m_scratchSpace(nullptr),
+        m_scratchFlags(nullptr),
+        m_stream(nullptr),
         m_team_scratch_current_size(0),
         m_team_scratch_ptr(nullptr) {}
 

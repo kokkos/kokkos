@@ -338,7 +338,7 @@ void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::HostSpace, void>::s_root_record;
 #endif
@@ -391,7 +391,7 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::SharedAllocationRecord(
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
     : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::HostSpace, void>::s_root_record,
 #endif
           Impl::checked_allocation_with_header(arg_space, arg_label,
@@ -468,7 +468,7 @@ SharedAllocationRecord<Kokkos::HostSpace, void>::get_record(void *alloc_ptr) {
 }
 
 // Iterate records to print orphaned memory ...
-#ifdef KOKKOS_DEBUG
+#ifdef KOKKOS_ENABLE_DEBUG
 void SharedAllocationRecord<Kokkos::HostSpace, void>::print_records(
     std::ostream &s, const Kokkos::HostSpace &, bool detail) {
   SharedAllocationRecord<void, void>::print_host_accessible_records(
@@ -479,7 +479,7 @@ void SharedAllocationRecord<Kokkos::HostSpace, void>::print_records(
     std::ostream &, const Kokkos::HostSpace &, bool) {
   throw_runtime_exception(
       "SharedAllocationRecord<HostSpace>::print_records only works with "
-      "KOKKOS_DEBUG enabled");
+      "KOKKOS_ENABLE_DEBUG enabled");
 }
 #endif
 

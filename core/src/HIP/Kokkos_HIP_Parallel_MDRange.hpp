@@ -227,16 +227,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using DeviceIteratePattern = typename Kokkos::Impl::Reduce::DeviceIterateTile<
       Policy::rank, Policy, FunctorType, WorkTag, reference_type>;
 
-  // Shall we use the shfl based reduction or not (only use it for static sized
-  // types of more than 128bit
-  static constexpr bool UseShflReduction = false;
-  // ((sizeof(value_type) > 2 * sizeof(double)) && (ValueTraits::StaticValueSize
-  // != 0))
-  // Some crutch to do function overloading
- private:
-  using DummyShflReductionType  = double;
-  using DummySHMEMReductionType = int;
-
  public:
   inline __device__ void exec_range(reference_type update) const {
     DeviceIteratePattern(m_policy, m_functor, update).exec_range();
@@ -348,10 +338,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                       1, 1);
 
       const int shmem =
-          UseShflReduction
-              ? 0
-              : ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
-                    false, FunctorType, WorkTag>(m_functor, block.y);
+          ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
+              false, FunctorType, WorkTag>(m_functor, block.y);
 
       Kokkos::Experimental::Impl::HIPParallelLaunch<ParallelReduce,
                                                     LaunchBounds>(
@@ -381,7 +369,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ViewType& arg_result,
                  typename std::enable_if<Kokkos::is_view<ViewType>::value,
-                                         void*>::type = NULL)
+                                         void*>::type = nullptr)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -389,8 +377,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_result_ptr_device_accessible(
             MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
                               typename ViewType::memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0) {}
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr) {}
 
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
                  const ReducerType& reducer)
@@ -402,8 +390,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
             MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible),
-        m_scratch_space(0),
-        m_scratch_flags(0) {}
+        m_scratch_space(nullptr),
+        m_scratch_flags(nullptr) {}
 };
 }  // namespace Impl
 }  // namespace Kokkos

@@ -474,6 +474,25 @@ emulate_fold_comma_operator(Ts&&...) noexcept {
 // </editor-fold> end Folding emulation }}}1
 //==============================================================================
 
+//==============================================================================
+// destruct_delete is a unique_ptr deleter for objects
+// created by placement new into already allocated memory
+// by only calling the destructor on the object.
+//
+// Because unique_ptr never calls its deleter with a nullptr value,
+// no need to check if p == nullptr.
+//
+// Note:  This differs in interface from std::default_delete in that the
+// function call operator is templated instead of the class, to make
+// it easier to use and disallow specialization.
+struct destruct_delete {
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION constexpr void operator()(T* p) const noexcept {
+    p->~T();
+  }
+};
+//==============================================================================
+
 }  // namespace Impl
 }  // namespace Kokkos
 

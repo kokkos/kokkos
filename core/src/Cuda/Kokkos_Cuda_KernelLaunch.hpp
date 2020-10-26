@@ -60,8 +60,6 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#if defined(__CUDACC__)
-
 /** \brief  Access to constant memory on the device */
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 
@@ -544,6 +542,5 @@ struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* defined( __CUDACC__ ) */
 #endif /* defined( KOKKOS_ENABLE_CUDA ) */
 #endif /* #ifndef KOKKOS_CUDAEXEC_HPP */

@@ -242,3 +242,4 @@ TEST(TEST_CATEGORY, view_overload_resolution) {
 }  // namespace Test
 
 #include <TestViewIsAssignable.hpp>
+#include <TestViewCopy.hpp>

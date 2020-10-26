@@ -28,10 +28,21 @@ get_kokkos_device_list() {
      if [ "${UC_DEVICE}" == "HIP" ]; then
        WITH_HIP_BACKEND=ON
      fi
+     if [ "${UC_DEVICE}" == "OPENMPTARGET" ]; then
+       WITH_OMPT_BACKEND=ON
+     fi
      KOKKOS_DEVICE_CMD="-DKokkos_ENABLE_${UC_DEVICE}=ON ${KOKKOS_DEVICE_CMD}"
   done
   if [ "${WITH_CUDA_BACKEND}" == "ON" ] && [ "${WITH_HIP_BACKEND}" == "ON" ]; then
      echo "Invalid configuration - Cuda and Hip cannot be simultaneously enabled"
+     exit
+  fi
+  if [ "${WITH_CUDA_BACKEND}" == "ON" ] && [ "${WITH_OMPT_BACKEND}" == "ON" ]; then
+     echo "Invalid configuration - Cuda and OpenMPTarget cannot be simultaneously enabled"
+     exit
+  fi
+  if [ "${WITH_OMPT_BACKEND}" == "ON" ] && [ "${WITH_HIP_BACKEND}" == "ON" ]; then
+     echo "Invalid configuration - OpenMPTarget and Hip cannot be simultaneously enabled"
      exit
   fi
 }
@@ -88,6 +99,25 @@ get_kokkos_hip_option_list() {
   done
 }
 
+get_kokkos_ompt_option_list() {
+  echo parsing KOKKOS_OMPT_OPTIONS=$KOKKOS_OMPT_OPTIONS
+  KOKKOS_OMPT_OPTION_CMD=
+  PARSE_OMPT_LST=$(echo $KOKKOS_OMPT_OPTIONS | tr "," "\n")
+# Stub for eventual OpenMPTarget options
+#  for OMPT_ in $PARSE_OMPT_LST
+#  do
+#     OMPT_OPT_NAME=
+#     if  [ "${OMPT_}" == "?" ]; then
+#        OMPT_OPT_NAME=OMPT_?
+#     else
+#        echo "${OMPT_} is not a valid openmptarget option..."
+#     fi
+#     if [ "${OMPT_OPT_NAME}" != "" ]; then
+#        KOKKOS_OMPT_OPTION_CMD="-DKokkos_ENABLE_${OMPT_OPT_NAME}=ON ${KOKKOS_OMPT_OPTION_CMD}"
+#     fi
+#  done
+}
+
 get_kokkos_option_list() {
   echo parsing KOKKOS_OPTIONS=$KOKKOS_OPTIONS
   KOKKOS_OPTION_CMD=
@@ -115,6 +145,7 @@ display_help_text() {
       echo ""
       echo "--with-cuda[=/Path/To/Cuda]:          Enable Cuda and set path to Cuda Toolkit."
       echo "--with-hip[=/Path/To/Hip]:            Enable Hip and set path to ROCM Toolkit."
+      echo "--with-openmptarget:                  Enable OpenMPTarget backend."
       echo "--with-openmp:                        Enable OpenMP backend."
       echo "--with-pthread:                       Enable Pthreads backend."
       echo "--with-serial:                        Enable Serial backend."
@@ -203,6 +234,7 @@ KOKKOS_DO_EXAMPLES=OFF
 # For tracking if Cuda and Hip devices are enabled simultaneously
 WITH_CUDA_BACKEND=OFF
 WITH_HIP_BACKEND=OFF
+WITH_OMPT_BACKEND=OFF
 
 while [[ $# > 0 ]]
 do
@@ -243,6 +275,12 @@ do
     --with-hip*)
       update_kokkos_devices Hip
       HIP_PATH="${key#*=}"
+      ;;
+    --with-openmptarget)
+      update_kokkos_devices OpenMPTarget
+      ;;
+    --with-openmptarget-options*)
+      KOKKOS_OMPT_OPTIONS="${key#*=}"
       ;;
     --with-openmp)
       update_kokkos_devices OpenMP
@@ -410,6 +448,7 @@ get_kokkos_option_list
 get_kokkos_arch_list
 get_kokkos_cuda_option_list
 get_kokkos_hip_option_list
+get_kokkos_ompt_option_list
 
 ## if HPX is enabled, we need to enforce cxx standard = 14
 if [[ ${KOKKOS_DEVICE_CMD} == *Kokkos_ENABLE_HPX* ]]; then
