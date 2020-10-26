@@ -625,8 +625,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
           false);
     } else {
-      printf("Kokkos::MDRange Error: Exceeded rank bounds with Cuda\n");
-      Kokkos::abort("Aborting");
+      Kokkos::abort("Kokkos::MDRange Error: Exceeded rank bounds with Cuda\n");
     }
 
   }  // end execute
