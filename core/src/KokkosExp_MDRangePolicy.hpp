@@ -179,7 +179,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   enum { rank = static_cast<int>(iteration_pattern::rank) };
 
   using index_type       = typename traits::index_type;
-  using array_index_type = long;
+  using array_index_type = std::int64_t;
   using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
   using tile_type  = Kokkos::Array<array_index_type, rank>;
   // If point_type or tile_type is not templated on a signed integral type (if
