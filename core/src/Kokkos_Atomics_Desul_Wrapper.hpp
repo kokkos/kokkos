@@ -1,6 +1,8 @@
 #ifndef KOKKOS_DESUL_ATOMICS_WRAPPER_HPP_
 #define KOKKOS_DESUL_ATOMICS_WRAPPER_HPP_
 #include <Kokkos_Macros.hpp>
+
+#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
 #include <desul/atomics.hpp>
 
 #include <impl/Kokkos_Atomic_Memory_Order.hpp>
@@ -233,4 +235,5 @@ namespace Impl {
 
 }
 // clang-format on
+#endif  // KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
 #endif

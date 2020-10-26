@@ -69,8 +69,6 @@ namespace desul {
 #include<desul/atomics/openmp/OpenMP_40_op.inc>
 #undef MEMORY_SCOPE
 #undef MEMORY_ORDER
-#define MEMORY_ORDER MemoryOrderRelaxed
-#undef MEMORY_ORDER
 
 #define MEMORY_ORDER MemoryOrderAcqRel
 // #define MEMORY_SCOPE MemoryScopeNode
@@ -83,8 +81,6 @@ namespace desul {
 #include<desul/atomics/openmp/OpenMP_40_op.inc>
 #undef MEMORY_SCOPE
 #undef MEMORY_ORDER
-#define MEMORY_ORDER MemoryOrderRelaxed
-#undef MEMORY_ORDER
 
 #define MEMORY_ORDER MemoryOrderSeqCst
 // #define MEMORY_SCOPE MemoryScopeNode
@@ -96,8 +92,6 @@ namespace desul {
 #define MEMORY_SCOPE MemoryScopeCore
 #include<desul/atomics/openmp/OpenMP_40_op.inc>
 #undef MEMORY_SCOPE
-#undef MEMORY_ORDER
-#define MEMORY_ORDER MemoryOrderRelaxed
 #undef MEMORY_ORDER
 }  // namespace desul
 #endif
