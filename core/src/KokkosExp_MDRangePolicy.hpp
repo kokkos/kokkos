@@ -127,7 +127,10 @@ constexpr To checked_narrow_cast(From arg) {
 }
 // NOTE prefer C array U[M] to std::initalizer_list<U> so that the number of
 // elements can be deduced (https://stackoverflow.com/q/40241370)
-template <class Array, class U, std::size_t M>
+// NOTE for some unfortunate reason the policy bounds are stored as signed
+// integer arrays so we specify the index type and check ahead of time that
+// narrowing conversions will be safe.
+template <class IndexType, class Array, class U, std::size_t M>
 constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   using T = typename Array::value_type;
   Array a{};
@@ -138,7 +141,10 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   // std::transform(std::begin(init), std::end(init), a.data(),
   //                [](U x) { return static_cast<T>(x); });
   // except that std::transform is not constexpr.
-  for (auto x : init) *ptr++ = checked_narrow_cast<T>(x);
+  for (auto x : init) {
+    *ptr++ = checked_narrow_cast<T>(x);
+    (void)checked_narrow_cast<IndexType>(x);  // see note above
+  }
   return a;
 }
 }  // namespace Impl
@@ -239,9 +245,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   MDRangePolicy(const LT (&lower)[LN], const UT (&upper)[UN],
                 const TT (&tile)[TN] = {})
       : MDRangePolicy(
-            Impl::to_array_potentially_narrowing<decltype(m_lower)>(lower),
-            Impl::to_array_potentially_narrowing<decltype(m_upper)>(upper),
-            Impl::to_array_potentially_narrowing<decltype(m_tile)>(tile)) {
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {
     static_assert(
         LN == rank && UN == rank && TN <= rank,
         "MDRangePolicy: Constructor initializer lists have wrong size");
@@ -257,9 +266,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
                 const TT (&tile)[TN] = {})
       : MDRangePolicy(
             work_space,
-            Impl::to_array_potentially_narrowing<decltype(m_lower)>(lower),
-            Impl::to_array_potentially_narrowing<decltype(m_upper)>(upper),
-            Impl::to_array_potentially_narrowing<decltype(m_tile)>(tile)) {
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {
     static_assert(
         LN == rank && UN == rank && TN <= rank,
         "MDRangePolicy: Constructor initializer lists have wrong size");
