@@ -113,6 +113,18 @@ struct Rank {
 };
 
 namespace Impl {
+// Checked narrowing conversion that calls abort if the cast changes the value
+template <class To, class From>
+constexpr To checked_narrow_cast(From arg) {
+  constexpr const bool is_different_signedness =
+      (std::is_signed<To>::value != std::is_signed<From>::value);
+  auto const ret = static_cast<To>(arg);
+  if (static_cast<From>(ret) != arg ||
+      (is_different_signedness && (arg < From{}) != (ret < To{}))) {
+    Kokkos::abort("unsafe narrowing conversion");
+  }
+  return ret;
+}
 // NOTE prefer C array U[M] to std::initalizer_list<U> so that the number of
 // elements can be deduced (https://stackoverflow.com/q/40241370)
 template <class Array, class U, std::size_t M>
@@ -126,8 +138,7 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   // std::transform(std::begin(init), std::end(init), a.data(),
   //                [](U x) { return static_cast<T>(x); });
   // except that std::transform is not constexpr.
-  for (auto x : init)
-    *ptr++ = static_cast<T>(x);  // allow narrowing conversions
+  for (auto x : init) *ptr++ = checked_narrow_cast<T>(x);
   return a;
 }
 }  // namespace Impl
