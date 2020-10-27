@@ -225,7 +225,6 @@ void SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
       s, "OpenMPTargetSpace", &s_root_record, detail);
 #else
   (void)s;
-  (void)space;
   (void)detail;
   throw_runtime_exception(
       "SharedAllocationRecord<OpenMPTargetSpace>::print_records"

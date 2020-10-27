@@ -227,4 +227,22 @@ void test_shared_alloc() {
 #endif /* #if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST ) */
 }
 
+TEST(TEST_CATEGORY, impl_shared_alloc) {
+#ifdef TEST_CATEGORY_NUMBER
+#if (TEST_CATEGORY_NUMBER < 4)  // serial threads openmp hpx
+  test_shared_alloc<Kokkos::HostSpace, TEST_EXECSPACE>();
+#elif (TEST_CATEGORY_NUMBER == 4)  // openmptarget
+  test_shared_alloc<Kokkos::Experimental::OpenMPTargetSpace,
+                    Kokkos::DefaultHostExecutionSpace>();
+#elif (TEST_CATEGORY_NUMBER == 5)  // cuda
+  test_shared_alloc<Kokkos::CudaSpace, Kokkos::DefaultHostExecutionSpace>();
+#elif (TEST_CATEGORY_NUMBER == 6)  // hip
+  test_shared_alloc<Kokkos::Experimental::HIPSpace,
+                    Kokkos::DefaultHostExecutionSpace>();
+#endif
+#else
+  test_shared_alloc<TEST_EXECSPACE, Kokkos::DefaultHostExecutionSpace>();
+#endif
+}
+
 }  // namespace Test

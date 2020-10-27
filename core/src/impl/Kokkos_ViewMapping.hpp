@@ -2866,13 +2866,16 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
 
   void execute(bool arg) {
     destroy = arg;
+    PolicyType policy(0, n);
+    std::string functor_name;
     if (!space.in_parallel()) {
       uint64_t kpID = 0;
       if (Kokkos::Profiling::profileLibraryLoaded()) {
-        auto functor_name =
+        functor_name =
             (destroy ? "Kokkos::View::destruction [" + name + "]"
                      : "Kokkos::View::initialization [" + name + "]");
-        Kokkos::Profiling::beginParallelFor(functor_name.c_str(), 0, &kpID);
+        Kokkos::Tools::Impl::begin_parallel_for(policy, *this, functor_name,
+                                                kpID);
       }
 #ifdef KOKKOS_ENABLE_CUDA
       if (std::is_same<ExecSpace, Kokkos::Cuda>::value) {
@@ -2881,11 +2884,12 @@ struct ViewValueFunctor<ExecSpace, ValueType, false /* is_scalar */> {
       }
 #endif
       const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
-          *this, PolicyType(0, n));
+          *this, policy);
       closure.execute();
       space.fence();
       if (Kokkos::Profiling::profileLibraryLoaded()) {
-        Kokkos::Profiling::endParallelFor(kpID);
+        Kokkos::Tools::Impl::end_parallel_for(policy, *this, functor_name,
+                                              kpID);
       }
     } else {
       for (size_t i = 0; i < n; ++i) operator()(i);

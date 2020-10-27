@@ -2233,7 +2233,7 @@ struct TestSubviewStaticSizes {
            test_8 + test_9 + test_10 + test_11;
   }
 
-  TestSubviewStaticSizes() : a(Kokkos::view_alloc(), 20), b() {}
+  TestSubviewStaticSizes() : a(Kokkos::view_alloc("a"), 20), b("b") {}
 };
 
 template <class Space>

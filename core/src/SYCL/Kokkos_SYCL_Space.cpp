@@ -46,6 +46,7 @@
 #include <Kokkos_SYCL_DeepCopy.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_Profiling.hpp>
+#include <Kokkos_SYCL.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 

@@ -162,7 +162,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   /// \brief The type of a const, random-access View host mirror of
   ///   \c t_dev_const_randomread.
   using t_host_const_randomread_um =
-      typename t_dev_const_randomread::HostMirror;
+      typename t_dev_const_randomread_um::HostMirror;
 
   //@}
   //! \name Counters to keep track of changes ("modified" flags)

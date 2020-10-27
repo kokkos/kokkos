@@ -81,11 +81,6 @@ if [[ "$HOSTNAME" =~ weaver.* ]]; then
   module load git
 fi
 
-if [[ "$HOSTNAME" =~ .*bowman.* ]]; then
-  MACHINE=bowman
-  module load git
-fi
-
 if [[ "$HOSTNAME" =~ .*voltrino.* ]]; then
   MACHINE=voltrino
   module load git
@@ -209,7 +204,7 @@ do
       SPOT_CHECK=True
       ;;
     --timeout*)
-      CTESTTIMEOUT="${key#=}"
+      CTESTTIMEOUT="${key#*=}"
       ;;
     --arch*)
       ARCH_FLAG="--arch=${key#*=}"
@@ -420,24 +415,6 @@ elif [ "$MACHINE" = "weaver" ]; then
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=Power9,Volta70"
-  fi
-
-elif [ "$MACHINE" = "bowman" ]; then
-  source /etc/profile.d/modules.sh
-  SKIP_HWLOC=True
-  export SLURM_TASKS_PER_NODE=32
-
-  BASE_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
-
-  OLD_INTEL_BUILD_LIST="Pthread,Serial,Pthread_Serial"
-
-  # Format: (compiler module-list build-list exe-name warning-flag)
-  COMPILERS=("intel/17.2.174 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-             "intel/18.2.199 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
-  )
-
-  if [ -z "$ARCH_FLAG" ]; then
-    ARCH_FLAG="--arch=KNL"
   fi
 
 elif [ "$MACHINE" = "voltrino" ]; then

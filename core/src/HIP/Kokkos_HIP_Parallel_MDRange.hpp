@@ -245,16 +245,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using DeviceIteratePattern = typename Kokkos::Impl::Reduce::DeviceIterateTile<
       Policy::rank, Policy, FunctorType, WorkTag, reference_type>;
 
-  // Shall we use the shfl based reduction or not (only use it for static sized
-  // types of more than 128bit
-  static constexpr bool UseShflReduction = false;
-  // ((sizeof(value_type) > 2 * sizeof(double)) && (ValueTraits::StaticValueSize
-  // != 0))
-  // Some crutch to do function overloading
- private:
-  using DummyShflReductionType  = double;
-  using DummySHMEMReductionType = int;
-
  public:
   inline __device__ void exec_range(reference_type update) const {
     DeviceIteratePattern(m_policy, m_functor, update).exec_range();
@@ -366,10 +356,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                       1, 1);
 
       const int shmem =
-          UseShflReduction
-              ? 0
-              : ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
-                    false, FunctorType, WorkTag>(m_functor, block.y);
+          ::Kokkos::Impl::hip_single_inter_block_reduce_scan_shmem<
+              false, FunctorType, WorkTag>(m_functor, block.y);
 
       Kokkos::Experimental::Impl::HIPParallelLaunch<ParallelReduce,
                                                     LaunchBounds>(

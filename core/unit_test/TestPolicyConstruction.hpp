@@ -571,6 +571,11 @@ class TestTeamPolicyConstruction {
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;
 #endif
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    if (std::is_same<typename policy_t::execution_space,
+                     Kokkos::Experimental::OpenMPTarget>::value)
+      team_size = 32;
+#endif
     int chunk_size         = 4;
     int per_team_scratch   = 1024;
     int per_thread_scratch = 16;
@@ -689,9 +694,27 @@ void check_semiregular() {
 TEST(TEST_CATEGORY, policy_construction) {
   check_semiregular<Kokkos::RangePolicy<TEST_EXECSPACE>>();
   check_semiregular<Kokkos::TeamPolicy<TEST_EXECSPACE>>();
+  check_semiregular<Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>>();
 
   TestRangePolicyConstruction<TEST_EXECSPACE>();
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
+}
+
+template <template <class...> class Policy, class... Args>
+void check_converting_constructor_add_work_tag(Policy<Args...> const& policy) {
+  // Not the greatest but at least checking it compiles
+  struct WorkTag {};
+  Policy<Args..., WorkTag> policy_with_tag = policy;
+  (void)policy_with_tag;
+}
+
+TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
+  check_converting_constructor_add_work_tag(
+      Kokkos::RangePolicy<TEST_EXECSPACE>{});
+  check_converting_constructor_add_work_tag(
+      Kokkos::TeamPolicy<TEST_EXECSPACE>{});
+  check_converting_constructor_add_work_tag(
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
 }
 
 }  // namespace Test
