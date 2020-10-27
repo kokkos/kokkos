@@ -66,7 +66,7 @@ namespace Impl {
 struct half_impl_t {
   using type = float;
 };
-} // namespace Impl
+}  // namespace Impl
 namespace Experimental {
 
 using half_t                       = Kokkos::Impl::half_impl_t::type;
