@@ -346,29 +346,6 @@ inline void test_utilities() {
     static_assert(at(9, i{}) == 9, "Error: at(unsigned, integer_sequence)");
   }
 
-  {
-    using i  = make_integer_sequence<int, 5>;
-    using r  = reverse_integer_sequence<i>;
-    using gr = integer_sequence<int, 4, 3, 2, 1, 0>;
-
-    static_assert(std::is_same<r, gr>::value,
-                  "Error: reverse_integer_sequence");
-  }
-
-  {
-    using s = make_integer_sequence<int, 10>;
-    using e = exclusive_scan_integer_sequence<s>;
-    using i = inclusive_scan_integer_sequence<s>;
-
-    using ge = integer_sequence<int, 0, 0, 1, 3, 6, 10, 15, 21, 28, 36>;
-    using gi = integer_sequence<int, 0, 1, 3, 6, 10, 15, 21, 28, 36, 45>;
-
-    static_assert(e::value == 45, "Error: scan value");
-    static_assert(i::value == 45, "Error: scan value");
-
-    static_assert(std::is_same<e::type, ge>::value, "Error: exclusive_scan");
-    static_assert(std::is_same<i::type, gi>::value, "Error: inclusive_scan");
-  }
 }
 
 template <std::size_t... Idxs, class... Args>
