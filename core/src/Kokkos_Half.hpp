@@ -62,8 +62,14 @@
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 #define KOKKOS_IMPL_HALF_TYPE_DEFINED
 namespace Kokkos {
+namespace Impl {
+struct half_impl_t {
+  using type = float;
+};
+} // namespace Impl
 namespace Experimental {
-using half_t                       = float;
+
+using half_t                       = Kokkos::Impl::half_impl_t::type;
 constexpr const bool half_is_float = true;
 
 // cast_to_half

@@ -128,11 +128,8 @@ struct Functor_TestHalfOperators {
   void operator()(int) const {
     half_t tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
-#if defined(HALF_IMPL_TYPE)
-    half_t::impl_type half_tmp;
-#else
-    half_t half_tmp;
-#endif  // HALF_IMPL_TYPE
+    using half_impl_type = Kokkos::Impl::half_impl_t::type;
+    half_impl_type half_tmp;
 
     tmp_lhs              = h_lhs;
     actual_lhs(ASSIGN)   = cast_from_half<double>(tmp_lhs);
