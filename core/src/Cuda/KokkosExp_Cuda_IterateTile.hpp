@@ -1379,8 +1379,7 @@ struct DeviceIterateTile {
               static_cast<index_type>(maxblocks)));
       CudaLaunch<DeviceIterateTile>(*this, grid, block);
     } else {
-      printf("Kokkos::MDRange Error: Exceeded rank bounds with Cuda\n");
-      Kokkos::abort("Aborting");
+      Kokkos::abort("Kokkos::MDRange Error: Exceeded rank bounds with Cuda\n");
     }
 
   }  // end execute

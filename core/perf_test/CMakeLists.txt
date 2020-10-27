@@ -59,6 +59,7 @@ ENDIF()
 IF(Kokkos_ENABLE_OPENMPTARGET)
 # FIXME OPENMPTARGET requires TeamPolicy Reductions and Custom Reduction
   LIST(REMOVE_ITEM SOURCES
+    PerfTestGramSchmidt.cpp
     PerfTest_CustomReduction.cpp
     PerfTest_ExecSpacePartitioning.cpp
   )

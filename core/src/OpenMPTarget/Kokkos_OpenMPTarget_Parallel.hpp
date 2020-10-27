@@ -46,7 +46,7 @@
 #define KOKKOS_OPENMPTARGET_PARALLEL_HPP
 
 #include <omp.h>
-#include <cstdio>  // printf
+#include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
@@ -139,8 +139,11 @@ template <class FunctorType, class PolicyType, class ReducerType,
 struct ParallelReduceSpecialize {
   static inline void execute(const FunctorType& /*f*/, const PolicyType& /*p*/,
                              PointerType /*result_ptr*/) {
-    printf("Error: Invalid Specialization %i %i\n", FunctorHasJoin,
-           UseReducerType);
+    std::stringstream error_message;
+    error_message << "Error: Invalid Specialization " << FunctorHasJoin << ' '
+                  << UseReducerType << '\n';
+    // FIXME_OPENMPTARGET
+    OpenMPTarget_abort(error_message.str().c_str());
   }
 };
 
