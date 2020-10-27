@@ -382,8 +382,8 @@ template <class T, class MemoryOrderSuccess, class MemoryOrderFailure>
 KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH bool _atomic_compare_exchange_strong(
     T* dest, T compare, T val, MemoryOrderSuccess, MemoryOrderFailure,
     typename std::enable_if<
-        (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
-         sizeof(T) == 8 || sizeof(T) == 16) &&
+        (sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8 || 
+         sizeof(T) == 16) &&
             std::is_same<
                 typename MemoryOrderSuccess::memory_order,
                 typename std::remove_cv<MemoryOrderSuccess>::type>::value &&
@@ -401,8 +401,8 @@ KOKKOS_INTERNAL_INLINE_DEVICE_IF_CUDA_ARCH bool _atomic_compare_exchange_strong(
     T* dest, T compare, T val, MemoryOrderSuccess order_success,
     MemoryOrderFailure order_failure,
     typename std::enable_if<
-        !(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8 ||
-          sizeof(T) == 16) &&
+        !(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 ||
+          sizeof(T) == 8 || sizeof(T) == 16) &&
             std::is_same<
                 typename MemoryOrderSuccess::memory_order,
                 typename std::remove_cv<MemoryOrderSuccess>::type>::value &&
