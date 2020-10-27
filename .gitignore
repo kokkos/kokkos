@@ -12,3 +12,5 @@ testing/
 /out/build
 /CMakeSettings.json
 /out/mytest
+gdb.txt
+.gdb_history
