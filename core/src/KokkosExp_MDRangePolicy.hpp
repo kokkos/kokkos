@@ -128,8 +128,9 @@ constexpr To checked_narrow_cast(From arg) {
 // NOTE prefer C array U[M] to std::initalizer_list<U> so that the number of
 // elements can be deduced (https://stackoverflow.com/q/40241370)
 // NOTE for some unfortunate reason the policy bounds are stored as signed
-// integer arrays so we specify the index type and check ahead of time that
-// narrowing conversions will be safe.
+// integer arrays (point_type which is Kokkos::Array<std::int64_t>) so we
+// specify the index type (actual policy index_type from the traits) and check
+// ahead of time that narrowing conversions will be safe.
 template <class IndexType, class Array, class U, std::size_t M>
 constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   using T = typename Array::value_type;
