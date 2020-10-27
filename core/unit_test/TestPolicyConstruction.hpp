@@ -717,6 +717,7 @@ TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
 }
 
+#ifndef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
 TEST(TEST_CATEGORY, policy_bounds_unsafe_narrowing_conversions) {
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
                                        Kokkos::IndexType<unsigned>>;
@@ -728,5 +729,6 @@ TEST(TEST_CATEGORY, policy_bounds_unsafe_narrowing_conversions) {
       },
       "unsafe narrowing conversion");
 }
+#endif
 
 }  // namespace Test
