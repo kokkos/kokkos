@@ -68,21 +68,8 @@ struct GraphNodeBackendSpecificDetails<Kokkos::Cuda> {
 
   explicit GraphNodeBackendSpecificDetails() = default;
 
-  GraphNodeBackendSpecificDetails(_graph_node_is_root_ctor_tag) noexcept {}
-
-  GraphNodeBackendSpecificDetails(GraphNodeBackendSpecificDetails const&) =
-      delete;
-
-  GraphNodeBackendSpecificDetails(GraphNodeBackendSpecificDetails&&) noexcept =
-      delete;
-
-  GraphNodeBackendSpecificDetails& operator   =(
-      GraphNodeBackendSpecificDetails const&) = delete;
-
-  GraphNodeBackendSpecificDetails& operator       =(
-      GraphNodeBackendSpecificDetails&&) noexcept = delete;
-
-  ~GraphNodeBackendSpecificDetails() = default;
+  explicit GraphNodeBackendSpecificDetails(
+      _graph_node_is_root_ctor_tag) noexcept {}
 
   // </editor-fold> end Ctors, destructor, and assignment }}}2
   //----------------------------------------------------------------------------
