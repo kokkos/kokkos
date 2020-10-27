@@ -151,16 +151,22 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
-
-    auto result_ptr = static_cast<pointer_type>(
-        sycl::malloc(sizeof(*m_result_ptr), q, sycl::usm::alloc::shared));
+    using ReductionResultMem =
+        Experimental::Impl::SYCLInternal::ReductionResultMem;
+    ReductionResultMem& reductionResultMem = instance.m_reductionResultMem;
+    sycl::queue& q                         = *instance.m_queue;
 
     value_type identity{};
     if constexpr (!std::is_same<ReducerType, InvalidType>::value)
       m_reducer.init(identity);
 
-    *result_ptr = identity;
+    // fancy_result_ptr manages the object in reductionResultMem
+    // result_ptr is a raw pointer to the object in reductionResultMem
+    using FancyResultPtr =
+        std::unique_ptr<value_type, ReductionResultMem::Deleter>;
+    FancyResultPtr fancy_result_ptr = reductionResultMem.copy_from(identity);
+    pointer_type result_ptr         = fancy_result_ptr.get();
+
     if constexpr (ReduceFunctorHasInit<Functor>::value)
       ValueInit::init(functor, result_ptr);
 
@@ -210,7 +216,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
       space.fence();
     }
-
     if constexpr (ReduceFunctorHasFinal<Functor>::value)
       q.submit([&](sycl::handler& cgh) {
         cgh.single_task([=]() {
@@ -222,8 +227,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           space, m_result_ptr, result_ptr, sizeof(*m_result_ptr));
     space.fence();
-
-    sycl::free(result_ptr, q);
   }
 
   template <typename Functor>
@@ -232,17 +235,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMemory& kernelMem =
-        *instance.m_indirectKernel;
+    using IndirectKernelMem =
+        Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
+    IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
 
-    // Allocate USM shared memory for the functor
-    kernelMem.resize(std::max(kernelMem.size(), sizeof(functor)));
-
-    // Placement new a copy of functor into USM shared memory
-    //
-    // Store it in a unique_ptr to call its destructor on scope exit
-    std::unique_ptr<Functor, Kokkos::Impl::destruct_delete> kernelFunctorPtr(
-        new (kernelMem.data()) Functor(functor));
+    // Store a copy of the functor in indirectKernelMem
+    using KernelFunctorPtr =
+        std::unique_ptr<Functor, IndirectKernelMem::Deleter>;
+    KernelFunctorPtr kernelFunctorPtr = indirectKernelMem.copy_from(functor);
 
     auto kernelFunctor = ExtendedReferenceWrapper<Functor>(*kernelFunctorPtr);
     sycl_direct_launch(m_policy, kernelFunctor);
