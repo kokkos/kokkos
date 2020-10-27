@@ -128,13 +128,12 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
 
   Kokkos::ObservingRawPtr<base_t> allocate_driver_memory_buffer() const {
     KOKKOS_EXPECTS(m_driver_storage == nullptr)
-    using record_t = typename GraphNodeKernelImpl::Record;
 
-    auto* record = record_t::allocate(
+    auto* record = Record::allocate(
         Kokkos::CudaSpace{}, "GraphNodeKernel global memory functor storage",
         sizeof(base_t));
 
-    record_t::increment(record);
+    Record::increment(record);
     m_driver_storage = reinterpret_cast<base_t*>(record->data());
     KOKKOS_ENSURES(m_driver_storage != nullptr)
     return m_driver_storage;
