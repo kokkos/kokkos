@@ -64,14 +64,11 @@
 namespace Kokkos {
 namespace Impl {
 
-struct CudaGraphNodeKernelBase {};
-
 template <class PolicyType, class Functor, class PatternTag, class... Args>
 class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
                           Args...>
     : public PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
-                                              Args..., Kokkos::Cuda>::type,
-      public CudaGraphNodeKernelBase {
+                                              Args..., Kokkos::Cuda>::type {
  private:
   using base_t =
       typename PatternImplSpecializationFromTag<PatternTag, Functor, PolicyType,
@@ -144,7 +141,7 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
   }
 };
 
-struct CudaGraphNodeAggregateKernel : CudaGraphNodeKernelBase {
+struct CudaGraphNodeAggregateKernel {
   using graph_kernel = CudaGraphNodeAggregateKernel;
 
   // Aggregates don't need a policy, but for the purposes of checking the static
