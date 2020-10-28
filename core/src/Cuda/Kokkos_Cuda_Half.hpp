@@ -52,10 +52,15 @@
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 // Make sure no one else tries to define half_t
 #define KOKKOS_IMPL_HALF_TYPE_DEFINED
+#define KOKKOS_ENABLE_CUDA_HALF
 
 namespace Kokkos {
+namespace Impl {
+struct half_impl_t {
+  using type = __half;
+};
+}  // namespace Impl
 namespace Experimental {
-#define HALF_IMPL_TYPE __half
 
 // Forward declarations
 class half_t;
@@ -122,7 +127,7 @@ KOKKOS_INLINE_FUNCTION
 
 class half_t {
  public:
-  using impl_type = HALF_IMPL_TYPE;
+  using impl_type = Kokkos::Impl::half_impl_t::type;
 
  private:
   impl_type val;
