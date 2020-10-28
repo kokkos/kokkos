@@ -50,6 +50,7 @@
 #ifdef KOKKOS_ENABLE_SYCL
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
+#include <impl/Kokkos_Tools.hpp>
 
 namespace Kokkos {
 namespace Experimental {
