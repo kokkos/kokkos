@@ -134,7 +134,7 @@ void* SYCLDeviceUSMSpace::allocate(const char* arg_label,
   return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
 }
 
-void* SYCLDeviceUSMSpace::allocate(
+void* SYCLDeviceUSMSpace::impl_allocate(
     const char* arg_label, const size_t arg_alloc_size,
     const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
