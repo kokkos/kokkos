@@ -48,14 +48,6 @@ SET(SOURCES
   PerfTest_ViewResize_8.cpp
   )
 
-IF(Kokkos_ENABLE_HIP)
-# FIXME HIP requires TeamPolicy
-  LIST(REMOVE_ITEM SOURCES
-    PerfTest_CustomReduction.cpp
-    PerfTest_ExecSpacePartitioning.cpp
-  )
-ENDIF()
-
 IF(Kokkos_ENABLE_OPENMPTARGET)
 # FIXME OPENMPTARGET requires TeamPolicy Reductions and Custom Reduction
   LIST(REMOVE_ITEM SOURCES
