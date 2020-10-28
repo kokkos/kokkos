@@ -164,14 +164,19 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   using t_host_const_randomread_um =
       typename t_dev_const_randomread_um::HostMirror;
 
-  //@}
-  //! \name Counters to keep track of changes ("modified" flags)
-  //@{
+  constexpr const static bool has_two_allocations =
+      !std::is_same<typename t_dev::memory_space,
+                    typename t_host::memory_space>::value
 
- protected:
-  // modified_flags[0] -> host
-  // modified_flags[1] -> device
-  using t_modified_flags = View<unsigned int[2], LayoutLeft, Kokkos::HostSpace>;
+      //@}
+      //! \name Counters to keep track of changes ("modified" flags)
+      //@{
+
+      protected :
+      // modified_flags[0] -> host
+      // modified_flags[1] -> device
+      using t_modified_flags =
+          View<unsigned int[2], LayoutLeft, Kokkos::HostSpace>;
   t_modified_flags modified_flags;
 
  public:
