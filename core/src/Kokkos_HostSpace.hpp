@@ -165,6 +165,7 @@ class HostSpace {
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
+
  private:
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
@@ -175,7 +176,8 @@ class HostSpace {
                        const size_t arg_logical_size = 0,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
-  public:
+
+ public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
