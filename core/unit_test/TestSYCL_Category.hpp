@@ -42,28 +42,12 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_TEST_SYCL_HPP
+#define KOKKOS_TEST_SYCL_HPP
+
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+#define TEST_CATEGORY sycl
+#define TEST_EXECSPACE Kokkos::Experimental::SYCL
 
-#if !defined(KOKKOS_ENABLE_CUDA) || defined(__CUDACC__)
-
-#include <default/TestDefaultDeviceType_Category.hpp>
-#include <TestReduceCombinatorical.hpp>
-
-// FIXME_SYCL
-// C++ exception with description "Global_work_size not evenly divisible by
-// local_work_size. Non-uniform work-groups are not allowed by default.
-// Underlying OpenCL 2.x implementation supports this feature and to enable it,
-// build device program with -cl-std=CL2.0 -54 (CL_INVALID_WORK_GROUP_SIZE)"
-// thrown in the test body.
-#ifndef KOKKOS_ENABLE_SYCL
-namespace Test {
-
-TEST(defaultdevicetype, reduce_instantiation_a1) {
-  TestReduceCombinatoricalInstantiation<>::execute_a1();
-}
-
-}  // namespace Test
-#endif
 #endif

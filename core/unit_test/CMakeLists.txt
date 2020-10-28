@@ -44,7 +44,7 @@ SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 12)
 SET(KOKKOS_OPENMPTARGET_NAME Experimental::OpenMPTarget)
 SET(KOKKOS_SERIAL_FEATURE_LEVEL 999)
 SET(KOKKOS_SERIAL_NAME Serial)
-SET(KOKKOS_SYCL_FEATURE_LEVEL 4)
+SET(KOKKOS_SYCL_FEATURE_LEVEL 5)
 SET(KOKKOS_SYCL_NAME Experimental::SYCL)
 SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
 SET(KOKKOS_THREADS_NAME Threads)
@@ -58,7 +58,7 @@ SET(KOKKOS_THREADS_NAME Threads)
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
-foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
+foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
     set(DEVICE "PTHREAD")
@@ -412,6 +412,82 @@ if(Kokkos_ENABLE_HIP)
     SOURCES
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Streams.cpp
+  )
+endif()
+
+if(Kokkos_ENABLE_SYCL)
+  list(REMOVE_ITEM SYCL_SOURCES
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_int.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_unsignedint.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_longint.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_unsignedlongint.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_longlongint.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_double.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_float.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_complexdouble.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_complexfloat.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicViews.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Atomics.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Atomics.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicViews.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_BlockSizeDeduction.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Crs.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_DeepCopyAlignment.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Init.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_LocalDeepCopy.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_a.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_b.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_c.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_d.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_e.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_f.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Other.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_RangePolicy.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_RangePolicyRequire.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reductions.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_a.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_b.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_c.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_d.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reductions_DeviceView.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Scan.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SharedAlloc.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_a.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_b.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c01.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c02.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c03.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c04.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c05.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c06.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c07.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c08.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c10.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c09.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c11.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c12.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c13.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamBasic.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamReductionScan.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamScratch.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamTeamSize.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamVectorRange.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_UniqueToken.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewAPI_a.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewAPI_d.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewAPI_e.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewLayoutStrideAssignment.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewMapping_a.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_WorkGraph.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewMapping_b.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ViewResize.cpp
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCL
+    SOURCES
+      UnitTestMainInit.cpp
+      ${SYCL_SOURCES}
   )
 endif()
 

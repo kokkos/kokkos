@@ -63,8 +63,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
   ParallelFor()        = delete;
   ParallelFor& operator=(const ParallelFor&) = delete;
 
-  static void sycl_direct_launch(const Policy& policy,
-                                 const FunctorType& functor) {
+  template <typename Functor>
+  static void sycl_direct_launch(const Policy& policy, const Functor& functor) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =

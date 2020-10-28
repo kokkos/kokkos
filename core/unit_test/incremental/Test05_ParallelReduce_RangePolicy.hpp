@@ -54,7 +54,6 @@ namespace Test {
 
 using value_type       = double;
 constexpr double value = 0.5;
-const int num_elements = 10;
 
 struct ReduceFunctor {
   value_type *_data;
@@ -68,6 +67,24 @@ struct ReduceFunctor {
   }
 };
 
+struct NonTrivialReduceFunctor {
+  value_type *_data;
+
+  NonTrivialReduceFunctor(value_type *data) : _data(data) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int i, double &UpdateSum) const {
+    _data[i] = (i + 1) * value;
+    UpdateSum += _data[i];
+  }
+
+  NonTrivialReduceFunctor(NonTrivialReduceFunctor const &) = default;
+  NonTrivialReduceFunctor(NonTrivialReduceFunctor &&)      = default;
+  NonTrivialReduceFunctor &operator=(NonTrivialReduceFunctor &&) = default;
+  NonTrivialReduceFunctor &operator=(NonTrivialReduceFunctor const &) = default;
+  ~NonTrivialReduceFunctor() {}
+};
+
 template <class ExecSpace>
 struct TestReduction {
   // Memory space type for Device and Host data
@@ -76,11 +93,14 @@ struct TestReduction {
 
   value_type *deviceData, *hostData;
   value_type sum = 0.0;
+  const int m_num_elements;
+
+  TestReduction(int num_elements) : m_num_elements(num_elements) {}
 
   // compare and equal
   void check_correctness() {
     int sum_local = 0;
-    for (int i = 0; i < num_elements; ++i) sum_local += (i + 1);
+    for (int i = 0; i < m_num_elements; ++i) sum_local += (i + 1);
 
     ASSERT_EQ(sum, sum_local * value)
         << "The reduced value does not match the expected answer";
@@ -108,11 +128,11 @@ struct TestReduction {
   // Allocate Memory for both device and host memory spaces
   void init() {
     // Allocate memory on Device space.
-    deviceData = allocate_mem<d_memspace_type>(num_elements);
+    deviceData = allocate_mem<d_memspace_type>(m_num_elements);
     ASSERT_NE(deviceData, nullptr);
 
     // Allocate memory on Host space.
-    hostData = allocate_mem<h_memspace_type>(num_elements);
+    hostData = allocate_mem<h_memspace_type>(m_num_elements);
     ASSERT_NE(hostData, nullptr);
 
     // Initialize the sum value to zero.
@@ -139,16 +159,36 @@ struct TestReduction {
 
     // parallel_reduce call with range policy over num_elements number of
     // iterations
-    Kokkos::parallel_reduce("Reduction", range_policy(0, num_elements),
+    Kokkos::parallel_reduce("Reduction", range_policy(0, m_num_elements),
                             ReduceFunctor(deviceData), sum);
+
+    check_correctness_and_cleanup();
+  }
+
+  void non_trivial_sum_reduction() {
+    // Allocates memory for num_elements number of value_type elements in the
+    // host and device memory spaces.
+    init();
+
+    // Creates a range policy that uses dynamic schedule.
+    using range_policy =
+        Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >;
+
+    // parallel_reduce call with range policy over num_elements number of
+    // iterations
+    Kokkos::parallel_reduce("Reduction", range_policy(0, m_num_elements),
+                            NonTrivialReduceFunctor(deviceData), sum);
 
     check_correctness_and_cleanup();
   }
 };
 
 TEST(TEST_CATEGORY, IncrTest_05_reduction) {
-  TestReduction<TEST_EXECSPACE> test;
-  test.sum_reduction();
+  for (unsigned int i = 1; i < 100; ++i) {
+    TestReduction<TEST_EXECSPACE> test(i);
+    test.sum_reduction();
+    test.non_trivial_sum_reduction();
+  }
 }
 
 }  // namespace Test
