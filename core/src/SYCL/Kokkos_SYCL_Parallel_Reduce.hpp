@@ -134,27 +134,28 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     ValueInit::init(functor, &host_result);
     q.memcpy(result_ptr, &host_result, sizeof(host_result));
 
-    q.submit([functor, policy, result_ptr](cl::sycl::handler& cgh) {
-      // FIXME_SYCL a local size larger than 1 doesn't work for all cases
-      cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
+    if (policy.begin() != policy.end()) {
+      q.submit([functor, policy, result_ptr](cl::sycl::handler& cgh) {
+        // FIXME_SYCL a local size larger than 1 doesn't work for all cases
+        cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
 
-      constexpr value_type identity{};
+        constexpr value_type identity{};
 
-      auto reduction =
-          cl::sycl::ONEAPI::reduction(result_ptr, identity, std::plus<>());
+        auto reduction =
+            cl::sycl::ONEAPI::reduction(result_ptr, identity, std::plus<>());
 
-      cgh.parallel_for(
-          range, reduction, [=](cl::sycl::nd_item<1> item, auto& sum) {
-            const typename Policy::index_type id = item.get_global_id(0);
-            value_type partial                   = identity;
-            if constexpr (std::is_same<WorkTag, void>::value)
-              functor(id, partial);
-            else
-              functor(WorkTag(), id, partial);
-            sum.combine(partial);
-          });
-    });
-
+        cgh.parallel_for(
+            range, reduction, [=](cl::sycl::nd_item<1> item, auto& sum) {
+              const typename Policy::index_type id = item.get_global_id(0);
+              value_type partial                   = identity;
+              if constexpr (std::is_same<WorkTag, void>::value)
+                functor(id, partial);
+              else
+                functor(WorkTag(), id, partial);
+              sum.combine(partial);
+            });
+      });
+    }
     q.wait();
 
     *m_result_ptr = *result_ptr;

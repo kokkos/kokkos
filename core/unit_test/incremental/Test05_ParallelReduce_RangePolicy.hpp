@@ -127,13 +127,15 @@ struct TestReduction {
 
   // Allocate Memory for both device and host memory spaces
   void init() {
-    // Allocate memory on Device space.
-    deviceData = allocate_mem<d_memspace_type>(m_num_elements);
-    ASSERT_NE(deviceData, nullptr);
+    if (m_num_elements > 0) {
+      // Allocate memory on Device space.
+      deviceData = allocate_mem<d_memspace_type>(m_num_elements);
+      ASSERT_NE(deviceData, nullptr);
 
-    // Allocate memory on Host space.
-    hostData = allocate_mem<h_memspace_type>(m_num_elements);
-    ASSERT_NE(hostData, nullptr);
+      // Allocate memory on Host space.
+      hostData = allocate_mem<h_memspace_type>(m_num_elements);
+      ASSERT_NE(hostData, nullptr);
+    }
 
     // Initialize the sum value to zero.
     sum = 0.0;
@@ -143,9 +145,11 @@ struct TestReduction {
     // Check if reduction has produced correct results
     check_correctness();
 
-    // free the allocated memory
-    free_mem<d_memspace_type>(deviceData);
-    free_mem<h_memspace_type>(hostData);
+    if (m_num_elements > 0) {
+      // free the allocated memory
+      free_mem<d_memspace_type>(deviceData);
+      free_mem<h_memspace_type>(hostData);
+    }
   }
 
   void sum_reduction() {
@@ -184,7 +188,7 @@ struct TestReduction {
 };
 
 TEST(TEST_CATEGORY, IncrTest_05_reduction) {
-  for (unsigned int i = 1; i < 100; ++i) {
+  for (unsigned int i = 0; i < 100; ++i) {
     TestReduction<TEST_EXECSPACE> test(i);
     test.sum_reduction();
     test.non_trivial_sum_reduction();
