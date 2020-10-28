@@ -95,6 +95,12 @@ void *HBWSpace::allocate(const size_t arg_alloc_size) const {
 }
 void *HBWSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                          const size_t arg_logical_size) const {
+  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
+}
+void *HBWSpace::impl_allocate(
+    const char *arg_label, const size_t arg_alloc_size,
+    const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
   static_assert(sizeof(void *) == sizeof(uintptr_t),
                 "Error sizeof(void*) != sizeof(uintptr_t)");
 
@@ -155,9 +161,7 @@ void *HBWSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
-        reported_size);
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
 
   return ptr;
@@ -170,13 +174,18 @@ void HBWSpace::deallocate(void *const arg_alloc_ptr,
 void HBWSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
                           const size_t arg_alloc_size,
                           const size_t arg_logical_size) const {
+  impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
+}
+void HBWSpace::impl_deallocate(
+    const char *arg_label, void *const arg_alloc_ptr,
+    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (arg_alloc_ptr) {
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       const size_t reported_size =
           (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-      Kokkos::Profiling::deallocateData(
-          Kokkos::Profiling::make_space_handle(name()), arg_label,
-          arg_alloc_ptr, reported_size);
+      Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
+                                        reported_size);
     }
 
     if (m_alloc_mech == STD_MALLOC) {
