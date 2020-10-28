@@ -63,11 +63,6 @@ class TestRangePolicyConstruction {
  private:
   void test_compile_time_parameters() {
     {
-      Kokkos::Impl::expand_variadic();
-      Kokkos::Impl::expand_variadic(1, 2, 3);
-    }
-
-    {
       using policy_t        = Kokkos::RangePolicy<>;
       using execution_space = typename policy_t::execution_space;
       using index_type      = typename policy_t::index_type;
