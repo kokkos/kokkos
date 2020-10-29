@@ -232,7 +232,9 @@ struct FloatingPointComparison {
 
     assertion_result ar(P(fpv));
     if (!ar) {
+#ifndef KOKKOS_ENABLE_SYCL
       printf("absolute value exceeds tolerance [|%e| > %e]\n", fpv, abs_tol_);
+#endif
     }
 
     return ar;
@@ -250,8 +252,10 @@ struct FloatingPointComparison {
 
       assertion_result ar(P(lhs, rhs));
       if (!ar) {
+#ifndef KOKKOS_ENABLE_SYCL
         printf("relative difference exceeds tolerance [%e > %e]\n",
                P.tested_rel_diff(), P.fraction_tolerance());
+#endif
       }
 
       return ar;
@@ -395,8 +399,10 @@ struct TestMathUnaryFunction : FloatingPointComparison {
     bool ar = compare_fpv<double>(Func::eval(val_[i]), res_[i]);
     if (!ar) {
       ++e;
+#ifndef KOKKOS_ENABLE_SYCL
       printf("value at %f which is %f was expected to be %f\n", (double)val_[i],
              (double)Func::eval(val_[i]), (double)res_[i]);
+#endif
     }
   }
 };
@@ -432,9 +438,11 @@ struct TestMathBinaryFunction : FloatingPointComparison {
     bool ar = compare_fpv<double>(Func::eval(val1_, val2_), res_);
     if (!ar) {
       ++e;
+#ifndef KOKKOS_ENABLE_SYCL
       printf("value at %f, %f which is %f was expected to be %f\n",
              (double)val1_, (double)val2_, (double)Func::eval(val1_, val2_),
              (double)res_);
+#endif
     }
   }
 };
