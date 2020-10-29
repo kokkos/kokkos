@@ -692,7 +692,10 @@ TEST(TEST_CATEGORY, policy_construction) {
   check_semiregular<Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>>();
 
   TestRangePolicyConstruction<TEST_EXECSPACE>();
+  // FIXME_SYCL requires Team policy
+#ifndef KOKKOS_ENABLE_SYCL
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
+#endif
 }
 
 template <template <class...> class Policy, class... Args>
@@ -706,10 +709,13 @@ void check_converting_constructor_add_work_tag(Policy<Args...> const& policy) {
 TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
   check_converting_constructor_add_work_tag(
       Kokkos::RangePolicy<TEST_EXECSPACE>{});
+  // FIXME_SYCL requires MDRange policy and Team policy
+#ifndef KOKKOS_ENABLE_SYCL
   check_converting_constructor_add_work_tag(
       Kokkos::TeamPolicy<TEST_EXECSPACE>{});
   check_converting_constructor_add_work_tag(
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
+#endif
 }
 
 }  // namespace Test
