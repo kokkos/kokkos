@@ -81,6 +81,7 @@ TEST(TEST_CATEGORY, team_reduce) {
 }
 
 TEST(TEST_CATEGORY, team_broadcast_long) {
+#if !defined(KOKKOS_ENABLE_HPX)
   // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if constexpr (!std::is_same<TEST_EXECSPACE,
@@ -107,9 +108,11 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                       long>::test_teambroadcast(1000, 1);
   }
+#endif
 }
 
 TEST(TEST_CATEGORY, team_broadcast_char) {
+#if !defined(KOKKOS_ENABLE_HPX)
   // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if constexpr (!std::is_same<TEST_EXECSPACE,
@@ -136,9 +139,11 @@ TEST(TEST_CATEGORY, team_broadcast_char) {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                       long>::test_teambroadcast(1000, 1);
   }
+#endif
 }
 
 TEST(TEST_CATEGORY, team_broadcast_float) {
+#if !defined(KOKKOS_ENABLE_HPX) && !defined(KOKKOS_ENABLE_OPENMP)
   // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if constexpr (!std::is_same<TEST_EXECSPACE,
@@ -175,9 +180,11 @@ TEST(TEST_CATEGORY, team_broadcast_float) {
                           float>::test_teambroadcast(1000, 1.3);
       }
   }
+#endif
 }
 
 TEST(TEST_CATEGORY, team_broadcast_double) {
+#if !defined(KOKKOS_ENABLE_HPX) && !defined(KOKKOS_ENABLE_OPENMP)
   // FIXME_OPENMPTARGET
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   if constexpr (!std::is_same<TEST_EXECSPACE,
@@ -215,6 +222,7 @@ TEST(TEST_CATEGORY, team_broadcast_double) {
                           double>::test_teambroadcast(1000, 1.3);
       }
   }
+#endif
 }
 
 }  // namespace Test
