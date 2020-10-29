@@ -319,7 +319,9 @@ DEFINE_UNARY_FUNCTION_EVAL(lgamma);
 DEFINE_UNARY_FUNCTION_EVAL(ceil);
 DEFINE_UNARY_FUNCTION_EVAL(floor);
 DEFINE_UNARY_FUNCTION_EVAL(trunc);
+#ifndef KOKKOS_ENABLE_SYCL
 DEFINE_UNARY_FUNCTION_EVAL(nearbyint);
+#endif
 
 #undef DEFINE_UNARY_FUNCTION_EVAL
 
@@ -805,6 +807,7 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(trunc)({12.3l, 4.56l, 789.l});
 #endif
 
+#ifndef KOKKOS_ENABLE_SYCL
   TEST_MATH_FUNCTION(nearbyint)({-3, -2, -1, 0, 1});
   TEST_MATH_FUNCTION(nearbyint)({-3l, -2l, -1l, 0l, 1l});
   TEST_MATH_FUNCTION(nearbyint)({-3ll, -2ll, -1ll, 0ll, 1ll});
@@ -815,5 +818,6 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(nearbyint)({-6.6, 7.7, -8.8, 9.9});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   TEST_MATH_FUNCTION(nearbyint)({12.3l, 4.56l, 789.l});
+#endif
 #endif
 }
