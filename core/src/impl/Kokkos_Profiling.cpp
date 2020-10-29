@@ -53,6 +53,7 @@
 #include <array>
 #include <cstring>
 #include <iostream>
+#include <memory>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
@@ -464,11 +465,11 @@ void initialize(const std::string& profileLibrary) {
 
   char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
-  char* envProfileCopy = static_cast<char*>(
-      malloc(sizeof(char) * (strlen(envProfileLibrary) + 1)));
-  sprintf(envProfileCopy, "%s", envProfileLibrary);
+  const auto envProfileCopy =
+      std::make_unique<char[]>(strlen(envProfileLibrary) + 1);
+  sprintf(envProfileCopy.get(), "%s", envProfileLibrary);
 
-  char* profileLibraryName = strtok(envProfileCopy, ";");
+  char* profileLibraryName = strtok(envProfileCopy.get(), ";");
 
   if ((profileLibraryName != nullptr) &&
       (strcmp(profileLibraryName, "") != 0)) {
@@ -664,9 +665,6 @@ void initialize(const std::string& profileLibrary) {
   Experimental::no_profiling.declare_output_type   = nullptr;
   Experimental::no_profiling.request_output_values = nullptr;
   Experimental::no_profiling.end_tuning_context    = nullptr;
-#ifdef KOKKOS_ENABLE_LIBDL
-  free(envProfileCopy);
-#endif
 }
 
 void finalize() {
