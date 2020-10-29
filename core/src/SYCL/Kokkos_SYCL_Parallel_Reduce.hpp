@@ -205,11 +205,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         case sycl::usm::alloc::unknown:
           value_type host_result;
           ValueInit::init(functor, &host_result);
-          q.memcpy(m_result_ptr, &host_result, sizeof(host_result));
+          q.memcpy(m_result_ptr, &host_result, sizeof(host_result)).wait();
           break;
         default: break;
       }
-      q.wait();
       return;
     }
 
