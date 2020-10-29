@@ -134,28 +134,27 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     ValueInit::init(functor, &host_result);
     q.memcpy(result_ptr, &host_result, sizeof(host_result));
 
-    if (policy.begin() != policy.end()) {
-      q.submit([functor, policy, result_ptr](cl::sycl::handler& cgh) {
-        // FIXME_SYCL a local size larger than 1 doesn't work for all cases
-        cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
+    q.submit([functor, policy, result_ptr](cl::sycl::handler& cgh) {
+      // FIXME_SYCL a local size larger than 1 doesn't work for all cases
+      cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
 
-        constexpr value_type identity{};
+      constexpr value_type identity{};
 
-        auto reduction =
-            cl::sycl::ONEAPI::reduction(result_ptr, identity, std::plus<>());
+      auto reduction =
+          cl::sycl::ONEAPI::reduction(result_ptr, identity, std::plus<>());
 
-        cgh.parallel_for(
-            range, reduction, [=](cl::sycl::nd_item<1> item, auto& sum) {
-              const typename Policy::index_type id = item.get_global_id(0);
-              value_type partial                   = identity;
-              if constexpr (std::is_same<WorkTag, void>::value)
-                functor(id, partial);
-              else
-                functor(WorkTag(), id, partial);
-              sum.combine(partial);
-            });
-      });
-    }
+      cgh.parallel_for(
+          range, reduction, [=](cl::sycl::nd_item<1> item, auto& sum) {
+            const typename Policy::index_type id = item.get_global_id(0);
+            value_type partial                   = identity;
+            if constexpr (std::is_same<WorkTag, void>::value)
+              functor(id, partial);
+            else
+              functor(WorkTag(), id, partial);
+            sum.combine(partial);
+          });
+    });
+
     q.wait();
 
     *m_result_ptr = *result_ptr;
@@ -187,6 +186,32 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
  public:
   void execute() const {
     ReducerTypeFwd functor = ReducerConditional::select(m_functor, m_reducer);
+
+    if (m_policy.begin() == m_policy.end()) {
+      const Kokkos::Experimental::SYCL& space = m_policy.space();
+      Kokkos::Experimental::Impl::SYCLInternal& instance =
+          *space.impl_internal_space_instance();
+      cl::sycl::queue& q = *instance.m_queue;
+
+      sycl::usm::alloc result_ptr_type =
+          sycl::get_pointer_type(m_result_ptr, q.get_context());
+
+      switch (result_ptr_type) {
+        case sycl::usm::alloc::host:
+        case sycl::usm::alloc::shared:
+          ValueInit::init(functor, m_result_ptr);
+          break;
+        case sycl::usm::alloc::device:
+        case sycl::usm::alloc::unknown:
+          value_type host_result;
+          ValueInit::init(functor, &host_result);
+          q.memcpy(m_result_ptr, &host_result, sizeof(host_result));
+          break;
+        default: break;
+      }
+      q.wait();
+      return;
+    }
 
     if constexpr (std::is_trivially_copyable_v<decltype(functor)>)
       sycl_direct_launch(m_policy, functor);
