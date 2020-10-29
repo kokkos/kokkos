@@ -380,11 +380,6 @@ if(Kokkos_ENABLE_CUDA)
 endif()
 
 if(Kokkos_ENABLE_HIP)
-  # FIXME_HIP
-  LIST(REMOVE_ITEM HIP_SOURCES
-    ${CMAKE_CURRENT_BINARY_DIR}/hip/TestHIP_AtomicOperations_complexdouble.cpp
-  )
-
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIP
     SOURCES

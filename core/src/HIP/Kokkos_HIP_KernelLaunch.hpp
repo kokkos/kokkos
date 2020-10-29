@@ -146,6 +146,8 @@ struct HIPParallelLaunch<
             "HIPParallelLaunch FAILED: shared memory request is too large");
       }
 
+      KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
+
       // FIXME_HIP -- there is currently an error copying (some) structs
       // by value to the device in HIP-Clang / VDI
       // As a workaround, we can malloc the DriverType and explictly copy over.
@@ -193,6 +195,8 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
         Kokkos::Impl::throw_runtime_exception(std::string(
             "HIPParallelLaunch FAILED: shared memory request is too large"));
       }
+
+      KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
 
       // Invoke the driver function on the device
 
