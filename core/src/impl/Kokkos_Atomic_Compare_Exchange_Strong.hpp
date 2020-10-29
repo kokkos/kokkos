@@ -150,7 +150,7 @@ __inline__ __device__ T atomic_compare_exchange(
 // Intel native CAS support int and long with the same interface as GCC.
 #if !defined(__CUDA_ARCH__) || defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 #if defined(KOKKOS_ENABLE_WINDOWS_ATOMICS)
-    // atomic_compare_exchange are already defined in Kokkos_Atomic_Windows.hpp
+// atomic_compare_exchange are already defined in Kokkos_Atomic_Windows.hpp
 #elif defined(KOKKOS_ENABLE_GNU_ATOMICS) || defined(KOKKOS_ENABLE_INTEL_ATOMICS)
 
 inline int atomic_compare_exchange(volatile int* const dest, const int compare,

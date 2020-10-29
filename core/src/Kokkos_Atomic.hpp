@@ -85,7 +85,7 @@
 #endif
 #endif
 
-#else // _WIN32
+#else  // _WIN32
 #if defined(KOKKOS_ENABLE_CUDA)
 
 // Compiling NVIDIA device code, must use Cuda atomics:
