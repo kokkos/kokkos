@@ -50,6 +50,10 @@
 #include <algorithm>
 #include <type_traits>
 
+#ifdef KOKKOS_ENABLE_SYCL
+#include <CL/sycl.hpp>
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
