@@ -84,7 +84,7 @@ namespace Experimental {
 
 // NOTE long double overloads are not available on the device
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
 
 #define KOKKOS_IMPL_BINARY_FUNCTION_ARITHMETIC(FUNC)                         \
   template <typename Arithmetic1, typename Arithmetic2,                      \
