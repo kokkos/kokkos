@@ -53,7 +53,8 @@
 
 #include "FloatingPointComparison.hpp"
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
 #else
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #endif

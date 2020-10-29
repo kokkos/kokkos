@@ -53,9 +53,15 @@
 namespace Kokkos {
 namespace Experimental {
 
+#if defined(KOKKOS_ENABLE_SYCL)
+#define NAMESPACE_MATH_FUNCTIONS cl::sycl
+#else
+#define NAMESPACE_MATH_FUNCTIONS std
+#endif
+
 #define KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, RETURNTYPE, ARGTYPE) \
   KOKKOS_INLINE_FUNCTION RETURNTYPE FUNC(ARGTYPE x) {                        \
-    using std::FUNC;                                                         \
+    using NAMESPACE_MATH_FUNCTIONS::FUNC;                                    \
     return FUNC(x);                                                          \
   }
 
@@ -68,12 +74,13 @@ namespace Experimental {
 
 #define KOKKOS_IMPL_BINARY_FUNCTION_FLOATING_POINT(FUNC, TYPE) \
   KOKKOS_INLINE_FUNCTION TYPE FUNC(TYPE x, TYPE y) {           \
-    using std::FUNC;                                           \
+    using NAMESPACE_MATH_FUNCTIONS::FUNC;                      \
     return FUNC(x, y);                                         \
   }
 
 // NOTE long double overloads are not available on the device
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
 
 #define KOKKOS_IMPL_BINARY_FUNCTION_ARITHMETIC(FUNC)                         \
   template <typename Arithmetic1, typename Arithmetic2,                      \
