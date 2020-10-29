@@ -202,6 +202,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           ValueInit::init(functor, m_result_ptr);
           break;
         case sycl::usm::alloc::device:
+          // non-USM-allocated memory
         case sycl::usm::alloc::unknown:
           value_type host_result;
           ValueInit::init(functor, &host_result);
