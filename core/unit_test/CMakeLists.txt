@@ -113,10 +113,11 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         SharedAlloc
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      file(WRITE ${file}
+      file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
       )
+      configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES1 ${file})
     endforeach()
 
@@ -143,10 +144,11 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewResize
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      file(WRITE ${file}
+      file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
       )
+      configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES2 ${file})
     endforeach()
 
@@ -174,10 +176,11 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       SubView_c13
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      file(WRITE ${file}
+      file(WRITE ${dir}/dummy.cpp
 	  "#include <Test${TagHostAccessible}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
-)
+      )
+      configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES2 ${file})
     endforeach()
 
