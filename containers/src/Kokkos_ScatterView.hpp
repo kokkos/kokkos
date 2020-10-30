@@ -206,6 +206,23 @@ struct DefaultContribution<Kokkos::Experimental::HIP,
 };
 #endif
 
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct DefaultDuplication<Kokkos::Experimental::SYCL> {
+  using type = Kokkos::Experimental::ScatterNonDuplicated;
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::SYCL,
+                           Kokkos::Experimental::ScatterNonDuplicated> {
+  using type = Kokkos::Experimental::ScatterAtomic;
+};
+template <>
+struct DefaultContribution<Kokkos::Experimental::SYCL,
+                           Kokkos::Experimental::ScatterDuplicated> {
+  using type = Kokkos::Experimental::ScatterAtomic;
+};
+#endif
+
 // FIXME All these scatter values need overhaul:
 //   - like should they be copyable at all?
 //   - what is the internal handle type
