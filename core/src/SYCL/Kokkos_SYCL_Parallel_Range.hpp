@@ -77,7 +77,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
       cl::sycl::range<1> range(policy.end() - policy.begin());
 
       cgh.parallel_for(range, [=](cl::sycl::item<1> item) {
-        const typename Policy::index_type id = item.get_linear_id();
+        const typename Policy::index_type id =
+            static_cast<typename Policy::index_type>(item.get_linear_id()) +
+            policy.begin();
         if constexpr (std::is_same<WorkTag, void>::value)
           functor(id);
         else

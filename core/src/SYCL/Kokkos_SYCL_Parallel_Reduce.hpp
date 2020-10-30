@@ -143,16 +143,19 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       auto reduction =
           cl::sycl::ONEAPI::reduction(result_ptr, identity, std::plus<>());
 
-      cgh.parallel_for(
-          range, reduction, [=](cl::sycl::nd_item<1> item, auto& sum) {
-            const typename Policy::index_type id = item.get_global_id(0);
-            value_type partial                   = identity;
-            if constexpr (std::is_same<WorkTag, void>::value)
-              functor(id, partial);
-            else
-              functor(WorkTag(), id, partial);
-            sum.combine(partial);
-          });
+      cgh.parallel_for(range, reduction,
+                       [=](cl::sycl::nd_item<1> item, auto& sum) {
+                         const typename Policy::index_type id =
+                             static_cast<typename Policy::index_type>(
+                                 item.get_global_id(0)) +
+                             policy.begin();
+                         value_type partial = identity;
+                         if constexpr (std::is_same<WorkTag, void>::value)
+                           functor(id, partial);
+                         else
+                           functor(WorkTag(), id, partial);
+                         sum.combine(partial);
+                       });
     });
 
     q.wait();
