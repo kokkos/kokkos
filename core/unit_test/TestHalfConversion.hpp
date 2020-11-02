@@ -1,3 +1,4 @@
+
 /*
 //@HEADER
 // ************************************************************************
@@ -42,36 +43,49 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
-
-#include <Kokkos_Core.hpp>
-#include <default/TestDefaultDeviceType_Category.hpp>
-#include <TestHalfConversion.hpp>
-#include <TestHalfOperators.hpp>
-
-#if !defined(KOKKOS_ENABLE_CUDA) || defined(__CUDACC__)
-
+#ifndef TESTHALFCONVERSION_HPP_
+#define TESTHALFCONVERSION_HPP_
 namespace Test {
 
-TEST(TEST_CATEGORY, host_space_access) {
-  using host_exec_space = Kokkos::HostSpace::execution_space;
-  using device_space    = Kokkos::Device<host_exec_space, Kokkos::HostSpace>;
-  using mirror_space =
-      Kokkos::Impl::HostMirror<Kokkos::DefaultExecutionSpace>::Space;
+template <class T>
+void test_half_conversion_type() {
+  double epsilon = Kokkos::Experimental::half_is_float ? 0.0000003 : 0.0003;
+  T base         = static_cast<T>(3.3);
+  Kokkos::Experimental::half_t a = Kokkos::Experimental::cast_to_half(base);
+  T b                            = Kokkos::Experimental::cast_from_half<T>(a);
+  ASSERT_TRUE((double(b - base) / double(base)) < epsilon);
 
-  static_assert(Kokkos::Impl::SpaceAccessibility<host_exec_space,
-                                                 Kokkos::HostSpace>::accessible,
-                "");
+// TODO: Remove ifndef once https://github.com/kokkos/kokkos/pull/3480 merges
+#ifndef KOKKOS_ENABLE_SYCL
+#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+  Kokkos::View<T> b_v("b_v");
+  Kokkos::parallel_for(
+      "TestHalfConversion", 1, KOKKOS_LAMBDA(int) {
+        Kokkos::Experimental::half_t d_a =
+            Kokkos::Experimental::cast_to_half(base);
+        b_v() = Kokkos::Experimental::cast_from_half<T>(d_a);
+      });
 
-  static_assert(Kokkos::Impl::SpaceAccessibility<device_space,
-                                                 Kokkos::HostSpace>::accessible,
-                "");
-
-  static_assert(Kokkos::Impl::SpaceAccessibility<mirror_space,
-                                                 Kokkos::HostSpace>::accessible,
-                "");
+  Kokkos::deep_copy(b, b_v);
+  ASSERT_TRUE((double(b - base) / double(base)) < epsilon);
+#endif  // KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
+#endif  // KOKKOS_ENABLE_SYCL
 }
 
-}  // namespace Test
+void test_half_conversion() {
+  test_half_conversion_type<float>();
+  test_half_conversion_type<double>();
+  test_half_conversion_type<short>();
+  test_half_conversion_type<int>();
+  test_half_conversion_type<long>();
+  test_half_conversion_type<long long>();
+  test_half_conversion_type<unsigned short>();
+  test_half_conversion_type<unsigned int>();
+  test_half_conversion_type<unsigned long>();
+  test_half_conversion_type<unsigned long long>();
+}
 
+TEST(TEST_CATEGORY, half_conversion) { test_half_conversion(); }
+
+}  // namespace Test
 #endif

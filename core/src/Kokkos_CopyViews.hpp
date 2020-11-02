@@ -292,6 +292,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 1, iType> {
   ViewTypeB b;
 
   using policy_type = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
+  using value_type  = typename ViewTypeA::value_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
@@ -301,7 +302,9 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 1, iType> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const { a(i0) = b(i0); };
+  void operator()(const iType& i0) const {
+    a(i0) = static_cast<value_type>(b(i0));
+  };
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -317,6 +320,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType> {
       Kokkos::Rank<2, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
       Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
+  using value_type = typename ViewTypeA::value_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
@@ -328,7 +332,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType> {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1) const {
-    a(i0, i1) = b(i0, i1);
+    a(i0, i1) = static_cast<value_type>(b(i0, i1));
   };
 };
 
@@ -346,6 +350,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType> {
       Kokkos::Rank<3, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
       Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
+  using value_type = typename ViewTypeA::value_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
@@ -358,7 +363,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType> {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2) const {
-    a(i0, i1, i2) = b(i0, i1, i2);
+    a(i0, i1, i2) = static_cast<value_type>(b(i0, i1, i2));
   };
 };
 
