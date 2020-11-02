@@ -31,6 +31,8 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP)
         Vector
         ViewCtorPropEmbeddedDim
         )
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
