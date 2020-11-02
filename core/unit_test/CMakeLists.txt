@@ -377,6 +377,12 @@ if(Kokkos_ENABLE_CUDA)
       UnitTestMain.cpp
       cuda/TestCuda_InterOp_Streams.cpp
   )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_CudaGraph
+    SOURCES
+      UnitTestMainInit.cpp
+      cuda/TestCuda_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_HIP)

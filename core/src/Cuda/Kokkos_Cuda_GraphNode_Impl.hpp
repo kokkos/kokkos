@@ -42,14 +42,62 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_CUDA_HPP
-#define KOKKOS_TEST_CUDA_HPP
+#ifndef KOKKOS_KOKKOS_CUDA_GRAPHNODE_IMPL_HPP
+#define KOKKOS_KOKKOS_CUDA_GRAPHNODE_IMPL_HPP
 
-#include <gtest/gtest.h>
+#include <Kokkos_Macros.hpp>
 
-#define TEST_CATEGORY cuda
-#define TEST_CATEGORY_DEATH cuda_DeathTest
-#define TEST_EXECSPACE Kokkos::Cuda
-#define TEST_CATEGORY_FIXTURE(name) cuda_##name
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_CUDA_ENABLE_GRAPHS)
 
-#endif
+#include <Kokkos_Graph_fwd.hpp>
+
+#include <impl/Kokkos_GraphImpl.hpp>  // GraphAccess needs to be complete
+
+#include <Kokkos_Cuda.hpp>
+#include <cuda_runtime_api.h>
+
+namespace Kokkos {
+namespace Impl {
+
+template <>
+struct GraphNodeBackendSpecificDetails<Kokkos::Cuda> {
+  cudaGraphNode_t node = nullptr;
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="Ctors, destructor, and assignment"> {{{2
+
+  explicit GraphNodeBackendSpecificDetails() = default;
+
+  explicit GraphNodeBackendSpecificDetails(
+      _graph_node_is_root_ctor_tag) noexcept {}
+
+  // </editor-fold> end Ctors, destructor, and assignment }}}2
+  //----------------------------------------------------------------------------
+};
+
+template <class Kernel, class PredecessorRef>
+struct GraphNodeBackendDetailsBeforeTypeErasure<Kokkos::Cuda, Kernel,
+                                                PredecessorRef> {
+ protected:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="ctors, destructor, and assignment"> {{{2
+
+  GraphNodeBackendDetailsBeforeTypeErasure(
+      Kokkos::Cuda const&, Kernel&, PredecessorRef const&,
+      GraphNodeBackendSpecificDetails<Kokkos::Cuda>&) noexcept {}
+
+  GraphNodeBackendDetailsBeforeTypeErasure(
+      Kokkos::Cuda const&, _graph_node_is_root_ctor_tag,
+      GraphNodeBackendSpecificDetails<Kokkos::Cuda>&) noexcept {}
+
+  // </editor-fold> end ctors, destructor, and assignment }}}2
+  //----------------------------------------------------------------------------
+};
+
+}  // end namespace Impl
+}  // end namespace Kokkos
+
+#include <Cuda/Kokkos_Cuda_GraphNodeKernel.hpp>
+
+#endif  // defined(KOKKOS_ENABLE_CUDA)
+#endif  // KOKKOS_KOKKOS_CUDA_GRAPHNODE_IMPL_HPP

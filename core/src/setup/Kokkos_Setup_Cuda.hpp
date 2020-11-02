@@ -131,4 +131,8 @@
 #define KOKKOS_IMPL_HOST_FUNCTION __host__
 #define KOKKOS_IMPL_DEVICE_FUNCTION __device__
 
+#if (CUDA_VERSION >= 10000)
+#define KOKKOS_CUDA_ENABLE_GRAPHS
+#endif
+
 #endif /* KOKKOS_CUDA_SETUP_HPP_ */
