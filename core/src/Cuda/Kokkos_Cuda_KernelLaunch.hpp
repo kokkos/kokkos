@@ -160,17 +160,15 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
                                        bool prefer_shmem) {
 #ifndef KOKKOS_ARCH_KEPLER
   // On Kepler the L1 has no benefit since it doesn't cache reads
-  static bool cache_config_preference_cached = [&] {
+  auto set_cache_config = [&] {
     CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
         func,
         (prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1)));
     return prefer_shmem;
-  }();
+  };
+  static bool cache_config_preference_cached = set_cache_config();
   if (cache_config_preference_cached != prefer_shmem) {
-    CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
-        func,
-        (prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1)));
-    cache_config_preference_cached = prefer_shmem;
+    cache_config_preference_cached = set_cache_config();
   }
 #else
   // Use the parameters so we don't get a warning
