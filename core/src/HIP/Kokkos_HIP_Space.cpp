@@ -205,6 +205,13 @@ void* HIPSpace::allocate(
 
     const char* arg_label, const size_t arg_alloc_size,
     const size_t arg_logical_size) const {
+  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
+}
+void* HIPSpace::impl_allocate(
+
+    const char* arg_label, const size_t arg_alloc_size,
+    const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
   void* ptr = nullptr;
 
   auto const error_code = hipMalloc(&ptr, arg_alloc_size);
@@ -219,9 +226,7 @@ void* HIPSpace::allocate(
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
-        reported_size);
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
 
   return ptr;
@@ -233,6 +238,12 @@ void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
 void* HIPHostPinnedSpace::allocate(const char* arg_label,
                                    const size_t arg_alloc_size,
                                    const size_t arg_logical_size) const {
+  return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
+}
+void* HIPHostPinnedSpace::impl_allocate(
+    const char* arg_label, const size_t arg_alloc_size,
+    const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
   void* ptr = nullptr;
 
   auto const error_code = hipHostMalloc(&ptr, arg_alloc_size);
@@ -247,9 +258,7 @@ void* HIPHostPinnedSpace::allocate(const char* arg_label,
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
-        reported_size);
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
 
   return ptr;
@@ -261,12 +270,17 @@ void HIPSpace::deallocate(void* const arg_alloc_ptr,
 void HIPSpace::deallocate(const char* arg_label, void* const arg_alloc_ptr,
                           const size_t arg_alloc_size,
                           const size_t arg_logical_size) const {
+  impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
+}
+void HIPSpace::impl_deallocate(
+    const char* arg_label, void* const arg_alloc_ptr,
+    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::make_space_handle(name()), arg_label, arg_alloc_ptr,
-        reported_size);
+    Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
+                                      reported_size);
   }
   HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
 }
@@ -280,12 +294,17 @@ void HIPHostPinnedSpace::deallocate(const char* arg_label,
                                     void* const arg_alloc_ptr,
                                     const size_t arg_alloc_size,
                                     const size_t arg_logical_size) const {
+  impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
+}
+void HIPHostPinnedSpace::impl_deallocate(
+    const char* arg_label, void* const arg_alloc_ptr,
+    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
-    Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::make_space_handle(name()), arg_label, arg_alloc_ptr,
-        reported_size);
+    Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
+                                      reported_size);
   }
   HIP_SAFE_CALL(hipHostFree(arg_alloc_ptr));
 }
