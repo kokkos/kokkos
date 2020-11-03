@@ -166,7 +166,12 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
         (prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1)));
     return prefer_shmem;
   }();
-  (void)cache_config_preference_cached;
+  if (cache_config_preference_cached != prefer_shmem) {
+    CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
+        func,
+        (prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1)));
+    cache_config_preference_cached = prefer_shmem;
+  }
 #else
   // Use the parameters so we don't get a warning
   (void)func;
