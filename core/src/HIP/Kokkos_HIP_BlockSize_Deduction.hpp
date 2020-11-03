@@ -128,7 +128,8 @@ int hip_internal_get_block_size(const F &condition_check,
     blocks_per_sm  = max_threads_per_sm / block_size;
     threads_per_sm = blocks_per_sm * block_size;
   }
-  int opt_block_size = (blocks_per_sm >= min_blocks_per_sm) ? block_size : 0;
+  int opt_block_size =
+      (blocks_per_sm >= min_blocks_per_sm) ? block_size : min_blocks_per_sm;
   int opt_threads_per_sm = threads_per_sm;
   // printf("BlockSizeMax: %i Shmem: %i %i %i %i Regs: %i %i Blocks: %i %i
   // Achieved: %i %i Opt: %i %i\n",block_size,
