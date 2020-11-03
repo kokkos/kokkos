@@ -49,10 +49,7 @@
 #include <Kokkos_Macros.hpp>
 
 // Include special backend specific versions here
-// TODO: figure out why this include fails in Clang
-#if !(defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 900)
 #include <Cuda/Kokkos_Cuda_Half.hpp>
-#endif  // KOKKOS_COMPILER_CLANG
 
 // Potentially include special compiler specific versions here
 // e.g. for Intel
@@ -61,6 +58,7 @@
 // define a fallback implementation here using float
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 #define KOKKOS_IMPL_HALF_TYPE_DEFINED
+#define KOKKOS_HALF_T_IS_FLOAT true
 namespace Kokkos {
 namespace Impl {
 struct half_impl_t {
@@ -69,8 +67,7 @@ struct half_impl_t {
 }  // namespace Impl
 namespace Experimental {
 
-using half_t                       = Kokkos::Impl::half_impl_t::type;
-constexpr const bool half_is_float = true;
+using half_t = Kokkos::Impl::half_impl_t::type;
 
 // cast_to_half
 KOKKOS_INLINE_FUNCTION
@@ -116,5 +113,7 @@ cast_from_half(half_t val) {
 }  // namespace Experimental
 }  // namespace Kokkos
 
-#endif
-#endif
+#else
+#define KOKKOS_HALF_T_IS_FLOAT false
+#endif  // KOKKOS_IMPL_HALF_TYPE_DEFINED
+#endif  // KOKKOS_HALF_HPP_

@@ -305,7 +305,7 @@ struct Functor_TestHalfOperators {
 };
 
 void __test_half_operators(half_t h_lhs, half_t h_rhs) {
-  double epsilon = half_is_float ? FLT_EPSILON : FP16_EPSILON;
+  double epsilon = KOKKOS_HALF_T_IS_FLOAT ? FLT_EPSILON : FP16_EPSILON;
   Functor_TestHalfOperators<ViewType> f_device(h_lhs, h_rhs);  // Run on device
   Functor_TestHalfOperators<ViewTypeHost> f_host(h_lhs, h_rhs);  // Run on host
   typename ViewType::HostMirror f_device_actual_lhs =
