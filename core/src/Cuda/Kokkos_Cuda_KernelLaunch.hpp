@@ -48,6 +48,7 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
+#include <mutex>
 #include <string>
 #include <cstdint>
 #include <Kokkos_Parallel.hpp>
@@ -571,6 +572,11 @@ struct CudaParallelLaunchImpl<
                                    const CudaInternal* cuda_instance,
                                    const bool prefer_shmem) {
     if (!Impl::is_empty_launch(grid, block)) {
+      // Prevent multiple threads to simultaneously set the cache configuration
+      // preference and launch the same kernel
+      static std::mutex mutex;
+      std::lock_guard<std::mutex> lock(mutex);
+
       Impl::check_shmem_request(cuda_instance, shmem);
       Impl::configure_shmem_preference(base_t::get_kernel_func(), prefer_shmem);
 
