@@ -48,7 +48,9 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 #if !(defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 900) && \
-    !defined(KOKKOS_ARCH_KEPLER35)
+    !(defined(KOKKOS_ARCH_KEPLER30) || defined(KOKKOS_ARCH_KEPLER32) || \
+      defined(KOKKOS_ARCH_KEPLER37)) &&                                 \
+    !(defined(KOKKOS_ARCH_MAXWELL50) || defined(KOKKOS_ARCH_MAXWELL52))
 #include <cuda_fp16.h>
 
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
@@ -704,5 +706,6 @@ KOKKOS_INLINE_FUNCTION
 }  // namespace Kokkos
 #endif  // KOKKOS_IMPL_HALF_TYPE_DEFINED
 #endif  // KOKKOS_ENABLE_CUDA
-#endif  // Disables for half_t on cuda: Clang/8||KEPLER35
+#endif  // Disables for half_t on cuda:
+        // Clang/8||KEPLER30||KEPLER32||KEPLER37||MAXWELL50||MAXWELL52
 #endif
