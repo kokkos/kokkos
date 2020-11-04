@@ -1175,6 +1175,37 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   // init_result = loop_boundaries.thread.team_reduce(result,join);
 }
 
+template <typename iType, class FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::TeamThreadRangeBoundariesStruct<
+        iType, Impl::OpenMPTargetExecTeamMember>& loop_bounds,
+    const FunctorType& lambda) {
+  using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
+  using value_type  = typename ValueTraits::value_type;
+
+  auto scan_val = value_type{};
+
+  // Intra-member scan
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_bounds.start; i < loop_bounds.end;
+       i += loop_bounds.increment) {
+    lambda(i, scan_val, false);
+  }
+
+  // 'scan_val' output is the exclusive prefix sum
+  scan_val = loop_bounds.thread.team_scan(scan_val);
+
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_bounds.start; i < loop_bounds.end;
+       i += loop_bounds.increment) {
+    lambda(i, scan_val, true);
+  }
+}
+
 }  // namespace Kokkos
 
 namespace Kokkos {

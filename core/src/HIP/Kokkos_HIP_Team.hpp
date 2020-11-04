@@ -755,6 +755,42 @@ KOKKOS_INLINE_FUNCTION
 #endif
 }
 
+/** \brief  Inter-thread parallel exclusive prefix sum.
+ *
+ *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
+ *
+ *  The range [0..N) is mapped to all vector lanes in the
+ *  thread and a scan operation is performed.
+ *  The last call to closure has final == true.
+ */
+template <typename iType, typename Closure>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
+        loop_bounds,
+    const Closure& closure) {
+  // Extract value_type from closure
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
+
+  const auto start     = loop_bounds.start;
+  const auto end       = loop_bounds.end + loop_bounds.start;
+  auto& member         = loop_bounds.member;
+  const auto team_size = member.team_size();
+  const auto team_rank = member.team_rank();
+  const auto nchunk    = (end - start) / loop_bounds.member.team_size();
+  value_type accum     = 0;
+  value_type offset    = 0;
+
+  for (iType i = 0; i < nchunk; ++i) {
+    auto ii                 = i * team_size + team_rank;
+    value_type local_offset = 0;
+    if (ii < loop_bounds.end) closure(ii, local_offset, false);
+    local_offset = member.team_scan(local_offset);
+    auto val     = accum + offset + local_offset;
+    if (ii < loop_bounds.end) closure(ii, val, true);
+  }
+}
+
 template <typename iType, class Closure>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
