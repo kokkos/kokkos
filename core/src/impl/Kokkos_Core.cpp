@@ -725,7 +725,7 @@ void parse_environment_variables(InitArguments& arguments) {
     }
     if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1"))
       tune_internals = true;
-    else if (!tune_internals)
+    else if (tune_internals)
       Impl::throw_runtime_exception(
           "Error: expecting a match between --kokkos-tune-internals and "
           "KOKKOS_TUNE_INTERNALS if both are set. Raised by "
