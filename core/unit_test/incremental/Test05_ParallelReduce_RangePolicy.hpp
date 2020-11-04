@@ -68,6 +68,7 @@ struct NonTrivialReduceFunctor {
     UpdateSum += (i + 1) * value;
   }
 
+  NonTrivialReduceFunctor()                                = default;
   NonTrivialReduceFunctor(NonTrivialReduceFunctor const &) = default;
   NonTrivialReduceFunctor(NonTrivialReduceFunctor &&)      = default;
   NonTrivialReduceFunctor &operator=(NonTrivialReduceFunctor &&) = default;
