@@ -48,6 +48,7 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
+#include <mutex>
 #include <string>
 #include <cstdint>
 #include <Kokkos_Parallel.hpp>
@@ -160,13 +161,16 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
                                        bool prefer_shmem) {
 #ifndef KOKKOS_ARCH_KEPLER
   // On Kepler the L1 has no benefit since it doesn't cache reads
-  static bool cache_config_preference_cached = [&] {
+  auto set_cache_config = [&] {
     CUDA_SAFE_CALL(cudaFuncSetCacheConfig(
         func,
         (prefer_shmem ? cudaFuncCachePreferShared : cudaFuncCachePreferL1)));
     return prefer_shmem;
-  }();
-  (void)cache_config_preference_cached;
+  };
+  static bool cache_config_preference_cached = set_cache_config();
+  if (cache_config_preference_cached != prefer_shmem) {
+    cache_config_preference_cached = set_cache_config();
+  }
 #else
   // Use the parameters so we don't get a warning
   (void)func;
@@ -568,6 +572,11 @@ struct CudaParallelLaunchImpl<
                                    const CudaInternal* cuda_instance,
                                    const bool prefer_shmem) {
     if (!Impl::is_empty_launch(grid, block)) {
+      // Prevent multiple threads to simultaneously set the cache configuration
+      // preference and launch the same kernel
+      static std::mutex mutex;
+      std::lock_guard<std::mutex> lock(mutex);
+
       Impl::check_shmem_request(cuda_instance, shmem);
       Impl::configure_shmem_preference(base_t::get_kernel_func(), prefer_shmem);
 
