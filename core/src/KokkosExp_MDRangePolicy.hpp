@@ -113,6 +113,20 @@ struct Rank {
 };
 
 namespace Impl {
+// NOTE the comparison below is encapsulated to silent warnings about pointless
+// comparison of unsigned integer with zero
+template <class T>
+constexpr std::enable_if_t<!std::is_signed<T>::value, bool>
+is_less_than_value_initialized_variable(T) {
+  return false;
+}
+
+template <class T>
+constexpr std::enable_if_t<std::is_signed<T>::value, bool>
+is_less_than_value_initialized_variable(T arg) {
+  return arg < T{};
+}
+
 // Checked narrowing conversion that calls abort if the cast changes the value
 template <class To, class From>
 constexpr To checked_narrow_cast(From arg) {
@@ -120,7 +134,9 @@ constexpr To checked_narrow_cast(From arg) {
       (std::is_signed<To>::value != std::is_signed<From>::value);
   auto const ret = static_cast<To>(arg);
   if (static_cast<From>(ret) != arg ||
-      (is_different_signedness && (arg < From{}) != (ret < To{}))) {
+      (is_different_signedness &&
+       is_less_than_value_initialized_variable(arg) !=
+           is_less_than_value_initialized_variable(ret))) {
     Kokkos::abort("unsafe narrowing conversion");
   }
   return ret;
