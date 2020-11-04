@@ -47,9 +47,9 @@
 
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
-#if !(defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 900) && \
-    !(defined(KOKKOS_ARCH_KEPLER30) || defined(KOKKOS_ARCH_KEPLER32) || \
-      defined(KOKKOS_ARCH_KEPLER37)) &&                                 \
+#if !(defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 900) &&  \
+    !(defined(KOKKOS_ARCH_KEPLER30) || defined(KOKKOS_ARCH_KEPLER32) ||  \
+      defined(KOKKOS_ARCH_KEPLER35) || defined(KOKKOS_ARCH_KEPLER37)) && \
     !(defined(KOKKOS_ARCH_MAXWELL50) || defined(KOKKOS_ARCH_MAXWELL52))
 #include <cuda_fp16.h>
 
