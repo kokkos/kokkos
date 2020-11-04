@@ -352,35 +352,6 @@ struct integral_nonzero_constant<T, zero, false> {
 
 //----------------------------------------------------------------------------
 
-template <class...>
-class TypeList;
-
-//----------------------------------------------------------------------------
-
-template <class>
-struct ReverseTypeList;
-
-template <class Head, class... Tail>
-struct ReverseTypeList<TypeList<Head, Tail...>> {
-  template <class... ReversedTail>
-  struct impl {
-    using type = typename ReverseTypeList<TypeList<Tail...>>::template impl<
-        Head, ReversedTail...>::type;
-  };
-  using type = typename impl<>::type;
-};
-
-template <>
-struct ReverseTypeList<TypeList<>> {
-  template <class... ReversedTail>
-  struct impl {
-    using type = TypeList<ReversedTail...>;
-  };
-  using type = TypeList<>;
-};
-
-//----------------------------------------------------------------------------
-
 template <class T>
 struct make_all_extents_into_pointers {
   using type = T;
