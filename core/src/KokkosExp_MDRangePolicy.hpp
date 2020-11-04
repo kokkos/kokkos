@@ -113,7 +113,7 @@ struct Rank {
 };
 
 namespace Impl {
-// NOTE comparaison below is encapsulated to silent warnings about pointless
+// NOTE the comparison below is encapsulated to silent warnings about pointless
 // comparison of unsigned integer with zero
 template <class T>
 constexpr std::enable_if_t<!std::is_signed<T>::value, bool>
