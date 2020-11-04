@@ -548,6 +548,13 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
         tools/TestTuning.cpp
     )
   endif()
+  if(NOT Kokkos_ENABLE_OPENMPTARGET)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_LogicalSpaces
+    SOURCES
+      tools/TestLogicalSpaces.cpp
+  )
+  endif()
   if(KOKKOS_ENABLE_LIBDL)
 
     KOKKOS_ADD_TEST_LIBRARY(

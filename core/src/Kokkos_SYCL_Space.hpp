@@ -76,6 +76,15 @@ class SYCLDeviceUSMSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
+  /** Note: if we're moving SYCL out of Experimental,
+   *  and you're getting an error regarding LogicalMemorySpace
+   *  not being a class, look at how we solved this in CudaSpace.
+   *  Basically, you need to forward declare LogicalMemorySpace
+   *  in namespace Experimental above this class, and namespace
+   *  qualify LogicalMemorySpace here
+   */
+  template <class, class, class, bool>
+  friend class LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
