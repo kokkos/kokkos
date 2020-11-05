@@ -50,6 +50,7 @@
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_EBO.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -306,9 +307,90 @@ struct AnalyzePolicy<Base> {
                        is_graph_kernel, occupancy_control>;
 };
 
+template <class AnalyzedPolicy>
+struct PolicyDataStorage : AnalyzedPolicy,
+                           NoUniqueAddressMemberEmulation<
+                               typename AnalyzedPolicy::occupancy_control> {
+  using occupancy_control_t = typename AnalyzedPolicy::occupancy_control;
+
+  using occupancy_control_storage_base_t =
+      NoUniqueAddressMemberEmulation<occupancy_control_t>;
+
+  static constexpr bool experimental_contains_desired_occupancy =
+      std::is_same<occupancy_control_t,
+                   Kokkos::Experimental::DesiredOccupancy>::value;
+
+  PolicyDataStorage() = default;
+
+  // Converting constructors
+  template <
+      class Other,
+      std::enable_if_t<
+          experimental_contains_desired_occupancy &&
+              PolicyDataStorage<Other>::experimental_contains_desired_occupancy,
+          int> = 0>
+  PolicyDataStorage(PolicyDataStorage<Other> const &other) {
+    this->impl_set_desired_occupancy(other.impl_get_desired_occupancy());
+  }
+
+  template <class Other,
+            std::enable_if_t<!experimental_contains_desired_occupancy ||
+                                 !PolicyDataStorage<Other>::
+                                     experimental_contains_desired_occupancy,
+                             int> = 0>
+  PolicyDataStorage(PolicyDataStorage<Other> const &) {}
+
+  // Converting assignment operators
+  template <
+      class Other,
+      std::enable_if_t<
+          experimental_contains_desired_occupancy &&
+              PolicyDataStorage<Other>::experimental_contains_desired_occupancy,
+          int> = 0>
+  PolicyDataStorage &operator=(PolicyDataStorage<Other> const &other) {
+    this->impl_set_desired_occupancy(other.impl_get_desired_occupancy());
+    return *this;
+  }
+
+  template <class Other,
+            std::enable_if_t<!experimental_contains_desired_occupancy ||
+                                 !PolicyDataStorage<Other>::
+                                     experimental_contains_desired_occupancy,
+                             int> = 0>
+  PolicyDataStorage &operator=(PolicyDataStorage<Other> const &) {
+    return *this;
+  }
+
+  // Access to desired occupancy (getter and setter)
+  template <class Dummy = occupancy_control_t>
+  std::enable_if_t<std::is_same<Dummy, occupancy_control_t>::value &&
+                       experimental_contains_desired_occupancy,
+                   Kokkos::Experimental::DesiredOccupancy>
+  impl_get_desired_occupancy() const {
+    return this
+        ->occupancy_control_storage_base_t::no_unique_address_data_member();
+  }
+
+  template <class Dummy = occupancy_control_t>
+  std::enable_if_t<std::is_same<Dummy, occupancy_control_t>::value &&
+                   experimental_contains_desired_occupancy>
+  impl_set_desired_occupancy(occupancy_control_t desired_occupancy) {
+    this->occupancy_control_storage_base_t::no_unique_address_data_member() =
+        desired_occupancy;
+  }
+};
+
 template <typename... Traits>
 struct PolicyTraits
-    : public AnalyzePolicy<PolicyTraitsBase<>, Traits...>::type {};
+    : PolicyDataStorage<
+          typename AnalyzePolicy<PolicyTraitsBase<>, Traits...>::type> {
+  using base_t = PolicyDataStorage<
+      typename AnalyzePolicy<PolicyTraitsBase<>, Traits...>::type>;
+  using base_t::base_t;
+  using base_t::operator=;
+  template <class... Args>
+  PolicyTraits(PolicyTraits<Args...> const &p) : base_t(p) {}
+};
 
 }  // namespace Impl
 }  // namespace Kokkos
