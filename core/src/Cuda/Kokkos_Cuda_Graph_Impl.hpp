@@ -168,7 +168,7 @@ struct GraphImpl<Kokkos::Cuda> {
     auto /*const*/& pred_cuda_node = pred_ptr->node_details_t::node;
     KOKKOS_EXPECTS(bool(pred_cuda_node))
 
-    auto& cuda_node = arg_node_ptr->node_details_t::node;
+    auto /*const*/& cuda_node = arg_node_ptr->node_details_t::node;
     KOKKOS_EXPECTS(bool(cuda_node))
 
     CUDA_SAFE_CALL(
