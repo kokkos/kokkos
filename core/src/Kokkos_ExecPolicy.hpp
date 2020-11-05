@@ -903,32 +903,19 @@ namespace Impl {
 template <class Property, class Policy>
 struct PolicyPropertyAdaptor;
 
-template <unsigned long P, class... Properties>
+template <unsigned long P, template <class...> class Policy,
+          class... Properties>
 struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
-                             RangePolicy<Properties...>> {
-  using policy_in_t = RangePolicy<Properties...>;
-  using policy_out_t =
-      RangePolicy<typename policy_in_t::traits::execution_space,
-                  typename policy_in_t::traits::schedule_type,
-                  typename policy_in_t::traits::work_tag,
-                  typename policy_in_t::traits::index_type,
-                  typename policy_in_t::traits::iteration_pattern,
-                  typename policy_in_t::traits::launch_bounds,
-                  WorkItemProperty::ImplWorkItemProperty<P>>;
-};
-
-template <unsigned long P, class... Properties>
-struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
-                             TeamPolicy<Properties...>> {
-  using policy_in_t = TeamPolicy<Properties...>;
-  using policy_out_t =
-      TeamPolicy<typename policy_in_t::traits::execution_space,
-                 typename policy_in_t::traits::schedule_type,
-                 typename policy_in_t::traits::work_tag,
-                 typename policy_in_t::traits::index_type,
-                 typename policy_in_t::traits::iteration_pattern,
-                 typename policy_in_t::traits::launch_bounds,
-                 WorkItemProperty::ImplWorkItemProperty<P>>;
+                             Policy<Properties...>> {
+  using policy_in_t = Policy<Properties...>;
+  static_assert(is_execution_policy<policy_in_t>::value, "");
+  using policy_out_t = Policy<typename policy_in_t::traits::execution_space,
+                              typename policy_in_t::traits::schedule_type,
+                              typename policy_in_t::traits::work_tag,
+                              typename policy_in_t::traits::index_type,
+                              typename policy_in_t::traits::iteration_pattern,
+                              typename policy_in_t::traits::launch_bounds,
+                              WorkItemProperty::ImplWorkItemProperty<P>>;
 };
 }  // namespace Impl
 
