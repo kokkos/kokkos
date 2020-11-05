@@ -159,10 +159,16 @@ struct GraphImpl<Kokkos::Cuda> {
     auto pred_ptr = GraphAccess::get_node_ptr(arg_pred_ref);
     KOKKOS_EXPECTS(bool(pred_ptr))
 
-    auto const& pred_cuda_node = pred_ptr->node_details_t::node;
+    // clang-format off
+    // NOTE const-qualifiers below are commented out because of an API break
+    // from CUDA 10.0 to CUDA 10.1
+    // cudaGraphAddDependencies(cudaGraph_t, cudaGraphNode_t*, cudaGraphNode_t*, size_t)
+    // cudaGraphAddDependencies(cudaGraph_t, const cudaGraphNode_t*, const cudaGraphNode_t*, size_t)
+    // clang-format on
+    auto /*const*/& pred_cuda_node = pred_ptr->node_details_t::node;
     KOKKOS_EXPECTS(bool(pred_cuda_node))
 
-    auto const& cuda_node = arg_node_ptr->node_details_t::node;
+    auto /*const*/& cuda_node = arg_node_ptr->node_details_t::node;
     KOKKOS_EXPECTS(bool(cuda_node))
 
     CUDA_SAFE_CALL(
