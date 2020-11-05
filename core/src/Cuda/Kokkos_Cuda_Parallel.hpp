@@ -472,6 +472,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
  public:
   using functor_type = FunctorType;
 
+  Policy const& get_policy() const { return m_policy; }
+
   inline __device__ void operator()(void) const {
     const Member work_stride = blockDim.y * gridDim.x;
     const Member work_end    = m_policy.end();
@@ -535,6 +537,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   const Policy m_rp;
 
  public:
+  Policy const& get_policy() const { return m_rp; }
+
   inline __device__ void operator()(void) const {
     Kokkos::Impl::Refactor::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                               typename Policy::work_tag>(
@@ -684,6 +688,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   __device__ inline void operator()(void) const {
     // Iterate this block through the league
     int64_t threadid = 0;
@@ -878,6 +884,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using DummySHMEMReductionType = int;
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   // Make the exec_range calls call to Reduce::DeviceIterateTile
   template <class TagType>
   __device__ inline
@@ -1213,6 +1221,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using DummySHMEMReductionType = int;
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   inline __device__ void exec_range(reference_type update) const {
     Kokkos::Impl::Reduce::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                             typename Policy::work_tag,
@@ -1533,6 +1543,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   __device__ inline void operator()() const {
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
@@ -2127,6 +2139,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   //----------------------------------------
 
   __device__ inline void operator()(void) const {
@@ -2417,6 +2431,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   //----------------------------------------
 
   __device__ inline void operator()(void) const {
