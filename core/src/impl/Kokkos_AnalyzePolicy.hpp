@@ -49,19 +49,37 @@
 #include <Kokkos_Concepts.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
-namespace Kokkos {
-namespace Impl {
+#include <impl/Kokkos_Error.hpp>
 
+namespace Kokkos {
+namespace Experimental {
+struct DesiredOccupancy {
+  int m_occ = 100;
+  explicit constexpr DesiredOccupancy(int occ) : m_occ(occ) {
+    KOKKOS_EXPECTS(0 <= occ && occ <= 100);
+  }
+  explicit constexpr operator int() const { return m_occ; }
+  constexpr int value() const { return m_occ; }
+  explicit DesiredOccupancy() = default;
+};
+struct MaximizeOccupancy {
+  explicit MaximizeOccupancy() = default;
+};
+}  // namespace Experimental
+
+namespace Impl {
 template <typename ExecutionSpace = void, typename Schedule = void,
           typename WorkTag = void, typename IndexType = void,
           typename IterationPattern = void, typename LaunchBounds = void,
           typename MyWorkItemProperty =
               Kokkos::Experimental::WorkItemProperty::None_t,
-          typename IsGraphKernel = std::false_type>
+          typename IsGraphKernel    = std::false_type,
+          typename OccupancyControl = Kokkos::Experimental::MaximizeOccupancy>
 struct PolicyTraitsBase {
-  using type = PolicyTraitsBase<ExecutionSpace, Schedule, WorkTag, IndexType,
-                                IterationPattern, LaunchBounds,
-                                MyWorkItemProperty, IsGraphKernel>;
+  using type =
+      PolicyTraitsBase<ExecutionSpace, Schedule, WorkTag, IndexType,
+                       IterationPattern, LaunchBounds, MyWorkItemProperty,
+                       IsGraphKernel, OccupancyControl>;
 
   using execution_space    = ExecutionSpace;
   using schedule_type      = Schedule;
@@ -71,6 +89,7 @@ struct PolicyTraitsBase {
   using launch_bounds      = LaunchBounds;
   using work_item_property = MyWorkItemProperty;
   using is_graph_kernel    = IsGraphKernel;
+  using occupancy_control  = OccupancyControl;
 };
 
 template <typename PolicyBase, typename Property>
@@ -84,7 +103,8 @@ struct SetWorkItemProperty {
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       typename PolicyBase::iteration_pattern,
       typename PolicyBase::launch_bounds, Property,
-      typename PolicyBase::is_graph_kernel>;
+      typename PolicyBase::is_graph_kernel,
+      typename PolicyBase::occupancy_control>;
 };
 
 template <typename PolicyBase, typename ExecutionSpace>
@@ -98,7 +118,8 @@ struct SetExecutionSpace {
                        typename PolicyBase::iteration_pattern,
                        typename PolicyBase::launch_bounds,
                        typename PolicyBase::work_item_property,
-                       typename PolicyBase::is_graph_kernel>;
+                       typename PolicyBase::is_graph_kernel,
+                       typename PolicyBase::occupancy_control>;
 };
 
 template <typename PolicyBase, typename Schedule>
@@ -111,7 +132,8 @@ struct SetSchedule {
                                 typename PolicyBase::iteration_pattern,
                                 typename PolicyBase::launch_bounds,
                                 typename PolicyBase::work_item_property,
-                                typename PolicyBase::is_graph_kernel>;
+                                typename PolicyBase::is_graph_kernel,
+                                typename PolicyBase::occupancy_control>;
 };
 
 template <typename PolicyBase, typename WorkTag>
@@ -124,7 +146,8 @@ struct SetWorkTag {
                                 typename PolicyBase::iteration_pattern,
                                 typename PolicyBase::launch_bounds,
                                 typename PolicyBase::work_item_property,
-                                typename PolicyBase::is_graph_kernel>;
+                                typename PolicyBase::is_graph_kernel,
+                                typename PolicyBase::occupancy_control>;
 };
 
 template <typename PolicyBase, typename IndexType>
@@ -137,7 +160,8 @@ struct SetIndexType {
                                 typename PolicyBase::iteration_pattern,
                                 typename PolicyBase::launch_bounds,
                                 typename PolicyBase::work_item_property,
-                                typename PolicyBase::is_graph_kernel>;
+                                typename PolicyBase::is_graph_kernel,
+                                typename PolicyBase::occupancy_control>;
 };
 
 template <typename PolicyBase, typename IterationPattern>
@@ -149,7 +173,8 @@ struct SetIterationPattern {
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       IterationPattern, typename PolicyBase::launch_bounds,
       typename PolicyBase::work_item_property,
-      typename PolicyBase::is_graph_kernel>;
+      typename PolicyBase::is_graph_kernel,
+      typename PolicyBase::occupancy_control>;
 };
 
 template <typename PolicyBase, typename LaunchBounds>
@@ -161,7 +186,8 @@ struct SetLaunchBounds {
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       typename PolicyBase::iteration_pattern, LaunchBounds,
       typename PolicyBase::work_item_property,
-      typename PolicyBase::is_graph_kernel>;
+      typename PolicyBase::is_graph_kernel,
+      typename PolicyBase::occupancy_control>;
 };
 
 template <typename PolicyBase>
@@ -171,7 +197,19 @@ struct SetIsGraphKernel {
       typename PolicyBase::work_tag, typename PolicyBase::index_type,
       typename PolicyBase::iteration_pattern,
       typename PolicyBase::launch_bounds,
-      typename PolicyBase::work_item_property, std::true_type>;
+      typename PolicyBase::work_item_property, std::true_type,
+      typename PolicyBase::occupancy_control>;
+};
+
+template <typename PolicyBase, typename OccupancyControl>
+struct SetOccupancyControl {
+  using type = PolicyTraitsBase<
+      typename PolicyBase::execution_space, typename PolicyBase::schedule_type,
+      typename PolicyBase::work_tag, typename PolicyBase::index_type,
+      typename PolicyBase::iteration_pattern,
+      typename PolicyBase::launch_bounds,
+      typename PolicyBase::work_item_property,
+      typename PolicyBase::is_graph_kernel, OccupancyControl>;
 };
 
 template <typename Base, typename... Traits>
@@ -205,11 +243,21 @@ struct AnalyzePolicy<Base, T, Traits...>
                                           std::is_same<T,
                                                        IsGraphKernelTag>::value,
                                           SetIsGraphKernel<Base>,
-
                                           std::conditional_t<
-                                              !std::is_void<T>::value,
-                                              SetWorkTag<Base, T>,
-                                              Base>>>>>>>>>::type,
+                                              std::is_same<
+                                                  T, Kokkos::Experimental::
+                                                         DesiredOccupancy>::
+                                                      value ||
+                                                  std::is_same<
+                                                      T,
+                                                      Kokkos::Experimental::
+                                                          MaximizeOccupancy>::
+                                                      value,
+                                              SetOccupancyControl<Base, T>,
+                                              std::conditional_t<
+                                                  !std::is_void<T>::value,
+                                                  SetWorkTag<Base, T>,
+                                                  Base>>>>>>>>>>::type,
           Traits...> {};
 
 template <typename Base>
@@ -250,9 +298,12 @@ struct AnalyzePolicy<Base> {
 
   using is_graph_kernel = typename Base::is_graph_kernel;
 
-  using type = PolicyTraitsBase<execution_space, schedule_type, work_tag,
-                                index_type, iteration_pattern, launch_bounds,
-                                work_item_property, is_graph_kernel>;
+  using occupancy_control = typename Base::occupancy_control;
+
+  using type =
+      PolicyTraitsBase<execution_space, schedule_type, work_tag, index_type,
+                       iteration_pattern, launch_bounds, work_item_property,
+                       is_graph_kernel, occupancy_control>;
 };
 
 template <typename... Traits>
