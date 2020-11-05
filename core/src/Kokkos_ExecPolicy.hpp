@@ -915,7 +915,8 @@ struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
                               typename policy_in_t::traits::index_type,
                               typename policy_in_t::traits::iteration_pattern,
                               typename policy_in_t::traits::launch_bounds,
-                              WorkItemProperty::ImplWorkItemProperty<P>>;
+                              WorkItemProperty::ImplWorkItemProperty<P>,
+                              typename policy_in_t::traits::occupancy_control>;
 };
 }  // namespace Impl
 
