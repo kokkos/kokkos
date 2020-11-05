@@ -84,14 +84,16 @@ struct InitArguments {
   int ndevices;
   int skip_device;
   bool disable_warnings;
-
-  InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false)
+  bool tune_internals;
+  InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false,
+                bool ti = false)
       : num_threads{nt},
         num_numa{nn},
         device_id{dv},
         ndevices{-1},
         skip_device{9999},
-        disable_warnings{dw} {}
+        disable_warnings{dw},
+        tune_internals{ti} {}
 };
 
 namespace Impl {
@@ -141,6 +143,7 @@ void post_initialize(const InitArguments& args);
 bool is_initialized() noexcept;
 
 bool show_warnings() noexcept;
+bool tune_internals() noexcept;
 
 /** \brief  Finalize the spaces that were initialized via Kokkos::initialize */
 void finalize();
