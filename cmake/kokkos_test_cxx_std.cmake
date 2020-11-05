@@ -44,7 +44,7 @@ FUNCTION(kokkos_set_cxx_standard_feature standard)
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
   ELSE()
     #nope, we can't do anything here
-    MESSAGE(WARNING "C++${standard} is not supported as a compiler feature. We will choose custom flags for now, but this behavior has been deprecated. Please open an issue at https://github.com/kokkos/kokkos/issues reporting that ${KOKKOS_CXX_COMPILER_ID} ${KOKKOS_CXX_COMPILER_VERSION} failed for ${KOKKOS_CXX_STANDARD}, preferrably including your CMake command.")
+    MESSAGE(WARNING "C++${standard} is not supported as a compiler feature. We will choose custom flags for now, but this behavior has been deprecated. Please open an issue at https://github.com/kokkos/kokkos/issues reporting that ${KOKKOS_CXX_COMPILER_ID} ${KOKKOS_CXX_COMPILER_VERSION} failed for ${KOKKOS_CXX_STANDARD}, preferably including your CMake command.")
     GLOBAL_SET(KOKKOS_CXX_STANDARD_FEATURE "")
   ENDIF()
 
