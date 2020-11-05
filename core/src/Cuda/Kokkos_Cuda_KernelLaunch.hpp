@@ -59,6 +59,7 @@
 #include <Cuda/Kokkos_Cuda_Instance.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 #include <Cuda/Kokkos_Cuda_GraphNodeKernel.hpp>
+#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -177,6 +178,34 @@ inline void configure_shmem_preference(KernelFuncPtr const& func,
   (void)prefer_shmem;
 #endif
 }
+
+template <class Policy>
+std::enable_if_t<Policy::experimental_contains_desired_occupancy>
+modify_launch_configuration_if_desired_occupancy_is_specified(
+    Policy const& policy, cudaDeviceProp const& properties,
+    cudaFuncAttributes const& attributes, dim3 const& block, int& shmem,
+    bool& prefer_shmem) {
+  int const block_size        = block.x * block.y * block.z;
+  int const desired_occupancy = policy.impl_get_desired_occupancy().value();
+
+  size_t const shmem_per_sm_prefer_l1 = get_shmem_per_sm_prefer_l1(properties);
+  size_t const static_shmem           = attributes.sharedSizeBytes;
+  int active_blocks = properties.maxThreadsPerMultiProcessor / block_size *
+                      desired_occupancy / 100;
+  int const dynamic_shmem =
+      shmem_per_sm_prefer_l1 / active_blocks - static_shmem;
+
+  if (dynamic_shmem > shmem) {
+    shmem        = dynamic_shmem;
+    prefer_shmem = false;
+  }
+}
+
+template <class Policy>
+std::enable_if_t<!Policy::experimental_contains_desired_occupancy>
+modify_launch_configuration_if_desired_occupancy_is_specified(
+    Policy const&, cudaDeviceProp const&, cudaFuncAttributes const&,
+    dim3 const& /*block*/, int& /*shmem*/, bool& /*prefer_shmem*/) {}
 
 // </editor-fold> end Some helper functions for launch code readability }}}1
 //==============================================================================
@@ -568,9 +597,9 @@ struct CudaParallelLaunchImpl<
       LaunchMechanism>;
 
   inline static void launch_kernel(const DriverType& driver, const dim3& grid,
-                                   const dim3& block, const int shmem,
+                                   const dim3& block, int shmem,
                                    const CudaInternal* cuda_instance,
-                                   const bool prefer_shmem) {
+                                   bool prefer_shmem) {
     if (!Impl::is_empty_launch(grid, block)) {
       // Prevent multiple threads to simultaneously set the cache configuration
       // preference and launch the same kernel
@@ -578,6 +607,16 @@ struct CudaParallelLaunchImpl<
       std::lock_guard<std::mutex> lock(mutex);
 
       Impl::check_shmem_request(cuda_instance, shmem);
+
+      // If a desired occupancy is specified, we compute how much shared memory
+      // to ask for to achieve that occupancy, assuming that the cache
+      // configuration is `cudaFuncCachePreferL1`.  If the amount of dynamic
+      // shared memory computed is actually smaller than `shmem` we overwrite
+      // `shmem` and set `prefer_shmem` to `false`.
+      modify_launch_configuration_if_desired_occupancy_is_specified(
+          driver.get_policy(), cuda_instance->m_deviceProp,
+          get_cuda_func_attributes(), block, shmem, prefer_shmem);
+
       Impl::configure_shmem_preference(base_t::get_kernel_func(), prefer_shmem);
 
       KOKKOS_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
