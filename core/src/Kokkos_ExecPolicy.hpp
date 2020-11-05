@@ -123,7 +123,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 
   template <class... OtherProperties>
   RangePolicy(const RangePolicy<OtherProperties...>& p)
-      : m_space(p.m_space),
+      : traits(p),  // base class may contain data such as desired occupancy
+        m_space(p.m_space),
         m_begin(p.m_begin),
         m_end(p.m_end),
         m_granularity(p.m_granularity),
@@ -601,7 +602,11 @@ class TeamPolicy
                         Kokkos::AUTO()) {}
 
   template <class... OtherProperties>
-  TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {}
+  TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {
+    // Cannot call converting constructor in the member initializer list because
+    // it is not a direct base.
+    internal_policy::traits::operator=(p);
+  }
 
  private:
   TeamPolicy(const internal_policy& p) : internal_policy(p) {}
