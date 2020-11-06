@@ -81,7 +81,7 @@ _tag_invoke(Functor const& f, Args&&... args) {
 template <class Tag, class Functor, class T, size_t N, size_t... Idxs,
           class... Args>
 KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array_helper(
-    Functor const& f, T (&vals)[N], integer_sequence<size_t, Idxs...>,
+    Functor const& f, T (&vals)[N], std::integer_sequence<size_t, Idxs...>,
     Args&&... args) {
   _tag_invoke<Tag>(f, vals[Idxs]..., (Args &&) args...);
 }
@@ -90,7 +90,7 @@ template <class Tag, class Functor, class T, size_t N, class... Args>
 KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array(Functor const& f,
                                                         T (&vals)[N],
                                                         Args&&... args) {
-  _tag_invoke_array_helper<Tag>(f, vals, make_index_sequence<N>{},
+  _tag_invoke_array_helper<Tag>(f, vals, std::make_index_sequence<N>{},
                                 (Args &&) args...);
 }
 

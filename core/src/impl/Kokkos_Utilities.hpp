@@ -57,11 +57,6 @@
 namespace Kokkos {
 namespace Impl {
 
-// We don't need to roll our own for these since we require C++14 now
-using std::index_sequence;
-using std::integer_sequence;
-using std::make_index_sequence;
-
 template <typename T>
 struct identity {
   using type = T;
