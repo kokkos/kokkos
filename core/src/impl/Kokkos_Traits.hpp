@@ -243,32 +243,7 @@ struct if_c<true, void, FalseType> {
   using value_type = void;
 };
 
-template <typename Cond, typename TrueType, typename FalseType>
-struct if_ : public if_c<Cond::value, TrueType, FalseType> {};
-
 //----------------------------------------------------------------------------
-
-template <typename T>
-struct is_label : public std::false_type {};
-
-template <>
-struct is_label<const char*> : public std::true_type {};
-
-template <>
-struct is_label<char*> : public std::true_type {};
-
-template <int N>
-struct is_label<const char[N]> : public std::true_type {};
-
-template <int N>
-struct is_label<char[N]> : public std::true_type {};
-
-template <>
-struct is_label<const std::string> : public std::true_type {};
-
-template <>
-struct is_label<std::string> : public std::true_type {};
-
 // These 'constexpr'functions can be used as
 // both regular functions and meta-function.
 
@@ -348,35 +323,6 @@ struct integral_nonzero_constant<T, zero, false> {
   using value_type = T;
   using type       = integral_nonzero_constant<T, 0>;
   KOKKOS_INLINE_FUNCTION integral_nonzero_constant(const T& v) : value(v) {}
-};
-
-//----------------------------------------------------------------------------
-
-template <class...>
-class TypeList;
-
-//----------------------------------------------------------------------------
-
-template <class>
-struct ReverseTypeList;
-
-template <class Head, class... Tail>
-struct ReverseTypeList<TypeList<Head, Tail...>> {
-  template <class... ReversedTail>
-  struct impl {
-    using type = typename ReverseTypeList<TypeList<Tail...>>::template impl<
-        Head, ReversedTail...>::type;
-  };
-  using type = typename impl<>::type;
-};
-
-template <>
-struct ReverseTypeList<TypeList<>> {
-  template <class... ReversedTail>
-  struct impl {
-    using type = TypeList<ReversedTail...>;
-  };
-  using type = TypeList<>;
 };
 
 //----------------------------------------------------------------------------
