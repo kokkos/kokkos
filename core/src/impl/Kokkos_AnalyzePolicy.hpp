@@ -390,6 +390,7 @@ struct PolicyTraits
   using base_t::operator=;
   template <class... Args>
   PolicyTraits(PolicyTraits<Args...> const &p) : base_t(p) {}
+  PolicyTraits() = default;
 };
 
 }  // namespace Impl
