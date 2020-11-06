@@ -243,9 +243,6 @@ struct if_c<true, void, FalseType> {
   using value_type = void;
 };
 
-template <typename Cond, typename TrueType, typename FalseType>
-struct if_ : public if_c<Cond::value, TrueType, FalseType> {};
-
 //----------------------------------------------------------------------------
 // These 'constexpr'functions can be used as
 // both regular functions and meta-function.
