@@ -73,6 +73,10 @@ template <class BaseSpace, class DefaultExecutionSpace = void,
           bool SharesAccessWithBase = true>
 class LogicalMemorySpace {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
+  // [DZP] For some reason I don't yet know, using LogicalMemorySpaces
+  // inside an OpenMPTarget build causes errors in the
+  // SharedAllocationRecords of other types. This is my way of erorring
+  // a build if we instantiate a LogicalMemSpace in an OMPTarget build
   static_assert(!std::is_same<BaseSpace, BaseSpace>::value,
                 "Can't use LogicalMemorySpaces in an OpenMPTarget build, we're "
                 "debugging memory issues");
@@ -124,9 +128,13 @@ class LogicalMemorySpace {
     impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
   }
 
+  /**\brief Return Name of the MemorySpace */
+  constexpr static const char* name() { return Namer::get_name(); }
+
  private:
   template <class, class, class, bool>
   friend class LogicalMemorySpace;
+  friend class Kokkos::Impl::SharedAllocationRecord<memory_space, void>;
 
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
@@ -144,12 +152,6 @@ class LogicalMemorySpace {
         arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size, arg_handle);
   }
 
- public:
-  /**\brief Return Name of the MemorySpace */
-  constexpr static const char* name() { return Namer::get_name(); }
-
- private:
-  friend class Kokkos::Impl::SharedAllocationRecord<memory_space, void>;
 };
 }  // namespace Experimental
 }  // namespace Kokkos
