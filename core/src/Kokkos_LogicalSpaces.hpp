@@ -102,11 +102,12 @@ class LogicalMemorySpace {
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
   BaseSpace underlying_allocator;
-  
+
   LogicalMemorySpace() = default;
 
   template <typename... Args>
-  LogicalMemorySpace(Args&&... args) : underlying_allocator((Args&&)args...) {}
+  LogicalMemorySpace(Args&&... args)
+      : underlying_allocator((Args &&) args...) {}
 
   /**\brief  Allocate untracked memory in the space */
   void* allocate(const size_t arg_alloc_size) const {
@@ -151,7 +152,6 @@ class LogicalMemorySpace {
     underlying_allocator.impl_deallocate(
         arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size, arg_handle);
   }
-
 };
 }  // namespace Experimental
 }  // namespace Kokkos
