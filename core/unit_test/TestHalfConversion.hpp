@@ -49,8 +49,8 @@ namespace Test {
 
 template <class T>
 void test_half_conversion_type() {
-  double epsilon = Kokkos::Experimental::half_is_float ? 0.0000003 : 0.0003;
-  T base         = static_cast<T>(3.3);
+  double epsilon                 = KOKKOS_HALF_T_IS_FLOAT ? 0.0000003 : 0.0003;
+  T base                         = static_cast<T>(3.3);
   Kokkos::Experimental::half_t a = Kokkos::Experimental::cast_to_half(base);
   T b                            = Kokkos::Experimental::cast_from_half<T>(a);
   ASSERT_TRUE((double(b - base) / double(base)) < epsilon);

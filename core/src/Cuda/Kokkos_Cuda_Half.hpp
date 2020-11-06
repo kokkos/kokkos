@@ -47,12 +47,14 @@
 
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
+#if !(defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 900) && \
+    !((defined(KOKKOS_ARCH_KEPLER)) ||                                  \
+      !(defined(KOKKOS_ARCH_MAXWELL50) || defined(KOKKOS_ARCH_MAXWELL52)))
 #include <cuda_fp16.h>
 
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 // Make sure no one else tries to define half_t
 #define KOKKOS_IMPL_HALF_TYPE_DEFINED
-#define KOKKOS_ENABLE_CUDA_HALF
 
 namespace Kokkos {
 namespace Impl {
@@ -442,8 +444,6 @@ class half_t {
   }
 };
 
-constexpr const bool half_is_float = false;
-
 // CUDA before 11.1 only has the half <-> float conversions marked host device
 // So we will largely convert to float on the host for conversion
 // But still call the correct functions on the device
@@ -705,4 +705,6 @@ KOKKOS_INLINE_FUNCTION
 }  // namespace Kokkos
 #endif  // KOKKOS_IMPL_HALF_TYPE_DEFINED
 #endif  // KOKKOS_ENABLE_CUDA
+#endif  // Disables for half_t on cuda:
+        // Clang/8||KEPLER30||KEPLER32||KEPLER37||MAXWELL50||MAXWELL52
 #endif
