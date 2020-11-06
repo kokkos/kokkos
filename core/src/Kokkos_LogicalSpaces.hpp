@@ -53,7 +53,6 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
-#include <iostream>
 #include <cstring>
 namespace Kokkos {
 namespace Experimental {
@@ -98,18 +97,12 @@ class LogicalMemorySpace {
 
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
-  /**\brief  Default memory space instance */
-  LogicalMemorySpace() : underlying_allocator(){};
-  LogicalMemorySpace(LogicalMemorySpace&& rhs)      = default;
-  LogicalMemorySpace(const LogicalMemorySpace& rhs) = default;
-  LogicalMemorySpace& operator=(LogicalMemorySpace&&) = default;
-  LogicalMemorySpace& operator=(const LogicalMemorySpace&) = default;
-  ~LogicalMemorySpace()                                    = default;
-
   BaseSpace underlying_allocator;
+  
+  LogicalMemorySpace() = default;
 
   template <typename... Args>
-  LogicalMemorySpace(Args&&... args) : underlying_allocator(args...) {}
+  LogicalMemorySpace(Args&&... args) : underlying_allocator((Args&&)args...) {}
 
   /**\brief  Allocate untracked memory in the space */
   void* allocate(const size_t arg_alloc_size) const {
