@@ -247,28 +247,6 @@ template <typename Cond, typename TrueType, typename FalseType>
 struct if_ : public if_c<Cond::value, TrueType, FalseType> {};
 
 //----------------------------------------------------------------------------
-
-template <typename T>
-struct is_label : public std::false_type {};
-
-template <>
-struct is_label<const char*> : public std::true_type {};
-
-template <>
-struct is_label<char*> : public std::true_type {};
-
-template <int N>
-struct is_label<const char[N]> : public std::true_type {};
-
-template <int N>
-struct is_label<char[N]> : public std::true_type {};
-
-template <>
-struct is_label<const std::string> : public std::true_type {};
-
-template <>
-struct is_label<std::string> : public std::true_type {};
-
 // These 'constexpr'functions can be used as
 // both regular functions and meta-function.
 
