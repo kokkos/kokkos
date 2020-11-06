@@ -160,7 +160,7 @@ void test_space_allocations() {
 template <typename Space>
 struct AccessCheckKernel {
   Kokkos::View<double*, Space> data;
-  void operator()(const int i) const { data[i] = i; }
+  KOKKOS_FUNCTION void operator()(const int i) const { data[i] = i; }
 };
 
 template <typename Space>
@@ -192,10 +192,5 @@ TEST(defaultdevicetype_DeathTest, access_forbidden) {
       { test_allowed_access<semantically_independent_logical_space>(); },
       "Kokkos::View ERROR: attempt to access inaccessible memory space");
 }
-
-// TEST(defaultdevicetype_DeathTest, stacktrace_generic_term) {
-//  ASSERT_DEATH({ test_stacktrace(true, false); },
-//               "Kokkos observes that std::terminate has been called");
-//}
 
 }  // namespace Test
