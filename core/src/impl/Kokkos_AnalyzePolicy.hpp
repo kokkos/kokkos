@@ -386,8 +386,6 @@ struct PolicyTraits
           typename AnalyzePolicy<PolicyTraitsBase<>, Traits...>::type> {
   using base_t = PolicyDataStorage<
       typename AnalyzePolicy<PolicyTraitsBase<>, Traits...>::type>;
-  using base_t::base_t;
-  using base_t::operator=;
   template <class... Args>
   PolicyTraits(PolicyTraits<Args...> const &p) : base_t(p) {}
   PolicyTraits() = default;
