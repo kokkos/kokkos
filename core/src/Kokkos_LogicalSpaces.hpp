@@ -51,7 +51,7 @@
 #include <impl/Kokkos_MemorySpace.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
-#include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_Profiling.hpp>
 #include <cstring>
 namespace Kokkos {
 namespace Experimental {
