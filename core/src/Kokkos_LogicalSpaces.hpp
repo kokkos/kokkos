@@ -100,7 +100,6 @@ class LogicalMemorySpace {
 
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
-
   LogicalMemorySpace() = default;
 
   template <typename... Args>
