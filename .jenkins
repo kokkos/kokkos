@@ -12,7 +12,6 @@ pipeline {
                 dockerfile {
                     filename 'Dockerfile.clang'
                     dir 'scripts/docker'
-                    additionalBuildArgs '--pull'
                     label 'nvidia-docker || docker'
                     args '-v /tmp/ccache.kokkos:/tmp/ccache'
                 }
@@ -29,7 +28,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.sycl'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=intel/oneapi-basekit:devel-ubuntu18.04'
+                            additionalBuildArgs '--build-arg BASE=intel/oneapi-basekit:devel-ubuntu18.04'
                             label 'docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
@@ -60,7 +59,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-20.04:3.8'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:3.8'
                             label 'rocm-docker && vega'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -98,7 +97,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=rocm/dev-ubuntu-20.04:3.8'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:3.8'
                             label 'rocm-docker && vega'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -129,7 +128,6 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.openmptarget'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -161,7 +159,6 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.kokkosllvmproject'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -196,7 +193,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:9.2-devel'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:9.2-devel'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -225,7 +222,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:11.0-devel --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran" --build-arg CMAKE_VERSION=3.17.3'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.0-devel --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran" --build-arg CMAKE_VERSION=3.17.3'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -287,7 +284,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull --build-arg BASE=nvidia/cuda:10.1-devel --build-arg CMAKE_VERSION=3.15.5'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel --build-arg CMAKE_VERSION=3.15.5'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -325,7 +322,6 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.gcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--pull'
                             label 'docker'
                         }
                     }
