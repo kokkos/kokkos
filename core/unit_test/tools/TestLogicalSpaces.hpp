@@ -114,7 +114,8 @@ struct TestSpaceNamerThree {
   static constexpr const char* get_name() { return "CustomAccessSpace"; }
 };
 using fake_memory_space = Kokkos::Experimental::LogicalMemorySpace<
-    Kokkos::HostSpace, Kokkos::DefaultHostExecutionSpace, TestSpaceNamer, true>;
+    Kokkos::HostSpace, Kokkos::DefaultHostExecutionSpace, TestSpaceNamer,
+    Kokkos::Experimental::LogicalSpaceSharesAccess::shared_access>;
 
 void test_view_construct() {
   {
@@ -136,7 +137,7 @@ void test_malloc_free() {
 void test_chained_spaces() {
   using doubly_fake_memory_space = Kokkos::Experimental::LogicalMemorySpace<
       fake_memory_space, Kokkos::DefaultHostExecutionSpace, TestSpaceNamerTwo,
-      true>;
+      Kokkos::Experimental::LogicalSpaceSharesAccess::shared_access>;
   {
     expect_allocation_event("xzibit_dot_jpeg", "YoDawg",
                             "Chained space view allocation");
@@ -175,9 +176,10 @@ void test_allowed_access() {
 }
 
 using semantically_independent_logical_space =
-    Kokkos::Experimental::LogicalMemorySpace<Kokkos::HostSpace,
-                                             Kokkos::DefaultHostExecutionSpace,
-                                             TestSpaceNamerThree, false>;
+    Kokkos::Experimental::LogicalMemorySpace<
+        Kokkos::HostSpace, Kokkos::DefaultHostExecutionSpace,
+        TestSpaceNamerThree,
+        Kokkos::Experimental::LogicalSpaceSharesAccess::no_shared_access>;
 
 TEST(defaultdevicetype, logical_space_views) { test_view_construct(); }
 TEST(defaultdevicetype, logical_space_malloc) { test_malloc_free(); }

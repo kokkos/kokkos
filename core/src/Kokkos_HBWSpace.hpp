@@ -148,7 +148,7 @@ class HBWSpace {
    *  in namespace Experimental above this class, and namespace
    *  qualify LogicalMemorySpace here
    */
-  template <class, class, class, bool>
+  template <class, class, class, class>
   friend class LogicalMemorySpace;
 
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,

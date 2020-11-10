@@ -97,7 +97,7 @@ void unlock_address_host_space(void* ptr);
 namespace Kokkos {
 namespace Experimental {
 // forward declaration
-template <class, class, class, bool>
+template <class, class, class, class>
 class LogicalMemorySpace;
 }  // namespace Experimental
 /// \class HostSpace
@@ -171,7 +171,7 @@ class HostSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
-  template <class, class, class, bool>
+  template <class, class, class, class>
   friend class Kokkos::Experimental::LogicalMemorySpace;
 
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,

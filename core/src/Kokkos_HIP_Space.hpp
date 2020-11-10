@@ -106,7 +106,7 @@ class HIPSpace {
    *  in namespace Experimental above this class, and namespace
    *  qualify LogicalMemorySpace here
    */
-  template <class, class, class, bool>
+  template <class, class, class, class>
   friend class LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
@@ -219,7 +219,7 @@ class HIPHostPinnedSpace {
    *  in namespace Experimental above this class, and namespace
    *  qualify LogicalMemorySpace here
    */
-  template <class, class, class, bool>
+  template <class, class, class, class>
   friend class LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,

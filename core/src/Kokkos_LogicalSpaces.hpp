@@ -61,15 +61,19 @@ struct DefaultMemorySpaceNamer {
   }
 };
 
+struct LogicalSpaceSharesAccess {
+  struct shared_access {};
+  struct no_shared_access {};
+};
+
 /// \class LogicalMemorySpace
 /// \brief
 ///
 /// LogicalMemorySpace is a space that is identical to another space,
 /// but differentiable by name and template argument
-
 template <class BaseSpace, class DefaultBaseExecutionSpace = void,
-          class Namer               = DefaultMemorySpaceNamer,
-          bool SharesAccessWithBase = true>
+          class Namer                = DefaultMemorySpaceNamer,
+          class SharesAccessWithBase = LogicalSpaceSharesAccess::shared_access>
 class LogicalMemorySpace {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   // [DZP] For some reason I don't yet know, using LogicalMemorySpaces
@@ -130,7 +134,7 @@ class LogicalMemorySpace {
 
  private:
   BaseSpace underlying_space;
-  template <class, class, class, bool>
+  template <class, class, class, class>
   friend class LogicalMemorySpace;
   friend class Kokkos::Impl::SharedAllocationRecord<memory_space, void>;
 
@@ -161,9 +165,11 @@ namespace Impl {
 
 template <typename BaseSpace, typename DefaultBaseExecutionSpace, class Namer,
           typename OtherSpace>
-struct MemorySpaceAccess<Kokkos::Experimental::LogicalMemorySpace<
-                             BaseSpace, DefaultBaseExecutionSpace, Namer, true>,
-                         OtherSpace> {
+struct MemorySpaceAccess<
+    Kokkos::Experimental::LogicalMemorySpace<
+        BaseSpace, DefaultBaseExecutionSpace, Namer,
+        Kokkos::Experimental::LogicalSpaceSharesAccess::shared_access>,
+    OtherSpace> {
   enum { assignable = MemorySpaceAccess<BaseSpace, OtherSpace>::assignable };
   enum { accessible = MemorySpaceAccess<BaseSpace, OtherSpace>::accessible };
   enum { deepcopy = MemorySpaceAccess<BaseSpace, OtherSpace>::deepcopy };
@@ -172,8 +178,10 @@ struct MemorySpaceAccess<Kokkos::Experimental::LogicalMemorySpace<
 template <typename BaseSpace, typename DefaultBaseExecutionSpace, class Namer,
           typename OtherSpace>
 struct MemorySpaceAccess<
-    OtherSpace, Kokkos::Experimental::LogicalMemorySpace<
-                    BaseSpace, DefaultBaseExecutionSpace, Namer, true>> {
+    OtherSpace,
+    Kokkos::Experimental::LogicalMemorySpace<
+        BaseSpace, DefaultBaseExecutionSpace, Namer,
+        Kokkos::Experimental::LogicalSpaceSharesAccess::shared_access>> {
   enum { assignable = MemorySpaceAccess<OtherSpace, BaseSpace>::assignable };
   enum { accessible = MemorySpaceAccess<OtherSpace, BaseSpace>::accessible };
   enum { deepcopy = MemorySpaceAccess<OtherSpace, BaseSpace>::deepcopy };
@@ -182,9 +190,11 @@ struct MemorySpaceAccess<
 template <typename BaseSpace, typename DefaultBaseExecutionSpace, class Namer>
 struct MemorySpaceAccess<
     Kokkos::Experimental::LogicalMemorySpace<
-        BaseSpace, DefaultBaseExecutionSpace, Namer, true>,
+        BaseSpace, DefaultBaseExecutionSpace, Namer,
+        Kokkos::Experimental::LogicalSpaceSharesAccess::shared_access>,
     Kokkos::Experimental::LogicalMemorySpace<
-        BaseSpace, DefaultBaseExecutionSpace, Namer, true>> {
+        BaseSpace, DefaultBaseExecutionSpace, Namer,
+        Kokkos::Experimental::LogicalSpaceSharesAccess::shared_access>> {
   enum { assignable = true };
   enum { accessible = true };
   enum { deepcopy = true };
@@ -200,7 +210,7 @@ namespace Kokkos {
 
 namespace Impl {
 template <class BaseSpace, class DefaultBaseExecutionSpace, class Namer,
-          bool SharesAccessSemanticsWithBase>
+          class SharesAccessSemanticsWithBase>
 class SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace<
                                  BaseSpace, DefaultBaseExecutionSpace, Namer,
                                  SharesAccessSemanticsWithBase>,
@@ -353,7 +363,7 @@ class SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace<
 /**\brief  Root record for tracked allocations from this LogicalSpace
  * instance */
 template <class BaseSpace, class DefaultBaseExecutionSpace, class Namer,
-          bool SharesAccessSemanticsWithBase>
+          class SharesAccessSemanticsWithBase>
 SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace<
                                BaseSpace, DefaultBaseExecutionSpace, Namer,
@@ -372,7 +382,7 @@ namespace Kokkos {
 namespace Impl {
 
 template <class Namer, class BaseSpace, class DefaultBaseExecutionSpace,
-          bool SharesAccess, class ExecutionSpace>
+          class SharesAccess, class ExecutionSpace>
 struct DeepCopy<Kokkos::Experimental::LogicalMemorySpace<
                     BaseSpace, DefaultBaseExecutionSpace, Namer, SharesAccess>,
                 Kokkos::Experimental::LogicalMemorySpace<
@@ -387,7 +397,7 @@ struct DeepCopy<Kokkos::Experimental::LogicalMemorySpace<
 };
 
 template <class Namer, class BaseSpace, class DefaultBaseExecutionSpace,
-          bool SharesAccess, class ExecutionSpace, class SourceSpace>
+          class SharesAccess, class ExecutionSpace, class SourceSpace>
 struct DeepCopy<SourceSpace,
                 Kokkos::Experimental::LogicalMemorySpace<
                     BaseSpace, DefaultBaseExecutionSpace, Namer, SharesAccess>,
@@ -401,7 +411,7 @@ struct DeepCopy<SourceSpace,
 };
 
 template <class Namer, class BaseSpace, class DefaultBaseExecutionSpace,
-          bool SharesAccess, class ExecutionSpace, class DestinationSpace>
+          class SharesAccess, class ExecutionSpace, class DestinationSpace>
 struct DeepCopy<Kokkos::Experimental::LogicalMemorySpace<
                     BaseSpace, DefaultBaseExecutionSpace, Namer, SharesAccess>,
                 DestinationSpace, ExecutionSpace> {

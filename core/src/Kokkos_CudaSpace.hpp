@@ -70,7 +70,7 @@ extern "C" void kokkos_impl_cuda_set_pin_uvm_to_host(bool);
 namespace Kokkos {
 namespace Experimental {
 // forward declaration
-template <class, class, class, bool>
+template <class, class, class, class>
 class LogicalMemorySpace;
 }  // namespace Experimental
 
@@ -106,7 +106,7 @@ class CudaSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
-  template <class, class, class, bool>
+  template <class, class, class, class>
   friend class Kokkos::Experimental::LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
@@ -217,7 +217,7 @@ class CudaUVMSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
-  template <class, class, class, bool>
+  template <class, class, class, class>
   friend class Kokkos::Experimental::LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
@@ -288,7 +288,7 @@ class CudaHostPinnedSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
-  template <class, class, class, bool>
+  template <class, class, class, class>
   friend class Kokkos::Experimental::LogicalMemorySpace;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
