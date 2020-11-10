@@ -307,7 +307,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   template <class... OtherProperties>
   MDRangePolicy(const MDRangePolicy<OtherProperties...> p)
-      : m_space(p.m_space),
+      : traits(p),  // base class may contain data such as desired occupancy
+        m_space(p.m_space),
         m_lower(p.m_lower),
         m_upper(p.m_upper),
         m_tile(p.m_tile),
