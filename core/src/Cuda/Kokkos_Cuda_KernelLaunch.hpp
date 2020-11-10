@@ -51,6 +51,7 @@
 #include <mutex>
 #include <string>
 #include <cstdint>
+#include <cmath>
 #include <Kokkos_Parallel.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <Cuda/Kokkos_Cuda_abort.hpp>
@@ -190,8 +191,12 @@ modify_launch_configuration_if_desired_occupancy_is_specified(
 
   size_t const shmem_per_sm_prefer_l1 = get_shmem_per_sm_prefer_l1(properties);
   size_t const static_shmem           = attributes.sharedSizeBytes;
-  int active_blocks = properties.maxThreadsPerMultiProcessor / block_size *
-                      desired_occupancy / 100;
+
+  // round to nearest integer and avoid division by zero
+  int active_blocks = std::max(
+      1, static_cast<int>(std::round(
+             static_cast<double>(properties.maxThreadsPerMultiProcessor) /
+             block_size * desired_occupancy / 100)));
   int const dynamic_shmem =
       shmem_per_sm_prefer_l1 / active_blocks - static_shmem;
 
