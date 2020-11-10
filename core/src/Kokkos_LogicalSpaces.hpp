@@ -372,11 +372,11 @@ namespace Kokkos {
 namespace Impl {
 
 template <class Namer, class BaseSpace, class DefaultBaseExecutionSpace,
-          class ExecutionSpace>
+          bool SharesAccess, class ExecutionSpace>
 struct DeepCopy<Kokkos::Experimental::LogicalMemorySpace<
-                    BaseSpace, DefaultBaseExecutionSpace, Namer, true>,
+                    BaseSpace, DefaultBaseExecutionSpace, Namer, SharesAccess>,
                 Kokkos::Experimental::LogicalMemorySpace<
-                    BaseSpace, DefaultBaseExecutionSpace, Namer, true>,
+                    BaseSpace, DefaultBaseExecutionSpace, Namer, SharesAccess>,
                 ExecutionSpace> {
   DeepCopy(void* dst, void* src, size_t n) {
     DeepCopy<BaseSpace, BaseSpace, ExecutionSpace>(dst, src, n);
@@ -387,10 +387,10 @@ struct DeepCopy<Kokkos::Experimental::LogicalMemorySpace<
 };
 
 template <class Namer, class BaseSpace, class DefaultBaseExecutionSpace,
-          class ExecutionSpace, class SourceSpace>
+          bool SharesAccess, class ExecutionSpace, class SourceSpace>
 struct DeepCopy<SourceSpace,
                 Kokkos::Experimental::LogicalMemorySpace<
-                    BaseSpace, DefaultBaseExecutionSpace, Namer, true>,
+                    BaseSpace, DefaultBaseExecutionSpace, Namer, SharesAccess>,
                 ExecutionSpace> {
   DeepCopy(void* dst, void* src, size_t n) {
     DeepCopy<SourceSpace, BaseSpace, ExecutionSpace>(dst, src, n);
@@ -401,9 +401,9 @@ struct DeepCopy<SourceSpace,
 };
 
 template <class Namer, class BaseSpace, class DefaultBaseExecutionSpace,
-          class ExecutionSpace, class DestinationSpace>
+          bool SharesAccess, class ExecutionSpace, class DestinationSpace>
 struct DeepCopy<Kokkos::Experimental::LogicalMemorySpace<
-                    BaseSpace, DefaultBaseExecutionSpace, Namer, true>,
+                    BaseSpace, DefaultBaseExecutionSpace, Namer, SharesAccess>,
                 DestinationSpace, ExecutionSpace> {
   DeepCopy(void* dst, void* src, size_t n) {
     DeepCopy<BaseSpace, DestinationSpace, ExecutionSpace>(dst, src, n);
