@@ -56,6 +56,8 @@
 #include <cerrno>
 #ifndef _WIN32
 #include <unistd.h>
+#else
+#include <Windows.h>
 #endif
 
 //----------------------------------------------------------------------------
