@@ -68,11 +68,6 @@ extern "C" void kokkos_impl_cuda_set_pin_uvm_to_host(bool);
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Experimental {
-// forward declaration
-template <class, class, class, class>
-class LogicalMemorySpace;
-}  // namespace Experimental
 
 /** \brief  Cuda on-device memory management */
 

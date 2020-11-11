@@ -95,11 +95,6 @@ void unlock_address_host_space(void* ptr);
 }  // namespace Kokkos
 
 namespace Kokkos {
-namespace Experimental {
-// forward declaration
-template <class, class, class, class>
-class LogicalMemorySpace;
-}  // namespace Experimental
 /// \class HostSpace
 /// \brief Memory management for host memory.
 ///
