@@ -763,14 +763,16 @@ KOKKOS_INLINE_FUNCTION
  *  thread and a scan operation is performed.
  *  The last call to closure has final == true.
  */
-template <typename iType, typename Closure>
+template <typename iType, typename FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
         loop_bounds,
-    const Closure& closure) {
-  // Extract value_type from closure
+    const FunctorType& lambda) {
+#ifdef __HIP_DEVICE_COMPILE__
+  // Extract value_type from lambda
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void,
+      FunctorType>::value_type;
 
   const auto start     = loop_bounds.start;
   const auto end       = loop_bounds.end + loop_bounds.start;
@@ -781,14 +783,20 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   value_type accum     = 0;
   value_type offset    = 0;
 
-  for (iType i = 0; i < nchunk; ++i) {
+  for (iType i = 0; i < nchunk + 1; ++i) {
     auto ii                 = i * team_size + team_rank;
     value_type local_offset = 0;
-    if (ii < loop_bounds.end) closure(ii, local_offset, false);
+    if (ii < loop_bounds.end) lambda(ii, local_offset, false);
     local_offset = member.team_scan(local_offset);
     auto val     = accum + offset + local_offset;
-    if (ii < loop_bounds.end) closure(ii, val, true);
+    if (ii < loop_bounds.end) lambda(ii, val, true);
+    if (team_rank == team_size - 1) offset = val;
+    member.team_broadcast(offset, team_size - 1);
   }
+#else
+  (void)loop_bounds;
+  (void)lambda;
+#endif
 }
 
 template <typename iType, class Closure>

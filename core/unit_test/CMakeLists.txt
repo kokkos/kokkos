@@ -124,6 +124,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
     foreach(Name
       TeamBasic
       TeamReductionScan
+      TeamScan
       TeamScratch
       TeamTeamSize
       TeamVectorRange
