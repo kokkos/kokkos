@@ -58,33 +58,36 @@ struct TestTeamScan {
   using member_type     = typename policy_type::member_type;
   using view_type       = Kokkos::View<value_type**, execution_space>;
 
-  void operator()(int32_t M, int32_t N, view_type a_d, view_type a_r) const {
-    auto policy = policy_type(M, Kokkos::AUTO());
+  view_type a_d;
+  view_type a_r;
+  int32_t M = 0;
+  int32_t N = 0;
+
+  KOKKOS_FUNCTION
+  void operator()(const member_type& team) const {
+    auto leagueRank = team.league_rank();
+
+    auto beg = 0;
+    auto end = N;
+
     Kokkos::parallel_for(
-        policy, KOKKOS_LAMBDA(const member_type& team) {
-          auto leagueRank = team.league_rank();
-          auto teamSize   = team.team_size();
+        Kokkos::TeamThreadRange(team, beg, end),
+        [&](const int i) { a_d(leagueRank, i) += leagueRank * N + i; });
 
-          auto beg = 0;
-          auto end = N;
-
-          Kokkos::parallel_for(
-              Kokkos::TeamThreadRange(team, beg, end),
-              [&](const int i) { a_d(leagueRank, i) += leagueRank * N + i; });
-
-          Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, beg, end),
-                                [&](int i, int32_t& val, const bool final) {
-                                  val += a_d(leagueRank, i);
-                                  if (final) a_r(leagueRank, i) = val;
-                                });
-        });
+    Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, beg, end),
+                          [&](int i, int32_t& val, const bool final) {
+                            val += a_d(leagueRank, i);
+                            if (final) a_r(leagueRank, i) = val;
+                          });
   }
 
-  auto operator()(int32_t M, int32_t N) const {
-    view_type a_d("a_d", M, N);
-    view_type a_r("a_r", M, N);
+  auto operator()(int32_t _M, int32_t _N) {
+    M   = _M;
+    N   = _N;
+    a_d = view_type("a_d", M, N);
+    a_r = view_type("a_r", M, N);
 
-    (*this)(M, N, a_d, a_r);
+    Kokkos::parallel_for(policy_type(M, Kokkos::AUTO()), *this);
 
     auto a_i = Kokkos::create_mirror_view(a_d);
     auto a_o = Kokkos::create_mirror_view(a_r);
@@ -122,7 +125,6 @@ struct TestTeamScan {
 };
 
 TEST(TEST_CATEGORY, team_scan) {
-  using TEST_POLICY = Kokkos::TeamPolicy<TEST_EXECSPACE>;
   TestTeamScan<TEST_EXECSPACE, int16_t>{}(99, 32);
   TestTeamScan<TEST_EXECSPACE, uint16_t>{}(139, 64);
   TestTeamScan<TEST_EXECSPACE, int32_t>{}(163, 128);
