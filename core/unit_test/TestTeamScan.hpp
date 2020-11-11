@@ -56,7 +56,7 @@ struct TestTeamScan {
   using value_type      = DataType;
   using policy_type     = Kokkos::TeamPolicy<execution_space>;
   using member_type     = typename policy_type::member_type;
-  using view_type       = Kokkos::View<value_type**>;
+  using view_type       = Kokkos::View<value_type**, execution_space>;
 
   void operator()(int32_t M, int32_t N, view_type a_d, view_type a_r) const {
     auto policy = policy_type(M, Kokkos::AUTO());
@@ -91,23 +91,23 @@ struct TestTeamScan {
     Kokkos::deep_copy(a_i, a_d);
     Kokkos::deep_copy(a_o, a_r);
 
-    EXPECT_EQ(a_d.extent(0), M);
-    EXPECT_EQ(a_r.extent(0), M);
-    EXPECT_EQ(a_d.extent(1), N);
-    EXPECT_EQ(a_r.extent(1), N);
+    EXPECT_EQ(a_i.extent(0), M);
+    EXPECT_EQ(a_o.extent(0), M);
+    EXPECT_EQ(a_i.extent(1), N);
+    EXPECT_EQ(a_o.extent(1), N);
 
     for (int32_t i = 0; i < M; ++i) {
       value_type _scan_real = 0;
       value_type _scan_calc = 0;
       value_type _epsilon   = std::numeric_limits<value_type>::round_error();
       for (int32_t j = 0; j < N; ++j) {
-        _scan_real += a_d(i, j);
-        _scan_calc     = a_r(i, j);
+        _scan_real += a_i(i, j);
+        _scan_calc     = a_o(i, j);
         auto _get_mesg = [=]() {
           std::stringstream ss, idx;
           idx << "(" << i << ", " << j << ") = ";
-          ss << "a_d" << idx.str() << a_d(i, j);
-          ss << ", a_r" << idx.str() << a_r(i, j);
+          ss << "a_d" << idx.str() << a_i(i, j);
+          ss << ", a_r" << idx.str() << a_o(i, j);
           return ss.str();
         };
         if (std::is_integral<value_type>::value) {
