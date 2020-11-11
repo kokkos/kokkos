@@ -54,12 +54,8 @@
 #include <Kokkos_Parallel.hpp>
 #include <type_traits>
 
-#if defined(KOKKOS_ENABLE_CUDA)
-#include <Cuda/KokkosExp_Cuda_IterateTile.hpp>
-#include <Cuda/KokkosExp_Cuda_IterateTile_Refactor.hpp>
-#endif
-
-#if defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || \
+    (defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP))
 #include <HIP/KokkosExp_HIP_IterateTile.hpp>
 #endif
 

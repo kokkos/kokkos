@@ -46,7 +46,6 @@
 #define KOKKOS_HIP_EXP_ITERATE_TILE_REFACTOR_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined(__HIPCC__)
 
 #include <algorithm>
 
@@ -73,25 +72,24 @@ struct DeviceIterateTile<2, PolicyType, Functor, void> {
       : m_policy(policy_), m_func(f_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y,
+                  index_type /*global_z*/, index_type local_x,
+                  index_type local_y, index_type /*local_z*/) const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
-      for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
-           tile_id1 < m_policy.m_tile_end[1]; tile_id1 += gridDim.y) {
+      for (index_type tile_id1 = global_y; tile_id1 < m_policy.m_tile_end[1];
+           tile_id1 += gridDim.y) {
         const index_type offset_1 =
-            tile_id1 * m_policy.m_tile[1] +
-            static_cast<index_type>(threadIdx.y) +
+            tile_id1 * m_policy.m_tile[1] + local_y +
             static_cast<index_type>(m_policy.m_lower[1]);
-        if (offset_1 < m_policy.m_upper[1] &&
-            static_cast<index_type>(threadIdx.y) < m_policy.m_tile[1]) {
-          for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
+        if (offset_1 < m_policy.m_upper[1] && local_y < m_policy.m_tile[1]) {
+          for (index_type tile_id0 = global_x;
                tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
             const index_type offset_0 =
-                tile_id0 * m_policy.m_tile[0] +
-                static_cast<index_type>(threadIdx.x) +
+                tile_id0 * m_policy.m_tile[0] + local_x +
                 static_cast<index_type>(m_policy.m_lower[0]);
             if (offset_0 < m_policy.m_upper[0] &&
-                static_cast<index_type>(threadIdx.x) < m_policy.m_tile[0]) {
+                local_x < m_policy.m_tile[0]) {
               m_func(offset_0, offset_1);
             }
           }
@@ -100,22 +98,19 @@ struct DeviceIterateTile<2, PolicyType, Functor, void> {
     }
     // LR
     else {
-      for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
-           tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
+      for (index_type tile_id0 = global_x; tile_id0 < m_policy.m_tile_end[0];
+           tile_id0 += gridDim.x) {
         const index_type offset_0 =
-            tile_id0 * m_policy.m_tile[0] +
-            static_cast<index_type>(threadIdx.x) +
+            tile_id0 * m_policy.m_tile[0] + local_x +
             static_cast<index_type>(m_policy.m_lower[0]);
-        if (offset_0 < m_policy.m_upper[0] &&
-            static_cast<index_type>(threadIdx.x) < m_policy.m_tile[0]) {
-          for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
+        if (offset_0 < m_policy.m_upper[0] && local_x < m_policy.m_tile[0]) {
+          for (index_type tile_id1 = global_y;
                tile_id1 < m_policy.m_tile_end[1]; tile_id1 += gridDim.y) {
             const index_type offset_1 =
-                tile_id1 * m_policy.m_tile[1] +
-                static_cast<index_type>(threadIdx.y) +
+                tile_id1 * m_policy.m_tile[1] + local_y +
                 static_cast<index_type>(m_policy.m_lower[1]);
             if (offset_1 < m_policy.m_upper[1] &&
-                static_cast<index_type>(threadIdx.y) < m_policy.m_tile[1]) {
+                local_y < m_policy.m_tile[1]) {
               m_func(offset_0, offset_1);
             }
           }
@@ -139,47 +134,43 @@ struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
       : m_policy(policy_), m_func(f_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y,
+                  index_type /*global_z*/, index_type local_x,
+                  index_type local_y, index_type /*local_z*/) const {
     if (PolicyType::inner_direction == PolicyType::Left) {
       // Loop over size maxnumblocks until full range covered
-      for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
-           tile_id1 < m_policy.m_tile_end[1]; tile_id1 += gridDim.y) {
+      for (index_type tile_id1 = global_y; tile_id1 < m_policy.m_tile_end[1];
+           tile_id1 += gridDim.y) {
         const index_type offset_1 =
-            tile_id1 * m_policy.m_tile[1] +
-            static_cast<index_type>(threadIdx.y) +
+            tile_id1 * m_policy.m_tile[1] + local_y +
             static_cast<index_type>(m_policy.m_lower[1]);
-        if (offset_1 < m_policy.m_upper[1] &&
-            static_cast<index_type>(threadIdx.y) < m_policy.m_tile[1]) {
-          for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
+        if (offset_1 < m_policy.m_upper[1] && local_y < m_policy.m_tile[1]) {
+          for (index_type tile_id0 = global_x;
                tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
             const index_type offset_0 =
-                tile_id0 * m_policy.m_tile[0] +
-                static_cast<index_type>(threadIdx.x) +
+                tile_id0 * m_policy.m_tile[0] + local_x +
                 static_cast<index_type>(m_policy.m_lower[0]);
             if (offset_0 < m_policy.m_upper[0] &&
-                static_cast<index_type>(threadIdx.x) < m_policy.m_tile[0]) {
+                local_x < m_policy.m_tile[0]) {
               m_func(Tag(), offset_0, offset_1);
             }
           }
         }
       }
     } else {
-      for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
-           tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
+      for (index_type tile_id0 = global_x; tile_id0 < m_policy.m_tile_end[0];
+           tile_id0 += gridDim.x) {
         const index_type offset_0 =
-            tile_id0 * m_policy.m_tile[0] +
-            static_cast<index_type>(threadIdx.x) +
+            tile_id0 * m_policy.m_tile[0] + local_x +
             static_cast<index_type>(m_policy.m_lower[0]);
-        if (offset_0 < m_policy.m_upper[0] &&
-            static_cast<index_type>(threadIdx.x) < m_policy.m_tile[0]) {
-          for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
+        if (offset_0 < m_policy.m_upper[0] && local_x < m_policy.m_tile[0]) {
+          for (index_type tile_id1 = global_y;
                tile_id1 < m_policy.m_tile_end[1]; tile_id1 += gridDim.y) {
             const index_type offset_1 =
-                tile_id1 * m_policy.m_tile[1] +
-                static_cast<index_type>(threadIdx.y) +
+                tile_id1 * m_policy.m_tile[1] + local_y +
                 static_cast<index_type>(m_policy.m_lower[1]);
             if (offset_1 < m_policy.m_upper[1] &&
-                static_cast<index_type>(threadIdx.y) < m_policy.m_tile[1]) {
+                local_y < m_policy.m_tile[1]) {
               m_func(Tag(), offset_0, offset_1);
             }
           }
@@ -203,33 +194,31 @@ struct DeviceIterateTile<3, PolicyType, Functor, void> {
       : m_policy(policy_), m_func(f_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y, index_type global_z,
+                  index_type local_x, index_type local_y,
+                  index_type local_z) const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
-      for (index_type tile_id2 = static_cast<index_type>(blockIdx.z);
-           tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.z) {
+      for (index_type tile_id2 = global_z; tile_id2 < m_policy.m_tile_end[2];
+           tile_id2 += gridDim.z) {
         const index_type offset_2 =
-            tile_id2 * m_policy.m_tile[2] +
-            static_cast<index_type>(threadIdx.z) +
+            tile_id2 * m_policy.m_tile[2] + local_z +
             static_cast<index_type>(m_policy.m_lower[2]);
-        if (offset_2 < m_policy.m_upper[2] &&
-            static_cast<index_type>(threadIdx.z) < m_policy.m_tile[2]) {
-          for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
+        if (offset_2 < m_policy.m_upper[2] && local_z < m_policy.m_tile[2]) {
+          for (index_type tile_id1 = global_y;
                tile_id1 < m_policy.m_tile_end[1]; tile_id1 += gridDim.y) {
             const index_type offset_1 =
-                tile_id1 * m_policy.m_tile[1] +
-                static_cast<index_type>(threadIdx.y) +
+                tile_id1 * m_policy.m_tile[1] + local_y +
                 static_cast<index_type>(m_policy.m_lower[1]);
             if (offset_1 < m_policy.m_upper[1] &&
-                static_cast<index_type>(threadIdx.y) < m_policy.m_tile[1]) {
-              for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
+                local_y < m_policy.m_tile[1]) {
+              for (index_type tile_id0 = global_x;
                    tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
                 const index_type offset_0 =
-                    tile_id0 * m_policy.m_tile[0] +
-                    static_cast<index_type>(threadIdx.x) +
+                    tile_id0 * m_policy.m_tile[0] + local_x +
                     static_cast<index_type>(m_policy.m_lower[0]);
                 if (offset_0 < m_policy.m_upper[0] &&
-                    static_cast<index_type>(threadIdx.x) < m_policy.m_tile[0]) {
+                    local_x < m_policy.m_tile[0]) {
                   m_func(offset_0, offset_1, offset_2);
                 }
               }
@@ -240,30 +229,26 @@ struct DeviceIterateTile<3, PolicyType, Functor, void> {
     }
     // LR
     else {
-      for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
-           tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
+      for (index_type tile_id0 = global_x; tile_id0 < m_policy.m_tile_end[0];
+           tile_id0 += gridDim.x) {
         const index_type offset_0 =
-            tile_id0 * m_policy.m_tile[0] +
-            static_cast<index_type>(threadIdx.x) +
+            tile_id0 * m_policy.m_tile[0] + local_x +
             static_cast<index_type>(m_policy.m_lower[0]);
-        if (offset_0 < m_policy.m_upper[0] &&
-            static_cast<index_type>(threadIdx.x) < m_policy.m_tile[0]) {
-          for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
+        if (offset_0 < m_policy.m_upper[0] && local_x < m_policy.m_tile[0]) {
+          for (index_type tile_id1 = global_y;
                tile_id1 < m_policy.m_tile_end[1]; tile_id1 += gridDim.y) {
             const index_type offset_1 =
-                tile_id1 * m_policy.m_tile[1] +
-                static_cast<index_type>(threadIdx.y) +
+                tile_id1 * m_policy.m_tile[1] + local_y +
                 static_cast<index_type>(m_policy.m_lower[1]);
             if (offset_1 < m_policy.m_upper[1] &&
-                static_cast<index_type>(threadIdx.y) < m_policy.m_tile[1]) {
-              for (index_type tile_id2 = static_cast<index_type>(blockIdx.z);
+                local_y < m_policy.m_tile[1]) {
+              for (index_type tile_id2 = global_z;
                    tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.z) {
                 const index_type offset_2 =
-                    tile_id2 * m_policy.m_tile[2] +
-                    static_cast<index_type>(threadIdx.z) +
+                    tile_id2 * m_policy.m_tile[2] + local_z +
                     static_cast<index_type>(m_policy.m_lower[2]);
                 if (offset_2 < m_policy.m_upper[2] &&
-                    static_cast<index_type>(threadIdx.z) < m_policy.m_tile[2]) {
+                    local_z < m_policy.m_tile[2]) {
                   m_func(offset_0, offset_1, offset_2);
                 }
               }
@@ -289,32 +274,30 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
       : m_policy(policy_), m_func(f_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y, index_type global_z,
+                  index_type local_x, index_type local_y,
+                  index_type local_z) const {
     if (PolicyType::inner_direction == PolicyType::Left) {
-      for (index_type tile_id2 = static_cast<index_type>(blockIdx.z);
-           tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.z) {
+      for (index_type tile_id2 = global_z; tile_id2 < m_policy.m_tile_end[2];
+           tile_id2 += gridDim.z) {
         const index_type offset_2 =
-            tile_id2 * m_policy.m_tile[2] +
-            static_cast<index_type>(threadIdx.z) +
+            tile_id2 * m_policy.m_tile[2] + local_z +
             static_cast<index_type>(m_policy.m_lower[2]);
-        if (offset_2 < m_policy.m_upper[2] &&
-            static_cast<index_type>(threadIdx.z) < m_policy.m_tile[2]) {
-          for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
+        if (offset_2 < m_policy.m_upper[2] && local_z < m_policy.m_tile[2]) {
+          for (index_type tile_id1 = global_y;
                tile_id1 < m_policy.m_tile_end[1]; tile_id1 += gridDim.y) {
             const index_type offset_1 =
-                tile_id1 * m_policy.m_tile[1] +
-                static_cast<index_type>(threadIdx.y) +
+                tile_id1 * m_policy.m_tile[1] + local_y +
                 static_cast<index_type>(m_policy.m_lower[1]);
             if (offset_1 < m_policy.m_upper[1] &&
-                static_cast<index_type>(threadIdx.y) < m_policy.m_tile[1]) {
-              for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
+                local_y < m_policy.m_tile[1]) {
+              for (index_type tile_id0 = global_x;
                    tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
                 const index_type offset_0 =
-                    tile_id0 * m_policy.m_tile[0] +
-                    static_cast<index_type>(threadIdx.x) +
+                    tile_id0 * m_policy.m_tile[0] + local_x +
                     static_cast<index_type>(m_policy.m_lower[0]);
                 if (offset_0 < m_policy.m_upper[0] &&
-                    static_cast<index_type>(threadIdx.x) < m_policy.m_tile[0]) {
+                    local_x < m_policy.m_tile[0]) {
                   m_func(Tag(), offset_0, offset_1, offset_2);
                 }
               }
@@ -323,30 +306,26 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
         }
       }
     } else {
-      for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
-           tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
+      for (index_type tile_id0 = global_x; tile_id0 < m_policy.m_tile_end[0];
+           tile_id0 += gridDim.x) {
         const index_type offset_0 =
-            tile_id0 * m_policy.m_tile[0] +
-            static_cast<index_type>(threadIdx.x) +
+            tile_id0 * m_policy.m_tile[0] + local_x +
             static_cast<index_type>(m_policy.m_lower[0]);
-        if (offset_0 < m_policy.m_upper[0] &&
-            static_cast<index_type>(threadIdx.x) < m_policy.m_tile[0]) {
-          for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
+        if (offset_0 < m_policy.m_upper[0] && local_x < m_policy.m_tile[0]) {
+          for (index_type tile_id1 = global_y;
                tile_id1 < m_policy.m_tile_end[1]; tile_id1 += gridDim.y) {
             const index_type offset_1 =
-                tile_id1 * m_policy.m_tile[1] +
-                static_cast<index_type>(threadIdx.y) +
+                tile_id1 * m_policy.m_tile[1] + local_y +
                 static_cast<index_type>(m_policy.m_lower[1]);
             if (offset_1 < m_policy.m_upper[1] &&
-                static_cast<index_type>(threadIdx.y) < m_policy.m_tile[1]) {
-              for (index_type tile_id2 = static_cast<index_type>(blockIdx.z);
+                local_y < m_policy.m_tile[1]) {
+              for (index_type tile_id2 = global_z;
                    tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.z) {
                 const index_type offset_2 =
-                    tile_id2 * m_policy.m_tile[2] +
-                    static_cast<index_type>(threadIdx.z) +
+                    tile_id2 * m_policy.m_tile[2] + local_z +
                     static_cast<index_type>(m_policy.m_lower[2]);
                 if (offset_2 < m_policy.m_upper[2] &&
-                    static_cast<index_type>(threadIdx.z) < m_policy.m_tile[2]) {
+                    local_z < m_policy.m_tile[2]) {
                   m_func(Tag(), offset_0, offset_1, offset_2);
                 }
               }
@@ -374,7 +353,9 @@ struct DeviceIterateTile<4, PolicyType, Functor, void> {
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y, index_type global_z,
+                  index_type local_x, index_type local_y,
+                  index_type local_z) const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
       const index_type temp0  = m_policy.m_tile_end[0];
@@ -385,29 +366,24 @@ struct DeviceIterateTile<4, PolicyType, Functor, void> {
                ? index_type(max_blocks / numbl0)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) / numbl0;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[0];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[0];
+      const index_type tile_id0 = global_x % numbl0;
+      const index_type tile_id1 = global_x / numbl0;
+      const index_type thr_id0  = local_x % m_policy.m_tile[0];
+      const index_type thr_id1  = local_x / m_policy.m_tile[0];
 
-      for (index_type tile_id3 = static_cast<index_type>(blockIdx.z);
-           tile_id3 < m_policy.m_tile_end[3]; tile_id3 += gridDim.z) {
+      for (index_type tile_id3 = global_z; tile_id3 < m_policy.m_tile_end[3];
+           tile_id3 += gridDim.z) {
         const index_type offset_3 =
-            tile_id3 * m_policy.m_tile[3] +
-            static_cast<index_type>(threadIdx.z) +
+            tile_id3 * m_policy.m_tile[3] + local_z +
             static_cast<index_type>(m_policy.m_lower[3]);
-        if (offset_3 < m_policy.m_upper[3] &&
-            static_cast<index_type>(threadIdx.z) < m_policy.m_tile[3]) {
-          for (index_type tile_id2 = static_cast<index_type>(blockIdx.y);
+        if (offset_3 < m_policy.m_upper[3] && local_z < m_policy.m_tile[3]) {
+          for (index_type tile_id2 = global_y;
                tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.y) {
             const index_type offset_2 =
-                tile_id2 * m_policy.m_tile[2] +
-                static_cast<index_type>(threadIdx.y) +
+                tile_id2 * m_policy.m_tile[2] + local_y +
                 static_cast<index_type>(m_policy.m_lower[2]);
             if (offset_2 < m_policy.m_upper[2] &&
-                static_cast<index_type>(threadIdx.y) < m_policy.m_tile[2]) {
+                local_y < m_policy.m_tile[2]) {
               for (index_type j = tile_id1; j < m_policy.m_tile_end[1];
                    j += numbl1) {
                 const index_type offset_1 =
@@ -442,12 +418,10 @@ struct DeviceIterateTile<4, PolicyType, Functor, void> {
                ? index_type(max_blocks / numbl1)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) % numbl1;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[1];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[1];
+      const index_type tile_id0 = global_x / numbl1;
+      const index_type tile_id1 = global_x % numbl1;
+      const index_type thr_id0  = local_x / m_policy.m_tile[1];
+      const index_type thr_id1  = local_x % m_policy.m_tile[1];
 
       for (index_type i = tile_id0; i < m_policy.m_tile_end[0]; i += numbl0) {
         const index_type offset_0 =
@@ -461,25 +435,21 @@ struct DeviceIterateTile<4, PolicyType, Functor, void> {
                 static_cast<index_type>(m_policy.m_lower[1]);
             if (offset_1 < m_policy.m_upper[1] &&
                 thr_id1 < m_policy.m_tile[1]) {
-              for (index_type tile_id2 = static_cast<index_type>(blockIdx.y);
+              for (index_type tile_id2 = global_y;
                    tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.y) {
                 const index_type offset_2 =
-                    tile_id2 * m_policy.m_tile[2] +
-                    static_cast<index_type>(threadIdx.y) +
+                    tile_id2 * m_policy.m_tile[2] + local_y +
                     static_cast<index_type>(m_policy.m_lower[2]);
                 if (offset_2 < m_policy.m_upper[2] &&
-                    static_cast<index_type>(threadIdx.y) < m_policy.m_tile[2]) {
-                  for (index_type tile_id3 =
-                           static_cast<index_type>(blockIdx.z);
+                    local_y < m_policy.m_tile[2]) {
+                  for (index_type tile_id3 = global_z;
                        tile_id3 < m_policy.m_tile_end[3];
                        tile_id3 += gridDim.z) {
                     const index_type offset_3 =
-                        tile_id3 * m_policy.m_tile[3] +
-                        static_cast<index_type>(threadIdx.z) +
+                        tile_id3 * m_policy.m_tile[3] + local_z +
                         static_cast<index_type>(m_policy.m_lower[3]);
                     if (offset_3 < m_policy.m_upper[3] &&
-                        static_cast<index_type>(threadIdx.z) <
-                            m_policy.m_tile[3]) {
+                        local_z < m_policy.m_tile[3]) {
                       m_func(offset_0, offset_1, offset_2, offset_3);
                     }
                   }
@@ -509,7 +479,9 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y, index_type global_z,
+                  index_type local_x, index_type local_y,
+                  index_type local_z) const {
     if (PolicyType::inner_direction == PolicyType::Left) {
       const index_type temp0  = m_policy.m_tile_end[0];
       const index_type temp1  = m_policy.m_tile_end[1];
@@ -519,29 +491,24 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
                ? static_cast<index_type>(max_blocks / numbl0)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) / numbl0;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[0];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[0];
+      const index_type tile_id0 = global_x % numbl0;
+      const index_type tile_id1 = global_x / numbl0;
+      const index_type thr_id0  = local_x % m_policy.m_tile[0];
+      const index_type thr_id1  = local_x / m_policy.m_tile[0];
 
-      for (index_type tile_id3 = static_cast<index_type>(blockIdx.z);
-           tile_id3 < m_policy.m_tile_end[3]; tile_id3 += gridDim.z) {
+      for (index_type tile_id3 = global_z; tile_id3 < m_policy.m_tile_end[3];
+           tile_id3 += gridDim.z) {
         const index_type offset_3 =
-            tile_id3 * m_policy.m_tile[3] +
-            static_cast<index_type>(threadIdx.z) +
+            tile_id3 * m_policy.m_tile[3] + local_z +
             static_cast<index_type>(m_policy.m_lower[3]);
-        if (offset_3 < m_policy.m_upper[3] &&
-            static_cast<index_type>(threadIdx.z) < m_policy.m_tile[3]) {
-          for (index_type tile_id2 = static_cast<index_type>(blockIdx.y);
+        if (offset_3 < m_policy.m_upper[3] && local_z < m_policy.m_tile[3]) {
+          for (index_type tile_id2 = global_y;
                tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.y) {
             const index_type offset_2 =
-                tile_id2 * m_policy.m_tile[2] +
-                static_cast<index_type>(threadIdx.y) +
+                tile_id2 * m_policy.m_tile[2] + local_y +
                 static_cast<index_type>(m_policy.m_lower[2]);
             if (offset_2 < m_policy.m_upper[2] &&
-                static_cast<index_type>(threadIdx.y) < m_policy.m_tile[2]) {
+                local_y < m_policy.m_tile[2]) {
               for (index_type j = tile_id1; j < m_policy.m_tile_end[1];
                    j += numbl1) {
                 const index_type offset_1 =
@@ -574,12 +541,10 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
                ? index_type(max_blocks / numbl1)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) % numbl1;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[1];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[1];
+      const index_type tile_id0 = global_x / numbl1;
+      const index_type tile_id1 = global_x % numbl1;
+      const index_type thr_id0  = local_x / m_policy.m_tile[1];
+      const index_type thr_id1  = local_x % m_policy.m_tile[1];
 
       for (index_type i = tile_id0; i < m_policy.m_tile_end[0]; i += numbl0) {
         const index_type offset_0 =
@@ -593,25 +558,21 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
                 static_cast<index_type>(m_policy.m_lower[1]);
             if (offset_1 < m_policy.m_upper[1] &&
                 thr_id1 < m_policy.m_tile[1]) {
-              for (index_type tile_id2 = static_cast<index_type>(blockIdx.y);
+              for (index_type tile_id2 = global_y;
                    tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.y) {
                 const index_type offset_2 =
-                    tile_id2 * m_policy.m_tile[2] +
-                    static_cast<index_type>(threadIdx.y) +
+                    tile_id2 * m_policy.m_tile[2] + local_y +
                     static_cast<index_type>(m_policy.m_lower[2]);
                 if (offset_2 < m_policy.m_upper[2] &&
-                    static_cast<index_type>(threadIdx.y) < m_policy.m_tile[2]) {
-                  for (index_type tile_id3 =
-                           static_cast<index_type>(blockIdx.z);
+                    local_y < m_policy.m_tile[2]) {
+                  for (index_type tile_id3 = global_z;
                        tile_id3 < m_policy.m_tile_end[3];
                        tile_id3 += gridDim.z) {
                     const index_type offset_3 =
-                        tile_id3 * m_policy.m_tile[3] +
-                        static_cast<index_type>(threadIdx.z) +
+                        tile_id3 * m_policy.m_tile[3] + local_z +
                         static_cast<index_type>(m_policy.m_lower[3]);
                     if (offset_3 < m_policy.m_upper[3] &&
-                        static_cast<index_type>(threadIdx.z) <
-                            m_policy.m_tile[3]) {
+                        local_z < m_policy.m_tile[3]) {
                       m_func(Tag(), offset_0, offset_1, offset_2, offset_3);
                     }
                   }
@@ -641,7 +602,9 @@ struct DeviceIterateTile<5, PolicyType, Functor, void> {
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y, index_type global_z,
+                  index_type local_x, index_type local_y,
+                  index_type local_z) const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
       index_type temp0        = m_policy.m_tile_end[0];
@@ -652,12 +615,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, void> {
                ? index_type(max_blocks / numbl0)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) / numbl0;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[0];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[0];
+      const index_type tile_id0 = global_x % numbl0;
+      const index_type tile_id1 = global_x / numbl0;
+      const index_type thr_id0  = local_x % m_policy.m_tile[0];
+      const index_type thr_id1  = local_x / m_policy.m_tile[0];
 
       temp0                   = m_policy.m_tile_end[2];
       temp1                   = m_policy.m_tile_end[3];
@@ -667,21 +628,17 @@ struct DeviceIterateTile<5, PolicyType, Functor, void> {
                ? index_type(max_blocks / numbl2)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id2 = static_cast<index_type>(blockIdx.y) % numbl2;
-      const index_type tile_id3 = static_cast<index_type>(blockIdx.y) / numbl2;
-      const index_type thr_id2 =
-          static_cast<index_type>(threadIdx.y) % m_policy.m_tile[2];
-      const index_type thr_id3 =
-          static_cast<index_type>(threadIdx.y) / m_policy.m_tile[2];
+      const index_type tile_id2 = global_y % numbl2;
+      const index_type tile_id3 = global_y / numbl2;
+      const index_type thr_id2  = local_y % m_policy.m_tile[2];
+      const index_type thr_id3  = local_y / m_policy.m_tile[2];
 
-      for (index_type tile_id4 = static_cast<index_type>(blockIdx.z);
-           tile_id4 < m_policy.m_tile_end[4]; tile_id4 += gridDim.z) {
+      for (index_type tile_id4 = global_z; tile_id4 < m_policy.m_tile_end[4];
+           tile_id4 += gridDim.z) {
         const index_type offset_4 =
-            tile_id4 * m_policy.m_tile[4] +
-            static_cast<index_type>(threadIdx.z) +
+            tile_id4 * m_policy.m_tile[4] + local_z +
             static_cast<index_type>(m_policy.m_lower[4]);
-        if (offset_4 < m_policy.m_upper[4] &&
-            static_cast<index_type>(threadIdx.z) < m_policy.m_tile[4]) {
+        if (offset_4 < m_policy.m_upper[4] && local_z < m_policy.m_tile[4]) {
           for (index_type l = tile_id3; l < m_policy.m_tile_end[3];
                l += numbl3) {
             const index_type offset_3 =
@@ -733,12 +690,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, void> {
                ? index_type(max_blocks / numbl1)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) % numbl1;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[1];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[1];
+      const index_type tile_id0 = global_x / numbl1;
+      const index_type tile_id1 = global_x % numbl1;
+      const index_type thr_id0  = local_x / m_policy.m_tile[1];
+      const index_type thr_id1  = local_x % m_policy.m_tile[1];
 
       temp0                   = m_policy.m_tile_end[2];
       temp1                   = m_policy.m_tile_end[3];
@@ -748,12 +703,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, void> {
                ? index_type(max_blocks / numbl3)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id2 = static_cast<index_type>(blockIdx.y) / numbl3;
-      const index_type tile_id3 = static_cast<index_type>(blockIdx.y) % numbl3;
-      const index_type thr_id2 =
-          static_cast<index_type>(threadIdx.y) / m_policy.m_tile[3];
-      const index_type thr_id3 =
-          static_cast<index_type>(threadIdx.y) % m_policy.m_tile[3];
+      const index_type tile_id2 = global_y / numbl3;
+      const index_type tile_id3 = global_y % numbl3;
+      const index_type thr_id2  = local_y / m_policy.m_tile[3];
+      const index_type thr_id3  = local_y % m_policy.m_tile[3];
 
       for (index_type i = tile_id0; i < m_policy.m_tile_end[0]; i += numbl0) {
         const index_type offset_0 =
@@ -781,17 +734,14 @@ struct DeviceIterateTile<5, PolicyType, Functor, void> {
                         static_cast<index_type>(m_policy.m_lower[3]);
                     if (offset_3 < m_policy.m_upper[3] &&
                         thr_id3 < m_policy.m_tile[3]) {
-                      for (index_type tile_id4 =
-                               static_cast<index_type>(blockIdx.z);
+                      for (index_type tile_id4 = global_z;
                            tile_id4 < m_policy.m_tile_end[4];
                            tile_id4 += gridDim.z) {
                         const index_type offset_4 =
-                            tile_id4 * m_policy.m_tile[4] +
-                            static_cast<index_type>(threadIdx.z) +
+                            tile_id4 * m_policy.m_tile[4] + local_z +
                             static_cast<index_type>(m_policy.m_lower[4]);
                         if (offset_4 < m_policy.m_upper[4] &&
-                            static_cast<index_type>(threadIdx.z) <
-                                m_policy.m_tile[4]) {
+                            local_z < m_policy.m_tile[4]) {
                           m_func(offset_0, offset_1, offset_2, offset_3,
                                  offset_4);
                         }
@@ -824,7 +774,9 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y, index_type global_z,
+                  index_type local_x, index_type local_y,
+                  index_type local_z) const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
       index_type temp0        = m_policy.m_tile_end[0];
@@ -835,12 +787,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
                ? index_type(max_blocks / numbl0)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) / numbl0;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[0];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[0];
+      const index_type tile_id0 = global_x % numbl0;
+      const index_type tile_id1 = global_x / numbl0;
+      const index_type thr_id0  = local_x % m_policy.m_tile[0];
+      const index_type thr_id1  = local_x / m_policy.m_tile[0];
 
       temp0                   = m_policy.m_tile_end[2];
       temp1                   = m_policy.m_tile_end[3];
@@ -850,21 +800,17 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
                ? index_type(max_blocks / numbl2)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id2 = static_cast<index_type>(blockIdx.y) % numbl2;
-      const index_type tile_id3 = static_cast<index_type>(blockIdx.y) / numbl2;
-      const index_type thr_id2 =
-          static_cast<index_type>(threadIdx.y) % m_policy.m_tile[2];
-      const index_type thr_id3 =
-          static_cast<index_type>(threadIdx.y) / m_policy.m_tile[2];
+      const index_type tile_id2 = global_y % numbl2;
+      const index_type tile_id3 = global_y / numbl2;
+      const index_type thr_id2  = local_y % m_policy.m_tile[2];
+      const index_type thr_id3  = local_y / m_policy.m_tile[2];
 
-      for (index_type tile_id4 = static_cast<index_type>(blockIdx.z);
-           tile_id4 < m_policy.m_tile_end[4]; tile_id4 += gridDim.z) {
+      for (index_type tile_id4 = global_z; tile_id4 < m_policy.m_tile_end[4];
+           tile_id4 += gridDim.z) {
         const index_type offset_4 =
-            tile_id4 * m_policy.m_tile[4] +
-            static_cast<index_type>(threadIdx.z) +
+            tile_id4 * m_policy.m_tile[4] + local_z +
             static_cast<index_type>(m_policy.m_lower[4]);
-        if (offset_4 < m_policy.m_upper[4] &&
-            static_cast<index_type>(threadIdx.z) < m_policy.m_tile[4]) {
+        if (offset_4 < m_policy.m_upper[4] && local_z < m_policy.m_tile[4]) {
           for (index_type l = tile_id3; l < m_policy.m_tile_end[3];
                l += numbl3) {
             const index_type offset_3 =
@@ -916,12 +862,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
                ? static_cast<index_type>(max_blocks / numbl1)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) % numbl1;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[1];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[1];
+      const index_type tile_id0 = global_x / numbl1;
+      const index_type tile_id1 = global_x % numbl1;
+      const index_type thr_id0  = local_x / m_policy.m_tile[1];
+      const index_type thr_id1  = local_x % m_policy.m_tile[1];
 
       temp0                   = m_policy.m_tile_end[2];
       temp1                   = m_policy.m_tile_end[3];
@@ -931,12 +875,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
                ? index_type(max_blocks / numbl3)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id2 = static_cast<index_type>(blockIdx.y) / numbl3;
-      const index_type tile_id3 = static_cast<index_type>(blockIdx.y) % numbl3;
-      const index_type thr_id2 =
-          static_cast<index_type>(threadIdx.y) / m_policy.m_tile[3];
-      const index_type thr_id3 =
-          static_cast<index_type>(threadIdx.y) % m_policy.m_tile[3];
+      const index_type tile_id2 = global_y / numbl3;
+      const index_type tile_id3 = global_y % numbl3;
+      const index_type thr_id2  = local_y / m_policy.m_tile[3];
+      const index_type thr_id3  = local_y % m_policy.m_tile[3];
 
       for (index_type i = tile_id0; i < m_policy.m_tile_end[0]; i += numbl0) {
         const index_type offset_0 =
@@ -964,17 +906,14 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
                         static_cast<index_type>(m_policy.m_lower[3]);
                     if (offset_3 < m_policy.m_upper[3] &&
                         thr_id3 < m_policy.m_tile[3]) {
-                      for (index_type tile_id4 =
-                               static_cast<index_type>(blockIdx.z);
+                      for (index_type tile_id4 = global_z;
                            tile_id4 < m_policy.m_tile_end[4];
                            tile_id4 += gridDim.z) {
                         const index_type offset_4 =
-                            tile_id4 * m_policy.m_tile[4] +
-                            static_cast<index_type>(threadIdx.z) +
+                            tile_id4 * m_policy.m_tile[4] + local_z +
                             static_cast<index_type>(m_policy.m_lower[4]);
                         if (offset_4 < m_policy.m_upper[4] &&
-                            static_cast<index_type>(threadIdx.z) <
-                                m_policy.m_tile[4]) {
+                            local_z < m_policy.m_tile[4]) {
                           m_func(Tag(), offset_0, offset_1, offset_2, offset_3,
                                  offset_4);
                         }
@@ -1007,7 +946,9 @@ struct DeviceIterateTile<6, PolicyType, Functor, void> {
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y, index_type global_z,
+                  index_type local_x, index_type local_y,
+                  index_type local_z) const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
       index_type temp0        = m_policy.m_tile_end[0];
@@ -1018,12 +959,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, void> {
                ? static_cast<index_type>(max_blocks / numbl0)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) / numbl0;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[0];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[0];
+      const index_type tile_id0 = global_x % numbl0;
+      const index_type tile_id1 = global_x / numbl0;
+      const index_type thr_id0  = local_x % m_policy.m_tile[0];
+      const index_type thr_id1  = local_x / m_policy.m_tile[0];
 
       temp0                   = m_policy.m_tile_end[2];
       temp1                   = m_policy.m_tile_end[3];
@@ -1033,12 +972,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, void> {
                ? index_type(max_blocks / numbl2)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id2 = static_cast<index_type>(blockIdx.y) % numbl2;
-      const index_type tile_id3 = static_cast<index_type>(blockIdx.y) / numbl2;
-      const index_type thr_id2 =
-          static_cast<index_type>(threadIdx.y) % m_policy.m_tile[2];
-      const index_type thr_id3 =
-          static_cast<index_type>(threadIdx.y) / m_policy.m_tile[2];
+      const index_type tile_id2 = global_y % numbl2;
+      const index_type tile_id3 = global_y / numbl2;
+      const index_type thr_id2  = local_y % m_policy.m_tile[2];
+      const index_type thr_id3  = local_y / m_policy.m_tile[2];
 
       temp0                   = m_policy.m_tile_end[4];
       temp1                   = m_policy.m_tile_end[5];
@@ -1048,12 +985,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, void> {
                ? static_cast<index_type>(max_blocks / numbl4)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id4 = static_cast<index_type>(blockIdx.z) % numbl4;
-      const index_type tile_id5 = static_cast<index_type>(blockIdx.z) / numbl4;
-      const index_type thr_id4 =
-          static_cast<index_type>(threadIdx.z) % m_policy.m_tile[4];
-      const index_type thr_id5 =
-          static_cast<index_type>(threadIdx.z) / m_policy.m_tile[4];
+      const index_type tile_id4 = global_z % numbl4;
+      const index_type tile_id5 = global_z / numbl4;
+      const index_type thr_id4  = local_z % m_policy.m_tile[4];
+      const index_type thr_id5  = local_z / m_policy.m_tile[4];
 
       for (index_type n = tile_id5; n < m_policy.m_tile_end[5]; n += numbl5) {
         const index_type offset_5 =
@@ -1120,12 +1055,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, void> {
                ? static_cast<index_type>(max_blocks / numbl1)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) % numbl1;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[1];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[1];
+      const index_type tile_id0 = global_x / numbl1;
+      const index_type tile_id1 = global_x % numbl1;
+      const index_type thr_id0  = local_x / m_policy.m_tile[1];
+      const index_type thr_id1  = local_x % m_policy.m_tile[1];
 
       temp0                   = m_policy.m_tile_end[2];
       temp1                   = m_policy.m_tile_end[3];
@@ -1135,12 +1068,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, void> {
                ? index_type(max_blocks / numbl3)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id2 = static_cast<index_type>(blockIdx.y) / numbl3;
-      const index_type tile_id3 = static_cast<index_type>(blockIdx.y) % numbl3;
-      const index_type thr_id2 =
-          static_cast<index_type>(threadIdx.y) / m_policy.m_tile[3];
-      const index_type thr_id3 =
-          static_cast<index_type>(threadIdx.y) % m_policy.m_tile[3];
+      const index_type tile_id2 = global_y / numbl3;
+      const index_type tile_id3 = global_y % numbl3;
+      const index_type thr_id2  = local_y / m_policy.m_tile[3];
+      const index_type thr_id3  = local_y % m_policy.m_tile[3];
 
       temp0                   = m_policy.m_tile_end[4];
       temp1                   = m_policy.m_tile_end[5];
@@ -1150,12 +1081,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, void> {
                ? index_type(max_blocks / numbl5)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id4 = static_cast<index_type>(blockIdx.z) / numbl5;
-      const index_type tile_id5 = static_cast<index_type>(blockIdx.z) % numbl5;
-      const index_type thr_id4 =
-          static_cast<index_type>(threadIdx.z) / m_policy.m_tile[5];
-      const index_type thr_id5 =
-          static_cast<index_type>(threadIdx.z) % m_policy.m_tile[5];
+      const index_type tile_id4 = global_z / numbl5;
+      const index_type tile_id5 = global_z % numbl5;
+      const index_type thr_id4  = local_z / m_policy.m_tile[5];
+      const index_type thr_id5  = local_z % m_policy.m_tile[5];
 
       for (index_type i = tile_id0; i < m_policy.m_tile_end[0]; i += numbl0) {
         const index_type offset_0 =
@@ -1231,7 +1160,9 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
+  void exec_range(index_type global_x, index_type global_y, index_type global_z,
+                  index_type local_x, index_type local_y,
+                  index_type local_z) const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
       index_type temp0        = m_policy.m_tile_end[0];
@@ -1242,12 +1173,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
                ? static_cast<index_type>(max_blocks / numbl0)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) / numbl0;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[0];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[0];
+      const index_type tile_id0 = global_x % numbl0;
+      const index_type tile_id1 = global_x / numbl0;
+      const index_type thr_id0  = local_x % m_policy.m_tile[0];
+      const index_type thr_id1  = local_x / m_policy.m_tile[0];
 
       temp0                   = m_policy.m_tile_end[2];
       temp1                   = m_policy.m_tile_end[3];
@@ -1257,12 +1186,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
                ? static_cast<index_type>(max_blocks / numbl2)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id2 = static_cast<index_type>(blockIdx.y) % numbl2;
-      const index_type tile_id3 = static_cast<index_type>(blockIdx.y) / numbl2;
-      const index_type thr_id2 =
-          static_cast<index_type>(threadIdx.y) % m_policy.m_tile[2];
-      const index_type thr_id3 =
-          static_cast<index_type>(threadIdx.y) / m_policy.m_tile[2];
+      const index_type tile_id2 = global_y % numbl2;
+      const index_type tile_id3 = global_y / numbl2;
+      const index_type thr_id2  = local_y % m_policy.m_tile[2];
+      const index_type thr_id3  = local_y / m_policy.m_tile[2];
 
       temp0                   = m_policy.m_tile_end[4];
       temp1                   = m_policy.m_tile_end[5];
@@ -1272,12 +1199,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
                ? static_cast<index_type>(max_blocks / numbl4)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
-      const index_type tile_id4 = static_cast<index_type>(blockIdx.z) % numbl4;
-      const index_type tile_id5 = static_cast<index_type>(blockIdx.z) / numbl4;
-      const index_type thr_id4 =
-          static_cast<index_type>(threadIdx.z) % m_policy.m_tile[4];
-      const index_type thr_id5 =
-          static_cast<index_type>(threadIdx.z) / m_policy.m_tile[4];
+      const index_type tile_id4 = global_z % numbl4;
+      const index_type tile_id5 = global_z / numbl4;
+      const index_type thr_id4  = local_z % m_policy.m_tile[4];
+      const index_type thr_id5  = local_z / m_policy.m_tile[4];
 
       for (index_type n = tile_id5; n < m_policy.m_tile_end[5]; n += numbl5) {
         const index_type offset_5 =
@@ -1344,12 +1269,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
                ? static_cast<index_type>(max_blocks / numbl1)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
-      const index_type tile_id1 = static_cast<index_type>(blockIdx.x) % numbl1;
-      const index_type thr_id0 =
-          static_cast<index_type>(threadIdx.x) / m_policy.m_tile[1];
-      const index_type thr_id1 =
-          static_cast<index_type>(threadIdx.x) % m_policy.m_tile[1];
+      const index_type tile_id0 = global_x / numbl1;
+      const index_type tile_id1 = global_x % numbl1;
+      const index_type thr_id0  = local_x / m_policy.m_tile[1];
+      const index_type thr_id1  = local_x % m_policy.m_tile[1];
 
       temp0                   = m_policy.m_tile_end[2];
       temp1                   = m_policy.m_tile_end[3];
@@ -1359,12 +1282,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
                ? static_cast<index_type>(max_blocks / numbl3)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id2 = static_cast<index_type>(blockIdx.y) / numbl3;
-      const index_type tile_id3 = static_cast<index_type>(blockIdx.y) % numbl3;
-      const index_type thr_id2 =
-          static_cast<index_type>(threadIdx.y) / m_policy.m_tile[3];
-      const index_type thr_id3 =
-          static_cast<index_type>(threadIdx.y) % m_policy.m_tile[3];
+      const index_type tile_id2 = global_y / numbl3;
+      const index_type tile_id3 = global_y % numbl3;
+      const index_type thr_id2  = local_y / m_policy.m_tile[3];
+      const index_type thr_id3  = local_y % m_policy.m_tile[3];
 
       temp0                   = m_policy.m_tile_end[4];
       temp1                   = m_policy.m_tile_end[5];
@@ -1374,12 +1295,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
                ? static_cast<index_type>(max_blocks / numbl5)
                : (temp0 <= max_blocks ? temp0 : max_blocks));
 
-      const index_type tile_id4 = static_cast<index_type>(blockIdx.z) / numbl5;
-      const index_type tile_id5 = static_cast<index_type>(blockIdx.z) % numbl5;
-      const index_type thr_id4 =
-          static_cast<index_type>(threadIdx.z) / m_policy.m_tile[5];
-      const index_type thr_id5 =
-          static_cast<index_type>(threadIdx.z) % m_policy.m_tile[5];
+      const index_type tile_id4 = global_z / numbl5;
+      const index_type tile_id5 = global_z % numbl5;
+      const index_type thr_id4  = local_z / m_policy.m_tile[5];
+      const index_type thr_id5  = local_z % m_policy.m_tile[5];
 
       for (index_type i = tile_id0; i < m_policy.m_tile_end[0]; i += numbl0) {
         const index_type offset_0 =
@@ -1476,7 +1395,7 @@ struct DeviceIterateTile;
 // num_blocks = min( num_tiles, max_num_blocks ); //i.e. determined by number of
 // tiles and reduction algorithm constraints extract n-dim tile offsets (i.e.
 // tile's global starting mulit-index) from the tileid = blockid using tile
-// dimensions local indices within a tile extracted from (index_type)threadIdx_x
+// dimensions local indices within a tile extracted from (index_type)local_x
 // using tile dims, constrained by blocksize combine tile and local id info for
 // multi-dim global ids
 
@@ -1508,19 +1427,21 @@ struct DeviceIterateTile<
       : m_policy(rp_), m_func(f_), m_v(v_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -1591,19 +1512,21 @@ struct DeviceIterateTile<
       : m_policy(rp_), m_func(f_), m_v(v_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -1614,7 +1537,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1636,7 +1559,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -1676,19 +1599,21 @@ struct DeviceIterateTile<
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -1699,7 +1624,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1721,7 +1646,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -1762,19 +1687,21 @@ struct DeviceIterateTile<
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -1785,7 +1712,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1807,7 +1734,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -1849,19 +1776,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -1872,7 +1801,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx.y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1894,7 +1823,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1934,19 +1863,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -1957,7 +1888,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1980,7 +1911,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2020,19 +1951,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2043,7 +1976,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2066,7 +1999,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2107,19 +2040,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2130,7 +2065,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2153,7 +2088,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2193,19 +2128,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2216,7 +2153,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2239,7 +2176,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2280,19 +2217,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2303,7 +2242,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2326,7 +2265,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2366,19 +2305,21 @@ struct DeviceIterateTile<
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2410,7 +2351,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -2452,19 +2393,21 @@ struct DeviceIterateTile<
       : m_policy(rp_), m_func(f_), m_v(v_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2475,7 +2418,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2497,7 +2440,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2536,19 +2479,21 @@ struct DeviceIterateTile<
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2559,7 +2504,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -2584,7 +2529,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -2627,19 +2572,21 @@ struct DeviceIterateTile<
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2650,7 +2597,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2672,7 +2619,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2713,19 +2660,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2736,7 +2685,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2758,7 +2707,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2800,19 +2749,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2823,7 +2774,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2846,7 +2797,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)threadIdx_y
+            // tile-local indices identified with (index_type)local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2888,19 +2839,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -2911,7 +2864,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2934,7 +2887,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2977,19 +2930,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -3000,7 +2955,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -3023,7 +2978,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -3065,19 +3020,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -3088,7 +3045,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -3111,7 +3068,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -3154,19 +3111,21 @@ struct DeviceIterateTile<
   static constexpr index_type max_blocks = 65535;
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
+  void exec_range(index_type global_x, index_type /*global_y*/,
+                  index_type /*global_z*/, index_type /*local_x*/,
+                  index_type local_y, index_type /*local_z*/) const {
+    if (global_x < m_policy.m_num_tiles &&
+        local_y < m_policy.m_prod_tile_dims) {
       index_type m_offset[PolicyType::rank];  // tile starting global id offset
       index_type
           m_local_offset[PolicyType::rank];  // tile starting global id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type tileidx = global_x; tileidx < m_policy.m_num_tiles;
+           tileidx += gridDim.x) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+        index_type thrd_idx = local_y;
         bool in_bounds      = true;
 
         // LL
@@ -3177,7 +3136,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -3200,7 +3159,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with threadIdx.y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -3228,5 +3187,4 @@ struct DeviceIterateTile<
 }  // namespace Reduce
 }  // namespace Impl
 }  // namespace Kokkos
-#endif
 #endif
