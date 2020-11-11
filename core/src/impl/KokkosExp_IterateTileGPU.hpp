@@ -1395,7 +1395,7 @@ struct DeviceIterateTile;
 // num_blocks = min( num_tiles, max_num_blocks ); //i.e. determined by number of
 // tiles and reduction algorithm constraints extract n-dim tile offsets (i.e.
 // tile's global starting mulit-index) from the tileid = blockid using tile
-// dimensions local indices within a tile extracted from (index_type)local_x
+// dimensions local indices within a tile extracted from local_x
 // using tile dims, constrained by blocksize combine tile and local id info for
 // multi-dim global ids
 
@@ -1537,7 +1537,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1559,7 +1559,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -1624,7 +1624,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1646,7 +1646,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -1712,7 +1712,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1734,7 +1734,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -1801,7 +1801,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1823,7 +1823,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -1976,7 +1976,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2242,7 +2242,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2265,7 +2265,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2351,7 +2351,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -2418,7 +2418,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2440,7 +2440,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2504,7 +2504,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -2529,7 +2529,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] =
                 (thrd_idx %
                  m_policy.m_tile[i]);  // Move this to first computation,
@@ -2619,7 +2619,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2774,7 +2774,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
@@ -2797,7 +2797,7 @@ struct DeviceIterateTile<
                 m_policy.m_lower[i];
             tile_idx /= m_policy.m_tile_end[i];
 
-            // tile-local indices identified with (index_type)local_y
+            // tile-local indices identified with local_y
             m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
             thrd_idx /= m_policy.m_tile[i];
 
