@@ -76,8 +76,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                     typename Policy::work_tag>(m_policy,
                                                                m_functor)
-        .exec_range(blockIdx.x, blockIdx.y, blockIdx.z, threadIdx.x,
-                    threadIdx.y, threadIdx.z);
+        .exec_range(gridDim.x, gridDim.y, gridDim.z, blockIdx.x, blockIdx.y,
+                    blockIdx.z, threadIdx.x, threadIdx.y, threadIdx.z);
   }
 
   inline void execute() const {
@@ -230,8 +230,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
  public:
   inline __device__ void exec_range(reference_type update) const {
     DeviceIteratePattern(m_policy, m_functor, update)
-        .exec_range(blockIdx.x, blockIdx.y, blockIdx.z, threadIdx.x,
-                    threadIdx.y, threadIdx.z);
+        .exec_range(gridDim.x, gridDim.y, gridDim.z, blockIdx.x, blockIdx.y,
+                    blockIdx.z, threadIdx.x, threadIdx.y, threadIdx.z);
   }
 
   inline __device__ void operator()(void) const {
