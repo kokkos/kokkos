@@ -1175,6 +1175,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   // init_result = loop_boundaries.thread.team_reduce(result,join);
 }
 
+//
 template <typename iType, class FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<
@@ -1189,19 +1190,17 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
-  for (iType i = loop_bounds.start; i < loop_bounds.end;
-       i += loop_bounds.increment) {
+  for (iType i = loop_bounds.start; i < loop_bounds.end; ++i) {
     lambda(i, scan_val, false);
   }
 
   // 'scan_val' output is the exclusive prefix sum
-  scan_val = loop_bounds.thread.team_scan(scan_val);
+  scan_val = loop_bounds.team.team_scan(scan_val);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
-  for (iType i = loop_bounds.start; i < loop_bounds.end;
-       i += loop_bounds.increment) {
+  for (iType i = loop_bounds.start; i < loop_bounds.end; ++i) {
     lambda(i, scan_val, true);
   }
 }
