@@ -56,7 +56,7 @@
 
 #if defined(KOKKOS_ENABLE_CUDA) || \
     (defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP))
-#include <HIP/KokkosExp_HIP_IterateTile.hpp>
+#include <impl/KokkosExp_IterateTileGPU.hpp>
 #endif
 
 namespace Kokkos {
