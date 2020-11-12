@@ -922,18 +922,38 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     }
 
+    // Doing code duplication here to fix issue #3428
+    // Suspect optimizer bug??
     // Reduce with final value at blockDim.y - 1 location.
     // Shortcut for length zero reduction
-    bool do_final_reduction = m_policy.begin() == m_policy.end();
-    if (!do_final_reduction)
-      do_final_reduction =
-          cuda_single_inter_block_reduce_scan<false, ReducerTypeFwd,
-                                              WorkTagFwd>(
-              ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
-              gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
-              m_scratch_space, m_scratch_flags);
+    if (m_policy.begin() == m_policy.end()) {
+      // This is the final block with the final result at the final threads'
+      // location
 
-    if (do_final_reduction) {
+      size_type* const shared = kokkos_impl_cuda_shared_memory<size_type>() +
+                                (blockDim.y - 1) * word_count.value;
+      size_type* const global =
+          m_result_ptr_device_accessible
+              ? reinterpret_cast<size_type*>(m_result_ptr)
+              : (m_unified_space ? m_unified_space : m_scratch_space);
+
+      if (threadIdx.y == 0) {
+        Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
+            ReducerConditional::select(m_functor, m_reducer), shared);
+      }
+
+      if (CudaTraits::WarpSize < word_count.value) {
+        __syncthreads();
+      }
+
+      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+        global[i] = shared[i];
+      }
+    } else if (cuda_single_inter_block_reduce_scan<false, ReducerTypeFwd,
+                                                   WorkTagFwd>(
+                   ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
+                   gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
+                   m_scratch_space, m_scratch_flags)) {
       // This is the final block with the final result at the final threads'
       // location
 
@@ -1586,14 +1606,35 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
 
     // Reduce with final value at blockDim.y - 1 location.
-    bool do_final_reduce = (m_league_size == 0);
-    if (!do_final_reduce)
-      do_final_reduce =
-          cuda_single_inter_block_reduce_scan<false, FunctorType, WorkTag>(
-              ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
-              gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
-              m_scratch_space, m_scratch_flags);
-    if (do_final_reduce) {
+    // Doing code duplication here to fix issue #3428
+    // Suspect optimizer bug??
+    if (m_league_size == 0) {
+      // This is the final block with the final result at the final threads'
+      // location
+
+      size_type* const shared = kokkos_impl_cuda_shared_memory<size_type>() +
+                                (blockDim.y - 1) * word_count.value;
+      size_type* const global =
+          m_result_ptr_device_accessible
+              ? reinterpret_cast<size_type*>(m_result_ptr)
+              : (m_unified_space ? m_unified_space : m_scratch_space);
+
+      if (threadIdx.y == 0) {
+        Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
+            ReducerConditional::select(m_functor, m_reducer), shared);
+      }
+
+      if (CudaTraits::WarpSize < word_count.value) {
+        __syncthreads();
+      }
+
+      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+        global[i] = shared[i];
+      }
+    } else if (cuda_single_inter_block_reduce_scan<false, FunctorType, WorkTag>(
+                   ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
+                   gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
+                   m_scratch_space, m_scratch_flags)) {
       // This is the final block with the final result at the final threads'
       // location
 
