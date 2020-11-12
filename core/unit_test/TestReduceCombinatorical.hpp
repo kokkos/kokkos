@@ -454,8 +454,8 @@ struct TestReduceCombinatoricalInstantiation {
     ASSERT_EQ(expected_result, result_view_const_um());
 
     value = 99;
-// WORKAROUND OPENMPTARGET FIXME_SYCL Custom Reducers not implemented
-#if !(defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_SYCL))
+// WORKAROUND OPENMPTARGET Custom Reducers not implemented
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     CallParallelReduce(args...,
                        Test::ReduceCombinatorical::AddPlus<double>(value));
     if ((Kokkos::DefaultExecutionSpace::concurrency() > 1) &&
@@ -517,11 +517,9 @@ struct TestReduceCombinatoricalInstantiation {
     AddReturnArgument(
         N, args...,
         Test::ReduceCombinatorical::FunctorScalar<ISTEAM>(result_view));
-// WORKAROUND OPENMPTARGET, FIXME_SYCL: reductions with functor join/init/final
+// WORKAROUND OPENMPTARGET: reductions with functor join/init/final
 // not implemented
-#if !(defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_SYCL))
-    double expected_result = (1.0 * N) * (1.0 * N - 1.0) / 2.0;
-
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
     AddReturnArgument(
         N, args...,
         Test::ReduceCombinatorical::FunctorScalarInit<ISTEAM>(result_view));
@@ -531,6 +529,7 @@ struct TestReduceCombinatoricalInstantiation {
     AddReturnArgument(
         N, args...,
         Test::ReduceCombinatorical::FunctorScalarJoinInit<ISTEAM>(result_view));
+    double expected_result = (1.0 * N) * (1.0 * N - 1.0) / 2.0;
 
     h_r() = 0;
     Kokkos::deep_copy(result_view, h_r);
@@ -639,8 +638,7 @@ struct TestReduceCombinatoricalInstantiation {
     std::string s("Std::String");
     AddPolicy_1(1000, s.c_str());
     AddPolicy_1(1000, "Char Constant");
-    // FIXME_SYCL
-#if !(defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_SYCL))
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     AddPolicy_1(0, "Char Constant");
 #endif
   }
@@ -656,8 +654,7 @@ struct TestReduceCombinatoricalInstantiation {
     std::string s("Std::String");
     AddPolicy_2(1000, s.c_str());
     AddPolicy_2(1000, "Char Constant");
-    // FIXME_SYCL
-#if !(defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_SYCL))
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
     AddPolicy_2(0, "Char Constant");
 #endif
   }
