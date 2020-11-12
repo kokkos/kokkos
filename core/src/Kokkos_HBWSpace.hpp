@@ -141,6 +141,9 @@ class HBWSpace {
                   const size_t arg_logical_size = 0) const;
 
  private:
+  template <class, class, class, class>
+  friend class LogicalMemorySpace;
+
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
