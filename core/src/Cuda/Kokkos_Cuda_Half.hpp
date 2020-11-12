@@ -48,8 +48,8 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 #if !(defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 900) && \
-    !((defined(KOKKOS_ARCH_KEPLER)) ||                                  \
-      !(defined(KOKKOS_ARCH_MAXWELL50) || defined(KOKKOS_ARCH_MAXWELL52)))
+    !(defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL50) ||  \
+      defined(KOKKOS_ARCH_MAXWELL52))
 #include <cuda_fp16.h>
 
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
