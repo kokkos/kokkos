@@ -48,8 +48,10 @@
 #include <Kokkos_Core_fwd.hpp>
 
 #ifdef KOKKOS_ENABLE_SYCL
+#include <Kokkos_Concepts.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
+#include <impl/Kokkos_Tools.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -73,12 +75,50 @@ class SYCLDeviceUSMSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
+ private:
+  template <class, class, class, class>
+  friend class LogicalMemorySpace;
+  void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      const Kokkos::Tools::SpaceHandle =
+                          Kokkos::Tools::make_space_handle(name())) const;
+  void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                       const size_t arg_alloc_size,
+                       const size_t arg_logical_size = 0,
+                       const Kokkos::Tools::SpaceHandle =
+                           Kokkos::Tools::make_space_handle(name())) const;
+
+ public:
   static constexpr const char* name() { return "SYCLDeviceUSM"; };
 
  private:
   int m_device;
 };
 }  // namespace Experimental
+
+namespace Impl {
+static_assert(Kokkos::Impl::MemorySpaceAccess<
+                  Kokkos::Experimental::SYCLDeviceUSMSpace,
+                  Kokkos::Experimental::SYCLDeviceUSMSpace>::assignable,
+              "");
+
+template <>
+struct MemorySpaceAccess<Kokkos::HostSpace,
+                         Kokkos::Experimental::SYCLDeviceUSMSpace> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = true };
+};
+
+template <>
+struct MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                         Kokkos::HostSpace> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = true };
+};
+
+}  // namespace Impl
 
 namespace Impl {
 

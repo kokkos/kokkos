@@ -104,7 +104,8 @@
 #if !defined(KOKKOS_DISABLE_CUDA_ASM)
 #if !defined(KOKKOS_ENABLE_CUDA_ASM)
 #define KOKKOS_ENABLE_CUDA_ASM
-#if !defined(KOKKOS_DISABLE_CUDA_ASM_ATOMICS)
+#if !defined(KOKKOS_DISABLE_CUDA_ASM_ATOMICS) && \
+    defined(KOKKOS_ENABLE_GNU_ATOMICS)
 #define KOKKOS_ENABLE_CUDA_ASM_ATOMICS
 #endif
 #endif
@@ -129,5 +130,9 @@
 #endif
 #define KOKKOS_IMPL_HOST_FUNCTION __host__
 #define KOKKOS_IMPL_DEVICE_FUNCTION __device__
+
+#if (CUDA_VERSION >= 10000)
+#define KOKKOS_CUDA_ENABLE_GRAPHS
+#endif
 
 #endif /* KOKKOS_CUDA_SETUP_HPP_ */

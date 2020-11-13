@@ -48,6 +48,7 @@
 
 namespace Test {
 
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, view_subview_auto_1d_left) {
   TestViewSubview::test_auto_1d<Kokkos::LayoutLeft, TEST_EXECSPACE>();
 }
@@ -59,6 +60,7 @@ TEST(TEST_CATEGORY, view_subview_auto_1d_right) {
 TEST(TEST_CATEGORY, view_subview_auto_1d_stride) {
   TestViewSubview::test_auto_1d<Kokkos::LayoutStride, TEST_EXECSPACE>();
 }
+#endif
 
 TEST(TEST_CATEGORY, view_subview_assign_strided) {
   TestViewSubview::test_1d_strided_assignment<TEST_EXECSPACE>();

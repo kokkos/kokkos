@@ -102,6 +102,8 @@ struct FunctorScalar<0> {
   void operator()(const int& i, double& update) const { update += i; }
 };
 
+// FIXME_SYCL requires TeamPolicy
+#ifndef KOKKOS_ENABLE_SYCL
 template <>
 struct FunctorScalar<1> {
   using team_type = Kokkos::TeamPolicy<>::member_type;
@@ -115,6 +117,7 @@ struct FunctorScalar<1> {
     update += 1.0 / team.team_size() * team.league_rank();
   }
 };
+#endif
 
 template <int ISTEAM>
 struct FunctorScalarInit;
@@ -132,6 +135,8 @@ struct FunctorScalarInit<0> {
   void init(double& update) const { update = 0.0; }
 };
 
+// FIXME_SYCL requires TeamPolicy
+#ifndef KOKKOS_ENABLE_SYCL
 template <>
 struct FunctorScalarInit<1> {
   using team_type = Kokkos::TeamPolicy<>::member_type;
@@ -148,6 +153,7 @@ struct FunctorScalarInit<1> {
   KOKKOS_INLINE_FUNCTION
   void init(double& update) const { update = 0.0; }
 };
+#endif
 
 template <int ISTEAM>
 struct FunctorScalarFinal;
@@ -165,6 +171,8 @@ struct FunctorScalarFinal<0> {
   void final(double& update) const { result() = update; }
 };
 
+// FIXME_SYCL requires TeamPolicy
+#ifndef KOKKOS_ENABLE_SYCL
 template <>
 struct FunctorScalarFinal<1> {
   using team_type = Kokkos::TeamPolicy<>::member_type;
@@ -181,6 +189,7 @@ struct FunctorScalarFinal<1> {
   KOKKOS_INLINE_FUNCTION
   void final(double& update) const { result() = update; }
 };
+#endif
 
 template <int ISTEAM>
 struct FunctorScalarJoin;
@@ -200,6 +209,8 @@ struct FunctorScalarJoin<0> {
   }
 };
 
+// FIXME_SYCL requires TeamPolicy
+#ifndef KOKKOS_ENABLE_SYCL
 template <>
 struct FunctorScalarJoin<1> {
   using team_type = Kokkos::TeamPolicy<>::member_type;
@@ -218,6 +229,7 @@ struct FunctorScalarJoin<1> {
     dst += update;
   }
 };
+#endif
 
 template <int ISTEAM>
 struct FunctorScalarJoinFinal;
@@ -240,6 +252,8 @@ struct FunctorScalarJoinFinal<0> {
   void final(double& update) const { result() = update; }
 };
 
+// FIXME_SYCL requires TeamPolicy
+#ifndef KOKKOS_ENABLE_SYCL
 template <>
 struct FunctorScalarJoinFinal<1> {
   using team_type = Kokkos::TeamPolicy<>::member_type;
@@ -261,6 +275,7 @@ struct FunctorScalarJoinFinal<1> {
   KOKKOS_INLINE_FUNCTION
   void final(double& update) const { result() = update; }
 };
+#endif
 
 template <int ISTEAM>
 struct FunctorScalarJoinInit;
@@ -283,6 +298,8 @@ struct FunctorScalarJoinInit<0> {
   void init(double& update) const { update = 0.0; }
 };
 
+// FIXME_SYCL requires TeamPolicy
+#ifndef KOKKOS_ENABLE_SYCL
 template <>
 struct FunctorScalarJoinInit<1> {
   using team_type = Kokkos::TeamPolicy<>::member_type;
@@ -304,6 +321,7 @@ struct FunctorScalarJoinInit<1> {
   KOKKOS_INLINE_FUNCTION
   void init(double& update) const { update = 0.0; }
 };
+#endif
 
 template <int ISTEAM>
 struct FunctorScalarJoinFinalInit;
@@ -329,6 +347,8 @@ struct FunctorScalarJoinFinalInit<0> {
   void init(double& update) const { update = 0.0; }
 };
 
+// FIXME_SYCL requires TeamPolicy
+#ifndef KOKKOS_ENABLE_SYCL
 template <>
 struct FunctorScalarJoinFinalInit<1> {
   using team_type = Kokkos::TeamPolicy<>::member_type;
@@ -353,6 +373,7 @@ struct FunctorScalarJoinFinalInit<1> {
   KOKKOS_INLINE_FUNCTION
   void init(double& update) const { update = 0.0; }
 };
+#endif
 
 struct Functor1 {
   KOKKOS_INLINE_FUNCTION
@@ -496,11 +517,9 @@ struct TestReduceCombinatoricalInstantiation {
     AddReturnArgument(
         N, args...,
         Test::ReduceCombinatorical::FunctorScalar<ISTEAM>(result_view));
-// WORKAROUND OPENMPTARGET: reductions with functor join/init/final not
-// implemented
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
-    double expected_result = (1.0 * N) * (1.0 * N - 1.0) / 2.0;
-
+// WORKAROUND OPENMPTARGET: reductions with functor join/init/final
+// not implemented
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
     AddReturnArgument(
         N, args...,
         Test::ReduceCombinatorical::FunctorScalarInit<ISTEAM>(result_view));
@@ -510,6 +529,7 @@ struct TestReduceCombinatoricalInstantiation {
     AddReturnArgument(
         N, args...,
         Test::ReduceCombinatorical::FunctorScalarJoinInit<ISTEAM>(result_view));
+    double expected_result = (1.0 * N) * (1.0 * N - 1.0) / 2.0;
 
     h_r() = 0;
     Kokkos::deep_copy(result_view, h_r);

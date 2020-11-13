@@ -116,14 +116,16 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                                                           devID, kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
-  auto context_id = Experimental::get_new_context_id();
-  Experimental::begin_context(context_id);
-  Experimental::VariableValue contextValues[] = {
-      Experimental::make_variable_value(
-          Experimental::kernel_name_context_variable_id, kernelPrefix),
-      Experimental::make_variable_value(
-          Experimental::kernel_type_context_variable_id, "parallel_for")};
-  Experimental::set_input_values(context_id, 2, contextValues);
+  if (Kokkos::tune_internals()) {
+    auto context_id = Experimental::get_new_context_id();
+    Experimental::begin_context(context_id);
+    Experimental::VariableValue contextValues[] = {
+        Experimental::make_variable_value(
+            Experimental::kernel_name_context_variable_id, kernelPrefix),
+        Experimental::make_variable_value(
+            Experimental::kernel_type_context_variable_id, "parallel_for")};
+    Experimental::set_input_values(context_id, 2, contextValues);
+  }
 #endif
 }
 
@@ -133,7 +135,9 @@ void endParallelFor(const uint64_t kernelID) {
     (*Experimental::current_callbacks.end_parallel_for)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
-  Experimental::end_context(Experimental::get_current_context_id());
+  if (Kokkos::tune_internals()) {
+    Experimental::end_context(Experimental::get_current_context_id());
+  }
 #endif
 }
 
@@ -145,14 +149,16 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                                                            devID, kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
-  auto context_id = Experimental::get_new_context_id();
-  Experimental::begin_context(context_id);
-  Experimental::VariableValue contextValues[] = {
-      Experimental::make_variable_value(
-          Experimental::kernel_name_context_variable_id, kernelPrefix),
-      Experimental::make_variable_value(
-          Experimental::kernel_type_context_variable_id, "parallel_for")};
-  Experimental::set_input_values(context_id, 2, contextValues);
+  if (Kokkos::tune_internals()) {
+    auto context_id = Experimental::get_new_context_id();
+    Experimental::begin_context(context_id);
+    Experimental::VariableValue contextValues[] = {
+        Experimental::make_variable_value(
+            Experimental::kernel_name_context_variable_id, kernelPrefix),
+        Experimental::make_variable_value(
+            Experimental::kernel_type_context_variable_id, "parallel_for")};
+    Experimental::set_input_values(context_id, 2, contextValues);
+  }
 #endif
 }
 
@@ -162,7 +168,9 @@ void endParallelScan(const uint64_t kernelID) {
     (*Experimental::current_callbacks.end_parallel_scan)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
-  Experimental::end_context(Experimental::get_current_context_id());
+  if (Kokkos::tune_internals()) {
+    Experimental::end_context(Experimental::get_current_context_id());
+  }
 #endif
 }
 
@@ -174,14 +182,16 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
         kernelPrefix.c_str(), devID, kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
-  auto context_id = Experimental::get_new_context_id();
-  Experimental::begin_context(context_id);
-  Experimental::VariableValue contextValues[] = {
-      Experimental::make_variable_value(
-          Experimental::kernel_name_context_variable_id, kernelPrefix),
-      Experimental::make_variable_value(
-          Experimental::kernel_type_context_variable_id, "parallel_for")};
-  Experimental::set_input_values(context_id, 2, contextValues);
+  if (Kokkos::tune_internals()) {
+    auto context_id = Experimental::get_new_context_id();
+    Experimental::begin_context(context_id);
+    Experimental::VariableValue contextValues[] = {
+        Experimental::make_variable_value(
+            Experimental::kernel_name_context_variable_id, kernelPrefix),
+        Experimental::make_variable_value(
+            Experimental::kernel_type_context_variable_id, "parallel_for")};
+    Experimental::set_input_values(context_id, 2, contextValues);
+  }
 #endif
 }
 
@@ -191,7 +201,9 @@ void endParallelReduce(const uint64_t kernelID) {
     (*Experimental::current_callbacks.end_parallel_reduce)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
-  Experimental::end_context(Experimental::get_current_context_id());
+  if (Kokkos::tune_internals()) {
+    Experimental::end_context(Experimental::get_current_context_id());
+  }
 #endif
 }
 
@@ -234,14 +246,17 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
         dst_space, dst_label.c_str(), dst_ptr, src_space, src_label.c_str(),
         src_ptr, size);
 #ifdef KOKKOS_ENABLE_TUNING
-    auto context_id = Experimental::get_new_context_id();
-    Experimental::begin_context(context_id);
-    Experimental::VariableValue contextValues[] = {
-        Experimental::make_variable_value(
-            Experimental::kernel_name_context_variable_id, "deep_copy_kernel"),
-        Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "deep_copy")};
-    Experimental::set_input_values(context_id, 2, contextValues);
+    if (Kokkos::tune_internals()) {
+      auto context_id = Experimental::get_new_context_id();
+      Experimental::begin_context(context_id);
+      Experimental::VariableValue contextValues[] = {
+          Experimental::make_variable_value(
+              Experimental::kernel_name_context_variable_id,
+              "deep_copy_kernel"),
+          Experimental::make_variable_value(
+              Experimental::kernel_type_context_variable_id, "deep_copy")};
+      Experimental::set_input_values(context_id, 2, contextValues);
+    }
 #endif
   }
 }
@@ -250,7 +265,9 @@ void endDeepCopy() {
   if (Experimental::current_callbacks.end_deep_copy != nullptr) {
     (*Experimental::current_callbacks.end_deep_copy)();
 #ifdef KOKKOS_ENABLE_TUNING
-    Experimental::end_context(Experimental::get_current_context_id());
+    if (Kokkos::tune_internals()) {
+      Experimental::end_context(Experimental::get_current_context_id());
+    }
 #endif
   }
 }

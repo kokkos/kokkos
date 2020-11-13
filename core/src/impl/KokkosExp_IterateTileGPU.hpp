@@ -42,11 +42,10 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_HIP_EXP_ITERATE_TILE_REFACTOR_HPP
-#define KOKKOS_HIP_EXP_ITERATE_TILE_REFACTOR_HPP
+#ifndef KOKKOS_EXP_ITERATE_TILE_GPU_HPP
+#define KOKKOS_EXP_ITERATE_TILE_GPU_HPP
 
 #include <Kokkos_Macros.hpp>
-#if defined(__HIPCC__)
 
 #include <algorithm>
 
@@ -69,10 +68,11 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<2, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
@@ -134,11 +134,11 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (PolicyType::inner_direction == PolicyType::Left) {
       // Loop over size maxnumblocks until full range covered
@@ -199,10 +199,11 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<3, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
@@ -284,11 +285,11 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (PolicyType::inner_direction == PolicyType::Left) {
       for (index_type tile_id2 = static_cast<index_type>(blockIdx.z);
@@ -368,12 +369,13 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<4, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
@@ -502,13 +504,13 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (PolicyType::inner_direction == PolicyType::Left) {
       const index_type temp0  = m_policy.m_tile_end[0];
@@ -635,12 +637,13 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<5, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
@@ -817,13 +820,13 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
@@ -1001,12 +1004,13 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<6, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& rp_, const Functor& f_)
-      : m_policy(rp_), m_func(f_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
+      : m_policy(policy_), m_func(f_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
@@ -1224,13 +1228,13 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     // LL
     if (PolicyType::inner_direction == PolicyType::Left) {
@@ -1503,11 +1507,12 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& rp_, const Functor& f_,
-                               ValueType& v_)
-      : m_policy(rp_), m_func(f_), m_v(v_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
+      : m_policy(policy_), m_func(f_), m_v(v_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -1586,11 +1591,12 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& rp_, const Functor& f_, ValueType& v_)
-      : m_policy(rp_), m_func(f_), m_v(v_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
+      : m_policy(policy_), m_func(f_), m_v(v_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -1671,11 +1677,12 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                               ValueType& v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -1757,11 +1764,12 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_, ValueType& v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -1842,13 +1850,14 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                               ValueType& v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -1927,13 +1936,14 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_, ValueType& v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2013,13 +2023,14 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                               ValueType& v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2100,13 +2111,14 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                               ValueType& v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2186,13 +2198,14 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                               ValueType& v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2273,13 +2286,14 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
-  __device__ DeviceIterateTile(const PolicyType& rp_, const Functor& f_,
-                               ValueType& v_)
-      : m_policy(rp_), m_func(f_), m_v(v_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                ValueType& v_)
+      : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2361,11 +2375,12 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  __device__ DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                               value_type* v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2447,11 +2462,12 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& rp_, const Functor& f_, value_type* v_)
-      : m_policy(rp_), m_func(f_), m_v(v_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
+      : m_policy(policy_), m_func(f_), m_v(v_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2530,12 +2546,12 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                    value_type* v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2621,12 +2637,12 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
                     value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2705,14 +2721,14 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                    value_type* v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2792,14 +2808,14 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                    value_type* v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2880,14 +2896,14 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                    value_type* v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -2969,14 +2985,14 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                    value_type* v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -3057,14 +3073,14 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                    value_type* v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -3146,14 +3162,14 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_INLINE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                    value_type* v_)
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 
   static constexpr index_type max_blocks = 65535;
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
         static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
@@ -3228,5 +3244,4 @@ struct DeviceIterateTile<
 }  // namespace Reduce
 }  // namespace Impl
 }  // namespace Kokkos
-#endif
 #endif

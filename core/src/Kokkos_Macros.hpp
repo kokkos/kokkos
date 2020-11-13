@@ -198,9 +198,9 @@
 // Intel compiler macros
 
 #if defined(KOKKOS_COMPILER_INTEL)
-#define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 // FIXME_SYCL
 #if !defined(KOKKOS_ENABLE_SYCL)
+#define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
 #endif
@@ -544,13 +544,14 @@
 #undef __CUDA_ARCH__
 #endif
 
-#if defined(KOKKOS_COMPILER_MSVC)
+#if defined(KOKKOS_COMPILER_MSVC) && !defined(KOKKOS_COMPILER_CLANG)
 #define KOKKOS_THREAD_LOCAL __declspec(thread)
 #else
 #define KOKKOS_THREAD_LOCAL __thread
 #endif
 
-#if defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)
+#if (defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)) && \
+    !defined(KOKKOS_COMPILER_CLANG)
 // MSVC (as of 16.5.5 at least) does not do empty base class optimization by
 // default when there are multiple bases, even though the standard requires it
 // for standard layout types.

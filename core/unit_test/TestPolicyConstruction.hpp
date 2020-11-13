@@ -63,11 +63,6 @@ class TestRangePolicyConstruction {
  private:
   void test_compile_time_parameters() {
     {
-      Kokkos::Impl::expand_variadic();
-      Kokkos::Impl::expand_variadic(1, 2, 3);
-    }
-
-    {
       using policy_t        = Kokkos::RangePolicy<>;
       using execution_space = typename policy_t::execution_space;
       using index_type      = typename policy_t::index_type;
@@ -697,7 +692,10 @@ TEST(TEST_CATEGORY, policy_construction) {
   check_semiregular<Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>>();
 
   TestRangePolicyConstruction<TEST_EXECSPACE>();
+  // FIXME_SYCL requires Team policy
+#ifndef KOKKOS_ENABLE_SYCL
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
+#endif
 }
 
 template <template <class...> class Policy, class... Args>
@@ -711,10 +709,113 @@ void check_converting_constructor_add_work_tag(Policy<Args...> const& policy) {
 TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
   check_converting_constructor_add_work_tag(
       Kokkos::RangePolicy<TEST_EXECSPACE>{});
+  // FIXME_SYCL requires MDRange policy and Team policy
+#ifndef KOKKOS_ENABLE_SYCL
   check_converting_constructor_add_work_tag(
       Kokkos::TeamPolicy<TEST_EXECSPACE>{});
   check_converting_constructor_add_work_tag(
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
+#endif
+}
+
+#ifndef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
+TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
+  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                                       Kokkos::IndexType<unsigned>>;
+
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  ASSERT_DEATH(
+      {
+        (void)Policy({-1, 0}, {2, 3});
+      },
+      "unsafe narrowing conversion");
+}
+#endif
+
+template <class Policy>
+void test_prefer_desired_occupancy(Policy const& policy) {
+  static_assert(!Policy::experimental_contains_desired_occupancy, "");
+
+  // MaximizeOccupancy -> MaximizeOccupancy
+  auto const policy_still_no_occ = Kokkos::Experimental::prefer(
+      policy, Kokkos::Experimental::MaximizeOccupancy{});
+  static_assert(
+      !decltype(policy_still_no_occ)::experimental_contains_desired_occupancy,
+      "");
+
+  // MaximizeOccupancy -> DesiredOccupancy
+  auto const policy_with_occ = Kokkos::Experimental::prefer(
+      policy, Kokkos::Experimental::DesiredOccupancy{33});
+  static_assert(
+      decltype(policy_with_occ)::experimental_contains_desired_occupancy, "");
+  EXPECT_EQ(policy_with_occ.impl_get_desired_occupancy().value(), 33);
+
+  // DesiredOccupancy -> DesiredOccupancy
+  auto const policy_change_occ = Kokkos::Experimental::prefer(
+      policy_with_occ, Kokkos::Experimental::DesiredOccupancy{24});
+  static_assert(
+      decltype(policy_change_occ)::experimental_contains_desired_occupancy, "");
+  EXPECT_EQ(policy_change_occ.impl_get_desired_occupancy().value(), 24);
+
+  // DesiredOccupancy -> MaximizeOccupancy
+  auto const policy_drop_occ = Kokkos::Experimental::prefer(
+      policy_with_occ, Kokkos::Experimental::MaximizeOccupancy{});
+  static_assert(
+      !decltype(policy_drop_occ)::experimental_contains_desired_occupancy, "");
+}
+
+template <class... Args>
+struct DummyPolicy : Kokkos::Impl::PolicyTraits<Args...> {
+  using execution_policy = DummyPolicy;
+  using traits           = Kokkos::Impl::PolicyTraits<Args...>;
+  template <class... OtherArgs>
+  DummyPolicy(DummyPolicy<OtherArgs...> const& p) : traits(p) {}
+  DummyPolicy() = default;
+};
+
+TEST(TEST_CATEGORY, desired_occupancy_prefer) {
+  test_prefer_desired_occupancy(DummyPolicy<TEST_EXECSPACE>{});
+  test_prefer_desired_occupancy(Kokkos::RangePolicy<TEST_EXECSPACE>{});
+  // FIXME_SYCL requires MDRange policy and Team policy
+#ifndef KOKKOS_ENABLE_SYCL
+  test_prefer_desired_occupancy(
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
+  test_prefer_desired_occupancy(Kokkos::TeamPolicy<TEST_EXECSPACE>{});
+#endif
+}
+
+TEST(TEST_CATEGORY, desired_occupancy_empty_base_optimization) {
+  DummyPolicy<TEST_EXECSPACE> const policy{};
+  static_assert(sizeof(decltype(policy)) == 1, "");
+
+  using Kokkos::Experimental::DesiredOccupancy;
+  auto policy_with_occ =
+      Kokkos::Experimental::prefer(policy, DesiredOccupancy{50});
+  static_assert(sizeof(decltype(policy_with_occ)) == sizeof(DesiredOccupancy),
+                "");
+}
+
+template <typename Policy>
+void test_desired_occupancy_converting_constructors(Policy const& policy) {
+  auto policy_with_occ = Kokkos::Experimental::prefer(
+      policy, Kokkos::Experimental::DesiredOccupancy{50});
+  EXPECT_EQ(policy_with_occ.impl_get_desired_occupancy().value(), 50);
+
+  auto policy_with_hint = Kokkos::Experimental::require(
+      policy_with_occ, Kokkos::Experimental::WorkItemProperty::HintLightWeight);
+  EXPECT_EQ(policy_with_hint.impl_get_desired_occupancy().value(), 50);
+}
+
+TEST(TEST_CATEGORY, desired_occupancy_converting_constructors) {
+  test_desired_occupancy_converting_constructors(
+      Kokkos::RangePolicy<TEST_EXECSPACE>{});
+  // FIXME_SYCL requires MDRange policy and Team policy
+#ifndef KOKKOS_ENABLE_SYCL
+  test_desired_occupancy_converting_constructors(
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
+  test_desired_occupancy_converting_constructors(
+      Kokkos::TeamPolicy<TEST_EXECSPACE>{});
+#endif
 }
 
 }  // namespace Test

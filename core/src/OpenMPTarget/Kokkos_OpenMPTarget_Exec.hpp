@@ -739,7 +739,7 @@ class OpenMPTargetExecTeamMember {
                                // Properties ...> & team
       ,
       void* const glb_scratch, const int shmem_size_L1, const int shmem_size_L2)
-      : m_team_shared(0, 0),
+      : m_team_shared(nullptr, 0),
         m_team_scratch_size{shmem_size_L1, shmem_size_L2},
         m_team_rank(0),
         m_team_size(team_size),

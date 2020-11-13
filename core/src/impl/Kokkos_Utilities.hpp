@@ -56,32 +56,6 @@
 namespace Kokkos {
 namespace Impl {
 
-// same as std::forward
-// needed to allow perfect forwarding on the device
-template <typename T>
-KOKKOS_INLINE_FUNCTION constexpr T&& forward(
-    typename std::remove_reference<T>::type& arg) noexcept {
-  return static_cast<T&&>(arg);
-}
-
-template <typename T>
-KOKKOS_INLINE_FUNCTION constexpr T&& forward(
-    typename std::remove_reference<T>::type&& arg) noexcept {
-  return static_cast<T&&>(arg);
-}
-
-// same as std::move
-// needed to allowing moving on the device
-template <typename T>
-KOKKOS_INLINE_FUNCTION constexpr typename std::remove_reference<T>::type&& move(
-    T&& arg) noexcept {
-  return static_cast<typename std::remove_reference<T>::type&&>(arg);
-}
-
-// empty function to allow expanding a variadic argument pack
-template <typename... Args>
-KOKKOS_INLINE_FUNCTION void expand_variadic(Args&&...) {}
-
 //----------------------------------------
 // C++14 integer sequence
 template <typename T, T... Ints>

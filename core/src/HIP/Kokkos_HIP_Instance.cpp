@@ -114,7 +114,7 @@ void HIPInternal::print_configuration(std::ostream &s) const {
       << (dev_info.m_hipProp[i].major) << "." << dev_info.m_hipProp[i].minor
       << ", Total Global Memory: "
       << ::Kokkos::Impl::human_memory_size(dev_info.m_hipProp[i].totalGlobalMem)
-      << ", Shared Memory per Wavefront: "
+      << ", Shared Memory per Block: "
       << ::Kokkos::Impl::human_memory_size(
              dev_info.m_hipProp[i].sharedMemPerBlock);
     if (m_hipDev == i) s << " : Selected";

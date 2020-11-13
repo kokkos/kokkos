@@ -54,13 +54,9 @@
 #include <Kokkos_Parallel.hpp>
 #include <type_traits>
 
-#if defined(KOKKOS_ENABLE_CUDA)
-#include <Cuda/KokkosExp_Cuda_IterateTile.hpp>
-#include <Cuda/KokkosExp_Cuda_IterateTile_Refactor.hpp>
-#endif
-
-#if defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP)
-#include <HIP/KokkosExp_HIP_IterateTile.hpp>
+#if defined(KOKKOS_ENABLE_CUDA) || \
+    (defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP))
+#include <impl/KokkosExp_IterateTileGPU.hpp>
 #endif
 
 namespace Kokkos {
@@ -113,9 +109,41 @@ struct Rank {
 };
 
 namespace Impl {
+// NOTE the comparison below is encapsulated to silent warnings about pointless
+// comparison of unsigned integer with zero
+template <class T>
+constexpr std::enable_if_t<!std::is_signed<T>::value, bool>
+is_less_than_value_initialized_variable(T) {
+  return false;
+}
+
+template <class T>
+constexpr std::enable_if_t<std::is_signed<T>::value, bool>
+is_less_than_value_initialized_variable(T arg) {
+  return arg < T{};
+}
+
+// Checked narrowing conversion that calls abort if the cast changes the value
+template <class To, class From>
+constexpr To checked_narrow_cast(From arg) {
+  constexpr const bool is_different_signedness =
+      (std::is_signed<To>::value != std::is_signed<From>::value);
+  auto const ret = static_cast<To>(arg);
+  if (static_cast<From>(ret) != arg ||
+      (is_different_signedness &&
+       is_less_than_value_initialized_variable(arg) !=
+           is_less_than_value_initialized_variable(ret))) {
+    Kokkos::abort("unsafe narrowing conversion");
+  }
+  return ret;
+}
 // NOTE prefer C array U[M] to std::initalizer_list<U> so that the number of
 // elements can be deduced (https://stackoverflow.com/q/40241370)
-template <class Array, class U, std::size_t M>
+// NOTE for some unfortunate reason the policy bounds are stored as signed
+// integer arrays (point_type which is Kokkos::Array<std::int64_t>) so we
+// specify the index type (actual policy index_type from the traits) and check
+// ahead of time that narrowing conversions will be safe.
+template <class IndexType, class Array, class U, std::size_t M>
 constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   using T = typename Array::value_type;
   Array a{};
@@ -126,8 +154,10 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   // std::transform(std::begin(init), std::end(init), a.data(),
   //                [](U x) { return static_cast<T>(x); });
   // except that std::transform is not constexpr.
-  for (auto x : init)
-    *ptr++ = static_cast<T>(x);  // allow narrowing conversions
+  for (auto x : init) {
+    *ptr++ = checked_narrow_cast<T>(x);
+    (void)checked_narrow_cast<IndexType>(x);  // see note above
+  }
   return a;
 }
 }  // namespace Impl
@@ -162,7 +192,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   enum { rank = static_cast<int>(iteration_pattern::rank) };
 
   using index_type       = typename traits::index_type;
-  using array_index_type = long;
+  using array_index_type = std::int64_t;
   using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
   using tile_type  = Kokkos::Array<array_index_type, rank>;
   // If point_type or tile_type is not templated on a signed integral type (if
@@ -228,9 +258,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   MDRangePolicy(const LT (&lower)[LN], const UT (&upper)[UN],
                 const TT (&tile)[TN] = {})
       : MDRangePolicy(
-            Impl::to_array_potentially_narrowing<decltype(m_lower)>(lower),
-            Impl::to_array_potentially_narrowing<decltype(m_upper)>(upper),
-            Impl::to_array_potentially_narrowing<decltype(m_tile)>(tile)) {
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {
     static_assert(
         LN == rank && UN == rank && TN <= rank,
         "MDRangePolicy: Constructor initializer lists have wrong size");
@@ -246,9 +279,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
                 const TT (&tile)[TN] = {})
       : MDRangePolicy(
             work_space,
-            Impl::to_array_potentially_narrowing<decltype(m_lower)>(lower),
-            Impl::to_array_potentially_narrowing<decltype(m_upper)>(upper),
-            Impl::to_array_potentially_narrowing<decltype(m_tile)>(tile)) {
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {
     static_assert(
         LN == rank && UN == rank && TN <= rank,
         "MDRangePolicy: Constructor initializer lists have wrong size");
@@ -267,7 +303,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   template <class... OtherProperties>
   MDRangePolicy(const MDRangePolicy<OtherProperties...> p)
-      : m_space(p.m_space),
+      : traits(p),  // base class may contain data such as desired occupancy
+        m_space(p.m_space),
         m_lower(p.m_lower),
         m_upper(p.m_upper),
         m_tile(p.m_tile),
@@ -371,29 +408,6 @@ namespace Experimental {
 using Kokkos::Iterate;
 using Kokkos::MDRangePolicy;
 using Kokkos::Rank;
-}  // namespace Experimental
-}  // namespace Kokkos
-// ------------------------------------------------------------------ //
-
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
-
-template <unsigned long P, class... Properties>
-struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
-                             MDRangePolicy<Properties...>> {
-  using policy_in_t = MDRangePolicy<Properties...>;
-  using policy_out_t =
-      MDRangePolicy<typename policy_in_t::traits::execution_space,
-                    typename policy_in_t::traits::schedule_type,
-                    typename policy_in_t::traits::work_tag,
-                    typename policy_in_t::traits::index_type,
-                    typename policy_in_t::traits::iteration_pattern,
-                    typename policy_in_t::traits::launch_bounds,
-                    WorkItemProperty::ImplWorkItemProperty<P>>;
-};
-
-}  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
 
