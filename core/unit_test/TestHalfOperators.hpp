@@ -108,7 +108,7 @@ struct Functor_TestHalfOperators {
   double d_lhs, d_rhs;
   view_type actual_lhs, expected_lhs;
 
-  Functor_TestHalfOperators(half_t lhs = 0, half_t rhs = 0)
+  Functor_TestHalfOperators(half_t lhs = half_t(0), half_t rhs = half_t(0))
       : h_lhs(lhs), h_rhs(rhs) {
     actual_lhs   = view_type("actual_lhs", N_OP_TESTS);
     expected_lhs = view_type("expected_lhs", N_OP_TESTS);
