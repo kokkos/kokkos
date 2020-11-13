@@ -261,6 +261,12 @@ inline unsigned long atomic_compare_exchange(volatile unsigned long* const dest,
   return __sync_val_compare_and_swap(dest, compare, val);
 }
 
+inline unsigned long long atomic_compare_exchange(
+    volatile unsigned long long* const dest, const unsigned long long compare,
+    const unsigned long long val) {
+  return __sync_val_compare_and_swap(dest, compare, val);
+}
+
 #endif
 
 template <typename T>

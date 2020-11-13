@@ -209,6 +209,15 @@ inline unsigned long int atomic_fetch_sub(
   return __sync_fetch_and_sub(dest, val);
 }
 
+inline unsigned long long int atomic_fetch_sub(
+    volatile unsigned long long int* const dest,
+    const unsigned long long int val) {
+#if defined(KOKKOS_ENABLE_RFO_PREFETCH)
+  _mm_prefetch((const char*)dest, _MM_HINT_ET0);
+#endif
+  return __sync_fetch_and_sub(dest, val);
+}
+
 #endif
 
 template <typename T>
