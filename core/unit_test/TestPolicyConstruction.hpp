@@ -818,4 +818,39 @@ TEST(TEST_CATEGORY, desired_occupancy_converting_constructors) {
 #endif
 }
 
+#ifndef KOKKOS_ENABLE_SYCL
+TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
+  {
+    // Check that construction from Kokkos::Array of long compiles for backwards
+    // compability.  This was broken in
+    // https://github.com/kokkos/kokkos/pull/3527/commits/88ea8eec6567c84739d77bdd25fdbc647fae28bb#r512323639
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>> p1(
+        Kokkos::Array<long, 2>{{0, 1}}, Kokkos::Array<long, 2>{{2, 3}});
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>> p2(
+        Kokkos::Array<long, 2>{{0, 1}}, Kokkos::Array<long, 2>{{2, 3}});
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>> p3(
+        Kokkos::Array<long, 2>{{0, 1}}, Kokkos::Array<long, 2>{{2, 3}},
+        Kokkos::Array<long, 1>{{4}});
+  }
+  {
+    // Check that construction from Kokkos::Array of the specified index type
+    // works.
+    using index_type = unsigned long long;
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                          Kokkos::IndexType<index_type>>
+        p1(Kokkos::Array<index_type, 2>{{0, 1}},
+           Kokkos::Array<index_type, 2>{{2, 3}});
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                          Kokkos::IndexType<index_type>>
+        p2(Kokkos::Array<index_type, 2>{{0, 1}},
+           Kokkos::Array<index_type, 2>{{2, 3}});
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                          Kokkos::IndexType<index_type>>
+        p3(Kokkos::Array<index_type, 2>{{0, 1}},
+           Kokkos::Array<index_type, 2>{{2, 3}},
+           Kokkos::Array<index_type, 1>{{4}});
+  }
+}
+#endif
+
 }  // namespace Test
