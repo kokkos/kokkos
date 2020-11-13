@@ -165,11 +165,12 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
 // is true to reduce code complexity.  You may change this if you have a good
 // reason to.  Intentionally not enabling std::array at this time but this may
 // change too.
-template <class IndexType, class Array, class U, std::size_t M>
-constexpr Array to_array_potentially_narrowing(
+template <class IndexType, class NVCC_WONT_LET_ME_CALL_YOU_Array, class U,
+          std::size_t M>
+constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
     Kokkos::Array<U, M> const& other) {
-  using T = typename Array::value_type;
-  Array a{};
+  using T = typename NVCC_WONT_LET_ME_CALL_YOU_Array::value_type;
+  NVCC_WONT_LET_ME_CALL_YOU_Array a{};
   constexpr std::size_t N = a.size();
   static_assert(M <= N, "");
   for (std::size_t i = 0; i < M; ++i) {
