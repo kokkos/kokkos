@@ -177,11 +177,11 @@ struct Functor_TestHalfOperators {
     expected_lhs(CADD_H_H) = d_lhs;
     expected_lhs(CADD_H_H) += d_rhs;
 
-    tmp_lhs = h_lhs;
-    tmp_lhs += static_cast<float>(d_rhs);
-    actual_lhs(CADD_H_S)   = cast_from_half<double>(tmp_lhs);
-    expected_lhs(CADD_H_S) = d_lhs;
-    expected_lhs(CADD_H_S) += d_rhs;
+    // tmp_lhs = h_lhs;
+    // tmp_lhs += static_cast<float>(d_rhs);
+    // actual_lhs(CADD_H_S)   = cast_from_half<double>(tmp_lhs);
+    // expected_lhs(CADD_H_S) = d_lhs;
+    // expected_lhs(CADD_H_S) += d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs -= h_rhs;
@@ -189,11 +189,11 @@ struct Functor_TestHalfOperators {
     expected_lhs(CSUB_H_H) = d_lhs;
     expected_lhs(CSUB_H_H) -= d_rhs;
 
-    tmp_lhs = h_lhs;
-    tmp_lhs -= static_cast<float>(d_rhs);
-    actual_lhs(CSUB_H_S)   = cast_from_half<double>(tmp_lhs);
-    expected_lhs(CSUB_H_S) = d_lhs;
-    expected_lhs(CSUB_H_S) -= d_rhs;
+    // tmp_lhs = h_lhs;
+    // tmp_lhs -= static_cast<float>(d_rhs);
+    // actual_lhs(CSUB_H_S)   = cast_from_half<double>(tmp_lhs);
+    // expected_lhs(CSUB_H_S) = d_lhs;
+    // expected_lhs(CSUB_H_S) -= d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs *= h_rhs;
@@ -201,11 +201,11 @@ struct Functor_TestHalfOperators {
     expected_lhs(CMUL_H_H) = d_lhs;
     expected_lhs(CMUL_H_H) *= d_rhs;
 
-    tmp_lhs = h_lhs;
-    tmp_lhs *= static_cast<float>(d_rhs);
-    actual_lhs(CMUL_H_S)   = cast_from_half<double>(tmp_lhs);
-    expected_lhs(CMUL_H_S) = d_lhs;
-    expected_lhs(CMUL_H_S) *= d_rhs;
+    // tmp_lhs = h_lhs;
+    // tmp_lhs *= static_cast<float>(d_rhs);
+    // actual_lhs(CMUL_H_S)   = cast_from_half<double>(tmp_lhs);
+    // expected_lhs(CMUL_H_S) = d_lhs;
+    // expected_lhs(CMUL_H_S) *= d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs /= h_rhs;
@@ -213,55 +213,56 @@ struct Functor_TestHalfOperators {
     expected_lhs(CDIV_H_H) = d_lhs;
     expected_lhs(CDIV_H_H) /= d_rhs;
 
-    tmp_lhs = h_lhs;
-    tmp_lhs /= static_cast<float>(d_rhs);
-    actual_lhs(CDIV_H_S)   = cast_from_half<double>(tmp_lhs);
-    expected_lhs(CDIV_H_S) = d_lhs;
-    expected_lhs(CDIV_H_S) /= d_rhs;
+    // tmp_lhs = h_lhs;
+    // tmp_lhs /= static_cast<float>(d_rhs);
+    // actual_lhs(CDIV_H_S)   = cast_from_half<double>(tmp_lhs);
+    // expected_lhs(CDIV_H_S) = d_lhs;
+    // expected_lhs(CDIV_H_S) /= d_rhs;
 
     actual_lhs(ADD_H_H)   = cast_from_half<double>(h_lhs + h_rhs);
     expected_lhs(ADD_H_H) = d_lhs + d_rhs;
-    actual_lhs(ADD_H_S) =
-        cast_from_half<double>(h_lhs + static_cast<float>(d_rhs));
-    expected_lhs(ADD_H_S) = d_lhs + d_rhs;
-    actual_lhs(ADD_S_H) =
-        cast_from_half<double>(static_cast<float>(d_lhs) + h_rhs);
-    expected_lhs(ADD_S_H) = d_lhs + d_rhs;
+    // actual_lhs(ADD_H_S) =
+    //    cast_from_half<double>(h_lhs + static_cast<float>(d_rhs));
+    // expected_lhs(ADD_H_S) = d_lhs + d_rhs;
+    // actual_lhs(ADD_S_H) =
+    //    cast_from_half<double>(static_cast<float>(d_lhs) + h_rhs);
+    // expected_lhs(ADD_S_H) = d_lhs + d_rhs;
 
     actual_lhs(SUB_H_H)   = cast_from_half<double>(h_lhs - h_rhs);
     expected_lhs(SUB_H_H) = d_lhs - d_rhs;
-    actual_lhs(SUB_H_S) =
-        cast_from_half<double>(h_lhs - static_cast<float>(d_rhs));
-    expected_lhs(SUB_H_S) = d_lhs - d_rhs;
-    actual_lhs(SUB_S_H) =
-        cast_from_half<double>(static_cast<float>(d_lhs) - h_rhs);
-    expected_lhs(SUB_S_H) = d_lhs - d_rhs;
+    // actual_lhs(SUB_H_S) =
+    //    cast_from_half<double>(h_lhs - static_cast<float>(d_rhs));
+    // expected_lhs(SUB_H_S) = d_lhs - d_rhs;
+    // actual_lhs(SUB_S_H) =
+    //    cast_from_half<double>(static_cast<float>(d_lhs) - h_rhs);
+    // expected_lhs(SUB_S_H) = d_lhs - d_rhs;
 
     actual_lhs(MUL_H_H)   = cast_from_half<double>(h_lhs * h_rhs);
     expected_lhs(MUL_H_H) = d_lhs * d_rhs;
-    actual_lhs(MUL_H_S) =
-        cast_from_half<double>(h_lhs * static_cast<float>(d_rhs));
-    expected_lhs(MUL_H_S) = d_lhs * d_rhs;
-    actual_lhs(MUL_S_H) =
-        cast_from_half<double>(static_cast<float>(d_lhs) * h_rhs);
-    expected_lhs(MUL_S_H) = d_lhs * d_rhs;
+    // actual_lhs(MUL_H_S) =
+    //    cast_from_half<double>(h_lhs * static_cast<float>(d_rhs));
+    // expected_lhs(MUL_H_S) = d_lhs * d_rhs;
+    // actual_lhs(MUL_S_H) =
+    //    cast_from_half<double>(static_cast<float>(d_lhs) * h_rhs);
+    // expected_lhs(MUL_S_H) = d_lhs * d_rhs;
 
     actual_lhs(DIV_H_H)   = cast_from_half<double>(h_lhs / h_rhs);
     expected_lhs(DIV_H_H) = d_lhs / d_rhs;
-    actual_lhs(DIV_H_S) =
-        cast_from_half<double>(h_lhs / static_cast<float>(d_rhs));
-    expected_lhs(DIV_H_S) = d_lhs / d_rhs;
-    actual_lhs(DIV_S_H) =
-        cast_from_half<double>(static_cast<float>(d_lhs) / h_rhs);
-    expected_lhs(DIV_S_H) = d_lhs / d_rhs;
+    // actual_lhs(DIV_H_S) =
+    //    cast_from_half<double>(h_lhs / static_cast<float>(d_rhs));
+    // expected_lhs(DIV_H_S) = d_lhs / d_rhs;
+    // actual_lhs(DIV_S_H) =
+    //    cast_from_half<double>(static_cast<float>(d_lhs) / h_rhs);
+    // expected_lhs(DIV_S_H) = d_lhs / d_rhs;
 
-    actual_lhs(NEG)   = cast_from_half<double>(!h_lhs);
+    // TODO: figure out why operator{!,&&,||} are returning __nv_bool
+    actual_lhs(NEG)   = static_cast<double>(!h_lhs);
     expected_lhs(NEG) = !d_lhs;
 
-    actual_lhs(AND)   = cast_from_half<double>(half_t(0) && h_lhs);
+    actual_lhs(AND)   = static_cast<double>(half_t(0) && h_lhs);
     expected_lhs(AND) = double(0) && d_lhs;
 
-    actual_lhs(OR)   = cast_from_half<double>(h_lhs || half_t(1));
+    actual_lhs(OR)   = static_cast<double>(h_lhs || half_t(1));
     expected_lhs(OR) = d_lhs || double(1);
 
     actual_lhs(EQ)   = h_lhs == h_rhs;
@@ -301,6 +302,8 @@ struct Functor_TestHalfOperators {
       Kokkos::abort("Error in half_t address-of operator");
     actual_lhs(AO_HALF_T)   = cast_from_half<double>(tmp_ptr[0]);
     expected_lhs(AO_HALF_T) = d_lhs;
+
+    // TODO: Add upcast / downcast tests using sizeof
   }
 };
 
@@ -328,7 +331,7 @@ void __test_half_operators(half_t h_lhs, half_t h_rhs) {
   ASSERT_TRUE(std::is_trivially_copyable<half_t>::value);
   constexpr size_t n       = 2;
   constexpr size_t n_bytes = sizeof(half_t) * n;
-  const half_t h_arr0 = 0x89ab, h_arr1 = 0xcdef;
+  const half_t h_arr0 = half_t(0x89ab), h_arr1 = half_t(0xcdef);
   half_t h_arr[n];
   char c_arr[n_bytes], *h_arr_ptr = nullptr;
   size_t i;
@@ -346,7 +349,7 @@ void __test_half_operators(half_t h_lhs, half_t h_rhs) {
 }
 
 void test_half_operators() {
-  half_t h_lhs = 0.23458, h_rhs = 0.67898;
+  half_t h_lhs = half_t(0.23458), h_rhs = half_t(0.67898);
   for (int i = -3; i < 2; i++) {
     __test_half_operators(h_lhs + cast_to_half(i + 1), h_rhs + cast_to_half(i));
   }
