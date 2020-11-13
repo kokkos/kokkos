@@ -540,9 +540,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   Policy const& get_policy() const { return m_rp; }
 
   inline __device__ void operator()(void) const {
-    Kokkos::Impl::Refactor::DeviceIterateTile<Policy::rank, Policy, FunctorType,
-                                              typename Policy::work_tag>(
-        m_rp, m_functor)
+    Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
+                                    typename Policy::work_tag>(m_rp, m_functor)
         .exec_range();
   }
 
