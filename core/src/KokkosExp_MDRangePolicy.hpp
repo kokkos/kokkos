@@ -309,6 +309,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         "MDRangePolicy: Constructor initializer lists have wrong size");
   }
 
+  // NOTE: Keeping these two constructor despite the templated constructors
+  // from Kokkos arrays for backwards compability to allow construction from
+  // double-braced initializer lists.
   MDRangePolicy(point_type const& lower, point_type const& upper,
                 tile_type const& tile = tile_type{})
       : MDRangePolicy(typename traits::execution_space(), lower, upper, tile) {}
