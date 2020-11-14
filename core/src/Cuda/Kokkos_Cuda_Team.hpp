@@ -1065,6 +1065,91 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 #endif
 }
 
+//----------------------------------------------------------------------------
+
+/** \brief  Intra-thread vector parallel scan with reducer.
+ *
+ *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
+ *
+ *  The range [0..N) is mapped to all vector lanes in the
+ *  thread and a scan operation is performed.
+ *  The last call to closure has final == true.
+ */
+template <typename iType, class Closure, typename ReducerType>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+    parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
+                      iType, Impl::CudaTeamMember>& loop_boundaries,
+                  const Closure& closure, const ReducerType& reducer) {
+  (void)loop_boundaries;
+  (void)closure;
+#ifdef __CUDA_ARCH__
+
+  using value_type = typename ReducerType::value_type;
+  value_type accum;
+  reducer.init(accum);
+  const value_type identity = accum;
+
+  // Loop through boundaries by vector-length chunks
+  // must scan at each iteration
+
+  // All thread "lanes" must loop the same number of times.
+  // Determine an loop end for all thread "lanes."
+  // Requires:
+  //   blockDim.x is power of two and thus
+  //     ( end % blockDim.x ) == ( end & ( blockDim.x - 1 ) )
+  //   1 <= blockDim.x <= CudaTraits::WarpSize
+
+  const int mask = blockDim.x - 1;
+  const unsigned active_mask =
+      blockDim.x == 32 ? 0xffffffff
+                       : ((1 << blockDim.x) - 1)
+                             << (threadIdx.y % (32 / blockDim.x)) * blockDim.x;
+  const int rem = loop_boundaries.end & mask;  // == end % blockDim.x
+  const int end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
+
+  for (int i = threadIdx.x; i < end; i += blockDim.x) {
+    value_type val = identity;
+
+    // First acquire per-lane contributions.
+    // This sets i's val to i-1's contribution
+    // to make the latter in_place_shfl_up an
+    // exclusive scan -- the final accumulation
+    // of i's val will be inclucded in the second
+    // closure call later.
+    if (i < loop_boundaries.end && threadIdx.x > 0) closure(i - 1, val, false);
+
+    // Bottom up exclusive scan in triangular pattern
+    // where each CUDA thread is the root of a reduction tree
+    // from the zeroth "lane" to itself.
+    //  [t] += [t-1] if t >= 1
+    //  [t] += [t-2] if t >= 2
+    //  [t] += [t-4] if t >= 4
+    //  ...
+    //  This differs from the non-reducer overload, where an inclusive scan was
+    //  implemented, because in general the binary operator cannot be inverted
+    //  and we would not be able to remove the inclusive contribution by
+    //  inversion.
+    for (int j = 1; j < (int)blockDim.x; j <<= 1) {
+      value_type tmp = identity;
+      Impl::in_place_shfl_up(tmp, val, j, blockDim.x, active_mask);
+      if (j <= (int)threadIdx.x) {
+        reducer.join(val, tmp);
+      }
+    }
+
+    // Include accumulation
+    reducer.join(val, accum);
+
+    // Update i's contribution into the val
+    // and add it to accum for next round
+    if (i < loop_boundaries.end) closure(i, val, true);
+    Impl::in_place_shfl(accum, val, mask, blockDim.x, active_mask);
+  }
+
+#endif
+}
+
 }  // namespace Kokkos
 
 namespace Kokkos {
