@@ -175,30 +175,42 @@ class half_t {
     return cast_from_half<unsigned long long>(*this);
   }
 
+  /**
+   * Conversion constructors.
+   *
+   * Support implicit conversions from impl_type, float, double -> half_t
+   * Mixed precision expressions require upcasting which is done in the
+   * "// Binary Arithmetic" operator overloads below.
+   *
+   * Support implicit conversions from integral types -> half_t.
+   * Expressions involving half_t with integral types require downcasting
+   * the integral types to half_t. Existing operator overloads can handle this
+   * with the addition of the below implicit conversion constructors.
+   */
   KOKKOS_FUNCTION
   half_t(impl_type rhs) : val(rhs) {}
   KOKKOS_FUNCTION
-  explicit half_t(float rhs) : val(cast_to_half(rhs).val) {}
+  half_t(float rhs) : val(cast_to_half(rhs).val) {}
+  KOKKOS_FUNCTION
+  half_t(double rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
   explicit half_t(bool rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  explicit half_t(double rhs) : val(cast_to_half(rhs).val) {}
+  half_t(short rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  explicit half_t(short rhs) : val(cast_to_half(rhs).val) {}
+  half_t(int rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  explicit half_t(int rhs) : val(cast_to_half(rhs).val) {}
+  half_t(long rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  explicit half_t(long rhs) : val(cast_to_half(rhs).val) {}
+  half_t(long long rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  explicit half_t(long long rhs) : val(cast_to_half(rhs).val) {}
+  half_t(unsigned short rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  explicit half_t(unsigned short rhs) : val(cast_to_half(rhs).val) {}
+  half_t(unsigned int rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  explicit half_t(unsigned int rhs) : val(cast_to_half(rhs).val) {}
+  half_t(unsigned long rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  explicit half_t(unsigned long rhs) : val(cast_to_half(rhs).val) {}
-  KOKKOS_FUNCTION
-  explicit half_t(unsigned long long rhs) : val(cast_to_half(rhs).val) {}
+  half_t(unsigned long long rhs) : val(cast_to_half(rhs).val) {}
 
   // Unary operators
   KOKKOS_FUNCTION
@@ -328,6 +340,20 @@ class half_t {
     return lhs;
   }
 
+  template <class T>
+  KOKKOS_FUNCTION std::enable_if_t<
+      std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
+  operator+(half_t lhs, T rhs) {
+    return T(lhs) + rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION std::enable_if_t<
+      std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
+  operator+(T lhs, half_t rhs) {
+    return lhs + T(rhs);
+  }
+
   KOKKOS_FUNCTION
   half_t friend operator-(half_t lhs, half_t rhs) {
 #ifdef __CUDA_ARCH__
@@ -336,6 +362,20 @@ class half_t {
     lhs.val = __float2half(__half2float(lhs.val) - __half2float(rhs.val));
 #endif
     return lhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION std::enable_if_t<
+      std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
+  operator-(half_t lhs, T rhs) {
+    return T(lhs) - rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION std::enable_if_t<
+      std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
+  operator-(T lhs, half_t rhs) {
+    return lhs - T(rhs);
   }
 
   KOKKOS_FUNCTION
@@ -348,6 +388,20 @@ class half_t {
     return lhs;
   }
 
+  template <class T>
+  KOKKOS_FUNCTION std::enable_if_t<
+      std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
+  operator*(half_t lhs, T rhs) {
+    return T(lhs) * rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION std::enable_if_t<
+      std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
+  operator*(T lhs, half_t rhs) {
+    return lhs * T(rhs);
+  }
+
   KOKKOS_FUNCTION
   half_t friend operator/(half_t lhs, half_t rhs) {
 #ifdef __CUDA_ARCH__
@@ -356,6 +410,20 @@ class half_t {
     lhs.val = __float2half(__half2float(lhs.val) / __half2float(rhs.val));
 #endif
     return lhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION std::enable_if_t<
+      std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
+  operator/(half_t lhs, T rhs) {
+    return T(lhs) / rhs;
+  }
+
+  template <class T>
+  KOKKOS_FUNCTION std::enable_if_t<
+      std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
+  operator/(T lhs, half_t rhs) {
+    return lhs / T(rhs);
   }
 
   // Logical operators

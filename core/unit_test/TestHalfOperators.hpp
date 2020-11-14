@@ -77,15 +77,43 @@ enum OP_TESTS {
   ADD_H_H,
   ADD_H_S,
   ADD_S_H,
+  ADD_H_D,
+  ADD_D_H,
+  ADD_H_I,  // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+  ADD_I_H,
+  ADD_H_S_SZ,
+  ADD_S_H_SZ,
+  ADD_H_D_SZ,
+  ADD_D_H_SZ,
+  ADD_H_I_SZ,
+  ADD_I_H_SZ,
   SUB_H_H,
   SUB_H_S,
   SUB_S_H,
+  SUB_H_D,
+  SUB_D_H,  // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+  SUB_H_S_SZ,
+  SUB_S_H_SZ,
+  SUB_H_D_SZ,
+  SUB_D_H_SZ,
   MUL_H_H,
   MUL_H_S,
   MUL_S_H,
+  MUL_H_D,
+  MUL_D_H,  // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+  MUL_H_S_SZ,
+  MUL_S_H_SZ,
+  MUL_H_D_SZ,
+  MUL_D_H_SZ,
   DIV_H_H,
   DIV_H_S,
   DIV_S_H,
+  DIV_H_D,
+  DIV_D_H,  // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+  DIV_H_S_SZ,
+  DIV_S_H_SZ,
+  DIV_H_D_SZ,
+  DIV_D_H_SZ,
   NEG,
   AND,
   OR,
@@ -177,11 +205,11 @@ struct Functor_TestHalfOperators {
     expected_lhs(CADD_H_H) = d_lhs;
     expected_lhs(CADD_H_H) += d_rhs;
 
-    // tmp_lhs = h_lhs;
-    // tmp_lhs += static_cast<float>(d_rhs);
-    // actual_lhs(CADD_H_S)   = cast_from_half<double>(tmp_lhs);
-    // expected_lhs(CADD_H_S) = d_lhs;
-    // expected_lhs(CADD_H_S) += d_rhs;
+    tmp_lhs = h_lhs;
+    tmp_lhs += static_cast<float>(d_rhs);
+    actual_lhs(CADD_H_S)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CADD_H_S) = d_lhs;
+    expected_lhs(CADD_H_S) += d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs -= h_rhs;
@@ -189,11 +217,11 @@ struct Functor_TestHalfOperators {
     expected_lhs(CSUB_H_H) = d_lhs;
     expected_lhs(CSUB_H_H) -= d_rhs;
 
-    // tmp_lhs = h_lhs;
-    // tmp_lhs -= static_cast<float>(d_rhs);
-    // actual_lhs(CSUB_H_S)   = cast_from_half<double>(tmp_lhs);
-    // expected_lhs(CSUB_H_S) = d_lhs;
-    // expected_lhs(CSUB_H_S) -= d_rhs;
+    tmp_lhs = h_lhs;
+    tmp_lhs -= static_cast<float>(d_rhs);
+    actual_lhs(CSUB_H_S)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CSUB_H_S) = d_lhs;
+    expected_lhs(CSUB_H_S) -= d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs *= h_rhs;
@@ -201,11 +229,11 @@ struct Functor_TestHalfOperators {
     expected_lhs(CMUL_H_H) = d_lhs;
     expected_lhs(CMUL_H_H) *= d_rhs;
 
-    // tmp_lhs = h_lhs;
-    // tmp_lhs *= static_cast<float>(d_rhs);
-    // actual_lhs(CMUL_H_S)   = cast_from_half<double>(tmp_lhs);
-    // expected_lhs(CMUL_H_S) = d_lhs;
-    // expected_lhs(CMUL_H_S) *= d_rhs;
+    tmp_lhs = h_lhs;
+    tmp_lhs *= static_cast<float>(d_rhs);
+    actual_lhs(CMUL_H_S)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CMUL_H_S) = d_lhs;
+    expected_lhs(CMUL_H_S) *= d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs /= h_rhs;
@@ -213,47 +241,121 @@ struct Functor_TestHalfOperators {
     expected_lhs(CDIV_H_H) = d_lhs;
     expected_lhs(CDIV_H_H) /= d_rhs;
 
-    // tmp_lhs = h_lhs;
-    // tmp_lhs /= static_cast<float>(d_rhs);
-    // actual_lhs(CDIV_H_S)   = cast_from_half<double>(tmp_lhs);
-    // expected_lhs(CDIV_H_S) = d_lhs;
-    // expected_lhs(CDIV_H_S) /= d_rhs;
+    tmp_lhs = h_lhs;
+    tmp_lhs /= static_cast<float>(d_rhs);
+    actual_lhs(CDIV_H_S)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CDIV_H_S) = d_lhs;
+    expected_lhs(CDIV_H_S) /= d_rhs;
 
     actual_lhs(ADD_H_H)   = cast_from_half<double>(h_lhs + h_rhs);
     expected_lhs(ADD_H_H) = d_lhs + d_rhs;
-    // actual_lhs(ADD_H_S) =
-    //    cast_from_half<double>(h_lhs + static_cast<float>(d_rhs));
-    // expected_lhs(ADD_H_S) = d_lhs + d_rhs;
-    // actual_lhs(ADD_S_H) =
-    //    cast_from_half<double>(static_cast<float>(d_lhs) + h_rhs);
-    // expected_lhs(ADD_S_H) = d_lhs + d_rhs;
+    auto add_h_s          = h_lhs + static_cast<float>(d_rhs);
+    actual_lhs(ADD_H_S)   = add_h_s;
+    expected_lhs(ADD_H_S) = d_lhs + d_rhs;
+    auto add_s_h          = static_cast<float>(d_lhs) + h_rhs;
+    actual_lhs(ADD_S_H)   = add_s_h;
+    expected_lhs(ADD_S_H) = d_lhs + d_rhs;
+    auto add_h_d          = h_lhs + d_rhs;
+    actual_lhs(ADD_H_D)   = add_h_d;
+    expected_lhs(ADD_H_D) = d_lhs + d_rhs;
+    auto add_d_h          = d_lhs + h_rhs;
+    actual_lhs(ADD_D_H)   = add_d_h;
+    expected_lhs(ADD_D_H) = d_lhs + d_rhs;
+    auto add_h_i          = h_lhs + int(d_rhs);
+    actual_lhs(ADD_H_I)   = cast_from_half<double>(add_h_i);
+    expected_lhs(ADD_H_I) = d_lhs + int(d_rhs);
+    auto add_i_h          = int(d_lhs) + h_rhs;
+    actual_lhs(ADD_I_H)   = cast_from_half<double>(add_i_h);
+    expected_lhs(ADD_I_H) = int(d_lhs) + d_rhs;
+    // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+
+    actual_lhs(ADD_H_S_SZ)   = sizeof(add_h_s);
+    expected_lhs(ADD_H_S_SZ) = sizeof(float);
+    actual_lhs(ADD_S_H_SZ)   = sizeof(add_s_h);
+    expected_lhs(ADD_S_H_SZ) = sizeof(float);
+    actual_lhs(ADD_H_D_SZ)   = sizeof(add_h_d);
+    expected_lhs(ADD_H_D_SZ) = sizeof(double);
+    actual_lhs(ADD_D_H_SZ)   = sizeof(add_d_h);
+    expected_lhs(ADD_D_H_SZ) = sizeof(double);
+    actual_lhs(ADD_H_I_SZ)   = sizeof(add_h_i);
+    expected_lhs(ADD_H_I_SZ) = sizeof(half_t);
+    actual_lhs(ADD_I_H_SZ)   = sizeof(add_i_h);
+    expected_lhs(ADD_I_H_SZ) = sizeof(half_t);
 
     actual_lhs(SUB_H_H)   = cast_from_half<double>(h_lhs - h_rhs);
     expected_lhs(SUB_H_H) = d_lhs - d_rhs;
-    // actual_lhs(SUB_H_S) =
-    //    cast_from_half<double>(h_lhs - static_cast<float>(d_rhs));
-    // expected_lhs(SUB_H_S) = d_lhs - d_rhs;
-    // actual_lhs(SUB_S_H) =
-    //    cast_from_half<double>(static_cast<float>(d_lhs) - h_rhs);
-    // expected_lhs(SUB_S_H) = d_lhs - d_rhs;
+    auto sub_h_s          = h_lhs - static_cast<float>(d_rhs);
+    actual_lhs(SUB_H_S)   = sub_h_s;
+    expected_lhs(SUB_H_S) = d_lhs - d_rhs;
+    auto sub_s_h          = static_cast<float>(d_lhs) - h_rhs;
+    actual_lhs(SUB_S_H)   = sub_s_h;
+    expected_lhs(SUB_S_H) = d_lhs - d_rhs;
+    auto sub_h_d          = h_lhs - d_rhs;
+    actual_lhs(SUB_H_D)   = sub_h_d;
+    expected_lhs(SUB_H_D) = d_lhs - d_rhs;
+    auto sub_d_h          = d_lhs - h_rhs;
+    actual_lhs(SUB_D_H)   = sub_d_h;
+    expected_lhs(SUB_D_H) = d_lhs - d_rhs;
+    // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+
+    actual_lhs(SUB_H_S_SZ)   = sizeof(sub_h_s);
+    expected_lhs(SUB_H_S_SZ) = sizeof(float);
+    actual_lhs(SUB_S_H_SZ)   = sizeof(sub_s_h);
+    expected_lhs(SUB_S_H_SZ) = sizeof(float);
+    actual_lhs(SUB_H_D_SZ)   = sizeof(sub_h_d);
+    expected_lhs(SUB_H_D_SZ) = sizeof(double);
+    actual_lhs(SUB_D_H_SZ)   = sizeof(sub_d_h);
+    expected_lhs(SUB_D_H_SZ) = sizeof(double);
 
     actual_lhs(MUL_H_H)   = cast_from_half<double>(h_lhs * h_rhs);
     expected_lhs(MUL_H_H) = d_lhs * d_rhs;
-    // actual_lhs(MUL_H_S) =
-    //    cast_from_half<double>(h_lhs * static_cast<float>(d_rhs));
-    // expected_lhs(MUL_H_S) = d_lhs * d_rhs;
-    // actual_lhs(MUL_S_H) =
-    //    cast_from_half<double>(static_cast<float>(d_lhs) * h_rhs);
-    // expected_lhs(MUL_S_H) = d_lhs * d_rhs;
+    auto mul_h_s          = h_lhs * static_cast<float>(d_rhs);
+    actual_lhs(MUL_H_S)   = mul_h_s;
+    expected_lhs(MUL_H_S) = d_lhs * d_rhs;
+    auto mul_s_h          = static_cast<float>(d_lhs) * h_rhs;
+    actual_lhs(MUL_S_H)   = mul_s_h;
+    expected_lhs(MUL_S_H) = d_lhs * d_rhs;
+    auto mul_h_d          = h_lhs * d_rhs;
+    actual_lhs(MUL_H_D)   = mul_h_d;
+    expected_lhs(MUL_H_D) = d_lhs * d_rhs;
+    auto mul_d_h          = d_lhs * h_rhs;
+    actual_lhs(MUL_D_H)   = mul_d_h;
+    expected_lhs(MUL_D_H) = d_lhs * d_rhs;
+    // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+
+    actual_lhs(MUL_H_S_SZ)   = sizeof(mul_h_s);
+    expected_lhs(MUL_H_S_SZ) = sizeof(float);
+    actual_lhs(MUL_S_H_SZ)   = sizeof(mul_s_h);
+    expected_lhs(MUL_S_H_SZ) = sizeof(float);
+    actual_lhs(MUL_H_D_SZ)   = sizeof(mul_h_d);
+    expected_lhs(MUL_H_D_SZ) = sizeof(double);
+    actual_lhs(MUL_D_H_SZ)   = sizeof(mul_d_h);
+    expected_lhs(MUL_D_H_SZ) = sizeof(double);
 
     actual_lhs(DIV_H_H)   = cast_from_half<double>(h_lhs / h_rhs);
     expected_lhs(DIV_H_H) = d_lhs / d_rhs;
-    // actual_lhs(DIV_H_S) =
-    //    cast_from_half<double>(h_lhs / static_cast<float>(d_rhs));
-    // expected_lhs(DIV_H_S) = d_lhs / d_rhs;
-    // actual_lhs(DIV_S_H) =
-    //    cast_from_half<double>(static_cast<float>(d_lhs) / h_rhs);
-    // expected_lhs(DIV_S_H) = d_lhs / d_rhs;
+    auto div_h_s          = h_lhs / static_cast<float>(d_rhs);
+    actual_lhs(DIV_H_S)   = div_h_s;
+    expected_lhs(DIV_H_S) = d_lhs / d_rhs;
+    auto div_s_h          = static_cast<float>(d_lhs) / h_rhs;
+    actual_lhs(DIV_S_H)   = div_s_h;
+    expected_lhs(DIV_S_H) = d_lhs / d_rhs;
+    auto div_h_d          = h_lhs / d_rhs;
+    actual_lhs(DIV_H_D)   = div_h_d;
+    expected_lhs(DIV_H_D) = d_lhs / d_rhs;
+    auto div_d_h          = d_lhs / h_rhs;
+    actual_lhs(DIV_D_H)   = div_d_h;
+    expected_lhs(DIV_D_H) = d_lhs / d_rhs;
+    // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+
+    actual_lhs(DIV_H_S_SZ)   = sizeof(div_h_s);
+    expected_lhs(DIV_H_S_SZ) = sizeof(float);
+    actual_lhs(DIV_S_H_SZ)   = sizeof(div_s_h);
+    expected_lhs(DIV_S_H_SZ) = sizeof(float);
+    actual_lhs(DIV_H_D_SZ)   = sizeof(div_h_d);
+    expected_lhs(DIV_H_D_SZ) = sizeof(double);
+    actual_lhs(DIV_D_H_SZ)   = sizeof(div_d_h);
+    expected_lhs(DIV_D_H_SZ) = sizeof(double);
 
     // TODO: figure out why operator{!,&&,||} are returning __nv_bool
     actual_lhs(NEG)   = static_cast<double>(!h_lhs);
@@ -303,7 +405,8 @@ struct Functor_TestHalfOperators {
     actual_lhs(AO_HALF_T)   = cast_from_half<double>(tmp_ptr[0]);
     expected_lhs(AO_HALF_T) = d_lhs;
 
-    // TODO: Add upcast / downcast tests using sizeof
+    // TODO: Check upcasting and downcasting in large expressions involving
+    // integral and floating point types
   }
 };
 
@@ -320,7 +423,7 @@ void __test_half_operators(half_t h_lhs, half_t h_rhs) {
   Kokkos::deep_copy(f_device_actual_lhs, f_device.actual_lhs);
   Kokkos::deep_copy(f_device_expected_lhs, f_device.expected_lhs);
   for (int op_test = 0; op_test < N_OP_TESTS; op_test++) {
-    // printf("%lf\n", actual_lhs(op));
+    // printf("op_test = %d\n", op_test);
     ASSERT_NEAR(f_device_actual_lhs(op_test), f_device_expected_lhs(op_test),
                 epsilon);
     ASSERT_NEAR(f_host.actual_lhs(op_test), f_host.expected_lhs(op_test),
