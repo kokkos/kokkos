@@ -2615,6 +2615,28 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   }
 }
 
+/** \brief  Intra-thread vector parallel scan with reducer
+ *
+ */
+template <typename iType, class FunctorType, typename ReducerType>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<
+    Kokkos::is_reducer<ReducerType>::value>::type
+parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
+                  iType, Impl::HPXTeamMember>& loop_boundaries,
+              const FunctorType& lambda, const ReducerType& reducer) {
+
+  typename ReducerType::value_type scan_val;
+  reducer.init(scan_val);
+
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, scan_val, true);
+  }
+}
+
 template <class FunctorType>
 KOKKOS_INLINE_FUNCTION void single(
     const Impl::VectorSingleStruct<Impl::HPXTeamMember> &,
