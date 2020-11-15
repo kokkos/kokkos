@@ -162,7 +162,8 @@
 #define KOKKOS_COMPILER_APPLECC __APPLE_CC__
 #endif
 
-#if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL)
+#if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL) && \
+    !defined(KOKKOS_COMPILER_IBM)
 #define KOKKOS_COMPILER_CLANG \
   __clang_major__ * 100 + __clang_minor__ * 10 + __clang_patchlevel__
 #endif
