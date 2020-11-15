@@ -154,6 +154,8 @@
 #define KOKKOS_COMPILER_IBM __IBMCPP__
 #elif defined(__IBMC__)
 #define KOKKOS_COMPILER_IBM __IBMC__
+#elif defined(__ibmxl_vrm__)  // xlclang++
+#define KOKKOS_COMPILER_IBM __ibmxl_vrm__
 #endif
 
 #if defined(__APPLE_CC__)
