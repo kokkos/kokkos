@@ -48,6 +48,20 @@
 #if defined(KOKKOS_ENABLE_SERIAL)
 namespace Kokkos {
 class Serial;  ///< Execution space main process on CPU.
+
+namespace Impl {
+
+template <typename ConfigT>
+struct SpacePriority<Kokkos::Serial, ConfigT>
+    : std::integral_constant<int, 100> {};
+
+template <>
+struct SpaceProperty<SERIAL_idx> {
+  using type = Kokkos::Serial;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
+
 #endif
 #endif

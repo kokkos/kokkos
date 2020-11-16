@@ -61,6 +61,18 @@ void cuda_prefetch_pointer(const ExecSpace& /*space*/, const void* /*ptr*/,
 void cuda_prefetch_pointer(const Cuda& space, const void* ptr, size_t bytes,
                            bool to_device);
 
+template <>
+struct SpacePriority<Kokkos::Cuda, Kokkos::DeviceParallelPriorityConfig>
+    : std::integral_constant<int, 50> {};
+
+template <>
+struct SpacePriority<Kokkos::Cuda, Kokkos::HostParallelPriorityConfig>
+    : std::integral_constant<int, 999> {};
+
+template <>
+struct SpaceProperty<CUDA_idx> {
+  using type = Kokkos::Cuda;
+};
 }  // namespace Impl
 }  // namespace Kokkos
 #endif

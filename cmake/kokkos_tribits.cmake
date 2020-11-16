@@ -266,33 +266,19 @@ MACRO(KOKKOS_CONFIGURE_CORE)
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_SetupBackend.hpp "KOKKOS_SETUP" "setup/Kokkos_Setup" "${DEVICE_SETUP_LIST}")
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_DeclareBackend.hpp "KOKKOS_DECLARE" "decl/Kokkos_Declare" "${FWD_BACKEND_LIST}")
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_PostInclude.hpp "KOKKOS_POST_INCLUDE" "Kokkos_Post_Include" "${KOKKOS_BACKEND_POST_INCLUDE_LIST}")
-   SET(_DEFAULT_HOST_MEMSPACE "::Kokkos::HostSpace")
-   KOKKOS_OPTION(DEFAULT_DEVICE_MEMORY_SPACE "" STRING "Override default device memory space")
-   KOKKOS_OPTION(DEFAULT_HOST_MEMORY_SPACE "" STRING "Override default host memory space")
-   KOKKOS_OPTION(DEFAULT_DEVICE_EXECUTION_SPACE "" STRING "Override default device execution space")
-   KOKKOS_OPTION(DEFAULT_HOST_PARALLEL_EXECUTION_SPACE "" STRING "Override default host parallel execution space")
-   IF (NOT Kokkos_DEFAULT_DEVICE_EXECUTION_SPACE STREQUAL "")
-      SET(_DEVICE_PARALLEL ${Kokkos_DEFAULT_DEVICE_EXECUTION_SPACE})
-      MESSAGE(STATUS "Override default device execution space: ${_DEVICE_PARALLEL}")
-      SET(KOKKOS_DEVICE_SPACE_ACTIVE ON)
-   ELSE()
-      IF (_DEVICE_PARALLEL STREQUAL "NoTypeDefined")
-         SET(KOKKOS_DEVICE_SPACE_ACTIVE OFF)
-      ELSE()
-         SET(KOKKOS_DEVICE_SPACE_ACTIVE ON)
-      ENDIF()
-   ENDIF()
-   IF (NOT Kokkos_DEFAULT_HOST_PARALLEL_EXECUTION_SPACE STREQUAL "")
-      SET(_HOST_PARALLEL ${Kokkos_DEFAULT_HOST_PARALLEL_EXECUTION_SPACE})
-      MESSAGE(STATUS "Override default host parallel execution space: ${_HOST_PARALLEL}")
-      SET(KOKKOS_HOSTPARALLEL_SPACE_ACTIVE ON)
-   ELSE()
-      IF (_HOST_PARALLEL STREQUAL "NoTypeDefined")
-         SET(KOKKOS_HOSTPARALLEL_SPACE_ACTIVE OFF)
-      ELSE()
-         SET(KOKKOS_HOSTPARALLEL_SPACE_ACTIVE ON)
-      ENDIF()
-   ENDIF()
+
+## Need to define Default Host Memory Space
+##                Default Device Memory Space
+##                Default Host Parallel Execution Space
+##                Default Device Execution Space
+##                Default Execution Space
+
+   KOKKOS_CONFIG_SPACE_ENUM(KokkosCore_Config_SpaceEnum.in KokkosCore_Config_ExecutionSpaceEnum.hpp "KOKKOS_EXECSPACE_ENUM" "TotalNumberOfExecutionSpaces" "${KOKKOS_ENABLED_DEVICES}")
+   KOKKOS_CONFIG_SPACE_ENUM(KokkosCore_Config_SpaceEnum.in KokkosCore_Config_MemorySpaceEnum.hpp "KOKKOS_MEMORYSPACE_ENUM" "TotalNumberOfMemorySpaces" "${KOKKOS_ENABLED_DEVICES}")
+
+   KOKKOS_OPTION(DEFAULT_EXECSPACE_PRIORITY_SET "Kokkos::DefaultPriorityConfig" STRING "Override default device memory space")
+   KOKKOS_OPTION(HOSTDEFAULT_EXECSPACE_PRIORITY_SET "Kokkos::HostDefaultPriorityConfig" STRING "Override default device memory space")
+
    #We are ready to configure the header
    CONFIGURE_FILE(cmake/KokkosCore_config.h.in KokkosCore_config.h @ONLY)
 ENDMACRO()

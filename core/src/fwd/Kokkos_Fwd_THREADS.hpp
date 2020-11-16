@@ -48,6 +48,19 @@
 #if defined(KOKKOS_ENABLE_THREADS)
 namespace Kokkos {
 class Threads;  ///< Execution space with pthreads back-end.
+
+namespace Impl {
+
+template <typename ConfigT>
+struct SpacePriority<Kokkos::Threads, ConfigT>
+    : std::integral_constant<int, 70> {};
+
+template <>
+struct SpaceProperty<THREADS_idx> {
+  using type = Kokkos::Threads;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 #endif
 #endif

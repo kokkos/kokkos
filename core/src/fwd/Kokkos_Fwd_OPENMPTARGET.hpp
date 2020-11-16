@@ -51,6 +51,25 @@ namespace Experimental {
 class OpenMPTarget;  ///< OpenMPTarget execution space.
 class OpenMPTargetSpace;
 }  // namespace Experimental
+
+namespace Impl {
+
+template <>
+struct SpacePriority<Kokkos::Experimental::OpenMPTarget,
+                     Kokkos::DeviceParallelPriorityConfig>
+    : std::integral_constant<int, 50> {};
+
+template <>
+struct SpacePriority<Kokkos::Experimental::OpenMPTarget,
+                     Kokkos::HostParallelPriorityConfig>
+    : std::integral_constant<int, 999> {};
+
+template <>
+struct SpaceProperty<OPENMPTARGET_idx> {
+  using type = Kokkos::Experimental::OpenMPTarget;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 #endif
 #endif

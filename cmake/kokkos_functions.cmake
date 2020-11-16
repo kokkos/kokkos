@@ -987,3 +987,24 @@ FUNCTION(KOKKOS_CONFIG_HEADER SRC_FILE TARGET_FILE HEADER_GUARD HEADER_PREFIX DA
    SET(INCLUDE_NEXT_FILE "" )
    CONFIGURE_FILE(${PROJECT_BINARY_DIR}/temp/${TARGET_FILE}.work ${TARGET_FILE} @ONLY)
 ENDFUNCTION()
+
+## KOKKOS_CONFIG_SPACE_ENUM - parse the data list which is a list of backend names
+##                        and create output header file...used for
+##                        creating dynamic enum list of spaces based on enabled backends
+##
+##                        SRC_FILE is input file
+##                        TARGET_FILE output file
+##                        HEADER_GUARD TEXT used with include header guard
+##                        ENUM_LEN_TAG used to set the enum used to determine the list length
+##                        DATA_LIST list of backends to include in generated file
+FUNCTION(KOKKOS_CONFIG_SPACE_ENUM SRC_FILE TARGET_FILE HEADER_GUARD ENUM_LEN_TAG DATA_LIST)
+   SET(HEADER_GUARD_TAG "${HEADER_GUARD}_HPP_")
+   CONFIGURE_FILE(cmake/${SRC_FILE} ${PROJECT_BINARY_DIR}/temp/${TARGET_FILE}.work COPYONLY)
+   FOREACH( BACKEND_NAME ${DATA_LIST} )
+   SET(NEXT_SPACE_IDX "${BACKEND_NAME}_idx,
+   \@NEXT_SPACE_IDX\@")
+   CONFIGURE_FILE(${PROJECT_BINARY_DIR}/temp/${TARGET_FILE}.work ${PROJECT_BINARY_DIR}/temp/${TARGET_FILE}.work @ONLY)
+   ENDFOREACH()
+   SET(NEXT_SPACE_IDX "${ENUM_LEN_TAG}" )
+   CONFIGURE_FILE(${PROJECT_BINARY_DIR}/temp/${TARGET_FILE}.work ${TARGET_FILE} @ONLY)
+ENDFUNCTION()

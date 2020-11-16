@@ -3,10 +3,9 @@
 // ************************************************************************
 //
 //                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
+//              Copyright (2014) Sandia Corporation
 //
-// Under the terms of Contract DE-NA0003525 with NTESS,
+// Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -24,10 +23,10 @@
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
 //
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
+// THIS SOFTWARE IS PROVIDED BY SANDIA CORPORATION "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL SANDIA CORPORATION OR THE
 // CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
 // EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -41,35 +40,16 @@
 // ************************************************************************
 //@HEADER
 */
+#ifndef @HEADER_GUARD_TAG@
+#define @HEADER_GUARD_TAG@
 
-#ifndef KOKKOS_HIP_FWD_HPP_
-#define KOKKOS_HIP_FWD_HPP_
-
-#if defined(KOKKOS_ENABLE_HIP)
 namespace Kokkos {
-namespace Experimental {
-class HIPSpace;  ///< Memory space on HIP GPU
-class HIP;       ///< Execution space for HIP GPU
-}  // namespace Experimental
-
 namespace Impl {
 
-template <>
-struct SpacePriority<Kokkos::Experimental::HIP,
-                     Kokkos::DeviceParallelPriorityConfig>
-    : std::integral_constant<int, 50> {};
-
-template <>
-struct SpacePriority<Kokkos::Experimental::HIP,
-                     Kokkos::HostParallelPriorityConfig>
-    : std::integral_constant<int, 999> {};
-
-template <>
-struct SpaceProperty<HIP_idx> {
-  using type = Kokkos::Experimental::HIP;
+enum {
+   @NEXT_SPACE_IDX@
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
-#endif
-#endif
+} // namespace Impl
+} // namespace Kokkos
+#endif // @HEADER_GUARD_TAG@ 

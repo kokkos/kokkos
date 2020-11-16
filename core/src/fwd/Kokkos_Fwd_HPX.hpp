@@ -50,6 +50,19 @@ namespace Kokkos {
 namespace Experimental {
 class HPX;  ///< Execution space with HPX back-end.
 }  // namespace Experimental
+
+namespace Impl {
+
+template <typename ConfigT>
+struct SpacePriority<Kokkos::Experimental::HPX, ConfigT>
+    : std::integral_constant<int, 70> {};
+
+template <>
+struct SpaceProperty<HPX_idx> {
+  using type = Kokkos::Experimental::HPX;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 #endif
 #endif

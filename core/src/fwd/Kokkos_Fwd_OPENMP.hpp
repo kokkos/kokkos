@@ -48,6 +48,18 @@
 #if defined(KOKKOS_ENABLE_OPENMP)
 namespace Kokkos {
 class OpenMP;  ///< OpenMP execution space.
+
+namespace Impl {
+
+template <typename ConfigT>
+struct SpacePriority<Kokkos::OpenMP, ConfigT>
+    : std::integral_constant<int, 70> {};
+
+template <>
+struct SpaceProperty<OPENMP_idx> {
+  using type = Kokkos::OpenMP;
+};
+}  // namespace Impl
 }  // namespace Kokkos
 #endif
 #endif
