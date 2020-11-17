@@ -52,7 +52,7 @@ namespace Test {
 
 template <class ExecutionSpace, class DataType>
 struct TestTeamScan {
-  using execution_space = Device;
+  using execution_space = ExecutionSpace;
   using value_type      = DataType;
   using policy_type     = Kokkos::TeamPolicy<execution_space>;
   using member_type     = typename policy_type::member_type;
@@ -72,7 +72,7 @@ struct TestTeamScan {
 
     Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, beg, end),
-        [&](const int i) { a_d(leagueRank, i) += leagueRank * N + i; });
+        [&](const int i) { a_d(leagueRank, i) = leagueRank * N + i; });
 
     Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, beg, end),
                           [&](int i, int32_t& val, const bool final) {
@@ -94,15 +94,16 @@ struct TestTeamScan {
     Kokkos::deep_copy(a_i, a_d);
     Kokkos::deep_copy(a_o, a_r);
 
-    EXPECT_EQ(a_i.extent(0), M);
-    EXPECT_EQ(a_o.extent(0), M);
-    EXPECT_EQ(a_i.extent(1), N);
-    EXPECT_EQ(a_o.extent(1), N);
-
     for (int32_t i = 0; i < M; ++i) {
       value_type _scan_real = 0;
       value_type _scan_calc = 0;
       value_type _epsilon   = std::numeric_limits<value_type>::round_error();
+      // each fp addition is subject to small loses in precision and these
+      // compound as loop so we set the base error to be the round-off
+      // error and then add in another round-off each iteration. For example,
+      // with CUDA backend + 32-bit float + large N values (e.g. 1,000) + high
+      // thread-counts (e.g. 1024), this test will fail w/o round_error
+      // accommodation
       for (int32_t j = 0; j < N; ++j) {
         _scan_real += a_i(i, j);
         _scan_calc     = a_o(i, j);
@@ -135,7 +136,6 @@ TEST(TEST_CATEGORY, team_scan) {
   TestTeamScan<TEST_EXECSPACE, double>{}(34, 32);
   TestTeamScan<TEST_EXECSPACE, double>{}(956, 128);
   TestTeamScan<TEST_EXECSPACE, double>{}(2596, 512);
-  TEST_EXECSPACE().fence();
 }
 
 }  // namespace Test

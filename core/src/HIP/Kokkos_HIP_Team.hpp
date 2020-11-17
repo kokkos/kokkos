@@ -759,16 +759,15 @@ KOKKOS_INLINE_FUNCTION
  *
  *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
  *
- *  The range [0..N) is mapped to all vector lanes in the
- *  thread and a scan operation is performed.
- *  The last call to closure has final == true.
+ *  The range [0..N) is mapped to each rank in the team (whose global rank is
+ *  less than N) and a scan operation is performed. The last call to closure has
+ *  final == true.
  */
 template <typename iType, typename FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
         loop_bounds,
     const FunctorType& lambda) {
-#ifdef __HIP_DEVICE_COMPILE__
   // Extract value_type from lambda
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void,
@@ -781,22 +780,25 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   const auto team_rank = member.team_rank();
   const auto nchunk    = (end - start) / loop_bounds.member.team_size();
   value_type accum     = 0;
-  value_type offset    = 0;
 
+  // each team has to process one or more chunks of the prefix scan
   for (iType i = 0; i < nchunk + 1; ++i) {
-    auto ii                 = i * team_size + team_rank;
-    value_type local_offset = 0;
-    if (ii < loop_bounds.end) lambda(ii, local_offset, false);
-    local_offset = member.team_scan(local_offset);
-    auto val     = accum + offset + local_offset;
+    auto ii = i * team_size + team_rank;
+    // local accumulation for this chunk
+    value_type local_accum = 0;
+    // user updates value with prefix value
+    if (ii < loop_bounds.end) lambda(ii, local_accum, false);
+    // perform team scan
+    local_accum = member.team_scan(local_accum);
+    // add this blocks accum to total accumulation
+    auto val = accum + local_accum;
+    // user updates their data with total accumulation
     if (ii < loop_bounds.end) lambda(ii, val, true);
-    if (team_rank == team_size - 1) offset = val;
-    member.team_broadcast(offset, team_size - 1);
+    // the last value needs to be propogated to next chunk
+    if (team_rank == team_size - 1) accum = val;
+    // broadcast last value to rest of the team
+    member.team_broadcast(accum, team_size - 1);
   }
-#else
-  (void)loop_bounds;
-  (void)lambda;
-#endif
 }
 
 template <typename iType, class Closure>
