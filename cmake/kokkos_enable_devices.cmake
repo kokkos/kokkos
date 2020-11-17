@@ -60,28 +60,20 @@ IF(KOKKOS_ENABLE_OPENMP)
     get_filename_component(LLVM_BIN_DIR ${CMAKE_CXX_COMPILER_AR} DIRECTORY)
     COMPILER_SPECIFIC_LIBS(Clang "${LLVM_BIN_DIR}/../lib/libomp.lib")
   ENDIF()
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
-    COMPILER_SPECIFIC_FLAGS(
-      COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-      Clang      -Xcompiler ${ClangOpenMPFlag}
-      PGI        -Xcompiler -mp
-      Cray       NO-VALUE-SPECIFIED
-      XL         -Xcompiler -qsmp=omp
-      DEFAULT    -Xcompiler -fopenmp
-    )
-  ELSE()
-    COMPILER_SPECIFIC_FLAGS(
+  COMPILER_SPECIFIC_FLAGS(
+    HOST_DEVICE
       Clang      ${ClangOpenMPFlag}
-      AppleClang -Xpreprocessor -fopenmp
       PGI        -mp
       Cray       NO-VALUE-SPECIFIED
       XL         -qsmp=omp
       DEFAULT    -fopenmp
-    )
-    COMPILER_SPECIFIC_LIBS(
+    HOST_ONLY
+      AppleClang -Xpreprocessor -fopenmp
+  )
+  COMPILER_SPECIFIC_LIBS(
+    HOST_ONLY
       AppleClang -lomp
-    )
-  ENDIF()
+  )
 ENDIF()
 
 KOKKOS_DEVICE_OPTION(OPENMPTARGET OFF DEVICE "Whether to build the OpenMP target backend")
