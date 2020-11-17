@@ -50,7 +50,7 @@
 
 namespace Test {
 
-template <class Device, class DataType>
+template <class ExecutionSpace, class DataType>
 struct TestTeamScan {
   using execution_space = Device;
   using value_type      = DataType;
