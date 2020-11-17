@@ -97,12 +97,12 @@ struct TestTeamScan {
     for (int32_t i = 0; i < M; ++i) {
       value_type _scan_real = 0;
       value_type _scan_calc = 0;
-      value_type _epsilon   = std::numeric_limits<value_type>::round_error();
+      value_type _epsilon   = std::numeric_limits<value_type>::epsilon();
       // each fp addition is subject to small loses in precision and these
-      // compound as loop so we set the base error to be the round-off
-      // error and then add in another round-off each iteration. For example,
-      // with CUDA backend + 32-bit float + large N values (e.g. 1,000) + high
-      // thread-counts (e.g. 1024), this test will fail w/o round_error
+      // compound as loop so we set the base error to be the machine epsilon and
+      // then add in another epsilon each iteration. For example, with CUDA
+      // backend + 32-bit float + large N values (e.g. 1,000) + high
+      // thread-counts (e.g. 1024), this test will fail w/o epsilon
       // accommodation
       for (int32_t j = 0; j < N; ++j) {
         _scan_real += a_i(i, j);
@@ -117,7 +117,7 @@ struct TestTeamScan {
         if (std::is_integral<value_type>::value) {
           ASSERT_EQ(_scan_real, _scan_calc) << _get_mesg();
         } else {
-          _epsilon += std::numeric_limits<value_type>::round_error();
+          _epsilon += std::numeric_limits<value_type>::epsilon();
           ASSERT_NEAR(_scan_real, _scan_calc, _epsilon) << _get_mesg();
         }
       }
