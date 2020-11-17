@@ -160,6 +160,25 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   }
   return a;
 }
+
+// NOTE Making a copy even when std::is_same<Array, Kokkos::Array<U, M>>::value
+// is true to reduce code complexity.  You may change this if you have a good
+// reason to.  Intentionally not enabling std::array at this time but this may
+// change too.
+template <class IndexType, class NVCC_WONT_LET_ME_CALL_YOU_Array, class U,
+          std::size_t M>
+constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
+    Kokkos::Array<U, M> const& other) {
+  using T = typename NVCC_WONT_LET_ME_CALL_YOU_Array::value_type;
+  NVCC_WONT_LET_ME_CALL_YOU_Array a{};
+  constexpr std::size_t N = a.size();
+  static_assert(M <= N, "");
+  for (std::size_t i = 0; i < M; ++i) {
+    a[i] = checked_narrow_cast<T>(other[i]);
+    (void)checked_narrow_cast<IndexType>(other[i]);  // see note above
+  }
+  return a;
+}
 }  // namespace Impl
 
 // multi-dimensional iteration pattern
@@ -290,6 +309,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         "MDRangePolicy: Constructor initializer lists have wrong size");
   }
 
+  // NOTE: Keeping these two constructor despite the templated constructors
+  // from Kokkos arrays for backwards compability to allow construction from
+  // double-braced initializer lists.
   MDRangePolicy(point_type const& lower, point_type const& upper,
                 tile_type const& tile = tile_type{})
       : MDRangePolicy(typename traits::execution_space(), lower, upper, tile) {}
@@ -300,6 +322,28 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       : m_space(work_space), m_lower(lower), m_upper(upper), m_tile(tile) {
     init();
   }
+
+  template <typename T, std::size_t NT = rank,
+            typename = std::enable_if_t<std::is_integral<T>::value>>
+  MDRangePolicy(Kokkos::Array<T, rank> const& lower,
+                Kokkos::Array<T, rank> const& upper,
+                Kokkos::Array<T, NT> const& tile = Kokkos::Array<T, NT>{})
+      : MDRangePolicy(typename traits::execution_space(), lower, upper, tile) {}
+
+  template <typename T, std::size_t NT = rank,
+            typename = std::enable_if_t<std::is_integral<T>::value>>
+  MDRangePolicy(const typename traits::execution_space& work_space,
+                Kokkos::Array<T, rank> const& lower,
+                Kokkos::Array<T, rank> const& upper,
+                Kokkos::Array<T, NT> const& tile = Kokkos::Array<T, NT>{})
+      : MDRangePolicy(
+            work_space,
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {}
 
   template <class... OtherProperties>
   MDRangePolicy(const MDRangePolicy<OtherProperties...> p)
