@@ -178,27 +178,27 @@ class half_t {
   KOKKOS_FUNCTION
   half_t(impl_type rhs) : val(rhs) {}
   KOKKOS_FUNCTION
-  half_t(float rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(float rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(bool rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(bool rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(double rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(double rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(short rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(short rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(int rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(int rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(long rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(long rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(long long rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(long long rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(unsigned short rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(unsigned short rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(unsigned int rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(unsigned int rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(unsigned long rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(unsigned long rhs) : val(cast_to_half(rhs).val) {}
   KOKKOS_FUNCTION
-  half_t(unsigned long long rhs) : val(cast_to_half(rhs).val) {}
+  explicit half_t(unsigned long long rhs) : val(cast_to_half(rhs).val) {}
 
   // Unary operators
   KOKKOS_FUNCTION
