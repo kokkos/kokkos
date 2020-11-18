@@ -64,6 +64,13 @@ class OpenMPTarget;
 }  // namespace Kokkos
 #endif
 
+#if !defined(KOKKOS_ENABLE_CUDA)
+// for avoid pre-processor block
+namespace Kokkos {
+class Cuda;
+}  // namespace Kokkos
+#endif
+
 namespace Test {
 
 template <class ExecutionSpace, class DataType>
