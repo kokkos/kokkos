@@ -43,6 +43,7 @@
 */
 
 #include <Kokkos_Core.hpp>
+#include <impl/Kokkos_Stacktrace.hpp>
 #include <cstdio>
 #include <cstdint>
 #include <sstream>
@@ -82,6 +83,9 @@ struct TestTeamScan {
   }
 
   auto operator()(int32_t _M, int32_t _N) {
+    std::cout << "Launching " << Kokkos::Impl::demangle(typeid(*this).name())
+              << " with "
+              << "M=" << _M << " and N=" << _N << "..." << std::endl;
     M   = _M;
     N   = _N;
     a_d = view_type("a_d", M, N);
