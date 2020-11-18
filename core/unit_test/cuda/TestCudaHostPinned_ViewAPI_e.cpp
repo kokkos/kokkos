@@ -44,5 +44,3 @@
 
 #include <cuda/TestCudaHostPinned_Category.hpp>
 #include <TestViewAPI_e.hpp>
-#include <TestViewCopy.hpp>
-#include <TestLambdaCapture.hpp>
