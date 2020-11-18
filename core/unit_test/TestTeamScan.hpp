@@ -126,8 +126,11 @@ struct TestTeamScan {
 };
 
 TEST(TEST_CATEGORY, team_scan) {
+  TestTeamScan<TEST_EXECSPACE, int32_t>{}(0, 0);
+  TestTeamScan<TEST_EXECSPACE, int32_t>{}(0, 1);
+  TestTeamScan<TEST_EXECSPACE, int32_t>{}(1, 0);
   TestTeamScan<TEST_EXECSPACE, int32_t>{}(99, 32);
-  TestTeamScan<TEST_EXECSPACE, int32_t>{}(139, 64);
+  TestTeamScan<TEST_EXECSPACE, uint32_t>{}(139, 64);
   TestTeamScan<TEST_EXECSPACE, uint32_t>{}(163, 128);
   TestTeamScan<TEST_EXECSPACE, uint64_t>{}(433, 256);
   TestTeamScan<TEST_EXECSPACE, int64_t>{}(976, 512);
