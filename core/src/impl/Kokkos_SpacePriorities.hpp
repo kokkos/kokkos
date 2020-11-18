@@ -65,6 +65,20 @@ struct GetTypes<std::index_sequence<Idx...>> : GetTypesT<Idx...> {};
 
 }  // namespace Impl
 
+// The following aliases define the default execution space and the
+// default host execution space using the above templates to determine
+// which execution space is the desired default.
+// The index sequence is used to iterate through the configured spaces
+// and the template logic will select the space that has the lowest
+// SpacePriority value.  Each execution space has a template specialization
+// for SpacePriority which returns a value corresponding to it's
+// proper place in the priority list. KOKKOS_DEFAULT_EXECSPACE_PRIORITY_SET
+// and KOKKOS_HOSTDEFAULT_EXECSPACE_PRIORITY_SET are additional configurations
+// that can be used to tweak the desired order.
+// The default host executiobn space works the same as the default execution
+// space, but it relies on the device execution spaces having a template
+// specialization for SpacePriority that returns a value of 999, thus taking
+// it out of consideration.
 using DefaultExecutionSpace KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION =
     typename Impl::GetPriority<
         KOKKOS_DEFAULT_EXECSPACE_PRIORITY_SET, Impl::SpacePriority,
