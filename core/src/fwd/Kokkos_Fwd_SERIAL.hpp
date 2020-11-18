@@ -56,6 +56,11 @@ struct SpacePriority<Kokkos::Serial, ConfigT>
     : std::integral_constant<int, 100> {};
 
 template <>
+struct SpacePriority<Kokkos::Serial,
+                     Kokkos::SerialParallelPriorityConfig>
+    : std::integral_constant<int, 20> {};
+
+template <>
 struct SpaceProperty<SERIAL_idx> {
   using type = Kokkos::Serial;
 };

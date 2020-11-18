@@ -267,13 +267,19 @@ MACRO(KOKKOS_CONFIGURE_CORE)
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_DeclareBackend.hpp "KOKKOS_DECLARE" "decl/Kokkos_Declare" "${FWD_BACKEND_LIST}")
    KOKKOS_CONFIG_HEADER( KokkosCore_Config_HeaderSet.in KokkosCore_Config_PostInclude.hpp "KOKKOS_POST_INCLUDE" "Kokkos_Post_Include" "${KOKKOS_BACKEND_POST_INCLUDE_LIST}")
 
-## Need to define Default Execution Space
-##                Default Host Execution Space
+## Need to define Priority Set Config for Default Execution Space
+##                Priority Set Config for Default Host Execution Space
+##                Current possible values for either:
+##                     Kokkos::DefaultPriorityConfig
+##                     Kokkos::HostDefaultPriorityConfig
+##                     Kokkos::DeviceParallelPriorityConfig
+##                     Kokkos::HostParallelPriorityConfig
+##                     Kokkos::SerialParallelPriorityConfig
 
    KOKKOS_CONFIG_SPACE_ENUM(KokkosCore_Config_SpaceEnum.in KokkosCore_Config_ExecutionSpaceEnum.hpp "KOKKOS_EXECSPACE_ENUM" "TotalNumberOfExecutionSpaces" "${KOKKOS_ENABLED_DEVICES}")
 
-   KOKKOS_OPTION(DEFAULT_EXECSPACE_PRIORITY_SET "Kokkos::DefaultPriorityConfig" STRING "Override default device memory space")
-   KOKKOS_OPTION(HOSTDEFAULT_EXECSPACE_PRIORITY_SET "Kokkos::HostDefaultPriorityConfig" STRING "Override default device memory space")
+   KOKKOS_OPTION(DEFAULT_EXECSPACE_PRIORITY_SET "Kokkos::DefaultPriorityConfig" STRING "Override priority config for default exec space")
+   KOKKOS_OPTION(HOSTDEFAULT_EXECSPACE_PRIORITY_SET "Kokkos::HostDefaultPriorityConfig" STRING "Override priority config for default host exec space")
 
    #We are ready to configure the header
    CONFIGURE_FILE(cmake/KokkosCore_config.h.in KokkosCore_config.h @ONLY)
