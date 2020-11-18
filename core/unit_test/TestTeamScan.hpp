@@ -75,7 +75,7 @@ struct TestTeamScan {
         [&](const int i) { a_d(leagueRank, i) = leagueRank * N + i; });
 
     Kokkos::parallel_scan(Kokkos::TeamThreadRange(team, beg, end),
-                          [&](int i, int32_t& val, const bool final) {
+                          [&](int i, DataType& val, const bool final) {
                             val += a_d(leagueRank, i);
                             if (final) a_r(leagueRank, i) = val;
                           });
@@ -126,16 +126,17 @@ struct TestTeamScan {
 };
 
 TEST(TEST_CATEGORY, team_scan) {
-  TestTeamScan<TEST_EXECSPACE, int16_t>{}(99, 32);
-  TestTeamScan<TEST_EXECSPACE, uint16_t>{}(139, 64);
-  TestTeamScan<TEST_EXECSPACE, int32_t>{}(163, 128);
-  TestTeamScan<TEST_EXECSPACE, int64_t>{}(2156, 512);
+  TestTeamScan<TEST_EXECSPACE, int32_t>{}(99, 32);
+  TestTeamScan<TEST_EXECSPACE, int32_t>{}(139, 64);
+  TestTeamScan<TEST_EXECSPACE, uint32_t>{}(163, 128);
+  TestTeamScan<TEST_EXECSPACE, uint64_t>{}(433, 256);
+  TestTeamScan<TEST_EXECSPACE, int64_t>{}(976, 512);
   TestTeamScan<TEST_EXECSPACE, uint64_t>{}(1234, 1024);
-  TestTeamScan<TEST_EXECSPACE, float>{}(108, 16);
-  TestTeamScan<TEST_EXECSPACE, float>{}(152, 80);
-  TestTeamScan<TEST_EXECSPACE, double>{}(34, 32);
-  TestTeamScan<TEST_EXECSPACE, double>{}(956, 128);
-  TestTeamScan<TEST_EXECSPACE, double>{}(2596, 512);
+  TestTeamScan<TEST_EXECSPACE, float>{}(108, 19);
+  TestTeamScan<TEST_EXECSPACE, float>{}(152, 83);
+  TestTeamScan<TEST_EXECSPACE, double>{}(34, 43);
+  TestTeamScan<TEST_EXECSPACE, double>{}(956, 121);
+  TestTeamScan<TEST_EXECSPACE, double>{}(2596, 34);
 }
 
 }  // namespace Test
