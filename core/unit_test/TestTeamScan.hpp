@@ -170,6 +170,12 @@ TEST(TEST_CATEGORY, team_scan) {
     TestTeamScan<TEST_EXECSPACE, float>{}(152, 83);
     TestTeamScan<TEST_EXECSPACE, double>{}(34, 43);
     TestTeamScan<TEST_EXECSPACE, double>{}(956, 121);
+  } else {
+    // OpenMPTarget requires multiples of 32
+    TestTeamScan<TEST_EXECSPACE, float>{}(108, 32);
+    TestTeamScan<TEST_EXECSPACE, float>{}(152, 64);
+    TestTeamScan<TEST_EXECSPACE, double>{}(34, 128);
+    TestTeamScan<TEST_EXECSPACE, double>{}(956, 256);
   }
 
   // known failure with Clang 11 + CUDA 10.1.243
@@ -180,6 +186,11 @@ TEST(TEST_CATEGORY, team_scan) {
     TestTeamScan<TEST_EXECSPACE, int64_t>{}(433, 256);
     TestTeamScan<TEST_EXECSPACE, uint64_t>{}(976, 512);
     TestTeamScan<TEST_EXECSPACE, uint64_t>{}(1234, 1024);
+  } else {
+    // Clang + Cuda requires smaller team sizes
+    TestTeamScan<TEST_EXECSPACE, int64_t>{}(433, 128);
+    TestTeamScan<TEST_EXECSPACE, uint64_t>{}(976, 64);
+    TestTeamScan<TEST_EXECSPACE, uint64_t>{}(1234, 32);
   }
 }
 
