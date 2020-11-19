@@ -83,30 +83,39 @@ class ViewHooksAttorney<ViewType, true> {
   const view_type &get_view() const { return v; }
 };
 
+/* ViewHooksAttorney - update version
+ *    this version needs to access the source view, the target map
+ *    and the target tracker. This gives a hook the ability to
+ *    modify the new view's data handle and tracking record
+ */
 template <class ViewType>
 class ViewHooksAttorney<ViewType, false> {
  public:
   using view_type    = ViewType;
+  using map_type     = typename view_type::map_type;
+  using track_type   = Kokkos::Impl::SharedAllocationTracker;
   using memory_space = typename view_type::memory_space;
 
  private:
   view_type &v;
+  map_type &m;
+  track_type &t;
 
  public:
-  ViewHooksAttorney(view_type &v_) : v(v_) {}
+  ViewHooksAttorney(view_type &v_, map_type &m_, track_type &t_)
+      : v(v_), m(m_), t(t_) {}
   view_type &get_view() const { return v; }
 
   template <class HandleType>
   void update_data_handle(HandleType ptr) {
-    v.assign_data_handle(ptr);
+    m.m_impl_handle = ptr;
   }
   template <class RecordType>
   void assign_view_record(RecordType rec) {
-    v.assign_record(rec);
+    t.clear();
+    t.assign_allocated_record_to_uninitialized(rec);
   }
-  void *rec_ptr() {
-    return (void *)v.impl_track().template get_record<memory_space>();
-  }
+  void *rec_ptr() { return (void *)t.template get_record<memory_space>(); }
 };
 
 }  // namespace Impl
@@ -233,12 +242,15 @@ class ViewHolder<ViewType, false> : public ViewHolderBase {
  public:
   using view_type          = ViewType;
   using view_hook_attorney = Kokkos::Impl::ViewHooksAttorney<view_type, false>;
+  using map_type           = typename view_hook_attorney::map_type;
+  using track_type         = Kokkos::Impl::SharedAllocationTracker;
   using memory_space       = typename view_type::memory_space;
   using view_hook_deepcopy = Kokkos::Experimental::ViewHookDeepCopy<view_type>;
   using view_hook_copyview = Kokkos::Experimental::ViewHookCopyView<view_type>;
   using view_hook_update =
       Kokkos::Experimental::ViewHookUpdate<view_hook_attorney>;
-  explicit ViewHolder(view_type &view) : m_view_att(view) {}
+  explicit ViewHolder(view_type &view, map_type &map, track_type &tracker)
+      : m_view_att(view, map, tracker) {}
   virtual ~ViewHolder() = default;
 
   size_t span() const override { return m_view_att.get_view().span(); }
@@ -341,6 +353,7 @@ struct ViewHookCaller : public ViewHookCallerBase {
 
 class ViewHooks {
  public:
+  using track_type = Kokkos::Impl::SharedAllocationTracker;
   enum HookCallerTypeEnum : int { CopyHookCaller = 0, RefHookCaller };
 
  private:
@@ -393,18 +406,9 @@ class ViewHooks {
 
   bool is_set() noexcept { return s_active_callers.size() > 0; }
 
-  // overload specialization not allowing data change.
+  // const view
   template <class DataType, class... Properties>
-  std::enable_if_t<
-      (std::is_same<
-           typename Kokkos::ViewTraits<DataType, Properties...>::value_type,
-           typename Kokkos::ViewTraits<
-               DataType, Properties...>::const_value_type>::value ||
-       std::is_same<
-           typename Kokkos::ViewTraits<DataType, Properties...>::memory_space,
-           Kokkos::AnonymousSpace>::value),
-      void>
-  call(const View<DataType, Properties...> &vt) {
+  void call(const View<DataType, Properties...> &vt) {
     using view_type             = View<DataType, Properties...>;
     using view_copy_holder_type = ViewHolder<const view_type, true>;
     view_copy_holder_type copy_holder(vt);
@@ -419,6 +423,24 @@ class ViewHooks {
     }
   }
 
+  // overload specialization not allowing data change.
+  template <class DataType, class... Properties>
+  std::enable_if_t<
+      (std::is_same<
+           typename Kokkos::ViewTraits<DataType, Properties...>::value_type,
+           typename Kokkos::ViewTraits<
+               DataType, Properties...>::const_value_type>::value ||
+       std::is_same<
+           typename Kokkos::ViewTraits<DataType, Properties...>::memory_space,
+           Kokkos::AnonymousSpace>::value),
+      void>
+  call(const View<DataType, Properties...> &vt,
+       typename Kokkos::Impl::ViewHooksAttorney<View<DataType, Properties...>,
+                                                false>::map_type &,
+       const track_type &) {
+    call(vt);
+  }
+
   // overload specialization allowing data change
   template <class DataType, class... Properties>
   std::enable_if_t<
@@ -430,12 +452,16 @@ class ViewHooks {
             typename Kokkos::ViewTraits<DataType, Properties...>::memory_space,
             Kokkos::AnonymousSpace>::value),
       void>
-  call(const View<DataType, Properties...> &vt) {
+  call(const View<DataType, Properties...> &vt,
+       typename Kokkos::Impl::ViewHooksAttorney<View<DataType, Properties...>,
+                                                false>::map_type &map,
+       const track_type &tracker) {
     using view_type             = View<DataType, Properties...>;
     using view_copy_holder_type = ViewHolder<const view_type, true>;
     using view_ref_holder_type  = ViewHolder<view_type, false>;
     view_copy_holder_type copy_holder(vt);
-    view_ref_holder_type ref_holder(const_cast<view_type &>(vt));
+    view_ref_holder_type ref_holder(const_cast<view_type &>(vt), map,
+                                    const_cast<track_type &>(tracker));
 
     for (const auto &caller : s_callers) {
       auto active = s_active_callers.find(caller.first);

@@ -69,6 +69,7 @@ template <class ParentView>
 struct ViewTracker {
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
   using view_traits = typename ParentView::traits;
+  using map_type    = typename ParentView::map_type;
 
   track_type m_tracker;
 
@@ -97,6 +98,27 @@ struct ViewTracker {
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const ParentView& vt) noexcept : m_tracker() {
     assign(vt);
+  }
+
+  template <class RT, class... RP>
+  KOKKOS_INLINE_FUNCTION explicit ViewTracker(const View<RT, RP...>& pv,
+                                              map_type& map,
+                                              const ViewTracker& vt) noexcept
+      : m_tracker() {
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+    if (view_traits::is_managed &&
+        Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()) {
+      m_tracker.assign_direct(pv.m_track.m_tracker);
+      if (Kokkos::Experimental::ViewHooks::get_instance().is_set()) {
+        Kokkos::Experimental::ViewHooks::get_instance().call(pv, map,
+                                                             m_tracker);
+      }
+    } else {
+      m_tracker.assign_force_disable(pv.m_track.m_tracker);
+    }
+#else
+    m_tracker.assign_force_disable(pv.m_track.m_tracker);
+#endif
   }
 
   template <class RT, class... RP>

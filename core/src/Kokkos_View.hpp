@@ -782,20 +782,6 @@ class View : public ViewTraits<DataType, Properties...> {
   //----------------------------------------
 
  private:
-  // update handle with new pointer.  This should only be called
-  // for special cases where the view is manipulated internally as
-  // with update view hooks
-  template <class HandleType>
-  inline void assign_data_handle(HandleType handle) {
-    m_map.m_impl_handle = handle;
-  }
-
-  template <class RecordType>
-  inline void assign_record(RecordType& rec) {
-    m_track.m_tracker.clear();
-    m_track.m_tracker.assign_allocated_record_to_uninitialized(rec);
-  }
-
   static constexpr bool is_layout_left =
       std::is_same<typename traits::array_layout, Kokkos::LayoutLeft>::value;
 
@@ -1448,7 +1434,7 @@ class View : public ViewTraits<DataType, Properties...> {
   View() = default;
 
   KOKKOS_INLINE_FUNCTION
-  View(const View& rhs) = default;
+  View(const View& rhs) : m_map(rhs.m_map), m_track(rhs, m_map, rhs.m_track) {}
 
   KOKKOS_DEFAULTED_FUNCTION
   View(View&&) = default;
