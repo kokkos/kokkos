@@ -1,4 +1,4 @@
-ARG BASE=nvidia/cuda:10.1-devel
+ARG BASE=nvidia/cuda:11.1-devel-ubuntu20.04
 FROM $BASE
 
 RUN apt-get update && apt-get install -y \
