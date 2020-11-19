@@ -32,15 +32,11 @@ RUN CMAKE_KEY=2D2CEF1034921684 && \
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
 ENV LLVM_DIR=/opt/llvm
-RUN LLVM_VERSION=10.0.0 && \
-    LLVM_KEY="345AD05D 86419D8A" && \
-    LLVM_URL=https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION} &&\
-    LLVM_ARCHIVE=llvm-project-${LLVM_VERSION}.tar.xz &&\
+RUN LLVM_VERSION=887c7660bdf3f300bd1997dcfd7ace91787c0584 && \
+    LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
+    LLVM_ARCHIVE=${LLVM_VERSION}.tar.gz &&\
     SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
     wget --quiet ${LLVM_URL}/${LLVM_ARCHIVE} && \
-    wget --quiet ${LLVM_URL}/${LLVM_ARCHIVE}.sig && \
-    gpg --keyserver hkps.pool.sks-keyservers.net --recv-keys ${LLVM_KEY} && \
-    gpg --verify ${LLVM_ARCHIVE}.sig ${LLVM_ARCHIVE} && \
     mkdir llvm-project && \
     tar -xf ${LLVM_ARCHIVE} -C llvm-project --strip-components=1 && \
     cd llvm-project && \
