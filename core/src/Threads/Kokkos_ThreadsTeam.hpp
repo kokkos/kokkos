@@ -1028,6 +1028,42 @@ KOKKOS_INLINE_FUNCTION
   }
 }
 
+/** \brief  Inter-thread parallel exclusive prefix sum. Executes
+ * lambda(iType i, ValueType & val, bool final) for each i=0..N-1.
+ *
+ */
+template <typename iType, class FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::TeamThreadRangeBoundariesStruct<
+        iType, Impl::ThreadsExecTeamMember>& loop_bounds,
+    const FunctorType& lambda) {
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void,
+      FunctorType>::value_type;
+
+  auto scan_val = value_type{};
+
+  // Intra-member scan
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_bounds.start; i < loop_bounds.end;
+       i += loop_bounds.increment) {
+    lambda(i, scan_val, false);
+  }
+
+  // 'scan_val' output is the exclusive prefix sum
+  scan_val = loop_bounds.thread.team_scan(scan_val);
+
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_bounds.start; i < loop_bounds.end;
+       i += loop_bounds.increment) {
+    lambda(i, scan_val, true);
+  }
+}
+
 /** \brief  Intra-thread vector parallel exclusive prefix sum. Executes
  * lambda(iType i, ValueType & val, bool final) for each i=0..N-1.
  *

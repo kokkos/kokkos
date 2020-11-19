@@ -48,7 +48,7 @@
 
 namespace Test {
 
-TEST(TEST_CATEGORY, team_scan) {
+TEST(TEST_CATEGORY, team_reduction_scan) {
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(10);
