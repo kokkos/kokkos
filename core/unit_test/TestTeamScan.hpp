@@ -186,11 +186,6 @@ TEST(TEST_CATEGORY, team_scan) {
     TestTeamScan<TEST_EXECSPACE, int64_t>{}(433, 256);
     TestTeamScan<TEST_EXECSPACE, uint64_t>{}(976, 512);
     TestTeamScan<TEST_EXECSPACE, uint64_t>{}(1234, 1024);
-  } else {
-    // Clang + Cuda requires smaller team sizes
-    TestTeamScan<TEST_EXECSPACE, int64_t>{}(433, 64);
-    TestTeamScan<TEST_EXECSPACE, uint64_t>{}(976, 32);
-    TestTeamScan<TEST_EXECSPACE, uint64_t>{}(1234, 32);
   }
 }
 
