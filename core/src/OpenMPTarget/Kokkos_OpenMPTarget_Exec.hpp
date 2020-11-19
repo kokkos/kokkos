@@ -583,7 +583,7 @@ class OpenMPTargetExecTeamMember {
   }
 
   KOKKOS_INLINE_FUNCTION
-  const execution_space::scratch_memory_space& team_scratch(int) const {
+  const execution_space::scratch_memory_space& team_scratch(int level) const {
     return m_team_shared.set_team_thread_mode(0, 1, 0);
   }
 
@@ -739,7 +739,7 @@ class OpenMPTargetExecTeamMember {
                                // Properties ...> & team
       ,
       void* const glb_scratch, const int shmem_size_L1, const int shmem_size_L2)
-      : m_team_shared(nullptr, 0),
+      : m_team_shared(((char*)glb_scratch + league_rank*shmem_size_L1) , shmem_size_L1),
         m_team_scratch_size{shmem_size_L1, shmem_size_L2},
         m_team_rank(0),
         m_team_size(team_size),
@@ -1117,7 +1117,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda) {
-#pragma omp for nowait schedule(static, 1)
+//#pragma omp for nowait schedule(static, 1)
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
 }
 

@@ -512,19 +512,22 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                             ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                             : league_size;
 
+    const size_t shmem_size_L1 = m_policy.scratch_size(0,team_size);
+//    const size_t shmem_size_L2 = m_policy.scratch_size(1,team_size);
     OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,
-                                     0, 0);
+                                     shmem_size_L1,0);
+
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     FunctorType a_functor(m_functor);
-#pragma omp target teams distribute map(to           \
+#pragma omp target teams distribute parallel for map(to           \
                                         : a_functor) \
     is_device_ptr(scratch_ptr) num_teams(nteams) thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
-#pragma omp parallel num_threads(team_size)
+//#pragma omp parallel num_threads(team_size)
       {
         typename Policy::member_type team(i, league_size, team_size,
-                                          vector_length, scratch_ptr, 0, 0);
+                                          vector_length, scratch_ptr, shmem_size_L1, 0);
         m_functor(team);
       }
     }
@@ -546,8 +549,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     FunctorType a_functor(m_functor);
 
+    const size_t shmem_size_L1 = m_policy.scratch_size(0,team_size);
+//    const size_t shmem_size_L2 = m_policy.scratch_size(1,team_size);
     OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,
-                                     0, 0);
+                                     shmem_size_L1,0);
+
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 #pragma omp target teams distribute map(to           \
                                         : a_functor) \
@@ -557,7 +563,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       {
         typename Policy::member_type team(i / (team_size * vector_length),
                                           league_size, team_size, vector_length,
-                                          scratch_ptr, 0, 0);
+                                          scratch_ptr, shmem_size_L1, 0);
         m_functor(TagType(), team);
       }
     }
