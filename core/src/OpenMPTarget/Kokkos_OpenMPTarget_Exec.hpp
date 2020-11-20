@@ -734,6 +734,9 @@ class OpenMPTargetExecTeamMember {
   using space = execution_space::scratch_memory_space;
 
  public:
+  // FIXME: OPENMPTARGET - 8 bytes at the begining of the scratch space for each
+  // league is saved for reduction. It should actually be based on the ValueType
+  // of the reduction variable.
   inline OpenMPTargetExecTeamMember(
       const int league_rank, const int league_size, const int team_size,
       const int vector_length  // const TeamPolicyInternal< OpenMPTarget,
@@ -741,11 +744,11 @@ class OpenMPTargetExecTeamMember {
       ,
       void* const glb_scratch, const int shmem_size_L1, const int shmem_size_L2)
       : m_team_shared(((char*)glb_scratch +
-                       league_rank * (shmem_size_L1 + shmem_size_L2)),
+                       league_rank * (shmem_size_L1 + shmem_size_L2 + 8)),
                       shmem_size_L1,
                       ((char*)glb_scratch +
-                       league_rank * (shmem_size_L1 + shmem_size_L2)) +
-                          shmem_size_L1,
+                       league_rank * (shmem_size_L1 + shmem_size_L2 + 8)) +
+                          shmem_size_L1 + 8,
                       shmem_size_L2),
         m_team_scratch_size{shmem_size_L1, shmem_size_L2},
         m_team_rank(0),
