@@ -584,7 +584,7 @@ class OpenMPTargetExecTeamMember {
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(int level) const {
-    return m_team_shared.set_team_thread_mode(level, 1, m_team_scratch_size[level]);
+    return m_team_shared.set_team_thread_mode(level, 1, 0);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -739,7 +739,7 @@ class OpenMPTargetExecTeamMember {
                                // Properties ...> & team
       ,
       void* const glb_scratch, const int shmem_size_L1, const int shmem_size_L2)
-      : m_team_shared(((char*)glb_scratch + league_rank*shmem_size_L1 + league_rank*shmem_size_L2) +16 , shmem_size_L1+shmem_size_L2),
+      : m_team_shared(((char*)glb_scratch + league_rank*(shmem_size_L1 + shmem_size_L2)) , shmem_size_L1, ((char*)glb_scratch + league_rank*(shmem_size_L1 + shmem_size_L2)) + shmem_size_L1, shmem_size_L2),
         m_team_scratch_size{shmem_size_L1, shmem_size_L2},
         m_team_rank(0),
         m_team_size(team_size),
