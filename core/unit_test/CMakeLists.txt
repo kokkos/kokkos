@@ -452,15 +452,12 @@ if(Kokkos_ENABLE_SYCL)
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_e.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_MDRange_f.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Other.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_RangePolicy.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_RangePolicyRequire.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reductions.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_a.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_b.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_c.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_d.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reductions_DeviceView.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Scan.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SharedAlloc.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c04.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c05.cpp
