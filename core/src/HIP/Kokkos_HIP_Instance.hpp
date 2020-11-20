@@ -83,33 +83,33 @@ class HIPInternal {
  public:
   using size_type = ::Kokkos::Experimental::HIP::size_type;
 
-  int m_hipDev;
-  int m_hipArch;
-  unsigned m_multiProcCount;
-  unsigned m_maxWarpCount;
-  unsigned m_maxBlock;
-  unsigned m_maxBlocksPerSM;
-  unsigned m_maxSharedWords;
+  int m_hipDev              = -1;
+  int m_hipArch             = -1;
+  unsigned m_multiProcCount = 0;
+  unsigned m_maxWarpCount   = 0;
+  unsigned m_maxBlock       = 0;
+  unsigned m_maxBlocksPerSM = 0;
+  unsigned m_maxSharedWords = 0;
   int m_regsPerSM;
-  int m_shmemPerSM;
-  int m_maxShmemPerBlock;
-  int m_maxThreadsPerSM;
+  int m_shmemPerSM       = 0;
+  int m_maxShmemPerBlock = 0;
+  int m_maxThreadsPerSM  = 0;
 
   // Scratch Spaces for Reductions
-  size_type m_scratchSpaceCount;
-  size_type m_scratchFlagsCount;
+  size_type m_scratchSpaceCount = 0;
+  size_type m_scratchFlagsCount = 0;
 
-  size_type *m_scratchSpace;
-  size_type *m_scratchFlags;
+  size_type *m_scratchSpace           = nullptr;
+  size_type *m_scratchFlags           = nullptr;
   uint32_t *m_scratchConcurrentBitset = nullptr;
 
   hipDeviceProp_t m_deviceProp;
 
-  hipStream_t m_stream;
+  hipStream_t m_stream = nullptr;
 
   // Team Scratch Level 1 Space
-  mutable int64_t m_team_scratch_current_size;
-  mutable void *m_team_scratch_ptr;
+  mutable int64_t m_team_scratch_current_size = 0;
+  mutable void *m_team_scratch_ptr            = nullptr;
 
   bool was_finalized = false;
 
@@ -117,9 +117,7 @@ class HIPInternal {
 
   int verify_is_initialized(const char *const label) const;
 
-  int is_initialized() const {
-    return m_hipDev >= 0;
-  }  // 0 != m_scratchSpace && 0 != m_scratchFlags ; }
+  int is_initialized() const { return m_hipDev >= 0; }
 
   void initialize(int hip_device_id, hipStream_t stream = nullptr);
   void finalize();
@@ -130,23 +128,7 @@ class HIPInternal {
 
   ~HIPInternal();
 
-  HIPInternal()
-      : m_hipDev(-1),
-        m_hipArch(-1),
-        m_multiProcCount(0),
-        m_maxWarpCount(0),
-        m_maxBlock(0),
-        m_maxSharedWords(0),
-        m_shmemPerSM(0),
-        m_maxShmemPerBlock(0),
-        m_maxThreadsPerSM(0),
-        m_scratchSpaceCount(0),
-        m_scratchFlagsCount(0),
-        m_scratchSpace(nullptr),
-        m_scratchFlags(nullptr),
-        m_stream(nullptr),
-        m_team_scratch_current_size(0),
-        m_team_scratch_ptr(nullptr) {}
+  HIPInternal() = default;
 
   // Resizing of reduction related scratch spaces
   size_type *scratch_space(const size_type size);
