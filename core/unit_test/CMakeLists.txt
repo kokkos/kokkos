@@ -162,6 +162,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       set(TagHostAccessible CudaUVM)
     elseif(Tag STREQUAL "HIP")
       set(TagHostAccessible HIPHostPinned)
+    elseif(Tag STREQUAL "SYCL")
+      set(TagHostAccessible SYCLSharedUSMSpace)
     endif()
     foreach(Name
       SubView_a
