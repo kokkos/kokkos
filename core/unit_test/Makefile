@@ -246,6 +246,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
     OBJ_OPENMPTARGET += TestOpenMPTarget_Atomics.o # Commented Out Arbitrary Type Atomics
     #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamBasic.o # There is still a static function in this
     #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamScratch.o
+    #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamScan.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamReductionScan.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_Other.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_MDRange_a.o TestOpenMPTarget_MDRange_b.o TestOpenMPTarget_MDRange_c.o TestOpenMPTarget_MDRange_d.o TestOpenMPTarget_MDRange_d.e
