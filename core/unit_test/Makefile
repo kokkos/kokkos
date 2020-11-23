@@ -509,7 +509,8 @@ build_all: $(TARGETS)
 test: $(TEST_TARGETS)
 
 clean: kokkos-clean
-	rm -f *.o $(TARGETS)
+	rm -f *.o $(TARGETS) TestCuda*.cpp TestThreads*.cpp TestOpenMP*.cpp TestSerial*.cpp TestHIP*.cpp \
+        TestOpenMPTarget*.cpp TestHPX*.cpp
 
 # Compilation rules
 

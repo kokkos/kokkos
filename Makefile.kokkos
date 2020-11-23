@@ -1340,7 +1340,8 @@ include $(KOKKOS_PATH)/Makefile.targets
 
 kokkos-clean:
 	rm -f $(KOKKOS_OBJ_LINK) KokkosCore_config.h KokkosCore_config.tmp libkokkos.a KokkosCore_Config_SetupBackend.hpp \
-	KokkosCore_Config_FwdBackend.hpp KokkosCore_Config_DeclareBackend.hpp
+	KokkosCore_Config_FwdBackend.hpp KokkosCore_Config_DeclareBackend.hpp KokkosCore_Config_DeclareBackend.tmp \
+        KokkosCore_Config_FwdBackend.tmp KokkosCore_Config_PostInclude.hpp KokkosCore_Config_PostInclude.tmp KokkosCore_Config_SetupBackend.tmp
 
 libkokkos.a: $(KOKKOS_OBJ_LINK) $(KOKKOS_SRC) $(KOKKOS_HEADERS)
 	ar cr libkokkos.a $(KOKKOS_OBJ_LINK)
