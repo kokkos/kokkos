@@ -138,7 +138,7 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Cray OR KOKKOS_CLANG_IS_CRAY)
 ENDIF()
 
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL Fujitsu)
-  # SET Cray's compiler version.
+  # SET Fujitsus compiler version which is not detected by CMake
   EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
                   OUTPUT_VARIABLE INTERNAL_CXX_COMPILER_VERSION
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
