@@ -224,7 +224,9 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
   // Set last element zero, in case c_str is too long
   header.m_label[SharedAllocationHeader::maximum_label_length - 1] = (char)0;
 
-  memcpy(m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
+  // Copy to device memory
+  Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace>(
+      RecordBase::m_alloc_ptr, &header, sizeof(SharedAllocationHeader));
 }
 
 }  // namespace Impl
