@@ -1175,7 +1175,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   // init_result = loop_boundaries.thread.team_reduce(result,join);
 }
 
-//
+// This is largely the same code as in HIP and CUDA except for the member name
 template <typename iType, class FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<
@@ -1186,8 +1186,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       Kokkos::Impl::FunctorPatternInterface::SCAN, void,
       FunctorType>::value_type;
 
-  const auto start     = loop_bounds.start;
-  const auto end       = loop_bounds.end;
+  const auto start = loop_bounds.start;
+  const auto end   = loop_bounds.end;
+  // Note this thing is called .member in the CUDA specialization of
+  // TeamThreadRangeBoundariesStruct
   auto& member         = loop_bounds.team;
   const auto team_size = member.team_size();
   const auto team_rank = member.team_rank();

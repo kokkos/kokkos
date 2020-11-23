@@ -943,6 +943,7 @@ KOKKOS_INLINE_FUNCTION
  *  less than N) and a scan operation is performed. The last call to closure has
  *  final == true.
  */
+// This is the same code as in HIP and largely the same as in OpenMPTarget
 template <typename iType, typename FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::CudaTeamMember>&
