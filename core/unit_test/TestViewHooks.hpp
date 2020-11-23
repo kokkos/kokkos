@@ -105,7 +105,7 @@ class ViewHookUpdate<
         handle_type(reinterpret_cast<pointer_type>(record->data())));
 
     record->m_destroy = functor_type(
-        exec_space(), (value_type *)view.get_view().impl_map().m_impl_handle,
+        exec_space(), reinterpret_cast<value_type *>(record->data()),
         view.get_view().span(), label);
 
     // Construct values
@@ -128,6 +128,7 @@ namespace {
 template <class T, class ExecSpace>
 struct TestViewHooks {
   struct ViewHookUpdateFunctor {
+    using view_hook_functor      = ViewHookUpdateFunctor;
     using view_hook_functor_type = Kokkos::Experimental::ViewHookRefFunctor;
     void operator()(Kokkos::Experimental::ViewHolderBase &vt) {
       vt.update_view();
@@ -163,9 +164,8 @@ struct TestViewHooks {
     Kokkos::parallel_for("run_functor", range_policy(0, N), tv1);
     Kokkos::fence();
 
-    Kokkos::Experimental::add_view_hook_caller(
-        "update",
-        [](Kokkos::Experimental::ViewHolderBase &vt) { vt.update_view(); });
+    Kokkos::Experimental::add_view_hook_caller("update",
+                                               ViewHookUpdateFunctor());
     TestViewHooks tv2(*this);
     Kokkos::Experimental::remove_view_hook_caller("update");
     // reset view contents before running functor.

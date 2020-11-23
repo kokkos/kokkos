@@ -299,16 +299,19 @@ class ViewHolder<ViewType, false> : public ViewHolderBase {
   view_hook_attorney m_view_att;
 };
 
-template <typename Functor, typename = std::false_type>
-struct is_hook_functor {
-  using type = void;
-};
+template <typename T>
+struct is_view_hook_functor {
+ private:
+  template <typename, typename = std::true_type>
+  struct have : std::false_type {};
+  template <typename U>
+  struct have<U,
+              typename std::is_base_of<typename U::view_hook_functor, U>::type>
+      : std::true_type {};
 
-template <typename Functor>
-struct is_hook_functor<
-    Functor, typename std::is_same<typename Functor::view_hook_functor_type,
-                                   void>::type> {
-  using type = typename Functor::view_hook_functor_type;
+ public:
+  static constexpr bool value = is_view_hook_functor::template have<
+      typename std::remove_cv<T>::type>::value;
 };
 
 struct ViewHookCopyFunctor {};
@@ -504,16 +507,14 @@ void add_view_hook_caller(const std::string &name, Functor &&fun,
 }
 
 template <typename Functor>
-std::enable_if_t<
-    std::is_same<typename is_hook_functor<Functor>::type, void>::value, void>
+std::enable_if_t<!is_view_hook_functor<Functor>::value, void>
 add_view_hook_caller(const std::string &name, Functor &&fun) {
   auto caller = std::make_unique<ViewHookCaller<Functor, void>>(fun);
   ViewHooks::get_instance().register_hook_caller(name, std::move(caller));
 }
 
 template <typename Functor>
-std::enable_if_t<
-    !std::is_same<typename is_hook_functor<Functor>::type, void>::value, void>
+std::enable_if_t<is_view_hook_functor<Functor>::value, void>
 add_view_hook_caller(const std::string &name, Functor &&fun) {
   auto caller = std::make_unique<ViewHookCaller<Functor, void>>(fun);
   ViewHooks::HookCallerTypeEnum caller_type = get_hook_caller_type(fun);
