@@ -112,8 +112,18 @@ struct TestTeamScan {
     N   = _N;
     a_d = view_type("a_d", M, N);
     a_r = view_type("a_r", M, N);
-
-    Kokkos::parallel_for(policy_type(M, Kokkos::AUTO()), *this);
+    // Set team size explicitly to
+    // a) check whether this works in CPU backends with team_size > 1 and
+    // b) make sure we have a power of 2 and for GPU backends due to limitation
+    // of the scan algorithm implemented in CUDA etc.
+    int team_size = 1;
+    if (ExecutionSpace().concurrency() > 2) {
+      if (ExecutionSpace().concurrency() > 10000)
+        team_size = 128;
+      else
+        team_size = 3;
+    }
+    Kokkos::parallel_for(policy_type(M, team_size), *this);
 
     auto a_i = Kokkos::create_mirror_view(a_d);
     auto a_o = Kokkos::create_mirror_view(a_r);
@@ -158,35 +168,15 @@ TEST(TEST_CATEGORY, team_scan) {
   TestTeamScan<TEST_EXECSPACE, uint32_t>{}(99, 32);
   TestTeamScan<TEST_EXECSPACE, uint32_t>{}(139, 64);
   TestTeamScan<TEST_EXECSPACE, uint32_t>{}(163, 128);
-  TestTeamScan<TEST_EXECSPACE, double>{}(2596, 34);
-
-  // known failure with OpenMPTarget
-  //
-  // Libomptarget fatal error 1: failure of target construct while offloading is
-  // mandatory
-  if (!std::is_same<TEST_EXECSPACE,
-                    Kokkos::Experimental::OpenMPTarget>::value) {
-    TestTeamScan<TEST_EXECSPACE, float>{}(108, 19);
-    TestTeamScan<TEST_EXECSPACE, float>{}(152, 83);
-    TestTeamScan<TEST_EXECSPACE, double>{}(34, 43);
-    TestTeamScan<TEST_EXECSPACE, double>{}(956, 121);
-  } else {
-    // OpenMPTarget requires multiples of 32
-    TestTeamScan<TEST_EXECSPACE, float>{}(108, 32);
-    TestTeamScan<TEST_EXECSPACE, float>{}(152, 64);
-    TestTeamScan<TEST_EXECSPACE, double>{}(34, 128);
-    TestTeamScan<TEST_EXECSPACE, double>{}(956, 256);
-  }
-
-  // known failure with Clang 11 + CUDA 10.1.243
-  //
-  // block: [263,0,0], thread: [0,64,0] Assertion
-  // `Cuda::cuda_intra_block_scan requires power-of-two blockDim` failed.
-  if (!(is_clang && std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)) {
-    TestTeamScan<TEST_EXECSPACE, int64_t>{}(433, 256);
-    TestTeamScan<TEST_EXECSPACE, uint64_t>{}(976, 512);
-    TestTeamScan<TEST_EXECSPACE, uint64_t>{}(1234, 1024);
-  }
+  TestTeamScan<TEST_EXECSPACE, int64_t>{}(433, 256);
+  TestTeamScan<TEST_EXECSPACE, uint64_t>{}(976, 512);
+  TestTeamScan<TEST_EXECSPACE, uint64_t>{}(1234, 1024);
+  TestTeamScan<TEST_EXECSPACE, float>{}(2596, 34);
+  TestTeamScan<TEST_EXECSPACE, double>{}(2596, 59);
+  TestTeamScan<TEST_EXECSPACE, float>{}(2596, 65);
+  TestTeamScan<TEST_EXECSPACE, double>{}(2596, 371);
+  TestTeamScan<TEST_EXECSPACE, int64_t>{}(2596, 987);
+  TestTeamScan<TEST_EXECSPACE, double>{}(2596, 1311);
 }
 
 }  // namespace Test

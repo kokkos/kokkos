@@ -763,6 +763,7 @@ KOKKOS_INLINE_FUNCTION
  *  less than N) and a scan operation is performed. The last call to closure has
  *  final == true.
  */
+// This is the same code as in CUDA and largely the same as in OpenMPTarget
 template <typename iType, typename FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
@@ -774,16 +775,15 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       FunctorType>::value_type;
 
   const auto start     = loop_bounds.start;
-  const auto end       = loop_bounds.end + loop_bounds.start;
+  const auto end       = loop_bounds.end;
   auto& member         = loop_bounds.member;
   const auto team_size = member.team_size();
   const auto team_rank = member.team_rank();
-  const auto nchunk    = (end - start) / loop_bounds.member.team_size();
+  const auto nchunk    = (end - start + team_size - 1) / team_size;
   value_type accum     = 0;
-
   // each team has to process one or more chunks of the prefix scan
-  for (iType i = 0; i < nchunk + 1; ++i) {
-    auto ii = i * team_size + team_rank;
+  for (iType i = 0; i < nchunk; ++i) {
+    auto ii = start + i * team_size + team_rank;
     // local accumulation for this chunk
     value_type local_accum = 0;
     // user updates value with prefix value
