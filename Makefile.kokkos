@@ -11,7 +11,7 @@ KOKKOS_DEVICES ?= "Pthread"
 # Options: 
 # Intel:    KNC,KNL,SNB,HSW,BDW,SKX
 # NVIDIA:   Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,Pascal60,Pascal61,Volta70,Volta72,Turing75,Ampere80
-# ARM:      ARMv80,ARMv81,ARMv8-ThunderX,ARMv8-TX2
+# ARM:      ARMv80,ARMv81,ARMv8-ThunderX,ARMv8-TX2,A64FX
 # IBM:      BGQ,Power7,Power8,Power9
 # AMD-GPUS: Vega900,Vega906,Vega908
 # AMD-CPUS: AMDAVX,Zen,Zen2
@@ -358,7 +358,8 @@ KOKKOS_INTERNAL_USE_ARCH_ARMV80 := $(call kokkos_has_string,$(KOKKOS_ARCH),ARMv8
 KOKKOS_INTERNAL_USE_ARCH_ARMV81 := $(call kokkos_has_string,$(KOKKOS_ARCH),ARMv81)
 KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX := $(call kokkos_has_string,$(KOKKOS_ARCH),ARMv8-ThunderX)
 KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX2 := $(call kokkos_has_string,$(KOKKOS_ARCH),ARMv8-TX2)
-KOKKOS_INTERNAL_USE_ARCH_ARM := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_ARMV80)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV81)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX2) | bc))
+KOKKOS_INTERNAL_USE_ARCH_A64FX := $(call kokkos_has_string,$(KOKKOS_ARCH),A64FX)
+KOKKOS_INTERNAL_USE_ARCH_ARM := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_ARMV80)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV81)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX)+$(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX2)+$(KOKKOS_INTERNAL_USE_ARCH_A64FX) | bc))
 
 # IBM based.
 KOKKOS_INTERNAL_USE_ARCH_BGQ := $(call kokkos_has_string,$(KOKKOS_ARCH),BGQ)
@@ -734,6 +735,13 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV81), 1)
       KOKKOS_LDFLAGS += -march=armv8.1-a
     endif
   endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_A64FX), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_A64FX")
+
+  KOKKOS_CXXFLAGS += -march=armv8.2-a+sve
+  KOKKOS_LDFLAGS += -march=armv8.2-a+sve
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN), 1)
