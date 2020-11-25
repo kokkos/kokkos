@@ -367,6 +367,10 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         && !std::is_same<typename traits::execution_space,
                          Kokkos::Experimental::HIP>::value
 #endif
+#if defined(KOKKOS_ENABLE_SYCL)
+        && !std::is_same<typename traits::execution_space,
+                         Kokkos::Experimental::SYCL>::value
+#endif
     ) {
       index_type span;
       for (int i = 0; i < rank; ++i) {
@@ -385,8 +389,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_prod_tile_dims *= m_tile[i];
       }
     }
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-    else  // Cuda or HIP
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+    else  // Cuda, HIP or SYCL
     {
       index_type span;
       int increment  = 1;
@@ -424,21 +429,38 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_num_tiles *= m_tile_end[i];
         m_prod_tile_dims *= m_tile[i];
       }
-      if (m_prod_tile_dims >
-          1024) {  // Match Cuda restriction for ParallelReduce; 1024,1024,64
-                   // max per dim (Kepler), but product num_threads < 1024
-        if (is_cuda_exec_space) {
-          printf(" Tile dimensions exceed Cuda limits\n");
-          Kokkos::abort(
-              "Cuda ExecSpace Error: MDRange tile dims exceed maximum number "
-              "of threads per block - choose smaller tile dims");
-        } else {
-          printf(" Tile dimensions exceed HIP limits\n");
-          Kokkos::abort(
-              "HIP ExecSpace Error: MDRange tile dims exceed maximum number of "
-              "threads per block - choose smaller tile dims");
-        }
+#if defined(KOKKOS_ENABLE_CUDA)
+      // Match Cuda restriction for ParallelReduce; 1024,1024,64 max per dim
+      // (Kepler), but product num_threads < 1024
+      if (std::is_same<typename traits::execution_space, Kokkos::Cuda>::value &&
+          m_prod_tile_dims > 1024) {
+        printf(" Tile dimensions exceed Cuda limits\n");
+        Kokkos::abort(
+            "Cuda ExecSpace Error: MDRange tile dims exceed maximum number "
+            "of threads per block - choose smaller tile dims");
       }
+#endif
+#if defined(KOKKOS_ENABLE_HIP)
+      if (std::is_same<typename traits::execution_space,
+                       Kokkos::Experimental::HIP>::value &&
+          m_prod_tile_dims > 1024) {
+        printf(" Tile dimensions exceed HIP limits\n");
+        Kokkos::abort(
+            "HIP ExecSpace Error: MDRange tile dims exceed maximum number "
+            "of threads per block - choose smaller tile dims");
+      }
+#endif
+#if defined(KOKKOS_ENABLE_SYCL)
+      // FIXME_SYCL query the limit instead
+      if (std::is_same<typename traits::execution_space,
+                       Kokkos::Experimental::SYCL>::value &&
+          m_prod_tile_dims > 256) {
+        printf(" Tile dimensions exceed SYCL limits\n");
+        Kokkos::abort(
+            "SYCL ExecSpace Error: MDRange tile dims exceed maximum number "
+            "of threads per block - choose smaller tile dims");
+      }
+#endif
     }
 #endif
   }

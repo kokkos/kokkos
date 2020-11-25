@@ -57,6 +57,15 @@
 namespace Kokkos {
 namespace Impl {
 
+#ifdef KOKKOS_ENABLE_SYCL
+template <typename index_type>
+struct EmulateCUDADim3 {
+  index_type x;
+  index_type y;
+  index_type z;
+};
+#endif
+
 // ------------------------------------------------------------------ //
 // ParallelFor iteration pattern
 template <int N, typename PolicyType, typename Functor, typename Tag>
@@ -68,9 +77,22 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<2, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -127,6 +149,11 @@ struct DeviceIterateTile<2, PolicyType, Functor, void> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for tag type
@@ -134,9 +161,22 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -191,6 +231,11 @@ struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 3
@@ -199,9 +244,22 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<3, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -278,6 +336,11 @@ struct DeviceIterateTile<3, PolicyType, Functor, void> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for void tag type
@@ -285,9 +348,22 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -361,6 +437,11 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 4
@@ -369,9 +450,22 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<4, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -497,6 +591,11 @@ struct DeviceIterateTile<4, PolicyType, Functor, void> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for void tag type
@@ -504,9 +603,22 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -629,6 +741,11 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 5
@@ -637,9 +754,22 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<5, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -813,6 +943,11 @@ struct DeviceIterateTile<5, PolicyType, Functor, void> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for tag type
@@ -820,9 +955,22 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -996,6 +1144,11 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 6
@@ -1004,9 +1157,22 @@ template <typename PolicyType, typename Functor>
 struct DeviceIterateTile<6, PolicyType, Functor, void> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -1221,6 +1387,11 @@ struct DeviceIterateTile<6, PolicyType, Functor, void> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for tag type
@@ -1228,9 +1399,22 @@ template <typename PolicyType, typename Functor, typename Tag>
 struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -1445,6 +1629,11 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // ----------------------------------------------------------------------------------
@@ -1507,10 +1696,24 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -1580,6 +1783,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for tag type
@@ -1591,10 +1799,24 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -1667,6 +1889,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 3
@@ -1677,10 +1904,24 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -1753,6 +1994,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for void tag type
@@ -1764,10 +2010,24 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -1840,6 +2100,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 4
@@ -1850,10 +2115,24 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -1925,6 +2204,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for void tag type
@@ -1936,10 +2220,24 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -2013,6 +2311,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 5
@@ -2023,10 +2326,24 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -2100,6 +2417,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for tag type
@@ -2111,10 +2433,24 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -2188,6 +2524,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 6
@@ -2198,10 +2539,24 @@ struct DeviceIterateTile<
     typename std::enable_if<!is_array_type<ValueType>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -2275,6 +2630,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for tag type
@@ -2286,10 +2646,24 @@ struct DeviceIterateTile<
                             !is_void<Tag>::value>::type> {
   using index_type = typename PolicyType::index_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, ValueType& v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 ValueType& v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -2363,6 +2737,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   ValueType& m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // ValueType = T[], T*
@@ -2375,10 +2754,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -2450,6 +2843,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for tag type
@@ -2462,10 +2860,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -2535,6 +2947,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 3
@@ -2546,10 +2963,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -2625,6 +3056,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for void tag type
@@ -2637,10 +3073,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
-  KOKKOS_IMPL_DEVICE_FUNCTION
-  DeviceIterateTile(const PolicyType& policy_, const Functor& f_,
-                    value_type* v_)
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
+                                                const Functor& f_,
+                                                value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -2710,6 +3160,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 4
@@ -2721,10 +3176,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -2796,6 +3265,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for void tag type
@@ -2808,10 +3282,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -2885,6 +3373,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 5
@@ -2896,10 +3389,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -2973,6 +3480,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for tag type
@@ -2985,10 +3497,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -3062,6 +3588,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Rank 6
@@ -3073,10 +3604,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -3150,6 +3695,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 // Specializations for tag type
@@ -3162,10 +3712,24 @@ struct DeviceIterateTile<
   using index_type = typename PolicyType::index_type;
   using value_type = typename is_array_type<ValueType>::value_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_, value_type* v_,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_policy(policy_),
+        m_func(f_),
+        m_v(v_),
+        gridDim(gridDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
                                                 const Functor& f_,
                                                 value_type* v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
+#endif
 
   static constexpr index_type max_blocks = 65535;
 
@@ -3239,6 +3803,11 @@ struct DeviceIterateTile<
   const PolicyType& m_policy;
   const Functor& m_func;
   value_type* m_v;
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
 };
 
 }  // namespace Reduce
