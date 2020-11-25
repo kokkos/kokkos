@@ -253,7 +253,7 @@ SharedAllocationRecord<void, void> SharedAllocationRecord<
     Kokkos::Experimental::SYCLDeviceUSMSpace, void>::s_root_record;
 
 SharedAllocationRecord<void, void> SharedAllocationRecord<
-    Kokkos::Experimenatl::SYCLSharedDeviceUSMSpace, void>::s_root_record;
+    Kokkos::Experimental::SYCLSharedDeviceUSMSpace, void>::s_root_record;
 #endif
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
