@@ -404,19 +404,14 @@ void test_dualview_resize() {
   Impl::test_dualview_resize<Scalar, Device>();
 }
 
-// FIXME_SYCL requires MDRange policy
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, dualview_combination) {
   test_dualview_combinations<int, TEST_EXECSPACE>(10, true);
 }
-#endif
 
 TEST(TEST_CATEGORY, dualview_alloc) {
   test_dualview_alloc<int, TEST_EXECSPACE>(10);
 }
 
-// FIXME_SYCL requires MDRange policy
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, dualview_combinations_without_init) {
   test_dualview_combinations<int, TEST_EXECSPACE>(10, false);
 }
@@ -433,7 +428,6 @@ TEST(TEST_CATEGORY, dualview_realloc) {
 TEST(TEST_CATEGORY, dualview_resize) {
   test_dualview_resize<int, TEST_EXECSPACE>();
 }
-#endif
 
 }  // namespace Test
 

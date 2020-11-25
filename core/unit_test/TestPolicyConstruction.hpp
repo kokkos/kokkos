@@ -709,13 +709,13 @@ void check_converting_constructor_add_work_tag(Policy<Args...> const& policy) {
 TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
   check_converting_constructor_add_work_tag(
       Kokkos::RangePolicy<TEST_EXECSPACE>{});
-  // FIXME_SYCL requires MDRange policy and Team policy
+  // FIXME_SYCL requires Team policy
 #ifndef KOKKOS_ENABLE_SYCL
   check_converting_constructor_add_work_tag(
       Kokkos::TeamPolicy<TEST_EXECSPACE>{});
+#endif
   check_converting_constructor_add_work_tag(
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
-#endif
 }
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
@@ -776,10 +776,10 @@ struct DummyPolicy : Kokkos::Impl::PolicyTraits<Args...> {
 TEST(TEST_CATEGORY, desired_occupancy_prefer) {
   test_prefer_desired_occupancy(DummyPolicy<TEST_EXECSPACE>{});
   test_prefer_desired_occupancy(Kokkos::RangePolicy<TEST_EXECSPACE>{});
-  // FIXME_SYCL requires MDRange policy and Team policy
-#ifndef KOKKOS_ENABLE_SYCL
   test_prefer_desired_occupancy(
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
+  // FIXME_SYCL requires Team policy
+#ifndef KOKKOS_ENABLE_SYCL
   test_prefer_desired_occupancy(Kokkos::TeamPolicy<TEST_EXECSPACE>{});
 #endif
 }
@@ -809,10 +809,10 @@ void test_desired_occupancy_converting_constructors(Policy const& policy) {
 TEST(TEST_CATEGORY, desired_occupancy_converting_constructors) {
   test_desired_occupancy_converting_constructors(
       Kokkos::RangePolicy<TEST_EXECSPACE>{});
-  // FIXME_SYCL requires MDRange policy and Team policy
-#ifndef KOKKOS_ENABLE_SYCL
   test_desired_occupancy_converting_constructors(
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
+  // FIXME_SYCL requires Team policy
+#ifndef KOKKOS_ENABLE_SYCL
   test_desired_occupancy_converting_constructors(
       Kokkos::TeamPolicy<TEST_EXECSPACE>{});
 #endif
