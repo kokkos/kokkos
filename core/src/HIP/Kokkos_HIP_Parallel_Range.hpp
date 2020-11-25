@@ -330,13 +330,19 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     int shmem_size =
         hip_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
             f, n);
+    using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType>;
+    hipFuncAttributes attr = ::Kokkos::Experimental::Impl::HIPParallelLaunch<
+        closure_type, LaunchBounds>::get_hip_func_attributes();
     while (
         (n &&
          (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
           shmem_size)) ||
-        (n > static_cast<unsigned int>(
-                 Kokkos::Experimental::Impl::hip_get_max_block_size<
-                     ParallelReduce, LaunchBounds>(f, 1, shmem_size, 0)))) {
+        (n >
+         static_cast<unsigned int>(
+             ::Kokkos::Experimental::Impl::hip_get_max_block_size<FunctorType,
+                                                                  LaunchBounds>(
+                 m_policy.space().impl_internal_space_instance(), attr, f, 1,
+                 shmem_size, 0)))) {
       n >>= 1;
       shmem_size =
           hip_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(

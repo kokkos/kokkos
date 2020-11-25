@@ -128,43 +128,6 @@ class HIPSpace {
 };
 
 }  // namespace Experimental
-
-namespace Impl {
-
-/// \brief Initialize lock array for arbitrary size atomics.
-///
-/// Arbitrary atomics are implemented using a hash table of locks
-/// where the hash value is derived from the address of the
-/// object for which an atomic operation is performed.
-/// This function initializes the locks to zero (unset).
-void init_lock_arrays_hip_space();
-
-/// \brief Retrieve the pointer to the lock array for arbitrary size atomics.
-///
-/// Arbitrary atomics are implemented using a hash table of locks
-/// where the hash value is derived from the address of the
-/// object for which an atomic operation is performed.
-/// This function retrieves the lock array pointer.
-/// If the array is not yet allocated it will do so.
-int* atomic_lock_array_hip_space_ptr(bool deallocate = false);
-
-/// \brief Retrieve the pointer to the scratch array for team and thread private
-/// global memory.
-///
-/// Team and Thread private scratch allocations in
-/// global memory are acquired via locks.
-/// This function retrieves the lock array pointer.
-/// If the array is not yet allocated it will do so.
-int* scratch_lock_array_hip_space_ptr(bool deallocate = false);
-
-/// \brief Retrieve the pointer to the scratch array for unique identifiers.
-///
-/// Unique identifiers in the range 0-HIP::concurrency
-/// are provided via locks.
-/// This function retrieves the lock array pointer.
-/// If the array is not yet allocated it will do so.
-int* threadid_lock_array_hip_space_ptr(bool deallocate = false);
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
