@@ -8,8 +8,8 @@
 
 #include <cxxabi.h>
 
-#ifndef __SPACE_PRIORITIES_HPP
-#define __SPACE_PRIORITIES_HPP
+#ifndef KOKKOS_SPACE_PRIORITIES_HPP
+#define KOKKOS_SPACE_PRIORITIES_HPP
 
 #if defined(__clang_analyzer__)
 #define KOKKOS_IMPL_DEFAULT_EXEC_SPACE_ANNOTATION \
