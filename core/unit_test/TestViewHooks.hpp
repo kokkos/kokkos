@@ -78,9 +78,8 @@ class ViewHookUpdate<
               typename ViewAttorneyType::view_type::memory_space>::value),
         void>::type> {
  public:
-  using view_att_type   = ViewAttorneyType;
-  using view_type       = typename view_att_type::view_type;
-  using view_track_type = Kokkos::Impl::SharedAllocationHeader;
+  using view_att_type = ViewAttorneyType;
+  using view_type     = typename view_att_type::view_type;
   static inline void update_view(view_att_type &view) {
     using mem_space    = typename view_type::memory_space;
     using exec_space   = typename mem_space::execution_space;
