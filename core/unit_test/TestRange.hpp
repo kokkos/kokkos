@@ -162,6 +162,7 @@ struct TestRange {
   KOKKOS_INLINE_FUNCTION
   void operator()(const VerifyInitTag &, const int i) const {
     if (i != m_flags(i)) {
+      // FIXME_SYCL printf needs a workaround
 #ifndef __SYCL_DEVICE_ONLY__
       printf("TestRange::test_for_error at %d != %d\n", i, m_flags(i));
 #endif
@@ -176,6 +177,7 @@ struct TestRange {
   KOKKOS_INLINE_FUNCTION
   void operator()(const VerifyResetTag &, const int i) const {
     if (2 * i != m_flags(i)) {
+      // FIXME_SYCL printf needs a workaround
 #ifndef __SYCL_DEVICE_ONLY__
       printf("TestRange::test_for_error at %d != %d\n", i, m_flags(i));
 #endif
@@ -190,6 +192,7 @@ struct TestRange {
   KOKKOS_INLINE_FUNCTION
   void operator()(const VerifyOffsetTag &, const int i) const {
     if (i + offset != m_flags(i)) {
+      // FIXME_SYCL printf needs a workaround
 #ifndef __SYCL_DEVICE_ONLY__
       printf("TestRange::test_for_error at %d != %d\n", i + offset, m_flags(i));
 #endif
@@ -436,6 +439,8 @@ TEST(TEST_CATEGORY, range_reduce) {
   }
 }
 
+// FIXME_SYCL needs parallel_scan
+#ifndef KOKKOS_ENABLE_SYCL
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, range_scan) {
   {
@@ -486,5 +491,6 @@ TEST(TEST_CATEGORY, range_scan) {
   }
 #endif
 }
+#endif
 #endif
 }  // namespace Test
