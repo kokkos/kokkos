@@ -122,9 +122,6 @@ class ViewHooksAttorney<ViewType, false> {
 
 namespace Experimental {
 
-template <class ViewType, class Enable = void>
-class ViewHookDeepCopy;
-
 template <class ViewAttorneyType, class Enable = void>
 class ViewHookUpdate {
  public:
@@ -154,10 +151,7 @@ class ViewHolderBase {
 
   // the following are implemented in specialization classes.
   // View Holder is only a pass through implementation
-  // deep copy contiguous buffers
-  virtual void deep_copy_to_buffer(unsigned char *buff)   = 0;
-  virtual void deep_copy_from_buffer(unsigned char *buff) = 0;
-  // copy view contents that aren't contiguous
+  // copy view contents to/from host buffer
   virtual void copy_view_to_buffer(unsigned char *buff)   = 0;
   virtual void copy_view_from_buffer(unsigned char *buff) = 0;
   // update view contents
@@ -178,7 +172,6 @@ class ViewHolder<ViewType, true> : public ViewHolderBase {
   using view_type          = ViewType;
   using view_hook_attorney = Kokkos::Impl::ViewHooksAttorney<view_type, true>;
   using memory_space       = typename view_type::memory_space;
-  using view_hook_deepcopy = Kokkos::Experimental::ViewHookDeepCopy<view_type>;
   using view_hook_copyview = Kokkos::Experimental::ViewHookCopyView<view_type>;
   // this invokes a special View copy constructor that avoids recursively
   // invoking the ViewHooks, hence the "true" below
@@ -210,14 +203,6 @@ class ViewHolder<ViewType, true> : public ViewHolderBase {
     return std::is_same<memory_space, HostSpace>::value;
   }
 
-  void deep_copy_to_buffer(unsigned char *buff) override {
-    view_hook_deepcopy::deep_copy(buff, m_view_att.get_view());
-  }
-
-  void deep_copy_from_buffer(unsigned char *buff) override {
-    view_hook_deepcopy::deep_copy(m_view_att.get_view(), buff);
-  }
-
   void copy_view_to_buffer(unsigned char *buff) override {
     view_hook_copyview::copy_view(buff, m_view_att.get_view());
   }
@@ -245,7 +230,6 @@ class ViewHolder<ViewType, false> : public ViewHolderBase {
   using map_type           = typename view_hook_attorney::map_type;
   using track_type         = Kokkos::Impl::SharedAllocationTracker;
   using memory_space       = typename view_type::memory_space;
-  using view_hook_deepcopy = Kokkos::Experimental::ViewHookDeepCopy<view_type>;
   using view_hook_copyview = Kokkos::Experimental::ViewHookCopyView<view_type>;
   using view_hook_update =
       Kokkos::Experimental::ViewHookUpdate<view_hook_attorney>;
@@ -275,14 +259,6 @@ class ViewHolder<ViewType, false> : public ViewHolderBase {
   }
   bool is_hostspace() const noexcept override {
     return std::is_same<memory_space, HostSpace>::value;
-  }
-
-  void deep_copy_to_buffer(unsigned char *buff) override {
-    view_hook_deepcopy::deep_copy(buff, m_view_att.get_view());
-  }
-
-  void deep_copy_from_buffer(unsigned char *buff) override {
-    view_hook_deepcopy::deep_copy(m_view_att.get_view(), buff);
   }
 
   void copy_view_to_buffer(unsigned char *buff) override {
