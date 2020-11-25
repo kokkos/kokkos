@@ -102,8 +102,7 @@ struct ViewTracker {
 
   template <class RT, class... RP>
   KOKKOS_INLINE_FUNCTION explicit ViewTracker(const View<RT, RP...>& pv,
-                                              map_type& map,
-                                              const ViewTracker& vt) noexcept
+                                              map_type& map) noexcept
       : m_tracker() {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     if (view_traits::is_managed &&
@@ -117,6 +116,7 @@ struct ViewTracker {
       m_tracker.assign_force_disable(pv.m_track.m_tracker);
     }
 #else
+    (void)map;
     m_tracker.assign_force_disable(pv.m_track.m_tracker);
 #endif
   }

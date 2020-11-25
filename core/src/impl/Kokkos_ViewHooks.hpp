@@ -459,7 +459,7 @@ template <class Functor>
 std::enable_if_t<(std::is_same<typename Functor::view_hook_functor_type,
                                ViewHookRefFunctor>::value),
                  ViewHooks::HookCallerTypeEnum>
-get_hook_caller_type(Functor func) {
+get_hook_caller_type() {
   return ViewHooks::RefHookCaller;
 }
 
@@ -467,7 +467,7 @@ template <class Functor>
 std::enable_if_t<!(std::is_same<typename Functor::view_hook_functor_type,
                                 ViewHookRefFunctor>::value),
                  ViewHooks::HookCallerTypeEnum>
-get_hook_caller_type(Functor func) {
+get_hook_caller_type() {
   return ViewHooks::CopyHookCaller;
 }
 
@@ -493,7 +493,7 @@ template <typename Functor>
 std::enable_if_t<is_view_hook_functor<Functor>::value, void>
 add_view_hook_caller(const std::string &name, Functor &&fun) {
   auto caller = std::make_unique<ViewHookCaller<Functor, void>>(fun);
-  ViewHooks::HookCallerTypeEnum caller_type = get_hook_caller_type(fun);
+  ViewHooks::HookCallerTypeEnum caller_type = get_hook_caller_type<Functor>();
   ViewHooks::get_instance().register_hook_caller(name, std::move(caller),
                                                  caller_type);
 }
