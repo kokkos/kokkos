@@ -51,6 +51,24 @@ namespace Experimental {
 class SYCLDeviceUSMSpace;  ///< Memory space on SYCL device
 class SYCL;                ///< Execution space for SYCL
 }  // namespace Experimental
+
+namespace Impl {
+
+template <typename ConfigT>
+struct SpacePriority<Kokkos::Experimental::SYCL, ConfigT>
+    : std::integral_constant<int, 50> {};
+
+template <>
+struct SpacePriority<Kokkos::Experimental::SYCL,
+                     Kokkos::HostParallelPriorityConfig>
+    : std::integral_constant<int, 999> {};
+
+template <>
+struct SpaceProperty<SYCL_idx> {
+  using type = Kokkos::Experimental::SYCL;
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 #endif
 #endif

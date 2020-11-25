@@ -55,8 +55,7 @@ class HIP;       ///< Execution space for HIP GPU
 namespace Impl {
 
 template <typename ConfigT>
-struct SpacePriority<Kokkos::Experimental::HIP,
-                     ConfigT>
+struct SpacePriority<Kokkos::Experimental::HIP, ConfigT>
     : std::integral_constant<int, 50> {};
 
 template <>

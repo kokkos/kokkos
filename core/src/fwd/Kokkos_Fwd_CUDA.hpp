@@ -62,8 +62,8 @@ void cuda_prefetch_pointer(const Cuda& space, const void* ptr, size_t bytes,
                            bool to_device);
 
 template <typename ConfigT>
-struct SpacePriority<Kokkos::Cuda, ConfigT>
-    : std::integral_constant<int, 50> {};
+struct SpacePriority<Kokkos::Cuda, ConfigT> : std::integral_constant<int, 50> {
+};
 
 template <>
 struct SpacePriority<Kokkos::Cuda, Kokkos::HostParallelPriorityConfig>

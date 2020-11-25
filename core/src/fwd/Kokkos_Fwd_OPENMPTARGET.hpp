@@ -55,8 +55,7 @@ class OpenMPTargetSpace;
 namespace Impl {
 
 template <typename ConfigT>
-struct SpacePriority<Kokkos::Experimental::OpenMPTarget,
-                     ConfigT>
+struct SpacePriority<Kokkos::Experimental::OpenMPTarget, ConfigT>
     : std::integral_constant<int, 50> {};
 
 template <>
