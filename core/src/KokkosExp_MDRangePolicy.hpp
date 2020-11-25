@@ -59,6 +59,10 @@
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 #endif
 
+#if defined(KOKKOS_ENABLE_SYCL)
+#include <Kokkos_SYCL.hpp>
+#endif
+
 namespace Kokkos {
 
 // ------------------------------------------------------------------ //
@@ -75,7 +79,8 @@ enum class Iterate
 template <typename ExecSpace>
 struct default_outer_direction {
   using type = Iterate;
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   static constexpr Iterate value = Iterate::Left;
 #else
   static constexpr Iterate value = Iterate::Right;
@@ -85,7 +90,8 @@ struct default_outer_direction {
 template <typename ExecSpace>
 struct default_inner_direction {
   using type = Iterate;
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
   static constexpr Iterate value = Iterate::Left;
 #else
   static constexpr Iterate value = Iterate::Right;
@@ -321,7 +327,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
                 point_type const& lower, point_type const& upper,
                 tile_type const& tile = tile_type{})
       : m_space(work_space), m_lower(lower), m_upper(upper), m_tile(tile) {
-    init();
+    init(work_space);
   }
 
   template <typename T, std::size_t NT = rank,
@@ -365,114 +371,82 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   bool impl_tune_tile_size() const { return m_tune_tile_size; }
 
  private:
-  void init() {
-    // Host
-    if (true
+  // Host
+  template <typename ExecutionSpace>
+  void init(const ExecutionSpace&) {
+    const int max_threads       = std::numeric_limits<int>::max();
+    const int max_tile_size     = std::numeric_limits<int>::max();
+    const int default_tile_size = 2;
+    init_helper(max_threads, max_tile_size, default_tile_size);
+  }
+
 #if defined(KOKKOS_ENABLE_CUDA)
-        && !std::is_same<typename traits::execution_space, Kokkos::Cuda>::value
+  void init(const Kokkos::Cuda& space) {
+    const int max_threads =
+        space.impl_internal_space_instance()->m_maxThreadsPerSM;
+    const int max_tile_size     = 16;
+    const int default_tile_size = 2;
+    init_helper(max_threads, max_tile_size, default_tile_size);
+  }
 #endif
+
 #if defined(KOKKOS_ENABLE_HIP)
-        && !std::is_same<typename traits::execution_space,
-                         Kokkos::Experimental::HIP>::value
+  void init(const Kokkos::Experimental::HIP& space) {
+    const int max_threads =
+        space.impl_internal_space_instance()->m_maxThreadsPerSM;
+    const int max_tile_size     = 16;
+    const int default_tile_size = 4;
+    init_helper(max_threads, max_tile_size, default_tile_size);
+  }
 #endif
+
 #if defined(KOKKOS_ENABLE_SYCL)
-        && !std::is_same<typename traits::execution_space,
-                         Kokkos::Experimental::SYCL>::value
+  void init(const Kokkos::Experimental::SYCL& space) {
+    const int max_threads =
+        space.impl_internal_space_instance()->m_maxThreadsPerSM;
+    const int max_tile_size     = 16;
+    const int default_tile_size = 2;
+    init_helper(max_threads, max_tile_size, default_tile_size);
+  }
 #endif
-    ) {
-      index_type span;
-      for (int i = 0; i < rank; ++i) {
-        span = m_upper[i] - m_lower[i];
-        if (m_tile[i] <= 0) {
-          m_tune_tile_size = true;
-          if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
-              ((int)inner_direction == (int)Left && (i > 0))) {
-            m_tile[i] = 2;
-          } else {
-            m_tile[i] = (span == 0 ? 1 : span);
-          }
-        }
-        m_tile_end[i] =
-            static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
-        m_num_tiles *= m_tile_end[i];
-        m_prod_tile_dims *= m_tile[i];
-      }
+
+  void init_helper(int max_threads, int max_tile_size, int default_tile_size) {
+    index_type span;
+    int increment  = 1;
+    int rank_start = 0;
+    int rank_end   = rank;
+    if ((int)inner_direction == (int)Right) {
+      increment  = -1;
+      rank_start = rank - 1;
+      rank_end   = -1;
     }
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-    else  // Cuda, HIP or SYCL
-    {
-      index_type span;
-      int increment  = 1;
-      int rank_start = 0;
-      int rank_end   = rank;
-      if ((int)inner_direction == (int)Right) {
-        increment  = -1;
-        rank_start = rank - 1;
-        rank_end   = -1;
-      }
-      bool is_cuda_exec_space =
-#if defined(KOKKOS_ENABLE_CUDA)
-          std::is_same<typename traits::execution_space, Kokkos::Cuda>::value;
-#else
-          false;
-#endif
-      for (int i = rank_start; i != rank_end; i += increment) {
-        span = m_upper[i] - m_lower[i];
-        if (m_tile[i] <= 0) {
-          // TODO: determine what is a good default tile size for Cuda and HIP
-          // may be rank dependent
-          m_tune_tile_size = true;
-          if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
-              ((int)inner_direction == (int)Left && (i > 0))) {
-            if (m_prod_tile_dims < 256) {
-              m_tile[i] = (is_cuda_exec_space) ? 2 : 4;
-            } else {
-              m_tile[i] = 1;
-            }
+    for (int i = rank_start; i != rank_end; i += increment) {
+      span = m_upper[i] - m_lower[i];
+      if (m_tile[i] <= 0) {
+        m_tune_tile_size = true; 
+        if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
+            ((int)inner_direction == (int)Left && (i > 0))) {
+          if (m_prod_tile_dims < max_threads) {
+            m_tile[i] = default_tile_size;
           } else {
-            m_tile[i] = 16;
+            m_tile[i] = 1;
           }
+        } else {
+          m_tile[i] = std::max(std::min<int>(span, max_tile_size), 1);
         }
-        m_tile_end[i] =
-            static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
-        m_num_tiles *= m_tile_end[i];
-        m_prod_tile_dims *= m_tile[i];
       }
-#if defined(KOKKOS_ENABLE_CUDA)
-      // Match Cuda restriction for ParallelReduce; 1024,1024,64 max per dim
-      // (Kepler), but product num_threads < 1024
-      if (std::is_same<typename traits::execution_space, Kokkos::Cuda>::value &&
-          m_prod_tile_dims > 1024) {
-        printf(" Tile dimensions exceed Cuda limits\n");
-        Kokkos::abort(
-            "Cuda ExecSpace Error: MDRange tile dims exceed maximum number "
-            "of threads per block - choose smaller tile dims");
-      }
-#endif
-#if defined(KOKKOS_ENABLE_HIP)
-      if (std::is_same<typename traits::execution_space,
-                       Kokkos::Experimental::HIP>::value &&
-          m_prod_tile_dims > 1024) {
-        printf(" Tile dimensions exceed HIP limits\n");
-        Kokkos::abort(
-            "HIP ExecSpace Error: MDRange tile dims exceed maximum number "
-            "of threads per block - choose smaller tile dims");
-      }
-#endif
-#if defined(KOKKOS_ENABLE_SYCL)
-      // FIXME_SYCL query the limit instead
-      if (std::is_same<typename traits::execution_space,
-                       Kokkos::Experimental::SYCL>::value &&
-          m_prod_tile_dims > 256) {
-        printf(" Tile dimensions exceed SYCL limits\n");
-        Kokkos::abort(
-            "SYCL ExecSpace Error: MDRange tile dims exceed maximum number "
-            "of threads per block - choose smaller tile dims");
-      }
-#endif
+      m_tile_end[i] =
+          static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
+      m_num_tiles *= m_tile_end[i];
+      m_prod_tile_dims *= m_tile[i];
     }
-#endif
+    if (m_prod_tile_dims > max_threads) {
+      printf(" Product of tile dimensions exceed maximum limit: %d\n",
+             max_threads);
+      Kokkos::abort(
+          "ExecSpace Error: MDRange tile dims exceed maximum number "
+          "of threads per block - choose smaller tile dims");
+    }
   }
 };
 
