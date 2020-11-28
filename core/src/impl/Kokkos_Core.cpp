@@ -54,6 +54,7 @@
 #include <functional>
 #include <list>
 #include <cerrno>
+#include <regex>
 #ifndef _WIN32
 #include <unistd.h>
 #else
@@ -270,8 +271,15 @@ void initialize_backends(const InitArguments& args) {
   Impl::ExecSpaceManager::get_instance().initialize_spaces(args);
 }
 
-void initialize_profiling(const InitArguments&) {
-  Kokkos::Profiling::initialize();
+void initialize_profiling(const InitArguments& args) {
+  Kokkos::Profiling::initialize(args.tool_lib);
+  if (args.tool_help) {
+    if (!Kokkos::Profiling::printHelp(args.tool_args)) {
+      std::cerr << "Tool has not provided a help message" << std::endl;
+    }
+    std::exit(EXIT_FAILURE);
+  }
+  Kokkos::Profiling::parseArgs(args.tool_args);
 }
 
 void pre_initialize_internal(const InitArguments& args) {
@@ -364,6 +372,24 @@ bool check_int_arg(char const* arg, char const* expected, int* value) {
   return true;
 }
 
+bool check_str_arg(char const* arg, char const* expected, std::string& value) {
+  if (!check_arg(arg, expected)) return false;
+  std::size_t arg_len = std::strlen(arg);
+  std::size_t exp_len = std::strlen(expected);
+  bool okay           = true;
+  if (arg_len == exp_len || arg[exp_len] != '=') okay = false;
+  char const* remain = arg + exp_len + 1;
+  value              = remain;
+  if (!okay) {
+    std::ostringstream ss;
+    ss << "Error: expecting an '=STRING' after command line argument '"
+       << expected << "'";
+    ss << ". Raised by Kokkos::initialize(int narg, char* argc[]).";
+    Impl::throw_runtime_exception(ss.str());
+  }
+  return true;
+}
+
 void warn_deprecated_command_line_argument(std::string deprecated,
                                            std::string valid) {
   std::cerr
@@ -390,6 +416,9 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& skip_device      = arguments.skip_device;
   auto& disable_warnings = arguments.disable_warnings;
   auto& tune_internals   = arguments.tune_internals;
+  auto& tool_help        = arguments.tool_help;
+  auto& tool_args        = arguments.tool_args;
+  auto& tool_lib         = arguments.tool_lib;
 
   bool kokkos_threads_found  = false;
   bool kokkos_numa_found     = false;
@@ -509,6 +538,36 @@ void parse_command_line_arguments(int& narg, char* arg[],
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
+    } else if (check_str_arg(arg[iarg], "--kokkos-tools-library", tool_lib)) {
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
+      narg--;
+    } else if (check_str_arg(arg[iarg], "--kokkos-tools-args", tool_args)) {
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
+      narg--;
+      // strip any leading and/or trailing quotes if they were retained in the
+      // string because this will very likely cause parsing issues for tools.
+      // If the quotes are retained (via bypassing the shell):
+      //    <EXE> --kokkos-tools-args="-c my example"
+      // would be tokenized as:
+      //    "<EXE>" "\"-c" "my" "example\""
+      // instead of:
+      //    "<EXE>" "-c" "my" "example"
+      if (!tool_args.empty()) {
+        if (tool_args.front() == '"') tool_args = tool_args.substr(1);
+        if (tool_args.back() == '"')
+          tool_args = tool_args.substr(0, tool_args.length() - 1);
+      }
+      // add the name of the executable to the beginning
+      if (narg > 0) tool_args = std::string(arg[0]) + " " + tool_args;
+    } else if (check_arg(arg[iarg], "--kokkos-tools-help")) {
+      tool_help = true;
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
       narg--;
     } else if (check_arg(arg[iarg], "--kokkos-help") ||
                check_arg(arg[iarg], "--help")) {
@@ -526,7 +585,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       --kokkos-disable-warnings      : disable kokkos warning messages
       --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
                                        tuning features through the tuning system. If
-				         left off, Kokkos uses heuristics
+                                       left off, Kokkos uses heuristics
       --kokkos-threads=INT           : specify total number of threads or
                                        number of threads per NUMA region if
                                        used in conjunction with '--numa' option.
@@ -540,6 +599,18 @@ void parse_command_line_arguments(int& narg, char* arg[],
                                        to be ignored. This is most useful on workstations
                                        with multiple GPUs of which one is used to drive
                                        screen output.
+      --kokkos-tools-library         : Equivalent to KOKKOS_PROFILE_LIBRARY environment
+                                       variable. Must either be full path to library or
+                                       name of library if the path is present in the
+                                       runtime library search path (e.g. LD_LIBRARY_PATH)
+      --kokkos-tools-help            : Query the (loaded) kokkos-tool for its command-line
+                                       option support (which should then be passed via
+                                       --kokkos-tools-args="...")
+      --kokkos-tools-args=STR        : A single (quoted) string of options which will be
+                                       whitespace delimited and passed to the loaded
+                                       kokkos-tool as command-line arguments. E.g.
+                                       `<EXE> --kokkos-tools-args="-c input.txt"` will
+                                       pass `<EXE> -c input.txt` as argc/argv to tool
       --------------------------------------------------------------------------------
 )";
       std::cout << help_message << std::endl;
@@ -556,6 +627,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
     } else
       iarg++;
   }
+  if (tool_args.empty() && narg > 0) tool_args = arg[0];
 }
 
 void parse_environment_variables(InitArguments& arguments) {
@@ -711,7 +783,9 @@ void parse_environment_variables(InitArguments& arguments) {
     for (char& c : env_str) {
       c = toupper(c);
     }
-    if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1"))
+    const auto _rc = std::regex_constants::icase | std::regex_constants::egrep;
+    const auto _re = std::regex("^(true|on|yes|[1-9])$", _rc);
+    if (std::regex_match(env_str, _re))
       disable_warnings = true;
     else if (disable_warnings)
       Impl::throw_runtime_exception(

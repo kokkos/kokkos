@@ -45,13 +45,13 @@
 #ifndef KOKKOS_IMPL_KOKKOS_PROFILING_HPP
 #define KOKKOS_IMPL_KOKKOS_PROFILING_HPP
 
-#include <impl/Kokkos_Profiling_Interface.hpp>
-#include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_Macros.hpp>
 #include <Kokkos_Tuners.hpp>
-#include <string>
+#include <impl/Kokkos_Profiling_Interface.hpp>
 #include <map>
+#include <string>
 #include <type_traits>
 namespace Kokkos {
 
@@ -125,8 +125,11 @@ void syncDualView(const std::string& label, const void* const ptr,
 void modifyDualView(const std::string& label, const void* const ptr,
                     bool on_device);
 
-void initialize();
+void initialize(const std::string& = {});
 void finalize();
+bool printHelp(const std::string&);
+void parseArgs(const std::string&);
+void parseArgs(int, char**);
 
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
@@ -134,6 +137,8 @@ namespace Experimental {
 
 void set_init_callback(initFunction callback);
 void set_finalize_callback(finalizeFunction callback);
+void set_parse_args_callback(parseArgsFunction callback);
+void set_print_help_callback(printHelpFunction callback);
 void set_begin_parallel_for_callback(beginFunction callback);
 void set_end_parallel_for_callback(endFunction callback);
 void set_begin_parallel_reduce_callback(beginFunction callback);
@@ -515,7 +520,12 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
                    const uint64_t size);
 void endDeepCopy();
 void finalize();
-void initialize();
+void initialize(const std::string& = {});
+
+bool printHelp(const std::string&);
+void parseArgs(const std::string&);
+void parseArgs(int, char**);
+
 SpaceHandle make_space_handle(const char* space_name);
 
 namespace Experimental {
@@ -533,7 +543,9 @@ using Kokkos::Tools::Experimental::set_end_parallel_reduce_callback;
 using Kokkos::Tools::Experimental::set_end_parallel_scan_callback;
 using Kokkos::Tools::Experimental::set_finalize_callback;
 using Kokkos::Tools::Experimental::set_init_callback;
+using Kokkos::Tools::Experimental::set_parse_args_callback;
 using Kokkos::Tools::Experimental::set_pop_region_callback;
+using Kokkos::Tools::Experimental::set_print_help_callback;
 using Kokkos::Tools::Experimental::set_profile_event_callback;
 using Kokkos::Tools::Experimental::set_push_region_callback;
 using Kokkos::Tools::Experimental::set_start_profile_section_callback;
