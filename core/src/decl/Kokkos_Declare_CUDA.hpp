@@ -47,6 +47,7 @@
 
 #if defined(KOKKOS_ENABLE_CUDA)
 #include <Kokkos_Cuda.hpp>
+#include <Cuda/Kokkos_Cuda_Parallel.hpp>
 #endif
 
 #endif

@@ -59,7 +59,11 @@
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 #endif
 
-#if defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_CUDA)
+#include <Kokkos_Cuda.hpp>
+#elif defined(KOKKOS_ENABLE_HIP)
+#include <Kokkos_HIP.hpp>
+#elif defined(KOKKOS_ENABLE_SYCL)
 #include <Kokkos_SYCL.hpp>
 #endif
 

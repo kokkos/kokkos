@@ -50,6 +50,8 @@
 
 #include <Kokkos_Core_fwd.hpp>
 
+#include <Kokkos_CudaSpace.hpp>
+
 #include <iosfwd>
 #include <vector>
 
@@ -345,7 +347,7 @@ struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
 #include <Cuda/Kokkos_Cuda_Instance.hpp>
 #include <Cuda/Kokkos_Cuda_View.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
-#include <Cuda/Kokkos_Cuda_Parallel.hpp>
+//#include <Cuda/Kokkos_Cuda_Parallel.hpp>
 #include <Cuda/Kokkos_Cuda_Task.hpp>
 #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 

@@ -48,7 +48,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_CUDA)
 
-#include <algorithm>
+/*#include <algorithm>
 #include <string>
 #include <cstdio>
 #include <cstdint>
@@ -66,7 +66,7 @@
 #include <impl/Kokkos_Tools.hpp>
 #include <typeinfo>
 
-#include <KokkosExp_MDRangePolicy.hpp>
+#include <KokkosExp_MDRangePolicy.hpp>*/
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
