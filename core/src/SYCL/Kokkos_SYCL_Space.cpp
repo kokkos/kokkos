@@ -508,7 +508,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
     Kokkos::Impl::throw_runtime_exception(
         std::string("Kokkos::Impl::SharedAllocationRecord<"
                     "Kokkos::Experimental::SYCLDeviceUSMSpace"
-                    ", void >::get_record ERROR"));
+                    ", void>::get_record ERROR"));
   }
 
   return record;
@@ -527,7 +527,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace,
   if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
     Kokkos::Impl::throw_runtime_exception(std::string(
         "Kokkos::Impl::SharedAllocationRecord<"
-        "Kokkos::Experimental::SYCLSharedUSMSpace, void >::get_record ERROR"));
+        "Kokkos::Experimental::SYCLSharedUSMSpace, void>::get_record ERROR"));
   }
 
   return static_cast<RecordSYCL*>(h->m_record);
