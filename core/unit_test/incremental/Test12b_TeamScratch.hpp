@@ -64,13 +64,15 @@ struct TeamScratch {
                                    Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
     int scratchSize = scratch_t::shmem_size(sX, sY);
 
+    const int scratch_level = 1;
+
     Kokkos::parallel_for(
         "Team",
         policy_t(pN, Kokkos::AUTO)
-            .set_scratch_size(1, Kokkos::PerTeam(scratchSize)),
+            .set_scratch_size(scratch_level, Kokkos::PerTeam(scratchSize)),
         KOKKOS_LAMBDA(const team_t &team) {
           // Allocate and use scratch pad memory
-          scratch_t v_S(team.team_scratch(1), sX, sY);
+          scratch_t v_S(team.team_scratch(scratch_level), sX, sY);
           int n = team.league_rank();
 
           Kokkos::parallel_for(
@@ -105,12 +107,15 @@ struct TeamScratch {
 
 TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
   TeamScratch<TEST_EXECSPACE> test;
+  // Fails with larger vector sizes and if the team-size is not a multiple
+  // of 32.
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  test.run(1, 32, 9);
+  test.run(2, 64, 22);
+  test.run(14, 128, 10);
+#else
   test.run(1, 4, 4);
   test.run(4, 7, 10);
-  // Fails with larger vector sizes.
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  test.run(14, 277, 10);
-#else
   test.run(14, 277, 321);
 #endif
 }
