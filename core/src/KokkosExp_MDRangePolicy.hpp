@@ -443,7 +443,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     }
     if (m_prod_tile_dims > max_threads) {
       printf(" Product of tile dimensions exceed maximum limit: %d\n",
-             max_threads);
+             static_cast<int>(max_threads));
       Kokkos::abort(
           "ExecSpace Error: MDRange tile dims exceed maximum number "
           "of threads per block - choose smaller tile dims");
