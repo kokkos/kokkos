@@ -961,36 +961,43 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
-    } else if (cuda_single_inter_block_reduce_scan<false, ReducerTypeFwd,
-                                                   WorkTagFwd>(
-                   ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
-                   gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
-                   m_scratch_space, m_scratch_flags)) {
-      // This is the final block with the final result at the final threads'
-      // location
+    }
 
-      size_type* const shared = kokkos_impl_cuda_shared_memory<size_type>() +
-                                (blockDim.y - 1) * word_count.value;
-      size_type* const global =
-          m_result_ptr_device_accessible
-              ? reinterpret_cast<size_type*>(m_result_ptr)
-              : (m_unified_space ? m_unified_space : m_scratch_space);
+    if (m_policy.begin() != m_policy.end()) {
+      {
+        if (cuda_single_inter_block_reduce_scan<false, ReducerTypeFwd,
+                                                WorkTagFwd>(
+                ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
+                gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
+                m_scratch_space, m_scratch_flags)) {
+          // This is the final block with the final result at the final threads'
+          // location
 
-      if (threadIdx.y == 0) {
-        Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-            ReducerConditional::select(m_functor, m_reducer), shared);
-      }
+          size_type* const shared =
+              kokkos_impl_cuda_shared_memory<size_type>() +
+              (blockDim.y - 1) * word_count.value;
+          size_type* const global =
+              m_result_ptr_device_accessible
+                  ? reinterpret_cast<size_type*>(m_result_ptr)
+                  : (m_unified_space ? m_unified_space : m_scratch_space);
 
-      if (CudaTraits::WarpSize < word_count.value) {
-        __syncthreads();
-      }
+          if (threadIdx.y == 0) {
+            Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
+                ReducerConditional::select(m_functor, m_reducer), shared);
+          }
 
-      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
-        global[i] = shared[i];
+          if (CudaTraits::WarpSize < word_count.value) {
+            __syncthreads();
+          }
+
+          for (unsigned i = threadIdx.y; i < word_count.value;
+               i += blockDim.y) {
+            global[i] = shared[i];
+          }
+        }
       }
     }
   }
-
   /*  __device__ inline
      void run(const DummyShflReductionType&) const
      {
@@ -1656,31 +1663,35 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
-    } else if (cuda_single_inter_block_reduce_scan<false, FunctorType, WorkTag>(
-                   ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
-                   gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
-                   m_scratch_space, m_scratch_flags)) {
-      // This is the final block with the final result at the final threads'
-      // location
+    }
 
-      size_type* const shared = kokkos_impl_cuda_shared_memory<size_type>() +
-                                (blockDim.y - 1) * word_count.value;
-      size_type* const global =
-          m_result_ptr_device_accessible
-              ? reinterpret_cast<size_type*>(m_result_ptr)
-              : (m_unified_space ? m_unified_space : m_scratch_space);
+    if (m_league_size != 0) {
+      if (cuda_single_inter_block_reduce_scan<false, FunctorType, WorkTag>(
+              ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
+              gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
+              m_scratch_space, m_scratch_flags)) {
+        // This is the final block with the final result at the final threads'
+        // location
 
-      if (threadIdx.y == 0) {
-        Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
-            ReducerConditional::select(m_functor, m_reducer), shared);
-      }
+        size_type* const shared = kokkos_impl_cuda_shared_memory<size_type>() +
+                                  (blockDim.y - 1) * word_count.value;
+        size_type* const global =
+            m_result_ptr_device_accessible
+                ? reinterpret_cast<size_type*>(m_result_ptr)
+                : (m_unified_space ? m_unified_space : m_scratch_space);
 
-      if (CudaTraits::WarpSize < word_count.value) {
-        __syncthreads();
-      }
+        if (threadIdx.y == 0) {
+          Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
+              ReducerConditional::select(m_functor, m_reducer), shared);
+        }
 
-      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
-        global[i] = shared[i];
+        if (CudaTraits::WarpSize < word_count.value) {
+          __syncthreads();
+        }
+
+        for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+          global[i] = shared[i];
+        }
       }
     }
   }
