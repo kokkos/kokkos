@@ -268,7 +268,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
 	OBJ_HIP += TestHIP_MDRange_a.o TestHIP_MDRange_b.o TestHIP_MDRange_c.o TestHIP_MDRange_d.o TestHIP_MDRange_e.o
 	OBJ_HIP += TestHIP_Spaces.o
 	OBJ_HIP += TestHIPHostPinned_ViewAPI_a.o TestHIPHostPinned_ViewAPI_b.o TestHIPHostPinned_ViewAPI_c.o TestHIPHostPinned_ViewAPI_d.o TestHIPHostPinned_ViewAPI_e.o
-        OBJ_HIP += TestHIPHostPinned_ViewCopy_a.o TestHIPHostPinned_ViewCopy_b.o
+	OBJ_HIP += TestHIPHostPinned_ViewCopy_a.o TestHIPHostPinned_ViewCopy_b.o
 	OBJ_HIP += TestHIPHostPinned_ViewMapping_a.o TestHIPHostPinned_ViewMapping_b.o TestHIPHostPinned_ViewMapping_subview.o
 
 	TARGETS += KokkosCore_UnitTest_HIP
@@ -283,7 +283,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX += TestHPX_RangePolicy.o TestHPX_RangePolicyRequire.o
 	OBJ_HPX += TestHPX_View_64bit.o
 	OBJ_HPX += TestHPX_ViewAPI_a.o TestHPX_ViewAPI_b.o TestHPX_ViewAPI_c.o TestHPX_ViewAPI_d.o TestHPX_ViewAPI_e.o
-        OBJ_HPX += TestHPX_ViewCopy_a.o TestHPX_ViewCopy_b.o
+	OBJ_HPX += TestHPX_ViewCopy_a.o TestHPX_ViewCopy_b.o
 	OBJ_HPX += TestHPX_ViewMapping_a.o TestHPX_ViewMapping_b.o TestHPX_ViewMapping_subview.o TestHPX_ViewResize.o
 	OBJ_HPX += TestHPX_ViewOfClass.o
 	OBJ_HPX += TestHPX_SubView_a.o TestHPX_SubView_b.o
