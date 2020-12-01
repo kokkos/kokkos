@@ -223,7 +223,7 @@ TEST(TEST_CATEGORY, view_copy_tests) {
     Kokkos::deep_copy(dev, b, h_b);
     ASSERT_TRUE(run_check(b, 4));
   }
-  
+
   // Non contiguous copies
   {
     Kokkos::deep_copy(dev, s_a, 5);
