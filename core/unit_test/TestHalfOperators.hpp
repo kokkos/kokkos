@@ -74,7 +74,7 @@ enum OP_TESTS {
   CMUL_H_S,
   CDIV_H_H,
   CDIV_H_S,
-  ADD_H_H, 
+  ADD_H_H,
   ADD_H_S,
   ADD_S_H,
   ADD_H_D,
@@ -120,29 +120,128 @@ enum OP_TESTS {
   SUB_H_S,
   SUB_S_H,
   SUB_H_D,
-  SUB_D_H,  // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+  SUB_D_H,
+  SUB_H_H_SZ,
   SUB_H_S_SZ,
   SUB_S_H_SZ,
   SUB_H_D_SZ,
   SUB_D_H_SZ,
+  SUB_SI_H,
+  SUB_SI_H_SZ,
+  SUB_I_H,
+  SUB_I_H_SZ,
+  SUB_LI_H,
+  SUB_LI_H_SZ,
+  SUB_LLI_H,
+  SUB_LLI_H_SZ,
+  SUB_USI_H,
+  SUB_USI_H_SZ,
+  SUB_UI_H,
+  SUB_UI_H_SZ,
+  SUB_ULI_H,
+  SUB_ULI_H_SZ,
+  SUB_ULLI_H,
+  SUB_ULLI_H_SZ,
+  SUB_H_SI,
+  SUB_H_SI_SZ,
+  SUB_H_I,
+  SUB_H_I_SZ,
+  SUB_H_LI,
+  SUB_H_LI_SZ,
+  SUB_H_LLI,
+  SUB_H_LLI_SZ,
+  SUB_H_USI,
+  SUB_H_USI_SZ,
+  SUB_H_UI,
+  SUB_H_UI_SZ,
+  SUB_H_ULI,
+  SUB_H_ULI_SZ,
+  SUB_H_ULLI,
+  SUB_H_ULLI_SZ,
   MUL_H_H,
   MUL_H_S,
   MUL_S_H,
   MUL_H_D,
-  MUL_D_H,  // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+  MUL_D_H,
+  MUL_H_H_SZ,
   MUL_H_S_SZ,
   MUL_S_H_SZ,
   MUL_H_D_SZ,
   MUL_D_H_SZ,
+  MUL_SI_H,
+  MUL_SI_H_SZ,
+  MUL_I_H,
+  MUL_I_H_SZ,
+  MUL_LI_H,
+  MUL_LI_H_SZ,
+  MUL_LLI_H,
+  MUL_LLI_H_SZ,
+  MUL_USI_H,
+  MUL_USI_H_SZ,
+  MUL_UI_H,
+  MUL_UI_H_SZ,
+  MUL_ULI_H,
+  MUL_ULI_H_SZ,
+  MUL_ULLI_H,
+  MUL_ULLI_H_SZ,
+  MUL_H_SI,
+  MUL_H_SI_SZ,
+  MUL_H_I,
+  MUL_H_I_SZ,
+  MUL_H_LI,
+  MUL_H_LI_SZ,
+  MUL_H_LLI,
+  MUL_H_LLI_SZ,
+  MUL_H_USI,
+  MUL_H_USI_SZ,
+  MUL_H_UI,
+  MUL_H_UI_SZ,
+  MUL_H_ULI,
+  MUL_H_ULI_SZ,
+  MUL_H_ULLI,
+  MUL_H_ULLI_SZ,
   DIV_H_H,
   DIV_H_S,
   DIV_S_H,
   DIV_H_D,
-  DIV_D_H,  // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+  DIV_D_H,
+  DIV_H_H_SZ,
   DIV_H_S_SZ,
   DIV_S_H_SZ,
   DIV_H_D_SZ,
   DIV_D_H_SZ,
+  DIV_SI_H,
+  DIV_SI_H_SZ,
+  DIV_I_H,
+  DIV_I_H_SZ,
+  DIV_LI_H,
+  DIV_LI_H_SZ,
+  DIV_LLI_H,
+  DIV_LLI_H_SZ,
+  DIV_USI_H,
+  DIV_USI_H_SZ,
+  DIV_UI_H,
+  DIV_UI_H_SZ,
+  DIV_ULI_H,
+  DIV_ULI_H_SZ,
+  DIV_ULLI_H,
+  DIV_ULLI_H_SZ,
+  DIV_H_SI,
+  DIV_H_SI_SZ,
+  DIV_H_I,
+  DIV_H_I_SZ,
+  DIV_H_LI,
+  DIV_H_LI_SZ,
+  DIV_H_LLI,
+  DIV_H_LLI_SZ,
+  DIV_H_USI,
+  DIV_H_USI_SZ,
+  DIV_H_UI,
+  DIV_H_UI_SZ,
+  DIV_H_ULI,
+  DIV_H_ULI_SZ,
+  DIV_H_ULLI,
+  DIV_H_ULLI_SZ,
   NEG,
   AND,
   OR,
@@ -151,7 +250,7 @@ enum OP_TESTS {
   LT,
   GT,
   LE,
-  GE, // TODO: TW,
+  GE,  // TODO: TW,
   PASS_BY_REF,
   AO_IMPL_HALF,
   AO_HALF_T,
@@ -171,11 +270,6 @@ struct Functor_TestHalfOperators {
     d_lhs        = cast_from_half<double>(h_lhs);
     d_rhs        = cast_from_half<double>(h_rhs);
 
-    for (int i = 0; i < N_OP_TESTS; ++i) {
-      actual_lhs(i) = 1;
-      expected_lhs(i) = -1;
-    }
-
     if (std::is_same<view_type, ViewTypeHost>::value) {
       auto run_on_host = *this;
       run_on_host(0);
@@ -185,13 +279,15 @@ struct Functor_TestHalfOperators {
     }
   }
 
-  template<class LhsType, class RhsType, class ExpectedResultType>
-  KOKKOS_INLINE_FUNCTION
-  void test_add(int op_test_idx, int op_test_sz_idx) const {
-    auto sum                = static_cast<LhsType>(h_lhs) + static_cast<RhsType>(h_rhs);
+  // BEGIN: Binary Arithmetic test helpers
+  template <class LhsType, class RhsType, class ExpectedResultType>
+  KOKKOS_INLINE_FUNCTION void test_add(int op_test_idx,
+                                       int op_test_sz_idx) const {
+    auto sum = static_cast<LhsType>(h_lhs) + static_cast<RhsType>(h_rhs);
     actual_lhs(op_test_idx) = static_cast<double>(sum);
 
-    if (std::is_same<RhsType, half_t>::value && std::is_same<LhsType, half_t>::value) {
+    if (std::is_same<RhsType, half_t>::value &&
+        std::is_same<LhsType, half_t>::value) {
       expected_lhs(op_test_idx) = d_lhs + d_rhs;
     } else {
       if (std::is_same<LhsType, half_t>::value)
@@ -204,12 +300,79 @@ struct Functor_TestHalfOperators {
     expected_lhs(op_test_sz_idx) = sizeof(ExpectedResultType);
   }
 
+  template <class LhsType, class RhsType, class ExpectedResultType>
+  KOKKOS_INLINE_FUNCTION void test_sub(int op_test_idx,
+                                       int op_test_sz_idx) const {
+    auto result = static_cast<LhsType>(h_lhs) - static_cast<RhsType>(h_rhs);
+    actual_lhs(op_test_idx) = static_cast<double>(result);
+
+    if (std::is_same<RhsType, half_t>::value &&
+        std::is_same<LhsType, half_t>::value) {
+      expected_lhs(op_test_idx) = d_lhs - d_rhs;
+    } else {
+      if (std::is_same<LhsType, half_t>::value)
+        expected_lhs(op_test_idx) = d_lhs - static_cast<RhsType>(d_rhs);
+      if (std::is_same<RhsType, half_t>::value)
+        expected_lhs(op_test_idx) = static_cast<LhsType>(d_lhs) - d_rhs;
+    }
+
+    actual_lhs(op_test_sz_idx)   = sizeof(result);
+    expected_lhs(op_test_sz_idx) = sizeof(ExpectedResultType);
+  }
+
+  template <class LhsType, class RhsType, class ExpectedResultType>
+  KOKKOS_INLINE_FUNCTION void test_mul(int op_test_idx,
+                                       int op_test_sz_idx) const {
+    auto result = static_cast<LhsType>(h_lhs) * static_cast<RhsType>(h_rhs);
+    actual_lhs(op_test_idx) = static_cast<double>(result);
+
+    if (std::is_same<RhsType, half_t>::value &&
+        std::is_same<LhsType, half_t>::value) {
+      expected_lhs(op_test_idx) = d_lhs * d_rhs;
+    } else {
+      if (std::is_same<LhsType, half_t>::value)
+        expected_lhs(op_test_idx) = d_lhs * static_cast<RhsType>(d_rhs);
+      if (std::is_same<RhsType, half_t>::value)
+        expected_lhs(op_test_idx) = static_cast<LhsType>(d_lhs) * d_rhs;
+    }
+
+    actual_lhs(op_test_sz_idx)   = sizeof(result);
+    expected_lhs(op_test_sz_idx) = sizeof(ExpectedResultType);
+  }
+
+  template <class LhsType, class RhsType, class ExpectedResultType>
+  KOKKOS_INLINE_FUNCTION void test_div(int op_test_idx,
+                                       int op_test_sz_idx) const {
+    auto result = static_cast<LhsType>(h_lhs) / static_cast<RhsType>(h_rhs);
+    actual_lhs(op_test_idx) = static_cast<double>(result);
+
+    if (std::is_same<RhsType, half_t>::value &&
+        std::is_same<LhsType, half_t>::value) {
+      expected_lhs(op_test_idx) = d_lhs / d_rhs;
+    } else {
+      if (std::is_same<LhsType, half_t>::value)
+        expected_lhs(op_test_idx) = d_lhs / static_cast<RhsType>(d_rhs);
+      if (std::is_same<RhsType, half_t>::value)
+        expected_lhs(op_test_idx) = static_cast<LhsType>(d_lhs) / d_rhs;
+    }
+
+    actual_lhs(op_test_sz_idx)   = sizeof(result);
+    expected_lhs(op_test_sz_idx) = sizeof(ExpectedResultType);
+  }
+  // END: Binary Arithmetic test helpers
+
   KOKKOS_FUNCTION
   void operator()(int) const {
     half_t tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
     using half_impl_type = Kokkos::Impl::half_impl_t::type;
     half_impl_type half_tmp;
+
+    // Initialze output views to catch missing test invocations
+    for (int i = 0; i < N_OP_TESTS; ++i) {
+      actual_lhs(i)   = 1;
+      expected_lhs(i) = -1;
+    }
 
     tmp_lhs              = h_lhs;
     actual_lhs(ASSIGN)   = cast_from_half<double>(tmp_lhs);
@@ -298,7 +461,7 @@ struct Functor_TestHalfOperators {
     actual_lhs(CDIV_H_S)   = cast_from_half<double>(tmp_lhs);
     expected_lhs(CDIV_H_S) = d_lhs;
     expected_lhs(CDIV_H_S) /= d_rhs;
-   
+
     test_add<half_t, half_t, half_t>(ADD_H_H, ADD_H_H_SZ);
     test_add<float, half_t, float>(ADD_S_H, ADD_S_H_SZ);
     test_add<double, half_t, double>(ADD_D_H, ADD_D_H_SZ);
@@ -313,124 +476,211 @@ struct Functor_TestHalfOperators {
     test_add<half_t, long int, half_t>(ADD_H_LI, ADD_H_LI_SZ);
     test_add<half_t, long long int, half_t>(ADD_H_LLI, ADD_H_LLI_SZ);
 
-    if (h_lhs >= 0 && h_rhs >= 0) {
+    // Check for potential overflow due to negative half_t -> unsigned integral
+    // cast
+    if (h_lhs >= 0) {
       test_add<unsigned short int, half_t, half_t>(ADD_USI_H, ADD_USI_H_SZ);
       test_add<unsigned int, half_t, half_t>(ADD_UI_H, ADD_UI_H_SZ);
       test_add<unsigned long int, half_t, half_t>(ADD_ULI_H, ADD_ULI_H_SZ);
-      test_add<unsigned long long int, half_t, half_t>(ADD_ULLI_H, ADD_ULLI_H_SZ);
+      test_add<unsigned long long int, half_t, half_t>(ADD_ULLI_H,
+                                                       ADD_ULLI_H_SZ);
+    } else {
+      actual_lhs(ADD_USI_H)     = expected_lhs(ADD_USI_H);
+      actual_lhs(ADD_USI_H_SZ)  = expected_lhs(ADD_USI_H_SZ);
+      actual_lhs(ADD_UI_H)      = expected_lhs(ADD_UI_H);
+      actual_lhs(ADD_UI_H_SZ)   = expected_lhs(ADD_UI_H_SZ);
+      actual_lhs(ADD_ULI_H)     = expected_lhs(ADD_ULI_H);
+      actual_lhs(ADD_ULI_H_SZ)  = expected_lhs(ADD_ULI_H_SZ);
+      actual_lhs(ADD_ULLI_H)    = expected_lhs(ADD_ULLI_H);
+      actual_lhs(ADD_ULLI_H_SZ) = expected_lhs(ADD_ULLI_H_SZ);
+    }
+
+    // Check for potential overflow due to negative half_t -> unsigned integral
+    // cast
+    if (h_rhs >= 0) {
       test_add<half_t, unsigned short int, half_t>(ADD_H_USI, ADD_H_USI_SZ);
       test_add<half_t, unsigned int, half_t>(ADD_H_UI, ADD_H_UI_SZ);
       test_add<half_t, unsigned long int, half_t>(ADD_H_ULI, ADD_H_ULI_SZ);
-      test_add<half_t, unsigned long long int, half_t>(ADD_H_ULLI, ADD_H_ULLI_SZ);
+      test_add<half_t, unsigned long long int, half_t>(ADD_H_ULLI,
+                                                       ADD_H_ULLI_SZ);
     } else {
-      actual_lhs(ADD_USI_H) =
-      actual_lhs(ADD_USI_H_SZ) =
-      actual_lhs(ADD_UI_H) =
-      actual_lhs(ADD_UI_H_SZ) =
-      actual_lhs(ADD_ULI_H) =
-      actual_lhs(ADD_ULI_H_SZ) =
-      actual_lhs(ADD_ULLI_H) =
-      actual_lhs(ADD_ULLI_H_SZ) =
-      actual_lhs(ADD_H_USI) =
-      actual_lhs(ADD_H_USI_SZ) =
-      actual_lhs(ADD_H_UI) =
-      actual_lhs(ADD_H_UI_SZ) =
-      actual_lhs(ADD_H_ULI) =
-      actual_lhs(ADD_H_ULI_SZ) =
-      actual_lhs(ADD_H_ULLI) =
-      actual_lhs(ADD_H_ULLI_SZ) =
-      expected_lhs(ADD_USI_H) =
-      expected_lhs(ADD_USI_H_SZ) =
-      expected_lhs(ADD_UI_H) =
-      expected_lhs(ADD_UI_H_SZ) =
-      expected_lhs(ADD_ULI_H) =
-      expected_lhs(ADD_ULI_H_SZ) =
-      expected_lhs(ADD_ULLI_H) =
-      expected_lhs(ADD_ULLI_H_SZ) =
-      expected_lhs(ADD_H_USI) =
-      expected_lhs(ADD_H_USI_SZ) =
-      expected_lhs(ADD_H_UI) =
-      expected_lhs(ADD_H_UI_SZ) =
-      expected_lhs(ADD_H_ULI) =
-      expected_lhs(ADD_H_ULI_SZ) =
-      expected_lhs(ADD_H_ULLI) =
-      expected_lhs(ADD_H_ULLI_SZ) = 0;
+      actual_lhs(ADD_H_USI)     = expected_lhs(ADD_H_USI);
+      actual_lhs(ADD_H_USI_SZ)  = expected_lhs(ADD_H_USI_SZ);
+      actual_lhs(ADD_H_UI)      = expected_lhs(ADD_H_UI);
+      actual_lhs(ADD_H_UI_SZ)   = expected_lhs(ADD_H_UI_SZ);
+      actual_lhs(ADD_H_ULI)     = expected_lhs(ADD_H_ULI);
+      actual_lhs(ADD_H_ULI_SZ)  = expected_lhs(ADD_H_ULI_SZ);
+      actual_lhs(ADD_H_ULLI)    = expected_lhs(ADD_H_ULLI);
+      actual_lhs(ADD_H_ULLI_SZ) = expected_lhs(ADD_H_ULLI_SZ);
     }
 
-    actual_lhs(SUB_H_H)   = cast_from_half<double>(h_lhs - h_rhs);
-    expected_lhs(SUB_H_H) = d_lhs - d_rhs;
-    auto sub_h_s          = h_lhs - static_cast<float>(d_rhs);
-    actual_lhs(SUB_H_S)   = sub_h_s;
-    expected_lhs(SUB_H_S) = d_lhs - d_rhs;
-    auto sub_s_h          = static_cast<float>(d_lhs) - h_rhs;
-    actual_lhs(SUB_S_H)   = sub_s_h;
-    expected_lhs(SUB_S_H) = d_lhs - d_rhs;
-    auto sub_h_d          = h_lhs - d_rhs;
-    actual_lhs(SUB_H_D)   = sub_h_d;
-    expected_lhs(SUB_H_D) = d_lhs - d_rhs;
-    auto sub_d_h          = d_lhs - h_rhs;
-    actual_lhs(SUB_D_H)   = sub_d_h;
-    expected_lhs(SUB_D_H) = d_lhs - d_rhs;
-    // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+    test_sub<half_t, half_t, half_t>(SUB_H_H, SUB_H_H_SZ);
+    test_sub<float, half_t, float>(SUB_S_H, SUB_S_H_SZ);
+    test_sub<double, half_t, double>(SUB_D_H, SUB_D_H_SZ);
+    test_sub<short int, half_t, half_t>(SUB_SI_H, SUB_SI_H_SZ);
+    test_sub<int, half_t, half_t>(SUB_I_H, SUB_I_H_SZ);
+    test_sub<long int, half_t, half_t>(SUB_LI_H, SUB_LI_H_SZ);
+    test_sub<long long int, half_t, half_t>(SUB_LLI_H, SUB_LLI_H_SZ);
+    test_sub<half_t, float, float>(SUB_H_S, SUB_H_S_SZ);
+    test_sub<half_t, double, double>(SUB_H_D, SUB_H_D_SZ);
+    test_sub<half_t, short int, half_t>(SUB_H_SI, SUB_H_SI_SZ);
+    test_sub<half_t, int, half_t>(SUB_H_I, SUB_H_I_SZ);
+    test_sub<half_t, long int, half_t>(SUB_H_LI, SUB_H_LI_SZ);
+    test_sub<half_t, long long int, half_t>(SUB_H_LLI, SUB_H_LLI_SZ);
 
-    actual_lhs(SUB_H_S_SZ)   = sizeof(sub_h_s);
-    expected_lhs(SUB_H_S_SZ) = sizeof(float);
-    actual_lhs(SUB_S_H_SZ)   = sizeof(sub_s_h);
-    expected_lhs(SUB_S_H_SZ) = sizeof(float);
-    actual_lhs(SUB_H_D_SZ)   = sizeof(sub_h_d);
-    expected_lhs(SUB_H_D_SZ) = sizeof(double);
-    actual_lhs(SUB_D_H_SZ)   = sizeof(sub_d_h);
-    expected_lhs(SUB_D_H_SZ) = sizeof(double);
+    // Check for potential overflow due to negative half_t -> unsigned integral
+    // cast
+    if (h_lhs >= half_t(0)) {
+      test_sub<unsigned short int, half_t, half_t>(SUB_USI_H, SUB_USI_H_SZ);
+      test_sub<unsigned int, half_t, half_t>(SUB_UI_H, SUB_UI_H_SZ);
+      test_sub<unsigned long int, half_t, half_t>(SUB_ULI_H, SUB_ULI_H_SZ);
+      test_sub<unsigned long long int, half_t, half_t>(SUB_ULLI_H,
+                                                       SUB_ULLI_H_SZ);
+    } else {
+      actual_lhs(SUB_USI_H)     = expected_lhs(SUB_USI_H);
+      actual_lhs(SUB_USI_H_SZ)  = expected_lhs(SUB_USI_H_SZ);
+      actual_lhs(SUB_UI_H)      = expected_lhs(SUB_UI_H);
+      actual_lhs(SUB_UI_H_SZ)   = expected_lhs(SUB_UI_H_SZ);
+      actual_lhs(SUB_ULI_H)     = expected_lhs(SUB_ULI_H);
+      actual_lhs(SUB_ULI_H_SZ)  = expected_lhs(SUB_ULI_H_SZ);
+      actual_lhs(SUB_ULLI_H)    = expected_lhs(SUB_ULLI_H);
+      actual_lhs(SUB_ULLI_H_SZ) = expected_lhs(SUB_ULLI_H_SZ);
+    }
 
-    actual_lhs(MUL_H_H)   = cast_from_half<double>(h_lhs * h_rhs);
-    expected_lhs(MUL_H_H) = d_lhs * d_rhs;
-    auto mul_h_s          = h_lhs * static_cast<float>(d_rhs);
-    actual_lhs(MUL_H_S)   = mul_h_s;
-    expected_lhs(MUL_H_S) = d_lhs * d_rhs;
-    auto mul_s_h          = static_cast<float>(d_lhs) * h_rhs;
-    actual_lhs(MUL_S_H)   = mul_s_h;
-    expected_lhs(MUL_S_H) = d_lhs * d_rhs;
-    auto mul_h_d          = h_lhs * d_rhs;
-    actual_lhs(MUL_H_D)   = mul_h_d;
-    expected_lhs(MUL_H_D) = d_lhs * d_rhs;
-    auto mul_d_h          = d_lhs * h_rhs;
-    actual_lhs(MUL_D_H)   = mul_d_h;
-    expected_lhs(MUL_D_H) = d_lhs * d_rhs;
-    // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+    // Check for potential overflow due to negative half_t -> unsigned integral
+    // cast
+    if (h_rhs >= half_t(0)) {
+      test_sub<half_t, unsigned short int, half_t>(SUB_H_USI, SUB_H_USI_SZ);
+      test_sub<half_t, unsigned int, half_t>(SUB_H_UI, SUB_H_UI_SZ);
+      test_sub<half_t, unsigned long int, half_t>(SUB_H_ULI, SUB_H_ULI_SZ);
+      test_sub<half_t, unsigned long long int, half_t>(SUB_H_ULLI,
+                                                       SUB_H_ULLI_SZ);
+    } else {
+      actual_lhs(SUB_H_USI)     = expected_lhs(SUB_H_USI);
+      actual_lhs(SUB_H_USI_SZ)  = expected_lhs(SUB_H_USI_SZ);
+      actual_lhs(SUB_H_UI)      = expected_lhs(SUB_H_UI);
+      actual_lhs(SUB_H_UI_SZ)   = expected_lhs(SUB_H_UI_SZ);
+      actual_lhs(SUB_H_ULI)     = expected_lhs(SUB_H_ULI);
+      actual_lhs(SUB_H_ULI_SZ)  = expected_lhs(SUB_H_ULI_SZ);
+      actual_lhs(SUB_H_ULLI)    = expected_lhs(SUB_H_ULLI);
+      actual_lhs(SUB_H_ULLI_SZ) = expected_lhs(SUB_H_ULLI_SZ);
+    }
 
-    actual_lhs(MUL_H_S_SZ)   = sizeof(mul_h_s);
-    expected_lhs(MUL_H_S_SZ) = sizeof(float);
-    actual_lhs(MUL_S_H_SZ)   = sizeof(mul_s_h);
-    expected_lhs(MUL_S_H_SZ) = sizeof(float);
-    actual_lhs(MUL_H_D_SZ)   = sizeof(mul_h_d);
-    expected_lhs(MUL_H_D_SZ) = sizeof(double);
-    actual_lhs(MUL_D_H_SZ)   = sizeof(mul_d_h);
-    expected_lhs(MUL_D_H_SZ) = sizeof(double);
+    test_mul<half_t, half_t, half_t>(MUL_H_H, MUL_H_H_SZ);
+    test_mul<float, half_t, float>(MUL_S_H, MUL_S_H_SZ);
+    test_mul<double, half_t, double>(MUL_D_H, MUL_D_H_SZ);
+    test_mul<short int, half_t, half_t>(MUL_SI_H, MUL_SI_H_SZ);
+    test_mul<int, half_t, half_t>(MUL_I_H, MUL_I_H_SZ);
+    test_mul<long int, half_t, half_t>(MUL_LI_H, MUL_LI_H_SZ);
+    test_mul<long long int, half_t, half_t>(MUL_LLI_H, MUL_LLI_H_SZ);
+    test_mul<half_t, float, float>(MUL_H_S, MUL_H_S_SZ);
+    test_mul<half_t, double, double>(MUL_H_D, MUL_H_D_SZ);
+    test_mul<half_t, short int, half_t>(MUL_H_SI, MUL_H_SI_SZ);
+    test_mul<half_t, int, half_t>(MUL_H_I, MUL_H_I_SZ);
+    test_mul<half_t, long int, half_t>(MUL_H_LI, MUL_H_LI_SZ);
+    test_mul<half_t, long long int, half_t>(MUL_H_LLI, MUL_H_LLI_SZ);
 
-    actual_lhs(DIV_H_H)   = cast_from_half<double>(h_lhs / h_rhs);
-    expected_lhs(DIV_H_H) = d_lhs / d_rhs;
-    auto div_h_s          = h_lhs / static_cast<float>(d_rhs);
-    actual_lhs(DIV_H_S)   = div_h_s;
-    expected_lhs(DIV_H_S) = d_lhs / d_rhs;
-    auto div_s_h          = static_cast<float>(d_lhs) / h_rhs;
-    actual_lhs(DIV_S_H)   = div_s_h;
-    expected_lhs(DIV_S_H) = d_lhs / d_rhs;
-    auto div_h_d          = h_lhs / d_rhs;
-    actual_lhs(DIV_H_D)   = div_h_d;
-    expected_lhs(DIV_H_D) = d_lhs / d_rhs;
-    auto div_d_h          = d_lhs / h_rhs;
-    actual_lhs(DIV_D_H)   = div_d_h;
-    expected_lhs(DIV_D_H) = d_lhs / d_rhs;
-    // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
+    // Check for potential overflow due to negative half_t -> unsigned integral
+    // cast
+    if (h_lhs >= half_t(0)) {
+      test_mul<unsigned short int, half_t, half_t>(MUL_USI_H, MUL_USI_H_SZ);
+      test_mul<unsigned int, half_t, half_t>(MUL_UI_H, MUL_UI_H_SZ);
+      test_mul<unsigned long int, half_t, half_t>(MUL_ULI_H, MUL_ULI_H_SZ);
+      test_mul<unsigned long long int, half_t, half_t>(MUL_ULLI_H,
+                                                       MUL_ULLI_H_SZ);
+    } else {
+      actual_lhs(MUL_USI_H)     = expected_lhs(MUL_USI_H);
+      actual_lhs(MUL_UI_H)      = expected_lhs(MUL_UI_H);
+      actual_lhs(MUL_ULI_H)     = expected_lhs(MUL_ULI_H);
+      actual_lhs(MUL_ULLI_H)    = expected_lhs(MUL_ULLI_H);
+      actual_lhs(MUL_USI_H_SZ)  = expected_lhs(MUL_USI_H_SZ);
+      actual_lhs(MUL_UI_H_SZ)   = expected_lhs(MUL_UI_H_SZ);
+      actual_lhs(MUL_ULI_H_SZ)  = expected_lhs(MUL_ULI_H_SZ);
+      actual_lhs(MUL_ULLI_H_SZ) = expected_lhs(MUL_ULLI_H_SZ);
+    }
 
-    actual_lhs(DIV_H_S_SZ)   = sizeof(div_h_s);
-    expected_lhs(DIV_H_S_SZ) = sizeof(float);
-    actual_lhs(DIV_S_H_SZ)   = sizeof(div_s_h);
-    expected_lhs(DIV_S_H_SZ) = sizeof(float);
-    actual_lhs(DIV_H_D_SZ)   = sizeof(div_h_d);
-    expected_lhs(DIV_H_D_SZ) = sizeof(double);
-    actual_lhs(DIV_D_H_SZ)   = sizeof(div_d_h);
-    expected_lhs(DIV_D_H_SZ) = sizeof(double);
+    // Check for potential overflow due to negative half_t -> unsigned integral
+    // cast
+    if (h_rhs >= half_t(0)) {
+      test_mul<half_t, unsigned short int, half_t>(MUL_H_USI, MUL_H_USI_SZ);
+      test_mul<half_t, unsigned int, half_t>(MUL_H_UI, MUL_H_UI_SZ);
+      test_mul<half_t, unsigned long int, half_t>(MUL_H_ULI, MUL_H_ULI_SZ);
+      test_mul<half_t, unsigned long long int, half_t>(MUL_H_ULLI,
+                                                       MUL_H_ULLI_SZ);
+    } else {
+      actual_lhs(MUL_H_USI)     = expected_lhs(MUL_H_USI);
+      actual_lhs(MUL_H_UI)      = expected_lhs(MUL_H_UI);
+      actual_lhs(MUL_H_ULI)     = expected_lhs(MUL_H_ULI);
+      actual_lhs(MUL_H_ULLI)    = expected_lhs(MUL_H_ULLI);
+      actual_lhs(MUL_H_USI_SZ)  = expected_lhs(MUL_H_USI_SZ);
+      actual_lhs(MUL_H_UI_SZ)   = expected_lhs(MUL_H_UI_SZ);
+      actual_lhs(MUL_H_ULI_SZ)  = expected_lhs(MUL_H_ULI_SZ);
+      actual_lhs(MUL_H_ULLI_SZ) = expected_lhs(MUL_H_ULLI_SZ);
+    }
+
+    test_div<half_t, half_t, half_t>(DIV_H_H, DIV_H_H_SZ);
+    test_div<float, half_t, float>(DIV_S_H, DIV_S_H_SZ);
+    test_div<double, half_t, double>(DIV_D_H, DIV_D_H_SZ);
+    test_div<short int, half_t, half_t>(DIV_SI_H, DIV_SI_H_SZ);
+    test_div<int, half_t, half_t>(DIV_I_H, DIV_I_H_SZ);
+    test_div<long int, half_t, half_t>(DIV_LI_H, DIV_LI_H_SZ);
+    test_div<long long int, half_t, half_t>(DIV_LLI_H, DIV_LLI_H_SZ);
+    test_div<half_t, float, float>(DIV_H_S, DIV_H_S_SZ);
+    test_div<half_t, double, double>(DIV_H_D, DIV_H_D_SZ);
+
+    // Check for division by zero due to truncation by half_t -> integral cast
+    if (h_rhs >= half_t(1) || h_rhs <= half_t(-1)) {
+      test_div<half_t, short int, half_t>(DIV_H_SI, DIV_H_SI_SZ);
+      test_div<half_t, int, half_t>(DIV_H_I, DIV_H_I_SZ);
+      test_div<half_t, long int, half_t>(DIV_H_LI, DIV_H_LI_SZ);
+      test_div<half_t, long long int, half_t>(DIV_H_LLI, DIV_H_LLI_SZ);
+    } else {
+      actual_lhs(DIV_H_SI)     = expected_lhs(DIV_H_SI);
+      actual_lhs(DIV_H_I)      = expected_lhs(DIV_H_I);
+      actual_lhs(DIV_H_LI)     = expected_lhs(DIV_H_LI);
+      actual_lhs(DIV_H_LLI)    = expected_lhs(DIV_H_LLI);
+      actual_lhs(DIV_H_SI_SZ)  = expected_lhs(DIV_H_SI_SZ);
+      actual_lhs(DIV_H_I_SZ)   = expected_lhs(DIV_H_I_SZ);
+      actual_lhs(DIV_H_LI_SZ)  = expected_lhs(DIV_H_LI_SZ);
+      actual_lhs(DIV_H_LLI_SZ) = expected_lhs(DIV_H_LLI_SZ);
+    }
+
+    // Check for potential overflow due to negative half_t -> unsigned integral
+    // cast
+    if (h_lhs >= half_t(0)) {
+      test_div<unsigned short int, half_t, half_t>(DIV_USI_H, DIV_USI_H_SZ);
+      test_div<unsigned int, half_t, half_t>(DIV_UI_H, DIV_UI_H_SZ);
+      test_div<unsigned long int, half_t, half_t>(DIV_ULI_H, DIV_ULI_H_SZ);
+      test_div<unsigned long long int, half_t, half_t>(DIV_ULLI_H,
+                                                       DIV_ULLI_H_SZ);
+    } else {
+      actual_lhs(DIV_USI_H)     = expected_lhs(DIV_USI_H);
+      actual_lhs(DIV_UI_H)      = expected_lhs(DIV_UI_H);
+      actual_lhs(DIV_ULI_H)     = expected_lhs(DIV_ULI_H);
+      actual_lhs(DIV_ULLI_H)    = expected_lhs(DIV_ULLI_H);
+      actual_lhs(DIV_USI_H_SZ)  = expected_lhs(DIV_USI_H_SZ);
+      actual_lhs(DIV_UI_H_SZ)   = expected_lhs(DIV_UI_H_SZ);
+      actual_lhs(DIV_ULI_H_SZ)  = expected_lhs(DIV_ULI_H_SZ);
+      actual_lhs(DIV_ULLI_H_SZ) = expected_lhs(DIV_ULLI_H_SZ);
+    }
+
+    // Check for division by zero due to truncation by half_t -> integral cast
+    if (h_rhs >= half_t(1)) {
+      test_div<half_t, unsigned short int, half_t>(DIV_H_USI, DIV_H_USI_SZ);
+      test_div<half_t, unsigned int, half_t>(DIV_H_UI, DIV_H_UI_SZ);
+      test_div<half_t, unsigned long int, half_t>(DIV_H_ULI, DIV_H_ULI_SZ);
+      test_div<half_t, unsigned long long int, half_t>(DIV_H_ULLI,
+                                                       DIV_H_ULLI_SZ);
+    } else {
+      actual_lhs(DIV_H_USI)     = expected_lhs(DIV_H_USI);
+      actual_lhs(DIV_H_USI_SZ)  = expected_lhs(DIV_H_USI_SZ);
+      actual_lhs(DIV_H_UI)      = expected_lhs(DIV_H_UI);
+      actual_lhs(DIV_H_UI_SZ)   = expected_lhs(DIV_H_UI_SZ);
+      actual_lhs(DIV_H_ULI)     = expected_lhs(DIV_H_ULI);
+      actual_lhs(DIV_H_ULI_SZ)  = expected_lhs(DIV_H_ULI_SZ);
+      actual_lhs(DIV_H_ULLI)    = expected_lhs(DIV_H_ULLI);
+      actual_lhs(DIV_H_ULLI_SZ) = expected_lhs(DIV_H_ULLI_SZ);
+    }
 
     // TODO: figure out why operator{!,&&,||} are returning __nv_bool
     actual_lhs(NEG)   = static_cast<double>(!h_lhs);
@@ -529,8 +779,13 @@ void __test_half_operators(half_t h_lhs, half_t h_rhs) {
 void test_half_operators() {
   half_t h_lhs = half_t(0.23458), h_rhs = half_t(0.67898);
   for (int i = -3; i < 2; i++) {
+    // printf("%f OP %f\n", float(h_lhs + cast_to_half(i + 1)), float(h_rhs +
+    // cast_to_half(i)));
     __test_half_operators(h_lhs + cast_to_half(i + 1), h_rhs + cast_to_half(i));
+    // TODO: __test_half_operators(h_lhs + cast_to_half(i + 1), half_t(0));
+    // TODO: __test_half_operators(half_t(0), h_rhs + cast_to_half(i));
   }
+  // TODO: __test_half_operators(0, 0);
 }
 
 TEST(TEST_CATEGORY, half_operators) { test_half_operators(); }

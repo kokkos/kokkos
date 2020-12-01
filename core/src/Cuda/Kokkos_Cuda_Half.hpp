@@ -340,6 +340,7 @@ class half_t {
     return lhs;
   }
 
+  // Binary Arithmetic upcast operators for +
   template <class T>
   KOKKOS_FUNCTION std::enable_if_t<
       std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
@@ -364,6 +365,7 @@ class half_t {
     return lhs;
   }
 
+  // Binary Arithmetic upcast operators for -
   template <class T>
   KOKKOS_FUNCTION std::enable_if_t<
       std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
@@ -388,6 +390,7 @@ class half_t {
     return lhs;
   }
 
+  // Binary Arithmetic upcast operators for *
   template <class T>
   KOKKOS_FUNCTION std::enable_if_t<
       std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
@@ -412,6 +415,7 @@ class half_t {
     return lhs;
   }
 
+  // Binary Arithmetic upcast operators for /
   template <class T>
   KOKKOS_FUNCTION std::enable_if_t<
       std::is_same<T, float>::value || std::is_same<T, double>::value, T> friend
