@@ -65,28 +65,19 @@ class SYCLDeviceUSMSpace {
 
   SYCLDeviceUSMSpace();
 
-  void* allocate(const std::size_t arg_alloc_size) const;
-  void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+  static void* allocate(const std::size_t arg_alloc_size);
+  static void* allocate(const char* arg_label, const size_t arg_alloc_size,
+                        const size_t arg_logical_size = 0);
 
-  void deallocate(void* const arg_alloc_ptr,
-                  const std::size_t arg_alloc_size) const;
-  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
-                  const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+  static void deallocate(void* const arg_alloc_ptr,
+                         const std::size_t arg_alloc_size);
+  static void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                         const size_t arg_alloc_size,
+                         const size_t arg_logical_size = 0);
 
  private:
   template <class, class, class, class>
   friend class LogicalMemorySpace;
-  void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
-                      const Kokkos::Tools::SpaceHandle =
-                          Kokkos::Tools::make_space_handle(name())) const;
-  void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
-                       const size_t arg_alloc_size,
-                       const size_t arg_logical_size = 0,
-                       const Kokkos::Tools::SpaceHandle =
-                           Kokkos::Tools::make_space_handle(name())) const;
 
  public:
   static constexpr const char* name() { return "SYCLDeviceUSM"; };
@@ -104,28 +95,19 @@ class SYCLSharedUSMSpace {
 
   SYCLSharedUSMSpace();
 
-  void* allocate(const std::size_t arg_alloc_size) const;
-  void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+  static void* allocate(const std::size_t arg_alloc_size);
+  static void* allocate(const char* arg_label, const size_t arg_alloc_size,
+                        const size_t arg_logical_size = 0);
 
-  void deallocate(void* const arg_alloc_ptr,
-                  const std::size_t arg_alloc_size) const;
-  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
-                  const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+  static void deallocate(void* const arg_alloc_ptr,
+                         const std::size_t arg_alloc_size);
+  static void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                         const size_t arg_alloc_size,
+                         const size_t arg_logical_size = 0);
 
  private:
   template <class, class, class, class>
   friend class LogicalMemorySpace;
-  void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
-                      const Kokkos::Tools::SpaceHandle =
-                          Kokkos::Tools::make_space_handle(name())) const;
-  void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
-                       const size_t arg_alloc_size,
-                       const size_t arg_logical_size = 0,
-                       const Kokkos::Tools::SpaceHandle =
-                           Kokkos::Tools::make_space_handle(name())) const;
 
  public:
   static constexpr const char* name() { return "SYCLSharedUSM"; };
