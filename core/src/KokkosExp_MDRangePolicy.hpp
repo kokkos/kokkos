@@ -432,7 +432,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 	m_tune_tile_size = true;
         if ((inner_direction == Right && (i < rank - 1)) ||
             (inner_direction == Left && (i > 0))) {
-          if (m_prod_tile_dims < max_threads) {
+          if (m_prod_tile_dims * default_tile_size < max_threads) {
             m_tile[i] = default_tile_size;
           } else {
             m_tile[i] = 1;
