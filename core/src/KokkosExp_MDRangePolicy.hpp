@@ -418,32 +418,31 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   void init_helper(index_type max_threads, int max_tile_size,
                    int default_tile_size) {
-    index_type span;
     int increment  = 1;
     int rank_start = 0;
     int rank_end   = rank;
-    if ((int)inner_direction == (int)Right) {
+    if (inner_direction == Right) {
       increment  = -1;
       rank_start = rank - 1;
       rank_end   = -1;
     }
     for (int i = rank_start; i != rank_end; i += increment) {
-      span = m_upper[i] - m_lower[i];
+      const index_type length = m_upper[i] - m_lower[i];
       if (m_tile[i] <= 0) {
-        m_tune_tile_size = true; 
-        if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
-            ((int)inner_direction == (int)Left && (i > 0))) {
+	m_tune_tile_size = true;
+        if ((inner_direction == Right && (i < rank - 1)) ||
+            (inner_direction == Left && (i > 0))) {
           if (m_prod_tile_dims < max_threads) {
             m_tile[i] = default_tile_size;
           } else {
             m_tile[i] = 1;
           }
         } else {
-          m_tile[i] = std::max(std::min<int>(span, max_tile_size), 1);
+          m_tile[i] = std::max(std::min<int>(length, max_tile_size), 1);
         }
       }
       m_tile_end[i] =
-          static_cast<index_type>((span + m_tile[i] - 1) / m_tile[i]);
+          static_cast<index_type>((length + m_tile[i] - 1) / m_tile[i]);
       m_num_tiles *= m_tile_end[i];
       m_prod_tile_dims *= m_tile[i];
     }
