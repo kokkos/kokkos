@@ -105,12 +105,14 @@ FUNCTION(KOKKOS_ADD_TEST)
     SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
     SET(EXE ${PACKAGE_NAME}_${EXE_ROOT})
 
-    if(TEST_TOOL)
-      add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
-      foreach(TEST_ADDED ${ALL_TESTS_ADDED})
-        set_property(TEST ${TEST_ADDED} APPEND PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
-      endforeach()
-    endif()
+    IF(TARGET ${EXE})
+      if(TEST_TOOL)
+        add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
+        foreach(TEST_ADDED ${ALL_TESTS_ADDED})
+          set_property(TEST ${TEST_ADDED} APPEND PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
+        endforeach()
+      endif()
+    ENDIF()
   else()
     CMAKE_PARSE_ARGUMENTS(TEST
       "WILL_FAIL"
