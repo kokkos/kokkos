@@ -61,6 +61,7 @@
 
 #if defined(KOKKOS_ENABLE_CUDA)
 #include <Kokkos_Cuda.hpp>
+#include <Cuda/Kokkos_Cuda_Instance.hpp>
 #elif defined(KOKKOS_ENABLE_HIP)
 #include <Kokkos_HIP.hpp>
 #elif defined(KOKKOS_ENABLE_SYCL)
