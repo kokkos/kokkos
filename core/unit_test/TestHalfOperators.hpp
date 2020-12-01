@@ -74,19 +74,48 @@ enum OP_TESTS {
   CMUL_H_S,
   CDIV_H_H,
   CDIV_H_S,
-  ADD_H_H,
+  ADD_H_H, 
   ADD_H_S,
   ADD_S_H,
   ADD_H_D,
   ADD_D_H,
-  ADD_H_I,  // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
-  ADD_I_H,
+  ADD_H_H_SZ,
   ADD_H_S_SZ,
   ADD_S_H_SZ,
   ADD_H_D_SZ,
   ADD_D_H_SZ,
-  ADD_H_I_SZ,
+  ADD_SI_H,
+  ADD_SI_H_SZ,
+  ADD_I_H,
   ADD_I_H_SZ,
+  ADD_LI_H,
+  ADD_LI_H_SZ,
+  ADD_LLI_H,
+  ADD_LLI_H_SZ,
+  ADD_USI_H,
+  ADD_USI_H_SZ,
+  ADD_UI_H,
+  ADD_UI_H_SZ,
+  ADD_ULI_H,
+  ADD_ULI_H_SZ,
+  ADD_ULLI_H,
+  ADD_ULLI_H_SZ,
+  ADD_H_SI,
+  ADD_H_SI_SZ,
+  ADD_H_I,
+  ADD_H_I_SZ,
+  ADD_H_LI,
+  ADD_H_LI_SZ,
+  ADD_H_LLI,
+  ADD_H_LLI_SZ,
+  ADD_H_USI,
+  ADD_H_USI_SZ,
+  ADD_H_UI,
+  ADD_H_UI_SZ,
+  ADD_H_ULI,
+  ADD_H_ULI_SZ,
+  ADD_H_ULLI,
+  ADD_H_ULLI_SZ,
   SUB_H_H,
   SUB_H_S,
   SUB_S_H,
@@ -122,8 +151,7 @@ enum OP_TESTS {
   LT,
   GT,
   LE,
-  GE,
-  TW,
+  GE, // TODO: TW,
   PASS_BY_REF,
   AO_IMPL_HALF,
   AO_HALF_T,
@@ -143,6 +171,11 @@ struct Functor_TestHalfOperators {
     d_lhs        = cast_from_half<double>(h_lhs);
     d_rhs        = cast_from_half<double>(h_rhs);
 
+    for (int i = 0; i < N_OP_TESTS; ++i) {
+      actual_lhs(i) = 1;
+      expected_lhs(i) = -1;
+    }
+
     if (std::is_same<view_type, ViewTypeHost>::value) {
       auto run_on_host = *this;
       run_on_host(0);
@@ -150,6 +183,25 @@ struct Functor_TestHalfOperators {
       Kokkos::parallel_for("Test::Functor_TestHalfOperators",
                            Kokkos::RangePolicy<ExecutionSpace>(0, 1), *this);
     }
+  }
+
+  template<class LhsType, class RhsType, class ExpectedResultType>
+  KOKKOS_INLINE_FUNCTION
+  void test_add(int op_test_idx, int op_test_sz_idx) const {
+    auto sum                = static_cast<LhsType>(h_lhs) + static_cast<RhsType>(h_rhs);
+    actual_lhs(op_test_idx) = static_cast<double>(sum);
+
+    if (std::is_same<RhsType, half_t>::value && std::is_same<LhsType, half_t>::value) {
+      expected_lhs(op_test_idx) = d_lhs + d_rhs;
+    } else {
+      if (std::is_same<LhsType, half_t>::value)
+        expected_lhs(op_test_idx) = d_lhs + static_cast<RhsType>(d_rhs);
+      if (std::is_same<RhsType, half_t>::value)
+        expected_lhs(op_test_idx) = static_cast<LhsType>(d_lhs) + d_rhs;
+    }
+
+    actual_lhs(op_test_sz_idx)   = sizeof(sum);
+    expected_lhs(op_test_sz_idx) = sizeof(ExpectedResultType);
   }
 
   KOKKOS_FUNCTION
@@ -246,41 +298,64 @@ struct Functor_TestHalfOperators {
     actual_lhs(CDIV_H_S)   = cast_from_half<double>(tmp_lhs);
     expected_lhs(CDIV_H_S) = d_lhs;
     expected_lhs(CDIV_H_S) /= d_rhs;
+   
+    test_add<half_t, half_t, half_t>(ADD_H_H, ADD_H_H_SZ);
+    test_add<float, half_t, float>(ADD_S_H, ADD_S_H_SZ);
+    test_add<double, half_t, double>(ADD_D_H, ADD_D_H_SZ);
+    test_add<short int, half_t, half_t>(ADD_SI_H, ADD_SI_H_SZ);
+    test_add<int, half_t, half_t>(ADD_I_H, ADD_I_H_SZ);
+    test_add<long int, half_t, half_t>(ADD_LI_H, ADD_LI_H_SZ);
+    test_add<long long int, half_t, half_t>(ADD_LLI_H, ADD_LLI_H_SZ);
+    test_add<half_t, float, float>(ADD_H_S, ADD_H_S_SZ);
+    test_add<half_t, double, double>(ADD_H_D, ADD_H_D_SZ);
+    test_add<half_t, short int, half_t>(ADD_H_SI, ADD_H_SI_SZ);
+    test_add<half_t, int, half_t>(ADD_H_I, ADD_H_I_SZ);
+    test_add<half_t, long int, half_t>(ADD_H_LI, ADD_H_LI_SZ);
+    test_add<half_t, long long int, half_t>(ADD_H_LLI, ADD_H_LLI_SZ);
 
-    actual_lhs(ADD_H_H)   = cast_from_half<double>(h_lhs + h_rhs);
-    expected_lhs(ADD_H_H) = d_lhs + d_rhs;
-    auto add_h_s          = h_lhs + static_cast<float>(d_rhs);
-    actual_lhs(ADD_H_S)   = add_h_s;
-    expected_lhs(ADD_H_S) = d_lhs + d_rhs;
-    auto add_s_h          = static_cast<float>(d_lhs) + h_rhs;
-    actual_lhs(ADD_S_H)   = add_s_h;
-    expected_lhs(ADD_S_H) = d_lhs + d_rhs;
-    auto add_h_d          = h_lhs + d_rhs;
-    actual_lhs(ADD_H_D)   = add_h_d;
-    expected_lhs(ADD_H_D) = d_lhs + d_rhs;
-    auto add_d_h          = d_lhs + h_rhs;
-    actual_lhs(ADD_D_H)   = add_d_h;
-    expected_lhs(ADD_D_H) = d_lhs + d_rhs;
-    auto add_h_i          = h_lhs + int(d_rhs);
-    actual_lhs(ADD_H_I)   = cast_from_half<double>(add_h_i);
-    expected_lhs(ADD_H_I) = d_lhs + int(d_rhs);
-    auto add_i_h          = int(d_lhs) + h_rhs;
-    actual_lhs(ADD_I_H)   = cast_from_half<double>(add_i_h);
-    expected_lhs(ADD_I_H) = int(d_lhs) + d_rhs;
-    // TODO: SI, I, LI, LLI, USI, UI, ULI, ULLI
-
-    actual_lhs(ADD_H_S_SZ)   = sizeof(add_h_s);
-    expected_lhs(ADD_H_S_SZ) = sizeof(float);
-    actual_lhs(ADD_S_H_SZ)   = sizeof(add_s_h);
-    expected_lhs(ADD_S_H_SZ) = sizeof(float);
-    actual_lhs(ADD_H_D_SZ)   = sizeof(add_h_d);
-    expected_lhs(ADD_H_D_SZ) = sizeof(double);
-    actual_lhs(ADD_D_H_SZ)   = sizeof(add_d_h);
-    expected_lhs(ADD_D_H_SZ) = sizeof(double);
-    actual_lhs(ADD_H_I_SZ)   = sizeof(add_h_i);
-    expected_lhs(ADD_H_I_SZ) = sizeof(half_t);
-    actual_lhs(ADD_I_H_SZ)   = sizeof(add_i_h);
-    expected_lhs(ADD_I_H_SZ) = sizeof(half_t);
+    if (h_lhs >= 0 && h_rhs >= 0) {
+      test_add<unsigned short int, half_t, half_t>(ADD_USI_H, ADD_USI_H_SZ);
+      test_add<unsigned int, half_t, half_t>(ADD_UI_H, ADD_UI_H_SZ);
+      test_add<unsigned long int, half_t, half_t>(ADD_ULI_H, ADD_ULI_H_SZ);
+      test_add<unsigned long long int, half_t, half_t>(ADD_ULLI_H, ADD_ULLI_H_SZ);
+      test_add<half_t, unsigned short int, half_t>(ADD_H_USI, ADD_H_USI_SZ);
+      test_add<half_t, unsigned int, half_t>(ADD_H_UI, ADD_H_UI_SZ);
+      test_add<half_t, unsigned long int, half_t>(ADD_H_ULI, ADD_H_ULI_SZ);
+      test_add<half_t, unsigned long long int, half_t>(ADD_H_ULLI, ADD_H_ULLI_SZ);
+    } else {
+      actual_lhs(ADD_USI_H) =
+      actual_lhs(ADD_USI_H_SZ) =
+      actual_lhs(ADD_UI_H) =
+      actual_lhs(ADD_UI_H_SZ) =
+      actual_lhs(ADD_ULI_H) =
+      actual_lhs(ADD_ULI_H_SZ) =
+      actual_lhs(ADD_ULLI_H) =
+      actual_lhs(ADD_ULLI_H_SZ) =
+      actual_lhs(ADD_H_USI) =
+      actual_lhs(ADD_H_USI_SZ) =
+      actual_lhs(ADD_H_UI) =
+      actual_lhs(ADD_H_UI_SZ) =
+      actual_lhs(ADD_H_ULI) =
+      actual_lhs(ADD_H_ULI_SZ) =
+      actual_lhs(ADD_H_ULLI) =
+      actual_lhs(ADD_H_ULLI_SZ) =
+      expected_lhs(ADD_USI_H) =
+      expected_lhs(ADD_USI_H_SZ) =
+      expected_lhs(ADD_UI_H) =
+      expected_lhs(ADD_UI_H_SZ) =
+      expected_lhs(ADD_ULI_H) =
+      expected_lhs(ADD_ULI_H_SZ) =
+      expected_lhs(ADD_ULLI_H) =
+      expected_lhs(ADD_ULLI_H_SZ) =
+      expected_lhs(ADD_H_USI) =
+      expected_lhs(ADD_H_USI_SZ) =
+      expected_lhs(ADD_H_UI) =
+      expected_lhs(ADD_H_UI_SZ) =
+      expected_lhs(ADD_H_ULI) =
+      expected_lhs(ADD_H_ULI_SZ) =
+      expected_lhs(ADD_H_ULLI) =
+      expected_lhs(ADD_H_ULLI_SZ) = 0;
+    }
 
     actual_lhs(SUB_H_H)   = cast_from_half<double>(h_lhs - h_rhs);
     expected_lhs(SUB_H_H) = d_lhs - d_rhs;
