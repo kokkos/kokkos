@@ -961,6 +961,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
+      // return ;
     }
 
     if (m_policy.begin() != m_policy.end()) {
