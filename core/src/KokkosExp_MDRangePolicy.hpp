@@ -63,7 +63,8 @@
 #include <Kokkos_Cuda.hpp>
 #include <Cuda/Kokkos_Cuda_Instance.hpp>
 #elif defined(KOKKOS_ENABLE_HIP)
-#include <Kokkos_HIP.hpp>
+#include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
 #elif defined(KOKKOS_ENABLE_SYCL)
 #include <Kokkos_SYCL.hpp>
 #endif
