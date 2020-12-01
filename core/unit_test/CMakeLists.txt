@@ -650,6 +650,8 @@ FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST DEVICE)
   )
 
   SET(EXE_NAME ${PACKAGE_NAME}_IncrementalTest_${DEVICE})
+  # Check that the target was actually created because in a TribITS build
+  # where only tests marked as PERFORMANCE enabled it would not be.
   IF(TARGET ${EXE_NAME})
     TARGET_INCLUDE_DIRECTORIES(${EXE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/incremental )
   ENDIF()
