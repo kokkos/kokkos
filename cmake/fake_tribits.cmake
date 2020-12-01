@@ -105,11 +105,17 @@ FUNCTION(KOKKOS_ADD_TEST)
     SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
     SET(EXE ${PACKAGE_NAME}_${EXE_ROOT})
 
-    if(TEST_TOOL)
-      add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
-      foreach(TEST_ADDED ${ALL_TESTS_ADDED})
-        set_property(TEST ${TEST_ADDED} APPEND PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
-      endforeach()
+    # The function TRIBITS_ADD_TEST() has a CATEGORIES argument that defaults
+    # to BASIC.  If a project elects to only enable tests marked as PERFORMANCE,
+    # the test won't actually be added and attempting to set a property on it below
+    # will yield an error.
+    if(TARGET ${EXE})
+      if(TEST_TOOL)
+        add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
+        foreach(TEST_ADDED ${ALL_TESTS_ADDED})
+          set_property(TEST ${TEST_ADDED} APPEND PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
+        endforeach()
+      endif()
     endif()
   else()
     CMAKE_PARSE_ARGUMENTS(TEST
