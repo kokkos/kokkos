@@ -258,7 +258,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   using launch_bounds     = typename traits::launch_bounds;
   using member_type       = typename range_policy::member_type;
 
-  enum { rank = static_cast<int>(iteration_pattern::rank) };
+  static constexpr int rank = iteration_pattern::rank;
 
   using index_type       = typename traits::index_type;
   using array_index_type = std::int64_t;
@@ -283,36 +283,18 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   index_type m_prod_tile_dims = 1;
   bool m_tune_tile_size       = false;
 
-  /*
-    // NDE enum impl definition alternative - replace static constexpr int ?
-    enum { outer_direction = static_cast<int> (
-        (iteration_pattern::outer_direction != Iterate::Default)
-      ? iteration_pattern::outer_direction
-      : default_outer_direction< typename traits::execution_space>::value ) };
-
-    enum { inner_direction = static_cast<int> (
-        iteration_pattern::inner_direction != Iterate::Default
-      ? iteration_pattern::inner_direction
-      : default_inner_direction< typename traits::execution_space>::value ) };
-
-    enum { Right = static_cast<int>( Iterate::Right ) };
-    enum { Left  = static_cast<int>( Iterate::Left ) };
-  */
-  // static constexpr int rank = iteration_pattern::rank;
-
-  static constexpr int outer_direction = static_cast<int>(
+  static constexpr auto outer_direction =
       (iteration_pattern::outer_direction != Iterate::Default)
           ? iteration_pattern::outer_direction
-          : default_outer_direction<typename traits::execution_space>::value);
+          : default_outer_direction<typename traits::execution_space>::value;
 
-  static constexpr int inner_direction = static_cast<int>(
+  static constexpr auto inner_direction =
       iteration_pattern::inner_direction != Iterate::Default
           ? iteration_pattern::inner_direction
-          : default_inner_direction<typename traits::execution_space>::value);
+          : default_inner_direction<typename traits::execution_space>::value;
 
-  // Ugly ugly workaround intel 14 not handling scoped enum correctly
-  static constexpr int Right = static_cast<int>(Iterate::Right);
-  static constexpr int Left  = static_cast<int>(Iterate::Left);
+  static constexpr auto Right = Iterate::Right;
+  static constexpr auto Left  = Iterate::Left;
 
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
     return m_space;
