@@ -743,13 +743,18 @@ class OpenMPTargetExecTeamMember {
                                // Properties ...> & team
       ,
       void* const glb_scratch, const int shmem_size_L1, const int shmem_size_L2)
-      : m_team_shared(((char*)glb_scratch +
-                       league_rank * (shmem_size_L1 + shmem_size_L2 + 16)),
-                      shmem_size_L1,
-                      ((char*)glb_scratch +
-                       league_rank * (shmem_size_L1 + shmem_size_L2 + 16)) +
-                          shmem_size_L1 + 16,
-                      shmem_size_L2),
+      : m_team_shared(
+            ((char*)glb_scratch +
+             league_rank * (shmem_size_L1 + shmem_size_L2 +
+                            ((shmem_size_L1 + shmem_size_L2) * 10 / 100) + 16)),
+            shmem_size_L1,
+            ((char*)glb_scratch +
+             league_rank *
+                 (shmem_size_L1 + shmem_size_L2 +
+                  ((shmem_size_L1 + shmem_size_L2) * 10 / 100) + 16)) +
+                shmem_size_L1 + ((shmem_size_L1 + shmem_size_L2) * 10 / 100) +
+                16,
+            shmem_size_L2),
         m_team_scratch_size{shmem_size_L1, shmem_size_L2},
         m_team_rank(0),
         m_team_size(team_size),
@@ -759,10 +764,15 @@ class OpenMPTargetExecTeamMember {
         m_glb_scratch(glb_scratch) {
     const int omp_tid      = omp_get_thread_num();
     const int omp_team_num = omp_get_team_num();
-    m_reduce_scratch = (char*)glb_scratch + omp_team_num * TEAM_REDUCE_SIZE;
-    m_league_rank    = league_rank;
-    m_team_rank      = omp_tid;
-    m_vector_lane    = 0;
+    //    Pointing to the first element of team-scratch that will be used of
+    //    reduction.
+    m_reduce_scratch =
+        (char*)glb_scratch +
+        league_rank * (shmem_size_L1 + shmem_size_L2 +
+                       ((shmem_size_L1 + shmem_size_L2) * 10 / 100) + 16);
+    m_league_rank = league_rank;
+    m_team_rank   = omp_tid;
+    m_vector_lane = 0;
   }
 
   static inline int team_reduce_size() { return TEAM_REDUCE_SIZE; }

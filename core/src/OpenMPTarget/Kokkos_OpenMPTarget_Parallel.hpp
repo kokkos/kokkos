@@ -514,8 +514,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const size_t shmem_size_L1 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L2 = m_policy.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,
-                                     shmem_size_L1, shmem_size_L2);
+    OpenMPTargetExec::resize_scratch(0, team_size, shmem_size_L1,
+                                     shmem_size_L2);
 
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
@@ -552,8 +552,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const size_t shmem_size_L1 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L2 = m_policy.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,
-                                     shmem_size_L1, shmem_size_L2);
+    OpenMPTargetExec::resize_scratch(0, team_size, shmem_size_L1,
+                                     shmem_size_L2);
 
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 #pragma omp target teams distribute map(to           \

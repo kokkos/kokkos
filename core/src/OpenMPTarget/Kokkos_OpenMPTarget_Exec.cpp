@@ -104,16 +104,14 @@ void OpenMPTargetExec::clear_scratch() {
 
 void* OpenMPTargetExec::get_scratch_ptr() { return m_scratch_ptr; }
 
-void OpenMPTargetExec::resize_scratch(int64_t reduce_bytes,
-                                      int64_t team_reduce_bytes,
-                                      int64_t team_shared_bytes,
-                                      int64_t thread_local_bytes) {
+void OpenMPTargetExec::resize_scratch(int64_t reduce_bytes, int64_t team_size,
+                                      int64_t shmem_size_L1,
+                                      int64_t shmem_size_L2) {
   Kokkos::Experimental::OpenMPTargetSpace space;
-  int64_t total_size =
-      MAX_ACTIVE_TEAMS * reduce_bytes +         // Inter Team Reduction
-      MAX_ACTIVE_TEAMS * team_reduce_bytes +    // Intra Team Reduction
-      MAX_ACTIVE_TEAMS * team_shared_bytes +    // Team Local Scratch
-      MAX_ACTIVE_THREADS * thread_local_bytes;  // Thread Private Scratch
+  const int64_t shmem_size =
+      shmem_size_L1 + shmem_size_L2;  // L1 + L2 shared memory per team.
+  const int64_t padding = shmem_size * 10 / 100;  // Padding per team.
+  int64_t total_size = (shmem_size + 16 + padding) * ((1024 * 80) / team_size);
 
   if (total_size > m_scratch_size) {
     space.deallocate(m_scratch_ptr, m_scratch_size);
