@@ -4,7 +4,6 @@ language: cpp
 
 os:
   - linux
-  - osx
 
 compiler:
   - gcc
@@ -42,30 +41,11 @@ env:
 
 matrix:
   exclude:
-# Apple GCC is just an alias to AppleClang
-    - os: osx
-      compiler: gcc
-# Apple Clang doesn't support OpenMP
-    - os: osx
-      compiler: clang
-      env: CMAKE_BUILD_TYPE=Debug BACKEND="OPENMP" COVERAGE=yes GTEST_FILTER="-*DeathTest*"
-    - os: osx
-      compiler: clang
-      env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
-# We do this as canary
     - os: linux
       compiler: gcc
       env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
 
 before_script:
-  - if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
-      brew update;
-      export HOMEBREW_NO_AUTO_UPDATE=1;
-      brew ls --versions ccache   > /dev/null || brew install ccache;
-      export PATH=/usr/local/opt/ccache/libexec:$PATH;
-      export CXXFLAGS="${CXXFLAGS} -Wno-unused-command-line-argument";
-      if [[ ${BACKEND} == "OPENMP" ]]; then brew install libomp; fi
-    fi
   - ccache -z
   - if [[ ${COVERAGE} ]]; then export CXX="${CXX} --coverage"; fi
   - if [[ ! ${CMAKE_BUILD_TYPE} ]]; then export CXXFLAGS="${CXXFLAGS} -O2"; fi
