@@ -69,8 +69,6 @@
 #include <Kokkos_SYCL.hpp>
 #endif
 
-#include <iostream>
-
 namespace Kokkos {
 
 // ------------------------------------------------------------------ //
@@ -383,7 +381,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   template <typename ExecutionSpace>
   void init(const ExecutionSpace&) {
     const index_type max_threads = std::numeric_limits<int>::max();
-    const int max_tile_size      = std::numeric_limits<int>::max();
+    const int max_tile_size      = -1;
     const int default_tile_size  = 2;
     init_helper(max_threads, max_tile_size, default_tile_size, max_threads);
   }
@@ -392,10 +390,11 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   void init(const Kokkos::Cuda& space) {
     const index_type max_threads =
         space.impl_internal_space_instance()->m_maxThreadsPerSM;
-    const int max_tile_size     = 16;
-    const int default_tile_size = 2;
+    const int max_tile_size       = 16;
+    const int default_tile_size   = 2;
     const int max_total_tile_size = 512;
-    init_helper(max_threads, max_tile_size, default_tile_size, max_total_tile_size);
+    init_helper(max_threads, max_tile_size, default_tile_size,
+                max_total_tile_size);
   }
 #endif
 
@@ -403,10 +402,11 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   void init(const Kokkos::Experimental::HIP& space) {
     const index_type max_threads =
         space.impl_internal_space_instance()->m_maxThreadsPerSM;
-    const int max_tile_size     = 16;
-    const int default_tile_size = 4;
+    const int max_tile_size       = 16;
+    const int default_tile_size   = 4;
     const int max_total_tile_size = 1024;
-    init_helper(max_threads, max_tile_size, default_tile_size, max_total_tile_size);
+    init_helper(max_threads, max_tile_size, default_tile_size,
+                max_total_tile_size);
   }
 #endif
 
@@ -430,24 +430,21 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       rank_start = rank - 1;
       rank_end   = -1;
     }
-    std::cout << "default_tile_size " << default_tile_size << " max_threads " << max_threads << std::endl;
     for (int i = rank_start; i != rank_end; i += increment) {
       const index_type length = m_upper[i] - m_lower[i];
       if (m_tile[i] <= 0) {
 	m_tune_tile_size = true;
         if ((inner_direction == Right && (i < rank - 1)) ||
             (inner_direction == Left && (i > 0))) {
-	  std::cout << "m_prod_tile_dims * default_tile_size=" << m_prod_tile_dims * default_tile_size 
-		    << " < " << "max_total_tile_size=" << max_total_tile_size << std::endl;
           if (m_prod_tile_dims * default_tile_size < max_total_tile_size) {
             m_tile[i] = default_tile_size;
           } else {
             m_tile[i] = 1;
           }
         } else {
-          m_tile[i] = std::max(std::min<int>(length, max_tile_size), 1);
+          m_tile[i] =
+              max_tile_size <= 0 ? std::max<int>(length, 1) : max_tile_size;
         }
-	std::cout << "m_tile[" << i << "]=" << m_tile[i] << std::endl;
       }
       m_tile_end[i] =
           static_cast<index_type>((length + m_tile[i] - 1) / m_tile[i]);
