@@ -39,10 +39,12 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version -fsycl -fsycl-targets=nvptx64-nvidia-cuda-sycldevice" \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version" \
+                                -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
+                                -DKokkos_ENABLE_UNSUPPORTED_ARCH=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
                               make -j8 && ctest --verbose'''
