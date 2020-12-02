@@ -84,25 +84,63 @@ enum class Iterate
 
 template <typename ExecSpace>
 struct default_outer_direction {
-  using type = Iterate;
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  static constexpr Iterate value = Iterate::Left;
-#else
+  using type                     = Iterate;
   static constexpr Iterate value = Iterate::Right;
-#endif
 };
+
+#ifdef KOKKOS_ENABLE_CUDA
+template <>
+struct default_outer_direction<Kokkos::Cuda> {
+  using type                     = Iterate;
+  static constexpr Iterate value = Iterate::Left;
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct default_outer_direction<Kokkos::Experimental::HIP> {
+  using type                     = Iterate;
+  static constexpr Iterate value = Iterate::Left;
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct default_outer_direction<Kokkos::Experimental::SYCL> {
+  using type                     = Iterate;
+  static constexpr Iterate value = Iterate::Left;
+};
+#endif
 
 template <typename ExecSpace>
 struct default_inner_direction {
-  using type = Iterate;
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-  static constexpr Iterate value = Iterate::Left;
-#else
+  using type                     = Iterate;
   static constexpr Iterate value = Iterate::Right;
-#endif
 };
+
+#ifdef KOKKOS_ENABLE_CUDA
+template <>
+struct default_inner_direction<Kokkos::Cuda> {
+  using type                     = Iterate;
+  static constexpr Iterate value = Iterate::Left;
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_HIP
+template <>
+struct default_inner_direction<Kokkos::Experimental::HIP> {
+  using type                     = Iterate;
+  static constexpr Iterate value = Iterate::Left;
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct default_inner_direction<Kokkos::Experimental::SYCL> {
+  using type                     = Iterate;
+  static constexpr Iterate value = Iterate::Left;
+};
+#endif
 
 // Iteration Pattern
 template <unsigned N, Iterate OuterDir = Iterate::Default,
