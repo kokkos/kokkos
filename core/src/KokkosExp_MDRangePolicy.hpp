@@ -69,6 +69,8 @@
 #include <Kokkos_SYCL.hpp>
 #endif
 
+#include <iostream>
+
 namespace Kokkos {
 
 // ------------------------------------------------------------------ //
@@ -383,7 +385,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     const index_type max_threads = std::numeric_limits<int>::max();
     const int max_tile_size      = std::numeric_limits<int>::max();
     const int default_tile_size  = 2;
-    init_helper(max_threads, max_tile_size, default_tile_size);
+    init_helper(max_threads, max_tile_size, default_tile_size, max_threads);
   }
 
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -392,7 +394,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         space.impl_internal_space_instance()->m_maxThreadsPerSM;
     const int max_tile_size     = 16;
     const int default_tile_size = 2;
-    init_helper(max_threads, max_tile_size, default_tile_size);
+    const int max_total_tile_size = 512;
+    init_helper(max_threads, max_tile_size, default_tile_size, max_total_tile_size);
   }
 #endif
 
@@ -402,7 +405,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         space.impl_internal_space_instance()->m_maxThreadsPerSM;
     const int max_tile_size     = 16;
     const int default_tile_size = 4;
-    init_helper(max_threads, max_tile_size, default_tile_size);
+    const int max_total_tile_size = 1024;
+    init_helper(max_threads, max_tile_size, default_tile_size, max_total_tile_size);
   }
 #endif
 
@@ -412,12 +416,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         space.impl_internal_space_instance()->m_maxThreadsPerSM;
     const int max_tile_size     = 16;
     const int default_tile_size = 2;
-    init_helper(max_threads, max_tile_size, default_tile_size);
+    init_helper(max_threads, max_tile_size, default_tile_size, max_threads);
   }
 #endif
 
   void init_helper(index_type max_threads, int max_tile_size,
-                   int default_tile_size) {
+                   int default_tile_size, int max_total_tile_size) {
     int increment  = 1;
     int rank_start = 0;
     int rank_end   = rank;
@@ -426,13 +430,16 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       rank_start = rank - 1;
       rank_end   = -1;
     }
+    std::cout << "default_tile_size " << default_tile_size << " max_threads " << max_threads << std::endl;
     for (int i = rank_start; i != rank_end; i += increment) {
       const index_type length = m_upper[i] - m_lower[i];
       if (m_tile[i] <= 0) {
 	m_tune_tile_size = true;
         if ((inner_direction == Right && (i < rank - 1)) ||
             (inner_direction == Left && (i > 0))) {
-          if (m_prod_tile_dims * default_tile_size < max_threads) {
+	  std::cout << "m_prod_tile_dims * default_tile_size=" << m_prod_tile_dims * default_tile_size 
+		    << " < " << "max_total_tile_size=" << max_total_tile_size << std::endl;
+          if (m_prod_tile_dims * default_tile_size < max_total_tile_size) {
             m_tile[i] = default_tile_size;
           } else {
             m_tile[i] = 1;
@@ -440,6 +447,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         } else {
           m_tile[i] = std::max(std::min<int>(length, max_tile_size), 1);
         }
+	std::cout << "m_tile[" << i << "]=" << m_tile[i] << std::endl;
       }
       m_tile_end[i] =
           static_cast<index_type>((length + m_tile[i] - 1) / m_tile[i]);
