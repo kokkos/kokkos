@@ -68,6 +68,9 @@ enum OP_TESTS {
   POSTFIX_DEC,
   CADD_H_H,
   CADD_H_S,
+  CADD_S_H,
+  CADD_H_D,
+  CADD_D_H,
   CSUB_H_H,
   CSUB_H_S,
   CMUL_H_H,
@@ -365,6 +368,7 @@ struct Functor_TestHalfOperators {
   void operator()(int) const {
     half_t tmp_lhs, tmp2_lhs, *tmp_ptr;
     double tmp_d_lhs;
+    float tmp_s_lhs;
     using half_impl_type = Kokkos::Impl::half_impl_t::type;
     half_impl_type half_tmp;
 
@@ -425,6 +429,24 @@ struct Functor_TestHalfOperators {
     actual_lhs(CADD_H_S)   = cast_from_half<double>(tmp_lhs);
     expected_lhs(CADD_H_S) = d_lhs;
     expected_lhs(CADD_H_S) += d_rhs;
+
+    tmp_s_lhs = h_lhs;
+    tmp_s_lhs += h_rhs;
+    actual_lhs(CADD_S_H) = static_cast<double>(tmp_s_lhs);
+    expected_lhs(CADD_S_H) = d_lhs;
+    expected_lhs(CADD_S_H) += d_rhs;
+
+    tmp_lhs = h_lhs;
+    tmp_lhs += static_cast<double>(d_rhs);
+    actual_lhs(CADD_H_D)   = cast_from_half<double>(tmp_lhs);
+    expected_lhs(CADD_H_D) = d_lhs;
+    expected_lhs(CADD_H_D) += d_rhs;
+
+    tmp_d_lhs = h_lhs;
+    tmp_d_lhs += h_rhs;
+    actual_lhs(CADD_D_H) = static_cast<double>(tmp_d_lhs);
+    expected_lhs(CADD_D_H) = d_lhs;
+    expected_lhs(CADD_D_H) += d_rhs;
 
     tmp_lhs = h_lhs;
     tmp_lhs -= h_rhs;
