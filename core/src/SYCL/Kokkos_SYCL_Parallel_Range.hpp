@@ -115,6 +115,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
   using functor_type = FunctorType;
 
   void execute() const {
+    if (m_policy.begin() == m_policy.end()) return;
+
     // if the functor is trivially copyable, we can launch it directly;
     // otherwise, we will launch it indirectly via explicitly creating
     // it in USM shared memory.

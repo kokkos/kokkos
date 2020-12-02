@@ -28,8 +28,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.sycl'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=intel/oneapi-basekit:devel-ubuntu18.04'
-                            label 'docker'
+                            label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
@@ -37,10 +36,10 @@ pipeline {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
-                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-Werror" \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version -fsycl -fsycl-targets=nvptx64-nvidia-cuda-sycldevice" \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
