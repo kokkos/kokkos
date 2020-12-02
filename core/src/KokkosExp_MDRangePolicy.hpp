@@ -420,8 +420,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   }
 #endif
 
-  void init_helper(index_type max_threads, int max_tile_size,
-                   int default_tile_size, int max_total_tile_size) {
+  void init_helper(index_type max_threads, index_type max_tile_size,
+                   index_type default_tile_size,
+                   index_type max_total_tile_size) {
     int increment  = 1;
     int rank_start = 0;
     int rank_end   = rank;
