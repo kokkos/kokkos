@@ -111,6 +111,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         Reductions_DeviceView
         Scan
         SharedAlloc
+        ViewMapping_a
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -137,8 +138,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewAPI_c
       ViewAPI_d
       ViewAPI_e
+      ViewCopy_a
+      ViewCopy_b
       ViewLayoutStrideAssignment
-      ViewMapping_a
       ViewMapping_b
       ViewMapping_subview
       ViewOfClass
@@ -218,6 +220,8 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamVectorRange.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_UniqueToken.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewCopy_a.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewCopy_b.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewOfClass.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_WorkGraph.cpp
@@ -353,6 +357,8 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCudaHostPinned_ViewAPI_c.cpp
       cuda/TestCudaHostPinned_ViewAPI_d.cpp
       cuda/TestCudaHostPinned_ViewAPI_e.cpp
+      cuda/TestCudaHostPinned_ViewCopy_a.cpp
+      cuda/TestCudaHostPinned_ViewCopy_b.cpp
       cuda/TestCudaHostPinned_ViewMapping_a.cpp
       cuda/TestCudaHostPinned_ViewMapping_b.cpp
       cuda/TestCudaHostPinned_ViewMapping_subview.cpp
@@ -362,6 +368,8 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCudaUVM_ViewAPI_c.cpp
       cuda/TestCudaUVM_ViewAPI_d.cpp
       cuda/TestCudaUVM_ViewAPI_e.cpp
+      cuda/TestCudaUVM_ViewCopy_a.cpp
+      cuda/TestCudaUVM_ViewCopy_b.cpp
       cuda/TestCudaUVM_ViewMapping_a.cpp
       cuda/TestCudaUVM_ViewMapping_b.cpp
       cuda/TestCudaUVM_ViewMapping_subview.cpp
@@ -409,6 +417,8 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIPHostPinned_ViewAPI_c.cpp
       hip/TestHIPHostPinned_ViewAPI_d.cpp
       hip/TestHIPHostPinned_ViewAPI_e.cpp
+      hip/TestHIPHostPinned_ViewCopy_a.cpp
+      hip/TestHIPHostPinned_ViewCopy_b.cpp
       hip/TestHIPHostPinned_ViewMapping_a.cpp
       hip/TestHIPHostPinned_ViewMapping_b.cpp
       hip/TestHIPHostPinned_ViewMapping_subview.cpp
