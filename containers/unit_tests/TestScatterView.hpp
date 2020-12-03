@@ -585,7 +585,7 @@ struct TestDuplicatedScatterView<
 
 template <typename DeviceType, typename ScatterType,
           typename NumberType = double>
-void test_scatter_view(int n) {
+void test_scatter_view(int64_t n) {
   using execution_space = typename DeviceType::execution_space;
 
   // no atomics or duplication is only sensible if the execution space
@@ -621,7 +621,7 @@ void test_scatter_view(int n) {
   constexpr std::size_t bytes_per_value = sizeof(NumberType) * 12;
   std::size_t const maximum_allowed_copy_values =
       maximum_allowed_copy_bytes / bytes_per_value;
-  n = std::min(n, int(maximum_allowed_copy_values));
+  n = std::min(n, int64_t(maximum_allowed_copy_values));
 
   // if the default is duplicated, this needs to follow the limit
   {
