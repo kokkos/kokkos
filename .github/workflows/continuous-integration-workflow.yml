@@ -11,13 +11,13 @@ on:
 
 jobs:
   CI:
-    continue-on-error: ${{ matrix.distro == 'ubuntu:devel' || matrix.distro == 'opensuse:latest' || matrix.distro == 'fedora:rawhide' || matrix.continue-on-error == true }}
+    continue-on-error: ${{ matrix.distro == 'opensuse:latest' || matrix.distro == 'fedora:rawhide' || matrix.continue-on-error == true }}
     strategy:
       matrix:
-        distro: ['fedora:latest', 'fedora:rawhide', 'opensuse:latest', 'ubuntu:latest', 'ubuntu:devel', 'ubuntu:rolling']
+        distro: ['fedora:latest', 'fedora:rawhide', 'opensuse:latest']
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
-        openmp: ['ON', 'OFF']
+        openmp: ['ON']
         include:
           - distro: 'fedora:intel'
             cxx: 'icpc'
@@ -27,14 +27,6 @@ jobs:
             cxx: 'icpc'
             cmake_build_type: 'Debug'
             openmp: 'ON'
-          - distro: 'fedora:intel'
-            cxx: 'icpc'
-            cmake_build_type: 'Release'
-            openmp: 'OFF'
-          - distro: 'fedora:intel'
-            cxx: 'icpc'
-            cmake_build_type: 'Debug'
-            openmp: 'OFF'
     runs-on: ubuntu-latest
     container: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
     steps:
