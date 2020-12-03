@@ -110,7 +110,7 @@ TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
   test.run(1, 4, 4);
   test.run(4, 7, 10);
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-  test.run(14, 277, 10);
+  test.run(14, 277, 1);
 #else
   test.run(14, 277, 321);
 #endif
