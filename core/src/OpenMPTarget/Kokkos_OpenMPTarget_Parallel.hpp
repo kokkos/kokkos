@@ -512,10 +512,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                             ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                             : league_size;
 
-    const size_t shmem_size_L1 = m_policy.scratch_size(0, team_size);
-    const size_t shmem_size_L2 = m_policy.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(0, team_size, shmem_size_L1,
-                                     shmem_size_L2);
+    const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
+    const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
+    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1);
 
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
@@ -528,7 +527,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       {
         typename Policy::member_type team(i, league_size, team_size,
                                           vector_length, scratch_ptr,
-                                          shmem_size_L1, shmem_size_L2);
+                                          shmem_size_L0, shmem_size_L1);
         m_functor(team);
       }
     }
@@ -550,10 +549,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     FunctorType a_functor(m_functor);
 
-    const size_t shmem_size_L1 = m_policy.scratch_size(0, team_size);
-    const size_t shmem_size_L2 = m_policy.scratch_size(1, team_size);
-    OpenMPTargetExec::resize_scratch(0, team_size, shmem_size_L1,
-                                     shmem_size_L2);
+    const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
+    const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
+    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1);
 
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 #pragma omp target teams distribute map(to           \
@@ -564,7 +562,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       {
         typename Policy::member_type team(
             i / (team_size * vector_length), league_size, team_size,
-            vector_length, scratch_ptr, shmem_size_L1, shmem_size_L2);
+            vector_length, scratch_ptr, shmem_size_L0, shmem_size_L1);
         m_functor(TagType(), team);
       }
     }
@@ -602,8 +600,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                            : league_size;
 
-    OpenMPTargetExec::resize_scratch(
-        0, PolicyType::member_type::TEAM_REDUCE_SIZE, 0, 0);
+    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
+                                     0, 0);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     ValueType result = ValueType();
@@ -642,8 +640,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                            : league_size;
 
-    OpenMPTargetExec::resize_scratch(
-        0, PolicyType::member_type::TEAM_REDUCE_SIZE, 0, 0);
+    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
+                                     0, 0);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     ValueType result = ValueType();

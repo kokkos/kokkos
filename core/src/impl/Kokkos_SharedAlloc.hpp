@@ -54,13 +54,12 @@
 #define KOKKOS_IMPL_IF_ON_HOST if (!__builtin_is_device_code())
 #else
 // Note: OpenMPTarget enforces C++17 at configure time
-//#define KOKKOS_IMPL_IF_ON_HOST if constexpr (omp_is_initial_device())
 #pragma omp begin declare variant match(device = {kind(host)})
-constexpr bool omp_is_initial_device2() { return true; }
+static constexpr bool omp_is_initial_device2() { return true; }
 #pragma omp end declare variant
 
 #pragma omp begin declare variant match(device = {kind(nohost)})
-constexpr bool omp_is_initial_device2() { return false; }
+static constexpr bool omp_is_initial_device2() { return false; }
 #pragma omp end declare variant
 
 #define KOKKOS_IMPL_IF_ON_HOST if constexpr (omp_is_initial_device2())

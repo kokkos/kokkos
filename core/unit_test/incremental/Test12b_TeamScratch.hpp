@@ -107,12 +107,10 @@ struct TeamScratch {
 
 TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
   TeamScratch<TEST_EXECSPACE> test;
-  // Fails with larger vector sizes and if the team-size is not a multiple
-  // of 32.
   test.run(1, 4, 4);
   test.run(4, 7, 10);
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-  test.run(14, 277, 15);
+  test.run(14, 277, 10);
 #else
   test.run(14, 277, 321);
 #endif

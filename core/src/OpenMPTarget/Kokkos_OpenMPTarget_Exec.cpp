@@ -104,13 +104,18 @@ void OpenMPTargetExec::clear_scratch() {
 
 void* OpenMPTargetExec::get_scratch_ptr() { return m_scratch_ptr; }
 
-void OpenMPTargetExec::resize_scratch(int64_t reduce_bytes, int64_t team_size,
-                                      int64_t shmem_size_L1,
-                                      int64_t shmem_size_L2) {
+void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
+                                      int64_t shmem_size_L1) {
   Kokkos::Experimental::OpenMPTargetSpace space;
   const int64_t shmem_size =
-      shmem_size_L1 + shmem_size_L2;  // L1 + L2 shared memory per team.
+      shmem_size_L0 + shmem_size_L1;  // L0 + L1 scratch memory per team.
   const int64_t padding = shmem_size * 10 / 100;  // Padding per team.
+  // FIXME_OPENMPTARGET - Total amount of scratch memory allocated is depenedent
+  // on the maximum number of teams possible. Currently the maximum number of
+  // teams possible is calculated based on NVIDIA's Volta GPU and assuming that
+  // the number of threads per threadblock will not exceed 1024 threads. In
+  // future this value should be based on the chosen architecture for the
+  // OpenMPTarget backend.
   int64_t total_size = (shmem_size + 16 + padding) * ((1024 * 80) / team_size);
 
   if (total_size > m_scratch_size) {
