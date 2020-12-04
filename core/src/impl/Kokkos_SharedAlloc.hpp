@@ -516,5 +516,4 @@ union SharedAllocationTracker {
 
 } /* namespace Impl */
 } /* namespace Kokkos */
-#undef KOKKOS_IMPL_IF_ON_HOST
 #endif
