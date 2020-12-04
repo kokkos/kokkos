@@ -1,20 +1,12 @@
 name: CI
-on:
-  push:
-    branches:
-      - master
-      - develop
-  pull_request:
-    branches:
-      - master
-      - develop
+on: [push, pull_request]
 
 jobs:
   CI:
-    continue-on-error: ${{ matrix.distro == 'opensuse:latest' || matrix.distro == 'fedora:rawhide' || matrix.continue-on-error == true }}
+    continue-on-error: true
     strategy:
       matrix:
-        distro: ['fedora:latest', 'fedora:rawhide', 'opensuse:latest']
+        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
         openmp: ['ON']
