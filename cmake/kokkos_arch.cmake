@@ -363,7 +363,7 @@ FUNCTION(CHECK_CUDA_ARCH ARCH FLAG)
       MESSAGE(FATAL_ERROR "Multiple GPU architectures given! Already have ${CUDA_ARCH_ALREADY_SPECIFIED}, but trying to add ${ARCH}. If you are re-running CMake, try clearing the cache and running again.")
     ENDIF()
     SET(CUDA_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
-    IF (NOT KOKKOS_ENABLE_CUDA AND NOT KOKKOS_ENABLE_OPENMPTARGET)
+    IF (NOT KOKKOS_ENABLE_CUDA AND NOT KOKKOS_ENABLE_OPENMPTARGET AND NOT KOKKOS_ENABLE_SYCL)
       MESSAGE(WARNING "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA and Kokkos_ENABLE_OPENMPTARGET are OFF. Option will be ignored.")
       UNSET(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
     ELSE()
@@ -448,6 +448,16 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
     COMPILER_SPECIFIC_FLAGS(
       IntelClang -fopenmp-targets=spir64 -D__STRICT_ANSI__
     )
+  ENDIF()
+ENDIF()
+
+IF (KOKKOS_ENABLE_SYCL AND CUDA_ARCH_ALREADY_SPECIFIED)
+  IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
+    COMPILER_SPECIFIC_FLAGS(
+      DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice
+    )
+  ELSE()
+    MESSAGE(SEND_ERROR "Setting a CUDA architecture for SYCL is only allowed with Kokkos_ENABLE_UNSUPPORTED_ARCHS=ON!")
   ENDIF()
 ENDIF()
 

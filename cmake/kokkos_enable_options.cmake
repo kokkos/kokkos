@@ -76,6 +76,8 @@ ELSE()
 ENDIF()
 KOKKOS_ENABLE_OPTION(CUDA_CONSTEXPR ${CUDA_CONSTEXPR_DEFAULT} "Whether to activate experimental relaxed constexpr functions")
 
+Kokkos_ENABLE_OPTION(UNSUPPORTED_ARCHS OFF "Whether to allow architectures in backends Kokkos doesn't optimize for")
+
 FUNCTION(check_device_specific_options)
   CMAKE_PARSE_ARGUMENTS(SOME "" "DEVICE" "OPTIONS" ${ARGN})
   IF(NOT KOKKOS_ENABLE_${SOME_DEVICE})
