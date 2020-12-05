@@ -51,7 +51,7 @@
 #include "Kokkos_ExecPolicy.hpp"
 #include "Kokkos_Parallel_Reduce.hpp"
 
-#include "FloatingPointComparison.hpp"
+#include <cfloat>
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -221,40 +221,64 @@ using math_binary_function_return_type_t = typename math_binary_function_return_
 // clang-format on
 
 struct FloatingPointComparison {
-  double rel_tol_ = 1e-6;
-  double abs_tol_ = 1e-12;
+ private:
+  template <class T>
+  KOKKOS_FUNCTION double rel_tol(T) const {
+    return DBL_EPSILON;
+  }
+  KOKKOS_FUNCTION
+  double rel_tol(float) const { return FLT_EPSILON; }
+  template <class T>
+  KOKKOS_FUNCTION double abs_tol(T) const {
+    return DBL_EPSILON;
+  }
 
-  using assertion_result = bool;
+  // Using absolute here instead of abs, since we actually test abs ...
+  template <class T>
+  KOKKOS_FUNCTION typename std::enable_if<std::is_signed<T>::value, T>::type
+  absolute(T val) const {
+    return val < T(0) ? -val : val;
+  }
 
+  template <class T>
+  KOKKOS_FUNCTION typename std::enable_if<!std::is_signed<T>::value, T>::type
+  absolute(T val) const {
+    return val;
+  }
+
+ public:
   template <class FPT>
-  KOKKOS_FUNCTION assertion_result compare_fpv_near_zero(FPT const& fpv) const {
-    fpc::small_with_tolerance<FPT> P(abs_tol_);
-
-    assertion_result ar(P(fpv));
+  KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, double ulp) const {
+    bool ar = absolute(fpv) < abs_tol(fpv) * ulp;
     if (!ar) {
 #if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-      printf("absolute value exceeds tolerance [|%e| > %e]\n", fpv, abs_tol_);
+      printf("absolute value exceeds tolerance [|%e| > %e]\n", fpv,
+             abs_tol(fpv) * ulp);
 #endif
     }
 
     return ar;
   }
 
-  template <class FPT, class Lhs, class Rhs>
-  KOKKOS_FUNCTION assertion_result compare_fpv(Lhs const& lhs,
-                                               Rhs const& rhs) const {
+  template <class Lhs, class Rhs>
+  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs,
+                               double ulp) const {
     if (lhs == 0) {
-      return compare_fpv_near_zero<FPT>(rhs);
+      return compare_near_zero(rhs, ulp);
     } else if (rhs == 0) {
-      return compare_fpv_near_zero<FPT>(lhs);
+      return compare_near_zero(lhs, ulp);
     } else {
-      fpc::close_at_tolerance<FPT> P(rel_tol_, fpc::FPC_STRONG);
-
-      assertion_result ar(P(lhs, rhs));
+      double rel_tol_ =
+          (rel_tol(lhs) < rel_tol(rhs) ? rel_tol(lhs) : rel_tol(rhs)) * ulp;
+      double abs_diff  = static_cast<double>(rhs > lhs ? rhs - lhs : lhs - rhs);
+      double min_denom = static_cast<double>(
+          absolute(rhs) < absolute(lhs) ? absolute(rhs) : absolute(lhs));
+      double rel_diff = abs_diff / min_denom;
+      bool ar         = rel_diff < rel_tol_;
       if (!ar) {
 #if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-        printf("relative difference exceeds tolerance [%e > %e]\n",
-               P.tested_rel_diff(), P.fraction_tolerance());
+        printf("relative difference exceeds tolerance [%e > %e]\n", rel_diff,
+               rel_tol_);
 #endif
       }
 
@@ -266,7 +290,7 @@ struct FloatingPointComparison {
 template <class>
 struct math_function_name;
 
-#define DEFINE_UNARY_FUNCTION_EVAL(FUNC)                                       \
+#define DEFINE_UNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                           \
   struct MathUnaryFunction_##FUNC {                                            \
     template <typename T>                                                      \
     static KOKKOS_FUNCTION auto eval(T x) {                                    \
@@ -282,6 +306,7 @@ struct math_function_name;
                     "");                                                       \
       return std::FUNC(x);                                                     \
     }                                                                          \
+    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }          \
   };                                                                           \
   using kk_##FUNC = MathUnaryFunction_##FUNC;                                  \
   template <>                                                                  \
@@ -290,41 +315,47 @@ struct math_function_name;
   };                                                                           \
   constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
 
-DEFINE_UNARY_FUNCTION_EVAL(exp);
-DEFINE_UNARY_FUNCTION_EVAL(exp2);
-DEFINE_UNARY_FUNCTION_EVAL(expm1);
-DEFINE_UNARY_FUNCTION_EVAL(log);
-DEFINE_UNARY_FUNCTION_EVAL(log10);
-DEFINE_UNARY_FUNCTION_EVAL(log2);
-DEFINE_UNARY_FUNCTION_EVAL(log1p);
+// Generally the expected ULP error should come from here:
+// https://www.gnu.org/software/libc/manual/html_node/Errors-in-Math-Functions.html
+// For now 1s largely seem to work ...
+DEFINE_UNARY_FUNCTION_EVAL(exp, 1);
+DEFINE_UNARY_FUNCTION_EVAL(exp2, 1);
+DEFINE_UNARY_FUNCTION_EVAL(expm1, 1);
+DEFINE_UNARY_FUNCTION_EVAL(log, 1);
+DEFINE_UNARY_FUNCTION_EVAL(log10, 1);
+DEFINE_UNARY_FUNCTION_EVAL(log2, 1);
+DEFINE_UNARY_FUNCTION_EVAL(log1p, 1);
 
-DEFINE_UNARY_FUNCTION_EVAL(sqrt);
-DEFINE_UNARY_FUNCTION_EVAL(cbrt);
+DEFINE_UNARY_FUNCTION_EVAL(sqrt, 1);
+DEFINE_UNARY_FUNCTION_EVAL(cbrt, 1);
 
-DEFINE_UNARY_FUNCTION_EVAL(sin);
-DEFINE_UNARY_FUNCTION_EVAL(cos);
-DEFINE_UNARY_FUNCTION_EVAL(tan);
-DEFINE_UNARY_FUNCTION_EVAL(asin);
-DEFINE_UNARY_FUNCTION_EVAL(acos);
-DEFINE_UNARY_FUNCTION_EVAL(atan);
+DEFINE_UNARY_FUNCTION_EVAL(sin, 1);
+DEFINE_UNARY_FUNCTION_EVAL(cos, 1);
+DEFINE_UNARY_FUNCTION_EVAL(tan, 1);
+DEFINE_UNARY_FUNCTION_EVAL(asin, 1);
+DEFINE_UNARY_FUNCTION_EVAL(acos, 1);
+DEFINE_UNARY_FUNCTION_EVAL(atan, 1);
 
-DEFINE_UNARY_FUNCTION_EVAL(sinh);
-DEFINE_UNARY_FUNCTION_EVAL(cosh);
-DEFINE_UNARY_FUNCTION_EVAL(tanh);
-DEFINE_UNARY_FUNCTION_EVAL(asinh);
-DEFINE_UNARY_FUNCTION_EVAL(acosh);
-DEFINE_UNARY_FUNCTION_EVAL(atanh);
+DEFINE_UNARY_FUNCTION_EVAL(sinh, 1);
+DEFINE_UNARY_FUNCTION_EVAL(cosh, 1);
+DEFINE_UNARY_FUNCTION_EVAL(tanh, 1);
+DEFINE_UNARY_FUNCTION_EVAL(asinh, 1);
+DEFINE_UNARY_FUNCTION_EVAL(acosh, 1);
+DEFINE_UNARY_FUNCTION_EVAL(atanh, 1);
 
-DEFINE_UNARY_FUNCTION_EVAL(erf);
-DEFINE_UNARY_FUNCTION_EVAL(erfc);
-DEFINE_UNARY_FUNCTION_EVAL(tgamma);
-DEFINE_UNARY_FUNCTION_EVAL(lgamma);
+DEFINE_UNARY_FUNCTION_EVAL(erf, 1);
+DEFINE_UNARY_FUNCTION_EVAL(erfc, 5);
+// has a larger error due to some impls doing integer exact.
+// We cast always to double leading to larger difference when comparing our
+// tgamma to std::tgamma on the host.
+DEFINE_UNARY_FUNCTION_EVAL(tgamma, 200);
+DEFINE_UNARY_FUNCTION_EVAL(lgamma, 1);
 
-DEFINE_UNARY_FUNCTION_EVAL(ceil);
-DEFINE_UNARY_FUNCTION_EVAL(floor);
-DEFINE_UNARY_FUNCTION_EVAL(trunc);
+DEFINE_UNARY_FUNCTION_EVAL(ceil, 1);
+DEFINE_UNARY_FUNCTION_EVAL(floor, 1);
+DEFINE_UNARY_FUNCTION_EVAL(trunc, 1);
 #ifndef KOKKOS_ENABLE_SYCL
-DEFINE_UNARY_FUNCTION_EVAL(nearbyint);
+DEFINE_UNARY_FUNCTION_EVAL(nearbyint, 1);
 #endif
 
 #undef DEFINE_UNARY_FUNCTION_EVAL
@@ -347,6 +378,7 @@ DEFINE_UNARY_FUNCTION_EVAL(nearbyint);
           "");                                                           \
       return std::FUNC(x, y);                                            \
     }                                                                    \
+    static KOKKOS_FUNCTION double ulp_factor() { return 1.; }            \
   };                                                                     \
   using kk_##FUNC = MathBinaryFunction_##FUNC;                           \
   template <>                                                            \
@@ -396,7 +428,7 @@ struct TestMathUnaryFunction : FloatingPointComparison {
     ASSERT_EQ(errors, 0);
   }
   KOKKOS_FUNCTION void operator()(int i, int& e) const {
-    bool ar = compare_fpv<double>(Func::eval(val_[i]), res_[i]);
+    bool ar = compare(Func::eval(val_[i]), res_[i], Func::ulp_factor());
     if (!ar) {
       ++e;
 #if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
@@ -435,7 +467,7 @@ struct TestMathBinaryFunction : FloatingPointComparison {
     ASSERT_EQ(errors, 0);
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
-    bool ar = compare_fpv<double>(Func::eval(val1_, val2_), res_);
+    bool ar = compare(Func::eval(val1_, val2_), res_, Func::ulp_factor());
     if (!ar) {
       ++e;
 #if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
