@@ -1628,7 +1628,7 @@ class View : public ViewTraits<DataType, Properties...> {
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
         arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     Impl::runtime_check_rank_host(
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
@@ -1668,7 +1668,7 @@ class View : public ViewTraits<DataType, Properties...> {
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
         arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     Impl::runtime_check_rank_host(
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
@@ -1722,7 +1722,7 @@ class View : public ViewTraits<DataType, Properties...> {
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
         arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     Impl::runtime_check_rank_host(
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
@@ -1798,7 +1798,7 @@ class View : public ViewTraits<DataType, Properties...> {
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
         arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     Impl::runtime_check_rank_host(
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
@@ -1888,7 +1888,7 @@ class View : public ViewTraits<DataType, Properties...> {
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
         arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
-#elif KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
+#elif defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     Impl::runtime_check_rank_host(
         traits::rank_dynamic,
         std::is_same<typename traits::specialize, void>::value, arg_N0, arg_N1,
