@@ -140,6 +140,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   template <typename PolicyType, typename Functor>
   void sycl_direct_launch(const PolicyType& policy,
                           const Functor& functor) const {
+    static_assert(ReduceFunctorHasInit<Functor>::value ==
+                  ReduceFunctorHasInit<FunctorType>::value);
+    static_assert(ReduceFunctorHasFinal<Functor>::value ==
+                  ReduceFunctorHasFinal<FunctorType>::value);
+    static_assert(ReduceFunctorHasJoin<Functor>::value ==
+                  ReduceFunctorHasJoin<FunctorType>::value);
+
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -157,59 +164,64 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     if constexpr (ReduceFunctorHasInit<Functor>::value)
       ValueInit::init(functor, result_ptr);
 
-    q.submit([&](cl::sycl::handler& cgh) {
-      // FIXME_SYCL a local size larger than 1 doesn't work for all cases
-      cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
+    if (policy.begin() != policy.end()) {
+      q.submit([&](cl::sycl::handler& cgh) {
+        // FIXME_SYCL a local size larger than 1 doesn't work for all cases
+        cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
 
-      const auto reduction = [&]() {
-        if constexpr (!std::is_same<ReducerType, InvalidType>::value) {
-          return cl::sycl::ONEAPI::reduction(
-              result_ptr, identity,
-              [this](value_type& old_value, const value_type& new_value) {
-                m_reducer.join(old_value, new_value);
-                return old_value;
-              });
-        } else {
-          if constexpr (ReduceFunctorHasJoin<Functor>::value) {
+        const auto reduction = [&]() {
+          if constexpr (!std::is_same<ReducerType, InvalidType>::value) {
             return cl::sycl::ONEAPI::reduction(
                 result_ptr, identity,
-                [functor](value_type& old_value, const value_type& new_value) {
-                  functor.join(old_value, new_value);
+                [this](value_type& old_value, const value_type& new_value) {
+                  m_reducer.join(old_value, new_value);
                   return old_value;
                 });
           } else {
-            return cl::sycl::ONEAPI::reduction(result_ptr, identity,
-                                               std::plus<>());
+            if constexpr (ReduceFunctorHasJoin<Functor>::value) {
+              return cl::sycl::ONEAPI::reduction(
+                  result_ptr, identity,
+                  [functor](value_type& old_value,
+                            const value_type& new_value) {
+                    functor.join(old_value, new_value);
+                    return old_value;
+                  });
+            } else {
+              return cl::sycl::ONEAPI::reduction(result_ptr, identity,
+                                                 std::plus<>());
+            }
           }
-        }
-      }();
+        }();
 
-      cgh.parallel_for(range, reduction,
-                       [=](cl::sycl::nd_item<1> item, auto& sum) {
-                         const typename Policy::index_type id =
-                             static_cast<typename Policy::index_type>(
-                                 item.get_global_id(0)) +
-                             policy.begin();
-                         value_type partial = identity;
-                         if constexpr (std::is_same<WorkTag, void>::value)
-                           functor(id, partial);
-                         else
-                           functor(WorkTag(), id, partial);
-                         sum.combine(partial);
-                       });
-    });
+        cgh.parallel_for(range, reduction,
+                         [=](cl::sycl::nd_item<1> item, auto& sum) {
+                           const typename Policy::index_type id =
+                               static_cast<typename Policy::index_type>(
+                                   item.get_global_id(0)) +
+                               policy.begin();
+                           value_type partial = identity;
+                           if constexpr (std::is_same<WorkTag, void>::value)
+                             functor(id, partial);
+                           else
+                             functor(WorkTag(), id, partial);
+                           sum.combine(partial);
+                         });
+      });
 
-    q.wait();
-
-    static_assert(ReduceFunctorHasFinal<Functor>::value ==
-                  ReduceFunctorHasFinal<FunctorType>::value);
-    static_assert(ReduceFunctorHasJoin<Functor>::value ==
-                  ReduceFunctorHasJoin<FunctorType>::value);
+      q.wait();
+    }
 
     if constexpr (ReduceFunctorHasFinal<Functor>::value)
-      FunctorFinal<Functor, WorkTag>::final(functor, result_ptr);
+      q.submit([&](cl::sycl::handler& cgh) {
+        cgh.single_task([=]() {
+          FunctorFinal<Functor, WorkTag>::final(functor, result_ptr);
+        });
+      });
     else
-      *m_result_ptr = *result_ptr;
+      Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                             Kokkos::Experimental::SYCLDeviceUSMSpace>(
+          space, m_result_ptr, result_ptr, sizeof(*m_result_ptr));
+    q.wait();
 
     sycl::free(result_ptr, q);
   }
@@ -238,45 +250,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
  public:
   void execute() const {
-    if (m_policy.begin() == m_policy.end()) {
-      const Kokkos::Experimental::SYCL& space = m_policy.space();
-      Kokkos::Experimental::Impl::SYCLInternal& instance =
-          *space.impl_internal_space_instance();
-      cl::sycl::queue& q = *instance.m_queue;
-
-      pointer_type result_ptr =
-          ReduceFunctorHasFinal<FunctorType>::value
-              ? static_cast<pointer_type>(sycl::malloc(
-                    sizeof(*m_result_ptr), q, sycl::usm::alloc::shared))
-              : m_result_ptr;
-
-      sycl::usm::alloc result_ptr_type =
-          sycl::get_pointer_type(result_ptr, q.get_context());
-
-      switch (result_ptr_type) {
-        case sycl::usm::alloc::host:
-        case sycl::usm::alloc::shared:
-          ValueInit::init(m_functor, result_ptr);
-          break;
-        case sycl::usm::alloc::device:
-          // non-USM-allocated memory
-        case sycl::usm::alloc::unknown: {
-          value_type host_result;
-          ValueInit::init(m_functor, &host_result);
-          q.memcpy(result_ptr, &host_result, sizeof(host_result)).wait();
-          break;
-        }
-        default: Kokkos::abort("pointer type outside of SYCL specs.");
-      }
-
-      if constexpr (ReduceFunctorHasFinal<FunctorType>::value) {
-        FunctorFinal<FunctorType, WorkTag>::final(m_functor, result_ptr);
-        sycl::free(result_ptr, q);
-      }
-
-      return;
-    }
-
     if constexpr (std::is_trivially_copyable_v<decltype(m_functor)>)
       sycl_direct_launch(m_policy, m_functor);
     else
