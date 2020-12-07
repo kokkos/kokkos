@@ -223,15 +223,13 @@ using math_binary_function_return_type_t = typename math_binary_function_return_
 struct FloatingPointComparison {
  private:
   template <class T>
-  KOKKOS_FUNCTION double rel_tol(T) const {
+  KOKKOS_FUNCTION double eps(T) const {
     return DBL_EPSILON;
   }
   KOKKOS_FUNCTION
-  double rel_tol(float) const { return FLT_EPSILON; }
-  template <class T>
-  KOKKOS_FUNCTION double abs_tol(T) const {
-    return DBL_EPSILON;
-  }
+  double eps(float) const { return FLT_EPSILON; }
+  KOKKOS_FUNCTION
+  double eps(long double) const { return LDBL_EPSILON; }
 
   // Using absolute here instead of abs, since we actually test abs ...
   template <class T>
@@ -249,11 +247,13 @@ struct FloatingPointComparison {
  public:
   template <class FPT>
   KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, double ulp) const {
-    bool ar = absolute(fpv) < abs_tol(fpv) * ulp;
+    auto abs_tol = eps(fpv) * ulp;
+
+    bool ar = absolute(fpv) < abs_tol;
     if (!ar) {
 #if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-      printf("absolute value exceeds tolerance [|%e| > %e]\n", fpv,
-             abs_tol(fpv) * ulp);
+      printf("absolute value exceeds tolerance [|%e| > %e]\n", (double)fpv,
+             abs_tol);
 #endif
     }
 
@@ -268,17 +268,16 @@ struct FloatingPointComparison {
     } else if (rhs == 0) {
       return compare_near_zero(lhs, ulp);
     } else {
-      double rel_tol_ =
-          (rel_tol(lhs) < rel_tol(rhs) ? rel_tol(lhs) : rel_tol(rhs)) * ulp;
+      auto rel_tol     = (eps(lhs) < eps(rhs) ? eps(lhs) : eps(rhs)) * ulp;
       double abs_diff  = static_cast<double>(rhs > lhs ? rhs - lhs : lhs - rhs);
       double min_denom = static_cast<double>(
           absolute(rhs) < absolute(lhs) ? absolute(rhs) : absolute(lhs));
       double rel_diff = abs_diff / min_denom;
-      bool ar         = rel_diff < rel_tol_;
+      bool ar         = rel_diff < rel_tol;
       if (!ar) {
 #if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_HIP)
-        printf("relative difference exceeds tolerance [%e > %e]\n", rel_diff,
-               rel_tol_);
+        printf("relative difference exceeds tolerance [%e > %e]\n",
+               (double)rel_diff, rel_tol);
 #endif
       }
 
