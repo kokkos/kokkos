@@ -65,6 +65,20 @@ struct identity {
 template <typename T>
 using identity_t = typename identity<T>::type;
 
+// Make a type dependent on something in order to avoid ODR-using it (e.g.,
+// in order to avoid requiring it to be complete).
+template <class T, class /*Ignored*/>
+struct dependent_identity {
+  using type = T;
+};
+
+struct not_a_type {
+  not_a_type()                  = delete;
+  ~not_a_type()                 = delete;
+  not_a_type(not_a_type const&) = delete;
+  void operator=(not_a_type const&) = delete;
+};
+
 #if defined(__cpp_lib_void_t)
 // since C++17
 using std::void_t;
@@ -258,6 +272,15 @@ using filter_type_list_t =
 //------------------------------------------------------------------------------
 
 // </editor-fold> end type_list }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="repeated_type"> {{{1
+
+template <class T, std::size_t I>
+using repeated_type = T;
+
+// </editor-fold> end repeated_type }}}1
 //==============================================================================
 
 }  // namespace Impl

@@ -96,6 +96,9 @@ struct Device;
 // forward declare here so that backend initializer calls can use it.
 struct InitArguments;
 
+template <unsigned T>
+struct MemoryTraits;
+
 }  // namespace Kokkos
 
 // Include backend forward statements as determined by build options
@@ -246,6 +249,19 @@ void fence(const std::string &);
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
+// We need to use a deferred instantiation technique here since the
+// DefaultExecutionSpace won't be a complete type yet in this forward
+// declarations file.
+template <class DataType,
+          class Layout = typename Impl::dependent_identity<
+              DefaultExecutionSpace, DataType>::array_layout,
+          class Space =
+              Device<DefaultExecutionSpace,
+                     typename Impl::dependent_identity<DefaultExecutionSpace,
+                                                       DataType>::memory_space>,
+          class MemTraits = MemoryTraits<0> >
+class BasicView;
 
 template <class DataType, class... Properties>
 class View;

@@ -3995,4 +3995,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#undef KOKKOS_IMPL_SINK
+#undef KOKKOS_IMPL_VIEW_OPERATOR_VERIFY
+
 #endif /* #ifndef KOKKOS_EXPERIMENTAL_VIEW_MAPPING_HPP */
