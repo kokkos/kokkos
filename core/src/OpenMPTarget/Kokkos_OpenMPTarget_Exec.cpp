@@ -112,11 +112,10 @@ void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
   const int64_t padding = shmem_size * 10 / 100;  // Padding per team.
   // FIXME_OPENMPTARGET - Total amount of scratch memory allocated is depenedent
   // on the maximum number of teams possible. Currently the maximum number of
-  // teams possible is calculated based on NVIDIA's Volta GPU and assuming that
-  // the number of threads per threadblock will not exceed 1024 threads. In
+  // teams possible is calculated based on NVIDIA's Volta GPU. In
   // future this value should be based on the chosen architecture for the
   // OpenMPTarget backend.
-  int64_t total_size = (shmem_size + 16 + padding) * ((1024 * 80) / team_size);
+  int64_t total_size = (shmem_size + 16 + padding) * ((2048 * 80) / team_size);
 
   if (total_size > m_scratch_size) {
     space.deallocate(m_scratch_ptr, m_scratch_size);
