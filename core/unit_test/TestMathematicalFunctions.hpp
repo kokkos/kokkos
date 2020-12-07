@@ -359,7 +359,7 @@ DEFINE_UNARY_FUNCTION_EVAL(nearbyint, 1);
 
 #undef DEFINE_UNARY_FUNCTION_EVAL
 
-#define DEFINE_BINARY_FUNCTION_EVAL(FUNC)                                \
+#define DEFINE_BINARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                    \
   struct MathBinaryFunction_##FUNC {                                     \
     template <typename T, typename U>                                    \
     static KOKKOS_FUNCTION auto eval(T x, U y) {                         \
@@ -377,7 +377,7 @@ DEFINE_UNARY_FUNCTION_EVAL(nearbyint, 1);
           "");                                                           \
       return std::FUNC(x, y);                                            \
     }                                                                    \
-    static KOKKOS_FUNCTION double ulp_factor() { return 1.; }            \
+    static KOKKOS_FUNCTION double ulp_factor() { return ULP_FACTOR; }    \
   };                                                                     \
   using kk_##FUNC = MathBinaryFunction_##FUNC;                           \
   template <>                                                            \
@@ -386,7 +386,7 @@ DEFINE_UNARY_FUNCTION_EVAL(nearbyint, 1);
   };                                                                     \
   constexpr char math_function_name<MathBinaryFunction_##FUNC>::name[]
 
-DEFINE_BINARY_FUNCTION_EVAL(pow);
+DEFINE_BINARY_FUNCTION_EVAL(pow, 1);
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
 
