@@ -348,7 +348,7 @@ DEFINE_UNARY_FUNCTION_EVAL(erfc, 5);
 // We cast always to double leading to larger difference when comparing our
 // tgamma to std::tgamma on the host.
 DEFINE_UNARY_FUNCTION_EVAL(tgamma, 200);
-DEFINE_UNARY_FUNCTION_EVAL(lgamma, 1);
+DEFINE_UNARY_FUNCTION_EVAL(lgamma, 2);
 
 DEFINE_UNARY_FUNCTION_EVAL(ceil, 1);
 DEFINE_UNARY_FUNCTION_EVAL(floor, 1);
