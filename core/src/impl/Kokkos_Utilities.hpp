@@ -65,6 +65,13 @@ struct identity {
 template <typename T>
 using identity_t = typename identity<T>::type;
 
+// Make a type dependent on something in order to avoid ODR-using it (e.g.,
+// in order to avoid requiring it to be complete).
+template <class T, class /*Ignored*/>
+struct dependent_identity {
+  using type = T;
+};
+
 struct not_a_type {
   not_a_type()                  = delete;
   ~not_a_type()                 = delete;
@@ -180,6 +187,15 @@ template <template <class> class GetBase>
 struct linearize_bases<GetBase> {};
 
 // </editor-fold> end MSVC linearize base workaround }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="repeated_type"> {{{1
+
+template <class T, std::size_t I>
+using repeated_type = T;
+
+// </editor-fold> end repeated_type }}}1
 //==============================================================================
 
 }  // namespace Impl
