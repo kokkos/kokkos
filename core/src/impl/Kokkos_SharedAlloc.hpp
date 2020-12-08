@@ -432,8 +432,8 @@ union SharedAllocationTracker {
   }
 
   template <class MemorySpace>
-  constexpr SharedAllocationRecord<MemorySpace, void>* get_record()
-      const noexcept {
+  constexpr SharedAllocationRecord<MemorySpace, void>* get_record() const
+      noexcept {
     return (m_record_bits & DO_NOT_DEREF_FLAG)
                ? nullptr
                : static_cast<SharedAllocationRecord<MemorySpace, void>*>(

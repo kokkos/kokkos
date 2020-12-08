@@ -578,7 +578,6 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
       const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate);
-
 };
 }  // namespace Impl
 }  // namespace Kokkos

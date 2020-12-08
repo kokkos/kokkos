@@ -50,8 +50,8 @@
 
 #include <impl/Kokkos_SharedAlloc.hpp>
 
-#include <string>  // std::string
-#include <cstring> // strncpy
+#include <string>   // std::string
+#include <cstring>  // strncpy
 
 namespace Kokkos {
 namespace Impl {
@@ -113,8 +113,7 @@ auto SharedAllocationRecordCommon<MemorySpace>::get_record(void* alloc_ptr)
     -> derived_t* {
   using Header = SharedAllocationHeader;
 
-  Header const* const h =
-      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
+  Header const* const h = alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
 
   if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
     Kokkos::Impl::throw_runtime_exception(
@@ -156,9 +155,9 @@ void SharedAllocationRecordCommon<MemorySpace>::print_records(
       s, MemorySpace::name(), &derived_t::s_root_record, detail);
 #else
   Kokkos::Impl::throw_runtime_exception(
-      std::string{"SharedAllocationHeader<"} + std::string{MemorySpace::name} +
-      std::string{
-          ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"});
+      std::string("SharedAllocationHeader<") + std::string(MemorySpace::name) +
+      std::string(
+          ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"));
 #endif
 }
 

@@ -247,7 +247,7 @@ class SharedAllocationRecord<Kokkos::HostSpace, void>
   friend Kokkos::HostSpace;
   friend class SharedAllocationRecordCommon<Kokkos::HostSpace>;
 
-  using base_t = SharedAllocationRecordCommon<Kokkos::HostSpace>;
+  using base_t     = SharedAllocationRecordCommon<Kokkos::HostSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
