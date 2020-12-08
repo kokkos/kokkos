@@ -289,7 +289,8 @@ class SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>
 
  protected:
   ~SharedAllocationRecord();
-  SharedAllocationRecord() : RecordBase(), m_space() {}
+
+  SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
       const Kokkos::Experimental::SYCLSharedUSMSpace& arg_space,

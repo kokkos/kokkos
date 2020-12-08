@@ -877,12 +877,12 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
   static RecordBase s_root_record;
 #endif
 
-  ::cudaTextureObject_t m_tex_obj;
+  ::cudaTextureObject_t m_tex_obj = 0;
   const Kokkos::CudaSpace m_space;
 
  protected:
   ~SharedAllocationRecord();
-  SharedAllocationRecord() : base_t(), m_tex_obj(0), m_space() {}
+  SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
       const Kokkos::CudaSpace& arg_space, const std::string& arg_label,
@@ -928,12 +928,12 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
 
   static RecordBase s_root_record;
 
-  ::cudaTextureObject_t m_tex_obj;
+  ::cudaTextureObject_t m_tex_obj = 0;
   const Kokkos::CudaUVMSpace m_space;
 
  protected:
   ~SharedAllocationRecord();
-  SharedAllocationRecord() : base_t(), m_tex_obj(0), m_space() {}
+  SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
       const Kokkos::CudaUVMSpace& arg_space, const std::string& arg_label,
@@ -984,7 +984,7 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
 
  protected:
   ~SharedAllocationRecord();
-  SharedAllocationRecord() : base_t(), m_space() {}
+  SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
       const Kokkos::CudaHostPinnedSpace& arg_space,
