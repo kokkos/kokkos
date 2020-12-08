@@ -42,9 +42,12 @@
 //@HEADER
 */
 
+#include <Kokkos_Macros.hpp>
+
+#include <impl/Kokkos_SharedAlloc_timpl.hpp>
+
 #include <algorithm>
 #include <omp.h>
-#include <Kokkos_Macros.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -93,6 +96,18 @@ void OpenMPTargetSpace::deallocate(void *const arg_alloc_ptr,
 
 namespace Kokkos {
 namespace Impl {
+
+//==============================================================================
+// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
+
+// To avoid additional compilation cost for something that's (mostly?) not
+// performance sensitive, we explicity instantiate these CRTP base classes here,
+// where we have access to the associated *_timpl.hpp header files.
+template class SharedAllocationRecordCommon<
+    Kokkos::Experimental::OpenMPTargetSpace>;
+
+// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
+//==============================================================================
 
 #ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void> SharedAllocationRecord<

@@ -42,13 +42,9 @@
 //@HEADER
 */
 
-#include <stdlib.h>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <algorithm>
-#include <atomic>
 #include <Kokkos_Macros.hpp>
+
+#include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_HIP.hpp>
@@ -56,6 +52,13 @@
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
+
+#include <stdlib.h>
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
+#include <algorithm>
+#include <atomic>
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
@@ -318,6 +321,19 @@ void HIPHostPinnedSpace::impl_deallocate(
 namespace Kokkos {
 namespace Impl {
 
+//==============================================================================
+// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
+
+// To avoid additional compilation cost for something that's (mostly?) not
+// performance sensitive, we explicity instantiate these CRTP base classes here,
+// where we have access to the associated *_timpl.hpp header files.
+template class SharedAllocationRecordCommon<Kokkos::Experimental::HIPSpace>;
+template class SharedAllocationRecordCommon<
+    Kokkos::Experimental::HIPHostPinnedSpace>;
+
+// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
+//==============================================================================
+
 #ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::s_root_record;
@@ -334,35 +350,6 @@ std::string SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
       &header, RecordBase::head(), sizeof(SharedAllocationHeader));
 
   return std::string(header.m_label);
-}
-
-std::string SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
-                                   void>::get_label() const {
-  return std::string(RecordBase::head()->m_label);
-}
-
-SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>*
-SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::allocate(
-    const Kokkos::Experimental::HIPSpace& arg_space,
-    const std::string& arg_label, const size_t arg_alloc_size) {
-  return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
-}
-
-SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>*
-SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
-    allocate(const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
-             const std::string& arg_label, const size_t arg_alloc_size) {
-  return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
-}
-
-void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::deallocate(
-    SharedAllocationRecord<void, void>* arg_rec) {
-  delete static_cast<SharedAllocationRecord*>(arg_rec);
-}
-
-void SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
-    deallocate(SharedAllocationRecord<void, void>* arg_rec) {
-  delete static_cast<SharedAllocationRecord*>(arg_rec);
 }
 
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
@@ -393,7 +380,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
         const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
-    : SharedAllocationRecord<void, void>(
+    : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                                   void>::s_root_record,
@@ -433,31 +420,6 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
                                                   arg_label);
 }
 
-void SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
-                            void>::deallocate_tracked(void* const
-                                                          arg_alloc_ptr) {
-  if (arg_alloc_ptr) {
-    SharedAllocationRecord* const r = get_record(arg_alloc_ptr);
-
-    RecordBase::decrement(r);
-  }
-}
-
-void* SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
-    reallocate_tracked(void* const arg_alloc_ptr, const size_t arg_alloc_size) {
-  SharedAllocationRecord* const r_old = get_record(arg_alloc_ptr);
-  SharedAllocationRecord* const r_new =
-      allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
-
-  using HIPHostPinnedSpace = Kokkos::Experimental::HIPHostPinnedSpace;
-  Kokkos::Impl::DeepCopy<HIPHostPinnedSpace, HIPHostPinnedSpace>(
-      r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
-
-  RecordBase::increment(r_new);
-  RecordBase::decrement(r_old);
-
-  return r_new->data();
-}
 
 //----------------------------------------------------------------------------
 
