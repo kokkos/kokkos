@@ -45,6 +45,8 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
+#include <impl/Kokkos_SharedAlloc_timpl.hpp>
+
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -405,6 +407,19 @@ void CudaHostPinnedSpace::impl_deallocate(
 namespace Kokkos {
 namespace Impl {
 
+//==============================================================================
+// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
+
+// To avoid additional compilation cost for something that's (mostly?) not
+// performance sensitive, we explicity instantiate these CRTP base classes here,
+// where we have access to the associated *_timpl.hpp header files.
+template class SharedAllocationRecordCommon<Kokkos::CudaSpace>;
+template class SharedAllocationRecordCommon<Kokkos::CudaUVMSpace>;
+template class SharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace>;
+
+// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
+//==============================================================================
+
 #ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record;
@@ -534,13 +549,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
 
   SharedAllocationHeader header;
 
-  // Fill in the Header information
-  header.m_record = static_cast<SharedAllocationRecord<void, void> *>(this);
-
-  strncpy(header.m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length - 1);
-  // Set last element zero, in case c_str is too long
-  header.m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
+  this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
   Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(RecordBase::m_alloc_ptr, &header,
@@ -562,16 +571,8 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_tex_obj(0),
       m_space(arg_space) {
-  // Fill in the Header information, directly accessible via UVM
-
-  RecordBase::m_alloc_ptr->m_record = this;
-
-  strncpy(RecordBase::m_alloc_ptr->m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length - 1);
-
-  // Set last element zero, in case c_str is too long
-  RecordBase::m_alloc_ptr
-      ->m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
+  this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
+                                                  arg_label);
 }
 
 SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
@@ -590,15 +591,8 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
                                                arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
-  // Fill in the Header information, directly accessible on the host
-
-  RecordBase::m_alloc_ptr->m_record = this;
-
-  strncpy(RecordBase::m_alloc_ptr->m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length - 1);
-  // Set last element zero, in case c_str is too long
-  RecordBase::m_alloc_ptr
-      ->m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
+  this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
+                                                  arg_label);
 }
 
 // </editor-fold> end SharedAllocationRecord constructors }}}1
@@ -710,34 +704,6 @@ void SharedAllocationRecord<Kokkos::CudaSpace, void>::print_records(
       r = r->m_next;
     } while (r != &s_root_record);
   }
-#else
-  Kokkos::Impl::throw_runtime_exception(
-      "SharedAllocationHeader<CudaSpace>::print_records only works with "
-      "KOKKOS_ENABLE_DEBUG enabled");
-#endif
-}
-
-void SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::print_records(
-    std::ostream &s, const Kokkos::CudaUVMSpace &, bool detail) {
-  (void)s;
-  (void)detail;
-#ifdef KOKKOS_ENABLE_DEBUG
-  SharedAllocationRecord<void, void>::print_host_accessible_records(
-      s, "CudaUVM", &s_root_record, detail);
-#else
-  Kokkos::Impl::throw_runtime_exception(
-      "SharedAllocationHeader<CudaSpace>::print_records only works with "
-      "KOKKOS_ENABLE_DEBUG enabled");
-#endif
-}
-
-void SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::print_records(
-    std::ostream &s, const Kokkos::CudaHostPinnedSpace &, bool detail) {
-  (void)s;
-  (void)detail;
-#ifdef KOKKOS_ENABLE_DEBUG
-  SharedAllocationRecord<void, void>::print_host_accessible_records(
-      s, "CudaHostPinned", &s_root_record, detail);
 #else
   Kokkos::Impl::throw_runtime_exception(
       "SharedAllocationHeader<CudaSpace>::print_records only works with "

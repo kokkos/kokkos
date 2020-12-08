@@ -47,7 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
-#include <impl/Kokkos_Error.hpp> // Impl::throw_runtime_exception
+#include <impl/Kokkos_Error.hpp>  // Impl::throw_runtime_exception
 
 #include <cstdint>
 #include <string>
@@ -78,6 +78,9 @@ namespace Impl {
 
 template <class MemorySpace = void, class DestroyFunctor = void>
 class SharedAllocationRecord;
+
+template <class MemorySpace>
+class SharedAllocationRecordCommon;
 
 class SharedAllocationHeader {
  private:
@@ -257,70 +260,30 @@ class SharedAllocationRecordCommon : public SharedAllocationRecord<void, void> {
  protected:
   using record_base_t::record_base_t;
 
- public:
-  static derived_t* allocate(MemorySpace const& arg_space,
-                             std::string const& arg_label,
-                             size_t arg_alloc_size) {
-    return new derived_t(arg_space, arg_label, arg_alloc_size);
-  }
+  void _fill_host_accessible_header_info(SharedAllocationHeader& arg_header,
+                                         std::string const& arg_label);
 
-  static void deallocate(record_base_t* arg_rec) {
-    delete static_cast<derived_t*>(arg_rec);
-  }
+ public:
+  static auto allocate(MemorySpace const& arg_space,
+                       std::string const& arg_label, size_t arg_alloc_size)
+      -> derived_t*;
+
+  static void deallocate(record_base_t* arg_rec);
 
   static void* allocate_tracked(MemorySpace const& arg_space,
                                 std::string const& arg_alloc_label,
-                                size_t arg_alloc_size) {
-    if (!arg_alloc_size) return nullptr;
+                                size_t arg_alloc_size);
 
-    SharedAllocationRecord* const r =
-        allocate(arg_space, arg_alloc_label, arg_alloc_size);
+  static void deallocate_tracked(void* arg_alloc_ptr);
 
-    record_base_t::increment(r);
+  static void* reallocate_tracked(void* arg_alloc_ptr, size_t arg_alloc_size);
 
-    return r->data();
-  }
+  static auto get_record(void* alloc_ptr) -> derived_t*;
 
-  static void deallocate_tracked(void* arg_alloc_ptr) {
-    if (arg_alloc_ptr != nullptr) {
-      SharedAllocationRecord* const r = derived_t::get_record(arg_alloc_ptr);
-      record_base_t::decrement(r);
-    }
-  }
+  std::string get_label() const;
 
-  static void* reallocate_tracked(void* arg_alloc_ptr, size_t arg_alloc_size) {
-    derived_t* const r_old = derived_t::get_record(arg_alloc_ptr);
-    derived_t* const r_new =
-        allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
-
-    Kokkos::Impl::DeepCopy<MemorySpace, MemorySpace>(
-        r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
-
-    record_base_t::increment(r_new);
-    record_base_t::decrement(r_old);
-
-    return r_new->data();
-  }
-
-  static derived_t* get_record(void* alloc_ptr) {
-    using Header = SharedAllocationHeader;
-
-    Header* const h =
-        alloc_ptr ? reinterpret_cast<Header*>(alloc_ptr) - 1 : nullptr;
-
-    if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::SharedAllocationRecordCommon<") +
-          std::string(MemorySpace::name()) +
-          std::string(">::get_record() ERROR"));
-    }
-
-    return static_cast<derived_t*>(h->m_record);
-  }
-
-  std::string get_label() const {
-    return std::string(record_base_t::head()->m_label);
-  }
+  static void print_records(std::ostream& s, MemorySpace const&,
+                            bool detail = false);
 };
 
 namespace {

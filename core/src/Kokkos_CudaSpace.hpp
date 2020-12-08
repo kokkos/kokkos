@@ -834,18 +834,19 @@ struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
 namespace Kokkos {
 namespace Impl {
 
-template <class MemorySpace>
+template <class MemorySpace,
+          class Derived = SharedAllocationRecord<MemorySpace, void>>
 class CudaSharedAllocationRecordCommon
-  : public SharedAllocationRecordCommon<Kokkos::CudaSpace> {
+    : public SharedAllocationRecordCommon<MemorySpace> {
  private:
-  using derived_t = SharedAllocationRecord<MemorySpace, void>;
-  using base_t = SharedAllocationRecordCommon<Kokkos::CudaSpace>;
+  using base_t = SharedAllocationRecordCommon<MemorySpace>;
+
  protected:
   using base_t::base_t;
 };
 
-} // end namespace Impl
-} // end namespace Kokkos
+}  // end namespace Impl
+}  // end namespace Kokkos
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -858,9 +859,10 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
     : public CudaSharedAllocationRecordCommon<Kokkos::CudaSpace> {
  private:
   friend class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>;
+  friend class SharedAllocationRecordCommon<Kokkos::CudaSpace>;
 
   using RecordBase = SharedAllocationRecord<void, void>;
-  using base_t = CudaSharedAllocationRecordCommon<Kokkos::CudaSpace>;
+  using base_t     = CudaSharedAllocationRecordCommon<Kokkos::CudaSpace>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
@@ -919,9 +921,11 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
 
 template <>
 class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
-    : public CudaSharedAllocationRecordCommon<Kokkos::CudaSpace> {
+    : public CudaSharedAllocationRecordCommon<Kokkos::CudaUVMSpace> {
  private:
-  using base_t = CudaSharedAllocationRecordCommon<Kokkos::CudaSpace>;
+  friend class SharedAllocationRecordCommon<Kokkos::CudaUVMSpace>;
+
+  using base_t     = CudaSharedAllocationRecordCommon<Kokkos::CudaUVMSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
@@ -972,10 +976,12 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
 
 template <>
 class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
-    : public CudaSharedAllocationRecordCommon<Kokkos::CudaSpace> {
+    : public CudaSharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace> {
  private:
+  friend class SharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace>;
+
   using RecordBase = SharedAllocationRecord<void, void>;
-  using base_t = CudaSharedAllocationRecordCommon<Kokkos::CudaSpace>;
+  using base_t = CudaSharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
