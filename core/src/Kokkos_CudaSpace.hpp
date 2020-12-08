@@ -856,13 +856,15 @@ namespace Impl {
 
 template <>
 class SharedAllocationRecord<Kokkos::CudaSpace, void>
-    : public CudaSharedAllocationRecordCommon<Kokkos::CudaSpace> {
+    : public HostInaccessibleSharedAllocationRecordCommon<Kokkos::CudaSpace> {
  private:
   friend class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>;
   friend class SharedAllocationRecordCommon<Kokkos::CudaSpace>;
+  friend class HostInaccessibleSharedAllocationRecordCommon<Kokkos::CudaSpace>;
 
   using RecordBase = SharedAllocationRecord<void, void>;
-  using base_t     = CudaSharedAllocationRecordCommon<Kokkos::CudaSpace>;
+  using base_t =
+      HostInaccessibleSharedAllocationRecordCommon<Kokkos::CudaSpace>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
@@ -888,10 +890,6 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
       const RecordBase::function_type arg_dealloc = &base_t::deallocate);
 
  public:
-  std::string get_label() const;
-
-  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
-
   template <typename AliasType>
   inline ::cudaTextureObject_t attach_texture_object() {
     static_assert((std::is_same<AliasType, int>::value ||
@@ -914,9 +912,6 @@ class SharedAllocationRecord<Kokkos::CudaSpace, void>
     // Texture object is attached to the entire allocation range
     return ptr - reinterpret_cast<AliasType*>(RecordBase::m_alloc_ptr);
   }
-
-  static void print_records(std::ostream&, const Kokkos::CudaSpace&,
-                            bool detail = false);
 };
 
 template <>
@@ -969,9 +964,6 @@ class SharedAllocationRecord<Kokkos::CudaUVMSpace, void>
     // Texture object is attached to the entire allocation range
     return ptr - reinterpret_cast<AliasType*>(RecordBase::m_alloc_ptr);
   }
-
-  static void print_records(std::ostream&, const Kokkos::CudaUVMSpace&,
-                            bool detail = false);
 };
 
 template <>
@@ -998,10 +990,6 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
       const Kokkos::CudaHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &deallocate);
-
- public:
-  static void print_records(std::ostream&, const Kokkos::CudaHostPinnedSpace&,
-                            bool detail = false);
 };
 
 }  // namespace Impl

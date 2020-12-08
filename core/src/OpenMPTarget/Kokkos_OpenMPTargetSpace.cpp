@@ -44,8 +44,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <impl/Kokkos_SharedAlloc_timpl.hpp>
-
 #include <algorithm>
 #include <omp.h>
 
@@ -96,18 +94,6 @@ void OpenMPTargetSpace::deallocate(void *const arg_alloc_ptr,
 
 namespace Kokkos {
 namespace Impl {
-
-//==============================================================================
-// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
-
-// To avoid additional compilation cost for something that's (mostly?) not
-// performance sensitive, we explicity instantiate these CRTP base classes here,
-// where we have access to the associated *_timpl.hpp header files.
-template class SharedAllocationRecordCommon<
-    Kokkos::Experimental::OpenMPTargetSpace>;
-
-// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
-//==============================================================================
 
 #ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void> SharedAllocationRecord<
@@ -201,48 +187,6 @@ void *SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
   return r_new->data();
 }
 
-SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
-    *SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
-                            void>::get_record(void *alloc_ptr) {
-  using Header = SharedAllocationHeader;
-  using RecordHost =
-      SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>;
-
-  if (alloc_ptr) {
-    Header head;
-    const Header *const head_ompt = Header::get_header(alloc_ptr);
-
-    Kokkos::Impl::DeepCopy<HostSpace, Experimental::OpenMPTargetSpace>(
-        &head, head_ompt, sizeof(SharedAllocationHeader));
-
-    RecordHost *record = static_cast<RecordHost *>(head.m_record);
-    if (record->m_alloc_ptr == head_ompt) {
-      return record;
-    }
-  }
-  Kokkos::Impl::throw_runtime_exception(std::string(
-      "Kokkos::Experimental::Impl::SharedAllocationRecord< "
-      "Kokkos::Experimental::OpenMPTargetSpace , void >::get_record ERROR"));
-  return nullptr;
-}
-
-// Iterate records to print orphaned memory ...
-void SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
-    print_records(std::ostream &s,
-                  const Kokkos::Experimental::OpenMPTargetSpace &,
-                  bool detail) {
-#ifdef KOKKOS_ENABLE_DEBUG
-  SharedAllocationRecord<void, void>::print_host_accessible_records(
-      s, "OpenMPTargetSpace", &s_root_record, detail);
-#else
-  (void)s;
-  (void)detail;
-  throw_runtime_exception(
-      "SharedAllocationRecord<OpenMPTargetSpace>::print_records"
-      " only works with KOKKOS_ENABLE_DEBUG enabled");
-#endif
-}
-
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -314,3 +258,25 @@ HOST_SPACE_ATOMIC_XOR_MASK] , 0);
 
 }
 }*/
+
+//==============================================================================
+// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
+
+#include <impl/Kokkos_SharedAlloc_timpl.hpp>
+
+namespace Kokkos {
+namespace Impl {
+
+// To avoid additional compilation cost for something that's (mostly?) not
+// performance sensitive, we explicity instantiate these CRTP base classes here,
+// where we have access to the associated *_timpl.hpp header files.
+template class HostInaccessibleSharedAllocationRecordCommon<
+    Kokkos::Experimental::OpenMPTargetSpace>;
+template class SharedAllocationRecordCommon<
+    Kokkos::Experimental::OpenMPTargetSpace>;
+
+}  // end namespace Impl
+}  // end namespace Kokkos
+
+// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
+//==============================================================================

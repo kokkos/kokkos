@@ -93,6 +93,8 @@ class SharedAllocationHeader {
   friend class SharedAllocationRecord;
   template <class>
   friend class SharedAllocationRecordCommon;
+  template <class>
+  friend class HostInaccessibleSharedAllocationRecordCommon;
 
   Record* m_record;
   char m_label[maximum_label_length];
@@ -119,6 +121,8 @@ class SharedAllocationRecord<void, void> {
   friend class SharedAllocationRecord;
   template <class>
   friend class SharedAllocationRecordCommon;
+  template <class>
+  friend class HostInaccessibleSharedAllocationRecordCommon;
 
   using function_type = void (*)(SharedAllocationRecord<void, void>*);
 
@@ -263,30 +267,42 @@ class SharedAllocationRecordCommon : public SharedAllocationRecord<void, void> {
   void _fill_host_accessible_header_info(SharedAllocationHeader& arg_header,
                                          std::string const& arg_label);
 
+  static void deallocate(record_base_t* arg_rec);
+
  public:
   static auto allocate(MemorySpace const& arg_space,
                        std::string const& arg_label, size_t arg_alloc_size)
       -> derived_t*;
-
-  static void deallocate(record_base_t* arg_rec);
-
   /**\brief  Allocate tracked memory in the space */
   static void* allocate_tracked(MemorySpace const& arg_space,
                                 std::string const& arg_alloc_label,
                                 size_t arg_alloc_size);
-
   /**\brief  Reallocate tracked memory in the space */
   static void deallocate_tracked(void* arg_alloc_ptr);
-
   /**\brief  Deallocate tracked memory in the space */
   static void* reallocate_tracked(void* arg_alloc_ptr, size_t arg_alloc_size);
-
   static auto get_record(void* alloc_ptr) -> derived_t*;
-
   std::string get_label() const;
-
   static void print_records(std::ostream& s, MemorySpace const&,
                             bool detail = false);
+};
+
+template <class MemorySpace>
+class HostInaccessibleSharedAllocationRecordCommon
+    : public SharedAllocationRecordCommon<MemorySpace> {
+ private:
+  using base_t        = SharedAllocationRecordCommon<MemorySpace>;
+  using derived_t     = SharedAllocationRecord<MemorySpace, void>;
+  using record_base_t = SharedAllocationRecord<void, void>;
+
+ protected:
+  using base_t::base_t;
+
+ public:
+  static void print_records(std::ostream& s, MemorySpace const&,
+                            bool detail = false);
+  static auto get_record(void* alloc_ptr) -> derived_t*;
+  std::string get_label() const;
 };
 
 namespace {

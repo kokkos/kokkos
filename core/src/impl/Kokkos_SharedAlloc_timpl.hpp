@@ -50,8 +50,11 @@
 
 #include <impl/Kokkos_SharedAlloc.hpp>
 
-#include <string>   // std::string
-#include <cstring>  // strncpy
+#include <Kokkos_HostSpace.hpp>  // used with HostInaccessible specializations
+
+#include <string>    // std::string
+#include <cstring>   // strncpy
+#include <iostream>  // ostream
 
 namespace Kokkos {
 namespace Impl {
@@ -116,10 +119,10 @@ auto SharedAllocationRecordCommon<MemorySpace>::get_record(void* alloc_ptr)
   Header const* const h = alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
 
   if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
+    using namespace std::literals::string_literals;
     Kokkos::Impl::throw_runtime_exception(
-        std::string("Kokkos::Impl::SharedAllocationRecordCommon<") +
-        std::string(MemorySpace::name()) +
-        std::string(">::get_record() ERROR"));
+        "Kokkos::Impl::SharedAllocationRecordCommon<"s +
+        std::string(MemorySpace::name()) + ">::get_record() ERROR"s);
   }
 
   return static_cast<derived_t*>(h->m_record);
@@ -154,11 +157,127 @@ void SharedAllocationRecordCommon<MemorySpace>::print_records(
   SharedAllocationRecord<void, void>::print_host_accessible_records(
       s, MemorySpace::name(), &derived_t::s_root_record, detail);
 #else
+  using namespace std::literals::string_literals;
   Kokkos::Impl::throw_runtime_exception(
-      std::string("SharedAllocationHeader<") + std::string(MemorySpace::name) +
-      std::string(
-          ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"));
+      "SharedAllocationHeader<"s + std::string(MemorySpace::name()) +
+      ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"s);
 #endif
+}
+
+template <class MemorySpace>
+void HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::print_records(
+    std::ostream& s, const MemorySpace&, bool detail) {
+  (void)s;
+  (void)detail;
+#ifdef KOKKOS_ENABLE_DEBUG
+  SharedAllocationRecord<void, void>* r = &derived_t::s_root_record;
+
+  char buffer[256];
+
+  SharedAllocationHeader head;
+
+  if (detail) {
+    do {
+      if (r->m_alloc_ptr) {
+        Kokkos::Impl::DeepCopy<HostSpace, MemorySpace>(
+            &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
+      } else {
+        head.m_label[0] = 0;
+      }
+
+      // Formatting dependent on sizeof(uintptr_t)
+      const char* format_string;
+
+      if (sizeof(uintptr_t) == sizeof(unsigned long)) {
+        format_string =
+            "%s addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx "
+            "+ %.8ld ] count(%d) dealloc(0x%.12lx) %s\n";
+      } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
+        format_string =
+            "%s addr( 0x%.12llx ) list( 0x%.12llx 0x%.12llx ) extent[ "
+            "0x%.12llx + %.8ld ] count(%d) dealloc(0x%.12llx) %s\n";
+      }
+
+      snprintf(buffer, 256, format_string, MemorySpace::execution_space::name(),
+               reinterpret_cast<uintptr_t>(r),
+               reinterpret_cast<uintptr_t>(r->m_prev),
+               reinterpret_cast<uintptr_t>(r->m_next),
+               reinterpret_cast<uintptr_t>(r->m_alloc_ptr), r->m_alloc_size,
+               r->m_count, reinterpret_cast<uintptr_t>(r->m_dealloc),
+               head.m_label);
+      s << buffer;
+      r = r->m_next;
+    } while (r != &derived_t::s_root_record);
+  } else {
+    do {
+      if (r->m_alloc_ptr) {
+        Kokkos::Impl::DeepCopy<HostSpace, MemorySpace>(
+            &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
+
+        // Formatting dependent on sizeof(uintptr_t)
+        const char* format_string;
+
+        if (sizeof(uintptr_t) == sizeof(unsigned long)) {
+          format_string = "%s [ 0x%.12lx + %ld ] %s\n";
+        } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
+          format_string = "%s [ 0x%.12llx + %ld ] %s\n";
+        }
+
+        snprintf(
+            buffer, 256, format_string, MemorySpace::execution_space::name(),
+            reinterpret_cast<uintptr_t>(r->data()), r->size(), head.m_label);
+      } else {
+        snprintf(buffer, 256, "%s [ 0 + 0 ]\n",
+                 MemorySpace::execution_space::name());
+      }
+      s << buffer;
+      r = r->m_next;
+    } while (r != &derived_t::s_root_record);
+  }
+#else
+  using namespace std::literals::string_literals;
+  Kokkos::Impl::throw_runtime_exception(
+      "SharedAllocationHeader<"s + std::string(MemorySpace::name()) +
+      ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"s);
+#endif
+}
+
+template <class MemorySpace>
+auto HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_record(
+    void* alloc_ptr) -> derived_t* {
+  // Copy the header from the allocation
+  SharedAllocationHeader head;
+
+  SharedAllocationHeader const* const head_cuda =
+      alloc_ptr ? SharedAllocationHeader::get_header(alloc_ptr) : nullptr;
+
+  if (alloc_ptr) {
+    Kokkos::Impl::DeepCopy<HostSpace, MemorySpace>(
+        &head, head_cuda, sizeof(SharedAllocationHeader));
+  }
+
+  derived_t* const record =
+      alloc_ptr ? static_cast<derived_t*>(head.m_record) : nullptr;
+
+  if (!alloc_ptr || record->m_alloc_ptr != head_cuda) {
+    using namespace std::literals::string_literals;
+    Kokkos::Impl::throw_runtime_exception(
+        "Kokkos::Impl::SharedAllocationRecord<"s +
+        std::string(MemorySpace::name()) + ", void>::get_record ERROR"s);
+  }
+
+  return record;
+}
+
+template <class MemorySpace>
+std::string
+HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_label() const {
+  SharedAllocationHeader header;
+
+  Kokkos::Impl::DeepCopy<Kokkos::HostSpace, MemorySpace>(
+      &header, this->record_base_t::head(), sizeof(SharedAllocationHeader));
+
+  return std::string(header.m_label);
 }
 
 }  // end namespace Impl

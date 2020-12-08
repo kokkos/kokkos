@@ -44,8 +44,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <impl/Kokkos_SharedAlloc_timpl.hpp>
-
 #include <Kokkos_Core.hpp>
 #include <Kokkos_HIP.hpp>
 #include <Kokkos_HIP_Space.hpp>
@@ -321,19 +319,6 @@ void HIPHostPinnedSpace::impl_deallocate(
 namespace Kokkos {
 namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
-
-// To avoid additional compilation cost for something that's (mostly?) not
-// performance sensitive, we explicity instantiate these CRTP base classes here,
-// where we have access to the associated *_timpl.hpp header files.
-template class SharedAllocationRecordCommon<Kokkos::Experimental::HIPSpace>;
-template class SharedAllocationRecordCommon<
-    Kokkos::Experimental::HIPHostPinnedSpace>;
-
-// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
-//==============================================================================
-
 #ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::s_root_record;
@@ -341,16 +326,6 @@ SharedAllocationRecord<void, void>
 SharedAllocationRecord<void, void> SharedAllocationRecord<
     Kokkos::Experimental::HIPHostPinnedSpace, void>::s_root_record;
 #endif
-
-std::string SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                                   void>::get_label() const {
-  SharedAllocationHeader header;
-
-  Kokkos::Impl::DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::HIPSpace>(
-      &header, RecordBase::head(), sizeof(SharedAllocationHeader));
-
-  return std::string(header.m_label);
-}
 
 SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                        void>::~SharedAllocationRecord() {
@@ -418,134 +393,6 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
   // Fill in the Header information, directly accessible via host pinned memory
   this->base_t::_fill_host_accessible_header_info(*RecordBase::m_alloc_ptr,
                                                   arg_label);
-}
-
-
-//----------------------------------------------------------------------------
-
-SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>*
-SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::get_record(
-    void* alloc_ptr) {
-  using Header = SharedAllocationHeader;
-  using RecordHIP =
-      SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>;
-
-  // Copy the header from the allocation
-  Header head;
-
-  Header const* const head_hip =
-      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
-
-  if (alloc_ptr) {
-    Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace>(
-        &head, head_hip, sizeof(SharedAllocationHeader));
-  }
-
-  RecordHIP* const record =
-      alloc_ptr ? static_cast<RecordHIP*>(head.m_record) : nullptr;
-
-  if (!alloc_ptr || record->m_alloc_ptr != head_hip) {
-    Kokkos::Impl::throw_runtime_exception(std::string(
-        "Kokkos::Impl::SharedAllocationRecord< Kokkos::Experimental::HIPSpace "
-        ", void >::get_record ERROR"));
-  }
-
-  return record;
-}
-
-SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>*
-SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
-                       void>::get_record(void* alloc_ptr) {
-  using Header = SharedAllocationHeader;
-  using RecordHIP =
-      SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>;
-
-  Header* const h =
-      alloc_ptr ? reinterpret_cast<Header*>(alloc_ptr) - 1 : nullptr;
-
-  if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
-    Kokkos::Impl::throw_runtime_exception(std::string(
-        "Kokkos::Impl::SharedAllocationRecord< "
-        "Kokkos::Experimental::HIPHostPinnedSpace , void >::get_record ERROR"));
-  }
-
-  return static_cast<RecordHIP*>(h->m_record);
-}
-
-// Iterate records to print orphaned memory ...
-void SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
-    print_records(std::ostream& s, const Kokkos::Experimental::HIPSpace&,
-                  bool detail) {
-#ifdef KOKKOS_ENABLE_DEBUG
-  SharedAllocationRecord<void, void>* r = &s_root_record;
-
-  char buffer[256];
-
-  SharedAllocationHeader head;
-
-  if (detail) {
-    do {
-      if (r->m_alloc_ptr) {
-        Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace>(
-            &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
-      } else {
-        head.m_label[0] = 0;
-      }
-
-      // Formatting dependent on sizeof(uintptr_t)
-      const char* format_string;
-
-      if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-        format_string =
-            "HIP addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx + "
-            "%.8ld ] count(%d) dealloc(0x%.12lx) %s\n";
-      } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-        format_string =
-            "HIP addr( 0x%.12llx ) list( 0x%.12llx 0x%.12llx ) extent[ "
-            "0x%.12llx + %.8ld ] count(%d) dealloc(0x%.12llx) %s\n";
-      }
-
-      snprintf(buffer, 256, format_string, reinterpret_cast<uintptr_t>(r),
-               reinterpret_cast<uintptr_t>(r->m_prev),
-               reinterpret_cast<uintptr_t>(r->m_next),
-               reinterpret_cast<uintptr_t>(r->m_alloc_ptr), r->m_alloc_size,
-               r->m_count, reinterpret_cast<uintptr_t>(r->m_dealloc),
-               head.m_label);
-      s << buffer;
-      r = r->m_next;
-    } while (r != &s_root_record);
-  } else {
-    do {
-      if (r->m_alloc_ptr) {
-        Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace>(
-            &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
-
-        // Formatting dependent on sizeof(uintptr_t)
-        const char* format_string;
-
-        if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-          format_string = "HIP [ 0x%.12lx + %ld ] %s\n";
-        } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-          format_string = "HIP [ 0x%.12llx + %ld ] %s\n";
-        }
-
-        snprintf(buffer, 256, format_string,
-                 reinterpret_cast<uintptr_t>(r->data()), r->size(),
-                 head.m_label);
-      } else {
-        snprintf(buffer, 256, "HIP [ 0 + 0 ]\n");
-      }
-      s << buffer;
-      r = r->m_next;
-    } while (r != &s_root_record);
-  }
-#else
-  (void)s;
-  (void)detail;
-  throw_runtime_exception(
-      "Kokkos::Impl::SharedAllocationRecord<HIPSpace>::print_records"
-      " only works with KOKKOS_ENABLE_DEBUG enabled");
-#endif
 }
 
 }  // namespace Impl
@@ -704,3 +551,26 @@ void HIPSpaceInitializer::print_configuration(std::ostream& msg,
 
 }  // namespace Impl
 }  // namespace Kokkos
+
+//==============================================================================
+// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
+
+#include <impl/Kokkos_SharedAlloc_timpl.hpp>
+
+namespace Kokkos {
+namespace Impl {
+
+// To avoid additional compilation cost for something that's (mostly?) not
+// performance sensitive, we explicity instantiate these CRTP base classes here,
+// where we have access to the associated *_timpl.hpp header files.
+template class HostInaccessibleSharedAllocationRecordCommon<
+    Kokkos::Experimental::HIPSpace>;
+template class SharedAllocationRecordCommon<Kokkos::Experimental::HIPSpace>;
+template class SharedAllocationRecordCommon<
+    Kokkos::Experimental::HIPHostPinnedSpace>;
+
+}  // end namespace Impl
+}  // end namespace Kokkos
+
+// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
+//==============================================================================

@@ -43,7 +43,6 @@
 */
 
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_SYCL.hpp>
@@ -266,13 +265,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
 
   SharedAllocationHeader header;
 
-  // Fill in the Header information
-  header.m_record = static_cast<SharedAllocationRecord<void, void>*>(this);
-
-  strncpy(header.m_label, label.c_str(),
-          SharedAllocationHeader::maximum_label_length - 1);
-  // Set last element zero, in case c_str is too long
-  header.m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
+  this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace>(
@@ -295,15 +288,9 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::
                                                arg_alloc_size),
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
-  // Fill in the Header information
-  RecordBase::m_alloc_ptr->m_record = this;
 
-  strncpy(RecordBase::m_alloc_ptr->m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length - 1);
-
-  // Set last element zero, in case c_str is too long
-  RecordBase::m_alloc_ptr
-      ->m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
+  this->base_t::_fill_host_accessible_header_info(*base_t::m_alloc_ptr,
+                                                  arg_label);
 }
 
 }  // namespace Impl
@@ -314,31 +301,6 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::
 
 namespace Kokkos {
 namespace Impl {
-
-//==============================================================================
-// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
-
-// To avoid additional compilation cost for something that's (mostly?) not
-// performance sensitive, we explicity instantiate these CRTP base classes here,
-// where we have access to the associated *_timpl.hpp header files.
-template class SharedAllocationRecordCommon<
-    Kokkos::Experimental::SYCLDeviceUSMSpace>;
-template class SharedAllocationRecordCommon<
-    Kokkos::Experimental::SYCLSharedUSMSpace>;
-
-// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
-//==============================================================================
-
-std::string SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                                   void>::get_label() const {
-  SharedAllocationHeader header;
-
-  Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
-                         Kokkos::Experimental::SYCLDeviceUSMSpace>(
-      &header, RecordBase::head(), sizeof(SharedAllocationHeader));
-
-  return std::string(header.m_label);
-}
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
                        void>::~SharedAllocationRecord() {
@@ -372,116 +334,27 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace,
 
 //----------------------------------------------------------------------------
 
-SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>*
-SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                       void>::get_record(void* alloc_ptr) {
-  using Header = SharedAllocationHeader;
-  using RecordSYCL =
-      SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
+}  // namespace Impl
+}  // namespace Kokkos
 
-  // Copy the header from the allocation
-  Header head;
+//==============================================================================
+// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
 
-  Header const* const head_sycl =
-      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
+#include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
-  if (alloc_ptr) {
-    Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
-                           Kokkos::Experimental::SYCLDeviceUSMSpace>(
-        &head, head_sycl, sizeof(SharedAllocationHeader));
-  }
+namespace Kokkos {
+namespace Impl {
 
-  RecordSYCL* const record =
-      alloc_ptr ? static_cast<RecordSYCL*>(head.m_record) : nullptr;
-
-  if (!alloc_ptr || record->m_alloc_ptr != head_sycl) {
-    Kokkos::Impl::throw_runtime_exception(
-        std::string("Kokkos::Impl::SharedAllocationRecord<"
-                    "Kokkos::Experimental::SYCLDeviceUSMSpace"
-                    ", void>::get_record ERROR"));
-  }
-
-  return record;
-}
-
-// Iterate records to print orphaned memory ...
-void SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
-    print_records(std::ostream& s,
-                  const Kokkos::Experimental::SYCLDeviceUSMSpace&,
-                  bool detail) {
-#ifdef KOKKOS_ENABLE_DEBUG
-  SharedAllocationRecord<void, void>* r = &s_root_record;
-
-  char buffer[256];
-
-  SharedAllocationHeader head;
-
-  if (detail) {
-    do {
-      if (r->m_alloc_ptr) {
-        Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
-                               Kokkos::Experimental::SYCLDeviceUSMSpace>(
-            &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
-      } else {
-        head.m_label[0] = 0;
-      }
-
-      // Formatting dependent on sizeof(uintptr_t)
-      const char* format_string;
-
-      if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-        format_string =
-            "SYCL addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx "
-            "+ %.8ld ] count(%d) dealloc(0x%.12lx) %s\n";
-      } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-        format_string =
-            "SYCL addr( 0x%.12llx ) list( 0x%.12llx 0x%.12llx ) extent[ "
-            "0x%.12llx + %.8ld ] count(%d) dealloc(0x%.12llx) %s\n";
-      }
-
-      snprintf(buffer, 256, format_string, reinterpret_cast<uintptr_t>(r),
-               reinterpret_cast<uintptr_t>(r->m_prev),
-               reinterpret_cast<uintptr_t>(r->m_next),
-               reinterpret_cast<uintptr_t>(r->m_alloc_ptr), r->m_alloc_size,
-               r->m_count, reinterpret_cast<uintptr_t>(r->m_dealloc),
-               head.m_label);
-      s << buffer;
-      r = r->m_next;
-    } while (r != &s_root_record);
-  } else {
-    do {
-      if (r->m_alloc_ptr) {
-        Kokkos::Impl::DeepCopy<Kokkos::HostSpace,
-                               Kokkos::Experimental::SYCLDeviceUSMSpace>(
-            &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
-
-        // Formatting dependent on sizeof(uintptr_t)
-        const char* format_string;
-
-        if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-          format_string = "SYCL [ 0x%.12lx + %ld ] %s\n";
-        } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-          format_string = "SYCL [ 0x%.12llx + %ld ] %s\n";
-        }
-
-        snprintf(buffer, 256, format_string,
-                 reinterpret_cast<uintptr_t>(r->data()), r->size(),
-                 head.m_label);
-      } else {
-        snprintf(buffer, 256, "SYCL [ 0 + 0 ]\n");
-      }
-      s << buffer;
-      r = r->m_next;
-    } while (r != &s_root_record);
-  }
-#else
-  (void)s;
-  (void)detail;
-  throw_runtime_exception(
-      "Kokkos::Impl::SharedAllocationRecord<SYCLDeviceUSMSpace>::print_records"
-      " only works with KOKKOS_ENABLE_DEBUG enabled");
-#endif
-}
+// To avoid additional compilation cost for something that's (mostly?) not
+// performance sensitive, we explicity instantiate these CRTP base classes here,
+// where we have access to the associated *_timpl.hpp header files.
+template class SharedAllocationRecordCommon<
+    Kokkos::Experimental::SYCLDeviceUSMSpace>;
+template class SharedAllocationRecordCommon<
+    Kokkos::Experimental::SYCLSharedUSMSpace>;
 
 }  // namespace Impl
 }  // namespace Kokkos
+
+// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
+//==============================================================================

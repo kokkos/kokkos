@@ -45,7 +45,9 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
-#include <impl/Kokkos_SharedAlloc_timpl.hpp>
+#include <Kokkos_Core.hpp>
+#include <Kokkos_Cuda.hpp>
+#include <Kokkos_CudaSpace.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -53,10 +55,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <atomic>
-
-#include <Kokkos_Core.hpp>
-#include <Kokkos_Cuda.hpp>
-#include <Kokkos_CudaSpace.hpp>
 
 //#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -407,19 +405,6 @@ void CudaHostPinnedSpace::impl_deallocate(
 namespace Kokkos {
 namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
-
-// To avoid additional compilation cost for something that's (mostly?) not
-// performance sensitive, we explicity instantiate these CRTP base classes here,
-// where we have access to the associated *_timpl.hpp header files.
-template class SharedAllocationRecordCommon<Kokkos::CudaSpace>;
-template class SharedAllocationRecordCommon<Kokkos::CudaUVMSpace>;
-template class SharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace>;
-
-// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
-//==============================================================================
-
 #ifdef KOKKOS_ENABLE_DEBUG
 SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::CudaSpace, void>::s_root_record;
@@ -473,21 +458,6 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::attach_texture_object(
 
   return tex_obj;
 }
-
-//==============================================================================
-// <editor-fold desc="SharedAllocationRecord::get_label()"> {{{1
-
-std::string SharedAllocationRecord<Kokkos::CudaSpace, void>::get_label() const {
-  SharedAllocationHeader header;
-
-  Kokkos::Impl::DeepCopy<Kokkos::HostSpace, Kokkos::CudaSpace>(
-      &header, RecordBase::head(), sizeof(SharedAllocationHeader));
-
-  return std::string(header.m_label);
-}
-
-// </editor-fold> end SharedAllocationRecord::get_label() }}}1
-//==============================================================================
 
 //==============================================================================
 // <editor-fold desc="SharedAllocationRecord destructors"> {{{1
@@ -598,122 +568,6 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
 // </editor-fold> end SharedAllocationRecord constructors }}}1
 //==============================================================================
 
-//==============================================================================
-// <editor-fold desc="SharedAllocationRecord::get_record()"> {{{1
-
-SharedAllocationRecord<Kokkos::CudaSpace, void> *
-SharedAllocationRecord<Kokkos::CudaSpace, void>::get_record(void *alloc_ptr) {
-  using RecordCuda = SharedAllocationRecord<Kokkos::CudaSpace, void>;
-
-  using Header = SharedAllocationHeader;
-
-  // Copy the header from the allocation
-  Header head;
-
-  Header const *const head_cuda =
-      alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
-
-  if (alloc_ptr) {
-    Kokkos::Impl::DeepCopy<HostSpace, CudaSpace>(
-        &head, head_cuda, sizeof(SharedAllocationHeader));
-  }
-
-  RecordCuda *const record =
-      alloc_ptr ? static_cast<RecordCuda *>(head.m_record) : nullptr;
-
-  if (!alloc_ptr || record->m_alloc_ptr != head_cuda) {
-    Kokkos::Impl::throw_runtime_exception(
-        std::string("Kokkos::Impl::SharedAllocationRecord< Kokkos::CudaSpace , "
-                    "void >::get_record ERROR"));
-  }
-
-  return record;
-}
-
-// </editor-fold> end SharedAllocationRecord::get_record() }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="SharedAllocationRecord::print_records()"> {{{1
-
-// Iterate records to print orphaned memory ...
-void SharedAllocationRecord<Kokkos::CudaSpace, void>::print_records(
-    std::ostream &s, const Kokkos::CudaSpace &, bool detail) {
-  (void)s;
-  (void)detail;
-#ifdef KOKKOS_ENABLE_DEBUG
-  SharedAllocationRecord<void, void> *r = &s_root_record;
-
-  char buffer[256];
-
-  SharedAllocationHeader head;
-
-  if (detail) {
-    do {
-      if (r->m_alloc_ptr) {
-        Kokkos::Impl::DeepCopy<HostSpace, CudaSpace>(
-            &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
-      } else {
-        head.m_label[0] = 0;
-      }
-
-      // Formatting dependent on sizeof(uintptr_t)
-      const char *format_string;
-
-      if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-        format_string =
-            "Cuda addr( 0x%.12lx ) list( 0x%.12lx 0x%.12lx ) extent[ 0x%.12lx "
-            "+ %.8ld ] count(%d) dealloc(0x%.12lx) %s\n";
-      } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-        format_string =
-            "Cuda addr( 0x%.12llx ) list( 0x%.12llx 0x%.12llx ) extent[ "
-            "0x%.12llx + %.8ld ] count(%d) dealloc(0x%.12llx) %s\n";
-      }
-
-      snprintf(buffer, 256, format_string, reinterpret_cast<uintptr_t>(r),
-               reinterpret_cast<uintptr_t>(r->m_prev),
-               reinterpret_cast<uintptr_t>(r->m_next),
-               reinterpret_cast<uintptr_t>(r->m_alloc_ptr), r->m_alloc_size,
-               r->m_count, reinterpret_cast<uintptr_t>(r->m_dealloc),
-               head.m_label);
-      s << buffer;
-      r = r->m_next;
-    } while (r != &s_root_record);
-  } else {
-    do {
-      if (r->m_alloc_ptr) {
-        Kokkos::Impl::DeepCopy<HostSpace, CudaSpace>(
-            &head, r->m_alloc_ptr, sizeof(SharedAllocationHeader));
-
-        // Formatting dependent on sizeof(uintptr_t)
-        const char *format_string;
-
-        if (sizeof(uintptr_t) == sizeof(unsigned long)) {
-          format_string = "Cuda [ 0x%.12lx + %ld ] %s\n";
-        } else if (sizeof(uintptr_t) == sizeof(unsigned long long)) {
-          format_string = "Cuda [ 0x%.12llx + %ld ] %s\n";
-        }
-
-        snprintf(buffer, 256, format_string,
-                 reinterpret_cast<uintptr_t>(r->data()), r->size(),
-                 head.m_label);
-      } else {
-        snprintf(buffer, 256, "Cuda [ 0 + 0 ]\n");
-      }
-      s << buffer;
-      r = r->m_next;
-    } while (r != &s_root_record);
-  }
-#else
-  Kokkos::Impl::throw_runtime_exception(
-      "SharedAllocationHeader<CudaSpace>::print_records only works with "
-      "KOKKOS_ENABLE_DEBUG enabled");
-#endif
-}
-
-// </editor-fold> end SharedAllocationRecord::print_records() }}}1
-//==============================================================================
-
 void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
                            bool to_device) {
   if ((ptr == nullptr) || (bytes == 0)) return;
@@ -737,6 +591,29 @@ void cuda_prefetch_pointer(const Cuda &space, const void *ptr, size_t bytes,
 
 }  // namespace Impl
 }  // namespace Kokkos
+
+//==============================================================================
+// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
+
+#include <impl/Kokkos_SharedAlloc_timpl.hpp>
+
+namespace Kokkos {
+namespace Impl {
+
+// To avoid additional compilation cost for something that's (mostly?) not
+// performance sensitive, we explicity instantiate these CRTP base classes here,
+// where we have access to the associated *_timpl.hpp header files.
+template class SharedAllocationRecordCommon<Kokkos::CudaSpace>;
+template class HostInaccessibleSharedAllocationRecordCommon<Kokkos::CudaSpace>;
+template class SharedAllocationRecordCommon<Kokkos::CudaUVMSpace>;
+template class SharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace>;
+
+}  // end namespace Impl
+}  // end namespace Kokkos
+
+// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
+//==============================================================================
+
 #else
 void KOKKOS_CORE_SRC_CUDA_CUDASPACE_PREVENT_LINK_ERROR() {}
 #endif  // KOKKOS_ENABLE_CUDA

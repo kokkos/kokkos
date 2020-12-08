@@ -519,10 +519,14 @@ namespace Impl {
 
 template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
-    : public SharedAllocationRecordCommon<Kokkos::Experimental::HIPSpace> {
+    : public HostInaccessibleSharedAllocationRecordCommon<
+          Kokkos::Experimental::HIPSpace> {
  private:
   friend class SharedAllocationRecordCommon<Kokkos::Experimental::HIPSpace>;
-  using base_t = SharedAllocationRecordCommon<Kokkos::Experimental::HIPSpace>;
+  friend class HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::HIPSpace>;
+  using base_t = HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::HIPSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
@@ -541,13 +545,6 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
       const Kokkos::Experimental::HIPSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &base_t::deallocate);
-
- public:
-  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
-
-  static void print_records(std::ostream&,
-                            const Kokkos::Experimental::HIPSpace&,
-                            bool detail = false);
 };
 
 template <>

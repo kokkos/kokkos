@@ -147,15 +147,15 @@ namespace Impl {
 
 template <>
 class SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
-    : public SharedAllocationRecordCommon<
+    : public HostInaccessibleSharedAllocationRecordCommon<
           Kokkos::Experimental::OpenMPTargetSpace> {
  private:
   friend class SharedAllocationRecordCommon<
       Kokkos::Experimental::OpenMPTargetSpace>;
   friend Kokkos::Experimental::OpenMPTargetSpace;
 
-  using base_t =
-      SharedAllocationRecordCommon<Kokkos::Experimental::OpenMPTargetSpace>;
+  using base_t = HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::OpenMPTargetSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
@@ -192,8 +192,6 @@ class SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
   /**\brief  Reallocate tracked memory in the space */
   static void* reallocate_tracked(void* const arg_alloc_ptr,
                                   const size_t arg_alloc_size);
-
-  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
 };
 
 }  // namespace Impl
