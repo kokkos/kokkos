@@ -57,6 +57,7 @@
 #include <sstream>
 #include <cstring>
 
+#include <Kokkos_OpenMPTarget.hpp>
 #include <Kokkos_OpenMPTargetSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Atomic.hpp>
@@ -125,7 +126,7 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
         const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
-    : SharedAllocationRecord<void, void>(
+    : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
                                   void>::s_root_record,

@@ -265,7 +265,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
 
   SharedAllocationHeader header;
 
-  this->base_t::_fill_host_accessible_header_info(header, arg_label);
+  this->base_t::_fill_host_accessible_header_info(header, label);
 
   // Copy to device memory
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, HostSpace>(
@@ -279,7 +279,7 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace, void>::
         const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
-    : SharedAllocationRecord<void, void>(
+    : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace,
                                   void>::s_root_record,

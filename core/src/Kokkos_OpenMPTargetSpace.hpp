@@ -150,6 +150,8 @@ class SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
     : public HostInaccessibleSharedAllocationRecordCommon<
           Kokkos::Experimental::OpenMPTargetSpace> {
  private:
+  friend class HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::OpenMPTargetSpace>;
   friend class SharedAllocationRecordCommon<
       Kokkos::Experimental::OpenMPTargetSpace>;
   friend Kokkos::Experimental::OpenMPTargetSpace;
