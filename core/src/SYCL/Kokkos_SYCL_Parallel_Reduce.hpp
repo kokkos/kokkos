@@ -151,7 +151,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    cl::sycl::queue& q = *instance.m_queue;
+    sycl::queue& q = *instance.m_queue;
 
     auto result_ptr = static_cast<pointer_type>(
         sycl::malloc(sizeof(*m_result_ptr), q, sycl::usm::alloc::shared));
@@ -165,13 +165,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       ValueInit::init(functor, result_ptr);
 
     if (policy.begin() != policy.end()) {
-      q.submit([&](cl::sycl::handler& cgh) {
+      q.submit([&](sycl::handler& cgh) {
         // FIXME_SYCL a local size larger than 1 doesn't work for all cases
-        cl::sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
+        sycl::nd_range<1> range(policy.end() - policy.begin(), 1);
 
         const auto reduction = [&]() {
           if constexpr (!std::is_same<ReducerType, InvalidType>::value) {
-            return cl::sycl::ONEAPI::reduction(
+            return sycl::ONEAPI::reduction(
                 result_ptr, identity,
                 [this](value_type& old_value, const value_type& new_value) {
                   m_reducer.join(old_value, new_value);
@@ -179,7 +179,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                 });
           } else {
             if constexpr (ReduceFunctorHasJoin<Functor>::value) {
-              return cl::sycl::ONEAPI::reduction(
+              return sycl::ONEAPI::reduction(
                   result_ptr, identity,
                   [functor](value_type& old_value,
                             const value_type& new_value) {
@@ -187,14 +187,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                     return old_value;
                   });
             } else {
-              return cl::sycl::ONEAPI::reduction(result_ptr, identity,
-                                                 std::plus<>());
+              return sycl::ONEAPI::reduction(result_ptr, identity,
+                                             std::plus<>());
             }
           }
         }();
 
         cgh.parallel_for(range, reduction,
-                         [=](cl::sycl::nd_item<1> item, auto& sum) {
+                         [=](sycl::nd_item<1> item, auto& sum) {
                            const typename Policy::index_type id =
                                static_cast<typename Policy::index_type>(
                                    item.get_global_id(0)) +
@@ -212,7 +212,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
 
     if constexpr (ReduceFunctorHasFinal<Functor>::value)
-      q.submit([&](cl::sycl::handler& cgh) {
+      q.submit([&](sycl::handler& cgh) {
         cgh.single_task([=]() {
           FunctorFinal<Functor, WorkTag>::final(functor, result_ptr);
         });

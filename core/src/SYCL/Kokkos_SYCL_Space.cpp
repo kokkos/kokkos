@@ -55,7 +55,7 @@
 namespace Kokkos {
 namespace Impl {
 namespace {
-auto USM_memcpy(cl::sycl::queue& q, void* dst, const void* src, size_t n) {
+auto USM_memcpy(sycl::queue& q, void* dst, const void* src, size_t n) {
   return q.memcpy(dst, src, n);
 }
 
@@ -132,10 +132,8 @@ void* allocate_sycl(
     const size_t arg_logical_size, const Kokkos::Tools::SpaceHandle arg_handle,
     const RawMemoryAllocationFailure::AllocationMechanism failure_tag,
     const sycl::usm::alloc allocation_kind) {
-  const cl::sycl::queue& queue =
-      *SYCL().impl_internal_space_instance()->m_queue;
-  void* const hostPtr =
-      cl::sycl::malloc(arg_alloc_size, queue, allocation_kind);
+  const sycl::queue& queue = *SYCL().impl_internal_space_instance()->m_queue;
+  void* const hostPtr = sycl::malloc(arg_alloc_size, queue, allocation_kind);
 
   if (hostPtr == nullptr)
     throw RawMemoryAllocationFailure(
@@ -188,9 +186,8 @@ void sycl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
-  const cl::sycl::queue& queue =
-      *SYCL().impl_internal_space_instance()->m_queue;
-  cl::sycl::free(arg_alloc_ptr, queue);
+  const sycl::queue& queue = *SYCL().impl_internal_space_instance()->m_queue;
+  sycl::free(arg_alloc_ptr, queue);
 }
 
 void SYCLDeviceUSMSpace::deallocate(void* const arg_alloc_ptr,

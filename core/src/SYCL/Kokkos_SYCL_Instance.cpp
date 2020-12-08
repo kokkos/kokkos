@@ -80,7 +80,7 @@ SYCLInternal& SYCLInternal::singleton() {
 }
 
 // FIME_SYCL
-void SYCLInternal::initialize(const cl::sycl::device& d) {
+void SYCLInternal::initialize(const sycl::device& d) {
   if (was_finalized)
     Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
 
@@ -96,7 +96,7 @@ void SYCLInternal::initialize(const cl::sycl::device& d) {
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
   const bool ok_dev  = true;
   if (ok_init && ok_dev) {
-    m_queue = std::make_unique<cl::sycl::queue>(d);
+    m_queue = std::make_unique<sycl::queue>(d);
     std::cout << SYCL::SYCLDevice(d) << '\n';
     m_indirectKernel.emplace(IndirectKernelAllocator(*m_queue));
   } else {
