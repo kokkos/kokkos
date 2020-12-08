@@ -135,12 +135,8 @@ SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
       m_space(arg_space) {
   SharedAllocationHeader header;
 
-  header.m_record = static_cast<SharedAllocationRecord<void, void> *>(this);
+  this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
-  strncpy(header.m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length - 1);
-  // Set last element zero, in case c_str is too long
-  header.m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
   // TODO DeepCopy
   // DeepCopy
   Kokkos::Impl::DeepCopy<Experimental::OpenMPTargetSpace, HostSpace>(
