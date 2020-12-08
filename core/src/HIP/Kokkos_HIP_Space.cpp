@@ -405,13 +405,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
 
   SharedAllocationHeader header;
 
-  // Fill in the Header information
-  header.m_record = static_cast<SharedAllocationRecord<void, void>*>(this);
-
-  strncpy(header.m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length - 1);
-  // Set last element zero, in case c_str is too long
-  header.m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
+  this->base_t::_fill_host_accessible_header_info(header, arg_label);
 
   // Copy to device memory
   Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace>(
@@ -425,7 +419,7 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
         const SharedAllocationRecord<void, void>::function_type arg_dealloc)
     // Pass through allocated [ SharedAllocationHeader , user_memory ]
     // Pass through deallocation function
-    : SharedAllocationRecord<void, void>(
+    : base_t(
 #ifdef KOKKOS_ENABLE_DEBUG
           &SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
                                   void>::s_root_record,
@@ -435,70 +429,8 @@ SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
           sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
       m_space(arg_space) {
   // Fill in the Header information, directly accessible via host pinned memory
-
-  RecordBase::m_alloc_ptr->m_record = this;
-
-  strncpy(RecordBase::m_alloc_ptr->m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length - 1);
-  // Set last element zero, in case c_str is too long
-  RecordBase::m_alloc_ptr
-      ->m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
-}
-
-//----------------------------------------------------------------------------
-
-void* SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
-    allocate_tracked(const Kokkos::Experimental::HIPSpace& arg_space,
-                     const std::string& arg_alloc_label,
-                     const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return nullptr;
-
-  SharedAllocationRecord* const r =
-      allocate(arg_space, arg_alloc_label, arg_alloc_size);
-
-  RecordBase::increment(r);
-
-  return r->data();
-}
-
-void SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
-                            void>::deallocate_tracked(void* const
-                                                          arg_alloc_ptr) {
-  if (arg_alloc_ptr != nullptr) {
-    SharedAllocationRecord* const r = get_record(arg_alloc_ptr);
-
-    RecordBase::decrement(r);
-  }
-}
-
-void* SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>::
-    reallocate_tracked(void* const arg_alloc_ptr, const size_t arg_alloc_size) {
-  SharedAllocationRecord* const r_old = get_record(arg_alloc_ptr);
-  SharedAllocationRecord* const r_new =
-      allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
-
-  Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace,
-                         Kokkos::Experimental::HIPSpace>(
-      r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
-
-  RecordBase::increment(r_new);
-  RecordBase::decrement(r_old);
-
-  return r_new->data();
-}
-
-void* SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>::
-    allocate_tracked(const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
-                     const std::string& arg_alloc_label,
-                     const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return nullptr;
-
-  SharedAllocationRecord* const r =
-      allocate(arg_space, arg_alloc_label, arg_alloc_size);
-
-  RecordBase::increment(r);
-
-  return r->data();
+  this->base_t::_fill_host_accessible_header_info(*RecordBase::m_alloc_ptr,
+                                                  arg_label);
 }
 
 void SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace,
