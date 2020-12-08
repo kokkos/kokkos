@@ -270,12 +270,15 @@ class SharedAllocationRecordCommon : public SharedAllocationRecord<void, void> {
 
   static void deallocate(record_base_t* arg_rec);
 
+  /**\brief  Allocate tracked memory in the space */
   static void* allocate_tracked(MemorySpace const& arg_space,
                                 std::string const& arg_alloc_label,
                                 size_t arg_alloc_size);
 
+  /**\brief  Reallocate tracked memory in the space */
   static void deallocate_tracked(void* arg_alloc_ptr);
 
+  /**\brief  Deallocate tracked memory in the space */
   static void* reallocate_tracked(void* arg_alloc_ptr, size_t arg_alloc_size);
 
   static auto get_record(void* alloc_ptr) -> derived_t*;
