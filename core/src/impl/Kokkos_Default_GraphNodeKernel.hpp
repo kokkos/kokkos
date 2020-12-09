@@ -63,7 +63,7 @@ template <class ExecutionSpace>
 struct GraphNodeKernelDefaultImpl {
   // TODO @graphs decide if this should use vtable or intrusive erasure via
   //      function pointers like in the rest of the graph interface
-  virtual void execute_kernel() const = 0;
+  virtual void execute_kernel() = 0;
 };
 
 // TODO Indicate that this kernel specialization is only for the Host somehow?
@@ -101,7 +101,7 @@ class GraphNodeKernelImpl
                             (PolicyDeduced &&) arg_policy,
                             (ArgsDeduced &&) args...) {}
 
-  void execute_kernel() const final { this->base_t::execute(); }
+  void execute_kernel() final { this->base_t::execute(); }
 };
 
 // </editor-fold> end GraphNodeKernelImpl }}}1
@@ -116,7 +116,7 @@ struct GraphNodeAggregateKernelDefaultImpl
     using is_graph_kernel = std::true_type;
   };
   using graph_kernel = GraphNodeAggregateKernelDefaultImpl;
-  void execute_kernel() const final {}
+  void execute_kernel() final {}
 };
 
 }  // end namespace Impl

@@ -103,8 +103,7 @@ ENDIF()
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   # The Cray compiler reports as Clang to most versions of CMake
   EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
-                  COMMAND grep Cray
-                  COMMAND wc -l
+                  COMMAND grep -c Cray
                   OUTPUT_VARIABLE INTERNAL_HAVE_CRAY_COMPILER
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   IF (INTERNAL_HAVE_CRAY_COMPILER) #not actually Clang
@@ -112,8 +111,7 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   ENDIF()
   # The clang based Intel compiler reports as Clang to most versions of CMake
   EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
-                  COMMAND grep icpx
-                  COMMAND wc -l
+                  COMMAND grep -c icpx
                   OUTPUT_VARIABLE INTERNAL_HAVE_INTEL_COMPILER
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   IF (INTERNAL_HAVE_INTEL_COMPILER) #not actually Clang
@@ -135,6 +133,17 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Cray OR KOKKOS_CLANG_IS_CRAY)
   ELSE()
     SET(KOKKOS_CXX_COMPILER_VERSION ${TEMP_CXX_COMPILER_VERSION} CACHE STRING INTERNAL FORCE)
   ENDIF()
+ENDIF()
+
+IF(KOKKOS_CXX_COMPILER_ID STREQUAL Fujitsu)
+  # SET Fujitsus compiler version which is not detected by CMake
+  EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
+                  OUTPUT_VARIABLE INTERNAL_CXX_COMPILER_VERSION
+                  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  STRING(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+"
+         TEMP_CXX_COMPILER_VERSION ${INTERNAL_CXX_COMPILER_VERSION})
+  SET(KOKKOS_CXX_COMPILER_VERSION ${TEMP_CXX_COMPILER_VERSION} CACHE STRING INTERNAL FORCE)
 ENDIF()
 
 # Enforce the minimum compilers supported by Kokkos.

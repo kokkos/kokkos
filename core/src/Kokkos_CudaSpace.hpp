@@ -100,6 +100,20 @@ class CudaSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
+ private:
+  template <class, class, class, class>
+  friend class Kokkos::Experimental::LogicalMemorySpace;
+  void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      const Kokkos::Tools::SpaceHandle =
+                          Kokkos::Tools::make_space_handle(name())) const;
+  void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                       const size_t arg_alloc_size,
+                       const size_t arg_logical_size = 0,
+                       const Kokkos::Tools::SpaceHandle =
+                           Kokkos::Tools::make_space_handle(name())) const;
+
+ public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
@@ -114,42 +128,6 @@ class CudaSpace {
   static constexpr const char* m_name = "Cuda";
   friend class Kokkos::Impl::SharedAllocationRecord<Kokkos::CudaSpace, void>;
 };
-
-namespace Impl {
-/// \brief Initialize lock array for arbitrary size atomics.
-///
-/// Arbitrary atomics are implemented using a hash table of locks
-/// where the hash value is derived from the address of the
-/// object for which an atomic operation is performed.
-/// This function initializes the locks to zero (unset).
-void init_lock_arrays_cuda_space();
-
-/// \brief Retrieve the pointer to the lock array for arbitrary size atomics.
-///
-/// Arbitrary atomics are implemented using a hash table of locks
-/// where the hash value is derived from the address of the
-/// object for which an atomic operation is performed.
-/// This function retrieves the lock array pointer.
-/// If the array is not yet allocated it will do so.
-int* atomic_lock_array_cuda_space_ptr(bool deallocate = false);
-
-/// \brief Retrieve the pointer to the scratch array for team and thread private
-/// global memory.
-///
-/// Team and Thread private scratch allocations in
-/// global memory are acquired via locks.
-/// This function retrieves the lock array pointer.
-/// If the array is not yet allocated it will do so.
-int* scratch_lock_array_cuda_space_ptr(bool deallocate = false);
-
-/// \brief Retrieve the pointer to the scratch array for unique identifiers.
-///
-/// Unique identifiers in the range 0-Cuda::concurrency
-/// are provided via locks.
-/// This function retrieves the lock array pointer.
-/// If the array is not yet allocated it will do so.
-int* threadid_lock_array_cuda_space_ptr(bool deallocate = false);
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/
@@ -197,6 +175,20 @@ class CudaUVMSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
+ private:
+  template <class, class, class, class>
+  friend class Kokkos::Experimental::LogicalMemorySpace;
+  void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      const Kokkos::Tools::SpaceHandle =
+                          Kokkos::Tools::make_space_handle(name())) const;
+  void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                       const size_t arg_alloc_size,
+                       const size_t arg_logical_size = 0,
+                       const Kokkos::Tools::SpaceHandle =
+                           Kokkos::Tools::make_space_handle(name())) const;
+
+ public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
@@ -254,6 +246,20 @@ class CudaHostPinnedSpace {
                   const size_t arg_alloc_size,
                   const size_t arg_logical_size = 0) const;
 
+ private:
+  template <class, class, class, class>
+  friend class Kokkos::Experimental::LogicalMemorySpace;
+  void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
+                      const size_t arg_logical_size = 0,
+                      const Kokkos::Tools::SpaceHandle =
+                          Kokkos::Tools::make_space_handle(name())) const;
+  void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                       const size_t arg_alloc_size,
+                       const size_t arg_logical_size = 0,
+                       const Kokkos::Tools::SpaceHandle =
+                           Kokkos::Tools::make_space_handle(name())) const;
+
+ public:
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 

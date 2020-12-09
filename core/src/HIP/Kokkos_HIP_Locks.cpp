@@ -52,26 +52,28 @@
 
 #include <iostream>
 
+namespace Kokkos {
+
 #ifdef KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
+namespace Impl {
 __device__ __constant__ HIPLockArrays g_device_hip_lock_arrays = {nullptr,
                                                                   nullptr, 0};
+}
 #endif
-
-namespace Kokkos {
 
 namespace {
 
 __global__ void init_lock_array_kernel_atomic() {
   unsigned i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1) {
-    g_device_hip_lock_arrays.atomic[i] = 0;
+    Kokkos::Impl::g_device_hip_lock_arrays.atomic[i] = 0;
   }
 }
 
 __global__ void init_lock_array_kernel_threadid(int N) {
   unsigned i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < static_cast<unsigned>(N)) {
-    g_device_hip_lock_arrays.scratch[i] = 0;
+    Kokkos::Impl::g_device_hip_lock_arrays.scratch[i] = 0;
   }
 }
 

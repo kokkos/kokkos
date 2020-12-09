@@ -472,6 +472,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
  public:
   using functor_type = FunctorType;
 
+  Policy const& get_policy() const { return m_policy; }
+
   inline __device__ void operator()(void) const {
     const Member work_stride = blockDim.y * gridDim.x;
     const Member work_end    = m_policy.end();
@@ -522,7 +524,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
  public:
-  using Policy = Kokkos::MDRangePolicy<Traits...>;
+  using Policy       = Kokkos::MDRangePolicy<Traits...>;
+  using functor_type = FunctorType;
 
  private:
   using RP               = Policy;
@@ -548,10 +551,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
         max_threads_per_sm,
         static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
   }
+  Policy const& get_policy() const { return m_rp; }
   inline __device__ void operator()(void) const {
-    Kokkos::Impl::Refactor::DeviceIterateTile<Policy::rank, Policy, FunctorType,
-                                              typename Policy::work_tag>(
-        m_rp, m_functor)
+    Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
+                                    typename Policy::work_tag>(m_rp, m_functor)
         .exec_range();
   }
 
@@ -639,8 +642,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance(),
           false);
     } else {
-      printf("Kokkos::MDRange Error: Exceeded rank bounds with Cuda\n");
-      Kokkos::abort("Aborting");
+      Kokkos::abort("Kokkos::MDRange Error: Exceeded rank bounds with Cuda\n");
     }
 
   }  // end execute
@@ -654,7 +656,7 @@ template <class FunctorType, class... Properties>
 class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   Kokkos::Cuda> {
  public:
-  using Policy = TeamPolicyInternal<Kokkos::Cuda, Properties...>;
+  using Policy = TeamPolicy<Properties...>;
 
  private:
   using Member       = typename Policy::member_type;
@@ -698,6 +700,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   __device__ inline void operator()(void) const {
     // Iterate this block through the league
     int64_t threadid = 0;
@@ -865,6 +869,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using functor_type   = FunctorType;
   using size_type      = Kokkos::Cuda::size_type;
   using index_type     = typename Policy::index_type;
+  using reducer_type   = ReducerType;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -891,6 +896,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using DummySHMEMReductionType = int;
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   // Make the exec_range calls call to Reduce::DeviceIterateTile
   template <class TagType>
   __device__ inline
@@ -940,18 +947,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     }
 
+    // Doing code duplication here to fix issue #3428
+    // Suspect optimizer bug??
     // Reduce with final value at blockDim.y - 1 location.
     // Shortcut for length zero reduction
-    bool do_final_reduction = m_policy.begin() == m_policy.end();
-    if (!do_final_reduction)
-      do_final_reduction =
-          cuda_single_inter_block_reduce_scan<false, ReducerTypeFwd,
-                                              WorkTagFwd>(
-              ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
-              gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
-              m_scratch_space, m_scratch_flags);
-
-    if (do_final_reduction) {
+    if (m_policy.begin() == m_policy.end()) {
       // This is the final block with the final result at the final threads'
       // location
 
@@ -974,9 +974,44 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
+      // return ;
+    }
+
+    if (m_policy.begin() != m_policy.end()) {
+      {
+        if (cuda_single_inter_block_reduce_scan<false, ReducerTypeFwd,
+                                                WorkTagFwd>(
+                ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
+                gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
+                m_scratch_space, m_scratch_flags)) {
+          // This is the final block with the final result at the final threads'
+          // location
+
+          size_type* const shared =
+              kokkos_impl_cuda_shared_memory<size_type>() +
+              (blockDim.y - 1) * word_count.value;
+          size_type* const global =
+              m_result_ptr_device_accessible
+                  ? reinterpret_cast<size_type*>(m_result_ptr)
+                  : (m_unified_space ? m_unified_space : m_scratch_space);
+
+          if (threadIdx.y == 0) {
+            Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
+                ReducerConditional::select(m_functor, m_reducer), shared);
+          }
+
+          if (CudaTraits::WarpSize < word_count.value) {
+            __syncthreads();
+          }
+
+          for (unsigned i = threadIdx.y; i < word_count.value;
+               i += blockDim.y) {
+            global[i] = shared[i];
+          }
+        }
+      }
     }
   }
-
   /*  __device__ inline
      void run(const DummyShflReductionType&) const
      {
@@ -1053,6 +1088,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
                                  ReduceFunctorHasFinal<FunctorType>::value ||
                                  !m_result_ptr_host_accessible ||
+#ifdef KOKKOS_CUDA_ENABLE_GRAPHS
+                                 Policy::is_graph_kernel::value ||
+#endif
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
@@ -1075,6 +1113,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       dim3 grid(std::min(int(block.y), int((nwork + block.y - 1) / block.y)), 1,
                 1);
 
+      // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
           UseShflReduction
               ? 0
@@ -1115,6 +1154,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     } else {
       if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         m_result_ptr);
       }
@@ -1193,6 +1233,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using reference_type = typename ValueTraits::reference_type;
   using functor_type   = FunctorType;
   using size_type      = Cuda::size_type;
+  using reducer_type   = ReducerType;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -1234,6 +1275,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         max_threads_per_sm,
         static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
   }
+  Policy const& get_policy() const { return m_policy; }
   inline __device__ void exec_range(reference_type update) const {
     Kokkos::Impl::Reduce::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                             typename Policy::work_tag,
@@ -1400,6 +1442,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       // Required grid.x <= block.y
       const dim3 grid(std::min(int(block.y), int(nwork)), 1, 1);
 
+      // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
           UseShflReduction
               ? 0
@@ -1431,6 +1474,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       }
     } else {
       if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         m_result_ptr);
       }
@@ -1474,7 +1518,7 @@ template <class FunctorType, class ReducerType, class... Properties>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      ReducerType, Kokkos::Cuda> {
  public:
-  using Policy = TeamPolicyInternal<Kokkos::Cuda, Properties...>;
+  using Policy = TeamPolicy<Properties...>;
 
  private:
   using Member       = typename Policy::member_type;
@@ -1501,6 +1545,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   using functor_type = FunctorType;
   using size_type    = Cuda::size_type;
+  using reducer_type = ReducerType;
 
   enum : bool {
     UseShflReduction = (true && (ValueTraits::StaticValueSize != 0))
@@ -1551,6 +1596,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   __device__ inline void operator()() const {
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
@@ -1618,14 +1665,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     }
 
     // Reduce with final value at blockDim.y - 1 location.
-    bool do_final_reduce = (m_league_size == 0);
-    if (!do_final_reduce)
-      do_final_reduce =
-          cuda_single_inter_block_reduce_scan<false, FunctorType, WorkTag>(
-              ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
-              gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
-              m_scratch_space, m_scratch_flags);
-    if (do_final_reduce) {
+    // Doing code duplication here to fix issue #3428
+    // Suspect optimizer bug??
+    if (m_league_size == 0) {
       // This is the final block with the final result at the final threads'
       // location
 
@@ -1647,6 +1689,36 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
+      }
+    }
+
+    if (m_league_size != 0) {
+      if (cuda_single_inter_block_reduce_scan<false, FunctorType, WorkTag>(
+              ReducerConditional::select(m_functor, m_reducer), blockIdx.x,
+              gridDim.x, kokkos_impl_cuda_shared_memory<size_type>(),
+              m_scratch_space, m_scratch_flags)) {
+        // This is the final block with the final result at the final threads'
+        // location
+
+        size_type* const shared = kokkos_impl_cuda_shared_memory<size_type>() +
+                                  (blockDim.y - 1) * word_count.value;
+        size_type* const global =
+            m_result_ptr_device_accessible
+                ? reinterpret_cast<size_type*>(m_result_ptr)
+                : (m_unified_space ? m_unified_space : m_scratch_space);
+
+        if (threadIdx.y == 0) {
+          Kokkos::Impl::FunctorFinal<ReducerTypeFwd, WorkTagFwd>::final(
+              ReducerConditional::select(m_functor, m_reducer), shared);
+        }
+
+        if (CudaTraits::WarpSize < word_count.value) {
+          __syncthreads();
+        }
+
+        for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+          global[i] = shared[i];
+        }
       }
     }
   }
@@ -1708,6 +1780,9 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
                                  ReduceFunctorHasFinal<FunctorType>::value ||
                                  !m_result_ptr_host_accessible ||
+#ifdef KOKKOS_CUDA_ENABLE_GRAPHS
+                                 Policy::is_graph_kernel::value ||
+#endif
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
       const int block_count =
@@ -1761,6 +1836,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       }
     } else {
       if (m_result_ptr) {
+        // TODO @graph We need to effectively insert this in to the graph
         ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
                         m_result_ptr);
       }
@@ -2141,6 +2217,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   //----------------------------------------
 
   __device__ inline void operator()(void) const {
@@ -2431,6 +2509,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
  public:
+  Policy const& get_policy() const { return m_policy; }
+
   //----------------------------------------
 
   __device__ inline void operator()(void) const {

@@ -1,4 +1,4 @@
-ARG BASE=nvidia/cuda:10.1-devel
+ARG BASE=nvidia/cuda:11.1-devel-ubuntu20.04
 FROM $BASE
 
 RUN apt-get update && apt-get install -y \
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 
 ARG NPROC=8
 
-ARG CMAKE_VERSION=3.10.3
+ARG CMAKE_VERSION=3.18.5
 ENV CMAKE_DIR=/opt/cmake
 RUN CMAKE_KEY=2D2CEF1034921684 && \
     CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
@@ -31,35 +31,12 @@ RUN CMAKE_KEY=2D2CEF1034921684 && \
     rm ${CMAKE_SCRIPT}
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
-ENV GCC_DIR=/opt/gcc
-RUN GCC_VERSION=6.5.0 && \
-    GNU_MIRROR=https://gnu.freemirror.org/gnu && \
-    wget --quiet ${GNU_MIRROR}/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz && \
-    wget --quiet ${GNU_MIRROR}/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz.sig && \
-    wget --quiet ${GNU_MIRROR}/gnu-keyring.gpg && \
-    gpg --verify --no-default-keyring --keyring ./gnu-keyring.gpg gcc-${GCC_VERSION}.tar.xz.sig && \
-    tar -xf gcc-${GCC_VERSION}.tar.xz && \
-    cd gcc-${GCC_VERSION} && \
-    ./contrib/download_prerequisites && \
-    cd .. && \
-    mkdir gcc-${GCC_VERSION}-build && \
-    cd gcc-${GCC_VERSION}-build && \
-    $PWD/../gcc-${GCC_VERSION}/configure --prefix=${GCC_DIR} --enable-languages=c,c++ --disable-multilib && \
-    make -j${NPROC} && \
-    make install && \
-    cd .. && rm -rf gcc-*
-ENV PATH=${GCC_DIR}/bin:$PATH
-
 ENV LLVM_DIR=/opt/llvm
-RUN LLVM_VERSION=10.0.0 && \
-    LLVM_KEY="345AD05D 86419D8A" && \
-    LLVM_URL=https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION} &&\
-    LLVM_ARCHIVE=llvm-project-${LLVM_VERSION}.tar.xz &&\
+RUN LLVM_VERSION=887c7660bdf3f300bd1997dcfd7ace91787c0584 && \
+    LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
+    LLVM_ARCHIVE=${LLVM_VERSION}.tar.gz &&\
     SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
     wget --quiet ${LLVM_URL}/${LLVM_ARCHIVE} && \
-    wget --quiet ${LLVM_URL}/${LLVM_ARCHIVE}.sig && \
-    gpg --keyserver hkps.pool.sks-keyservers.net --recv-keys ${LLVM_KEY} && \
-    gpg --verify ${LLVM_ARCHIVE}.sig ${LLVM_ARCHIVE} && \
     mkdir llvm-project && \
     tar -xf ${LLVM_ARCHIVE} -C llvm-project --strip-components=1 && \
     cd llvm-project && \

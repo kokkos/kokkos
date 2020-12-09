@@ -95,10 +95,6 @@ void test_offsetview_construction() {
   ASSERT_EQ(ov.extent(1), 5);
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
-  const int ovmin0 = ov.begin(0);
-  const int ovend0 = ov.end(0);
-  const int ovmin1 = ov.begin(1);
-  const int ovend1 = ov.end(1);
   {
     Kokkos::Experimental::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView",
                                                                range0);
@@ -133,6 +129,11 @@ void test_offsetview_construction() {
       }
     }
   }
+
+  const int ovmin0 = ov.begin(0);
+  const int ovend0 = ov.end(0);
+  const int ovmin1 = ov.begin(1);
+  const int ovend1 = ov.end(1);
 
   using range_type =
       Kokkos::MDRangePolicy<Device, Kokkos::Rank<2>, Kokkos::IndexType<int> >;
@@ -685,17 +686,23 @@ void test_offsetview_offsets_rank3() {
 }
 #endif
 
+// FIXME_SYCL requires MDRange policy reduce
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>();
 }
+#endif
 
 TEST(TEST_CATEGORY, offsetview_unmanaged_construction) {
   test_offsetview_unmanaged_construction<int, TEST_EXECSPACE>();
 }
 
+// FIXME_SYCL requires MDRange policy reduce
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, offsetview_subview) {
   test_offsetview_subview<int, TEST_EXECSPACE>();
 }
+#endif
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
 TEST(TEST_CATEGORY, offsetview_offsets_rank1) {

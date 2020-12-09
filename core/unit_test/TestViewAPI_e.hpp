@@ -65,7 +65,7 @@ TEST(TEST_CATEGORY, view_remap) {
       std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value, \
       Kokkos::Experimental::HIPHostPinnedSpace, TEST_EXECSPACE>::type
 #else
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_SYCL)
 #define EXECSPACE Kokkos::HostSpace
 #else
 #define EXECSPACE TEST_EXECSPACE
@@ -242,4 +242,3 @@ TEST(TEST_CATEGORY, view_overload_resolution) {
 }  // namespace Test
 
 #include <TestViewIsAssignable.hpp>
-#include <TestViewCopy.hpp>

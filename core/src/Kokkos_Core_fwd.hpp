@@ -213,6 +213,11 @@ class ExecSpaceInitializerBase;
 
 }  // namespace Impl
 
+namespace Experimental {
+template <class, class, class, class>
+class LogicalMemorySpace;
+}
+
 }  // namespace Kokkos
 
 #define KOKKOS_RESTRICT_EXECUTION_TO_DATA(DATA_SPACE, DATA_PTR) \

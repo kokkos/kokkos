@@ -405,12 +405,6 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
   }
 };
 
-struct HIPLockArrays {
-  std::int32_t* atomic  = nullptr;
-  std::int32_t* scratch = nullptr;
-  std::int32_t n        = 0;
-};
-
 template <typename FunctorType, typename... Properties>
 class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   Kokkos::Experimental::HIP> {
@@ -439,7 +433,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   int m_shmem_size;
   void* m_scratch_ptr[2];
   int m_scratch_size[2];
-  mutable HIPLockArrays hip_lock_arrays;
 
   template <typename TagType>
   __device__ inline
@@ -463,15 +456,19 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       __shared__ int64_t base_thread_id;
       if (threadIdx.x == 0 && threadIdx.y == 0) {
         threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
-                   (hip_lock_arrays.n / (blockDim.x * blockDim.y));
+                   (Kokkos::Impl::g_device_hip_lock_arrays.n /
+                    (blockDim.x * blockDim.y));
         threadid *= blockDim.x * blockDim.y;
         int done = 0;
         while (!done) {
-          done = (0 == atomicCAS(&hip_lock_arrays.scratch[threadid], 0, 1));
+          done = (0 ==
+                  atomicCAS(
+                      &Kokkos::Impl::g_device_hip_lock_arrays.scratch[threadid],
+                      0, 1));
           if (!done) {
             threadid += blockDim.x * blockDim.y;
             if (int64_t(threadid + blockDim.x * blockDim.y) >=
-                int64_t(hip_lock_arrays.n))
+                int64_t(Kokkos::Impl::g_device_hip_lock_arrays.n))
               threadid = 0;
           }
         }
@@ -495,22 +492,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_scratch_size[1] > 0) {
       __syncthreads();
       if (threadIdx.x == 0 && threadIdx.y == 0)
-        hip_lock_arrays.scratch[threadid] = 0;
+        Kokkos::Impl::g_device_hip_lock_arrays.scratch[threadid] = 0;
     }
   }
 
   inline void execute() const {
-    HIP_SAFE_CALL(hipMalloc(
-        &hip_lock_arrays.atomic,
-        sizeof(std::int32_t) * (KOKKOS_IMPL_HIP_SPACE_ATOMIC_MASK + 1)));
-    HIP_SAFE_CALL(hipMalloc(
-        &hip_lock_arrays.scratch,
-        sizeof(std::int32_t) * (::Kokkos::Experimental::HIP::concurrency())));
-    HIP_SAFE_CALL(hipMemset(
-        hip_lock_arrays.scratch, 0,
-        sizeof(std::int32_t) * (::Kokkos::Experimental::HIP::concurrency())));
-    hip_lock_arrays.n = ::Kokkos::Experimental::HIP::concurrency();
-
     int64_t const shmem_size_total = m_shmem_begin + m_shmem_size;
     dim3 const grid(static_cast<int>(m_league_size), 1, 1);
     dim3 const block(static_cast<int>(m_vector_size),
@@ -520,16 +506,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         *this, grid, block, shmem_size_total,
         m_policy.space().impl_internal_space_instance(),
         true);  // copy to device and execute
-
-    if (hip_lock_arrays.atomic) {
-      HIP_SAFE_CALL(hipFree(hip_lock_arrays.atomic));
-      hip_lock_arrays.atomic = nullptr;
-    }
-    if (hip_lock_arrays.scratch) {
-      HIP_SAFE_CALL(hipFree(hip_lock_arrays.scratch));
-      hip_lock_arrays.scratch = nullptr;
-    }
-    hip_lock_arrays.n = 0;
   }
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
@@ -705,16 +681,19 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       __shared__ int64_t base_thread_id;
       if (threadIdx.x == 0 && threadIdx.y == 0) {
         threadid = (blockIdx.x * blockDim.z + threadIdx.z) %
-                   (g_device_hip_lock_arrays.n / (blockDim.x * blockDim.y));
+                   (Kokkos::Impl::g_device_hip_lock_arrays.n /
+                    (blockDim.x * blockDim.y));
         threadid *= blockDim.x * blockDim.y;
         int done = 0;
         while (!done) {
           done = (0 ==
-                  atomicCAS(&g_device_hip_lock_arrays.scratch[threadid], 0, 1));
+                  atomicCAS(
+                      &Kokkos::Impl::g_device_hip_lock_arrays.scratch[threadid],
+                      0, 1));
           if (!done) {
             threadid += blockDim.x * blockDim.y;
             if (static_cast<int64_t>(threadid + blockDim.x * blockDim.y) >=
-                static_cast<int64_t>(g_device_hip_lock_arrays.n))
+                static_cast<int64_t>(Kokkos::Impl::g_device_hip_lock_arrays.n))
               threadid = 0;
           }
         }
@@ -731,7 +710,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_scratch_size[1] > 0) {
       __syncthreads();
       if (threadIdx.x == 0 && threadIdx.y == 0) {
-        g_device_hip_lock_arrays.scratch[threadid] = 0;
+        Kokkos::Impl::g_device_hip_lock_arrays.scratch[threadid] = 0;
       }
     }
   }

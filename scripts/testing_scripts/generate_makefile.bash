@@ -86,7 +86,7 @@ do
       ;;
     --compiler*)
       COMPILER="${key#*=}"
-      CNUM=$(command -v ${COMPILER} 2>&1 >/dev/null | grep "no ${COMPILER}" | wc -l)
+      CNUM=$(command -v ${COMPILER} 2>&1 >/dev/null | grep -c "no ${COMPILER}")
       if [ ${CNUM} -gt 0 ]; then
         echo "Invalid compiler by --compiler command: '${COMPILER}'"
         exit
@@ -95,7 +95,7 @@ do
         echo "Empty compiler specified by --compiler command."
         exit
       fi
-      CNUM=$(command -v ${COMPILER} | grep ${COMPILER} | wc -l)
+      CNUM=$(command -v ${COMPILER} | grep -c ${COMPILER})
       if [ ${CNUM} -eq 0 ]; then
         echo "Invalid compiler by --compiler command: '${COMPILER}'"
         exit

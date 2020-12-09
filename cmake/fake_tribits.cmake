@@ -98,11 +98,24 @@ FUNCTION(KOKKOS_ADD_TEST)
       NUM_MPI_PROCS 1
       ARGS ${TEST_ARGS}
       ${TEST_UNPARSED_ARGUMENTS}
+      ADDED_TESTS_NAMES_OUT ALL_TESTS_ADDED
     )
 
-    if(TEST_TOOL)
-      add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
-      set_property(TEST ${TEST_NAME} APPEND_STRING PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
+    # We will get prepended package name here
+    SET(TEST_NAME ${PACKAGE_NAME}_${TEST_NAME})
+    SET(EXE ${PACKAGE_NAME}_${EXE_ROOT})
+
+    # The function TRIBITS_ADD_TEST() has a CATEGORIES argument that defaults
+    # to BASIC.  If a project elects to only enable tests marked as PERFORMANCE,
+    # the test won't actually be added and attempting to set a property on it below
+    # will yield an error.
+    if(TARGET ${EXE})
+      if(TEST_TOOL)
+        add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
+        foreach(TEST_ADDED ${ALL_TESTS_ADDED})
+          set_property(TEST ${TEST_ADDED} APPEND PROPERTY ENVIRONMENT "KOKKOS_PROFILE_LIBRARY=$<TARGET_FILE:${TEST_TOOL}>")
+        endforeach()
+      endif()
     endif()
   else()
     CMAKE_PARSE_ARGUMENTS(TEST
@@ -281,9 +294,7 @@ ENDFUNCTION()
 
 FUNCTION(KOKKOS_ADD_TEST_LIBRARY NAME)
 IF (KOKKOS_HAS_TRILINOS)
-  TRIBITS_ADD_LIBRARY(${NAME} ${ARGN} TESTONLY
-   ADDED_LIB_TARGET_NAME_OUT ${NAME}
-  )
+  TRIBITS_ADD_LIBRARY(${NAME} ${ARGN} TESTONLY)
 ELSE()
   SET(oneValueArgs)
   SET(multiValueArgs HEADERS SOURCES)
@@ -291,8 +302,15 @@ ELSE()
   CMAKE_PARSE_ARGUMENTS(PARSE
     "STATIC;SHARED"
     ""
-    "HEADERS;SOURCES"
+    "HEADERS;SOURCES;DEPLIBS"
     ${ARGN})
+
+  SET(LIB_TYPE)
+  IF (PARSE_STATIC)
+    SET(LIB_TYPE STATIC)
+  ELSEIF (PARSE_SHARED)
+    SET(LIB_TYPE SHARED)
+  ENDIF()
 
   IF(PARSE_HEADERS)
     LIST(REMOVE_DUPLICATES PARSE_HEADERS)
@@ -300,7 +318,10 @@ ELSE()
   IF(PARSE_SOURCES)
     LIST(REMOVE_DUPLICATES PARSE_SOURCES)
   ENDIF()
-  ADD_LIBRARY(${NAME} ${PARSE_SOURCES})
+  ADD_LIBRARY(${NAME} ${LIB_TYPE} ${PARSE_SOURCES})
+  IF (PARSE_DEPLIBS)
+    TARGET_LINK_LIBRARIES(${NAME} PRIVATE ${PARSE_DEPLIBS})
+  ENDIF()
 ENDIF()
 ENDFUNCTION()
 

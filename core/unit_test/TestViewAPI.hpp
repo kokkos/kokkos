@@ -1479,6 +1479,12 @@ class TestViewAPI {
                      Kokkos::Experimental::OpenMPTargetSpace>::value)
       return;
 #endif
+// FIXME_SYCL
+#ifdef KOKKOS_ENABLE_SYCL
+    if (std::is_same<typename dView1::memory_space,
+                     Kokkos::Experimental::SYCLDeviceUSMSpace>::value)
+      return;
+#endif
     auto alloc_size = std::numeric_limits<size_t>::max() - 42;
     try {
       auto should_always_fail = dView1("hello_world_failure", alloc_size);

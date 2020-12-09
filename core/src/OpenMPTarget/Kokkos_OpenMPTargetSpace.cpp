@@ -153,7 +153,7 @@ void *SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
     allocate_tracked(const Kokkos::Experimental::OpenMPTargetSpace &arg_space,
                      const std::string &arg_alloc_label,
                      const size_t arg_alloc_size) {
-  if (!arg_alloc_size) return (void *)0;
+  if (!arg_alloc_size) return nullptr;
 
   SharedAllocationRecord *const r =
       allocate(arg_space, arg_alloc_label, arg_alloc_size);
@@ -166,7 +166,7 @@ void *SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>::
 void SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace,
                             void>::deallocate_tracked(void *const
                                                           arg_alloc_ptr) {
-  if (arg_alloc_ptr != 0) {
+  if (arg_alloc_ptr != nullptr) {
     SharedAllocationRecord *const r = get_record(arg_alloc_ptr);
 
     RecordBase::decrement(r);

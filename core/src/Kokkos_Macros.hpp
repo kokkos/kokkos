@@ -154,13 +154,16 @@
 #define KOKKOS_COMPILER_IBM __IBMCPP__
 #elif defined(__IBMC__)
 #define KOKKOS_COMPILER_IBM __IBMC__
+#elif defined(__ibmxl_vrm__)  // xlclang++
+#define KOKKOS_COMPILER_IBM __ibmxl_vrm__
 #endif
 
 #if defined(__APPLE_CC__)
 #define KOKKOS_COMPILER_APPLECC __APPLE_CC__
 #endif
 
-#if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL)
+#if defined(__clang__) && !defined(KOKKOS_COMPILER_INTEL) && \
+    !defined(KOKKOS_COMPILER_IBM)
 #define KOKKOS_COMPILER_CLANG \
   __clang_major__ * 100 + __clang_minor__ * 10 + __clang_patchlevel__
 #endif
@@ -198,9 +201,9 @@
 // Intel compiler macros
 
 #if defined(KOKKOS_COMPILER_INTEL)
-#define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 // FIXME_SYCL
 #if !defined(KOKKOS_ENABLE_SYCL)
+#define KOKKOS_ENABLE_PRAGMA_UNROLL 1
 #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
 #endif
@@ -544,13 +547,14 @@
 #undef __CUDA_ARCH__
 #endif
 
-#if defined(KOKKOS_COMPILER_MSVC)
+#if defined(KOKKOS_COMPILER_MSVC) && !defined(KOKKOS_COMPILER_CLANG)
 #define KOKKOS_THREAD_LOCAL __declspec(thread)
 #else
 #define KOKKOS_THREAD_LOCAL __thread
 #endif
 
-#if defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)
+#if (defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)) && \
+    !defined(KOKKOS_COMPILER_CLANG)
 // MSVC (as of 16.5.5 at least) does not do empty base class optimization by
 // default when there are multiple bases, even though the standard requires it
 // for standard layout types.

@@ -162,7 +162,10 @@ struct TestRange {
   KOKKOS_INLINE_FUNCTION
   void operator()(const VerifyInitTag &, const int i) const {
     if (i != m_flags(i)) {
-      printf("TestRange::test_for error at %d != %d\n", i, m_flags(i));
+      // FIXME_SYCL printf needs a workaround
+#ifndef __SYCL_DEVICE_ONLY__
+      printf("TestRange::test_for_error at %d != %d\n", i, m_flags(i));
+#endif
     }
   }
 
@@ -174,7 +177,10 @@ struct TestRange {
   KOKKOS_INLINE_FUNCTION
   void operator()(const VerifyResetTag &, const int i) const {
     if (2 * i != m_flags(i)) {
-      printf("TestRange::test_for error at %d != %d\n", i, m_flags(i));
+      // FIXME_SYCL printf needs a workaround
+#ifndef __SYCL_DEVICE_ONLY__
+      printf("TestRange::test_for_error at %d != %d\n", i, m_flags(i));
+#endif
     }
   }
 
@@ -186,7 +192,10 @@ struct TestRange {
   KOKKOS_INLINE_FUNCTION
   void operator()(const VerifyOffsetTag &, const int i) const {
     if (i + offset != m_flags(i)) {
-      printf("TestRange::test_for error at %d != %d\n", i + offset, m_flags(i));
+      // FIXME_SYCL printf needs a workaround
+#ifndef __SYCL_DEVICE_ONLY__
+      printf("TestRange::test_for_error at %d != %d\n", i + offset, m_flags(i));
+#endif
     }
   }
 
@@ -269,8 +278,10 @@ struct TestRange {
 
     if (final) {
       if (update != (i * (i + 1)) / 2) {
+#ifndef __SYCL_DEVICE_ONLY__
         printf("TestRange::test_scan error (%d,%d) : %d != %d\n", i, m_flags(i),
                (i * (i + 1)) / 2, update);
+#endif
       }
       result_view(i) = update;
     }
@@ -428,6 +439,8 @@ TEST(TEST_CATEGORY, range_reduce) {
   }
 }
 
+// FIXME_SYCL needs parallel_scan
+#ifndef KOKKOS_ENABLE_SYCL
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, range_scan) {
   {
@@ -438,7 +451,8 @@ TEST(TEST_CATEGORY, range_scan) {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(0);
     f.test_scan();
   }
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
+    !defined(KOKKOS_ENABLE_SYCL)
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(0);
     f.test_dynamic_policy();
@@ -453,7 +467,8 @@ TEST(TEST_CATEGORY, range_scan) {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(3);
     f.test_scan();
   }
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
+    !defined(KOKKOS_ENABLE_SYCL)
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(3);
     f.test_dynamic_policy();
@@ -468,12 +483,14 @@ TEST(TEST_CATEGORY, range_scan) {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(1001);
     f.test_scan();
   }
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
+    !defined(KOKKOS_ENABLE_SYCL)
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(1001);
     f.test_dynamic_policy();
   }
 #endif
 }
+#endif
 #endif
 }  // namespace Test

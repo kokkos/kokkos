@@ -72,7 +72,7 @@ struct GraphNodeBackendSpecificDetails {
   std::vector<std::shared_ptr<GraphNodeBackendSpecificDetails<ExecutionSpace>>>
       m_predecessors = {};
 
-  Kokkos::ObservingRawPtr<default_kernel_impl_t const> m_kernel_ptr = nullptr;
+  Kokkos::ObservingRawPtr<default_kernel_impl_t> m_kernel_ptr = nullptr;
 
   bool m_has_executed = false;
   bool m_is_aggregate = false;
@@ -109,12 +109,12 @@ struct GraphNodeBackendSpecificDetails {
   //----------------------------------------------------------------------------
 
  public:
-  void set_kernel(default_kernel_impl_t const& arg_kernel) {
+  void set_kernel(default_kernel_impl_t& arg_kernel) {
     KOKKOS_EXPECTS(m_kernel_ptr == nullptr)
     m_kernel_ptr = &arg_kernel;
   }
 
-  void set_kernel(default_aggregate_kernel_impl_t const& arg_kernel) {
+  void set_kernel(default_aggregate_kernel_impl_t& arg_kernel) {
     KOKKOS_EXPECTS(m_kernel_ptr == nullptr)
     m_kernel_ptr   = &arg_kernel;
     m_is_aggregate = true;

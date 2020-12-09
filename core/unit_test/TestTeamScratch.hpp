@@ -55,8 +55,8 @@ TEST(TEST_CATEGORY, team_shared_request) {
 
 TEST(TEST_CATEGORY, team_scratch_request) {
   // FIXME_HIP the parallel_reduce in this test requires a team size larger than
-// 256
-#ifdef KOKKOS_ENABLE_HIP
+  // 256. Fixed in ROCm 3.9
+#if defined(KOKKOS_ENABLE_HIP) && (HIP_VERSION < 309)
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value)
 #endif
   {
@@ -79,8 +79,8 @@ TEST(TEST_CATEGORY, shmem_size) { TestShmemSize<TEST_EXECSPACE>(); }
 
 TEST(TEST_CATEGORY, multi_level_scratch) {
   // FIXME_HIP the parallel_for and the parallel_reduce in this test requires a
-  // team size larger than 256
-#ifdef KOKKOS_ENABLE_HIP
+  // team size larger than 256. Fixed In ROCm 3.9
+#if defined(KOKKOS_ENABLE_HIP) && (HIP_VERSION < 309)
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value)
 #endif
   {

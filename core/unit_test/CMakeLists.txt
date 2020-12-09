@@ -18,7 +18,7 @@ TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_P
 
 TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
 #Gtest minimally requires C++11
-IF(NOT (Kokkos_ENABLE_CUDA AND WIN32))
+IF((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
 TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_11)
 ENDIF()
 
@@ -44,7 +44,7 @@ SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 12)
 SET(KOKKOS_OPENMPTARGET_NAME Experimental::OpenMPTarget)
 SET(KOKKOS_SERIAL_FEATURE_LEVEL 999)
 SET(KOKKOS_SERIAL_NAME Serial)
-SET(KOKKOS_SYCL_FEATURE_LEVEL 4)
+SET(KOKKOS_SYCL_FEATURE_LEVEL 9)
 SET(KOKKOS_SYCL_NAME Experimental::SYCL)
 SET(KOKKOS_THREADS_FEATURE_LEVEL 999)
 SET(KOKKOS_THREADS_NAME Threads)
@@ -58,7 +58,7 @@ SET(KOKKOS_THREADS_NAME Threads)
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
-foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
+foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
     set(DEVICE "PTHREAD")
@@ -111,12 +111,16 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
         Reductions_DeviceView
         Scan
         SharedAlloc
+        ViewMapping_a
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      file(WRITE ${file}
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
       )
+      configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES1 ${file})
     endforeach()
 
@@ -124,6 +128,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
     foreach(Name
       TeamBasic
       TeamReductionScan
+      TeamScan
       TeamScratch
       TeamTeamSize
       TeamVectorRange
@@ -133,8 +138,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       ViewAPI_c
       ViewAPI_d
       ViewAPI_e
+      ViewCopy_a
+      ViewCopy_b
       ViewLayoutStrideAssignment
-      ViewMapping_a
       ViewMapping_b
       ViewMapping_subview
       ViewOfClass
@@ -143,10 +149,13 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       ViewResize
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      file(WRITE ${file}
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
       )
+      configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES2 ${file})
     endforeach()
 
@@ -155,6 +164,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       set(TagHostAccessible CudaUVM)
     elseif(Tag STREQUAL "HIP")
       set(TagHostAccessible HIPHostPinned)
+    elseif(Tag STREQUAL "SYCL")
+      set(TagHostAccessible SYCLSharedUSMSpace)
     endif()
     foreach(Name
       SubView_a
@@ -174,10 +185,13 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP)
       SubView_c13
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
-      file(WRITE ${file}
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
 	  "#include <Test${TagHostAccessible}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
-)
+      )
+      configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES2 ${file})
     endforeach()
 
@@ -204,9 +218,12 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScratch.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamTeamSize.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamVectorRange.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_UniqueToken.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewCopy_a.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewCopy_b.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewMapping_subview.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewOfClass.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_WorkGraph.cpp
@@ -342,6 +359,8 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCudaHostPinned_ViewAPI_c.cpp
       cuda/TestCudaHostPinned_ViewAPI_d.cpp
       cuda/TestCudaHostPinned_ViewAPI_e.cpp
+      cuda/TestCudaHostPinned_ViewCopy_a.cpp
+      cuda/TestCudaHostPinned_ViewCopy_b.cpp
       cuda/TestCudaHostPinned_ViewMapping_a.cpp
       cuda/TestCudaHostPinned_ViewMapping_b.cpp
       cuda/TestCudaHostPinned_ViewMapping_subview.cpp
@@ -351,6 +370,8 @@ if(Kokkos_ENABLE_CUDA)
       cuda/TestCudaUVM_ViewAPI_c.cpp
       cuda/TestCudaUVM_ViewAPI_d.cpp
       cuda/TestCudaUVM_ViewAPI_e.cpp
+      cuda/TestCudaUVM_ViewCopy_a.cpp
+      cuda/TestCudaUVM_ViewCopy_b.cpp
       cuda/TestCudaUVM_ViewMapping_a.cpp
       cuda/TestCudaUVM_ViewMapping_b.cpp
       cuda/TestCudaUVM_ViewMapping_subview.cpp
@@ -377,14 +398,15 @@ if(Kokkos_ENABLE_CUDA)
       UnitTestMain.cpp
       cuda/TestCuda_InterOp_Streams.cpp
   )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_CudaGraph
+    SOURCES
+      UnitTestMainInit.cpp
+      cuda/TestCuda_Graph.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_HIP)
-  # FIXME_HIP
-  LIST(REMOVE_ITEM HIP_SOURCES
-    ${CMAKE_CURRENT_BINARY_DIR}/hip/TestHIP_AtomicOperations_complexdouble.cpp
-  )
-
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_HIP
     SOURCES
@@ -397,6 +419,8 @@ if(Kokkos_ENABLE_HIP)
       hip/TestHIPHostPinned_ViewAPI_c.cpp
       hip/TestHIPHostPinned_ViewAPI_d.cpp
       hip/TestHIPHostPinned_ViewAPI_e.cpp
+      hip/TestHIPHostPinned_ViewCopy_a.cpp
+      hip/TestHIPHostPinned_ViewCopy_b.cpp
       hip/TestHIPHostPinned_ViewMapping_a.cpp
       hip/TestHIPHostPinned_ViewMapping_b.cpp
       hip/TestHIPHostPinned_ViewMapping_subview.cpp
@@ -412,6 +436,60 @@ if(Kokkos_ENABLE_HIP)
     SOURCES
       UnitTestMain.cpp
       hip/TestHIP_InterOp_Streams.cpp
+  )
+endif()
+
+if(Kokkos_ENABLE_SYCL)
+  list(REMOVE_ITEM SYCL_SOURCES
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_int.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_unsignedint.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_longint.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_unsignedlongint.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_longlongint.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_double.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_float.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_complexdouble.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_complexfloat.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicViews.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Atomics.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Atomics.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicViews.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_BlockSizeDeduction.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Crs.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_DeepCopyAlignment.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_LocalDeepCopy.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Other.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reductions.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_a.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_b.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_c.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_d.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reductions_DeviceView.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SharedAlloc.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c04.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c05.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c06.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c07.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c08.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c09.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c10.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c11.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c12.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamBasic.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamReductionScan.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamScan.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamScratch.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamTeamSize.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamVectorRange.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_UniqueToken.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_WorkGraph.cpp
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCL
+    SOURCES
+      UnitTestMainInit.cpp
+      ${SYCL_SOURCES}
   )
 endif()
 
@@ -476,14 +554,19 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
         tools/TestTuning.cpp
     )
   endif()
+  if(NOT Kokkos_ENABLE_OPENMPTARGET)
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_LogicalSpaces
+    SOURCES
+      tools/TestLogicalSpaces.cpp
+  )
+  endif()
   if(KOKKOS_ENABLE_LIBDL)
 
-    add_library(
+    KOKKOS_ADD_TEST_LIBRARY(
       kokkosprinter-tool SHARED
-      tools/printing-tool.cpp
+      SOURCES tools/printing-tool.cpp
     )
-
-    KOKKOS_SET_LIBRARY_PROPERTIES(kokkosprinter-tool)
 
     KOKKOS_ADD_TEST_EXECUTABLE(
       ProfilingAllCalls
@@ -522,7 +605,7 @@ KOKKOS_ADD_TEST( NAME UnitTest_StackTraceTest
                )
 endif()
 
-foreach(INITTESTS_NUM RANGE 1 16)
+foreach(INITTESTS_NUM RANGE 1 18)
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_DefaultInit_${INITTESTS_NUM}
   SOURCES UnitTestMain.cpp default/TestDefaultDeviceTypeInit_${INITTESTS_NUM}.cpp
@@ -578,7 +661,12 @@ FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST DEVICE)
     SOURCES ${${DEVICE}_SOURCES}
   )
 
-  TARGET_INCLUDE_DIRECTORIES( ${PACKAGE_NAME}_IncrementalTest_${DEVICE} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/incremental )
+  SET(EXE_NAME ${PACKAGE_NAME}_IncrementalTest_${DEVICE})
+  # Check that the target was actually created because in a TribITS build
+  # where only tests marked as PERFORMANCE enabled it would not be.
+  IF(TARGET ${EXE_NAME})
+    TARGET_INCLUDE_DIRECTORIES(${EXE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/incremental )
+  ENDIF()
 
 ENDFUNCTION()
 

@@ -739,7 +739,7 @@ class OpenMPTargetExecTeamMember {
                                // Properties ...> & team
       ,
       void* const glb_scratch, const int shmem_size_L1, const int shmem_size_L2)
-      : m_team_shared(0, 0),
+      : m_team_shared(nullptr, 0),
         m_team_scratch_size{shmem_size_L1, shmem_size_L2},
         m_team_rank(0),
         m_team_size(team_size),
@@ -1173,6 +1173,46 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   }
 
   // init_result = loop_boundaries.thread.team_reduce(result,join);
+}
+
+// This is largely the same code as in HIP and CUDA except for the member name
+template <typename iType, class FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::TeamThreadRangeBoundariesStruct<
+        iType, Impl::OpenMPTargetExecTeamMember>& loop_bounds,
+    const FunctorType& lambda) {
+  // Extract value_type from lambda
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void,
+      FunctorType>::value_type;
+
+  const auto start = loop_bounds.start;
+  const auto end   = loop_bounds.end;
+  // Note this thing is called .member in the CUDA specialization of
+  // TeamThreadRangeBoundariesStruct
+  auto& member         = loop_bounds.team;
+  const auto team_size = member.team_size();
+  const auto team_rank = member.team_rank();
+  const auto nchunk    = (end - start + team_size - 1) / team_size;
+  value_type accum     = 0;
+  // each team has to process one or more chunks of the prefix scan
+  for (iType i = 0; i < nchunk; ++i) {
+    auto ii = start + i * team_size + team_rank;
+    // local accumulation for this chunk
+    value_type local_accum = 0;
+    // user updates value with prefix value
+    if (ii < loop_bounds.end) lambda(ii, local_accum, false);
+    // perform team scan
+    local_accum = member.team_scan(local_accum);
+    // add this blocks accum to total accumulation
+    auto val = accum + local_accum;
+    // user updates their data with total accumulation
+    if (ii < loop_bounds.end) lambda(ii, val, true);
+    // the last value needs to be propogated to next chunk
+    if (team_rank == team_size - 1) accum = val;
+    // broadcast last value to rest of the team
+    member.team_broadcast(accum, team_size - 1);
+  }
 }
 
 }  // namespace Kokkos

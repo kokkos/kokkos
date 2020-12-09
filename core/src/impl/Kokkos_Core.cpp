@@ -56,12 +56,15 @@
 #include <cerrno>
 #ifndef _WIN32
 #include <unistd.h>
+#else
+#include <Windows.h>
 #endif
 
 //----------------------------------------------------------------------------
 namespace {
 bool g_is_initialized = false;
 bool g_show_warnings  = true;
+bool g_tune_internals = false;
 // When compiling with clang/LLVM and using the GNU (GCC) C++ Standard Library
 // (any recent version between GCC 7.3 and GCC 9.2), std::deque SEGV's during
 // the unwinding of the atexit(3C) handlers at program termination.  However,
@@ -273,6 +276,7 @@ void initialize_profiling(const InitArguments&) {
 
 void pre_initialize_internal(const InitArguments& args) {
   if (args.disable_warnings) g_show_warnings = false;
+  if (args.tune_internals) g_tune_internals = true;
 }
 
 void post_initialize_internal(const InitArguments& args) {
@@ -320,6 +324,7 @@ void finalize_internal(const bool all_spaces = false) {
 
   g_is_initialized = false;
   g_show_warnings  = true;
+  g_tune_internals = false;
 }
 
 void fence_internal() { Impl::ExecSpaceManager::get_instance().static_fence(); }
@@ -384,6 +389,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
   auto& ndevices         = arguments.ndevices;
   auto& skip_device      = arguments.skip_device;
   auto& disable_warnings = arguments.disable_warnings;
+  auto& tune_internals   = arguments.tune_internals;
 
   bool kokkos_threads_found  = false;
   bool kokkos_numa_found     = false;
@@ -498,6 +504,12 @@ void parse_command_line_arguments(int& narg, char* arg[],
         arg[k] = arg[k + 1];
       }
       narg--;
+    } else if (check_arg(arg[iarg], "--kokkos-tune-internals")) {
+      tune_internals = true;
+      for (int k = iarg; k < narg - 1; k++) {
+        arg[k] = arg[k + 1];
+      }
+      narg--;
     } else if (check_arg(arg[iarg], "--kokkos-help") ||
                check_arg(arg[iarg], "--help")) {
       auto const help_message = R"(
@@ -512,6 +524,9 @@ void parse_command_line_arguments(int& narg, char* arg[],
 
       --kokkos-help                  : print this message
       --kokkos-disable-warnings      : disable kokkos warning messages
+      --kokkos-tune-internals        : allow Kokkos to autotune policies and declare
+                                       tuning features through the tuning system. If
+				         left off, Kokkos uses heuristics
       --kokkos-threads=INT           : specify total number of threads or
                                        number of threads per NUMA region if
                                        used in conjunction with '--numa' option.
@@ -550,7 +565,7 @@ void parse_environment_variables(InitArguments& arguments) {
   auto& ndevices         = arguments.ndevices;
   auto& skip_device      = arguments.skip_device;
   auto& disable_warnings = arguments.disable_warnings;
-
+  auto& tune_internals   = arguments.tune_internals;
   char* endptr;
   auto env_num_threads_str = std::getenv("KOKKOS_NUM_THREADS");
   if (env_num_threads_str != nullptr) {
@@ -702,6 +717,20 @@ void parse_environment_variables(InitArguments& arguments) {
       Impl::throw_runtime_exception(
           "Error: expecting a match between --kokkos-disable-warnings and "
           "KOKKOS_DISABLE_WARNINGS if both are set. Raised by "
+          "Kokkos::initialize(int narg, char* argc[]).");
+  }
+  char* env_tuneinternals_str = std::getenv("KOKKOS_TUNE_INTERNALS");
+  if (env_tuneinternals_str != nullptr) {
+    std::string env_str(env_tuneinternals_str);  // deep-copies string
+    for (char& c : env_str) {
+      c = toupper(c);
+    }
+    if ((env_str == "TRUE") || (env_str == "ON") || (env_str == "1"))
+      tune_internals = true;
+    else if (tune_internals)
+      Impl::throw_runtime_exception(
+          "Error: expecting a match between --kokkos-tune-internals and "
+          "KOKKOS_TUNE_INTERNALS if both are set. Raised by "
           "Kokkos::initialize(int narg, char* argc[]).");
   }
 }
@@ -932,6 +961,7 @@ void print_configuration(std::ostream& out, const bool detail) {
 bool is_initialized() noexcept { return g_is_initialized; }
 
 bool show_warnings() noexcept { return g_show_warnings; }
+bool tune_internals() noexcept { return g_tune_internals; }
 
 #ifdef KOKKOS_COMPILER_PGI
 namespace Impl {

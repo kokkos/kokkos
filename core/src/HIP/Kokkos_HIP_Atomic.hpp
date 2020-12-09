@@ -47,6 +47,7 @@
 
 #include <impl/Kokkos_Atomic_Memory_Order.hpp>
 #include <impl/Kokkos_Memory_Fence.hpp>
+#include <HIP/Kokkos_HIP_Locks.hpp>
 
 #if defined(KOKKOS_ENABLE_HIP_ATOMICS)
 namespace Kokkos {
@@ -106,19 +107,16 @@ atomic_exchange(volatile T *const dest,
                 typename std::enable_if<sizeof(T) != sizeof(int) &&
                                             sizeof(T) != sizeof(long long),
                                         const T>::type &val) {
-  // FIXME_HIP
-  Kokkos::abort("atomic_exchange not implemented for large types.\n");
   T return_val;
   int done                 = 0;
   unsigned int active      = __ballot(1);
   unsigned int done_active = 0;
   while (active != done_active) {
     if (!done) {
-      // if (Impl::lock_address_hip_space((void*)dest))
-      {
+      if (Impl::lock_address_hip_space((void *)dest)) {
         return_val = *dest;
         *dest      = val;
-        // Impl::unlock_address_hip_space((void*)dest);
+        Impl::unlock_address_hip_space((void *)dest);
         done = 1;
       }
     }
@@ -218,19 +216,16 @@ __inline__ __device__ T atomic_compare_exchange(
     typename std::enable_if<sizeof(T) != sizeof(int) &&
                                 sizeof(T) != sizeof(long long),
                             const T>::type &val) {
-  // FIXME_HIP
-  Kokkos::abort("atomic_compare_exchange not implemented for large types.\n");
   T return_val;
   int done                 = 0;
   unsigned int active      = __ballot(1);
   unsigned int done_active = 0;
   while (active != done_active) {
     if (!done) {
-      // if (Impl::lock_address_hip_space((void*)dest))
-      {
+      if (Impl::lock_address_hip_space((void *)dest)) {
         return_val = *dest;
         if (return_val == compare) *dest = val;
-        // Impl::unlock_address_hip_space((void*)dest);
+        Impl::unlock_address_hip_space((void *)dest);
         done = 1;
       }
     }
@@ -353,19 +348,16 @@ atomic_fetch_add(volatile T *dest,
                  typename std::enable_if<sizeof(T) != sizeof(int) &&
                                              sizeof(T) != sizeof(long long),
                                          const T &>::type val) {
-  // FIXME_HIP
-  Kokkos::abort("atomic_fetch_add not implemented for large types.\n");
   T return_val;
   int done                 = 0;
   unsigned int active      = __ballot(1);
   unsigned int done_active = 0;
   while (active != done_active) {
     if (!done) {
-      // if(Kokkos::Impl::lock_address_hip_space((void *)dest))
-      {
+      if (Kokkos::Impl::lock_address_hip_space((void *)dest)) {
         return_val = *dest;
         *dest      = return_val + val;
-        // Kokkos::Impl::unlock_address_hip_space((void *)dest);
+        Kokkos::Impl::unlock_address_hip_space((void *)dest);
         done = 1;
       }
     }
@@ -516,19 +508,16 @@ atomic_fetch_sub(volatile T *const dest,
                  typename std::enable_if<sizeof(T) != sizeof(int) &&
                                              sizeof(T) != sizeof(long long),
                                          const T>::type &val) {
-  // FIXME_HIP
-  Kokkos::abort("atomic_fetch_sub not implemented for large types.\n");
   T return_val;
   int done                 = 0;
   unsigned int active      = __ballot(1);
   unsigned int done_active = 0;
   while (active != done_active) {
     if (!done) {
-      /*if (Impl::lock_address_hip_space((void*)dest)) */
-      {
+      if (Impl::lock_address_hip_space((void *)dest)) {
         return_val = *dest;
         *dest      = return_val - val;
-        // Impl::unlock_address_hip_space((void*)dest);
+        Impl::unlock_address_hip_space((void *)dest);
         done = 1;
       }
     }

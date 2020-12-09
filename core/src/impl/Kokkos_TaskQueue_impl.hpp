@@ -381,7 +381,7 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_runnable(
 
   // If we don't have a dependency, or if pushing onto the wait queue of that
   // dependency failed (since the only time that queue should be locked is when
-  // the task is transitioning to complete??!?)
+  // the task is transitioning to complete?)
   const bool is_ready = (nullptr == dep) || (!push_task(&dep->m_wait, task));
 
   if ((nullptr != dep) && respawn) {

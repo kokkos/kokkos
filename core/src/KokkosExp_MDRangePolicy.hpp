@@ -54,13 +54,9 @@
 #include <Kokkos_Parallel.hpp>
 #include <type_traits>
 
-#if defined(KOKKOS_ENABLE_CUDA)
-#include <Cuda/KokkosExp_Cuda_IterateTile.hpp>
-#include <Cuda/KokkosExp_Cuda_IterateTile_Refactor.hpp>
-#endif
-
-#if defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP)
-#include <HIP/KokkosExp_HIP_IterateTile.hpp>
+#if defined(KOKKOS_ENABLE_CUDA) || \
+    (defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP))
+#include <impl/KokkosExp_IterateTileGPU.hpp>
 #endif
 
 namespace Kokkos {
@@ -113,9 +109,41 @@ struct Rank {
 };
 
 namespace Impl {
+// NOTE the comparison below is encapsulated to silent warnings about pointless
+// comparison of unsigned integer with zero
+template <class T>
+constexpr std::enable_if_t<!std::is_signed<T>::value, bool>
+is_less_than_value_initialized_variable(T) {
+  return false;
+}
+
+template <class T>
+constexpr std::enable_if_t<std::is_signed<T>::value, bool>
+is_less_than_value_initialized_variable(T arg) {
+  return arg < T{};
+}
+
+// Checked narrowing conversion that calls abort if the cast changes the value
+template <class To, class From>
+constexpr To checked_narrow_cast(From arg) {
+  constexpr const bool is_different_signedness =
+      (std::is_signed<To>::value != std::is_signed<From>::value);
+  auto const ret = static_cast<To>(arg);
+  if (static_cast<From>(ret) != arg ||
+      (is_different_signedness &&
+       is_less_than_value_initialized_variable(arg) !=
+           is_less_than_value_initialized_variable(ret))) {
+    Kokkos::abort("unsafe narrowing conversion");
+  }
+  return ret;
+}
 // NOTE prefer C array U[M] to std::initalizer_list<U> so that the number of
 // elements can be deduced (https://stackoverflow.com/q/40241370)
-template <class Array, class U, std::size_t M>
+// NOTE for some unfortunate reason the policy bounds are stored as signed
+// integer arrays (point_type which is Kokkos::Array<std::int64_t>) so we
+// specify the index type (actual policy index_type from the traits) and check
+// ahead of time that narrowing conversions will be safe.
+template <class IndexType, class Array, class U, std::size_t M>
 constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   using T = typename Array::value_type;
   Array a{};
@@ -126,8 +154,29 @@ constexpr Array to_array_potentially_narrowing(const U (&init)[M]) {
   // std::transform(std::begin(init), std::end(init), a.data(),
   //                [](U x) { return static_cast<T>(x); });
   // except that std::transform is not constexpr.
-  for (auto x : init)
-    *ptr++ = static_cast<T>(x);  // allow narrowing conversions
+  for (auto x : init) {
+    *ptr++ = checked_narrow_cast<T>(x);
+    (void)checked_narrow_cast<IndexType>(x);  // see note above
+  }
+  return a;
+}
+
+// NOTE Making a copy even when std::is_same<Array, Kokkos::Array<U, M>>::value
+// is true to reduce code complexity.  You may change this if you have a good
+// reason to.  Intentionally not enabling std::array at this time but this may
+// change too.
+template <class IndexType, class NVCC_WONT_LET_ME_CALL_YOU_Array, class U,
+          std::size_t M>
+constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
+    Kokkos::Array<U, M> const& other) {
+  using T = typename NVCC_WONT_LET_ME_CALL_YOU_Array::value_type;
+  NVCC_WONT_LET_ME_CALL_YOU_Array a{};
+  constexpr std::size_t N = a.size();
+  static_assert(M <= N, "");
+  for (std::size_t i = 0; i < M; ++i) {
+    a[i] = checked_narrow_cast<T>(other[i]);
+    (void)checked_narrow_cast<IndexType>(other[i]);  // see note above
+  }
   return a;
 }
 }  // namespace Impl
@@ -162,7 +211,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   enum { rank = static_cast<int>(iteration_pattern::rank) };
 
   using index_type       = typename traits::index_type;
-  using array_index_type = long;
+  using array_index_type = std::int64_t;
   using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
   using tile_type  = Kokkos::Array<array_index_type, rank>;
   // If point_type or tile_type is not templated on a signed integral type (if
@@ -229,9 +278,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   MDRangePolicy(const LT (&lower)[LN], const UT (&upper)[UN],
                 const TT (&tile)[TN] = {})
       : MDRangePolicy(
-            Impl::to_array_potentially_narrowing<decltype(m_lower)>(lower),
-            Impl::to_array_potentially_narrowing<decltype(m_upper)>(upper),
-            Impl::to_array_potentially_narrowing<decltype(m_tile)>(tile)) {
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {
     static_assert(
         LN == rank && UN == rank && TN <= rank,
         "MDRangePolicy: Constructor initializer lists have wrong size");
@@ -247,14 +299,20 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
                 const TT (&tile)[TN] = {})
       : MDRangePolicy(
             work_space,
-            Impl::to_array_potentially_narrowing<decltype(m_lower)>(lower),
-            Impl::to_array_potentially_narrowing<decltype(m_upper)>(upper),
-            Impl::to_array_potentially_narrowing<decltype(m_tile)>(tile)) {
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {
     static_assert(
         LN == rank && UN == rank && TN <= rank,
         "MDRangePolicy: Constructor initializer lists have wrong size");
   }
 
+  // NOTE: Keeping these two constructor despite the templated constructors
+  // from Kokkos arrays for backwards compability to allow construction from
+  // double-braced initializer lists.
   MDRangePolicy(point_type const& lower, point_type const& upper,
                 tile_type const& tile = tile_type{})
       : MDRangePolicy(typename traits::execution_space(), lower, upper, tile) {}
@@ -266,9 +324,32 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     init();
   }
 
+  template <typename T, std::size_t NT = rank,
+            typename = std::enable_if_t<std::is_integral<T>::value>>
+  MDRangePolicy(Kokkos::Array<T, rank> const& lower,
+                Kokkos::Array<T, rank> const& upper,
+                Kokkos::Array<T, NT> const& tile = Kokkos::Array<T, NT>{})
+      : MDRangePolicy(typename traits::execution_space(), lower, upper, tile) {}
+
+  template <typename T, std::size_t NT = rank,
+            typename = std::enable_if_t<std::is_integral<T>::value>>
+  MDRangePolicy(const typename traits::execution_space& work_space,
+                Kokkos::Array<T, rank> const& lower,
+                Kokkos::Array<T, rank> const& upper,
+                Kokkos::Array<T, NT> const& tile = Kokkos::Array<T, NT>{})
+      : MDRangePolicy(
+            work_space,
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {}
+
   template <class... OtherProperties>
   MDRangePolicy(const MDRangePolicy<OtherProperties...> p)
-      : m_space(p.m_space),
+      : traits(p),  // base class may contain data such as desired occupancy
+        m_space(p.m_space),
         m_lower(p.m_lower),
         m_upper(p.m_upper),
         m_tile(p.m_tile),
@@ -294,6 +375,10 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         && !std::is_same<typename traits::execution_space,
                          Kokkos::Experimental::HIP>::value
 #endif
+#if defined(KOKKOS_ENABLE_SYCL)
+        && !std::is_same<typename traits::execution_space,
+                         Kokkos::Experimental::SYCL>::value
+#endif
     ) {
       index_type span;
       for (int i = 0; i < rank; ++i) {
@@ -313,8 +398,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_prod_tile_dims *= m_tile[i];
       }
     }
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-    else  // Cuda or HIP
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+    else  // Cuda, HIP or SYCL
     {
       index_type span;
       int increment  = 1;
@@ -353,21 +439,38 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_num_tiles *= m_tile_end[i];
         m_prod_tile_dims *= m_tile[i];
       }
-      if (m_prod_tile_dims >
-          1024) {  // Match Cuda restriction for ParallelReduce; 1024,1024,64
-                   // max per dim (Kepler), but product num_threads < 1024
-        if (is_cuda_exec_space) {
-          printf(" Tile dimensions exceed Cuda limits\n");
-          Kokkos::abort(
-              "Cuda ExecSpace Error: MDRange tile dims exceed maximum number "
-              "of threads per block - choose smaller tile dims");
-        } else {
-          printf(" Tile dimensions exceed HIP limits\n");
-          Kokkos::abort(
-              "HIP ExecSpace Error: MDRange tile dims exceed maximum number of "
-              "threads per block - choose smaller tile dims");
-        }
+#if defined(KOKKOS_ENABLE_CUDA)
+      // Match Cuda restriction for ParallelReduce; 1024,1024,64 max per dim
+      // (Kepler), but product num_threads < 1024
+      if (std::is_same<typename traits::execution_space, Kokkos::Cuda>::value &&
+          m_prod_tile_dims > 1024) {
+        printf(" Tile dimensions exceed Cuda limits\n");
+        Kokkos::abort(
+            "Cuda ExecSpace Error: MDRange tile dims exceed maximum number "
+            "of threads per block - choose smaller tile dims");
       }
+#endif
+#if defined(KOKKOS_ENABLE_HIP)
+      if (std::is_same<typename traits::execution_space,
+                       Kokkos::Experimental::HIP>::value &&
+          m_prod_tile_dims > 1024) {
+        printf(" Tile dimensions exceed HIP limits\n");
+        Kokkos::abort(
+            "HIP ExecSpace Error: MDRange tile dims exceed maximum number "
+            "of threads per block - choose smaller tile dims");
+      }
+#endif
+#if defined(KOKKOS_ENABLE_SYCL)
+      // FIXME_SYCL query the limit instead
+      if (std::is_same<typename traits::execution_space,
+                       Kokkos::Experimental::SYCL>::value &&
+          m_prod_tile_dims > 256) {
+        printf(" Tile dimensions exceed SYCL limits\n");
+        Kokkos::abort(
+            "SYCL ExecSpace Error: MDRange tile dims exceed maximum number "
+            "of threads per block - choose smaller tile dims");
+      }
+#endif
     }
 #endif
   }
@@ -381,29 +484,6 @@ namespace Experimental {
 using Kokkos::Iterate;
 using Kokkos::MDRangePolicy;
 using Kokkos::Rank;
-}  // namespace Experimental
-}  // namespace Kokkos
-// ------------------------------------------------------------------ //
-
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
-
-template <unsigned long P, class... Properties>
-struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
-                             MDRangePolicy<Properties...>> {
-  using policy_in_t = MDRangePolicy<Properties...>;
-  using policy_out_t =
-      MDRangePolicy<typename policy_in_t::traits::execution_space,
-                    typename policy_in_t::traits::schedule_type,
-                    typename policy_in_t::traits::work_tag,
-                    typename policy_in_t::traits::index_type,
-                    typename policy_in_t::traits::iteration_pattern,
-                    typename policy_in_t::traits::launch_bounds,
-                    WorkItemProperty::ImplWorkItemProperty<P>>;
-};
-
-}  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
 

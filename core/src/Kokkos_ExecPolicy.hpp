@@ -123,7 +123,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 
   template <class... OtherProperties>
   RangePolicy(const RangePolicy<OtherProperties...>& p)
-      : m_space(p.m_space),
+      : traits(p),  // base class may contain data such as desired occupancy
+        m_space(p.m_space),
         m_begin(p.m_begin),
         m_end(p.m_end),
         m_granularity(p.m_granularity),
@@ -601,7 +602,11 @@ class TeamPolicy
                         Kokkos::AUTO()) {}
 
   template <class... OtherProperties>
-  TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {}
+  TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {
+    // Cannot call converting constructor in the member initializer list because
+    // it is not a direct base.
+    internal_policy::traits::operator=(p);
+  }
 
  private:
   TeamPolicy(const internal_policy& p) : internal_policy(p) {}
@@ -903,32 +908,50 @@ namespace Impl {
 template <class Property, class Policy>
 struct PolicyPropertyAdaptor;
 
-template <unsigned long P, class... Properties>
+template <unsigned long P, template <class...> class Policy,
+          class... Properties>
 struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
-                             RangePolicy<Properties...>> {
-  using policy_in_t = RangePolicy<Properties...>;
-  using policy_out_t =
-      RangePolicy<typename policy_in_t::traits::execution_space,
-                  typename policy_in_t::traits::schedule_type,
-                  typename policy_in_t::traits::work_tag,
-                  typename policy_in_t::traits::index_type,
-                  typename policy_in_t::traits::iteration_pattern,
-                  typename policy_in_t::traits::launch_bounds,
-                  WorkItemProperty::ImplWorkItemProperty<P>>;
+                             Policy<Properties...>> {
+  using policy_in_t = Policy<Properties...>;
+  static_assert(is_execution_policy<policy_in_t>::value, "");
+  using policy_out_t = Policy<typename policy_in_t::traits::execution_space,
+                              typename policy_in_t::traits::schedule_type,
+                              typename policy_in_t::traits::work_tag,
+                              typename policy_in_t::traits::index_type,
+                              typename policy_in_t::traits::iteration_pattern,
+                              typename policy_in_t::traits::launch_bounds,
+                              WorkItemProperty::ImplWorkItemProperty<P>,
+                              typename policy_in_t::traits::occupancy_control>;
 };
 
-template <unsigned long P, class... Properties>
-struct PolicyPropertyAdaptor<WorkItemProperty::ImplWorkItemProperty<P>,
-                             TeamPolicy<Properties...>> {
-  using policy_in_t = TeamPolicy<Properties...>;
-  using policy_out_t =
-      TeamPolicy<typename policy_in_t::traits::execution_space,
-                 typename policy_in_t::traits::schedule_type,
-                 typename policy_in_t::traits::work_tag,
-                 typename policy_in_t::traits::index_type,
-                 typename policy_in_t::traits::iteration_pattern,
-                 typename policy_in_t::traits::launch_bounds,
-                 WorkItemProperty::ImplWorkItemProperty<P>>;
+template <template <class...> class Policy, class... Properties>
+struct PolicyPropertyAdaptor<DesiredOccupancy, Policy<Properties...>> {
+  using policy_in_t = Policy<Properties...>;
+  static_assert(is_execution_policy<policy_in_t>::value, "");
+  using policy_out_t = Policy<typename policy_in_t::traits::execution_space,
+                              typename policy_in_t::traits::schedule_type,
+                              typename policy_in_t::traits::work_tag,
+                              typename policy_in_t::traits::index_type,
+                              typename policy_in_t::traits::iteration_pattern,
+                              typename policy_in_t::traits::launch_bounds,
+                              typename policy_in_t::traits::work_item_property,
+                              DesiredOccupancy>;
+  static_assert(policy_out_t::experimental_contains_desired_occupancy, "");
+};
+
+template <template <class...> class Policy, class... Properties>
+struct PolicyPropertyAdaptor<MaximizeOccupancy, Policy<Properties...>> {
+  using policy_in_t = Policy<Properties...>;
+  static_assert(is_execution_policy<policy_in_t>::value, "");
+  using policy_out_t = Policy<typename policy_in_t::traits::execution_space,
+                              typename policy_in_t::traits::schedule_type,
+                              typename policy_in_t::traits::work_tag,
+                              typename policy_in_t::traits::index_type,
+                              typename policy_in_t::traits::iteration_pattern,
+                              typename policy_in_t::traits::launch_bounds,
+                              typename policy_in_t::traits::work_item_property,
+                              MaximizeOccupancy>;
+  static_assert(!policy_out_t::experimental_contains_desired_occupancy, "");
 };
 }  // namespace Impl
 
@@ -939,6 +962,24 @@ require(const PolicyType p, WorkItemProperty::ImplWorkItemProperty<P>) {
   return typename Impl::PolicyPropertyAdaptor<
       WorkItemProperty::ImplWorkItemProperty<P>, PolicyType>::policy_out_t(p);
 }
+
+template <typename Policy>
+/*constexpr*/ typename Impl::PolicyPropertyAdaptor<DesiredOccupancy,
+                                                   Policy>::policy_out_t
+prefer(Policy const& p, DesiredOccupancy occ) {
+  typename Impl::PolicyPropertyAdaptor<DesiredOccupancy, Policy>::policy_out_t
+      pwo{p};
+  pwo.impl_set_desired_occupancy(occ);
+  return pwo;
+}
+
+template <typename Policy>
+constexpr typename Impl::PolicyPropertyAdaptor<MaximizeOccupancy,
+                                               Policy>::policy_out_t
+prefer(Policy const& p, MaximizeOccupancy) {
+  return {p};
+}
+
 }  // namespace Experimental
 
 namespace Impl {
