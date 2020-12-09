@@ -144,8 +144,7 @@ void SharedAllocationRecordCommon<MemorySpace>::
   strncpy(arg_header.m_label, arg_label.c_str(),
           SharedAllocationHeader::maximum_label_length);
   // Set last element zero, in case c_str is too long
-  arg_header.m_label[SharedAllocationHeader::maximum_label_length - 1] =
-      (char)0;
+  arg_header.m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
 }
 
 template <class MemorySpace>
