@@ -58,6 +58,7 @@
 #include <Kokkos_AnonymousSpace.hpp>
 #include <Kokkos_LogicalSpaces.hpp>
 #include <Kokkos_Pair.hpp>
+#include <Kokkos_MathematicalFunctions.hpp>
 #include <Kokkos_MemoryPool.hpp>
 #include <Kokkos_Array.hpp>
 #include <Kokkos_View.hpp>
