@@ -133,10 +133,10 @@ void Experimental::RawMemoryAllocationFailure::print_error_message(
     case AllocationMechanism::HIPMalloc: o << "hipMalloc()."; break;
     case AllocationMechanism::HIPHostMalloc: o << "hipHostMalloc()."; break;
     case AllocationMechanism::SYCLMallocDevice:
-      o << "cl::sycl::malloc_device().";
+      o << "sycl::malloc_device().";
       break;
     case AllocationMechanism::SYCLMallocShared:
-      o << "cl::sycl::malloc_shared().";
+      o << "sycl::malloc_shared().";
       break;
   }
   append_additional_error_information(o);

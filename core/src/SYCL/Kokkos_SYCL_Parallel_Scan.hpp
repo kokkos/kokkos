@@ -83,21 +83,21 @@ class ParallelScanSYCLBase {
 
  private:
   template <typename Functor>
-  void scan_internal(cl::sycl::queue& q, const Functor& functor,
+  void scan_internal(sycl::queue& q, const Functor& functor,
                      pointer_type global_mem, std::size_t size) const {
     // FIXME_SYCL optimize
     constexpr size_t wgroup_size = 32;
     auto n_wgroups               = (size + wgroup_size - 1) / wgroup_size;
 
     // FIXME_SYCL The allocation should be handled by the execution space
-    auto deleter = [&q](value_type* ptr) { cl::sycl::free(ptr, q); };
+    auto deleter = [&q](value_type* ptr) { sycl::free(ptr, q); };
     std::unique_ptr<value_type[], decltype(deleter)> group_results_memory(
         static_cast<pointer_type>(sycl::malloc(sizeof(value_type) * n_wgroups,
                                                q, sycl::usm::alloc::shared)),
         deleter);
     auto group_results = group_results_memory.get();
 
-    q.submit([&](cl::sycl::handler& cgh) {
+    q.submit([&](sycl::handler& cgh) {
       sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                      sycl::access::target::local>
           local_mem(sycl::range<1>(wgroup_size), cgh);
@@ -180,7 +180,7 @@ class ParallelScanSYCLBase {
     const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    cl::sycl::queue& q = *instance.m_queue;
+    sycl::queue& q = *instance.m_queue;
 
     const std::size_t len = m_policy.end() - m_policy.begin();
 
@@ -256,7 +256,7 @@ class ParallelScanSYCLBase {
     // FIXME_SYCL The allocation should be handled by the execution space
     // consider only storing one value per block and recreate initial results in
     // the end before doing the final pass
-    auto deleter = [&q](value_type* ptr) { cl::sycl::free(ptr, q); };
+    auto deleter = [&q](value_type* ptr) { sycl::free(ptr, q); };
     std::unique_ptr<value_type[], decltype(deleter)> result_memory(
         static_cast<pointer_type>(sycl::malloc(sizeof(value_type) * len, q,
                                                sycl::usm::alloc::shared)),

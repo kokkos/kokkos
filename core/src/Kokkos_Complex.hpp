@@ -697,7 +697,7 @@ KOKKOS_INLINE_FUNCTION RealType real(const complex<RealType>& x) noexcept {
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType abs(const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::hypot;
+  using sycl::hypot;
 #else
   using std::hypot;
 #endif
@@ -710,10 +710,10 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> pow(const complex<RealType>& x,
                                                      const RealType& e) {
   RealType r = abs(x);
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::atan;
-  using cl::sycl::cos;
-  using cl::sycl::pow;
-  using cl::sycl::sin;
+  using sycl::atan;
+  using sycl::cos;
+  using sycl::pow;
+  using sycl::sin;
 #else
   using std::atan;
   using std::cos;
@@ -730,8 +730,8 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sqrt(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::abs;
-  using cl::sycl::sqrt;
+  using sycl::abs;
+  using sycl::sqrt;
 #else
   using std::abs;
   using std::sqrt;
@@ -763,9 +763,9 @@ KOKKOS_INLINE_FUNCTION complex<RealType> conj(
 template <class RealType>
 KOKKOS_INLINE_FUNCTION complex<RealType> exp(const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::cos;
-  using cl::sycl::exp;
-  using cl::sycl::sin;
+  using sycl::cos;
+  using sycl::exp;
+  using sycl::sin;
 #else
   using std::cos;
   using std::exp;
@@ -779,8 +779,8 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> log(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::atan;
-  using cl::sycl::log;
+  using sycl::atan;
+  using sycl::log;
 #else
   using std::atan;
   using std::log;
@@ -794,10 +794,10 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sin(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::cos;
-  using cl::sycl::cosh;
-  using cl::sycl::sin;
-  using cl::sycl::sinh;
+  using sycl::cos;
+  using sycl::cosh;
+  using sycl::sin;
+  using sycl::sinh;
 #else
   using std::cos;
   using std::cosh;
@@ -813,10 +813,10 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cos(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::cos;
-  using cl::sycl::cosh;
-  using cl::sycl::sin;
-  using cl::sycl::sinh;
+  using sycl::cos;
+  using sycl::cosh;
+  using sycl::sin;
+  using sycl::sinh;
 #else
   using std::cos;
   using std::cosh;
@@ -839,10 +839,10 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sinh(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::cos;
-  using cl::sycl::cosh;
-  using cl::sycl::sin;
-  using cl::sycl::sinh;
+  using sycl::cos;
+  using sycl::cosh;
+  using sycl::sin;
+  using sycl::sinh;
 #else
   using std::cos;
   using std::cosh;
@@ -858,10 +858,10 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> cosh(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::cos;
-  using cl::sycl::cosh;
-  using cl::sycl::sin;
-  using cl::sycl::sinh;
+  using sycl::cos;
+  using sycl::cosh;
+  using sycl::sin;
+  using sycl::sinh;
 #else
   using std::cos;
   using std::cosh;
@@ -899,8 +899,8 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> atanh(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::atan2;
-  using cl::sycl::log;
+  using sycl::atan2;
+  using sycl::log;
 #else
   using std::atan2;
   using std::log;
@@ -934,7 +934,7 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> acos(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::acos;
+  using sycl::acos;
 
 #else
   using std::acos;
@@ -949,8 +949,8 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> atan(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using cl::sycl::atan2;
-  using cl::sycl::log;
+  using sycl::atan2;
+  using sycl::log;
 #else
   using std::atan2;
   using std::log;
