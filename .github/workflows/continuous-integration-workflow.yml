@@ -1,4 +1,4 @@
-name: CI
+name: github-Linux
 on: [push, pull_request]
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
           path: ~/.ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp}}-${github.ref}-${{ github.sha }}
           restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp}}-${{github.ref}}
-      - name: Get trail license
+      - name: Get trial license
         if: ${{ matrix.cxx == 'icpc' }}
         run: |
           mkdir ~/Licenses
