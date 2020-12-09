@@ -184,7 +184,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     hipFuncAttributes attr = Kokkos::Experimental::Impl::HIPParallelLaunch<
         closure_type, LaunchBounds>::get_hip_func_attributes();
     auto const& prop = pol.space().hip_device_prop();
-    // Limits due do registers/SM
+    // Limits due to registers/SM, MDRange doesn't have
+    // shared memory constraints
     int const regs_per_sm        = prop.regsPerMultiprocessor;
     int const regs_per_thread    = attr.numRegs;
     int const max_threads_per_sm = regs_per_sm / regs_per_thread;

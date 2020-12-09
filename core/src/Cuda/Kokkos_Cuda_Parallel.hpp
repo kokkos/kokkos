@@ -543,7 +543,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
         CudaParallelLaunch<ParallelFor,
                            LaunchBounds>::get_cuda_func_attributes();
     auto const& prop = pol.space().cuda_device_prop();
-    // Limits due do registers/SM
+    // Limits due to registers/SM, MDRange doesn't have
+    // shared memory constraints
     int const regs_per_sm        = prop.regsPerMultiprocessor;
     int const regs_per_thread    = attr.numRegs;
     int const max_threads_per_sm = regs_per_sm / regs_per_thread;
