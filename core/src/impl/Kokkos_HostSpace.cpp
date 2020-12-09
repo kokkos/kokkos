@@ -351,8 +351,12 @@ SharedAllocationRecord<void, void>
     SharedAllocationRecord<Kokkos::HostSpace, void>::s_root_record;
 #endif
 
-SharedAllocationRecord<Kokkos::HostSpace,
-                       void>::~SharedAllocationRecord() noexcept {
+SharedAllocationRecord<Kokkos::HostSpace, void>::~SharedAllocationRecord()
+#if defined( \
+    KOKKOS_IMPL_INTEL_WORKAROUND_NOEXCEPT_SPECIFICATION_VIRTUAL_FUNCTION)
+    noexcept
+#endif
+{
   m_space.deallocate(RecordBase::m_alloc_ptr->m_label,
                      SharedAllocationRecord<void, void>::m_alloc_ptr,
                      SharedAllocationRecord<void, void>::m_alloc_size,

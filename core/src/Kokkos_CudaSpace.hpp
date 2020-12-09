@@ -953,7 +953,7 @@ class SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>
   friend class SharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace>;
 
   using RecordBase = SharedAllocationRecord<void, void>;
-  using base_t = SharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace>;
+  using base_t     = SharedAllocationRecordCommon<Kokkos::CudaHostPinnedSpace>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
