@@ -75,9 +75,7 @@ struct ViewTracker {
 
   KOKKOS_INLINE_FUNCTION
   ViewTracker(const ViewTracker& vt) noexcept
-      : m_tracker(vt.m_tracker, view_traits::is_managed) {
-    // call ViewHook
-  }
+      : m_tracker(vt.m_tracker, view_traits::is_managed) {}
 
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const ParentView& vt) noexcept : m_tracker() {
