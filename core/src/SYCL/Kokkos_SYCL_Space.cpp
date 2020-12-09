@@ -348,6 +348,8 @@ namespace Impl {
 // To avoid additional compilation cost for something that's (mostly?) not
 // performance sensitive, we explicity instantiate these CRTP base classes here,
 // where we have access to the associated *_timpl.hpp header files.
+template class HostInaccessibleSharedAllocationRecordCommon<
+    Kokkos::Experimental::SYCLDeviceUSMSpace>;
 template class SharedAllocationRecordCommon<
     Kokkos::Experimental::SYCLDeviceUSMSpace>;
 template class SharedAllocationRecordCommon<
