@@ -293,9 +293,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
           ? iteration_pattern::inner_direction
           : default_inner_direction<typename traits::execution_space>::value;
 
-  static constexpr auto Right = Iterate::Right;
-  static constexpr auto Left  = Iterate::Left;
-
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
     return m_space;
   }
@@ -446,7 +443,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     int increment  = 1;
     int rank_start = 0;
     int rank_end   = rank;
-    if (inner_direction == Right) {
+    if (inner_direction == Iterate::Right) {
       increment  = -1;
       rank_start = rank - 1;
       rank_end   = -1;
@@ -455,8 +452,8 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       const index_type length = m_upper[i] - m_lower[i];
       if (m_tile[i] <= 0) {
 	m_tune_tile_size = true;
-        if ((inner_direction == Right && (i < rank - 1)) ||
-            (inner_direction == Left && (i > 0))) {
+        if ((inner_direction == Iterate::Right && (i < rank - 1)) ||
+            (inner_direction == Iterate::Left && (i > 0))) {
           if (m_prod_tile_dims * default_tile_size < max_total_tile_size) {
             m_tile[i] = default_tile_size;
           } else {
