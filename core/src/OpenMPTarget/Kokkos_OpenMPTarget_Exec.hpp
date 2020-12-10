@@ -495,7 +495,11 @@ namespace Impl {
 
 class OpenMPTargetExec {
  public:
-  enum { MAX_ACTIVE_THREADS = 256 * 8 * 56 * 4 };
+  // FIXME_OPENMPTARGET - Currently the maximum number of
+  // teams possible is calculated based on NVIDIA's Volta GPU. In
+  // future this value should be based on the chosen architecture for the
+  // OpenMPTarget backend.
+  enum { MAX_ACTIVE_THREADS = 2080 * 80 };
   enum { MAX_ACTIVE_TEAMS = MAX_ACTIVE_THREADS / 32 };
 
  private:

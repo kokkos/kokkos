@@ -517,18 +517,61 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1);
 
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
-
     FunctorType a_functor(m_functor);
+
+    // Only enter this loop if scratch memory is requested.
+    if ((shmem_size_L0 + shmem_size_L1) > 0) {
+      // Maximum in-flight teams possible.
+      int max_league_size = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+
+      // A lock array to keep track of scratch memory blocks.
+      int* lock_array = new int[max_league_size];
+      memset(lock_array, 1, max_league_size * sizeof(int));
+
+#pragma omp target teams distribute map(                                    \
+    to                                                                      \
+    : a_functor, lock_array [0:max_league_size]) is_device_ptr(scratch_ptr) \
+    num_teams(nteams) thread_limit(team_size)
+      for (int i = 0; i < league_size; i++) {
+        // Calculate the scratch block index for the current team.
+        // FIXME_OPENMPTARGET - Currently a static allocation is being used
+        // where the same block of scratch memory is assigned to the teams with
+        // the same remainder.
+        const int shmem_block_index = omp_get_team_num() % max_league_size;
+
+        // Try and get a lock on the block.
+        int lock_team =
+            atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+        while (!lock_team) {
+          while (lock_array[shmem_block_index] == 0)
+            ;
+          lock_team =
+              atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+        }
+#pragma omp parallel num_threads(team_size)
+        {
+          typename Policy::member_type team(i, league_size, team_size,
+                                            vector_length, scratch_ptr,
+                                            shmem_size_L0, shmem_size_L1);
+          m_functor(team);
+        }
+        // FIXME_OPENMPTARGET - Uses the same variable name to unlock the block
+        // in order to avoid an unused-variable warning.
+        lock_team =
+            atomic_compare_exchange(&lock_array[shmem_block_index], 0, 1);
+      }
+    } else {
 #pragma omp target teams distribute map(to           \
                                         : a_functor) \
     is_device_ptr(scratch_ptr) num_teams(nteams) thread_limit(team_size)
-    for (int i = 0; i < league_size; i++) {
+      for (int i = 0; i < league_size; i++) {
 #pragma omp parallel num_threads(team_size)
-      {
-        typename Policy::member_type team(i, league_size, team_size,
-                                          vector_length, scratch_ptr,
-                                          shmem_size_L0, shmem_size_L1);
-        m_functor(team);
+        {
+          typename Policy::member_type team(i, league_size, team_size,
+                                            vector_length, scratch_ptr,
+                                            shmem_size_L0, shmem_size_L1);
+          m_functor(team);
+        }
       }
     }
   }
