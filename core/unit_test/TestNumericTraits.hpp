@@ -81,6 +81,17 @@ DEFINE_EXTREMA(long double, -LDBL_MAX, LDBL_MAX);
 struct Infinity {};
 struct Epsilon {};
 struct FiniteMinMax {};
+struct RoundError {};
+struct NormMin {};
+struct Digits {};
+struct Radix {};
+struct MinMaxExponent {};
+struct MinMaxExponent10 {};
+
+template <class T>
+KOKKOS_FUNCTION T* take_address_of(T& arg) {
+  return &arg;
+}
 
 template <class Space, class T, class Tag>
 struct TestNumericTraits {
@@ -94,24 +105,66 @@ struct TestNumericTraits {
   }
 
   KOKKOS_FUNCTION void operator()(Infinity, int, int& e) const {
-    auto const inf  = Kokkos::Experimental::infinity<T>::value;
+    using Kokkos::Experimental::infinity;
+    auto const inf  = infinity<T>::value;
     auto const zero = T(0);
     e += (int)!(inf + inf == inf);
     e += (int)!(inf != zero);
+    (void)take_address_of(infinity<T>::value);
   }
 
   KOKKOS_FUNCTION void operator()(Epsilon, int, int& e) const {
-    auto const eps = Kokkos::Experimental::epsilon<T>::value;
+    using Kokkos::Experimental::epsilon;
+    auto const eps = epsilon<T>::value;
     auto const one = T(1);
     e += (int)!(one + eps != one);
     e += (int)!(one + eps / 2 == one);
+    (void)take_address_of(epsilon<T>::value);
   }
 
   KOKKOS_FUNCTION void operator()(FiniteMinMax, int, int& e) const {
-    auto const min = Kokkos::Experimental::finite_min<T>::value;
-    auto const max = Kokkos::Experimental::finite_max<T>::value;
+    using Kokkos::Experimental::finite_max;
+    using Kokkos::Experimental::finite_min;
+    auto const min = finite_min<T>::value;
+    auto const max = finite_max<T>::value;
     e += (int)!(min == extrema<T>::min);
     e += (int)!(max == extrema<T>::max);
+    (void)take_address_of(finite_min<T>::value);
+    (void)take_address_of(finite_max<T>::value);
+  }
+
+  KOKKOS_FUNCTION void operator()(RoundError, int, int&) const {
+    using Kokkos::Experimental::round_error;
+    (void)take_address_of(round_error<T>::value);
+  }
+
+  KOKKOS_FUNCTION void operator()(NormMin, int, int&) const {
+    using Kokkos::Experimental::norm_min;
+    (void)take_address_of(norm_min<T>::value);
+  }
+
+  KOKKOS_FUNCTION void operator()(Digits, int, int&) const {
+    using Kokkos::Experimental::digits;
+    (void)take_address_of(digits<T>::value);
+  }
+
+  KOKKOS_FUNCTION void operator()(Radix, int, int&) const {
+    using Kokkos::Experimental::radix;
+    (void)take_address_of(radix<T>::value);
+  }
+
+  KOKKOS_FUNCTION void operator()(MinMaxExponent, int, int&) const {
+    using Kokkos::Experimental::max_exponent;
+    using Kokkos::Experimental::min_exponent;
+    (void)take_address_of(min_exponent<T>::value);
+    (void)take_address_of(max_exponent<T>::value);
+  }
+
+  KOKKOS_FUNCTION void operator()(MinMaxExponent10, int, int&) const {
+    using Kokkos::Experimental::max_exponent10;
+    using Kokkos::Experimental::min_exponent10;
+    (void)take_address_of(min_exponent10<T>::value);
+    (void)take_address_of(max_exponent10<T>::value);
   }
 };
 
@@ -125,6 +178,18 @@ TEST(TEST_CATEGORY, numeric_traits_epsilon) {
   TestNumericTraits<TEST_EXECSPACE, float, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, double, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, long double, Epsilon>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_round_error) {
+  TestNumericTraits<TEST_EXECSPACE, float, RoundError>();
+  TestNumericTraits<TEST_EXECSPACE, double, RoundError>();
+  TestNumericTraits<TEST_EXECSPACE, long double, RoundError>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_norm_min) {
+  TestNumericTraits<TEST_EXECSPACE, float, NormMin>();
+  TestNumericTraits<TEST_EXECSPACE, double, NormMin>();
+  TestNumericTraits<TEST_EXECSPACE, long double, NormMin>();
 }
 
 TEST(TEST_CATEGORY, numeric_traits_finite_min_max) {
@@ -147,4 +212,52 @@ TEST(TEST_CATEGORY, numeric_traits_finite_min_max) {
   TestNumericTraits<TEST_EXECSPACE, float, FiniteMinMax>();
   TestNumericTraits<TEST_EXECSPACE, double, FiniteMinMax>();
   TestNumericTraits<TEST_EXECSPACE, long double, FiniteMinMax>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_digits) {
+  TestNumericTraits<TEST_EXECSPACE, bool, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, char, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, signed char, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned char, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, short, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned short, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, int, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned int, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, long int, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long int, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, long long int, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, float, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, double, Digits>();
+  TestNumericTraits<TEST_EXECSPACE, long double, Digits>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_radix) {
+  TestNumericTraits<TEST_EXECSPACE, bool, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, char, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, signed char, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned char, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, short, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned short, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, int, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned int, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, long int, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long int, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, long long int, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, float, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, double, Radix>();
+  TestNumericTraits<TEST_EXECSPACE, long double, Radix>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_min_max_exponent) {
+  TestNumericTraits<TEST_EXECSPACE, float, MinMaxExponent>();
+  TestNumericTraits<TEST_EXECSPACE, double, MinMaxExponent>();
+  TestNumericTraits<TEST_EXECSPACE, long double, MinMaxExponent>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
+  TestNumericTraits<TEST_EXECSPACE, float, MinMaxExponent10>();
+  TestNumericTraits<TEST_EXECSPACE, double, MinMaxExponent10>();
+  TestNumericTraits<TEST_EXECSPACE, long double, MinMaxExponent10>();
 }
