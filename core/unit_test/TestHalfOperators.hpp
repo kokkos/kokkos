@@ -67,7 +67,8 @@ enum OP_TESTS {
   POSTFIX_INC,
   POSTFIX_DEC,
   CADD_H_H,
-  CADD_H_S,  //   CADD_S_H,
+  CADD_H_S,  
+  CADD_S_H,
   CADD_H_D,  //   CADD_D_H,
   CSUB_H_H,
   CSUB_H_S,
@@ -430,10 +431,10 @@ struct Functor_TestHalfOperators {
 
     // NOTE: Commented out as the toolchain cannot find the float
     // operator+=(half_t) overload tmp_s_lhs = static_cast<float>(h_lhs);
-    // tmp_s_lhs += h_rhs;
-    // actual_lhs(CADD_S_H) = static_cast<double>(tmp_s_lhs);
-    // expected_lhs(CADD_S_H) = d_lhs;
-    // expected_lhs(CADD_S_H) += d_rhs;
+    tmp_s_lhs += h_rhs;
+    actual_lhs(CADD_S_H) = static_cast<double>(tmp_s_lhs);
+    expected_lhs(CADD_S_H) = d_lhs;
+    expected_lhs(CADD_S_H) += d_rhs;
 
     tmp_lhs = static_cast<double>(h_lhs);
     tmp_lhs += static_cast<double>(d_rhs);
