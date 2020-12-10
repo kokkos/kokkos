@@ -430,6 +430,7 @@ struct Functor_TestHalfOperators {
     expected_lhs(CADD_H_S) = d_lhs;
     expected_lhs(CADD_H_S) += d_rhs;
 
+    tmp_s_lhs = h_lhs;
     tmp_s_lhs += h_rhs;
     actual_lhs(CADD_S_H) = static_cast<double>(tmp_s_lhs);
     expected_lhs(CADD_S_H) = d_lhs;
@@ -441,6 +442,7 @@ struct Functor_TestHalfOperators {
     expected_lhs(CADD_H_D) = d_lhs;
     expected_lhs(CADD_H_D) += d_rhs;
 
+    tmp_d_lhs = h_lhs;
     tmp_d_lhs += h_rhs;
     actual_lhs(CADD_D_H) = static_cast<double>(tmp_d_lhs);
     expected_lhs(CADD_D_H) = d_lhs;
