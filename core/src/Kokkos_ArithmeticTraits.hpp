@@ -120,6 +120,34 @@ template <> struct digits_helper<unsigned long long int> { static constexpr int 
 template <> struct digits_helper<float> { static constexpr int value = FLT_MANT_DIG; };
 template <> struct digits_helper<double> { static constexpr int value = DBL_MANT_DIG; };
 template <> struct digits_helper<long double> { static constexpr int value = LDBL_MANT_DIG; };
+template <class> struct digits10_helper;
+template <> struct digits10_helper<bool> { static constexpr int value = 0; };
+constexpr double log10_2 = 2.41;
+#define DIGITS10_HELPER_INTEGRAL(TYPE) \
+template <> struct digits10_helper<TYPE> { static constexpr int value = digits_helper<TYPE>::value * log10_2; };
+DIGITS10_HELPER_INTEGRAL(char)
+DIGITS10_HELPER_INTEGRAL(signed char)
+DIGITS10_HELPER_INTEGRAL(unsigned char)
+DIGITS10_HELPER_INTEGRAL(short)
+DIGITS10_HELPER_INTEGRAL(unsigned short)
+DIGITS10_HELPER_INTEGRAL(int)
+DIGITS10_HELPER_INTEGRAL(unsigned int)
+DIGITS10_HELPER_INTEGRAL(long int)
+DIGITS10_HELPER_INTEGRAL(unsigned long int)
+DIGITS10_HELPER_INTEGRAL(long long int)
+DIGITS10_HELPER_INTEGRAL(unsigned long long int)
+#undef DIGITS10_HELPER_INTEGRAL
+template <> struct digits10_helper<float> { static constexpr int value = FLT_DIG; };
+template <> struct digits10_helper<double> { static constexpr int value = DBL_DIG; };
+template <> struct digits10_helper<long double> { static constexpr int value = LDBL_DIG; };
+template <class> struct max_digits10_helper;
+// FIXME not sure why were not defined in my <cfloat>
+//template <> struct max_digits10_helper<float> { static constexpr int value = FLT_DECIMAL_DIG; };
+//template <> struct max_digits10_helper<double> { static constexpr int value = DBL_DECIMAL_DIG; };
+//template <> struct max_digits10_helper<long double> { static constexpr int value = LDBL_DECIMAL_DIG; };
+template <> struct max_digits10_helper<float> { static constexpr int value = 9; };
+template <> struct max_digits10_helper<double> { static constexpr int value = 17; };
+template <> struct max_digits10_helper<long double> { static constexpr int value = 21; };
 template <class> struct radix_helper;
 template <> struct radix_helper<bool> { static constexpr int value = 2; };
 template <> struct radix_helper<char> { static constexpr int value = 2; };
@@ -177,6 +205,8 @@ KOKKOS_IMPL_DEFINE_TRAIT(norm_min)
 
 // Numeric characteristics traits
 KOKKOS_IMPL_DEFINE_TRAIT(digits)
+KOKKOS_IMPL_DEFINE_TRAIT(digits10)
+KOKKOS_IMPL_DEFINE_TRAIT(max_digits10)
 KOKKOS_IMPL_DEFINE_TRAIT(radix)
 KOKKOS_IMPL_DEFINE_TRAIT(min_exponent)
 KOKKOS_IMPL_DEFINE_TRAIT(min_exponent10)

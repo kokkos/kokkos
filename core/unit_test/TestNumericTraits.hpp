@@ -84,6 +84,8 @@ struct FiniteMinMax {};
 struct RoundError {};
 struct NormMin {};
 struct Digits {};
+struct Digits10 {};
+struct MaxDigits10 {};
 struct Radix {};
 struct MinMaxExponent {};
 struct MinMaxExponent10 {};
@@ -146,6 +148,16 @@ struct TestNumericTraits {
   KOKKOS_FUNCTION void operator()(Digits, int, int&) const {
     using Kokkos::Experimental::digits;
     (void)take_address_of(digits<T>::value);
+  }
+
+  KOKKOS_FUNCTION void operator()(Digits10, int, int&) const {
+    using Kokkos::Experimental::digits10;
+    (void)take_address_of(digits10<T>::value);
+  }
+
+  KOKKOS_FUNCTION void operator()(MaxDigits10, int, int&) const {
+    using Kokkos::Experimental::max_digits10;
+    (void)take_address_of(max_digits10<T>::value);
   }
 
   KOKKOS_FUNCTION void operator()(Radix, int, int&) const {
@@ -230,6 +242,30 @@ TEST(TEST_CATEGORY, numeric_traits_digits) {
   TestNumericTraits<TEST_EXECSPACE, float, Digits>();
   TestNumericTraits<TEST_EXECSPACE, double, Digits>();
   TestNumericTraits<TEST_EXECSPACE, long double, Digits>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_digits10) {
+  TestNumericTraits<TEST_EXECSPACE, bool, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, char, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, signed char, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned char, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, short, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned short, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, int, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned int, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, long int, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long int, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, long long int, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long long int, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, float, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, double, Digits10>();
+  TestNumericTraits<TEST_EXECSPACE, long double, Digits10>();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_max_digits10) {
+  TestNumericTraits<TEST_EXECSPACE, float, MaxDigits10>();
+  TestNumericTraits<TEST_EXECSPACE, double, MaxDigits10>();
+  TestNumericTraits<TEST_EXECSPACE, long double, MaxDigits10>();
 }
 
 TEST(TEST_CATEGORY, numeric_traits_radix) {
