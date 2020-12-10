@@ -300,15 +300,12 @@ class half_t {
   }
 
   // Compund operators: upcast overloads for +=
-  // TODO: Determine why this overload is not considered
-  #if 1
   template <class T>
   KOKKOS_FUNCTION std::enable_if_t<
       std::is_same<T, float>::value || std::is_same<T, double>::value, T>
   friend operator+=(T lhs, half_t rhs) {
     return lhs + static_cast<T>(rhs);
   }
-#endif
 
   KOKKOS_FUNCTION
   half_t& operator+=(float rhs) {
