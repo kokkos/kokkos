@@ -303,8 +303,9 @@ class half_t {
   template <class T>
   KOKKOS_FUNCTION std::enable_if_t<
       std::is_same<T, float>::value || std::is_same<T, double>::value, T>
-  friend operator+=(T lhs, half_t rhs) {
-    return lhs + static_cast<T>(rhs);
+  friend operator+=(T& lhs, half_t rhs) {
+    lhs += static_cast<T>(rhs);
+    return lhs;
   }
 
   KOKKOS_FUNCTION
