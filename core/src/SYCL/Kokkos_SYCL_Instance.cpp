@@ -96,7 +96,21 @@ void SYCLInternal::initialize(const sycl::device& d) {
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
   const bool ok_dev  = true;
   if (ok_init && ok_dev) {
-    m_queue = std::make_unique<sycl::queue>(d);
+    auto exception_handler = [](sycl::exception_list exceptions) {
+      bool asynchronous_error = false;
+      for (std::exception_ptr const& e : exceptions) {
+        try {
+          std::rethrow_exception(e);
+        } catch (sycl::exception const& e) {
+          std::cerr << e.what() << '\n';
+          asynchronous_error = true;
+        }
+      }
+      if (asynchronous_error)
+        Kokkos::Impl::throw_runtime_exception(
+            "There was an asynchronous SYCL error!\n");
+    };
+    m_queue = std::make_unique<sycl::queue>(d, exception_handler);
     std::cout << SYCL::SYCLDevice(d) << '\n';
     m_indirectKernel.emplace(IndirectKernelAllocator(*m_queue));
   } else {
