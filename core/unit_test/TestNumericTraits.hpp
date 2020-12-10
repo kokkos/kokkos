@@ -48,35 +48,29 @@
 #include "Kokkos_ArithmeticTraits.hpp"
 #include "Kokkos_ExecPolicy.hpp"
 
-template <typename T>
 struct extrema {
-  static T min;
-  static T max;
-};
+#define DEFINE_EXTREMA(T, m, M)                 \
+  KOKKOS_FUNCTION static T min(T) { return m; } \
+  KOKKOS_FUNCTION static T max(T) { return M; }
 
-#define DEFINE_EXTREMA(T, m, M) \
-  template <>                   \
-  T extrema<T>::min = m;        \
-  template <>                   \
-  T extrema<T>::max = M
+  DEFINE_EXTREMA(char, CHAR_MIN, CHAR_MAX);
+  DEFINE_EXTREMA(signed char, SCHAR_MIN, SCHAR_MAX);
+  DEFINE_EXTREMA(unsigned char, 0, UCHAR_MAX);
+  DEFINE_EXTREMA(short, SHRT_MIN, SHRT_MAX);
+  DEFINE_EXTREMA(unsigned short, 0, USHRT_MAX);
+  DEFINE_EXTREMA(int, INT_MIN, INT_MAX);
+  DEFINE_EXTREMA(unsigned, 0U, UINT_MAX);
+  DEFINE_EXTREMA(long, LONG_MIN, LONG_MAX);
+  DEFINE_EXTREMA(unsigned long, 0UL, ULONG_MAX);
+  DEFINE_EXTREMA(long long, LLONG_MIN, LLONG_MAX);
+  DEFINE_EXTREMA(unsigned long long, 0ULL, ULLONG_MAX);
 
-DEFINE_EXTREMA(char, CHAR_MIN, CHAR_MAX);
-DEFINE_EXTREMA(signed char, SCHAR_MIN, SCHAR_MAX);
-DEFINE_EXTREMA(unsigned char, 0, UCHAR_MAX);
-DEFINE_EXTREMA(short, SHRT_MIN, SHRT_MAX);
-DEFINE_EXTREMA(unsigned short, 0, USHRT_MAX);
-DEFINE_EXTREMA(int, INT_MIN, INT_MAX);
-DEFINE_EXTREMA(unsigned, 0U, UINT_MAX);
-DEFINE_EXTREMA(long, LONG_MIN, LONG_MAX);
-DEFINE_EXTREMA(unsigned long, 0UL, ULONG_MAX);
-DEFINE_EXTREMA(long long, LLONG_MIN, LLONG_MAX);
-DEFINE_EXTREMA(unsigned long long, 0ULL, ULLONG_MAX);
-
-DEFINE_EXTREMA(float, -FLT_MAX, FLT_MAX);
-DEFINE_EXTREMA(double, -DBL_MAX, DBL_MAX);
-DEFINE_EXTREMA(long double, -LDBL_MAX, LDBL_MAX);
+  DEFINE_EXTREMA(float, -FLT_MAX, FLT_MAX);
+  DEFINE_EXTREMA(double, -DBL_MAX, DBL_MAX);
+  DEFINE_EXTREMA(long double, -LDBL_MAX, LDBL_MAX);
 
 #undef DEFINE_EXTREMA
+};
 
 struct Infinity {};
 struct Epsilon {};
@@ -129,8 +123,8 @@ struct TestNumericTraits {
     using Kokkos::Experimental::finite_min;
     auto const min = finite_min<T>::value;
     auto const max = finite_max<T>::value;
-    e += (int)!(min == extrema<T>::min);
-    e += (int)!(max == extrema<T>::max);
+    e += (int)!(min == extrema::min(T{}));
+    e += (int)!(max == extrema::max(T{}));
     (void)take_address_of(finite_min<T>::value);
     (void)take_address_of(finite_max<T>::value);
   }
