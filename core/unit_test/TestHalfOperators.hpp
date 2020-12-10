@@ -67,7 +67,7 @@ enum OP_TESTS {
   POSTFIX_INC,
   POSTFIX_DEC,
   CADD_H_H,
-  CADD_H_S,  
+  CADD_H_S,
   CADD_S_H,
   CADD_H_D,
   CADD_D_H,
@@ -432,7 +432,7 @@ struct Functor_TestHalfOperators {
 
     tmp_s_lhs = static_cast<float>(h_lhs);
     tmp_s_lhs += h_rhs;
-    actual_lhs(CADD_S_H) = static_cast<double>(tmp_s_lhs);
+    actual_lhs(CADD_S_H)   = static_cast<double>(tmp_s_lhs);
     expected_lhs(CADD_S_H) = d_lhs;
     expected_lhs(CADD_S_H) += d_rhs;
 
@@ -444,7 +444,7 @@ struct Functor_TestHalfOperators {
 
     tmp_d_lhs = static_cast<double>(h_lhs);
     tmp_d_lhs += h_rhs;
-    actual_lhs(CADD_D_H) = static_cast<double>(tmp_d_lhs);
+    actual_lhs(CADD_D_H)   = static_cast<double>(tmp_d_lhs);
     expected_lhs(CADD_D_H) = d_lhs;
     expected_lhs(CADD_D_H) += d_rhs;
 
