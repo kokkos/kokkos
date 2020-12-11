@@ -164,9 +164,18 @@ struct TestNumericTraits {
   }
 };
 
-#ifdef KOKKOS_COMPILER_NVCC
+#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_SYCL) || \
+    defined(KOKKOS_ENABLE_OPENMPTARGET)
 template <class Tag>
-struct TestNumericTraits<Kokkos::Cuda, long double, Tag> {
+struct TestNumericTraits<
+#if defined(KOKKOS_ENABLE_CUDA)
+    Kokkos::Cuda,
+#elif defined(KOKKOS_ENABLE_SYCL)
+    Kokkos::Experimental::SYCL,
+#else
+    Kokkos::Experimental::OpenMPTarget,
+#endif
+    long double, Tag> {
   template <class T>
   using trait = typename Tag::template trait<T>;
   TestNumericTraits() {
