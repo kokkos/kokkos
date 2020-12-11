@@ -159,7 +159,7 @@ class ParallelScanSYCLBase {
     });
 
     if (n_wgroups > 1) scan_internal(q, functor, group_results, n_wgroups);
-    q.wait();
+    m_policy.space().fence();
 
     q.submit([&](sycl::handler& cgh) {
       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
@@ -171,7 +171,7 @@ class ParallelScanSYCLBase {
                                &group_results[item.get_group_linear_id()]);
                        });
     });
-    q.wait();
+    m_policy.space().fence();
   }
 
   template <typename Functor>
@@ -201,7 +201,7 @@ class ParallelScanSYCLBase {
         ValueOps::copy(functor, &global_mem[id], &update);
       });
     });
-    q.wait();
+    space.fence();
 
     // Perform the actual exlcusive scan
     scan_internal(q, functor, m_scratch_space, len);
@@ -220,7 +220,7 @@ class ParallelScanSYCLBase {
         ValueOps::copy(functor, &global_mem[global_id], &update);
       });
     });
-    q.wait();
+    space.fence();
   }
 
   template <typename Functor>

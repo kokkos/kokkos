@@ -93,7 +93,14 @@ bool SYCL::impl_is_initialized() {
 
 void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
-void SYCL::fence() const { m_space_instance->m_queue->wait(); }
+void SYCL::fence() const {
+  try {
+    m_space_instance->m_queue->wait_and_throw();
+  } catch (sycl::exception const& e) {
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("There was a synchronous SYCL error:\n") + e.what());
+  }
+}
 
 int SYCL::sycl_device() const {
   return impl_internal_space_instance()->m_syclDev;
