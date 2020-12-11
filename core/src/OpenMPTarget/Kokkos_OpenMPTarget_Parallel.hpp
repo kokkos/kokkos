@@ -353,6 +353,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
+  using idx_type  = typename Policy::index_type;
 
   using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, WorkTag>;
   using ValueInit   = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
@@ -366,6 +367,19 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const FunctorType m_functor;
   const Policy m_policy;
 
+  template <class TagType>
+  inline typename std::enable_if<std::is_same<TagType, void>::value>::type
+  call_with_tag(const FunctorType& f, const idx_type& idx, value_type& val,
+                const bool& is_final) const {
+    f(idx, val, is_final);
+  }
+  template <class TagType>
+  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
+  call_with_tag(const FunctorType& f, const idx_type& idx, value_type& val,
+                const bool& is_final) const {
+    f(WorkTag(), idx, val, is_final);
+  }
+
  public:
   inline void impl_execute(
       Kokkos::View<value_type**, Kokkos::LayoutRight,
@@ -375,31 +389,35 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
           chunk_values,
       Kokkos::View<int64_t, Kokkos::Experimental::OpenMPTargetSpace> count)
       const {
-    const int64_t N        = m_policy.end() - m_policy.begin();
-    const int chunk_size   = 128;
-    const int64_t n_chunks = (N + chunk_size - 1) / chunk_size;
-    int nteams             = n_chunks > 512 ? 512 : n_chunks;
-    int team_size          = 128;
+    const idx_type N          = m_policy.end() - m_policy.begin();
+    const idx_type chunk_size = 128;
+    const idx_type n_chunks   = (N + chunk_size - 1) / chunk_size;
+    idx_type nteams           = n_chunks > 512 ? 512 : n_chunks;
+    idx_type team_size        = 128;
 
     FunctorType a_functor(m_functor);
 #pragma omp target teams distribute map(to                             \
                                         : a_functor) num_teams(nteams) \
     thread_limit(team_size)
-    for (int64_t team_id = 0; team_id < n_chunks; team_id++) {
+    for (idx_type team_id = 0; team_id < n_chunks; team_id++) {
 #pragma omp parallel num_threads(team_size)
       {
-        int64_t local_offset = team_id * chunk_size;
+        const idx_type local_offset = team_id * chunk_size;
 
 #pragma omp for
-        for (int i = 0; i < chunk_size; i++) {
-          int64_t idx = local_offset + i;
-          if (idx < N) a_functor(idx, element_values(team_id, i), false);
+        for (idx_type i = 0; i < chunk_size; i++) {
+          const idx_type idx = local_offset + i;
+          value_type val;
+          ValueInit::init(a_functor, &val);
+          if (idx < N) call_with_tag<WorkTag>(a_functor, idx, val, false);
+          element_values(team_id, i) = val;
         }
 #pragma omp barrier
         if (omp_get_thread_num() == 0) {
-          value_type sum = 0;
-          for (int i = 0; i < chunk_size; i++) {
-            sum += element_values(team_id, i);
+          value_type sum;
+          ValueInit::init(a_functor, &sum);
+          for (idx_type i = 0; i < chunk_size; i++) {
+            ValueJoin::join(a_functor, &sum, &element_values(team_id, i));
             element_values(team_id, i) = sum;
           }
           chunk_values(team_id) = sum;
@@ -407,9 +425,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 #pragma omp barrier
         if (omp_get_thread_num() == 0) {
           if (Kokkos::atomic_fetch_add(&count(), 1) == n_chunks - 1) {
-            value_type sum = 0;
-            for (int i = 0; i < n_chunks; i++) {
-              sum += chunk_values(i);
+            value_type sum;
+            ValueInit::init(a_functor, &sum);
+            for (idx_type i = 0; i < n_chunks; i++) {
+              ValueJoin::join(a_functor, &sum, &chunk_values(i));
               chunk_values(i) = sum;
             }
           }
@@ -420,18 +439,27 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 #pragma omp target teams distribute map(to                             \
                                         : a_functor) num_teams(nteams) \
     thread_limit(team_size)
-    for (int64_t team_id = 0; team_id < n_chunks; team_id++) {
+    for (idx_type team_id = 0; team_id < n_chunks; team_id++) {
 #pragma omp parallel num_threads(team_size)
       {
-        int64_t local_offset    = team_id * chunk_size;
-        value_type offset_value = team_id > 0 ? chunk_values(team_id - 1) : 0;
+        const idx_type local_offset = team_id * chunk_size;
+        value_type offset_value;
+        if (team_id > 0)
+          offset_value = chunk_values(team_id - 1);
+        else
+          ValueInit::init(a_functor, &offset_value);
 
 #pragma omp for
-        for (int i = 0; i < chunk_size; i++) {
-          int64_t idx = local_offset + i;
-          value_type local_offset_value =
-              (i > 0 ? element_values(team_id, i - 1) : 0) + offset_value;
-          if (idx < N) a_functor(idx, local_offset_value, true);
+        for (idx_type i = 0; i < chunk_size; i++) {
+          const idx_type idx = local_offset + i;
+          value_type local_offset_value;
+          if (i > 0) {
+            local_offset_value = element_values(team_id, i - 1);
+            ValueJoin::join(a_functor, &local_offset_value, &offset_value);
+          } else
+            local_offset_value = offset_value;
+          if (idx < N)
+            call_with_tag<WorkTag>(a_functor, idx, local_offset_value, true);
         }
       }
     }
@@ -442,9 +470,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const int64_t N        = m_policy.end() - m_policy.begin();
-    const int chunk_size   = 128;
-    const int64_t n_chunks = (N + chunk_size - 1) / chunk_size;
+    const idx_type N          = m_policy.end() - m_policy.begin();
+    const idx_type chunk_size = 128;
+    const idx_type n_chunks   = (N + chunk_size - 1) / chunk_size;
 
     // This could be scratch memory per team
     Kokkos::View<value_type**, Kokkos::LayoutRight,
