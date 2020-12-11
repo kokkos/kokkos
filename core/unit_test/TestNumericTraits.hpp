@@ -101,7 +101,7 @@ KOKKOS_FUNCTION void take_by_value(T) {}
 template <class Space, class T, class Tag>
 struct TestNumericTraits {
   template <class U>
-  using trait = typename Tag::trait<U>;
+  using trait = typename Tag::template trait<U>;
 
   TestNumericTraits() { run(); }
 
@@ -141,37 +141,19 @@ struct TestNumericTraits {
     use_on_device();
   }
 
-  KOKKOS_FUNCTION void operator()(FiniteMax, int, int& e) const {
-    use_on_device();
-  }
-  KOKKOS_FUNCTION void operator()(RoundError, int, int& e) const {
-    use_on_device();
-  }
-  KOKKOS_FUNCTION void operator()(NormMin, int, int& e) const {
-    use_on_device();
-  }
-  KOKKOS_FUNCTION void operator()(Digits, int, int& e) const {
-    use_on_device();
-  }
-  KOKKOS_FUNCTION void operator()(Digits10, int, int& e) const {
-    use_on_device();
-  }
-  KOKKOS_FUNCTION void operator()(MaxDigits10, int, int& e) const {
-    use_on_device();
-  }
-  KOKKOS_FUNCTION void operator()(Radix, int, int& e) const { use_on_device(); }
-  KOKKOS_FUNCTION void operator()(MinExponent, int, int& e) const {
-    use_on_device();
-  }
-  KOKKOS_FUNCTION void operator()(MaxExponent, int, int& e) const {
-    use_on_device();
-  }
-  KOKKOS_FUNCTION void operator()(MinExponent10, int, int& e) const {
-    use_on_device();
-  }
-  KOKKOS_FUNCTION void operator()(MaxExponent10, int, int& e) const {
-    use_on_device();
-  }
+  // clang-format off
+  KOKKOS_FUNCTION void operator()(FiniteMax, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(RoundError, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(NormMin, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(Digits, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(Digits10, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(MaxDigits10, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(Radix, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(MinExponent, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(MaxExponent, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(MinExponent10, int, int&) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(MaxExponent10, int, int&) const { use_on_device(); }
+  // clang-format on
 
   KOKKOS_FUNCTION void use_on_device() const {
 #ifndef KOKKOS_COMPILER_NVCC
@@ -186,7 +168,7 @@ struct TestNumericTraits {
 template <class Tag>
 struct TestNumericTraits<Kokkos::Cuda, long double, Tag> {
   template <class T>
-  using trait = typename Tag::trait<T>;
+  using trait = typename Tag::template trait<T>;
   TestNumericTraits() {
     (void)take_address_of(trait<long double>::value);
     // Do nothing on the device.
