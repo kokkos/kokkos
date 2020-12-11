@@ -239,6 +239,9 @@ void fence();
 namespace Kokkos {
 
 template <class DataType, class... Properties>
+struct ViewTraits;
+
+template <class DataType, class... Properties>
 class View;
 
 namespace Impl {
