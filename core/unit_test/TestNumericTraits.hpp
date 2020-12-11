@@ -156,10 +156,10 @@ struct TestNumericTraits {
   // clang-format on
 
   KOKKOS_FUNCTION void use_on_device() const {
-#ifndef KOKKOS_COMPILER_NVCC
-    (void)take_address_of(trait<T>::value);
-#else
+#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENMPTARGET)
     take_by_value(trait<T>::value);
+#else
+    (void)take_address_of(trait<T>::value);
 #endif
   }
 };
