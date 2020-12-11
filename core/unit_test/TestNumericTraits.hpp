@@ -45,6 +45,7 @@
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
+#include <type_traits>
 #include "Kokkos_ArithmeticTraits.hpp"
 #include "Kokkos_ExecPolicy.hpp"
 
@@ -72,25 +73,36 @@ struct extrema {
 #undef DEFINE_EXTREMA
 };
 
-struct Infinity {};
-struct Epsilon {};
-struct FiniteMinMax {};
-struct RoundError {};
-struct NormMin {};
-struct Digits {};
-struct Digits10 {};
-struct MaxDigits10 {};
-struct Radix {};
-struct MinMaxExponent {};
-struct MinMaxExponent10 {};
+// clang-format off
+struct Infinity { template <class T> using trait = Kokkos::Experimental::infinity<T>; };
+struct Epsilon { template <class T> using trait = Kokkos::Experimental::epsilon<T>; };
+struct FiniteMin { template <class T> using trait = Kokkos::Experimental::finite_min<T>; };
+struct FiniteMax { template <class T> using trait = Kokkos::Experimental::finite_max<T>; };
+struct RoundError { template <class T> using trait = Kokkos::Experimental::round_error<T>; };
+struct NormMin { template <class T> using trait = Kokkos::Experimental::norm_min<T>; };
+struct Digits { template <class T> using trait = Kokkos::Experimental::digits<T>; };
+struct Digits10 { template <class T> using trait = Kokkos::Experimental::digits10<T>; };
+struct MaxDigits10 { template <class T> using trait = Kokkos::Experimental::max_digits10<T>; };
+struct Radix { template <class T> using trait = Kokkos::Experimental::radix<T>; };
+struct MinExponent { template <class T> using trait = Kokkos::Experimental::min_exponent<T>; };
+struct MaxExponent { template <class T> using trait = Kokkos::Experimental::max_exponent<T>; };
+struct MinExponent10 { template <class T> using trait = Kokkos::Experimental::min_exponent10<T>; };
+struct MaxExponent10 { template <class T> using trait = Kokkos::Experimental::max_exponent10<T>; };
+// clang-format on
 
 template <class T>
 KOKKOS_FUNCTION T* take_address_of(T& arg) {
   return &arg;
 }
 
+template <class T>
+KOKKOS_FUNCTION void take_by_value(T) {}
+
 template <class Space, class T, class Tag>
 struct TestNumericTraits {
+  template <class U>
+  using trait = typename Tag::trait<U>;
+
   TestNumericTraits() { run(); }
 
   void run() const {
@@ -98,6 +110,7 @@ struct TestNumericTraits {
     Kokkos::parallel_reduce(Kokkos::RangePolicy<Space, Tag>(0, 1), *this,
                             errors);
     ASSERT_EQ(errors, 0);
+    (void)take_address_of(trait<T>::value);  // use on host
   }
 
   KOKKOS_FUNCTION void operator()(Infinity, int, int& e) const {
@@ -106,7 +119,7 @@ struct TestNumericTraits {
     auto const zero = T(0);
     e += (int)!(inf + inf == inf);
     e += (int)!(inf != zero);
-    (void)take_address_of(infinity<T>::value);
+    use_on_device();
   }
 
   KOKKOS_FUNCTION void operator()(Epsilon, int, int& e) const {
@@ -115,64 +128,74 @@ struct TestNumericTraits {
     auto const one = T(1);
     e += (int)!(one + eps != one);
     e += (int)!(one + eps / 2 == one);
-    (void)take_address_of(epsilon<T>::value);
+    use_on_device();
   }
 
-  KOKKOS_FUNCTION void operator()(FiniteMinMax, int, int& e) const {
+  KOKKOS_FUNCTION void operator()(FiniteMin, int, int& e) const {
     using Kokkos::Experimental::finite_max;
     using Kokkos::Experimental::finite_min;
     auto const min = finite_min<T>::value;
     auto const max = finite_max<T>::value;
     e += (int)!(min == extrema::min(T{}));
     e += (int)!(max == extrema::max(T{}));
-    (void)take_address_of(finite_min<T>::value);
-    (void)take_address_of(finite_max<T>::value);
+    use_on_device();
   }
 
-  KOKKOS_FUNCTION void operator()(RoundError, int, int&) const {
-    using Kokkos::Experimental::round_error;
-    (void)take_address_of(round_error<T>::value);
+  KOKKOS_FUNCTION void operator()(FiniteMax, int, int& e) const {
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(RoundError, int, int& e) const {
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(NormMin, int, int& e) const {
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(Digits, int, int& e) const {
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(Digits10, int, int& e) const {
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(MaxDigits10, int, int& e) const {
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(Radix, int, int& e) const { use_on_device(); }
+  KOKKOS_FUNCTION void operator()(MinExponent, int, int& e) const {
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(MaxExponent, int, int& e) const {
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(MinExponent10, int, int& e) const {
+    use_on_device();
+  }
+  KOKKOS_FUNCTION void operator()(MaxExponent10, int, int& e) const {
+    use_on_device();
   }
 
-  KOKKOS_FUNCTION void operator()(NormMin, int, int&) const {
-    using Kokkos::Experimental::norm_min;
-    (void)take_address_of(norm_min<T>::value);
-  }
-
-  KOKKOS_FUNCTION void operator()(Digits, int, int&) const {
-    using Kokkos::Experimental::digits;
-    (void)take_address_of(digits<T>::value);
-  }
-
-  KOKKOS_FUNCTION void operator()(Digits10, int, int&) const {
-    using Kokkos::Experimental::digits10;
-    (void)take_address_of(digits10<T>::value);
-  }
-
-  KOKKOS_FUNCTION void operator()(MaxDigits10, int, int&) const {
-    using Kokkos::Experimental::max_digits10;
-    (void)take_address_of(max_digits10<T>::value);
-  }
-
-  KOKKOS_FUNCTION void operator()(Radix, int, int&) const {
-    using Kokkos::Experimental::radix;
-    (void)take_address_of(radix<T>::value);
-  }
-
-  KOKKOS_FUNCTION void operator()(MinMaxExponent, int, int&) const {
-    using Kokkos::Experimental::max_exponent;
-    using Kokkos::Experimental::min_exponent;
-    (void)take_address_of(min_exponent<T>::value);
-    (void)take_address_of(max_exponent<T>::value);
-  }
-
-  KOKKOS_FUNCTION void operator()(MinMaxExponent10, int, int&) const {
-    using Kokkos::Experimental::max_exponent10;
-    using Kokkos::Experimental::min_exponent10;
-    (void)take_address_of(min_exponent10<T>::value);
-    (void)take_address_of(max_exponent10<T>::value);
+  KOKKOS_FUNCTION void use_on_device() const {
+#ifndef KOKKOS_COMPILER_NVCC
+    (void)take_address_of(trait<T>::value);
+#else
+    take_by_value(trait<T>::value);
+#endif
   }
 };
+
+#ifdef KOKKOS_COMPILER_NVCC
+template <class Tag>
+struct TestNumericTraits<Kokkos::Cuda, long double, Tag> {
+  template <class T>
+  using trait = typename Tag::trait<T>;
+  TestNumericTraits() {
+    (void)take_address_of(trait<long double>::value);
+    // Do nothing on the device.
+    // According to the doc
+    // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#constexpr-variables
+    // the traits member constant value cannot be directly used in device code.
+  }
+};
+#endif
 
 TEST(TEST_CATEGORY, numeric_traits_infinity) {
   TestNumericTraits<TEST_EXECSPACE, float, Infinity>();
@@ -199,25 +222,39 @@ TEST(TEST_CATEGORY, numeric_traits_norm_min) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_finite_min_max) {
-  TestNumericTraits<TEST_EXECSPACE, char, FiniteMinMax>();
-  TestNumericTraits<TEST_EXECSPACE, signed char, FiniteMinMax>();
-  TestNumericTraits<TEST_EXECSPACE, unsigned char, FiniteMinMax>();
+  TestNumericTraits<TEST_EXECSPACE, char, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, char, FiniteMax>();
+  TestNumericTraits<TEST_EXECSPACE, signed char, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, signed char, FiniteMax>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned char, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned char, FiniteMax>();
 
-  TestNumericTraits<TEST_EXECSPACE, short, FiniteMinMax>();
-  TestNumericTraits<TEST_EXECSPACE, unsigned short, FiniteMinMax>();
+  TestNumericTraits<TEST_EXECSPACE, short, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, short, FiniteMax>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned short, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned short, FiniteMax>();
 
-  TestNumericTraits<TEST_EXECSPACE, int, FiniteMinMax>();
-  TestNumericTraits<TEST_EXECSPACE, unsigned int, FiniteMinMax>();
+  TestNumericTraits<TEST_EXECSPACE, int, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, int, FiniteMax>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned int, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned int, FiniteMax>();
 
-  TestNumericTraits<TEST_EXECSPACE, long, FiniteMinMax>();
-  TestNumericTraits<TEST_EXECSPACE, unsigned long, FiniteMinMax>();
+  TestNumericTraits<TEST_EXECSPACE, long, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, long, FiniteMax>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long, FiniteMax>();
 
-  TestNumericTraits<TEST_EXECSPACE, long long, FiniteMinMax>();
-  TestNumericTraits<TEST_EXECSPACE, unsigned long long, FiniteMinMax>();
+  TestNumericTraits<TEST_EXECSPACE, long long, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, long long, FiniteMax>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long long, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, unsigned long long, FiniteMax>();
 
-  TestNumericTraits<TEST_EXECSPACE, float, FiniteMinMax>();
-  TestNumericTraits<TEST_EXECSPACE, double, FiniteMinMax>();
-  TestNumericTraits<TEST_EXECSPACE, long double, FiniteMinMax>();
+  TestNumericTraits<TEST_EXECSPACE, float, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, float, FiniteMax>();
+  TestNumericTraits<TEST_EXECSPACE, double, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, double, FiniteMax>();
+  TestNumericTraits<TEST_EXECSPACE, long double, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, long double, FiniteMax>();
 }
 
 TEST(TEST_CATEGORY, numeric_traits_digits) {
@@ -281,13 +318,19 @@ TEST(TEST_CATEGORY, numeric_traits_radix) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_min_max_exponent) {
-  TestNumericTraits<TEST_EXECSPACE, float, MinMaxExponent>();
-  TestNumericTraits<TEST_EXECSPACE, double, MinMaxExponent>();
-  TestNumericTraits<TEST_EXECSPACE, long double, MinMaxExponent>();
+  TestNumericTraits<TEST_EXECSPACE, float, MinExponent>();
+  TestNumericTraits<TEST_EXECSPACE, float, MaxExponent>();
+  TestNumericTraits<TEST_EXECSPACE, double, MinExponent>();
+  TestNumericTraits<TEST_EXECSPACE, double, MaxExponent>();
+  TestNumericTraits<TEST_EXECSPACE, long double, MinExponent>();
+  TestNumericTraits<TEST_EXECSPACE, long double, MaxExponent>();
 }
 
 TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
-  TestNumericTraits<TEST_EXECSPACE, float, MinMaxExponent10>();
-  TestNumericTraits<TEST_EXECSPACE, double, MinMaxExponent10>();
-  TestNumericTraits<TEST_EXECSPACE, long double, MinMaxExponent10>();
+  TestNumericTraits<TEST_EXECSPACE, float, MinExponent10>();
+  TestNumericTraits<TEST_EXECSPACE, float, MaxExponent10>();
+  TestNumericTraits<TEST_EXECSPACE, double, MinExponent10>();
+  TestNumericTraits<TEST_EXECSPACE, double, MaxExponent10>();
+  TestNumericTraits<TEST_EXECSPACE, long double, MinExponent10>();
+  TestNumericTraits<TEST_EXECSPACE, long double, MaxExponent10>();
 }
