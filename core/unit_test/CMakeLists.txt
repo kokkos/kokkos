@@ -455,27 +455,12 @@ if(Kokkos_ENABLE_SYCL)
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Atomics.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Atomics.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicViews.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_BlockSizeDeduction.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Crs.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_DeepCopyAlignment.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_LocalDeepCopy.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Other.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reductions.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_a.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_b.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_c.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reducers_d.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Reductions_DeviceView.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SharedAlloc.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c04.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c05.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c06.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c07.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c08.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c09.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c10.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c11.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_SubView_c12.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamBasic.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamReductionScan.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamScan.cpp
