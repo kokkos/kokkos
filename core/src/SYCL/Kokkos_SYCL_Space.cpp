@@ -65,10 +65,15 @@ void USM_memcpy(Kokkos::Experimental::Impl::SYCLInternal& space, void* dst,
 }
 
 void USM_memcpy(void* dst, const void* src, size_t n) {
-  Kokkos::Experimental::Impl::SYCLInternal::singleton().m_queue->wait();
-  USM_memcpy(*Kokkos::Experimental::Impl::SYCLInternal::singleton().m_queue,
-             dst, src, n)
-      .wait();
+  Experimental::SYCL().fence();
+  try {
+    USM_memcpy(*Kokkos::Experimental::Impl::SYCLInternal::singleton().m_queue,
+               dst, src, n)
+        .wait_and_throw();
+  } catch (sycl::exception const& e) {
+    Kokkos::Impl::throw_runtime_exception(
+        std::string("There was a synchronous SYCL error:\n") + e.what());
+  }
 }
 }  // namespace
 
