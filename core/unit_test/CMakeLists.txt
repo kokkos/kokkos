@@ -190,7 +190,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       # Write to a temporary intermediate file and call configure_file to avoid
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
-	  "#include <Test${TagHostAccessible}_Category.hpp>\n"
+          "#include <Test${TagHostAccessible}_Category.hpp>\n"
           "#include <Test${Name}.hpp>\n"
       )
       configure_file(${dir}/dummy.cpp ${file})
@@ -571,7 +571,9 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       TOOL kokkosprinter-tool
       COMMON_ARGS --kokkos-tools-help
       PASS_REGULAR_EXPRESSION
-        "kokkosp_init_library::kokkosp_print_help:KokkosCore_ProfilingAllCalls::[\n\r]")
+        "kokkosp_init_library::kokkosp_print_help:KokkosCore_ProfilingAllCalls::"
+      FAIL_REGULAR_EXPRESSION
+        "kokkosp_init_library::kokkosp_print_help:KokkosCore_ProfilingAllCalls::[A-Za-z]")
 
     # check help works via direct library specification
     KOKKOS_ADD_TEST( NAME ProfilingTestLibraryCmdLineHelp
@@ -579,7 +581,9 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       COMMON_ARGS --kokkos-tools-help
                   --kokkos-tools-library=$<TARGET_FILE:kokkosprinter-tool>
       PASS_REGULAR_EXPRESSION
-        "kokkosp_init_library::kokkosp_print_help:KokkosCore_ProfilingAllCalls::[\n\r]")
+        "kokkosp_init_library::kokkosp_print_help:KokkosCore_ProfilingAllCalls::"
+      FAIL_REGULAR_EXPRESSION
+        "kokkosp_init_library::kokkosp_print_help:KokkosCore_ProfilingAllCalls::[A-Za-z]")
 
     KOKKOS_ADD_TEST( NAME ProfilingTestLibraryLoad
       EXE  ProfilingAllCalls
