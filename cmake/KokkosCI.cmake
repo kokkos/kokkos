@@ -259,6 +259,13 @@ foreach(_ARG ${KOKKOS_CMAKE_ARGS})
     endif()
 endforeach()
 
+file(WRITE ${BINARY_REALDIR}/initial-cache.cmake
+"
+set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" CACHE STRING \"CMake CXX flags\")
+")
+
+set(CONFIG_ARGS "-C ${BINARY_REALDIR}/initial-cache.cmake ${CONFIG_ARGS}")
+
 # message(STATUS "BUILD_TYPE: ${BUILD_TYPE}; CONFIG: ${CONFIG}; CONFIG_VAR: ${CONFIG_VAR}")
 # message(STATUS "CONFIG_ARGS: ${CONFIG_ARGS}; BUILD_TYPE: ${BUILD_TYPE}")
 
