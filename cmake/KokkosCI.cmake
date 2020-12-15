@@ -181,12 +181,13 @@ SET_DEFAULT(SOURCE_DIR      "${WORKING_DIR}")           # source directory
 SET_DEFAULT(BINARY_DIR      "${WORKING_DIR}/build")     # build directory
 SET_DEFAULT(BUILD_TYPE      "${CMAKE_BUILD_TYPE}")      # Release, Debug, etc.
 SET_DEFAULT(MODEL           "Continuous")               # Continuous, Nightly, or Experimental
-SET_DEFAULT(SITE            "${HOSTNAME}")              # update site
 SET_DEFAULT(JOBS            1)                          # number of parallel ctests
 SET_DEFAULT(CTEST_COMMAND   "${CMAKE_CTEST_COMMAND}")   # just in case
 SET_DEFAULT(CTEST_ARGS      "-V --output-on-failure")   # extra arguments when ctest is called
 SET_DEFAULT(GIT_EXECUTABLE  "git")                      # ctest_update
 SET_DEFAULT(TARGET          "all")                      # build target
+SET_DEFAULT_ARG1(SITE       "$ENV{SITE}"
+                            "${HOSTNAME}")              # update site
 SET_DEFAULT_ARG1(BUILD_JOBS "$ENV{BUILD_JOBS}"
                             "${NUM_PROCESSORS}")        # number of parallel compile jobs
 #

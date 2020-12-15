@@ -70,6 +70,7 @@ script:
           -DKokkos_ENABLE_TESTS=On
           ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}}
           -DBUILD_NAME="${CC}-${BACKEND}${BUILD_NAME_SUFFIX}"
+          -DSITE=Travis
           -P cmake/KokkosCI.cmake &&
     pushd build &&
     make install DESTDIR=${PWD}/install && rm -rf ${PWD}/install/usr/local && rmdir ${PWD}/install/usr &&
