@@ -221,14 +221,14 @@ message(STATUS "")
 #-------------------------------------------------------------------------#
 # Non-zero exit codes for important errors
 #
-if(config_ret GREATER 0)
+if(NOT config_ret EQUAL 0)
     message(FATAL_ERROR "Error during configuration! Exit code: ${config_ret}")
 endif()
 
-if(build_ret GREATER 0)
+if(NOT build_ret EQUAL 0)
     message(FATAL_ERROR "Error during build! Exit code: ${build_ret}")
 endif()
 
-if(test_ret GREATER 0)
+if(NOT test_ret EQUAL 0)
     message(FATAL_ERROR "Error during testing! Exit code: ${test_ret}")
 endif()

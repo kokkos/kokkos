@@ -255,7 +255,7 @@ get_filename_component(BINARY_REALDIR ${BINARY_DIR} REALPATH)
 set(CONFIG_ARGS)
 foreach(_ARG ${KOKKOS_CMAKE_ARGS})
     if(NOT "${${_ARG}}" STREQUAL "")
-        set(CONFIG_ARGS "${CONFIG_ARGS} -D${_ARG}=\"${${_ARG}}\"")
+        set(CONFIG_ARGS "${CONFIG_ARGS} -D${_ARG}=${${_ARG}}")
     endif()
 endforeach()
 
@@ -300,6 +300,6 @@ execute_process(
     WORKING_DIRECTORY   ${BINARY_REALDIR}
     )
 
-if(RET GREATER 0)
+if(NOT RET EQUAL 0)
     message(FATAL_ERROR "CTest return non-zero exit code: ${RET}")
 endif()
