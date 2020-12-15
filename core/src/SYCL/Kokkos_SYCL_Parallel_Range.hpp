@@ -53,12 +53,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
  public:
   using Policy = ExecPolicy;
 
-  ParallelFor(const ParallelFor&) = delete;
-  ParallelFor(ParallelFor&&)      = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-  ParallelFor& operator=(ParallelFor&&) = delete;
-  ~ParallelFor()                        = default;
-
  private:
   using Member       = typename Policy::member_type;
   using WorkTag      = typename Policy::work_tag;
@@ -104,9 +98,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
     IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
 
-    // Placement new a copy of functor into USM shared memory
-    //
-    // Store it in a unique_ptr to call its destructor on scope exit
+    // Copy the functor into USM Shared Memory
     using KernelFunctorPtr =
         std::unique_ptr<FunctorType, IndirectKernelMem::Deleter>;
     KernelFunctorPtr kernelFunctorPtr = indirectKernelMem.copy_from(m_functor);
