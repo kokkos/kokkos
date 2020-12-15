@@ -34,7 +34,7 @@ pipeline {
                     }
                     environment {
                         BUILD_JOBS = 8
-                        SITE = Jenkins
+                        SITE = 'Jenkins'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -74,7 +74,7 @@ pipeline {
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
                         BUILD_JOBS = 8
-                        SITE = Jenkins
+                        SITE = 'Jenkins'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -111,7 +111,7 @@ pipeline {
                     }
                     environment {
                         BUILD_JOBS = 8
-                        SITE = Jenkins
+                        SITE = 'Jenkins'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -145,7 +145,7 @@ pipeline {
                     }
                     environment {
                         BUILD_JOBS = 8
-                        SITE = Jenkins
+                        SITE = 'Jenkins'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -180,7 +180,7 @@ pipeline {
                     }
                     environment {
                         BUILD_JOBS = 8
-                        SITE = Jenkins
+                        SITE = 'Jenkins'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -252,7 +252,7 @@ pipeline {
                         OMP_PROC_BIND = 'spread'
                         NVCC_WRAPPER_DEFAULT_COMPILER = 'g++-8'
                         BUILD_JOBS = 8
-                        SITE = Jenkins
+                        SITE = 'Jenkins'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -312,7 +312,7 @@ pipeline {
                     }
                     environment {
                         BUILD_JOBS = 8
-                        SITE = Jenkins
+                        SITE = 'Jenkins'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -355,7 +355,7 @@ pipeline {
                         OMP_NUM_THREADS = 8
                         OMP_PROC_BIND = 'true'
                         BUILD_JOBS = 8
-                        SITE = Jenkins
+                        SITE = 'Jenkins'
                     }
                     steps {
                         sh '''rm -rf build && \
