@@ -69,8 +69,11 @@ void test_bug_pr_3103() {
                        PoorMansLambda());
 }
 
+// FIXME_SYCL requires TeamPolicy
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, test_block_deduction_bug_pr_3103) {
   test_bug_pr_3103<TEST_EXECSPACE>();
 }
+#endif
 
 #endif
