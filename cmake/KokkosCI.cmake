@@ -4,7 +4,7 @@ message(STATUS "")
 
 get_cmake_property(_cached_vars CACHE_VARIABLES)
 set(KOKKOS_CMAKE_ARGS)
-set(EXCLUDED_VARIABLES "CMAKE_COMMAND" "CMAKE_CPACK_COMMAND" "CMAKE_CTEST_COMMAND" "CMAKE_ROOT" "CTEST_ARGS" "BUILD_NAME")
+set(EXCLUDED_VARIABLES "CMAKE_COMMAND" "CMAKE_CPACK_COMMAND" "CMAKE_CTEST_COMMAND" "CMAKE_ROOT" "CTEST_ARGS" "BUILD_NAME" "CMAKE_CXX_FLAGS")
 list(SORT _cached_vars)
 foreach(_var ${_cached_vars})
     if(NOT "${_var}" IN_LIST EXCLUDED_VARIABLES)
@@ -105,6 +105,20 @@ function(GET_GIT_BRANCH_NAME VAR)
         list(GET GIT_DESCRIPTION 0 GIT_DESCRIPTION)
         string(REPLACE "heads/" "" GIT_DESCRIPTION "${GIT_DESCRIPTION}")
         set(${VAR} "${GIT_DESCRIPTION}" PARENT_SCOPE)
+    else()
+        execute_process(COMMAND ${GIT_EXECUTABLE} show -s --format=%D
+            OUTPUT_VARIABLE GIT_DESCRIPTION
+            RESULT_VARIABLE RET
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+        if(RET EQUAL 0)
+            string(REPLACE " " ";" GIT_DESCRIPTION "${GIT_DESCRIPTION}")
+            set(_DESC)
+            foreach(_ITR "${GIT_DESCRIPTION}")
+                set(_DESC "${_ITR}")
+            endforeach()
+            set(${VAR} "${_DESC}" PARENT_SCOPE)
+        endif()
     endif()
     message(STATUS "GIT BRANCH via '${GIT_EXECUTABLE} describe --all': ${GIT_DESCRIPTION}")
 endfunction()
@@ -235,13 +249,12 @@ get_filename_component(BINARY_REALDIR ${BINARY_DIR} REALPATH)
 #
 #----------------------------------------------------------------------------------------#
 
+set(CONFIG_ARGS)
 foreach(_ARG ${KOKKOS_CMAKE_ARGS})
     if(NOT "${${_ARG}}" STREQUAL "")
-        list(APPEND CONFIG_ARGS "-D${_ARG}=${${_ARG}}")
+        set(CONFIG_ARGS "${CONFIG_ARGS} -D${_ARG}=\"${${_ARG}}\"")
     endif()
 endforeach()
-
-string(REPLACE ";" " " CONFIG_ARGS  "${CONFIG_ARGS}")
 
 # message(STATUS "BUILD_TYPE: ${BUILD_TYPE}; CONFIG: ${CONFIG}; CONFIG_VAR: ${CONFIG_VAR}")
 # message(STATUS "CONFIG_ARGS: ${CONFIG_ARGS}; BUILD_TYPE: ${BUILD_TYPE}")
