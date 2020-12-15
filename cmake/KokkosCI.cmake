@@ -96,32 +96,20 @@ endif()
 
 # just gets the git branch name if available
 function(GET_GIT_BRANCH_NAME VAR)
-    execute_process(COMMAND ${GIT_EXECUTABLE} describe --all
+    execute_process(COMMAND ${GIT_EXECUTABLE} show -s --format=%D
         OUTPUT_VARIABLE GIT_DESCRIPTION
         RESULT_VARIABLE RET
         OUTPUT_STRIP_TRAILING_WHITESPACE
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
     if(RET EQUAL 0)
-        string(REPLACE " " ";" GIT_DESCRIPTION "${GIT_DESCRIPTION}")
-        list(GET GIT_DESCRIPTION 0 GIT_DESCRIPTION)
-        string(REPLACE "heads/" "" GIT_DESCRIPTION "${GIT_DESCRIPTION}")
+        string(REPLACE " " ";" _DESC "${GIT_DESCRIPTION}")
+        # just set it to last one via loop instead of wonky cmake index manip
+        foreach(_ITR ${_DESC})
+            set(GIT_DESCRIPTION "${_ITR}")
+        endforeach()
         set(${VAR} "${GIT_DESCRIPTION}" PARENT_SCOPE)
-    else()
-        execute_process(COMMAND ${GIT_EXECUTABLE} show -s --format=%D
-            OUTPUT_VARIABLE GIT_DESCRIPTION
-            RESULT_VARIABLE RET
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-        if(RET EQUAL 0)
-            string(REPLACE " " ";" GIT_DESCRIPTION "${GIT_DESCRIPTION}")
-            set(_DESC)
-            foreach(_ITR "${GIT_DESCRIPTION}")
-                set(_DESC "${_ITR}")
-            endforeach()
-            set(${VAR} "${_DESC}" PARENT_SCOPE)
-        endif()
+        message(STATUS "GIT BRANCH via '${GIT_EXECUTABLE} show -s --format=%D': ${GIT_DESCRIPTION}")
     endif()
-    message(STATUS "GIT BRANCH via '${GIT_EXECUTABLE} describe --all': ${GIT_DESCRIPTION}")
 endfunction()
 
 # just gets the git branch name if available
@@ -206,13 +194,11 @@ SET_DEFAULT(STOP_TIME       "")
 SET_DEFAULT(LABELS          "")
 SET_DEFAULT(NOTES           "")
 
-set(BUILD_TAG "[${BUILD_NAME}]")
+# default static build tag for Nightly
+set(BUILD_TAG "${BRANCH}")
 
-if("${MODEL}" STREQUAL "Nightly")
-    # build a static name if nightly
-    set(BUILD_TAG "${BRANCH}")
-else()
-    # build a dynamic name if continuous or experimental model
+# generate dynamic name if continuous or experimental model
+if(NOT "${MODEL}" STREQUAL "Nightly")
     if(EVENT_TYPE AND PULL_REQUEST_NUM)
         # e.g. pull_request #123
         set(BUILD_TAG "${EVENT_TYPE} #${PULL_REQUEST_NUM}")
@@ -227,11 +213,12 @@ else()
     endif()
 endif()
 
+# unnecessary
 string(REPLACE "/remotes/" "/" BUILD_TAG "${BUILD_TAG}")
 
 message(STATUS "BUILD_TAG: ${BUILD_TAG}")
 
-set(BUILD_NAME "[${BUILD_NAME}][${BUILD_TAG}][${BUILD_TYPE}]")
+set(BUILD_NAME "[${BUILD_TAG}] [${BUILD_NAME}-${BUILD_TYPE}]")
 
 # check binary directory
 if(EXISTS ${BINARY_DIR})
@@ -256,16 +243,33 @@ get_filename_component(BINARY_REALDIR ${BINARY_DIR} REALPATH)
 set(CONFIG_ARGS)
 foreach(_ARG ${KOKKOS_CMAKE_ARGS})
     if(NOT "${${_ARG}}" STREQUAL "")
-        set(CONFIG_ARGS "${CONFIG_ARGS} -D${_ARG}=${${_ARG}}")
+        get_property(_ARG_TYPE CACHE ${_ARG} PROPERTY TYPE)
+        if("${_ARG_TYPE}" STREQUAL "UNINITIALIZED")
+            if("${${_ARG}}" STREQUAL "ON" OR "${${_ARG}}" STREQUAL "OFF")
+                set(_ARG_TYPE "BOOL")
+            elseif(EXISTS "${${_ARG}}" AND NOT IS_DIRECTORY "${${_ARG}}")
+                set(_ARG_TYPE "FILEPATH")
+            elseif(EXISTS "${${_ARG}}" AND IS_DIRECTORY "${${_ARG}}")
+                set(_ARG_TYPE "PATH")
+            elseif(NOT "${${_ARG}}" STREQUAL "")
+                set(_ARG_TYPE "STRING")
+            endif()
+        endif()
+        set(CONFIG_ARGS "${CONFIG_ARGS}set(${_ARG} \"${${_ARG}}\" CACHE ${_ARG_TYPE} \"\")\n")
     endif()
 endforeach()
 
 file(WRITE ${BINARY_REALDIR}/initial-cache.cmake
 "
-set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" CACHE STRING \"CMake CXX flags\")
+set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS}\" CACHE STRING \"\")
+${CONFIG_ARGS}
 ")
 
-set(CONFIG_ARGS "-C ${BINARY_REALDIR}/initial-cache.cmake ${CONFIG_ARGS}")
+file(READ ${BINARY_REALDIR}/initial-cache.cmake _CACHE_INFO)
+message(STATUS "Initial cache:\n${_CACHE_INFO}")
+
+# initialize the cache
+set(CONFIG_ARGS "-C ${BINARY_REALDIR}/initial-cache.cmake")
 
 # message(STATUS "BUILD_TYPE: ${BUILD_TYPE}; CONFIG: ${CONFIG}; CONFIG_VAR: ${CONFIG_VAR}")
 # message(STATUS "CONFIG_ARGS: ${CONFIG_ARGS}; BUILD_TYPE: ${BUILD_TYPE}")

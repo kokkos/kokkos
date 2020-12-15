@@ -75,6 +75,9 @@ pipeline {
                         OMP_PROC_BIND = 'spread'
                         BUILD_JOBS = 8
                         SITE = 'Jenkins'
+                        LANGUAGE = 'en_US.UTF-8'
+                        LANG = 'en_US.UTF-8'
+                        LC_ALL = 'en_US.UTF-8'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -112,6 +115,9 @@ pipeline {
                     environment {
                         BUILD_JOBS = 8
                         SITE = 'Jenkins'
+                        LANGUAGE = 'en_US.UTF-8'
+                        LANG = 'en_US.UTF-8'
+                        LC_ALL = 'en_US.UTF-8'
                     }
                     steps {
                         sh 'ccache --zero-stats'
