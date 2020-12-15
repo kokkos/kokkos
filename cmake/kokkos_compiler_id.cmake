@@ -112,7 +112,7 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   ENDIF()
   # The clang based Intel compiler reports as Clang to most versions of CMake
   EXECUTE_PROCESS(COMMAND ${CMAKE_CXX_COMPILER} --version
-                  COMMAND grep -c icpx
+                  COMMAND grep -c "DPC++\\|icpx"
                   OUTPUT_VARIABLE INTERNAL_HAVE_INTEL_COMPILER
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   IF (INTERNAL_HAVE_INTEL_COMPILER) #not actually Clang
