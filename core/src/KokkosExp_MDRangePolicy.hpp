@@ -293,6 +293,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
           ? iteration_pattern::inner_direction
           : default_inner_direction<typename traits::execution_space>::value;
 
+  static constexpr auto Right = Iterate::Right;
+  static constexpr auto Left  = Iterate::Left;
+
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
     return m_space;
   }
