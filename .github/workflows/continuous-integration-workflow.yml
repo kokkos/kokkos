@@ -44,7 +44,7 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
-            -DBUILD_NAME=${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.openmp }} \
+            -DBUILD_NAME=${{ matrix.distro }}-${{ matrix.cxx }} \
             -DBUILD_JOBS=2 -DBINARY_DIR=builddir -DSITE=GitHub-Linux \
             -P cmake/KokkosCI.cmake
           ccache -s
