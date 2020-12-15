@@ -230,8 +230,20 @@ TEST_F(TEST_CATEGORY_FIXTURE(count_bugs), zero_work_reduce) {
   auto graph = Kokkos::Experimental::create_graph(ex, [&](auto root) {
     root.then_parallel_reduce(0, set_result_functor{bugs}, count);
   });
+// These fences are only necessary because of the weirdness of how CUDA
+// UVM works on pre pascal cards.
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
+    (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
+  Kokkos::fence();
+#endif
   graph.submit();
   Kokkos::deep_copy(ex, count, 1);
+// These fences are only necessary because of the weirdness of how CUDA
+// UVM works on pre pascal cards.
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
+    (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
+  Kokkos::fence();
+#endif
   graph.submit();  // should reset to 0, but doesn't
   Kokkos::deep_copy(ex, count_host, count);
   ex.fence();
