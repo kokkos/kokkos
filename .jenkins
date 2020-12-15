@@ -270,7 +270,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
-                                -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
+                                -DCMAKE_INSTALL_PREFIX=${PWD}/install \
                                 -DBUILD_NAME=CUDA-11.0-NVCC-C++17-RDC \
                                 -DTARGET=install \
                               -P cmake/KokkosCI.cmake && \
