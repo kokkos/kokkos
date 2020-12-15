@@ -4,7 +4,8 @@ message(STATUS "")
 
 get_cmake_property(_cached_vars CACHE_VARIABLES)
 set(KOKKOS_CMAKE_ARGS)
-set(EXCLUDED_VARIABLES "CMAKE_COMMAND" "CMAKE_CPACK_COMMAND" "CMAKE_CTEST_COMMAND" "CMAKE_ROOT" "CTEST_ARGS" "BUILD_NAME" "CMAKE_CXX_FLAGS")
+set(EXCLUDED_VARIABLES "CMAKE_COMMAND" "CMAKE_CPACK_COMMAND" "CMAKE_CTEST_COMMAND" "CMAKE_ROOT"
+                       "CTEST_ARGS" "BUILD_NAME" "CMAKE_CXX_FLAGS" "CMAKE_BUILD_TYPE")
 list(SORT _cached_vars)
 foreach(_var ${_cached_vars})
     if(NOT "${_var}" IN_LIST EXCLUDED_VARIABLES)
@@ -224,6 +225,8 @@ else()
         set(BUILD_TAG "${BUILD_TAG}-${EVENT_TYPE}")
     endif()
 endif()
+
+string(REPLACE "/remotes/" "/" BUILD_TAG "${BUILD_TAG}")
 
 message(STATUS "BUILD_TAG: ${BUILD_TAG}")
 
