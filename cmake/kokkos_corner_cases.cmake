@@ -55,5 +55,8 @@ IF (KOKKOS_CXX_STANDARD STREQUAL 17)
   IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11)
     MESSAGE(FATAL_ERROR "You have requested C++17 support for NVCC ${KOKKOS_CXX_COMPILER_VERSION}. NVCC only supports C++17 from version 11 on. Please reduce the C++ standard to 14 or upgrade the compiler if you need C++17 support.")
   ENDIF()
+  IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND NOT KOKKOS_ENABLE_CUDA_CONSTEXPR)
+    MESSAGE(FATAL_ERROR "You have requested C++17 support for NVCC ${KOKKOS_CXX_COMPILER_VERSION}, but you forgot to enable relaxed constexpr. Please reduce the C++ standard to 14 or re-configure with -DKokkos_ENABLE_CUDA_CONSTEXPR=ON")
+  ENDIF()
 ENDIF()
 
