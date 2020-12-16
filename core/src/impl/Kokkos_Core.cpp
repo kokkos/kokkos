@@ -277,7 +277,8 @@ void initialize_profiling(const InitArguments& args) {
     if (!Kokkos::Profiling::printHelp(args.tool_args)) {
       std::cerr << "Tool has not provided a help message" << std::endl;
     }
-    std::exit(EXIT_FAILURE);
+    ::Kokkos::finalize();
+    std::exit(EXIT_SUCCESS);
   }
   Kokkos::Profiling::parseArgs(args.tool_args);
 }
