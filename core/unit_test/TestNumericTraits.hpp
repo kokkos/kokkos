@@ -46,7 +46,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <type_traits>
-#include "Kokkos_ArithmeticTraits.hpp"
+#include "Kokkos_NumericTraits.hpp"
 #include "Kokkos_ExecPolicy.hpp"
 
 struct extrema {

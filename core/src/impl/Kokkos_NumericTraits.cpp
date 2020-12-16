@@ -1,4 +1,4 @@
-#include <Kokkos_ArithmeticTraits.hpp>
+#include <Kokkos_NumericTraits.hpp>
 
 // NOTE These out-of class definitions are only required with C++14.  Since
 // C++17, a static data member declared constrexpr is impllictly inline.
