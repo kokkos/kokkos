@@ -103,7 +103,11 @@ struct TestNumericTraits {
   template <class U>
   using trait = typename Tag::template trait<U>;
 
-  TestNumericTraits() { run(); }
+  Kokkos::View<T, Space> compare;
+  TestNumericTraits() {
+    compare = Kokkos::View<T, Space>("C");
+    run();
+  }
 
   void run() const {
     int errors = 0;
@@ -126,8 +130,11 @@ struct TestNumericTraits {
     using Kokkos::Experimental::epsilon;
     auto const eps = epsilon<T>::value;
     auto const one = T(1);
-    e += (int)!(one + eps != one);
-    e += (int)!(one + eps / 2 == one);
+    // Avoid higher precision intermediate representation
+    compare() = one + eps;
+    e += (int)!(compare() != one);
+    compare() = one + eps / 2;
+    e += (int)!(compare() == one);
     use_on_device();
   }
 
