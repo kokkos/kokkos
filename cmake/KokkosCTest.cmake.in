@@ -207,7 +207,9 @@ foreach(_FILE ${NOTE_FILES})
     include("${_FILE}")
 endforeach()
 
-ctest_submit(RETURN_VALUE ret)
+ctest_submit(RETURN_VALUE submit_ret
+    RETRY_COUNT 2
+    RETRY_DELAY 10)
 
 
 #-------------------------------------------------------------------------#
