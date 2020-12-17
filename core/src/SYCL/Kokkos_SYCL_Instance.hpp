@@ -106,7 +106,7 @@ class SYCLInternal {
       assert(!rhs.m_size);
 
       using std::swap;
-      //swap(lhs.m_q, rhs.m_q);
+      swap(lhs.m_q, rhs.m_q);
       swap(lhs.m_data, rhs.m_data);
       swap(lhs.m_size, rhs.m_size);
       swap(lhs.m_capacity, rhs.m_capacity);
@@ -117,29 +117,11 @@ class SYCLInternal {
     USMObjectMem& operator=(USMObjectMem const&) = delete;
 
     USMObjectMem(USMObjectMem&& that) noexcept : USMObjectMem() {
-//	    swap(*this, that);
-      m_q = that.m_q;
-      m_data = that.m_data;
-      m_size = that.m_size;
-      m_capacity = that.m_capacity;
-      
-      that.m_data = nullptr;
-      that.m_size = 0;
-      that.m_capacity = 0;
-      std::abort();
+      swap(*this, that);
     }
 
     USMObjectMem& operator=(USMObjectMem&& that) noexcept {
-      m_q = that.m_q;
-      m_data = that.m_data;
-      m_size = that.m_size;
-      m_capacity = that.m_capacity;
-
-      that.m_data = nullptr;
-      that.m_size = 0;
-      that.m_capacity = 0;
-
-      //swap(*this, that);
+      swap(*this, that);
 
       return *this;
     }
