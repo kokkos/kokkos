@@ -106,7 +106,7 @@ class SYCLInternal {
       assert(!rhs.m_size);
 
       using std::swap;
-      swap(lhs.m_q, rhs.m_q);
+      //swap(lhs.m_q, rhs.m_q);
       swap(lhs.m_data, rhs.m_data);
       swap(lhs.m_size, rhs.m_size);
       swap(lhs.m_capacity, rhs.m_capacity);
