@@ -86,6 +86,7 @@ script:
     cmake ..
           ${BACKEND:+-DKokkos_ENABLE_${BACKEND}=On}
           -DCMAKE_CXX_FLAGS="${CXXFLAGS} -Werror"
+          -DCMAKE_CXX_STANDARD=14
           -DKokkos_ENABLE_COMPILER_WARNINGS=ON
           -DKokkos_ENABLE_TESTS=On
           ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}} &&
