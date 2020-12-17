@@ -117,11 +117,29 @@ class SYCLInternal {
     USMObjectMem& operator=(USMObjectMem const&) = delete;
 
     USMObjectMem(USMObjectMem&& that) noexcept : USMObjectMem() {
-      swap(*this, that);
+	    swap(*this, that);
+/*      m_q = that.m_q;
+      m_data = that.m_data;
+      m_size = that.m_size;
+      m_capacity = that.m_capacity;
+      
+      that.m_data = nullptr;
+      that.m_size = 0;
+      that.m_capacity = 0;*/
     }
 
     USMObjectMem& operator=(USMObjectMem&& that) noexcept {
+/*      m_q = that.m_q;
+      m_data = that.m_data;
+      m_size = that.m_size;
+      m_capacity = that.m_capacity;
+
+      that.m_data = nullptr;
+      that.m_size = 0;
+      that.m_capacity = 0;*/
+
       swap(*this, that);
+
       return *this;
     }
 
