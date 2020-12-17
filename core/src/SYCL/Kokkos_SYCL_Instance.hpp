@@ -126,19 +126,20 @@ class SYCLInternal {
       that.m_data = nullptr;
       that.m_size = 0;
       that.m_capacity = 0;
+      std::abort();
     }
 
     USMObjectMem& operator=(USMObjectMem&& that) noexcept {
-/*      m_q = that.m_q;
+      m_q = that.m_q;
       m_data = that.m_data;
       m_size = that.m_size;
       m_capacity = that.m_capacity;
 
       that.m_data = nullptr;
       that.m_size = 0;
-      that.m_capacity = 0;*/
+      that.m_capacity = 0;
 
-      swap(*this, that);
+      //swap(*this, that);
 
       return *this;
     }
@@ -276,10 +277,10 @@ class SYCLInternal {
   // copied to USM device memory before being executed, to get around the
   // trivially copyable limitation of SYCL.
   using IndirectKernelMem = USMObjectMem<sycl::usm::alloc::shared>;
-  IndirectKernelMem m_indirectKernelMem;
+  std::unique_ptr<IndirectKernelMem> m_indirectKernelMem;
 
   using ReductionResultMem = USMObjectMem<sycl::usm::alloc::shared>;
-  ReductionResultMem m_reductionResultMem;
+  std::unique_ptr<ReductionResultMem> m_reductionResultMem;
 
   static int was_finalized;
 

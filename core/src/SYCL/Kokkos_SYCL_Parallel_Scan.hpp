@@ -231,7 +231,7 @@ class ParallelScanSYCLBase {
         *space.impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
+    IndirectKernelMem& indirectKernelMem = *instance.m_indirectKernelMem;
 
     // Copy functor into USM shared memory
     //

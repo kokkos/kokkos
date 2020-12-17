@@ -153,7 +153,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         *space.impl_internal_space_instance();
     using ReductionResultMem =
         Experimental::Impl::SYCLInternal::ReductionResultMem;
-    ReductionResultMem& reductionResultMem = instance.m_reductionResultMem;
+    ReductionResultMem& reductionResultMem = *instance.m_reductionResultMem;
     sycl::queue& q                         = *instance.m_queue;
 
     value_type identity{};
@@ -237,7 +237,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         *space.impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
+    IndirectKernelMem& indirectKernelMem = *instance.m_indirectKernelMem;
 
     // Store a copy of the functor in indirectKernelMem
     using KernelFunctorPtr =

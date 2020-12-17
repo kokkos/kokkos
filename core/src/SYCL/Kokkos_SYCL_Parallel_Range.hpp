@@ -96,7 +96,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
         *space.impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
+    IndirectKernelMem& indirectKernelMem = *instance.m_indirectKernelMem;
 
     // Copy the functor into USM Shared Memory
     using KernelFunctorPtr =
@@ -249,7 +249,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         *space.impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
+    IndirectKernelMem& indirectKernelMem = *instance.m_indirectKernelMem;
 
     // Copy the functor into USM Shared Memory
     using KernelFunctorPtr =

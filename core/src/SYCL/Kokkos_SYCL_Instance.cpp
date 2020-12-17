@@ -112,8 +112,8 @@ void SYCLInternal::initialize(const sycl::device& d) {
     };
     m_queue = std::make_unique<sycl::queue>(d, exception_handler);
     std::cout << SYCL::SYCLDevice(d) << '\n';
-    m_indirectKernelMem  = IndirectKernelMem(*m_queue);
-    m_reductionResultMem = ReductionResultMem(*m_queue);
+    m_indirectKernelMem  = std::make_unique<IndirectKernelMem>(*m_queue);
+    m_reductionResultMem = std::make_unique<ReductionResultMem>(*m_queue);
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
@@ -133,8 +133,8 @@ void SYCLInternal::finalize() {
     std::abort();
   }
 
-  m_reductionResultMem = ReductionResultMem();
-  m_indirectKernelMem  = IndirectKernelMem();
+  m_reductionResultMem.reset();
+  m_indirectKernelMem.reset();
   m_queue.reset();
 }
 
