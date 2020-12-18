@@ -45,7 +45,7 @@
 #ifndef KOKKOS_SYCL_INSTANCE_HPP_
 #define KOKKOS_SYCL_INSTANCE_HPP_
 
-#include <memory>
+#include <optional>
 #include <CL/sycl.hpp>
 
 namespace Kokkos {
@@ -68,7 +68,7 @@ class SYCLInternal {
   size_type* m_scratchSpace = nullptr;
   size_type* m_scratchFlags = nullptr;
 
-  std::unique_ptr<sycl::queue> m_queue;
+  std::optional<sycl::queue> m_queue;
 
   // An indirect kernel is one where the functor to be executed is explicitly
   // created in USM shared memory before being executed, to get around the
@@ -91,7 +91,7 @@ class SYCLInternal {
 
   void initialize(const sycl::device& d);
 
-  int is_initialized() const { return m_queue != nullptr; }
+  int is_initialized() const { return m_queue.has_value(); }
 
   void finalize();
 };
