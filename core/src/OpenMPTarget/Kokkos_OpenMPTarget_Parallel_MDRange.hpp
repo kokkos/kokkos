@@ -568,6 +568,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
+  // TODO DZP: based on a conversation with Christian, we're using 256 as a
+  // heuristic here. We need something better once we can query these kinds of
+  // properties
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy&, const Functor&) {
+    return 256;
+  }
 };
 
 }  // namespace Impl
@@ -757,6 +764,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     //                                , Kokkos::HostSpace >::value
     //  , "Reduction result on Kokkos::Experimental::OpenMPTarget must be a
     //  Kokkos::View in HostSpace" );
+  }
+  // TODO DZP: based on a conversation with Christian, we're using 256 as a
+heuristic
+  // here. We need something better once we can query these kinds of properties
+  template<typename Policy, typename Functor>
+static int max_tile_size_product(const Policy&, const Functor&) {
+    return 256;
   }
 };*/
 

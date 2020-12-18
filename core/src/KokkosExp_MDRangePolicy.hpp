@@ -48,7 +48,7 @@
 #include <initializer_list>
 
 #include <Kokkos_Layout.hpp>
-
+#include <Kokkos_Array.hpp>
 #include <impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Parallel.hpp>
@@ -231,6 +231,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   point_type m_tile_end       = {};
   index_type m_num_tiles      = 1;
   index_type m_prod_tile_dims = 1;
+  bool m_tune_tile_size       = false;
 
   /*
     // NDE enum impl definition alternative - replace static constexpr int ?
@@ -354,7 +355,14 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_tile(p.m_tile),
         m_tile_end(p.m_tile_end),
         m_num_tiles(p.m_num_tiles),
-        m_prod_tile_dims(p.m_prod_tile_dims) {}
+        m_prod_tile_dims(p.m_prod_tile_dims),
+        m_tune_tile_size(p.m_tune_tile_size) {}
+
+  void impl_change_tile_size(const point_type& tile) {
+    m_tile = tile;
+    init(m_lower, m_upper, m_tile);
+  }
+  bool impl_tune_tile_size() const { return m_tune_tile_size; }
 
  private:
   void init() {
@@ -376,6 +384,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       for (int i = 0; i < rank; ++i) {
         span = m_upper[i] - m_lower[i];
         if (m_tile[i] <= 0) {
+          m_tune_tile_size = true;
           if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
               ((int)inner_direction == (int)Left && (i > 0))) {
             m_tile[i] = 2;
@@ -413,6 +422,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         if (m_tile[i] <= 0) {
           // TODO: determine what is a good default tile size for Cuda and HIP
           // may be rank dependent
+          m_tune_tile_size = true;
           if (((int)inner_direction == (int)Right && (i < rank - 1)) ||
               ((int)inner_direction == (int)Left && (i > 0))) {
             if (m_prod_tile_dims < 256) {

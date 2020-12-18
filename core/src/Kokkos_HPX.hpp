@@ -1172,6 +1172,15 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       : m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)) {}
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy &, const Functor &) {
+    /**
+     * 1024 here is just our guess for a reasonable max tile size,
+     * it isn't a hardware constraint. If people see a use for larger
+     * tile size products, we're happy to change this.
+     */
+    return 1024;
+  }
 };
 }  // namespace Impl
 }  // namespace Kokkos
@@ -1715,6 +1724,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()),
         m_force_synchronous(!reducer.view().impl_track().has_record()) {}
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy &, const Functor &) {
+    /**
+     * 1024 here is just our guess for a reasonable max tile size,
+     * it isn't a hardware constraint. If people see a use for larger
+     * tile size products, we're happy to change this.
+     */
+    return 1024;
+  }
 };
 }  // namespace Impl
 }  // namespace Kokkos
