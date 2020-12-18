@@ -454,7 +454,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     for (int i = rank_start; i != rank_end; i += increment) {
       const index_type length = m_upper[i] - m_lower[i];
       if (m_tile[i] <= 0) {
-	m_tune_tile_size = true;
+        m_tune_tile_size = true;
         if ((inner_direction == Iterate::Right && (i < rank - 1)) ||
             (inner_direction == Iterate::Left && (i > 0))) {
           if (m_prod_tile_dims * default_tile_size < max_total_tile_size) {
