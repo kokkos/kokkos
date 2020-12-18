@@ -481,75 +481,17 @@ if(CMAKE_CUDA_COMPILER_LOADED AND NOT CUDAToolkit_BIN_DIR AND CMAKE_CUDA_COMPILE
   unset(cuda_dir)
 endif()
 
-IF(CMAKE_VERSION VERSION_LESS "3.12.0")
-  function(import_target_link_libraries target)
-    cmake_parse_arguments(HACK
-      "SYSTEM;INTERFACE;PUBLIC"
-      ""
-      ""
-      ${ARGN}
-    )
-    get_target_property(LIBS ${target} INTERFACE_LINK_LIBRARIES)
-    if (LIBS)
-      list(APPEND LIBS ${HACK_UNPARSED_ARGUMENTS})
-    else()
-      set(LIBS ${HACK_UNPARSED_ARGUMENTS})
-    endif()
-    set_target_properties(${target} PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${LIBS}")
-  endfunction()
-ELSE()
-  function(import_target_link_libraries)
-    target_link_libraries(${ARGN})
-  endfunction()
-ENDIF()
+function(import_target_link_libraries)
+  target_link_libraries(${ARGN})
+endfunction()
 
-IF(CMAKE_VERSION VERSION_LESS "3.13.0")
-  function(import_target_link_directories target)
-    cmake_parse_arguments(HACK
-      "SYSTEM;INTERFACE;PUBLIC"
-      ""
-      ""
-      ${ARGN}
-    )
-    get_target_property(LINK_LIBS ${target} INTERFACE_LINK_LIBRARIES)
-    if (LINK_LIBS) #could be not-found
-      set(LINK_LIBS_LIST ${LINK_LIBS})
-    endif()
-    foreach(LIB ${HACK_UNPARSED_ARGUMENTS})
-      list(APPEND LINK_LIBS_LIST -L${LIB})
-    endforeach()
-    set_target_properties(${target} PROPERTIES
-      INTERFACE_LINK_LIBRARIES "${LINK_LIBS_LIST}")
-  endfunction()
-ELSE()
-  function(import_target_link_directories)
-    target_link_directories(${ARGN})
-  endfunction()
-ENDIF()
+function(import_target_link_directories)
+  target_link_directories(${ARGN})
+endfunction()
 
-IF(CMAKE_VERSION VERSION_LESS "3.12.0")
-  function(import_target_include_directories target)
-    cmake_parse_arguments(HACK
-      "SYSTEM;INTERFACE;PUBLIC"
-      ""
-      ""
-      ${ARGN}
-    )
-    get_target_property(INLUDE_DIRS ${target} INTERFACE_INCLUDE_DIRECTORIES)
-    if (INCLUDE_DIRS)
-      list(APPEND INCLUDE_DIRS ${HACK_UNPARSED_ARGUMENTS})
-    else()
-      set(INCLUDE_DIRS ${HACK_UNPARSED_ARGUMENTS})
-    endif()
-    set_target_properties(${target} PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${INCLUDE_DIRS}")
-  endfunction()
-ELSE()
-  function(import_target_include_directories)
-    target_include_directories(${ARGN})
-  endfunction()
-ENDIF()
+function(import_target_include_directories)
+  target_include_directories(${ARGN})
+endfunction()
 
 # Try language- or user-provided path first.
 if(CUDAToolkit_BIN_DIR)

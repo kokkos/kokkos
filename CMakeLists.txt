@@ -72,7 +72,7 @@ ENDFUNCTION()
 LIST(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
 IF(NOT KOKKOS_HAS_TRILINOS)
-  cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.17.1 FATAL_ERROR)
   set(CMAKE_DISABLE_SOURCE_CHANGES ON)
   set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
   IF (Spack_WORKAROUND)
@@ -116,22 +116,20 @@ set(Kokkos_VERSION_PATCH 1)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 math(EXPR KOKKOS_VERSION "${Kokkos_VERSION_MAJOR} * 10000 + ${Kokkos_VERSION_MINOR} * 100 + ${Kokkos_VERSION_PATCH}")
 
-IF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.12.0")
-  MESSAGE(STATUS "Setting policy CMP0074 to use <Package>_ROOT variables")
-  CMAKE_POLICY(SET CMP0074 NEW)
-ENDIF()
+MESSAGE(STATUS "Setting policy CMP0074 to use <Package>_ROOT variables")
+CMAKE_POLICY(SET CMP0074 NEW)
 
 # Load either the real TriBITS or a TriBITS wrapper
 # for certain utility functions that are universal (like GLOBAL_SET)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
 
-IF (Kokkos_ENABLE_CUDA AND ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.14.0")
-  #If we are building CUDA, we have tricked CMake because we declare a CXX project
-  #If the default C++ standard for a given compiler matches the requested
-  #standard, then CMake just omits the -std flag in later versions of CMake
-  #This breaks CUDA compilation (CUDA compiler can have a different default
-  #-std then the underlying host compiler by itself). Setting this variable
-  #forces CMake to always add the -std flag even if it thinks it doesn't need it
+IF (Kokkos_ENABLE_CUDA)
+  # If we are building CUDA, we have tricked CMake because we declare a CXX project
+  # If the default C++ standard for a given compiler matches the requested
+  # standard, then CMake just omits the -std flag in later versions of CMake
+  # This breaks CUDA compilation (CUDA compiler can have a different default
+  # -std then the underlying host compiler by itself). Setting this variable
+  # forces CMake to always add the -std flag even if it thinks it doesn't need it
   GLOBAL_SET(CMAKE_CXX_STANDARD_DEFAULT 98)
 ENDIF()
 

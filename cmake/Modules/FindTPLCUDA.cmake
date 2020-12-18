@@ -7,11 +7,7 @@ IF (NOT CUDAToolkit_ROOT)
   ENDIF()
 ENDIF()
 
-IF(CMAKE_VERSION VERSION_GREATER_EQUAL "3.17.0")
-  find_package(CUDAToolkit)
-ELSE()
-  include(${CMAKE_CURRENT_LIST_DIR}/CudaToolkit.cmake)
-ENDIF()
+find_package(CUDAToolkit)
 
 
 IF (TARGET CUDA::cudart)
