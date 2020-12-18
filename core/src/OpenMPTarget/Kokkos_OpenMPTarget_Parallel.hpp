@@ -347,114 +347,143 @@ namespace Impl {
 template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Experimental::OpenMPTarget> {
- private:
+ protected:
   using Policy = Kokkos::RangePolicy<Traits...>;
 
   using WorkTag   = typename Policy::work_tag;
   using WorkRange = typename Policy::WorkRange;
   using Member    = typename Policy::member_type;
+  using idx_type  = typename Policy::index_type;
 
   using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, WorkTag>;
   using ValueInit   = Kokkos::Impl::FunctorValueInit<FunctorType, WorkTag>;
   using ValueJoin   = Kokkos::Impl::FunctorValueJoin<FunctorType, WorkTag>;
   using ValueOps    = Kokkos::Impl::FunctorValueOps<FunctorType, WorkTag>;
 
+  using value_type     = typename ValueTraits::value_type;
   using pointer_type   = typename ValueTraits::pointer_type;
   using reference_type = typename ValueTraits::reference_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
-  /*
-    template< class TagType >
-    inline static
-    typename std::enable_if< std::is_same< TagType , void >::value >::type
-    exec_range( const FunctorType & functor
-              , const Member ibeg , const Member iend
-              , reference_type update , const bool final )
-      {
-        #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
-        #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-        #pragma ivdep
-        #endif
-        #endif
-        for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
-          functor( iwork , update , final );
-        }
-      }
 
-    template< class TagType >
-    inline static
-    typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-    exec_range( const FunctorType & functor
-              , const Member ibeg , const Member iend
-              , reference_type update , const bool final )
-      {
-        const TagType t{} ;
-        #ifdef KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION
-        #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-        #pragma ivdep
-        #endif
-        #endif
-        for ( Member iwork = ibeg ; iwork < iend ; ++iwork ) {
-          functor( t , iwork , update , final );
-        }
-      }
-  */
+  template <class TagType>
+  inline typename std::enable_if<std::is_same<TagType, void>::value>::type
+  call_with_tag(const FunctorType& f, const idx_type& idx, value_type& val,
+                const bool& is_final) const {
+    f(idx, val, is_final);
+  }
+  template <class TagType>
+  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
+  call_with_tag(const FunctorType& f, const idx_type& idx, value_type& val,
+                const bool& is_final) const {
+    f(WorkTag(), idx, val, is_final);
+  }
+
  public:
-  inline void execute() const {
-    /*      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget
-    parallel_scan");
-          OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget
-    parallel_scan");
+  inline void impl_execute(
+      Kokkos::View<value_type**, Kokkos::LayoutRight,
+                   Kokkos::Experimental::OpenMPTargetSpace>
+          element_values,
+      Kokkos::View<value_type*, Kokkos::Experimental::OpenMPTargetSpace>
+          chunk_values,
+      Kokkos::View<int64_t, Kokkos::Experimental::OpenMPTargetSpace> count)
+      const {
+    const idx_type N          = m_policy.end() - m_policy.begin();
+    const idx_type chunk_size = 128;
+    const idx_type n_chunks   = (N + chunk_size - 1) / chunk_size;
+    idx_type nteams           = n_chunks > 512 ? 512 : n_chunks;
+    idx_type team_size        = 128;
 
-          OpenMPTargetExec::resize_scratch( 2 * ValueTraits::value_size(
-    m_functor ) , 0 );
+    FunctorType a_functor(m_functor);
+#pragma omp target teams distribute map(to                             \
+                                        : a_functor) num_teams(nteams) \
+    thread_limit(team_size)
+    for (idx_type team_id = 0; team_id < n_chunks; team_id++) {
+#pragma omp parallel num_threads(team_size)
+      {
+        const idx_type local_offset = team_id * chunk_size;
 
-    #pragma omp parallel
-          {
-            OpenMPTargetExec & exec = * OpenMPTargetExec::get_thread_omp();
-            const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size()
-    ); const pointer_type ptr = pointer_type( exec.scratch_reduce() ) +
-              ValueTraits::value_count( m_functor );
-            ParallelScan::template exec_range< WorkTag >
-              ( m_functor , range.begin() , range.end()
-              , ValueInit::init( m_functor , ptr ) , false );
+#pragma omp for
+        for (idx_type i = 0; i < chunk_size; i++) {
+          const idx_type idx = local_offset + i;
+          value_type val;
+          ValueInit::init(a_functor, &val);
+          if (idx < N) call_with_tag<WorkTag>(a_functor, idx, val, false);
+          element_values(team_id, i) = val;
+        }
+#pragma omp barrier
+        if (omp_get_thread_num() == 0) {
+          value_type sum;
+          ValueInit::init(a_functor, &sum);
+          for (idx_type i = 0; i < chunk_size; i++) {
+            ValueJoin::join(a_functor, &sum, &element_values(team_id, i));
+            element_values(team_id, i) = sum;
           }
-
-          {
-            const unsigned thread_count = OpenMPTargetExec::pool_size();
-            const unsigned value_count  = ValueTraits::value_count( m_functor );
-
-            pointer_type ptr_prev = 0 ;
-
-            for ( unsigned rank_rev = thread_count ; rank_rev-- ; ) {
-
-              pointer_type ptr = pointer_type(
-    OpenMPTargetExec::pool_rev(rank_rev)->scratch_reduce() );
-
-              if ( ptr_prev ) {
-                for ( unsigned i = 0 ; i < value_count ; ++i ) { ptr[i] =
-    ptr_prev[ i + value_count ] ; } ValueJoin::join( m_functor , ptr +
-    value_count , ptr );
-              }
-              else {
-                ValueInit::init( m_functor , ptr );
-              }
-
-              ptr_prev = ptr ;
+          chunk_values(team_id) = sum;
+        }
+#pragma omp barrier
+        if (omp_get_thread_num() == 0) {
+          if (Kokkos::atomic_fetch_add(&count(), 1) == n_chunks - 1) {
+            value_type sum;
+            ValueInit::init(a_functor, &sum);
+            for (idx_type i = 0; i < n_chunks; i++) {
+              ValueJoin::join(a_functor, &sum, &chunk_values(i));
+              chunk_values(i) = sum;
             }
           }
+        }
+      }
+    }
 
-    #pragma omp parallel
-          {
-            OpenMPTargetExec & exec = * OpenMPTargetExec::get_thread_omp();
-            const WorkRange range( m_policy, exec.pool_rank(), exec.pool_size()
-    ); const pointer_type ptr = pointer_type( exec.scratch_reduce() );
-            ParallelScan::template exec_range< WorkTag >
-              ( m_functor , range.begin() , range.end()
-              , ValueOps::reference( ptr ) , true );
-          }
-    */
+#pragma omp target teams distribute map(to                             \
+                                        : a_functor) num_teams(nteams) \
+    thread_limit(team_size)
+    for (idx_type team_id = 0; team_id < n_chunks; team_id++) {
+#pragma omp parallel num_threads(team_size)
+      {
+        const idx_type local_offset = team_id * chunk_size;
+        value_type offset_value;
+        if (team_id > 0)
+          offset_value = chunk_values(team_id - 1);
+        else
+          ValueInit::init(a_functor, &offset_value);
+
+#pragma omp for
+        for (idx_type i = 0; i < chunk_size; i++) {
+          const idx_type idx = local_offset + i;
+          value_type local_offset_value;
+          if (i > 0) {
+            local_offset_value = element_values(team_id, i - 1);
+            ValueJoin::join(a_functor, &local_offset_value, &offset_value);
+          } else
+            local_offset_value = offset_value;
+          if (idx < N)
+            call_with_tag<WorkTag>(a_functor, idx, local_offset_value, true);
+        }
+      }
+    }
+  }
+
+  inline void execute() const {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    const idx_type N          = m_policy.end() - m_policy.begin();
+    const idx_type chunk_size = 128;
+    const idx_type n_chunks   = (N + chunk_size - 1) / chunk_size;
+
+    // This could be scratch memory per team
+    Kokkos::View<value_type**, Kokkos::LayoutRight,
+                 Kokkos::Experimental::OpenMPTargetSpace>
+        element_values("element_values", n_chunks, chunk_size);
+    Kokkos::View<value_type*, Kokkos::Experimental::OpenMPTargetSpace>
+        chunk_values("chunk_values", n_chunks);
+    Kokkos::View<int64_t, Kokkos::Experimental::OpenMPTargetSpace> count(
+        "Count");
+
+    impl_execute(element_values, chunk_values, count);
   }
 
   //----------------------------------------
@@ -465,6 +494,51 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 };
 
+template <class FunctorType, class ReturnType, class... Traits>
+class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
+                            ReturnType, Kokkos::Experimental::OpenMPTarget>
+    : public ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
+                          Kokkos::Experimental::OpenMPTarget> {
+  using base_t     = ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
+                              Kokkos::Experimental::OpenMPTarget>;
+  using value_type = typename base_t::value_type;
+  value_type& m_returnvalue;
+
+ public:
+  inline void execute() const {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    const int64_t N        = base_t::m_policy.end() - base_t::m_policy.begin();
+    const int chunk_size   = 128;
+    const int64_t n_chunks = (N + chunk_size - 1) / chunk_size;
+
+    if (N > 0) {
+      // This could be scratch memory per team
+      Kokkos::View<value_type**, Kokkos::LayoutRight,
+                   Kokkos::Experimental::OpenMPTargetSpace>
+          element_values("element_values", n_chunks, chunk_size);
+      Kokkos::View<value_type*, Kokkos::Experimental::OpenMPTargetSpace>
+          chunk_values("chunk_values", n_chunks);
+      Kokkos::View<int64_t, Kokkos::Experimental::OpenMPTargetSpace> count(
+          "Count");
+
+      base_t::impl_execute(element_values, chunk_values, count);
+
+      const int size = base_t::ValueTraits::value_size(base_t::m_functor);
+      DeepCopy<HostSpace, Kokkos::Experimental::OpenMPTargetSpace>(
+          &m_returnvalue, chunk_values.data() + (n_chunks - 1), size);
+    } else {
+      m_returnvalue = 0;
+    }
+  }
+
+  ParallelScanWithTotal(const FunctorType& arg_functor,
+                        const typename base_t::Policy& arg_policy,
+                        ReturnType& arg_returnvalue)
+      : base_t(arg_functor, arg_policy), m_returnvalue(arg_returnvalue) {}
+};
 }  // namespace Impl
 }  // namespace Kokkos
 
