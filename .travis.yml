@@ -56,9 +56,9 @@ install:
     wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} &&
     wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc &&
     wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} &&
-    gpg --keyserver pool.sks-keyservers.net --recv-keys ${CMAKE_KEY} &&
-    gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} &&
-    grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check &&
+    #gpg --keyserver pool.sks-keyservers.net --recv-keys ${CMAKE_KEY} &&
+    #gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} &&
+    #grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check &&
     mkdir -p ${CMAKE_DIR} &&
     sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} &&
     rm cmake*
