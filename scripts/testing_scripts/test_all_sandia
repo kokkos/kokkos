@@ -446,7 +446,7 @@ elif [ "$MACHINE" = "mayer" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=96
 
-  BASE_MODULE_LIST="cmake/3.14.5,<COMPILER_NAME>/<COMPILER_VERSION>"
+  BASE_MODULE_LIST="cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("gnu7/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -851,8 +851,12 @@ single_build_and_test() {
     echo "        \$KOKKOS_PATH/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=\$KOKKOS_PATH --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} ${KOKKOS_BOUNDS_CHECK} --no-examples $extra_args" &> call_generate_makefile_genericpath.sh
 
     run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} ${KOKKOS_BOUNDS_CHECK} --no-examples $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+    local make_par_lvl=12
+    if [[ "$MACHINE" = white* ]]; then
+      make_par_lvl=48
+    fi
     local -i build_start_time=$(date +%s)
-    run_cmd make -j 48 all >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
+    run_cmd make -j  $make_par_lvl all >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
     local -i build_end_time=$(date +%s)
     comment="build_time=$(($build_end_time-$build_start_time))"
 
