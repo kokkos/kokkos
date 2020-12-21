@@ -546,6 +546,7 @@ class OpenMPTargetExecTeamMember {
   int m_league_size;
   int m_vector_length;
   int m_vector_lane;
+  int m_shmem_block_index;
   void* m_glb_scratch;
   void* m_reduce_scratch;
 
@@ -746,36 +747,33 @@ class OpenMPTargetExecTeamMember {
       const int vector_length  // const TeamPolicyInternal< OpenMPTarget,
                                // Properties ...> & team
       ,
-      void* const glb_scratch, const int shmem_size_L0, const int shmem_size_L1)
-      : m_team_shared(
-            ((char*)glb_scratch +
-             league_rank * (shmem_size_L0 + shmem_size_L1 +
-                            ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16)),
-            shmem_size_L0,
-            ((char*)glb_scratch +
-             league_rank *
-                 (shmem_size_L0 + shmem_size_L1 +
-                  ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16)) +
-                shmem_size_L0 + ((shmem_size_L0 + shmem_size_L1) * 10 / 100) +
-                16,
-            shmem_size_L1),
-        m_team_scratch_size{shmem_size_L0, shmem_size_L1},
+      void* const glb_scratch, const int shmem_block_index,
+      const int shmem_size_L0, const int shmem_size_L1)
+      : m_team_scratch_size{shmem_size_L0, shmem_size_L1},
         m_team_rank(0),
         m_team_size(team_size),
         m_league_rank(league_rank),
         m_league_size(league_size),
         m_vector_length(vector_length),
+        m_shmem_block_index(shmem_block_index),
         m_glb_scratch(glb_scratch) {
     const int omp_tid = omp_get_thread_num();
-    // FIXME_OPENMPTARGET - variable not needed right now, hence commenting it
-    // to avoid warning. But maybe needed in the future.
-    //    const int omp_team_num = omp_get_team_num();
-    //    Pointing to the first element of team-scratch that will be used of
-    //    reduction.
+    m_team_shared     = scratch_memory_space(
+        ((char*)glb_scratch +
+         m_shmem_block_index *
+             (shmem_size_L0 + shmem_size_L1 +
+              ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16)),
+        shmem_size_L0,
+        ((char*)glb_scratch +
+         m_shmem_block_index *
+             (shmem_size_L0 + shmem_size_L1 +
+              ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16)) +
+            shmem_size_L0 + ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16,
+        shmem_size_L1);
     m_reduce_scratch =
         (char*)glb_scratch +
-        league_rank * (shmem_size_L0 + shmem_size_L1 +
-                       ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16);
+        shmem_block_index * (shmem_size_L0 + shmem_size_L1 +
+                             ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16);
     m_league_rank = league_rank;
     m_team_rank   = omp_tid;
     m_vector_lane = 0;
