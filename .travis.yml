@@ -45,7 +45,7 @@ matrix:
       compiler: gcc
       env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
 
-# Install newer CMake. The distribution comes with CMake 3.12.4 but we require at least 3.17.1
+# Install newer CMake. The distribution comes with CMake 3.12.4 but we require at least 3.16
 install:
   - CMAKE_VERSION=3.17.1
   - CMAKE_DIR=/opt/cmake
