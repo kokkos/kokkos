@@ -54,6 +54,7 @@
 #include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Cuda/Kokkos_Cuda_Parallel.hpp>
 #include <Cuda/Kokkos_Cuda_Task.hpp>
+#include <Cuda/Kokkos_Cuda_MDRangePolicy.hpp>
 #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #endif
 

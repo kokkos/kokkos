@@ -54,15 +54,7 @@
 #include <Kokkos_Parallel.hpp>
 #include <type_traits>
 
-#if defined(KOKKOS_ENABLE_CUDA) || \
-    (defined(__HIPCC__) && defined(KOKKOS_ENABLE_HIP))
-#include <impl/KokkosExp_IterateTileGPU.hpp>
-#endif
-
-#if defined(KOKKOS_ENABLE_CUDA)
-#include <Kokkos_Cuda.hpp>
-#include <Cuda/Kokkos_Cuda_Instance.hpp>
-#elif defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_HIP)
 #include <Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #elif defined(KOKKOS_ENABLE_SYCL)
@@ -88,14 +80,6 @@ struct default_outer_direction {
   static constexpr Iterate value = Iterate::Right;
 };
 
-#ifdef KOKKOS_ENABLE_CUDA
-template <>
-struct default_outer_direction<Kokkos::Cuda> {
-  using type                     = Iterate;
-  static constexpr Iterate value = Iterate::Left;
-};
-#endif
-
 #ifdef KOKKOS_ENABLE_HIP
 template <>
 struct default_outer_direction<Kokkos::Experimental::HIP> {
@@ -117,14 +101,6 @@ struct default_inner_direction {
   using type                     = Iterate;
   static constexpr Iterate value = Iterate::Right;
 };
-
-#ifdef KOKKOS_ENABLE_CUDA
-template <>
-struct default_inner_direction<Kokkos::Cuda> {
-  using type                     = Iterate;
-  static constexpr Iterate value = Iterate::Left;
-};
-#endif
 
 #ifdef KOKKOS_ENABLE_HIP
 template <>
@@ -229,6 +205,28 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   }
   return a;
 }
+
+struct TileSizeProperties
+{
+   int max_threads;
+   int max_tile_size;
+   int default_tile_size;
+   int max_total_tile_size;
+};
+
+template <typename ExecutionSpace>
+TileSizeProperties 
+get_tile_size_properties(const ExecutionSpace&)
+{
+  // Host settings
+  TileSizeProperties properties;
+  properties.max_threads       = std::numeric_limits<int>::max();
+  properties.max_tile_size     = 0;
+  properties.default_tile_size = 2;
+  properties.max_total_tile_size = std::numeric_limits<int>::max();
+  return properties;
+}
+
 }  // namespace Impl
 
 // multi-dimensional iteration pattern
@@ -353,7 +351,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
                 point_type const& lower, point_type const& upper,
                 tile_type const& tile = tile_type{})
       : m_space(work_space), m_lower(lower), m_upper(upper), m_tile(tile) {
-    init(work_space);
+    init_helper(Impl::get_tile_size_properties(work_space));
   }
 
   template <typename T, std::size_t NT = rank,
@@ -397,27 +395,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   bool impl_tune_tile_size() const { return m_tune_tile_size; }
 
  private:
-  // Host
-  template <typename ExecutionSpace>
-  void init(const ExecutionSpace&) {
-    const index_type max_threads       = std::numeric_limits<int>::max();
-    const index_type max_tile_size     = 0;
-    const index_type default_tile_size = 2;
-    init_helper(max_threads, max_tile_size, default_tile_size, max_threads);
-  }
-
-#if defined(KOKKOS_ENABLE_CUDA)
-  void init(const Kokkos::Cuda& space) {
-    const index_type max_threads =
-        space.impl_internal_space_instance()->m_maxThreadsPerSM;
-    const index_type max_tile_size       = 16;
-    const index_type default_tile_size   = 2;
-    const index_type max_total_tile_size = 512;
-    init_helper(max_threads, max_tile_size, default_tile_size,
-                max_total_tile_size);
-  }
-#endif
-
+/*
 #if defined(KOKKOS_ENABLE_HIP)
   void init(const Kokkos::Experimental::HIP& space) {
     const index_type max_threads =
@@ -438,11 +416,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
     const index_type default_tile_size = 2;
     init_helper(max_threads, max_tile_size, default_tile_size, max_threads);
   }
-#endif
+#endif*/
 
-  void init_helper(index_type max_threads, index_type max_tile_size,
-                   index_type default_tile_size,
-                   index_type max_total_tile_size) {
+  void init_helper(Impl::TileSizeProperties properties) {
     int increment  = 1;
     int rank_start = 0;
     int rank_end   = rank;
@@ -457,14 +433,14 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_tune_tile_size = true;
         if ((inner_direction == Iterate::Right && (i < rank - 1)) ||
             (inner_direction == Iterate::Left && (i > 0))) {
-          if (m_prod_tile_dims * default_tile_size < max_total_tile_size) {
-            m_tile[i] = default_tile_size;
+          if (m_prod_tile_dims * properties.default_tile_size < static_cast<index_type>(properties.max_total_tile_size)) {
+            m_tile[i] = properties.default_tile_size;
           } else {
             m_tile[i] = 1;
           }
         } else {
           m_tile[i] =
-              max_tile_size == 0 ? std::max<int>(length, 1) : max_tile_size;
+              properties.max_tile_size == 0 ? std::max<int>(length, 1) : properties.max_tile_size;
         }
       }
       m_tile_end[i] =
@@ -472,9 +448,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       m_num_tiles *= m_tile_end[i];
       m_prod_tile_dims *= m_tile[i];
     }
-    if (m_prod_tile_dims > max_threads) {
+    if (m_prod_tile_dims > static_cast<index_type>(properties.max_threads)) {
       printf(" Product of tile dimensions exceed maximum limit: %d\n",
-             static_cast<int>(max_threads));
+             static_cast<int>(properties.max_threads));
       Kokkos::abort(
           "ExecSpace Error: MDRange tile dims exceed maximum number "
           "of threads per block - choose smaller tile dims");

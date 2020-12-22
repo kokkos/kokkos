@@ -68,6 +68,7 @@
 #include <typeinfo>
 
 #include <KokkosExp_MDRangePolicy.hpp>
+#include <impl/KokkosExp_IterateTileGPU.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
