@@ -9,10 +9,6 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   return()
 endif()
 
-add_executable(HelloWorld hello_world.cpp)
-target_link_libraries(HelloWorld Cabana::cabanacore)
-add_test(NAME Core_tutorial_01 COMMAND ${NONMPI_PRECOMMAND} HelloWorld)
-
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
