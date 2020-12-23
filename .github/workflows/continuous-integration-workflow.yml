@@ -55,3 +55,8 @@ jobs:
         run: DESTDIR=${PWD}/install cmake --build builddir --target install && rm -rf ${PWD}/install/usr && rmdir ${PWD}/install
       - name: Install
         run: sudo cmake --build builddir --target install
+      - name: Test install
+        working-directory: example/tutorial/01_hello_world
+        run: |
+          cmake -B builddir
+          cmake --build builddir 
