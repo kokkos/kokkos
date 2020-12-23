@@ -58,5 +58,5 @@ jobs:
       - name: Test install
         working-directory: example/tutorial/01_hello_world
         run: |
-          cmake -B builddir
+          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           cmake --build builddir 
