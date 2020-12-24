@@ -54,7 +54,7 @@ jobs:
       - name: Build
         run: |
           ccache -z
-          cmake --build builddir --parallel 2
+          cmake --build builddir --parallel 2 --verbose
           ccache -s
       - name: Tests
         working-directory: builddir
