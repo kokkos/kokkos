@@ -54,10 +54,6 @@
 #include <Kokkos_Parallel.hpp>
 #include <type_traits>
 
-#if defined(KOKKOS_ENABLE_SYCL)
-#include <Kokkos_SYCL.hpp>
-#endif
-
 namespace Kokkos {
 
 // ------------------------------------------------------------------ //
@@ -77,27 +73,11 @@ struct default_outer_direction {
   static constexpr Iterate value = Iterate::Right;
 };
 
-#ifdef KOKKOS_ENABLE_SYCL
-template <>
-struct default_outer_direction<Kokkos::Experimental::SYCL> {
-  using type                     = Iterate;
-  static constexpr Iterate value = Iterate::Left;
-};
-#endif
-
 template <typename ExecSpace>
 struct default_inner_direction {
   using type                     = Iterate;
   static constexpr Iterate value = Iterate::Right;
 };
-
-#ifdef KOKKOS_ENABLE_SYCL
-template <>
-struct default_inner_direction<Kokkos::Experimental::SYCL> {
-  using type                     = Iterate;
-  static constexpr Iterate value = Iterate::Left;
-};
-#endif
 
 // Iteration Pattern
 template <unsigned N, Iterate OuterDir = Iterate::Default,
@@ -373,17 +353,6 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   bool impl_tune_tile_size() const { return m_tune_tile_size; }
 
  private:
-  /*
-  #if defined(KOKKOS_ENABLE_SYCL)
-    void init(const Kokkos::Experimental::SYCL& space) {
-      const index_type max_threads =
-          space.impl_internal_space_instance()->m_maxThreadsPerSM;
-      const index_type max_tile_size     = 16;
-      const index_type default_tile_size = 2;
-      init_helper(max_threads, max_tile_size, default_tile_size, max_threads);
-    }
-  #endif*/
-
   void init_helper(Impl::TileSizeProperties properties) {
     int increment  = 1;
     int rank_start = 0;
