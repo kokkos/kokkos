@@ -169,7 +169,7 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
 
 struct TileSizeProperties {
   int max_threads;
-  int max_tile_size;
+  int default_largest_tile_size;
   int default_tile_size;
   int max_total_tile_size;
 };
@@ -178,10 +178,10 @@ template <typename ExecutionSpace>
 TileSizeProperties get_tile_size_properties(const ExecutionSpace&) {
   // Host settings
   TileSizeProperties properties;
-  properties.max_threads         = std::numeric_limits<int>::max();
-  properties.max_tile_size       = 0;
-  properties.default_tile_size   = 2;
-  properties.max_total_tile_size = std::numeric_limits<int>::max();
+  properties.max_threads               = std::numeric_limits<int>::max();
+  properties.default_largest_tile_size = 0;
+  properties.default_tile_size         = 2;
+  properties.max_total_tile_size       = std::numeric_limits<int>::max();
   return properties;
 }
 
@@ -375,8 +375,9 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
             m_tile[i] = 1;
           }
         } else {
-          m_tile[i] = properties.max_tile_size == 0 ? std::max<int>(length, 1)
-                                                    : properties.max_tile_size;
+          m_tile[i] = properties.default_largest_tile_size == 0
+                          ? std::max<int>(length, 1)
+                          : properties.default_largest_tile_size;
         }
       }
       m_tile_end[i] =
