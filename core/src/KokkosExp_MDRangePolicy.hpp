@@ -206,23 +206,20 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   return a;
 }
 
-struct TileSizeProperties
-{
-   int max_threads;
-   int max_tile_size;
-   int default_tile_size;
-   int max_total_tile_size;
+struct TileSizeProperties {
+  int max_threads;
+  int max_tile_size;
+  int default_tile_size;
+  int max_total_tile_size;
 };
 
 template <typename ExecutionSpace>
-TileSizeProperties 
-get_tile_size_properties(const ExecutionSpace&)
-{
+TileSizeProperties get_tile_size_properties(const ExecutionSpace&) {
   // Host settings
   TileSizeProperties properties;
-  properties.max_threads       = std::numeric_limits<int>::max();
-  properties.max_tile_size     = 0;
-  properties.default_tile_size = 2;
+  properties.max_threads         = std::numeric_limits<int>::max();
+  properties.max_tile_size       = 0;
+  properties.default_tile_size   = 2;
   properties.max_total_tile_size = std::numeric_limits<int>::max();
   return properties;
 }
@@ -395,28 +392,28 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   bool impl_tune_tile_size() const { return m_tune_tile_size; }
 
  private:
-/*
-#if defined(KOKKOS_ENABLE_HIP)
-  void init(const Kokkos::Experimental::HIP& space) {
-    const index_type max_threads =
-        space.impl_internal_space_instance()->m_maxThreadsPerSM;
-    const index_type max_tile_size       = 16;
-    const index_type default_tile_size   = 4;
-    const index_type max_total_tile_size = 1024;
-    init_helper(max_threads, max_tile_size, default_tile_size,
-                max_total_tile_size);
-  }
-#endif
+  /*
+  #if defined(KOKKOS_ENABLE_HIP)
+    void init(const Kokkos::Experimental::HIP& space) {
+      const index_type max_threads =
+          space.impl_internal_space_instance()->m_maxThreadsPerSM;
+      const index_type max_tile_size       = 16;
+      const index_type default_tile_size   = 4;
+      const index_type max_total_tile_size = 1024;
+      init_helper(max_threads, max_tile_size, default_tile_size,
+                  max_total_tile_size);
+    }
+  #endif
 
-#if defined(KOKKOS_ENABLE_SYCL)
-  void init(const Kokkos::Experimental::SYCL& space) {
-    const index_type max_threads =
-        space.impl_internal_space_instance()->m_maxThreadsPerSM;
-    const index_type max_tile_size     = 16;
-    const index_type default_tile_size = 2;
-    init_helper(max_threads, max_tile_size, default_tile_size, max_threads);
-  }
-#endif*/
+  #if defined(KOKKOS_ENABLE_SYCL)
+    void init(const Kokkos::Experimental::SYCL& space) {
+      const index_type max_threads =
+          space.impl_internal_space_instance()->m_maxThreadsPerSM;
+      const index_type max_tile_size     = 16;
+      const index_type default_tile_size = 2;
+      init_helper(max_threads, max_tile_size, default_tile_size, max_threads);
+    }
+  #endif*/
 
   void init_helper(Impl::TileSizeProperties properties) {
     int increment  = 1;
@@ -433,14 +430,15 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
         m_tune_tile_size = true;
         if ((inner_direction == Iterate::Right && (i < rank - 1)) ||
             (inner_direction == Iterate::Left && (i > 0))) {
-          if (m_prod_tile_dims * properties.default_tile_size < static_cast<index_type>(properties.max_total_tile_size)) {
+          if (m_prod_tile_dims * properties.default_tile_size <
+              static_cast<index_type>(properties.max_total_tile_size)) {
             m_tile[i] = properties.default_tile_size;
           } else {
             m_tile[i] = 1;
           }
         } else {
-          m_tile[i] =
-              properties.max_tile_size == 0 ? std::max<int>(length, 1) : properties.max_tile_size;
+          m_tile[i] = properties.max_tile_size == 0 ? std::max<int>(length, 1)
+                                                    : properties.max_tile_size;
         }
       }
       m_tile_end[i] =
