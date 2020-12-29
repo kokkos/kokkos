@@ -114,7 +114,7 @@ int main(int narg, char* arg[]) {
     srand(134231);
 
     for (int i = 0; i < size; i++) {
-      for (view_type::size_type j = 0; j < h_idx.extent(1); ++j) {
+      for (size_t j = 0; j < h_idx.extent(1); ++j) {
         h_idx(i, j) = (size + i + (rand() % 500 - 250)) % size;
       }
     }

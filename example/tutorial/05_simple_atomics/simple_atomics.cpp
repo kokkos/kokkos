@@ -118,11 +118,10 @@ int main() {
     host_view_type h_result = Kokkos::create_mirror_view(result);
     host_count_type h_count = Kokkos::create_mirror_view(count);
 
-    using size_type = view_type::size_type;
     // Fill the 'data' array on the host with random numbers.  We assume
     // that they come from some process which is only implemented on the
     // host, via some library.  (That's true in this case.)
-    for (size_type i = 0; i < data.extent(0); ++i) {
+    for (size_t i = 0; i < data.extent(0); ++i) {
       h_data(i) = rand() % nnumbers;
     }
     Kokkos::deep_copy(data, h_data);  // copy from host to device
