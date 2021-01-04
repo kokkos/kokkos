@@ -69,12 +69,7 @@ struct InvNorm2 : public Kokkos::DotSingle<VectorView> {
 
   KOKKOS_INLINE_FUNCTION
   void final(value_type& result) const {
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-    using sycl::sqrt;
-#else
-    using std::sqrt;
-#endif
-    result = sqrt(result);
+    result = Kokkos::Experimental::sqrt(result);
     Rjj()  = result;
     inv()  = (0 < result) ? 1.0 / result : 0;
   }
