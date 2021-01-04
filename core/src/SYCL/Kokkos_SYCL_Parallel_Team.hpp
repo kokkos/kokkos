@@ -467,7 +467,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
              "Requested "
           << m_shmem_size << " bytes but maximum is "
           << m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock
-          << 'n';
+          << '\n';
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 

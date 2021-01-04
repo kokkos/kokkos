@@ -109,7 +109,7 @@ TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
   test.run(4, 7, 10);
   // running out of local memory
 #ifdef KOKKOS_ENABLE_SYCL
-  test.run(14, 25, 321);
+  test.run(14, 19, 321);
 #else
   test.run(14, 277, 321);
 #endif
