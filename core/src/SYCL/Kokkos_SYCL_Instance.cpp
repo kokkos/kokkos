@@ -115,6 +115,8 @@ void SYCLInternal::initialize(const sycl::device& d) {
 
     m_maxThreadsPerSM =
         d.template get_info<sycl::info::device::max_work_group_size>();
+    m_maxShmemPerBlock =
+        d.template get_info<sycl::info::device::local_mem_size>();
     m_indirectKernelMem.reset(*m_queue);
     m_indirectReducerMem.reset(*m_queue);
   } else {

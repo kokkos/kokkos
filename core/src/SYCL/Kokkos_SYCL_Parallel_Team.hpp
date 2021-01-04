@@ -383,10 +383,16 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const auto shmem_begin  = m_shmem_begin;
       const auto shmem_size   = m_shmem_size;
       const auto scratch_size = m_scratch_size[1];
-      auto team_lambda        = [=](sycl::nd_item<1> item) {
+
+      sycl::accessor<char, 1, sycl::access::mode::read_write,
+                     sycl::access::target::local>
+          team_scratch_memory(sycl::range<1>(std::max(shmem_size, 0)), cgh);
+
+      auto team_lambda = [=](sycl::nd_item<1> item) {
         // FIXME_SYCL Add scratch memory
-        const member_type team_member(nullptr, shmem_begin, shmem_size, nullptr,
-                                      scratch_size, item);
+        const member_type team_member(nullptr, shmem_begin, shmem_size,
+                                      &team_scratch_memory[0], scratch_size,
+                                      item);
 
         if constexpr (std::is_same<work_tag, void>::value)
           functor(team_member);
@@ -442,6 +448,34 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_SYCL check_parameters
     // FIXME_SYCL optimize
     if (m_team_size < 0) m_team_size = 32;
+    m_shmem_size =
+        (m_policy.scratch_size(0, m_team_size) +
+         m_policy.scratch_size(1, m_team_size) +
+         FunctorTeamShmemSize<FunctorType>::value(m_functor, m_team_size));
+    m_scratch_size[0] = m_policy.scratch_size(0, m_team_size);
+    m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
+
+    // FIXME_SYCL
+    // Functor's reduce memory, team scan memory, and team shared memory depend
+    // upon team size.
+    m_scratch_ptr[0] = nullptr;
+    m_scratch_ptr[1] = nullptr;
+
+    if (static_cast<int>(m_policy.space()
+                             .impl_internal_space_instance()
+                             ->m_maxShmemPerBlock) < m_shmem_size) {
+      std::stringstream out;
+      out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
+             "Requested "
+          << m_shmem_size << " bytes but maximum is "
+          << m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock
+          << '\n';
+      Kokkos::Impl::throw_runtime_exception(out.str());
+    }
+
+    if (m_team_size > m_policy.team_size_max(arg_functor, ParallelForTag{}))
+      Kokkos::Impl::throw_runtime_exception(std::string(
+          "Kokkos::Impl::ParallelFor< HIP > requested too large team size."));
   }
 };
 

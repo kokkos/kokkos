@@ -118,6 +118,8 @@ struct ThreadScratch {
   }
 };
 
+// FIXME_SYCL unclear if it can be implemented with out SYCL2020
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, IncrTest_12a_ThreadScratch) {
   ThreadScratch<TEST_EXECSPACE> test;
   // FIXME_OPENMPTARGET - team_size has to be a multiple of 32 for the tests to
@@ -133,5 +135,6 @@ TEST(TEST_CATEGORY, IncrTest_12a_ThreadScratch) {
   test.run(14, 277, 321);
 #endif
 }
+#endif
 
 }  // namespace Test
