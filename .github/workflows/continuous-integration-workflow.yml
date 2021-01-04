@@ -57,7 +57,8 @@ jobs:
       - name: Install
         run: sudo cmake --build builddir --target install
       - name: Test install
-        working-directory: example/tutorial/01_hello_world
+        working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
-          cmake --build builddir 
+          cmake --build builddir
+          cmake --build builddir --target test
