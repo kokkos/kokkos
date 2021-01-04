@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-// @Kokkos_Feature_Level_Required:13
+// @Kokkos_Feature_Level_Required:12
 // Unit test for hierarchical parallelism
 // Create concurrent work hierarchically and verify if
 // contributions of paticipating processing units corresponds to expected value
@@ -115,11 +115,14 @@ struct ThreadScratch {
   }
 };
 
+// FIXME_SYCL unclear if it can be implemented with out SYCL2020
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, IncrTest_12a_ThreadScratch) {
   ThreadScratch<TEST_EXECSPACE> test;
   test.run(1, 55, 9);
   test.run(2, 4, 22);
   test.run(14, 277, 321);
 }
+#endif
 
 }  // namespace Test

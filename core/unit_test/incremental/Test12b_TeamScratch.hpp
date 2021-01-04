@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-// @Kokkos_Feature_Level_Required:13
+// @Kokkos_Feature_Level_Required:12
 // Unit test for hierarchical parallelism
 // Create concurrent work hierarchically and verify if
 // contributions of paticipating processing units corresponds to expected value
@@ -107,7 +107,12 @@ TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
   TeamScratch<TEST_EXECSPACE> test;
   test.run(1, 4, 4);
   test.run(4, 7, 10);
+  // running out of local memory
+#ifdef KOKKOS_ENABLE_SYCL
+  test.run(14, 25, 321);
+#else
   test.run(14, 277, 321);
+#endif
 }
 
 }  // namespace Test
