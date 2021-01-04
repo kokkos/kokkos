@@ -159,7 +159,7 @@ display_help_text() {
       echo "               [AMD: GPU]"
       echo "                 VEGA900         = AMD GPU MI25 GFX900"
       echo "                 VEGA906         = AMD GPU MI50/MI60 GFX906"
-      echo "                 VEGA908         = AMD GPU"
+      echo "                 VEGA908         = AMD GPU MI100 GFX908"
       echo "               [ARM]"
       echo "                 ARMV80          = ARMv8.0 Compatible CPU"
       echo "                 ARMV81          = ARMv8.1 Compatible CPU"
