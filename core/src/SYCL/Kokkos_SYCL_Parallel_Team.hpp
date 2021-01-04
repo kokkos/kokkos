@@ -380,20 +380,26 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     sycl::queue& q = *instance.m_queue;
 
     q.submit([&](sycl::handler& cgh) {
-      const auto shmem_begin  = m_shmem_begin;
-      const auto shmem_size   = m_shmem_size;
-      const auto scratch_size = m_scratch_size[1];
+      const auto shmem_begin    = m_shmem_begin;
+      const auto shmem_size     = m_shmem_size;
+      const int scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
 
+      // FIXME_SYCL accessors seem to need a size greater than zero at least for
+      // host queues
       sycl::accessor<char, 1, sycl::access::mode::read_write,
                      sycl::access::target::local>
-          team_scratch_memory(sycl::range<1>(shmem_size), cgh);
+          team_scratch_memory_L0(
+              sycl::range<1>(std::max(m_scratch_size[0] + shmem_begin, 1)),
+              cgh);
+      sycl::accessor<char, 1, sycl::access::mode::read_write,
+                     sycl::access::target::local>
+          team_scratch_memory_L1(sycl::range<1>(std::max(m_scratch_size[1], 1)),
+                                 cgh);
 
       auto team_lambda = [=](sycl::nd_item<1> item) {
-        // FIXME_SYCL Add scratch memory
-        const member_type team_member(nullptr, shmem_begin, shmem_size,
-                                      &team_scratch_memory[0], scratch_size,
-                                      item);
-
+        const member_type team_member(
+            team_scratch_memory_L0.get_pointer(), shmem_begin, scratch_size[0],
+            team_scratch_memory_L1.get_pointer(), scratch_size[1], item);
         if constexpr (std::is_same<work_tag, void>::value)
           functor(team_member);
         else
@@ -445,17 +451,18 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.impl_vector_length()) {
-    // FIXME_SYCL check_parameters
     // FIXME_SYCL optimize
     if (m_team_size < 0) m_team_size = 32;
+
+    // FIXME_SYCL modify for reduce etc.
+    m_shmem_begin = 0;
     m_shmem_size =
         (m_policy.scratch_size(0, m_team_size) +
-         m_policy.scratch_size(1, m_team_size) +
          FunctorTeamShmemSize<FunctorType>::value(m_functor, m_team_size));
     m_scratch_size[0] = m_policy.scratch_size(0, m_team_size);
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
 
-    // FIXME_SYCL
+    // FIXME_SYCL so far accessors used instead of these pointers
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
     m_scratch_ptr[0] = nullptr;
