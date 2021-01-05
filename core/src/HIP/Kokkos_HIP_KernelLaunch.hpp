@@ -49,9 +49,9 @@
 
 #if defined(__HIPCC__)
 
-#include <Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
+#include <Kokkos_HIP_Space.hpp>
 
 // Must use global variable on the device with HIP-Clang
 #ifdef __HIP__
@@ -148,15 +148,10 @@ struct HIPParallelLaunch<
 
       KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
 
-      // FIXME_HIP -- there is currently an error copying (some) structs
-      // by value to the device in HIP-Clang / VDI
-      // As a workaround, we can malloc the DriverType and explictly copy over.
-      // To remove once solved in HIP
-      DriverType *d_driver;
-      HIP_SAFE_CALL(hipMalloc(&d_driver, sizeof(DriverType)));
-      HIP_SAFE_CALL(hipMemcpyAsync(d_driver, &driver, sizeof(DriverType),
-                                   hipMemcpyHostToDevice,
-                                   hip_instance->m_stream));
+      // Invoke the driver function on the device
+      DriverType *d_driver = reinterpret_cast<DriverType *>(
+          hip_instance->get_next_driver(sizeof(DriverType)));
+      std::memcpy((void *)d_driver, (void *)&driver, sizeof(DriverType));
       hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
                                        MinBlocksPerSM>
           <<<grid, block, shmem, hip_instance->m_stream>>>(d_driver);
@@ -165,7 +160,6 @@ struct HIPParallelLaunch<
       HIP_SAFE_CALL(hipGetLastError());
       hip_instance->fence();
 #endif
-      HIP_SAFE_CALL(hipFree(d_driver));
     }
   }
 
@@ -197,15 +191,10 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       }
 
       KOKKOS_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
-
       // Invoke the driver function on the device
-
-      // FIXME_HIP -- see note about struct copy by value above
-      DriverType *d_driver;
-      HIP_SAFE_CALL(hipMalloc(&d_driver, sizeof(DriverType)));
-      HIP_SAFE_CALL(hipMemcpyAsync(d_driver, &driver, sizeof(DriverType),
-                                   hipMemcpyHostToDevice,
-                                   hip_instance->m_stream));
+      DriverType *d_driver = reinterpret_cast<DriverType *>(
+          hip_instance->get_next_driver(sizeof(DriverType)));
+      std::memcpy((void *)d_driver, (void *)&driver, sizeof(DriverType));
       hip_parallel_launch_local_memory<DriverType, 1024, 1>
           <<<grid, block, shmem, hip_instance->m_stream>>>(d_driver);
 
@@ -213,7 +202,6 @@ struct HIPParallelLaunch<DriverType, Kokkos::LaunchBounds<0, 0>,
       HIP_SAFE_CALL(hipGetLastError());
       hip_instance->fence();
 #endif
-      HIP_SAFE_CALL(hipFree(d_driver));
     }
   }
 
