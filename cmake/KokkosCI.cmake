@@ -94,32 +94,45 @@ if(NOT GIT_EXECUTABLE)
     unset(GIT_EXECUTABLE)
 endif()
 
-# just gets the git branch name if available
-function(GET_GIT_BRANCH_NAME VAR)
-    execute_process(COMMAND ${GIT_EXECUTABLE} show -s --format=%D
-        OUTPUT_VARIABLE GIT_DESCRIPTION
+function(EXECUTE_GIT_COMMAND VAR)
+    set(${VAR} "" PARENT_SCOPE)
+    execute_process(COMMAND ${GIT_EXECUTABLE} ${ARGN}
+        OUTPUT_VARIABLE VAL
         RESULT_VARIABLE RET
         OUTPUT_STRIP_TRAILING_WHITESPACE
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+    set(LAST_GIT_COMMAND "${GIT_EXECUTABLE} ${ARGN}" PARENT_SCOPE)
     if(RET EQUAL 0)
-        string(REPLACE " " ";" _DESC "${GIT_DESCRIPTION}")
+        set(${VAR} "${VAL}" PARENT_SCOPE)
+    endif()
+endfunction()
+
+# just gets the git branch name if available
+function(GET_GIT_BRANCH_NAME VAR)
+    execute_git_command(GIT_BRANCH branch --show-current)
+    set(_INVALID "%D" "HEAD")
+    if(NOT GIT_BRANCH OR "${GIT_BRANCH}" IN_LIST _INVALID)
+        execute_git_command(GIT_BRANCH show -s --format=%D)
+        if(NOT GIT_BRANCH OR "${GIT_BRANCH}" IN_LIST _INVALID)
+            execute_git_command(GIT_BRANCH --describe all)
+        endif()
+    endif()
+    #
+    if(GIT_BRANCH)
+        string(REPLACE " " ";" _DESC "${GIT_BRANCH}")
         # just set it to last one via loop instead of wonky cmake index manip
         foreach(_ITR ${_DESC})
-            set(GIT_DESCRIPTION "${_ITR}")
+            set(GIT_BRANCH "${_ITR}")
         endforeach()
-        set(${VAR} "${GIT_DESCRIPTION}" PARENT_SCOPE)
-        message(STATUS "GIT BRANCH via '${GIT_EXECUTABLE} show -s --format=%D': ${GIT_DESCRIPTION}")
+        set(${VAR} "${GIT_BRANCH}" PARENT_SCOPE)
+        message(STATUS "GIT BRANCH via '${LAST_GIT_COMMAND}': ${GIT_BRANCH}")
     endif()
 endfunction()
 
 # just gets the git branch name if available
 function(GET_GIT_AUTHOR_NAME VAR)
-    execute_process(COMMAND ${GIT_EXECUTABLE} show -s --format=%an
-        OUTPUT_VARIABLE GIT_AUTHOR
-        RESULT_VARIABLE RET
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-    if(RET EQUAL 0)
+    execute_git_command(GIT_AUTHOR show -s --format=%an)
+    if(GIT_AUTHOR)
         string(LENGTH "${GIT_AUTHOR}" STRLEN)
         # if the build name gets too long, this can cause submission errors
         if(STRLEN GREATER 24)
@@ -137,8 +150,8 @@ function(GET_GIT_AUTHOR_NAME VAR)
         # remove any spaces, quotes, periods, etc.
         string(REGEX REPLACE "[ ',;_\.\"]+" "" GIT_AUTHOR "${GIT_AUTHOR}")
         set(${VAR} "${GIT_AUTHOR}" PARENT_SCOPE)
+        message(STATUS "GIT AUTHOR via '${LAST_GIT_COMMAND}': ${GIT_AUTHOR}")
     endif()
-    message(STATUS "GIT AUTHOR via '${GIT_EXECUTABLE} show -s --format=%an': ${GIT_AUTHOR}")
 endfunction()
 
 # get the name of the branch
@@ -215,10 +228,18 @@ endif()
 
 # unnecessary
 string(REPLACE "/remotes/" "/" BUILD_TAG "${BUILD_TAG}")
+string(REPLACE "/origin/" "/" BUILD_TAG "${BUILD_TAG}")
 
 message(STATUS "BUILD_TAG: ${BUILD_TAG}")
 
 set(BUILD_NAME "[${BUILD_TAG}] [${BUILD_NAME}-${BUILD_TYPE}]")
+
+# colons in build name create extra (empty) entries in CDash
+string(REPLACE ":" "-" BUILD_NAME "${BUILD_NAME}")
+# unnecessary info
+string(REPLACE "/merge]" "]" BUILD_NAME "${BUILD_NAME}")
+# unnecessary info
+string(REPLACE "/pr/" "/pull/" BUILD_NAME "${BUILD_NAME}")
 
 # check binary directory
 if(EXISTS ${BINARY_DIR})
