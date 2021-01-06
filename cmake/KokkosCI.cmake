@@ -102,7 +102,8 @@ function(EXECUTE_GIT_COMMAND VAR)
         OUTPUT_STRIP_TRAILING_WHITESPACE
         WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
         ERROR_QUIET)
-    set(LAST_GIT_COMMAND "${GIT_EXECUTABLE} ${ARGN}" PARENT_SCOPE)
+    string(REPLACE ";" " " _CMD "${GIT_EXECUTABLE} ${ARGN}")
+    set(LAST_GIT_COMMAND "${_CMD}" PARENT_SCOPE)
     if(RET EQUAL 0)
         set(${VAR} "${VAL}" PARENT_SCOPE)
     endif()
@@ -159,18 +160,20 @@ endfunction()
 GET_GIT_BRANCH_NAME(GIT_BRANCH)
 # get the name of the author
 GET_GIT_AUTHOR_NAME(GIT_AUTHOR)
+# author, prefer git method for consistency
+SET_DEFAULT_ARG1(AUTHOR ${GIT_AUTHOR} $ENV{GIT_AUTHOR} $ENV{AUTHOR})
 # SLUG == owner_name/repo_name
 SET_DEFAULT_ARG1(SLUG $ENV{TRAVIS_PULL_REQUEST_SLUG} $ENV{TRAVIS_REPO_SLUG} $ENV{APPVEYOR_REPO_NAME} $ENV{PULL_REQUEST_SLUG} $ENV{REPO_SLUG})
 # branch name
-SET_DEFAULT_ARG1(BRANCH $ENV{TRAVIS_PULL_REQUEST_BRANCH} $ENV{TRAVIS_BRANCH} $ENV{APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH} $ENV{APPVEYOR_REPO_BRANCH} $ENV{BRANCH_NAME} ${BRANCH} ${GIT_BRANCH})
+SET_DEFAULT_ARG1(BRANCH $ENV{TRAVIS_PULL_REQUEST_BRANCH} $ENV{TRAVIS_BRANCH} $ENV{APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH} $ENV{APPVEYOR_REPO_BRANCH} $ENV{GIT_BRANCH} $ENV{BRANCH_NAME} $ENV{BRANCH} ${GIT_BRANCH})
 # pull request number
 SET_DEFAULT_ARG1(PULL_REQUEST_NUM $ENV{TRAVIS_PULL_REQUEST} $ENV{CHANGE_ID} $ENV{APPVEYOR_PULL_REQUEST_NUMBER} $ENV{PULL_REQUEST_NUM})
 # get the event type, e.g. push, pull_request, api, cron, etc.
 SET_DEFAULT_ARG1(EVENT_TYPE $ENV{TRAVIS_EVENT_TYPE} ${EVENT_TYPE})
 
 if("${BRANCH}" STREQUAL "")
-    message(STATUS "Checked: environment variables: TRAVIS_PULL_REQUEST_BRANCH, TRAVIS_BRANCH, BRANCH_NAME, -DBRANCH=<...>, and 'git describe --all' in that order")
-    message(FATAL_ERROR "Error! Branch could not be determined")
+    message(STATUS "Checked: environment variables for Travis, Appveyor, Jenkins (git plugin), BRANCH_NAME, BRANCH and 'git branch --show-current'")
+    message(FATAL_ERROR "Error! Git branch could not be determined. Please provide -DBRANCH=<name>")
 endif()
 
 #----------------------------------------------------------------------------------------#
@@ -220,16 +223,16 @@ endif()
 if(NOT "${MODEL}" STREQUAL "Nightly")
     if(EVENT_TYPE AND PULL_REQUEST_NUM)
         # e.g. pull_request/123
-        if(GIT_AUTHOR)
-            set(BUILD_TAG "${GIT_AUTHOR}/${EVENT_TYPE}/${PULL_REQUEST_NUM}")
+        if(AUTHOR)
+            set(BUILD_TAG "${AUTHOR}/${EVENT_TYPE}/${PULL_REQUEST_NUM}")
         else()
             set(BUILD_TAG "${EVENT_TYPE}/${PULL_REQUEST_NUM}")
         endif()
     elseif(SLUG)
         # e.g. owner_name/repo_name
         set(BUILD_TAG "${SLUG}")
-    elseif(GIT_AUTHOR)
-        set(BUILD_TAG "${GIT_AUTHOR}/${BRANCH}")
+    elseif(AUTHOR)
+        set(BUILD_TAG "${AUTHOR}/${BRANCH}")
     endif()
     if(EVENT_TYPE AND NOT PULL_REQUEST_NUM)
         set(BUILD_TAG "${BUILD_TAG}-${EVENT_TYPE}")
@@ -252,7 +255,7 @@ string(REPLACE "/merge]" "]" BUILD_NAME "${BUILD_NAME}")
 string(REPLACE "/pr/" "/pull/" BUILD_NAME "${BUILD_NAME}")
 string(REPLACE "pull_request/" "pull/" BUILD_NAME "${BUILD_NAME}")
 # miscellaneous from missing fields
-string(REPLACE "--]" "]" BUILD_NAME "${BUILD_NAME}")
+string(REPLACE "--" "-" BUILD_NAME "${BUILD_NAME}")
 string(REPLACE "-]" "]" BUILD_NAME "${BUILD_NAME}")
 
 # check binary directory
