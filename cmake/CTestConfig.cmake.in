@@ -47,7 +47,7 @@ set(CTEST_CUSTOM_MAXIMUM_PASSED_TEST_OUTPUT_SIZE "104857600")
 #
 #   coverage related
 #
-set(CTEST_CUSTOM_COVERAGE_EXCLUDE ".*tpls/.*;/usr/.*")
+set(CTEST_CUSTOM_COVERAGE_EXCLUDE ".*tpls/.*;/usr/.*;.*unit_test/.*")
 
 #
 #   commands
