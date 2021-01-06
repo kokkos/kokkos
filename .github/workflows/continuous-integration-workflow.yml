@@ -41,6 +41,7 @@ jobs:
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
             -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} 
       - name: Build
@@ -55,3 +56,9 @@ jobs:
         run: DESTDIR=${PWD}/install cmake --build builddir --target install && rm -rf ${PWD}/install/usr && rmdir ${PWD}/install
       - name: Install
         run: sudo cmake --build builddir --target install
+      - name: Test install
+        working-directory: example/build_cmake_installed
+        run: |
+          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          cmake --build builddir
+          cmake --build builddir --target test
