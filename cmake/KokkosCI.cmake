@@ -164,7 +164,7 @@ SET_DEFAULT_ARG1(SLUG $ENV{TRAVIS_PULL_REQUEST_SLUG} $ENV{TRAVIS_REPO_SLUG} $ENV
 # branch name
 SET_DEFAULT_ARG1(BRANCH $ENV{TRAVIS_PULL_REQUEST_BRANCH} $ENV{TRAVIS_BRANCH} $ENV{APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH} $ENV{APPVEYOR_REPO_BRANCH} $ENV{BRANCH_NAME} ${BRANCH} ${GIT_BRANCH})
 # pull request number
-SET_DEFAULT_ARG1(PULL_REQUEST_NUM $ENV{TRAVIS_PULL_REQUEST} $ENV{CHANGE_ID} $ENV{PULL_REQUEST_NUM})
+SET_DEFAULT_ARG1(PULL_REQUEST_NUM $ENV{TRAVIS_PULL_REQUEST} $ENV{CHANGE_ID} $ENV{APPVEYOR_PULL_REQUEST_NUMBER} $ENV{PULL_REQUEST_NUM})
 # get the event type, e.g. push, pull_request, api, cron, etc.
 SET_DEFAULT_ARG1(EVENT_TYPE $ENV{TRAVIS_EVENT_TYPE} ${EVENT_TYPE})
 
@@ -211,11 +211,20 @@ SET_DEFAULT(NOTES           "")
 # default static build tag for Nightly
 set(BUILD_TAG "${BRANCH}")
 
+if(NOT BUILD_TYPE)
+    # default for kokkos if not specified
+    set(BUILD_TYPE "RelWithDebInfo")
+endif()
+
 # generate dynamic name if continuous or experimental model
 if(NOT "${MODEL}" STREQUAL "Nightly")
     if(EVENT_TYPE AND PULL_REQUEST_NUM)
-        # e.g. pull_request #123
-        set(BUILD_TAG "${EVENT_TYPE} #${PULL_REQUEST_NUM}")
+        # e.g. pull_request/123
+        if(GIT_AUTHOR)
+            set(BUILD_TAG "${GIT_AUTHOR}/${EVENT_TYPE}/${PULL_REQUEST_NUM}")
+        else()
+            set(BUILD_TAG "${EVENT_TYPE}/${PULL_REQUEST_NUM}")
+        endif()
     elseif(SLUG)
         # e.g. owner_name/repo_name
         set(BUILD_TAG "${SLUG}")
@@ -239,8 +248,12 @@ set(BUILD_NAME "[${BUILD_TAG}] [${BUILD_NAME}-${BUILD_TYPE}]")
 string(REPLACE ":" "-" BUILD_NAME "${BUILD_NAME}")
 # unnecessary info
 string(REPLACE "/merge]" "]" BUILD_NAME "${BUILD_NAME}")
-# unnecessary info
+# consistency
 string(REPLACE "/pr/" "/pull/" BUILD_NAME "${BUILD_NAME}")
+string(REPLACE "pull_request/" "pull/" BUILD_NAME "${BUILD_NAME}")
+# miscellaneous from missing fields
+string(REPLACE "--]" "]" BUILD_NAME "${BUILD_NAME}")
+string(REPLACE "-]" "]" BUILD_NAME "${BUILD_NAME}")
 
 # check binary directory
 if(EXISTS ${BINARY_DIR})
