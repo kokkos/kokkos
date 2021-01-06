@@ -10,6 +10,8 @@ jobs:
     steps:
       - uses: styfle/cancel-workflow-action@0.6.0
         with:
+          # visit https://api.github.com/repos/kokkos/kokkos/actions/workflows
+          # to get workflow_id
           workflow_id: 3979050
           access_token: ${{ github.token }}
   osxci:
