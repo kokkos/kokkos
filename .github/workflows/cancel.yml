@@ -14,5 +14,6 @@ jobs:
     steps:
       - uses: styfle/cancel-workflow-action@0.6.0
         with:
+          # update if new files are added to .github/workflows/
           workflow_id: 3979336,3979050
           access_token: ${{ github.token }}
