@@ -84,6 +84,7 @@ int main() {
     Kokkos::Profiling::stopSection(sectionId);
     Kokkos::Profiling::destroyProfileSection(sectionId);
     Kokkos::Profiling::markEvent("profiling_event");
+    Kokkos::Tools::declareMetadata("dogs", "good");
   }
   Kokkos::finalize();
 }

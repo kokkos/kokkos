@@ -95,6 +95,7 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.end_deep_copy == r.end_deep_copy && l.begin_fence == r.begin_fence &&
          l.end_fence == r.end_fence && l.sync_dual_view == r.sync_dual_view &&
          l.modify_dual_view == r.modify_dual_view &&
+         l.declare_metadata == r.declare_metadata &&
          l.declare_input_type == r.declare_input_type &&
          l.declare_output_type == r.declare_output_type &&
          l.end_tuning_context == r.end_tuning_context &&
@@ -425,46 +426,50 @@ void initialize() {
       Experimental::set_dual_view_modify_callback(
           *reinterpret_cast<dualViewModifyFunction*>(&p18));
 
-      auto p19 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
-      Experimental::set_create_profile_section_callback(
-          *(reinterpret_cast<createProfileSectionFunction*>(&p19)));
-      auto p20 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
-      Experimental::set_start_profile_section_callback(
-          *reinterpret_cast<startProfileSectionFunction*>(&p20));
-      auto p21 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
-      Experimental::set_stop_profile_section_callback(
-          *reinterpret_cast<stopProfileSectionFunction*>(&p21));
-      auto p22 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
-      Experimental::set_destroy_profile_section_callback(
-          *(reinterpret_cast<destroyProfileSectionFunction*>(&p22)));
+      auto p19 = dlsym(firstProfileLibrary, "kokkosp_declare_metadata");
+      Experimental::set_declare_metadata_callback(
+          *(reinterpret_cast<declareMetadataFunction*>(&p19)));
 
-      auto p23 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
+      auto p20 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
+      Experimental::set_create_profile_section_callback(
+          *(reinterpret_cast<createProfileSectionFunction*>(&p20)));
+      auto p21 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
+      Experimental::set_start_profile_section_callback(
+          *reinterpret_cast<startProfileSectionFunction*>(&p21));
+      auto p22 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
+      Experimental::set_stop_profile_section_callback(
+          *reinterpret_cast<stopProfileSectionFunction*>(&p22));
+      auto p23 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
+      Experimental::set_destroy_profile_section_callback(
+          *(reinterpret_cast<destroyProfileSectionFunction*>(&p23)));
+
+      auto p24 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
       Experimental::set_profile_event_callback(
-          *reinterpret_cast<profileEventFunction*>(&p23));
+          *reinterpret_cast<profileEventFunction*>(&p24));
 
 #ifdef KOKKOS_ENABLE_TUNING
-      auto p24 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
+      auto p25 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
       Experimental::set_declare_output_type_callback(
           *reinterpret_cast<Experimental::outputTypeDeclarationFunction*>(
-              &p24));
+              &p25));
 
-      auto p25 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
+      auto p26 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
       Experimental::set_declare_input_type_callback(
-          *reinterpret_cast<Experimental::inputTypeDeclarationFunction*>(&p25));
-      auto p26 = dlsym(firstProfileLibrary, "kokkosp_request_values");
+          *reinterpret_cast<Experimental::inputTypeDeclarationFunction*>(&p26));
+      auto p27 = dlsym(firstProfileLibrary, "kokkosp_request_values");
       Experimental::set_request_output_values_callback(
-          *reinterpret_cast<Experimental::requestValueFunction*>(&p26));
-      auto p27 = dlsym(firstProfileLibrary, "kokkosp_end_context");
+          *reinterpret_cast<Experimental::requestValueFunction*>(&p27));
+      auto p28 = dlsym(firstProfileLibrary, "kokkosp_end_context");
       Experimental::set_end_context_callback(
-          *reinterpret_cast<Experimental::contextEndFunction*>(&p27));
-      auto p28 = dlsym(firstProfileLibrary, "kokkosp_begin_context");
+          *reinterpret_cast<Experimental::contextEndFunction*>(&p28));
+      auto p29 = dlsym(firstProfileLibrary, "kokkosp_begin_context");
       Experimental::set_begin_context_callback(
-          *reinterpret_cast<Experimental::contextBeginFunction*>(&p28));
-      auto p29 =
+          *reinterpret_cast<Experimental::contextBeginFunction*>(&p29));
+      auto p30 =
           dlsym(firstProfileLibrary, "kokkosp_declare_optimization_goal");
       Experimental::set_declare_optimization_goal_callback(
           *reinterpret_cast<Experimental::optimizationGoalDeclarationFunction*>(
-              &p29));
+              &p30));
 #endif  // KOKKOS_ENABLE_TUNING
     }
   }
@@ -581,6 +586,13 @@ void modifyDualView(const std::string& label, const void* const ptr,
   }
 }
 
+void declareMetadata(const std::string& key, const std::string& value) {
+  if (Experimental::current_callbacks.declare_metadata != nullptr) {
+    (*Experimental::current_callbacks.declare_metadata)(key.c_str(),
+                                                        value.c_str());
+  }
+}
+
 }  // namespace Tools
 
 namespace Tools {
@@ -656,6 +668,9 @@ void set_dual_view_sync_callback(dualViewSyncFunction callback) {
 }
 void set_dual_view_modify_callback(dualViewModifyFunction callback) {
   current_callbacks.modify_dual_view = callback;
+}
+void set_declare_metadata_callback(declareMetadataFunction callback) {
+  current_callbacks.declare_metadata = callback;
 }
 
 void set_declare_output_type_callback(outputTypeDeclarationFunction callback) {

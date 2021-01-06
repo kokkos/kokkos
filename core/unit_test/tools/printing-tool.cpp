@@ -116,3 +116,6 @@ extern "C" void kokkosp_destroy_profile_section(uint32_t sec_id) {
 extern "C" void kokkosp_profile_event(const char* name) {
   std::cout << "kokkosp_profile_event:" << name << "::";
 }
+extern "C" void kokkosp_declare_metadata(const char* key, const char* value) {
+  std::cout << "kokkosp_declare_metadata:" << key << ":" << value << "::";
+}

@@ -54,7 +54,7 @@
 #include <stdbool.h>
 #endif
 
-#define KOKKOSP_INTERFACE_VERSION 20200625
+#define KOKKOSP_INTERFACE_VERSION 20210106
 
 // Profiling
 
@@ -122,6 +122,10 @@ typedef void (*Kokkos_Profiling_dualViewSyncFunction)(const char*,
 typedef void (*Kokkos_Profiling_dualViewModifyFunction)(const char*,
                                                         const void* const,
                                                         bool);
+
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Profiling_declareMetadataFunction)(const char*,
+                                                         const char*);
 
 // Tuning
 
@@ -243,7 +247,8 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_endFenceFunction end_fence;
   Kokkos_Profiling_dualViewSyncFunction sync_dual_view;
   Kokkos_Profiling_dualViewModifyFunction modify_dual_view;
-  char profiling_padding[12 * sizeof(function_pointer)];
+  Kokkos_Profiling_declareMetadataFunction declare_metadata;
+  char profiling_padding[11 * sizeof(function_pointer)];
   Kokkos_Tools_outputTypeDeclarationFunction declare_output_type;
   Kokkos_Tools_inputTypeDeclarationFunction declare_input_type;
   Kokkos_Tools_requestValueFunction request_output_values;
