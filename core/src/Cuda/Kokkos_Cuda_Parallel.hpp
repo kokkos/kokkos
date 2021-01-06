@@ -537,8 +537,22 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   const Policy m_rp;
 
  public:
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy& pol, const Functor&) {
+    cudaFuncAttributes attr =
+        CudaParallelLaunch<ParallelFor,
+                           LaunchBounds>::get_cuda_func_attributes();
+    auto const& prop = pol.space().cuda_device_prop();
+    // Limits due to registers/SM, MDRange doesn't have
+    // shared memory constraints
+    int const regs_per_sm        = prop.regsPerMultiprocessor;
+    int const regs_per_thread    = attr.numRegs;
+    int const max_threads_per_sm = regs_per_sm / regs_per_thread;
+    return std::min(
+        max_threads_per_sm,
+        static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
+  }
   Policy const& get_policy() const { return m_rp; }
-
   inline __device__ void operator()(void) const {
     Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                     typename Policy::work_tag>(m_rp, m_functor)
@@ -1248,8 +1262,21 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   using DummySHMEMReductionType = int;
 
  public:
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy& pol, const Functor&) {
+    cudaFuncAttributes attr =
+        CudaParallelLaunch<ParallelReduce,
+                           LaunchBounds>::get_cuda_func_attributes();
+    auto const& prop = pol.space().cuda_device_prop();
+    // Limits due do registers/SM
+    int const regs_per_sm        = prop.regsPerMultiprocessor;
+    int const regs_per_thread    = attr.numRegs;
+    int const max_threads_per_sm = regs_per_sm / regs_per_thread;
+    return std::min(
+        max_threads_per_sm,
+        static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
+  }
   Policy const& get_policy() const { return m_policy; }
-
   inline __device__ void exec_range(reference_type update) const {
     Kokkos::Impl::Reduce::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                             typename Policy::work_tag,

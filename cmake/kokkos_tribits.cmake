@@ -303,16 +303,16 @@ ENDMACRO()
 MACRO(KOKKOS_INSTALL_ADDITIONAL_FILES)
   # kokkos_launch_compiler is used by Kokkos to prefix compiler commands so that they forward to nvcc_wrapper
   INSTALL(PROGRAMS
-          "${PROJECT_SOURCE_DIR}/bin/nvcc_wrapper"
-          "${PROJECT_SOURCE_DIR}/bin/hpcbind"
-          "${PROJECT_SOURCE_DIR}/bin/kokkos_launch_compiler"
+          "${CMAKE_CURRENT_SOURCE_DIR}/bin/nvcc_wrapper"
+          "${CMAKE_CURRENT_SOURCE_DIR}/bin/hpcbind"
+          "${CMAKE_CURRENT_SOURCE_DIR}/bin/kokkos_launch_compiler"
           DESTINATION ${CMAKE_INSTALL_BINDIR})
   INSTALL(FILES
-          "${PROJECT_BINARY_DIR}/KokkosCore_config.h"
-          "${PROJECT_BINARY_DIR}/KokkosCore_Config_FwdBackend.hpp"
-          "${PROJECT_BINARY_DIR}/KokkosCore_Config_SetupBackend.hpp"
-          "${PROJECT_BINARY_DIR}/KokkosCore_Config_DeclareBackend.hpp"
-          "${PROJECT_BINARY_DIR}/KokkosCore_Config_PostInclude.hpp"
+          "${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_config.h"
+          "${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_Config_FwdBackend.hpp"
+          "${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_Config_SetupBackend.hpp"
+          "${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_Config_DeclareBackend.hpp"
+          "${CMAKE_CURRENT_BINARY_DIR}/KokkosCore_Config_PostInclude.hpp"
           DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 ENDMACRO()
 

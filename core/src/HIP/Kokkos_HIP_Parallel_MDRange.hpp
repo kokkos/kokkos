@@ -175,6 +175,25 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
+
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy& pol, const Functor&) {
+    using closure_type =
+        ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
+                    Kokkos::Experimental::HIP>;
+    hipFuncAttributes attr = Kokkos::Experimental::Impl::HIPParallelLaunch<
+        closure_type, LaunchBounds>::get_hip_func_attributes();
+    auto const& prop = pol.space().hip_device_prop();
+    // Limits due to registers/SM, MDRange doesn't have
+    // shared memory constraints
+    int const regs_per_sm        = prop.regsPerMultiprocessor;
+    int const regs_per_thread    = attr.numRegs;
+    int const max_threads_per_sm = regs_per_sm / regs_per_thread;
+    return std::min(
+        max_threads_per_sm,
+        static_cast<int>(
+            Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock));
+  }
 };
 
 // ParallelReduce
@@ -397,6 +416,23 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                   memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr) {}
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy& pol, const Functor&) {
+    using closure_type =
+        ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
+                       ReducerType, Kokkos::Experimental::HIP>;
+    hipFuncAttributes attr = Kokkos::Experimental::Impl::HIPParallelLaunch<
+        closure_type, LaunchBounds>::get_hip_func_attributes();
+    auto const& prop = pol.space().hip_device_prop();
+    // Limits due do registers/SM
+    int const regs_per_sm        = prop.regsPerMultiprocessor;
+    int const regs_per_thread    = attr.numRegs;
+    int const max_threads_per_sm = regs_per_sm / regs_per_thread;
+    return std::min(
+        max_threads_per_sm,
+        static_cast<int>(
+            Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock));
+  }
 };
 }  // namespace Impl
 }  // namespace Kokkos

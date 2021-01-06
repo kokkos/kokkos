@@ -42,38 +42,48 @@
 //@HEADER
 */
 
-#ifndef TEST_BLOCK_SIZE_DEDUCTION_HPP
-#define TEST_BLOCK_SIZE_DEDUCTION_HPP
-
 #include <Kokkos_Core.hpp>
-#include <gtest/gtest.h>
+#include <hip/TestHIP_Category.hpp>
 
-// NOTE kokkos/kokkos#3103 introduced a bug that was accidentally fixed in #3124
-// The code below will do until we decide to test block size deduction more
-// thoroughly
+namespace Test {
 
-struct PoorMansLambda {
-  template <typename MemberType>
-  KOKKOS_FUNCTION void operator()(MemberType const&) const {}
+struct TestAsyncLauncher {
+  size_t *m_flag;
+  size_t m_value;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int /*i*/) const {
+    // and update flag
+    Kokkos::atomic_add(m_flag, m_value);
+  }
+
+  TestAsyncLauncher(size_t *flag, int value) : m_flag(flag), m_value(value) {}
+
+  void run() {
+    Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), *this);
+  }
 };
 
-template <typename ExecutionSpace>
-void test_bug_pr_3103() {
-  using Policy =
-      Kokkos::TeamPolicy<ExecutionSpace, Kokkos::LaunchBounds<32, 1>>;
-  int const league_size   = 1;
-  int const team_size     = std::min(32, ExecutionSpace::concurrency());
-  int const vector_length = 1;
-
-  Kokkos::parallel_for(Policy(league_size, team_size, vector_length),
-                       PoorMansLambda());
+TEST(hip, async_launcher) {
+  size_t *flag;
+  HIP_SAFE_CALL(hipMalloc(&flag, sizeof(size_t)));
+  HIP_SAFE_CALL(hipMemset(flag, 0, sizeof(size_t)));
+  // launch # of cycles * 1000 kernels w/ distinct values
+  auto space        = Kokkos::Experimental::HIP();
+  auto instance     = space.impl_internal_space_instance();
+  size_t max_cycles = instance->m_maxDriverCycles;
+  size_t nkernels   = max_cycles * 1000;
+  for (size_t i = 0; i < nkernels; ++i) {
+    TestAsyncLauncher(flag, i).run();
+  }
+  // and check results -- if any of the driver types were overwritten
+  // the sum below should fail
+  instance->fence();
+  size_t h_flag;
+  HIP_SAFE_CALL(
+      hipMemcpy(&h_flag, flag, sizeof(size_t), hipMemcpyHostToDevice));
+  ASSERT_EQ(h_flag, (nkernels * (nkernels - 1)) / 2);
+  HIP_SAFE_CALL(hipFree(flag));
 }
 
-// FIXME_SYCL requires TeamPolicy
-#ifndef KOKKOS_ENABLE_SYCL
-TEST(TEST_CATEGORY, test_block_deduction_bug_pr_3103) {
-  test_bug_pr_3103<TEST_EXECSPACE>();
-}
-#endif
-
-#endif
+}  // namespace Test

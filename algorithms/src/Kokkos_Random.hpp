@@ -1028,7 +1028,7 @@ class Random_XorShift1024 {
 
   KOKKOS_INLINE_FUNCTION
   double drand(const double& start, const double& end) {
-    return frand(end - start) + start;
+    return drand(end - start) + start;
   }
 
   // Marsaglia polar method for drawing a standard normal distributed random

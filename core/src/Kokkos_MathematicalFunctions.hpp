@@ -58,7 +58,7 @@ namespace Kokkos {
 namespace Experimental {
 
 #if defined(KOKKOS_ENABLE_SYCL)
-#define NAMESPACE_MATH_FUNCTIONS cl::sycl
+#define NAMESPACE_MATH_FUNCTIONS sycl
 #else
 #define NAMESPACE_MATH_FUNCTIONS std
 #endif

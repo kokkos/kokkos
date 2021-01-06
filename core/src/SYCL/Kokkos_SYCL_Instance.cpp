@@ -110,7 +110,7 @@ void SYCLInternal::initialize(const sycl::device& d) {
         Kokkos::Impl::throw_runtime_exception(
             "There was an asynchronous SYCL error!\n");
     };
-    m_queue = std::make_unique<sycl::queue>(d, exception_handler);
+    m_queue.emplace(d, exception_handler);
     std::cout << SYCL::SYCLDevice(d) << '\n';
     m_indirectKernel.emplace(IndirectKernelAllocator(*m_queue));
   } else {
