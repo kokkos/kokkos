@@ -3,6 +3,15 @@ name: github-OSX
 on: [push, pull_request]
 
 jobs:
+  cancelosx:
+    name: 'Cancel Previous Workflows'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          workflow_id: 3979050
+          access_token: ${{ github.token }}
   osxci:
     name: osx-ci
     runs-on: [macos-latest]

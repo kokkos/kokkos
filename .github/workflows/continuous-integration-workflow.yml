@@ -2,6 +2,15 @@ name: github-Linux
 on: [push, pull_request]
 
 jobs:
+  cancel:
+    name: 'Cancel Previous Workflows'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: styfle/cancel-workflow-action@0.6.0
+        with:
+          workflow_id: 3979336
+          access_token: ${{ github.token }}
   CI:
     continue-on-error: true
     strategy:
@@ -43,7 +52,7 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} 
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
       - name: Build
         run: |
           ccache -z
