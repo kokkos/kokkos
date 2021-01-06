@@ -207,10 +207,17 @@ foreach(_FILE ${NOTE_FILES})
     include("${_FILE}")
 endforeach()
 
-ctest_submit(RETURN_VALUE submit_ret
-    RETRY_COUNT 2
-    RETRY_DELAY 10)
-
+if(CMAKE_VERSION VERSION_LESS 3.13)
+    ctest_submit(RETURN_VALUE submit_ret
+        RETRY_COUNT 2
+        RETRY_DELAY 10)
+else()
+    # don't fail because of a submission error
+    ctest_submit(RETURN_VALUE submit_ret
+        RETRY_COUNT 2
+        RETRY_DELAY 10
+        CAPTURE_CMAKE_ERROR submit_err)
+endif()
 
 #-------------------------------------------------------------------------#
 # Submit
