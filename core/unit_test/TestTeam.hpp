@@ -817,16 +817,17 @@ KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
                        });
   team.team_barrier();
 
-  Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, 16), [&](const int &i) {
-    a_thread1(i) = 1000000 + 100000 * team.team_rank() + 16 - i +
-                   team.league_rank() * 100000;
-    a_thread2(i) = 2000000 + 100000 * team.team_rank() + 16 - i +
-                   team.league_rank() * 100000;
-    a_thread3(i) = 3000000 + 100000 * team.team_rank() + 16 - i +
-                   team.league_rank() * 100000;
-  });
+  Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, int(0), unsigned(16)),
+                       [&](const int &i) {
+                         a_thread1(i) = 1000000 + 100000 * team.team_rank() +
+                                        16 - i + team.league_rank() * 100000;
+                         a_thread2(i) = 2000000 + 100000 * team.team_rank() +
+                                        16 - i + team.league_rank() * 100000;
+                         a_thread3(i) = 3000000 + 100000 * team.team_rank() +
+                                        16 - i + team.league_rank() * 100000;
+                       });
 
-  Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, 12800),
+  Kokkos::parallel_for(Kokkos::TeamThreadRange(team, int(0), unsigned(12800)),
                        [&](const int &i) {
                          b_team1(i) = 1000000 + i + team.league_rank() * 100000;
                          b_team2(i) = 2000000 + i + team.league_rank() * 100000;

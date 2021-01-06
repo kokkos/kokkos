@@ -856,11 +856,12 @@ KOKKOS_INLINE_FUNCTION_DELETED
     Impl::ThreadVectorRangeBoundariesStruct<iType, TeamMemberType>
     ThreadVectorRange(const TeamMemberType&, const iType& count) = delete;
 
-template <typename iType, class TeamMemberType, class _never_use_this_overload>
-KOKKOS_INLINE_FUNCTION_DELETED
-    Impl::ThreadVectorRangeBoundariesStruct<iType, TeamMemberType>
-    ThreadVectorRange(const TeamMemberType&, const iType& arg_begin,
-                      const iType& arg_end) = delete;
+template <typename iType1, typename iType2, class TeamMemberType,
+          class _never_use_this_overload>
+KOKKOS_INLINE_FUNCTION_DELETED Impl::ThreadVectorRangeBoundariesStruct<
+    typename std::common_type<iType1, iType2>::type, TeamMemberType>
+ThreadVectorRange(const TeamMemberType&, const iType1& arg_begin,
+                  const iType2& arg_end) = delete;
 
 namespace Impl {
 
