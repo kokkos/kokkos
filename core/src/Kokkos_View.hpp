@@ -654,7 +654,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, size_t>::type
+      typename std::enable_if<std::is_integral<iType>::value,
+                              typename traits::size_type>::type
       extent(const iType& r) const noexcept {
     return m_map.extent(r);
   }

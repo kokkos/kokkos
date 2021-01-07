@@ -830,7 +830,8 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr
-      typename std::enable_if<std::is_integral<iType>::value, size_t>::type
+      typename std::enable_if<std::is_integral<iType>::value,
+                              typename traits::size_type>::type
       extent(const iType& r) const {
     return d_view.extent(r);
   }

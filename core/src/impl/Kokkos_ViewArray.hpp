@@ -154,7 +154,8 @@ class ViewMapping<Traits, Kokkos::Array<>> {
   enum { Rank = Traits::dimension::rank };
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr size_t extent(const iType &r) const {
+  KOKKOS_INLINE_FUNCTION constexpr typename Traits::size_type
+  extent(const iType &r) const {
     return m_impl_offset.m_dim.extent(r);
   }
 

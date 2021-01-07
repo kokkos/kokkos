@@ -182,7 +182,8 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   }
 
   template <typename iType>
-  KOKKOS_INLINE_FUNCTION size_t extent(const iType& r) const {
+  KOKKOS_INLINE_FUNCTION typename traits::size_type extent(
+      const iType& r) const {
     return r == 0 ? size() : 1;
   }
 
