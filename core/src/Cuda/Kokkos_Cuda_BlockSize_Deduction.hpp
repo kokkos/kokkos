@@ -140,7 +140,7 @@ inline int cuda_deduce_block_size(bool early_termination,
       }
     }
 
-    if (early_termination && blocks_per_sm != 0) break;
+    if (early_termination && opt_block_size != 0) break;
   }
 
   return opt_block_size;
