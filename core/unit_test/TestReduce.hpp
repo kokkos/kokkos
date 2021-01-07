@@ -89,6 +89,14 @@ class ReduceFunctor {
   }
 
   KOKKOS_INLINE_FUNCTION
+  void join(const ReducerTag, volatile value_type& dst,
+            const volatile value_type& src) const {
+    dst.value[0] += src.value[0];
+    dst.value[1] += src.value[1];
+    dst.value[2] += src.value[2];
+  }
+
+  KOKKOS_INLINE_FUNCTION
   void operator()(size_type iwork, value_type& dst) const {
     dst.value[0] += 1;
     dst.value[1] += iwork + 1;
