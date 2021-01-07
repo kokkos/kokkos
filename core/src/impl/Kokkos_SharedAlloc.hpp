@@ -48,8 +48,9 @@
 #include <cstdint>
 #include <string>
 
-// undefined at end of file
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)
+// Base function.
+static constexpr bool kokkos_omp_on_host() { return true; }
 #if defined(KOKKOS_COMPILER_PGI)
 #define KOKKOS_IMPL_IF_ON_HOST if (!__builtin_is_device_code())
 #else

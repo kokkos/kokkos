@@ -524,30 +524,45 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
 
     // A lock array to keep track of scratch memory blocks.
-    int* lock_array = new int[max_active_league_size];
-    memset(lock_array, 1, max_active_league_size * sizeof(int));
+    // The first element to keep track of the number of free-blocks.
+    int* lock_array = new int[max_active_league_size + 1];
+    memset(lock_array, 1, (max_active_league_size + 1) * sizeof(int));
+    lock_array[0] = max_active_league_size;
 
-#pragma omp target teams distribute map(                \
-    to                                                  \
-    : a_functor, lock_array [0:max_active_league_size]) \
+#pragma omp target teams distribute map(                    \
+    to                                                      \
+    : a_functor, lock_array [0:max_active_league_size + 1]) \
     is_device_ptr(scratch_ptr) num_teams(nteams) thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
-      // Calculate the scratch block index for the current team.
-      // FIXME_OPENMPTARGET - Currently a static allocation is being used
-      // where the same block of scratch memory is assigned to the teams with
-      // the same remainder.
-      const int shmem_block_index = omp_get_team_num() % max_active_league_size;
+      int shmem_block_index = 0, lock_team = 99999;
 
-      // Try and get a lock on the block.
-      // FIXME_OPENMPTARGET - Currently a lock is required even when scratch
-      // memory is not requested since hierarchical reduction uses the first 16
-      // bytes in the scratch-space to store the team-specific partial results.
-      int lock_team =
-          atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
-      while (lock_array[shmem_block_index] == 0) {
+      // Allocate the first set of max_active_league_size blocks.
+      if (i < max_active_league_size) {
+        shmem_block_index = i + 1;
+        atomic_decrement(&lock_array[0]);
+        lock_array[shmem_block_index] = 0;
+      } else {
+        // Block until there is atleast one free scratch block is available.
+        while (lock_array[0] == 0)
+          ;
+
+        // Iterate till the first free scratch block is encountered and try and
+        // get a lock on the block.
+        int iter = 1;
+        while (lock_array[iter] != 1) iter++;
+        shmem_block_index = iter;
+
         lock_team =
             atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+        while (lock_array[shmem_block_index] == 1) {
+          lock_team =
+              atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+        }
+
+        // Decrement the number of available free blocks.
+        atomic_decrement(&lock_array[0]);
       }
+
 #pragma omp parallel num_threads(team_size)
       {
         typename Policy::member_type team(
@@ -556,8 +571,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_functor(team);
       }
 
-      // Free the locked block.
+      // Free the locked block and increment the number of available free
+      // blocks.
       lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 0, 1);
+      atomic_increment(&lock_array[0]);
     }
 
     delete[] lock_array;
@@ -590,21 +607,42 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
 
     // A lock array to keep track of scratch memory blocks.
-    int* lock_array = new int[max_active_league_size];
-    memset(lock_array, 1, max_active_league_size * sizeof(int));
+    int* lock_array = new int[max_active_league_size + 1];
+    memset(lock_array, 1, (max_active_league_size + 1) * sizeof(int));
+    lock_array[0] = max_active_league_size;
 
 #pragma omp target teams distribute map(                \
     to                                                  \
     : a_functor, lock_array [0:max_active_league_size]) \
     is_device_ptr(scratch_ptr) num_teams(nteams) thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
-      const int shmem_block_index = omp_get_team_num() % max_active_league_size;
+      int shmem_block_index = 0, lock_team = 99999;
 
-      int lock_team =
-          atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
-      while (lock_array[shmem_block_index] == 0) {
+      // Allocate the first set of max_active_league_size blocks.
+      if (i < max_active_league_size) {
+        shmem_block_index = i + 1;
+        atomic_decrement(&lock_array[0]);
+        lock_array[shmem_block_index] = 0;
+      } else {
+        // Block until there is atleast one free scratch block is available.
+        while (lock_array[0] == 0)
+          ;
+
+        // Iterate till the first free scratch block is encountered and try and
+        // get a lock on the block.
+        int iter = 1;
+        while (lock_array[iter] != 1) iter++;
+        shmem_block_index = iter;
+
         lock_team =
             atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+        while (lock_array[shmem_block_index] == 1) {
+          lock_team =
+              atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+        }
+
+        // Decrement the number of available free blocks.
+        atomic_decrement(&lock_array[0]);
       }
 #pragma omp parallel num_threads(team_size)
       {
@@ -614,8 +652,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_functor(TagType(), team);
       }
 
-      // Free the locked block.
+      // Free the locked block and increment the number of available free
+      // blocks.
       lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 0, 1);
+      atomic_increment(&lock_array[0]);
     }
 
     delete[] lock_array;
