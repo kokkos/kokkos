@@ -33,3 +33,7 @@ IF(@Kokkos_ENABLE_CUDA@ AND NOT "separable_compilation" IN_LIST Kokkos_FIND_COMP
     ENDIF()
     UNSET(IS_NVCC) # be mindful of the environment, pollution is bad
 ENDIF()
+
+IF(NOT CMAKE_CXX_COMPILER_ID STREQUAL "@CMAKE_CXX_COMPILER_ID@")
+  MESSAGE(FATAL_ERROR "Kokkos was compiled with @CMAKE_CXX_COMPILER_ID@ and hence cannot be used with ${CMAKE_CXX_COMPILER_ID}")
+ENDIF()
