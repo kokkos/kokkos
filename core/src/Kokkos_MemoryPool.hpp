@@ -527,7 +527,7 @@ class MemoryPool {
 
 // FIXME_SYCL clock_tic not yet implemented
 #ifdef KOKKOS_ENABLE_SYCL
-    const uint32_t block_id_hint = 0;
+    const uint32_t block_id_hint = alloc_size;
 #else
     const uint32_t block_id_hint =
         (uint32_t)(Kokkos::Impl::clock_tic()
