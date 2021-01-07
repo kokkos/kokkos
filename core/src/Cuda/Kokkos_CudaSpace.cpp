@@ -596,7 +596,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
   header.m_record = static_cast<SharedAllocationRecord<void, void> *>(this);
 
   strncpy(header.m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length);
+          SharedAllocationHeader::maximum_label_length - 1);
   // Set last element zero, in case c_str is too long
   header.m_label[SharedAllocationHeader::maximum_label_length - 1] = (char)0;
 
@@ -625,7 +625,7 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
   RecordBase::m_alloc_ptr->m_record = this;
 
   strncpy(RecordBase::m_alloc_ptr->m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length);
+          SharedAllocationHeader::maximum_label_length - 1);
 
   // Set last element zero, in case c_str is too long
   RecordBase::m_alloc_ptr
@@ -653,7 +653,7 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
   RecordBase::m_alloc_ptr->m_record = this;
 
   strncpy(RecordBase::m_alloc_ptr->m_label, arg_label.c_str(),
-          SharedAllocationHeader::maximum_label_length);
+          SharedAllocationHeader::maximum_label_length - 1);
   // Set last element zero, in case c_str is too long
   RecordBase::m_alloc_ptr
       ->m_label[SharedAllocationHeader::maximum_label_length - 1] = (char)0;
