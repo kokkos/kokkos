@@ -196,7 +196,9 @@ struct FunctorScalarJoin<0> {
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile double& dst, const volatile double& update) const {
-    dst += update;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    dst = dst + update;
   }
 };
 
@@ -215,7 +217,9 @@ struct FunctorScalarJoin<1> {
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile double& dst, const volatile double& update) const {
-    dst += update;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    dst = dst + update;
   }
 };
 
@@ -233,7 +237,9 @@ struct FunctorScalarJoinFinal<0> {
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile double& dst, const volatile double& update) const {
-    dst += update;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    dst = dst + update;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -255,7 +261,9 @@ struct FunctorScalarJoinFinal<1> {
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile double& dst, const volatile double& update) const {
-    dst += update;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    dst = dst + update;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -276,7 +284,9 @@ struct FunctorScalarJoinInit<0> {
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile double& dst, const volatile double& update) const {
-    dst += update;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    dst = dst + update;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -298,7 +308,9 @@ struct FunctorScalarJoinInit<1> {
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile double& dst, const volatile double& update) const {
-    dst += update;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    dst = dst + update;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -319,7 +331,9 @@ struct FunctorScalarJoinFinalInit<0> {
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile double& dst, const volatile double& update) const {
-    dst += update;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    dst = dst + update;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -344,7 +358,9 @@ struct FunctorScalarJoinFinalInit<1> {
 
   KOKKOS_INLINE_FUNCTION
   void join(volatile double& dst, const volatile double& update) const {
-    dst += update;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    dst = dst + update;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -379,8 +395,9 @@ struct Functor2 {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(volatile double dst[], const volatile double src[]) const {
-    for (unsigned i = 0; i < value_count; ++i) dst[i] += src[i];
+  // volatile-qualified parameter type is deprecated
+  void join(volatile double* dst, const volatile double* src) const {
+    for (unsigned i = 0; i < value_count; ++i) dst[i] = dst[i] + src[i];
   }
 };
 

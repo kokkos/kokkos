@@ -74,8 +74,8 @@ struct MyComplex {
 
   KOKKOS_INLINE_FUNCTION
   void operator+=(const volatile MyComplex& src) volatile {
-    _re += src._re;
-    _im += src._im;
+    _re = _re + src._re;
+    _im = _im + src._im;
   }
 };
 

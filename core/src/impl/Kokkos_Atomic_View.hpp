@@ -339,6 +339,8 @@ class AtomicDataElement {
   }
 
   KOKKOS_INLINE_FUNCTION
+  // FIXME volatile-qualified return type  is deprecated - safe to simply remove
+  // volatile on return type here?
   operator volatile non_const_value_type() volatile const {
     // return Kokkos::atomic_load(ptr);
     return *ptr;
