@@ -122,7 +122,7 @@ struct SuperScalar {
   }
 
   KOKKOS_INLINE_FUNCTION
-  bool operator==(const SuperScalar& src) {
+  bool operator==(const SuperScalar& src) const {
     bool compare = true;
     for (int i = 0; i < N; i++) {
       compare = compare && (val[i] == src.val[i]);
@@ -131,7 +131,7 @@ struct SuperScalar {
   }
 
   KOKKOS_INLINE_FUNCTION
-  bool operator!=(const SuperScalar& src) {
+  bool operator!=(const SuperScalar& src) const {
     bool compare = true;
     for (int i = 0; i < N; i++) {
       compare = compare && (val[i] == src.val[i]);
