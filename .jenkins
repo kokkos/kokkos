@@ -48,7 +48,7 @@ pipeline {
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
-                                -DBUILD_NAME=SYCL-OneAPI \
+                                -DBUILD_NAME=${STAGE_NAME} \
                               -P cmake/KokkosCI.cmake'''
                     }
                     post {
@@ -87,7 +87,7 @@ pipeline {
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
-                                -DBUILD_NAME=HIP-ROCm-3.8-C++14 \
+                                -DBUILD_NAME=${STAGE_NAME} \
                                 -DCTEST_ARGS=-VV \
                               -P cmake/KokkosCI.cmake'''
                     }
@@ -122,7 +122,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
-                                -DBUILD_NAME=HIP-ROCm-3.8-C++17 \
+                                -DBUILD_NAME=${STAGE_NAME} \
                                 -DCTEST_ARGS=-VV \
                               -P cmake/KokkosCI.cmake'''
                     }
@@ -154,7 +154,7 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
-                                -DBUILD_NAME=OPENMPTARGET-Clang \
+                                -DBUILD_NAME=${STAGE_NAME} \
                               -P cmake/KokkosCI.cmake'''
                     }
                     post {
@@ -188,7 +188,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
-                                -DBUILD_NAME=CUDA-10.1-Clang-Tidy \
+                                -DBUILD_NAME=${STAGE_NAME} \
                               -P cmake/KokkosCI.cmake'''
                     }
                     post {
@@ -259,7 +259,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/install \
-                                -DBUILD_NAME=CUDA-11.0-NVCC-C++17-RDC \
+                                -DBUILD_NAME=${STAGE_NAME} \
                                 -DTARGET=install \
                               -P cmake/KokkosCI.cmake && \
                               rm -rf build-tests && mkdir -p build-tests && cd build-tests && \
@@ -314,7 +314,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
-                                -DBUILD_NAME=CUDA-10.1-NVCC \
+                                -DBUILD_NAME=${STAGE_NAME} \
                                 -DTARGET=install \
                               -P cmake/KokkosCI.cmake && \
                               cd example/build_cmake_in_tree && \
@@ -349,7 +349,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
-                                -DBUILD_NAME=GCC-5.3.0 \
+                                -DBUILD_NAME=${STAGE_NAME} \
                               -P cmake/KokkosCI.cmake && \
                               gcc -I$PWD/core/src core/unit_test/tools/TestCInterface.c'''
                     }
