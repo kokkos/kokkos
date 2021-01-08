@@ -391,9 +391,9 @@ void initialize(const std::string& profileLibrary) {
 #ifdef KOKKOS_ENABLE_LIBDL
   void* firstProfileLibrary = nullptr;
 
-  char* envProfileLibrary = (profileLibrary.empty())
-                                ? getenv("KOKKOS_PROFILE_LIBRARY")
-                                : const_cast<char*>(profileLibrary.c_str());
+  if (profileLibrary.empty()) return;
+
+  char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
   // If we do not find a profiling library in the environment then exit
   // early.
