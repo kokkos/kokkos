@@ -129,7 +129,6 @@ void initialize(const std::string& = {});
 void finalize();
 bool printHelp(const std::string&);
 void parseArgs(const std::string&);
-void parseArgs(int, char**);
 
 Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
@@ -521,10 +520,6 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
 void endDeepCopy();
 void finalize();
 void initialize(const std::string& = {});
-
-bool printHelp(const std::string&);
-void parseArgs(const std::string&);
-void parseArgs(int, char**);
 
 SpaceHandle make_space_handle(const char* space_name);
 

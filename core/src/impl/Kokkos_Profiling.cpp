@@ -395,12 +395,6 @@ void initialize(const std::string& profileLibrary) {
 
   char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
-  // If we do not find a profiling library in the environment then exit
-  // early.
-  if (envProfileLibrary == nullptr) {
-    return;
-  }
-
   char* envProfileCopy =
       (char*)malloc(sizeof(char) * (strlen(envProfileLibrary) + 1));
   sprintf(envProfileCopy, "%s", envProfileLibrary);

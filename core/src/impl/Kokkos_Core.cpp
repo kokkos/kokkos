@@ -274,14 +274,14 @@ void initialize_backends(const InitArguments& args) {
 void initialize_profiling(const InitArguments& args) {
   Kokkos::Profiling::initialize(args.tool_lib);
   if (args.tool_help) {
-    if (!Kokkos::Profiling::printHelp(args.tool_args)) {
+    if (!Kokkos::Tools::printHelp(args.tool_args)) {
       std::cerr << "Tool has not provided a help message" << std::endl;
     }
     g_is_initialized = true;
     ::Kokkos::finalize();
     std::exit(EXIT_SUCCESS);
   }
-  Kokkos::Profiling::parseArgs(args.tool_args);
+  Kokkos::Tools::parseArgs(args.tool_args);
 }
 
 void pre_initialize_internal(const InitArguments& args) {
