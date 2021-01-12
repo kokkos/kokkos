@@ -72,8 +72,6 @@ KOKKOS_ADD_LIBRARY(
   ADD_BUILD_OPTIONS # core should be given all the necessary compiler/linker flags
 )
 
-SET_TARGET_PROPERTIES(kokkoscore PROPERTIES VERSION ${Kokkos_VERSION})
-
 KOKKOS_LIB_INCLUDE_DIRECTORIES(kokkoscore
   ${KOKKOS_TOP_BUILD_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}

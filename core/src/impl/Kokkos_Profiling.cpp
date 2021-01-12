@@ -49,14 +49,14 @@
 #include <dlfcn.h>
 #endif
 
+#include <algorithm>
+#include <array>
 #include <cstring>
+#include <iostream>
+#include <stack>
 #include <unordered_map>
 #include <unordered_set>
-#include <algorithm>
 #include <vector>
-#include <array>
-#include <stack>
-#include <iostream>
 namespace Kokkos {
 
 namespace Tools {
@@ -77,6 +77,7 @@ static EventSet no_profiling;
 
 bool eventSetsEqual(const EventSet& l, const EventSet& r) {
   return l.init == r.init && l.finalize == r.finalize &&
+         l.parse_args == r.parse_args && l.print_help == r.print_help &&
          l.begin_parallel_for == r.begin_parallel_for &&
          l.end_parallel_for == r.end_parallel_for &&
          l.begin_parallel_reduce == r.begin_parallel_reduce &&
@@ -318,13 +319,71 @@ void markEvent(const std::string& eventName) {
   }
 }
 
+bool printHelp(const std::string& args) {
+  if (Experimental::current_callbacks.print_help == nullptr) {
+    return false;
+  }
+  std::string arg0  = args.substr(0, args.find_first_of(' '));
+  const char* carg0 = arg0.c_str();
+  (*Experimental::current_callbacks.print_help)(const_cast<char*>(carg0));
+  return true;
+}
+
+void parseArgs(int _argc, char** _argv) {
+  if (Experimental::current_callbacks.parse_args != nullptr && _argc > 0) {
+    (*Experimental::current_callbacks.parse_args)(_argc, _argv);
+  }
+}
+
+void parseArgs(const std::string& args) {
+  if (Experimental::current_callbacks.parse_args == nullptr) {
+    return;
+  }
+  using strvec_t = std::vector<std::string>;
+  auto tokenize  = [](const std::string& line, const std::string& delimiters) {
+    strvec_t _result{};
+    std::size_t _bidx = 0;  // position that is the beginning of the new string
+    std::size_t _didx = 0;  // position of the delimiter in the string
+    while (_bidx < line.length() && _didx < line.length()) {
+      // find the first character (starting at _didx) that is not a delimiter
+      _bidx = line.find_first_not_of(delimiters, _didx);
+      // if no more non-delimiter chars, done
+      if (_bidx == std::string::npos) break;
+      // starting at the position of the new string, find the next delimiter
+      _didx = line.find_first_of(delimiters, _bidx);
+      // starting at the position of the new string, get the characters
+      // between this position and the next delimiter
+      std::string _tmp = line.substr(_bidx, _didx - _bidx);
+      // don't add empty strings
+      if (!_tmp.empty()) _result.emplace_back(_tmp);
+    }
+    return _result;
+  };
+  auto vargs = tokenize(args, " \t");
+  if (vargs.size() == 0) return;
+  auto _argc          = static_cast<int>(vargs.size());
+  char** _argv        = new char*[_argc + 1];
+  _argv[vargs.size()] = nullptr;
+  for (int i = 0; i < _argc; ++i) {
+    auto& _str = vargs.at(i);
+    _argv[i]   = new char[_str.length() + 1];
+    std::memcpy(_argv[i], _str.c_str(), _str.length() * sizeof(char));
+    _argv[i][_str.length()] = '\0';
+  }
+  parseArgs(_argc, _argv);
+  for (int i = 0; i < _argc; ++i) {
+    delete[] _argv[i];
+  }
+  delete[] _argv;
+}
+
 SpaceHandle make_space_handle(const char* space_name) {
   SpaceHandle handle;
   strncpy(handle.name, space_name, 63);
   return handle;
 }
 
-void initialize() {
+void initialize(const std::string& profileLibrary) {
   // Make sure initialize calls happens only once
   static int is_initialized = 0;
   if (is_initialized) return;
@@ -333,13 +392,9 @@ void initialize() {
 #ifdef KOKKOS_ENABLE_LIBDL
   void* firstProfileLibrary = nullptr;
 
-  char* envProfileLibrary = getenv("KOKKOS_PROFILE_LIBRARY");
+  if (profileLibrary.empty()) return;
 
-  // If we do not find a profiling library in the environment then exit
-  // early.
-  if (envProfileLibrary == nullptr) {
-    return;
-  }
+  char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
   char* envProfileCopy =
       (char*)malloc(sizeof(char) * (strlen(envProfileLibrary) + 1));
@@ -471,8 +526,17 @@ void initialize() {
           *reinterpret_cast<Experimental::optimizationGoalDeclarationFunction*>(
               &p30));
 #endif  // KOKKOS_ENABLE_TUNING
+
+      auto p31 = dlsym(firstProfileLibrary, "kokkosp_print_help");
+      Experimental::set_print_help_callback(
+          *reinterpret_cast<printHelpFunction*>(&p31));
+      auto p32 = dlsym(firstProfileLibrary, "kokkosp_parse_args");
+      Experimental::set_parse_args_callback(
+          *reinterpret_cast<parseArgsFunction*>(&p32));
     }
   }
+#else
+  (void)profileLibrary;
 #endif  // KOKKOS_ENABLE_LIBDL
   if (Experimental::current_callbacks.init != nullptr) {
     (*Experimental::current_callbacks.init)(
@@ -602,6 +666,12 @@ void set_init_callback(initFunction callback) {
 }
 void set_finalize_callback(finalizeFunction callback) {
   current_callbacks.finalize = callback;
+}
+void set_parse_args_callback(parseArgsFunction callback) {
+  current_callbacks.parse_args = callback;
+}
+void set_print_help_callback(printHelpFunction callback) {
+  current_callbacks.print_help = callback;
 }
 void set_begin_parallel_for_callback(beginFunction callback) {
   current_callbacks.begin_parallel_for = callback;
@@ -766,7 +836,17 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
 void endDeepCopy() { Kokkos::Tools::endDeepCopy(); }
 
 void finalize() { Kokkos::Tools::finalize(); }
-void initialize() { Kokkos::Tools::initialize(); }
+void initialize(const std::string& profileLibrary) {
+  Kokkos::Tools::initialize(profileLibrary);
+}
+
+bool printHelp(const std::string& args) {
+  return Kokkos::Tools::printHelp(args);
+}
+void parseArgs(const std::string& args) { Kokkos::Tools::parseArgs(args); }
+void parseArgs(int _argc, char** _argv) {
+  Kokkos::Tools::parseArgs(_argc, _argv);
+}
 
 SpaceHandle make_space_handle(const char* space_name) {
   return Kokkos::Tools::make_space_handle(space_name);
