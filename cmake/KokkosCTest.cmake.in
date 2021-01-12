@@ -127,6 +127,18 @@ ctest_configure(BUILD "${CTEST_BINARY_DIRECTORY}"
 
 
 #-------------------------------------------------------------------------#
+# Echo configure log bc Damien wants to delay merging this PR for eternity
+#
+file(GLOB _configure_log "${CTEST_BINARY_DIRECTORY}/Testing/Temporary/LastConfigure*.log")
+# should only have one but loop just for safety
+foreach(_LOG ${_configure_log})
+    file(READ ${_LOG} _LOG_MESSAGE)
+    message(STATUS "Configure Log: ${_LOG}")
+    message(STATUS "\n${_LOG_MESSAGE}\n")
+endforeach()
+
+
+#-------------------------------------------------------------------------#
 # Build
 #
 message(STATUS "")
@@ -136,6 +148,18 @@ message(STATUS "")
 ctest_build(BUILD "${CTEST_BINARY_DIRECTORY}"
     ${APPEND_CTEST}
     RETURN_VALUE build_ret)
+
+
+#-------------------------------------------------------------------------#
+# Echo build log bc Damien wants to delay merging this PR for eternity
+#
+file(GLOB _build_log "${CTEST_BINARY_DIRECTORY}/Testing/Temporary/LastBuild*.log")
+# should only have one but loop just for safety
+foreach(_LOG ${_build_log})
+    file(READ ${_LOG} _LOG_MESSAGE)
+    message(STATUS "Build Log: ${_LOG}")
+    message(STATUS "\n${_LOG_MESSAGE}\n")
+endforeach()
 
 
 #-------------------------------------------------------------------------#
