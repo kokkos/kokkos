@@ -62,10 +62,18 @@ struct TestTeamPolicy {
   view_type m_flags;
 
   TestTeamPolicy(const size_t league_size)
-      : m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"),
-                Kokkos::TeamPolicy<ScheduleType, ExecSpace>(1, 1).team_size_max(
-                    *this, Kokkos::ParallelReduceTag()),
-                league_size) {}
+      : m_flags(
+            Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"),
+  // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+            Kokkos::TeamPolicy<ScheduleType, ExecSpace>(1, 32).team_size_max(
+                *this, Kokkos::ParallelReduceTag()),
+#else
+            Kokkos::TeamPolicy<ScheduleType, ExecSpace>(1, 1).team_size_max(
+                *this, Kokkos::ParallelReduceTag()),
+#endif
+            league_size) {
+  }
 
   struct VerifyInitTag {};
 
@@ -120,12 +128,24 @@ struct TestTeamPolicy {
 
   static void test_constructors() {
     constexpr const int smallest_work = 1;
+    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    Kokkos::TeamPolicy<ExecSpace, NoOpTag> none_auto(smallest_work, 32,
+                                                     smallest_work);
+#else
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> none_auto(
         smallest_work, smallest_work, smallest_work);
+#endif
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> both_auto(
         smallest_work, Kokkos::AUTO(), Kokkos::AUTO());
+    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_vector(smallest_work, 32,
+                                                       Kokkos::AUTO());
+#else
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_vector(
         smallest_work, smallest_work, Kokkos::AUTO());
+#endif
     Kokkos::TeamPolicy<ExecSpace, NoOpTag> auto_team(
         smallest_work, Kokkos::AUTO(), smallest_work);
   }
@@ -136,11 +156,20 @@ struct TestTeamPolicy {
     using policy_type_init =
         Kokkos::TeamPolicy<ScheduleType, ExecSpace, VerifyInitTag>;
 
+    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    const int team_size = policy_type(league_size, 32)
+                              .team_size_max(functor, Kokkos::ParallelForTag());
+    const int team_size_init =
+        policy_type_init(league_size, 32)
+            .team_size_max(functor, Kokkos::ParallelForTag());
+#else
     const int team_size = policy_type(league_size, 1)
                               .team_size_max(functor, Kokkos::ParallelForTag());
     const int team_size_init =
         policy_type_init(league_size, 1)
             .team_size_max(functor, Kokkos::ParallelForTag());
+#endif
 
     Kokkos::parallel_for(policy_type(league_size, team_size), functor);
     Kokkos::parallel_for(policy_type_init(league_size, team_size_init),
@@ -173,9 +202,16 @@ struct TestTeamPolicy {
     using policy_type_reduce =
         Kokkos::TeamPolicy<ScheduleType, ExecSpace, ReduceTag>;
 
+    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    const int team_size =
+        policy_type_reduce(league_size, 32)
+            .team_size_max(functor, Kokkos::ParallelReduceTag());
+#else
     const int team_size =
         policy_type_reduce(league_size, 1)
             .team_size_max(functor, Kokkos::ParallelReduceTag());
+#endif
 
     const int64_t N = team_size * league_size;
 
@@ -781,16 +817,17 @@ KOKKOS_INLINE_FUNCTION int test_team_mulit_level_scratch_loop_body(
                        });
   team.team_barrier();
 
-  Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, 16), [&](const int &i) {
-    a_thread1(i) = 1000000 + 100000 * team.team_rank() + 16 - i +
-                   team.league_rank() * 100000;
-    a_thread2(i) = 2000000 + 100000 * team.team_rank() + 16 - i +
-                   team.league_rank() * 100000;
-    a_thread3(i) = 3000000 + 100000 * team.team_rank() + 16 - i +
-                   team.league_rank() * 100000;
-  });
+  Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, int(0), unsigned(16)),
+                       [&](const int &i) {
+                         a_thread1(i) = 1000000 + 100000 * team.team_rank() +
+                                        16 - i + team.league_rank() * 100000;
+                         a_thread2(i) = 2000000 + 100000 * team.team_rank() +
+                                        16 - i + team.league_rank() * 100000;
+                         a_thread3(i) = 3000000 + 100000 * team.team_rank() +
+                                        16 - i + team.league_rank() * 100000;
+                       });
 
-  Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, 12800),
+  Kokkos::parallel_for(Kokkos::TeamThreadRange(team, int(0), unsigned(12800)),
                        [&](const int &i) {
                          b_team1(i) = 1000000 + i + team.league_rank() * 100000;
                          b_team2(i) = 2000000 + i + team.league_rank() * 100000;
