@@ -267,7 +267,7 @@ class SharedAllocationRecord<Kokkos::Experimental::LogicalMemorySpace<
             SharedAllocationHeader::maximum_label_length - 1);
     // Set last element zero, in case c_str is too long
     RecordBase::m_alloc_ptr
-        ->m_label[SharedAllocationHeader::maximum_label_length - 1] = (char)0;
+        ->m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
   }
 
  public:

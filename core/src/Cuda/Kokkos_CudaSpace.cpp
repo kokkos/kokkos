@@ -598,7 +598,7 @@ SharedAllocationRecord<Kokkos::CudaSpace, void>::SharedAllocationRecord(
   strncpy(header.m_label, arg_label.c_str(),
           SharedAllocationHeader::maximum_label_length - 1);
   // Set last element zero, in case c_str is too long
-  header.m_label[SharedAllocationHeader::maximum_label_length - 1] = (char)0;
+  header.m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
 
   // Copy to device memory
   Kokkos::Impl::DeepCopy<CudaSpace, HostSpace>(RecordBase::m_alloc_ptr, &header,
@@ -629,7 +629,7 @@ SharedAllocationRecord<Kokkos::CudaUVMSpace, void>::SharedAllocationRecord(
 
   // Set last element zero, in case c_str is too long
   RecordBase::m_alloc_ptr
-      ->m_label[SharedAllocationHeader::maximum_label_length - 1] = (char)0;
+      ->m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
 }
 
 SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
@@ -656,7 +656,7 @@ SharedAllocationRecord<Kokkos::CudaHostPinnedSpace, void>::
           SharedAllocationHeader::maximum_label_length - 1);
   // Set last element zero, in case c_str is too long
   RecordBase::m_alloc_ptr
-      ->m_label[SharedAllocationHeader::maximum_label_length - 1] = (char)0;
+      ->m_label[SharedAllocationHeader::maximum_label_length - 1] = '\0';
 }
 
 // </editor-fold> end SharedAllocationRecord constructors }}}1
