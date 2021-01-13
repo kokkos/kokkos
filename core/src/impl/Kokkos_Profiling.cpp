@@ -113,7 +113,9 @@ bool profileLibraryLoaded() {
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
   if (Experimental::current_callbacks.begin_parallel_for != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.begin_parallel_for)(kernelPrefix.c_str(),
                                                           devID, kernelID);
   }
@@ -133,7 +135,9 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
 
 void endParallelFor(const uint64_t kernelID) {
   if (Experimental::current_callbacks.end_parallel_for != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.end_parallel_for)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
@@ -146,7 +150,9 @@ void endParallelFor(const uint64_t kernelID) {
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                        uint64_t* kernelID) {
   if (Experimental::current_callbacks.begin_parallel_scan != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(),
                                                            devID, kernelID);
   }
@@ -166,7 +172,9 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
 
 void endParallelScan(const uint64_t kernelID) {
   if (Experimental::current_callbacks.end_parallel_scan != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.end_parallel_scan)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
@@ -179,7 +187,9 @@ void endParallelScan(const uint64_t kernelID) {
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
                          uint64_t* kernelID) {
   if (Experimental::current_callbacks.begin_parallel_reduce != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.begin_parallel_reduce)(
         kernelPrefix.c_str(), devID, kernelID);
   }
@@ -199,7 +209,9 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
 
 void endParallelReduce(const uint64_t kernelID) {
   if (Experimental::current_callbacks.end_parallel_reduce != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.end_parallel_reduce)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
