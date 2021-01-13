@@ -19,28 +19,22 @@ namespace Impl {
 struct CudaTraits {
   static constexpr CudaSpace::size_type WarpSize = 32 /* 0x0020 */;
   static constexpr CudaSpace::size_type WarpIndexMask =
-      0x001f /* Mask for warpindex */
-      ;
+      0x001f; /* Mask for warpindex */
   static constexpr CudaSpace::size_type WarpIndexShift =
-      5 /* WarpSize == 1 << WarpShift */
-      ;
+      5; /* WarpSize == 1 << WarpShift */
 
   static constexpr CudaSpace::size_type ConstantMemoryUsage =
-      0x008000 /* 32k bytes */
-      ;
+      0x008000; /* 32k bytes */
   static constexpr CudaSpace::size_type ConstantMemoryCache =
-      0x002000 /*  8k bytes */
-      ;
+      0x002000; /*  8k bytes */
   static constexpr CudaSpace::size_type KernelArgumentLimit =
-      0x001000 /*  4k bytes */
-      ;
+      0x001000; /*  4k bytes */
   static constexpr CudaSpace::size_type MaxHierarchicalParallelism =
-      1024 /* team_size * vector_length */
-      ;
+      1024; /* team_size * vector_length */
   using ConstantGlobalBufferType =
       unsigned long[ConstantMemoryUsage / sizeof(unsigned long)];
 
-  static constexpr auto ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */;
+  static constexpr int ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */;
 
   KOKKOS_INLINE_FUNCTION static CudaSpace::size_type warp_count(
       CudaSpace::size_type i) {

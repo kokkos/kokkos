@@ -122,12 +122,10 @@ struct ViewOffset<
                              is_array_layout<Layout>::value &&
                              is_array_layout_tiled<Layout>::value)>::type> {
  public:
-  //  static constexpr auto outer_pattern = Layout::outer_pattern };
-  //  static constexpr auto inner_pattern = Layout::inner_pattern };
   static constexpr Kokkos::Iterate outer_pattern = Layout::outer_pattern;
   static constexpr Kokkos::Iterate inner_pattern = Layout::inner_pattern;
 
-  static constexpr auto VORank = Dimension::rank;
+  static constexpr int VORank = Dimension::rank;
 
   static constexpr unsigned SHIFT_0 =
       Kokkos::Impl::integral_power_of_two(Layout::N0);
@@ -145,14 +143,14 @@ struct ViewOffset<
       Kokkos::Impl::integral_power_of_two(Layout::N6);
   static constexpr unsigned SHIFT_7 =
       Kokkos::Impl::integral_power_of_two(Layout::N7);
-  static constexpr auto MASK_0 = Layout::N0 - 1;
-  static constexpr auto MASK_1 = Layout::N1 - 1;
-  static constexpr auto MASK_2 = Layout::N2 - 1;
-  static constexpr auto MASK_3 = Layout::N3 - 1;
-  static constexpr auto MASK_4 = Layout::N4 - 1;
-  static constexpr auto MASK_5 = Layout::N5 - 1;
-  static constexpr auto MASK_6 = Layout::N6 - 1;
-  static constexpr auto MASK_7 = Layout::N7 - 1;
+  static constexpr int MASK_0 = Layout::N0 - 1;
+  static constexpr int MASK_1 = Layout::N1 - 1;
+  static constexpr int MASK_2 = Layout::N2 - 1;
+  static constexpr int MASK_3 = Layout::N3 - 1;
+  static constexpr int MASK_4 = Layout::N4 - 1;
+  static constexpr int MASK_5 = Layout::N5 - 1;
+  static constexpr int MASK_6 = Layout::N6 - 1;
+  static constexpr int MASK_7 = Layout::N7 - 1;
 
   static constexpr unsigned SHIFT_2T = SHIFT_0 + SHIFT_1;
   static constexpr unsigned SHIFT_3T = SHIFT_0 + SHIFT_1 + SHIFT_2;
@@ -689,8 +687,8 @@ class ViewMapping<
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T**, src_layout, P...>;
 
-  static constexpr auto is_outer_left = (OuterP == Kokkos::Iterate::Left);
-  static constexpr auto is_inner_left = (InnerP == Kokkos::Iterate::Left);
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -741,8 +739,8 @@ class ViewMapping<typename std::enable_if<(N3 == 0 && N4 == 0 && N5 == 0 &&
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T***, src_layout, P...>;
 
-  static constexpr auto is_outer_left = (OuterP == Kokkos::Iterate::Left);
-  static constexpr auto is_inner_left = (InnerP == Kokkos::Iterate::Left);
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -799,8 +797,8 @@ class ViewMapping<typename std::enable_if<(N4 == 0 && N5 == 0 && N6 == 0 &&
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T****, src_layout, P...>;
 
-  static constexpr auto is_outer_left = (OuterP == Kokkos::Iterate::Left);
-  static constexpr auto is_inner_left = (InnerP == Kokkos::Iterate::Left);
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -862,8 +860,8 @@ class ViewMapping<
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T*****, src_layout, P...>;
 
-  static constexpr auto is_outer_left = (OuterP == Kokkos::Iterate::Left);
-  static constexpr auto is_inner_left = (InnerP == Kokkos::Iterate::Left);
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -930,8 +928,8 @@ class ViewMapping<typename std::enable_if<(N6 == 0 && N7 == 0)>::type  // void
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T******, src_layout, P...>;
 
-  static constexpr auto is_outer_left = (OuterP == Kokkos::Iterate::Left);
-  static constexpr auto is_inner_left = (InnerP == Kokkos::Iterate::Left);
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -1004,8 +1002,8 @@ class ViewMapping<typename std::enable_if<(N7 == 0)>::type  // void
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T*******, src_layout, P...>;
 
-  static constexpr auto is_outer_left = (OuterP == Kokkos::Iterate::Left);
-  static constexpr auto is_inner_left = (InnerP == Kokkos::Iterate::Left);
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -1087,8 +1085,8 @@ class ViewMapping<typename std::enable_if<(N0 != 0 && N1 != 0 && N2 != 0 &&
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T********, src_layout, P...>;
 
-  static constexpr auto is_outer_left = (OuterP == Kokkos::Iterate::Left);
-  static constexpr auto is_inner_left = (InnerP == Kokkos::Iterate::Left);
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
