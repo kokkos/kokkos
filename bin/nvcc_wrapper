@@ -195,7 +195,7 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
-  --expt-extended-lambda|--expt-relaxed-constexpr)
+  --expt-extended-lambda|--expt-relaxed-constexpr|--Wno-deprecated-gpu-targets|-Wno-deprecated-gpu-targets)
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument
