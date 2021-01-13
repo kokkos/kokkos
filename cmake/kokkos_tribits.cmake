@@ -345,24 +345,12 @@ FUNCTION(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
       ${LIBRARY_NAME} PUBLIC
       $<$<LINK_LANGUAGE:CXX>:${KOKKOS_LINK_OPTIONS}>
     )
-  ELSEIF(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.13")
+  ELSE()
     #I can use link options
     #just assume CXX linkage
     TARGET_LINK_OPTIONS(
       ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
     )
-  ELSE()
-    #assume CXX linkage, we have no good way to check otherwise
-    IF (PARSE_PLAIN_STYLE)
-      TARGET_LINK_LIBRARIES(
-        ${LIBRARY_NAME} ${KOKKOS_LINK_OPTIONS}
-      )
-    ELSE()
-      #well, have to do it the wrong way for now
-      TARGET_LINK_LIBRARIES(
-        ${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS}
-      )
-    ENDIF()
   ENDIF()
 
   TARGET_COMPILE_OPTIONS(

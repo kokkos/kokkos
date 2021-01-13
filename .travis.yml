@@ -45,6 +45,26 @@ matrix:
       compiler: gcc
       env: CMAKE_BUILD_TYPE=Release BACKEND="OPENMP"
 
+# Install newer CMake. The distribution comes with CMake 3.12.4 but we require at least 3.16
+install:
+  - CMAKE_VERSION=3.17.1
+  - CMAKE_DIR=/opt/cmake
+  - CMAKE_KEY=2D2CEF1034921684 &&
+    CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} &&
+    CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh &&
+    CMAKE_SHA256=cmake-${CMAKE_VERSION}-SHA-256.txt &&
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} &&
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc &&
+    wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} &&
+    #gpg --keyserver pool.sks-keyservers.net --recv-keys ${CMAKE_KEY} &&
+    #gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} &&
+    #grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check &&
+    mkdir -p ${CMAKE_DIR} &&
+    sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} &&
+    rm cmake*
+  - PATH=${CMAKE_DIR}/bin:$PATH
+  - cd ${TRAVIS_BUILD_DIR}
+
 before_script:
   - ccache -z
   - if [[ ${COVERAGE} ]]; then export CXX="${CXX} --coverage"; fi
