@@ -89,25 +89,10 @@ class ReduceFunctor {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void join(const ReducerTag, volatile value_type& dst,
-            const volatile value_type& src) const {
-    dst.value[0] += src.value[0];
-    dst.value[1] += src.value[1];
-    dst.value[2] += src.value[2];
-  }
-
-  KOKKOS_INLINE_FUNCTION
   void operator()(size_type iwork, value_type& dst) const {
     dst.value[0] += 1;
     dst.value[1] += iwork + 1;
     dst.value[2] += nwork - iwork;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const ReducerTag, size_type iwork, value_type& dst) const {
-    dst.value[0] -= 1;
-    dst.value[1] -= iwork + 1;
-    dst.value[2] -= nwork - iwork;
   }
 };
 
@@ -128,13 +113,35 @@ class ReduceFunctorFinal : public ReduceFunctor<int64_t, DeviceType> {
 };
 
 template <class DeviceType>
-class ReduceFunctorFinalTag : public ReduceFunctor<int64_t, DeviceType> {
+class ReduceFunctorFinalTag {
  public:
-  using value_type = typename ReduceFunctor<int64_t, DeviceType>::value_type;
+  using execution_space = DeviceType;
+  using size_type       = typename execution_space::size_type;
+  using ScalarType      = int64_t;
+
+  struct value_type {
+    ScalarType value[3];
+  };
+
+  const size_type nwork;
 
   KOKKOS_INLINE_FUNCTION
-  ReduceFunctorFinalTag(const size_t n)
-      : ReduceFunctor<int64_t, DeviceType>(n) {}
+  ReduceFunctorFinalTag(const size_type arg_nwork) : nwork(arg_nwork) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void join(const ReducerTag, volatile value_type& dst,
+            const volatile value_type& src) const {
+    dst.value[0] += src.value[0];
+    dst.value[1] += src.value[1];
+    dst.value[2] += src.value[2];
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const ReducerTag, size_type iwork, value_type& dst) const {
+    dst.value[0] -= 1;
+    dst.value[1] -= iwork + 1;
+    dst.value[2] -= nwork - iwork;
+  }
 
   KOKKOS_INLINE_FUNCTION
   void final(const ReducerTag, value_type& dst) const {
