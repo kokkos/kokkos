@@ -88,7 +88,6 @@ pipeline {
                                 -DKokkos_ARCH_VEGA906=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DBUILD_NAME=${STAGE_NAME} \
-                                -DCTEST_ARGS=-VV \
                               -P cmake/KokkosCI.cmake'''
                     }
                     post {
@@ -123,7 +122,6 @@ pipeline {
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
                                 -DBUILD_NAME=${STAGE_NAME} \
-                                -DCTEST_ARGS=-VV \
                               -P cmake/KokkosCI.cmake'''
                     }
                     post {

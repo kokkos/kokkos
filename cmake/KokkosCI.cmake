@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 message(STATUS "")
 
@@ -13,13 +13,9 @@ foreach(_var ${_cached_vars})
         if("${_var}" STREQUAL "CMAKE_BUILD_TYPE")
             set(BUILD_TYPE "${CMAKE_BUILD_TYPE}")
         endif()
-        #get_property(_var_type CACHE ${_var} PROPERTY TYPE)
-        #set(FORWARDED_VARIABLES "${FORWARDED_VARIABLES}set(${_var} \"${${_var}}\" CACHE ${_var_type} \"Command-line configuration\")\n")
     endif()
 endforeach()
 
-#message(STATUS "${FORWARDED_VARIABLES}")
-#return()
 
 #----------------------------------------------------------------------------------------#
 #
@@ -309,8 +305,6 @@ message(STATUS "Initial cache:\n${_CACHE_INFO}")
 # initialize the cache
 set(CONFIG_ARGS "-C ${BINARY_REALDIR}/initial-cache.cmake")
 
-# message(STATUS "BUILD_TYPE: ${BUILD_TYPE}; CONFIG: ${CONFIG}; CONFIG_VAR: ${CONFIG_VAR}")
-# message(STATUS "CONFIG_ARGS: ${CONFIG_ARGS}; BUILD_TYPE: ${BUILD_TYPE}")
 
 # generate the CTestConfig.cmake
 configure_file(
