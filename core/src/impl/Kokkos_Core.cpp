@@ -491,7 +491,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       char* num2      = strpbrk(num1, ",");
       int num1_len    = num2 == nullptr ? strlen(num1) : num2 - num1;
       char* num1_only = new char[num1_len + 1];
-      strncpy(num1_only, num1, num1_len - 1);
+      strncpy(num1_only, num1, num1_len);
       num1_only[num1_len] = '\0';
 
       if (!is_unsigned_int(num1_only) || (strlen(num1_only) == 0)) {
