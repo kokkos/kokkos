@@ -5,6 +5,7 @@ ARG ADDITIONAL_PACKAGES
 
 RUN apt-get update && apt-get install -y \
         bc \
+        git \
         wget \
         ccache \
         $ADDITIONAL_PACKAGES \
