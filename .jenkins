@@ -42,6 +42,7 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version" \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
