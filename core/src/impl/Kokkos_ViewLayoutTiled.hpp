@@ -122,47 +122,47 @@ struct ViewOffset<
                              is_array_layout<Layout>::value &&
                              is_array_layout_tiled<Layout>::value)>::type> {
  public:
-  //  enum { outer_pattern = Layout::outer_pattern };
-  //  enum { inner_pattern = Layout::inner_pattern };
   static constexpr Kokkos::Iterate outer_pattern = Layout::outer_pattern;
   static constexpr Kokkos::Iterate inner_pattern = Layout::inner_pattern;
 
-  enum { VORank = Dimension::rank };
+  static constexpr int VORank = Dimension::rank;
 
-  enum : unsigned { SHIFT_0 = Kokkos::Impl::integral_power_of_two(Layout::N0) };
-  enum : unsigned { SHIFT_1 = Kokkos::Impl::integral_power_of_two(Layout::N1) };
-  enum : unsigned { SHIFT_2 = Kokkos::Impl::integral_power_of_two(Layout::N2) };
-  enum : unsigned { SHIFT_3 = Kokkos::Impl::integral_power_of_two(Layout::N3) };
-  enum : unsigned { SHIFT_4 = Kokkos::Impl::integral_power_of_two(Layout::N4) };
-  enum : unsigned { SHIFT_5 = Kokkos::Impl::integral_power_of_two(Layout::N5) };
-  enum : unsigned { SHIFT_6 = Kokkos::Impl::integral_power_of_two(Layout::N6) };
-  enum : unsigned { SHIFT_7 = Kokkos::Impl::integral_power_of_two(Layout::N7) };
-  enum { MASK_0 = Layout::N0 - 1 };
-  enum { MASK_1 = Layout::N1 - 1 };
-  enum { MASK_2 = Layout::N2 - 1 };
-  enum { MASK_3 = Layout::N3 - 1 };
-  enum { MASK_4 = Layout::N4 - 1 };
-  enum { MASK_5 = Layout::N5 - 1 };
-  enum { MASK_6 = Layout::N6 - 1 };
-  enum { MASK_7 = Layout::N7 - 1 };
+  static constexpr unsigned SHIFT_0 =
+      Kokkos::Impl::integral_power_of_two(Layout::N0);
+  static constexpr unsigned SHIFT_1 =
+      Kokkos::Impl::integral_power_of_two(Layout::N1);
+  static constexpr unsigned SHIFT_2 =
+      Kokkos::Impl::integral_power_of_two(Layout::N2);
+  static constexpr unsigned SHIFT_3 =
+      Kokkos::Impl::integral_power_of_two(Layout::N3);
+  static constexpr unsigned SHIFT_4 =
+      Kokkos::Impl::integral_power_of_two(Layout::N4);
+  static constexpr unsigned SHIFT_5 =
+      Kokkos::Impl::integral_power_of_two(Layout::N5);
+  static constexpr unsigned SHIFT_6 =
+      Kokkos::Impl::integral_power_of_two(Layout::N6);
+  static constexpr unsigned SHIFT_7 =
+      Kokkos::Impl::integral_power_of_two(Layout::N7);
+  static constexpr int MASK_0 = Layout::N0 - 1;
+  static constexpr int MASK_1 = Layout::N1 - 1;
+  static constexpr int MASK_2 = Layout::N2 - 1;
+  static constexpr int MASK_3 = Layout::N3 - 1;
+  static constexpr int MASK_4 = Layout::N4 - 1;
+  static constexpr int MASK_5 = Layout::N5 - 1;
+  static constexpr int MASK_6 = Layout::N6 - 1;
+  static constexpr int MASK_7 = Layout::N7 - 1;
 
-  enum : unsigned { SHIFT_2T = SHIFT_0 + SHIFT_1 };
-  enum : unsigned { SHIFT_3T = SHIFT_0 + SHIFT_1 + SHIFT_2 };
-  enum : unsigned { SHIFT_4T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 };
-  enum : unsigned {
-    SHIFT_5T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4
-  };
-  enum : unsigned {
-    SHIFT_6T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 + SHIFT_5
-  };
-  enum : unsigned {
-    SHIFT_7T =
-        SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 + SHIFT_5 + SHIFT_6
-  };
-  enum : unsigned {
-    SHIFT_8T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 + SHIFT_5 +
-               SHIFT_6 + SHIFT_7
-  };
+  static constexpr unsigned SHIFT_2T = SHIFT_0 + SHIFT_1;
+  static constexpr unsigned SHIFT_3T = SHIFT_0 + SHIFT_1 + SHIFT_2;
+  static constexpr unsigned SHIFT_4T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3;
+  static constexpr unsigned SHIFT_5T =
+      SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4;
+  static constexpr unsigned SHIFT_6T =
+      SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 + SHIFT_5;
+  static constexpr unsigned SHIFT_7T =
+      SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 + SHIFT_4 + SHIFT_5 + SHIFT_6;
+  static constexpr unsigned SHIFT_8T = SHIFT_0 + SHIFT_1 + SHIFT_2 + SHIFT_3 +
+                                       SHIFT_4 + SHIFT_5 + SHIFT_6 + SHIFT_7;
 
   // Is an irregular layout that does not have uniform striding for each index.
   using is_mapping_plugin = std::true_type;
@@ -687,8 +687,8 @@ class ViewMapping<
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T**, src_layout, P...>;
 
-  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -739,8 +739,8 @@ class ViewMapping<typename std::enable_if<(N3 == 0 && N4 == 0 && N5 == 0 &&
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T***, src_layout, P...>;
 
-  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -797,8 +797,8 @@ class ViewMapping<typename std::enable_if<(N4 == 0 && N5 == 0 && N6 == 0 &&
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T****, src_layout, P...>;
 
-  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -860,8 +860,8 @@ class ViewMapping<
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T*****, src_layout, P...>;
 
-  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -928,8 +928,8 @@ class ViewMapping<typename std::enable_if<(N6 == 0 && N7 == 0)>::type  // void
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T******, src_layout, P...>;
 
-  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -1002,8 +1002,8 @@ class ViewMapping<typename std::enable_if<(N7 == 0)>::type  // void
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T*******, src_layout, P...>;
 
-  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
@@ -1085,8 +1085,8 @@ class ViewMapping<typename std::enable_if<(N0 != 0 && N1 != 0 && N2 != 0 &&
                                         N6, N7, true>;
   using src_traits = Kokkos::ViewTraits<T********, src_layout, P...>;
 
-  enum { is_outer_left = (OuterP == Kokkos::Iterate::Left) };
-  enum { is_inner_left = (InnerP == Kokkos::Iterate::Left) };
+  static constexpr bool is_outer_left = (OuterP == Kokkos::Iterate::Left);
+  static constexpr bool is_inner_left = (InnerP == Kokkos::Iterate::Left);
   using array_layout =
       typename std::conditional<is_inner_left, Kokkos::LayoutLeft,
                                 Kokkos::LayoutRight>::type;
