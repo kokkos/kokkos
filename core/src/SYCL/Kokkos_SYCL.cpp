@@ -87,6 +87,8 @@ int SYCL::concurrency() {
   return 2;
 }
 
+const char* SYCL::name() { return "SYCL"; }
+
 bool SYCL::impl_is_initialized() {
   return Impl::SYCLInternal::singleton().is_initialized();
 }

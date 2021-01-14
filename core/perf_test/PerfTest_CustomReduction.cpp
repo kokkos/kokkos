@@ -47,6 +47,8 @@
 #include <PerfTest_Category.hpp>
 #include <Kokkos_Random.hpp>
 
+// FIXME_SYCL requires TeamPolicy
+#ifndef KOKKOS_ENABLE_SYCL
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 namespace Test {
 template <class Scalar>
@@ -135,4 +137,5 @@ TEST(default_exec, custom_reduction) {
   custom_reduction_test<double>(N, R, num_trials);
 }
 }  // namespace Test
+#endif
 #endif
