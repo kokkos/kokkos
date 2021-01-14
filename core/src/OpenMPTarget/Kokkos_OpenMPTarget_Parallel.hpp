@@ -526,16 +526,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Allocate the lock_array on the device and initialize it to 0's in a
     // target region.
     int* lock_array = static_cast<int*>(omp_target_alloc(
-        (max_active_league_size + 1) * sizeof(int), omp_get_default_device()));
+        (max_active_league_size) * sizeof(int), omp_get_default_device()));
 
 #pragma omp target teams distribute parallel for is_device_ptr(lock_array)
-    for (int i = 1; i < max_active_league_size + 1; ++i) {
+    for (int i = 0; i < max_active_league_size; ++i) {
       lock_array[i] = 0;
-
-      // Only one thread in one team sets the number of free blocks as the value
-      // of the first index in the lock_array.
-      if (omp_get_team_num() == 0 && omp_get_thread_num() == 0)
-        lock_array[0] = max_active_league_size;
     }
 
 #pragma omp target teams distribute map(to                   \
@@ -543,35 +538,27 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
         thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
-      int shmem_block_index = 0, lock_team = 99999, iter = 0;
+      int shmem_block_index = -1, lock_team = 99999, iter = -1;
 
       // Loop as long as a shmem_block_index is not found.
-      while (shmem_block_index == 0) {
-        // Proceed if there are free blocks available.
-        if (lock_array[0] > 0) {
-          // Loop until a lock can be acquired on a team
-          while (lock_team != 1) {
-            // Avoid tripping over other team's block index.
-            // Find a free block index.
-            iter = (omp_get_team_num() % max_active_league_size) + 1;
+      while (shmem_block_index == -1) {
+        // Loop until a lock can be acquired on a team
+        while (lock_team != 1) {
+          // Avoid tripping over other team's block index.
+          // Find a free block index.
+          iter = (omp_get_team_num() % max_active_league_size);
 
-            // Try and acquire a lock on the index.
-            lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
+          // Try and acquire a lock on the index.
+          lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
 
-            // If lock is acquired assign it to the block index.
-            if (lock_team == 1)
-              shmem_block_index = iter;
-            else {
-              iter = ++iter % max_active_league_size;
-            }
-          }
-          // Decrement the number of available free blocks.
-          atomic_decrement(&lock_array[0]);
-        } else {
-          // Block until there is atleast one free scratch block is available.
-          while (lock_array[0] == 0)
-            ;
+          // If lock is acquired assign it to the block index.
+          if (lock_team == 1)
+            shmem_block_index = iter;
+          else
+            iter = ++iter % max_active_league_size;
         }
+        // Decrement the number of available free blocks.
+        atomic_decrement(&lock_array[0]);
       }
 
 #pragma omp parallel num_threads(team_size)
