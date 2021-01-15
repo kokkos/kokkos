@@ -41,7 +41,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version" \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version -Wno-gnu-zero-variadic-macro-arguments" \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_EXAMPLES=ON \

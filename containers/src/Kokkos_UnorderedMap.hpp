@@ -540,10 +540,7 @@ class UnorderedMap {
           // Previously claimed an unused entry that was not inserted.
           // Release this unused entry immediately.
           if (!m_available_indexes.reset(new_index)) {
-            // FIXME_SYCL SYCL doesn't allow printf in kernels
-#ifndef KOKKOS_ENABLE_SYCL
-            printf("Unable to free existing\n");
-#endif
+            KOKKOS_IMPL_DO_NOT_USE_PRINTF("Unable to free existing\n");
           }
         }
 
