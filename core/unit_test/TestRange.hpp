@@ -162,8 +162,8 @@ struct TestRange {
   KOKKOS_INLINE_FUNCTION
   void operator()(const VerifyInitTag &, const int i) const {
     if (i != m_flags(i)) {
-      KOKKOS_IMPL_PRINTF("TestRange::test_for_error at %d != %d\n", i,
-                         m_flags(i));
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("TestRange::test_for_error at %d != %d\n",
+                                    i, m_flags(i));
     }
   }
 
@@ -175,8 +175,8 @@ struct TestRange {
   KOKKOS_INLINE_FUNCTION
   void operator()(const VerifyResetTag &, const int i) const {
     if (2 * i != m_flags(i)) {
-      KOKKOS_IMPL_PRINTF("TestRange::test_for_error at %d != %d\n", i,
-                         m_flags(i));
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("TestRange::test_for_error at %d != %d\n",
+                                    i, m_flags(i));
     }
   }
 
@@ -188,8 +188,8 @@ struct TestRange {
   KOKKOS_INLINE_FUNCTION
   void operator()(const VerifyOffsetTag &, const int i) const {
     if (i + offset != m_flags(i)) {
-      KOKKOS_IMPL_PRINTF("TestRange::test_for_error at %d != %d\n", i + offset,
-                         m_flags(i));
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("TestRange::test_for_error at %d != %d\n",
+                                    i + offset, m_flags(i));
     }
   }
 
@@ -272,8 +272,9 @@ struct TestRange {
 
     if (final) {
       if (update != (i * (i + 1)) / 2) {
-        KOKKOS_IMPL_PRINTF("TestRange::test_scan error (%d,%d) : %d != %d\n", i,
-                           m_flags(i), (i * (i + 1)) / 2, update);
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+            "TestRange::test_scan error (%d,%d) : %d != %d\n", i, m_flags(i),
+            (i * (i + 1)) / 2, update);
       }
       result_view(i) = update;
     }
