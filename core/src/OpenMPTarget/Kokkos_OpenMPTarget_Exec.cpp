@@ -94,12 +94,23 @@ void OpenMPTargetExec::verify_initialized(const char* const label) {
 
 void* OpenMPTargetExec::m_scratch_ptr    = nullptr;
 int64_t OpenMPTargetExec::m_scratch_size = 0;
+int* OpenMPTargetExec::m_lock_array      = nullptr;
+int64_t OpenMPTargetExec::m_lock_size    = 0;
 
 void OpenMPTargetExec::clear_scratch() {
   Kokkos::Experimental::OpenMPTargetSpace space;
   space.deallocate(m_scratch_ptr, m_scratch_size);
   m_scratch_ptr  = nullptr;
   m_scratch_size = 0;
+}
+
+void OpenMPTargetExec::clear_lock_array() {
+  if (m_lock_array != nullptr) {
+    Kokkos::Experimental::OpenMPTargetSpace space;
+    space.deallocate(m_lock_array, m_lock_size);
+    m_lock_array = nullptr;
+    m_lock_size  = 0;
+  }
 }
 
 void* OpenMPTargetExec::get_scratch_ptr() { return m_scratch_ptr; }
@@ -121,6 +132,21 @@ void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
     m_scratch_ptr  = space.allocate(total_size);
   }
 }
+
+int* OpenMPTargetExec::get_lock_array(int num_teams) {
+  Kokkos::Experimental::OpenMPTargetSpace space;
+  int max_active_league_size = MAX_ACTIVE_THREADS / 32;
+  if (max_active_league_size < num_teams) {
+    space.deallocate(m_lock_array, m_lock_size);
+    m_lock_size  = num_teams * sizeof(int);
+    m_lock_array = static_cast<int*>(space.allocate(m_lock_size));
+  } else if (m_lock_array == nullptr) {
+    m_lock_size  = max_active_league_size * sizeof(int);
+    m_lock_array = static_cast<int*>(space.allocate(m_lock_size));
+  }
+  return m_lock_array;
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 

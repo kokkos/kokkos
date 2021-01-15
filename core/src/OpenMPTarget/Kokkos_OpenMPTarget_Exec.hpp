@@ -509,14 +509,18 @@ class OpenMPTargetExec {
   static void verify_is_process(const char* const);
   static void verify_initialized(const char* const);
 
+  static int* get_lock_array(int num_teams);
   static void* get_scratch_ptr();
   static void clear_scratch();
+  static void clear_lock_array();
   static void resize_scratch(int64_t team_reduce_bytes,
                              int64_t team_shared_bytes,
                              int64_t thread_local_bytes);
 
   static void* m_scratch_ptr;
   static int64_t m_scratch_size;
+  static int* m_lock_array;
+  static int64_t m_lock_size;
 };
 
 }  // namespace Impl
