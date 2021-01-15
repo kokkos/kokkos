@@ -2080,23 +2080,71 @@ struct FunctorFinal {
   KOKKOS_FORCEINLINE_FUNCTION static void final(const FunctorType&, void*) {}
 };
 
-/* 'final' function provided */
+/* 'final' function provided for single value but no tag*/
 template <class FunctorType, class ArgTag, class T>
-struct FunctorFinal<FunctorType, ArgTag,
-                    T&
-                    // First  substitution failure when FunctorType::final does
-                    // not exist. Second substitution failure when enable_if( &
-                    // Functor::final ) does not exist
-                    ,
-                    decltype(
-                        FunctorFinalFunction<FunctorType, ArgTag>::enable_if(
-                            &FunctorType::final))> {
+struct FunctorFinal<
+    FunctorType, ArgTag,
+    T&
+    // First  substitution failure when FunctorType::final does not exist.
+    // Second substitution failure when FunctorType::final is not compatible.
+    ,
+    typename std::enable_if<
+        std::is_same<ArgTag, void>::value,
+        decltype(FunctorFinalFunction<FunctorType, ArgTag>::enable_if(
+            &FunctorType::final))>::type> {
   KOKKOS_FORCEINLINE_FUNCTION static void final(const FunctorType& f, void* p) {
     f.final(*((T*)p));
   }
+};
 
-  KOKKOS_FORCEINLINE_FUNCTION static void final(FunctorType& f, void* p) {
-    f.final(*((T*)p));
+/* 'final' function provided for array value but no tag*/
+template <class FunctorType, class ArgTag, class T>
+struct FunctorFinal<
+    FunctorType, ArgTag,
+    T*
+    // First  substitution failure when FunctorType::final does not exist.
+    // Second substitution failure when FunctorType::final is not compatible.
+    ,
+    typename std::enable_if<
+        std::is_same<ArgTag, void>::value,
+        decltype(FunctorFinalFunction<FunctorType, ArgTag>::enable_if(
+            &FunctorType::final))>::typei> {
+  KOKKOS_FORCEINLINE_FUNCTION static void final(const FunctorType& f, void* p) {
+    f.final((T*)p);
+  }
+};
+
+/* 'final' function provided for single value and with tag */
+template <class FunctorType, class ArgTag, class T>
+struct FunctorFinal<
+    FunctorType, ArgTag,
+    T&
+    // First  substitution failure when FunctorType::final does not exist.
+    // Second substitution failure when FunctorType::final is not compatible.
+    ,
+    typename std::enable_if<
+        !std::is_same<ArgTag, void>::value,
+        decltype(FunctorFinalFunction<FunctorType, ArgTag>::enable_if(
+            &FunctorType::final))>::type> {
+  KOKKOS_FORCEINLINE_FUNCTION static void final(const FunctorType& f, void* p) {
+    f.final(ArgTag(), *((T*)p));
+  }
+};
+
+/* 'final' function provided for array value and with tag */
+template <class FunctorType, class ArgTag, class T>
+struct FunctorFinal<
+    FunctorType, ArgTag,
+    T*
+    // First  substitution failure when FunctorType::final does not exist.
+    // Second substitution failure when FunctorType::final is not compatible
+    ,
+    typename std::enable_if<
+        !std::is_same<ArgTag, void>::value,
+        decltype(FunctorFinalFunction<FunctorType, ArgTag>::enable_if(
+            &FunctorType::final))>::type> {
+  KOKKOS_FORCEINLINE_FUNCTION static void final(const FunctorType& f, void* p) {
+    f.final(ArgTag(), (T*)p);
   }
 };
 
@@ -2111,12 +2159,32 @@ struct FunctorFinal<FunctorType, ArgTag,
                     decltype(
                         FunctorFinalFunction<FunctorType, ArgTag>::enable_if(
                             &FunctorType::final))> {
-  KOKKOS_FORCEINLINE_FUNCTION static void final(const FunctorType& f, void* p) {
+  template <typename Dummy = ArgTag>
+  KOKKOS_FORCEINLINE_FUNCTION static std::enable_if_t<
+      std::is_same<Dummy, void>::value>
+  final(const FunctorType& f, void* p) {
     f.final((T*)p);
   }
 
-  KOKKOS_FORCEINLINE_FUNCTION static void final(FunctorType& f, void* p) {
+  template <typename Dummy = ArgTag>
+  KOKKOS_FORCEINLINE_FUNCTION static std::enable_if_t<
+      !std::is_same<Dummy, void>::value>
+  final(const FunctorType& f, void* p) {
+    f.final(ArgTag(), (T*)p);
+  }
+
+  template <typename Dummy = ArgTag>
+  KOKKOS_FORCEINLINE_FUNCTION static std::enable_if_t<
+      std::is_same<Dummy, void>::value>
+  final(FunctorType& f, void* p) {
     f.final((T*)p);
+  }
+
+  template <typename Dummy = ArgTag>
+  KOKKOS_FORCEINLINE_FUNCTION static std::enable_if_t<
+      !std::is_same<Dummy, void>::value>
+  final(FunctorType& f, void* p) {
+    f.final(ArgTag(), (T*)p);
   }
 };
 
