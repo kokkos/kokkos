@@ -49,6 +49,7 @@
 #include <HIP/Kokkos_HIP_KernelLaunch.hpp>
 #include <HIP/Kokkos_HIP_ReduceScan.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
+#include <impl/KokkosExp_IterateTileGPU.hpp>
 #include <Kokkos_Parallel.hpp>
 
 namespace Kokkos {

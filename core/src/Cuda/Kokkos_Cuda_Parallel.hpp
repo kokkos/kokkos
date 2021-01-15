@@ -60,6 +60,7 @@
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
+#include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Kokkos_Vectorization.hpp>
 #include <Cuda/Kokkos_Cuda_Version_9_8_Compatibility.hpp>
 
@@ -67,6 +68,7 @@
 #include <typeinfo>
 
 #include <KokkosExp_MDRangePolicy.hpp>
+#include <impl/KokkosExp_IterateTileGPU.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

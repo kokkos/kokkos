@@ -123,7 +123,7 @@ struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
-    if (PolicyType::inner_direction == PolicyType::Left) {
+    if (PolicyType::inner_direction == Iterate::Left) {
       // Loop over size maxnumblocks until full range covered
       for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
            tile_id1 < m_policy.m_tile_end[1]; tile_id1 += gridDim.y) {
@@ -205,7 +205,7 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
-    if (PolicyType::inner_direction == PolicyType::Left) {
+    if (PolicyType::inner_direction == Iterate::Left) {
       for (index_type tile_id2 = static_cast<index_type>(blockIdx.z);
            tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.z) {
         const index_type offset_2 =
@@ -308,7 +308,7 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
-    if (PolicyType::inner_direction == PolicyType::Left) {
+    if (PolicyType::inner_direction == Iterate::Left) {
       const index_type temp0  = m_policy.m_tile_end[0];
       const index_type temp1  = m_policy.m_tile_end[1];
       const index_type numbl0 = (temp0 <= max_blocks ? temp0 : max_blocks);
@@ -461,7 +461,7 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     // LL
-    if (PolicyType::inner_direction == PolicyType::Left) {
+    if (PolicyType::inner_direction == Iterate::Left) {
       index_type temp0        = m_policy.m_tile_end[0];
       index_type temp1        = m_policy.m_tile_end[1];
       const index_type numbl0 = (temp0 <= max_blocks ? temp0 : max_blocks);
@@ -662,7 +662,7 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     // LL
-    if (PolicyType::inner_direction == PolicyType::Left) {
+    if (PolicyType::inner_direction == Iterate::Left) {
       index_type temp0        = m_policy.m_tile_end[0];
       index_type temp1        = m_policy.m_tile_end[1];
       const index_type numbl0 = (temp0 <= max_blocks ? temp0 : max_blocks);
@@ -974,7 +974,7 @@ struct DeviceIterateTile {
         bool in_bounds      = true;
 
         // LL
-        if (PolicyType::inner_direction == PolicyType::Left) {
+        if (PolicyType::inner_direction == Iterate::Left) {
           for (int i = 0; i < PolicyType::rank; ++i) {
             m_offset[i] =
                 (tile_idx % m_policy.m_tile_end[i]) * m_policy.m_tile[i] +
