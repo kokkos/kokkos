@@ -692,8 +692,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       ValueType inner_result = ValueType();
 #pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
       {
-        typename PolicyType::member_type team(i, league_size, team_size,
-                                              vector_length, scratch_ptr, 0, 0);
+        typename PolicyType::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr, 0, 0, 0);
         f(team, inner_result);
       }
       result = inner_result;
@@ -732,8 +732,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       ValueType inner_result = ValueType();
 #pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
       {
-        typename PolicyType::member_type team(i, league_size, team_size,
-                                              vector_length, scratch_ptr, 0, 0);
+        typename PolicyType::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr, 0, 0, 0);
         f(TagType(), team, result);
       }
       result = inner_result;
