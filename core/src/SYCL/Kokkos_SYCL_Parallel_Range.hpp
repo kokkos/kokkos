@@ -94,17 +94,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
     const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMemory& kernelMem =
-        *instance.m_indirectKernel;
+    using IndirectKernelMem =
+        Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
+    IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
 
-    // Allocate USM shared memory for the functor
-    kernelMem.resize(std::max(kernelMem.size(), sizeof(m_functor)));
-
-    // Placement new a copy of functor into USM shared memory
-    //
-    // Store it in a unique_ptr to call its destructor on scope exit
-    std::unique_ptr<FunctorType, Kokkos::Impl::destruct_delete>
-        kernelFunctorPtr(new (kernelMem.data()) FunctorType(m_functor));
+    // Copy the functor into USM Shared Memory
+    using KernelFunctorPtr =
+        std::unique_ptr<FunctorType, IndirectKernelMem::Deleter>;
+    KernelFunctorPtr kernelFunctorPtr = indirectKernelMem.copy_from(m_functor);
 
     // Use reference_wrapper (because it is both trivially copyable and
     // invocable) and launch it
@@ -249,17 +246,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
-    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMemory& kernelMem =
-        *instance.m_indirectKernel;
+    using IndirectKernelMem =
+        Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
+    IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
 
-    // Allocate USM shared memory for the functor
-    kernelMem.resize(std::max(kernelMem.size(), sizeof(m_functor)));
-
-    // Placement new a copy of functor into USM shared memory
-    //
-    // Store it in a unique_ptr to call its destructor on scope exit
-    std::unique_ptr<FunctorType, Kokkos::Impl::destruct_delete>
-        kernelFunctorPtr(new (kernelMem.data()) FunctorType(m_functor));
+    // Copy the functor into USM Shared Memory
+    using KernelFunctorPtr =
+        std::unique_ptr<FunctorType, IndirectKernelMem::Deleter>;
+    KernelFunctorPtr kernelFunctorPtr = indirectKernelMem.copy_from(m_functor);
 
     // Use reference_wrapper (because it is both trivially copyable and
     // invocable) and launch it
