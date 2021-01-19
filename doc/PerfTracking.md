@@ -48,7 +48,11 @@ For profile that can be transferred to LLNL, simply upload your profiles onto an
 
 TODO: LLNL Hosting
 
-For other profiles, contact David Poliakoff for info about setting up a hosted SPOT instance.
+If you're comfortable with Docker, and can host your profiles on a local machine (at most labs, *not* one of your production clusters), there are instructions for building the Docker container for Spot here:
+
+https://github.com/LLNL/spot2\_container
+
+For other profiles, contact David Poliakoff for info about setting up a hosted SPOT instance. If profiles from your code don't fit one of the above categories, however, things are likely to be difficult
 
 ## How do I prevent Kokkos bugs from harming my app?
 
