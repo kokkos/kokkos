@@ -569,4 +569,14 @@
 #define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
 #endif
 
+/**
+ * Originally, Kokkos provided the ability for apps
+ * to configure out the profiling hooks at compile
+ * time. We removed that ability, but some apps
+ * still guard code based on whether Kokkos
+ * has Profiling enabled. This is our way of
+ * not breaking such code
+ */
+#define KOKKOS_ENABLE_PROFILING
+
 #endif  // #ifndef KOKKOS_MACROS_HPP
