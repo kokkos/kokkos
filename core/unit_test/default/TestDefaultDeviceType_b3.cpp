@@ -46,7 +46,7 @@
 
 #include <Kokkos_Core.hpp>
 
-// FIXME_SYCL requires TeamPolicy
+// FIXME_SYCL requires TeamPolicy reduce
 #ifndef KOKKOS_ENABLE_SYCL
 #if !defined(KOKKOS_ENABLE_CUDA) || defined(__CUDACC__)
 

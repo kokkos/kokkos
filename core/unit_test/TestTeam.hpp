@@ -95,9 +95,10 @@ struct TestTeamPolicy {
         member.team_rank() + member.team_size() * member.league_rank();
 
     if (tid != m_flags(member.team_rank(), member.league_rank())) {
-      printf("TestTeamPolicy member(%d,%d) error %d != %d\n",
-             member.league_rank(), member.team_rank(), tid,
-             m_flags(member.team_rank(), member.league_rank()));
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "TestTeamPolicy member(%d,%d) error %d != %d\n", member.league_rank(),
+          member.team_rank(), tid,
+          m_flags(member.team_rank(), member.league_rank()));
     }
   }
 
@@ -151,29 +152,38 @@ struct TestTeamPolicy {
   }
 
   static void test_for(const size_t league_size) {
-    TestTeamPolicy functor(league_size);
-    using policy_type = Kokkos::TeamPolicy<ScheduleType, ExecSpace>;
-    using policy_type_init =
-        Kokkos::TeamPolicy<ScheduleType, ExecSpace, VerifyInitTag>;
+    // FIXME_SYCL requires team rank
+#ifdef KOKKOS_ENABLE_SYCL
+    if (league_size == 0)
+#endif
+    {
+      TestTeamPolicy functor(league_size);
+      using policy_type = Kokkos::TeamPolicy<ScheduleType, ExecSpace>;
+      using policy_type_init =
+          Kokkos::TeamPolicy<ScheduleType, ExecSpace, VerifyInitTag>;
 
-    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+      // FIXME_OPENMPTARGET temporary restriction for team size to be at least
+      // 32
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-    const int team_size = policy_type(league_size, 32)
-                              .team_size_max(functor, Kokkos::ParallelForTag());
-    const int team_size_init =
-        policy_type_init(league_size, 32)
-            .team_size_max(functor, Kokkos::ParallelForTag());
+      const int team_size =
+          policy_type(league_size, 32)
+              .team_size_max(functor, Kokkos::ParallelForTag());
+      const int team_size_init =
+          policy_type_init(league_size, 32)
+              .team_size_max(functor, Kokkos::ParallelForTag());
 #else
-    const int team_size = policy_type(league_size, 1)
-                              .team_size_max(functor, Kokkos::ParallelForTag());
-    const int team_size_init =
-        policy_type_init(league_size, 1)
-            .team_size_max(functor, Kokkos::ParallelForTag());
+      const int team_size =
+          policy_type(league_size, 1)
+              .team_size_max(functor, Kokkos::ParallelForTag());
+      const int team_size_init =
+          policy_type_init(league_size, 1)
+              .team_size_max(functor, Kokkos::ParallelForTag());
 #endif
 
-    Kokkos::parallel_for(policy_type(league_size, team_size), functor);
-    Kokkos::parallel_for(policy_type_init(league_size, team_size_init),
-                         functor);
+      Kokkos::parallel_for(policy_type(league_size, team_size), functor);
+      Kokkos::parallel_for(policy_type_init(league_size, team_size_init),
+                           functor);
+    }
 
     test_small_league_size();
     test_constructors();

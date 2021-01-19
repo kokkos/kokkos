@@ -76,9 +76,11 @@ struct functor_team_for {
     const size_type shmemSize = team.team_size() * 13;
     shared_int values         = shared_int(team.team_shmem(), shmemSize);
 
-    if (values.data() == nullptr || values.extent(0) < shmemSize) {
-      printf("FAILED to allocate shared memory of size %u\n",
-             static_cast<unsigned int>(shmemSize));
+    if (values.data() == nullptr ||
+        static_cast<size_type>(values.extent(0)) < shmemSize) {
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "FAILED to allocate shared memory of size %u\n",
+          static_cast<unsigned int>(shmemSize));
     } else {
       // Initialize shared memory.
       values(team.team_rank()) = 0;
@@ -281,9 +283,11 @@ struct functor_team_vector_for {
     const size_type shmemSize = team.team_size() * 13;
     shared_int values         = shared_int(team.team_shmem(), shmemSize);
 
-    if (values.data() == nullptr || values.extent(0) < shmemSize) {
-      printf("FAILED to allocate shared memory of size %u\n",
-             static_cast<unsigned int>(shmemSize));
+    if (values.data() == nullptr ||
+        static_cast<size_type>(values.extent(0)) < shmemSize) {
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "FAILED to allocate shared memory of size %u\n",
+          static_cast<unsigned int>(shmemSize));
     } else {
       team.team_barrier();
 
@@ -460,8 +464,9 @@ struct functor_vec_single {
         [&](int /*i*/, Scalar &val) { val += value; }, value2);
 
     if (value2 != (value * Scalar(nEnd - nStart))) {
-      printf("FAILED vector_single broadcast %i %i %f %f\n", team.league_rank(),
-             team.team_rank(), (double)value2, (double)value);
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+          "FAILED vector_single broadcast %i %i %f %f\n", team.league_rank(),
+          team.team_rank(), (double)value2, (double)value);
 
       flag() = 1;
     }
@@ -491,8 +496,8 @@ struct functor_vec_for {
 
     if (values.data() == nullptr ||
         values.extent(0) < (unsigned)team.team_size() * 13) {
-      printf("FAILED to allocate memory of size %i\n",
-             static_cast<int>(team.team_size() * 13));
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("FAILED to allocate memory of size %i\n",
+                                    static_cast<int>(team.team_size() * 13));
       flag() = 1;
     } else {
       Kokkos::parallel_for(Kokkos::ThreadVectorRange(team, 13), [&](int i) {
@@ -850,6 +855,8 @@ class TestTripleNestedReduce {
 
 #endif
 
+// FIXME_SYCL requires team reduce
+#ifndef KOKKOS_ENABLE_SYCL
 #if !(defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ENABLE_HIP))
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
@@ -885,6 +892,7 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 19);
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 7, 16);
 }
+#endif
 #endif
 
 }  // namespace Test

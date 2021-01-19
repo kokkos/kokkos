@@ -579,7 +579,10 @@ class TestTeamPolicyConstruction {
     policy_t p1(league_size, team_size);
     ASSERT_EQ(p1.league_size(), league_size);
     ASSERT_EQ(p1.team_size(), team_size);
+// FIXME_SYCL implement chunk_size
+#ifndef KOKKOS_ENABLE_SYCL
     ASSERT_TRUE(p1.chunk_size() > 0);
+#endif
     ASSERT_EQ(p1.scratch_size(0), 0);
 
     policy_t p2 = p1.set_chunk_size(chunk_size);
@@ -692,10 +695,7 @@ TEST(TEST_CATEGORY, policy_construction) {
   check_semiregular<Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>>();
 
   TestRangePolicyConstruction<TEST_EXECSPACE>();
-  // FIXME_SYCL requires Team policy
-#ifndef KOKKOS_ENABLE_SYCL
   TestTeamPolicyConstruction<TEST_EXECSPACE>();
-#endif
 }
 
 template <template <class...> class Policy, class... Args>
@@ -709,11 +709,8 @@ void check_converting_constructor_add_work_tag(Policy<Args...> const& policy) {
 TEST(TEST_CATEGORY, policy_converting_constructor_from_other_policy) {
   check_converting_constructor_add_work_tag(
       Kokkos::RangePolicy<TEST_EXECSPACE>{});
-  // FIXME_SYCL requires Team policy
-#ifndef KOKKOS_ENABLE_SYCL
   check_converting_constructor_add_work_tag(
       Kokkos::TeamPolicy<TEST_EXECSPACE>{});
-#endif
   check_converting_constructor_add_work_tag(
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
 }
@@ -778,10 +775,7 @@ TEST(TEST_CATEGORY, desired_occupancy_prefer) {
   test_prefer_desired_occupancy(Kokkos::RangePolicy<TEST_EXECSPACE>{});
   test_prefer_desired_occupancy(
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
-  // FIXME_SYCL requires Team policy
-#ifndef KOKKOS_ENABLE_SYCL
   test_prefer_desired_occupancy(Kokkos::TeamPolicy<TEST_EXECSPACE>{});
-#endif
 }
 
 TEST(TEST_CATEGORY, desired_occupancy_empty_base_optimization) {
@@ -811,14 +805,10 @@ TEST(TEST_CATEGORY, desired_occupancy_converting_constructors) {
       Kokkos::RangePolicy<TEST_EXECSPACE>{});
   test_desired_occupancy_converting_constructors(
       Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{});
-  // FIXME_SYCL requires Team policy
-#ifndef KOKKOS_ENABLE_SYCL
   test_desired_occupancy_converting_constructors(
       Kokkos::TeamPolicy<TEST_EXECSPACE>{});
-#endif
 }
 
-#ifndef KOKKOS_ENABLE_SYCL
 template <class T>
 void more_md_range_policy_construction_test() {
   (void)Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>{
@@ -878,6 +868,5 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
   more_md_range_policy_construction_test<unsigned long>();
   more_md_range_policy_construction_test<std::int64_t>();
 }
-#endif
 
 }  // namespace Test
