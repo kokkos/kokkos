@@ -52,6 +52,7 @@
 #include <SYCL/Kokkos_SYCL_Parallel_Range.hpp>
 #include <SYCL/Kokkos_SYCL_Parallel_Reduce.hpp>
 #include <SYCL/Kokkos_SYCL_Parallel_Scan.hpp>
+#include <SYCL/Kokkos_SYCL_Parallel_Team.hpp>
 #endif
 
 #endif
