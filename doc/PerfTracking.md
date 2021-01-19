@@ -1,4 +1,4 @@
-# Performance Tracking
+#Performance Tracking
 
 This is a design document describing the motivation, ideas, design, and prototype implementation for a generic Kokkos performance tracking system
 
@@ -15,14 +15,14 @@ Kokkos::Tools::declareMetadata("number\_of\_particles",std::to\_string(input\_de
 For now, and only for the purposes of performance tracking, we recommend the following block of code to enable tools to follow region callbacks, without slowing down your application with individual kernel fences
 
 void hacky\thing\_kokkos\_should\_do\_for\_me(){
-   auto events = Kokkos::Tools::Experimental::get\_callbacks();
-   auto push = events.push\_region;
-   auto pop = events.pop\_region;
-   auto metadata = events.declare\_metadata;
-   Kokkos::Tools::Experimental::pause\_tools();
-   Kokkos::Tools::Experimental::set\_push\_region\_callback(push);
-   Kokkos::Tools::Experimental::set\_pop\_region\_callback(pop);
-   Kokkos::Tools::Experimental::set\_declare\_metadata\_callback(metadata);
+  auto events   = Kokkos::Tools::Experimental::get\_callbacks();
+  auto push     = events.push\_region;
+  auto pop      = events.pop\_region;
+  auto metadata = events.declare\_metadata;
+  Kokkos::Tools::Experimental::pause\_tools();
+  Kokkos::Tools::Experimental::set\_push\_region\_callback(push);
+  Kokkos::Tools::Experimental::set\_pop\_region\_callback(pop);
+  Kokkos::Tools::Experimental::set\_declare\_metadata\_callback(metadata);
 }
 
 If called immediately after Kokkos::initialize, you'll get region timings without kernel fences.
@@ -36,7 +36,7 @@ SPOT (Software Performance Optimization Tracker) is a utility developed at LLNL,
 3) The Spot Web Frontend: for visualizing the results
 
 In Kokkos, we bundle the first two for you in the "spot bundle," which you can check out and build here:
-https://github.com/DavidPoliakoff/spot\_kokkos\_bundle.git . Note that you'll need an MPI module loaded, but then simply type "make" in the root directory of that repo and you should get a libspot-bundle.so.
+https://github.com/DavidPoliakoff/spot_kokkos_bundle.git . Note that you'll need an MPI module loaded, but then simply type "make" in the root directory of that repo and you should get a libspot-bundle.so.
 
 When you go to run your application, point KOKKOS\_PROFILE\_LIBRARY at that libspot-bundle.so, set the environment variable "CALI\_CONFIG" to "spot(profile.kokkos)" and you should get an output file with a ".cali" suffix wherever you ran your application.
 
@@ -50,7 +50,7 @@ TODO: LLNL Hosting
 
 If you're comfortable with Docker, and can host your profiles on a local machine (at most labs, *not* one of your production clusters), there are instructions for building the Docker container for Spot here:
 
-https://github.com/LLNL/spot2\_container
+https://github.com/LLNL/spot2_container
 
 For other profiles, contact David Poliakoff for info about setting up a hosted SPOT instance. If profiles from your code don't fit one of the above categories, however, things are likely to be difficult
 
