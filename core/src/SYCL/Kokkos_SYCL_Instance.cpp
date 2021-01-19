@@ -116,7 +116,7 @@ void SYCLInternal::initialize(const sycl::device& d) {
     m_maxThreadsPerSM =
         d.template get_info<sycl::info::device::max_work_group_size>();
     m_indirectKernelMem.reset(*m_queue);
-    m_reductionResultMem.reset(*m_queue);
+    m_indirectReducerMem.reset(*m_queue);
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
@@ -136,8 +136,8 @@ void SYCLInternal::finalize() {
     std::abort();
   }
 
-  m_reductionResultMem.reset();
   m_indirectKernelMem.reset();
+  m_indirectReducerMem.reset();
   m_queue.reset();
 }
 
