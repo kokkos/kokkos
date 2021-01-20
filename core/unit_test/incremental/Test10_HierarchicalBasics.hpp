@@ -70,15 +70,22 @@ struct HierarchicalBasics {
     Kokkos::View<int **, ExecSpace> v("Array_A", nP, nT);
     Kokkos::parallel_for(
         "Teams", pol, KOKKOS_LAMBDA(const team_t &team) {
+    // FIXME_SYCL Can't ask for team_rank
+#ifndef KOKKOS_ENABLE_SYCL
           const int tR = team.team_rank();
+#endif
           const int tS = team.team_size();
           const int lR = team.league_rank();
           const int lS = team.league_size();
-          if (lR < lS) {
-            v(lR, tR) = lR * tS + tR;
-          } else {
-            v(lR, tR) = 100000;
-          }
+      // FIXME_SYCL Can't ask for team_rank
+#ifdef KOKKOS_ENABLE_SYCL
+          for (int tR = 0; tR < tS; ++tR)
+#endif
+            if (lR < lS) {
+              v(lR, tR) = lR * tS + tR;
+            } else {
+              v(lR, tR) = 100000;
+            }
         });
     Kokkos::fence();
     auto h_v = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), v);

@@ -65,6 +65,8 @@ TEST(TEST_CATEGORY, team_for) {
       1000);
 }
 
+// FIXME_SYCL team reduction and broadcast not yet implemented
+#ifndef KOKKOS_ENABLE_SYCL
 // FIXME_OPENMPTARGET wrong results
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, team_reduce) {
@@ -219,6 +221,7 @@ TEST(TEST_CATEGORY, team_broadcast_double) {
       }
   }
 }
+#endif
 
 }  // namespace Test
 
