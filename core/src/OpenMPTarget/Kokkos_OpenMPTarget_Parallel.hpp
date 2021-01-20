@@ -554,7 +554,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             iter = ++iter % max_active_teams;
         }
         // Decrement the number of available free blocks.
-        atomic_decrement(&lock_array[0]);
       }
 
 #pragma omp parallel num_threads(team_size)
@@ -568,7 +567,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // Free the locked block and increment the number of available free
       // blocks.
       lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
-      atomic_increment(&lock_array[0]);
     }
   }
 
@@ -629,7 +627,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             iter = ++iter % max_active_teams;
         }
         // Decrement the number of available free blocks.
-        atomic_decrement(&lock_array[0]);
       }
 
 #pragma omp parallel num_threads(team_size)
@@ -643,7 +640,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // Free the locked block and increment the number of available free
       // blocks.
       lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
-      atomic_increment(&lock_array[0]);
     }
   }
 

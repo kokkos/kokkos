@@ -136,12 +136,11 @@ void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
 int* OpenMPTargetExec::get_lock_array(int num_teams) {
   Kokkos::Experimental::OpenMPTargetSpace space;
   int max_active_league_size = MAX_ACTIVE_THREADS / 32;
-  if (max_active_league_size < num_teams) {
+  int lock_array_elem =
+      (num_teams > max_active_league_size) ? num_teams : max_active_league_size;
+  if (m_lock_size < (lock_array_elem * sizeof(int))) {
     space.deallocate(m_lock_array, m_lock_size);
-    m_lock_size  = num_teams * sizeof(int);
-    m_lock_array = static_cast<int*>(space.allocate(m_lock_size));
-  } else if (m_lock_array == nullptr) {
-    m_lock_size  = max_active_league_size * sizeof(int);
+    m_lock_size  = lock_array_elem * sizeof(int);
     m_lock_array = static_cast<int*>(space.allocate(m_lock_size));
   }
   return m_lock_array;
