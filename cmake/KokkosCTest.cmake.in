@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/CTestConfig.cmake")
     include("${CMAKE_CURRENT_LIST_DIR}/CTestConfig.cmake")
@@ -231,17 +231,11 @@ foreach(_FILE ${NOTE_FILES})
     include("${_FILE}")
 endforeach()
 
-if(CMAKE_VERSION VERSION_LESS 3.13)
-    ctest_submit(RETURN_VALUE submit_ret
-        RETRY_COUNT 2
-        RETRY_DELAY 10)
-else()
-    # don't fail because of a submission error
-    ctest_submit(RETURN_VALUE submit_ret
-        RETRY_COUNT 2
-        RETRY_DELAY 10
-        CAPTURE_CMAKE_ERROR submit_err)
-endif()
+# capture submit error so it doesn't fail because of a submission error
+ctest_submit(RETURN_VALUE submit_ret
+    RETRY_COUNT 2
+    RETRY_DELAY 10
+    CAPTURE_CMAKE_ERROR submit_err)
 
 #-------------------------------------------------------------------------#
 # Submit
