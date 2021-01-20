@@ -344,8 +344,7 @@ execute_process(
     WORKING_DIRECTORY   ${BINARY_REALDIR}
     )
 
-# if the configure, build, or testing failed it should return a negative value
-# other issues such as submission failure should be fine
-if(RET LESS 0)
+# ensure that any non-zero result variable gets propagated
+if(NOT RET EQUAL 0)
     message(FATAL_ERROR "CTest return non-zero exit code: ${RET}")
 endif()
