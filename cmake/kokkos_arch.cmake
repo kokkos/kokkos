@@ -111,9 +111,7 @@ IF (KOKKOS_ENABLE_CUDA_CONSTEXPR)
   ENDIF()
 ENDIF()
 
-IF(KOKKOS_ENABLE_SYCL)
-  SET(CUDA_ARCH_FLAG -Xsycl-target-backend -cuda-gpu-arch)
-ELSEIF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+IF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   SET(CUDA_ARCH_FLAG "--cuda-gpu-arch")
   GLOBAL_APPEND(KOKKOS_CUDA_OPTIONS -x cuda)
   # Kokkos_CUDA_DIR has priority over CUDAToolkit_BIN_DIR
@@ -127,6 +125,12 @@ ELSEIF (KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   ENDIF()
 ELSEIF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
   SET(CUDA_ARCH_FLAG "-arch")
+ENDIF()
+
+# SYCL needs a slightly different flag than just the Clang flag
+# to speicify a CUDA architecture
+IF(KOKKOS_ENABLE_SYCL)
+  SET(CUDA_ARCH_FLAG -Xsycl-target-backend -cuda-gpu-arch)
 ENDIF()
 
 IF (KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
