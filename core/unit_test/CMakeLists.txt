@@ -73,7 +73,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
     # Needed to split this for Windows NVCC, since it ends up putting everything on the
     # command line in an intermediate compilation step even if CMake generated a response
     # file. That then exceeded the shell command line max length.
-    set(${Tag}_SOURCES1)
+    set(${Tag}_SOURCES1A)
     foreach(Name
         AtomicOperations_int
         AtomicOperations_unsignedint
@@ -98,6 +98,20 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         MDRange_a
         MDRange_b
         MDRange_c
+        )
+      set(file ${dir}/Test${Tag}_${Name}.cpp)
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
+          "#include <Test${Tag}_Category.hpp>\n"
+          "#include <Test${Name}.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES1A ${file})
+    endforeach()
+
+    set(${Tag}_SOURCES1B)
+    foreach(Name
         MDRange_d
         MDRange_e
         MDRange_f
@@ -123,10 +137,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
           "#include <Test${Name}.hpp>\n"
       )
       configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_SOURCES1 ${file})
+      list(APPEND ${Tag}_SOURCES1B ${file})
     endforeach()
 
-    SET(${Tag}_SOURCES2)
+    SET(${Tag}_SOURCES2A)
     foreach(Name
       TeamBasic
       TeamReductionScan
@@ -146,9 +160,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       ViewMapping_b
       ViewMapping_subview
       ViewOfClass
-      WorkGraph
-      View_64bit
       ViewResize
+      View_64bit
+      WorkGraph
       )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -158,7 +172,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
           "#include <Test${Name}.hpp>\n"
       )
       configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_SOURCES2 ${file})
+      list(APPEND ${Tag}_SOURCES2A ${file})
     endforeach()
 
     set(TagHostAccessible ${Tag})
@@ -169,6 +183,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
     elseif(Tag STREQUAL "SYCL")
       set(TagHostAccessible SYCLSharedUSMSpace)
     endif()
+
+    set(${Tag}_SOURCES2B)
     foreach(Name
       SubView_a
       SubView_b
@@ -177,10 +193,38 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       SubView_c03
       SubView_c04
       SubView_c05
+      )
+      set(file ${dir}/Test${Tag}_${Name}.cpp)
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
+          "#include <Test${TagHostAccessible}_Category.hpp>\n"
+          "#include <Test${Name}.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES2B ${file})
+    endforeach()
+
+    set(${Tag}_SOURCES2C)
+    foreach(Name
       SubView_c06
       SubView_c07
       SubView_c08
       SubView_c09
+      )
+      set(file ${dir}/Test${Tag}_${Name}.cpp)
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp
+          "#include <Test${TagHostAccessible}_Category.hpp>\n"
+          "#include <Test${Name}.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES2C ${file})
+    endforeach()
+
+    set(${Tag}_SOURCES2D)
+    foreach(Name
       SubView_c10
       SubView_c11
       SubView_c12
@@ -194,9 +238,11 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
           "#include <Test${Name}.hpp>\n"
       )
       configure_file(${dir}/dummy.cpp ${file})
-      list(APPEND ${Tag}_SOURCES2 ${file})
+      list(APPEND ${Tag}_SOURCES2D ${file})
     endforeach()
 
+    SET(${Tag}_SOURCES1 ${${Tag}_SOURCES1A} ${${Tag}_SOURCES1B})
+    SET(${Tag}_SOURCES2 ${${Tag}_SOURCES2A} ${${Tag}_SOURCES2B} ${${Tag}_SOURCES2C} ${${Tag}_SOURCES2D})
     SET(${Tag}_SOURCES ${${Tag}_SOURCES1} ${${Tag}_SOURCES2})
   endif()
 endforeach()
@@ -441,7 +487,7 @@ if(Kokkos_ENABLE_HIP)
 endif()
 
 if(Kokkos_ENABLE_SYCL)
-  list(REMOVE_ITEM SYCL_SOURCES
+  list(REMOVE_ITEM SYCL_SOURCES1A
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_int.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_unsignedint.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_longint.cpp
@@ -455,6 +501,8 @@ if(Kokkos_ENABLE_SYCL)
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Atomics.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Atomics.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicViews.cpp
+  )
+  list(REMOVE_ITEM SYCL_SOURCES2A
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamReductionScan.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamScan.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamScratch.cpp
@@ -464,10 +512,45 @@ if(Kokkos_ENABLE_SYCL)
   )
 
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
-    UnitTest_SYCL
+    UnitTest_SYCL1A
     SOURCES
       UnitTestMainInit.cpp
-      ${SYCL_SOURCES}
+      ${SYCL_SOURCES1A}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCL1B
+    SOURCES
+      UnitTestMainInit.cpp
+      ${SYCL_SOURCES1B}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCL2A
+    SOURCES
+      UnitTestMainInit.cpp
+      ${SYCL_SOURCES2A}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCL2B
+    SOURCES
+      UnitTestMainInit.cpp
+      ${SYCL_SOURCES2B}
+  )
+
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCL2C
+    SOURCES
+      UnitTestMainInit.cpp
+      ${SYCL_SOURCES2C}
+  )
+
+ KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCL2D
+    SOURCES
+      UnitTestMainInit.cpp
+      ${SYCL_SOURCES2D}
   )
 endif()
 
