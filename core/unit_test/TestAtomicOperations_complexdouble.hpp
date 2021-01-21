@@ -45,6 +45,8 @@
 #include <TestAtomicOperations.hpp>
 
 namespace Test {
+// FIXME_SYCL atomic_fetch_oper for large types to be implemented
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, atomic_operations_complexdouble) {
   const int start = 1;  // Avoid zero for division.
   const int end   = 11;
@@ -57,4 +59,5 @@ TEST(TEST_CATEGORY, atomic_operations_complexdouble) {
                                              TEST_EXECSPACE>(start, end - i)));
   }
 }
+#endif
 }  // namespace Test
