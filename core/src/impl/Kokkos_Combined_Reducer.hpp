@@ -493,11 +493,8 @@ using _reducer_from_arg_t =
 //------------------------------------------------------------------------------
 
 template <class Space, class... ReferencesOrViewsOrReducers>
-KOKKOS_INLINE_FUNCTION constexpr CombinedReducerValueImpl<
-    std::make_index_sequence<sizeof...(ReferencesOrViewsOrReducers)>,
-    typename _reducer_from_arg_t<Space,
-                                 ReferencesOrViewsOrReducers>::value_type...>
-make_combined_reducer_value(ReferencesOrViewsOrReducers&&... args) {
+KOKKOS_INLINE_FUNCTION constexpr auto make_combined_reducer_value(
+    ReferencesOrViewsOrReducers&&... args) {
   //----------------------------------------
   // This is a bit round-about and we should make sure it doesn't have
   // any performance implications. Basically, we make a reducer out of anything
@@ -515,9 +512,8 @@ make_combined_reducer_value(ReferencesOrViewsOrReducers&&... args) {
 }
 
 template <class Space, class ValueType, class... ReferencesOrViewsOrReducers>
-KOKKOS_INLINE_FUNCTION constexpr CombinedReducer<
-    Space, _reducer_from_arg_t<Space, ReferencesOrViewsOrReducers>...>
-make_combined_reducer(ValueType& value, ReferencesOrViewsOrReducers&&... args) {
+KOKKOS_INLINE_FUNCTION constexpr auto make_combined_reducer(
+    ValueType& value, ReferencesOrViewsOrReducers&&... args) {
   //----------------------------------------
   // This is doing more or less the same thing of making every argument into
   // a reducer, just in a different place than in `make_combined_reducer_value`,
@@ -531,10 +527,8 @@ make_combined_reducer(ValueType& value, ReferencesOrViewsOrReducers&&... args) {
 }
 
 template <class Functor, class Space, class... ReferencesOrViewsOrReducers>
-KOKKOS_INLINE_FUNCTION constexpr CombinedReductionFunctorWrapper<
-    Functor, Space, _reducer_from_arg_t<Space, ReferencesOrViewsOrReducers>...>
-make_wrapped_combined_functor(Functor const& functor, Space,
-                              ReferencesOrViewsOrReducers&&...) {
+KOKKOS_INLINE_FUNCTION constexpr auto make_wrapped_combined_functor(
+    Functor const& functor, Space, ReferencesOrViewsOrReducers&&...) {
   //----------------------------------------
   return CombinedReductionFunctorWrapper<
       Functor, Space,
