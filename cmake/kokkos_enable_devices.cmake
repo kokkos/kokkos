@@ -48,9 +48,6 @@ IF(KOKKOS_ENABLE_OPENMP)
   IF(KOKKOS_CLANG_IS_CRAY)
     SET(ClangOpenMPFlag -fopenmp)
   ENDIF()
-  IF(KOKKOS_CLANG_IS_INTEL)
-    SET(ClangOpenMPFlag -fiopenmp)
-  ENDIF()
   IF(KOKKOS_COMPILER_CLANG_MSVC)
     #for clang-cl expression /openmp yields an error, so directly add the specific Clang flag
     SET(ClangOpenMPFlag /clang:-fopenmp=libomp)
@@ -64,6 +61,7 @@ IF(KOKKOS_ENABLE_OPENMP)
     COMPILER_SPECIFIC_FLAGS(
       COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
       Clang      -Xcompiler ${ClangOpenMPFlag}
+      IntelClang -Xcompiler -fiopenmp
       PGI        -Xcompiler -mp
       Cray       NO-VALUE-SPECIFIED
       XL         -Xcompiler -qsmp=omp
@@ -72,6 +70,7 @@ IF(KOKKOS_ENABLE_OPENMP)
   ELSE()
     COMPILER_SPECIFIC_FLAGS(
       Clang      ${ClangOpenMPFlag}
+      IntelClang -fiopenmp
       AppleClang -Xpreprocessor -fopenmp
       PGI        -mp
       Cray       NO-VALUE-SPECIFIED
