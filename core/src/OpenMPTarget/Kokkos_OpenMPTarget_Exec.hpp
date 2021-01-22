@@ -495,7 +495,11 @@ namespace Impl {
 
 class OpenMPTargetExec {
  public:
-  enum { MAX_ACTIVE_THREADS = 256 * 8 * 56 * 4 };
+  // FIXME_OPENMPTARGET - Currently the maximum number of
+  // teams possible is calculated based on NVIDIA's Volta GPU. In
+  // future this value should be based on the chosen architecture for the
+  // OpenMPTarget backend.
+  enum { MAX_ACTIVE_THREADS = 2080 * 80 };
   enum { MAX_ACTIVE_TEAMS = MAX_ACTIVE_THREADS / 32 };
 
  private:
@@ -505,14 +509,18 @@ class OpenMPTargetExec {
   static void verify_is_process(const char* const);
   static void verify_initialized(const char* const);
 
+  static int* get_lock_array(int num_teams);
   static void* get_scratch_ptr();
   static void clear_scratch();
-  static void resize_scratch(int64_t reduce_bytes, int64_t team_reduce_bytes,
+  static void clear_lock_array();
+  static void resize_scratch(int64_t team_reduce_bytes,
                              int64_t team_shared_bytes,
                              int64_t thread_local_bytes);
 
   static void* m_scratch_ptr;
   static int64_t m_scratch_size;
+  static int* m_lock_array;
+  static int64_t m_lock_size;
 };
 
 }  // namespace Impl
@@ -542,6 +550,7 @@ class OpenMPTargetExecTeamMember {
   int m_league_size;
   int m_vector_length;
   int m_vector_lane;
+  int m_shmem_block_index;
   void* m_glb_scratch;
   void* m_reduce_scratch;
 
@@ -583,13 +592,14 @@ class OpenMPTargetExecTeamMember {
   }
 
   KOKKOS_INLINE_FUNCTION
-  const execution_space::scratch_memory_space& team_scratch(int) const {
-    return m_team_shared.set_team_thread_mode(0, 1, 0);
+  const execution_space::scratch_memory_space& team_scratch(int level) const {
+    return m_team_shared.set_team_thread_mode(level, 1,
+                                              m_team_scratch_size[level]);
   }
 
   KOKKOS_INLINE_FUNCTION
-  const execution_space::scratch_memory_space& thread_scratch(int) const {
-    return m_team_shared.set_team_thread_mode(0, team_size(), team_rank());
+  const execution_space::scratch_memory_space& thread_scratch(int level) const {
+    return m_team_shared.set_team_thread_mode(level, team_size(), team_rank());
   }
 
   KOKKOS_INLINE_FUNCTION int league_rank() const { return m_league_rank; }
@@ -733,26 +743,44 @@ class OpenMPTargetExecTeamMember {
   using space = execution_space::scratch_memory_space;
 
  public:
+  // FIXME_OPENMPTARGET - 16 bytes at the begining of the scratch space for each
+  // league is saved for reduction. It should actually be based on the ValueType
+  // of the reduction variable.
   inline OpenMPTargetExecTeamMember(
       const int league_rank, const int league_size, const int team_size,
       const int vector_length  // const TeamPolicyInternal< OpenMPTarget,
                                // Properties ...> & team
       ,
-      void* const glb_scratch, const int shmem_size_L1, const int shmem_size_L2)
-      : m_team_shared(nullptr, 0),
-        m_team_scratch_size{shmem_size_L1, shmem_size_L2},
+      void* const glb_scratch, const int shmem_block_index,
+      const int shmem_size_L0, const int shmem_size_L1)
+      : m_team_scratch_size{shmem_size_L0, shmem_size_L1},
         m_team_rank(0),
         m_team_size(team_size),
         m_league_rank(league_rank),
         m_league_size(league_size),
         m_vector_length(vector_length),
+        m_shmem_block_index(shmem_block_index),
         m_glb_scratch(glb_scratch) {
-    const int omp_tid      = omp_get_thread_num();
-    const int omp_team_num = omp_get_team_num();
-    m_reduce_scratch = (char*)glb_scratch + omp_team_num * TEAM_REDUCE_SIZE;
-    m_league_rank    = league_rank;
-    m_team_rank      = omp_tid;
-    m_vector_lane    = 0;
+    const int omp_tid = omp_get_thread_num();
+    m_team_shared     = scratch_memory_space(
+        ((char*)glb_scratch +
+         m_shmem_block_index *
+             (shmem_size_L0 + shmem_size_L1 +
+              ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16)),
+        shmem_size_L0,
+        ((char*)glb_scratch +
+         m_shmem_block_index *
+             (shmem_size_L0 + shmem_size_L1 +
+              ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16)) +
+            shmem_size_L0 + ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16,
+        shmem_size_L1);
+    m_reduce_scratch =
+        (char*)glb_scratch +
+        shmem_block_index * (shmem_size_L0 + shmem_size_L1 +
+                             ((shmem_size_L0 + shmem_size_L1) * 10 / 100) + 16);
+    m_league_rank = league_rank;
+    m_team_rank   = omp_tid;
+    m_vector_lane = 0;
   }
 
   static inline int team_reduce_size() { return TEAM_REDUCE_SIZE; }

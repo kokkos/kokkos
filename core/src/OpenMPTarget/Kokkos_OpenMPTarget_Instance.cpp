@@ -95,7 +95,12 @@ void OpenMPTarget::fence() {
 }
 
 void OpenMPTarget::impl_initialize() { m_space_instance->impl_initialize(); }
-void OpenMPTarget::impl_finalize() { m_space_instance->impl_finalize(); }
+void OpenMPTarget::impl_finalize() {
+  Kokkos::Impl::OpenMPTargetExec space;
+  if (space.m_lock_array != nullptr) space.clear_lock_array();
+
+  m_space_instance->impl_finalize();
+}
 int OpenMPTarget::impl_is_initialized() {
   return Impl::OpenMPTargetInternal::impl_singleton()->impl_is_initialized();
 }

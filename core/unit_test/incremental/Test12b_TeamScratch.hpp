@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-// @Kokkos_Feature_Level_Required:13
+// @Kokkos_Feature_Level_Required:12
 // Unit test for hierarchical parallelism
 // Create concurrent work hierarchically and verify if
 // contributions of paticipating processing units corresponds to expected value
@@ -64,13 +64,15 @@ struct TeamScratch {
                                    Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
     int scratchSize = scratch_t::shmem_size(sX, sY);
 
+    const int scratch_level = 1;
+
     Kokkos::parallel_for(
         "Team",
         policy_t(pN, Kokkos::AUTO)
-            .set_scratch_size(1, Kokkos::PerTeam(scratchSize)),
+            .set_scratch_size(scratch_level, Kokkos::PerTeam(scratchSize)),
         KOKKOS_LAMBDA(const team_t &team) {
           // Allocate and use scratch pad memory
-          scratch_t v_S(team.team_scratch(1), sX, sY);
+          scratch_t v_S(team.team_scratch(scratch_level), sX, sY);
           int n = team.league_rank();
 
           Kokkos::parallel_for(
@@ -107,7 +109,11 @@ TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
   TeamScratch<TEST_EXECSPACE> test;
   test.run(1, 4, 4);
   test.run(4, 7, 10);
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+  test.run(14, 277, 1);
+#else
   test.run(14, 277, 321);
+#endif
 }
 
 }  // namespace Test

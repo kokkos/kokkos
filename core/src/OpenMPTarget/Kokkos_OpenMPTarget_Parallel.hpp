@@ -586,21 +586,61 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                             ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                             : league_size;
 
-    OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,
-                                     0, 0);
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
+    const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
+    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1);
 
+    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
     FunctorType a_functor(m_functor);
-#pragma omp target teams distribute map(to           \
-                                        : a_functor) \
-    is_device_ptr(scratch_ptr) num_teams(nteams) thread_limit(team_size)
+
+    // Maximum active teams possible.
+    int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+
+    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+
+#pragma omp target teams distribute parallel for is_device_ptr(lock_array)
+    for (int i = 0; i < max_active_teams; ++i) {
+      lock_array[i] = 0;
+    }
+
+#pragma omp target teams distribute map(to                   \
+                                        : a_functor)         \
+    is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
+        thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
+      int shmem_block_index = -1, lock_team = 99999, iter = -1;
+
+      // Loop as long as a shmem_block_index is not found.
+      while (shmem_block_index == -1) {
+        // Loop until a lock can be acquired on a team
+        while (lock_team != 1) {
+          // Avoid tripping over other team's block index.
+          // Find a free block index.
+          iter = (omp_get_team_num() % max_active_teams);
+
+          // Try and acquire a lock on the index.
+          lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
+
+          // If lock is acquired assign it to the block index.
+          if (lock_team == 1)
+            shmem_block_index = iter;
+          else
+            iter = ++iter % max_active_teams;
+        }
+        // Decrement the number of available free blocks.
+      }
+
 #pragma omp parallel num_threads(team_size)
       {
-        typename Policy::member_type team(i, league_size, team_size,
-                                          vector_length, scratch_ptr, 0, 0);
+        typename Policy::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr,
+            shmem_block_index, shmem_size_L0, shmem_size_L1);
         m_functor(team);
       }
+
+      // Free the locked block and increment the number of available free
+      // blocks.
+      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
     }
   }
 
@@ -620,20 +660,60 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     FunctorType a_functor(m_functor);
 
-    OpenMPTargetExec::resize_scratch(0, Policy::member_type::TEAM_REDUCE_SIZE,
-                                     0, 0);
+    const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
+    const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
+    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1);
+
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
-#pragma omp target teams distribute map(to           \
-                                        : a_functor) \
-    is_device_ptr(scratch_ptr) num_teams(nteams) thread_limit(team_size)
+
+    // Maximum active teams possible.
+    int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+
+    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+
+#pragma omp target teams distribute parallel for is_device_ptr(lock_array)
+    for (int i = 0; i < max_active_teams; ++i) {
+      lock_array[i] = 0;
+    }
+
+#pragma omp target teams distribute map(to                   \
+                                        : a_functor)         \
+    is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
+        thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
+      int shmem_block_index = -1, lock_team = 99999, iter = -1;
+
+      // Loop as long as a shmem_block_index is not found.
+      while (shmem_block_index == -1) {
+        // Loop until a lock can be acquired on a team
+        while (lock_team != 1) {
+          // Avoid tripping over other team's block index.
+          // Find a free block index.
+          iter = (omp_get_team_num() % max_active_teams);
+
+          // Try and acquire a lock on the index.
+          lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
+
+          // If lock is acquired assign it to the block index.
+          if (lock_team == 1)
+            shmem_block_index = iter;
+          else
+            iter = ++iter % max_active_teams;
+        }
+        // Decrement the number of available free blocks.
+      }
+
 #pragma omp parallel num_threads(team_size)
       {
-        typename Policy::member_type team(i / (team_size * vector_length),
-                                          league_size, team_size, vector_length,
-                                          scratch_ptr, 0, 0);
+        typename Policy::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr,
+            shmem_block_index, shmem_size_L0, shmem_size_L1);
         m_functor(TagType(), team);
       }
+
+      // Free the locked block and increment the number of available free
+      // blocks.
+      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
     }
   }
 
@@ -669,8 +749,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                            : league_size;
 
-    OpenMPTargetExec::resize_scratch(
-        0, PolicyType::member_type::TEAM_REDUCE_SIZE, 0, 0);
+    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
+                                     0, 0);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     ValueType result = ValueType();
@@ -682,8 +762,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       ValueType inner_result = ValueType();
 #pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
       {
-        typename PolicyType::member_type team(i, league_size, team_size,
-                                              vector_length, scratch_ptr, 0, 0);
+        typename PolicyType::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr, 0, 0, 0);
         f(team, inner_result);
       }
       result = inner_result;
@@ -709,8 +789,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
                            : league_size;
 
-    OpenMPTargetExec::resize_scratch(
-        0, PolicyType::member_type::TEAM_REDUCE_SIZE, 0, 0);
+    OpenMPTargetExec::resize_scratch(PolicyType::member_type::TEAM_REDUCE_SIZE,
+                                     0, 0);
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
     ValueType result = ValueType();
@@ -722,8 +802,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       ValueType inner_result = ValueType();
 #pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
       {
-        typename PolicyType::member_type team(i, league_size, team_size,
-                                              vector_length, scratch_ptr, 0, 0);
+        typename PolicyType::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr, 0, 0, 0);
         f(TagType(), team, result);
       }
       result = inner_result;

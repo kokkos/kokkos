@@ -94,6 +94,8 @@ void OpenMPTargetExec::verify_initialized(const char* const label) {
 
 void* OpenMPTargetExec::m_scratch_ptr    = nullptr;
 int64_t OpenMPTargetExec::m_scratch_size = 0;
+int* OpenMPTargetExec::m_lock_array      = nullptr;
+int64_t OpenMPTargetExec::m_lock_size    = 0;
 
 void OpenMPTargetExec::clear_scratch() {
   Kokkos::Experimental::OpenMPTargetSpace space;
@@ -102,18 +104,27 @@ void OpenMPTargetExec::clear_scratch() {
   m_scratch_size = 0;
 }
 
+void OpenMPTargetExec::clear_lock_array() {
+  if (m_lock_array != nullptr) {
+    Kokkos::Experimental::OpenMPTargetSpace space;
+    space.deallocate(m_lock_array, m_lock_size);
+    m_lock_array = nullptr;
+    m_lock_size  = 0;
+  }
+}
+
 void* OpenMPTargetExec::get_scratch_ptr() { return m_scratch_ptr; }
 
-void OpenMPTargetExec::resize_scratch(int64_t reduce_bytes,
-                                      int64_t team_reduce_bytes,
-                                      int64_t team_shared_bytes,
-                                      int64_t thread_local_bytes) {
+void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
+                                      int64_t shmem_size_L1) {
   Kokkos::Experimental::OpenMPTargetSpace space;
+  const int64_t shmem_size =
+      shmem_size_L0 + shmem_size_L1;  // L0 + L1 scratch memory per team.
+  const int64_t padding = shmem_size * 10 / 100;  // Padding per team.
+  // Total amount of scratch memory allocated is depenedent
+  // on the maximum number of in-flight teams possible.
   int64_t total_size =
-      MAX_ACTIVE_TEAMS * reduce_bytes +         // Inter Team Reduction
-      MAX_ACTIVE_TEAMS * team_reduce_bytes +    // Intra Team Reduction
-      MAX_ACTIVE_TEAMS * team_shared_bytes +    // Team Local Scratch
-      MAX_ACTIVE_THREADS * thread_local_bytes;  // Thread Private Scratch
+      (shmem_size + 16 + padding) * (MAX_ACTIVE_THREADS / team_size);
 
   if (total_size > m_scratch_size) {
     space.deallocate(m_scratch_ptr, m_scratch_size);
@@ -121,6 +132,20 @@ void OpenMPTargetExec::resize_scratch(int64_t reduce_bytes,
     m_scratch_ptr  = space.allocate(total_size);
   }
 }
+
+int* OpenMPTargetExec::get_lock_array(int num_teams) {
+  Kokkos::Experimental::OpenMPTargetSpace space;
+  int max_active_league_size = MAX_ACTIVE_THREADS / 32;
+  int lock_array_elem =
+      (num_teams > max_active_league_size) ? num_teams : max_active_league_size;
+  if (m_lock_size < (lock_array_elem * sizeof(int))) {
+    space.deallocate(m_lock_array, m_lock_size);
+    m_lock_size  = lock_array_elem * sizeof(int);
+    m_lock_array = static_cast<int*>(space.allocate(m_lock_size));
+  }
+  return m_lock_array;
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 
