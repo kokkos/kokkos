@@ -53,8 +53,6 @@
 
 namespace Test {
 
-TEST(defaultdevicetype, test_utilities) { test_utilities(); }
-
 TEST(defaultdevicetype, malloc) {
   int* data = (int*)Kokkos::kokkos_malloc(100 * sizeof(int));
   ASSERT_NO_THROW(data = (int*)Kokkos::kokkos_realloc(data, 120 * sizeof(int)));
