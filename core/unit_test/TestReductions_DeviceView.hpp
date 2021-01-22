@@ -95,8 +95,6 @@ struct MDRangePolicyFunctor {
   }
 };
 
-// FIXME_SYCL requires TeamPolicy
-#ifndef KOKKOS_ENABLE_SYCL
 struct TeamPolicyFunctor {
   int M;
   TeamPolicyFunctor(int M_) : M(M_) {}
@@ -107,7 +105,6 @@ struct TeamPolicyFunctor {
     for (int i = team.team_rank(); i < M; i += team.team_size()) lsum += 1;
   }
 };
-#endif
 
 }  // namespace
 
@@ -134,7 +131,7 @@ TEST(TEST_CATEGORY, reduce_device_view_mdrange_policy) {
 }
 #endif
 
-// FIXME_SYCL requires TeamPolicy
+// FIXME_SYCL requires TeamPolicy parallel_reduce
 #ifndef KOKKOS_ENABLE_SYCL
 // FIXME_HIP
 #ifndef KOKKOS_ENABLE_HIP
