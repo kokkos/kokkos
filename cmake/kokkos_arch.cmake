@@ -453,15 +453,21 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
   ENDIF()
 ENDIF()
 
-IF (KOKKOS_ENABLE_SYCL AND CUDA_ARCH_ALREADY_SPECIFIED)
-  IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
+IF (KOKKOS_ENABLE_SYCL)
+  IF(CUDA_ARCH_ALREADY_SPECIFIED)
+    IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
+      COMPILER_SPECIFIC_FLAGS(
+        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice
+      )
+      # FIXME_SYCL The CUDA backend doesn't support printf yet.
+      GLOBAL_SET(KOKKOS_IMPL_DISABLE_SYCL_DEVICE_PRINTF ON)
+    ELSE()
+      MESSAGE(SEND_ERROR "Setting a CUDA architecture for SYCL is only allowed with Kokkos_ENABLE_UNSUPPORTED_ARCHS=ON!")
+    ENDIF()
+  ELSEIF(KOKKOS_ARCH_INTEL_GEN)
     COMPILER_SPECIFIC_FLAGS(
-      DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice
+      DEFAULT -fsycl-targets=spir64_gen-unknown-unknown-sycldevice -Xsycl-target-backend "-device skl"
     )
-    # FIXME_SYCL The CUDA backend doesn't support printf yet.
-    GLOBAL_SET(KOKKOS_IMPL_DISABLE_SYCL_DEVICE_PRINTF ON)
-  ELSE()
-    MESSAGE(SEND_ERROR "Setting a CUDA architecture for SYCL is only allowed with Kokkos_ENABLE_UNSUPPORTED_ARCHS=ON!")
   ENDIF()
 ENDIF()
 
