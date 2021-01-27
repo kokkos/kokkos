@@ -298,10 +298,11 @@ class SYCLInternal {
 
   void finalize();
 
+ private:
   // fence(...) takes any type with a .wait_and_throw() method
   // (sycl::event and sycl::queue)
   template <typename WAT>
-  static void fence(WAT& wat) {
+  static void fence_helper(WAT& wat) {
     try {
       wat.wait_and_throw();
     } catch (sycl::exception const& e) {
@@ -309,6 +310,10 @@ class SYCLInternal {
           std::string("There was a synchronous SYCL error:\n") += e.what());
     }
   }
+
+ public:
+  static void fence(sycl::queue& q) { fence_helper(q); }
+  static void fence(sycl::event& e) { fence_helper(e); }
 };
 
 }  // namespace Impl
