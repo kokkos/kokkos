@@ -95,7 +95,7 @@ class SYCL {
   //@{
 
   KOKKOS_INLINE_FUNCTION static int in_parallel() {
-#if defined(__SYCL_ARCH__)
+#if defined(__SYCL_DEVICE_ONLY__)
     return true;
 #else
     return false;
