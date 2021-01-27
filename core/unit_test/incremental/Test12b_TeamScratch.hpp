@@ -107,6 +107,9 @@ struct TeamScratch {
 
 TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
   TeamScratch<TEST_EXECSPACE> test;
+  // FIXME_OPENMPTARGET - team_size has to be a multiple of 32 for the tests to
+  // pass in the Release and RelWithDebInfo builds. Does not need the team_size
+  // to be a multiple of 32 for the Debug builds.
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
   test.run(1, 32, 4);
   test.run(4, 64, 10);
