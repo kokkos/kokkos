@@ -487,6 +487,11 @@ if(Kokkos_ENABLE_HIP)
 endif()
 
 if(Kokkos_ENABLE_SYCL)
+  list(REMOVE_ITEM SYCL_SOURCES1A
+       # FIXME_SYCL atomic_fetch_oper for large types to be implemented
+       ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_AtomicOperations_complexdouble.cpp
+  )
+
   list(REMOVE_ITEM SYCL_SOURCES2A
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamReductionScan.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_TeamScan.cpp
