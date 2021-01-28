@@ -168,10 +168,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     sycl::queue& q = *instance.m_queue;
 
     // FIXME_SYCL optimize
-    const size_t wgroup_size =
-        space.impl_internal_space_instance()->m_maxThreadsPerSM;
-    std::size_t size     = policy.end() - policy.begin();
-    const auto init_size = std::max<std::size_t>(
+    const size_t wgroup_size = 64;
+    std::size_t size         = policy.end() - policy.begin();
+    const auto init_size     = std::max<std::size_t>(
         ((size + 1) / 2 + wgroup_size - 1) / wgroup_size, 1);
     const auto value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
