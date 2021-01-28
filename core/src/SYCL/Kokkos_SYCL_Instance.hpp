@@ -170,21 +170,6 @@ class SYCLInternal {
     }
 
    private:
-    // fence(...) takes any type with a .wait_and_throw() method
-    // (sycl::event and sycl::queue)
-    //
-    // FIXME_SYCL This (and a public interface taking a sycl::event
-    // or sycl::queue) should really be in Kokkos::Experimental::SYCL
-    template <typename WAT>
-    static void fence(WAT& wat) {
-      try {
-        wat.wait_and_throw();
-      } catch (sycl::exception const& e) {
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("There was a synchronous SYCL error:\n") += e.what());
-      }
-    }
-
     // This will memcpy an object T into memory held by this object
     // returns: a T* to that object
     //
@@ -312,6 +297,23 @@ class SYCLInternal {
   int is_initialized() const { return m_queue.has_value(); }
 
   void finalize();
+
+ private:
+  // fence(...) takes any type with a .wait_and_throw() method
+  // (sycl::event and sycl::queue)
+  template <typename WAT>
+  static void fence_helper(WAT& wat) {
+    try {
+      wat.wait_and_throw();
+    } catch (sycl::exception const& e) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("There was a synchronous SYCL error:\n") += e.what());
+    }
+  }
+
+ public:
+  static void fence(sycl::queue& q) { fence_helper(q); }
+  static void fence(sycl::event& e) { fence_helper(e); }
 };
 
 }  // namespace Impl
