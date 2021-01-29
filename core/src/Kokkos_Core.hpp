@@ -144,6 +144,10 @@ void pre_initialize(const InitArguments& args);
 
 void post_initialize(const InitArguments& args);
 
+void declare_configuration_metadata(const std::string& category,
+                                    const std::string& key,
+                                    const std::string& value);
+
 }  // namespace Impl
 
 bool is_initialized() noexcept;
