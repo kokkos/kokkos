@@ -1,4 +1,4 @@
-name: cancel-duplicates
+name: cancel-builds-on-update
 on:
   workflow_run:
     workflows: ['github-Linux', 'github-OSX']
@@ -17,3 +17,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           sourceRunId: ${{ github.event.workflow_run.id }}
           notifyPRCancel: true
+          skipEventTypes: '["push", "schedule"]'
