@@ -152,10 +152,6 @@ struct TestTeamPolicy {
   }
 
   static void test_for(const size_t league_size) {
-    // FIXME_SYCL requires team rank
-#ifdef KOKKOS_ENABLE_SYCL
-    if (league_size == 0)
-#endif
     {
       TestTeamPolicy functor(league_size);
       using policy_type = Kokkos::TeamPolicy<ScheduleType, ExecSpace>;
