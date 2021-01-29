@@ -68,9 +68,7 @@ class SYCLTeamMember {
   mutable void* m_team_reduce;
   scratch_memory_space m_team_shared;
   int m_team_reduce_size;
-  int m_league_rank;
-  int m_league_size;
-  sycl::group<1> m_group;
+  sycl::nd_item<1> m_item;
 
  public:
   KOKKOS_INLINE_FUNCTION
@@ -90,22 +88,17 @@ class SYCLTeamMember {
     return m_team_shared.set_team_thread_mode(level, team_size(), team_rank());
   }
 
-  KOKKOS_INLINE_FUNCTION int league_rank() const { return m_league_rank; }
-  KOKKOS_INLINE_FUNCTION int league_size() const { return m_league_size; }
+  KOKKOS_INLINE_FUNCTION int league_rank() const { return m_item.get_group(0); }
+  KOKKOS_INLINE_FUNCTION int league_size() const {
+    return m_item.get_group_range(0);
+  }
   KOKKOS_INLINE_FUNCTION int team_rank() const {
-    // FIXME_SYCL should be m_group.get_local_id() in SYCL2020
-    Kokkos::abort("Not implemented!");
-    return 0;
+    return m_item.get_local_id(0);
   }
   KOKKOS_INLINE_FUNCTION int team_size() const {
-    return m_group.get_local_range(0);
+    return m_item.get_local_range(0);
   }
-  KOKKOS_INLINE_FUNCTION void team_barrier() const {
-    // FIXME_SYCL This should be sycl::barrier(group); in SYCL2020
-    m_group.mem_fence<sycl::access::mode::read_write>();
-  }
-
-  KOKKOS_INLINE_FUNCTION sycl::group<1> group() const { return m_group; }
+  KOKKOS_INLINE_FUNCTION void team_barrier() const { m_item.barrier(); }
 
   //--------------------------------------------------------------------------
 
@@ -210,15 +203,12 @@ class SYCLTeamMember {
   KOKKOS_INLINE_FUNCTION
   SYCLTeamMember(void* shared, const int shared_begin, const int shared_size,
                  void* scratch_level_1_ptr, const int scratch_level_1_size,
-                 const sycl::group<1> group)
+                 const sycl::nd_item<1> item)
       : m_team_reduce(shared),
         m_team_shared(static_cast<char*>(shared) + shared_begin, shared_size,
                       scratch_level_1_ptr, scratch_level_1_size),
         m_team_reduce_size(shared_begin),
-        // FIXME_SYCL should be group.get_group_id(0) in SYCL2020
-        m_league_rank(group.get_id(0)),
-        m_league_size(group.get_group_range(0)),
-        m_group(group) {}
+        m_item(item) {}
 
  public:
   // Declare to avoid unused private member warnings which are trigger
@@ -370,11 +360,9 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::SYCLTeamMember>&
         loop_boundaries,
     const Closure& closure) {
-  loop_boundaries.member.group().parallel_for_work_item(
-      sycl::range<1>(loop_boundaries.end - loop_boundaries.start),
-      [=](sycl::h_item<1> item) {
-        closure(item.get_local()[0] + loop_boundaries.start);
-      });
+  for (iType i = loop_boundaries.start + loop_boundaries.member.team_rank();
+       i < loop_boundaries.end; i += loop_boundaries.member.team_size())
+    closure(i);
 }
 
 //----------------------------------------------------------------------------
