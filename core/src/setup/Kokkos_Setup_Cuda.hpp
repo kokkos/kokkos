@@ -76,9 +76,9 @@
 #error "#include <cuda.h> did not define CUDA_VERSION."
 #endif
 
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 300)
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 350)
 // Compiling with CUDA compiler for device code.
-#error "Cuda device capability >= 3.0 is required."
+#error "Cuda device capability >= 3.5 is required."
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA_LAMBDA
