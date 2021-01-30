@@ -265,12 +265,6 @@ Architecture-specific optimizations can be enabled by specifying `-DKokkos_ARCH_
 * Kokkos_ARCH_HSW
     * Whether to optimize for the HSW architecture
     * BOOL Default: OFF
-* Kokkos_ARCH_KEPLER30
-    * Whether to optimize for the KEPLER30 architecture
-    * BOOL Default: OFF
-* Kokkos_ARCH_KEPLER32
-    * Whether to optimize for the KEPLER32 architecture
-    * BOOL Default: OFF
 * Kokkos_ARCH_KEPLER35
     * Whether to optimize for the KEPLER35 architecture
     * BOOL Default: OFF
