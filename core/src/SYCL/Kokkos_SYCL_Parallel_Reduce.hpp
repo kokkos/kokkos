@@ -168,10 +168,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     sycl::queue& q = *instance.m_queue;
 
     // FIXME_SYCL optimize
-    const size_t wgroup_size = 64;
-    std::size_t size         = policy.end() - policy.begin();
-    const auto init_size     = std::max<std::size_t>(
-        ((size + 1) / 2 + wgroup_size - 1) / wgroup_size, 1);
+    constexpr size_t wgroup_size       = 128;
+    constexpr size_t values_per_thread = 2;
+    std::size_t size                   = policy.end() - policy.begin();
+    const auto init_size               = std::max<std::size_t>(
+        ((size + values_per_thread - 1) / values_per_thread + wgroup_size - 1) /
+            wgroup_size,
+        1);
     const auto value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
             selected_reducer);
@@ -201,7 +204,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     bool first_run = true;
     while (size > 1) {
-      auto n_wgroups = ((size + 1) / 2 + wgroup_size - 1) / wgroup_size;
+      auto n_wgroups = ((size + values_per_thread - 1) / values_per_thread +
+                        wgroup_size - 1) /
+                       wgroup_size;
       q.submit([&](sycl::handler& cgh) {
         sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                        sycl::access::target::local>
@@ -213,37 +218,39 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             [=](sycl::nd_item<1> item) {
               const auto local_id = item.get_local_linear_id();
               const auto global_id =
-                  wgroup_size * item.get_group_linear_id() * 2 + local_id;
+                  wgroup_size * item.get_group_linear_id() * values_per_thread +
+                  local_id;
 
               // Initialize local memory
+              const typename Policy::index_type upper_bound =
+                  (global_id + values_per_thread * wgroup_size) < size
+                      ? global_id + values_per_thread * wgroup_size
+                      : size;
+
               if (first_run) {
                 reference_type update = ValueInit::init(
                     selected_reducer, &local_mem[local_id * value_count]);
-                if (global_id < size) {
-                  const typename Policy::index_type id =
-                      static_cast<typename Policy::index_type>(global_id) +
-                      policy.begin();
-                  if constexpr (std::is_same<WorkTag, void>::value) {
-                    functor(id, update);
-                    if (global_id + wgroup_size < size)
-                      functor(id + wgroup_size, update);
-                  } else {
-                    functor(WorkTag(), id, update);
-                    if (global_id + wgroup_size < size)
-                      functor(WorkTag(), id + wgroup_size, update);
-                  }
+                for (typename Policy::index_type id = global_id;
+                     id < upper_bound; id += wgroup_size) {
+                  if constexpr (std::is_same<WorkTag, void>::value)
+                    functor(id + policy.begin(), update);
+                  else
+                    functor(WorkTag(), id + policy.begin(), update);
                 }
               } else {
-                if (global_id < size) {
-                  ValueOps::copy(functor, &local_mem[local_id * value_count],
-                                 &results_ptr[global_id * value_count]);
-                  if (global_id + wgroup_size < size)
-                    ValueOps::copy(
-                        functor, &local_mem[local_id * value_count],
-                        &results_ptr[(global_id + wgroup_size) * value_count]);
-                } else
+                if (global_id >= size)
                   ValueInit::init(selected_reducer,
                                   &local_mem[local_id * value_count]);
+                else {
+                  ValueOps::copy(functor, &local_mem[local_id * value_count],
+                                 &results_ptr[global_id * value_count]);
+                  for (typename Policy::index_type id = global_id + wgroup_size;
+                       id < upper_bound; id += wgroup_size) {
+                    ValueJoin::join(selected_reducer,
+                                    &local_mem[local_id * value_count],
+                                    &results_ptr[id * value_count]);
+                  }
+                }
               }
               item.barrier(sycl::access::fence_space::local_space);
 
