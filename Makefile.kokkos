@@ -158,7 +158,7 @@ KOKKOS_INTERNAL_COMPILER_XL          := $(strip $(shell $(CXX) -qversion       2
 KOKKOS_INTERNAL_COMPILER_CRAY        := $(strip $(shell $(CXX) -craype-verbose 2>&1 | grep "CC-"               | wc -l))
 KOKKOS_INTERNAL_COMPILER_NVCC        := $(strip $(shell echo "$(shell export OMPI_CXX=$(OMPI_CXX); export MPICH_CXX=$(MPICH_CXX); $(CXX) --version 2>&1 | grep nvcc | wc -l)>0" | bc))
 KOKKOS_INTERNAL_COMPILER_CLANG       := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),clang)
-KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Apple LLVM)
+KOKKOS_INTERNAL_COMPILER_APPLE_CLANG := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),Apple clang)
 KOKKOS_INTERNAL_COMPILER_HCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),HCC)
 KOKKOS_INTERNAL_COMPILER_GCC         := $(call kokkos_has_string,$(KOKKOS_CXX_VERSION),GCC)
 
