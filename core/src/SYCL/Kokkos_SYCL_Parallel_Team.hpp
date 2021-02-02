@@ -386,7 +386,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       sycl::accessor<char, 1, sycl::access::mode::read_write,
                      sycl::access::target::local>
-          team_scratch_memory(sycl::range<1>(std::max(shmem_size, 0)), cgh);
+          team_scratch_memory(sycl::range<1>(shmem_size), cgh);
 
       auto team_lambda = [=](sycl::nd_item<1> item) {
         // FIXME_SYCL Add scratch memory
