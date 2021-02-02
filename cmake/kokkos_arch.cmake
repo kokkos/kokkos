@@ -491,33 +491,33 @@ IF(KOKKOS_ENABLE_CUDA AND NOT CUDA_ARCH_ALREADY_SPECIFIED)
     GET_PROPERTY(_ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
     # language has to be fully enabled, just checking for CMAKE_CUDA_COMPILER isn't enough
     IF(NOT "CUDA" IN_LIST _ENABLED_LANGUAGES)
-        # make sure the user knows that we aren't using CUDA compiler for anything else
-        MESSAGE(STATUS "CUDA auto-detection of architecture failed with ${CMAKE_CXX_COMPILER}. Enabling CUDA language ONLY to auto-detect architecture...")
-        INCLUDE(CheckLanguage)
-        CHECK_LANGUAGE(CUDA)
-        IF(CMAKE_CUDA_COMPILER)
-            ENABLE_LANGUAGE(CUDA)
-        ELSE()
-            MESSAGE(STATUS "CUDA language could not be enabled")
-        ENDIF()
+      # make sure the user knows that we aren't using CUDA compiler for anything else
+      MESSAGE(STATUS "CUDA auto-detection of architecture failed with ${CMAKE_CXX_COMPILER}. Enabling CUDA language ONLY to auto-detect architecture...")
+      INCLUDE(CheckLanguage)
+      CHECK_LANGUAGE(CUDA)
+      IF(CMAKE_CUDA_COMPILER)
+        ENABLE_LANGUAGE(CUDA)
+      ELSE()
+        MESSAGE(STATUS "CUDA language could not be enabled")
+      ENDIF()
     ENDIF()
 
     # if CUDA was enabled, this will be defined
     IF(CMAKE_CUDA_COMPILER)
-        # copy our test to .cu so cmake compiles as CUDA
-        CONFIGURE_FILE(
-            ${PROJECT_SOURCE_DIR}/cmake/compile_tests/cuda_compute_capability.cc
-            ${PROJECT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
-            COPYONLY
-        )
-        # run test again
-        TRY_RUN(
-            _RESULT
-            _COMPILE_RESULT
-            ${_BINARY_TEST_DIR}
-            ${PROJECT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
-            COMPILE_DEFINITIONS -DSM_ONLY
-            RUN_OUTPUT_VARIABLE _CUDA_COMPUTE_CAPABILITY)
+      # copy our test to .cu so cmake compiles as CUDA
+      CONFIGURE_FILE(
+        ${PROJECT_SOURCE_DIR}/cmake/compile_tests/cuda_compute_capability.cc
+        ${PROJECT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
+        COPYONLY
+      )
+      # run test again
+      TRY_RUN(
+        _RESULT
+        _COMPILE_RESULT
+        ${_BINARY_TEST_DIR}
+        ${PROJECT_BINARY_DIR}/compile_tests/cuda_compute_capability.cu
+        COMPILE_DEFINITIONS -DSM_ONLY
+        RUN_OUTPUT_VARIABLE _CUDA_COMPUTE_CAPABILITY)
     ENDIF()
   ENDIF()
 
