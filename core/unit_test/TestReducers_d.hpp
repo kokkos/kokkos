@@ -58,7 +58,6 @@ TEST(TEST_CATEGORY, reducers_struct) {
   // FIXME_OPENMPTARGET - The size of data in array_reduce has to be a power of
   // 2 for OPENMPTARGET backend in Release and RelWithDebInfo builds.
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-  TestReducers<array_reduce<float, 4>, TEST_EXECSPACE>::test_sum(1031);
   TestReducers<array_reduce<float, 8>, TEST_EXECSPACE>::test_sum(1031);
 #else
   TestReducers<array_reduce<float, 3>, TEST_EXECSPACE>::test_sum(1031);
