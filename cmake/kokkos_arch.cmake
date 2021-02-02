@@ -486,11 +486,11 @@ IF(KOKKOS_ENABLE_CUDA AND NOT CUDA_ARCH_ALREADY_SPECIFIED)
     RUN_OUTPUT_VARIABLE _CUDA_COMPUTE_CAPABILITY)
 
   # if user is using kokkos_compiler_launcher, above will fail.
-  IF(NOT _COMPILE_RESULT OR NOT _RESULT EQUAL 0 OR FLAG_INDEX EQUAL -1)
+  IF(NOT _COMPILE_RESULT OR NOT _RESULT EQUAL 0)
     # check to see if CUDA is not already enabled (may happen when Kokkos is subproject)
-    GET_PROPERTY(ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
+    GET_PROPERTY(_ENABLED_LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
     # language has to be fully enabled, just checking for CMAKE_CUDA_COMPILER isn't enough
-    IF(NOT "CUDA" IN_LIST ENABLED_LANGUAGES)
+    IF(NOT "CUDA" IN_LIST _ENABLED_LANGUAGES)
         # make sure the user knows that we aren't using CUDA compiler for anything else
         MESSAGE(STATUS "CUDA auto-detection of architecture failed with ${CMAKE_CXX_COMPILER}. Enabling CUDA language ONLY to auto-detect architecture...")
         INCLUDE(CheckLanguage)
