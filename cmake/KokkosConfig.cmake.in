@@ -21,7 +21,13 @@ UNSET(Kokkos_CMAKE_DIR)
 
 # if CUDA was enabled and separable compilation was specified, e.g.
 #   find_package(Kokkos COMPONENTS separable_compilation)
-# then we set the RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK
+# then we expect the user to call kokkos_compilation(PROJECT|DIRECTORY|TARGET|SOURCE ...)
+# for the scope they want the RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK to be applied.
+# If CUDA was enabled, a standard find_package was used, and the CMAKE_CXX_COMPILER cannot
+# compile CUDA, then set the RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK globally and
+# kokkos_launch_compiler will re-direct to nvcc_wrapper when the compiler command
+# matches ${CMAKE_CXX_COMPILER} and -DKOKKOS_DEPENDENCE is present, otherwise,
+# kokkos_launch_compiler will execute the original command
 IF(@Kokkos_ENABLE_CUDA@ AND NOT "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
     # run test to see if CMAKE_CXX_COMPILER=nvcc_wrapper
     kokkos_compiler_is_nvcc(IS_NVCC ${CMAKE_CXX_COMPILER})
