@@ -51,7 +51,6 @@
 #include <Kokkos_Array.hpp>
 #include <impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
-#include <Kokkos_Parallel.hpp>
 #include <type_traits>
 
 namespace Kokkos {
@@ -348,7 +347,7 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
   void impl_change_tile_size(const point_type& tile) {
     m_tile = tile;
-    init(m_lower, m_upper, m_tile);
+    init_helper(Impl::get_tile_size_properties(m_space));
   }
   bool impl_tune_tile_size() const { return m_tune_tile_size; }
 
