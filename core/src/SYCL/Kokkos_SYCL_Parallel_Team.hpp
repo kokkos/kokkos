@@ -338,13 +338,17 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
 
   template <class ClosureType, class FunctorType>
   int internal_team_size_max(const FunctorType& /*f*/) const {
-    return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+	  const auto thread_scratch_size  = m_thread_scratch_size[0]+m_thread_scratch_size[1];
+	  if (thread_scratch_size==0)
+		  return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+	  const auto max_threads_for_memory = (space().impl_internal_space_instance()->m_maxShmemPerBlock-m_team_scratch_size[0]-m_team_scratch_size[1])/thread_scratch_size;
+    return std::min(m_space.impl_internal_space_instance()->m_maxThreadsPerSM, max_threads_for_memory);
   }
 
   template <class ClosureType, class FunctorType>
-  int internal_team_size_recommended(const FunctorType& /*f*/) const {
+  int internal_team_size_recommended(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+    return internal_team_size_max(f);
   }
 };
 
@@ -469,11 +473,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     if (static_cast<int>(m_policy.space()
                              .impl_internal_space_instance()
-                             ->m_maxShmemPerBlock) < m_shmem_size) {
+                             ->m_maxShmemPerBlock) < m_shmem_size+m_scratch_size[1]) {
       std::stringstream out;
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "
-          << m_shmem_size << " bytes but maximum is "
+          << m_shmem_size + m_scratch_size[1] << " bytes but maximum is "
           << m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock
           << '\n';
       Kokkos::Impl::throw_runtime_exception(out.str());
@@ -481,7 +485,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     if (m_team_size > m_policy.team_size_max(arg_functor, ParallelForTag{}))
       Kokkos::Impl::throw_runtime_exception(std::string(
-          "Kokkos::Impl::ParallelFor< HIP > requested too large team size."));
+          "Kokkos::Impl::ParallelFor<SYCL> requested too large team size."));
   }
 };
 
