@@ -256,7 +256,6 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=OFF \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
-                                -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/install \
                                 -DBUILD_NAME=${STAGE_NAME} \
                                 -DTARGET=install \
