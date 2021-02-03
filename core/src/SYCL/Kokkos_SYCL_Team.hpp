@@ -208,10 +208,7 @@ class SYCLTeamMember {
         m_team_shared(static_cast<char*>(shared) + shared_begin, shared_size,
                       scratch_level_1_ptr, scratch_level_1_size),
         m_team_reduce_size(shared_begin),
-        m_item(item) {
-    //         KOKKOS_IMPL_DO_NOT_USE_PRINTF("shared: %p\n", shared);
-    assert(shared_size == 0 || shared != nullptr);
-  }
+        m_item(item) {}
 
  public:
   // Declare to avoid unused private member warnings which are trigger
