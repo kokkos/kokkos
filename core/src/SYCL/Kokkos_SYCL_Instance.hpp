@@ -316,6 +316,38 @@ class SYCLInternal {
   static void fence(sycl::event& e) { fence_helper(e); }
 };
 
+template <typename ReferenceWrapper, typename Functor, typename Storage,
+          bool is_memcpyable = std::is_trivially_copyable_v<Functor>>
+class SYCLFunctionWrapper;
+
+template <typename ReferenceWrapper, typename Functor, typename Storage>
+class SYCLFunctionWrapper<ReferenceWrapper, Functor, Storage, true> {
+  const Functor& m_functor;
+
+ public:
+  SYCLFunctionWrapper(const Functor& functor, Storage&) : m_functor(functor) {}
+
+  const Functor& get_functor() const { return m_functor; }
+};
+
+template <typename ReferenceWrapper, typename Functor, typename Storage>
+class SYCLFunctionWrapper<ReferenceWrapper, Functor, Storage, false> {
+  std::unique_ptr<Functor,
+                  Experimental::Impl::SYCLInternal::IndirectKernelMem::Deleter>
+      m_kernelFunctorPtr;
+
+ public:
+  SYCLFunctionWrapper(const Functor& functor, Storage& storage)
+      : m_kernelFunctorPtr(storage.copy_from(functor)) {}
+
+  ReferenceWrapper get_functor() const { return {*m_kernelFunctorPtr}; }
+};
+
+template <typename ReferenceWrapper, typename Functor, typename Storage>
+auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
+  return SYCLFunctionWrapper<ReferenceWrapper, Functor, Storage>(functor,
+                                                                 storage);
+}
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos

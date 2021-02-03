@@ -223,33 +223,12 @@ class ParallelScanSYCLBase {
     space.fence();
   }
 
-  template <typename Functor>
-  void sycl_indirect_launch(const Functor& functor) const {
-    // Convenience references
-    const Kokkos::Experimental::SYCL& space = m_policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    using IndirectKernelMem =
-        Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
-
-    // Copy functor into USM shared memory
-    //
-    // Store it in a unique_ptr to call its destructor on scope exit
-    using KernelFunctorPtr =
-        std::unique_ptr<Functor, IndirectKernelMem::Deleter>;
-    KernelFunctorPtr kernelFunctorPtr = indirectKernelMem.copy_from(functor);
-
-    auto kernelFunctor = std::reference_wrapper(*kernelFunctorPtr);
-    sycl_direct_launch(kernelFunctor);
-  }
-
  public:
   template <typename PostFunctor>
   void impl_execute(const PostFunctor& post_functor) {
     if (m_policy.begin() == m_policy.end()) return;
 
-    const auto& q = *(m_policy.space().impl_internal_space_instance()->m_queue);
+    const auto& q = *m_policy.space().impl_internal_space_instance()->m_queue;
     const std::size_t len = m_policy.end() - m_policy.begin();
 
     // FIXME_SYCL The allocation should be handled by the execution space
@@ -262,10 +241,15 @@ class ParallelScanSYCLBase {
         deleter);
     m_scratch_space = result_memory.get();
 
-    if constexpr (std::is_trivially_copyable_v<decltype(m_functor)>)
-      sycl_direct_launch(m_policy, m_functor);
-    else
-      sycl_indirect_launch(m_functor);
+    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
+        indirectKernelMem = m_policy.space()
+                                .impl_internal_space_instance()
+                                ->m_indirectKernelMem;
+
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper<
+        std::reference_wrapper<FunctorType>>(m_functor, indirectKernelMem);
+
+    sycl_direct_launch(functor_wrapper.get_functor());
     post_functor();
   }
 

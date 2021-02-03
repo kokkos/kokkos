@@ -292,44 +292,22 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     sycl::free(results_ptr2, q);
   }
 
-  template <typename Functor, typename Reducer>
-  void sycl_indirect_launch(const Functor& functor,
-                            const Reducer& reducer) const {
-    // Convenience references
-    const Kokkos::Experimental::SYCL& space = m_policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem& kernelMem =
-        instance.m_indirectKernelMem;
-
-    // Copy the functor into USM Shared Memory
-    using KernelFunctorPtr = std::unique_ptr<
-        Functor, Experimental::Impl::SYCLInternal::IndirectKernelMem::Deleter>;
-    KernelFunctorPtr kernelFunctorPtr = kernelMem.copy_from(functor);
-    auto kernelFunctor = ExtendedReferenceWrapper<Functor>(*kernelFunctorPtr);
-
-    if constexpr (!std::is_same<Reducer, InvalidType>::value) {
-      Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem& reducerMem =
-          instance.m_indirectReducerMem;
-
-      // Copy the functor into USM Shared Memory
-      std::unique_ptr<
-          Reducer, Experimental::Impl::SYCLInternal::IndirectKernelMem::Deleter>
-          kernelReducerPtr = reducerMem.copy_from(reducer);
-      auto kernelReducer = ExtendedReferenceWrapper<Reducer>(*kernelReducerPtr);
-
-      sycl_direct_launch(m_policy, kernelFunctor, kernelReducer);
-    } else
-      sycl_direct_launch(m_policy, kernelFunctor, reducer);
-  }
-
  public:
   void execute() const {
-    if constexpr (std::is_trivially_copyable_v<decltype(m_functor)> &&
-                  std::is_trivially_copyable_v<decltype(m_reducer)>)
-      sycl_direct_launch(m_policy, m_functor, m_reducer);
-    else
-      sycl_indirect_launch(m_functor, m_reducer);
+    Kokkos::Experimental::Impl::SYCLInternal& instance =
+        *m_policy.space().impl_internal_space_instance();
+    using IndirectKernelMem =
+        Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
+    IndirectKernelMem& indirectKernelMem  = instance.m_indirectKernelMem;
+    IndirectKernelMem& indirectReducerMem = instance.m_indirectReducerMem;
+
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper<
+        ExtendedReferenceWrapper<FunctorType>>(m_functor, indirectKernelMem);
+    const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper<
+        ExtendedReferenceWrapper<ReducerType>>(m_reducer, indirectReducerMem);
+
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
+                       reducer_wrapper.get_functor());
   }
 
  private:
