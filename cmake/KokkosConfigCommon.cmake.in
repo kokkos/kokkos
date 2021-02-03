@@ -101,6 +101,13 @@ endfunction()
 FUNCTION(kokkos_compilation)
     CMAKE_PARSE_ARGUMENTS(COMP "GLOBAL;PROJECT" "" "DIRECTORY;TARGET;SOURCE" ${ARGN})
 
+    # if built w/o CUDA support, we want to basically make this a no-op
+    SET(_Kokkos_ENABLE_CUDA @Kokkos_ENABLE_CUDA@)
+
+    IF(NOT _Kokkos_ENABLE_CUDA)
+        RETURN()
+    ENDIF()
+
     # search relative first and then absolute
     SET(_HINTS "${CMAKE_CURRENT_LIST_DIR}/../.." "@CMAKE_INSTALL_PREFIX@")
 
@@ -158,4 +165,3 @@ FUNCTION(kokkos_compiler_is_nvcc VAR COMPILER)
         ENDIF()
     ENDIF()
 ENDFUNCTION()
-

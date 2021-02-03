@@ -42,26 +42,32 @@
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
-#include <TestReducers.hpp>
-#include <TestNonTrivialScalarTypes.hpp>
+#ifndef KOKKOS_OPENMPTARGET_ERROR_HPP
+#define KOKKOS_OPENMPTARGET_ERROR_HPP
 
-namespace Test {
-TEST(TEST_CATEGORY, reducers_complex_double) {
-  TestReducers<Kokkos::complex<double>, TEST_EXECSPACE>::execute_basic();
+#include <impl/Kokkos_Error.hpp>
+#include <sstream>
+
+namespace Kokkos {
+namespace Impl {
+
+inline void ompt_internal_safe_call(int e, const char* name,
+                                    const char* file = nullptr,
+                                    const int line   = 0) {
+  if (e != 0) {
+    std::ostringstream out;
+    out << name << " return value of " << e << " indicates failure";
+    if (file) {
+      out << " " << file << ":" << line;
+    }
+    throw_runtime_exception(out.str());
+  }
 }
 
-TEST(TEST_CATEGORY, reducers_struct) {
-  TestReducers<array_reduce<float, 1>, TEST_EXECSPACE>::test_sum(1031);
-  TestReducers<array_reduce<float, 2>, TEST_EXECSPACE>::test_sum(1031);
-  TestReducers<array_reduce<float, 4>, TEST_EXECSPACE>::test_sum(1031);
-  // FIXME_OPENMPTARGET - The size of data in array_reduce has to be a power of
-  // 2 for OPENMPTARGET backend in Release and RelWithDebInfo builds.
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  TestReducers<array_reduce<float, 8>, TEST_EXECSPACE>::test_sum(1031);
-#else
-  TestReducers<array_reduce<float, 3>, TEST_EXECSPACE>::test_sum(1031);
-  TestReducers<array_reduce<float, 7>, TEST_EXECSPACE>::test_sum(1031);
+#define OMPT_SAFE_CALL(call) \
+  Kokkos::Impl::ompt_internal_safe_call(call, #call, __FILE__, __LINE__)
+
+}  // namespace Impl
+}  // namespace Kokkos
+
 #endif
-}
-}  // namespace Test
