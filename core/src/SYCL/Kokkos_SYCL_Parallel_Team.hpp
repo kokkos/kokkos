@@ -338,11 +338,16 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
 
   template <class ClosureType, class FunctorType>
   int internal_team_size_max(const FunctorType& /*f*/) const {
-	  const auto thread_scratch_size  = m_thread_scratch_size[0]+m_thread_scratch_size[1];
-	  if (thread_scratch_size==0)
-		  return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
-	  const auto max_threads_for_memory = (space().impl_internal_space_instance()->m_maxShmemPerBlock-m_team_scratch_size[0]-m_team_scratch_size[1])/thread_scratch_size;
-    return std::min(m_space.impl_internal_space_instance()->m_maxThreadsPerSM, max_threads_for_memory);
+    const auto thread_scratch_size =
+        m_thread_scratch_size[0] + m_thread_scratch_size[1];
+    if (thread_scratch_size == 0)
+      return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+    const auto max_threads_for_memory =
+        (space().impl_internal_space_instance()->m_maxShmemPerBlock -
+         m_team_scratch_size[0] - m_team_scratch_size[1]) /
+        thread_scratch_size;
+    return std::min(m_space.impl_internal_space_instance()->m_maxThreadsPerSM,
+                    max_threads_for_memory);
   }
 
   template <class ClosureType, class FunctorType>
@@ -473,7 +478,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     if (static_cast<int>(m_policy.space()
                              .impl_internal_space_instance()
-                             ->m_maxShmemPerBlock) < m_shmem_size+m_scratch_size[1]) {
+                             ->m_maxShmemPerBlock) <
+        m_shmem_size + m_scratch_size[1]) {
       std::stringstream out;
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "
