@@ -381,7 +381,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     q.submit([&](sycl::handler& cgh) {
       const auto shmem_begin    = m_shmem_begin;
-      const auto shmem_size     = m_shmem_size;
       const int scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
 
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
