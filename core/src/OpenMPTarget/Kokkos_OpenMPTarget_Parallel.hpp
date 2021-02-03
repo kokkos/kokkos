@@ -593,6 +593,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
     FunctorType a_functor(m_functor);
 
+    // FIXME_OPENMPTARGET - If the team_size is not a multiple of 32, the
+    // scratch implementation does not work in the Release or RelWithDebugInfo
+    // mode but works in the Debug mode.
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
 
@@ -627,7 +630,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           else
             iter = ++iter % max_active_teams;
         }
-        // Decrement the number of available free blocks.
       }
 
 #pragma omp parallel num_threads(team_size)

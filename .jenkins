@@ -144,7 +144,7 @@ pipeline {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && \
                               cmake \
-                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=clang++ \
                                 -DCMAKE_CXX_FLAGS="-Wno-unknown-cuda-version -Werror -Wno-undefined-internal -Wno-pass-failed" \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
