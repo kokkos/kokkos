@@ -568,12 +568,21 @@ struct TestSharedTeam {
         Kokkos::View<typename Functor::value_type, Kokkos::HostSpace,
                      Kokkos::MemoryUnmanaged>;
 
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    const size_t team_size =
+        Kokkos::TeamPolicy<ScheduleType, ExecSpace>(64, 32).team_size_max(
+            Functor(), Kokkos::ParallelReduceTag());
+
+    Kokkos::TeamPolicy<ScheduleType, ExecSpace> team_exec(32 / team_size,
+                                                          team_size);
+#else
     const size_t team_size =
         Kokkos::TeamPolicy<ScheduleType, ExecSpace>(8192, 1).team_size_max(
             Functor(), Kokkos::ParallelReduceTag());
 
     Kokkos::TeamPolicy<ScheduleType, ExecSpace> team_exec(8192 / team_size,
                                                           team_size);
+#endif
 
     typename Functor::value_type error_count = 0;
 
@@ -605,7 +614,11 @@ struct TestLambdaSharedTeam {
         Kokkos::View<int *, shmem_space, Kokkos::MemoryUnmanaged>;
 
     const int SHARED_COUNT = 1000;
-    int team_size          = 1;
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    int team_size = 32;
+#else
+    int team_size = 1;
+#endif
 
 #ifdef KOKKOS_ENABLE_CUDA
     if (std::is_same<ExecSpace, Kokkos::Cuda>::value) team_size = 128;
@@ -759,11 +772,19 @@ struct TestScratchTeam {
     int thread_scratch_size = Functor::shared_int_array_type::shmem_size(
         Functor::SHARED_THREAD_COUNT);
 
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    p_type team_exec = p_type(64, 32).set_scratch_size(
+        1,
+        Kokkos::PerTeam(Functor::shared_int_array_type::shmem_size(
+            Functor::SHARED_TEAM_COUNT)),
+        Kokkos::PerThread(thread_scratch_size + 3 * sizeof(int)));
+#else
     p_type team_exec = p_type(8192, 1).set_scratch_size(
         1,
         Kokkos::PerTeam(Functor::shared_int_array_type::shmem_size(
             Functor::SHARED_TEAM_COUNT)),
         Kokkos::PerThread(thread_scratch_size + 3 * sizeof(int)));
+#endif
 
     const size_t team_size =
         team_exec.team_size_max(Functor(), Kokkos::ParallelReduceTag());
@@ -772,7 +793,11 @@ struct TestScratchTeam {
         Functor::shared_int_array_type::shmem_size(Functor::SHARED_TEAM_COUNT) +
         Functor::shared_int_array_type::shmem_size(3 * team_size);
 
-    team_exec = p_type(8192 / team_size, team_size);
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    team_exec = p_type(64 / team_size, team_size);
+#else
+    team_exec     = p_type(8192 / team_size, team_size);
+#endif
 
     Kokkos::parallel_reduce(
         team_exec.set_scratch_size(1, Kokkos::PerTeam(team_scratch_size),
@@ -1469,10 +1494,15 @@ struct TestScratchAlignment {
       Kokkos::View<int *, typename ExecSpace::scratch_memory_space>;
   void test(bool allocate_small) {
     int shmem_size = ScratchView::shmem_size(11);
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    int team_size = 32;
+#else
+    int team_size = 1;
+#endif
     if (allocate_small) shmem_size += ScratchViewInt::shmem_size(1);
     Kokkos::parallel_for(
-        Kokkos::TeamPolicy<ExecSpace>(1, 1).set_scratch_size(
-            0, Kokkos::PerTeam(shmem_size)),
+        Kokkos::TeamPolicy<ExecSpace>(1, team_size)
+            .set_scratch_size(0, Kokkos::PerTeam(shmem_size)),
         KOKKOS_LAMBDA(
             const typename Kokkos::TeamPolicy<ExecSpace>::member_type &team) {
           if (allocate_small) ScratchViewInt p(team.team_scratch(0), 1);

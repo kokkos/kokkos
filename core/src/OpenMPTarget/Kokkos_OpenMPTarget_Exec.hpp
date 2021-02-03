@@ -1361,7 +1361,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda) {
-#pragma omp for simd
+#pragma omp for simd nowait
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
 }
 
