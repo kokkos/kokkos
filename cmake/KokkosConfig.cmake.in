@@ -34,6 +34,15 @@ IF(@Kokkos_ENABLE_CUDA@ AND NOT "separable_compilation" IN_LIST Kokkos_FIND_COMP
     UNSET(IS_NVCC) # be mindful of the environment, pollution is bad
 ENDIF()
 
-IF(NOT CMAKE_CXX_COMPILER_ID STREQUAL "@CMAKE_CXX_COMPILER_ID@")
-  MESSAGE(FATAL_ERROR "Kokkos was compiled with @CMAKE_CXX_COMPILER_ID@ and hence cannot be used with ${CMAKE_CXX_COMPILER_ID}")
+# It is highly recommended that projects using Kokkos use the same compiler as when Kokkos was installed but HPC commonly has
+# complex toolchains where different compiler IDs are necessary:
+# - If separable_compilation is requested, i.e. find_package(Kokkos COMPONENTS separable_compilation), the user 
+#   is assuming control of redirection to the compiler for kokkos code so no warning should ever be emitted.
+# - Emitting the warning during find_package(Kokkos QUIET) is not finding the package quietly
+# - AUTHOR_WARNING instead of WARNING enables setting CMAKE_SUPPRESS_DEVELOPER_WARNINGS to ON via the command-line or
+#   locally in a cmake script to suppress this message  
+IF(NOT "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS AND 
+    NOT CMAKE_CXX_COMPILER_ID STREQUAL "@CMAKE_CXX_COMPILER_ID@" AND
+    NOT Kokkos_FIND_QUIETLY)
+  MESSAGE(AUTHOR_WARNING "Kokkos was compiled with @CMAKE_CXX_COMPILER_ID@. Using ${CMAKE_CXX_COMPILER_ID} may cause fatal compilation errors or ABI issues")
 ENDIF()
