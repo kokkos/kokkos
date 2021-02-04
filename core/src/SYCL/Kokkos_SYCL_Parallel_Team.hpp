@@ -338,10 +338,19 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
 
   template <class ClosureType, class FunctorType>
   int internal_team_size_max(const FunctorType& /*f*/) const {
+    // We choose the maximum as the minimum of the number of threads allowed in
+    // a workgroup and the number of threads that allow allocating the amount of
+    // local memory requested.
     const auto thread_scratch_size =
         m_thread_scratch_size[0] + m_thread_scratch_size[1];
+    // If no scratch memory per thread is requested, the maximum is simply the
+    // maximum number of threads allowed in a workgroup.
     if (thread_scratch_size == 0)
       return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+    // We want to satisfy
+    // memory_per_team + memory_per_thread * thread_size < max_local_memory
+    // which implies
+    // thread_size < (max_local_memory - memory_per_team)/memory_per_thread
     const auto max_threads_for_memory =
         (space().impl_internal_space_instance()->m_maxShmemPerBlock -
          m_team_scratch_size[0] - m_team_scratch_size[1]) /
@@ -394,6 +403,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
       // host queues
+      // FIXME_SYCL Currently, we allocate both L0 and L1 in local memory.
+      // We need to decide if that's what we want going forward or something
+      // else.
       sycl::accessor<char, 1, sycl::access::mode::read_write,
                      sycl::access::target::local>
           team_scratch_memory_L0(
