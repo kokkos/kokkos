@@ -26,6 +26,12 @@ IF(Kokkos_ENABLE_CUDA)
       HINTS           ${PROJECT_SOURCE_DIR}
       PATHS           ${PROJECT_SOURCE_DIR}
       PATH_SUFFIXES   bin)
+      
+  FIND_PROGRAM(Kokkos_NVCC_WRAPPER
+      NAMES           nvcc_wrapper
+      HINTS           ${PROJECT_SOURCE_DIR}
+      PATHS           ${PROJECT_SOURCE_DIR}
+      PATH_SUFFIXES   bin)
 
   # check if compiler was set to nvcc_wrapper
   kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
@@ -37,7 +43,7 @@ IF(Kokkos_ENABLE_CUDA)
     # if the second argument matches the C++ compiler, it forwards the rest of the
     # args to nvcc_wrapper
     kokkos_internal_have_compiler_nvcc(
-      ${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER} -DKOKKOS_DEPENDENCE)
+      ${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER} -DKOKKOS_DEPENDENCE)
     SET(INTERNAL_USE_COMPILER_LAUNCHER true)
   ENDIF()
 ENDIF()

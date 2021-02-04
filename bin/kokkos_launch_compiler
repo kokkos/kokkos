@@ -96,6 +96,11 @@ else
     # find the nvcc_wrapper from the same build/install
     NVCC_WRAPPER="$(dirname ${BASH_SOURCE[0]})/nvcc_wrapper"
     if [ "${KOKKOS_COMPILER}" = "${NVCC_WRAPPER}" ]; then
+        # this should only be valid in the install tree -- it will be set to CMAKE_CXX_COMPILER used using Kokkos installation
+        if [ -z $(echo "@NVCC_WRAPPER_DEFAULT_COMPILER@" | grep 'NVCC_WRAPPER_DEFAULT_COMPILER') ]; then
+            : ${NVCC_WRAPPER_DEFAULT_COMPILER:="@NVCC_WRAPPER_DEFAULT_COMPILER@"}
+        fi
+
         # set default nvcc wrapper compiler if not specified
         : ${NVCC_WRAPPER_DEFAULT_COMPILER:=${CXX_COMPILER}}
         export NVCC_WRAPPER_DEFAULT_COMPILER
