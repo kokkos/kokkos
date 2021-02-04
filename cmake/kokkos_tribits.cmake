@@ -319,8 +319,12 @@ MACRO(KOKKOS_INSTALL_ADDITIONAL_FILES)
 
   # kokkos_launch_compiler is used by Kokkos to prefix compiler commands so that they forward to original kokkos compiler
   # if nvcc_wrapper was not used as CMAKE_CXX_COMPILER, configure the original compiler into kokkos_launch_compiler
-  IF(NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "nvcc_wrapper")
+  IF(NOT "${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
     SET(NVCC_WRAPPER_DEFAULT_COMPILER "${CMAKE_CXX_COMPILER}")
+  ELSE()
+    IF(NOT "$ENV{NVCC_WRAPPER_DEFAULT_COMPILER}" STREQUAL "")
+        SET(NVCC_WRAPPER_DEFAULT_COMPILER "$ENV{NVCC_WRAPPER_DEFAULT_COMPILER}")
+    ENDIF()
   ENDIF()
 
   CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/bin/kokkos_launch_compiler
