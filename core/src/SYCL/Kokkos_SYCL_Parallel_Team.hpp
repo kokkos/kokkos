@@ -348,12 +348,14 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     if (thread_scratch_size == 0)
       return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
     // We want to satisfy
-    // memory_per_team + memory_per_thread * thread_size < max_local_memory
+    // team_scratch_size + thread_scratch_size * thread_size < max_local_memory
     // which implies
-    // thread_size < (max_local_memory - memory_per_team)/memory_per_thread
+    // thread_size < (max_local_memory - team_scratch_size)/thread_scratch_size
+    const auto team_scratch_size =
+        m_team_scratch_size[0] + m_team_scratch_size[1];
     const auto max_threads_for_memory =
         (space().impl_internal_space_instance()->m_maxShmemPerBlock -
-         m_team_scratch_size[0] - m_team_scratch_size[1]) /
+         team_scratch_size) /
         thread_scratch_size;
     return std::min(m_space.impl_internal_space_instance()->m_maxThreadsPerSM,
                     max_threads_for_memory);
