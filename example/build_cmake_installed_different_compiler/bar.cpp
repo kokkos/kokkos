@@ -1,8 +1,7 @@
 
 #include <cstdio>
 
-int main()
-{
-    puts("hello world!");
-    return 0;
+int main() {
+  puts("hello world!");
+  return 0;
 }
