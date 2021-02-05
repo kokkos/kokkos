@@ -287,11 +287,11 @@ else
       #KOKKOS_INTERNAL_CXX1Z_FLAG := -hstd=c++1z
       #KOKKOS_INTERNAL_CXX2A_FLAG := -hstd=c++2a
     else
-      KOKKOS_INTERNAL_CXX14_FLAG := --std=c++14
-      KOKKOS_INTERNAL_CXX1Y_FLAG := --std=c++1y
-      KOKKOS_INTERNAL_CXX17_FLAG := --std=c++17
-      KOKKOS_INTERNAL_CXX1Z_FLAG := --std=c++1z
-      KOKKOS_INTERNAL_CXX2A_FLAG := --std=c++2a
+      KOKKOS_INTERNAL_CXX14_FLAG := -std=c++14
+      KOKKOS_INTERNAL_CXX1Y_FLAG := -std=c++1y
+      KOKKOS_INTERNAL_CXX17_FLAG := -std=c++17
+      KOKKOS_INTERNAL_CXX1Z_FLAG := -std=c++1z
+      KOKKOS_INTERNAL_CXX2A_FLAG := -std=c++2a
     endif
   endif
 endif
@@ -1331,7 +1331,7 @@ ifneq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
 endif
 
 # With Cygwin functions such as fdopen and fileno are not defined
-# when strict ansi is enabled. strict ansi gets enabled with --std=c++14
+# when strict ansi is enabled. strict ansi gets enabled with -std=c++14
 # though. So we hard undefine it here. Not sure if that has any bad side effects
 # This is needed for gtest actually, not for Kokkos itself!
 ifeq ($(KOKKOS_INTERNAL_OS_CYGWIN), 1)
