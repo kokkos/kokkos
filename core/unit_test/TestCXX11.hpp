@@ -318,8 +318,12 @@ double TestVariantLambda(int test) {
   switch (test) {
     case 1: return AddTestLambda<DeviceType, false>();
     case 2: return AddTestLambda<DeviceType, true>();
-    case 3: return ReduceTestLambda<DeviceType, false>();
+    case 3:
+      return ReduceTestLambda<DeviceType, false>();
+      // FIXME_SYCL requires TeamPolicy reduce
+#ifndef KOKKOS_ENABLE_SYCL
     case 4: return ReduceTestLambda<DeviceType, true>();
+#endif
   }
 
   return 0;
@@ -330,8 +334,12 @@ double TestVariantFunctor(int test) {
   switch (test) {
     case 1: return AddTestFunctor<DeviceType, false>();
     case 2: return AddTestFunctor<DeviceType, true>();
-    case 3: return ReduceTestFunctor<DeviceType, false>();
+    case 3:
+      return ReduceTestFunctor<DeviceType, false>();
+// FIXME_SYCL requires TeamPolicy reduce
+#ifndef KOKKOS_ENABLE_SYCL
     case 4: return ReduceTestFunctor<DeviceType, true>();
+#endif
   }
 
   return 0;
@@ -371,8 +379,6 @@ bool Test(int test) {
 }  // namespace TestCXX11
 
 namespace Test {
-// FIXME_SYCL requires TeamPolicy and team_rank
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, cxx11) {
   if (std::is_same<Kokkos::DefaultExecutionSpace, TEST_EXECSPACE>::value) {
     ASSERT_TRUE((TestCXX11::Test<TEST_EXECSPACE>(1)));
@@ -381,6 +387,5 @@ TEST(TEST_CATEGORY, cxx11) {
     ASSERT_TRUE((TestCXX11::Test<TEST_EXECSPACE>(4)));
   }
 }
-#endif
 
 }  // namespace Test
