@@ -612,24 +612,18 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
       int shmem_block_index = -1, lock_team = 99999, iter = -1;
+      iter = (omp_get_team_num() % max_active_teams);
 
       // Loop as long as a shmem_block_index is not found.
       while (shmem_block_index == -1) {
-        // Loop until a lock can be acquired on a team
-        while (lock_team != 1) {
-          // Avoid tripping over other team's block index.
-          // Find a free block index.
-          iter = (omp_get_team_num() % max_active_teams);
+        // Try and acquire a lock on the index.
+        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
 
-          // Try and acquire a lock on the index.
-          lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
-
-          // If lock is acquired assign it to the block index.
-          if (lock_team == 1)
-            shmem_block_index = iter;
-          else
-            iter = ++iter % max_active_teams;
-        }
+        // If lock is acquired assign it to the block index.
+        if (lock_team == 1)
+          shmem_block_index = iter;
+        else
+          iter = ++iter % max_active_teams;
       }
 
 #pragma omp parallel num_threads(team_size)
@@ -684,25 +678,18 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         thread_limit(team_size)
     for (int i = 0; i < league_size; i++) {
       int shmem_block_index = -1, lock_team = 99999, iter = -1;
+      iter = (omp_get_team_num() % max_active_teams);
 
       // Loop as long as a shmem_block_index is not found.
       while (shmem_block_index == -1) {
-        // Loop until a lock can be acquired on a team
-        while (lock_team != 1) {
-          // Avoid tripping over other team's block index.
-          // Find a free block index.
-          iter = (omp_get_team_num() % max_active_teams);
+        // Try and acquire a lock on the index.
+        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
 
-          // Try and acquire a lock on the index.
-          lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
-
-          // If lock is acquired assign it to the block index.
-          if (lock_team == 1)
-            shmem_block_index = iter;
-          else
-            iter = ++iter % max_active_teams;
-        }
-        // Decrement the number of available free blocks.
+        // If lock is acquired assign it to the block index.
+        if (lock_team == 1)
+          shmem_block_index = iter;
+        else
+          iter = ++iter % max_active_teams;
       }
 
 #pragma omp parallel num_threads(team_size)
@@ -775,24 +762,18 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     for (int i = 0; i < league_size; i++) {
       ValueType inner_result = ValueType();
       int shmem_block_index = -1, lock_team = 99999, iter = -1;
+      iter = (omp_get_team_num() % max_active_teams);
 
       // Loop as long as a shmem_block_index is not found.
       while (shmem_block_index == -1) {
-        // Loop until a lock can be acquired on a team
-        while (lock_team != 1) {
-          // Avoid tripping over other team's block index.
-          // Find a free block index.
-          iter = (omp_get_team_num() % max_active_teams);
+        // Try and acquire a lock on the index.
+        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
 
-          // Try and acquire a lock on the index.
-          lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
-
-          // If lock is acquired assign it to the block index.
-          if (lock_team == 1)
-            shmem_block_index = iter;
-          else
-            iter = ++iter % max_active_teams;
-        }
+        // If lock is acquired assign it to the block index.
+        if (lock_team == 1)
+          shmem_block_index = iter;
+        else
+          iter = ++iter % max_active_teams;
       }
 #pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
       {
@@ -852,24 +833,18 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     for (int i = 0; i < league_size; i++) {
       ValueType inner_result = ValueType();
       int shmem_block_index = -1, lock_team = 99999, iter = -1;
+      iter = (omp_get_team_num() % max_active_teams);
 
       // Loop as long as a shmem_block_index is not found.
       while (shmem_block_index == -1) {
-        // Loop until a lock can be acquired on a team
-        while (lock_team != 1) {
-          // Avoid tripping over other team's block index.
-          // Find a free block index.
-          iter = (omp_get_team_num() % max_active_teams);
+        // Try and acquire a lock on the index.
+        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
 
-          // Try and acquire a lock on the index.
-          lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
-
-          // If lock is acquired assign it to the block index.
-          if (lock_team == 1)
-            shmem_block_index = iter;
-          else
-            iter = ++iter % max_active_teams;
-        }
+        // If lock is acquired assign it to the block index.
+        if (lock_team == 1)
+          shmem_block_index = iter;
+        else
+          iter = ++iter % max_active_teams;
       }
 #pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
       {
