@@ -253,12 +253,6 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_AtomicOperations_complexdouble.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Crs.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_LocalDeepCopy.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_a.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_b.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_c.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_d.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_e.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_MDRange_f.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Other.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reductions_DeviceView.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScratch.cpp
