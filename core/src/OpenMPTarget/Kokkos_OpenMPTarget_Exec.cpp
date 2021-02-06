@@ -143,6 +143,7 @@ int* OpenMPTargetExec::get_lock_array(int num_teams) {
     m_lock_size  = lock_array_elem * sizeof(int);
     m_lock_array = static_cast<int*>(space.allocate(m_lock_size));
   }
+
   return m_lock_array;
 }
 
