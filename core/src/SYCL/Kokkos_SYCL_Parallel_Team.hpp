@@ -397,10 +397,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     sycl::queue& q = *instance.m_queue;
 
     q.submit([&](sycl::handler& cgh) {
-      const auto shmem_begin     = m_shmem_begin;
-      const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
-      void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
-
       // FIXME_SYCL accessors seem to need a size greater than zero at least for
       // host queues
       sycl::accessor<char, 1, sycl::access::mode::read_write,
@@ -409,20 +405,25 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               sycl::range<1>(std::max(m_scratch_size[0] + shmem_begin, 1)),
               cgh);
 
-      auto team_lambda = [=](sycl::nd_item<1> item) {
-        const member_type team_member(team_scratch_memory_L0.get_pointer(),
-                                      shmem_begin, scratch_size[0],
-                                      static_cast<char*>(scratch_ptr[1]) +
-                                          item.get_group(0) * scratch_size[1],
-                                      scratch_size[1], item);
-        if constexpr (std::is_same<work_tag, void>::value)
-          functor(team_member);
-        else
-          functor(work_tag(), team_member);
-      };
+      // Avoid capturing *this since it might not be trivially copyable
+      const auto shmem_begin     = m_shmem_begin;
+      const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
+      void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
+
       cgh.parallel_for(
           sycl::nd_range<1>(m_league_size * m_team_size, m_team_size),
-          team_lambda);
+          [=](sycl::nd_item<1> item) {
+            const member_type team_member(
+                team_scratch_memory_L0.get_pointer(), shmem_begin,
+                scratch_size[0],
+                static_cast<char*>(scratch_ptr[1]) +
+                    item.get_group(0) * scratch_size[1],
+                scratch_size[1], item);
+            if constexpr (std::is_same<work_tag, void>::value)
+              functor(team_member);
+            else
+              functor(work_tag(), team_member);
+          });
     });
     space.fence();
   }
