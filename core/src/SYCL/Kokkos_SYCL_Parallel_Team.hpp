@@ -349,12 +349,13 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     // memory_per_team + memory_per_thread * thread_size < max_local_memory
     // which implies
     // thread_size < (max_local_memory - memory_per_team)/memory_per_thread
-    const auto max_threads_for_memory =
+    const int max_threads_for_memory =
         (space().impl_internal_space_instance()->m_maxShmemPerBlock -
          m_team_scratch_size[0]) /
         m_thread_scratch_size[0];
-    return std::min(m_space.impl_internal_space_instance()->m_maxThreadsPerSM,
-                    max_threads_for_memory);
+    return std::min<int>(
+        m_space.impl_internal_space_instance()->m_maxThreadsPerSM,
+        max_threads_for_memory);
   }
 
   template <class ClosureType, class FunctorType>
