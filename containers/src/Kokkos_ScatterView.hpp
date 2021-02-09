@@ -649,13 +649,14 @@ struct ReduceDuplicatesBase {
   size_t stride;
   size_t start;
   size_t n;
-  ReduceDuplicatesBase(ValueType const* src_in, ValueType* dest_in,
+  ReduceDuplicatesBase(ExecSpace exec_space,
+                       ValueType const* src_in, ValueType* dest_in,
                        size_t stride_in, size_t start_in, size_t n_in,
                        std::string const& name)
       : src(src_in), dst(dest_in), stride(stride_in), start(start_in), n(n_in) {
     parallel_for(
         std::string("Kokkos::ScatterView::ReduceDuplicates [") + name + "]",
-        RangePolicy<ExecSpace, size_t>(0, stride),
+        RangePolicy<ExecSpace, size_t>(exec_space, 0, stride),
         static_cast<Derived const&>(*this));
   }
 };
@@ -667,9 +668,10 @@ template <typename ExecSpace, typename ValueType, typename Op>
 struct ReduceDuplicates
     : public ReduceDuplicatesBase<ExecSpace, ValueType, Op> {
   using Base = ReduceDuplicatesBase<ExecSpace, ValueType, Op>;
-  ReduceDuplicates(ValueType const* src_in, ValueType* dst_in, size_t stride_in,
+  ReduceDuplicates(ExecSpace exec_space,
+                   ValueType const* src_in, ValueType* dst_in, size_t stride_in,
                    size_t start_in, size_t n_in, std::string const& name)
-      : Base(src_in, dst_in, stride_in, start_in, n_in, name) {}
+    : Base(exec_space, src_in, dst_in, stride_in, start_in, n_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     for (size_t j = Base::start; j < Base::n; ++j) {
       ScatterValue<ValueType, Op, ExecSpace,
@@ -687,12 +689,12 @@ template <typename ExecSpace, typename ValueType, typename Op>
 struct ResetDuplicatesBase {
   using Derived = ResetDuplicates<ExecSpace, ValueType, Op>;
   ValueType* data;
-  ResetDuplicatesBase(ValueType* data_in, size_t size_in,
+  ResetDuplicatesBase(ExecSpace exec_space, ValueType* data_in, size_t size_in,
                       std::string const& name)
       : data(data_in) {
     parallel_for(
         std::string("Kokkos::ScatterView::ResetDuplicates [") + name + "]",
-        RangePolicy<ExecSpace, size_t>(0, size_in),
+        RangePolicy<ExecSpace, size_t>(exec_space, 0, size_in),
         static_cast<Derived const&>(*this));
   }
 };
@@ -703,8 +705,9 @@ struct ResetDuplicatesBase {
 template <typename ExecSpace, typename ValueType, typename Op>
 struct ResetDuplicates : public ResetDuplicatesBase<ExecSpace, ValueType, Op> {
   using Base = ResetDuplicatesBase<ExecSpace, ValueType, Op>;
-  ResetDuplicates(ValueType* data_in, size_t size_in, std::string const& name)
-      : Base(data_in, size_in, name) {}
+  ResetDuplicates(ExecSpace exec_space,
+                  ValueType* data_in, size_t size_in, std::string const& name)
+    : Base(exec_space, data_in, size_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     ScatterValue<ValueType, Op, ExecSpace,
                  Kokkos::Experimental::ScatterNonAtomic>
@@ -795,7 +798,7 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
   }
 
   template <typename DT, typename... RP>
-  void contribute_into(View<DT, RP...> const& dest) const {
+  void contribute_into(const execution_space & exec_space, View<DT, RP...> const& dest) const {
     using dest_type = View<DT, RP...>;
     static_assert(std::is_same<typename dest_type::array_layout, Layout>::value,
                   "ScatterView contribute destination has different layout");
@@ -806,17 +809,24 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
     if (dest.data() == internal_view.data()) return;
     Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
                                                  original_value_type, Op>(
-        internal_view.data(), dest.data(), 0, 0, 1, internal_view.label());
+        exec_space, internal_view.data(), dest.data(), 0, 0, 1, internal_view.label());
   }
 
   void reset() {
+    reset(execution_space{});
+  }
+  void reset(const execution_space & exec_space) {
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
-        internal_view.data(), internal_view.size(), internal_view.label());
+        exec_space, internal_view.data(), internal_view.size(), internal_view.label());
   }
   template <typename DT, typename... RP>
   void reset_except(View<DT, RP...> const& view) {
-    if (view.data() != internal_view.data()) reset();
+    reset_except(execution_space{}, view);
+  }
+  template <typename DT, typename... RP>
+  void reset_except(const execution_space & exec_space, View<DT, RP...> const& view) {
+    if (view.data() != internal_view.data()) reset(exec_space);
   }
 
   void resize(const size_t n0 = 0, const size_t n1 = 0, const size_t n2 = 0,
@@ -956,6 +966,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
   ScatterView(std::string const& name, Dims... dims)
       : internal_view(view_alloc(WithoutInitializing, name),
                       unique_token.size(), dims...) {
+    // Think about this call
     reset();
   }
 
@@ -983,7 +994,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
   }
 
   template <typename DT, typename... RP>
-  void contribute_into(View<DT, RP...> const& dest) const {
+  void contribute_into(const execution_space & exec_space, View<DT, RP...> const& dest) const {
     using dest_type = View<DT, RP...>;
     static_assert(std::is_same<typename dest_type::array_layout,
                                Kokkos::LayoutRight>::value,
@@ -996,23 +1007,33 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
     size_t start  = is_equal ? 1 : 0;
     Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
                                                  original_value_type, Op>(
+        exec_space,
         internal_view.data(), dest.data(), internal_view.stride(0), start,
         internal_view.extent(0), internal_view.label());
   }
 
   void reset() {
+    reset(execution_space{});
+  }
+  void reset(const execution_space & exec_space) {
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
-        internal_view.data(), internal_view.size(), internal_view.label());
+        exec_space, internal_view.data(), internal_view.size(), internal_view.label());
   }
+
   template <typename DT, typename... RP>
   void reset_except(View<DT, RP...> const& view) {
+    reset_except(execution_space{}, view);
+  }
+  template <typename DT, typename... RP>
+  void reset_except(const execution_space & exec_space, View<DT, RP...> const& view) {
     if (view.data() != internal_view.data()) {
-      reset();
+      reset(exec_space);
       return;
     }
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
+        exec_space,
         internal_view.data() + view.size(), internal_view.size() - view.size(),
         internal_view.label());
   }
@@ -1165,7 +1186,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
   }
 
   template <typename... RP>
-  void contribute_into(View<RP...> const& dest) const {
+  void contribute_into(const execution_space & exec_space, View<RP...> const& dest) const {
     using dest_type = View<RP...>;
     static_assert(
         std::is_same<typename dest_type::value_type,
@@ -1183,24 +1204,35 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
     size_t start  = is_equal ? 1 : 0;
     Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
                                                  original_value_type, Op>(
+        exec_space,
         internal_view.data(), dest.data(),
         internal_view.stride(internal_view_type::rank - 1), start, extent,
         internal_view.label());
   }
 
   void reset() {
+    reset(execution_space{});
+  }
+  void reset(const execution_space & exec_space) {
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
+        exec_space,
         internal_view.data(), internal_view.size(), internal_view.label());
   }
+
   template <typename DT, typename... RP>
   void reset_except(View<DT, RP...> const& view) {
+    reset_except(execution_space{}, view);
+  }
+  template <typename DT, typename... RP>
+  void reset_except(const execution_space & exec_space, View<DT, RP...> const& view) {
     if (view.data() != internal_view.data()) {
-      reset();
+      reset(exec_space);
       return;
     }
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
+        exec_space,
         internal_view.data() + view.size(), internal_view.size() - view.size(),
         internal_view.label());
   }
@@ -1365,12 +1397,21 @@ create_scatter_view(Op, Duplication, Contribution,
 namespace Kokkos {
 namespace Experimental {
 
+  template <typename DT1, typename DT2, typename LY, typename ES,
+          typename OP, typename CT, typename DP, typename... VP>
+  void contribute(typename ES::execution_space const& exec_space,
+    View<DT1, VP...>& dest,
+    Kokkos::Experimental::ScatterView<DT2, LY, ES, OP, CT, DP> const& src) {
+  src.contribute_into(exec_space, dest);
+}
+
 template <typename DT1, typename DT2, typename LY, typename ES, typename OP,
           typename CT, typename DP, typename... VP>
 void contribute(
     View<DT1, VP...>& dest,
     Kokkos::Experimental::ScatterView<DT2, LY, ES, OP, CT, DP> const& src) {
-  src.contribute_into(dest);
+  using execution_space = typename ES::execution_space;
+  contribute(execution_space{}, dest, src);
 }
 
 }  // namespace Experimental
