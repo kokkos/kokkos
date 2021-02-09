@@ -402,7 +402,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       sycl::accessor<char, 1, sycl::access::mode::read_write,
                      sycl::access::target::local>
           team_scratch_memory_L0(
-              sycl::range<1>(std::max(m_scratch_size[0] + shmem_begin, 1)),
+              sycl::range<1>(std::max(m_scratch_size[0] + m_shmem_begin, 1)),
               cgh);
 
       // Avoid capturing *this since it might not be trivially copyable
@@ -481,15 +481,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_SYCL so far accessors used instead of these pointers
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
-    sycl::queue& q =
-        *(*(m_policy.space()).impl_internal_space_instance()).m_queue;
-    m_scratch_ptr[0] = nullptr;
-    m_scratch_ptr[1] = sycl::malloc_device(
+    const auto& space    = *m_policy.space().impl_internal_space_instance();
+    const sycl::queue& q = *space.m_queue;
+    m_scratch_ptr[0]     = nullptr;
+    m_scratch_ptr[1]     = sycl::malloc_device(
         sizeof(char) * m_scratch_size[1] * m_league_size, q);
 
-    if (static_cast<int>(m_policy.space()
-                             .impl_internal_space_instance()
-                             ->m_maxShmemPerBlock) < m_shmem_size) {
+    if (static_cast<int>(space.m_maxShmemPerBlock) < m_shmem_size) {
       std::stringstream out;
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "
