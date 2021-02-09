@@ -117,12 +117,7 @@ TEST(TEST_CATEGORY, IncrTest_12b_TeamScratch) {
 #else
   test.run(1, 4, 4);
   test.run(4, 7, 10);
-  // FIXME_SYCL running out of local memory
-#ifdef KOKKOS_ENABLE_SYCL
-  test.run(14, 19, 321);
-#else
   test.run(14, 277, 321);
-#endif
 #endif
 }
 
