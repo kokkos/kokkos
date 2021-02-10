@@ -2148,46 +2148,6 @@ struct FunctorFinal<
   }
 };
 
-/* 'final' function provided for array value */
-template <class FunctorType, class ArgTag, class T>
-struct FunctorFinal<FunctorType, ArgTag,
-                    T*
-                    // First  substitution failure when FunctorType::final does
-                    // not exist. Second substitution failure when enable_if( &
-                    // Functor::final ) does not exist
-                    ,
-                    decltype(
-                        FunctorFinalFunction<FunctorType, ArgTag>::enable_if(
-                            &FunctorType::final))> {
-  template <typename Dummy = ArgTag>
-  KOKKOS_FORCEINLINE_FUNCTION static std::enable_if_t<
-      std::is_same<Dummy, void>::value>
-  final(const FunctorType& f, void* p) {
-    f.final((T*)p);
-  }
-
-  template <typename Dummy = ArgTag>
-  KOKKOS_FORCEINLINE_FUNCTION static std::enable_if_t<
-      !std::is_same<Dummy, void>::value>
-  final(const FunctorType& f, void* p) {
-    f.final(ArgTag(), (T*)p);
-  }
-
-  template <typename Dummy = ArgTag>
-  KOKKOS_FORCEINLINE_FUNCTION static std::enable_if_t<
-      std::is_same<Dummy, void>::value>
-  final(FunctorType& f, void* p) {
-    f.final((T*)p);
-  }
-
-  template <typename Dummy = ArgTag>
-  KOKKOS_FORCEINLINE_FUNCTION static std::enable_if_t<
-      !std::is_same<Dummy, void>::value>
-  final(FunctorType& f, void* p) {
-    f.final(ArgTag(), (T*)p);
-  }
-};
-
 }  // namespace Impl
 }  // namespace Kokkos
 
