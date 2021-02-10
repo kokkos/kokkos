@@ -2108,7 +2108,7 @@ struct FunctorFinal<
     typename std::enable_if<
         std::is_same<ArgTag, void>::value,
         decltype(FunctorFinalFunction<FunctorType, ArgTag>::enable_if(
-            &FunctorType::final))>::typei> {
+            &FunctorType::final))>::type> {
   KOKKOS_FORCEINLINE_FUNCTION static void final(const FunctorType& f, void* p) {
     f.final((T*)p);
   }
@@ -2137,7 +2137,7 @@ struct FunctorFinal<
     FunctorType, ArgTag,
     T*
     // First  substitution failure when FunctorType::final does not exist.
-    // Second substitution failure when FunctorType::final is not compatible
+    // Second substitution failure when FunctorType::final is not compatible.
     ,
     typename std::enable_if<
         !std::is_same<ArgTag, void>::value,
