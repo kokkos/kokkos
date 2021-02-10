@@ -142,6 +142,20 @@ int* OpenMPTargetExec::get_lock_array(int num_teams) {
     space.deallocate(m_lock_array, m_lock_size);
     m_lock_size  = lock_array_elem * sizeof(int);
     m_lock_array = static_cast<int*>(space.allocate(m_lock_size));
+
+    // FIXME_OPENMPTARGET - Creating a target region here to initialize the
+    // lock_array with 0's fails. Hence creating an equivalent host array to
+    // achieve the same. Value of host array are then copied to the lock_array.
+    int* h_lock_array = static_cast<int*>(
+        omp_target_alloc(m_lock_size, omp_get_initial_device()));
+
+    for (int i = 0; i < lock_array_elem; ++i) h_lock_array[i] = 0;
+
+    OMPT_SAFE_CALL(omp_target_memcpy(m_lock_array, h_lock_array, m_lock_size, 0,
+                                     0, omp_get_default_device(),
+                                     omp_get_initial_device()));
+
+    omp_target_free(h_lock_array, omp_get_initial_device());
   }
 
   return m_lock_array;

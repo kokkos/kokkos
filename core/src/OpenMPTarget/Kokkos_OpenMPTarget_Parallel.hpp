@@ -601,11 +601,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
 
-#pragma omp target teams distribute parallel for is_device_ptr(lock_array)
-    for (int i = 0; i < max_active_teams; ++i) {
-      lock_array[i] = 0;
-    }
-
 #pragma omp target teams distribute map(to                   \
                                         : a_functor)         \
     is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
@@ -620,7 +615,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
 
         // If lock is acquired assign it to the block index.
-        if (lock_team == 1)
+        // lock_team = 0, implies atomic_compare_exchange is successfull.
+        if (lock_team == 0)
           shmem_block_index = iter;
         else
           iter = ++iter % max_active_teams;
@@ -667,11 +663,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
 
-#pragma omp target teams distribute parallel for is_device_ptr(lock_array)
-    for (int i = 0; i < max_active_teams; ++i) {
-      lock_array[i] = 0;
-    }
-
 #pragma omp target teams distribute map(to                   \
                                         : a_functor)         \
     is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
@@ -686,7 +677,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
 
         // If lock is acquired assign it to the block index.
-        if (lock_team == 1)
+        // lock_team = 0, implies atomic_compare_exchange is successfull.
+        if (lock_team == 0)
           shmem_block_index = iter;
         else
           iter = ++iter % max_active_teams;
@@ -751,11 +743,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
 
-#pragma omp target teams distribute parallel for is_device_ptr(lock_array)
-    for (int i = 0; i < max_active_teams; ++i) {
-      lock_array[i] = 0;
-    }
-
 #pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
          map(to:f) map(tofrom:result) reduction(+: result) \
     is_device_ptr(scratch_ptr, lock_array)
@@ -770,7 +757,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
 
         // If lock is acquired assign it to the block index.
-        if (lock_team == 1)
+        // lock_team = 0, implies atomic_compare_exchange is successfull.
+        if (lock_team == 0)
           shmem_block_index = iter;
         else
           iter = ++iter % max_active_teams;
@@ -822,11 +810,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
 
-#pragma omp target teams distribute parallel for is_device_ptr(lock_array)
-    for (int i = 0; i < max_active_teams; ++i) {
-      lock_array[i] = 0;
-    }
-
 #pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
          map(to:f) map(tofrom:result) reduction(+: result) \
     is_device_ptr(scratch_ptr, lock_array)
@@ -841,7 +824,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
 
         // If lock is acquired assign it to the block index.
-        if (lock_team == 1)
+        // lock_team = 0, implies atomic_compare_exchange is successfull.
+        if (lock_team == 0)
           shmem_block_index = iter;
         else
           iter = ++iter % max_active_teams;
