@@ -69,10 +69,8 @@ class ScratchMemorySpace {
   enum { ALIGN = 8 };
 
  private:
-  mutable char* m_iter_L0 = nullptr;
-  char* m_end_L0          = nullptr;
-  mutable char* m_iter_L1 = nullptr;
-  char* m_end_L1          = nullptr;
+  mutable char* m_iter_L[2] = {nullptr, nullptr};
+  char* m_end_L[2]          = {nullptr, nullptr};
 
   mutable int m_multiplier    = 0;
   mutable int m_offset        = 0;
@@ -100,87 +98,41 @@ class ScratchMemorySpace {
   template <typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem(const IntType& size,
                                          int level = -1) const {
-    if (level == -1) level = m_default_level;
-    if (level == 0) {
-      void* tmp = m_iter_L0 + m_offset * align(size);
-      if (m_end_L0 < (m_iter_L0 += align(size) * m_multiplier)) {
-        m_iter_L0 -= align(size) * m_multiplier;  // put it back like it was
-#ifdef KOKKOS_ENABLE_DEBUG
-        // mfh 23 Jun 2015: printf call consumes 25 registers
-        // in a CUDA build, so only print in debug mode.  The
-        // function still returns nullptr if not enough memory.
-        printf(
-            "ScratchMemorySpace<...>::get_shmem: Failed to allocate "
-            "%ld byte(s); remaining capacity is %ld byte(s)\n",
-            long(size), long(m_end_L0 - m_iter_L0));
-#endif  // KOKKOS_ENABLE_DEBUG
-        tmp = nullptr;
-      }
-      return tmp;
-    } else {
-      void* tmp = m_iter_L1 + m_offset * align(size);
-      if (m_end_L1 < (m_iter_L1 += align(size) * m_multiplier)) {
-        m_iter_L1 -= align(size) * m_multiplier;  // put it back like it was
-#ifdef KOKKOS_ENABLE_DEBUG
-        // mfh 23 Jun 2015: printf call consumes 25 registers
-        // in a CUDA build, so only print in debug mode.  The
-        // function still returns nullptr if not enough memory.
-        printf(
-            "ScratchMemorySpace<...>::get_shmem: Failed to allocate "
-            "%ld byte(s); remaining capacity is %ld byte(s)\n",
-            long(size), long(m_end_L1 - m_iter_L1));
-#endif  // KOKKOS_ENABLE_DEBUG
-        tmp = nullptr;
-      }
-      return tmp;
-    }
+    return get_shmem_common</*aligned*/ false>(size, 1, level);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  void* get_shmem_aligned(const ptrdiff_t size, const ptrdiff_t alignment,
-                          int level = -1) const {
+  template <typename IntType>
+  KOKKOS_INLINE_FUNCTION void* get_shmem_aligned(const IntType& size,
+                                                 const ptrdiff_t alignment,
+                                                 int level = -1) const {
+    return get_shmem_common</*aligned*/ true>(size, alignment, level);
+  }
+
+  template <bool aligned, typename IntType>
+  KOKKOS_INLINE_FUNCTION void* get_shmem_common(const IntType& size,
+                                                const ptrdiff_t alignment,
+                                                int level = -1) const {
     if (level == -1) level = m_default_level;
-    if (level == 0) {
-      char* previous            = m_iter_L0;
-      const ptrdiff_t missalign = size_t(m_iter_L0) % alignment;
-      if (missalign) m_iter_L0 += alignment - missalign;
+    char* previous            = m_iter_L[level];
+    const ptrdiff_t missalign = size_t(m_iter_L[level]) % alignment;
+    if (missalign) m_iter_L[level] += alignment - missalign;
 
-      void* tmp = m_iter_L0 + m_offset * size;
-      if (m_end_L0 < (m_iter_L0 += size * m_multiplier)) {
-        m_iter_L0 = previous;  // put it back like it was
+    void* tmp = m_iter_L[level] + m_offset * (aligned ? size : align(size));
+    if (m_end_L[level] <
+        (m_iter_L[level] += (aligned ? size : align(size)) * m_multiplier)) {
+      m_iter_L[level] = previous;  // put it back like it was
 #ifdef KOKKOS_ENABLE_DEBUG
-        // mfh 23 Jun 2015: printf call consumes 25 registers
-        // in a CUDA build, so only print in debug mode.  The
-        // function still returns nullptr if not enough memory.
-        printf(
-            "ScratchMemorySpace<...>::get_shmem: Failed to allocate "
-            "%ld byte(s); remaining capacity is %ld byte(s)\n",
-            long(size), long(m_end_L0 - m_iter_L0));
+      // mfh 23 Jun 2015: printf call consumes 25 registers
+      // in a CUDA build, so only print in debug mode.  The
+      // function still returns nullptr if not enough memory.
+      printf(
+          "ScratchMemorySpace<...>::get_shmem: Failed to allocate "
+          "%ld byte(s); remaining capacity is %ld byte(s)\n",
+          long(size), long(m_end_L[level] - m_iter_L[level]));
 #endif  // KOKKOS_ENABLE_DEBUG
-        tmp = nullptr;
-      }
-      return tmp;
-    } else {
-      char* previous            = m_iter_L1;
-      const ptrdiff_t missalign = size_t(m_iter_L1) % alignment;
-      if (missalign) m_iter_L1 += alignment - missalign;
-
-      void* tmp = m_iter_L1 + m_offset * size;
-      if (m_end_L1 < (m_iter_L1 += size * m_multiplier)) {
-        m_iter_L1 = previous;  // put it back like it was
-#ifdef KOKKOS_ENABLE_DEBUG
-        // mfh 23 Jun 2015: printf call consumes 25 registers
-        // in a CUDA build, so only print in debug mode.  The
-        // function still returns nullptr if not enough memory.
-        printf(
-            "ScratchMemorySpace<...>::get_shmem: Failed to allocate "
-            "%ld byte(s); remaining capacity is %ld byte(s)\n",
-            long(size), long(m_end_L1 - m_iter_L1));
-#endif  // KOKKOS_ENABLE_DEBUG
-        tmp = nullptr;
-      }
-      return tmp;
+      tmp = nullptr;
     }
+    return tmp;
   }
 
   KOKKOS_DEFAULTED_FUNCTION
@@ -191,10 +143,8 @@ class ScratchMemorySpace {
                                             const IntType& size_L0,
                                             void* ptr_L1           = nullptr,
                                             const IntType& size_L1 = 0)
-      : m_iter_L0((char*)ptr_L0),
-        m_end_L0(m_iter_L0 + size_L0),
-        m_iter_L1((char*)ptr_L1),
-        m_end_L1(m_iter_L1 + size_L1),
+      : m_iter_L{(char*)ptr_L0, (char*)ptr_L1},
+        m_end_L{(char*)ptr_L0 + size_L0, (char*)ptr_L1 + size_L1},
         m_multiplier(1),
         m_offset(0),
         m_default_level(0) {}
