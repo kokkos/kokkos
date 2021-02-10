@@ -400,37 +400,19 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     space.fence();
   }
 
-  // Indirectly launch a functor by explicitly creating it in USM shared memory
-  void sycl_indirect_launch() const {
-    // Convenience references
-    const Kokkos::Experimental::SYCL& space = m_policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    using IndirectKernelMem =
-        Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
-    IndirectKernelMem& indirectKernelMem = instance.m_indirectKernelMem;
-
-    // Copy the functor into USM Shared Memory
-    using KernelFunctorPtr =
-        std::unique_ptr<FunctorType, IndirectKernelMem::Deleter>;
-    KernelFunctorPtr kernelFunctorPtr = indirectKernelMem.copy_from(m_functor);
-
-    // Use reference_wrapper (because it is both trivially copyable and
-    // invocable) and launch it
-    sycl_direct_launch(m_policy, std::reference_wrapper(*kernelFunctorPtr));
-  }
-
  public:
   inline void execute() const {
     if (m_league_size == 0) return;
 
-    // if the functor is trivially copyable, we can launch it directly;
-    // otherwise, we will launch it indirectly via explicitly creating
-    // it in USM shared memory.
-    if constexpr (std::is_trivially_copyable_v<decltype(m_functor)>)
-      sycl_direct_launch(m_policy, m_functor);
-    else
-      sycl_indirect_launch();
+    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
+        indirectKernelMem = m_policy.space()
+                                .impl_internal_space_instance()
+                                ->m_indirectKernelMem;
+
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper<
+        std::reference_wrapper<FunctorType>>(m_functor, indirectKernelMem);
+
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor());
   }
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
