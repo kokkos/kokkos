@@ -797,7 +797,8 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
   }
 
   template <typename DT, typename... RP>
-  void contribute_into(const execution_space & exec_space, View<DT, RP...> const& dest) const {
+  void contribute_into(execution_space const& exec_space,
+                       View<DT, RP...> const& dest) const {
     using dest_type = View<DT, RP...>;
     static_assert(std::is_same<typename dest_type::array_layout, Layout>::value,
                   "ScatterView contribute destination has different layout");
@@ -808,23 +809,26 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
     if (dest.data() == internal_view.data()) return;
     Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
                                                  original_value_type, Op>(
-        exec_space, internal_view.data(), dest.data(), 0, 0, 1, internal_view.label());
+        exec_space, internal_view.data(), dest.data(), 0, 0, 1,
+        internal_view.label());
   }
 
-  void reset() {
-    reset(execution_space{});
-  }
-  void reset(const execution_space & exec_space) {
+  void reset() { reset(execution_space()); }
+
+  void reset(execution_space const& exec_space) {
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
-        exec_space, internal_view.data(), internal_view.size(), internal_view.label());
+        exec_space, internal_view.data(), internal_view.size(),
+        internal_view.label());
   }
   template <typename DT, typename... RP>
   void reset_except(View<DT, RP...> const& view) {
-    reset_except(execution_space{}, view);
+    reset_except(execution_space(), view);
   }
+
   template <typename DT, typename... RP>
-  void reset_except(const execution_space & exec_space, View<DT, RP...> const& view) {
+  void reset_except(const execution_space& exec_space,
+                    View<DT, RP...> const& view) {
     if (view.data() != internal_view.data()) reset(exec_space);
   }
 
@@ -993,7 +997,8 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
   }
 
   template <typename DT, typename... RP>
-  void contribute_into(const execution_space & exec_space, View<DT, RP...> const& dest) const {
+  void contribute_into(execution_space const& exec_space,
+                       View<DT, RP...> const& dest) const {
     using dest_type = View<DT, RP...>;
     static_assert(std::is_same<typename dest_type::array_layout,
                                Kokkos::LayoutRight>::value,
@@ -1006,35 +1011,35 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
     size_t start  = is_equal ? 1 : 0;
     Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
                                                  original_value_type, Op>(
-        exec_space,
-        internal_view.data(), dest.data(), internal_view.stride(0), start,
-        internal_view.extent(0), internal_view.label());
+        exec_space, internal_view.data(), dest.data(), internal_view.stride(0),
+        start, internal_view.extent(0), internal_view.label());
   }
 
-  void reset() {
-    reset(execution_space{});
-  }
-  void reset(const execution_space & exec_space) {
+  void reset() { reset(execution_space()); }
+
+  void reset(execution_space const& exec_space) {
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
-        exec_space, internal_view.data(), internal_view.size(), internal_view.label());
+        exec_space, internal_view.data(), internal_view.size(),
+        internal_view.label());
   }
 
   template <typename DT, typename... RP>
   void reset_except(View<DT, RP...> const& view) {
-    reset_except(execution_space{}, view);
+    reset_except(execution_space(), view);
   }
+
   template <typename DT, typename... RP>
-  void reset_except(const execution_space & exec_space, View<DT, RP...> const& view) {
+  void reset_except(execution_space const& exec_space,
+                    View<DT, RP...> const& view) {
     if (view.data() != internal_view.data()) {
       reset(exec_space);
       return;
     }
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
-        exec_space,
-        internal_view.data() + view.size(), internal_view.size() - view.size(),
-        internal_view.label());
+        exec_space, internal_view.data() + view.size(),
+        internal_view.size() - view.size(), internal_view.label());
   }
 
   void resize(const size_t n0 = 0, const size_t n1 = 0, const size_t n2 = 0,
@@ -1185,7 +1190,8 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
   }
 
   template <typename... RP>
-  void contribute_into(const execution_space & exec_space, View<RP...> const& dest) const {
+  void contribute_into(execution_space const& exec_space,
+                       View<RP...> const& dest) const {
     using dest_type = View<RP...>;
     static_assert(
         std::is_same<typename dest_type::value_type,
@@ -1203,37 +1209,36 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
     size_t start  = is_equal ? 1 : 0;
     Kokkos::Impl::Experimental::ReduceDuplicates<execution_space,
                                                  original_value_type, Op>(
-        exec_space,
-        internal_view.data(), dest.data(),
+        exec_space, internal_view.data(), dest.data(),
         internal_view.stride(internal_view_type::rank - 1), start, extent,
         internal_view.label());
   }
 
-  void reset() {
-    reset(execution_space{});
-  }
-  void reset(const execution_space & exec_space) {
+  void reset() { reset(execution_space()); }
+
+  void reset(execution_space const& exec_space) {
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
-        exec_space,
-        internal_view.data(), internal_view.size(), internal_view.label());
+        exec_space, internal_view.data(), internal_view.size(),
+        internal_view.label());
   }
 
   template <typename DT, typename... RP>
   void reset_except(View<DT, RP...> const& view) {
-    reset_except(execution_space{}, view);
+    reset_except(execution_space(), view);
   }
+
   template <typename DT, typename... RP>
-  void reset_except(const execution_space & exec_space, View<DT, RP...> const& view) {
+  void reset_except(execution_space const& exec_space,
+                    View<DT, RP...> const& view) {
     if (view.data() != internal_view.data()) {
       reset(exec_space);
       return;
     }
     Kokkos::Impl::Experimental::ResetDuplicates<execution_space,
                                                 original_value_type, Op>(
-        exec_space,
-        internal_view.data() + view.size(), internal_view.size() - view.size(),
-        internal_view.label());
+        exec_space, internal_view.data() + view.size(),
+        internal_view.size() - view.size(), internal_view.label());
   }
 
   void resize(const size_t n0 = 0, const size_t n1 = 0, const size_t n2 = 0,
@@ -1396,10 +1401,10 @@ create_scatter_view(Op, Duplication, Contribution,
 namespace Kokkos {
 namespace Experimental {
 
-  template <typename DT1, typename DT2, typename LY, typename ES,
-          typename OP, typename CT, typename DP, typename... VP>
-  void contribute(typename ES::execution_space const& exec_space,
-    View<DT1, VP...>& dest,
+template <typename DT1, typename DT2, typename LY, typename ES, typename OP,
+          typename CT, typename DP, typename... VP>
+void contribute(
+    typename ES::execution_space const& exec_space, View<DT1, VP...>& dest,
     Kokkos::Experimental::ScatterView<DT2, LY, ES, OP, CT, DP> const& src) {
   src.contribute_into(exec_space, dest);
 }
