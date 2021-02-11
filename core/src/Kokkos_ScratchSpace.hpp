@@ -108,6 +108,7 @@ class ScratchMemorySpace {
     return get_shmem_common</*aligned*/ true>(size, alignment, level);
   }
 
+ private:
   template <bool aligned, typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem_common(const IntType& size,
                                                 const ptrdiff_t alignment,
@@ -135,6 +136,7 @@ class ScratchMemorySpace {
     return tmp;
   }
 
+ public:
   KOKKOS_DEFAULTED_FUNCTION
   ScratchMemorySpace() = default;
 
