@@ -68,7 +68,8 @@ class SYCLInternal {
 
   int m_syclDev = -1;
 
-  int m_maxThreadsPerSM = 0;
+  size_t m_maxThreadsPerSM    = 0;
+  uint64_t m_maxShmemPerBlock = 0;
 
   size_type* m_scratchSpace = nullptr;
   size_type* m_scratchFlags = nullptr;

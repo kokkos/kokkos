@@ -338,13 +338,30 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
 
   template <class ClosureType, class FunctorType>
   int internal_team_size_max(const FunctorType& /*f*/) const {
-    return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+    // If no scratch memory per thread is requested, the maximum is simply the
+    // maximum number of threads allowed in a workgroup.
+    if (m_thread_scratch_size[0] == 0)
+      return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+
+    // Otherwise, we choose the maximum as the minimum of the number of threads
+    // allowed in a workgroup and the number of threads that allow allocating
+    // the amount of local memory requested. We want to satisfy
+    // memory_per_team + memory_per_thread * thread_size < max_local_memory
+    // which implies
+    // thread_size < (max_local_memory - memory_per_team)/memory_per_thread
+    const int max_threads_for_memory =
+        (space().impl_internal_space_instance()->m_maxShmemPerBlock -
+         m_team_scratch_size[0]) /
+        m_thread_scratch_size[0];
+    return std::min<int>(
+        m_space.impl_internal_space_instance()->m_maxThreadsPerSM,
+        max_threads_for_memory);
   }
 
   template <class ClosureType, class FunctorType>
-  int internal_team_size_recommended(const FunctorType& /*f*/) const {
+  int internal_team_size_recommended(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+    return internal_team_size_max(f);
   }
 };
 
@@ -380,22 +397,33 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     sycl::queue& q = *instance.m_queue;
 
     q.submit([&](sycl::handler& cgh) {
-      const auto shmem_begin  = m_shmem_begin;
-      const auto shmem_size   = m_shmem_size;
-      const auto scratch_size = m_scratch_size[1];
-      auto team_lambda        = [=](sycl::nd_item<1> item) {
-        // FIXME_SYCL Add scratch memory
-        const member_type team_member(nullptr, shmem_begin, shmem_size, nullptr,
-                                      scratch_size, item);
+      // FIXME_SYCL accessors seem to need a size greater than zero at least for
+      // host queues
+      sycl::accessor<char, 1, sycl::access::mode::read_write,
+                     sycl::access::target::local>
+          team_scratch_memory_L0(
+              sycl::range<1>(std::max(m_scratch_size[0] + m_shmem_begin, 1)),
+              cgh);
 
-        if constexpr (std::is_same<work_tag, void>::value)
-          functor(team_member);
-        else
-          functor(work_tag(), team_member);
-      };
+      // Avoid capturing *this since it might not be trivially copyable
+      const auto shmem_begin     = m_shmem_begin;
+      const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
+      void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
+
       cgh.parallel_for(
           sycl::nd_range<1>(m_league_size * m_team_size, m_team_size),
-          team_lambda);
+          [=](sycl::nd_item<1> item) {
+            const member_type team_member(
+                team_scratch_memory_L0.get_pointer(), shmem_begin,
+                scratch_size[0],
+                static_cast<char*>(scratch_ptr[1]) +
+                    item.get_group(0) * scratch_size[1],
+                scratch_size[1], item);
+            if constexpr (std::is_same<work_tag, void>::value)
+              functor(team_member);
+            else
+              functor(work_tag(), team_member);
+          });
     });
     space.fence();
   }
@@ -421,9 +449,52 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.impl_vector_length()) {
-    // FIXME_SYCL check_parameters
     // FIXME_SYCL optimize
     if (m_team_size < 0) m_team_size = 32;
+
+    // FIXME_SYCL modify for reduce etc.
+    m_shmem_begin = 0;
+    m_shmem_size =
+        (m_policy.scratch_size(0, m_team_size) +
+         FunctorTeamShmemSize<FunctorType>::value(m_functor, m_team_size));
+    m_scratch_size[0] = m_policy.scratch_size(0, m_team_size);
+    m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
+
+    // FIXME_SYCL so far accessors used instead of these pointers
+    // Functor's reduce memory, team scan memory, and team shared memory depend
+    // upon team size.
+    const auto& space    = *m_policy.space().impl_internal_space_instance();
+    const sycl::queue& q = *space.m_queue;
+    m_scratch_ptr[0]     = nullptr;
+    m_scratch_ptr[1]     = sycl::malloc_device(
+        sizeof(char) * m_scratch_size[1] * m_league_size, q);
+
+    if (static_cast<int>(space.m_maxShmemPerBlock) < m_shmem_size) {
+      std::stringstream out;
+      out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
+             "Requested "
+          << m_shmem_size << " bytes but maximum is "
+          << m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock
+          << '\n';
+      Kokkos::Impl::throw_runtime_exception(out.str());
+    }
+
+    if (m_team_size > m_policy.team_size_max(arg_functor, ParallelForTag{}))
+      Kokkos::Impl::throw_runtime_exception(
+          "Kokkos::Impl::ParallelFor<SYCL> requested too large team size.");
+  }
+
+  // FIXME_SYCL remove when managing m_scratch_ptr[1] in the execution space
+  // instance
+  ParallelFor(const ParallelFor&) = delete;
+  ParallelFor& operator=(const ParallelFor&) = delete;
+
+  ~ParallelFor() {
+    const Kokkos::Experimental::SYCL& space = m_policy.space();
+    Kokkos::Experimental::Impl::SYCLInternal& instance =
+        *space.impl_internal_space_instance();
+    sycl::queue& q = *instance.m_queue;
+    sycl::free(m_scratch_ptr[1], q);
   }
 };
 
