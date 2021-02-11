@@ -502,6 +502,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           "Kokkos::Impl::ParallelFor<SYCL> requested too large team size.");
   }
 
+  // FIXME_SYCL remove when managing m_scratch_ptr[1] in the execution space
+  // instance
+  ParallelFor(const ParallelFor&) = delete;
+  ParallelFor& operator=(const ParallelFor&) = delete;
+
   ~ParallelFor() {
     const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
