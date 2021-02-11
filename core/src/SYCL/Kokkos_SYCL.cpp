@@ -159,6 +159,13 @@ void SYCL::fence() const {
   Impl::SYCLInternal::fence(*m_space_instance->m_queue);
 }
 
+void SYCL::impl_static_fence() {
+  // guard accessing all_queues
+  std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
+  for (auto& queue : Impl::SYCLInternal::all_queues)
+    Impl::SYCLInternal::fence(**queue);
+}
+
 int SYCL::sycl_device() const {
   return impl_internal_space_instance()->m_syclDev;
 }
@@ -316,9 +323,7 @@ void SYCLSpaceInitializer::finalize(const bool all_spaces) {
 }
 
 void SYCLSpaceInitializer::fence() {
-  // FIXME_SYCL should be
-  //  Kokkos::Experimental::SYCL::impl_static_fence();
-  Kokkos::Experimental::SYCL().fence();
+  Kokkos::Experimental::SYCL::impl_static_fence();
 }
 
 void SYCLSpaceInitializer::print_configuration(std::ostream& msg,
