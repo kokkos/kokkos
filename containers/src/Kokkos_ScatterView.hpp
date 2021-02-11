@@ -649,10 +649,9 @@ struct ReduceDuplicatesBase {
   size_t stride;
   size_t start;
   size_t n;
-  ReduceDuplicatesBase(ExecSpace exec_space,
-                       ValueType const* src_in, ValueType* dest_in,
-                       size_t stride_in, size_t start_in, size_t n_in,
-                       std::string const& name)
+  ReduceDuplicatesBase(ExecSpace const& exec_space, ValueType const* src_in,
+                       ValueType* dest_in, size_t stride_in, size_t start_in,
+                       size_t n_in, std::string const& name)
       : src(src_in), dst(dest_in), stride(stride_in), start(start_in), n(n_in) {
     parallel_for(
         std::string("Kokkos::ScatterView::ReduceDuplicates [") + name + "]",
@@ -668,10 +667,10 @@ template <typename ExecSpace, typename ValueType, typename Op>
 struct ReduceDuplicates
     : public ReduceDuplicatesBase<ExecSpace, ValueType, Op> {
   using Base = ReduceDuplicatesBase<ExecSpace, ValueType, Op>;
-  ReduceDuplicates(ExecSpace exec_space,
-                   ValueType const* src_in, ValueType* dst_in, size_t stride_in,
-                   size_t start_in, size_t n_in, std::string const& name)
-    : Base(exec_space, src_in, dst_in, stride_in, start_in, n_in, name) {}
+  ReduceDuplicates(ExecSpace const& exec_space, ValueType const* src_in,
+                   ValueType* dst_in, size_t stride_in, size_t start_in,
+                   size_t n_in, std::string const& name)
+      : Base(exec_space, src_in, dst_in, stride_in, start_in, n_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     for (size_t j = Base::start; j < Base::n; ++j) {
       ScatterValue<ValueType, Op, ExecSpace,
@@ -689,8 +688,8 @@ template <typename ExecSpace, typename ValueType, typename Op>
 struct ResetDuplicatesBase {
   using Derived = ResetDuplicates<ExecSpace, ValueType, Op>;
   ValueType* data;
-  ResetDuplicatesBase(ExecSpace exec_space, ValueType* data_in, size_t size_in,
-                      std::string const& name)
+  ResetDuplicatesBase(ExecSpace const& exec_space, ValueType* data_in,
+                      size_t size_in, std::string const& name)
       : data(data_in) {
     parallel_for(
         std::string("Kokkos::ScatterView::ResetDuplicates [") + name + "]",
@@ -705,9 +704,9 @@ struct ResetDuplicatesBase {
 template <typename ExecSpace, typename ValueType, typename Op>
 struct ResetDuplicates : public ResetDuplicatesBase<ExecSpace, ValueType, Op> {
   using Base = ResetDuplicatesBase<ExecSpace, ValueType, Op>;
-  ResetDuplicates(ExecSpace exec_space,
-                  ValueType* data_in, size_t size_in, std::string const& name)
-    : Base(exec_space, data_in, size_in, name) {}
+  ResetDuplicates(ExecSpace const& exec_space, ValueType* data_in,
+                  size_t size_in, std::string const& name)
+      : Base(exec_space, data_in, size_in, name) {}
   KOKKOS_FORCEINLINE_FUNCTION void operator()(size_t i) const {
     ScatterValue<ValueType, Op, ExecSpace,
                  Kokkos::Experimental::ScatterNonAtomic>
