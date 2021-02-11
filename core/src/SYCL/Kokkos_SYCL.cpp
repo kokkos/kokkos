@@ -231,7 +231,7 @@ std::ostream& SYCL::SYCLDevice::info(std::ostream& os) const {
 
 namespace Impl {
 
-int g_hip_space_factory_initialized =
+int g_sycl_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<SYCLSpaceInitializer>("170_SYCL");
 
 void SYCLSpaceInitializer::initialize(const InitArguments& args) {
