@@ -76,9 +76,69 @@ int get_gpu(const InitArguments& args);
 }  // namespace Impl
 
 namespace Experimental {
-SYCL::SYCL() : m_space_instance(&Impl::SYCLInternal::singleton()) {
+SYCL::SYCL()
+    : m_space_instance(&Impl::SYCLInternal::singleton()), m_counter(nullptr) {
   Impl::SYCLInternal::singleton().verify_is_initialized(
       "SYCL instance constructor");
+}
+
+SYCL::SYCL(const sycl::queue& stream)
+    : m_space_instance(new Impl::SYCLInternal), m_counter(new int(1)) {
+  Impl::SYCLInternal::singleton().verify_is_initialized(
+      "SYCL instance constructor");
+  m_space_instance->initialize(stream);
+}
+
+KOKKOS_FUNCTION SYCL::SYCL(SYCL&& other) noexcept
+    : m_space_instance(other.m_space_instance), m_counter(other.m_counter) {
+  other.m_space_instance = nullptr;
+  other.m_counter        = nullptr;
+}
+
+KOKKOS_FUNCTION SYCL::SYCL(const SYCL& other)
+    : m_space_instance(other.m_space_instance), m_counter(other.m_counter) {
+#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
+  if (m_counter) Kokkos::atomic_add(m_counter, 1);
+#endif
+}
+
+KOKKOS_FUNCTION SYCL& SYCL::operator=(SYCL&& other) noexcept {
+  if (&other != this) {
+    cleanup();
+    m_space_instance       = other.m_space_instance;
+    other.m_space_instance = nullptr;
+    m_counter              = other.m_counter;
+    other.m_counter        = nullptr;
+  }
+  return *this;
+}
+
+KOKKOS_FUNCTION SYCL& SYCL::operator=(const SYCL& other) {
+  if (&other != this) {
+    cleanup();
+    m_space_instance = other.m_space_instance;
+    m_counter        = other.m_counter;
+#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
+    if (m_counter) Kokkos::atomic_add(m_counter, 1);
+#endif
+  }
+  return *this;
+}
+
+KOKKOS_FUNCTION SYCL::~SYCL() { cleanup(); }
+
+KOKKOS_FUNCTION void SYCL::cleanup() noexcept {
+#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
+  // If m_counter is set, then this instance is responsible for managing the
+  // objects pointed to by m_counter and m_space_instance.
+  if (m_counter == nullptr) return;
+  int const count = Kokkos::atomic_fetch_sub(m_counter, 1);
+  if (count == 1) {
+    delete m_counter;
+    m_space_instance->finalize();
+    delete m_space_instance;
+  }
+#endif
 }
 
 int SYCL::concurrency() {

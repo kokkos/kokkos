@@ -75,6 +75,12 @@ class SYCLInternal {
 
   std::optional<sycl::queue> m_queue;
 
+  // Using std::vector<std::optional<sycl::queue>> reveals a compiler bug when
+  // compiling for the CUDA backend. Storing pointers instead works around this.
+  static std::vector<std::optional<sycl::queue>*> all_queues;
+  // We need a mutex for thread safety when modifying all_queues.
+  static std::mutex mutex;
+
   // USMObjectMem is a reusable buffer for a single object
   // in USM memory
   //
@@ -286,13 +292,15 @@ class SYCLInternal {
   using IndirectReducerMem = USMObjectMem<sycl::usm::alloc::shared>;
   IndirectReducerMem m_indirectReducerMem;
 
-  static int was_finalized;
+  bool was_finalized = false;
 
   static SYCLInternal& singleton();
 
   int verify_is_initialized(const char* const label) const;
 
   void initialize(const sycl::device& d);
+
+  void initialize(const sycl::queue& q);
 
   int is_initialized() const { return m_queue.has_value(); }
 
