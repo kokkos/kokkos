@@ -797,6 +797,11 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
   }
 
   template <typename DT, typename... RP>
+  void contribute_into(View<DT, RP...> const& dest) const {
+    contribute_into(execution_space(), dest);
+  }
+
+  template <typename DT, typename... RP>
   void contribute_into(execution_space const& exec_space,
                        View<DT, RP...> const& dest) const {
     using dest_type = View<DT, RP...>;
@@ -995,6 +1000,11 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
   }
 
   template <typename DT, typename... RP>
+  void contribute_into(View<DT, RP...> const& dest) const {
+    contribute_into(execution_space(), dest);
+  }
+
+  template <typename DT, typename... RP>
   void contribute_into(execution_space const& exec_space,
                        View<DT, RP...> const& dest) const {
     using dest_type = View<DT, RP...>;
@@ -1183,6 +1193,11 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
 
   KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
     return internal_view.is_allocated();
+  }
+
+  template <typename... RP>
+  void contribute_into(View<RP...> const& dest) const {
+    contribute_into(execution_space(), dest);
   }
 
   template <typename... RP>
