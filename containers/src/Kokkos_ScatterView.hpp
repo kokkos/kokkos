@@ -715,6 +715,16 @@ struct ResetDuplicates : public ResetDuplicatesBase<ExecSpace, ValueType, Op> {
   }
 };
 
+template <typename... P>
+void check_scatter_view_allocation_properties_argument(
+    ViewCtorProp<P...> const&) {
+  static_assert(ViewCtorProp<P...>::has_execution_space &&
+                    ViewCtorProp<P...>::has_label &&
+                    ViewCtorProp<P...>::initialize,
+                "Allocation property must have an execution name as well as a "
+                "label, and must perform the view initialization");
+}
+
 }  // namespace Experimental
 }  // namespace Impl
 }  // namespace Kokkos
@@ -767,6 +777,14 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
   template <typename... Dims>
   ScatterView(std::string const& name, Dims... dims)
       : internal_view(name, dims...) {}
+
+  template <typename... P, typename... Dims>
+  ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop, Dims... dims)
+      : internal_view(arg_prop, dims...) {
+    using ::Kokkos::Impl::Experimental::
+        check_scatter_view_allocation_properties_argument;
+    check_scatter_view_allocation_properties_argument(arg_prop);
+  }
 
   template <typename OtherDataType, typename OtherDeviceType>
   KOKKOS_FUNCTION ScatterView(
@@ -970,10 +988,24 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
 
   template <typename... Dims>
   ScatterView(std::string const& name, Dims... dims)
-      : internal_view(view_alloc(WithoutInitializing, name),
+      : ScatterView(view_alloc(execution_space(), name), dims...) {}
+
+  template <typename... P, typename... Dims>
+  ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop, Dims... dims)
+      : internal_view(view_alloc(WithoutInitializing,
+                                 static_cast<::Kokkos::Impl::ViewCtorProp<
+                                     void, std::string> const&>(arg_prop)
+                                     .value),
                       unique_token.size(), dims...) {
-    // Think about this call
-    reset();
+    using ::Kokkos::Impl::Experimental::
+        check_scatter_view_allocation_properties_argument;
+    check_scatter_view_allocation_properties_argument(arg_prop);
+
+    auto const exec_space =
+        static_cast<::Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
+            arg_prop)
+            .value;
+    reset(exec_space);
   }
 
   template <typename OverrideContribution = Contribution>
@@ -1132,7 +1164,16 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
   }
 
   template <typename... Dims>
-  ScatterView(std::string const& name, Dims... dims) {
+  ScatterView(std::string const& name, Dims... dims)
+      : ScatterView(view_alloc(execution_space(), name), dims...) {}
+
+  template <typename... P, typename... Dims>
+  ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
+              Dims... dims) {
+    using ::Kokkos::Impl::Experimental::
+        check_scatter_view_allocation_properties_argument;
+    check_scatter_view_allocation_properties_argument(arg_prop);
+
     original_view_type original_view;
     size_t arg_N[8] = {original_view.rank > 0 ? original_view.static_extent(0)
                                               : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -1151,10 +1192,20 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
                        KOKKOS_IMPL_CTOR_DEFAULT_ARG};
     Kokkos::Impl::Experimental::args_to_array(arg_N, 0, dims...);
     arg_N[internal_view_type::rank - 1] = unique_token.size();
+
+    auto const name =
+        static_cast<::Kokkos::Impl::ViewCtorProp<void, std::string> const&>(
+            arg_prop)
+            .value;
     internal_view = internal_view_type(view_alloc(WithoutInitializing, name),
                                        arg_N[0], arg_N[1], arg_N[2], arg_N[3],
                                        arg_N[4], arg_N[5], arg_N[6], arg_N[7]);
-    reset();
+
+    auto const exec_space =
+        static_cast<::Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
+            arg_prop)
+            .value;
+    reset(exec_space);
   }
 
   template <typename OtherDataType, typename OtherDeviceType>
