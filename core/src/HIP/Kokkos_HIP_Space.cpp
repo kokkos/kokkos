@@ -680,61 +680,16 @@ void HIP::impl_initialize(const HIP::SelectDevice config) {
 void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
 
 HIP::HIP()
-    : m_space_instance(&Impl::HIPInternal::singleton()), m_counter(nullptr) {
+    : m_space_instance(&Impl::HIPInternal::singleton(), /*owning*/ false) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
 }
 
 HIP::HIP(hipStream_t const stream)
-    : m_space_instance(new Impl::HIPInternal), m_counter(new int(1)) {
+    : m_space_instance(new Impl::HIPInternal, /*owning*/ true) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
   m_space_instance->initialize(Impl::HIPInternal::singleton().m_hipDev, stream);
-}
-
-KOKKOS_FUNCTION HIP::HIP(HIP&& other) noexcept {
-  m_space_instance       = other.m_space_instance;
-  other.m_space_instance = nullptr;
-  m_counter              = other.m_counter;
-  other.m_counter        = nullptr;
-}
-
-KOKKOS_FUNCTION HIP::HIP(HIP const& other)
-    : m_space_instance(other.m_space_instance), m_counter(other.m_counter) {
-#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
-  if (m_counter) Kokkos::atomic_add(m_counter, 1);
-#endif
-}
-
-KOKKOS_FUNCTION HIP& HIP::operator=(HIP&& other) noexcept {
-  m_space_instance       = other.m_space_instance;
-  other.m_space_instance = nullptr;
-  m_counter              = other.m_counter;
-  other.m_counter        = nullptr;
-
-  return *this;
-}
-
-KOKKOS_FUNCTION HIP& HIP::operator=(HIP const& other) {
-  m_space_instance = other.m_space_instance;
-  m_counter        = other.m_counter;
-#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
-  if (m_counter) Kokkos::atomic_add(m_counter, 1);
-#endif
-
-  return *this;
-}
-
-KOKKOS_FUNCTION HIP::~HIP() noexcept {
-#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HIP_GPU
-  if (m_counter == nullptr) return;
-  int const count = Kokkos::atomic_fetch_sub(m_counter, 1);
-  if (count == 1) {
-    delete m_counter;
-    m_space_instance->finalize();
-    delete m_space_instance;
-  }
-#endif
 }
 
 void HIP::print_configuration(std::ostream& s, const bool) {

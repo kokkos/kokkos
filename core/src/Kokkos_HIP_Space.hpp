@@ -61,6 +61,7 @@
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 
 #include <hip/hip_runtime_api.h>
 /*--------------------------------------------------------------------------*/
@@ -650,13 +651,6 @@ class HIP {
   HIP();
   HIP(hipStream_t stream);
 
-  KOKKOS_FUNCTION HIP(HIP&& other) noexcept;
-  KOKKOS_FUNCTION HIP(HIP const& other);
-  KOKKOS_FUNCTION HIP& operator=(HIP&&) noexcept;
-  KOKKOS_FUNCTION HIP& operator=(HIP const&);
-
-  KOKKOS_FUNCTION ~HIP() noexcept;
-
   //@}
   //------------------------------------
   //! \name Functions that all Kokkos devices must implement.
@@ -712,14 +706,13 @@ class HIP {
   static const char* name();
 
   inline Impl::HIPInternal* impl_internal_space_instance() const {
-    return m_space_instance;
+    return m_space_instance.get();
   }
 
   uint32_t impl_instance_id() const noexcept { return 0; }
 
  private:
-  Impl::HIPInternal* m_space_instance;
-  int* m_counter;
+  HostSharedPtr<Impl::HIPInternal> m_space_instance;
 };
 }  // namespace Experimental
 namespace Tools {

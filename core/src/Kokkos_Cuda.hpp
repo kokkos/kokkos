@@ -63,6 +63,7 @@
 #include <Kokkos_MemoryTraits.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 
 /*--------------------------------------------------------------------------*/
 
@@ -198,16 +199,6 @@ class Cuda {
 
   Cuda();
 
-  KOKKOS_FUNCTION Cuda(Cuda&& other) noexcept;
-
-  KOKKOS_FUNCTION Cuda(const Cuda& other);
-
-  KOKKOS_FUNCTION Cuda& operator=(Cuda&& other) noexcept;
-
-  KOKKOS_FUNCTION Cuda& operator=(const Cuda& other);
-
-  KOKKOS_FUNCTION ~Cuda() noexcept;
-
   Cuda(cudaStream_t stream);
 
   //--------------------------------------------------------------------------
@@ -253,13 +244,12 @@ class Cuda {
   static const char* name();
 
   inline Impl::CudaInternal* impl_internal_space_instance() const {
-    return m_space_instance;
+    return m_space_instance.get();
   }
   uint32_t impl_instance_id() const noexcept { return 0; }
 
  private:
-  Impl::CudaInternal* m_space_instance;
-  int* m_counter;
+  HostSharedPtr<Impl::CudaInternal> m_space_instance;
 };
 
 namespace Tools {
