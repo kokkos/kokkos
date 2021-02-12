@@ -77,13 +77,18 @@ int get_gpu(const InitArguments& args);
 
 namespace Experimental {
 SYCL::SYCL()
-    : m_space_instance(&Impl::SYCLInternal::singleton(), /*owning*/ false) {
+    : m_space_instance(&Impl::SYCLInternal::singleton(), /*owning*/ false,
+                       [](Impl::SYCLInternal*) {}) {
   Impl::SYCLInternal::singleton().verify_is_initialized(
       "SYCL instance constructor");
 }
 
 SYCL::SYCL(const sycl::queue& stream)
-    : m_space_instance(new Impl::SYCLInternal, /*owning*/ true) {
+    : m_space_instance(new Impl::SYCLInternal, /*owning*/ true,
+                       [](Impl::SYCLInternal* ptr) {
+                         ptr->finalize();
+                         delete ptr;
+                       }) {
   Impl::SYCLInternal::singleton().verify_is_initialized(
       "SYCL instance constructor");
   m_space_instance->initialize(stream);

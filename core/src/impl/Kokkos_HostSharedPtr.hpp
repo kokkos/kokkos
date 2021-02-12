@@ -53,17 +53,24 @@
 template <typename T>
 class HostSharedPtr {
  public:
-  HostSharedPtr(T* value_ptr, bool owning)
-      : m_value_ptr(value_ptr), m_counter(owning ? (new int(1)) : nullptr) {}
+  template <class Deleter>
+  HostSharedPtr(T* value_ptr, bool owning, Deleter deleter)
+      : m_value_ptr(value_ptr),
+        m_deleter(std::move(deleter)),
+        m_counter(owning ? (new int(1)) : nullptr) {}
 
   KOKKOS_FUNCTION HostSharedPtr(HostSharedPtr&& other) noexcept
-      : m_value_ptr(other.m_value_ptr), m_counter(other.m_counter) {
+      : m_value_ptr(other.m_value_ptrl),
+        m_deleter(std::move(other.m_deleter)),
+        m_counter(other.m_counter) {
     other.m_value_ptr = nullptr;
     other.m_counter   = nullptr;
   }
 
-  KOKKOS_FUNCTION HostSharedPtr(const HostSharedPtr& other)
-      : m_value_ptr(other.m_value_ptr), m_counter(other.m_counter) {
+  KOKKOS_FUNCTION HostSharedPtr(const HostSharedPtr& other) noexcept
+      : m_value_ptr(other.m_value_ptr),
+        m_deleter(other.m_deleter),
+        m_counter(other.m_counter) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     if (m_counter) Kokkos::atomic_add(m_counter, 1);
 #endif
@@ -74,16 +81,19 @@ class HostSharedPtr {
       cleanup();
       m_value_ptr       = other.m_value_ptr;
       other.m_value_ptr = nullptr;
+      m_deleter         = std::move(other.m_deleter);
       m_counter         = other.m_counter;
       other.m_counter   = nullptr;
     }
     return *this;
   }
 
-  KOKKOS_FUNCTION HostSharedPtr& operator=(const HostSharedPtr& other) {
+  KOKKOS_FUNCTION HostSharedPtr& operator=(
+      const HostSharedPtr& other) noexcept {
     if (&other != this) {
       cleanup();
       m_value_ptr = other.m_value_ptr;
+      m_deleter   = other.m_deleter;
       m_counter   = other.m_counter;
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       if (m_counter) Kokkos::atomic_add(m_counter, 1);
@@ -107,13 +117,13 @@ class HostSharedPtr {
     int const count = Kokkos::atomic_fetch_sub(m_counter, 1);
     if (count == 1) {
       delete m_counter;
-      m_value_ptr->finalize();
-      delete m_value_ptr;
+      m_deleter(m_value_ptr);
     }
 #endif
   }
 
   T* m_value_ptr;
+  std::function<void(T*)> m_deleter;
   int* m_counter;
 };
 

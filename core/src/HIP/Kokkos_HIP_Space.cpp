@@ -680,13 +680,18 @@ void HIP::impl_initialize(const HIP::SelectDevice config) {
 void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
 
 HIP::HIP()
-    : m_space_instance(&Impl::HIPInternal::singleton(), /*owning*/ false) {
+    : m_space_instance(&Impl::HIPInternal::singleton(), /*owning*/ false,
+                       [](Impl::HIPInternal*) {}) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
 }
 
 HIP::HIP(hipStream_t const stream)
-    : m_space_instance(new Impl::HIPInternal, /*owning*/ true) {
+    : m_space_instance(new Impl::HIPInternal, /*owning*/ true,
+                       [](Impl::HIPInternal* ptr) {
+                         ptr->finalize();
+                         delete ptr;
+                       }) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
   m_space_instance->initialize(Impl::HIPInternal::singleton().m_hipDev, stream);
