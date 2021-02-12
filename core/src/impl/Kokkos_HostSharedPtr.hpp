@@ -108,6 +108,14 @@ class HostSharedPtr {
   KOKKOS_FUNCTION T& operator*() const noexcept { return *get(); }
   KOKKOS_FUNCTION T* operator->() const noexcept { return get(); }
 
+  // checks if the stored pointer is not null
+  KOKKOS_FUNCTION explicit operator bool() const noexcept {
+    return get() != nullptr;
+  }
+
+  // checks whether the HostSharedPtr manages the lifetime of the object
+  KOKKOS_FUNCTION bool owner() const noexcept { return m_counter != nullptr; }
+
  private:
   KOKKOS_FUNCTION void cleanup() noexcept {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
