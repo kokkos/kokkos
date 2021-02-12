@@ -535,6 +535,24 @@ if(Kokkos_ENABLE_SYCL)
       UnitTestMainInit.cpp
       ${SYCL_SOURCES2D}
   )
+ KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCLInterOpInit
+    SOURCES
+      UnitTestMain.cpp
+      sycl/TestSYCL_InterOp_Init.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCLInterOpInit_Context
+    SOURCES
+    UnitTestMainInit.cpp
+      sycl/TestSYCL_InterOp_Init_Context.cpp
+  )
+  KOKKOS_ADD_EXECUTABLE_AND_TEST(
+    UnitTest_SYCLInterOpStreams
+    SOURCES
+      UnitTestMain.cpp
+     sycl/TestSYCL_InterOp_Streams.cpp
+  )
 endif()
 
 SET(DEFAULT_DEVICE_SOURCES

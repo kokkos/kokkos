@@ -175,27 +175,26 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         ((size + values_per_thread - 1) / values_per_thread + wgroup_size - 1) /
             wgroup_size,
         1);
-    const auto value_count =
+    const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
             selected_reducer);
-    const auto results_ptr =
-        static_cast<pointer_type>(Experimental::SYCLSharedUSMSpace().allocate(
-            "SYCL parallel_reduce result storage",
-            sizeof(value_type) * std::max(value_count, 1u) * init_size));
+    const auto results_ptr = static_cast<pointer_type>(sycl::malloc_shared(
+        sizeof(value_type) * std::max(value_count, 1u) * init_size, q));
 
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
     if (size <= 1) {
       q.submit([&](sycl::handler& cgh) {
+        const auto begin = policy.begin();
         cgh.single_task([=]() {
           reference_type update =
               ValueInit::init(selected_reducer, results_ptr);
           if (size == 1) {
             if constexpr (std::is_same<WorkTag, void>::value)
-              functor(policy.begin(), update);
+              functor(begin, update);
             else
-              functor(WorkTag(), policy.begin(), update);
+              functor(WorkTag(), begin, update);
           }
           if constexpr (ReduceFunctorHasFinal<Functor>::value)
             FunctorFinal<Functor, WorkTag>::final(functor, results_ptr);
@@ -218,6 +217,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                        sycl::access::target::local>
             local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u),
                       cgh);
+        const auto begin = policy.begin();
 
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
@@ -242,9 +242,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                 for (index_type id = global_id; id < upper_bound;
                      id += wgroup_size) {
                   if constexpr (std::is_same<WorkTag, void>::value)
-                    functor(id + policy.begin(), update);
+                    functor(id + begin, update);
                   else
-                    functor(WorkTag(), id + policy.begin(), update);
+                    functor(WorkTag(), id + begin, update);
                 }
               } else {
                 if (global_id >= size)

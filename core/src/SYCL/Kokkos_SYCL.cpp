@@ -76,9 +76,69 @@ int get_gpu(const InitArguments& args);
 }  // namespace Impl
 
 namespace Experimental {
-SYCL::SYCL() : m_space_instance(&Impl::SYCLInternal::singleton()) {
+SYCL::SYCL()
+    : m_space_instance(&Impl::SYCLInternal::singleton()), m_counter(nullptr) {
   Impl::SYCLInternal::singleton().verify_is_initialized(
       "SYCL instance constructor");
+}
+
+SYCL::SYCL(const sycl::queue& stream)
+    : m_space_instance(new Impl::SYCLInternal), m_counter(new int(1)) {
+  Impl::SYCLInternal::singleton().verify_is_initialized(
+      "SYCL instance constructor");
+  m_space_instance->initialize(stream);
+}
+
+KOKKOS_FUNCTION SYCL::SYCL(SYCL&& other) noexcept
+    : m_space_instance(other.m_space_instance), m_counter(other.m_counter) {
+  other.m_space_instance = nullptr;
+  other.m_counter        = nullptr;
+}
+
+KOKKOS_FUNCTION SYCL::SYCL(const SYCL& other)
+    : m_space_instance(other.m_space_instance), m_counter(other.m_counter) {
+#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
+  if (m_counter) Kokkos::atomic_add(m_counter, 1);
+#endif
+}
+
+KOKKOS_FUNCTION SYCL& SYCL::operator=(SYCL&& other) noexcept {
+  if (&other != this) {
+    cleanup();
+    m_space_instance       = other.m_space_instance;
+    other.m_space_instance = nullptr;
+    m_counter              = other.m_counter;
+    other.m_counter        = nullptr;
+  }
+  return *this;
+}
+
+KOKKOS_FUNCTION SYCL& SYCL::operator=(const SYCL& other) {
+  if (&other != this) {
+    cleanup();
+    m_space_instance = other.m_space_instance;
+    m_counter        = other.m_counter;
+#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
+    if (m_counter) Kokkos::atomic_add(m_counter, 1);
+#endif
+  }
+  return *this;
+}
+
+KOKKOS_FUNCTION SYCL::~SYCL() { cleanup(); }
+
+KOKKOS_FUNCTION void SYCL::cleanup() noexcept {
+#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
+  // If m_counter is set, then this instance is responsible for managing the
+  // objects pointed to by m_counter and m_space_instance.
+  if (m_counter == nullptr) return;
+  int const count = Kokkos::atomic_fetch_sub(m_counter, 1);
+  if (count == 1) {
+    delete m_counter;
+    m_space_instance->finalize();
+    delete m_space_instance;
+  }
+#endif
 }
 
 int SYCL::concurrency() {
@@ -97,6 +157,13 @@ void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
 void SYCL::fence() const {
   Impl::SYCLInternal::fence(*m_space_instance->m_queue);
+}
+
+void SYCL::impl_static_fence() {
+  // guard accessing all_queues
+  std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
+  for (auto& queue : Impl::SYCLInternal::all_queues)
+    Impl::SYCLInternal::fence(**queue);
 }
 
 int SYCL::sycl_device() const {
@@ -231,7 +298,7 @@ std::ostream& SYCL::SYCLDevice::info(std::ostream& os) const {
 
 namespace Impl {
 
-int g_hip_space_factory_initialized =
+int g_sycl_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<SYCLSpaceInitializer>("170_SYCL");
 
 void SYCLSpaceInitializer::initialize(const InitArguments& args) {
@@ -256,9 +323,7 @@ void SYCLSpaceInitializer::finalize(const bool all_spaces) {
 }
 
 void SYCLSpaceInitializer::fence() {
-  // FIXME_SYCL should be
-  //  Kokkos::Experimental::SYCL::impl_static_fence();
-  Kokkos::Experimental::SYCL().fence();
+  Kokkos::Experimental::SYCL::impl_static_fence();
 }
 
 void SYCLSpaceInitializer::print_configuration(std::ostream& msg,

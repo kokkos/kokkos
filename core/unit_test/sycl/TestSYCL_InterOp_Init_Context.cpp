@@ -43,46 +43,78 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <cuda/TestCuda_Category.hpp>
+#include <sycl/TestSYCL_Category.hpp>
 
 #include <array>
 
 namespace Test {
 
-__global__ void offset(int* p) {
-  int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < 100) {
-    p[idx] += idx;
-  }
-}
+// Test whether external allocations can be accessed by the default queue.
+TEST(sycl, raw_sycl_interop_context_1) {
+  Kokkos::Experimental::SYCL default_space;
+  sycl::context default_context = default_space.sycl_context();
 
-// Test whether allocations survive Kokkos initialize/finalize if done via Raw
-// Cuda.
-TEST(cuda, raw_cuda_interop) {
-  int* p;
-  CUDA_SAFE_CALL(cudaMalloc(&p, sizeof(int) * 100));
-  Kokkos::InitArguments arguments{-1, -1, -1, false};
-  Kokkos::initialize(arguments);
+  cl::sycl::default_selector device_selector;
+  cl::sycl::queue queue(default_context, device_selector);
+  constexpr int n = 100;
+  int* p          = sycl::malloc_device<int>(n, queue);
 
-  Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(p, 100);
+  Kokkos::Experimental::SYCL space(queue);
+  Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(p, n);
   Kokkos::deep_copy(v, 5);
 
-  Kokkos::finalize();
+  queue.submit([&](cl::sycl::handler& cgh) {
+    cgh.parallel_for(sycl::range<1>(n), [=](int idx) { p[idx] += idx; });
+  });
+  queue.wait_and_throw();
 
-  offset<<<100, 64>>>(p);
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  std::array<int, n> h_p;
+  queue.memcpy(h_p.data(), p, sizeof(int) * n);
+  queue.wait_and_throw();
+  sycl::free(p, queue);
 
-  std::array<int, 100> h_p;
-  cudaMemcpy(h_p.data(), p, sizeof(int) * 100, cudaMemcpyDefault);
-  CUDA_SAFE_CALL(cudaDeviceSynchronize());
   int64_t sum        = 0;
   int64_t sum_expect = 0;
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < n; i++) {
     sum += h_p[i];
     sum_expect += 5 + i;
   }
 
   ASSERT_EQ(sum, sum_expect);
-  CUDA_SAFE_CALL(cudaFree(p));
 }
+
+// Test whether regular View allocations can be accessed by non-default queues.
+TEST(sycl, raw_sycl_interop_context_2) {
+  Kokkos::Experimental::SYCL default_space;
+  sycl::context default_context = default_space.sycl_context();
+
+  cl::sycl::default_selector device_selector;
+  cl::sycl::queue queue(default_context, device_selector);
+  constexpr int n = 100;
+
+  Kokkos::Experimental::SYCL space(queue);
+  Kokkos::View<int*, Kokkos::Experimental::SYCLDeviceUSMSpace> v("default_view",
+                                                                 n);
+  Kokkos::deep_copy(space, v, 5);
+
+  auto* v_ptr = v.data();
+  queue.submit([&](cl::sycl::handler& cgh) {
+    cgh.parallel_for(sycl::range<1>(n), [=](int idx) { v_ptr[idx] += idx; });
+  });
+  queue.wait_and_throw();
+
+  std::array<int, n> h_p;
+  queue.memcpy(h_p.data(), v_ptr, sizeof(int) * n);
+  queue.wait_and_throw();
+
+  int64_t sum        = 0;
+  int64_t sum_expect = 0;
+  for (int i = 0; i < n; i++) {
+    sum += h_p[i];
+    sum_expect += 5 + i;
+  }
+
+  ASSERT_EQ(sum, sum_expect);
+}
+
 }  // namespace Test
