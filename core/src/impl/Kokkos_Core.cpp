@@ -756,6 +756,7 @@ void parse_command_line_arguments(int& narg, char* arg[],
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
       }
+      narg--;
     } else if (check_str_arg(arg[iarg], "--kokkos-tools-library", tool_lib)) {
       for (int k = iarg; k < narg - 1; k++) {
         arg[k] = arg[k + 1];
