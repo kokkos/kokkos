@@ -56,14 +56,16 @@ class HostSharedPtr {
   template <class Deleter>
   HostSharedPtr(T* value_ptr, bool owning, Deleter deleter)
       : m_value_ptr(value_ptr),
-        m_deleter(std::move(deleter)),
+        m_deleter(owning ? (new std::function<void(T*)>(std::move(deleter)))
+                         : nullptr),
         m_counter(owning ? (new int(1)) : nullptr) {}
 
   KOKKOS_FUNCTION HostSharedPtr(HostSharedPtr&& other) noexcept
-      : m_value_ptr(other.m_value_ptrl),
-        m_deleter(std::move(other.m_deleter)),
+      : m_value_ptr(other.m_value_ptr),
+        m_deleter(other.m_deleter),
         m_counter(other.m_counter) {
     other.m_value_ptr = nullptr;
+    other.m_deleter   = nullptr;
     other.m_counter   = nullptr;
   }
 
@@ -81,7 +83,8 @@ class HostSharedPtr {
       cleanup();
       m_value_ptr       = other.m_value_ptr;
       other.m_value_ptr = nullptr;
-      m_deleter         = std::move(other.m_deleter);
+      m_deleter         = other.m_deleter;
+      other.m_deleter   = nullptr;
       m_counter         = other.m_counter;
       other.m_counter   = nullptr;
     }
@@ -125,13 +128,14 @@ class HostSharedPtr {
     int const count = Kokkos::atomic_fetch_sub(m_counter, 1);
     if (count == 1) {
       delete m_counter;
-      m_deleter(m_value_ptr);
+      (*m_deleter)(m_value_ptr);
+      delete m_deleter;
     }
 #endif
   }
 
   T* m_value_ptr;
-  std::function<void(T*)> m_deleter;
+  std::function<void(T*)>* m_deleter;
   int* m_counter;
 };
 
