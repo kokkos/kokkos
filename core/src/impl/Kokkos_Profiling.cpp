@@ -422,6 +422,7 @@ SpaceHandle make_space_handle(const char* space_name) {
 template <typename V1Function, typename V2Function>
 void lookup_function(void* dlopen_handle, const std::string& basename,
                      V2Function& v2, V1Function& v1) {
+#ifdef KOKKOS_ENABLE_LIBDL
   auto v2name = basename + "_v2";
   auto p      = dlsym(dlopen_handle, v2name.c_str());
   // dlsym returns a pointer to an object, while we want to assign to
@@ -432,6 +433,7 @@ void lookup_function(void* dlopen_handle, const std::string& basename,
     p  = dlsym(dlopen_handle, basename.c_str());
     v1 = *reinterpret_cast<V1Function*>(&p);
   }
+#endif
 }
 
 void initialize(const std::string& profileLibrary) {
