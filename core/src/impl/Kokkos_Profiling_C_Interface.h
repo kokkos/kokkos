@@ -66,10 +66,21 @@ struct Kokkos_Profiling_SpaceHandle {
   char name[64];
 };
 
+struct Kokkos_Profiling_ToolResponse {
+  bool should_fence;
+};
+
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_initFunction)(
     const int, const uint64_t, const uint32_t,
     struct Kokkos_Profiling_KokkosPDeviceInfo*);
+
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Profiling_initFunction_v2)(
+    const int, const uint64_t, const uint32_t,
+    struct Kokkos_Profiling_KokkosPDeviceInfo*,
+    struct Kokkos_Profiling_ToolResponse*);
+
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_finalizeFunction)();
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
@@ -80,7 +91,13 @@ typedef void (*Kokkos_Profiling_printHelpFunction)(char*);
 typedef void (*Kokkos_Profiling_beginFunction)(const char*, const uint32_t,
                                                uint64_t*);
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Profiling_beginFunction_v2)(
+    const char*, const uint32_t, uint64_t*,
+    struct Kokkos_Profiling_ToolResponse*);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_endFunction)(uint64_t);
+typedef void (*Kokkos_Profiling_endFunction_v2)(
+    uint64_t, struct Kokkos_Profiling_ToolResponse*);
 
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Profiling_pushFunction)(const char*);
@@ -229,15 +246,22 @@ typedef void (*function_pointer)();
 
 struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_initFunction init;
+  Kokkos_Profiling_initFunction_v2 init_v2;
   Kokkos_Profiling_finalizeFunction finalize;
   Kokkos_Profiling_parseArgsFunction parse_args;
   Kokkos_Profiling_printHelpFunction print_help;
   Kokkos_Profiling_beginFunction begin_parallel_for;
+  Kokkos_Profiling_beginFunction_v2 begin_parallel_for_v2;
   Kokkos_Profiling_endFunction end_parallel_for;
+  Kokkos_Profiling_endFunction_v2 end_parallel_for_v2;
   Kokkos_Profiling_beginFunction begin_parallel_reduce;
+  Kokkos_Profiling_beginFunction_v2 begin_parallel_reduce_v2;
   Kokkos_Profiling_endFunction end_parallel_reduce;
+  Kokkos_Profiling_endFunction_v2 end_parallel_reduce_v2;
   Kokkos_Profiling_beginFunction begin_parallel_scan;
+  Kokkos_Profiling_beginFunction_v2 begin_parallel_scan_v2;
   Kokkos_Profiling_endFunction end_parallel_scan;
+  Kokkos_Profiling_endFunction_v2 end_parallel_scan_v2;
   Kokkos_Profiling_pushFunction push_region;
   Kokkos_Profiling_popFunction pop_region;
   Kokkos_Profiling_allocateDataFunction allocate_data;
@@ -261,7 +285,7 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Tools_contextBeginFunction begin_tuning_context;
   Kokkos_Tools_contextEndFunction end_tuning_context;
   Kokkos_Tools_optimizationGoalDeclarationFunction declare_optimization_goal;
-  char padding[232 *
+  char padding[225 *
                sizeof(function_pointer)];  // allows us to add another 256
                                            // events to the Tools interface
                                            // without changing struct layout

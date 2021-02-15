@@ -74,16 +74,22 @@ static std::unordered_map<size_t, VariableInfo> variable_metadata;
 static EventSet current_callbacks;
 static EventSet backup_callbacks;
 static EventSet no_profiling;
-
+static ToolResponse default_response;
 bool eventSetsEqual(const EventSet& l, const EventSet& r) {
   return l.init == r.init && l.finalize == r.finalize &&
          l.parse_args == r.parse_args && l.print_help == r.print_help &&
          l.begin_parallel_for == r.begin_parallel_for &&
+         l.begin_parallel_for_v2 == r.begin_parallel_for_v2 &&
          l.end_parallel_for == r.end_parallel_for &&
+         l.end_parallel_for_v2 == r.end_parallel_for_v2 &&
          l.begin_parallel_reduce == r.begin_parallel_reduce &&
+         l.begin_parallel_reduce_v2 == r.begin_parallel_reduce_v2 &&
          l.end_parallel_reduce == r.end_parallel_reduce &&
+         l.end_parallel_reduce_v2 == r.end_parallel_reduce_v2 &&
          l.begin_parallel_scan == r.begin_parallel_scan &&
+         l.begin_parallel_scan_v2 == r.begin_parallel_scan_v2 &&
          l.end_parallel_scan == r.end_parallel_scan &&
+         l.end_parallel_scan_v2 == r.end_parallel_scan_v2 &&
          l.push_region == r.push_region && l.pop_region == r.pop_region &&
          l.allocate_data == r.allocate_data &&
          l.deallocate_data == r.deallocate_data &&
@@ -104,6 +110,21 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.request_output_values == r.request_output_values &&
          l.declare_optimization_goal == r.declare_optimization_goal;
 }
+template <typename V2Function, typename V1Function, typename... Args>
+Kokkos::Tools::Experimental::ToolResponse call_kokkos_callback(
+    const V2Function v2, const V1Function v1, Args... args) {
+  Kokkos::Tools::Experimental::ToolResponse response = default_response;
+  if (v2 != nullptr) {
+    (*v2)(args..., &response);
+  } else if (v1 != nullptr) {
+    if (response.should_fence) {
+      Kokkos::fence();
+    }
+    (*v1)(args...);
+    response.should_fence = false;  // no post-callback fence in the old scheme
+  }
+  return response;
+}
 }  // namespace Experimental
 bool profileLibraryLoaded() {
   return !Experimental::eventSetsEqual(Experimental::current_callbacks,
@@ -112,12 +133,12 @@ bool profileLibraryLoaded() {
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
-  if (Experimental::current_callbacks.begin_parallel_for != nullptr) {
-#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
+  auto response = Kokkos::Tools::Experimental::call_kokkos_callback(
+      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_for_v2,
+      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_for,
+      kernelPrefix.c_str(), devID, kernelID);
+  if (response.should_fence) {
     Kokkos::fence();
-#endif
-    (*Experimental::current_callbacks.begin_parallel_for)(kernelPrefix.c_str(),
-                                                          devID, kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
@@ -134,11 +155,12 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
 }
 
 void endParallelFor(const uint64_t kernelID) {
-  if (Experimental::current_callbacks.end_parallel_for != nullptr) {
-#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
+  auto response = Kokkos::Tools::Experimental::call_kokkos_callback(
+      Kokkos::Tools::Experimental::current_callbacks.end_parallel_for_v2,
+      Kokkos::Tools::Experimental::current_callbacks.end_parallel_for,
+      kernelID);
+  if (response.should_fence) {
     Kokkos::fence();
-#endif
-    (*Experimental::current_callbacks.end_parallel_for)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
@@ -149,12 +171,12 @@ void endParallelFor(const uint64_t kernelID) {
 
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                        uint64_t* kernelID) {
-  if (Experimental::current_callbacks.begin_parallel_scan != nullptr) {
-#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
+  auto response = Kokkos::Tools::Experimental::call_kokkos_callback(
+      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_scan_v2,
+      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_scan,
+      kernelPrefix.c_str(), devID, kernelID);
+  if (response.should_fence) {
     Kokkos::fence();
-#endif
-    (*Experimental::current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(),
-                                                           devID, kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
@@ -171,11 +193,12 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
 }
 
 void endParallelScan(const uint64_t kernelID) {
-  if (Experimental::current_callbacks.end_parallel_scan != nullptr) {
-#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
+  auto response = Kokkos::Tools::Experimental::call_kokkos_callback(
+      Kokkos::Tools::Experimental::current_callbacks.end_parallel_scan_v2,
+      Kokkos::Tools::Experimental::current_callbacks.end_parallel_scan,
+      kernelID);
+  if (response.should_fence) {
     Kokkos::fence();
-#endif
-    (*Experimental::current_callbacks.end_parallel_scan)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
@@ -186,12 +209,12 @@ void endParallelScan(const uint64_t kernelID) {
 
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
                          uint64_t* kernelID) {
-  if (Experimental::current_callbacks.begin_parallel_reduce != nullptr) {
-#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
+  auto response = Kokkos::Tools::Experimental::call_kokkos_callback(
+      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_reduce_v2,
+      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_reduce,
+      kernelPrefix.c_str(), devID, kernelID);
+  if (response.should_fence) {
     Kokkos::fence();
-#endif
-    (*Experimental::current_callbacks.begin_parallel_reduce)(
-        kernelPrefix.c_str(), devID, kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
@@ -208,11 +231,12 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
 }
 
 void endParallelReduce(const uint64_t kernelID) {
-  if (Experimental::current_callbacks.end_parallel_reduce != nullptr) {
-#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
+  auto response = Kokkos::Tools::Experimental::call_kokkos_callback(
+      Kokkos::Tools::Experimental::current_callbacks.end_parallel_reduce_v2,
+      Kokkos::Tools::Experimental::current_callbacks.end_parallel_reduce,
+      kernelID);
+  if (response.should_fence) {
     Kokkos::fence();
-#endif
-    (*Experimental::current_callbacks.end_parallel_reduce)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
@@ -395,6 +419,21 @@ SpaceHandle make_space_handle(const char* space_name) {
   return handle;
 }
 
+template <typename V1Function, typename V2Function>
+void lookup_function(void* dlopen_handle, const std::string& basename,
+                     V2Function& v2, V1Function& v1) {
+  auto v2name = basename + "_v2";
+  auto p      = dlsym(dlopen_handle, v2name.c_str());
+  // dlsym returns a pointer to an object, while we want to assign to
+  // pointer to function A direct cast will give warnings hence, we have to
+  // workaround the issue by casting pointer to pointers.
+  v2 = *reinterpret_cast<V2Function*>(&p);
+  if (v2 == nullptr) {
+    auto p = dlsym(dlopen_handle, basename.c_str());
+    v1     = *reinterpret_cast<V1Function*>(&p);
+  }
+}
+
 void initialize(const std::string& profileLibrary) {
   // Make sure initialize calls happens only once
   static int is_initialized = 0;
@@ -429,31 +468,37 @@ void initialize(const std::string& profileLibrary) {
       std::cout << "KokkosP: Library Loaded: " << profileLibraryName
                 << std::endl;
 #endif
-      // dlsym returns a pointer to an object, while we want to assign to
-      // pointer to function A direct cast will give warnings hence, we have to
-      // workaround the issue by casting pointer to pointers.
-      auto p1 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_for");
-      Experimental::set_begin_parallel_for_callback(
-          *reinterpret_cast<beginFunction*>(&p1));
-      auto p2 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_scan");
-      Experimental::set_begin_parallel_scan_callback(
-          *reinterpret_cast<beginFunction*>(&p2));
-      auto p3 = dlsym(firstProfileLibrary, "kokkosp_begin_parallel_reduce");
-      Experimental::set_begin_parallel_reduce_callback(
-          *reinterpret_cast<beginFunction*>(&p3));
+      lookup_function(
+          firstProfileLibrary, "kokkosp_begin_parallel_scan",
+          Kokkos::Tools::Experimental::current_callbacks.begin_parallel_scan_v2,
+          Kokkos::Tools::Experimental::current_callbacks.begin_parallel_scan);
+      lookup_function(
+          firstProfileLibrary, "kokkosp_begin_parallel_for",
+          Kokkos::Tools::Experimental::current_callbacks.begin_parallel_for_v2,
+          Kokkos::Tools::Experimental::current_callbacks.begin_parallel_for);
+      lookup_function(
+          firstProfileLibrary, "kokkosp_begin_parallel_reduce",
+          Kokkos::Tools::Experimental::current_callbacks
+              .begin_parallel_reduce_v2,
+          Kokkos::Tools::Experimental::current_callbacks.begin_parallel_reduce);
 
-      auto p4 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_scan");
-      Experimental::set_end_parallel_scan_callback(
-          *reinterpret_cast<endFunction*>(&p4));
-      auto p5 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_for");
-      Experimental::set_end_parallel_for_callback(
-          *reinterpret_cast<endFunction*>(&p5));
-      auto p6 = dlsym(firstProfileLibrary, "kokkosp_end_parallel_reduce");
-      Experimental::set_end_parallel_reduce_callback(
-          *reinterpret_cast<endFunction*>(&p6));
+      lookup_function(
+          firstProfileLibrary, "kokkosp_end_parallel_scan",
+          Kokkos::Tools::Experimental::current_callbacks.end_parallel_scan_v2,
+          Kokkos::Tools::Experimental::current_callbacks.end_parallel_scan);
+      lookup_function(
+          firstProfileLibrary, "kokkosp_end_parallel_for",
+          Kokkos::Tools::Experimental::current_callbacks.end_parallel_for_v2,
+          Kokkos::Tools::Experimental::current_callbacks.end_parallel_for);
+      lookup_function(
+          firstProfileLibrary, "kokkosp_end_parallel_reduce",
+          Kokkos::Tools::Experimental::current_callbacks.end_parallel_reduce_v2,
+          Kokkos::Tools::Experimental::current_callbacks.end_parallel_reduce);
 
-      auto p7 = dlsym(firstProfileLibrary, "kokkosp_init_library");
-      Experimental::set_init_callback(*reinterpret_cast<initFunction*>(&p7));
+      lookup_function(firstProfileLibrary, "kokkosp_init_library",
+                      Kokkos::Tools::Experimental::current_callbacks.init_v2,
+                      Kokkos::Tools::Experimental::current_callbacks.init);
+
       auto p8 = dlsym(firstProfileLibrary, "kokkosp_finalize_library");
       Experimental::set_finalize_callback(
           *reinterpret_cast<finalizeFunction*>(&p8));
@@ -550,10 +595,12 @@ void initialize(const std::string& profileLibrary) {
 #else
   (void)profileLibrary;
 #endif  // KOKKOS_ENABLE_LIBDL
-  if (Experimental::current_callbacks.init != nullptr) {
-    (*Experimental::current_callbacks.init)(
-        0, (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
-  }
+  Kokkos::Tools::Experimental::default_response.should_fence = true;
+  Kokkos::Tools::Experimental::default_response =
+      Kokkos::Tools::Experimental::call_kokkos_callback(
+          Kokkos::Tools::Experimental::current_callbacks.init_v2,
+          Kokkos::Tools::Experimental::current_callbacks.init, 0,
+          (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
 
 #ifdef KOKKOS_ENABLE_TUNING
   Experimental::VariableInfo kernel_name;
@@ -676,6 +723,9 @@ namespace Experimental {
 void set_init_callback(initFunction callback) {
   current_callbacks.init = callback;
 }
+void set_init_callback(initFunction_v2 callback) {
+  current_callbacks.init_v2 = callback;
+}
 void set_finalize_callback(finalizeFunction callback) {
   current_callbacks.finalize = callback;
 }
@@ -688,20 +738,38 @@ void set_print_help_callback(printHelpFunction callback) {
 void set_begin_parallel_for_callback(beginFunction callback) {
   current_callbacks.begin_parallel_for = callback;
 }
+void set_begin_parallel_for_callback(beginFunction_v2 callback) {
+  current_callbacks.begin_parallel_for_v2 = callback;
+}
 void set_end_parallel_for_callback(endFunction callback) {
   current_callbacks.end_parallel_for = callback;
+}
+void set_end_parallel_for_callback(endFunction_v2 callback) {
+  current_callbacks.end_parallel_for_v2 = callback;
 }
 void set_begin_parallel_reduce_callback(beginFunction callback) {
   current_callbacks.begin_parallel_reduce = callback;
 }
+void set_begin_parallel_reduce_callback(beginFunction_v2 callback) {
+  current_callbacks.begin_parallel_reduce_v2 = callback;
+}
 void set_end_parallel_reduce_callback(endFunction callback) {
   current_callbacks.end_parallel_reduce = callback;
+}
+void set_end_parallel_reduce_callback(endFunction_v2 callback) {
+  current_callbacks.end_parallel_reduce_v2 = callback;
 }
 void set_begin_parallel_scan_callback(beginFunction callback) {
   current_callbacks.begin_parallel_scan = callback;
 }
+void set_begin_parallel_scan_callback(beginFunction_v2 callback) {
+  current_callbacks.begin_parallel_scan_v2 = callback;
+}
 void set_end_parallel_scan_callback(endFunction callback) {
   current_callbacks.end_parallel_scan = callback;
+}
+void set_end_parallel_scan_callback(endFunction_v2 callback) {
+  current_callbacks.end_parallel_scan_v2 = callback;
 }
 void set_push_region_callback(pushFunction callback) {
   current_callbacks.push_region = callback;

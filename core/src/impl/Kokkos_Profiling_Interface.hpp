@@ -101,16 +101,20 @@ namespace Tools {
 
 namespace Experimental {
 using EventSet = Kokkos_Profiling_EventSet;
+using ToolResponse = Kokkos_Profiling_ToolResponse;
 static_assert(sizeof(EventSet) / sizeof(function_pointer) == 275,
               "sizeof EventSet has changed, this is an error on the part of a "
               "Kokkos developer");
 }  // namespace Experimental
 using initFunction           = Kokkos_Profiling_initFunction;
+using initFunction_v2        = Kokkos_Profiling_initFunction_v2;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;
 using parseArgsFunction      = Kokkos_Profiling_parseArgsFunction;
 using printHelpFunction      = Kokkos_Profiling_printHelpFunction;
 using beginFunction          = Kokkos_Profiling_beginFunction;
+using beginFunction_v2       = Kokkos_Profiling_beginFunction_v2;
 using endFunction            = Kokkos_Profiling_endFunction;
+using endFunction_v2         = Kokkos_Profiling_endFunction_v2;
 using pushFunction           = Kokkos_Profiling_pushFunction;
 using popFunction            = Kokkos_Profiling_popFunction;
 using allocateDataFunction   = Kokkos_Profiling_allocateDataFunction;
