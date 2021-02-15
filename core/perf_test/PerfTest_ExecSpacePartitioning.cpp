@@ -387,8 +387,6 @@ TEST(default_exec, overlap_mdrange_policy) {
   printf("Time MDRangePolicy: NonOverlap: %lf Time Overlap: %lf\n", time_end,
          time_overlap);
 
-  // FIXME_SYCL requires parallel_reduce with MDRangePolicy
-#ifndef KOKKOS_ENABLE_SYCL
   Kokkos::View<double, TEST_EXECSPACE> result("result");
   Kokkos::View<double, TEST_EXECSPACE> result1("result1");
   Kokkos::View<double, TEST_EXECSPACE> result2("result2");
@@ -469,7 +467,6 @@ TEST(default_exec, overlap_mdrange_policy) {
   }
   printf("Time MDRangePolicy Reduce: NonOverlap: %lf Time Overlap: %lf\n",
          time_no_overlapped_reduce, time_overlapped_reduce);
-#endif
   SpaceInstance<TEST_EXECSPACE>::destroy(space2);
   SpaceInstance<TEST_EXECSPACE>::destroy(space1);
 }

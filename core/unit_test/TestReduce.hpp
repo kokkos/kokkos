@@ -583,8 +583,6 @@ TEST(TEST_CATEGORY, int_combined_reduce) {
   ASSERT_EQ(nsum, result3);
 }
 
-// FIXME_SYCL needs parallel_reduce for MDRangePolicy
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, mdrange_combined_reduce) {
   using functor_type = CombinedReduceFunctorSameType<int64_t, TEST_EXECSPACE>;
   constexpr uint64_t nw = 1000;
@@ -605,7 +603,6 @@ TEST(TEST_CATEGORY, mdrange_combined_reduce) {
   ASSERT_EQ(nsum, result2);
   ASSERT_EQ(nsum, result3);
 }
-#endif
 
 TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
   using functor_type = CombinedReduceFunctorSameType<int64_t, TEST_EXECSPACE>;

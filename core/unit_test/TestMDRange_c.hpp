@@ -47,9 +47,8 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, mdrange_2d) {
-// FIXME_SYCL requires MDRange parallel_reduce
 // FIXME_OPENMPTARGET requires MDRange parallel_reduce
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestMDRange_2D<TEST_EXECSPACE>::test_reduce2(100, 100);
 #endif
   TestMDRange_2D<TEST_EXECSPACE>::test_for2(100, 100);

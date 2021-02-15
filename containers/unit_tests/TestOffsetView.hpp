@@ -686,23 +686,17 @@ void test_offsetview_offsets_rank3() {
 }
 #endif
 
-// FIXME_SYCL requires MDRange policy reduce
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, offsetview_construction) {
   test_offsetview_construction<int, TEST_EXECSPACE>();
 }
-#endif
 
 TEST(TEST_CATEGORY, offsetview_unmanaged_construction) {
   test_offsetview_unmanaged_construction<int, TEST_EXECSPACE>();
 }
 
-// FIXME_SYCL requires MDRange policy reduce
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, offsetview_subview) {
   test_offsetview_subview<int, TEST_EXECSPACE>();
 }
-#endif
 
 #if defined(KOKKOS_ENABLE_CUDA_LAMBDA) || !defined(KOKKOS_ENABLE_CUDA)
 TEST(TEST_CATEGORY, offsetview_offsets_rank1) {
