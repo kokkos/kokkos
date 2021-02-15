@@ -241,6 +241,11 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
  public:
   using functor_type = FunctorType;
 
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy& policy, const Functor&) {
+    return policy.space().impl_internal_space_instance()->m_maxThreadsPerSM;
+  }
+
   void execute() const {
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem =
