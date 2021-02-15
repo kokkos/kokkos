@@ -429,8 +429,8 @@ void lookup_function(void* dlopen_handle, const std::string& basename,
   // workaround the issue by casting pointer to pointers.
   v2 = *reinterpret_cast<V2Function*>(&p);
   if (v2 == nullptr) {
-    p      = dlsym(dlopen_handle, basename.c_str());
-    v1     = *reinterpret_cast<V1Function*>(&p);
+    p  = dlsym(dlopen_handle, basename.c_str());
+    v1 = *reinterpret_cast<V1Function*>(&p);
   }
 }
 
