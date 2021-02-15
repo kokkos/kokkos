@@ -778,6 +778,9 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
   ScatterView(std::string const& name, Dims... dims)
       : internal_view(name, dims...) {}
 
+  // This overload allows specifying an execution space instance to be
+  // used by passing, e.g., Kokkos::view_alloc(exec_space, "label") as
+  // first argument.
   template <typename... P, typename... Dims>
   ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop, Dims... dims)
       : internal_view(arg_prop, dims...) {
@@ -990,6 +993,9 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
   ScatterView(std::string const& name, Dims... dims)
       : ScatterView(view_alloc(execution_space(), name), dims...) {}
 
+  // This overload allows specifying an execution space instance to be
+  // used by passing, e.g., Kokkos::view_alloc(exec_space, "label") as
+  // first argument.
   template <typename... P, typename... Dims>
   ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop, Dims... dims)
       : internal_view(view_alloc(WithoutInitializing,
@@ -1167,6 +1173,9 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
   ScatterView(std::string const& name, Dims... dims)
       : ScatterView(view_alloc(execution_space(), name), dims...) {}
 
+  // This overload allows specifying an execution space instance to be
+  // used by passing, e.g., Kokkos::view_alloc(exec_space, "label") as
+  // first argument.
   template <typename... P, typename... Dims>
   ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
               Dims... dims) {
