@@ -50,6 +50,9 @@
 
 #include <functional>
 
+namespace Kokkos {
+namespace Impl {
+
 template <typename T>
 class HostSharedPtr {
  public:
@@ -138,5 +141,7 @@ class HostSharedPtr {
   std::function<void(T*)>* m_deleter;
   int* m_counter;
 };
+}  // namespace Impl
+}  // namespace Kokkos
 
 #endif

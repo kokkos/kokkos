@@ -249,7 +249,7 @@ class Cuda {
   uint32_t impl_instance_id() const noexcept { return 0; }
 
  private:
-  HostSharedPtr<Impl::CudaInternal> m_space_instance;
+  Kokkos::Impl::HostSharedPtr<Impl::CudaInternal> m_space_instance;
 };
 
 namespace Tools {
