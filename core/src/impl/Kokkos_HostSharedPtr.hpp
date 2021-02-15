@@ -131,8 +131,11 @@ class HostSharedPtr {
     int const count = Kokkos::atomic_fetch_sub(m_counter, 1);
     if (count == 1) {
       delete m_counter;
+      m_counter = nullptr;
       (*m_deleter)(m_value_ptr);
+      m_value_ptr = nullptr;
       delete m_deleter;
+      m_deleter = nullptr;
     }
 #endif
   }
