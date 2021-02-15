@@ -100,7 +100,7 @@ using SpaceHandle = Kokkos_Profiling_SpaceHandle;
 namespace Tools {
 
 namespace Experimental {
-using EventSet = Kokkos_Profiling_EventSet;
+using EventSet     = Kokkos_Profiling_EventSet;
 using ToolResponse = Kokkos_Profiling_ToolResponse;
 static_assert(sizeof(EventSet) / sizeof(function_pointer) == 275,
               "sizeof EventSet has changed, this is an error on the part of a "
