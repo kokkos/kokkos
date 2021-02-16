@@ -353,9 +353,10 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
  private:
   void init_helper(Impl::TileSizeProperties properties) {
-    int increment  = 1;
-    int rank_start = 0;
-    int rank_end   = rank;
+    m_prod_tile_dims = 1;
+    int increment    = 1;
+    int rank_start   = 0;
+    int rank_end     = rank;
     if (inner_direction == Iterate::Right) {
       increment  = -1;
       rank_start = rank - 1;
