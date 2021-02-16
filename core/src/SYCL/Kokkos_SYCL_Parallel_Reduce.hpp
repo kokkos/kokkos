@@ -443,11 +443,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const int block_size =
         std::pow(2, std::ceil(std::log2(m_policy.m_prod_tile_dims)));
 
-    const sycl::range<3> local_range(block_size, 1, 1);
+    const sycl::range<1> local_range(block_size);
     // REMEMBER swap local x<->y to be conforming with Cuda/HIP implementation
-    const sycl::range<3> global_range(nwork * block_size, 1, 1);
-    const sycl::nd_range<3> range{global_range, local_range};
-    std::cout << "block_size: " << block_size << std::endl;
+    const sycl::range<1> global_range(nwork * block_size);
+    const sycl::nd_range<1> range{global_range, local_range};
 
     const size_t wgroup_size = range.get_local_range().size();
     size_t size              = range.get_global_range().size();
@@ -496,7 +495,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
         const BarePolicy bare_policy = m_policy;
 
-        cgh.parallel_for(range, [=](sycl::nd_item<3> item) {
+        cgh.parallel_for(range, [=](sycl::nd_item<1> item) {
           const auto local_id = item.get_local_linear_id();
           const auto global_id =
               wgroup_size * item.get_group_linear_id() + local_id;
@@ -513,15 +512,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                 selected_reducer, &local_mem[local_id * value_count]);
 
             // SWAPPED here to be conforming with CUDA implementation
-            const index_type local_x    = item.get_local_id(1);
+            const index_type local_x    = 0;
             const index_type local_y    = item.get_local_id(0);
-            const index_type local_z    = item.get_local_id(2);
+            const index_type local_z    = 0;
             const index_type global_x   = item.get_group(0);
-            const index_type global_y   = item.get_group(1);
-            const index_type global_z   = item.get_group(2);
+            const index_type global_y   = 0;
+            const index_type global_z   = 0;
             const index_type n_global_x = item.get_group_range(0);
-            const index_type n_global_y = item.get_group_range(1);
-            const index_type n_global_z = item.get_group_range(2);
+            const index_type n_global_y = 1;
+            const index_type n_global_z = 1;
 
             Kokkos::Impl::Reduce::DeviceIterateTile<
                 Policy::rank, BarePolicy, Functor, typename Policy::work_tag,
