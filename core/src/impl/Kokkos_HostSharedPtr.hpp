@@ -57,29 +57,22 @@ template <typename T>
 class HostSharedPtr {
  public:
   HostSharedPtr(T* value_ptr = nullptr)
-      : m_value_ptr(value_ptr), m_deleter(nullptr), m_counter(nullptr) {}
+      : m_value_ptr(value_ptr), m_control(nullptr) {}
 
   template <class Deleter>
   HostSharedPtr(T* value_ptr, Deleter deleter)
-      : m_value_ptr(value_ptr),
-        m_deleter(new std::function<void(T*)>(std::move(deleter))),
-        m_counter(new int(1)) {}
+      : m_value_ptr(value_ptr), m_control(new Control{std::move(deleter), 1}) {}
 
   KOKKOS_FUNCTION HostSharedPtr(HostSharedPtr&& other) noexcept
-      : m_value_ptr(other.m_value_ptr),
-        m_deleter(other.m_deleter),
-        m_counter(other.m_counter) {
+      : m_value_ptr(other.m_value_ptr), m_control(other.m_control) {
     other.m_value_ptr = nullptr;
-    other.m_deleter   = nullptr;
-    other.m_counter   = nullptr;
+    other.m_control   = nullptr;
   }
 
   KOKKOS_FUNCTION HostSharedPtr(const HostSharedPtr& other) noexcept
-      : m_value_ptr(other.m_value_ptr),
-        m_deleter(other.m_deleter),
-        m_counter(other.m_counter) {
+      : m_value_ptr(other.m_value_ptr), m_control(other.m_control) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    if (m_counter) Kokkos::atomic_add(m_counter, 1);
+    if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);
 #endif
   }
 
@@ -88,10 +81,8 @@ class HostSharedPtr {
       cleanup();
       m_value_ptr       = other.m_value_ptr;
       other.m_value_ptr = nullptr;
-      m_deleter         = other.m_deleter;
-      other.m_deleter   = nullptr;
-      m_counter         = other.m_counter;
-      other.m_counter   = nullptr;
+      m_control         = other.m_control;
+      other.m_control   = nullptr;
     }
     return *this;
   }
@@ -101,10 +92,9 @@ class HostSharedPtr {
     if (&other != this) {
       cleanup();
       m_value_ptr = other.m_value_ptr;
-      m_deleter   = other.m_deleter;
-      m_counter   = other.m_counter;
+      m_control   = other.m_control;
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-      if (m_counter) Kokkos::atomic_add(m_counter, 1);
+      if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);
 #endif
     }
     return *this;
@@ -122,10 +112,10 @@ class HostSharedPtr {
   }
 
   // checks whether the HostSharedPtr manages the lifetime of the object
-  KOKKOS_FUNCTION bool owner() const noexcept { return m_counter != nullptr; }
+  KOKKOS_FUNCTION bool owner() const noexcept { return m_control != nullptr; }
 
   KOKKOS_FUNCTION int use_count() const noexcept {
-    return m_counter ? *m_counter : 0;
+    return m_control ? m_control->m_counter : 0;
   }
 
  private:
@@ -133,22 +123,22 @@ class HostSharedPtr {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     // If m_counter is set, then this instance is responsible for managing the
     // objects pointed to by m_counter and m_value_ptr.
-    if (m_counter == nullptr) return;
-    int const count = Kokkos::atomic_fetch_sub(m_counter, 1);
+    if (m_control == nullptr) return;
+    int const count = Kokkos::atomic_fetch_sub(&(m_control->m_counter), 1);
     if (count == 1) {
-      delete m_counter;
-      m_counter = nullptr;
-      (*m_deleter)(m_value_ptr);
+      (m_control->m_deleter)(m_value_ptr);
       m_value_ptr = nullptr;
-      delete m_deleter;
-      m_deleter = nullptr;
+      delete m_control;
+      m_control = nullptr;
     }
 #endif
   }
 
   T* m_value_ptr;
-  std::function<void(T*)>* m_deleter;
-  int* m_counter;
+  struct Control {
+    std::function<void(T*)> m_deleter;
+    int m_counter;
+  } * m_control;
 };
 }  // namespace Impl
 }  // namespace Kokkos
