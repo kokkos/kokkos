@@ -124,6 +124,10 @@ class HostSharedPtr {
   // checks whether the HostSharedPtr manages the lifetime of the object
   KOKKOS_FUNCTION bool owner() const noexcept { return m_counter != nullptr; }
 
+  KOKKOS_FUNCTION int use_count() const noexcept {
+    return m_counter ? *m_counter : 0;
+  }
+
  private:
   KOKKOS_FUNCTION void cleanup() noexcept {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST

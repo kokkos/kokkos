@@ -92,6 +92,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         Crs
         DeepCopyAlignment
         FunctorAnalysis
+	HostSharedPtr
         Init
         LocalDeepCopy
         MathematicalFunctions
