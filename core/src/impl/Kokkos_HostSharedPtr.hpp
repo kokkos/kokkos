@@ -56,12 +56,14 @@ namespace Impl {
 template <typename T>
 class HostSharedPtr {
  public:
+  HostSharedPtr(T* value_ptr = nullptr)
+      : m_value_ptr(value_ptr), m_deleter(nullptr), m_counter(nullptr) {}
+
   template <class Deleter>
-  HostSharedPtr(T* value_ptr, bool owning, Deleter deleter)
+  HostSharedPtr(T* value_ptr, Deleter deleter)
       : m_value_ptr(value_ptr),
-        m_deleter(owning ? (new std::function<void(T*)>(std::move(deleter)))
-                         : nullptr),
-        m_counter(owning ? (new int(1)) : nullptr) {}
+        m_deleter(new std::function<void(T*)>(std::move(deleter))),
+        m_counter(new int(1)) {}
 
   KOKKOS_FUNCTION HostSharedPtr(HostSharedPtr&& other) noexcept
       : m_value_ptr(other.m_value_ptr),

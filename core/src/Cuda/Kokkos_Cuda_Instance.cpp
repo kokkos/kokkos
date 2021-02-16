@@ -821,19 +821,16 @@ Cuda::size_type Cuda::device_arch() {
 
 void Cuda::impl_finalize() { Impl::CudaInternal::singleton().finalize(); }
 
-Cuda::Cuda()
-    : m_space_instance(&Impl::CudaInternal::singleton(), /*owning*/ false,
-                       [](Impl::CudaInternal *) {}) {
+Cuda::Cuda() : m_space_instance(&Impl::CudaInternal::singleton()) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
 }
 
 Cuda::Cuda(cudaStream_t stream)
-    : m_space_instance(new Impl::CudaInternal, /*owning*/ true,
-                       [](Impl::CudaInternal *ptr) {
-                         ptr->finalize();
-                         delete ptr;
-                       }) {
+    : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
+        ptr->finalize();
+        delete ptr;
+      }) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
   m_space_instance->initialize(Impl::CudaInternal::singleton().m_cudaDev,
