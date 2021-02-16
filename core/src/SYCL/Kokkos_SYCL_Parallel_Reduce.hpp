@@ -287,10 +287,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     IndirectKernelMem& indirectKernelMem  = instance.m_indirectKernelMem;
     IndirectKernelMem& indirectReducerMem = instance.m_indirectReducerMem;
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper<
-        std::reference_wrapper<FunctorType>>(m_functor, indirectKernelMem);
-    const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper<
-        std::reference_wrapper<ReducerType>>(m_reducer, indirectReducerMem);
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_functor, indirectKernelMem);
+    const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_reducer, indirectReducerMem);
 
     sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
                        reducer_wrapper.get_functor());

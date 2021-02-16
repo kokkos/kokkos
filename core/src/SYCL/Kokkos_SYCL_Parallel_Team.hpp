@@ -437,8 +437,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                 .impl_internal_space_instance()
                                 ->m_indirectKernelMem;
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper<
-        std::reference_wrapper<FunctorType>>(m_functor, indirectKernelMem);
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_functor, indirectKernelMem);
 
     sycl_direct_launch(m_policy, functor_wrapper.get_functor());
   }
