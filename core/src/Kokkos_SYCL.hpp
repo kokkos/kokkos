@@ -158,7 +158,7 @@ class SYCL {
   }
 
  private:
-  Kokkos::Impl::HostSharedPtr<Impl::SYCLInternal> m_space_instance;
+  Kokkos::Impl::MaybeReferenceCountedPtr<Impl::SYCLInternal> m_space_instance;
 };
 
 namespace Impl {

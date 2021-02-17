@@ -47,16 +47,21 @@
 #include <gtest/gtest.h>
 
 using Kokkos::Impl::HostSharedPtr;
+using Kokkos::Impl::UnmanagedPtr;
 
 TEST(TEST_CATEGORY, host_shared_ptr_owner) {
   using T = int;  // default constructible
   {
     HostSharedPtr<T> p1;
-    EXPECT_FALSE(p1.owner());
+    EXPECT_TRUE(p1.owner());
   }
   {
     HostSharedPtr<T> p1(nullptr);
-    EXPECT_FALSE(p1.owner());
+    EXPECT_TRUE(p1.owner());
+  }
+  {
+    HostSharedPtr<T> p1(new T());
+    EXPECT_TRUE(p1.owner());
   }
   {
     HostSharedPtr<T> p1(new T(), [](T* p) { delete p; });
@@ -73,11 +78,15 @@ TEST(TEST_CATEGORY, host_shared_ptr_use_count) {
   using T = int;
   {
     HostSharedPtr<T> p1;
-    EXPECT_EQ(p1.use_count(), 0);
+    EXPECT_EQ(p1.use_count(), 1);
   }
   {
     HostSharedPtr<T> p1(nullptr);
-    EXPECT_EQ(p1.use_count(), 0);
+    EXPECT_EQ(p1.use_count(), 1);
+  }
+  {
+    HostSharedPtr<T> p1(new T());
+    EXPECT_EQ(p1.use_count(), 1);
   }
   {
     HostSharedPtr<T> p1(new T(), [](T* p) { delete p; });
@@ -89,26 +98,26 @@ TEST(TEST_CATEGORY, host_shared_ptr_use_count) {
     EXPECT_EQ(p1.use_count(), 1);
   }
   {
-    HostSharedPtr<T> p1(new T(), [](T* p) { delete p; });
+    HostSharedPtr<T> p1(new T());
     HostSharedPtr<T> p2(p1);  // copy construction
     EXPECT_EQ(p1.use_count(), 2);
     EXPECT_EQ(p2.use_count(), 2);
   }
   {
-    HostSharedPtr<T> p1(new T(), [](T* p) { delete p; });
+    HostSharedPtr<T> p1(new T());
     HostSharedPtr<T> p2(std::move(p1));  // move construction
     EXPECT_EQ(p1.use_count(), 0);
     EXPECT_EQ(p2.use_count(), 1);
   }
   {
-    HostSharedPtr<T> p1(new T(), [](T* p) { delete p; });
+    HostSharedPtr<T> p1(new T());
     HostSharedPtr<T> p2;
     p2 = p1;  // copy assignment
     EXPECT_EQ(p1.use_count(), 2);
     EXPECT_EQ(p2.use_count(), 2);
   }
   {
-    HostSharedPtr<T> p1(new T(), [](T* p) { delete p; });
+    HostSharedPtr<T> p1(new T());
     HostSharedPtr<T> p2;
     p2 = std::move(p1);  // move assignment
     EXPECT_EQ(p1.use_count(), 0);
@@ -167,6 +176,113 @@ TEST(TEST_CATEGORY, host_shared_ptr_get) {
     T i;
     HostSharedPtr<T> p1(&i, [](T*) {});
     HostSharedPtr<T> p2;
+    p2 = std::move(p1);  // move assignment
+    EXPECT_EQ(p1.get(), nullptr);
+    EXPECT_EQ(p2.get(), &i);
+  }
+}
+
+TEST(TEST_CATEGORY, unmanaged_ptr_owner) {
+  using T = int;  // default constructible
+  {
+    UnmanagedPtr<T> p1;
+    EXPECT_FALSE(p1.owner());
+  }
+  {
+    UnmanagedPtr<T> p1(nullptr);
+    EXPECT_FALSE(p1.owner());
+  }
+  {
+    T i;
+    UnmanagedPtr<T> p1(&i);
+    EXPECT_FALSE(p1.owner());
+  }
+}
+
+TEST(TEST_CATEGORY, unmanaged_ptr_use_count) {
+  using T = int;
+  {
+    UnmanagedPtr<T> p1;
+    EXPECT_EQ(p1.use_count(), 0);
+  }
+  {
+    UnmanagedPtr<T> p1(nullptr);
+    EXPECT_EQ(p1.use_count(), 0);
+  }
+  {
+    T i;
+    UnmanagedPtr<T> p1(&i);
+    EXPECT_EQ(p1.use_count(), 0);
+  }
+  {
+    UnmanagedPtr<T> p1(new T());
+    UnmanagedPtr<T> p2(p1);  // copy construction
+    EXPECT_EQ(p1.use_count(), 0);
+    EXPECT_EQ(p2.use_count(), 0);
+  }
+  {
+    UnmanagedPtr<T> p1(new T());
+    UnmanagedPtr<T> p2(std::move(p1));  // move construction
+    EXPECT_EQ(p1.use_count(), 0);
+    EXPECT_EQ(p2.use_count(), 0);
+  }
+  {
+    UnmanagedPtr<T> p1(new T());
+    UnmanagedPtr<T> p2;
+    p2 = p1;  // copy assignment
+    EXPECT_EQ(p1.use_count(), 0);
+    EXPECT_EQ(p2.use_count(), 0);
+  }
+  {
+    UnmanagedPtr<T> p1(new T());
+    UnmanagedPtr<T> p2;
+    p2 = std::move(p1);  // move assignment
+    EXPECT_EQ(p1.use_count(), 0);
+    EXPECT_EQ(p2.use_count(), 0);
+  }
+}
+
+TEST(TEST_CATEGORY, unmanaged_ptr_get) {
+  using T = int;
+  {
+    UnmanagedPtr<T> p1;
+    EXPECT_EQ(p1.get(), nullptr);
+  }
+  {
+    UnmanagedPtr<T> p1(nullptr);
+    EXPECT_EQ(p1.get(), nullptr);
+  }
+  {
+    T i;
+    UnmanagedPtr<T> p1(&i);
+    EXPECT_EQ(p1.get(), &i);
+  }
+  {
+    T i;
+    UnmanagedPtr<T> p1(&i);
+    UnmanagedPtr<T> p2(p1);  // copy construction
+    EXPECT_EQ(p1.get(), &i);
+    EXPECT_EQ(p1.get(), &i);
+  }
+  {
+    T i;
+    UnmanagedPtr<T> p1(&i);
+    UnmanagedPtr<T> p2(std::move(p1));  // move construction
+    EXPECT_EQ(p1.get(), nullptr);
+    EXPECT_EQ(p2.get(), &i);
+  }
+  {
+    T i;
+    UnmanagedPtr<T> p1(&i);
+    UnmanagedPtr<T> p2;
+    p2 = p1;  // copy assignment
+    EXPECT_EQ(p1.get(), &i);
+    EXPECT_EQ(p1.get(), &i);
+  }
+  {
+    T i;
+    UnmanagedPtr<T> p1(&i);
+    UnmanagedPtr<T> p2;
     p2 = std::move(p1);  // move assignment
     EXPECT_EQ(p1.get(), nullptr);
     EXPECT_EQ(p2.get(), &i);

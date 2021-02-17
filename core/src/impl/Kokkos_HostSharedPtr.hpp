@@ -54,29 +54,33 @@ namespace Kokkos {
 namespace Impl {
 
 template <typename T>
-class HostSharedPtr {
- public:
-  HostSharedPtr(T* value_ptr = nullptr)
+class MaybeReferenceCountedPtr {
+ protected:
+  MaybeReferenceCountedPtr(T* value_ptr)
       : m_value_ptr(value_ptr), m_control(nullptr) {}
 
   template <class Deleter>
-  HostSharedPtr(T* value_ptr, Deleter deleter)
+  MaybeReferenceCountedPtr(T* value_ptr, Deleter deleter)
       : m_value_ptr(value_ptr), m_control(new Control{std::move(deleter), 1}) {}
 
-  KOKKOS_FUNCTION HostSharedPtr(HostSharedPtr&& other) noexcept
+ public:
+  KOKKOS_FUNCTION MaybeReferenceCountedPtr(
+      MaybeReferenceCountedPtr&& other) noexcept
       : m_value_ptr(other.m_value_ptr), m_control(other.m_control) {
     other.m_value_ptr = nullptr;
     other.m_control   = nullptr;
   }
 
-  KOKKOS_FUNCTION HostSharedPtr(const HostSharedPtr& other) noexcept
+  KOKKOS_FUNCTION MaybeReferenceCountedPtr(
+      const MaybeReferenceCountedPtr& other) noexcept
       : m_value_ptr(other.m_value_ptr), m_control(other.m_control) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);
 #endif
   }
 
-  KOKKOS_FUNCTION HostSharedPtr& operator=(HostSharedPtr&& other) noexcept {
+  KOKKOS_FUNCTION MaybeReferenceCountedPtr& operator=(
+      MaybeReferenceCountedPtr&& other) noexcept {
     if (&other != this) {
       cleanup();
       m_value_ptr       = other.m_value_ptr;
@@ -87,8 +91,8 @@ class HostSharedPtr {
     return *this;
   }
 
-  KOKKOS_FUNCTION HostSharedPtr& operator=(
-      const HostSharedPtr& other) noexcept {
+  KOKKOS_FUNCTION MaybeReferenceCountedPtr& operator=(
+      const MaybeReferenceCountedPtr& other) noexcept {
     if (&other != this) {
       cleanup();
       m_value_ptr = other.m_value_ptr;
@@ -100,7 +104,7 @@ class HostSharedPtr {
     return *this;
   }
 
-  KOKKOS_FUNCTION ~HostSharedPtr() { cleanup(); }
+  KOKKOS_FUNCTION ~MaybeReferenceCountedPtr() { cleanup(); }
 
   KOKKOS_FUNCTION T* get() const noexcept { return m_value_ptr; }
   KOKKOS_FUNCTION T& operator*() const noexcept { return *get(); }
@@ -111,7 +115,8 @@ class HostSharedPtr {
     return get() != nullptr;
   }
 
-  // checks whether the HostSharedPtr manages the lifetime of the object
+  // checks whether the MaybeReferenceCountedPtr manages the lifetime of the
+  // object
   KOKKOS_FUNCTION bool owner() const noexcept { return m_control != nullptr; }
 
   KOKKOS_FUNCTION int use_count() const noexcept {
@@ -139,6 +144,25 @@ class HostSharedPtr {
     std::function<void(T*)> m_deleter;
     int m_counter;
   } * m_control;
+};
+
+template <class T>
+class HostSharedPtr : public MaybeReferenceCountedPtr<T> {
+ public:
+  HostSharedPtr(T* value_ptr = nullptr)
+      : MaybeReferenceCountedPtr<T>(value_ptr, [](T* const t) { delete t; }) {}
+
+  template <class Deleter>
+  HostSharedPtr(
+      T* value_ptr = nullptr, Deleter deleter = [](T* const t) { delete t; })
+      : MaybeReferenceCountedPtr<T>(value_ptr, std::move(deleter)) {}
+};
+
+template <class T>
+class UnmanagedPtr : public MaybeReferenceCountedPtr<T> {
+ public:
+  UnmanagedPtr(T* value_ptr = nullptr)
+      : MaybeReferenceCountedPtr<T>(value_ptr) {}
 };
 }  // namespace Impl
 }  // namespace Kokkos
