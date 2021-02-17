@@ -180,6 +180,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             selected_reducer);
     const auto results_ptr = static_cast<pointer_type>(sycl::malloc_shared(
         sizeof(value_type) * std::max(value_count, 1u) * init_size, q));
+    // FIXME_SYCL without this we are running into a race condition
+    const auto results_ptr2 = static_cast<pointer_type>(sycl::malloc_shared(
+        sizeof(value_type) * std::max(value_count, 1u) * init_size, q));
 
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
@@ -287,16 +290,23 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               if (local_id == 0) {
                 ValueOps::copy(
                     functor,
-                    &results_ptr[(item.get_group_linear_id()) * value_count],
+                    &results_ptr2[(item.get_group_linear_id()) * value_count],
                     &local_mem[0]);
                 if constexpr (ReduceFunctorHasFinal<Functor>::value)
                   if (n_wgroups <= 1)
                     FunctorFinal<Functor, WorkTag>::final(
-                        functor, &results_ptr[(item.get_group_linear_id()) *
-                                              value_count]);
+                        functor, &results_ptr2[(item.get_group_linear_id()) *
+                                               value_count]);
               }
             });
       });
+      space.fence();
+
+      // FIXME_SYCL this is likely not necessary, see above
+      Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                             Kokkos::Experimental::SYCLDeviceUSMSpace>(
+          space, results_ptr, results_ptr2,
+          sizeof(*m_result_ptr) * value_count * n_wgroups);
       space.fence();
 
       first_run = false;
