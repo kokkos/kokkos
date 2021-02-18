@@ -680,14 +680,14 @@ void HIP::impl_initialize(const HIP::SelectDevice config) {
 void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
 
 HIP::HIP()
-    : m_space_instance(Kokkos::Impl::UnmanagedPtr<Impl::HIPInternal>(
+    : m_space_instance(Kokkos::Experimental::UnmanagedPtr<Impl::HIPInternal>(
           &Impl::HIPInternal::singleton())) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
 }
 
 HIP::HIP(hipStream_t const stream)
-    : m_space_instance(Kokkos::Impl::HostSharedPtr<Impl::HIPInternal>(
+    : m_space_instance(Kokkos::Experimental::HostSharedPtr<Impl::HIPInternal>(
           new Impl::HIPInternal, [](Impl::HIPInternal* ptr) {
             ptr->finalize();
             delete ptr;

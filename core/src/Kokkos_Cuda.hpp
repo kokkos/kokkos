@@ -249,7 +249,8 @@ class Cuda {
   uint32_t impl_instance_id() const noexcept { return 0; }
 
  private:
-  Kokkos::Impl::MaybeReferenceCountedPtr<Impl::CudaInternal> m_space_instance;
+  Kokkos::Experimental::MaybeReferenceCountedPtr<Impl::CudaInternal>
+      m_space_instance;
 };
 
 namespace Tools {

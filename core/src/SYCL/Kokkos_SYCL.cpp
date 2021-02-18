@@ -77,14 +77,14 @@ int get_gpu(const InitArguments& args);
 
 namespace Experimental {
 SYCL::SYCL()
-    : m_space_instance(Kokkos::Impl::UnmanagedPtr<Impl::SYCLInternal>(
+    : m_space_instance(Kokkos::Experimental::UnmanagedPtr<Impl::SYCLInternal>(
           &Impl::SYCLInternal::singleton())) {
   Impl::SYCLInternal::singleton().verify_is_initialized(
       "SYCL instance constructor");
 }
 
 SYCL::SYCL(const sycl::queue& stream)
-    : m_space_instance(Kokkos::Impl::HostSharedPtr<Impl::SYCLInternal>(
+    : m_space_instance(Kokkos::Experimental::HostSharedPtr<Impl::SYCLInternal>(
           new Impl::SYCLInternal, [](Impl::SYCLInternal* ptr) {
             ptr->finalize();
             delete ptr;
