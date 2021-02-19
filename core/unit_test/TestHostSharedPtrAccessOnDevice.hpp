@@ -50,8 +50,6 @@
 using Kokkos::Experimental::HostSharedPtr;
 using Kokkos::Experimental::UnmanagedPtr;
 
-using Data = Kokkos::Array<char, 32>;
-
 namespace {
 
 class Data {
@@ -70,7 +68,7 @@ struct CheckAccessStoredPointerAndDereferenceOnDevice {
   MoreOrLessSmartPtr m_device_ptr;
   // FIXME deduce from the smart pointer
   using ElementType = std::decay_t<decltype(*m_device_ptr)>;
-  static_assert(std::same<ElementType, Data>::value, "");
+  static_assert(std::is_same<ElementType, Data>::value, "");
 
   CheckAccessStoredPointerAndDereferenceOnDevice(MoreOrLessSmartPtr device_ptr)
       : m_device_ptr(device_ptr) {
