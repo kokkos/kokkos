@@ -94,7 +94,7 @@ struct CheckAccessStoredPointerAndDereferenceOnDevice {
 
 template <class Ptr>
 CheckAccessStoredPointerAndDereferenceOnDevice<Ptr>
-check_access_strored_pointer_and_dereference_on_device(Ptr p) {
+check_access_stored_pointer_and_dereference_on_device(Ptr p) {
   return {p};
 }
 
@@ -109,7 +109,7 @@ TEST(TEST_CATEGORY, host_shared_ptr_dereference_on_device) {
       static_cast<T*>(Kokkos::kokkos_malloc<MemorySpace>(sizeof(T))),
       [](T* p) { Kokkos::kokkos_free<MemorySpace>(p); });
 
-  check_access_strored_pointer_and_dereference_on_device(device_ptr);
+  check_access_stored_pointer_and_dereference_on_device(device_ptr);
 }
 
 TEST(TEST_CATEGORY, unmanaged_ptr_dereference_on_device) {
@@ -120,7 +120,7 @@ TEST(TEST_CATEGORY, unmanaged_ptr_dereference_on_device) {
   UnmanagedPtr<T> device_ptr(
       static_cast<T*>(Kokkos::kokkos_malloc<MemorySpace>(sizeof(T))));
 
-  check_access_strored_pointer_and_dereference_on_device(device_ptr);
+  check_access_stored_pointer_and_dereference_on_device(device_ptr);
 
   Kokkos::kokkos_free<MemorySpace>(device_ptr.get());
 }
