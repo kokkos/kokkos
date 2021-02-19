@@ -119,8 +119,8 @@ class MaybeReferenceCountedPtr {
     return get() != nullptr;
   }
 
-  // checks whether the MaybeReferenceCountedPtr manages the lifetime of the
-  // object
+  // checks whether the MaybeReferenceCountedPtr does reference counting
+  // which implies managing the lifetime of the object
   KOKKOS_FUNCTION bool is_reference_counted() const noexcept {
     return m_control != nullptr;
   }
