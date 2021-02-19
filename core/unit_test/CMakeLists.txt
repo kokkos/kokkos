@@ -75,6 +75,29 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
     # file. That then exceeded the shell command line max length.
     set(${Tag}_SOURCES1A)
     foreach(Name
+        AtomicOperations_int
+        AtomicOperations_unsignedint
+        AtomicOperations_longint
+        AtomicOperations_unsignedlongint
+        AtomicOperations_longlongint
+        AtomicOperations_double
+        AtomicOperations_float
+        AtomicOperations_complexdouble
+        AtomicOperations_complexfloat
+        AtomicViews
+        Atomics
+        BlockSizeDeduction
+        Concepts
+        Complex
+        Crs
+        DeepCopyAlignment
+        FunctorAnalysis
+        Init
+        LocalDeepCopy
+        MathematicalFunctions
+        MDRange_a
+        MDRange_b
+        MDRange_c
         HostSharedPtr
         HostSharedPtrAccessOnDevice
         )
