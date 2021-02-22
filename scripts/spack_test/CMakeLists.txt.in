@@ -1,0 +1,24 @@
+cmake_minimum_required(VERSION 3.16) 
+project(kokkos_spack_test CXX)
+find_package(Kokkos REQUIRED)
+
+set(SRC_NAME_LIST "@SRC_NAME_LIST@")
+set(BIN_NAME_LIST "@BIN_NAME_LIST@")
+
+enable_testing()
+list(LENGTH SRC_NAME_LIST LEN) 
+math(EXPR LEN "${LEN}-1")
+
+set(CMAKE_CXX_COMPILER ${Kokkos_CXX_COMPILER})
+
+foreach (it RANGE ${LEN}) 
+  list(GET SRC_NAME_LIST ${it} src) 
+  list(GET BIN_NAME_LIST ${it} bin)
+  add_executable(${bin} ${src})
+  target_link_libraries(${bin} Kokkos::kokkos)
+  add_test(NAME ${bin} COMMAND ${bin})
+  set_tests_properties(${bin} PROPERTIES
+    LABELS "Kokkos"
+    PROCESSORS 1
+    TIMEOUT 60)
+endforeach()
