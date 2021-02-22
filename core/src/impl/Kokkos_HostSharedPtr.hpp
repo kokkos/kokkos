@@ -172,7 +172,7 @@ class HostSharedPtr : public MaybeReferenceCountedPtr<T> {
 
   template <class Deleter>
   explicit HostSharedPtr(
-      T* element_ptr = nullptr, Deleter deleter = [](T* const t) { delete t; })
+      T* element_ptr, Deleter deleter = [](T* const t) { delete t; })
       : MaybeReferenceCountedPtr<T>(element_ptr, std::move(deleter)) {}
 
   int use_count() const noexcept {
