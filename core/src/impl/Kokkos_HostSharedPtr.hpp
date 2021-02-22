@@ -64,12 +64,14 @@ class MaybeReferenceCountedPtr {
 
   template <class Deleter>
   MaybeReferenceCountedPtr(T* element_ptr, const Deleter& deleter)
-      : m_element_ptr(element_ptr) {
-    try {
-      m_control = new Control{deleter, 1};
-    } catch (...) {
-      deleter(element_ptr);
-      throw;
+      : m_element_ptr(element_ptr), m_control(nullptr) {
+    if (element_ptr) {
+      try {
+        m_control = new Control{deleter, 1};
+      } catch (...) {
+        deleter(element_ptr);
+        throw;
+      }
     }
   }
 
