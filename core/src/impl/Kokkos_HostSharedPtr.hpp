@@ -55,17 +55,20 @@ namespace Experimental {
 
 template <typename T>
 class MaybeReferenceCountedPtr {
+ public:
+  using elemeny_type = T;
+
  protected:
-  MaybeReferenceCountedPtr(T* value_ptr)
-      : m_value_ptr(value_ptr), m_control(nullptr) {}
+  MaybeReferenceCountedPtr(T* element_ptr)
+      : m_element_ptr(element_ptr), m_control(nullptr) {}
 
   template <class Deleter>
-  MaybeReferenceCountedPtr(T* value_ptr, Deleter deleter)
-      : m_value_ptr(value_ptr) {
+  MaybeReferenceCountedPtr(T* element_ptr, Deleter deleter)
+      : m_element_ptr(element_ptr) {
     try {
       m_control = new Control{std::move(deleter), 1};
     } catch (...) {
-      deleter(value_ptr);
+      deleter(element_ptr);
       throw;
     }
   }
@@ -73,14 +76,14 @@ class MaybeReferenceCountedPtr {
  public:
   KOKKOS_FUNCTION MaybeReferenceCountedPtr(
       MaybeReferenceCountedPtr&& other) noexcept
-      : m_value_ptr(other.m_value_ptr), m_control(other.m_control) {
-    other.m_value_ptr = nullptr;
-    other.m_control   = nullptr;
+      : m_element_ptr(other.m_element_ptr), m_control(other.m_control) {
+    other.m_element_ptr = nullptr;
+    other.m_control     = nullptr;
   }
 
   KOKKOS_FUNCTION MaybeReferenceCountedPtr(
       const MaybeReferenceCountedPtr& other) noexcept
-      : m_value_ptr(other.m_value_ptr), m_control(other.m_control) {
+      : m_element_ptr(other.m_element_ptr), m_control(other.m_control) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     if (m_control) Kokkos::atomic_add(&(m_control->m_counter), 1);
 #endif
@@ -90,10 +93,10 @@ class MaybeReferenceCountedPtr {
       MaybeReferenceCountedPtr&& other) noexcept {
     if (&other != this) {
       cleanup();
-      m_value_ptr       = other.m_value_ptr;
-      other.m_value_ptr = nullptr;
-      m_control         = other.m_control;
-      other.m_control   = nullptr;
+      m_element_ptr       = other.m_element_ptr;
+      other.m_element_ptr = nullptr;
+      m_control           = other.m_control;
+      other.m_control     = nullptr;
     }
     return *this;
   }
@@ -102,8 +105,8 @@ class MaybeReferenceCountedPtr {
       const MaybeReferenceCountedPtr& other) noexcept {
     if (&other != this) {
       cleanup();
-      m_value_ptr = other.m_value_ptr;
-      m_control   = other.m_control;
+      m_element_ptr = other.m_element_ptr;
+      m_control     = other.m_control;
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
       if (is_reference_counted())
         Kokkos::atomic_add(&(m_control->m_counter), 1);
@@ -114,7 +117,7 @@ class MaybeReferenceCountedPtr {
 
   KOKKOS_FUNCTION ~MaybeReferenceCountedPtr() { cleanup(); }
 
-  KOKKOS_FUNCTION T* get() const noexcept { return m_value_ptr; }
+  KOKKOS_FUNCTION T* get() const noexcept { return m_element_ptr; }
   KOKKOS_FUNCTION T& operator*() const noexcept {
     KOKKOS_EXPECTS(bool(*this));
     return *get();
@@ -136,12 +139,12 @@ class MaybeReferenceCountedPtr {
   KOKKOS_FUNCTION void cleanup() noexcept {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     // If m_counter is set, then this instance is responsible for managing the
-    // objects pointed to by m_counter and m_value_ptr.
+    // objects pointed to by m_counter and m_element_ptr.
     if (is_reference_counted()) {
       int const count = Kokkos::atomic_fetch_sub(&(m_control->m_counter), 1);
       if (count == 1) {
-        (m_control->m_deleter)(m_value_ptr);
-        m_value_ptr = nullptr;
+        (m_control->m_deleter)(m_element_ptr);
+        m_element_ptr = nullptr;
         delete m_control;
         m_control = nullptr;
       }
@@ -154,7 +157,7 @@ class MaybeReferenceCountedPtr {
     int m_counter;
   };
 
-  T* m_value_ptr;
+  T* m_element_ptr;
 
  protected:
   Control* m_control;
@@ -163,13 +166,14 @@ class MaybeReferenceCountedPtr {
 template <class T>
 class HostSharedPtr : public MaybeReferenceCountedPtr<T> {
  public:
-  explicit HostSharedPtr(T* value_ptr = nullptr)
-      : MaybeReferenceCountedPtr<T>(value_ptr, [](T* const t) { delete t; }) {}
+  explicit HostSharedPtr(T* element_ptr = nullptr)
+      : MaybeReferenceCountedPtr<T>(element_ptr, [](T* const t) { delete t; }) {
+  }
 
   template <class Deleter>
   explicit HostSharedPtr(
-      T* value_ptr = nullptr, Deleter deleter = [](T* const t) { delete t; })
-      : MaybeReferenceCountedPtr<T>(value_ptr, std::move(deleter)) {}
+      T* element_ptr = nullptr, Deleter deleter = [](T* const t) { delete t; })
+      : MaybeReferenceCountedPtr<T>(element_ptr, std::move(deleter)) {}
 
   int use_count() const noexcept {
     return this->m_control ? this->m_control->m_counter : 0;
@@ -179,8 +183,8 @@ class HostSharedPtr : public MaybeReferenceCountedPtr<T> {
 template <class T>
 class UnmanagedPtr : public MaybeReferenceCountedPtr<T> {
  public:
-  explicit UnmanagedPtr(T* value_ptr = nullptr)
-      : MaybeReferenceCountedPtr<T>(value_ptr) {}
+  explicit UnmanagedPtr(T* element_ptr = nullptr)
+      : MaybeReferenceCountedPtr<T>(element_ptr) {}
 };
 }  // namespace Experimental
 }  // namespace Kokkos
