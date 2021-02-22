@@ -61,7 +61,14 @@ class MaybeReferenceCountedPtr {
 
   template <class Deleter>
   MaybeReferenceCountedPtr(T* value_ptr, Deleter deleter)
-      : m_value_ptr(value_ptr), m_control(new Control{std::move(deleter), 1}) {}
+      : m_value_ptr(value_ptr) {
+    try {
+      m_control = new Control{std::move(deleter), 1};
+    } catch (...) {
+      deleter(value_ptr);
+      throw;
+    }
+  }
 
  public:
   KOKKOS_FUNCTION MaybeReferenceCountedPtr(
@@ -131,7 +138,6 @@ class MaybeReferenceCountedPtr {
     // If m_counter is set, then this instance is responsible for managing the
     // objects pointed to by m_counter and m_value_ptr.
     if (is_reference_counted()) {
-      KOKKOS_EXPECTS(m_control->m_deleter);
       int const count = Kokkos::atomic_fetch_sub(&(m_control->m_counter), 1);
       if (count == 1) {
         (m_control->m_deleter)(m_value_ptr);
