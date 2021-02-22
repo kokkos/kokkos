@@ -56,7 +56,7 @@ namespace Experimental {
 template <typename T>
 class MaybeReferenceCountedPtr {
  public:
-  using elemeny_type = T;
+  using element_type = T;
 
  protected:
   MaybeReferenceCountedPtr(T* element_ptr)
