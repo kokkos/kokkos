@@ -189,7 +189,9 @@ class HostSharedPtr : public MaybeReferenceCountedPtr<T> {
 template <class T>
 class UnmanagedPtr : public MaybeReferenceCountedPtr<T> {
  public:
-  explicit UnmanagedPtr(T* element_ptr = nullptr) noexcept
+  UnmanagedPtr() noexcept : MaybeReferenceCountedPtr<T>(nullptr) {}
+
+  explicit UnmanagedPtr(T* element_ptr) noexcept
       : MaybeReferenceCountedPtr<T>(element_ptr) {}
 };
 }  // namespace Experimental
