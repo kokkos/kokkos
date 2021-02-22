@@ -166,7 +166,12 @@ class MaybeReferenceCountedPtr {
 template <class T>
 class HostSharedPtr : public MaybeReferenceCountedPtr<T> {
  public:
-  explicit HostSharedPtr(T* element_ptr = nullptr)
+  // Objects that are default-constructed or initialized with an (explicit)
+  // nullptr are not considered reference-counted.
+  HostSharedPtr() noexcept : MaybeReferenceCountedPtr<T>(nullptr) {}
+  HostSharedPtr(std::nullptr_t) noexcept : HostSharedPtr() {}
+
+  explicit HostSharedPtr(T* element_ptr)
       : MaybeReferenceCountedPtr<T>(element_ptr, [](T* const t) { delete t; }) {
   }
 
@@ -183,7 +188,7 @@ class HostSharedPtr : public MaybeReferenceCountedPtr<T> {
 template <class T>
 class UnmanagedPtr : public MaybeReferenceCountedPtr<T> {
  public:
-  explicit UnmanagedPtr(T* element_ptr = nullptr)
+  explicit UnmanagedPtr(T* element_ptr = nullptr) noexcept
       : MaybeReferenceCountedPtr<T>(element_ptr) {}
 };
 }  // namespace Experimental

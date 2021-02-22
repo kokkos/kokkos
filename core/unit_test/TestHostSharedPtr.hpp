@@ -53,11 +53,11 @@ TEST(TEST_CATEGORY, host_shared_ptr_is_reference_counted) {
   using T = int;  // default constructible
   {
     HostSharedPtr<T> p1;
-    EXPECT_TRUE(p1.is_reference_counted());
+    EXPECT_FALSE(p1.is_reference_counted());
   }
   {
     HostSharedPtr<T> p1(nullptr);
-    EXPECT_TRUE(p1.is_reference_counted());
+    EXPECT_FALSE(p1.is_reference_counted());
   }
   {
     HostSharedPtr<T> p1(new T());
@@ -78,11 +78,11 @@ TEST(TEST_CATEGORY, host_shared_ptr_use_count) {
   using T = int;
   {
     HostSharedPtr<T> p1;
-    EXPECT_EQ(p1.use_count(), 1);
+    EXPECT_EQ(p1.use_count(), 0);
   }
   {
     HostSharedPtr<T> p1(nullptr);
-    EXPECT_EQ(p1.use_count(), 1);
+    EXPECT_EQ(p1.use_count(), 0);
   }
   {
     HostSharedPtr<T> p1(new T());
