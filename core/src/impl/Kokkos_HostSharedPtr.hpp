@@ -63,10 +63,10 @@ class MaybeReferenceCountedPtr {
       : m_element_ptr(element_ptr), m_control(nullptr) {}
 
   template <class Deleter>
-  MaybeReferenceCountedPtr(T* element_ptr, Deleter deleter)
+  MaybeReferenceCountedPtr(T* element_ptr, const Deleter& deleter)
       : m_element_ptr(element_ptr) {
     try {
-      m_control = new Control{std::move(deleter), 1};
+      m_control = new Control{deleter, 1};
     } catch (...) {
       deleter(element_ptr);
       throw;
@@ -176,8 +176,8 @@ class HostSharedPtr : public MaybeReferenceCountedPtr<T> {
   }
 
   template <class Deleter>
-  HostSharedPtr(T* element_ptr, Deleter deleter)
-      : MaybeReferenceCountedPtr<T>(element_ptr, std::move(deleter)) {}
+  HostSharedPtr(T* element_ptr, const Deleter& deleter)
+      : MaybeReferenceCountedPtr<T>(element_ptr, deleter) {}
 
   int use_count() const noexcept {
     return this->m_control ? this->m_control->m_counter : 0;
