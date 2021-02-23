@@ -7,7 +7,11 @@ IF (NOT Kokkos_INSTALL_TESTING)
 ENDIF()
 
 KOKKOS_ADD_TEST_DIRECTORIES(unit_test)
+
+# FIXME_OPENMPTARGET - the nvidia compiler in the OpenMPTarget backend does not pass the perf_tests.
+IF((Kokkos_ENABLE_OPENMPTARGET) AND (NOT "${KOKKOS_CXX_COMPILER_ID}" STREQUAL "PGI"))
 KOKKOS_ADD_TEST_DIRECTORIES(perf_test)
+ENDIF()
 
 KOKKOS_SUBPACKAGE_POSTPROCESS()
 
