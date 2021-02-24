@@ -599,40 +599,27 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
 
-    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+// Performing our own scheduling of teams to avoid separation of code between
+// teams-distribute and parallel. Gave a 2x performance boost in test cases.
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) \
+    map(to                                                         \
+        : a_functor) is_device_ptr(scratch_ptr)
+#pragma omp parallel
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
 
-#pragma omp target teams distribute map(to                   \
-                                        : a_functor)         \
-    is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
-        thread_limit(team_size)
-    for (int i = 0; i < league_size; i++) {
-      int shmem_block_index = -1, lock_team = 99999, iter = -1;
-      iter = (omp_get_team_num() % max_active_teams);
-
-      // Loop as long as a shmem_block_index is not found.
-      while (shmem_block_index == -1) {
-        // Try and acquire a lock on the index.
-        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
-
-        // If lock is acquired assign it to the block index.
-        // lock_team = 0, implies atomic_compare_exchange is successfull.
-        if (lock_team == 0)
-          shmem_block_index = iter;
-        else
-          iter = ++iter % max_active_teams;
-      }
-
-#pragma omp parallel num_threads(team_size)
-      {
-        typename Policy::member_type team(
-            i, league_size, team_size, vector_length, scratch_ptr,
-            shmem_block_index, shmem_size_L0, shmem_size_L1);
+      // Iterate through the number of teams until league_size and assign the
+      // league_id accordingly
+      for (int league_id = blockIdx, track = 0; league_id < league_size;
+           league_id += gridDim, ++track) {
+        int i          = track * gridDim + blockIdx;
+        const int iter = blockIdx % max_active_teams;
+        typename Policy::member_type team(i, league_size, team_size,
+                                          vector_length, scratch_ptr, iter,
+                                          shmem_size_L0, shmem_size_L1);
         m_functor(team);
       }
-
-      // Free the locked block and increment the number of available free
-      // blocks.
-      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
     }
   }
 
@@ -661,40 +648,23 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
 
-    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) \
+    map(to                                                         \
+        : a_functor) is_device_ptr(scratch_ptr)
+#pragma omp parallel
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
 
-#pragma omp target teams distribute map(to                   \
-                                        : a_functor)         \
-    is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
-        thread_limit(team_size)
-    for (int i = 0; i < league_size; i++) {
-      int shmem_block_index = -1, lock_team = 99999, iter = -1;
-      iter = (omp_get_team_num() % max_active_teams);
-
-      // Loop as long as a shmem_block_index is not found.
-      while (shmem_block_index == -1) {
-        // Try and acquire a lock on the index.
-        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
-
-        // If lock is acquired assign it to the block index.
-        // lock_team = 0, implies atomic_compare_exchange is successfull.
-        if (lock_team == 0)
-          shmem_block_index = iter;
-        else
-          iter = ++iter % max_active_teams;
-      }
-
-#pragma omp parallel num_threads(team_size)
-      {
-        typename Policy::member_type team(
-            i, league_size, team_size, vector_length, scratch_ptr,
-            shmem_block_index, shmem_size_L0, shmem_size_L1);
+      for (int league_id = blockIdx, track = 0; league_id < league_size;
+           league_id += gridDim, ++track) {
+        int i          = track * gridDim + blockIdx;
+        const int iter = blockIdx % max_active_teams;
+        typename Policy::member_type team(i, league_size, team_size,
+                                          vector_length, scratch_ptr, iter,
+                                          shmem_size_L0, shmem_size_L1);
         m_functor(TagType(), team);
       }
-
-      // Free the locked block and increment the number of available free
-      // blocks.
-      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
     }
   }
 
@@ -741,40 +711,23 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
 
-    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+                                                                       : f) \
+    is_device_ptr(scratch_ptr)
+#pragma omp parallel reduction(+ : result)
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
 
-#pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
-         map(to:f) map(tofrom:result) reduction(+: result) \
-    is_device_ptr(scratch_ptr, lock_array)
-    for (int i = 0; i < league_size; i++) {
-      ValueType inner_result = ValueType();
-      int shmem_block_index = -1, lock_team = 99999, iter = -1;
-      iter = (omp_get_team_num() % max_active_teams);
-
-      // Loop as long as a shmem_block_index is not found.
-      while (shmem_block_index == -1) {
-        // Try and acquire a lock on the index.
-        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
-
-        // If lock is acquired assign it to the block index.
-        // lock_team = 0, implies atomic_compare_exchange is successfull.
-        if (lock_team == 0)
-          shmem_block_index = iter;
-        else
-          iter = ++iter % max_active_teams;
+      for (int league_id = blockIdx, track = 0; league_id < league_size;
+           league_id += gridDim, ++track) {
+        int i          = track * gridDim + blockIdx;
+        const int iter = blockIdx % max_active_teams;
+        typename PolicyType::member_type team(i, league_size, team_size,
+                                              vector_length, scratch_ptr, iter,
+                                              shmem_size_L0, shmem_size_L1);
+        f(team, result);
       }
-#pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
-      {
-        typename PolicyType::member_type team(
-            i, league_size, team_size, vector_length, scratch_ptr,
-            shmem_block_index, shmem_size_L0, shmem_size_L1);
-        f(team, inner_result);
-      }
-      result = inner_result;
-
-      // Free the locked block and increment the number of available free
-      // blocks.
-      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
     }
 
     *result_ptr = result;
@@ -808,39 +761,23 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
 
-    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+                                                                       : f) \
+    is_device_ptr(scratch_ptr)
+#pragma omp parallel reduction(+ : result)
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
 
-#pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
-         map(to:f) map(tofrom:result) reduction(+: result) \
-    is_device_ptr(scratch_ptr, lock_array)
-    for (int i = 0; i < league_size; i++) {
-      ValueType inner_result = ValueType();
-      int shmem_block_index = -1, lock_team = 99999, iter = -1;
-      iter = (omp_get_team_num() % max_active_teams);
-
-      // Loop as long as a shmem_block_index is not found.
-      while (shmem_block_index == -1) {
-        // Try and acquire a lock on the index.
-        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
-
-        // If lock is acquired assign it to the block index.
-        // lock_team = 0, implies atomic_compare_exchange is successfull.
-        if (lock_team == 0)
-          shmem_block_index = iter;
-        else
-          iter = ++iter % max_active_teams;
-      }
-#pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
-      {
-        typename PolicyType::member_type team(
-            i, league_size, team_size, vector_length, scratch_ptr, 0, 0, 0);
+      for (int league_id = blockIdx, track = 0; league_id < league_size;
+           league_id += gridDim, ++track) {
+        int i          = track * gridDim + blockIdx;
+        const int iter = blockIdx % max_active_teams;
+        typename PolicyType::member_type team(i, league_size, team_size,
+                                              vector_length, scratch_ptr, iter,
+                                              shmem_size_L0, shmem_size_L1);
         f(TagType(), team, result);
       }
-      result = inner_result;
-
-      // Free the locked block and increment the number of available free
-      // blocks.
-      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
     }
 
     *result_ptr = result;
