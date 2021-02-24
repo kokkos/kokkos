@@ -74,7 +74,9 @@ struct Dot {
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type& update,
                    const volatile value_type& source) {
-    update += source;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    update = update + source;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -107,7 +109,9 @@ struct DotSingle {
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type& update,
                    const volatile value_type& source) {
-    update += source;
+    // compound assignment to object of volatile-qualified type is deprecated in
+    // c++20
+    update = update + source;
   }
 
   KOKKOS_INLINE_FUNCTION

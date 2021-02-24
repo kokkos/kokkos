@@ -75,7 +75,8 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 1> {
   KOKKOS_INLINE_FUNCTION
   static void join(volatile value_type& update,
                    const volatile value_type& input) {
-    update |= input;
+    // compound assignment to object of volatile-qualified type deprecated
+    update = update | input;
   }
 
   KOKKOS_INLINE_FUNCTION

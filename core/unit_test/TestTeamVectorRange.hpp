@@ -126,9 +126,9 @@ struct my_complex {
 
   KOKKOS_INLINE_FUNCTION
   void operator+=(const volatile my_complex& src) volatile {
-    re += src.re;
-    im += src.im;
-    dummy += src.dummy;
+    re    = re + src.re;
+    im    = im + src.im;
+    dummy = dummy + src.dummy;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -165,7 +165,7 @@ struct my_complex {
     double im_tmp = re * src.im + im * src.re;
     re            = re_tmp;
     im            = im_tmp;
-    dummy *= src.dummy;
+    dummy         = dummy * src.dummy;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -278,7 +278,7 @@ struct functor_teamvector_for {
           value += values(i);
         }
 
-        if (test != value) {
+        if (static_cast<double>(test) != static_cast<double>(value)) {
           printf("FAILED teamvector_parallel_for %i %i %f %f\n",
                  team.league_rank(), team.team_rank(),
                  static_cast<double>(test), static_cast<double>(value));
@@ -343,7 +343,7 @@ struct functor_teamvector_reduce {
         test += i - team.league_rank() + team.league_size() + team.team_size();
       }
 
-      if (test != value) {
+      if (static_cast<double>(test) != static_cast<double>(value)) {
         if (team.league_rank() == 0) {
           printf("FAILED teamvector_parallel_reduce %i %i %lf %lf %lu\n",
                  (int)team.league_rank(), (int)team.team_rank(),
@@ -353,7 +353,7 @@ struct functor_teamvector_reduce {
 
         flag() = 1;
       }
-      if (test != shared_value(0)) {
+      if (static_cast<double>(test) != static_cast<double>(shared_value(0))) {
         if (team.league_rank() == 0) {
           printf(
               "FAILED teamvector_parallel_reduce with shared result %i %i %lf "
@@ -416,14 +416,14 @@ struct functor_teamvector_reduce_reducer {
         test += i - team.league_rank() + team.league_size() + team.team_size();
       }
 
-      if (test != value) {
+      if (static_cast<double>(test) != static_cast<double>(value)) {
         printf("FAILED teamvector_parallel_reduce_reducer %i %i %lf %lf\n",
                team.league_rank(), team.team_rank(), static_cast<double>(test),
                static_cast<double>(value));
 
         flag() = 1;
       }
-      if (test != shared_value(0)) {
+      if (static_cast<double>(test) != static_cast<double>(shared_value(0))) {
         printf(
             "FAILED teamvector_parallel_reduce_reducer shared value %i %i %lf "
             "%lf\n",

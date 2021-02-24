@@ -130,9 +130,9 @@ struct my_complex {
 
   KOKKOS_INLINE_FUNCTION
   void operator+=(const volatile my_complex &src) volatile {
-    re += src.re;
-    im += src.im;
-    dummy += src.dummy;
+    re    = re + src.re;
+    im    = im + src.im;
+    dummy = dummy + src.dummy;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -169,7 +169,7 @@ struct my_complex {
     double im_tmp = re * src.im + im * src.re;
     re            = re_tmp;
     im            = im_tmp;
-    dummy *= src.dummy;
+    dummy         = dummy * src.dummy;
   }
 
   KOKKOS_INLINE_FUNCTION

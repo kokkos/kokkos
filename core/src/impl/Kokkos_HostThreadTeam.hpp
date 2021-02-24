@@ -91,9 +91,18 @@ class HostThreadTeamData {
   //   [ thread_local ]     = [ m_thread_local    .. m_scratch_size )
 
   enum : int { m_pool_members = 0 };
-  enum : int { m_pool_rendezvous = m_pool_members + max_pool_members };
-  enum : int { m_team_rendezvous = m_pool_rendezvous + max_pool_rendezvous };
-  enum : int { m_pool_reduce = m_team_rendezvous + max_team_rendezvous };
+  enum : int {
+    m_pool_rendezvous =
+        static_cast<int>(m_pool_members) + static_cast<int>(max_pool_members)
+  };
+  enum : int {
+    m_team_rendezvous = static_cast<int>(m_pool_rendezvous) +
+                        static_cast<int>(max_pool_rendezvous)
+  };
+  enum : int {
+    m_pool_reduce = static_cast<int>(m_team_rendezvous) +
+                    static_cast<int>(max_team_rendezvous)
+  };
 
   using pair_int_t = Kokkos::pair<int64_t, int64_t>;
 
