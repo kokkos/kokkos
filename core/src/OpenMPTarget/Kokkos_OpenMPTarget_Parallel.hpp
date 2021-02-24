@@ -582,9 +582,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto league_size   = m_policy.league_size();
     const auto team_size     = m_policy.team_size();
     const auto vector_length = m_policy.impl_vector_length();
-    const auto nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                            : league_size;
 
     const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
@@ -596,11 +593,18 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_OPENMPTARGET - If the team_size is not a multiple of 32, the
     // scratch implementation does not work in the Release or RelWithDebugInfo
     // mode but works in the Debug mode.
+
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    // nteams should not exceed the maximum in-flight teams possible.
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
 
 // Performing our own scheduling of teams to avoid separation of code between
-// teams-distribute and parallel. Gave a 2x performance boost in test cases.
+// teams-distribute and parallel. Gave a 2x performance boost in test cases with
+// the clang compiler. atomic_compare_exchange can be avoided since the standard
+// guarantees that the number of teams specified in the `num_teams` clause is
+// always less than or equal to the maximum concurrently running teams.
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) \
     map(to                                                         \
         : a_functor) is_device_ptr(scratch_ptr)
@@ -611,12 +615,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       // Iterate through the number of teams until league_size and assign the
       // league_id accordingly
-      for (int league_id = blockIdx, track = 0; league_id < league_size;
-           league_id += gridDim, ++track) {
-        int i          = track * gridDim + blockIdx;
-        const int iter = blockIdx % max_active_teams;
-        typename Policy::member_type team(i, league_size, team_size,
-                                          vector_length, scratch_ptr, iter,
+      for (int league_id = blockIdx; league_id < league_size;
+           league_id += gridDim) {
+        typename Policy::member_type team(league_id, league_size, team_size,
+                                          vector_length, scratch_ptr, blockIdx,
                                           shmem_size_L0, shmem_size_L1);
         m_functor(team);
       }
@@ -633,9 +635,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto league_size   = m_policy.league_size();
     const auto team_size     = m_policy.team_size();
     const auto vector_length = m_policy.impl_vector_length();
-    const auto nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                            : league_size;
 
     FunctorType a_functor(m_functor);
 
@@ -647,6 +646,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
 
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) \
     map(to                                                         \
@@ -656,12 +657,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const int blockIdx = omp_get_team_num();
       const int gridDim  = omp_get_num_teams();
 
-      for (int league_id = blockIdx, track = 0; league_id < league_size;
-           league_id += gridDim, ++track) {
-        int i          = track * gridDim + blockIdx;
-        const int iter = blockIdx % max_active_teams;
-        typename Policy::member_type team(i, league_size, team_size,
-                                          vector_length, scratch_ptr, iter,
+      for (int league_id = blockIdx; league_id < league_size;
+           league_id += gridDim) {
+        typename Policy::member_type team(league_id, league_size, team_size,
+                                          vector_length, scratch_ptr, blockIdx,
                                           shmem_size_L0, shmem_size_L1);
         m_functor(TagType(), team);
       }
@@ -696,9 +695,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
     const int vector_length = p.impl_vector_length();
-    const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                           ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                           : league_size;
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
@@ -710,6 +706,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
 
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
                                                                        : f) \
@@ -719,13 +717,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       const int blockIdx = omp_get_team_num();
       const int gridDim  = omp_get_num_teams();
 
-      for (int league_id = blockIdx, track = 0; league_id < league_size;
-           league_id += gridDim, ++track) {
-        int i          = track * gridDim + blockIdx;
-        const int iter = blockIdx % max_active_teams;
-        typename PolicyType::member_type team(i, league_size, team_size,
-                                              vector_length, scratch_ptr, iter,
-                                              shmem_size_L0, shmem_size_L1);
+      for (int league_id = blockIdx; league_id < league_size;
+           league_id += gridDim) {
+        typename PolicyType::member_type team(
+            league_id, league_size, team_size, vector_length, scratch_ptr,
+            blockIdx, shmem_size_L0, shmem_size_L1);
         f(team, result);
       }
     }
@@ -746,9 +742,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
     const int vector_length = p.impl_vector_length();
-    const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                           ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                           : league_size;
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
@@ -760,6 +753,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
 
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
                                                                        : f) \
@@ -769,13 +764,11 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       const int blockIdx = omp_get_team_num();
       const int gridDim  = omp_get_num_teams();
 
-      for (int league_id = blockIdx, track = 0; league_id < league_size;
-           league_id += gridDim, ++track) {
-        int i          = track * gridDim + blockIdx;
-        const int iter = blockIdx % max_active_teams;
-        typename PolicyType::member_type team(i, league_size, team_size,
-                                              vector_length, scratch_ptr, iter,
-                                              shmem_size_L0, shmem_size_L1);
+      for (int league_id = blockIdx; league_id < league_size;
+           league_id += gridDim) {
+        typename PolicyType::member_type team(
+            league_id, league_size, team_size, vector_length, scratch_ptr,
+            blockIdx, shmem_size_L0, shmem_size_L1);
         f(TagType(), team, result);
       }
     }
