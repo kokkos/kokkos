@@ -196,18 +196,6 @@ using ActiveExecutionMemorySpace = Kokkos::HostSpace;
 using ActiveExecutionMemorySpace = void;
 #endif
 
-template <class ActiveSpace, class MemorySpace>
-struct VerifyExecutionCanAccessMemorySpace {
-  enum { value = 0 };
-};
-
-template <class Space>
-struct VerifyExecutionCanAccessMemorySpace<Space, Space> {
-  enum { value = 1 };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void *) {}
-};
-
 // Base class for exec space initializer factories
 class ExecSpaceInitializerBase;
 
@@ -220,13 +208,19 @@ class LogicalMemorySpace;
 
 }  // namespace Kokkos
 
-#define KOKKOS_RESTRICT_EXECUTION_TO_DATA(DATA_SPACE, DATA_PTR) \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace<            \
-      Kokkos::Impl::ActiveExecutionMemorySpace, DATA_SPACE>::verify(DATA_PTR)
+#define KOKKOS_RESTRICT_EXECUTION_TO_DATA(DATA_SPACE, DATA_PTR)              \
+  if (!Kokkos::Impl::MemorySpaceAccess<                                      \
+          Kokkos::Impl::ActiveExecutionMemorySpace, DATA_SPACE>::accessible) \
+    Kokkos::Impl::throw_runtime_exception(                                   \
+        "Kokkos::access_error: accessing device function from incompatible " \
+        "memory space!");
 
-#define KOKKOS_RESTRICT_EXECUTION_TO_(DATA_SPACE)    \
-  Kokkos::Impl::VerifyExecutionCanAccessMemorySpace< \
-      Kokkos::Impl::ActiveExecutionMemorySpace, DATA_SPACE>::verify()
+#define KOKKOS_RESTRICT_EXECUTION_TO_(DATA_SPACE)                            \
+  if (!Kokkos::Impl::MemorySpaceAccess<                                      \
+          Kokkos::Impl::ActiveExecutionMemorySpace, DATA_SPACE>::accessible) \
+    Kokkos::Impl::throw_runtime_exception(                                   \
+        "Kokkos::access_error: accessing device function from incompatible " \
+        "memory space!");
 
 //----------------------------------------------------------------------------
 
