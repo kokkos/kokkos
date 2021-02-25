@@ -174,11 +174,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags = nullptr;
 
-  // FIXME_HIP_PERFORMANCE Need a rule to choose when to use shared memory and
-  // when to use shuffle
+#if HIP_VERSION < 401
   static bool constexpr UseShflReduction =
       ((sizeof(value_type) > 2 * sizeof(double)) &&
        static_cast<bool>(ValueTraits::StaticValueSize));
+#else
+  static bool constexpr UseShflReduction =
+      static_cast<bool>(ValueTraits::StaticValueSize);
+#endif
 
  private:
   struct ShflReductionTag {};
