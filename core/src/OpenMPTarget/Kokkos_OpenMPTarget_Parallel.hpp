@@ -625,8 +625,47 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           m_functor(team);
         }
       } else
-        printf("`num_teams` clause was not respected. \n");
+        Kokkos::abort("`num_teams` clause was not respected.\n");
     }
+
+// Saving the older implementation that uses `atomic_compare_exchange` to
+// calculate the shared memory block index and `distribute` clause to distribute
+// teams.
+#if 0
+#pragma omp target teams distribute map(to                   \
+                                        : a_functor)         \
+    is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
+        thread_limit(team_size)
+    for (int i = 0; i < league_size; i++) {
+      int shmem_block_index = -1, lock_team = 99999, iter = -1;
+      iter = (omp_get_team_num() % max_active_teams);
+
+      // Loop as long as a shmem_block_index is not found.
+      while (shmem_block_index == -1) {
+        // Try and acquire a lock on the index.
+        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
+
+        // If lock is acquired assign it to the block index.
+        // lock_team = 0, implies atomic_compare_exchange is successfull.
+        if (lock_team == 0)
+          shmem_block_index = iter;
+        else
+          iter = ++iter % max_active_teams;
+      }
+
+#pragma omp parallel num_threads(team_size)
+      {
+        typename Policy::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr,
+            shmem_block_index, shmem_size_L0, shmem_size_L1);
+        m_functor(team);
+      }
+
+      // Free the locked block and increment the number of available free
+      // blocks.
+      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+    }
+#endif
   }
 
   template <class TagType>
@@ -671,8 +710,47 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
           m_functor(TagType(), team);
         }
       } else
-        printf("`num_teams` clause was not respected. \n");
+        Kokkos::abort("`num_teams` clause was not respected.\n");
     }
+
+// Saving the older implementation that uses `atomic_compare_exchange` to
+// calculate the shared memory block index and `distribute` clause to distribute
+// teams.
+#if 0
+#pragma omp target teams distribute map(to                   \
+                                        : a_functor)         \
+    is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
+        thread_limit(team_size)
+    for (int i = 0; i < league_size; i++) {
+      int shmem_block_index = -1, lock_team = 99999, iter = -1;
+      iter = (omp_get_team_num() % max_active_teams);
+
+      // Loop as long as a shmem_block_index is not found.
+      while (shmem_block_index == -1) {
+        // Try and acquire a lock on the index.
+        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
+
+        // If lock is acquired assign it to the block index.
+        // lock_team = 0, implies atomic_compare_exchange is successfull.
+        if (lock_team == 0)
+          shmem_block_index = iter;
+        else
+          iter = ++iter % max_active_teams;
+      }
+
+#pragma omp parallel num_threads(team_size)
+      {
+        typename Policy::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr,
+            shmem_block_index, shmem_size_L0, shmem_size_L1);
+        m_functor(TagType(), team);
+      }
+
+      // Free the locked block and increment the number of available free
+      // blocks.
+      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+    }
+#endif
   }
 
  public:
@@ -735,10 +813,51 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           f(team, result);
         }
       } else
-        printf("`num_teams` clause was not respected. \n");
+        Kokkos::abort("`num_teams` clause was not respected.\n");
     }
 
     *result_ptr = result;
+
+// Saving the older implementation that uses `atomic_compare_exchange` to
+// calculate the shared memory block index and `distribute` clause to distribute
+// teams.
+#if 0
+#pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
+         map(to:f) map(tofrom:result) reduction(+: result) \
+    is_device_ptr(scratch_ptr, lock_array)
+    for (int i = 0; i < league_size; i++) {
+      ValueType inner_result = ValueType();
+      int shmem_block_index = -1, lock_team = 99999, iter = -1;
+      iter = (omp_get_team_num() % max_active_teams);
+
+      // Loop as long as a shmem_block_index is not found.
+      while (shmem_block_index == -1) {
+        // Try and acquire a lock on the index.
+        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
+
+        // If lock is acquired assign it to the block index.
+        // lock_team = 0, implies atomic_compare_exchange is successfull.
+        if (lock_team == 0)
+          shmem_block_index = iter;
+        else
+          iter = ++iter % max_active_teams;
+      }
+#pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
+      {
+        typename PolicyType::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr,
+            shmem_block_index, shmem_size_L0, shmem_size_L1);
+        f(team, inner_result);
+      }
+      result = inner_result;
+
+      // Free the locked block and increment the number of available free
+      // blocks.
+      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+    }
+
+    *result_ptr = result;
+#endif
   }
 
   template <class TagType>
@@ -786,10 +905,51 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
           f(TagType(), team, result);
         }
       } else
-        printf("`num_teams` clause was not respected. \n");
+        Kokkos::abort("`num_teams` clause was not respected.\n");
     }
 
     *result_ptr = result;
+
+// Saving the older implementation that uses `atomic_compare_exchange` to
+// calculate the shared memory block index and `distribute` clause to distribute
+// teams.
+#if 0
+#pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
+         map(to:f) map(tofrom:result) reduction(+: result) \
+    is_device_ptr(scratch_ptr, lock_array)
+    for (int i = 0; i < league_size; i++) {
+      ValueType inner_result = ValueType();
+      int shmem_block_index = -1, lock_team = 99999, iter = -1;
+      iter = (omp_get_team_num() % max_active_teams);
+
+      // Loop as long as a shmem_block_index is not found.
+      while (shmem_block_index == -1) {
+        // Try and acquire a lock on the index.
+        lock_team = atomic_compare_exchange(&lock_array[iter], 0, 1);
+
+        // If lock is acquired assign it to the block index.
+        // lock_team = 0, implies atomic_compare_exchange is successfull.
+        if (lock_team == 0)
+          shmem_block_index = iter;
+        else
+          iter = ++iter % max_active_teams;
+      }
+#pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
+      {
+        typename PolicyType::member_type team(
+            i, league_size, team_size, vector_length, scratch_ptr,
+            shmem_block_index, shmem_size_L0, shmem_size_L1);
+        f(TagType(), team, inner_result);
+      }
+      result = inner_result;
+
+      // Free the locked block and increment the number of available free
+      // blocks.
+      lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
+    }
+
+    *result_ptr = result;
+#endif
   }
 
   inline static void execute(const FunctorType& f, const PolicyType& p,
