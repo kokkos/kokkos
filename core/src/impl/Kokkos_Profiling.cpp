@@ -72,7 +72,7 @@ void tool_invoked_fence(const uint32_t /* devID */) {
    */
   Kokkos::fence();
 }
-};  // namespace Impl
+}  // namespace Impl
 #ifdef KOKKOS_ENABLE_TUNING
 static size_t kernel_name_context_variable_id;
 static size_t kernel_type_context_variable_id;
