@@ -569,4 +569,10 @@
 #define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
 #endif
 
+#if __cplusplus >= 201703L
+#define KOKKOS_IMPL_IF_CONSTEXPR if constexpr
+#else
+#define KOKKOS_IMPL_IF_CONSTEXPR if
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP
