@@ -50,6 +50,7 @@
 // and compiler environment then sets a collection of #define macros.
 
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
 #include <Kokkos_MasterLock.hpp>
@@ -180,7 +181,6 @@ using DefaultHostExecutionSpace KOKKOS_IMPL_DEFAULT_HOST_EXEC_SPACE_ANNOTATION =
 // a given memory space.
 
 namespace Kokkos {
-
 namespace Impl {
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA) && \
@@ -196,6 +196,24 @@ using ActiveExecutionMemorySpace = Kokkos::HostSpace;
 using ActiveExecutionMemorySpace = void;
 #endif
 
+template <typename DstMemorySpace, typename SrcMemorySpace>
+struct MemorySpaceAccess;
+
+template <typename DstMemorySpace, typename SrcMemorySpace,
+          bool = Kokkos::Impl::MemorySpaceAccess<DstMemorySpace,
+                                                 SrcMemorySpace>::accessible>
+struct verify_space {
+  KOKKOS_FORCEINLINE_FUNCTION static void check() {}
+};
+
+template <typename DstMemorySpace, typename SrcMemorySpace>
+struct verify_space<DstMemorySpace, SrcMemorySpace, false> {
+  KOKKOS_FORCEINLINE_FUNCTION static void check() {
+    Kokkos::abort(
+        "Kokkos::View ERROR: attempt to access inaccessible memory space");
+  };
+};
+
 // Base class for exec space initializer factories
 class ExecSpaceInitializerBase;
 
@@ -208,19 +226,13 @@ class LogicalMemorySpace;
 
 }  // namespace Kokkos
 
-#define KOKKOS_RESTRICT_EXECUTION_TO_DATA(DATA_SPACE, DATA_PTR)              \
-  if (!Kokkos::Impl::MemorySpaceAccess<                                      \
-          Kokkos::Impl::ActiveExecutionMemorySpace, DATA_SPACE>::accessible) \
-    Kokkos::Impl::throw_runtime_exception(                                   \
-        "Kokkos::access_error: accessing device function from incompatible " \
-        "memory space!");
+#define KOKKOS_RESTRICT_EXECUTION_TO_DATA(DATA_SPACE, DATA_PTR)        \
+  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
+                             DATA_SPACE>::check();
 
-#define KOKKOS_RESTRICT_EXECUTION_TO_(DATA_SPACE)                            \
-  if (!Kokkos::Impl::MemorySpaceAccess<                                      \
-          Kokkos::Impl::ActiveExecutionMemorySpace, DATA_SPACE>::accessible) \
-    Kokkos::Impl::throw_runtime_exception(                                   \
-        "Kokkos::access_error: accessing device function from incompatible " \
-        "memory space!");
+#define KOKKOS_RESTRICT_EXECUTION_TO_(DATA_SPACE)                      \
+  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
+                             DATA_SPACE>::check();
 
 //----------------------------------------------------------------------------
 
