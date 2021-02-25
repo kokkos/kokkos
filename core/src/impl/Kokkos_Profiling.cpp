@@ -117,12 +117,13 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.request_output_values == r.request_output_values &&
          l.declare_optimization_goal == r.declare_optimization_goal;
 }
-template <typename Callback, typename... Args>
-void call_kokkos_callback(const Callback callback, bool ever_needs_fence,
+template <typename Callback, typename BooleanConstant, typename... Args>
+void call_kokkos_callback(const Callback callback, BooleanConstant,
                           Args... args) {
   if (callback != nullptr) {
-    if ((ever_needs_fence) && (Kokkos::Tools::Experimental::tool_requirements
-                                   .requires_global_fencing)) {
+    if ((BooleanConstant::value) &&
+        (Kokkos::Tools::Experimental::tool_requirements
+             .requires_global_fencing)) {
       Kokkos::fence();
     }
     (*callback)(args...);
@@ -137,8 +138,8 @@ bool profileLibraryLoaded() {
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
   Kokkos::Tools::Experimental::call_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_for, true,
-      kernelPrefix.c_str(), devID, kernelID);
+      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_for,
+      std::true_type{}, kernelPrefix.c_str(), devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
     auto context_id = Experimental::get_new_context_id();
@@ -155,8 +156,8 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
 
 void endParallelFor(const uint64_t kernelID) {
   Kokkos::Tools::Experimental::call_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.end_parallel_for, true,
-      kernelID);
+      Kokkos::Tools::Experimental::current_callbacks.end_parallel_for,
+      std::true_type{}, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
     Experimental::end_context(Experimental::get_current_context_id());
@@ -167,8 +168,8 @@ void endParallelFor(const uint64_t kernelID) {
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                        uint64_t* kernelID) {
   Kokkos::Tools::Experimental::call_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_scan, true,
-      kernelPrefix.c_str(), devID, kernelID);
+      Kokkos::Tools::Experimental::current_callbacks.begin_parallel_scan,
+      std::true_type{}, kernelPrefix.c_str(), devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
     auto context_id = Experimental::get_new_context_id();
@@ -185,8 +186,8 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
 
 void endParallelScan(const uint64_t kernelID) {
   Kokkos::Tools::Experimental::call_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.end_parallel_scan, true,
-      kernelID);
+      Kokkos::Tools::Experimental::current_callbacks.end_parallel_scan,
+      std::true_type{}, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
     Experimental::end_context(Experimental::get_current_context_id());
@@ -198,7 +199,7 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
                          uint64_t* kernelID) {
   Kokkos::Tools::Experimental::call_kokkos_callback(
       Kokkos::Tools::Experimental::current_callbacks.begin_parallel_reduce,
-      true, kernelPrefix.c_str(), devID, kernelID);
+      std::true_type{}, kernelPrefix.c_str(), devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
     auto context_id = Experimental::get_new_context_id();
@@ -215,8 +216,8 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
 
 void endParallelReduce(const uint64_t kernelID) {
   Kokkos::Tools::Experimental::call_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.end_parallel_reduce, true,
-      kernelID);
+      Kokkos::Tools::Experimental::current_callbacks.end_parallel_reduce,
+      std::true_type{}, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
     Experimental::end_context(Experimental::get_current_context_id());
@@ -225,44 +226,40 @@ void endParallelReduce(const uint64_t kernelID) {
 }
 
 void pushRegion(const std::string& kName) {
-  if (Experimental::current_callbacks.push_region != nullptr) {
-    Kokkos::fence();
-    (*Experimental::current_callbacks.push_region)(kName.c_str());
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.push_region, std::true_type{},
+      kName.c_str());
 }
 
 void popRegion() {
-  if (Experimental::current_callbacks.pop_region != nullptr) {
-    Kokkos::fence();
-    (*Experimental::current_callbacks.pop_region)();
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.pop_region, std::true_type{});
 }
 
 void allocateData(const SpaceHandle space, const std::string label,
                   const void* ptr, const uint64_t size) {
-  if (Experimental::current_callbacks.allocate_data != nullptr) {
-    (*Experimental::current_callbacks.allocate_data)(space, label.c_str(), ptr,
-                                                     size);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.allocate_data, std::false_type{}, space,
+      label.c_str(), ptr, size);
 }
 
 void deallocateData(const SpaceHandle space, const std::string label,
                     const void* ptr, const uint64_t size) {
-  if (Experimental::current_callbacks.deallocate_data != nullptr) {
-    (*Experimental::current_callbacks.deallocate_data)(space, label.c_str(),
-                                                       ptr, size);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.deallocate_data, std::false_type{}, space,
+      label.c_str(), ptr, size);
 }
 
 void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
                    const void* dst_ptr, const SpaceHandle src_space,
                    const std::string src_label, const void* src_ptr,
                    const uint64_t size) {
-  if (Experimental::current_callbacks.begin_deep_copy != nullptr) {
-    (*Experimental::current_callbacks.begin_deep_copy)(
-        dst_space, dst_label.c_str(), dst_ptr, src_space, src_label.c_str(),
-        src_ptr, size);
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.begin_deep_copy, std::false_type{},
+      dst_space, dst_label.c_str(), dst_ptr, src_space, src_label.c_str(),
+      src_ptr, size);
 #ifdef KOKKOS_ENABLE_TUNING
+  if (Experimental::current_callbacks.begin_deep_copy != nullptr) {
     if (Kokkos::tune_internals()) {
       auto context_id = Experimental::get_new_context_id();
       Experimental::begin_context(context_id);
@@ -274,64 +271,62 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
               Experimental::kernel_type_context_variable_id, "deep_copy")};
       Experimental::set_input_values(context_id, 2, contextValues);
     }
-#endif
   }
+#endif
 }
 
 void endDeepCopy() {
-  if (Experimental::current_callbacks.end_deep_copy != nullptr) {
-    (*Experimental::current_callbacks.end_deep_copy)();
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.end_deep_copy, std::false_type{});
 #ifdef KOKKOS_ENABLE_TUNING
+  if (Experimental::current_callbacks.end_deep_copy != nullptr) {
     if (Kokkos::tune_internals()) {
       Experimental::end_context(Experimental::get_current_context_id());
     }
-#endif
   }
+#endif
 }
 
 void beginFence(const std::string name, const uint32_t deviceId,
                 uint64_t* handle) {
-  if (Experimental::current_callbacks.begin_fence != nullptr) {
-    (*Experimental::current_callbacks.begin_fence)(name.c_str(), deviceId,
-                                                   handle);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.begin_fence, std::false_type{},
+      name.c_str(), deviceId, handle);
 }
 
 void endFence(const uint64_t handle) {
-  if (Experimental::current_callbacks.end_fence != nullptr) {
-    (*Experimental::current_callbacks.end_fence)(handle);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.end_fence, std::false_type{}, handle);
 }
 
 void createProfileSection(const std::string& sectionName, uint32_t* secID) {
-  if (Experimental::current_callbacks.create_profile_section != nullptr) {
-    (*Experimental::current_callbacks.create_profile_section)(
-        sectionName.c_str(), secID);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.create_profile_section, std::false_type{},
+      sectionName.c_str(), secID);
 }
 
 void startSection(const uint32_t secID) {
-  if (Experimental::current_callbacks.start_profile_section != nullptr) {
-    (*Experimental::current_callbacks.start_profile_section)(secID);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.start_profile_section, std::false_type{},
+      secID);
 }
 
 void stopSection(const uint32_t secID) {
-  if (Experimental::current_callbacks.stop_profile_section != nullptr) {
-    (*Experimental::current_callbacks.stop_profile_section)(secID);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.stop_profile_section, std::false_type{},
+      secID);
 }
 
 void destroyProfileSection(const uint32_t secID) {
-  if (Experimental::current_callbacks.destroy_profile_section != nullptr) {
-    (*Experimental::current_callbacks.destroy_profile_section)(secID);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.destroy_profile_section,
+      std::false_type{}, secID);
 }
 
 void markEvent(const std::string& eventName) {
-  if (Experimental::current_callbacks.profile_event != nullptr) {
-    (*Experimental::current_callbacks.profile_event)(eventName.c_str());
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.profile_event, std::false_type{},
+      eventName.c_str());
 }
 
 bool printHelp(const std::string& args) {
@@ -340,13 +335,17 @@ bool printHelp(const std::string& args) {
   }
   std::string arg0  = args.substr(0, args.find_first_of(' '));
   const char* carg0 = arg0.c_str();
-  (*Experimental::current_callbacks.print_help)(const_cast<char*>(carg0));
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.print_help, std::false_type{},
+      const_cast<char*>(carg0));
   return true;
 }
 
 void parseArgs(int _argc, char** _argv) {
   if (Experimental::current_callbacks.parse_args != nullptr && _argc > 0) {
-    (*Experimental::current_callbacks.parse_args)(_argc, _argv);
+    Kokkos::Tools::Experimental::call_kokkos_callback(
+        Experimental::current_callbacks.parse_args, std::false_type{}, _argc,
+        _argv);
   }
 }
 
@@ -558,23 +557,23 @@ void initialize(const std::string& profileLibrary) {
   (void)profileLibrary;
 #endif  // KOKKOS_ENABLE_LIBDL
   Kokkos::Tools::Experimental::call_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.init, false, 0,
+      Kokkos::Tools::Experimental::current_callbacks.init, std::false_type{}, 0,
       (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
 
   Kokkos::Tools::Experimental::tool_requirements.num_supported_responses = 1;
   Kokkos::Tools::Experimental::tool_requirements.requires_global_fencing = true;
 
   Kokkos::Tools::Experimental::call_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.request_responses, false,
-      &Kokkos::Tools::Experimental::tool_requirements);
+      Kokkos::Tools::Experimental::current_callbacks.request_responses,
+      std::false_type{}, &Kokkos::Tools::Experimental::tool_requirements);
 
   Kokkos::Tools::Experimental::ToolActions actions;
   actions.num_supported_actions = 1;
   actions.fence = &Kokkos::Tools::Experimental::Impl::tool_invoked_fence;
 
   Kokkos::Tools::Experimental::call_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.transmit_actions, false,
-      actions);
+      Kokkos::Tools::Experimental::current_callbacks.transmit_actions,
+      std::false_type{}, actions);
 
 #ifdef KOKKOS_ENABLE_TUNING
   Experimental::VariableInfo kernel_name;
@@ -650,7 +649,8 @@ void finalize() {
   is_finalized = 1;
 
   if (Experimental::current_callbacks.finalize != nullptr) {
-    (*Experimental::current_callbacks.finalize)();
+    Kokkos::Tools::Experimental::call_kokkos_callback(
+        Experimental::current_callbacks.finalize, std::false_type{});
 
     Experimental::pause_tools();
   }
@@ -670,24 +670,21 @@ void finalize() {
 
 void syncDualView(const std::string& label, const void* const ptr,
                   bool to_device) {
-  if (Experimental::current_callbacks.sync_dual_view != nullptr) {
-    (*Experimental::current_callbacks.sync_dual_view)(label.c_str(), ptr,
-                                                      to_device);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.sync_dual_view, std::false_type{},
+      label.c_str(), ptr, to_device);
 }
 void modifyDualView(const std::string& label, const void* const ptr,
                     bool on_device) {
-  if (Experimental::current_callbacks.modify_dual_view != nullptr) {
-    (*Experimental::current_callbacks.modify_dual_view)(label.c_str(), ptr,
-                                                        on_device);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.modify_dual_view, std::false_type{},
+      label.c_str(), ptr, on_device);
 }
 
 void declareMetadata(const std::string& key, const std::string& value) {
-  if (Experimental::current_callbacks.declare_metadata != nullptr) {
-    (*Experimental::current_callbacks.declare_metadata)(key.c_str(),
-                                                        value.c_str());
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.declare_metadata, std::false_type{},
+      key.c_str(), value.c_str());
 }
 
 }  // namespace Tools
@@ -910,10 +907,9 @@ size_t get_new_variable_id() { return get_variable_counter(); }
 size_t declare_output_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
-  if (Experimental::current_callbacks.declare_output_type != nullptr) {
-    (*Experimental::current_callbacks.declare_output_type)(variableName.c_str(),
-                                                           variableId, &info);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.declare_output_type, std::false_type{},
+      variableName.c_str(), variableId, &info);
   variable_metadata[variableId] = info;
 #else
   (void)variableName;
@@ -925,10 +921,9 @@ size_t declare_output_type(const std::string& variableName, VariableInfo info) {
 size_t declare_input_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
-  if (Experimental::current_callbacks.declare_input_type != nullptr) {
-    (*Experimental::current_callbacks.declare_input_type)(variableName.c_str(),
-                                                          variableId, &info);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.declare_input_type, std::false_type{},
+      variableName.c_str(), variableId, &info);
   variable_metadata[variableId] = info;
 #else
   (void)variableName;
@@ -967,8 +962,10 @@ void request_output_values(size_t contextId, size_t count,
     for (size_t x = 0; x < count; ++x) {
       values[x].metadata = &variable_metadata[values[x].type_id];
     }
-    (*Experimental::current_callbacks.request_output_values)(
-        contextId, context_values.size(), context_values.data(), count, values);
+    Kokkos::Tools::Experimental::call_kokkos_callback(
+        Experimental::current_callbacks.request_output_values,
+        std::false_type{}, contextId, context_values.size(),
+        context_values.data(), count, values);
   }
 #else
   (void)contextId;
@@ -982,19 +979,18 @@ static std::unordered_map<size_t, size_t> optimization_goals;
 #endif
 
 void begin_context(size_t contextId) {
-  if (Experimental::current_callbacks.begin_tuning_context != nullptr) {
-    (*Experimental::current_callbacks.begin_tuning_context)(contextId);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.begin_tuning_context, std::false_type{},
+      contextId);
 }
 void end_context(size_t contextId) {
 #ifdef KOKKOS_ENABLE_TUNING
   for (auto id : features_per_context[contextId]) {
     active_features.erase(id);
   }
-  if (Experimental::current_callbacks.end_tuning_context != nullptr) {
-    (*Experimental::current_callbacks.end_tuning_context)(
-        contextId, feature_values[optimization_goals[contextId]]);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.end_tuning_context, std::false_type{},
+      contextId, feature_values[optimization_goals[contextId]]);
   optimization_goals.erase(contextId);
   decrement_current_context_id();
 #else
@@ -1082,9 +1078,9 @@ size_t get_new_variable_id();
 void declare_optimization_goal(const size_t context,
                                const OptimizationGoal& goal) {
 #ifdef KOKKOS_ENABLE_TUNING
-  if (Experimental::current_callbacks.declare_optimization_goal != nullptr) {
-    (*Experimental::current_callbacks.declare_optimization_goal)(context, goal);
-  }
+  Kokkos::Tools::Experimental::call_kokkos_callback(
+      Experimental::current_callbacks.declare_optimization_goal,
+      std::false_type{}, context, goal);
   optimization_goals[context] = goal.type_id;
 #else
   (void)context;
