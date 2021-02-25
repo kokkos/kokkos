@@ -150,10 +150,11 @@ struct Kokkos_Tools_ToolResponses {
 };
 
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
-typedef void (*Kokkos_Tools_transmitActionsFunction)(Kokkos_Tools_ToolActions);
+typedef void (*Kokkos_Tools_transmitActionsFunction)(
+    struct Kokkos_Tools_ToolActions);
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Tools_requestResponsesFunction)(
-    Kokkos_Tools_ToolResponses*);
+    struct Kokkos_Tools_ToolResponses*);
 
 // Tuning
 
