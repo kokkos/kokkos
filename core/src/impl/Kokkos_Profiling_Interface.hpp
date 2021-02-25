@@ -101,11 +101,15 @@ namespace Tools {
 
 namespace Experimental {
 using EventSet = Kokkos_Profiling_EventSet;
-static_assert(sizeof(EventSet) / sizeof(function_pointer) == 275,
+static_assert(sizeof(EventSet) / sizeof(Kokkos_Tools_function_pointer) == 275,
               "sizeof EventSet has changed, this is an error on the part of a "
               "Kokkos developer");
-using toolInvokedFenceFunction = Kokkos_Profiling_toolInvokedFenceFunction;
-using transmitFenceFunction    = Kokkos_Profiling_transmitFenceFunction;
+
+using toolInvokedFenceFunction = Kokkos_Tools_toolInvokedFenceFunction;
+using transmitActionsFunction  = Kokkos_Tools_transmitActionsFunction;
+using requestResponseFunction  = Kokkos_Tools_requestResponsesFunction;
+using ToolResponses            = Kokkos_Tools_ToolResponses;
+using ToolActions              = Kokkos_Tools_ToolActions;
 }  // namespace Experimental
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;

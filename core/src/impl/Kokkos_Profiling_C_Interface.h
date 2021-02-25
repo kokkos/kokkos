@@ -131,9 +131,29 @@ typedef void (*Kokkos_Profiling_dualViewModifyFunction)(const char*,
 typedef void (*Kokkos_Profiling_declareMetadataFunction)(const char*,
                                                          const char*);
 
-typedef void (*Kokkos_Profiling_toolInvokedFenceFunction)(const uint32_t);
-typedef void (*Kokkos_Profiling_transmitFenceFunction)(
-    Kokkos_Profiling_toolInvokedFenceFunction);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Tools_toolInvokedFenceFunction)(const uint32_t);
+
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Tools_function_pointer)();
+struct Kokkos_Tools_ToolActions {
+  int num_supported_actions;
+  Kokkos_Tools_toolInvokedFenceFunction fence;
+  // allow addition of more actions
+  Kokkos_Tools_function_pointer padding[31];
+};
+
+struct Kokkos_Tools_ToolResponses {
+  int num_supported_responses;
+  bool requires_global_fencing;
+  bool padding[255];
+};
+
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Tools_transmitActionsFunction)(Kokkos_Tools_ToolActions);
+// NOLINTNEXTLINE(modernize-use-using): C compatibility
+typedef void (*Kokkos_Tools_requestResponsesFunction)(
+    Kokkos_Tools_ToolResponses*);
 
 // Tuning
 
@@ -229,8 +249,6 @@ typedef void (*Kokkos_Tools_contextEndFunction)(
 typedef void (*Kokkos_Tools_optimizationGoalDeclarationFunction)(
     const size_t, const struct Kokkos_Tools_OptimzationGoal goal);
 
-typedef void (*function_pointer)();
-
 struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_initFunction init;
   Kokkos_Profiling_finalizeFunction finalize;
@@ -258,8 +276,9 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_dualViewSyncFunction sync_dual_view;
   Kokkos_Profiling_dualViewModifyFunction modify_dual_view;
   Kokkos_Profiling_declareMetadataFunction declare_metadata;
-  Kokkos_Profiling_transmitFenceFunction transmit_fence;
-  char profiling_padding[10 * sizeof(function_pointer)];
+  Kokkos_Tools_transmitActionsFunction transmit_actions;
+  Kokkos_Tools_requestResponsesFunction request_responses;
+  char profiling_padding[9 * sizeof(Kokkos_Tools_function_pointer)];
   Kokkos_Tools_outputTypeDeclarationFunction declare_output_type;
   Kokkos_Tools_inputTypeDeclarationFunction declare_input_type;
   Kokkos_Tools_requestValueFunction request_output_values;
@@ -267,9 +286,11 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Tools_contextEndFunction end_tuning_context;
   Kokkos_Tools_optimizationGoalDeclarationFunction declare_optimization_goal;
   char padding[232 *
-               sizeof(function_pointer)];  // allows us to add another 256
-                                           // events to the Tools interface
-                                           // without changing struct layout
+               sizeof(
+                   Kokkos_Tools_function_pointer)];  // allows us to add another
+                                                     // 256 events to the Tools
+                                                     // interface without
+                                                     // changing struct layout
 };
 
 #endif  // KOKKOS_PROFILING_C_INTERFACE_HPP
