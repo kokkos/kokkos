@@ -615,13 +615,17 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       // Iterate through the number of teams until league_size and assign the
       // league_id accordingly
-      for (int league_id = blockIdx; league_id < league_size;
-           league_id += gridDim) {
-        typename Policy::member_type team(league_id, league_size, team_size,
-                                          vector_length, scratch_ptr, blockIdx,
-                                          shmem_size_L0, shmem_size_L1);
-        m_functor(team);
-      }
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename Policy::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          m_functor(team);
+        }
+      } else
+        printf("`num_teams` clause was not respected. \n");
     }
   }
 
@@ -657,13 +661,17 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       const int blockIdx = omp_get_team_num();
       const int gridDim  = omp_get_num_teams();
 
-      for (int league_id = blockIdx; league_id < league_size;
-           league_id += gridDim) {
-        typename Policy::member_type team(league_id, league_size, team_size,
-                                          vector_length, scratch_ptr, blockIdx,
-                                          shmem_size_L0, shmem_size_L1);
-        m_functor(TagType(), team);
-      }
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename Policy::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          m_functor(TagType(), team);
+        }
+      } else
+        printf("`num_teams` clause was not respected. \n");
     }
   }
 
@@ -717,13 +725,17 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       const int blockIdx = omp_get_team_num();
       const int gridDim  = omp_get_num_teams();
 
-      for (int league_id = blockIdx; league_id < league_size;
-           league_id += gridDim) {
-        typename PolicyType::member_type team(
-            league_id, league_size, team_size, vector_length, scratch_ptr,
-            blockIdx, shmem_size_L0, shmem_size_L1);
-        f(team, result);
-      }
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename PolicyType::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          f(team, result);
+        }
+      } else
+        printf("`num_teams` clause was not respected. \n");
     }
 
     *result_ptr = result;
@@ -764,13 +776,17 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       const int blockIdx = omp_get_team_num();
       const int gridDim  = omp_get_num_teams();
 
-      for (int league_id = blockIdx; league_id < league_size;
-           league_id += gridDim) {
-        typename PolicyType::member_type team(
-            league_id, league_size, team_size, vector_length, scratch_ptr,
-            blockIdx, shmem_size_L0, shmem_size_L1);
-        f(TagType(), team, result);
-      }
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename PolicyType::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          f(TagType(), team, result);
+        }
+      } else
+        printf("`num_teams` clause was not respected. \n");
     }
 
     *result_ptr = result;
