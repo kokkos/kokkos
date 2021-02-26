@@ -118,8 +118,8 @@ class HIPSpace {
 
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access HIPSpace */
-  static void access_error();
-  static void access_error(const void* const);
+  KOKKOS_DEPRECATED static void access_error();
+  KOKKOS_DEPRECATED static void access_error(const void* const);
 
  private:
   int m_device;  ///< Which HIP device

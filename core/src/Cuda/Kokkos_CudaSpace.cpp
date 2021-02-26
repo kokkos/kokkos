@@ -128,14 +128,14 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
 
 namespace Kokkos {
 
-void CudaSpace::access_error() {
+KOKKOS_DEPRECATED void CudaSpace::access_error() {
   const std::string msg(
       "Kokkos::CudaSpace::access_error attempt to execute Cuda function from "
       "non-Cuda space");
   Kokkos::Impl::throw_runtime_exception(msg);
 }
 
-void CudaSpace::access_error(const void *const) {
+KOKKOS_DEPRECATED void CudaSpace::access_error(const void *const) {
   const std::string msg(
       "Kokkos::CudaSpace::access_error attempt to execute Cuda function from "
       "non-Cuda space");
