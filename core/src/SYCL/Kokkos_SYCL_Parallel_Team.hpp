@@ -348,7 +348,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   template <class FunctorType>
   int internal_team_size_recommended_reduce(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return internal_team_size_max_reduce(f);
+    return internal_team_size_max<ClosureType>(f);
   }
 };
 
@@ -441,7 +441,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_SYCL optimize
     if (m_team_size < 0) m_team_size = 32;
 
-    // FIXME_SYCL modify for reduce etc.
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
         (m_policy.scratch_size(0, m_team_size) +

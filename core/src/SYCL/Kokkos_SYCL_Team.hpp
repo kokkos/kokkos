@@ -182,6 +182,53 @@ class SYCLTeamMember {
     m_item.barrier(sycl::access::fence_space::local_space);
   }
 
+  // FIXME_SYCL move somewhere else and combine with other places that do
+  // parallel_scan
+  // Exclusive scan returning the total sum, compare
+  // https://developer.nvidia.com/gpugems/gpugems3/part-vi-gpu-computing/chapter-39-parallel-prefix-sum-scan-cuda
+  template <typename Type>
+  static Type prescan(sycl::nd_item<2> m_item, Type* temp, int n) {
+    int thid   = m_item.get_local_id(0);
+    int offset = 1;
+
+    for (int d = n >> 1; d > 0; d >>= 1)  // build sum in place up the tree
+    {
+      if (thid < d) {
+        int ai = offset * (2 * thid + 1) - 1;
+        int bi = offset * (2 * thid + 2) - 1;
+
+        temp[bi] += temp[ai];
+      }
+      m_item.barrier(sycl::access::fence_space::local_space);
+
+      offset *= 2;
+    }
+
+    Type total_sum = temp[n - 1];
+    m_item.barrier(sycl::access::fence_space::local_space);
+    if (thid == 0) {
+      temp[n - 1] = 0;
+    }  // clear the last element
+
+    for (int d = 1; d < n; d *= 2)  // traverse down tree & build scan
+    {
+      offset >>= 1;
+      m_item.barrier(sycl::access::fence_space::local_space);
+
+      if (thid < d) {
+        int ai = offset * (2 * thid + 1) - 1;
+        int bi = offset * (2 * thid + 2) - 1;
+
+        Type t   = temp[ai];
+        temp[ai] = temp[bi];
+        temp[bi] += t;
+      }
+    }
+
+    m_item.barrier(sycl::access::fence_space::local_space);
+    return total_sum;
+  }
+
   //--------------------------------------------------------------------------
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
    *          with intra-team non-deterministic ordering accumulation.
@@ -194,10 +241,53 @@ class SYCLTeamMember {
    */
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type team_scan(const Type& value,
-                                        Type* const /*global_accum*/) const {
-    // FIXME_SYCL
-    Kokkos::abort("Not implemented!");
-    return value;
+                                        Type* const global_accum) const {
+    // We need to chunk up the whole reduction because we might not have
+    // allocated enough memory.
+    const int maximum_work_range =
+        std::min<int>(m_team_reduce_size / sizeof(Type), team_size());
+
+    int not_greater_power_of_two = 1;
+    while ((not_greater_power_of_two << 1) < maximum_work_range + 1)
+      not_greater_power_of_two <<= 1;
+
+    Type intermediate;
+    Type total{};
+
+    const int idx        = team_rank();
+    const auto base_data = static_cast<Type*>(m_team_reduce);
+
+    // Load values into the first not_greater_power_of_two values of the
+    // reduction array in chunks. This means that only threads with an id in the
+    // corresponding chunk load values and the reduction is always done by the
+    // first smaller_power_of_two threads.
+    for (int start = 0; start < team_size();
+         start += not_greater_power_of_two) {
+      m_item.barrier(sycl::access::fence_space::local_space);
+      if (idx >= start && idx < start + not_greater_power_of_two) {
+        base_data[idx - start] = value;
+      }
+      m_item.barrier(sycl::access::fence_space::local_space);
+
+      const Type partial_total =
+          prescan(m_item, base_data, not_greater_power_of_two);
+      if (idx >= start && idx < start + not_greater_power_of_two)
+        intermediate = base_data[idx - start] + total;
+      if (start == 0)
+        total = partial_total;
+      else
+        total += partial_total;
+    }
+
+    if (global_accum) {
+      if (team_size() == idx + 1) {
+        base_data[0] = atomic_fetch_add(global_accum, base_data[0]);
+      }
+      m_item.barrier();  // Wait for atomic
+      intermediate += base_data[0];
+    }
+
+    return intermediate;
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering.
