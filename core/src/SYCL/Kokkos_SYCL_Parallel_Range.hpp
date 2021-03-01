@@ -98,8 +98,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
                                 .impl_internal_space_instance()
                                 ->m_indirectKernelMem;
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper<
-        std::reference_wrapper<FunctorType>>(m_functor, indirectKernelMem);
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_functor, indirectKernelMem);
     sycl_direct_launch(m_policy, functor_wrapper.get_functor());
   }
 
@@ -246,8 +246,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         indirectKernelMem =
             m_space.impl_internal_space_instance()->m_indirectKernelMem;
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper<
-        std::reference_wrapper<FunctorType>>(m_functor, indirectKernelMem);
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_functor, indirectKernelMem);
     sycl_direct_launch(functor_wrapper.get_functor());
   }
 
