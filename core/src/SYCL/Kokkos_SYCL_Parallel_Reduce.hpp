@@ -556,6 +556,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     }
 
     sycl::free(results_ptr, q);
+    sycl::free(results_ptr2, q);
   }
 
  public:
