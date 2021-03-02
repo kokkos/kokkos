@@ -131,10 +131,19 @@ TEST(TEST_CATEGORY, reduce_device_view_mdrange_policy) {
 // FIXME_HIP
 #ifndef KOKKOS_ENABLE_HIP
 TEST(TEST_CATEGORY, reduce_device_view_team_policy) {
+// FIXME_SYCL The number of workgroups on CUDA devices can not be larger than
+// 65535
+#ifdef KOKKOS_ENABLE_SYCL
+  int N = 63 * 1024 * 1024;
+  test_reduce_device_view(
+      N, Kokkos::TeamPolicy<TEST_EXECSPACE>(63 * 1024, Kokkos::AUTO),
+      TeamPolicyFunctor(1024));
+#else
   int N = 1000 * 1024 * 1024;
   test_reduce_device_view(
       N, Kokkos::TeamPolicy<TEST_EXECSPACE>(1000 * 1024, Kokkos::AUTO),
       TeamPolicyFunctor(1024));
+#endif
 }
 #endif
 }  // namespace Test
