@@ -95,64 +95,36 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
 
   template <typename FunctorType>
   int team_size_max(FunctorType const& f, ParallelForTag const&) const {
-    using closure_type =
-        Impl::ParallelFor<FunctorType, TeamPolicy<Properties...>>;
-    return internal_team_size_max<closure_type>(f);
+    return internal_team_size_max_for(f);
   }
 
   template <class FunctorType>
   inline int team_size_max(const FunctorType& f,
                            const ParallelReduceTag&) const {
-    using functor_analysis_type =
-        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              TeamPolicyInternal, FunctorType>;
-    using reducer_type = typename Impl::ParallelReduceReturnValue<
-        void, typename functor_analysis_type::value_type,
-        FunctorType>::reducer_type;
-    using closure_type =
-        Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             reducer_type>;
-    return internal_team_size_max<closure_type>(f);
+    return internal_team_size_max_reduce(f);
   }
 
   template <class FunctorType, class ReducerType>
   inline int team_size_max(const FunctorType& f, const ReducerType& /*r*/,
                            const ParallelReduceTag&) const {
-    using closure_type =
-        Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             ReducerType>;
-    return internal_team_size_max<closure_type>(f);
+    return internal_team_size_max_reduce(f);
   }
 
   template <typename FunctorType>
-  int team_size_recommended(FunctorType const& /*f*/,
-                            ParallelForTag const&) const {
-    // FIXME_SYCL optimize
-    return m_space.impl_internal_space_instance()->m_maxWorkgroupSize;
+  int team_size_recommended(FunctorType const& f, ParallelForTag const&) const {
+    return internal_team_size_max_for(f);
   }
 
   template <typename FunctorType>
   inline int team_size_recommended(FunctorType const& f,
                                    ParallelReduceTag const&) const {
-    using functor_analysis_type =
-        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
-                              TeamPolicyInternal, FunctorType>;
-    using reducer_type = typename Impl::ParallelReduceReturnValue<
-        void, typename functor_analysis_type::value_type,
-        FunctorType>::reducer_type;
-    using closure_type =
-        Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             reducer_type>;
-    return internal_team_size_recommended<closure_type>(f);
+    return internal_team_size_recommended_reduce(f);
   }
 
   template <class FunctorType, class ReducerType>
   int team_size_recommended(FunctorType const& f, ReducerType const&,
                             ParallelReduceTag const&) const {
-    using closure_type =
-        Impl::ParallelReduce<FunctorType, TeamPolicy<Properties...>,
-                             ReducerType>;
-    return internal_team_size_recommended<closure_type>(f);
+    return internal_team_size_recommended_reduce(f);
   }
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
@@ -327,41 +299,56 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   using member_type = Kokkos::Impl::SYCLTeamMember;
 
  protected:
-  template <class ClosureType, class FunctorType, class BlockSizeCallable>
-  int internal_team_size_common(
-      const FunctorType& /*f*/,
-      BlockSizeCallable&& /*block_size_callable*/) const {
-    // FIXME_SYCL
-    Kokkos::abort("Not implemented!");
-    return 0;
-  }
-
-  template <class ClosureType, class FunctorType>
-  int internal_team_size_max(const FunctorType& /*f*/) const {
-    // If no scratch memory per thread is requested, the maximum is simply the
-    // maximum number of threads allowed in a workgroup.
-    if (m_thread_scratch_size[0] == 0)
-      return m_space.impl_internal_space_instance()->m_maxWorkgroupSize;
-
-    // Otherwise, we choose the maximum as the minimum of the number of threads
-    // allowed in a workgroup and the number of threads that allow allocating
-    // the amount of local memory requested. We want to satisfy
-    // memory_per_team + memory_per_thread * thread_size < max_local_memory
-    // which implies
-    // thread_size < (max_local_memory - memory_per_team)/memory_per_thread
+  template <class FunctorType>
+  int internal_team_size_max_for(const FunctorType& /*f*/) const {
+    // nested_reducer_memsize = (sizeof(double) * (m_team_size + 2)
+    // custom: m_team_scratch_size[0] + m_thread_scratch_size[0] * m_team_size
+    // total:
+    // 2*sizeof(double)+m_team_scratch_size[0]
+    // + m_team_size(sizeof(double)+m_thread_scratch_size[0])
     const int max_threads_for_memory =
         (space().impl_internal_space_instance()->m_maxShmemPerBlock -
-         m_team_scratch_size[0]) /
-        m_thread_scratch_size[0];
+         2 * sizeof(double) - m_team_scratch_size[0]) /
+        (sizeof(double) + m_thread_scratch_size[0]);
     return std::min<int>(
         m_space.impl_internal_space_instance()->m_maxWorkgroupSize,
         max_threads_for_memory);
   }
 
-  template <class ClosureType, class FunctorType>
-  int internal_team_size_recommended(const FunctorType& f) const {
+  template <class FunctorType>
+  int internal_team_size_max_reduce(const FunctorType& f) const {
+    using Analysis        = FunctorAnalysis<FunctorPatternInterface::REDUCE,
+                                     TeamPolicyInternal, FunctorType>;
+    using value_type      = typename Analysis::value_type;
+    const int value_count = Analysis::value_count(f);
+
+    // nested_reducer_memsize = (sizeof(double) * (m_team_size + 2)
+    // reducer_memsize = sizeof(value_type) * m_team_size * value_count
+    // custom: m_team_scratch_size[0] + m_thread_scratch_size[0] * m_team_size
+    // total:
+    // 2*sizeof(double)+m_team_scratch_size[0]
+    // + m_team_size(sizeof(double)+sizeof(value_type)*value_count
+    //               +m_thread_scratch_size[0])
+    const int max_threads_for_memory =
+        (space().impl_internal_space_instance()->m_maxShmemPerBlock -
+         2 * sizeof(double) - m_team_scratch_size[0]) /
+        (sizeof(double) + sizeof(value_type) * value_count +
+         m_thread_scratch_size[0]);
+    return std::min<int>(
+        m_space.impl_internal_space_instance()->m_maxWorkgroupSize,
+        max_threads_for_memory);
+  }
+
+  template <class FunctorType>
+  int internal_team_size_recommended_for(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return internal_team_size_max<ClosureType>(f);
+    return internal_team_size_max_for(f);
+  }
+
+  template <class FunctorType>
+  int internal_team_size_recommended_reduce(const FunctorType& f) const {
+    // FIXME_SYCL improve
+    return internal_team_size_max_reduce(f);
   }
 };
 
