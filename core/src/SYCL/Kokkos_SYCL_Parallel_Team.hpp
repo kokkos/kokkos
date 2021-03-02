@@ -618,7 +618,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     bool first_run = true;
     while (size > 1) {
       auto n_wgroups = (size + wgroup_size - 1) / wgroup_size;
-      if (n_wgroups == size) std::abort();
       q.submit([&](sycl::handler& cgh) {
         sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                        sycl::access::target::local>
@@ -763,7 +762,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
  private:
   void initialize() {
     // FIXME_SYCL optimize
-    if (m_team_size < -1) m_team_size = 32;
+    if (m_team_size < 0) m_team_size = 32;
     // Must be a power of two greater than two, get the one not bigger than the
     // requested one.
     if ((m_team_size & m_team_size - 1) || m_team_size < 2) {
