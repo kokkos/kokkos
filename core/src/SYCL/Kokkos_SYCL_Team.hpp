@@ -109,10 +109,17 @@ class SYCLTeamMember {
   //--------------------------------------------------------------------------
 
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& /*val*/,
-                                             const int& /*thread_id*/) const {
-    // FIXME_SYCL
-    Kokkos::abort("Not implemented!");
+  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& val,
+                                             const int& thread_id) const {
+    // Wait for shared data write until all threads arrive here
+    m_item.barrier(sycl::access::fence_space::local_space);
+    if (m_item.get_local_id(1) == 0 &&
+        static_cast<int>(m_item.get_local_id(0)) == thread_id) {
+      *static_cast<ValueType*>(m_team_reduce) = val;
+    }
+    // Wait for shared data read until root thread writes
+    m_item.barrier(sycl::access::fence_space::local_space);
+    val = *static_cast<ValueType*>(m_team_reduce);
   }
 
   template <class Closure, class ValueType>
@@ -366,13 +373,14 @@ KOKKOS_INLINE_FUNCTION
       thread, count);
 }
 
-template <typename iType>
-KOKKOS_INLINE_FUNCTION
-    Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::SYCLTeamMember>
-    ThreadVectorRange(const Impl::SYCLTeamMember& thread, iType arg_begin,
-                      iType arg_end) {
+template <typename iType1, typename iType2>
+KOKKOS_INLINE_FUNCTION Impl::ThreadVectorRangeBoundariesStruct<
+    typename std::common_type<iType1, iType2>::type, Impl::SYCLTeamMember>
+ThreadVectorRange(const Impl::SYCLTeamMember& thread, iType1 arg_begin,
+                  iType2 arg_end) {
+  using iType = typename std::common_type<iType1, iType2>::type;
   return Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::SYCLTeamMember>(
-      thread, arg_begin, arg_end);
+      thread, iType(arg_begin), iType(arg_end));
 }
 
 KOKKOS_INLINE_FUNCTION
