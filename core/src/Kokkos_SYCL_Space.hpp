@@ -49,6 +49,7 @@
 
 #ifdef KOKKOS_ENABLE_SYCL
 #include <Kokkos_Concepts.hpp>
+#include <Kokkos_ScratchSpace.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 #include <impl/Kokkos_Tools.hpp>
@@ -81,6 +82,9 @@ class SYCLDeviceUSMSpace {
 
  public:
   static constexpr const char* name() { return "SYCLDeviceUSM"; };
+
+  static void impl_access_error();
+  static void impl_access_error(const void* const);
 
  private:
   int m_device;
@@ -185,6 +189,45 @@ struct MemorySpaceAccess<Kokkos::Experimental::SYCLSharedUSMSpace,
   // SYCLSharedUSMSpace::execution_space can access SYCLDeviceUSMSpace
   enum : bool { accessible = true };
   enum : bool { deepcopy = true };
+};
+
+template <>
+struct MemorySpaceAccess<
+    Kokkos::Experimental::SYCLDeviceUSMSpace,
+    Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL>> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+
+template <>
+struct MemorySpaceAccess<
+    Kokkos::Experimental::SYCLSharedUSMSpace,
+    Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL>> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+
+template <>
+struct VerifyExecutionCanAccessMemorySpace<
+    Kokkos::Experimental::SYCLDeviceUSMSpace,
+    Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL>> {
+  enum : bool { value = true };
+  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
+};
+
+template <>
+struct VerifyExecutionCanAccessMemorySpace<
+    Kokkos::HostSpace, Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL>> {
+  enum : bool { value = false };
+  inline static void verify(void) {
+    Experimental::SYCLDeviceUSMSpace::impl_access_error();
+  }
+  inline static void verify(const void* p) {
+    Experimental::SYCLDeviceUSMSpace::impl_access_error(p);
+  }
 };
 
 }  // namespace Impl
