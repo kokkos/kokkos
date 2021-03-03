@@ -712,8 +712,7 @@ class HIP {
   uint32_t impl_instance_id() const noexcept { return 0; }
 
  private:
-  Kokkos::Experimental::MaybeReferenceCountedPtr<Impl::HIPInternal>
-      m_space_instance;
+  Kokkos::Impl::HostSharedPtr<Impl::HIPInternal> m_space_instance;
 };
 }  // namespace Experimental
 namespace Tools {
