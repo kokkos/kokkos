@@ -51,6 +51,8 @@
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
+#define KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
+
 namespace Kokkos {
 namespace Impl {
 
@@ -600,6 +602,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto nteams =
         league_size < max_active_teams ? league_size : max_active_teams;
 
+#ifdef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
 // Performing our own scheduling of teams to avoid separation of code between
 // teams-distribute and parallel. Gave a 2x performance boost in test cases with
 // the clang compiler. atomic_compare_exchange can be avoided since the standard
@@ -628,10 +631,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         Kokkos::abort("`num_teams` clause was not respected.\n");
     }
 
+#else
 // Saving the older implementation that uses `atomic_compare_exchange` to
 // calculate the shared memory block index and `distribute` clause to distribute
 // teams.
-#if 0
 #pragma omp target teams distribute map(to                   \
                                         : a_functor)         \
     is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
@@ -692,6 +695,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto nteams =
         league_size < max_active_teams ? league_size : max_active_teams;
 
+#ifdef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) \
     map(to                                                         \
         : a_functor) is_device_ptr(scratch_ptr)
@@ -713,10 +717,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         Kokkos::abort("`num_teams` clause was not respected.\n");
     }
 
+#else
 // Saving the older implementation that uses `atomic_compare_exchange` to
 // calculate the shared memory block index and `distribute` clause to distribute
 // teams.
-#if 0
 #pragma omp target teams distribute map(to                   \
                                         : a_functor)         \
     is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
@@ -795,6 +799,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const auto nteams =
         league_size < max_active_teams ? league_size : max_active_teams;
 
+#ifdef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
                                                                        : f) \
     is_device_ptr(scratch_ptr)
@@ -817,11 +822,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     }
 
     *result_ptr = result;
-
+#else
 // Saving the older implementation that uses `atomic_compare_exchange` to
 // calculate the shared memory block index and `distribute` clause to distribute
 // teams.
-#if 0
 #pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
          map(to:f) map(tofrom:result) reduction(+: result) \
     is_device_ptr(scratch_ptr, lock_array)
@@ -887,6 +891,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const auto nteams =
         league_size < max_active_teams ? league_size : max_active_teams;
 
+#ifdef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
                                                                        : f) \
     is_device_ptr(scratch_ptr)
@@ -910,10 +915,10 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     *result_ptr = result;
 
+#else
 // Saving the older implementation that uses `atomic_compare_exchange` to
 // calculate the shared memory block index and `distribute` clause to distribute
 // teams.
-#if 0
 #pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
          map(to:f) map(tofrom:result) reduction(+: result) \
     is_device_ptr(scratch_ptr, lock_array)
@@ -1090,4 +1095,5 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenMPTargetExecTeamMember> {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#undef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
 #endif /* KOKKOS_OPENMPTARGET_PARALLEL_HPP */
