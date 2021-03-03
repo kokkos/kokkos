@@ -2133,6 +2133,43 @@ void test_unmanaged_subview_reset() {
 
 //----------------------------------------------------------------------------
 
+template <std::underlying_type_t<Kokkos::MemoryTraitsFlags> MTF>
+struct TestSubviewMemoryTraitsConstruction {
+  void operator()() const noexcept {
+    Kokkos::View<double*, Kokkos::HostSpace> v("v", 7);
+    for (int i = 0; i != v.size(); ++i) v[i] = static_cast<double>(i);
+
+    std::pair<int, int> range(3, 5);
+    auto sv = Kokkos::subview<Kokkos::MemoryTraits<MTF>>(v, range);
+
+    ASSERT_EQ(2u, sv.size());
+    EXPECT_EQ(3., sv[0]);
+    EXPECT_EQ(4., sv[1]);
+  }
+};
+
+inline void test_subview_memory_traits_construction() {
+  // Test all combinations of Unmanaged, RandomAccess, Atomic and Restricted
+  TestSubviewMemoryTraitsConstruction<0>()();
+  TestSubviewMemoryTraitsConstruction<1>()();
+  TestSubviewMemoryTraitsConstruction<2>()();
+  TestSubviewMemoryTraitsConstruction<3>()();
+  TestSubviewMemoryTraitsConstruction<4>()();
+  TestSubviewMemoryTraitsConstruction<5>()();
+  TestSubviewMemoryTraitsConstruction<6>()();
+  TestSubviewMemoryTraitsConstruction<7>()();
+  TestSubviewMemoryTraitsConstruction<8>()();
+  TestSubviewMemoryTraitsConstruction<9>()();
+  TestSubviewMemoryTraitsConstruction<10>()();
+  TestSubviewMemoryTraitsConstruction<11>()();
+  TestSubviewMemoryTraitsConstruction<12>()();
+  TestSubviewMemoryTraitsConstruction<13>()();
+  TestSubviewMemoryTraitsConstruction<14>()();
+  TestSubviewMemoryTraitsConstruction<15>()();
+}
+
+//----------------------------------------------------------------------------
+
 template <class T>
 struct get_view_type;
 
