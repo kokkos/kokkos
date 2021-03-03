@@ -144,8 +144,12 @@ GLOBAL_SET(KOKKOS_XCOMPILER_OPTIONS)
 # We need to append text here for making sure TPLs
 # we import are available for an installed Kokkos
 GLOBAL_SET(KOKKOS_TPL_EXPORTS)
-# this could probably be scoped to project
+# KOKKOS_DEPENDENCE is used by kokkos_launch_compiler
 GLOBAL_SET(KOKKOS_COMPILE_DEFINITIONS KOKKOS_DEPENDENCE)
+# MSVC never goes through kokkos_launch_compiler
+IF(NOT MSVC)
+    GLOBAL_APPEND(KOKKOS_LINK_OPTIONS -DKOKKOS_DEPENDENCE)
+ENDIF()
 
 # Include a set of Kokkos-specific wrapper functions that
 # will either call raw CMake or TriBITS
