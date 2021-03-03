@@ -681,7 +681,7 @@ void HIP::impl_finalize() { Impl::HIPInternal::singleton().finalize(); }
 
 HIP::HIP()
     : m_space_instance(&Impl::HIPInternal::singleton(),
-                       [](Impl::HIPInternal* ptr) {}) {
+                       [](Impl::HIPInternal*) {}) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
 }

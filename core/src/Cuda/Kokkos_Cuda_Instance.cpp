@@ -823,7 +823,7 @@ void Cuda::impl_finalize() { Impl::CudaInternal::singleton().finalize(); }
 
 Cuda::Cuda()
     : m_space_instance(&Impl::CudaInternal::singleton(),
-                       [](Impl::CudaInternal *ptr) {}) {
+                       [](Impl::CudaInternal *) {}) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
 }
