@@ -50,10 +50,10 @@
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 #include <impl/Kokkos_Error.hpp>
-#include <impl/Kokkos_EBO.hpp>
 
 namespace Kokkos {
 namespace Experimental {
+struct MaximizeOccupancy;
 struct DesiredOccupancy {
   int m_occ = 100;
   explicit constexpr DesiredOccupancy(int occ) : m_occ(occ) {
@@ -61,10 +61,11 @@ struct DesiredOccupancy {
   }
   explicit constexpr operator int() const { return m_occ; }
   constexpr int value() const { return m_occ; }
-  explicit DesiredOccupancy() = default;
+  DesiredOccupancy() = default;
+  explicit DesiredOccupancy(MaximizeOccupancy const&) : DesiredOccupancy() {}
 };
 struct MaximizeOccupancy {
-  explicit MaximizeOccupancy() = default;
+  MaximizeOccupancy() = default;
 };
 }  // namespace Experimental
 
@@ -75,12 +76,18 @@ template <class Enable, class... TraitsList>
 struct AnalyzePolicy;
 
 //------------------------------------------------------------------------------
+
+template <class AnalysisResults>
+struct PolicyTraitsWithDefaults;
+
+//------------------------------------------------------------------------------
 // ExecutionSpace case
 template <class ExecutionSpace, class... Traits>
 struct AnalyzePolicy<
     std::enable_if_t<Impl::is_execution_space<ExecutionSpace>::value>,
     ExecutionSpace, Traits...> : AnalyzePolicy<void, Traits...> {
   using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   static_assert(base_t::execution_space_is_defaulted,
                 "Kokkos Error: More than one execution space given");
   static constexpr bool execution_space_is_defaulted = false;
@@ -93,6 +100,7 @@ template <class ScheduleType, class... Traits>
 struct AnalyzePolicy<void, Kokkos::Schedule<ScheduleType>, Traits...>
     : AnalyzePolicy<void, Traits...> {
   using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   static_assert(base_t::schedule_type_is_defaulted,
                 "Kokkos Error: More than one schedule type given");
   static constexpr bool schedule_type_is_defaulted = false;
@@ -105,6 +113,7 @@ template <class IntegralIndexType, class... Traits>
 struct AnalyzePolicy<void, Kokkos::IndexType<IntegralIndexType>, Traits...>
     : AnalyzePolicy<void, Traits...> {
   using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   static_assert(base_t::index_type_is_defaulted,
                 "Kokkos Error: More than one index type given");
   static constexpr bool index_type_is_defaulted = false;
@@ -117,6 +126,7 @@ struct AnalyzePolicy<
     std::enable_if_t<std::is_integral<IntegralIndexType>::value>,
     IntegralIndexType, Traits...> : AnalyzePolicy<void, Traits...> {
   using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   static_assert(base_t::index_type_is_defaulted,
                 "Kokkos Error: More than one index type given");
   static constexpr bool index_type_is_defaulted = false;
@@ -130,6 +140,7 @@ struct AnalyzePolicy<
     std::enable_if_t<Impl::is_iteration_pattern<IterationPattern>::value>,
     IterationPattern, Traits...> : AnalyzePolicy<void, Traits...> {
   using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   static_assert(std::is_void<typename base_t::iteration_pattern>::value,
                 "Kokkos Error: More than one iteration pattern given");
   using iteration_pattern = IterationPattern;
@@ -141,6 +152,7 @@ template <unsigned int... Bounds, class... Traits>
 struct AnalyzePolicy<void, Kokkos::LaunchBounds<Bounds...>, Traits...>
     : AnalyzePolicy<void, Traits...> {
   using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   static_assert(base_t::launch_bounds_is_defaulted,
                 "Kokkos Error: More than one launch_bounds given");
   static constexpr bool launch_bounds_is_defaulted = false;
@@ -155,6 +167,7 @@ struct AnalyzePolicy<
         Kokkos::Experimental::is_work_item_property<Property>::value>,
     Property, Traits...> : AnalyzePolicy<void, Traits...> {
   using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   static_assert(
       std::is_same<typename base_t::work_item_property,
                    Kokkos::Experimental::WorkItemProperty::None_t>::value,
@@ -167,28 +180,78 @@ struct AnalyzePolicy<
 template <class... Traits>
 struct AnalyzePolicy<void, Impl::IsGraphKernelTag, Traits...>
     : AnalyzePolicy<void, Traits...> {
+  using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   using is_graph_kernel = std::true_type;
 };
 
 //------------------------------------------------------------------------------
 // Occupancy control case
+// The DesiredOccupancy case has runtime storage, so we need to handle copies
+// and assignments
 template <class... Traits>
 struct AnalyzePolicy<void, Kokkos::Experimental::DesiredOccupancy, Traits...>
     : AnalyzePolicy<void, Traits...> {
+ public:
+  using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   using occupancy_control = Kokkos::Experimental::DesiredOccupancy;
+  static constexpr bool experimental_contains_desired_occupancy = true;
+
+ private:
+  // storage for a stateful desired occupancy
+  occupancy_control m_desired_occupancy = {};
+
+ public:
+  // Converting constructor
+  // Just rely on the convertibility of occupancy_control to transfer the data
+  template <class Other>
+  AnalyzePolicy(PolicyTraitsWithDefaults<Other> const& other)
+      : base_t(other),
+        m_desired_occupancy(other.impl_get_occupancy_control()) {}
+
+  // Converting assignment operator
+  // Just rely on the convertibility of occupancy_control to transfer the data
+  template <class Other>
+  AnalyzePolicy& operator=(PolicyTraitsWithDefaults<Other> const& other) {
+    *static_cast<base_t*>(this) = other;
+    this->impl_set_desired_occupancy(
+        occupancy_control{other.impl_get_occupancy_control()});
+    return *this;
+  }
+
+  // Access to occupancy control instance, usable in generic context
+  constexpr occupancy_control impl_get_occupancy_control() const {
+    return m_desired_occupancy;
+  }
+
+  // Access to desired occupancy (getter and setter)
+  Kokkos::Experimental::DesiredOccupancy impl_get_desired_occupancy() const {
+    return m_desired_occupancy;
+  }
+
+  void impl_set_desired_occupancy(occupancy_control desired_occupancy) {
+    m_desired_occupancy = desired_occupancy;
+  }
 };
 
 template <class... Traits>
 struct AnalyzePolicy<void, Kokkos::Experimental::MaximizeOccupancy, Traits...>
     : AnalyzePolicy<void, Traits...> {
+  using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   using occupancy_control = Kokkos::Experimental::MaximizeOccupancy;
+  static constexpr bool experimental_contains_desired_occupancy = false;
 };
 
 //------------------------------------------------------------------------------
 // Ignore void for backwards compatibility purposes, though hopefully no one is
 // using this in application code
 template <class... Traits>
-struct AnalyzePolicy<void, void, Traits...> : AnalyzePolicy<void, Traits...> {};
+struct AnalyzePolicy<void, void, Traits...> : AnalyzePolicy<void, Traits...> {
+  using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
+};
 
 //------------------------------------------------------------------------------
 // Handle work tag: if nothing else matches, tread the trait as a work tag
@@ -197,12 +260,16 @@ struct AnalyzePolicy<void, void, Traits...> : AnalyzePolicy<void, Traits...> {};
 // "trait" handling code be unspecialized, so we handle it instead in a class
 // with a different name.
 template <class... Traits>
-struct AnalyzePolicyHandleWorkTag : AnalyzePolicy<void, Traits...> {};
+struct AnalyzePolicyHandleWorkTag : AnalyzePolicy<void, Traits...> {
+  using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
+};
 
 template <class WorkTag, class... Traits>
 struct AnalyzePolicyHandleWorkTag<WorkTag, Traits...>
     : AnalyzePolicy<void, Traits...> {
   using base_t = AnalyzePolicy<void, Traits...>;
+  using base_t::base_t;
   static_assert(std::is_void<typename base_t::work_tag>::value,
                 "Kokkos Error: More than one work tag given");
   using work_tag = WorkTag;
@@ -211,7 +278,10 @@ struct AnalyzePolicyHandleWorkTag<WorkTag, Traits...>
 // This only works if this is not a partial specialization, so we have to
 // do the partial specialization elsewhere
 template <class Enable, class... Traits>
-struct AnalyzePolicy : AnalyzePolicyHandleWorkTag<Traits...> {};
+struct AnalyzePolicy : AnalyzePolicyHandleWorkTag<Traits...> {
+  using base_t = AnalyzePolicyHandleWorkTag<Traits...>;
+  using base_t::base_t;
+};
 
 //------------------------------------------------------------------------------
 // Defaults, for the traits that aren't yet handled
@@ -240,8 +310,23 @@ struct AnalyzePolicy<void> {
   using is_graph_kernel    = std::false_type;
 
   using occupancy_control = Kokkos::Experimental::MaximizeOccupancy;
+  static constexpr bool experimental_contains_desired_occupancy = false;
+  // Default access occupancy_control, for when it is the (stateless) default
+  constexpr occupancy_control impl_get_occupancy_control() const {
+    return occupancy_control{};
+  }
 
   using work_tag = void;
+
+  AnalyzePolicy() = default;
+
+  // Base converting constructors: unless an individual policy analysis
+  // deletes a constructor, assume it's convertible
+  template <class Other>
+  AnalyzePolicy(PolicyTraitsWithDefaults<Other> const&) {}
+
+  template <class Other>
+  AnalyzePolicy& operator=(PolicyTraitsWithDefaults<Other> const&) {}
 };
 
 //------------------------------------------------------------------------------
@@ -249,6 +334,7 @@ struct AnalyzePolicy<void> {
 template <class AnalysisResults>
 struct PolicyTraitsWithDefaults : AnalysisResults {
   using base_t = AnalysisResults;
+  using base_t::base_t;
   // The old code turned this into an integral type for backwards compatibility,
   // so that's what we're doing here. The original comment was:
   //   nasty hack to make index_type into an integral_type
@@ -260,89 +346,11 @@ struct PolicyTraitsWithDefaults : AnalysisResults {
 };
 
 //------------------------------------------------------------------------------
-// Data storage for policies that require storage
-template <class AnalysisResults>
-struct PolicyDataStorage : PolicyTraitsWithDefaults<AnalysisResults>,
-                           NoUniqueAddressMemberEmulation<
-                               typename AnalysisResults::occupancy_control> {
- private:
-  using occupancy_control_t = typename AnalysisResults::occupancy_control;
-
-  using occupancy_control_storage_base_t =
-    NoUniqueAddressMemberEmulation<occupancy_control_t>;
- public:
-
-  static constexpr bool experimental_contains_desired_occupancy =
-      std::is_same<occupancy_control_t,
-          Kokkos::Experimental::DesiredOccupancy>::value;
-
-  PolicyDataStorage() = default;
-
-  // Converting constructors
-  template <
-      class Other,
-      std::enable_if_t<
-          experimental_contains_desired_occupancy &&
-          PolicyDataStorage<Other>::experimental_contains_desired_occupancy,
-          int> = 0>
-  PolicyDataStorage(PolicyDataStorage<Other> const &other) {
-    this->impl_set_desired_occupancy(other.impl_get_desired_occupancy());
-  }
-
-  template <class Other,
-      std::enable_if_t<!experimental_contains_desired_occupancy ||
-                       !PolicyDataStorage<Other>::
-                       experimental_contains_desired_occupancy,
-          int> = 0>
-  PolicyDataStorage(PolicyDataStorage<Other> const &) {}
-
-  // Converting assignment operators
-  template <
-      class Other,
-      std::enable_if_t<
-          experimental_contains_desired_occupancy &&
-          PolicyDataStorage<Other>::experimental_contains_desired_occupancy,
-          int> = 0>
-  PolicyDataStorage &operator=(PolicyDataStorage<Other> const &other) {
-    this->impl_set_desired_occupancy(other.impl_get_desired_occupancy());
-    return *this;
-  }
-
-  template <class Other,
-      std::enable_if_t<!experimental_contains_desired_occupancy ||
-                       !PolicyDataStorage<Other>::
-                       experimental_contains_desired_occupancy,
-          int> = 0>
-  PolicyDataStorage &operator=(PolicyDataStorage<Other> const &) {
-    return *this;
-  }
-
-  // Access to desired occupancy (getter and setter)
-  template <class Dummy = occupancy_control_t>
-  std::enable_if_t<std::is_same<Dummy, occupancy_control_t>::value &&
-                   experimental_contains_desired_occupancy,
-      Kokkos::Experimental::DesiredOccupancy>
-  impl_get_desired_occupancy() const {
-    return this
-        ->occupancy_control_storage_base_t::no_unique_address_data_member();
-  }
-
-  template <class Dummy = occupancy_control_t>
-  std::enable_if_t<std::is_same<Dummy, occupancy_control_t>::value &&
-                   experimental_contains_desired_occupancy>
-  impl_set_desired_occupancy(occupancy_control_t desired_occupancy) {
-    this->occupancy_control_storage_base_t::no_unique_address_data_member() =
-        desired_occupancy;
-  }
-};
-
-//------------------------------------------------------------------------------
 template <typename... Traits>
-struct PolicyTraits
-    : PolicyDataStorage<AnalyzePolicy<void, Traits...>> {
-  using base_t = PolicyDataStorage<AnalyzePolicy<void, Traits...>>;
+struct PolicyTraits : PolicyTraitsWithDefaults<AnalyzePolicy<void, Traits...>> {
+  using base_t = PolicyTraitsWithDefaults<AnalyzePolicy<void, Traits...>>;
   template <class... Args>
-  PolicyTraits(PolicyTraits<Args...> const &p) : base_t(p) {}
+  PolicyTraits(PolicyTraits<Args...> const& p) : base_t(p) {}
   PolicyTraits() = default;
 };
 
