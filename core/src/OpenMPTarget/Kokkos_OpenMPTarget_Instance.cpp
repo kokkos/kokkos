@@ -46,7 +46,12 @@
 
 #if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(_OPENMP)
 
+// FIXME_OPENMPTARGET - macro for workaround implementation in UniqueToken
+// constructor. undef'ed at the end
+#define KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
+
 #include <Kokkos_OpenMPTarget.hpp>
+#include <OpenMPTarget/Kokkos_OpenMPTarget_UniqueToken.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>
 
 #include <sstream>
@@ -63,7 +68,15 @@ void OpenMPTargetInternal::print_configuration(std::ostream& /*stream*/,
   printf("Using OpenMPTarget\n");
 }
 
-void OpenMPTargetInternal::impl_finalize() { m_is_initialized = false; }
+void OpenMPTargetInternal::impl_finalize() {
+  m_is_initialized = false;
+  Kokkos::Impl::OpenMPTargetExec space;
+  if (space.m_lock_array != nullptr) space.clear_lock_array();
+
+  if (space.m_uniquetoken_ptr != nullptr)
+    Kokkos::kokkos_free<Kokkos::Experimental::OpenMPTargetSpace>(
+        space.m_uniquetoken_ptr);
+}
 void OpenMPTargetInternal::impl_initialize() { m_is_initialized = true; }
 int OpenMPTargetInternal::impl_is_initialized() {
   return m_is_initialized ? 1 : 0;
@@ -95,12 +108,7 @@ void OpenMPTarget::fence() {
 }
 
 void OpenMPTarget::impl_initialize() { m_space_instance->impl_initialize(); }
-void OpenMPTarget::impl_finalize() {
-  Kokkos::Impl::OpenMPTargetExec space;
-  if (space.m_lock_array != nullptr) space.clear_lock_array();
-
-  m_space_instance->impl_finalize();
-}
+void OpenMPTarget::impl_finalize() { m_space_instance->impl_finalize(); }
 int OpenMPTarget::impl_is_initialized() {
   return Impl::OpenMPTargetInternal::impl_singleton()->impl_is_initialized();
 }
@@ -154,4 +162,50 @@ void OpenMPTargetSpaceInitializer::print_configuration(std::ostream& msg,
 }  // namespace Impl
 }  // Namespace Kokkos
 
+namespace Kokkos {
+namespace Experimental {
+
+UniqueToken<Kokkos::Experimental::OpenMPTarget,
+            Kokkos::Experimental::UniqueTokenScope::Global>::
+    UniqueToken(Kokkos::Experimental::OpenMPTarget const&) {
+#ifdef KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
+  uint32_t* ptr    = Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr;
+  static int count = 0;
+  if (ptr == nullptr) {
+    int size =
+        sizeof(uint32_t) * (Kokkos::Experimental::OpenMPTarget().concurrency());
+    count = size / sizeof(uint32_t);
+    ptr   = static_cast<uint32_t*>(
+        Kokkos::kokkos_malloc<Kokkos::Experimental::OpenMPTargetSpace>(
+            "Kokkos::OpenMPTarget::m_uniquetoken_ptr", size));
+    uint32_t* h_ptr = new uint32_t[size / sizeof(uint32_t)];
+    memset(h_ptr, 0, size);
+    omp_target_memcpy(ptr, h_ptr, size, 0, 0, omp_get_default_device(),
+                      omp_get_initial_device());
+
+    delete[] h_ptr;
+    Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr = ptr;
+#else
+// FIXME_OPENMPTARGET : Not Working - Creating a target region and filling the
+// pointer Error - CUDA error: named symbol not found
+#pragma omp target teams distribute parallel for is_device_ptr(ptr) \
+    map(to                                                          \
+        : size)
+  for (int i = 0; i < size / sizeof(uint32_t); ++i) ptr[i] = 0;
+
+  // FIXME_OPENMPTARGET : Not Working - Allocating a view on the device and
+  // filling it with 0's
+  Kokkos::View<uint32_t*, Kokkos::Experimental::OpenMPTargetSpace> ptr_view(
+      ptr, size / sizeof(uint32_t));
+  Kokkos::deep_copy(ptr_view, 0);
+#endif
+  }
+  m_buffer = ptr;
+  m_count  = count;
+}  // namespace Experimental
+
+}  // namespace Experimental
+}  // namespace Kokkos
+
+#undef KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
 #endif  // defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(_OPENMP)
