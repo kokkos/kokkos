@@ -180,8 +180,9 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
             "Kokkos::OpenMPTarget::m_uniquetoken_ptr", size));
     uint32_t* h_ptr = new uint32_t[size / sizeof(uint32_t)];
     memset(h_ptr, 0, size);
-    omp_target_memcpy(ptr, h_ptr, size, 0, 0, omp_get_default_device(),
-                      omp_get_initial_device());
+    OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_ptr, size, 0, 0,
+                                     omp_get_default_device(),
+                                     omp_get_initial_device()));
 
     delete[] h_ptr;
     Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr = ptr;
