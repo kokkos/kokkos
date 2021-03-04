@@ -136,6 +136,16 @@ struct destruct_delete {
 };
 //==============================================================================
 
+//==============================================================================
+// <editor-fold desc="type_list"> {{{1
+
+// An intentionally uninstantiateable type_list for metaprogramming purposes
+template <class...>
+struct type_list;
+
+// </editor-fold> end type_list }}}1
+//==============================================================================
+
 }  // namespace Impl
 }  // namespace Kokkos
 
