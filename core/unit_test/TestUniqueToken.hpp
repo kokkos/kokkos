@@ -166,11 +166,8 @@ TEST(TEST_CATEGORY, unique_token_global) {
 }
 
 TEST(TEST_CATEGORY, unique_token_instance) {
-  // FIXME_OPENMPTARGET - Not yet implemented.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
   TestUniqueToken<TEST_EXECSPACE,
                   Kokkos::Experimental::UniqueTokenScope::Instance>::run();
-#endif
 }
 
 template <class Space>
