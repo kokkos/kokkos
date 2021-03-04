@@ -169,22 +169,18 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
             Kokkos::Experimental::UniqueTokenScope::Global>::
     UniqueToken(Kokkos::Experimental::OpenMPTarget const&) {
 #ifdef KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
-  uint32_t* ptr    = Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr;
-  static int count = 0;
+  uint32_t* ptr = Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr;
+  int count     = Kokkos::Experimental::OpenMPTarget().concurrency();
   if (ptr == nullptr) {
-    int size =
-        sizeof(uint32_t) * (Kokkos::Experimental::OpenMPTarget().concurrency());
-    count = size / sizeof(uint32_t);
-    ptr   = static_cast<uint32_t*>(
+    int size = count * sizeof(uint32_t);
+    ptr      = static_cast<uint32_t*>(
         Kokkos::kokkos_malloc<Kokkos::Experimental::OpenMPTargetSpace>(
             "Kokkos::OpenMPTarget::m_uniquetoken_ptr", size));
-    uint32_t* h_ptr = new uint32_t[size / sizeof(uint32_t)];
-    memset(h_ptr, 0, size);
-    OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_ptr, size, 0, 0,
+    std::vector<uint32_t> h_ptr(count, 0);
+    OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_ptr.data(), size, 0, 0,
                                      omp_get_default_device(),
                                      omp_get_initial_device()));
 
-    delete[] h_ptr;
     Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr = ptr;
 #else
 // FIXME_OPENMPTARGET : Not Working - Creating a target region and filling the
@@ -192,12 +188,12 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
 #pragma omp target teams distribute parallel for is_device_ptr(ptr) \
     map(to                                                          \
         : size)
-  for (int i = 0; i < size / sizeof(uint32_t); ++i) ptr[i] = 0;
+  for (int i = 0; i < count; ++i) ptr[i] = 0;
 
   // FIXME_OPENMPTARGET : Not Working - Allocating a view on the device and
   // filling it with 0's
   Kokkos::View<uint32_t*, Kokkos::Experimental::OpenMPTargetSpace> ptr_view(
-      ptr, size / sizeof(uint32_t));
+      ptr, count);
   Kokkos::deep_copy(ptr_view, 0);
 #endif
   }
