@@ -121,7 +121,7 @@ class UniqueToken<OpenMPTarget, UniqueTokenScope::Instance>
 
   UniqueToken(size_type max_size, execution_space const& = execution_space())
       : m_buffer_view(
-            "UniqueToken::m_buffer_view",
+            "Kokkos::UniqueToken::m_buffer_view",
             ::Kokkos::Impl::concurrent_bitset::buffer_bound(max_size)) {
     m_buffer = m_buffer_view.data();
     m_count  = max_size;

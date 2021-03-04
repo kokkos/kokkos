@@ -176,31 +176,32 @@ UniqueToken<Kokkos::Experimental::OpenMPTarget,
     ptr      = static_cast<uint32_t*>(
         Kokkos::kokkos_malloc<Kokkos::Experimental::OpenMPTargetSpace>(
             "Kokkos::OpenMPTarget::m_uniquetoken_ptr", size));
-    std::vector<uint32_t> h_ptr(count, 0);
-    OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_ptr.data(), size, 0, 0,
+    std::vector<uint32_t> h_buf(count, 0);
+    OMPT_SAFE_CALL(omp_target_memcpy(ptr, h_buf.data(), size, 0, 0,
                                      omp_get_default_device(),
                                      omp_get_initial_device()));
 
     Kokkos::Impl::OpenMPTargetExec::m_uniquetoken_ptr = ptr;
+  }
 #else
-// FIXME_OPENMPTARGET : Not Working - Creating a target region and filling the
+// FIXME_OPENMPTARGET - 2 versions of non-working implementations to fill `ptr`
+// with 0's
+// Version 1 - Creating a target region and filling the
 // pointer Error - CUDA error: named symbol not found
 #pragma omp target teams distribute parallel for is_device_ptr(ptr) \
     map(to                                                          \
         : size)
   for (int i = 0; i < count; ++i) ptr[i] = 0;
 
-  // FIXME_OPENMPTARGET : Not Working - Allocating a view on the device and
-  // filling it with 0's
+  // Version 2 : Allocating a view on the device and filling it with a scalar
+  // value of 0.
   Kokkos::View<uint32_t*, Kokkos::Experimental::OpenMPTargetSpace> ptr_view(
       ptr, count);
   Kokkos::deep_copy(ptr_view, 0);
 #endif
-  }
   m_buffer = ptr;
   m_count  = count;
-}  // namespace Experimental
-
+}
 }  // namespace Experimental
 }  // namespace Kokkos
 
