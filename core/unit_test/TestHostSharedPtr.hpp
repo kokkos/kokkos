@@ -80,7 +80,6 @@ TEST(TEST_CATEGORY, host_shared_ptr_use_count) {
   {
     HostSharedPtr<T> p1(new T());
     HostSharedPtr<T> p2(std::move(p1));  // move construction
-    EXPECT_EQ(p1.use_count(), 0);
     EXPECT_EQ(p2.use_count(), 1);
   }
   {
@@ -94,7 +93,6 @@ TEST(TEST_CATEGORY, host_shared_ptr_use_count) {
     HostSharedPtr<T> p1(new T());
     HostSharedPtr<T> p2;
     p2 = std::move(p1);  // move assignment
-    EXPECT_EQ(p1.use_count(), 0);
     EXPECT_EQ(p2.use_count(), 1);
   }
 }
