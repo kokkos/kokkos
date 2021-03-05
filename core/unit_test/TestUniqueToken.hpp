@@ -271,7 +271,10 @@ class TestAcquireTeamUniqueToken {
 };
 
 TEST(TEST_CATEGORY, acquire_team_unique_token) {
+  // FIXME_OPENMPTARGET - Not yet implemented.
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
   TestAcquireTeamUniqueToken<TEST_EXECSPACE>::run();
+#endif
 }
 
 }  // namespace Test
