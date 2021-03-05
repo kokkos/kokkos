@@ -95,9 +95,10 @@ struct OccupancyControlTrait : TraitSpecificationBase<OccupancyControlTrait> {
     }
   };
   template <class T>
-  static constexpr bool trait_matches_specification =
+  using trait_matches_specification = std::integral_constant<
+      bool,
       std::is_same<T, Kokkos::Experimental::DesiredOccupancy>::value ||
-      std::is_same<T, Kokkos::Experimental::MaximizeOccupancy>::value;
+          std::is_same<T, Kokkos::Experimental::MaximizeOccupancy>::value>;
 };
 
 // </editor-fold> end Occupancy control trait specification }}}1
@@ -112,8 +113,7 @@ template <class... Traits>
 struct AnalyzeExecPolicy<void, Kokkos::Experimental::DesiredOccupancy,
                          Traits...> : AnalyzeExecPolicy<void, Traits...> {
  public:
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
-  using base_t::base_t;
+  using base_t            = AnalyzeExecPolicy<void, Traits...>;
   using occupancy_control = Kokkos::Experimental::DesiredOccupancy;
   static constexpr bool experimental_contains_desired_occupancy = true;
 
@@ -125,6 +125,7 @@ struct AnalyzeExecPolicy<void, Kokkos::Experimental::DesiredOccupancy,
   occupancy_control m_desired_occupancy = {};
 
  public:
+  AnalyzeExecPolicy() = default;
   // Converting constructor
   // Just rely on the convertibility of occupancy_control to transfer the data
   template <class Other>

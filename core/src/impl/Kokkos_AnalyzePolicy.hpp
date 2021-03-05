@@ -134,9 +134,7 @@ struct PolicyTraits
     : ExecPolicyTraitsWithDefaults<AnalyzeExecPolicy<void, Traits...>> {
   using base_t =
       ExecPolicyTraitsWithDefaults<AnalyzeExecPolicy<void, Traits...>>;
-  template <class... Args>
-  PolicyTraits(PolicyTraits<Args...> const& p) : base_t(p) {}
-  PolicyTraits() = default;
+  using base_t::base_t;
 };
 
 }  // namespace Impl

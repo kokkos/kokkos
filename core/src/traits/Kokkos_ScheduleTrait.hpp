@@ -64,8 +64,7 @@ struct ScheduleTrait : TraitSpecificationBase<ScheduleTrait> {
     using schedule_type = Schedule<Static>;
   };
   template <class T>
-  static constexpr bool trait_matches_specification =
-      is_schedule_type<T>::value;
+  using trait_matches_specification = is_schedule_type<T>;
 };
 
 // </editor-fold> end trait specification }}}1

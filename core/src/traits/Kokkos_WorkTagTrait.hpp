@@ -60,9 +60,6 @@ struct WorkTagTrait : TraitSpecificationBase<WorkTagTrait> {
   struct base_traits {
     using work_tag = void;
   };
-  // Matching is handled through PolicyTraitsMatcher, not through this
-  template <class T>
-  static constexpr bool trait_matches_specification = false;
 };
 
 // </editor-fold> end trait specification }}}1

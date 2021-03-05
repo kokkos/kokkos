@@ -61,8 +61,8 @@ struct WorkItemPropertyTrait : TraitSpecificationBase<WorkItemPropertyTrait> {
     using work_item_property = Kokkos::Experimental::WorkItemProperty::None_t;
   };
   template <class T>
-  static constexpr bool trait_matches_specification =
-      Kokkos::Experimental::is_work_item_property<T>::value;
+  using trait_matches_specification =
+      Kokkos::Experimental::is_work_item_property<T>;
 };
 
 // </editor-fold> end trait specification }}}1

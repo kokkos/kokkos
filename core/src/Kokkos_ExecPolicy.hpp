@@ -50,7 +50,6 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_AnalyzePolicy.hpp>
-
 #include <Kokkos_Concepts.hpp>
 #include <typeinfo>
 

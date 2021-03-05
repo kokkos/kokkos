@@ -58,8 +58,7 @@ struct IterationPatternTrait : TraitSpecificationBase<IterationPatternTrait> {
     using iteration_pattern = void;  // TODO set default iteration pattern
   };
   template <class T>
-  static constexpr bool trait_matches_specification =
-      Impl::is_iteration_pattern<T>::value;
+  using trait_matches_specification = Impl::is_iteration_pattern<T>;
 };
 
 // </editor-fold> end trait specification }}}1
@@ -70,8 +69,7 @@ struct IterationPatternTrait : TraitSpecificationBase<IterationPatternTrait> {
 
 template <class IterationPattern, class... Traits>
 struct AnalyzeExecPolicy<
-    std::enable_if_t<
-        IterationPatternTrait::trait_matches_specification<IterationPattern>>,
+    std::enable_if_t<is_iteration_pattern<IterationPattern>::value>,
     IterationPattern, Traits...> : AnalyzeExecPolicy<void, Traits...> {
   using base_t = AnalyzeExecPolicy<void, Traits...>;
   using base_t::base_t;

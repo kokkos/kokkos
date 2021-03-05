@@ -62,8 +62,9 @@ struct IndexTypeTrait : TraitSpecificationBase<IndexTypeTrait> {
     using index_type = dependent_policy_trait_default;
   };
   template <class T>
-  static constexpr bool trait_matches_specification =
-      std::is_integral<T>::value || is_index_type<T>::value;
+  using trait_matches_specification =
+      std::integral_constant<bool, std::is_integral<T>::value ||
+                                       is_index_type<T>::value>;
 };
 
 // </editor-fold> end trait specification }}}1

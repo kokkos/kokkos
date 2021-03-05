@@ -60,8 +60,7 @@ struct GraphKernelTrait : TraitSpecificationBase<GraphKernelTrait> {
     using is_graph_kernel = std::false_type;
   };
   template <class T>
-  static constexpr bool trait_matches_specification =
-      std::is_same<T, IsGraphKernelTag>::value;
+  using trait_matches_specification = std::is_same<T, IsGraphKernelTag>;
 };
 
 // </editor-fold> end trait specification }}}1

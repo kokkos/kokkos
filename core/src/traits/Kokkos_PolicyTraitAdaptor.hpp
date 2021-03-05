@@ -78,7 +78,8 @@ struct PolicyTraitMatcher;
 template <class TraitSpec, class Trait>
 struct PolicyTraitMatcher<
     TraitSpec, Trait,
-    std::enable_if_t<TraitSpec::template trait_matches_specification<Trait>>>
+    std::enable_if_t<
+        TraitSpec::template trait_matches_specification<Trait>::value>>
     : std::true_type {};
 
 // </editor-fold> end PolicyTraitMatcher }}}2

@@ -63,8 +63,7 @@ struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
     using launch_bounds = LaunchBounds<>;
   };
   template <class T>
-  static constexpr bool trait_matches_specification =
-      is_launch_bounds<T>::value;
+  using trait_matches_specification = is_launch_bounds<T>;
 };
 
 // </editor-fold> end trait specification }}}1

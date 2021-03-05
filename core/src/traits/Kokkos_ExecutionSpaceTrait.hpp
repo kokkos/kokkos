@@ -63,8 +63,7 @@ struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
     using execution_space = Kokkos::DefaultExecutionSpace;
   };
   template <class T>
-  static constexpr bool trait_matches_specification =
-      is_execution_space<T>::value;
+  using trait_matches_specification = is_execution_space<T>;
 };
 
 // </editor-fold> end trait specification }}}1
@@ -75,8 +74,7 @@ struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
 
 template <class ExecutionSpace, class... Traits>
 struct AnalyzeExecPolicy<
-    std::enable_if_t<ExecutionSpaceTrait::template trait_matches_specification<
-        ExecutionSpace>>,
+    std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>,
     ExecutionSpace, Traits...> : AnalyzeExecPolicy<void, Traits...> {
   using base_t = AnalyzeExecPolicy<void, Traits...>;
   using base_t::base_t;
