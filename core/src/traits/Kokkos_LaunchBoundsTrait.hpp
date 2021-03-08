@@ -72,15 +72,15 @@ struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
 //==============================================================================
 // <editor-fold desc="AnalyzeExecPolicy specializations"> {{{1
 
-template <unsigned int... Bounds, class... Traits>
-struct AnalyzeExecPolicy<void, Kokkos::LaunchBounds<Bounds...>, Traits...>
+template <unsigned int MaxT, unsigned int MinB, class... Traits>
+struct AnalyzeExecPolicy<void, Kokkos::LaunchBounds<MaxT, MinB>, Traits...>
     : AnalyzeExecPolicy<void, Traits...> {
   using base_t = AnalyzeExecPolicy<void, Traits...>;
   using base_t::base_t;
   static_assert(base_t::launch_bounds_is_defaulted,
                 "Kokkos Error: More than one launch_bounds given");
   static constexpr bool launch_bounds_is_defaulted = false;
-  using launch_bounds = Kokkos::LaunchBounds<Bounds...>;
+  using launch_bounds = Kokkos::LaunchBounds<MaxT, MinB>;
 };
 
 // </editor-fold> end AnalyzeExecPolicy specializations }}}1
