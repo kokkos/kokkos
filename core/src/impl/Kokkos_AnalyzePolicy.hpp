@@ -83,11 +83,19 @@ struct AnalyzeExecPolicy<void, void, Traits...>
 //------------------------------------------------------------------------------
 // Mix in the defaults (base_traits) for the traits that aren't yet handled
 
+// MSVC Workaround: linearize base traits to help with EBO?
+template <class... Ts>
+struct LinearizeInheritance;
+template <class T, class... Ts>
+struct LinearizeInheritance<T, Ts...> : T, LinearizeInheritance<Ts...> {};
+template <>
+struct LinearizeInheritance<> {};
+
 template <class TraitSpecList>
 struct AnalyzeExecPolicyBaseTraits;
 template <class... TraitSpecifications>
 struct AnalyzeExecPolicyBaseTraits<type_list<TraitSpecifications...>>
-    : TraitSpecifications::base_traits... {};
+    : LinearizeInheritance<typename TraitSpecifications::base_traits...> {};
 
 template <>
 struct AnalyzeExecPolicy<void>
