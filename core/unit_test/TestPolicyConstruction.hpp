@@ -764,10 +764,9 @@ void test_prefer_desired_occupancy(Policy const& policy) {
 template <class... Args>
 struct DummyPolicy : Kokkos::Impl::PolicyTraits<Args...> {
   using execution_policy = DummyPolicy;
-  using traits           = Kokkos::Impl::PolicyTraits<Args...>;
-  template <class... OtherArgs>
-  DummyPolicy(DummyPolicy<OtherArgs...> const& p) : traits(p) {}
-  DummyPolicy() = default;
+
+  using base_t = Kokkos::Impl::PolicyTraits<Args...>;
+  using base_t::base_t;
 };
 
 TEST(TEST_CATEGORY, desired_occupancy_prefer) {

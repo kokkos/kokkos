@@ -120,11 +120,11 @@ struct AnalyzeExecPolicy<void, Kokkos::Experimental::DesiredOccupancy,
   template <class OccControl>
   using with_occupancy_control = AnalyzeExecPolicy<void, OccControl, Traits...>;
 
-  // Treat this as private, but make it public so that MSVC will still treat this
-  // as a standard layout class and make it the right size:
-  // storage for a stateful desired occupancy
-  // private:
-  occupancy_control m_desired_occupancy = {};
+  // Treat this as private, but make it public so that MSVC will still treat
+  // this as a standard layout class and make it the right size: storage for a
+  // stateful desired occupancy
+  //   private:
+  occupancy_control m_desired_occupancy;
 
   AnalyzeExecPolicy() = default;
   // Converting constructor
