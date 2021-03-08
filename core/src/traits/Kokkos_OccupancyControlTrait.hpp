@@ -72,7 +72,7 @@ struct DesiredOccupancy {
 };
 
 struct MaximizeOccupancy {
-  MaximizeOccupancy() = default;
+  explicit MaximizeOccupancy() = default;
 };
 
 // </editor-fold> end Occupancy control user interface }}}1
@@ -182,8 +182,8 @@ namespace Experimental {
 template <typename Policy>
 auto prefer(Policy const& p, DesiredOccupancy occ) {
   using new_policy_t =
-      typename Kokkos::Impl::OccupancyControlTrait::template policy_with_trait<
-          Policy, DesiredOccupancy>;
+      Kokkos::Impl::OccupancyControlTrait::policy_with_trait<Policy,
+                                                             DesiredOccupancy>;
   new_policy_t pwo{p};
   pwo.impl_set_desired_occupancy(occ);
   return pwo;
@@ -192,8 +192,8 @@ auto prefer(Policy const& p, DesiredOccupancy occ) {
 template <typename Policy>
 constexpr auto prefer(Policy const& p, MaximizeOccupancy) {
   using new_policy_t =
-      typename Kokkos::Impl::OccupancyControlTrait::template policy_with_trait<
-          Policy, MaximizeOccupancy>;
+      Kokkos::Impl::OccupancyControlTrait::policy_with_trait<Policy,
+                                                             MaximizeOccupancy>;
   return new_policy_t{p};
 }
 

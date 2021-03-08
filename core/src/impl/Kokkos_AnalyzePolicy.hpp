@@ -46,10 +46,7 @@
 #define KOKKOS_IMPL_ANALYZE_POLICY_HPP
 
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_Concepts.hpp>
-#include <impl/Kokkos_Tags.hpp>
-#include <impl/Kokkos_GraphImpl_fwd.hpp>
-#include <impl/Kokkos_Error.hpp>
+#include <Kokkos_Concepts.hpp>  // IndexType
 #include <traits/Kokkos_Traits_fwd.hpp>
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 
@@ -95,8 +92,6 @@ struct AnalyzeExecPolicyBaseTraits<type_list<TraitSpecifications...>>
 template <>
 struct AnalyzeExecPolicy<void>
     : AnalyzeExecPolicyBaseTraits<execution_policy_trait_specifications> {
-  using work_tag = void;
-
   // Ensure default constructibility since a converting constructor causes it to
   // be deleted.
   AnalyzeExecPolicy() = default;

@@ -137,7 +137,7 @@ struct PolicyTraitAdaptor<TraitSpec, PolicyTemplate<Traits...>, NewTrait>
 //==============================================================================
 
 //==============================================================================
-// <editor-fold desc="CRTP Base clasee for trait specifications"> {{{1
+// <editor-fold desc="CRTP Base class for trait specifications"> {{{1
 
 template <class TraitSpec>
 struct TraitSpecificationBase {
@@ -147,7 +147,7 @@ struct TraitSpecificationBase {
       typename PolicyTraitAdaptor<TraitSpec, Policy, Trait>::type;
 };
 
-// </editor-fold> end CRTP Base clasee for trait specifications }}}1
+// </editor-fold> end CRTP Base class for trait specifications }}}1
 //==============================================================================
 
 }  // end namespace Impl

@@ -96,9 +96,8 @@ namespace Experimental {
 
 template <class Policy, class ScheduleType>
 constexpr auto require(Policy const& p, Kokkos::Schedule<ScheduleType>) {
-  using new_policy_t =
-      typename Kokkos::Impl::ScheduleTrait::template policy_with_trait<
-          Policy, Kokkos::Schedule<ScheduleType>>;
+  using new_policy_t = Kokkos::Impl::ScheduleTrait::policy_with_trait<
+      Policy, Kokkos::Schedule<ScheduleType>>;
   return new_policy_t{p};
 }
 

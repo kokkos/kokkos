@@ -46,7 +46,7 @@
 #define KOKKOS_KOKKOS_INDEXTYPETRAIT_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_Concepts.hpp>  // is_execution_space
+#include <Kokkos_Concepts.hpp>  // IndexType, is_index_type
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
 

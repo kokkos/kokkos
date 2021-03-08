@@ -45,7 +45,8 @@
 #ifndef KOKKOS_KOKKOS_ITERATIONPATTERNTRAIT_HPP
 #define KOKKOS_KOKKOS_ITERATIONPATTERNTRAIT_HPP
 
-#include <impl/Kokkos_Error.hpp>
+#include <Kokkos_Concepts.hpp>  // is_iteration_pattern
+#include <type_traits>          // is_void
 
 namespace Kokkos {
 namespace Impl {
@@ -58,7 +59,7 @@ struct IterationPatternTrait : TraitSpecificationBase<IterationPatternTrait> {
     using iteration_pattern = void;  // TODO set default iteration pattern
   };
   template <class T>
-  using trait_matches_specification = Impl::is_iteration_pattern<T>;
+  using trait_matches_specification = is_iteration_pattern<T>;
 };
 
 // </editor-fold> end trait specification }}}1

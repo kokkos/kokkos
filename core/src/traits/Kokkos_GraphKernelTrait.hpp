@@ -47,6 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
+#include <impl/Kokkos_GraphImpl_fwd.hpp>  // IsGraphKernelTag
 #include <traits/Kokkos_Traits_fwd.hpp>
 
 namespace Kokkos {
