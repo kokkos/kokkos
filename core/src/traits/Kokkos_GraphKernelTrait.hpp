@@ -49,6 +49,7 @@
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>  // IsGraphKernelTag
 #include <traits/Kokkos_Traits_fwd.hpp>
+#include <impl/Kokkos_Utilities.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -57,7 +58,9 @@ namespace Impl {
 // <editor-fold desc="trait specification"> {{{1
 
 struct GraphKernelTrait : TraitSpecificationBase<GraphKernelTrait> {
-  struct base_traits {
+  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
+  template <template <class> class GetBase, class... OtherTraits>
+  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
     using is_graph_kernel = std::false_type;
   };
   template <class T>

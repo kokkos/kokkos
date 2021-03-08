@@ -57,7 +57,9 @@ namespace Impl {
 // <editor-fold desc="trait specification"> {{{1
 
 struct WorkItemPropertyTrait : TraitSpecificationBase<WorkItemPropertyTrait> {
-  struct base_traits {
+  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
+  template <template <class> class GetBase, class... OtherTraits>
+  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
     using work_item_property = Kokkos::Experimental::WorkItemProperty::None_t;
   };
   template <class T>
