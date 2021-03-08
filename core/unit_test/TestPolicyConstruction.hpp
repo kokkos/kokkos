@@ -777,15 +777,34 @@ TEST(TEST_CATEGORY, desired_occupancy_prefer) {
   test_prefer_desired_occupancy(Kokkos::TeamPolicy<TEST_EXECSPACE>{});
 }
 
+// For a more informative static assertion:
+template <size_t>
+struct static_assert_dummy_policy_must_be_size_one;
+template <>
+struct static_assert_dummy_policy_must_be_size_one<1> {};
+template <size_t, size_t>
+struct static_assert_dummy_policy_must_be_size_of_desired_occupancy;
+template <>
+struct static_assert_dummy_policy_must_be_size_of_desired_occupancy<
+    sizeof(Kokkos::Experimental::DesiredOccupancy),
+    sizeof(Kokkos::Experimental::DesiredOccupancy)> {};
+
 TEST(TEST_CATEGORY, desired_occupancy_empty_base_optimization) {
   DummyPolicy<TEST_EXECSPACE> const policy{};
   static_assert(sizeof(decltype(policy)) == 1, "");
+  static_assert_dummy_policy_must_be_size_one<sizeof(decltype(policy))>
+      _assert1{};
+  (void)_assert1;  // avoid unused variable warning
 
   using Kokkos::Experimental::DesiredOccupancy;
   auto policy_with_occ =
       Kokkos::Experimental::prefer(policy, DesiredOccupancy{50});
   static_assert(sizeof(decltype(policy_with_occ)) == sizeof(DesiredOccupancy),
                 "");
+  static_assert_dummy_policy_must_be_size_of_desired_occupancy<
+      sizeof(decltype(policy_with_occ)), sizeof(DesiredOccupancy)>
+      _assert2{};
+  (void)_assert2;  // avoid unused variable warning
 }
 
 template <typename Policy>
