@@ -64,6 +64,18 @@ struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
 
     using launch_bounds = LaunchBounds<>;
   };
+  template <class LaunchBoundParam, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+
+    static constexpr bool launch_bounds_is_defaulted = false;
+
+    static_assert(base_t::launch_bounds_is_defaulted,
+                  "Kokkos Error: More than one launch_bounds given");
+
+    using launch_bounds = LaunchBoundParam;
+  };
   template <class T>
   using trait_matches_specification = is_launch_bounds<T>;
 };
@@ -71,22 +83,6 @@ struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
 // </editor-fold> end trait specification }}}1
 //==============================================================================
 
-//==============================================================================
-// <editor-fold desc="AnalyzeExecPolicy specializations"> {{{1
-
-template <unsigned int MaxT, unsigned int MinB, class... Traits>
-struct AnalyzeExecPolicy<void, Kokkos::LaunchBounds<MaxT, MinB>, Traits...>
-    : AnalyzeExecPolicy<void, Traits...> {
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
-  using base_t::base_t;
-  static_assert(base_t::launch_bounds_is_defaulted,
-                "Kokkos Error: More than one launch_bounds given");
-  static constexpr bool launch_bounds_is_defaulted = false;
-  using launch_bounds = Kokkos::LaunchBounds<MaxT, MinB>;
-};
-
-// </editor-fold> end AnalyzeExecPolicy specializations }}}1
-//==============================================================================
 }  // end namespace Impl
 }  // end namespace Kokkos
 

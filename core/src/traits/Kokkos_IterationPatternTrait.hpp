@@ -60,28 +60,19 @@ struct IterationPatternTrait : TraitSpecificationBase<IterationPatternTrait> {
   struct base_traits : linearize_bases<GetBase, OtherTraits...> {
     using iteration_pattern = void;  // TODO set default iteration pattern
   };
+  template <class IterPattern, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+    static_assert(std::is_void<typename base_t::iteration_pattern>::value,
+                  "Kokkos Error: More than one iteration pattern given");
+    using iteration_pattern = IterPattern;
+  };
   template <class T>
   using trait_matches_specification = is_iteration_pattern<T>;
 };
 
 // </editor-fold> end trait specification }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="AnalyzeExecPolicy specializations"> {{{1
-
-template <class IterationPattern, class... Traits>
-struct AnalyzeExecPolicy<
-    std::enable_if_t<is_iteration_pattern<IterationPattern>::value>,
-    IterationPattern, Traits...> : AnalyzeExecPolicy<void, Traits...> {
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
-  using base_t::base_t;
-  static_assert(std::is_void<typename base_t::iteration_pattern>::value,
-                "Kokkos Error: More than one iteration pattern given");
-  using iteration_pattern = IterationPattern;
-};
-
-// </editor-fold> end AnalyzeExecPolicy specializations }}}1
 //==============================================================================
 
 }  // end namespace Impl

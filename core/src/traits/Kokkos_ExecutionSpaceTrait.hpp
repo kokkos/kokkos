@@ -66,31 +66,23 @@ struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
   };
   template <class T>
   using trait_matches_specification = is_execution_space<T>;
+  template <class ExecSpace, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+
+    static_assert(base_t::execution_space_is_defaulted,
+                  "Kokkos Error: More than one execution space given");
+
+    static constexpr auto execution_space_is_defaulted = false;
+
+    using execution_space = ExecSpace;
+  };
 };
 
 // </editor-fold> end trait specification }}}1
 //==============================================================================
 
-//==============================================================================
-// <editor-fold desc="AnalyzeExecPolicy specializations"> {{{1
-
-template <class ExecutionSpace, class... Traits>
-struct AnalyzeExecPolicy<
-    std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>,
-    ExecutionSpace, Traits...> : AnalyzeExecPolicy<void, Traits...> {
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
-  using base_t::base_t;
-
-  static_assert(base_t::execution_space_is_defaulted,
-                "Kokkos Error: More than one execution space given");
-
-  static constexpr bool execution_space_is_defaulted = false;
-
-  using execution_space = ExecutionSpace;
-};
-
-// </editor-fold> end AnalyzeExecPolicy specializations }}}1
-//==============================================================================
 }  // end namespace Impl
 }  // end namespace Kokkos
 

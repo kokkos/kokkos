@@ -70,18 +70,13 @@ using execution_policy_trait_specifications =
               IterationPatternTrait, LaunchBoundsTrait, OccupancyControlTrait,
               ScheduleTrait, WorkItemPropertyTrait, WorkTagTrait>;
 
-//------------------------------------------------------------------------------
-// Ignore void for backwards compatibility purposes, though hopefully no one is
-// using this in application code
-template <class... Traits>
-struct AnalyzeExecPolicy<void, void, Traits...>
-    : AnalyzeExecPolicy<void, Traits...> {
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
-  using base_t::base_t;
-};
+//==============================================================================
+// <editor-fold desc="AnalyzePolicyBaseTraits"> {{{1
+
+// Mix in the defaults (base_traits) for the traits that aren't yet handled
 
 //------------------------------------------------------------------------------
-// Mix in the defaults (base_traits) for the traits that aren't yet handled
+// <editor-fold desc="MSVC EBO failure workaround"> {{{2
 
 // MSVC workaround: inheriting from more than one base_traits causes EBO to no
 // longer work, so we need to linearize the inheritance hierarchy
@@ -95,6 +90,9 @@ struct msvc_workaround_get_next_base_traits {
                                        Ts...>;
 };
 
+// </editor-fold> end MSVC EBO failure workaround }}}2
+//------------------------------------------------------------------------------
+
 template <class TraitSpecList>
 struct AnalyzeExecPolicyBaseTraits;
 template <class... TraitSpecifications>
@@ -102,6 +100,36 @@ struct AnalyzeExecPolicyBaseTraits<type_list<TraitSpecifications...>>
     : linearize_bases<msvc_workaround_get_next_base_traits,
                       TraitSpecifications...> {};
 
+// </editor-fold> end AnalyzePolicyBaseTraits }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="AnalyzeExecPolicy specializations"> {{{1
+
+//------------------------------------------------------------------------------
+// Note: unspecialized, so that the default pathway is to fall back to using
+// the PolicyTraitMatcher. See AnalyzeExecPolicyUseMatcher below
+template <class Enable, class... Traits>
+struct AnalyzeExecPolicy
+    : AnalyzeExecPolicyUseMatcher<void, execution_policy_trait_specifications,
+                                  Traits...> {
+  using base_t =
+      AnalyzeExecPolicyUseMatcher<void, execution_policy_trait_specifications,
+                                  Traits...>;
+  using base_t::base_t;
+};
+
+//------------------------------------------------------------------------------
+// Ignore void for backwards compatibility purposes, though hopefully no one is
+// using this in application code
+template <class... Traits>
+struct AnalyzeExecPolicy<void, void, Traits...>
+    : AnalyzeExecPolicy<void, Traits...> {
+  using base_t = AnalyzeExecPolicy<void, Traits...>;
+  using base_t::base_t;
+};
+
+//------------------------------------------------------------------------------
 template <>
 struct AnalyzeExecPolicy<void>
     : AnalyzeExecPolicyBaseTraits<execution_policy_trait_specifications> {
@@ -119,6 +147,65 @@ struct AnalyzeExecPolicy<void>
     return *this;
   }
 };
+
+// </editor-fold> end AnalyzeExecPolicy specializations }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="AnalyzeExecPolicyUseMatcher"> {{{1
+
+// We can avoid having to have policies specialize AnalyzeExecPolicy themselves
+// by piggy-backing off of the PolicyTraitMatcher that we need to have for
+// things like require() anyway. We mixin the effects of the trait using
+// the `mixin_matching_trait` nested alias template in the trait specification
+
+// General PolicyTraitMatcher version
+
+// Matching case
+template <class TraitSpec, class... TraitSpecs, class Trait, class... Traits>
+struct AnalyzeExecPolicyUseMatcher<
+    std::enable_if_t<PolicyTraitMatcher<TraitSpec, Trait>::value>,
+    type_list<TraitSpec, TraitSpecs...>, Trait, Traits...>
+    : TraitSpec::template mixin_matching_trait<
+          Trait, AnalyzeExecPolicy<void, Traits...>> {
+  using base_t = typename TraitSpec::template mixin_matching_trait<
+      Trait, AnalyzeExecPolicy<void, Traits...>>;
+  using base_t::base_t;
+};
+
+// Non-matching case
+template <class TraitSpec, class... TraitSpecs, class Trait, class... Traits>
+struct AnalyzeExecPolicyUseMatcher<
+    std::enable_if_t<!PolicyTraitMatcher<TraitSpec, Trait>::value>,
+    type_list<TraitSpec, TraitSpecs...>, Trait, Traits...>
+    : AnalyzeExecPolicyUseMatcher<void, type_list<TraitSpecs...>, Trait,
+                                  Traits...> {
+  using base_t = AnalyzeExecPolicyUseMatcher<void, type_list<TraitSpecs...>,
+                                             Trait, Traits...>;
+  using base_t::base_t;
+};
+
+// No match found case:
+template <class>
+struct show_name_of_invalid_execution_policy_trait;
+template <class Trait, class... Traits>
+struct AnalyzeExecPolicyUseMatcher<void, type_list<>, Trait, Traits...> {
+  static_assert(
+      /* always false: */ std::is_void<Trait>::value,
+      "Unknown execution policy trait");
+  show_name_of_invalid_execution_policy_trait<Trait> trigger_error_message = {};
+};
+
+// All traits matched case:
+template <>
+struct AnalyzeExecPolicyUseMatcher<void, type_list<>>
+    : AnalyzeExecPolicy<void> {
+  using base_t = AnalyzeExecPolicy<void>;
+  using base_t::base_t;
+};
+
+// </editor-fold> end AnalyzeExecPolicyUseMatcher }}}1
+//==============================================================================
 
 //------------------------------------------------------------------------------
 // Used for defaults that depend on other analysis results

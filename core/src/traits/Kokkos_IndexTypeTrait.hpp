@@ -53,6 +53,9 @@
 namespace Kokkos {
 namespace Impl {
 
+template <class Trait, class AnalyzeNextTrait>
+struct IndexTypePolicyMixin;
+
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
@@ -63,6 +66,8 @@ struct IndexTypeTrait : TraitSpecificationBase<IndexTypeTrait> {
     static constexpr bool index_type_is_defaulted = true;
     using index_type = dependent_policy_trait_default;
   };
+  template <class IdxType, class AnalyzeNextTrait>
+  using mixin_matching_trait = IndexTypePolicyMixin<IdxType, AnalyzeNextTrait>;
   template <class T>
   using trait_matches_specification =
       std::integral_constant<bool, std::is_integral<T>::value ||
@@ -73,13 +78,13 @@ struct IndexTypeTrait : TraitSpecificationBase<IndexTypeTrait> {
 //==============================================================================
 
 //==============================================================================
-// <editor-fold desc="AnalyzeExecPolicy specializations"> {{{1
+// <editor-fold desc="IndexTypePolicyMixin specializations"> {{{1
 
 // Index type given as IndexType template
-template <class IntegralIndexType, class... Traits>
-struct AnalyzeExecPolicy<void, Kokkos::IndexType<IntegralIndexType>, Traits...>
-    : AnalyzeExecPolicy<void, Traits...> {
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
+template <class IntegralIndexType, class AnalyzeNextTrait>
+struct IndexTypePolicyMixin<Kokkos::IndexType<IntegralIndexType>,
+                            AnalyzeNextTrait> : AnalyzeNextTrait {
+  using base_t = AnalyzeNextTrait;
   using base_t::base_t;
   static_assert(base_t::index_type_is_defaulted,
                 "Kokkos Error: More than one index type given");
@@ -87,15 +92,15 @@ struct AnalyzeExecPolicy<void, Kokkos::IndexType<IntegralIndexType>, Traits...>
   using index_type = Kokkos::IndexType<IntegralIndexType>;
 };
 
-// IndexType given as an integral type directly
-template <class IntegralIndexType, class... Traits>
-struct AnalyzeExecPolicy<
-    std::enable_if_t<std::is_integral<IntegralIndexType>::value>,
-    IntegralIndexType, Traits...> : AnalyzeExecPolicy<void, Traits...> {
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
+// IndexType given as an integral type directly (the matcher already checks
+// this, so we don't have specialize to re-check it here)
+template <class IntegralIndexType, class AnalyzeNextTrait>
+struct IndexTypePolicyMixin : AnalyzeNextTrait {
+  using base_t = AnalyzeNextTrait;
   using base_t::base_t;
   static_assert(base_t::index_type_is_defaulted,
                 "Kokkos Error: More than one index type given");
+  static_assert(std::is_integral<IntegralIndexType>::value, "");
   static constexpr bool index_type_is_defaulted = false;
   using index_type = Kokkos::IndexType<IntegralIndexType>;
 };

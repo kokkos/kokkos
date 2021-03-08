@@ -65,28 +65,20 @@ struct ScheduleTrait : TraitSpecificationBase<ScheduleTrait> {
 
     using schedule_type = Schedule<Static>;
   };
+  template <class Sched, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+    using schedule_type = Sched;
+    static_assert(base_t::schedule_type_is_defaulted,
+                  "Kokkos Error: More than one schedule type given");
+    static constexpr bool schedule_type_is_defaulted = false;
+  };
   template <class T>
   using trait_matches_specification = is_schedule_type<T>;
 };
 
 // </editor-fold> end trait specification }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="AnalyzeExecPolicy specializations"> {{{1
-
-template <class ScheduleType, class... Traits>
-struct AnalyzeExecPolicy<void, Kokkos::Schedule<ScheduleType>, Traits...>
-    : AnalyzeExecPolicy<void, Traits...> {
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
-  using base_t::base_t;
-  static_assert(base_t::schedule_type_is_defaulted,
-                "Kokkos Error: More than one schedule type given");
-  static constexpr bool schedule_type_is_defaulted = false;
-  using schedule_type = Kokkos::Schedule<ScheduleType>;
-};
-
-// </editor-fold> end AnalyzeExecPolicy specializations }}}1
 //==============================================================================
 
 }  // end namespace Impl

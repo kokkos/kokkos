@@ -62,50 +62,27 @@ struct WorkTagTrait : TraitSpecificationBase<WorkTagTrait> {
   struct base_traits : linearize_bases<GetBase, OtherTraits...> {
     using work_tag = void;
   };
+  template <class WorkTag, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+    using work_tag = WorkTag;
+    static_assert(std::is_void<typename base_t::work_tag>::value,
+                  "Kokkos Error: More than one work tag given");
+  };
 };
 
 // </editor-fold> end trait specification }}}1
 //==============================================================================
 
 //==============================================================================
-// <editor-fold desc="AnalyzeExecPolicy specializations"> {{{1
+// <editor-fold desc="PolicyTraitMatcher specializations"> {{{1
 
 // Since we don't have subsumption in pre-C++20, we need to have the work tag
 // "trait" handling code be unspecialized, so we handle it instead in a class
 // with a different name.
-template <class... Traits>
-struct AnalyzeExecPolicyHandleWorkTag : AnalyzeExecPolicy<void, Traits...> {
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
-  using base_t::base_t;
-};
-
-template <class WorkTag, class... Traits>
-struct AnalyzeExecPolicyHandleWorkTag<WorkTag, Traits...>
-    : AnalyzeExecPolicy<void, Traits...> {
-  using base_t = AnalyzeExecPolicy<void, Traits...>;
-  using base_t::base_t;
-  static_assert(std::is_void<typename base_t::work_tag>::value,
-                "Kokkos Error: More than one work tag given");
-  using work_tag = WorkTag;
-};
-
-// This only works if this is not a partial specialization, so we have to
-// do the partial specialization elsewhere
-template <class Enable, class... Traits>
-struct AnalyzeExecPolicy : AnalyzeExecPolicyHandleWorkTag<Traits...> {
-  using base_t = AnalyzeExecPolicyHandleWorkTag<Traits...>;
-  using base_t::base_t;
-};
-
-// </editor-fold> end AnalyzeExecPolicy specializations }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="PolicyTraitMatcher specializations"> {{{1
-
 // In order to match the work tag trait the work tag "matcher" needs to be
-// unspecialized and the logic needs to be handled in a differently-named class,
-// just like above.
+// unspecialized and the logic needs to be handled in a differently-named class.
 template <class TraitSpec, class Trait>
 struct PolicyTraitMatcherHandleWorkTag : std::false_type {};
 
@@ -113,6 +90,8 @@ template <class Trait>
 struct PolicyTraitMatcherHandleWorkTag<WorkTagTrait, Trait>
     : std::integral_constant<bool, !std::is_void<Trait>::value> {};
 
+// This only works if this is not a partial specialization, so we have to
+// do the partial specialization elsewhere
 template <class TraitSpec, class Trait, class Enable>
 struct PolicyTraitMatcher /* unspecialized! */
     : PolicyTraitMatcherHandleWorkTag<TraitSpec, Trait> {};

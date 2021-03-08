@@ -51,6 +51,9 @@ namespace Impl {
 template <class Enable, class... TraitsList>
 struct AnalyzeExecPolicy;
 
+template <class Enable, class TraitSpecList, class... Traits>
+struct AnalyzeExecPolicyUseMatcher;
+
 template <class AnalysisResults>
 struct ExecPolicyTraitsWithDefaults;
 
