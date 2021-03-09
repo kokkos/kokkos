@@ -1,11 +1,6 @@
 # Create tests that contain each header separately. We do not  run these tests
 # but we just try to compile them.
 if(NOT KOKKOS_HAS_TRILINOS)
-  # Globbing all the header filenames to test for self-containment and presence of header guards
-   KOKKOS_OPTION(DEFAULT_DEVICE_MEMORY_SPACE "" STRING "Override default device memory space")
-   KOKKOS_OPTION(DEFAULT_HOST_MEMORY_SPACE "" STRING "Override default host memory space")
-   KOKKOS_OPTION(DEFAULT_DEVICE_EXECUTION_SPACE "" STRING "Override default device execution space")
-   KOKKOS_OPTION(DEFAULT_HOST_PARALLEL_EXECUTION_SPACE "" STRING "Override default host parallel execution space")
    # Globbing all the header filenames to test for self-containment and presence of header guards
    SET(BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../../")
    file(GLOB KOKKOS_CORE_HEADERS RELATIVE ${BASE_DIR}/core/src
