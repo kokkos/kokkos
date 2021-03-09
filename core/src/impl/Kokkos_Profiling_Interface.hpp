@@ -108,8 +108,8 @@ static_assert(sizeof(EventSet) / sizeof(Kokkos_Tools_function_pointer) == 275,
 using toolInvokedFenceFunction = Kokkos_Tools_toolInvokedFenceFunction;
 using transmitActionsFunction  = Kokkos_Tools_transmitActionsFunction;
 using requestResponseFunction  = Kokkos_Tools_requestResponsesFunction;
-using ToolResponses            = Kokkos_Tools_ToolResponses;
-using ToolActions              = Kokkos_Tools_ToolActions;
+using ToolSettings             = Kokkos_Tools_ToolSettings;
+using ToolInvokedActions       = Kokkos_Tools_ToolInvokedActions;
 }  // namespace Experimental
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;

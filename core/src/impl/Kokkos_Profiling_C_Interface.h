@@ -136,14 +136,14 @@ typedef void (*Kokkos_Tools_toolInvokedFenceFunction)(const uint32_t);
 
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Tools_function_pointer)();
-struct Kokkos_Tools_ToolActions {
+struct Kokkos_Tools_ToolInvokedActions {
   int num_supported_actions;
   Kokkos_Tools_toolInvokedFenceFunction fence;
   // allow addition of more actions
   Kokkos_Tools_function_pointer padding[31];
 };
 
-struct Kokkos_Tools_ToolResponses {
+struct Kokkos_Tools_ToolSettings {
   int num_supported_responses;
   bool requires_global_fencing;
   bool padding[255];
@@ -151,10 +151,10 @@ struct Kokkos_Tools_ToolResponses {
 
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Tools_transmitActionsFunction)(
-    struct Kokkos_Tools_ToolActions);
+    struct Kokkos_Tools_ToolInvokedActions);
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Tools_requestResponsesFunction)(
-    struct Kokkos_Tools_ToolResponses*);
+    struct Kokkos_Tools_ToolSettings*);
 
 // Tuning
 

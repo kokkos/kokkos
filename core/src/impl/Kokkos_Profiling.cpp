@@ -85,7 +85,7 @@ static std::unordered_map<size_t, VariableInfo> variable_metadata;
 static EventSet current_callbacks;
 static EventSet backup_callbacks;
 static EventSet no_profiling;
-static Kokkos::Tools::Experimental::ToolResponses tool_requirements;
+static Kokkos::Tools::Experimental::ToolSettings tool_requirements;
 bool eventSetsEqual(const EventSet& l, const EventSet& r) {
   return l.init == r.init && l.finalize == r.finalize &&
          l.parse_args == r.parse_args && l.print_help == r.print_help &&
@@ -118,8 +118,8 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.declare_optimization_goal == r.declare_optimization_goal;
 }
 template <typename Callback, typename BooleanConstant, typename... Args>
-void call_kokkos_callback(const Callback callback, BooleanConstant,
-                          Args... args) {
+inline void call_kokkos_callback(const Callback callback, BooleanConstant,
+                                 Args... args) {
   if (callback != nullptr) {
     if ((BooleanConstant::value) &&
         (Kokkos::Tools::Experimental::tool_requirements
@@ -549,7 +549,7 @@ void initialize(const std::string& profileLibrary) {
           firstProfileLibrary, "kokkosp_transmit_actions",
           Kokkos::Tools::Experimental::current_callbacks.transmit_actions);
       lookup_function(
-          firstProfileLibrary, "kokkosp_request_responses",
+          firstProfileLibrary, "kokkosp_request_settings",
           Kokkos::Tools::Experimental::current_callbacks.request_responses);
     }
   }
@@ -567,7 +567,7 @@ void initialize(const std::string& profileLibrary) {
       Kokkos::Tools::Experimental::current_callbacks.request_responses,
       std::false_type{}, &Kokkos::Tools::Experimental::tool_requirements);
 
-  Kokkos::Tools::Experimental::ToolActions actions;
+  Kokkos::Tools::Experimental::ToolInvokedActions actions;
   actions.num_supported_actions = 1;
   actions.fence = &Kokkos::Tools::Experimental::Impl::tool_invoked_fence;
 
