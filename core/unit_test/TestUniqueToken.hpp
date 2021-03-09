@@ -233,7 +233,12 @@ class TestAcquireTeamUniqueToken {
 
     {
       const int duplicate = 100;
+      // FIXME_SYCL The number of workgroups on CUDA devices can not be larger than 65535
+#ifdef KOKKOS_ENABLE_SYCL
+      const long n        = std::min(65535,duplicate * self.tokens.size());
+#else
       const long n        = duplicate * self.tokens.size();
+#endif
 
       team_policy_type team_policy(n, team_size);
       team_policy.set_scratch_size(
