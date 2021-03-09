@@ -61,7 +61,6 @@ namespace Impl {
 
 void HostBarrier::impl_backoff_wait_until_equal(
     int* ptr, const int v, const bool active_wait) noexcept {
-#if !defined(_WIN32)
   unsigned count = 0u;
 
   while (!test_equal(ptr, v)) {
@@ -87,18 +86,6 @@ void HostBarrier::impl_backoff_wait_until_equal(
 #endif
 #endif
   }
-#else  // _WIN32
-  while (!test_equal(ptr, v)) {
-#if defined(KOKKOS_ENABLE_ASM)
-    for (int j = 0; j < num_nops; ++j) {
-      __asm__ __volatile__("nop\n");
-    }
-    __asm__ __volatile__("pause\n" ::: "memory");
-#endif
-  }
-#endif
-  // printf("W: %d\n", count);
 }
-
 }  // namespace Impl
 }  // namespace Kokkos
