@@ -790,5 +790,5 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 
 KOKKOS_ENABLE_OPTION(HEADER_SELF_CONTAINMENT_TESTS ON "Enable header self-containment unit tests")
 if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS)
-add_subdirectory(headers_self_contained)
+  add_subdirectory(headers_self_contained)
 endif()
