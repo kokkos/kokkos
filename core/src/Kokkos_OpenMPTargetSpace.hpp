@@ -276,7 +276,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::HostSpace, Kokkos::Experimental::OpenMPTargetSpace> {
   enum : bool { value = false };
-  inline static void verify(void) {}
+  inline static void verify() {}
   inline static void verify(const void*) {}
 };
 

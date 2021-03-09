@@ -92,7 +92,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
  public:
   using functor_type = FunctorType;
 
-  inline __device__ void operator()(void) const {
+  inline __device__ void operator()() const {
     const Member work_stride = blockDim.y * gridDim.x;
     const Member work_end    = m_policy.end();
 
@@ -502,7 +502,7 @@ class ParallelScanHIPBase {
 
   //----------------------------------------
 
-  __device__ inline void initial(void) const {
+  __device__ inline void initial() const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(m_functor) / sizeof(size_type));
@@ -538,7 +538,7 @@ class ParallelScanHIPBase {
 
   //----------------------------------------
 
-  __device__ inline void final(void) const {
+  __device__ inline void final() const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(m_functor) / sizeof(size_type));
@@ -615,7 +615,7 @@ class ParallelScanHIPBase {
  public:
   //----------------------------------------
 
-  __device__ inline void operator()(void) const {
+  __device__ inline void operator()() const {
     if (!m_final) {
       initial();
     } else {

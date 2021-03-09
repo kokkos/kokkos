@@ -204,7 +204,7 @@ struct VerifyExecutionCanAccessMemorySpace {
 template <class Space>
 struct VerifyExecutionCanAccessMemorySpace<Space, Space> {
   enum { value = 1 };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void *) {}
 };
 
