@@ -42,73 +42,52 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_BITSET_IMPL_HPP
-#define KOKKOS_BITSET_IMPL_HPP
-
-#include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_BitOps.hpp>
-#include <cstdint>
-
+#include <Kokkos_Core.hpp>
 #include <cstdio>
-#include <climits>
-#include <iostream>
-#include <iomanip>
 
-namespace Kokkos {
-namespace Impl {
-
-KOKKOS_FORCEINLINE_FUNCTION
-unsigned rotate_left(unsigned i, int r) {
-  constexpr int size = static_cast<int>(sizeof(unsigned) * CHAR_BIT);
-  return r ? ((i << r) | (i >> (size - r))) : i;
-}
-
-KOKKOS_FORCEINLINE_FUNCTION
-unsigned rotate_right(unsigned i, int r) {
-  constexpr int size = static_cast<int>(sizeof(unsigned) * CHAR_BIT);
-  // FIXME_SYCL llvm.fshr.i32 missing
-  // (https://github.com/intel/llvm/issues/3308)
-#ifdef __SYCL_DEVICE_ONLY__
-  return rotate_left(i, size - r);
-#else
-  return r ? ((i >> r) | (i << (size - r))) : i;
-#endif
-}
-
-template <typename Bitset>
-struct BitsetCount {
-  using bitset_type = Bitset;
-  using execution_space =
-      typename bitset_type::execution_space::execution_space;
-  using size_type  = typename bitset_type::size_type;
-  using value_type = size_type;
-
-  bitset_type m_bitset;
-
-  BitsetCount(bitset_type const& bitset) : m_bitset(bitset) {}
-
-  size_type apply() const {
-    size_type count = 0u;
-    parallel_reduce("Kokkos::Impl::BitsetCount::apply",
-                    m_bitset.m_blocks.extent(0), *this, count);
-    return count;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void init(value_type& count) const { count = 0u; }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& count, const volatile size_type& incr) const {
-    count += incr;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(size_type i, value_type& count) const {
-    count += bit_count(m_bitset.m_blocks[i]);
+struct CountFunctor {
+  KOKKOS_FUNCTION void operator()(const long i, long& lcount) const {
+    lcount += (i % 2) == 0;
   }
 };
 
-}  // namespace Impl
-}  // namespace Kokkos
+int main(int argc, char* argv[]) {
+  Kokkos::initialize(argc, argv);
+  Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
 
-#endif  // KOKKOS_BITSET_IMPL_HPP
+  if (argc < 2) {
+    fprintf(stderr, "Usage: %s [<kokkos_options>] <size>\n", argv[0]);
+    Kokkos::finalize();
+    exit(1);
+  }
+
+  const long n = strtol(argv[1], nullptr, 10);
+
+  printf("Number of even integers from 0 to %ld\n", n - 1);
+
+  Kokkos::Timer timer;
+  timer.reset();
+
+  // Compute the number of even integers from 0 to n-1, in parallel.
+  long count = 0;
+  CountFunctor functor;
+  Kokkos::parallel_reduce(n, functor, count);
+
+  double count_time = timer.seconds();
+  printf("  Parallel: %ld    %10.6f\n", count, count_time);
+
+  timer.reset();
+
+  // Compare to a sequential loop.
+  long seq_count = 0;
+  for (long i = 0; i < n; ++i) {
+    seq_count += (i % 2) == 0;
+  }
+
+  count_time = timer.seconds();
+  printf("Sequential: %ld    %10.6f\n", seq_count, count_time);
+
+  Kokkos::finalize();
+
+  return (count == seq_count) ? 0 : -1;
+}

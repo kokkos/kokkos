@@ -158,7 +158,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
   static int vector_length_max() {
     // FIXME_SYCL provide a reasonable value
-    return 8;
+    return 1;
   }
 
   static int verify_requested_vector_length(int requested_vector_length) {
@@ -411,8 +411,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
 
       cgh.parallel_for(
-          sycl::nd_range<1>(m_league_size * m_team_size, m_team_size),
-          [=](sycl::nd_item<1> item) {
+          sycl::nd_range<2>(
+              sycl::range<2>(m_league_size * m_team_size, m_vector_size),
+              sycl::range<2>(m_team_size, m_vector_size)),
+          [=](sycl::nd_item<2> item) {
             const member_type team_member(
                 team_scratch_memory_L0.get_pointer(), shmem_begin,
                 scratch_size[0],
@@ -437,8 +439,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                 .impl_internal_space_instance()
                                 ->m_indirectKernelMem;
 
-    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper<
-        std::reference_wrapper<FunctorType>>(m_functor, indirectKernelMem);
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_functor, indirectKernelMem);
 
     sycl_direct_launch(m_policy, functor_wrapper.get_functor());
   }
@@ -453,11 +455,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_team_size < 0) m_team_size = 32;
 
     // FIXME_SYCL modify for reduce etc.
-    m_shmem_begin = 0;
+    m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =
         (m_policy.scratch_size(0, m_team_size) +
          FunctorTeamShmemSize<FunctorType>::value(m_functor, m_team_size));
-    m_scratch_size[0] = m_policy.scratch_size(0, m_team_size);
+    m_scratch_size[0] = m_shmem_size;
     m_scratch_size[1] = m_policy.scratch_size(1, m_team_size);
 
     // FIXME_SYCL so far accessors used instead of these pointers
@@ -469,11 +471,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     m_scratch_ptr[1]     = sycl::malloc_device(
         sizeof(char) * m_scratch_size[1] * m_league_size, q);
 
-    if (static_cast<int>(space.m_maxShmemPerBlock) < m_shmem_size) {
+    if (static_cast<int>(space.m_maxShmemPerBlock) <
+        m_shmem_size - m_shmem_begin) {
       std::stringstream out;
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "
-          << m_shmem_size << " bytes but maximum is "
+          << m_shmem_size - m_shmem_begin << " bytes but maximum is "
           << m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock
           << '\n';
       Kokkos::Impl::throw_runtime_exception(out.str());

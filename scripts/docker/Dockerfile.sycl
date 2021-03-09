@@ -30,8 +30,8 @@ RUN CMAKE_KEY=2D2CEF1034921684 && \
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
 ENV SYCL_DIR=/opt/sycl
-RUN SYCL_VERSION=2020-12 && \
-    SYCL_URL=https://github.com/intel/llvm/archive && \
+RUN SYCL_VERSION=20210303 && \
+    SYCL_URL=https://github.com/intel/llvm/archive/sycl-nightly && \
     SYCL_ARCHIVE=${SYCL_VERSION}.tar.gz && \
     SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
     wget --quiet ${SYCL_URL}/${SYCL_ARCHIVE} && \

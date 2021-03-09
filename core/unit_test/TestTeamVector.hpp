@@ -110,9 +110,10 @@ struct functor_team_for {
         }
 
         if (test != value) {
-          printf("FAILED team_parallel_for %i %i %f %f\n", team.league_rank(),
-                 team.team_rank(), static_cast<double>(test),
-                 static_cast<double>(value));
+          KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+              "FAILED team_parallel_for %i %i %f %f\n", team.league_rank(),
+              team.team_rank(), static_cast<double>(test),
+              static_cast<double>(value));
           flag() = 1;
         }
       });
@@ -168,17 +169,18 @@ struct functor_team_reduce {
 
       if (test != value) {
         if (team.league_rank() == 0) {
-          printf("FAILED team_parallel_reduce %i %i %lf %lf %lu\n",
-                 team.league_rank(), team.team_rank(),
-                 static_cast<double>(test), static_cast<double>(value),
-                 static_cast<unsigned long>(sizeof(Scalar)));
+          KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+              "FAILED team_parallel_reduce %i %i %lf %lf %lu\n",
+              team.league_rank(), team.team_rank(), static_cast<double>(test),
+              static_cast<double>(value),
+              static_cast<unsigned long>(sizeof(Scalar)));
         }
 
         flag() = 1;
       }
       if (test != shared_value(0)) {
         if (team.league_rank() == 0) {
-          printf(
+          KOKKOS_IMPL_DO_NOT_USE_PRINTF(
               "FAILED team_parallel_reduce with shared result %i %i %lf %lf "
               "%lu\n",
               team.league_rank(), team.team_rank(), static_cast<double>(test),
@@ -239,14 +241,15 @@ struct functor_team_reduce_reducer {
       }
 
       if (test != value) {
-        printf("FAILED team_vector_parallel_reduce_reducer %i %i %lf %lf\n",
-               team.league_rank(), team.team_rank(), static_cast<double>(test),
-               static_cast<double>(value));
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+            "FAILED team_vector_parallel_reduce_reducer %i %i %lf %lf\n",
+            team.league_rank(), team.team_rank(), static_cast<double>(test),
+            static_cast<double>(value));
 
         flag() = 1;
       }
       if (test != shared_value(0)) {
-        printf(
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
             "FAILED team_vector_parallel_reduce_reducer shared value %i %i %lf "
             "%lf\n",
             team.league_rank(), team.team_rank(), static_cast<double>(test),
@@ -317,9 +320,10 @@ struct functor_team_vector_for {
         }
 
         if (test != value) {
-          printf("FAILED team_vector_parallel_for %i %i %f %f\n",
-                 team.league_rank(), team.team_rank(),
-                 static_cast<double>(test), static_cast<double>(value));
+          KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+              "FAILED team_vector_parallel_for %i %i %f %f\n",
+              team.league_rank(), team.team_rank(), static_cast<double>(test),
+              static_cast<double>(value));
 
           flag() = 1;
         }
@@ -367,10 +371,11 @@ struct functor_team_vector_reduce {
 
       if (test != value) {
         if (team.league_rank() == 0) {
-          printf("FAILED team_vector_parallel_reduce %i %i %f %f %lu\n",
-                 team.league_rank(), team.team_rank(),
-                 static_cast<double>(test), static_cast<double>(value),
-                 static_cast<unsigned long>(sizeof(Scalar)));
+          KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+              "FAILED team_vector_parallel_reduce %i %i %f %f %lu\n",
+              team.league_rank(), team.team_rank(), static_cast<double>(test),
+              static_cast<double>(value),
+              static_cast<unsigned long>(sizeof(Scalar)));
         }
 
         flag() = 1;
@@ -418,9 +423,10 @@ struct functor_team_vector_reduce_reducer {
       }
 
       if (test != value) {
-        printf("FAILED team_vector_parallel_reduce_reducer %i %i %f %f\n",
-               team.league_rank(), team.team_rank(), static_cast<double>(test),
-               static_cast<double>(value));
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+            "FAILED team_vector_parallel_reduce_reducer %i %i %f %f\n",
+            team.league_rank(), team.team_rank(), static_cast<double>(test),
+            static_cast<double>(value));
 
         flag() = 1;
       }
@@ -517,9 +523,10 @@ struct functor_vec_for {
         }
 
         if (test != value) {
-          printf("FAILED vector_par_for %i %i %f %f\n", team.league_rank(),
-                 team.team_rank(), static_cast<double>(test),
-                 static_cast<double>(value));
+          KOKKOS_IMPL_DO_NOT_USE_PRINTF("FAILED vector_par_for %i %i %f %f\n",
+                                        team.league_rank(), team.team_rank(),
+                                        static_cast<double>(test),
+                                        static_cast<double>(value));
 
           flag() = 1;
         }
@@ -553,8 +560,9 @@ struct functor_vec_red {
       for (int i = 0; i < 13; i++) test += i;
 
       if (test != value) {
-        printf("FAILED vector_par_reduce %i %i %f %f\n", team.league_rank(),
-               team.team_rank(), (double)test, (double)value);
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF("FAILED vector_par_reduce %i %i %f %f\n",
+                                      team.league_rank(), team.team_rank(),
+                                      (double)test, (double)value);
 
         flag() = 1;
       }
@@ -591,9 +599,9 @@ struct functor_vec_red_reducer {
       for (int i = 0; i < 13; i++) test *= (i % 5 + 1);
 
       if (test != value) {
-        printf("FAILED vector_par_reduce_reducer %i %i %f %f\n",
-               team.league_rank(), team.team_rank(), (double)test,
-               (double)value);
+        KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+            "FAILED vector_par_reduce_reducer %i %i %f %f\n",
+            team.league_rank(), team.team_rank(), (double)test, (double)value);
 
         flag() = 1;
       }
@@ -621,9 +629,10 @@ struct functor_vec_scan {
                               for (int k = 0; k <= i; k++) test += k;
 
                               if (test != val) {
-                                printf("FAILED vector_par_scan %i %i %f %f\n",
-                                       team.league_rank(), team.team_rank(),
-                                       (double)test, (double)val);
+                                KOKKOS_IMPL_DO_NOT_USE_PRINTF(
+                                    "FAILED vector_par_scan %i %i %f %f\n",
+                                    team.league_rank(), team.team_rank(),
+                                    (double)test, (double)val);
 
                                 flag() = 1;
                               }
@@ -855,8 +864,6 @@ class TestTripleNestedReduce {
 
 #endif
 
-// FIXME_SYCL requires team reduce
-#ifndef KOKKOS_ENABLE_SYCL
 #if !(defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ENABLE_HIP))
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
@@ -874,6 +881,8 @@ TEST(TEST_CATEGORY, team_vector) {
 }
 #endif
 
+// FIXME_SYCL requires outer TeamPolicy parallel_reduce
+#ifndef KOKKOS_ENABLE_SYCL
 #if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST(TEST_CATEGORY, triple_nested_parallelism) {
 // With KOKKOS_ENABLE_DEBUG enabled, the functor uses too many registers to run
