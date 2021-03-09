@@ -278,8 +278,11 @@ if(Kokkos_ENABLE_OPENMPTARGET)
 endif()
 
 ## FIXME_OPENMPTARGET - Comment non-passing tests with the nvidia compiler
-if((Kokkos_ENABLE_OPENMPTARGET) AND ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "PGI")) 
+if((Kokkos_ENABLE_OPENMPTARGET) AND ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "PGI"))
   list(REMOVE_ITEM OpenMPTarget_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_UniqueToken.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_HostSharedPtr.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_HostSharedPtrAccessOnDevice.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScratch.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TestScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TestTeamScan.cpp
@@ -619,6 +622,12 @@ if(Kokkos_ENABLE_SYCL)
   )
 endif()
 
+if ((KOKKOS_ENABLE_OPENMPTARGET) AND ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "PGI"))
+SET(DEFAULT_DEVICE_SOURCES
+  UnitTestMainInit.cpp
+  default/TestDefaultDeviceType.cpp
+)
+else()
 SET(DEFAULT_DEVICE_SOURCES
   UnitTestMainInit.cpp
   default/TestDefaultDeviceType.cpp
@@ -634,6 +643,7 @@ SET(DEFAULT_DEVICE_SOURCES
   default/TestDefaultDeviceType_d.cpp
   default/TestDefaultDeviceTypeResize.cpp
 )
+endif()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest_Default
