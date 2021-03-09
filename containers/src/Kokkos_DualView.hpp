@@ -500,9 +500,9 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   ///   the data in either View.  You must manually mark modified data
   ///   as modified, by calling the modify() method with the
   ///   appropriate template parameter.
-  // deliberately passing args by value as they're used multiple times
+  // deliberately passing args by cref as they're used multiple times
   template <class Device, class... Args>
-  void sync_impl(const std::true_type&, Args const&... args) {
+  void sync_impl(std::true_type, Args const&... args) {
     if (modified_flags.data() == nullptr) return;
 
     int dev = get_device_side<Device>();
@@ -567,9 +567,9 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     sync_impl<Device>(std::true_type{}, exec);
   }
 
-  // deliberately passing args by value as they're used multiple times
+  // deliberately passing args by cref as they're used multiple times
   template <class Device, class... Args>
-  void sync_impl(const std::false_type&, Args const&...) {
+  void sync_impl(std::false_type, Args const&...) {
     if (modified_flags.data() == nullptr) return;
 
     int dev = get_device_side<Device>();
@@ -608,7 +608,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     sync_impl<Device>(std::false_type{}, exec);
   }
 
-  // deliberately passing args by value as they're used multiple times
+  // deliberately passing args by cref as they're used multiple times
   template <typename... Args>
   void sync_host_impl(Args const&... args) {
     if (!std::is_same<typename traits::data_type,
@@ -639,7 +639,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
   void sync_host() { sync_host_impl(); }
 
-  // deliberately passing args by value as they're used multiple times
+  // deliberately passing args by cref as they're used multiple times
   template <typename... Args>
   void sync_device_impl(Args const&... args) {
     if (!std::is_same<typename traits::data_type,
