@@ -65,10 +65,23 @@ namespace Impl {
 
 //------------------------------------------------------------------------------
 
+// Keep these sorted by frequency of use to reduce compilation time
+//
+// clang-format off
 using execution_policy_trait_specifications =
-    type_list<ExecutionSpaceTrait, GraphKernelTrait, IndexTypeTrait,
-              IterationPatternTrait, LaunchBoundsTrait, OccupancyControlTrait,
-              ScheduleTrait, WorkItemPropertyTrait, WorkTagTrait>;
+    type_list<
+        ExecutionSpaceTrait,
+        IndexTypeTrait,
+        ScheduleTrait,
+        IterationPatternTrait,
+        WorkItemPropertyTrait,
+        LaunchBoundsTrait,
+        OccupancyControlTrait,
+        GraphKernelTrait,
+        // This one has to be last, unfortunately:
+        WorkTagTrait
+    >;
+// clang-format on
 
 //==============================================================================
 // <editor-fold desc="AnalyzePolicyBaseTraits"> {{{1
