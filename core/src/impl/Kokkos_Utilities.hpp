@@ -143,6 +143,64 @@ struct destruct_delete {
 template <class...>
 struct type_list;
 
+//------------------------------------------------------------------------------
+// <editor-fold desc="type_list_remove_first"> {{{2
+
+// Currently linear complexity; if we use this a lot, maybe make it better?
+
+template <class Entry, class InList, class OutList>
+struct _type_list_remove_first_impl;
+
+template <class Entry, class T, class... Ts, class... OutTs>
+struct _type_list_remove_first_impl<Entry, type_list<T, Ts...>,
+                                    type_list<OutTs...>>
+    : _type_list_remove_first_impl<Entry, type_list<Ts...>,
+                                   type_list<OutTs..., T>> {};
+
+template <class Entry, class... Ts, class... OutTs>
+struct _type_list_remove_first_impl<Entry, type_list<Entry, Ts...>,
+                                    type_list<OutTs...>>
+    : _type_list_remove_first_impl<Entry, type_list<>,
+                                   type_list<OutTs..., Ts...>> {};
+
+template <class Entry, class... OutTs>
+struct _type_list_remove_first_impl<Entry, type_list<>, type_list<OutTs...>>
+    : identity<type_list<OutTs...>> {};
+
+template <class Entry, class List>
+struct type_list_remove_first
+    : _type_list_remove_first_impl<Entry, List, type_list<>> {};
+
+// </editor-fold> end type_list_remove_first }}}2
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// <editor-fold desc="type_list_any"> {{{2
+
+template <template <class> class UnaryPred, class List>
+struct type_list_any;
+
+#ifdef KOKKOS_ENABLE_CXX17
+template <template <class> class UnaryPred, class... Ts>
+struct type_list_any<UnaryPred, type_list<Ts...>>
+    : std::bool_constant<(UnaryPred<Ts>::value || ...)> {};
+#else
+template <template <class> class UnaryPred, class T, class... Ts>
+struct type_list_any<UnaryPred, type_list<T, Ts...>> {
+  using type = typename std::conditional_t<
+      UnaryPred<T>::value, std::true_type,
+      type_list_any<UnaryPred, type_list<Ts...>>>::type;
+  static constexpr auto value = type::value;
+};
+
+template <template <class> class UnaryPred>
+struct type_list_any<UnaryPred, type_list<>> : std::false_type {};
+
+#endif
+
+// </editor-fold> end type_list_any }}}2
+//------------------------------------------------------------------------------
+
 // </editor-fold> end type_list }}}1
 //==============================================================================
 

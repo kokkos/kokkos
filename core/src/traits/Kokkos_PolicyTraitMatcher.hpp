@@ -42,72 +42,36 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_TRAITS_FWD_HPP
-#define KOKKOS_KOKKOS_TRAITS_FWD_HPP
+#include <impl/Kokkos_Utilities.hpp>  // type_list
+
+#include <traits/Kokkos_Traits_fwd.hpp>
+
+#ifndef KOKKOS_KOKKOS_POLICYTRAITMATCHER_HPP
+#define KOKKOS_KOKKOS_POLICYTRAITMATCHER_HPP
 
 namespace Kokkos {
 namespace Impl {
 
-template <class Enable, class... TraitsList>
-struct AnalyzeExecPolicy;
-
-template <class Enable, class TraitSpecList, class... Traits>
-struct AnalyzeExecPolicyUseMatcher;
-
-template <class AnalysisResults>
-struct ExecPolicyTraitsWithDefaults;
-
-template <class TraitSpec, class Trait, class Enable>
-struct PolicyTraitMatcher;
-
-template <class TraitSpec, template <class...> class PolicyTemplate,
-          class AlreadyProcessedList, class ToProcessList, class NewTrait,
-          class Enable = void>
-struct PolicyTraitAdaptorImpl;
-
-template <class TraitSpec, class Policy, class NewTrait>
-struct PolicyTraitAdaptor;
-
-// A tag class for dependent defaults that must be handled by the
-// ExecPolicyTraitsWithDefaults wrapper, since their defaults depend on other
-// traits
-struct dependent_policy_trait_default;
-
 //==============================================================================
-// <editor-fold desc="Execution policy trait specifications"> {{{1
+// <editor-fold desc="PolicyTraitMatcher"> {{{1
 
-struct ExecutionSpaceTrait;
-struct IndexTypeTrait;
-struct ScheduleTrait;
-struct IterationPatternTrait;
-struct WorkItemPropertyTrait;
-struct LaunchBoundsTrait;
-struct OccupancyControlTrait;
-struct GraphKernelTrait;
-struct WorkTagTrait;
+// To handle the WorkTag case, we need more than just a predicate; we need
+// something that we can default to in the unspecialized case, just like we
+// do for AnalyzeExecPolicy
+template <class TraitSpec, class Trait, class Enable = void>
+struct PolicyTraitMatcher : std::false_type {};
 
-// Keep these sorted by frequency of use to reduce compilation time
-//
-// clang-format off
-using execution_policy_trait_specifications =
-  type_list<
-    ExecutionSpaceTrait,
-    IndexTypeTrait,
-    ScheduleTrait,
-    IterationPatternTrait,
-    WorkItemPropertyTrait,
-    LaunchBoundsTrait,
-    OccupancyControlTrait,
-    GraphKernelTrait,
-    // This one has to be last, unfortunately:
-    WorkTagTrait
-  >;
-// clang-format on
+template <class TraitSpec, class Trait>
+struct PolicyTraitMatcher<
+    TraitSpec, Trait,
+    std::enable_if_t<
+        TraitSpec::template trait_matches_specification<Trait>::value>>
+    : std::true_type {};
 
-// </editor-fold> end Execution policy trait specifications }}}1
+// </editor-fold> end PolicyTraitMatcher }}}1
 //==============================================================================
 
 }  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_TRAITS_FWD_HPP
+#endif  // KOKKOS_KOKKOS_POLICYTRAITMATCHER_HPP

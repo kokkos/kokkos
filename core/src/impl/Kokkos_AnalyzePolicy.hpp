@@ -63,26 +63,6 @@
 namespace Kokkos {
 namespace Impl {
 
-//------------------------------------------------------------------------------
-
-// Keep these sorted by frequency of use to reduce compilation time
-//
-// clang-format off
-using execution_policy_trait_specifications =
-    type_list<
-        ExecutionSpaceTrait,
-        IndexTypeTrait,
-        ScheduleTrait,
-        IterationPatternTrait,
-        WorkItemPropertyTrait,
-        LaunchBoundsTrait,
-        OccupancyControlTrait,
-        GraphKernelTrait,
-        // This one has to be last, unfortunately:
-        WorkTagTrait
-    >;
-// clang-format on
-
 //==============================================================================
 // <editor-fold desc="AnalyzePolicyBaseTraits"> {{{1
 
@@ -203,10 +183,13 @@ template <class>
 struct show_name_of_invalid_execution_policy_trait;
 template <class Trait, class... Traits>
 struct AnalyzeExecPolicyUseMatcher<void, type_list<>, Trait, Traits...> {
+  static constexpr auto trigger_error_message =
+      show_name_of_invalid_execution_policy_trait<Trait>{};
   static_assert(
       /* always false: */ std::is_void<Trait>::value,
-      "Unknown execution policy trait");
-  show_name_of_invalid_execution_policy_trait<Trait> trigger_error_message = {};
+      "Unknown execution policy trait. Search compiler output for "
+      "'show_name_of_invalid_execution_policy_trait' to see the type of the "
+      "invalid trait.");
 };
 
 // All traits matched case:
