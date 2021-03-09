@@ -56,6 +56,11 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
+template <class T>
+struct show_extra_execution_space_erroneously_given_to_execution_policy;
+template <>
+struct show_extra_execution_space_erroneously_given_to_execution_policy<void> {
+};
 struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
   // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
   template <template <class> class GetBase, class... OtherTraits>
@@ -71,8 +76,14 @@ struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
     using base_t = AnalyzeNextTrait;
     using base_t::base_t;
 
+    static constexpr auto show_execution_space_error_in_compilation_message =
+        show_extra_execution_space_erroneously_given_to_execution_policy<
+            std::conditional_t<base_t::execution_space_is_defaulted, void,
+                               typename base_t::execution_space>>{};
     static_assert(base_t::execution_space_is_defaulted,
-                  "Kokkos Error: More than one execution space given");
+                  "Kokkos Error: More than one execution space given. Search "
+                  "compiler output for 'show_extra_execution_space' to see the "
+                  "type of the errant tag.");
 
     static constexpr auto execution_space_is_defaulted = false;
 

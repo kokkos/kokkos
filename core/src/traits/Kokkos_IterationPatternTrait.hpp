@@ -54,6 +54,11 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
+template <class T>
+struct show_extra_iteration_pattern_erroneously_given_to_execution_policy;
+template <>
+struct show_extra_iteration_pattern_erroneously_given_to_execution_policy<
+    void> {};
 struct IterationPatternTrait : TraitSpecificationBase<IterationPatternTrait> {
   // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
   template <template <class> class GetBase, class... OtherTraits>
@@ -64,8 +69,14 @@ struct IterationPatternTrait : TraitSpecificationBase<IterationPatternTrait> {
   struct mixin_matching_trait : AnalyzeNextTrait {
     using base_t = AnalyzeNextTrait;
     using base_t::base_t;
-    static_assert(std::is_void<typename base_t::iteration_pattern>::value,
-                  "Kokkos Error: More than one iteration pattern given");
+    static constexpr auto show_iteration_pattern_error_in_compilation_message =
+        show_extra_iteration_pattern_erroneously_given_to_execution_policy<
+            typename base_t::iteration_pattern>{};
+    static_assert(
+        std::is_void<typename base_t::iteration_pattern>::value,
+        "Kokkos Error: More than one index type given. Search "
+        "compiler output for 'show_extra_iteration_pattern' to see the "
+        "type of the errant tag.");
     using iteration_pattern = IterPattern;
   };
   template <class T>

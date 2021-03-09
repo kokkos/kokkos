@@ -56,6 +56,10 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
+template <class T>
+struct show_extra_work_tag_erroneously_given_to_execution_policy;
+template <>
+struct show_extra_work_tag_erroneously_given_to_execution_policy<void> {};
 struct WorkTagTrait : TraitSpecificationBase<WorkTagTrait> {
   // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
   template <template <class> class GetBase, class... OtherTraits>
@@ -67,8 +71,13 @@ struct WorkTagTrait : TraitSpecificationBase<WorkTagTrait> {
     using base_t = AnalyzeNextTrait;
     using base_t::base_t;
     using work_tag = WorkTag;
-    static_assert(std::is_void<typename base_t::work_tag>::value,
-                  "Kokkos Error: More than one work tag given");
+    static constexpr auto show_work_tag_error_in_compilation_message =
+        show_extra_work_tag_erroneously_given_to_execution_policy<
+            typename base_t::work_tag>{};
+    static_assert(
+        std::is_void<typename base_t::work_tag>::value,
+        "Kokkos Error: More than one work tag given. Search compiler output "
+        "for 'show_extra_work_tag' to see the type of the errant tag.");
   };
 };
 

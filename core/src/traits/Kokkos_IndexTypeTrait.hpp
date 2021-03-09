@@ -59,6 +59,10 @@ struct IndexTypePolicyMixin;
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
+template <class T>
+struct show_extra_index_type_erroneously_given_to_execution_policy;
+template <>
+struct show_extra_index_type_erroneously_given_to_execution_policy<void> {};
 struct IndexTypeTrait : TraitSpecificationBase<IndexTypeTrait> {
   // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
   template <template <class> class GetBase, class... OtherTraits>
@@ -86,8 +90,14 @@ struct IndexTypePolicyMixin<Kokkos::IndexType<IntegralIndexType>,
                             AnalyzeNextTrait> : AnalyzeNextTrait {
   using base_t = AnalyzeNextTrait;
   using base_t::base_t;
+  static constexpr auto show_index_type_error_in_compilation_message =
+      show_extra_index_type_erroneously_given_to_execution_policy<
+          std::conditional_t<base_t::index_type_is_defaulted, void,
+                             typename base_t::schedule_type>>{};
   static_assert(base_t::index_type_is_defaulted,
-                "Kokkos Error: More than one index type given");
+                "Kokkos Error: More than one index type given. Search "
+                "compiler output for 'show_extra_index_type' to see the "
+                "type of the errant tag.");
   static constexpr bool index_type_is_defaulted = false;
   using index_type = Kokkos::IndexType<IntegralIndexType>;
 };
@@ -98,8 +108,14 @@ template <class IntegralIndexType, class AnalyzeNextTrait>
 struct IndexTypePolicyMixin : AnalyzeNextTrait {
   using base_t = AnalyzeNextTrait;
   using base_t::base_t;
+  static constexpr auto show_index_type_error_in_compilation_message =
+      show_extra_index_type_erroneously_given_to_execution_policy<
+          std::conditional_t<base_t::index_type_is_defaulted, void,
+                             typename base_t::schedule_type>>{};
   static_assert(base_t::index_type_is_defaulted,
-                "Kokkos Error: More than one index type given");
+                "Kokkos Error: More than one index type given. Search "
+                "compiler output for 'show_extra_index_type' to see the "
+                "type of the errant tag.");
   static_assert(std::is_integral<IntegralIndexType>::value, "");
   static constexpr bool index_type_is_defaulted = false;
   using index_type = Kokkos::IndexType<IntegralIndexType>;

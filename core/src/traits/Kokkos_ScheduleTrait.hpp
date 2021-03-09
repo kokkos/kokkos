@@ -57,6 +57,10 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
+template <class T>
+struct show_extra_schedule_type_erroneously_given_to_execution_policy;
+template <>
+struct show_extra_schedule_type_erroneously_given_to_execution_policy<void> {};
 struct ScheduleTrait : TraitSpecificationBase<ScheduleTrait> {
   // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
   template <template <class> class GetBase, class... OtherTraits>
@@ -70,8 +74,14 @@ struct ScheduleTrait : TraitSpecificationBase<ScheduleTrait> {
     using base_t = AnalyzeNextTrait;
     using base_t::base_t;
     using schedule_type = Sched;
+    static constexpr auto show_schedule_type_error_in_compilation_message =
+        show_extra_schedule_type_erroneously_given_to_execution_policy<
+            std::conditional_t<base_t::schedule_type_is_defaulted, void,
+                               typename base_t::schedule_type>>{};
     static_assert(base_t::schedule_type_is_defaulted,
-                  "Kokkos Error: More than one schedule type given");
+                  "Kokkos Error: More than one schedule type given. Search "
+                  "compiler output for 'show_extra_schedule_type' to see the "
+                  "type of the errant tag.");
     static constexpr bool schedule_type_is_defaulted = false;
   };
   template <class T>
