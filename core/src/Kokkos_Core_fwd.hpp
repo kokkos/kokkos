@@ -370,8 +370,10 @@ KOKKOS_IMPL_DISABLE_TYPE(OpenMPExec)
 #if !defined(KOKKOS_ENABLE_CUDA)
 class Cuda;
 class CudaSpace;
+class CudaHostPinnedSpace;
 KOKKOS_IMPL_DISABLE_TYPE(Cuda)
 KOKKOS_IMPL_DISABLE_TYPE(CudaSpace)
+KOKKOS_IMPL_DISABLE_TYPE(CudaHostPinnedSpace)
 #endif
 
 #if !defined(KOKKOS_ENABLE_CUDA_UVM)
@@ -399,9 +401,11 @@ KOKKOS_IMPL_DISABLE_TYPE(Experimental::OpenMPTargetSpace)
 namespace Experimental {
 class HIP;
 class HIPSpace;
+class HIPHostPinnedSpace;
 }  // namespace Experimental
 KOKKOS_IMPL_DISABLE_TYPE(Experimental::HIP)
 KOKKOS_IMPL_DISABLE_TYPE(Experimental::HIPSpace)
+KOKKOS_IMPL_DISABLE_TYPE(Experimental::HIPHostPinnedSpace)
 #endif
 
 #if !defined(KOKKOS_ENABLE_SYCL)
