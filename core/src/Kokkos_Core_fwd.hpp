@@ -57,6 +57,8 @@
 #include <Kokkos_MasterLock.hpp>
 #endif
 
+#include <type_traits>
+
 //----------------------------------------------------------------------------
 // Have assumed a 64bit build (8byte pointers) throughout the code base.
 
@@ -336,6 +338,87 @@ struct LAnd;
 template <class ScalarType, class Space = HostSpace>
 struct LOr;
 
+//--------------------------------------------------------------------------------------//
+//  this is used to mark execution or memory spaces as not available
+//
+template <typename Tp>
+struct IsAvailable : std::true_type {};
+
+#define KOKKOS_IMPL_DISABLE_TYPE(TYPE) \
+  template <>                          \
+  struct IsAvailable<TYPE> : std::false_type {};
+
+//--------------------------------------------------------------------------------------//
+//  declare any spaces that might not be available and mark them as unavailable
+//
+#if !defined(KOKKOS_ENABLE_SERIAL)
+class Serial;
+KOKKOS_IMPL_DISABLE_TYPE(Serial)
+#endif
+
+#if !defined(KOKKOS_ENABLE_THREADS)
+class Threads;
+class ThreadsExec;
+KOKKOS_IMPL_DISABLE_TYPE(Threads)
+KOKKOS_IMPL_DISABLE_TYPE(ThreadsExec)
+#endif
+
+#if !defined(KOKKOS_ENABLE_OPENMP)
+class OpenMP;
+class OpenMPExec;
+KOKKOS_IMPL_DISABLE_TYPE(OpenMP)
+KOKKOS_IMPL_DISABLE_TYPE(OpenMPExec)
+#endif
+
+#if !defined(KOKKOS_ENABLE_CUDA)
+class Cuda;
+class CudaSpace;
+KOKKOS_IMPL_DISABLE_TYPE(Cuda)
+KOKKOS_IMPL_DISABLE_TYPE(CudaSpace)
+#endif
+
+#if !defined(KOKKOS_ENABLE_CUDA_UVM)
+class CudaUVMSpace;
+KOKKOS_IMPL_DISABLE_TYPE(CudaUVMSpace)
+#endif
+
+#ifndef KOKKOS_ENABLE_HBWSPACE
+namespace Experimental {
+class HBWSpace;
+}  // namespace Experimental
+KOKKOS_IMPL_DISABLE_TYPE(Experimental::HBWSpace)
+#endif
+
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
+namespace Experimental {
+class OpenMPTarget;
+class OpenMPTargetSpace;
+}  // namespace Experimental
+KOKKOS_IMPL_DISABLE_TYPE(Experimental::OpenMPTarget)
+KOKKOS_IMPL_DISABLE_TYPE(Experimental::OpenMPTargetSpace)
+#endif
+
+#if !defined(KOKKOS_ENABLE_HIP)
+namespace Experimental {
+class HIP;
+class HIPSpace;
+}  // namespace Experimental
+KOKKOS_IMPL_DISABLE_TYPE(Experimental::HIP)
+KOKKOS_IMPL_DISABLE_TYPE(Experimental::HIPSpace)
+#endif
+
+#if !defined(KOKKOS_ENABLE_SYCL)
+namespace Experimental {
+class SYCL;
+class SYCLDeviceUSMSpace;
+class SYCLSharedUSMSpace;
+}  // namespace Experimental
+KOKKOS_IMPL_DISABLE_TYPE(Experimental::SYCL)
+KOKKOS_IMPL_DISABLE_TYPE(Experimental::SYCLDeviceUSMSpace)
+#endif
+
 }  // namespace Kokkos
+
+#undef KOKKOS_IMPL_DISABLE_TYPE
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
