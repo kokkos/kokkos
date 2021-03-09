@@ -114,6 +114,8 @@ struct test_dualview_combinations {
 
     a.template modify<typename ViewType::execution_space>();
     a.template sync<typename ViewType::host_mirror_space>();
+    a.template sync<typename ViewType::host_mirror_space>(
+        Kokkos::DefaultExecutionSpace{});
 
     a.h_view(5, 1) = 3;
     a.h_view(6, 1) = 4;
@@ -122,11 +124,15 @@ struct test_dualview_combinations {
     ViewType b = Kokkos::subview(a, std::pair<unsigned int, unsigned int>(6, 9),
                                  std::pair<unsigned int, unsigned int>(0, 1));
     a.template sync<typename ViewType::execution_space>();
+    a.template sync<typename ViewType::execution_space>(
+        Kokkos::DefaultExecutionSpace{});
     b.template modify<typename ViewType::execution_space>();
 
     Kokkos::deep_copy(b.d_view, 2);
 
     a.template sync<typename ViewType::host_mirror_space>();
+    a.template sync<typename ViewType::host_mirror_space>(
+        Kokkos::DefaultExecutionSpace{});
     Scalar count = 0;
     for (unsigned int i = 0; i < a.d_view.extent(0); i++)
       for (unsigned int j = 0; j < a.d_view.extent(1); j++)
@@ -180,6 +186,7 @@ struct test_dual_view_deep_copy {
     } else {
       a.modify_device();
       a.sync_host();
+      a.sync_host(Kokkos::DefaultExecutionSpace{});
     }
 
     // Check device view is initialized as expected
@@ -208,6 +215,7 @@ struct test_dual_view_deep_copy {
       b.template sync<typename ViewType::host_mirror_space>();
     } else {
       b.sync_host();
+      b.sync_host(Kokkos::DefaultExecutionSpace{});
     }
 
     // Perform same checks on b as done on a
@@ -302,6 +310,7 @@ struct test_dualview_resize {
     ASSERT_EQ(a.extent(1), m / factor);
 
     a.sync_device();
+    a.sync_device(Kokkos::DefaultExecutionSpace{});
 
     // Check device view is initialized as expected
     a_d_sum = 0;
