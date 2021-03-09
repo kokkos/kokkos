@@ -58,12 +58,9 @@ TEST(TEST_CATEGORY, team_reduction_scan) {
 }
 
 TEST(TEST_CATEGORY, team_long_reduce) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
   // WORKAROUND OPENMPTARGET: Not implemented
-  if constexpr (!std::is_same<TEST_EXECSPACE,
-                              Kokkos::Experimental::OpenMPTarget>::value)
-#endif
-  {
+  if (!std::is_same<TEST_EXECSPACE,
+                    Kokkos::Experimental::OpenMPTarget>::value) {
     TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
     TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
     TestReduceTeam<long, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(3);
@@ -76,12 +73,9 @@ TEST(TEST_CATEGORY, team_long_reduce) {
 }
 
 TEST(TEST_CATEGORY, team_double_reduce) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
   // WORKAROUND OPENMPTARGET: Not implemented
-  if constexpr (!std::is_same<TEST_EXECSPACE,
-                              Kokkos::Experimental::OpenMPTarget>::value)
-#endif
-  {
+  if (!std::is_same<TEST_EXECSPACE,
+                    Kokkos::Experimental::OpenMPTarget>::value) {
     TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(
         0);
     TestReduceTeam<double, TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(

@@ -65,48 +65,55 @@ TEST(TEST_CATEGORY, team_for) {
       1000);
 }
 
-// FIXME_OPENMPTARGET wrong results
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, team_reduce) {
-  TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
-  TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(0);
-  TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Static> >::test_reduce(2);
-  TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(2);
-  TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
-  TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
+  // FIXME_OPENMPTARGET wrong results
+  if (!std::is_same<TEST_EXECSPACE,
+                    Kokkos::Experimental::OpenMPTarget>::value) {
+    TestTeamPolicy<TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
+    TestTeamPolicy<TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(0);
+    TestTeamPolicy<TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Static> >::test_reduce(2);
+    TestTeamPolicy<TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(2);
+    TestTeamPolicy<TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
+    TestTeamPolicy<TEST_EXECSPACE,
+                   Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
+  }
 }
-#endif
 
 TEST(TEST_CATEGORY, team_broadcast_long) {
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
-                    long>::test_teambroadcast(0, 1);
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
-                    long>::test_teambroadcast(0, 1);
+  // FIXME_OPENMPTARGET
+  if (!std::is_same<TEST_EXECSPACE,
+                    Kokkos::Experimental::OpenMPTarget>::value) {
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                      long>::test_teambroadcast(0, 1);
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                      long>::test_teambroadcast(0, 1);
 
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
-                    long>::test_teambroadcast(2, 1);
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
-                    long>::test_teambroadcast(2, 1);
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                      long>::test_teambroadcast(2, 1);
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                      long>::test_teambroadcast(2, 1);
 
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
-                    long>::test_teambroadcast(16, 1);
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
-                    long>::test_teambroadcast(16, 1);
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                      long>::test_teambroadcast(16, 1);
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                      long>::test_teambroadcast(16, 1);
 
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
-                    long>::test_teambroadcast(1000, 1);
-  TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
-                    long>::test_teambroadcast(1000, 1);
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                      long>::test_teambroadcast(1000, 1);
+    TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                      long>::test_teambroadcast(1000, 1);
+  }
 }
 
 TEST(TEST_CATEGORY, team_broadcast_char) {
-  {
+  // FIXME_OPENMPTARGET
+  if (!std::is_same<TEST_EXECSPACE,
+                    Kokkos::Experimental::OpenMPTarget>::value) {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
                       unsigned char>::test_teambroadcast(0, 1);
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
@@ -130,7 +137,9 @@ TEST(TEST_CATEGORY, team_broadcast_char) {
 }
 
 TEST(TEST_CATEGORY, team_broadcast_float) {
-  {
+  // FIXME_OPENMPTARGET
+  if (!std::is_same<TEST_EXECSPACE,
+                    Kokkos::Experimental::OpenMPTarget>::value) {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
                       float>::test_teambroadcast(0, 1.3);
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
@@ -146,25 +155,21 @@ TEST(TEST_CATEGORY, team_broadcast_float) {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                       float>::test_teambroadcast(16, 1.3);
 
-    // FIXME_CUDA
-#ifdef KOKKOS_ENABLE_CUDA
-    if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
-#endif
-    // FIXME_HIP
-#ifdef KOKKOS_ENABLE_HIP
-      if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value)
-#endif
-      {
-        TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
-                          float>::test_teambroadcast(1000, 1.3);
-        TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
-                          float>::test_teambroadcast(1000, 1.3);
-      }
+    // FIXME_CUDA, FIXME_HIP
+    if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value &&
+        !std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value) {
+      TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                        float>::test_teambroadcast(1000, 1.3);
+      TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+                        float>::test_teambroadcast(1000, 1.3);
+    }
   }
 }
 
 TEST(TEST_CATEGORY, team_broadcast_double) {
-  {
+  // FIXME_OPENMPTARGET
+  if (!std::is_same<TEST_EXECSPACE,
+                    Kokkos::Experimental::OpenMPTarget>::value) {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
                       double>::test_teambroadcast(0, 1.3);
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
@@ -180,21 +185,15 @@ TEST(TEST_CATEGORY, team_broadcast_double) {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                       double>::test_teambroadcast(16, 1.3);
 
-    // FIXME_CUDA
-#ifdef KOKKOS_ENABLE_CUDA
-    if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
-#endif
-    // FIXME_HIP
-#ifdef KOKKOS_ENABLE_HIP
-      if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value)
-#endif
-      {
-        TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
-                          double>::test_teambroadcast(1000, 1.3);
-        TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
+    // FIXME_CUDA, FIXME_HIP
+    if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value &&
+        !std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value) {
+      TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
+                        double>::test_teambroadcast(1000, 1.3);
+      TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
 
-                          double>::test_teambroadcast(1000, 1.3);
-      }
+                        double>::test_teambroadcast(1000, 1.3);
+    }
   }
 }
 

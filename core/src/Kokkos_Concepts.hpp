@@ -338,32 +338,21 @@ struct is_space {
   // in do_not_use_host_memory_space and do_not_use_host_execution_space to be
   // able to use them within this class without deprecation warnings.
   using do_not_use_host_memory_space = std::conditional_t<
-      std::is_same<memory_space, Kokkos::HostSpace>::value
-#if defined(KOKKOS_ENABLE_CUDA)
-          || std::is_same<memory_space, Kokkos::CudaUVMSpace>::value ||
-          std::is_same<memory_space, Kokkos::CudaHostPinnedSpace>::value
-#elif defined(KOKKOS_ENABLE_HIP)
-          || std::is_same<memory_space,
-                          Kokkos::Experimental::HIPHostPinnedSpace>::value
-#elif defined(KOKKOS_ENABLE_SYCL)
-          || std::is_same<memory_space,
-                          Kokkos::Experimental::SYCLSharedUSMSpace>::value
-#endif
-      ,
+      std::is_same<memory_space, Kokkos::HostSpace>::value ||
+          std::is_same<memory_space, Kokkos::CudaUVMSpace>::value ||
+          std::is_same<memory_space, Kokkos::CudaHostPinnedSpace>::value ||
+          std::is_same<memory_space,
+                       Kokkos::Experimental::HIPHostPinnedSpace>::value ||
+          std::is_same<memory_space,
+                       Kokkos::Experimental::SYCLSharedUSMSpace>::value,
       memory_space, Kokkos::HostSpace>;
 
   using do_not_use_host_execution_space = std::conditional_t<
-#if defined(KOKKOS_ENABLE_CUDA)
       std::is_same<execution_space, Kokkos::Cuda>::value ||
-#elif defined(KOKKOS_ENABLE_HIP)
-      std::is_same<execution_space, Kokkos::Experimental::HIP>::value ||
-#elif defined(KOKKOS_ENABLE_SYCL)
-      std::is_same<execution_space, Kokkos::Experimental::SYCL>::value ||
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-      std::is_same<execution_space,
-                   Kokkos::Experimental::OpenMPTarget>::value ||
-#endif
-          false,
+          std::is_same<execution_space, Kokkos::Experimental::HIP>::value ||
+          std::is_same<execution_space, Kokkos::Experimental::SYCL>::value ||
+          std::is_same<execution_space,
+                       Kokkos::Experimental::OpenMPTarget>::value,
       Kokkos::DefaultHostExecutionSpace, execution_space>;
 
  public:

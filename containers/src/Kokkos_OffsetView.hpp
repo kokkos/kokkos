@@ -1235,7 +1235,6 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
     alloc_prop prop_copy(arg_prop);
 
     //------------------------------------------------------------
-#if defined(KOKKOS_ENABLE_CUDA)
     // If allocating in CudaUVMSpace must fence before and after
     // the allocation to protect against possible concurrent access
     // on the CPU and the GPU.
@@ -1245,19 +1244,16 @@ class OffsetView : public ViewTraits<DataType, Properties...> {
                      typename traits::device_type::memory_space>::value) {
       typename traits::device_type::memory_space::execution_space().fence();
     }
-#endif
     //------------------------------------------------------------
 
     Kokkos::Impl::SharedAllocationRecord<>* record =
         m_map.allocate_shared(prop_copy, arg_layout);
 
     //------------------------------------------------------------
-#if defined(KOKKOS_ENABLE_CUDA)
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
       typename traits::device_type::memory_space::execution_space().fence();
     }
-#endif
     //------------------------------------------------------------
 
     // Setup and initialization complete, start tracking

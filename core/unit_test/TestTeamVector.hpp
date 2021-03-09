@@ -1006,18 +1006,16 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
 // with a team size of 32 on GPUs, 16 is the max possible (at least on a K80
 // GPU) See https://github.com/kokkos/kokkos/issues/1513
 // For Intel GPUs, the requested workgroup size is just too large here.
-#if defined(KOKKOS_ENABLE_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
-#elif defined(KOKKOS_ENABLE_SYCL)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value)
+if(
+#if defined(KOKKOS_ENABLE_DEBUG)
+  !std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value ||
 #endif
+  !std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value)
   {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 32);
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 16);
   }
-#if defined(KOKKOS_ENABLE_SYCL)
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value)
-#endif
   {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 33);
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 19);
@@ -1025,7 +1023,6 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 16);
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 7, 16);
 }
-#endif
 
 TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
   using T = double;
