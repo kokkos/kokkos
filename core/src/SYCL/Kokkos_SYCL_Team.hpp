@@ -78,13 +78,13 @@ class SYCLTeamMember {
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(
-      const int& level) const {
+      const int level) const {
     return m_team_shared.set_team_thread_mode(level, 1, 0);
   }
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& thread_scratch(
-      const int& level) const {
+      const int level) const {
     return m_team_shared.set_team_thread_mode(level, team_size(), team_rank());
   }
 
@@ -110,7 +110,7 @@ class SYCLTeamMember {
 
   template <class ValueType>
   KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& val,
-                                             const int& thread_id) const {
+                                             const int thread_id) const {
     // Wait for shared data write until all threads arrive here
     m_item.barrier(sycl::access::fence_space::local_space);
     if (m_item.get_local_id(1) == 0 &&
@@ -124,7 +124,7 @@ class SYCLTeamMember {
 
   template <class Closure, class ValueType>
   KOKKOS_INLINE_FUNCTION void team_broadcast(Closure const& f, ValueType& val,
-                                             const int& thread_id) const {
+                                             const int thread_id) const {
     f(val);
     team_broadcast(val, thread_id);
   }
