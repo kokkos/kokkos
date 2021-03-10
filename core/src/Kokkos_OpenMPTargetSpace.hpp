@@ -147,16 +147,21 @@ namespace Impl {
 
 template <>
 class SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
-    : public SharedAllocationRecord<void, void> {
+    : public HostInaccessibleSharedAllocationRecordCommon<
+          Kokkos::Experimental::OpenMPTargetSpace> {
  private:
+  friend class HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::OpenMPTargetSpace>;
+  friend class SharedAllocationRecordCommon<
+      Kokkos::Experimental::OpenMPTargetSpace>;
   friend Kokkos::Experimental::OpenMPTargetSpace;
 
+  using base_t = HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::OpenMPTargetSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
-
-  static void deallocate(RecordBase*);
 
   /**\brief  Root record for tracked allocations from this OpenMPTargetSpace
    * instance */
@@ -186,23 +191,9 @@ class SharedAllocationRecord<Kokkos::Experimental::OpenMPTargetSpace, void>
 #endif
   }
 
-  /**\brief  Allocate tracked memory in the space */
-  static void* allocate_tracked(
-      const Kokkos::Experimental::OpenMPTargetSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size);
-
   /**\brief  Reallocate tracked memory in the space */
   static void* reallocate_tracked(void* const arg_alloc_ptr,
                                   const size_t arg_alloc_size);
-
-  /**\brief  Deallocate tracked memory in the space */
-  static void deallocate_tracked(void* const arg_alloc_ptr);
-
-  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
-
-  static void print_records(std::ostream&,
-                            const Kokkos::Experimental::OpenMPTargetSpace&,
-                            bool detail = false);
 };
 
 }  // namespace Impl

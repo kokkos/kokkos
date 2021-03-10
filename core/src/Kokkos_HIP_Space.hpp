@@ -520,14 +520,18 @@ namespace Impl {
 
 template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
-    : public SharedAllocationRecord<void, void> {
+    : public HostInaccessibleSharedAllocationRecordCommon<
+          Kokkos::Experimental::HIPSpace> {
  private:
+  friend class SharedAllocationRecordCommon<Kokkos::Experimental::HIPSpace>;
+  friend class HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::HIPSpace>;
+  using base_t = HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::HIPSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
-
-  static void deallocate(RecordBase*);
 
 #ifdef KOKKOS_ENABLE_DEBUG
   static RecordBase s_root_record;
@@ -541,44 +545,22 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
   SharedAllocationRecord(
       const Kokkos::Experimental::HIPSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &deallocate);
-
- public:
-  std::string get_label() const;
-
-  static SharedAllocationRecord* allocate(
-      const Kokkos::Experimental::HIPSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size);
-
-  /**\brief  Allocate tracked memory in the space */
-  static void* allocate_tracked(const Kokkos::Experimental::HIPSpace& arg_space,
-                                const std::string& arg_label,
-                                const size_t arg_alloc_size);
-
-  /**\brief  Reallocate tracked memory in the space */
-  static void* reallocate_tracked(void* const arg_alloc_ptr,
-                                  const size_t arg_alloc_size);
-
-  /**\brief  Deallocate tracked memory in the space */
-  static void deallocate_tracked(void* const arg_alloc_ptr);
-
-  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
-
-  static void print_records(std::ostream&,
-                            const Kokkos::Experimental::HIPSpace&,
-                            bool detail = false);
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
 };
 
 template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
-    : public SharedAllocationRecord<void, void> {
+    : public SharedAllocationRecordCommon<
+          Kokkos::Experimental::HIPHostPinnedSpace> {
  private:
+  friend class SharedAllocationRecordCommon<
+      Kokkos::Experimental::HIPHostPinnedSpace>;
+  using base_t =
+      SharedAllocationRecordCommon<Kokkos::Experimental::HIPHostPinnedSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
-
-  static void deallocate(RecordBase*);
 
 #ifdef KOKKOS_ENABLE_DEBUG
   static RecordBase s_root_record;
@@ -588,36 +570,12 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
 
  protected:
   ~SharedAllocationRecord();
-  SharedAllocationRecord() : RecordBase(), m_space() {}
+  SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
       const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &deallocate);
-
- public:
-  std::string get_label() const;
-
-  static SharedAllocationRecord* allocate(
-      const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size);
-  /**\brief  Allocate tracked memory in the space */
-  static void* allocate_tracked(
-      const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size);
-
-  /**\brief  Reallocate tracked memory in the space */
-  static void* reallocate_tracked(void* const arg_alloc_ptr,
-                                  const size_t arg_alloc_size);
-
-  /**\brief  Deallocate tracked memory in the space */
-  static void deallocate_tracked(void* const arg_alloc_ptr);
-
-  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
-
-  static void print_records(std::ostream&,
-                            const Kokkos::Experimental::HIPHostPinnedSpace&,
-                            bool detail = false);
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
 };
 }  // namespace Impl
 }  // namespace Kokkos
