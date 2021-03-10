@@ -17,6 +17,10 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #endif
 namespace desul {
 
+// Disable warning for large atomics:
+// error: large atomic operation may incur significant performance penalty [-Werror,-Watomic-alignment]
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Watomic-alignment"
 template<class MemoryOrder, class MemoryScope>
 void atomic_thread_fence(MemoryOrder, MemoryScope) {
   __atomic_thread_fence(GCCMemoryOrder<MemoryOrder>::value);
@@ -56,6 +60,7 @@ T atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
   return compare;
 }
+#pragma GCC diagnostic pop
 }  // namespace desul
 #endif
 #endif
