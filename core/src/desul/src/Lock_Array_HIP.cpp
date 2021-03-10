@@ -38,6 +38,7 @@ namespace Impl {
 int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
 int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 
+template<typename T>
 void init_lock_arrays_hip() {
   if (HIP_SPACE_ATOMIC_LOCKS_DEVICE_h != nullptr) return;
   hipMalloc(&HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,
@@ -50,6 +51,7 @@ void init_lock_arrays_hip() {
   hipDeviceSynchronize();
 }
 
+template<typename T>
 void finalize_lock_arrays_hip() {
   if (HIP_SPACE_ATOMIC_LOCKS_DEVICE_h == nullptr) return;
   hipFree(HIP_SPACE_ATOMIC_LOCKS_DEVICE_h);
@@ -60,6 +62,9 @@ void finalize_lock_arrays_hip() {
   DESUL_IMPL_COPY_HIP_LOCK_ARRAYS_TO_DEVICE();
 #endif
 }
+
+template void init_lock_arrays_hip<int>();
+template void finalize_lock_arrays_hip<int>();
 
 }  // namespace Impl
 

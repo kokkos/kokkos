@@ -38,6 +38,8 @@ namespace Impl {
 int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
 int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 
+// define functions
+template<typename T>
 void init_lock_arrays_cuda() {
   if (CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h != nullptr) return;
   auto error_malloc1 = cudaMalloc(&CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h,
@@ -50,6 +52,7 @@ void init_lock_arrays_cuda() {
   auto error_sync2 = cudaDeviceSynchronize();
 }
 
+template<typename T>
 void finalize_lock_arrays_cuda() {
   if (CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h == nullptr) return;
   cudaFree(CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h);
@@ -60,6 +63,10 @@ void finalize_lock_arrays_cuda() {
   DESUL_IMPL_COPY_CUDA_LOCK_ARRAYS_TO_DEVICE();
 #endif
 }
+
+// Instantiate functions
+template void init_lock_arrays_cuda<int>();
+template void finalize_lock_arrays_cuda<int>();
 
 }  // namespace Impl
 

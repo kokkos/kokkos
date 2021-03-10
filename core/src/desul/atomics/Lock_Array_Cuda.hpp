@@ -23,7 +23,7 @@ namespace Impl {
 #define DESUL_IMPL_BALLOT_MASK(m, x) __ballot_sync(m, x)
 #define DESUL_IMPL_ACTIVEMASK __activemask()
 #else
-#define DESUL_IMPL_BALLOT_MASK(m, x) 0
+#define DESUL_IMPL_BALLOT_MASK(m, x) m==0?0:1
 #define DESUL_IMPL_ACTIVEMASK 0
 #endif
 
@@ -32,16 +32,23 @@ namespace Impl {
 extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h;
 extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h;
 
+
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
 ///        valid, initialized arrays.
 ///
 /// This call is idempotent.
+/// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
+///   snappshotted version while also linking against pure Desul
+template<typename T = int>
 void init_lock_arrays_cuda();
 
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
 ///        all null pointers, and all array memory has been freed.
 ///
 /// This call is idempotent.
+/// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
+///   snappshotted version while also linking against pure Desul
+template<typename T = int>
 void finalize_lock_arrays_cuda();
 
 }  // namespace Impl

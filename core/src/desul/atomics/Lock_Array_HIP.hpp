@@ -32,20 +32,22 @@ namespace Impl {
 extern int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE_h;
 extern int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h;
 
-/**
- * \brief After this call, the g_host_hip_lock_arrays variable has valid,
- * initialized arrays.
- *
- * This call is idempotent.
- */
+/// \brief After this call, the g_host_cuda_lock_arrays variable has
+///        valid, initialized arrays.
+///
+/// This call is idempotent.
+/// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
+///   snappshotted version while also linking against pure Desul
+template<typename T = int>
 void init_lock_arrays_hip();
 
-/**
- * \brief After this call, the g_host_hip_lock_arrays variable has all null
- * pointers, and all array memory has been freed.
- *
- * This call is idempotent.
- */
+/// \brief After this call, the g_host_cuda_lock_arrays variable has
+///        all null pointers, and all array memory has been freed.
+///
+/// This call is idempotent.
+/// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
+///   snappshotted version while also linking against pure Desul
+template<typename T = int>
 void finalize_lock_arrays_hip();
 }  // namespace Impl
 }  // namespace desul
