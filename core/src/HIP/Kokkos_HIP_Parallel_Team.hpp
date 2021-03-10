@@ -449,7 +449,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
  public:
-  __device__ inline void operator()(void) const {
+  __device__ inline void operator()() const {
     // Iterate this block through the league
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {

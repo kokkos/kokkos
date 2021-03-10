@@ -476,7 +476,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
   Policy const& get_policy() const { return m_policy; }
 
-  inline __device__ void operator()(void) const {
+  inline __device__ void operator()() const {
     const Member work_stride = blockDim.y * gridDim.x;
     const Member work_end    = m_policy.end();
 
@@ -555,7 +555,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
         static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
   }
   Policy const& get_policy() const { return m_rp; }
-  inline __device__ void operator()(void) const {
+  inline __device__ void operator()() const {
     Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                     typename Policy::work_tag>(m_rp, m_functor)
         .exec_range();
@@ -705,7 +705,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   Policy const& get_policy() const { return m_policy; }
 
-  __device__ inline void operator()(void) const {
+  __device__ inline void operator()() const {
     // Iterate this block through the league
     int64_t threadid = 0;
     if (m_scratch_size[1] > 0) {
@@ -1287,7 +1287,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         .exec_range();
   }
 
-  inline __device__ void operator()(void) const {
+  inline __device__ void operator()() const {
     /*    run(Kokkos::Impl::if_c<UseShflReduction, DummyShflReductionType,
       DummySHMEMReductionType>::select(1,1.0) );
       }
@@ -2103,7 +2103,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
   //----------------------------------------
 
-  __device__ inline void initial(void) const {
+  __device__ inline void initial() const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(m_functor) / sizeof(size_type));
@@ -2139,7 +2139,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
   //----------------------------------------
 
-  __device__ inline void final(void) const {
+  __device__ inline void final() const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(m_functor) / sizeof(size_type));
@@ -2224,7 +2224,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
   //----------------------------------------
 
-  __device__ inline void operator()(void) const {
+  __device__ inline void operator()() const {
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     if (m_run_serial) {
       typename ValueTraits::value_type value;
@@ -2393,7 +2393,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   //----------------------------------------
 
-  __device__ inline void initial(void) const {
+  __device__ inline void initial() const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(m_functor) / sizeof(size_type));
@@ -2429,7 +2429,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   //----------------------------------------
 
-  __device__ inline void final(void) const {
+  __device__ inline void final() const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(m_functor) / sizeof(size_type));
@@ -2516,7 +2516,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   //----------------------------------------
 
-  __device__ inline void operator()(void) const {
+  __device__ inline void operator()() const {
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     if (m_run_serial) {
       typename ValueTraits::value_type value;

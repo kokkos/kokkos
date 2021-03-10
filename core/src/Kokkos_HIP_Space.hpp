@@ -61,6 +61,7 @@
 
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 
 #include <hip/hip_runtime_api.h>
 /*--------------------------------------------------------------------------*/
@@ -451,7 +452,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::Experimental::HIPSpace,
                                            Kokkos::HostSpace> {
   enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {
+  KOKKOS_INLINE_FUNCTION static void verify() {
     Kokkos::abort("HIP code attempted to access HostSpace memory");
   }
 
@@ -465,7 +466,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPHostPinnedSpace> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 
@@ -477,7 +478,7 @@ struct VerifyExecutionCanAccessMemorySpace<
         Kokkos::Experimental::HIPSpace>::type,
     OtherSpace> {
   enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {
+  KOKKOS_INLINE_FUNCTION static void verify() {
     Kokkos::abort("HIP code attempted to access unknown Space memory");
   }
 
@@ -492,7 +493,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
                                            Kokkos::Experimental::HIPSpace> {
   enum : bool { value = false };
-  inline static void verify(void) {
+  inline static void verify() {
     Kokkos::Experimental::HIPSpace::access_error();
   }
   inline static void verify(const void* p) {
@@ -505,7 +506,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::HostSpace, Kokkos::Experimental::HIPHostPinnedSpace> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 }  // namespace Impl
@@ -650,13 +651,6 @@ class HIP {
   HIP();
   HIP(hipStream_t stream);
 
-  KOKKOS_FUNCTION HIP(HIP&& other) noexcept;
-  KOKKOS_FUNCTION HIP(HIP const& other);
-  KOKKOS_FUNCTION HIP& operator=(HIP&&) noexcept;
-  KOKKOS_FUNCTION HIP& operator=(HIP const&);
-
-  KOKKOS_FUNCTION ~HIP() noexcept;
-
   //@}
   //------------------------------------
   //! \name Functions that all Kokkos devices must implement.
@@ -712,14 +706,13 @@ class HIP {
   static const char* name();
 
   inline Impl::HIPInternal* impl_internal_space_instance() const {
-    return m_space_instance;
+    return m_space_instance.get();
   }
 
   uint32_t impl_instance_id() const noexcept { return 0; }
 
  private:
-  Impl::HIPInternal* m_space_instance;
-  int* m_counter;
+  Kokkos::Impl::HostSharedPtr<Impl::HIPInternal> m_space_instance;
 };
 }  // namespace Experimental
 namespace Tools {
@@ -762,7 +755,7 @@ struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::Experimental::HIP::memory_space,
     Kokkos::Experimental::HIP::scratch_memory_space> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 
@@ -770,7 +763,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::HostSpace, Kokkos::Experimental::HIP::scratch_memory_space> {
   enum : bool { value = false };
-  inline static void verify(void) {
+  inline static void verify() {
     Kokkos::Experimental::HIPSpace::access_error();
   }
   inline static void verify(const void* p) {

@@ -324,7 +324,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
                                            Kokkos::Experimental::HBWSpace> {
   enum : bool { value = true };
-  inline static void verify(void) {}
+  inline static void verify() {}
   inline static void verify(const void*) {}
 };
 
@@ -332,7 +332,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::Experimental::HBWSpace,
                                            Kokkos::HostSpace> {
   enum : bool { value = true };
-  inline static void verify(void) {}
+  inline static void verify() {}
   inline static void verify(const void*) {}
 };
 
