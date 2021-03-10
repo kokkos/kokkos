@@ -63,7 +63,6 @@ struct FunctorMDRange {
   }
 };
 
-#ifndef KOKKOS_ENABLE_SYCL
 struct FunctorTeam {
   int M, R;
   Kokkos::View<double**, Kokkos::LayoutRight, TEST_EXECSPACE> a;
@@ -80,7 +79,6 @@ struct FunctorTeam {
     }
   }
 };
-#endif
 
 struct FunctorRangeReduce {
   int M, R;
@@ -108,7 +106,6 @@ struct FunctorMDRangeReduce {
   }
 };
 
-#ifndef KOKKOS_ENABLE_SYCL
 struct FunctorTeamReduce {
   int M, R;
   Kokkos::View<double**, Kokkos::LayoutRight, TEST_EXECSPACE> a;
@@ -129,7 +126,6 @@ struct FunctorTeamReduce {
     }
   }
 };
-#endif
 
 TEST(default_exec, overlap_range_policy) {
   int N = 2000;
@@ -471,8 +467,6 @@ TEST(default_exec, overlap_mdrange_policy) {
   SpaceInstance<TEST_EXECSPACE>::destroy(space1);
 }
 
-// FIXME_SYCL requires TeamPolicy
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(default_exec, overlap_team_policy) {
   int N = 20;
   int M = 1000000;
@@ -635,5 +629,4 @@ TEST(default_exec, overlap_team_policy) {
   SpaceInstance<TEST_EXECSPACE>::destroy(space1);
   SpaceInstance<TEST_EXECSPACE>::destroy(space2);
 }
-#endif
 }  // namespace Test

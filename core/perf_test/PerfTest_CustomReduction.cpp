@@ -47,7 +47,7 @@
 #include <PerfTest_Category.hpp>
 #include <Kokkos_Random.hpp>
 
-// FIXME_SYCL requires TeamPolicy
+// FIXME_SYCL requires Random
 #ifndef KOKKOS_ENABLE_SYCL
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
 namespace Test {
