@@ -209,6 +209,8 @@ template <class FunctorType, class PolicyType, class ReducerType,
           class PointerType, class ValueType>
 struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
                                 PointerType, ValueType, 0, 1> {
+// FIXME_OPENMPTARGET - custom reductions are not yet supported by the nvidia
+// compiler.
 #if !defined(KOKKOS_COMPILER_PGI)
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
@@ -238,9 +240,8 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
 #if !defined(KOKKOS_COMPILER_PGI)
 #pragma omp target teams distribute parallel for num_teams(512) map(to   \
                                                                     : f) \
-    map(tofrom                                                           \
-        : result) reduction(custom                                       \
-                            : result)
+    reduction(custom                                                     \
+              : result)
 #else
 #pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
     reduction(+: result)
@@ -272,9 +273,8 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
 #if !defined(KOKKOS_COMPILER_PGI)
 #pragma omp target teams distribute parallel for num_teams(512) map(to   \
                                                                     : f) \
-    map(tofrom                                                           \
-        : result) reduction(custom                                       \
-                            : result)
+    reduction(custom                                                     \
+              : result)
 #else
 #pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
     reduction(+: result)

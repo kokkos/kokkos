@@ -81,11 +81,3 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   UnitTest
   SOURCES ${SOURCES}
 )
-
-# FIXME_OPENMPTARGET - The following unit tests do not pass in the OpenMPTarget backend with the nvidia compiler.
-if((Kokkos_ENABLE_OPENMPTARGET) AND ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "PGI"))
-  list(REMOVE_ITEM SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/core/unit_test/default/TestDefaultDeviceType_a1.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/core/unit_test/default/TestDefaultDeviceType_b1.cpp
-    )
-endif()

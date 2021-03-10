@@ -42,7 +42,7 @@ SET(KOKKOS_OPENMP_FEATURE_LEVEL 999)
 SET(KOKKOS_OPENMP_NAME OpenMP)
 
 # FIXME_OPENMPTARGET - NVIDIA compiler only compiles the first 8 incremental tests for now.
-IF("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "PGI")
+IF(KOKKOS_CXX_COMPILER_ID STREQUAL "PGI")
 SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 8)
 ELSE()
 SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 13)
@@ -278,7 +278,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
 endif()
 
 ## FIXME_OPENMPTARGET - Comment non-passing tests with the nvidia compiler
-if((Kokkos_ENABLE_OPENMPTARGET) AND ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "PGI"))
+if(Kokkos_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "PGI")
   list(REMOVE_ITEM OpenMPTarget_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_UniqueToken.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_HostSharedPtr.cpp
@@ -333,6 +333,8 @@ if((Kokkos_ENABLE_OPENMPTARGET) AND ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "PGI")
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewAPI_f.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewResize.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_RangePolicyRequire.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_a1.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_b1.cpp
     )
 endif()
 
@@ -622,7 +624,7 @@ if(Kokkos_ENABLE_SYCL)
   )
 endif()
 
-if ((KOKKOS_ENABLE_OPENMPTARGET) AND ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "PGI"))
+if (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "PGI")
 SET(DEFAULT_DEVICE_SOURCES
   UnitTestMainInit.cpp
   default/TestDefaultDeviceType.cpp
