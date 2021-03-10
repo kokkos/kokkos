@@ -73,7 +73,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   ParallelFor& operator=(ParallelFor const&) = delete;
 
  public:
-  inline __device__ void operator()(void) const {
+  inline __device__ void operator()() const {
     Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
                                     typename Policy::work_tag>(m_policy,
                                                                m_functor)
@@ -251,7 +251,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     DeviceIteratePattern(m_policy, m_functor, update).exec_range();
   }
 
-  inline __device__ void operator()(void) const {
+  inline __device__ void operator()() const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(

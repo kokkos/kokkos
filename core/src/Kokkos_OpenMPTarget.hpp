@@ -158,7 +158,7 @@ struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::Experimental::OpenMPTarget::memory_space,
     Kokkos::Experimental::OpenMPTarget::scratch_memory_space> {
   enum : bool { value = true };
-  inline static void verify(void) {}
+  inline static void verify() {}
   inline static void verify(const void*) {}
 };
 

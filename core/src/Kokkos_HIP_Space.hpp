@@ -452,7 +452,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::Experimental::HIPSpace,
                                            Kokkos::HostSpace> {
   enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {
+  KOKKOS_INLINE_FUNCTION static void verify() {
     Kokkos::abort("HIP code attempted to access HostSpace memory");
   }
 
@@ -466,7 +466,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPHostPinnedSpace> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 
@@ -478,7 +478,7 @@ struct VerifyExecutionCanAccessMemorySpace<
         Kokkos::Experimental::HIPSpace>::type,
     OtherSpace> {
   enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {
+  KOKKOS_INLINE_FUNCTION static void verify() {
     Kokkos::abort("HIP code attempted to access unknown Space memory");
   }
 
@@ -493,7 +493,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
                                            Kokkos::Experimental::HIPSpace> {
   enum : bool { value = false };
-  inline static void verify(void) {
+  inline static void verify() {
     Kokkos::Experimental::HIPSpace::access_error();
   }
   inline static void verify(const void* p) {
@@ -506,7 +506,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::HostSpace, Kokkos::Experimental::HIPHostPinnedSpace> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 }  // namespace Impl
@@ -755,7 +755,7 @@ struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::Experimental::HIP::memory_space,
     Kokkos::Experimental::HIP::scratch_memory_space> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 
@@ -763,7 +763,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::HostSpace, Kokkos::Experimental::HIP::scratch_memory_space> {
   enum : bool { value = false };
-  inline static void verify(void) {
+  inline static void verify() {
     Kokkos::Experimental::HIPSpace::access_error();
   }
   inline static void verify(const void* p) {
