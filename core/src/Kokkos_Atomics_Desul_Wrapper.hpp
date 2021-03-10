@@ -9,7 +9,7 @@
 #include <impl/Kokkos_Volatile_Load.hpp>
 
 // clang-format off
-namespace Kokkos { 
+namespace Kokkos {
 
 // These functions don't have any use/test in unit tests ...
 // ==========================================================
@@ -36,8 +36,8 @@ template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_store(T* const dest, const T val) { return desul::atomic_store(dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
 KOKKOS_INLINE_FUNCTION
-void memory_fence() { 
-  desul::atomic_thread_fence(desul::MemoryOrderSeqCst(), desul::MemoryScopeDevice()); 
+void memory_fence() {
+  desul::atomic_thread_fence(desul::MemoryOrderSeqCst(), desul::MemoryScopeDevice());
 }
 
 KOKKOS_INLINE_FUNCTION
@@ -179,14 +179,14 @@ template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_exchange(T* const dest, const T val) { return desul::atomic_exchange(dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
 template<class T> KOKKOS_INLINE_FUNCTION
-bool atomic_compare_exchange_strong(T* const dest, T& expected, const T desired) { 
-  return desul::atomic_compare_exchange_strong(dest, expected, desired, 
+bool atomic_compare_exchange_strong(T* const dest, T& expected, const T desired) {
+  return desul::atomic_compare_exchange_strong(dest, expected, desired,
                   desul::MemoryOrderRelaxed(), desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
 }
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_compare_exchange(T* const dest, const T compare, const T desired) { 
-  return desul::atomic_compare_exchange(dest, compare, desired, 
+T atomic_compare_exchange(T* const dest, const T compare, const T desired) {
+  return desul::atomic_compare_exchange(dest, compare, desired,
                   desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
 }
 
@@ -216,8 +216,8 @@ namespace Impl {
     using type = desul::MemoryOrderRelaxed;
   };
   template<class T, class MemOrderSuccess, class MemOrderFailure> KOKKOS_INLINE_FUNCTION
-  bool atomic_compare_exchange_strong(T* const dest, T& expected, const T desired, MemOrderSuccess, MemOrderFailure) { 
-    return desul::atomic_compare_exchange_strong(dest, expected, desired, 
+  bool atomic_compare_exchange_strong(T* const dest, T& expected, const T desired, MemOrderSuccess, MemOrderFailure) {
+    return desul::atomic_compare_exchange_strong(dest, expected, desired,
                   typename KokkosToDesulMemoryOrder<MemOrderSuccess>::type(),
                   typename KokkosToDesulMemoryOrder<MemOrderFailure>::type(),
                   desul::MemoryScopeDevice());
