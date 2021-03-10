@@ -9,11 +9,13 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifndef DESUL_ATOMICS_GENERIC_HPP_
 #define DESUL_ATOMICS_GENERIC_HPP_
 
+#include <type_traits>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #include "desul/atomics/Common.hpp"
 #include "desul/atomics/Compare_Exchange.hpp"
 #include "desul/atomics/Lock_Array.hpp"
 #include "desul/atomics/Macros.hpp"
-#include <type_traits>
 // Combination operands to be used in an Compare and Exchange based atomic
 // operation
 namespace desul {
@@ -657,4 +659,5 @@ DESUL_INLINE_FUNCTION bool atomic_compare_exchange_weak(T* const dest,
 #include <desul/atomics/GCC.hpp>
 #include <desul/atomics/HIP.hpp>
 #include <desul/atomics/OpenMP.hpp>
+#pragma GCC diagnostic pop
 #endif
