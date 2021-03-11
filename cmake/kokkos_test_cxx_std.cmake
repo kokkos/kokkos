@@ -91,10 +91,12 @@ ENDIF()
 TRY_COMPILE(CAN_COMPILE_CPP14
   ${KOKKOS_TOP_BUILD_DIR}/corner_cases
   ${KOKKOS_SOURCE_DIR}/cmake/compile_tests/cplusplus14.cpp
+  OUTPUT_VARIABLE ERROR_MESSAGE
+  CXX_STANDARD 14
 )
 if (NOT CAN_COMPILE_CPP14)
   UNSET(CAN_COMPILE_CPP14 CACHE) #make sure CMake always re-runs this
-  MESSAGE(FATAL_ERROR "C++${KOKKOS_CXX_STANDARD}-compliant compiler detected, but unable to compile C++14 or later program. Verify that ${CMAKE_CXX_COMPILER_ID}:${CMAKE_CXX_COMPILER_VERSION} is set up correctly (e.g., check that correct library headers are being used).")
+  MESSAGE(FATAL_ERROR "C++${KOKKOS_CXX_STANDARD}-compliant compiler detected, but unable to compile C++14 or later program. Verify that ${CMAKE_CXX_COMPILER_ID}:${CMAKE_CXX_COMPILER_VERSION} is set up correctly (e.g., check that correct library headers are being used).\nFailing output:\n ${ERROR_MESSAGE}")
 ENDIF()
 UNSET(CAN_COMPILE_CPP14 CACHE) #make sure CMake always re-runs this
 
