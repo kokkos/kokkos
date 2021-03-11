@@ -297,7 +297,8 @@ void test_deep_copy(uint32_t num_nodes) {
 // FIXME_SYCL wrong results on Nvidia GPUs but correct on Host and Intel GPUs
 // FIXME_HIP
 // WORKAROUND MSVC
-#if !(defined(KOKKOS_ENABLE_HIP) && (HIP_VERSION < 401)) && !defined(_WIN32) && !defined(KOKKOS_ENABLE_SYCL)
+#if !(defined(KOKKOS_ENABLE_HIP) && (HIP_VERSION < 401)) && \
+    !defined(_WIN32) && !defined(KOKKOS_ENABLE_SYCL)
 TEST(TEST_CATEGORY, UnorderedMap_insert) {
   for (int i = 0; i < 500; ++i) {
     test_insert<TEST_EXECSPACE>(100000, 90000, 100, true);
