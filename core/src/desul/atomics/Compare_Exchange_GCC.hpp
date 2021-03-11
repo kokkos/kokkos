@@ -29,7 +29,8 @@ void atomic_thread_fence(MemoryOrder, MemoryScope) {
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-T atomic_exchange(
+std::enable_if_t<std::is_trivially_copyable<T>::value, T>
+atomic_exchange(
     T* dest, T value, MemoryOrder, MemoryScope) {
   T return_val;
   __atomic_exchange(
@@ -40,7 +41,8 @@ T atomic_exchange(
 // Failure mode for atomic_compare_exchange_n cannot be RELEASE nor ACQREL so
 // Those two get handled separatly.
 template <typename T, class MemoryOrder, class MemoryScope>
-T atomic_compare_exchange(
+std::enable_if_t<std::is_trivially_copyable<T>::value, T>
+atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, GCCMemoryOrder<MemoryOrder>::value, GCCMemoryOrder<MemoryOrder>::value);
@@ -48,7 +50,8 @@ T atomic_compare_exchange(
 }
 
 template <typename T, class MemoryScope>
-T atomic_compare_exchange(
+std::enable_if_t<std::is_trivially_copyable<T>::value, T>
+atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
@@ -56,12 +59,14 @@ T atomic_compare_exchange(
 }
 
 template <typename T, class MemoryScope>
-T atomic_compare_exchange(
+std::enable_if_t<std::is_trivially_copyable<T>::value, T>
+atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderAcqRel, MemoryScope) {
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
   return compare;
 }
+
 #if defined(__clang__) && (__clang_major__>=7)
 #pragma GCC diagnostic pop
 #endif

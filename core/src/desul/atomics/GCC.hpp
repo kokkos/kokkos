@@ -89,6 +89,43 @@ DESUL_GCC_INTEGRAL_OP_ATOMICS(MemoryOrderRelaxed, MemoryScopeCore)
 DESUL_GCC_INTEGRAL_OP_ATOMICS(MemoryOrderSeqCst, MemoryScopeNode)
 DESUL_GCC_INTEGRAL_OP_ATOMICS(MemoryOrderSeqCst, MemoryScopeDevice)
 DESUL_GCC_INTEGRAL_OP_ATOMICS(MemoryOrderSeqCst, MemoryScopeCore)
+
+template <typename T, class MemoryOrder, class MemoryScope>
+std::enable_if_t<!std::is_trivially_copyable<T>::value, T>
+atomic_exchange(T* const dest,
+                  Impl::dont_deduce_this_parameter_t<const T> val,
+                  MemoryOrder /*order*/,
+                  MemoryScope scope) {
+  // Acquire a lock for the address
+  while (!Impl::lock_address((void*)dest, scope)) {}
+
+  atomic_thread_fence(MemoryOrderAcquire(),scope);
+  T return_val = *dest;
+  *dest = val;
+  atomic_thread_fence(MemoryOrderRelease(),scope);
+  Impl::unlock_address((void*)dest, scope);
+  return return_val;
+}
+
+template <typename T, class MemoryOrder, class MemoryScope>
+std::enable_if_t<!std::is_trivially_copyable<T>::value, T>
+atomic_compare_exchange(T* const dest,
+                  Impl::dont_deduce_this_parameter_t<const T> compare,
+                  Impl::dont_deduce_this_parameter_t<const T> val,
+                  MemoryOrder /*order*/,
+                  MemoryScope scope) {
+  // Acquire a lock for the address
+  while (!Impl::lock_address((void*)dest, scope)) {}
+
+  atomic_thread_fence(MemoryOrderAcquire(),scope);
+  T return_val = *dest;
+  if(return_val == compare) {
+    *dest = val;
+    atomic_thread_fence(MemoryOrderRelease(),scope);
+  }
+  Impl::unlock_address((void*)dest, scope);
+  return return_val;
+}
 }  // namespace desul
 #endif
 #endif
