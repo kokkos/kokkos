@@ -348,7 +348,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   template <class FunctorType>
   int internal_team_size_recommended_reduce(const FunctorType& f) const {
     // FIXME_SYCL improve
-    return internal_team_size_max<ClosureType>(f);
+    return internal_team_size_max_reduce(f);
   }
 };
 

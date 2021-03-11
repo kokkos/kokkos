@@ -281,10 +281,10 @@ class SYCLTeamMember {
 
     if (global_accum) {
       if (team_size() == idx + 1) {
-        base_data[0] = atomic_fetch_add(global_accum, base_data[0]);
+        base_data[team_size()] = atomic_fetch_add(global_accum, total);
       }
       m_item.barrier();  // Wait for atomic
-      intermediate += base_data[0];
+      intermediate += base_data[team_size()];
     }
 
     return intermediate;
