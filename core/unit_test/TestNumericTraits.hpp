@@ -204,7 +204,9 @@ TEST(TEST_CATEGORY, numeric_traits_infinity) {
 TEST(TEST_CATEGORY, numeric_traits_epsilon) {
   TestNumericTraits<TEST_EXECSPACE, float, Epsilon>();
   TestNumericTraits<TEST_EXECSPACE, double, Epsilon>();
+#ifndef KOKKOS_COMPILER_IBM  // fails with XL 16.1.1
   TestNumericTraits<TEST_EXECSPACE, long double, Epsilon>();
+#endif
 }
 
 TEST(TEST_CATEGORY, numeric_traits_round_error) {

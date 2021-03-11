@@ -6,7 +6,7 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
+        distro: ['fedora:latest', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
         openmp: ['ON']
@@ -35,31 +35,35 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp}}-${github.ref}-${{ github.sha }}
-          restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp}}-${{github.ref}}
+          key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${github.ref}-${{ github.sha }}
+          restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{github.ref}}
       - name: Get trial license
         if: ${{ matrix.cxx == 'icpc' }}
         run: |
           mkdir ~/Licenses
           curl https://dynamicinstaller.intel.com/api/v2/license > ~/Licenses/intel.lic
-      - name: CMake
+      - name: build-and-test
         run: |
-          cmake -B builddir \
+          ccache -z
+          cmake \
             -DCMAKE_INSTALL_PREFIX=/usr \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
             -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
-            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} 
-      - name: Build
-        run: |
-          ccache -z
-          cmake --build builddir --parallel 2 --verbose
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
+            -DBUILD_NAME=${{ matrix.distro }}-${{ matrix.cxx }} \
+            -DBUILD_JOBS=2 -DBINARY_DIR=builddir -DSITE=GitHub-Linux \
+            -P cmake/KokkosCI.cmake
           ccache -s
-      - name: Tests
-        working-directory: builddir
-        run: ctest --output-on-failure
       - name: Test DESTDIR Install
         run: DESTDIR=${PWD}/install cmake --build builddir --target install && rm -rf ${PWD}/install/usr && rmdir ${PWD}/install
       - name: Install
         run: sudo cmake --build builddir --target install
+      - name: Test install
+        working-directory: example/build_cmake_installed
+        run: |
+          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          cmake --build builddir
+          cmake --build builddir --target test

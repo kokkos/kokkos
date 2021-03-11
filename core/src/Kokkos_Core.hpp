@@ -87,6 +87,10 @@ struct InitArguments {
   int skip_device;
   bool disable_warnings;
   bool tune_internals;
+  bool tool_help        = false;
+  std::string tool_lib  = {};
+  std::string tool_args = {};
+
   InitArguments(int nt = -1, int nn = -1, int dv = -1, bool dw = false,
                 bool ti = false)
       : num_threads{nt},
@@ -139,6 +143,10 @@ namespace Impl {
 void pre_initialize(const InitArguments& args);
 
 void post_initialize(const InitArguments& args);
+
+void declare_configuration_metadata(const std::string& category,
+                                    const std::string& key,
+                                    const std::string& value);
 
 }  // namespace Impl
 

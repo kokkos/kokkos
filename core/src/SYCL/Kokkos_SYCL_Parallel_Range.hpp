@@ -73,11 +73,10 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
 
     q.submit([functor, policy](sycl::handler& cgh) {
       sycl::range<1> range(policy.end() - policy.begin());
+      const auto begin = policy.begin();
 
       cgh.parallel_for(range, [=](sycl::item<1> item) {
-        const typename Policy::index_type id =
-            static_cast<typename Policy::index_type>(item.get_linear_id()) +
-            policy.begin();
+        const typename Policy::index_type id = item.get_linear_id() + begin;
         if constexpr (std::is_same<WorkTag, void>::value)
           functor(id);
         else
@@ -88,42 +87,20 @@ class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
     space.fence();
   }
 
-  // Indirectly launch a functor by explicitly creating it in USM shared memory
-  void sycl_indirect_launch() const {
-    // Convenience references
-    const Kokkos::Experimental::SYCL& space = m_policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMemory& kernelMem =
-        *instance.m_indirectKernel;
-
-    // Allocate USM shared memory for the functor
-    kernelMem.resize(std::max(kernelMem.size(), sizeof(m_functor)));
-
-    // Placement new a copy of functor into USM shared memory
-    //
-    // Store it in a unique_ptr to call its destructor on scope exit
-    std::unique_ptr<FunctorType, Kokkos::Impl::destruct_delete>
-        kernelFunctorPtr(new (kernelMem.data()) FunctorType(m_functor));
-
-    // Use reference_wrapper (because it is both trivially copyable and
-    // invocable) and launch it
-    sycl_direct_launch(m_policy, std::reference_wrapper(*kernelFunctorPtr));
-  }
-
  public:
   using functor_type = FunctorType;
 
   void execute() const {
     if (m_policy.begin() == m_policy.end()) return;
 
-    // if the functor is trivially copyable, we can launch it directly;
-    // otherwise, we will launch it indirectly via explicitly creating
-    // it in USM shared memory.
-    if constexpr (std::is_trivially_copyable_v<decltype(m_functor)>)
-      sycl_direct_launch(m_policy, m_functor);
-    else
-      sycl_indirect_launch();
+    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
+        indirectKernelMem = m_policy.space()
+                                .impl_internal_space_instance()
+                                ->m_indirectKernelMem;
+
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_functor, indirectKernelMem);
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor());
   }
 
   ParallelFor(const ParallelFor&) = delete;
@@ -150,7 +127,26 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using WorkTag          = typename Policy::work_tag;
 
   const FunctorType m_functor;
-  const Policy m_policy;
+  // MDRangePolicy is not trivially copyable. Hence, replicate the data we
+  // really need in DeviceIterateTile in a trivially copyable struct.
+  const struct BarePolicy {
+    using index_type = typename Policy::index_type;
+
+    BarePolicy(const Policy& policy)
+        : m_lower(policy.m_lower),
+          m_upper(policy.m_upper),
+          m_tile(policy.m_tile),
+          m_tile_end(policy.m_tile_end),
+          m_num_tiles(policy.m_num_tiles) {}
+
+    const typename Policy::point_type m_lower;
+    const typename Policy::point_type m_upper;
+    const typename Policy::tile_type m_tile;
+    const typename Policy::point_type m_tile_end;
+    const typename Policy::index_type m_num_tiles;
+    static constexpr Iterate inner_direction = Policy::inner_direction;
+  } m_policy;
+  const Kokkos::Experimental::SYCL& m_space;
 
   sycl::nd_range<3> compute_ranges() const {
     const auto& m_tile     = m_policy.m_tile;
@@ -207,21 +203,20 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   template <typename Functor>
   void sycl_direct_launch(const Functor& functor) const {
     // Convenience references
-    const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
+        *m_space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
-    space.fence();
+    m_space.fence();
 
     if (m_policy.m_num_tiles == 0) return;
 
-    auto& policy = m_policy;
+    const BarePolicy bare_policy(m_policy);
 
-    q.submit([functor, this, policy](sycl::handler& cgh) {
+    q.submit([functor, this, bare_policy](sycl::handler& cgh) {
       const auto range = compute_ranges();
 
-      cgh.parallel_for(range, [functor, policy](sycl::nd_item<3> item) {
+      cgh.parallel_for(range, [functor, bare_policy](sycl::nd_item<3> item) {
         const index_type local_x    = item.get_local_id(0);
         const index_type local_y    = item.get_local_id(1);
         const index_type local_z    = item.get_local_id(2);
@@ -232,51 +227,33 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         const index_type n_global_y = item.get_group_range(1);
         const index_type n_global_z = item.get_group_range(2);
 
-        Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, Functor,
+        Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, Functor,
                                         typename Policy::work_tag>(
-            policy, functor, {n_global_x, n_global_y, n_global_z},
+            bare_policy, functor, {n_global_x, n_global_y, n_global_z},
             {global_x, global_y, global_z}, {local_x, local_y, local_z})
             .exec_range();
       });
     });
 
-    space.fence();
-  }
-
-  // Indirectly launch a functor by explicitly creating it in USM shared memory
-  void sycl_indirect_launch() const {
-    // Convenience references
-    const Kokkos::Experimental::SYCL& space = m_policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMemory& kernelMem =
-        *instance.m_indirectKernel;
-
-    // Allocate USM shared memory for the functor
-    kernelMem.resize(std::max(kernelMem.size(), sizeof(m_functor)));
-
-    // Placement new a copy of functor into USM shared memory
-    //
-    // Store it in a unique_ptr to call its destructor on scope exit
-    std::unique_ptr<FunctorType, Kokkos::Impl::destruct_delete>
-        kernelFunctorPtr(new (kernelMem.data()) FunctorType(m_functor));
-
-    // Use reference_wrapper (because it is both trivially copyable and
-    // invocable) and launch it
-    sycl_direct_launch(std::reference_wrapper(*kernelFunctorPtr));
+    m_space.fence();
   }
 
  public:
   using functor_type = FunctorType;
 
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy& policy, const Functor&) {
+    return policy.space().impl_internal_space_instance()->m_maxThreadsPerSM;
+  }
+
   void execute() const {
-    // if the functor is trivially copyable, we can launch it directly;
-    // otherwise, we will launch it indirectly via explicitly creating
-    // it in USM shared memory.
-    if constexpr (std::is_trivially_copyable_v<decltype(m_functor)>)
-      sycl_direct_launch(m_functor);
-    else
-      sycl_indirect_launch();
+    Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
+        indirectKernelMem =
+            m_space.impl_internal_space_instance()->m_indirectKernelMem;
+
+    const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
+        m_functor, indirectKernelMem);
+    sycl_direct_launch(functor_wrapper.get_functor());
   }
 
   ParallelFor(const ParallelFor&) = delete;
@@ -286,7 +263,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   ~ParallelFor()                        = default;
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
+      : m_functor(arg_functor),
+        m_policy(arg_policy),
+        m_space(arg_policy.space()) {}
 };
 
 #endif  // KOKKOS_SYCL_PARALLEL_RANGE_HPP_

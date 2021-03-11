@@ -76,9 +76,21 @@ int get_gpu(const InitArguments& args);
 }  // namespace Impl
 
 namespace Experimental {
-SYCL::SYCL() : m_space_instance(&Impl::SYCLInternal::singleton()) {
+SYCL::SYCL()
+    : m_space_instance(&Impl::SYCLInternal::singleton(),
+                       [](Impl::SYCLInternal*) {}) {
   Impl::SYCLInternal::singleton().verify_is_initialized(
       "SYCL instance constructor");
+}
+
+SYCL::SYCL(const sycl::queue& stream)
+    : m_space_instance(new Impl::SYCLInternal, [](Impl::SYCLInternal* ptr) {
+        ptr->finalize();
+        delete ptr;
+      }) {
+  Impl::SYCLInternal::singleton().verify_is_initialized(
+      "SYCL instance constructor");
+  m_space_instance->initialize(stream);
 }
 
 int SYCL::concurrency() {
@@ -87,6 +99,8 @@ int SYCL::concurrency() {
   return 2;
 }
 
+const char* SYCL::name() { return "SYCL"; }
+
 bool SYCL::impl_is_initialized() {
   return Impl::SYCLInternal::singleton().is_initialized();
 }
@@ -94,12 +108,14 @@ bool SYCL::impl_is_initialized() {
 void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
 void SYCL::fence() const {
-  try {
-    m_space_instance->m_queue->wait_and_throw();
-  } catch (sycl::exception const& e) {
-    Kokkos::Impl::throw_runtime_exception(
-        std::string("There was a synchronous SYCL error:\n") + e.what());
-  }
+  Impl::SYCLInternal::fence(*m_space_instance->m_queue);
+}
+
+void SYCL::impl_static_fence() {
+  // guard accessing all_queues
+  std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
+  for (auto& queue : Impl::SYCLInternal::all_queues)
+    Impl::SYCLInternal::fence(**queue);
 }
 
 int SYCL::sycl_device() const {
@@ -234,7 +250,7 @@ std::ostream& SYCL::SYCLDevice::info(std::ostream& os) const {
 
 namespace Impl {
 
-int g_hip_space_factory_initialized =
+int g_sycl_space_factory_initialized =
     Kokkos::Impl::initialize_space_factory<SYCLSpaceInitializer>("170_SYCL");
 
 void SYCLSpaceInitializer::initialize(const InitArguments& args) {
@@ -259,9 +275,7 @@ void SYCLSpaceInitializer::finalize(const bool all_spaces) {
 }
 
 void SYCLSpaceInitializer::fence() {
-  // FIXME_SYCL should be
-  //  Kokkos::Experimental::SYCL::impl_static_fence();
-  Kokkos::Experimental::SYCL().fence();
+  Kokkos::Experimental::SYCL::impl_static_fence();
 }
 
 void SYCLSpaceInitializer::print_configuration(std::ostream& msg,

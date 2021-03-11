@@ -92,7 +92,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
  public:
   using functor_type = FunctorType;
 
-  inline __device__ void operator()(void) const {
+  inline __device__ void operator()() const {
     const Member work_stride = blockDim.y * gridDim.x;
     const Member work_end    = m_policy.end();
 
@@ -174,11 +174,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags = nullptr;
 
-  // FIXME_HIP_PERFORMANCE Need a rule to choose when to use shared memory and
-  // when to use shuffle
+#if HIP_VERSION < 401
   static bool constexpr UseShflReduction =
       ((sizeof(value_type) > 2 * sizeof(double)) &&
        static_cast<bool>(ValueTraits::StaticValueSize));
+#else
+  static bool constexpr UseShflReduction =
+      static_cast<bool>(ValueTraits::StaticValueSize);
+#endif
 
  private:
   struct ShflReductionTag {};
@@ -499,7 +502,7 @@ class ParallelScanHIPBase {
 
   //----------------------------------------
 
-  __device__ inline void initial(void) const {
+  __device__ inline void initial() const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(m_functor) / sizeof(size_type));
@@ -535,7 +538,7 @@ class ParallelScanHIPBase {
 
   //----------------------------------------
 
-  __device__ inline void final(void) const {
+  __device__ inline void final() const {
     const integral_nonzero_constant<size_type, ValueTraits::StaticValueSize /
                                                    sizeof(size_type)>
         word_count(ValueTraits::value_size(m_functor) / sizeof(size_type));
@@ -612,7 +615,7 @@ class ParallelScanHIPBase {
  public:
   //----------------------------------------
 
-  __device__ inline void operator()(void) const {
+  __device__ inline void operator()() const {
     if (!m_final) {
       initial();
     } else {

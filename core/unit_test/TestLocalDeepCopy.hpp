@@ -934,8 +934,6 @@ void impl_test_local_deepcopy_rangepolicy_rank_7(const int N) {
 //-------------------------------------------------------------------------------------------------------------
 
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-// FIXME_SYCL needs TeamPolicy
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
   using ViewType  = Kokkos::View<double********, Kokkos::LayoutLeft, ExecSpace>;
@@ -962,7 +960,6 @@ TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutleft) {
     impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace, ViewType>(8);
   }
 }
-#endif
 //-------------------------------------------------------------------------------------------------------------
 TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
@@ -991,8 +988,6 @@ TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutleft) {
   }
 }
 //-------------------------------------------------------------------------------------------------------------
-// FIXME_SYCL needs TeamPolicy
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
   using ViewType = Kokkos::View<double********, Kokkos::LayoutRight, ExecSpace>;
@@ -1019,7 +1014,6 @@ TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutright) {
     impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace, ViewType>(8);
   }
 }
-#endif
 //-------------------------------------------------------------------------------------------------------------
 TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
@@ -1049,8 +1043,6 @@ TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutright) {
 }
 #endif
 
-// FIXME_SYCL needs TeamPolicy
-#ifndef KOKKOS_ENABLE_SYCL
 namespace Impl {
 template <typename T, typename SHMEMTYPE>
 using ShMemView =
@@ -1091,6 +1083,8 @@ struct DeepCopyScratchFunctor {
 };
 }  // namespace Impl
 
+// FIXME_SYCL needs TeamPolicy scratch memory
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, deep_copy_scratch) {
   using TestDeviceTeamPolicy = Kokkos::TeamPolicy<TEST_EXECSPACE>;
 

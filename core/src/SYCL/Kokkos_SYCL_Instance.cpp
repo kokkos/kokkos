@@ -53,10 +53,11 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-int SYCLInternal::was_finalized = 0;
+std::vector<std::optional<sycl::queue>*> SYCLInternal::all_queues;
+std::mutex SYCLInternal::mutex;
 
 SYCLInternal::~SYCLInternal() {
-  if (m_scratchSpace || m_scratchFlags) {
+  if (!was_finalized || m_scratchSpace || m_scratchFlags) {
     std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call "
                  "Kokkos::Experimental::SYCL::finalize()"
               << std::endl;
@@ -79,8 +80,26 @@ SYCLInternal& SYCLInternal::singleton() {
   return self;
 }
 
-// FIME_SYCL
 void SYCLInternal::initialize(const sycl::device& d) {
+  auto exception_handler = [](sycl::exception_list exceptions) {
+    bool asynchronous_error = false;
+    for (std::exception_ptr const& e : exceptions) {
+      try {
+        std::rethrow_exception(e);
+      } catch (sycl::exception const& e) {
+        std::cerr << e.what() << '\n';
+        asynchronous_error = true;
+      }
+    }
+    if (asynchronous_error)
+      Kokkos::Impl::throw_runtime_exception(
+          "There was an asynchronous SYCL error!\n");
+  };
+  initialize(sycl::queue{d, exception_handler});
+}
+
+// FIXME_SYCL
+void SYCLInternal::initialize(const sycl::queue& q) {
   if (was_finalized)
     Kokkos::abort("Calling SYCL::initialize after SYCL::finalize is illegal\n");
 
@@ -96,23 +115,21 @@ void SYCLInternal::initialize(const sycl::device& d) {
   const bool ok_init = nullptr == m_scratchSpace || nullptr == m_scratchFlags;
   const bool ok_dev  = true;
   if (ok_init && ok_dev) {
-    auto exception_handler = [](sycl::exception_list exceptions) {
-      bool asynchronous_error = false;
-      for (std::exception_ptr const& e : exceptions) {
-        try {
-          std::rethrow_exception(e);
-        } catch (sycl::exception const& e) {
-          std::cerr << e.what() << '\n';
-          asynchronous_error = true;
-        }
-      }
-      if (asynchronous_error)
-        Kokkos::Impl::throw_runtime_exception(
-            "There was an asynchronous SYCL error!\n");
-    };
-    m_queue.emplace(d, exception_handler);
+    m_queue = q;
+    // guard pushing to all_queues
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      all_queues.push_back(&m_queue);
+    }
+    const sycl::device& d = m_queue->get_device();
     std::cout << SYCL::SYCLDevice(d) << '\n';
-    m_indirectKernel.emplace(IndirectKernelAllocator(*m_queue));
+
+    m_maxThreadsPerSM =
+        d.template get_info<sycl::info::device::max_work_group_size>();
+    m_maxShmemPerBlock =
+        d.template get_info<sycl::info::device::local_mem_size>();
+    m_indirectKernelMem.reset(*m_queue);
+    m_indirectReducerMem.reset(*m_queue);
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
@@ -126,13 +143,19 @@ void SYCLInternal::initialize(const sycl::device& d) {
 
 void SYCLInternal::finalize() {
   SYCL().fence();
-  was_finalized = 1;
+  was_finalized = true;
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     // FIXME_SYCL
     std::abort();
   }
 
-  m_indirectKernel.reset();
+  m_indirectKernelMem.reset();
+  m_indirectReducerMem.reset();
+  // guard erasing from all_queues
+  {
+    std::lock_guard<std::mutex> lock(mutex);
+    all_queues.erase(std::find(all_queues.begin(), all_queues.end(), &m_queue));
+  }
   m_queue.reset();
 }
 

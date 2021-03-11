@@ -48,24 +48,11 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_SYCL)
 
-#include <CL/sycl.hpp>
-
 namespace Kokkos {
 namespace Impl {
 
 inline void sycl_abort(char const *msg) {
-#ifdef KOKKOS_IMPL_DISABLE_SYCL_DEVICE_PRINTF
-  (void)msg;
-#else
-#ifdef __SYCL_DEVICE_ONLY__
-  static const __attribute__((opencl_constant)) char format[] =
-      "Aborting with message `%s'.\n";
-  using sycl::ONEAPI::experimental::printf;
-#else
-  static const char format[] = "Aborting with message `%s'.\n";
-#endif
-  printf(format, msg);
-#endif
+  KOKKOS_IMPL_DO_NOT_USE_PRINTF("Aborting with message %s.\n", msg);
 }
 
 }  // namespace Impl

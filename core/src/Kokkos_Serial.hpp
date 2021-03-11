@@ -201,7 +201,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::Serial::memory_space, Kokkos::Serial::scratch_memory_space> {
   enum : bool { value = true };
-  inline static void verify(void) {}
+  inline static void verify() {}
   inline static void verify(const void*) {}
 };
 

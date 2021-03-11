@@ -54,6 +54,7 @@
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <Cuda/Kokkos_Cuda_Instance.hpp>
 #include <Cuda/Kokkos_Cuda_Locks.hpp>
+#include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
 
@@ -821,60 +822,21 @@ Cuda::size_type Cuda::device_arch() {
 void Cuda::impl_finalize() { Impl::CudaInternal::singleton().finalize(); }
 
 Cuda::Cuda()
-    : m_space_instance(&Impl::CudaInternal::singleton()), m_counter(nullptr) {
+    : m_space_instance(&Impl::CudaInternal::singleton(),
+                       [](Impl::CudaInternal *) {}) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
 }
 
 Cuda::Cuda(cudaStream_t stream)
-    : m_space_instance(new Impl::CudaInternal), m_counter(new int(1)) {
+    : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
+        ptr->finalize();
+        delete ptr;
+      }) {
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
   m_space_instance->initialize(Impl::CudaInternal::singleton().m_cudaDev,
                                stream);
-}
-
-KOKKOS_FUNCTION Cuda::Cuda(Cuda &&other) noexcept {
-  m_space_instance       = other.m_space_instance;
-  other.m_space_instance = nullptr;
-  m_counter              = other.m_counter;
-  other.m_counter        = nullptr;
-}
-
-KOKKOS_FUNCTION Cuda::Cuda(const Cuda &other)
-    : m_space_instance(other.m_space_instance), m_counter(other.m_counter) {
-#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
-  if (m_counter) Kokkos::atomic_add(m_counter, 1);
-#endif
-}
-
-KOKKOS_FUNCTION Cuda &Cuda::operator=(Cuda &&other) noexcept {
-  m_space_instance       = other.m_space_instance;
-  other.m_space_instance = nullptr;
-  m_counter              = other.m_counter;
-  other.m_counter        = nullptr;
-  return *this;
-}
-
-KOKKOS_FUNCTION Cuda &Cuda::operator=(const Cuda &other) {
-  m_space_instance = other.m_space_instance;
-  m_counter        = other.m_counter;
-#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
-  if (m_counter) Kokkos::atomic_add(m_counter, 1);
-#endif
-  return *this;
-}
-
-KOKKOS_FUNCTION Cuda::~Cuda() noexcept {
-#ifndef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA
-  if (m_counter == nullptr) return;
-  int const count = Kokkos::atomic_fetch_sub(m_counter, 1);
-  if (count == 1) {
-    delete m_counter;
-    m_space_instance->finalize();
-    delete m_space_instance;
-  }
-#endif
 }
 
 void Cuda::print_configuration(std::ostream &s, const bool) {

@@ -54,6 +54,7 @@
 #include <Kokkos_ScratchSpace.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -79,15 +80,14 @@ class SYCL {
 
   using scratch_memory_space = ScratchMemorySpace<SYCL>;
 
-  ~SYCL() = default;
   SYCL();
-
-  SYCL(SYCL&&)      = default;
-  SYCL(const SYCL&) = default;
-  SYCL& operator=(SYCL&&) = default;
-  SYCL& operator=(const SYCL&) = default;
+  explicit SYCL(const sycl::queue&);
 
   uint32_t impl_instance_id() const noexcept { return 0; }
+
+  sycl::context sycl_context() const noexcept {
+    return m_space_instance->m_queue->get_context();
+  };
 
   //@}
   //------------------------------------
@@ -95,7 +95,7 @@ class SYCL {
   //@{
 
   KOKKOS_INLINE_FUNCTION static int in_parallel() {
-#if defined(__SYCL_ARCH__)
+#if defined(__SYCL_DEVICE_ONLY__)
     return true;
 #else
     return false;
@@ -154,11 +154,11 @@ class SYCL {
   static const char* name();
 
   inline Impl::SYCLInternal* impl_internal_space_instance() const {
-    return m_space_instance;
+    return m_space_instance.get();
   }
 
  private:
-  Impl::SYCLInternal* m_space_instance;
+  Kokkos::Impl::HostSharedPtr<Impl::SYCLInternal> m_space_instance;
 };
 
 namespace Impl {

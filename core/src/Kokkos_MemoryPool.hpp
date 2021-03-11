@@ -525,6 +525,10 @@ class MemoryPool {
     // the guess for which block within a superblock should
     // be claimed.  If not available then a search occurs.
 
+// FIXME_SYCL clock_tic not yet implemented
+#ifdef KOKKOS_ENABLE_SYCL
+    const uint32_t block_id_hint = alloc_size;
+#else
     const uint32_t block_id_hint =
         (uint32_t)(Kokkos::Impl::clock_tic()
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_CUDA)
@@ -533,6 +537,7 @@ class MemoryPool {
                    + (threadIdx.x + blockDim.x * threadIdx.y)
 #endif
         );
+#endif
 
     // expected state of superblock for allocation
     uint32_t sb_state = block_state;

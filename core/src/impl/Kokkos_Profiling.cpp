@@ -49,14 +49,14 @@
 #include <dlfcn.h>
 #endif
 
+#include <algorithm>
+#include <array>
 #include <cstring>
+#include <iostream>
+#include <stack>
 #include <unordered_map>
 #include <unordered_set>
-#include <algorithm>
 #include <vector>
-#include <array>
-#include <stack>
-#include <iostream>
 namespace Kokkos {
 
 namespace Tools {
@@ -77,6 +77,7 @@ static EventSet no_profiling;
 
 bool eventSetsEqual(const EventSet& l, const EventSet& r) {
   return l.init == r.init && l.finalize == r.finalize &&
+         l.parse_args == r.parse_args && l.print_help == r.print_help &&
          l.begin_parallel_for == r.begin_parallel_for &&
          l.end_parallel_for == r.end_parallel_for &&
          l.begin_parallel_reduce == r.begin_parallel_reduce &&
@@ -95,6 +96,7 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.end_deep_copy == r.end_deep_copy && l.begin_fence == r.begin_fence &&
          l.end_fence == r.end_fence && l.sync_dual_view == r.sync_dual_view &&
          l.modify_dual_view == r.modify_dual_view &&
+         l.declare_metadata == r.declare_metadata &&
          l.declare_input_type == r.declare_input_type &&
          l.declare_output_type == r.declare_output_type &&
          l.end_tuning_context == r.end_tuning_context &&
@@ -111,7 +113,9 @@ bool profileLibraryLoaded() {
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
   if (Experimental::current_callbacks.begin_parallel_for != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.begin_parallel_for)(kernelPrefix.c_str(),
                                                           devID, kernelID);
   }
@@ -131,7 +135,9 @@ void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
 
 void endParallelFor(const uint64_t kernelID) {
   if (Experimental::current_callbacks.end_parallel_for != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.end_parallel_for)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
@@ -144,7 +150,9 @@ void endParallelFor(const uint64_t kernelID) {
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                        uint64_t* kernelID) {
   if (Experimental::current_callbacks.begin_parallel_scan != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.begin_parallel_scan)(kernelPrefix.c_str(),
                                                            devID, kernelID);
   }
@@ -164,7 +172,9 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
 
 void endParallelScan(const uint64_t kernelID) {
   if (Experimental::current_callbacks.end_parallel_scan != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.end_parallel_scan)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
@@ -177,7 +187,9 @@ void endParallelScan(const uint64_t kernelID) {
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
                          uint64_t* kernelID) {
   if (Experimental::current_callbacks.begin_parallel_reduce != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.begin_parallel_reduce)(
         kernelPrefix.c_str(), devID, kernelID);
   }
@@ -197,7 +209,9 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
 
 void endParallelReduce(const uint64_t kernelID) {
   if (Experimental::current_callbacks.end_parallel_reduce != nullptr) {
+#ifndef KOKKOS_IMPL_SIMULATE_LAUNCH_LATENCY
     Kokkos::fence();
+#endif
     (*Experimental::current_callbacks.end_parallel_reduce)(kernelID);
   }
 #ifdef KOKKOS_ENABLE_TUNING
@@ -317,13 +331,71 @@ void markEvent(const std::string& eventName) {
   }
 }
 
+bool printHelp(const std::string& args) {
+  if (Experimental::current_callbacks.print_help == nullptr) {
+    return false;
+  }
+  std::string arg0  = args.substr(0, args.find_first_of(' '));
+  const char* carg0 = arg0.c_str();
+  (*Experimental::current_callbacks.print_help)(const_cast<char*>(carg0));
+  return true;
+}
+
+void parseArgs(int _argc, char** _argv) {
+  if (Experimental::current_callbacks.parse_args != nullptr && _argc > 0) {
+    (*Experimental::current_callbacks.parse_args)(_argc, _argv);
+  }
+}
+
+void parseArgs(const std::string& args) {
+  if (Experimental::current_callbacks.parse_args == nullptr) {
+    return;
+  }
+  using strvec_t = std::vector<std::string>;
+  auto tokenize  = [](const std::string& line, const std::string& delimiters) {
+    strvec_t _result{};
+    std::size_t _bidx = 0;  // position that is the beginning of the new string
+    std::size_t _didx = 0;  // position of the delimiter in the string
+    while (_bidx < line.length() && _didx < line.length()) {
+      // find the first character (starting at _didx) that is not a delimiter
+      _bidx = line.find_first_not_of(delimiters, _didx);
+      // if no more non-delimiter chars, done
+      if (_bidx == std::string::npos) break;
+      // starting at the position of the new string, find the next delimiter
+      _didx = line.find_first_of(delimiters, _bidx);
+      // starting at the position of the new string, get the characters
+      // between this position and the next delimiter
+      std::string _tmp = line.substr(_bidx, _didx - _bidx);
+      // don't add empty strings
+      if (!_tmp.empty()) _result.emplace_back(_tmp);
+    }
+    return _result;
+  };
+  auto vargs = tokenize(args, " \t");
+  if (vargs.size() == 0) return;
+  auto _argc          = static_cast<int>(vargs.size());
+  char** _argv        = new char*[_argc + 1];
+  _argv[vargs.size()] = nullptr;
+  for (int i = 0; i < _argc; ++i) {
+    auto& _str = vargs.at(i);
+    _argv[i]   = new char[_str.length() + 1];
+    std::memcpy(_argv[i], _str.c_str(), _str.length() * sizeof(char));
+    _argv[i][_str.length()] = '\0';
+  }
+  parseArgs(_argc, _argv);
+  for (int i = 0; i < _argc; ++i) {
+    delete[] _argv[i];
+  }
+  delete[] _argv;
+}
+
 SpaceHandle make_space_handle(const char* space_name) {
   SpaceHandle handle;
   strncpy(handle.name, space_name, 63);
   return handle;
 }
 
-void initialize() {
+void initialize(const std::string& profileLibrary) {
   // Make sure initialize calls happens only once
   static int is_initialized = 0;
   if (is_initialized) return;
@@ -332,13 +404,9 @@ void initialize() {
 #ifdef KOKKOS_ENABLE_LIBDL
   void* firstProfileLibrary = nullptr;
 
-  char* envProfileLibrary = getenv("KOKKOS_PROFILE_LIBRARY");
+  if (profileLibrary.empty()) return;
 
-  // If we do not find a profiling library in the environment then exit
-  // early.
-  if (envProfileLibrary == nullptr) {
-    return;
-  }
+  char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
   char* envProfileCopy =
       (char*)malloc(sizeof(char) * (strlen(envProfileLibrary) + 1));
@@ -425,49 +493,62 @@ void initialize() {
       Experimental::set_dual_view_modify_callback(
           *reinterpret_cast<dualViewModifyFunction*>(&p18));
 
-      auto p19 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
-      Experimental::set_create_profile_section_callback(
-          *(reinterpret_cast<createProfileSectionFunction*>(&p19)));
-      auto p20 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
-      Experimental::set_start_profile_section_callback(
-          *reinterpret_cast<startProfileSectionFunction*>(&p20));
-      auto p21 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
-      Experimental::set_stop_profile_section_callback(
-          *reinterpret_cast<stopProfileSectionFunction*>(&p21));
-      auto p22 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
-      Experimental::set_destroy_profile_section_callback(
-          *(reinterpret_cast<destroyProfileSectionFunction*>(&p22)));
+      auto p19 = dlsym(firstProfileLibrary, "kokkosp_declare_metadata");
+      Experimental::set_declare_metadata_callback(
+          *(reinterpret_cast<declareMetadataFunction*>(&p19)));
 
-      auto p23 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
+      auto p20 = dlsym(firstProfileLibrary, "kokkosp_create_profile_section");
+      Experimental::set_create_profile_section_callback(
+          *(reinterpret_cast<createProfileSectionFunction*>(&p20)));
+      auto p21 = dlsym(firstProfileLibrary, "kokkosp_start_profile_section");
+      Experimental::set_start_profile_section_callback(
+          *reinterpret_cast<startProfileSectionFunction*>(&p21));
+      auto p22 = dlsym(firstProfileLibrary, "kokkosp_stop_profile_section");
+      Experimental::set_stop_profile_section_callback(
+          *reinterpret_cast<stopProfileSectionFunction*>(&p22));
+      auto p23 = dlsym(firstProfileLibrary, "kokkosp_destroy_profile_section");
+      Experimental::set_destroy_profile_section_callback(
+          *(reinterpret_cast<destroyProfileSectionFunction*>(&p23)));
+
+      auto p24 = dlsym(firstProfileLibrary, "kokkosp_profile_event");
       Experimental::set_profile_event_callback(
-          *reinterpret_cast<profileEventFunction*>(&p23));
+          *reinterpret_cast<profileEventFunction*>(&p24));
 
 #ifdef KOKKOS_ENABLE_TUNING
-      auto p24 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
+      auto p25 = dlsym(firstProfileLibrary, "kokkosp_declare_output_type");
       Experimental::set_declare_output_type_callback(
           *reinterpret_cast<Experimental::outputTypeDeclarationFunction*>(
-              &p24));
+              &p25));
 
-      auto p25 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
+      auto p26 = dlsym(firstProfileLibrary, "kokkosp_declare_input_type");
       Experimental::set_declare_input_type_callback(
-          *reinterpret_cast<Experimental::inputTypeDeclarationFunction*>(&p25));
-      auto p26 = dlsym(firstProfileLibrary, "kokkosp_request_values");
+          *reinterpret_cast<Experimental::inputTypeDeclarationFunction*>(&p26));
+      auto p27 = dlsym(firstProfileLibrary, "kokkosp_request_values");
       Experimental::set_request_output_values_callback(
-          *reinterpret_cast<Experimental::requestValueFunction*>(&p26));
-      auto p27 = dlsym(firstProfileLibrary, "kokkosp_end_context");
+          *reinterpret_cast<Experimental::requestValueFunction*>(&p27));
+      auto p28 = dlsym(firstProfileLibrary, "kokkosp_end_context");
       Experimental::set_end_context_callback(
-          *reinterpret_cast<Experimental::contextEndFunction*>(&p27));
-      auto p28 = dlsym(firstProfileLibrary, "kokkosp_begin_context");
+          *reinterpret_cast<Experimental::contextEndFunction*>(&p28));
+      auto p29 = dlsym(firstProfileLibrary, "kokkosp_begin_context");
       Experimental::set_begin_context_callback(
-          *reinterpret_cast<Experimental::contextBeginFunction*>(&p28));
-      auto p29 =
+          *reinterpret_cast<Experimental::contextBeginFunction*>(&p29));
+      auto p30 =
           dlsym(firstProfileLibrary, "kokkosp_declare_optimization_goal");
       Experimental::set_declare_optimization_goal_callback(
           *reinterpret_cast<Experimental::optimizationGoalDeclarationFunction*>(
-              &p29));
+              &p30));
 #endif  // KOKKOS_ENABLE_TUNING
+
+      auto p31 = dlsym(firstProfileLibrary, "kokkosp_print_help");
+      Experimental::set_print_help_callback(
+          *reinterpret_cast<printHelpFunction*>(&p31));
+      auto p32 = dlsym(firstProfileLibrary, "kokkosp_parse_args");
+      Experimental::set_parse_args_callback(
+          *reinterpret_cast<parseArgsFunction*>(&p32));
     }
   }
+#else
+  (void)profileLibrary;
 #endif  // KOKKOS_ENABLE_LIBDL
   if (Experimental::current_callbacks.init != nullptr) {
     (*Experimental::current_callbacks.init)(
@@ -581,6 +662,13 @@ void modifyDualView(const std::string& label, const void* const ptr,
   }
 }
 
+void declareMetadata(const std::string& key, const std::string& value) {
+  if (Experimental::current_callbacks.declare_metadata != nullptr) {
+    (*Experimental::current_callbacks.declare_metadata)(key.c_str(),
+                                                        value.c_str());
+  }
+}
+
 }  // namespace Tools
 
 namespace Tools {
@@ -590,6 +678,12 @@ void set_init_callback(initFunction callback) {
 }
 void set_finalize_callback(finalizeFunction callback) {
   current_callbacks.finalize = callback;
+}
+void set_parse_args_callback(parseArgsFunction callback) {
+  current_callbacks.parse_args = callback;
+}
+void set_print_help_callback(printHelpFunction callback) {
+  current_callbacks.print_help = callback;
 }
 void set_begin_parallel_for_callback(beginFunction callback) {
   current_callbacks.begin_parallel_for = callback;
@@ -656,6 +750,9 @@ void set_dual_view_sync_callback(dualViewSyncFunction callback) {
 }
 void set_dual_view_modify_callback(dualViewModifyFunction callback) {
   current_callbacks.modify_dual_view = callback;
+}
+void set_declare_metadata_callback(declareMetadataFunction callback) {
+  current_callbacks.declare_metadata = callback;
 }
 
 void set_declare_output_type_callback(outputTypeDeclarationFunction callback) {
@@ -751,7 +848,17 @@ void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
 void endDeepCopy() { Kokkos::Tools::endDeepCopy(); }
 
 void finalize() { Kokkos::Tools::finalize(); }
-void initialize() { Kokkos::Tools::initialize(); }
+void initialize(const std::string& profileLibrary) {
+  Kokkos::Tools::initialize(profileLibrary);
+}
+
+bool printHelp(const std::string& args) {
+  return Kokkos::Tools::printHelp(args);
+}
+void parseArgs(const std::string& args) { Kokkos::Tools::parseArgs(args); }
+void parseArgs(int _argc, char** _argv) {
+  Kokkos::Tools::parseArgs(_argc, _argv);
+}
 
 SpaceHandle make_space_handle(const char* space_name) {
   return Kokkos::Tools::make_space_handle(space_name);

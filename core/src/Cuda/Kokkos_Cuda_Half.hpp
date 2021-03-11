@@ -255,7 +255,7 @@ class half_t {
 #else
     float tmp = __half2float(val);
     --tmp;
-    val     = __float2half(tmp);
+    val = __float2half(tmp);
 #endif
     return *this;
   }
@@ -288,13 +288,36 @@ class half_t {
     return *this;
   }
 
+  template <class T>
+  KOKKOS_FUNCTION void operator=(T rhs) volatile {
+    val = cast_to_half(rhs).val;
+  }
+
   // Compound operators
   KOKKOS_FUNCTION
   half_t& operator+=(half_t rhs) {
 #ifdef __CUDA_ARCH__
     val += rhs.val;
 #else
-    val     = __float2half(__half2float(val) + __half2float(rhs.val));
+    val = __float2half(__half2float(val) + __half2float(rhs.val));
+#endif
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  volatile half_t& operator+=(half_t rhs) volatile {
+#ifdef __CUDA_ARCH__
+    // Cuda 10 supports __half volatile stores but not volatile arithmetic
+    // operands. Cast away volatile-ness of val for arithmetic but not for store
+    // location.
+    val = const_cast<impl_type&>(val) + rhs.val;
+#else
+    // Use non-volatile val_ref to suppress:
+    // "warning: implicit dereference will not access object of type ‘volatile
+    // __half’ in statement"
+    auto val_ref = const_cast<impl_type&>(val);
+    val_ref      = __float2half(__half2float(const_cast<impl_type&>(val)) +
+                           __half2float(rhs.val));
 #endif
     return *this;
   }
@@ -327,7 +350,25 @@ class half_t {
 #ifdef __CUDA_ARCH__
     val -= rhs.val;
 #else
-    val     = __float2half(__half2float(val) - __half2float(rhs.val));
+    val          = __float2half(__half2float(val) - __half2float(rhs.val));
+#endif
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  volatile half_t& operator-=(half_t rhs) volatile {
+#ifdef __CUDA_ARCH__
+    // Cuda 10 supports __half volatile stores but not volatile arithmetic
+    // operands. Cast away volatile-ness of val for arithmetic but not for store
+    // location.
+    val = const_cast<impl_type&>(val) - rhs.val;
+#else
+    // Use non-volatile val_ref to suppress:
+    // "warning: implicit dereference will not access object of type ‘volatile
+    // __half’ in statement"
+    auto val_ref = const_cast<impl_type&>(val);
+    val_ref      = __float2half(__half2float(const_cast<impl_type&>(val)) -
+                           __half2float(rhs.val));
 #endif
     return *this;
   }
@@ -360,7 +401,25 @@ class half_t {
 #ifdef __CUDA_ARCH__
     val *= rhs.val;
 #else
-    val     = __float2half(__half2float(val) * __half2float(rhs.val));
+    val          = __float2half(__half2float(val) * __half2float(rhs.val));
+#endif
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  volatile half_t& operator*=(half_t rhs) volatile {
+#ifdef __CUDA_ARCH__
+    // Cuda 10 supports __half volatile stores but not volatile arithmetic
+    // operands. Cast away volatile-ness of val for arithmetic but not for store
+    // location.
+    val = const_cast<impl_type&>(val) * rhs.val;
+#else
+    // Use non-volatile val_ref to suppress:
+    // "warning: implicit dereference will not access object of type ‘volatile
+    // __half’ in statement"
+    auto val_ref = const_cast<impl_type&>(val);
+    val_ref      = __float2half(__half2float(const_cast<impl_type&>(val)) *
+                           __half2float(rhs.val));
 #endif
     return *this;
   }
@@ -393,7 +452,25 @@ class half_t {
 #ifdef __CUDA_ARCH__
     val /= rhs.val;
 #else
-    val     = __float2half(__half2float(val) / __half2float(rhs.val));
+    val          = __float2half(__half2float(val) / __half2float(rhs.val));
+#endif
+    return *this;
+  }
+
+  KOKKOS_FUNCTION
+  volatile half_t& operator/=(half_t rhs) volatile {
+#ifdef __CUDA_ARCH__
+    // Cuda 10 supports __half volatile stores but not volatile arithmetic
+    // operands. Cast away volatile-ness of val for arithmetic but not for store
+    // location.
+    val = const_cast<impl_type&>(val) / rhs.val;
+#else
+    // Use non-volatile val_ref to suppress:
+    // "warning: implicit dereference will not access object of type ‘volatile
+    // __half’ in statement"
+    auto val_ref = const_cast<impl_type&>(val);
+    val_ref      = __float2half(__half2float(const_cast<impl_type&>(val)) /
+                           __half2float(rhs.val));
 #endif
     return *this;
   }
@@ -427,7 +504,7 @@ class half_t {
 #ifdef __CUDA_ARCH__
     lhs.val += rhs.val;
 #else
-    lhs.val = __float2half(__half2float(lhs.val) + __half2float(rhs.val));
+    lhs.val      = __float2half(__half2float(lhs.val) + __half2float(rhs.val));
 #endif
     return lhs;
   }
@@ -452,7 +529,7 @@ class half_t {
 #ifdef __CUDA_ARCH__
     lhs.val -= rhs.val;
 #else
-    lhs.val = __float2half(__half2float(lhs.val) - __half2float(rhs.val));
+    lhs.val      = __float2half(__half2float(lhs.val) - __half2float(rhs.val));
 #endif
     return lhs;
   }
@@ -477,7 +554,7 @@ class half_t {
 #ifdef __CUDA_ARCH__
     lhs.val *= rhs.val;
 #else
-    lhs.val = __float2half(__half2float(lhs.val) * __half2float(rhs.val));
+    lhs.val      = __float2half(__half2float(lhs.val) * __half2float(rhs.val));
 #endif
     return lhs;
   }
@@ -502,7 +579,7 @@ class half_t {
 #ifdef __CUDA_ARCH__
     lhs.val /= rhs.val;
 #else
-    lhs.val = __float2half(__half2float(lhs.val) / __half2float(rhs.val));
+    lhs.val      = __float2half(__half2float(lhs.val) / __half2float(rhs.val));
 #endif
     return lhs;
   }
