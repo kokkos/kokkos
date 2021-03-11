@@ -142,7 +142,7 @@ ENDIF()
 #------------------------------- KOKKOS_HIP_OPTIONS ---------------------------
 #clear anything that might be in the cache
 GLOBAL_SET(KOKKOS_AMDGPU_OPTIONS)
-IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIP)
+IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
   SET(AMDGPU_ARCH_FLAG "--amdgpu-target")
 ELSE()
   SET(AMDGPU_ARCH_FLAG "--offload-arch")
