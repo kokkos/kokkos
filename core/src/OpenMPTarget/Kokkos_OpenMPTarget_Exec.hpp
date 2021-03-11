@@ -1170,20 +1170,65 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, ValueType& result) {
+  // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
+  // elements in the array <= 32. For reduction we allocate, 16 bytes per
+  // element in the scratch space, hence, 16*32 = 512.
+  static_assert(sizeof(ValueType) <= 512);
+
   ValueType* tmp_scratch =
       static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+
 #pragma omp barrier
   tmp_scratch[0] = ValueType();
 #pragma omp barrier
 
-#pragma omp for reduction(+ : tmp_scratch[:1]) schedule(static, 1)
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    tmp_scratch[0] += tmp;
+  if constexpr (std::is_arithmetic<ValueType>::value) {
+#pragma omp for reduction(+ : tmp_scratch[:1])
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      lambda(i, tmp_scratch[0]);
+    }
+  } else {
+#pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
+
+#pragma omp for reduction(custom : tmp_scratch[:1])
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      lambda(i, tmp_scratch[0]);
+    }
   }
 
   result = tmp_scratch[0];
+}
+
+template <typename iType, class Lambda, typename ReducerType>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<Kokkos::is_reducer_type<ReducerType>::value>::type
+    parallel_reduce(
+        const Impl::TeamThreadRangeBoundariesStruct<
+            iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+        const Lambda& lambda, ReducerType const& result) {
+  using ValueType = typename ReducerType::value_type;
+
+#pragma omp declare reduction(                                               \
+    custom:ValueType                                                         \
+    : Impl::OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
+    initializer(                                                             \
+        Impl::OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+
+  static_assert(sizeof(ValueType) <= 512);
+
+  ValueType* tmp_scratch =
+      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+
+#pragma omp barrier
+  Impl::OpenMPTargetReducerWrapper<ReducerType>::init(tmp_scratch[0]);
+#pragma omp barrier
+
+#pragma omp for reduction(custom : tmp_scratch[:1])
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+    lambda(i, tmp_scratch[0]);
+  }
+
+  result.reference() = tmp_scratch[0];
 }
 
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
@@ -1201,16 +1246,32 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
-  ValueType result = init_result;
+  ValueType* tmp_scratch =
+      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
 
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    join(result, tmp);
+#pragma omp barrier
+  tmp_scratch[0] = init_result;
+#pragma omp barrier
+
+  if constexpr (std::is_arithmetic<ValueType>::value) {
+#pragma omp for reduction(+ : tmp_scratch[:1])
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      ValueType tmp = ValueType();
+      lambda(i, tmp);
+      join(tmp_scratch[0], tmp);
+    }
+  } else {
+#pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
+
+#pragma omp for reduction(custom : tmp_scratch[:1])
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      ValueType tmp = ValueType();
+      lambda(i, tmp);
+      join(tmp_scratch[0], tmp);
+    }
   }
 
-  // init_result = loop_boundaries.thread.team_reduce(result,join);
+  init_result = tmp_scratch[0];
 }
 
 // This is largely the same code as in HIP and CUDA except for the member name
@@ -1282,13 +1343,48 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, ValueType& result) {
   ValueType vector_reduce = ValueType();
+
+  if constexpr (std::is_arithmetic<ValueType>::value) {
 #pragma omp simd reduction(+ : vector_reduce)
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    vector_reduce += tmp;
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      lambda(i, vector_reduce);
+    }
+  } else {
+#pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
+
+#pragma omp simd reduction(custom : vector_reduce)
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      lambda(i, vector_reduce);
+    }
   }
+
   result = vector_reduce;
+}
+
+template <typename iType, class Lambda, typename ReducerType>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<Kokkos::is_reducer_type<ReducerType>::value>::type
+    parallel_reduce(
+        const Impl::ThreadVectorRangeBoundariesStruct<
+            iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+        const Lambda& lambda, ReducerType const& result) {
+    using ValueType = typename ReducerType::value_type;
+
+#pragma omp declare reduction(                                               \
+    custom:ValueType                                                         \
+    : Impl::OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
+    initializer(                                                             \
+        Impl::OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+
+    ValueType vector_reduce;
+    Impl::OpenMPTargetReducerWrapper<ReducerType>::init(vector_reduce);
+
+#pragma omp simd reduction(custom : vector_reduce)
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+        lambda(i, vector_reduce);
+    }
+
+    result.reference() = vector_reduce;
 }
 
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
@@ -1307,14 +1403,15 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
   ValueType result = init_result;
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
+
+  // FIXME_OPENMPTARGET think about omp simd
+  // join does not work with omp reduction clause
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     ValueType tmp = ValueType();
     lambda(i, tmp);
     join(result, tmp);
   }
+
   init_result = result;
 }
 
@@ -1377,19 +1474,64 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, ValueType& result) {
+  static_assert(sizeof(ValueType) <= 512);
+
   ValueType* tmp_scratch =
       static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+
 #pragma omp barrier
   tmp_scratch[0] = ValueType();
 #pragma omp barrier
 
+  if constexpr (std::is_arithmetic<ValueType>::value) {
 #pragma omp for simd reduction(+ : tmp_scratch[:1])
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    tmp_scratch[0] += tmp;
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      lambda(i, tmp_scratch[0]);
+    }
+  } else {
+#pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
+
+#pragma omp for simd reduction(custom : tmp_scratch[:1])
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+      lambda(i, tmp_scratch[0]);
+    }
   }
+
   result = tmp_scratch[0];
+}
+
+template <typename iType, class Lambda, typename ReducerType>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<Kokkos::is_reducer_type<ReducerType>::value>::type
+    parallel_reduce(
+        const Impl::TeamVectorRangeBoundariesStruct<
+            iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
+        const Lambda& lambda, ReducerType const& result) {
+    using ValueType = typename ReducerType::value_type;
+
+    static_assert(sizeof(ValueType) <= 512);
+
+#pragma omp declare reduction(                                               \
+    custom:ValueType                                                         \
+    : Impl::OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
+    initializer(                                                             \
+        Impl::OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+
+    static_assert(sizeof(ValueType) <= 512);
+
+    ValueType* tmp_scratch =
+        static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+
+#pragma omp barrier
+    Impl::OpenMPTargetReducerWrapper<ReducerType>::init(tmp_scratch[0]);
+#pragma omp barrier
+
+#pragma omp for simd reduction(custom : tmp_scratch[:1])
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+        lambda(i, tmp_scratch[0]);
+    }
+
+    result.reference() = tmp_scratch[0];
 }
 }  // namespace Kokkos
 
