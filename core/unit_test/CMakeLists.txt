@@ -722,11 +722,6 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
 )
 endif()
 
-KOKKOS_ADD_EXECUTABLE_AND_TEST(
-  UnitTest_HostBarrier
-  SOURCES UnitTestMain.cpp  TestHostBarrier.cpp
-)
-
 FUNCTION (KOKKOS_ADD_INCREMENTAL_TEST DEVICE)
   KOKKOS_OPTION( ${DEVICE}_EXCLUDE_TESTS "" STRING "Incremental test exclude list" )
   # Add unit test main
