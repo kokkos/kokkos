@@ -84,11 +84,20 @@ struct ScheduleTrait : TraitSpecificationBase<ScheduleTrait> {
                   "type of the errant tag.");
     static constexpr bool schedule_type_is_defaulted = false;
   };
-  template <class T>
-  using trait_matches_specification = is_schedule_type<T>;
+  // template <class T>
+  // using trait_matches_specification = is_schedule_type<T>;
 };
 
 // </editor-fold> end trait specification }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
+
+template <class Sched>
+struct PolicyTraitMatcher<ScheduleTrait, Schedule<Sched>> : std::true_type {};
+
+// </editor-fold> end PolicyTraitMatcher specialization }}}1
 //==============================================================================
 
 }  // end namespace Impl

@@ -46,7 +46,7 @@
 #define KOKKOS_KOKKOS_INDEXTYPETRAIT_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_Concepts.hpp>  // IndexType, is_index_type
+#include <Kokkos_Concepts.hpp>  // IndexType
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
 
@@ -72,10 +72,6 @@ struct IndexTypeTrait : TraitSpecificationBase<IndexTypeTrait> {
   };
   template <class IdxType, class AnalyzeNextTrait>
   using mixin_matching_trait = IndexTypePolicyMixin<IdxType, AnalyzeNextTrait>;
-  template <class T>
-  using trait_matches_specification =
-      std::integral_constant<bool, std::is_integral<T>::value ||
-                                       is_index_type<T>::value>;
 };
 
 // </editor-fold> end trait specification }}}1
@@ -122,6 +118,22 @@ struct IndexTypePolicyMixin : AnalyzeNextTrait {
 };
 
 // </editor-fold> end AnalyzeExecPolicy specializations }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
+
+template <class IntegralIndexType>
+struct PolicyTraitMatcher<IndexTypeTrait, IndexType<IntegralIndexType>>
+    : std::true_type {};
+
+template <class IntegralIndexType>
+struct PolicyTraitMatcher<
+    IndexTypeTrait, IntegralIndexType,
+    std::enable_if_t<std::is_integral<IntegralIndexType>::value>>
+    : std::true_type {};
+
+// </editor-fold> end PolicyTraitMatcher specialization"> }}}1
 //==============================================================================
 
 }  // end namespace Impl

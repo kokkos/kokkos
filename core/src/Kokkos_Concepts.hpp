@@ -190,10 +190,6 @@ using Kokkos::is_memory_traits;
 
 // Implementation concept:
 
-KOKKOS_IMPL_IS_CONCEPT(iteration_pattern)
-KOKKOS_IMPL_IS_CONCEPT(schedule_type)
-KOKKOS_IMPL_IS_CONCEPT(index_type)
-KOKKOS_IMPL_IS_CONCEPT(launch_bounds)
 KOKKOS_IMPL_IS_CONCEPT(thread_team_member)
 KOKKOS_IMPL_IS_CONCEPT(host_thread_team_member)
 KOKKOS_IMPL_IS_CONCEPT(graph_kernel)

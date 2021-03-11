@@ -45,8 +45,11 @@
 #ifndef KOKKOS_KOKKOS_ITERATIONPATTERNTRAIT_HPP
 #define KOKKOS_KOKKOS_ITERATIONPATTERNTRAIT_HPP
 
-#include <Kokkos_Concepts.hpp>  // is_iteration_pattern
-#include <type_traits>          // is_void
+#include <Kokkos_Concepts.hpp>                   // is_iteration_pattern
+#include <traits/Kokkos_PolicyTraitAdaptor.hpp>  // TraitSpecificationBase
+#include <Kokkos_Rank.hpp>                       // Rank
+#include <Kokkos_Layout.hpp>                     // Iterate
+#include <type_traits>                           // is_void
 
 namespace Kokkos {
 namespace Impl {
@@ -79,11 +82,19 @@ struct IterationPatternTrait : TraitSpecificationBase<IterationPatternTrait> {
         "type of the errant tag.");
     using iteration_pattern = IterPattern;
   };
-  template <class T>
-  using trait_matches_specification = is_iteration_pattern<T>;
 };
 
 // </editor-fold> end trait specification }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
+
+template <unsigned N, Iterate OuterDir, Iterate InnerDir>
+struct PolicyTraitMatcher<IterationPatternTrait, Rank<N, OuterDir, InnerDir>>
+    : std::true_type {};
+
+// </editor-fold> end  }}}1
 //==============================================================================
 
 }  // end namespace Impl

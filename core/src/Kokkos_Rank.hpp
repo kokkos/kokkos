@@ -42,56 +42,30 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
-#define KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+#ifndef KOKKOS_KOKKOS_RANK_HPP
+#define KOKKOS_KOKKOS_RANK_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_Concepts.hpp>  // LaunchBounds
-#include <traits/Kokkos_PolicyTraitAdaptor.hpp>
-#include <traits/Kokkos_Traits_fwd.hpp>
+#include <Kokkos_Layout.hpp>  // Iterate
 
 namespace Kokkos {
-namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="trait specification"> {{{1
+// Iteration Pattern
+template <unsigned N, Iterate OuterDir = Iterate::Default,
+          Iterate InnerDir = Iterate::Default>
+struct Rank {
+  static_assert(N != 0u, "Kokkos Error: rank 0 undefined");
+  static_assert(N != 1u,
+                "Kokkos Error: rank 1 is not a multi-dimensional range");
+  static_assert(N < 7u, "Kokkos Error: Unsupported rank...");
 
-struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
-    static constexpr bool launch_bounds_is_defaulted = true;
+  using iteration_pattern = Rank<N, OuterDir, InnerDir>;
 
-    using launch_bounds = LaunchBounds<>;
-  };
-  template <class LaunchBoundParam, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-
-    static constexpr bool launch_bounds_is_defaulted = false;
-
-    static_assert(base_t::launch_bounds_is_defaulted,
-                  "Kokkos Error: More than one launch_bounds given");
-
-    using launch_bounds = LaunchBoundParam;
-  };
+  static constexpr int rank                = N;
+  static constexpr Iterate outer_direction = OuterDir;
+  static constexpr Iterate inner_direction = InnerDir;
 };
 
-// </editor-fold> end trait specification }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
-
-template <unsigned int maxT, unsigned int minB>
-struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
-    : std::true_type {};
-
-// </editor-fold> end PolicyTraitMatcher specialization }}}1
-//==============================================================================
-
-}  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+#endif  // KOKKOS_KOKKOS_RANK_HPP
