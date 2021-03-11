@@ -6,7 +6,7 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        distro: ['fedora:latest', 'ubuntu:latest']
+        distro: ['fedora:latest', 'fedora:rawhide', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cmake_build_type: ['Release', 'Debug']
         openmp: ['ON']
@@ -34,6 +34,9 @@ jobs:
         run: |
           mkdir ~/Licenses
           curl https://dynamicinstaller.intel.com/api/v2/license > ~/Licenses/intel.lic
+      - name: maybe_disable_death_tests
+        if: ${{ matrix.distro == 'fedora:rawhide' }}
+        run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
       - name: build-and-test
         run: |
           ccache -z
