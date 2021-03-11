@@ -293,8 +293,8 @@ void test_deep_copy(uint32_t num_nodes) {
   }
 }
 
-// FIXME_HIP wrong result in CI but works locally
-#ifndef KOKKOS_ENABLE_HIP
+// FIXME_HIP
+#if !(defined(KOKKOS_ENABLE_HIP) && (HIP_VERSION < 401))
 // WORKAROUND MSVC
 #ifndef _WIN32
 TEST(TEST_CATEGORY, UnorderedMap_insert) {

@@ -864,4 +864,6 @@ KOKKOS_ADD_EXECUTABLE_AND_TEST(
   ARGS "one 2 THREE"
 )
 
-add_subdirectory(headers_self_contained)
+if (KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT KOKKOS_HAS_TRILINOS)
+  add_subdirectory(headers_self_contained)
+endif()
