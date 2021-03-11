@@ -17,10 +17,12 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #endif
 namespace desul {
 
-// Disable warning for large atomics:
+#if defined(__clang__) && (__clang_major__>=7)
+// Disable warning for large atomics on clang 7 and up (checked with godbolt)
 // error: large atomic operation may incur significant performance penalty [-Werror,-Watomic-alignment]
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Watomic-alignment"
+#endif
 template<class MemoryOrder, class MemoryScope>
 void atomic_thread_fence(MemoryOrder, MemoryScope) {
   __atomic_thread_fence(GCCMemoryOrder<MemoryOrder>::value);
@@ -60,7 +62,9 @@ T atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
   return compare;
 }
+#if defined(__clang__) && (__clang_major__>=7)
 #pragma GCC diagnostic pop
+#endif
 }  // namespace desul
 #endif
 #endif
