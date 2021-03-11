@@ -8,6 +8,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <desul/atomics/Lock_Array.hpp>
 #include <cinttypes>
+#include <string>
+#include <sstream>
 
 #ifdef DESUL_HAVE_CUDA_ATOMICS
 #ifdef __CUDACC_RDC__
