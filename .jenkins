@@ -45,6 +45,8 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
+                                // FIXME_SYCL triggers interal compiler error for SYCL+CUDA
+                                -DKokkos_ENABLE_HEADER_SELF_CONTAINMENT_TESTS=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
