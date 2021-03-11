@@ -5,8 +5,8 @@ Source: https://github.com/desul/desul
 
 SPDX-License-Identifier: (BSD-3-Clause)
 */
-#ifndef DESUL_ATOMICS_CUDA_HPP_
-#define DESUL_ATOMICS_CUDA_HPP_
+#ifndef DESUL_ATOMICS_HIP_HPP_
+#define DESUL_ATOMICS_HIP_HPP_
 
 #ifdef __HIP_DEVICE_COMPILE__
 namespace desul {
@@ -222,7 +222,7 @@ __device__ inline
 
 template <typename T, typename MemoryOrder>
 __device__ inline
-    typename std::enable_if<Impl::is_typename_atomic_integer_type<T>::value, T>::type
+    typename std::enable_if<Impl::is_hip_atomic_integer_type<T>::value, T>::type
     atomic_fetch_xor(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
   __threadfence();
   T return_val = atomicXor(dest, val);
@@ -261,6 +261,77 @@ __device__ inline
     atomic_fetch_or(T* dest, T val, MemoryOrder, MemoryScopeCore) {
   return atomic_fetch_or(dest, val, MemoryOrder(), MemoryScopeDevice());
 }
+
+}
+
+#define DESUL_HIP_GCC_INTEGRAL_OP_ATOMICS_COMPATIBILITY(MEMORY_ORDER, MEMORY_SCOPE)                 \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_add_type<T>::value, T>::type atomic_fetch_add(  \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_fetch_oper(Impl::AddOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_sub_type<T>::value, T>::type atomic_fetch_sub(  \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_fetch_oper(Impl::SubOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_integer_type<T>::value, T>::type atomic_fetch_and(  \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_fetch_oper(Impl::AndOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_integer_type<T>::value, T>::type atomic_fetch_or(   \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_fetch_oper(Impl::OrOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_integer_type<T>::value, T>::type atomic_fetch_xor(  \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_fetch_oper(Impl::XorOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_integer_type<T>::value, T>::type atomic_fetch_nand( \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_fetch_oper(Impl::NandOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_add_type<T>::value, T>::type atomic_add_fetch(  \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_oper_fetch(Impl::AddOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_sub_type<T>::value, T>::type atomic_sub_fetch(  \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_oper_fetch(Impl::SubOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_integer_type<T>::value, T>::type atomic_and_fetch(  \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_oper_fetch(Impl::AndOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_integer_type<T>::value, T>::type atomic_or_fetch(   \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_oper_fetch(Impl::OrOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_integer_type<T>::value, T>::type atomic_xor_fetch(  \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_oper_fetch(Impl::XorOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }                                                                               \
+  template <typename T>                                                           \
+  __device__ typename std::enable_if<std::is_integral<T>::value && !Impl::is_hip_atomic_integer_type<T>::value, T>::type atomic_nand_fetch( \
+      T* const dest, T value, MEMORY_ORDER, MEMORY_SCOPE) {                       \
+       return Impl::atomic_oper_fetch(Impl::NandOper<T, const T>(), dest, value, MEMORY_ORDER(), MEMORY_SCOPE()); \
+  }
+namespace desul {
+DESUL_HIP_GCC_INTEGRAL_OP_ATOMICS_COMPATIBILITY(MemoryOrderRelaxed, MemoryScopeNode)
+DESUL_HIP_GCC_INTEGRAL_OP_ATOMICS_COMPATIBILITY(MemoryOrderRelaxed, MemoryScopeDevice)
+DESUL_HIP_GCC_INTEGRAL_OP_ATOMICS_COMPATIBILITY(MemoryOrderRelaxed, MemoryScopeCore)
+DESUL_HIP_GCC_INTEGRAL_OP_ATOMICS_COMPATIBILITY(MemoryOrderSeqCst, MemoryScopeNode)
+DESUL_HIP_GCC_INTEGRAL_OP_ATOMICS_COMPATIBILITY(MemoryOrderSeqCst, MemoryScopeDevice)
+DESUL_HIP_GCC_INTEGRAL_OP_ATOMICS_COMPATIBILITY(MemoryOrderSeqCst, MemoryScopeCore)
 }  // namespace desul
 
 #endif
