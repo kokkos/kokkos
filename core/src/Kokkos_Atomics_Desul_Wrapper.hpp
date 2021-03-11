@@ -224,10 +224,12 @@ namespace Impl {
 
   }
   template<class T, class MemoryOrder>
+  KOKKOS_INLINE_FUNCTION
   T atomic_load(const T* const src, MemoryOrder) {
     return desul::atomic_load(src, typename KokkosToDesulMemoryOrder<MemoryOrder>::type(), desul::MemoryScopeDevice());
   }
   template<class T, class MemoryOrder>
+  KOKKOS_INLINE_FUNCTION
   void atomic_store(T* const src, const T val, MemoryOrder) {
     return desul::atomic_store(src, val, typename KokkosToDesulMemoryOrder<MemoryOrder>::type(), desul::MemoryScopeDevice());
   }

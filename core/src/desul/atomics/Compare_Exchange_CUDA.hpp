@@ -183,7 +183,6 @@ __device__ typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_excha
 #if defined(__CUDA_ARCH__) || !defined(__NVCC__)
 namespace desul {
 template <typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION 
 __device__ typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type atomic_compare_exchange(
     T* const dest, T compare, T value, MemoryOrder, MemoryScope scope) {
   // This is a way to avoid dead lock in a warp or wave front
@@ -211,7 +210,6 @@ __device__ typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::typ
   return return_val;
 }
 template <typename T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION 
 __device__ typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type atomic_exchange(
     T* const dest, T value, MemoryOrder, MemoryScope scope) {
   // This is a way to avoid dead lock in a warp or wave front
