@@ -161,7 +161,7 @@ class SYCLTeamMember {
     for (int start = maximum_work_range; start < team_size();
          start += maximum_work_range) {
       if (idx >= start &&
-          idx < std::max(start + maximum_work_range, team_size()))
+          idx < std::min(start + maximum_work_range, team_size()))
         reducer.join(reduction_array[idx - start], value);
       m_item.barrier(sycl::access::fence_space::local_space);
     }
