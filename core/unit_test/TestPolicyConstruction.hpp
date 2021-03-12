@@ -48,6 +48,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
+#include <type_traits>
 
 namespace Test {
 struct SomeTag {};
@@ -887,4 +888,25 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
   more_md_range_policy_construction_test<std::int64_t>();
 }
 
+template <class WorkTag, class Policy>
+constexpr auto set_worktag(Policy const& policy) {
+  static_assert(Kokkos::is_execution_policy<Policy>::value, "");
+  using PolicyWithWorkTag =
+      Kokkos::Impl::WorkTagTrait::policy_with_trait<Policy, WorkTag>;
+  return PolicyWithWorkTag{policy};
+}
+
+TEST(TEST_CATEGORY, policy_set_worktag) {
+  struct SomeWorkTag {};
+  struct OtherWorkTag {};
+
+  Kokkos::RangePolicy<> p1;
+  static_assert(std::is_void<decltype(p1)::work_tag>::value, "");
+
+  auto p2 = set_worktag<SomeWorkTag>(p1);
+  static_assert(std::is_same<decltype(p2)::work_tag, SomeWorkTag>::value, "");
+
+  auto p3 = set_worktag<OtherWorkTag>(p2);
+  static_assert(std::is_same<decltype(p3)::work_tag, OtherWorkTag>::value, "");
+}
 }  // namespace Test
