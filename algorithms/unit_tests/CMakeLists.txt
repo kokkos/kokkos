@@ -47,6 +47,12 @@ IF(Kokkos_ENABLE_OPENMP)
   )
 ENDIF()
 
+IF(Kokkos_ENABLE_SYCL)
+  LIST( APPEND SOURCES
+	  TestSYCL.cpp
+  )
+ENDIF()
+
 IF(Kokkos_ENABLE_HIP)
   LIST( APPEND SOURCES
     TestHIP.cpp
