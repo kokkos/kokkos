@@ -908,5 +908,9 @@ TEST(TEST_CATEGORY, policy_set_worktag) {
 
   auto p3 = set_worktag<OtherWorkTag>(p2);
   static_assert(std::is_same<decltype(p3)::work_tag, OtherWorkTag>::value, "");
+
+  // NOTE this does not currently compile
+  // auto p4 = set_worktag<void>(p3);
+  // static_assert(std::is_void<decltype(p4)::work_tag>::value, "");
 }
 }  // namespace Test
