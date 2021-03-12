@@ -97,12 +97,13 @@ namespace Experimental {
 //==============================================================================
 // <editor-fold desc="User interface"> {{{1
 
-template <class PolicyType, unsigned long P>
-constexpr auto require(const PolicyType p,
-                       WorkItemProperty::ImplWorkItemProperty<P>) {
+template <class Policy, unsigned long Property>
+constexpr auto require(const Policy p,
+                       WorkItemProperty::ImplWorkItemProperty<Property>) {
+  static_assert(Kokkos::is_execution_policy<Policy>::value, "");
   using new_policy_t =
       typename Kokkos::Impl::WorkItemPropertyTrait::template policy_with_trait<
-          PolicyType, WorkItemProperty::ImplWorkItemProperty<P>>;
+          Policy, WorkItemProperty::ImplWorkItemProperty<Property>>;
   return new_policy_t{p};
 }
 
