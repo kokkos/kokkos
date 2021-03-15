@@ -42,22 +42,14 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_TEST_CUDA_HPP
+#define KOKKOS_TEST_CUDA_HPP
+
 #include <gtest/gtest.h>
 
-#include <TestRandom.hpp>
-#include <TestSort.hpp>
+#define TEST_CATEGORY cuda
+#define TEST_CATEGORY_NUMBER 5
+#define TEST_CATEGORY_DEATH cuda_DeathTest
+#define TEST_EXECSPACE Kokkos::Cuda
 
-#include <TestHIP_Category.hpp>
-
-namespace Test {
-
-TEST(TEST_CATEGORY, Random_XorShift64) {
-  test_random_xorshift64<TEST_EXECSPACE>();
-}
-TEST(TEST_CATEGORY, Random_XorShift1024_0) {
-  test_random_xorshift1024<TEST_EXECSPACE>();
-}
-TEST(TEST_CATEGORY, SortUnsigned) {
-  Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
-}
-}  // namespace Test
+#endif

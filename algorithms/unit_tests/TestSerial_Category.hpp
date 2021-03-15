@@ -42,22 +42,15 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_TEST_SERIAL_HPP
+#define KOKKOS_TEST_SERIAL_HPP
+
 #include <gtest/gtest.h>
 
-#include <TestRandom.hpp>
-#include <TestSort.hpp>
+#define TEST_CATEGORY serial
+#define TEST_CATEGORY_NUMBER 0
+#define TEST_CATEGORY_DEATH serial_DeathTest
+#define TEST_EXECSPACE Kokkos::Serial
+#define TEST_CATEGORY_FIXTURE(name) serial_##name
 
-#include <TestHIP_Category.hpp>
-
-namespace Test {
-
-TEST(TEST_CATEGORY, Random_XorShift64) {
-  test_random_xorshift64<TEST_EXECSPACE>();
-}
-TEST(TEST_CATEGORY, Random_XorShift1024_0) {
-  test_random_xorshift1024<TEST_EXECSPACE>();
-}
-TEST(TEST_CATEGORY, SortUnsigned) {
-  Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
-}
-}  // namespace Test
+#endif
