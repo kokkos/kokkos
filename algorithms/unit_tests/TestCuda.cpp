@@ -42,51 +42,18 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_CUDA
-
-#include <cstdint>
-#include <iostream>
-#include <iomanip>
-
 #include <gtest/gtest.h>
-
-#include <Kokkos_Core.hpp>
 
 #include <TestRandom.hpp>
 #include <TestSort.hpp>
 
+#include <TestCuda_Category.hpp>
+
 namespace Test {
 
-void cuda_test_random_xorshift64(int num_draws) {
-  Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Cuda>>(num_draws);
-  Impl::test_random<Kokkos::Random_XorShift64_Pool<
-      Kokkos::Device<Kokkos::Cuda, Kokkos::CudaSpace>>>(num_draws);
+TEST(TEST_CATEGORY, Random_XorShift64) { test_random_xorshift64<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, Random_XorShift1024_0) { test_random_xorshift1024<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, SortUnsigned) {
+  Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
 }
-
-void cuda_test_random_xorshift1024(int num_draws) {
-  Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Cuda>>(num_draws);
-  Impl::test_random<Kokkos::Random_XorShift1024_Pool<
-      Kokkos::Device<Kokkos::Cuda, Kokkos::CudaSpace>>>(num_draws);
-}
-
-#define CUDA_RANDOM_XORSHIFT64(num_draws) \
-  TEST(cuda, Random_XorShift64) { cuda_test_random_xorshift64(num_draws); }
-
-#define CUDA_RANDOM_XORSHIFT1024(num_draws) \
-  TEST(cuda, Random_XorShift1024) { cuda_test_random_xorshift1024(num_draws); }
-
-#define CUDA_SORT_UNSIGNED(size) \
-  TEST(cuda, SortUnsigned) { Impl::test_sort<Kokkos::Cuda, unsigned>(size); }
-
-CUDA_RANDOM_XORSHIFT64(132141141)
-CUDA_RANDOM_XORSHIFT1024(52428813)
-CUDA_SORT_UNSIGNED(171)
-
-#undef CUDA_RANDOM_XORSHIFT64
-#undef CUDA_RANDOM_XORSHIFT1024
-#undef CUDA_SORT_UNSIGNED
 }  // namespace Test
-#else
-void KOKKOS_ALGORITHMS_UNITTESTS_TESTCUDA_PREVENT_LINK_ERROR() {}
-#endif /* #ifdef KOKKOS_ENABLE_CUDA */

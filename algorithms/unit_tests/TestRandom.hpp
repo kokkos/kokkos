@@ -493,9 +493,9 @@ void test_random(unsigned int num_draws) {
 
 template<typename ExecutionSpace>
 void test_random_xorshift64() {
-#ifdef KOKKOS_ENABLE_SYCL
+#if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA)
         const int num_draws = 132141141;
-#else
+#else // SERIAL, HPX, OPENMP
         const int num_draws = 10240000;
 #endif
   Impl::test_random<Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(
@@ -507,9 +507,9 @@ void test_random_xorshift64() {
 
 template<typename ExecutionSpace>
 void test_random_xorshift1024() {
-        #ifdef KOKKOS_ENABLE_SYCL
+#if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA)
         const int num_draws = 52428813;
-#else
+#else // SERIAL, HPX, OPENMP
         const int num_draws = 10130144;
 #endif
   Impl::test_random<

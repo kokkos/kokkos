@@ -42,46 +42,18 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_HPX
-
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
 
-//----------------------------------------------------------------------------
 #include <TestRandom.hpp>
 #include <TestSort.hpp>
-#include <iomanip>
+
+#include <TestHPX_Category.hpp>
 
 namespace Test {
 
-#define HPX_RANDOM_XORSHIFT64(num_draws)                             \
-  TEST(hpx, Random_XorShift64) {                                     \
-    Impl::test_random<                                               \
-        Kokkos::Random_XorShift64_Pool<Kokkos::Experimental::HPX> >( \
-        num_draws);                                                  \
-  }
-
-#define HPX_RANDOM_XORSHIFT1024(num_draws)                             \
-  TEST(hpx, Random_XorShift1024) {                                     \
-    Impl::test_random<                                                 \
-        Kokkos::Random_XorShift1024_Pool<Kokkos::Experimental::HPX> >( \
-        num_draws);                                                    \
-  }
-
-#define HPX_SORT_UNSIGNED(size)                                 \
-  TEST(hpx, SortUnsigned) {                                     \
-    Impl::test_sort<Kokkos::Experimental::HPX, unsigned>(size); \
-  }
-
-HPX_RANDOM_XORSHIFT64(10240000)
-HPX_RANDOM_XORSHIFT1024(10130144)
-HPX_SORT_UNSIGNED(171)
-
-#undef HPX_RANDOM_XORSHIFT64
-#undef HPX_RANDOM_XORSHIFT1024
-#undef HPX_SORT_UNSIGNED
+TEST(TEST_CATEGORY, Random_XorShift64) { test_random_xorshift64<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, Random_XorShift1024_0) { test_random_xorshift1024<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, SortUnsigned) {
+  Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
+}
 }  // namespace Test
-#else
-void KOKKOS_ALGORITHMS_UNITTESTS_TESTHPX_PREVENT_LINK_ERROR() {}
-#endif
