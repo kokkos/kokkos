@@ -42,9 +42,6 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_SYCL
-
 #include <cstdint>
 #include <iostream>
 #include <iomanip>
@@ -80,6 +77,3 @@ TEST(sycl, SortUnsigned) {
   Impl::test_sort<Kokkos::Experimental::SYCL, unsigned>(171);
 }
 }  // namespace Test
-#else
-void KOKKOS_ALGORITHMS_UNITTESTS_TESTSYCL_PREVENT_LINK_ERROR() {}
-#endif /* #ifdef KOKKOS_ENABLE_SYCL */
