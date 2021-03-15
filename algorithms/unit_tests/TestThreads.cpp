@@ -51,8 +51,12 @@
 
 namespace Test {
 
-TEST(TEST_CATEGORY, Random_XorShift64) { test_random_xorshift64<TEST_EXECSPACE>(); }
-TEST(TEST_CATEGORY, Random_XorShift1024_0) { test_random_xorshift1024<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, Random_XorShift64) {
+  test_random_xorshift64<TEST_EXECSPACE>();
+}
+TEST(TEST_CATEGORY, Random_XorShift1024_0) {
+  test_random_xorshift1024<TEST_EXECSPACE>();
+}
 TEST(TEST_CATEGORY, SortUnsigned) {
   Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
 }
