@@ -128,7 +128,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
   int team_size_recommended(FunctorType const& /*f*/,
                             ParallelForTag const&) const {
     // FIXME_SYCL optimize
-    return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+    return m_space.impl_internal_space_instance()->m_maxWorkgroupSize;
   }
 
   template <typename FunctorType>
@@ -341,7 +341,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
     // If no scratch memory per thread is requested, the maximum is simply the
     // maximum number of threads allowed in a workgroup.
     if (m_thread_scratch_size[0] == 0)
-      return m_space.impl_internal_space_instance()->m_maxThreadsPerSM;
+      return m_space.impl_internal_space_instance()->m_maxWorkgroupSize;
 
     // Otherwise, we choose the maximum as the minimum of the number of threads
     // allowed in a workgroup and the number of threads that allow allocating
@@ -354,7 +354,7 @@ class TeamPolicyInternal<Kokkos::Experimental::SYCL, Properties...>
          m_team_scratch_size[0]) /
         m_thread_scratch_size[0];
     return std::min<int>(
-        m_space.impl_internal_space_instance()->m_maxThreadsPerSM,
+        m_space.impl_internal_space_instance()->m_maxWorkgroupSize,
         max_threads_for_memory);
   }
 

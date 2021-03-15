@@ -68,7 +68,7 @@ class SYCLInternal {
 
   int m_syclDev = -1;
 
-  size_t m_maxThreadsPerSM    = 0;
+  size_t m_maxWorkgroupSize   = 0;
   uint32_t m_maxConcurrency   = 0;
   uint64_t m_maxShmemPerBlock = 0;
 
