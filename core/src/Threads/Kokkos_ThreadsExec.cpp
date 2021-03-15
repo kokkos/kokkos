@@ -111,7 +111,7 @@ namespace Impl {
 
 void execute_function_noop(ThreadsExec &, const void *) {}
 
-void ThreadsExec::driver(void) {
+void ThreadsExec::driver() {
   SharedAllocationRecord<void, void>::tracking_enable();
 
   ThreadsExec this_thread;

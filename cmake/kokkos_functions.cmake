@@ -922,6 +922,9 @@ ENDFUNCTION()
 #       DIRECTORY   --> all files in directory
 #       PROJECT     --> all files/targets in a project/subproject
 #
+# NOTE: this is VERY DIFFERENT than the version in KokkosConfigCommon.cmake.in.
+# This version explicitly uses nvcc_wrapper.
+#
 FUNCTION(kokkos_compilation)
     # check whether the compiler already supports building CUDA
     KOKKOS_CXX_COMPILER_CUDA_TEST(Kokkos_CXX_COMPILER_COMPILES_CUDA)
@@ -943,10 +946,21 @@ FUNCTION(kokkos_compilation)
         MESSAGE(FATAL_ERROR "Kokkos could not find 'kokkos_launch_compiler'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/launcher'")
     ENDIF()
 
+    # find nvcc_wrapper
+    FIND_PROGRAM(Kokkos_NVCC_WRAPPER
+        NAMES           nvcc_wrapper
+        HINTS           ${PROJECT_SOURCE_DIR}
+        PATHS           ${PROJECT_SOURCE_DIR}
+        PATH_SUFFIXES   bin)
+
+    IF(NOT Kokkos_COMPILE_LAUNCHER)
+        MESSAGE(FATAL_ERROR "Kokkos could not find 'nvcc_wrapper'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/nvcc_wrapper'")
+    ENDIF()
+
     IF(COMP_GLOBAL)
         # if global, don't bother setting others
-        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
-        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
+        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}")
+        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}")
     ELSE()
         FOREACH(_TYPE PROJECT DIRECTORY TARGET SOURCE)
             # make project/subproject scoping easy, e.g. KokkosCompilation(PROJECT) after project(...)
@@ -957,8 +971,8 @@ FUNCTION(kokkos_compilation)
             # set the properties if defined
             IF(COMP_${_TYPE})
                 # MESSAGE(STATUS "Using nvcc_wrapper :: ${_TYPE} :: ${COMP_${_TYPE}}")
-                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
-                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${CMAKE_CXX_COMPILER}")
+                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}")
+                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}")
             ENDIF()
         ENDFOREACH()
     ENDIF()

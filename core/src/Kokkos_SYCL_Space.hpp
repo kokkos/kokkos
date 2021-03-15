@@ -214,7 +214,7 @@ struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::Experimental::SYCLDeviceUSMSpace,
     Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL>> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 
@@ -222,7 +222,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<
     Kokkos::HostSpace, Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL>> {
   enum : bool { value = false };
-  inline static void verify(void) {
+  inline static void verify() {
     Experimental::SYCLDeviceUSMSpace::impl_access_error();
   }
   inline static void verify(const void* p) {

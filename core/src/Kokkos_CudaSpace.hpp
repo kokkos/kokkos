@@ -755,7 +755,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
                                            Kokkos::HostSpace> {
   enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {
+  KOKKOS_INLINE_FUNCTION static void verify() {
     Kokkos::abort("Cuda code attempted to access HostSpace memory");
   }
 
@@ -769,7 +769,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
                                            Kokkos::CudaUVMSpace> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 
@@ -778,7 +778,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
                                            Kokkos::CudaHostPinnedSpace> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 
@@ -789,7 +789,7 @@ struct VerifyExecutionCanAccessMemorySpace<
                             Kokkos::CudaSpace>::type,
     OtherSpace> {
   enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {
+  KOKKOS_INLINE_FUNCTION static void verify() {
     Kokkos::abort("Cuda code attempted to access unknown Space memory");
   }
 
@@ -804,7 +804,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
                                            Kokkos::CudaSpace> {
   enum : bool { value = false };
-  inline static void verify(void) { CudaSpace::access_error(); }
+  inline static void verify() { CudaSpace::access_error(); }
   inline static void verify(const void* p) { CudaSpace::access_error(p); }
 };
 
@@ -813,7 +813,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
                                            Kokkos::CudaUVMSpace> {
   enum : bool { value = true };
-  inline static void verify(void) {}
+  inline static void verify() {}
   inline static void verify(const void*) {}
 };
 
@@ -822,7 +822,7 @@ template <>
 struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
                                            Kokkos::CudaHostPinnedSpace> {
   enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify(void) {}
+  KOKKOS_INLINE_FUNCTION static void verify() {}
   KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 

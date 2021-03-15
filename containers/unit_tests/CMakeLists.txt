@@ -42,7 +42,6 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       list(APPEND UnitTestSources ${file})
     endforeach()
     list(REMOVE_ITEM UnitTestSources
-        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_Bitset.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ScatterView.cpp
         ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_UnorderedMap.cpp
         )

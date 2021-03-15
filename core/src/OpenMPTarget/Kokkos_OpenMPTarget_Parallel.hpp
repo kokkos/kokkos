@@ -51,6 +51,8 @@
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Exec.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
 
+#define KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
+
 namespace Kokkos {
 namespace Impl {
 
@@ -582,9 +584,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto league_size   = m_policy.league_size();
     const auto team_size     = m_policy.team_size();
     const auto vector_length = m_policy.impl_vector_length();
-    const auto nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                            : league_size;
 
     const size_t shmem_size_L0 = m_policy.scratch_size(0, team_size);
     const size_t shmem_size_L1 = m_policy.scratch_size(1, team_size);
@@ -596,11 +595,46 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_OPENMPTARGET - If the team_size is not a multiple of 32, the
     // scratch implementation does not work in the Release or RelWithDebugInfo
     // mode but works in the Debug mode.
+
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    // nteams should not exceed the maximum in-flight teams possible.
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
 
-    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+#ifdef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
+// Performing our own scheduling of teams to avoid separation of code between
+// teams-distribute and parallel. Gave a 2x performance boost in test cases with
+// the clang compiler. atomic_compare_exchange can be avoided since the standard
+// guarantees that the number of teams specified in the `num_teams` clause is
+// always less than or equal to the maximum concurrently running teams.
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) \
+    map(to                                                         \
+        : a_functor) is_device_ptr(scratch_ptr)
+#pragma omp parallel
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
 
+      // Iterate through the number of teams until league_size and assign the
+      // league_id accordingly
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename Policy::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          m_functor(team);
+        }
+      } else
+        Kokkos::abort("`num_teams` clause was not respected.\n");
+    }
+
+#else
+// Saving the older implementation that uses `atomic_compare_exchange` to
+// calculate the shared memory block index and `distribute` clause to distribute
+// teams.
 #pragma omp target teams distribute map(to                   \
                                         : a_functor)         \
     is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
@@ -634,6 +668,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // blocks.
       lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
     }
+#endif
   }
 
   template <class TagType>
@@ -646,9 +681,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto league_size   = m_policy.league_size();
     const auto team_size     = m_policy.team_size();
     const auto vector_length = m_policy.impl_vector_length();
-    const auto nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                            ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                            : league_size;
 
     FunctorType a_functor(m_functor);
 
@@ -660,9 +692,35 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
 
-    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+#ifdef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) \
+    map(to                                                         \
+        : a_functor) is_device_ptr(scratch_ptr)
+#pragma omp parallel
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
 
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename Policy::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          m_functor(TagType(), team);
+        }
+      } else
+        Kokkos::abort("`num_teams` clause was not respected.\n");
+    }
+
+#else
+// Saving the older implementation that uses `atomic_compare_exchange` to
+// calculate the shared memory block index and `distribute` clause to distribute
+// teams.
 #pragma omp target teams distribute map(to                   \
                                         : a_functor)         \
     is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
@@ -696,6 +754,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // blocks.
       lock_team = atomic_compare_exchange(&lock_array[shmem_block_index], 1, 0);
     }
+#endif
   }
 
  public:
@@ -726,9 +785,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
     const int vector_length = p.impl_vector_length();
-    const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                           ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                           : league_size;
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
@@ -740,9 +796,36 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
 
-    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+#ifdef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+                                                                       : f) \
+    is_device_ptr(scratch_ptr)
+#pragma omp parallel reduction(+ : result)
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
 
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename PolicyType::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          f(team, result);
+        }
+      } else
+        Kokkos::abort("`num_teams` clause was not respected.\n");
+    }
+
+    *result_ptr = result;
+#else
+// Saving the older implementation that uses `atomic_compare_exchange` to
+// calculate the shared memory block index and `distribute` clause to distribute
+// teams.
 #pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
          map(to:f) map(tofrom:result) reduction(+: result) \
     is_device_ptr(scratch_ptr, lock_array)
@@ -778,6 +861,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     }
 
     *result_ptr = result;
+#endif
   }
 
   template <class TagType>
@@ -793,9 +877,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
     const int vector_length = p.impl_vector_length();
-    const int nteams        = OpenMPTargetExec::MAX_ACTIVE_TEAMS < league_size
-                           ? OpenMPTargetExec::MAX_ACTIVE_TEAMS
-                           : league_size;
 
     const size_t shmem_size_L0 = p.scratch_size(0, team_size);
     const size_t shmem_size_L1 = p.scratch_size(1, team_size);
@@ -807,9 +888,37 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     // Maximum active teams possible.
     int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
 
-    int* lock_array = OpenMPTargetExec::get_lock_array(max_active_teams);
+#ifdef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+                                                                       : f) \
+    is_device_ptr(scratch_ptr)
+#pragma omp parallel reduction(+ : result)
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
 
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename PolicyType::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          f(TagType(), team, result);
+        }
+      } else
+        Kokkos::abort("`num_teams` clause was not respected.\n");
+    }
+
+    *result_ptr = result;
+
+#else
+// Saving the older implementation that uses `atomic_compare_exchange` to
+// calculate the shared memory block index and `distribute` clause to distribute
+// teams.
 #pragma omp target teams distribute num_teams(nteams) thread_limit(team_size) \
          map(to:f) map(tofrom:result) reduction(+: result) \
     is_device_ptr(scratch_ptr, lock_array)
@@ -833,8 +942,9 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 #pragma omp parallel num_threads(team_size) reduction(+ : inner_result)
       {
         typename PolicyType::member_type team(
-            i, league_size, team_size, vector_length, scratch_ptr, 0, 0, 0);
-        f(TagType(), team, result);
+            i, league_size, team_size, vector_length, scratch_ptr,
+            shmem_block_index, shmem_size_L0, shmem_size_L1);
+        f(TagType(), team, inner_result);
       }
       result = inner_result;
 
@@ -844,6 +954,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     }
 
     *result_ptr = result;
+#endif
   }
 
   inline static void execute(const FunctorType& f, const PolicyType& p,
@@ -984,4 +1095,5 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenMPTargetExecTeamMember> {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#undef KOKKOS_IMPL_LOCK_FREE_HIERARCHICAL
 #endif /* KOKKOS_OPENMPTARGET_PARALLEL_HPP */

@@ -42,71 +42,52 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_CLOCKTIC_HPP
-#define KOKKOS_CLOCKTIC_HPP
+#include <Kokkos_Core.hpp>
+#include <cstdio>
 
-#include <Kokkos_Macros.hpp>
-#include <stdint.h>
-#include <chrono>
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-#include <omp.h>
-#endif
+struct CountFunctor {
+  KOKKOS_FUNCTION void operator()(const long i, long& lcount) const {
+    lcount += (i % 2) == 0;
+  }
+};
 
-namespace Kokkos {
-namespace Impl {
+int main(int argc, char* argv[]) {
+  Kokkos::initialize(argc, argv);
+  Kokkos::DefaultExecutionSpace::print_configuration(std::cout);
 
-/**\brief  Quick query of clock register tics
- *
- *  Primary use case is to, with low overhead,
- *  obtain a integral value that consistently varies
- *  across concurrent threads of execution within
- *  a parallel algorithm.
- *  This value is often used to "randomly" seed an
- *  attempt to acquire an indexed resource (e.g., bit)
- *  from an array of resources (e.g., bitset) such that
- *  concurrent threads will have high likelihood of
- *  having different index-seed values.
- */
+  if (argc < 2) {
+    fprintf(stderr, "Usage: %s [<kokkos_options>] <size>\n", argv[0]);
+    Kokkos::finalize();
+    exit(1);
+  }
 
-KOKKOS_FORCEINLINE_FUNCTION
-uint64_t clock_tic() noexcept {
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
+  const long n = strtol(argv[1], nullptr, 10);
 
-  // Return value of 64-bit hi-res clock register.
+  printf("Number of even integers from 0 to %ld\n", n - 1);
 
-  return clock64();
+  Kokkos::Timer timer;
+  timer.reset();
 
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-  return uint64_t(omp_get_wtime() * 1.e9);
-#elif defined(__i386__) || defined(__x86_64)
+  // Compute the number of even integers from 0 to n-1, in parallel.
+  long count = 0;
+  CountFunctor functor;
+  Kokkos::parallel_reduce(n, functor, count);
 
-  // Return value of 64-bit hi-res clock register.
+  double count_time = timer.seconds();
+  printf("  Parallel: %ld    %10.6f\n", count, count_time);
 
-  unsigned a = 0, d = 0;
+  timer.reset();
 
-  __asm__ volatile("rdtsc" : "=a"(a), "=d"(d));
+  // Compare to a sequential loop.
+  long seq_count = 0;
+  for (long i = 0; i < n; ++i) {
+    seq_count += (i % 2) == 0;
+  }
 
-  return ((uint64_t)a) | (((uint64_t)d) << 32);
+  count_time = timer.seconds();
+  printf("Sequential: %ld    %10.6f\n", seq_count, count_time);
 
-#elif defined(__powerpc) || defined(__powerpc__) || defined(__powerpc64__) || \
-    defined(__POWERPC__) || defined(__ppc__) || defined(__ppc64__)
+  Kokkos::finalize();
 
-  unsigned int cycles = 0;
-
-  asm volatile("mftb %0" : "=r"(cycles));
-
-  return (uint64_t)cycles;
-
-#else
-
-  return (uint64_t)std::chrono::high_resolution_clock::now()
-      .time_since_epoch()
-      .count();
-
-#endif
+  return (count == seq_count) ? 0 : -1;
 }
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-#endif  // KOKKOS_CLOCKTIC_HPP
