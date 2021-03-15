@@ -53,27 +53,31 @@
 #include <TestRandom.hpp>
 #include <TestSort.hpp>
 
+#include <TestSYCL_Category.hpp>
+
 namespace Test {
 
-void sycl_test_random_xorshift64(size_t num_draws) {
-  Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Experimental::SYCL>>(
+template<typename ExecutionSpace>
+void test_random_xorshift64(size_t num_draws) {
+  Impl::test_random<Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(
       num_draws);
   Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Device<
-      Kokkos::Experimental::SYCL, Kokkos::Experimental::SYCLDeviceUSMSpace>>>(
+      ExecutionSpace, typename ExecutionSpace::memory_space>>>(
       num_draws);
 }
 
-void sycl_test_random_xorshift1024(size_t num_draws) {
+template<typename ExecutionSpace>
+void test_random_xorshift1024(size_t num_draws) {
   Impl::test_random<
-      Kokkos::Random_XorShift1024_Pool<Kokkos::Experimental::SYCL>>(num_draws);
+      Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(num_draws);
   Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Device<
-      Kokkos::Experimental::SYCL, Kokkos::Experimental::SYCLDeviceUSMSpace>>>(
+      ExecutionSpace, typename ExecutionSpace::memory_space>>>(
       num_draws);
 }
 
-TEST(sycl, Random_XorShift64) { sycl_test_random_xorshift64(132141141); }
-TEST(sycl, Random_XorShift1024_0) { sycl_test_random_xorshift1024(52428813); }
-TEST(sycl, SortUnsigned) {
-  Impl::test_sort<Kokkos::Experimental::SYCL, unsigned>(171);
+TEST(TEST_CATEGORY, Random_XorShift64) { test_random_xorshift64<TEST_EXECSPACE>(132141141); }
+TEST(TEST_CATEGORY, Random_XorShift1024_0) { test_random_xorshift1024<TEST_EXECSPACE>(52428813); }
+TEST(TEST_CATEGORY, SortUnsigned) {
+  Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
 }
 }  // namespace Test
