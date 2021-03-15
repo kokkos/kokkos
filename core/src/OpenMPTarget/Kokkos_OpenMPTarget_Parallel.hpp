@@ -209,14 +209,10 @@ template <class FunctorType, class PolicyType, class ReducerType,
           class PointerType, class ValueType>
 struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
                                 PointerType, ValueType, 0, 1> {
-// FIXME_OPENMPTARGET - custom reductions are not yet supported by the nvidia
-// compiler.
-#if !defined(KOKKOS_COMPILER_PGI)
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
-#endif
 
   template <class TagType>
   inline static
@@ -235,17 +231,10 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
     ValueType result = ValueType();
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
 
-// FIXME_OPENMPTARGET - The nvidia compiler does not support custom reduction
-// yet.
-#if !defined(KOKKOS_COMPILER_PGI)
 #pragma omp target teams distribute parallel for num_teams(512) map(to   \
                                                                     : f) \
     reduction(custom                                                     \
               : result)
-#else
-#pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
-    reduction(+: result)
-#endif
     for (auto i = begin; i < end; i++) f(i, result);
     // clang-format on
     *result_ptr = result;
@@ -268,17 +257,10 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
     ValueType result = ValueType();
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
 
-// FIXME_OPENMPTARGET - The nvidia compiler does not support custom reduction
-// yet.
-#if !defined(KOKKOS_COMPILER_PGI)
 #pragma omp target teams distribute parallel for num_teams(512) map(to   \
                                                                     : f) \
     reduction(custom                                                     \
               : result)
-#else
-#pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
-    reduction(+: result)
-#endif
     for (auto i = begin; i < end; i++) f(TagType(), i, result);
     // clang-format on
 
