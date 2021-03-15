@@ -41,7 +41,7 @@ SET(KOKKOS_HPX_NAME Experimental::HPX)
 SET(KOKKOS_OPENMP_FEATURE_LEVEL 999)
 SET(KOKKOS_OPENMP_NAME OpenMP)
 
-# FIXME_OPENMPTARGET - NVIDIA compiler only compiles the first 8 incremental tests for now.
+# FIXME_OPENMPTARGET - PGI (NVIDIA) compiler only compiles the first 8 incremental tests for the OpenMPTarget backend.
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL "PGI")
 SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 8)
 ELSE()
@@ -277,7 +277,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     )
 endif()
 
-## FIXME_OPENMPTARGET - Comment non-passing tests with the nvidia compiler
+## FIXME_OPENMPTARGET - Comment non-passing tests with the PGI (NVIDIA) compiler
 if(Kokkos_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "PGI")
   list(REMOVE_ITEM OpenMPTarget_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_UniqueToken.cpp
