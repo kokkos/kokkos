@@ -94,9 +94,7 @@ SYCL::SYCL(const sycl::queue& stream)
 }
 
 int SYCL::concurrency() {
-  // FIXME_SYCL We need a value larger than 1 here for some tests to pass,
-  // clearly this is true but not the roght value
-  return 2;
+  return Impl::SYCLInternal::singleton().m_maxConcurrency;
 }
 
 const char* SYCL::name() { return "SYCL"; }

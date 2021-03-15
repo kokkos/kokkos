@@ -25,7 +25,7 @@ inline TileSizeProperties get_tile_size_properties<Kokkos::Experimental::SYCL>(
     const Kokkos::Experimental::SYCL& space) {
   TileSizeProperties properties;
   properties.max_threads =
-      space.impl_internal_space_instance()->m_maxThreadsPerSM;
+      space.impl_internal_space_instance()->m_maxWorkgroupSize;
   properties.default_largest_tile_size = 16;
   properties.default_tile_size         = 2;
   properties.max_total_tile_size       = properties.max_threads;

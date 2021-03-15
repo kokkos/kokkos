@@ -124,8 +124,13 @@ void SYCLInternal::initialize(const sycl::queue& q) {
     const sycl::device& d = m_queue->get_device();
     std::cout << SYCL::SYCLDevice(d) << '\n';
 
-    m_maxThreadsPerSM =
+    m_maxWorkgroupSize =
         d.template get_info<sycl::info::device::max_work_group_size>();
+    // FIXME_SYCL this should give the correct value for NVIDIA GPUs
+    m_maxConcurrency =
+        m_maxWorkgroupSize * 2 *
+        d.template get_info<sycl::info::device::max_compute_units>();
+
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
     m_indirectKernelMem.reset(*m_queue);

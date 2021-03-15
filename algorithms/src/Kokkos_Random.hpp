@@ -668,6 +668,25 @@ struct Random_UniqueIndex<Kokkos::Experimental::HIP> {
 };
 #endif
 
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct Random_UniqueIndex<Kokkos::Experimental::SYCL> {
+  using locks_view_type = View<int*, Kokkos::Experimental::SYCL>;
+  KOKKOS_FUNCTION
+  static int get_state_idx(const locks_view_type& locks_) {
+    // FIXME_SYCL get an index that is specific to each thread.
+    // Starting from 0 for every thread is not incorrect but
+    // will lead to a lot of contention and loop iterations.
+    int i = 0;
+    while (Kokkos::atomic_compare_exchange(&locks_(i), 0, 1)) {
+      i += 1;
+      i = i % static_cast<int>(locks_.extent(0));
+    }
+    return i;
+  }
+};
+#endif
+
 }  // namespace Impl
 
 template <class DeviceType>
