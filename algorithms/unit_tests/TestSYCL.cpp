@@ -51,34 +51,6 @@
 
 namespace Test {
 
-template<typename ExecutionSpace>
-void test_random_xorshift64() {
-#ifdef KOKKOS_ENABLE_SYCL
-	const int num_draws = 132141141;
-#else
-	const int num_draws = 10240000;
-#endif
-  Impl::test_random<Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(
-      num_draws);
-  Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Device<
-      ExecutionSpace, typename ExecutionSpace::memory_space>>>(
-      num_draws);
-}
-
-template<typename ExecutionSpace>
-void test_random_xorshift1024() {
-	#ifdef KOKKOS_ENABLE_SYCL
-        const int num_draws = 52428813;
-#else
-        const int num_draws = 10130144;
-#endif
-  Impl::test_random<
-      Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(num_draws);
-  Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Device<
-      ExecutionSpace, typename ExecutionSpace::memory_space>>>(
-      num_draws);
-}
-
 TEST(TEST_CATEGORY, Random_XorShift64) { test_random_xorshift64<TEST_EXECSPACE>(); }
 TEST(TEST_CATEGORY, Random_XorShift1024_0) { test_random_xorshift1024<TEST_EXECSPACE>(); }
 TEST(TEST_CATEGORY, SortUnsigned) {

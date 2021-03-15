@@ -42,47 +42,18 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_SERIAL
-
 #include <gtest/gtest.h>
-
-#include <Kokkos_Core.hpp>
 
 #include <TestRandom.hpp>
 #include <TestSort.hpp>
-#include <iomanip>
 
-//----------------------------------------------------------------------------
+#include <TestSerial_Category.hpp>
 
 namespace Test {
 
-#define SERIAL_RANDOM_XORSHIFT64(num_draws)                             \
-  TEST(serial, Random_XorShift64) {                                     \
-    Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Serial> >( \
-        num_draws);                                                     \
-  }
-
-#define SERIAL_RANDOM_XORSHIFT1024(num_draws)                             \
-  TEST(serial, Random_XorShift1024) {                                     \
-    Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Serial> >( \
-        num_draws);                                                       \
-  }
-
-#define SERIAL_SORT_UNSIGNED(size)                   \
-  TEST(serial, SortUnsigned) {                       \
-    Impl::test_sort<Kokkos::Serial, unsigned>(size); \
-  }
-
-SERIAL_RANDOM_XORSHIFT64(10240000)
-SERIAL_RANDOM_XORSHIFT1024(10130144)
-SERIAL_SORT_UNSIGNED(171)
-
-#undef SERIAL_RANDOM_XORSHIFT64
-#undef SERIAL_RANDOM_XORSHIFT1024
-#undef SERIAL_SORT_UNSIGNED
-
+TEST(TEST_CATEGORY, Random_XorShift64) { test_random_xorshift64<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, Random_XorShift1024_0) { test_random_xorshift1024<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, SortUnsigned) {
+  Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
+}
 }  // namespace Test
-#else
-void KOKKOS_ALGORITHMS_UNITTESTS_TESTSERIAL_PREVENT_LINK_ERROR() {}
-#endif  // KOKKOS_ENABLE_SERIAL
