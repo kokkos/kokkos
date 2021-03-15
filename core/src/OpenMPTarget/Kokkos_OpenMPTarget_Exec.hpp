@@ -1266,7 +1266,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
       ValueType tmp = ValueType();
       lambda(i, tmp);
-      join(tmp_scratch[0], tmp);
+      tmp_scratch[0] += tmp;
     }
   } else {
 #pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
