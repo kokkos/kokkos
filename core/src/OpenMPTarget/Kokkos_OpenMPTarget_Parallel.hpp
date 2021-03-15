@@ -963,6 +963,123 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   }
 };
 
+template <class FunctorType, class ReducerType, class PointerType,
+          class ValueType, class... PolicyArgs>
+struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
+                                ReducerType, PointerType, ValueType, 0, 1> {
+  using PolicyType = TeamPolicyInternal<PolicyArgs...>;
+  template <class TagType>
+  inline static
+      typename std::enable_if<std::is_same<TagType, void>::value>::type
+      execute_impl(const FunctorType& f, const PolicyType& p,
+                   PointerType result_ptr) {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+
+#pragma omp declare reduction(                                         \
+    custom:ValueType                                                   \
+    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
+    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+    const int league_size      = p.league_size();
+    const int team_size        = p.team_size();
+    const int vector_length    = p.impl_vector_length();
+    const size_t shmem_size_L0 = p.scratch_size(0, team_size);
+    const size_t shmem_size_L1 = p.scratch_size(1, team_size);
+    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1);
+    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+
+    ValueType result = ValueType();
+
+    // Maximum active teams possible.
+    int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
+
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+                                                                       : f) \
+    is_device_ptr(scratch_ptr)
+#pragma omp parallel reduction(custom : result)
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
+
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename PolicyType::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          f(team, result);
+        }
+      } else
+        Kokkos::abort("`num_teams` clause was not respected.\n");
+    }
+
+    *result_ptr = result;
+  }
+
+  template <class TagType>
+  inline static
+      typename std::enable_if<!std::is_same<TagType, void>::value>::type
+      execute_impl(const FunctorType& f, const PolicyType& p,
+                   PointerType result_ptr) {
+    OpenMPTargetExec::verify_is_process(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+    OpenMPTargetExec::verify_initialized(
+        "Kokkos::Experimental::OpenMPTarget parallel_for");
+
+#pragma omp declare reduction(                                         \
+    custom:ValueType                                                   \
+    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
+    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+    const int league_size      = p.league_size();
+    const int team_size        = p.team_size();
+    const int vector_length    = p.impl_vector_length();
+    const size_t shmem_size_L0 = p.scratch_size(0, team_size);
+    const size_t shmem_size_L1 = p.scratch_size(1, team_size);
+    OpenMPTargetExec::resize_scratch(team_size, shmem_size_L0, shmem_size_L1);
+    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+
+    ValueType result = ValueType();
+
+    // Maximum active teams possible.
+    int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
+
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+                                                                       : f) \
+    is_device_ptr(scratch_ptr)
+#pragma omp parallel reduction(custom : result)
+    {
+      const int blockIdx = omp_get_team_num();
+      const int gridDim  = omp_get_num_teams();
+
+      // Guarantee that the compilers respect the `num_teams` clause
+      if (gridDim <= nteams) {
+        for (int league_id = blockIdx; league_id < league_size;
+             league_id += gridDim) {
+          typename PolicyType::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              blockIdx, shmem_size_L0, shmem_size_L1);
+          f(TagType(), team, result);
+        }
+      } else
+        Kokkos::abort("`num_teams` clause was not respected.\n");
+    }
+
+    *result_ptr = result;
+  }
+
+  inline static void execute(const FunctorType& f, const PolicyType& p,
+                             PointerType ptr) {
+    execute_impl<typename PolicyType::work_tag>(f, p, ptr);
+  }
+};
+
 template <class FunctorType, class ReducerType, class... Properties>
 class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      ReducerType, Kokkos::Experimental::OpenMPTarget> {
