@@ -184,7 +184,7 @@ class SYCLTeamMember {
 
   // FIXME_SYCL move somewhere else and combine with other places that do
   // parallel_scan
-  // Exclusive scan returning the itotal sum.
+  // Exclusive scan returning the total sum.
   // n is required to be a power of two and
   // temp must point to an array containing the data to be processed
   // The accumulated value is returned.
