@@ -1411,8 +1411,13 @@ struct TestMDRange_3D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{0, 0, 0}}, point_type{{N0, N1, N2}},
+                       tile_type{{8, 8, 4}});
+#else
       range_type range(point_type{{0, 0, 0}}, point_type{{N0, N1, N2}},
                        tile_type{{8, 8, 8}});
+#endif
       TestMDRange_3D functor(N0, N1, N2);
 
       parallel_for(range, functor);
@@ -1874,8 +1879,13 @@ struct TestMDRange_4D {
       int s1 = 1;
       int s2 = 1;
       int s3 = 1;
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{s0, s1, s2, s3}},
+                       point_type{{N0, N1, N2, N3}}, tile_type{{3, 11, 3, 2}});
+#else
       range_type range(point_type{{s0, s1, s2, s3}},
                        point_type{{N0, N1, N2, N3}}, tile_type{{3, 11, 3, 3}});
+#endif
       TestMDRange_4D functor(N0, N1, N2, N3);
 
       parallel_for(range, functor);
@@ -2440,9 +2450,15 @@ struct TestMDRange_5D {
       int s2 = 1;
       int s3 = 1;
       int s4 = 1;
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{s0, s1, s2, s3, s4}},
+                       point_type{{N0, N1, N2, N3, N4}},
+                       tile_type{{3, 3, 3, 3, 3}});
+#else
       range_type range(point_type{{s0, s1, s2, s3, s4}},
                        point_type{{N0, N1, N2, N3, N4}},
                        tile_type{{3, 3, 3, 3, 5}});
+#endif
 
       TestMDRange_5D functor(N0, N1, N2, N3, N4);
 
@@ -2769,9 +2785,15 @@ struct TestMDRange_6D {
       int s4 = 1;
       int s5 = 1;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{s0, s1, s2, s3, s4, s5}},
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       tile_type{{3, 3, 3, 2, 2, 2}});
+#else
       range_type range(point_type{{s0, s1, s2, s3, s4, s5}},
                        point_type{{N0, N1, N2, N3, N4, N5}},
                        tile_type{{3, 3, 3, 3, 3, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -2788,8 +2810,13 @@ struct TestMDRange_6D {
       using range_type =
           typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>,
                                          Kokkos::IndexType<int>>;
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range({{0, 0, 0, 0, 0, 0}}, {{N0, N1, N2, N3, N4, N5}},
+                       {{3, 3, 3, 2, 2, 2}});
+#else
       range_type range({{0, 0, 0, 0, 0, 0}}, {{N0, N1, N2, N3, N4, N5}},
                        {{3, 3, 3, 3, 3, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -2809,8 +2836,13 @@ struct TestMDRange_6D {
           typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>,
                                          Kokkos::IndexType<int>>;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range({{0, 0, 0, 0, 0, 0}}, {{N0, N1, N2, N3, N4, N5}},
+                       {{3, 3, 3, 2, 2, 2}});
+#else
       range_type range({{0, 0, 0, 0, 0, 0}}, {{N0, N1, N2, N3, N4, N5}},
                        {{3, 3, 3, 3, 3, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -2829,8 +2861,13 @@ struct TestMDRange_6D {
       using range_type =
           typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>,
                                          Kokkos::IndexType<int>>;
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range({{0, 0, 0, 0, 0, 0}}, {{N0, N1, N2, N3, N4, N5}},
+                       {{3, 3, 3, 2, 2, 2}});
+#else
       range_type range({{0, 0, 0, 0, 0, 0}}, {{N0, N1, N2, N3, N4, N5}},
                        {{3, 3, 3, 3, 3, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -2854,7 +2891,6 @@ struct TestMDRange_6D {
       using range_type =
           typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6>,
                                          Kokkos::IndexType<int>>;
-
       range_type range({{1, 1, 1, 1, 1, 1}}, {{N0, N1, N2, N3, N4, N5}},
                        {{3, 3, 3, 2, 2, 1}});
 
@@ -2893,9 +2929,15 @@ struct TestMDRange_6D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{0, 0, 0, 0, 0, 0}},
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       tile_type{{2, 4, 4, 2, 2, 2}});
+#else
       range_type range(point_type{{0, 0, 0, 0, 0, 0}},
                        point_type{{N0, N1, N2, N3, N4, N5}},
                        tile_type{{2, 4, 6, 2, 2, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -3032,10 +3074,16 @@ struct TestMDRange_6D {
       int s3 = 1;
       int s4 = 1;
       int s5 = 1;
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{s0, s1, s2, s3, s4, s5}},
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       tile_type{{3, 3, 3, 2, 2, 2}});
+#else
       // tile dims 3,3,3,3,3,3 more than cuda can handle with debugging
       range_type range(point_type{{s0, s1, s2, s3, s4, s5}},
                        point_type{{N0, N1, N2, N3, N4, N5}},
                        tile_type{{3, 3, 3, 3, 2, 3}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -3073,9 +3121,15 @@ struct TestMDRange_6D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{0, 0, 0, 0, 0, 0}},
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       tile_type{{4, 4, 2, 2, 2, 2}});
+#else
       range_type range(point_type{{0, 0, 0, 0, 0, 0}},
                        point_type{{N0, N1, N2, N3, N4, N5}},
                        tile_type{{4, 4, 4, 2, 2, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -3110,9 +3164,15 @@ struct TestMDRange_6D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{0, 0, 0, 0, 0, 0}},
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       tile_type{{4, 4, 2, 2, 2, 2}});
+#else
       range_type range(point_type{{0, 0, 0, 0, 0, 0}},
                        point_type{{N0, N1, N2, N3, N4, N5}},
                        tile_type{{4, 4, 4, 2, 2, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -3147,9 +3207,15 @@ struct TestMDRange_6D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{0, 0, 0, 0, 0, 0}},
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       tile_type{{4, 4, 2, 2, 2, 2}});
+#else
       range_type range(point_type{{0, 0, 0, 0, 0, 0}},
                        point_type{{N0, N1, N2, N3, N4, N5}},
                        tile_type{{4, 4, 4, 2, 2, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -3184,9 +3250,15 @@ struct TestMDRange_6D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{0, 0, 0, 0, 0, 0}},
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       tile_type{{4, 4, 2, 2, 2, 2}});
+#else
       range_type range(point_type{{0, 0, 0, 0, 0, 0}},
                        point_type{{N0, N1, N2, N3, N4, N5}},
                        tile_type{{4, 4, 4, 2, 2, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -3221,9 +3293,15 @@ struct TestMDRange_6D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{0, 0, 0, 0, 0, 0}},
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       tile_type{{4, 4, 2, 2, 2, 2}});
+#else
       range_type range(point_type{{0, 0, 0, 0, 0, 0}},
                        point_type{{N0, N1, N2, N3, N4, N5}},
                        tile_type{{4, 4, 4, 2, 2, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
@@ -3258,9 +3336,15 @@ struct TestMDRange_6D {
       using tile_type  = typename range_type::tile_type;
       using point_type = typename range_type::point_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+      range_type range(point_type{{0, 0, 0, 0, 0, 0}},
+                       point_type{{N0, N1, N2, N3, N4, N5}},
+                       tile_type{{4, 4, 2, 2, 2, 2}});
+#else
       range_type range(point_type{{0, 0, 0, 0, 0, 0}},
                        point_type{{N0, N1, N2, N3, N4, N5}},
                        tile_type{{4, 4, 4, 2, 2, 2}});
+#endif
 
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
