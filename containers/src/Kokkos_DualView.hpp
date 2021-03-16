@@ -102,8 +102,8 @@ inline Kokkos::Cuda get_cuda_space() {
   return Kokkos::Cuda(Kokkos::Impl::cuda_get_deep_copy_stream());
 }
 
-template <typename Arg>
-inline Kokkos::Cuda get_cuda_space(Arg&) {
+template <typename NonCudaExecSpace>
+inline Kokkos::Cuda get_cuda_space(const NonCudaExecSpace&) {
   return Kokkos::Cuda(Kokkos::Impl::cuda_get_deep_copy_stream());
 }
 
