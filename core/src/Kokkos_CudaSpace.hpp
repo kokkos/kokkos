@@ -278,6 +278,8 @@ class CudaHostPinnedSpace {
 namespace Kokkos {
 namespace Impl {
 
+cudaStream_t cuda_get_deep_copy_stream();
+
 static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaSpace,
                                               Kokkos::CudaSpace>::assignable,
               "");
