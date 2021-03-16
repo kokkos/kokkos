@@ -1,3 +1,4 @@
+/*
 //@HEADER
 // ************************************************************************
 //
@@ -39,6 +40,7 @@
 //
 // ************************************************************************
 //@HEADER
+*/
 
 #ifndef KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_COMMON_HPP
 #define KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_COMMON_HPP
