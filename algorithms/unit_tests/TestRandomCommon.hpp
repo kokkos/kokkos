@@ -1,4 +1,3 @@
-/*
 //@HEADER
 // ************************************************************************
 //
@@ -40,27 +39,20 @@
 //
 // ************************************************************************
 //@HEADER
-*/
 
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_OPENMP
+#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TESTRANDOM_COMMON_HPP
+#define KOKKOS_ALGORITHMS_UNITTESTS_TESTRANDOM_COMMON_HPP
 
-#include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
-
-//----------------------------------------------------------------------------
-#include <TestOpenMP_Category.hpp>
 #include <TestRandom.hpp>
-#include <TestSort.hpp>
-#include <iomanip>
 
 namespace Test {
 
-TEST(openmp, SortUnsigned3D) {
-  Impl::test_3D_sort<Kokkos::OpenMP, unsigned>(171);
+TEST(TEST_CATEGORY, Random_XorShift64) {
+  test_random_xorshift64<TEST_EXECSPACE>();
 }
-
+TEST(TEST_CATEGORY, Random_XorShift1024_0) {
+  test_random_xorshift1024<TEST_EXECSPACE>();
+}
 }  // namespace Test
-#else
-void KOKKOS_ALGORITHMS_UNITTESTS_TESTOPENMP_PREVENT_LINK_ERROR() {}
+
 #endif

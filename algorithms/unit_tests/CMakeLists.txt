@@ -58,8 +58,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
       # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
       file(WRITE ${dir}/dummy.cpp
           "#include <Test${Tag}_Category.hpp>\n"
-	  "#include <TestRandom.hpp>\n"
-	  "#include <TestSort.hpp>\n"
+	  "#include <TestRandomCommon.hpp>\n"
+	  "#include <TestSortCommon.hpp>\n"
       )
       configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ALGORITHM_SOURCES ${file})

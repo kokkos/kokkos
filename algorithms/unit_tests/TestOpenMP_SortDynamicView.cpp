@@ -49,6 +49,7 @@
 #include <Kokkos_Core.hpp>
 
 //----------------------------------------------------------------------------
+#include <TestOpenMP_Category.hpp>
 #include <TestRandom.hpp>
 #include <TestSort.hpp>
 #include <iomanip>
