@@ -3,7 +3,7 @@ include(FindPackageHandleStandardArgs)
 find_package(hip CONFIG)
 
 find_package_handle_standard_args(TPLROCM
-  REQUIRED_VARS HIP_INCLUDE_DIR
+  REQUIRED_VARS ROCM_PATH
   VERSION_VAR hip_VERSION
 )
 
