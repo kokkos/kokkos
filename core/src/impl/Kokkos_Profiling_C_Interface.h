@@ -136,7 +136,7 @@ typedef void (*Kokkos_Tools_toolInvokedFenceFunction)(const uint32_t);
 
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Tools_function_pointer)();
-struct Kokkos_Tools_ToolInvokedActions {
+struct Kokkos_Tools_ToolProgrammingInterface {
   Kokkos_Tools_toolInvokedFenceFunction fence;
   // allow addition of more actions
   Kokkos_Tools_function_pointer padding[31];
@@ -148,8 +148,8 @@ struct Kokkos_Tools_ToolSettings {
 };
 
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
-typedef void (*Kokkos_Tools_transmitActionsFunction)(
-    const uint32_t, struct Kokkos_Tools_ToolInvokedActions);
+typedef void (*Kokkos_Tools_provideToolProgrammingInterfaceFunction)(
+    const uint32_t, struct Kokkos_Tools_ToolProgrammingInterface);
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Tools_requestSettingsFunction)(
     const uint32_t, struct Kokkos_Tools_ToolSettings*);
@@ -275,8 +275,9 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_dualViewSyncFunction sync_dual_view;
   Kokkos_Profiling_dualViewModifyFunction modify_dual_view;
   Kokkos_Profiling_declareMetadataFunction declare_metadata;
-  Kokkos_Tools_transmitActionsFunction transmit_actions;
-  Kokkos_Tools_requestSettingsFunction request_settings;
+  Kokkos_Tools_provideToolProgrammingInterfaceFunction
+      provide_tool_programming_interface;
+  Kokkos_Tools_requestSettingsFunction request_tool_settings;
   char profiling_padding[9 * sizeof(Kokkos_Tools_function_pointer)];
   Kokkos_Tools_outputTypeDeclarationFunction declare_output_type;
   Kokkos_Tools_inputTypeDeclarationFunction declare_input_type;

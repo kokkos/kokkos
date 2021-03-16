@@ -108,8 +108,9 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.end_fence == r.end_fence && l.sync_dual_view == r.sync_dual_view &&
          l.modify_dual_view == r.modify_dual_view &&
          l.declare_metadata == r.declare_metadata &&
-         l.request_settings == r.request_settings &&
-         l.transmit_actions == r.transmit_actions &&
+         l.request_tool_settings == r.request_tool_settings &&
+         l.provide_tool_programming_interface ==
+             r.provide_tool_programming_interface &&
          l.declare_input_type == r.declare_input_type &&
          l.declare_output_type == r.declare_output_type &&
          l.end_tuning_context == r.end_tuning_context &&
@@ -549,12 +550,13 @@ void initialize(const std::string& profileLibrary) {
       lookup_function(
           firstProfileLibrary, "kokkosp_parse_args",
           Kokkos::Tools::Experimental::current_callbacks.parse_args);
+      lookup_function(firstProfileLibrary,
+                      "kokkosp_provide_tool_programming_interface",
+                      Kokkos::Tools::Experimental::current_callbacks
+                          .provide_tool_programming_interface);
       lookup_function(
-          firstProfileLibrary, "kokkosp_transmit_actions",
-          Kokkos::Tools::Experimental::current_callbacks.transmit_actions);
-      lookup_function(
-          firstProfileLibrary, "kokkosp_request_settings",
-          Kokkos::Tools::Experimental::current_callbacks.request_settings);
+          firstProfileLibrary, "kokkosp_request_tool_settings",
+          Kokkos::Tools::Experimental::current_callbacks.request_tool_settings);
     }
   }
 #else
@@ -567,14 +569,15 @@ void initialize(const std::string& profileLibrary) {
   Kokkos::Tools::Experimental::tool_requirements.requires_global_fencing = true;
 
   Kokkos::Tools::Experimental::invoke_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.request_settings,
+      Kokkos::Tools::Experimental::current_callbacks.request_tool_settings,
       std::false_type{}, 1, &Kokkos::Tools::Experimental::tool_requirements);
 
-  Kokkos::Tools::Experimental::ToolInvokedActions actions;
+  Kokkos::Tools::Experimental::ToolProgrammingInterface actions;
   actions.fence = &Kokkos::Tools::Experimental::Impl::tool_invoked_fence;
 
   Kokkos::Tools::Experimental::invoke_kokkos_callback(
-      Kokkos::Tools::Experimental::current_callbacks.transmit_actions,
+      Kokkos::Tools::Experimental::current_callbacks
+          .provide_tool_programming_interface,
       std::false_type{}, 1, actions);
 
 #ifdef KOKKOS_ENABLE_TUNING

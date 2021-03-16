@@ -107,17 +107,18 @@ static_assert(sizeof(EventSet) / sizeof(Kokkos_Tools_function_pointer) == 275,
 static_assert(sizeof(Kokkos_Tools_ToolSettings) / sizeof(bool) == 256,
               "sizeof EventSet has changed, this is an error on the part of a "
               "Kokkos developer");
-static_assert(sizeof(Kokkos_Tools_ToolInvokedActions) /
+static_assert(sizeof(Kokkos_Tools_ToolProgrammingInterface) /
                       sizeof(Kokkos_Tools_function_pointer) ==
                   32,
               "sizeof EventSet has changed, this is an error on the part of a "
               "Kokkos developer");
 
 using toolInvokedFenceFunction = Kokkos_Tools_toolInvokedFenceFunction;
-using transmitActionsFunction  = Kokkos_Tools_transmitActionsFunction;
+using provideToolProgrammingInterfaceFunction =
+    Kokkos_Tools_provideToolProgrammingInterfaceFunction;
 using requestSettingsFunction  = Kokkos_Tools_requestSettingsFunction;
 using ToolSettings             = Kokkos_Tools_ToolSettings;
-using ToolInvokedActions       = Kokkos_Tools_ToolInvokedActions;
+using ToolProgrammingInterface = Kokkos_Tools_ToolProgrammingInterface;
 }  // namespace Experimental
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;
