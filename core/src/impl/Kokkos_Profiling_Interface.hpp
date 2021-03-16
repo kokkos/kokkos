@@ -116,7 +116,7 @@ static_assert(sizeof(Kokkos_Tools_ToolProgrammingInterface) /
 using toolInvokedFenceFunction = Kokkos_Tools_toolInvokedFenceFunction;
 using provideToolProgrammingInterfaceFunction =
     Kokkos_Tools_provideToolProgrammingInterfaceFunction;
-using requestSettingsFunction  = Kokkos_Tools_requestSettingsFunction;
+using requestToolSettingsFunction = Kokkos_Tools_requestToolSettingsFunction;
 using ToolSettings             = Kokkos_Tools_ToolSettings;
 using ToolProgrammingInterface = Kokkos_Tools_ToolProgrammingInterface;
 }  // namespace Experimental
