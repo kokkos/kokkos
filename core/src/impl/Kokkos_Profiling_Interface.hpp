@@ -117,8 +117,8 @@ using toolInvokedFenceFunction = Kokkos_Tools_toolInvokedFenceFunction;
 using provideToolProgrammingInterfaceFunction =
     Kokkos_Tools_provideToolProgrammingInterfaceFunction;
 using requestToolSettingsFunction = Kokkos_Tools_requestToolSettingsFunction;
-using ToolSettings             = Kokkos_Tools_ToolSettings;
-using ToolProgrammingInterface = Kokkos_Tools_ToolProgrammingInterface;
+using ToolSettings                = Kokkos_Tools_ToolSettings;
+using ToolProgrammingInterface    = Kokkos_Tools_ToolProgrammingInterface;
 }  // namespace Experimental
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;
