@@ -48,6 +48,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <iostream>
+#include <type_traits>
 
 namespace Test {
 struct SomeTag {};
@@ -764,10 +765,9 @@ void test_prefer_desired_occupancy(Policy const& policy) {
 template <class... Args>
 struct DummyPolicy : Kokkos::Impl::PolicyTraits<Args...> {
   using execution_policy = DummyPolicy;
-  using traits           = Kokkos::Impl::PolicyTraits<Args...>;
-  template <class... OtherArgs>
-  DummyPolicy(DummyPolicy<OtherArgs...> const& p) : traits(p) {}
-  DummyPolicy() = default;
+
+  using base_t = Kokkos::Impl::PolicyTraits<Args...>;
+  using base_t::base_t;
 };
 
 TEST(TEST_CATEGORY, desired_occupancy_prefer) {
@@ -778,15 +778,34 @@ TEST(TEST_CATEGORY, desired_occupancy_prefer) {
   test_prefer_desired_occupancy(Kokkos::TeamPolicy<TEST_EXECSPACE>{});
 }
 
+// For a more informative static assertion:
+template <size_t>
+struct static_assert_dummy_policy_must_be_size_one;
+template <>
+struct static_assert_dummy_policy_must_be_size_one<1> {};
+template <size_t, size_t>
+struct static_assert_dummy_policy_must_be_size_of_desired_occupancy;
+template <>
+struct static_assert_dummy_policy_must_be_size_of_desired_occupancy<
+    sizeof(Kokkos::Experimental::DesiredOccupancy),
+    sizeof(Kokkos::Experimental::DesiredOccupancy)> {};
+
 TEST(TEST_CATEGORY, desired_occupancy_empty_base_optimization) {
   DummyPolicy<TEST_EXECSPACE> const policy{};
   static_assert(sizeof(decltype(policy)) == 1, "");
+  static_assert_dummy_policy_must_be_size_one<sizeof(decltype(policy))>
+      _assert1{};
+  (void)_assert1;  // avoid unused variable warning
 
   using Kokkos::Experimental::DesiredOccupancy;
   auto policy_with_occ =
       Kokkos::Experimental::prefer(policy, DesiredOccupancy{50});
   static_assert(sizeof(decltype(policy_with_occ)) == sizeof(DesiredOccupancy),
                 "");
+  static_assert_dummy_policy_must_be_size_of_desired_occupancy<
+      sizeof(decltype(policy_with_occ)), sizeof(DesiredOccupancy)>
+      _assert2{};
+  (void)_assert2;  // avoid unused variable warning
 }
 
 template <typename Policy>
@@ -869,4 +888,29 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
   more_md_range_policy_construction_test<std::int64_t>();
 }
 
+template <class WorkTag, class Policy>
+constexpr auto set_worktag(Policy const& policy) {
+  static_assert(Kokkos::is_execution_policy<Policy>::value, "");
+  using PolicyWithWorkTag =
+      Kokkos::Impl::WorkTagTrait::policy_with_trait<Policy, WorkTag>;
+  return PolicyWithWorkTag{policy};
+}
+
+TEST(TEST_CATEGORY, policy_set_worktag) {
+  struct SomeWorkTag {};
+  struct OtherWorkTag {};
+
+  Kokkos::RangePolicy<> p1;
+  static_assert(std::is_void<decltype(p1)::work_tag>::value, "");
+
+  auto p2 = set_worktag<SomeWorkTag>(p1);
+  static_assert(std::is_same<decltype(p2)::work_tag, SomeWorkTag>::value, "");
+
+  auto p3 = set_worktag<OtherWorkTag>(p2);
+  static_assert(std::is_same<decltype(p3)::work_tag, OtherWorkTag>::value, "");
+
+  // NOTE this does not currently compile
+  // auto p4 = set_worktag<void>(p3);
+  // static_assert(std::is_void<decltype(p4)::work_tag>::value, "");
+}
 }  // namespace Test
