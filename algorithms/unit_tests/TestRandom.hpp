@@ -520,6 +520,13 @@ void test_random_xorshift1024() {
       num_draws);
 }
 
+TEST(TEST_CATEGORY, Random_XorShift64) {
+  test_random_xorshift64<TEST_EXECSPACE>();
+}
+TEST(TEST_CATEGORY, Random_XorShift1024_0) {
+  test_random_xorshift1024<TEST_EXECSPACE>();
+}
+
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_UNORDERED_MAP_HPP

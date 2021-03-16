@@ -374,5 +374,10 @@ void test_sort(unsigned int N) {
   test_issue_1160_sort<ExecutionSpace>();
 }
 }  // namespace Impl
+
+TEST(TEST_CATEGORY, SortUnsigned) {
+  Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
+}
+
 }  // namespace Test
 #endif /* KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_HPP */
