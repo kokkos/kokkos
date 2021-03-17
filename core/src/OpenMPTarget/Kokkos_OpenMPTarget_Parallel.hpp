@@ -231,9 +231,9 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
     ValueType result = ValueType();
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
 
-// clang-format off
-#pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
-    map(tofrom: result) reduction(custom: result)
+    // clang-format off
+#pragma omp target teams distribute parallel for num_teams(512)          \
+    map(to: f) reduction(custom: result)
     for (auto i = begin; i < end; i++) f(i, result);
     // clang-format on
     *result_ptr = result;
@@ -256,9 +256,9 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
     ValueType result = ValueType();
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
 
-// clang-format off
-#pragma omp target teams distribute parallel for num_teams(512) map(to: f) \
-    map(tofrom: result) reduction(custom: result)
+    // clang-format off
+#pragma omp target teams distribute parallel for num_teams(512)          \
+    map(to: f) reduction(custom: result)
     for (auto i = begin; i < end; i++) f(TagType(), i, result);
     // clang-format on
 
