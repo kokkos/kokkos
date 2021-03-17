@@ -41,7 +41,7 @@ SET(KOKKOS_HPX_NAME Experimental::HPX)
 SET(KOKKOS_OPENMP_FEATURE_LEVEL 999)
 SET(KOKKOS_OPENMP_NAME OpenMP)
 
-# FIXME_OPENMPTARGET - PGI (NVIDIA) compiler only compiles the first 8 incremental tests for the OpenMPTarget backend.
+# FIXME_OPENMPTARGET - The NVIDIA HPC compiler nvc++ only compiles the first 8 incremental tests for the OpenMPTarget backend.
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL "PGI")
 SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 8)
 ELSE()
@@ -277,8 +277,8 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     )
 endif()
 
-## FIXME_OPENMPTARGET - Comment non-passing tests with the PGI (NVIDIA) compiler
-if(Kokkos_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "PGI")
+# FIXME_OPENMPTARGET - Comment non-passing tests with the NVIDIA HPC compiler nvc++
+if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "PGI")
   list(REMOVE_ITEM OpenMPTarget_SOURCES
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_UniqueToken.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_HostSharedPtr.cpp
@@ -625,27 +625,28 @@ if(Kokkos_ENABLE_SYCL)
   )
 endif()
 
+# FIXME_OPENMPTARGET - Comment non-passing tests with the NVIDIA HPC compiler nvc++
 if (KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL "PGI")
-SET(DEFAULT_DEVICE_SOURCES
-  UnitTestMainInit.cpp
-  default/TestDefaultDeviceType.cpp
-)
+  SET(DEFAULT_DEVICE_SOURCES
+    UnitTestMainInit.cpp
+    default/TestDefaultDeviceType.cpp
+  )
 else()
-SET(DEFAULT_DEVICE_SOURCES
-  UnitTestMainInit.cpp
-  default/TestDefaultDeviceType.cpp
-  default/TestDefaultDeviceType_a1.cpp
-  default/TestDefaultDeviceType_b1.cpp
-  default/TestDefaultDeviceType_c1.cpp
-  default/TestDefaultDeviceType_a2.cpp
-  default/TestDefaultDeviceType_b2.cpp
-  default/TestDefaultDeviceType_c2.cpp
-  default/TestDefaultDeviceType_a3.cpp
-  default/TestDefaultDeviceType_b3.cpp
-  default/TestDefaultDeviceType_c3.cpp
-  default/TestDefaultDeviceType_d.cpp
-  default/TestDefaultDeviceTypeResize.cpp
-)
+  SET(DEFAULT_DEVICE_SOURCES
+    UnitTestMainInit.cpp
+    default/TestDefaultDeviceType.cpp
+    default/TestDefaultDeviceType_a1.cpp
+    default/TestDefaultDeviceType_b1.cpp
+    default/TestDefaultDeviceType_c1.cpp
+    default/TestDefaultDeviceType_a2.cpp
+    default/TestDefaultDeviceType_b2.cpp
+    default/TestDefaultDeviceType_c2.cpp
+    default/TestDefaultDeviceType_a3.cpp
+    default/TestDefaultDeviceType_b3.cpp
+    default/TestDefaultDeviceType_c3.cpp
+    default/TestDefaultDeviceType_d.cpp
+    default/TestDefaultDeviceTypeResize.cpp
+  )
 endif()
 
 KOKKOS_ADD_EXECUTABLE_AND_TEST(
