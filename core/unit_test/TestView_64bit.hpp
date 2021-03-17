@@ -87,8 +87,6 @@ void test_64bit() {
         sum);
     ASSERT_EQ(N * 3, sum);
   }
-  // FIXME_SYC: requires MDRangPolicy parallel_reduce
-#ifndef KOKKOS_ENABLE_SYCL
   {
     int64_t N0 = 56925;
     int64_t N1 = 56927;
@@ -112,7 +110,6 @@ void test_64bit() {
         sum);
     ASSERT_EQ(N0 * N1, sum);
   }
-#endif
   {
     int N0    = 1024 * 1024 * 1500;
     int64_t P = 1713091;
