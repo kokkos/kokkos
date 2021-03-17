@@ -317,19 +317,27 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
 
   // does the given device match the device of t_dev?
   template <typename Device>
-  constexpr static bool impl_device_matches_tdev_device =
-      std::is_same<typename t_dev::device_type, Device>::value;
-
+  struct impl_device_matches_tdev_device {
+    enum : bool {
+      value = std::is_same<typename t_dev::device_type, Device>::value
+    };
+  };
   // does the given device match the device of t_host?
   template <typename Device>
-  constexpr static bool impl_device_matches_thost_device =
-      std::is_same<typename t_host::device_type, Device>::value;
+  struct impl_device_matches_thost_device {
+    enum : bool {
+      value = std::is_same<typename t_host::device_type, Device>::value
+    };
+  };
 
   // does the given device's memory space match the memory space of t_dev?
   template <typename Device>
-  constexpr static bool impl_device_matches_tdev_memory_space =
-      std::is_same<typename t_dev::memory_space,
-                   typename Device::memory_space>::value;
+  struct impl_device_matches_tdev_memory_space {
+    enum : bool {
+      value = std::is_same<typename t_dev::memory_space,
+                           typename Device::memory_space>::value
+    };
+  };
 
   //@}
   //! \name Methods for synchronizing, marking as modified, and getting Views.
@@ -359,11 +367,12 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   /// \endcode
   template <class Device>
   KOKKOS_INLINE_FUNCTION const typename Impl::if_c<
-      impl_device_matches_tdev_device<Device>, t_dev,
+      impl_device_matches_tdev_device<Device>::value, t_dev,
       typename Impl::if_c<
-          impl_device_matches_thost_device<Device>, t_host,
-          typename Impl::if_c<impl_device_matches_tdev_memory_space<Device>,
-                              t_dev, t_host>::type>::type>::type&
+          impl_device_matches_thost_device<Device>::value, t_host,
+          typename Impl::if_c<
+              impl_device_matches_tdev_memory_space<Device>::value, t_dev,
+              t_host>::type>::type>::type&
   view() const {
     constexpr bool device_is_memspace =
         std::is_same<Device, typename Device::memory_space>::value;
