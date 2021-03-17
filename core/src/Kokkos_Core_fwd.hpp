@@ -342,11 +342,11 @@ struct LOr;
 //  this is used to mark execution or memory spaces as not available
 //
 template <typename Tp>
-struct IsAvailable : std::true_type {};
+struct IsSpaceAvailable : std::true_type {};
 
 #define KOKKOS_IMPL_DISABLE_TYPE(TYPE) \
   template <>                          \
-  struct IsAvailable<TYPE> : std::false_type {};
+  struct IsSpaceAvailable<TYPE> : std::false_type {};
 
 //--------------------------------------------------------------------------------------//
 //  declare any spaces that might not be available and mark them as unavailable
@@ -384,7 +384,7 @@ class CudaUVMSpace;
 KOKKOS_IMPL_DISABLE_TYPE(CudaUVMSpace)
 #endif
 
-#ifndef KOKKOS_ENABLE_HBWSPACE
+#if !defined(KOKKOS_ENABLE_HBWSPACE)
 namespace Experimental {
 class HBWSpace;
 }  // namespace Experimental
@@ -419,6 +419,7 @@ class SYCLSharedUSMSpace;
 }  // namespace Experimental
 KOKKOS_IMPL_DISABLE_TYPE(Experimental::SYCL)
 KOKKOS_IMPL_DISABLE_TYPE(Experimental::SYCLDeviceUSMSpace)
+KOKKOS_IMPL_DISABLE_TYPE(Experimental::SYCLSharedUSMSpace)
 #endif
 
 }  // namespace Kokkos
