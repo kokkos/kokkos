@@ -19,6 +19,14 @@ jobs:
             cxx: 'icpc'
             cmake_build_type: 'Debug'
             openmp: 'ON'
+          - distro: 'fedora:intel-oneapi'
+            cxx: 'icpx'
+            cmake_build_type: 'Release'
+            openmp: 'ON'
+          - distro: 'fedora:intel-oneapi'
+            cxx: 'icpx'
+            cmake_build_type: 'Debug'
+            openmp: 'ON'
     runs-on: ubuntu-latest
     container: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
     steps:
