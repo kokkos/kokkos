@@ -203,7 +203,7 @@ class SYCLTeamMember {
     m_item.barrier(sycl::access::fence_space::local_space);
 
     // clear the last element so we get an exclusive scan
-    if (thid == 0) temp[n - 1] = 0;
+    if (thid == 0) temp[n - 1] = Type{};
     m_item.barrier(sycl::access::fence_space::local_space);
 
     // Now add the intermediate results to the remaining items again
@@ -251,7 +251,7 @@ class SYCLTeamMember {
     // Load values into the first not_greater_power_of_two values of the
     // reduction array in chunks. This means that only threads with an id in the
     // corresponding chunk load values and the reduction is always done by the
-    // first smaller_power_of_two threads.
+    // first not_greater_power_of_two threads.
     for (int start = 0; start < team_size();
          start += not_greater_power_of_two) {
       m_item.barrier(sycl::access::fence_space::local_space);
