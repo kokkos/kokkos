@@ -561,7 +561,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
             selected_reducer);
-    auto deleter = [q](pointer_type ptr) { sycl::free(ptr, q); };
+    auto deleter = [&q](pointer_type ptr) { sycl::free(ptr, q); };
     std::unique_ptr<value_type, decltype(deleter)> results_ptr(
         static_cast<pointer_type>(sycl::malloc_shared(
             sizeof(value_type) * std::max(value_count, 1u) * init_size, q)),
