@@ -2684,7 +2684,7 @@ struct ViewDataHandle<
   template <class SrcHandleType>
   KOKKOS_INLINE_FUNCTION static handle_type assign(
       const SrcHandleType& arg_handle, size_t offset) {
-    return handle_type(arg_handle.ptr + offset);
+    return handle_type(arg_handle + offset);
   }
 };
 
