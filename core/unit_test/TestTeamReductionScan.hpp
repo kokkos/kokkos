@@ -48,6 +48,8 @@
 
 namespace Test {
 
+// FIXME_SYCL needs team_scan
+#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, team_reduction_scan) {
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >(0);
   TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(0);
@@ -62,6 +64,7 @@ TEST(TEST_CATEGORY, team_reduction_scan) {
     TestScanTeam<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >(10000);
   }
 }
+#endif
 
 TEST(TEST_CATEGORY, team_long_reduce) {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
