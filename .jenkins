@@ -36,7 +36,6 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        // FIXME_SYCL self contained headers trigger internal compiler error for SYCL+CUDA
                         sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
