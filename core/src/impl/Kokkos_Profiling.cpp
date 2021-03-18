@@ -930,7 +930,7 @@ size_t get_new_variable_id() { return get_variable_counter(); }
 size_t declare_output_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
-  Experimental::invoke_kokkos_callback(
+  Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
       Experimental::current_callbacks.declare_output_type, variableName.c_str(),
       variableId, &info);
@@ -945,7 +945,7 @@ size_t declare_output_type(const std::string& variableName, VariableInfo info) {
 size_t declare_input_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();
 #ifdef KOKKOS_ENABLE_TUNING
-  Experimental::invoke_kokkos_callback(
+  Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
       Experimental::current_callbacks.declare_input_type, variableName.c_str(),
       variableId, &info);
@@ -987,7 +987,7 @@ void request_output_values(size_t contextId, size_t count,
     for (size_t x = 0; x < count; ++x) {
       values[x].metadata = &variable_metadata[values[x].type_id];
     }
-    Experimental::invoke_kokkos_callback(
+    Experimental::invoke_kokkosp_callback(
         Experimental::MayRequireGlobalFencing::No,
         Experimental::current_callbacks.request_output_values, contextId,
         context_values.size(), context_values.data(), count, values);
@@ -1013,7 +1013,7 @@ void end_context(size_t contextId) {
   for (auto id : features_per_context[contextId]) {
     active_features.erase(id);
   }
-  Experimental::invoke_kokkos_callback(
+  Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
       Experimental::current_callbacks.end_tuning_context, contextId,
       feature_values[optimization_goals[contextId]]);
@@ -1104,7 +1104,7 @@ size_t get_new_variable_id();
 void declare_optimization_goal(const size_t context,
                                const OptimizationGoal& goal) {
 #ifdef KOKKOS_ENABLE_TUNING
-  Experimental::invoke_kokkos_callback(
+  Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
       Experimental::current_callbacks.declare_optimization_goal, context, goal);
   optimization_goals[context] = goal.type_id;
