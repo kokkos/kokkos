@@ -48,6 +48,7 @@
 #include <gtest/gtest.h>
 
 #define TEST_CATEGORY threads
+#define TEST_CATEGORY_NUMBER 1
 #define TEST_CATEGORY_DEATH threads_DeathTest
 #define TEST_EXECSPACE Kokkos::Threads
 
