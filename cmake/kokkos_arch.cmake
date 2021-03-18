@@ -142,8 +142,16 @@ ENDIF()
 #------------------------------- KOKKOS_HIP_OPTIONS ---------------------------
 #clear anything that might be in the cache
 GLOBAL_SET(KOKKOS_AMDGPU_OPTIONS)
-IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIP)
-  SET(AMDGPU_ARCH_FLAG "--amdgpu-target")
+IF(KOKKOS_ENABLE_HIP)
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
+    SET(AMDGPU_ARCH_FLAG "--amdgpu-target")
+  ELSE()
+    SET(AMDGPU_ARCH_FLAG "--offload-arch")
+    GLOBAL_APPEND(KOKKOS_AMDGPU_OPTIONS -x hip)
+    IF(DEFINED ENV{ROCM_PATH})
+      GLOBAL_APPEND(KOKKOS_AMDGPU_OPTIONS --rocm-path=$ENV{ROCM_PATH})
+    ENDIF()
+  ENDIF()
 ENDIF()
 
 
