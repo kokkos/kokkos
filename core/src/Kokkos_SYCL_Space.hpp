@@ -83,9 +83,6 @@ class SYCLDeviceUSMSpace {
  public:
   static constexpr const char* name() { return "SYCLDeviceUSM"; };
 
-  static void impl_access_error();
-  static void impl_access_error(const void* const);
-
  private:
   int m_device;
 };
@@ -207,27 +204,6 @@ struct MemorySpaceAccess<
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
-};
-
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::Experimental::SYCLDeviceUSMSpace,
-    Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL>> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::HostSpace, Kokkos::ScratchMemorySpace<Kokkos::Experimental::SYCL>> {
-  enum : bool { value = false };
-  inline static void verify() {
-    Experimental::SYCLDeviceUSMSpace::impl_access_error();
-  }
-  inline static void verify(const void* p) {
-    Experimental::SYCLDeviceUSMSpace::impl_access_error(p);
-  }
 };
 
 }  // namespace Impl

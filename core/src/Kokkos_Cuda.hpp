@@ -309,22 +309,6 @@ struct MemorySpaceAccess<Kokkos::CudaUVMSpace,
 
 #endif
 
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
-                                           Kokkos::Cuda::scratch_memory_space> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
-                                           Kokkos::Cuda::scratch_memory_space> {
-  enum : bool { value = false };
-  inline static void verify() { CudaSpace::access_error(); }
-  inline static void verify(const void* p) { CudaSpace::access_error(p); }
-};
-
 }  // namespace Impl
 }  // namespace Kokkos
 
