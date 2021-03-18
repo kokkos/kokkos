@@ -15,7 +15,6 @@ vpath %.cpp ${KOKKOS_PATH}/core/unit_test/cuda
 
 TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
 TEST_HEADERS += $(wildcard $(KOKKOS_PATH)/core/unit_test/*/*.hpp)
-TEST_HEADERS += $(wildcard $(KOKKOS_PATH)/tests/*.hpp)
 
 default: build_all
 	echo "End Build"
@@ -33,7 +32,7 @@ override LDFLAGS += -lpthread
 
 include $(KOKKOS_PATH)/Makefile.kokkos
 
-KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test
+KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test -I${KOKKOS_PATH}/tests
 
 TEST_TARGETS =
 TARGETS =
