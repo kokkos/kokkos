@@ -52,18 +52,36 @@
 
 namespace Test {
 
+// modify if we have other UVM enabled backends
+#ifdef KOKKOS_ENABLE_CUDA  // OR other UVM builds
+#ifdef KOKKOS_ENABLE_CUDA_UVM
+#define UVM_ENABLED_BUILD
+#endif
+#endif
+
+#ifdef UVM_ENABLED_BUILD
 template <typename ExecSpace>
 struct UVMSpaceFor;
+#endif
 
+#ifdef KOKKOS_ENABLE_CUDA  // specific to CUDA
 template <>
 struct UVMSpaceFor<Kokkos::Cuda> {
   using type = Kokkos::CudaUVMSpace;
 };
+#endif
 
+#ifdef UVM_ENABLED_BUILD
 template <>
 struct UVMSpaceFor<Kokkos::DefaultHostExecutionSpace> {
   using type = typename UVMSpaceFor<Kokkos::DefaultExecutionSpace>::type;
 };
+#else
+template <typename ExecSpace>
+struct UVMSpaceFor {
+  using type = typename ExecSpace::memory_space;
+};
+#endif
 
 TEST(defaultdevicetype, development_test) {
   using ExecSpace  = Kokkos::DefaultExecutionSpace;
