@@ -83,9 +83,6 @@ class SYCLDeviceUSMSpace {
  public:
   static constexpr const char* name() { return "SYCLDeviceUSM"; };
 
-  KOKKOS_DEPRECATED static void impl_access_error();
-  KOKKOS_DEPRECATED static void impl_access_error(const void* const);
-
  private:
   int m_device;
 };

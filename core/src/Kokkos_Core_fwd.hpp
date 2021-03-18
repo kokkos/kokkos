@@ -203,12 +203,12 @@ template <typename DstMemorySpace, typename SrcMemorySpace,
           bool = Kokkos::Impl::MemorySpaceAccess<DstMemorySpace,
                                                  SrcMemorySpace>::accessible>
 struct verify_space {
-  KOKKOS_FORCEINLINE_FUNCTION static void check() {}
+  KOKKOS_FUNCTION static void check() {}
 };
 
 template <typename DstMemorySpace, typename SrcMemorySpace>
 struct verify_space<DstMemorySpace, SrcMemorySpace, false> {
-  KOKKOS_FORCEINLINE_FUNCTION static void check() {
+  KOKKOS_FUNCTION static void check() {
     Kokkos::abort(
         "Kokkos::View ERROR: attempt to access inaccessible memory space");
   };

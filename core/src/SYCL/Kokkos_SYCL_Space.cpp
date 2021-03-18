@@ -217,18 +217,6 @@ void SYCLSharedUSMSpace::deallocate(const char* arg_label,
                   Kokkos::Tools::make_space_handle(name()));
 }
 
-KOKKOS_DEPRECATED void SYCLDeviceUSMSpace::impl_access_error() {
-  const std::string msg(
-      "Kokkos::Experimental::SYCLDeviceUSMSpace::impl_access_error attempt to "
-      "execute device function from non-device space");
-  Kokkos::Impl::throw_runtime_exception(msg);
-}
-
-KOKKOS_DEPRECATED void SYCLDeviceUSMSpace::impl_access_error(
-    const void* const) {
-  impl_access_error();
-}
-
 }  // namespace Experimental
 }  // namespace Kokkos
 
