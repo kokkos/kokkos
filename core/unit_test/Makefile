@@ -15,6 +15,7 @@ vpath %.cpp ${KOKKOS_PATH}/core/unit_test/cuda
 
 TEST_HEADERS = $(wildcard $(KOKKOS_PATH)/core/unit_test/*.hpp)
 TEST_HEADERS += $(wildcard $(KOKKOS_PATH)/core/unit_test/*/*.hpp)
+TEST_HEADERS += $(wildcard $(KOKKOS_PATH)/tests/*.hpp)
 
 default: build_all
 	echo "End Build"
