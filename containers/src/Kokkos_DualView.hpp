@@ -314,6 +314,13 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
           "DualView constructed with incompatible views");
     }
   }
+  // does the DualView have only one device
+  struct impl_dualview_is_single_device {
+    enum : bool {
+      value = std::is_same<typename t_dev::device_type,
+                           typename t_host::device_type>::value
+    };
+  };
 
   // does the given device match the device of t_dev?
   template <typename Device>
@@ -772,6 +779,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   template <class Device>
   void modify() {
     if (modified_flags.data() == nullptr) return;
+    if (impl_dualview_is_single_device::value) return;
     int dev = get_device_side<Device>();
 
     if (dev == 1) {  // if Device is the same as DualView's device type
@@ -804,6 +812,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   inline void modify_host() {
+    if (impl_dualview_is_single_device::value) return;
     if (modified_flags.data() != nullptr) {
       modified_flags(0) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
@@ -824,6 +833,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   inline void modify_device() {
+    if (impl_dualview_is_single_device::value) return;
     if (modified_flags.data() != nullptr) {
       modified_flags(1) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
