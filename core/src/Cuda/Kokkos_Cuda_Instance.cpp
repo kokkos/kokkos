@@ -275,7 +275,6 @@ CudaInternal::~CudaInternal() {
       m_scratchConcurrentBitset) {
     std::cerr << "Kokkos::Cuda ERROR: Failed to call Kokkos::Cuda::finalize()"
               << std::endl;
-    std::cerr.flush();
   }
 
   m_cudaDev                   = -1;
