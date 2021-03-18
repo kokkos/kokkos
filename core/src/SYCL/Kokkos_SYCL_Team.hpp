@@ -182,6 +182,44 @@ class SYCLTeamMember {
     m_item.barrier(sycl::access::fence_space::local_space);
   }
 
+  // FIXME_SYCL move somewhere else and combine with other places that do
+  // parallel_scan
+  // Exclusive scan returning the total sum.
+  // n is required to be a power of two and
+  // temp must point to an array containing the data to be processed
+  // The accumulated value is returned.
+  template <typename Type>
+  static Type prescan(sycl::nd_item<2> m_item, Type* temp, int n) {
+    int thid = m_item.get_local_id(0);
+
+    // First do a reduction saving intermediate results
+    for (int stride = 1; stride < n; stride <<= 1) {
+      auto idx = 2 * stride * (thid + 1) - 1;
+      if (idx < n) temp[idx] += temp[idx - stride];
+      m_item.barrier(sycl::access::fence_space::local_space);
+    }
+
+    Type total_sum = temp[n - 1];
+    m_item.barrier(sycl::access::fence_space::local_space);
+
+    // clear the last element so we get an exclusive scan
+    if (thid == 0) temp[n - 1] = Type{};
+    m_item.barrier(sycl::access::fence_space::local_space);
+
+    // Now add the intermediate results to the remaining items again
+    for (int stride = n / 2; stride > 0; stride >>= 1) {
+      auto idx = 2 * stride * (thid + 1) - 1;
+      if (idx < n) {
+        Type dummy         = temp[idx - stride];
+        temp[idx - stride] = temp[idx];
+        temp[idx] += dummy;
+      }
+      m_item.barrier(sycl::access::fence_space::local_space);
+    }
+
+    return total_sum;
+  }
+
   //--------------------------------------------------------------------------
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering
    *          with intra-team non-deterministic ordering accumulation.
@@ -194,10 +232,53 @@ class SYCLTeamMember {
    */
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type team_scan(const Type& value,
-                                        Type* const /*global_accum*/) const {
-    // FIXME_SYCL
-    Kokkos::abort("Not implemented!");
-    return value;
+                                        Type* const global_accum) const {
+    // We need to chunk up the whole reduction because we might not have
+    // allocated enough memory.
+    const int maximum_work_range =
+        std::min<int>(m_team_reduce_size / sizeof(Type), team_size());
+
+    int not_greater_power_of_two = 1;
+    while ((not_greater_power_of_two << 1) < maximum_work_range + 1)
+      not_greater_power_of_two <<= 1;
+
+    Type intermediate;
+    Type total{};
+
+    const int idx        = team_rank();
+    const auto base_data = static_cast<Type*>(m_team_reduce);
+
+    // Load values into the first not_greater_power_of_two values of the
+    // reduction array in chunks. This means that only threads with an id in the
+    // corresponding chunk load values and the reduction is always done by the
+    // first not_greater_power_of_two threads.
+    for (int start = 0; start < team_size();
+         start += not_greater_power_of_two) {
+      m_item.barrier(sycl::access::fence_space::local_space);
+      if (idx >= start && idx < start + not_greater_power_of_two) {
+        base_data[idx - start] = value;
+      }
+      m_item.barrier(sycl::access::fence_space::local_space);
+
+      const Type partial_total =
+          prescan(m_item, base_data, not_greater_power_of_two);
+      if (idx >= start && idx < start + not_greater_power_of_two)
+        intermediate = base_data[idx - start] + total;
+      if (start == 0)
+        total = partial_total;
+      else
+        total += partial_total;
+    }
+
+    if (global_accum) {
+      if (team_size() == idx + 1) {
+        base_data[team_size()] = atomic_fetch_add(global_accum, total);
+      }
+      m_item.barrier();  // Wait for atomic
+      intermediate += base_data[team_size()];
+    }
+
+    return intermediate;
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering.
