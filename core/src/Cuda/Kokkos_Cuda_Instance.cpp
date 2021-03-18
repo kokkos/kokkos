@@ -491,17 +491,11 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 
 #ifdef KOKKOS_ENABLE_CUDA_UVM
   if (Kokkos::show_warnings() && !cuda_launch_blocking()) {
-    std::cerr << "Kokkos::Cuda::initialize WARNING: Cuda is allocating into "
-                 "UVMSpace by default"
-              << std::endl;
-    std::cerr << "                                  without setting "
-                 "CUDA_LAUNCH_BLOCKING=1."
-              << std::endl;
-    std::cerr << "                                  The code must call "
-                 "Cuda().fence() after each kernel"
-              << std::endl;
-    std::cerr << "                                  or will likely crash when "
-                 "accessing data on the host."
+    std::cerr << R"warning(
+Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
+                                  without setting CUDA_LAUNCH_BLOCKING=1.
+                                  The code must call Cuda().fence() after each kernel
+                                  or will likely crash when accessing data on the host.)warning"
               << std::endl;
   }
 
@@ -519,19 +513,13 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 
   if (Kokkos::show_warnings() &&
       (!visible_devices_one && !force_device_alloc)) {
-    std::cerr << "Kokkos::Cuda::initialize WARNING: Cuda is allocating into "
-                 "UVMSpace by default"
+    std::cerr << R"warning(
+Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
+                                  without setting CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or
+                                  setting CUDA_VISIBLE_DEVICES.
+                                  This could on multi GPU systems lead to severe performance"
+                                  penalties.)warning"
               << std::endl;
-    std::cerr << "                                  without setting "
-                 "CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or "
-              << std::endl;
-    std::cerr
-        << "                                  setting CUDA_VISIBLE_DEVICES."
-        << std::endl;
-    std::cerr << "                                  This could on multi GPU "
-                 "systems lead to severe performance"
-              << std::endl;
-    std::cerr << "                                  penalties." << std::endl;
   }
 #endif
 
