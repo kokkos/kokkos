@@ -330,6 +330,22 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
     };
   };
 
+  // does the given device match the execution space of t_host?
+  template <typename Device>
+  struct impl_device_matches_thost_exec {
+    enum : bool {
+      value = std::is_same<typename t_host::execution_space, Device>::value
+    };
+  };
+
+  // does the given device match the execution space of t_dev?
+  template <typename Device>
+  struct impl_device_matches_tdev_exec {
+    enum : bool {
+      value = std::is_same<typename t_dev::execution_space, Device>::value
+    };
+  };
+
   // does the given device's memory space match the memory space of t_dev?
   template <typename Device>
   struct impl_device_matches_tdev_memory_space {
@@ -371,8 +387,12 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
       typename Impl::if_c<
           impl_device_matches_thost_device<Device>::value, t_host,
           typename Impl::if_c<
-              impl_device_matches_tdev_memory_space<Device>::value, t_dev,
-              t_host>::type>::type>::type&
+              impl_device_matches_thost_exec<Device>::value, t_host,
+              typename Impl::if_c<
+                  impl_device_matches_tdev_exec<Device>::value, t_dev,
+                  typename Impl::if_c<
+                      impl_device_matches_tdev_memory_space<Device>::value,
+                      t_dev, t_host>::type>::type>::type>::type>::type
   view() const {
     constexpr bool device_is_memspace =
         std::is_same<Device, typename Device::memory_space>::value;
