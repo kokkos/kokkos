@@ -54,9 +54,7 @@ namespace Test {
 
 // modify if we have other UVM enabled backends
 #ifdef KOKKOS_ENABLE_CUDA  // OR other UVM builds
-#ifdef KOKKOS_ENABLE_CUDA_UVM
 #define UVM_ENABLED_BUILD
-#endif
 #endif
 
 #ifdef UVM_ENABLED_BUILD
@@ -65,12 +63,10 @@ struct UVMSpaceFor;
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA  // specific to CUDA
-#ifdef KOKKOS_ENABLE_CUDA_UVM
 template <>
 struct UVMSpaceFor<Kokkos::Cuda> {
   using type = Kokkos::CudaUVMSpace;
 };
-#endif
 #endif
 
 #ifdef UVM_ENABLED_BUILD
@@ -155,6 +151,8 @@ TEST(defaultdevicetype, development_test) {
     dv.template sync<d_device>();
     std::cout << "Now, need sync host/device: " << dv.need_sync_host() << "/"
               << dv.need_sync_device() << '\n';
+    EXPECT_TRUE(!dv.need_sync_device());
+    EXPECT_TRUE(!dv.need_sync_host());
     dv.clear_sync_state();
   }
   std::cout
@@ -164,6 +162,8 @@ TEST(defaultdevicetype, development_test) {
     dv.template sync<typename d_device::execution_space>();
     std::cout << "Now, need sync host/device: " << dv.need_sync_host() << "/"
               << dv.need_sync_device() << '\n';
+    EXPECT_TRUE(!dv.need_sync_device());
+    EXPECT_TRUE(!dv.need_sync_host());
     dv.clear_sync_state();
   }
   std::cout << "Marking device modified, then doing sync<Device<Serial, "
@@ -173,6 +173,8 @@ TEST(defaultdevicetype, development_test) {
     dv.template sync<h_device>();
     std::cout << "Now, need sync host/device: " << dv.need_sync_host() << "/"
               << dv.need_sync_device() << '\n';
+    EXPECT_TRUE(!dv.need_sync_device());
+    EXPECT_TRUE(!dv.need_sync_host());
     dv.clear_sync_state();
   }
   std::cout << "Marking device modified, then doing "
@@ -182,6 +184,8 @@ TEST(defaultdevicetype, development_test) {
     dv.template sync<typename h_device::execution_space>();
     std::cout << "Now, need sync host/device: " << dv.need_sync_host() << "/"
               << dv.need_sync_device() << '\n';
+    EXPECT_TRUE(!dv.need_sync_device());
+    EXPECT_TRUE(!dv.need_sync_host());
     dv.clear_sync_state();
   }
   std::cout << "Marking host modified, then doing sync<UVMSpace>\n";
