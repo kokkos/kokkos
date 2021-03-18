@@ -65,10 +65,12 @@ struct UVMSpaceFor;
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA  // specific to CUDA
+#ifdef KOKKOS_ENABLE_CUDA_UVM
 template <>
 struct UVMSpaceFor<Kokkos::Cuda> {
   using type = Kokkos::CudaUVMSpace;
 };
+#endif
 #endif
 
 #ifdef UVM_ENABLED_BUILD
