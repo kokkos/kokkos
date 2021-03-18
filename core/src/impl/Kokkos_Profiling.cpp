@@ -258,7 +258,7 @@ void allocateData(const SpaceHandle space, const std::string label,
 void deallocateData(const SpaceHandle space, const std::string label,
                     const void* ptr, const uint64_t size) {
   Experimental::invoke_kokkosp_callback(
-      Experimental::MayRequireGlobalFencing::Yes,
+      Experimental::MayRequireGlobalFencing::No,
       Experimental::current_callbacks.deallocate_data, space, label.c_str(),
       ptr, size);
 }
