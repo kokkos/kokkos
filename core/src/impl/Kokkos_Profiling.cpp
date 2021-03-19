@@ -118,7 +118,7 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.request_output_values == r.request_output_values &&
          l.declare_optimization_goal == r.declare_optimization_goal;
 }
-enum class MayRequireGlobalFencing : bool { Yes, No };
+enum class MayRequireGlobalFencing : bool { No, Yes };
 template <typename Callback, typename... Args>
 inline void invoke_kokkosp_callback(
     MayRequireGlobalFencing may_require_global_fencing,
