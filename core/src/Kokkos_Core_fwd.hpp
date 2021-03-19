@@ -262,8 +262,7 @@ template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
           int Rank, typename iType>
 struct ViewCopy;
 
-template <class Functor, class Policy, class EnableFunctor = void,
-          class EnablePolicy = void>
+template <class Functor, class Policy, class Enable = void>
 struct FunctorPolicyExecutionSpace;
 
 //----------------------------------------------------------------------------

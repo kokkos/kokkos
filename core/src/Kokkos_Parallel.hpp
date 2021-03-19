@@ -54,6 +54,7 @@
 #include <Kokkos_ExecPolicy.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
+#include <type_traits>
 #include <typeinfo>
 
 #include <impl/Kokkos_Tags.hpp>
@@ -71,6 +72,19 @@
 namespace Kokkos {
 namespace Impl {
 
+template <class T, class = void>
+struct has_execution_space : std::false_type {};
+
+template <class T>
+struct has_execution_space<T, void_t<typename T::execution_space>>
+    : std::true_type {};
+
+template <class T, class = void>
+struct has_device_type : std::false_type {};
+
+template <class T>
+struct has_device_type<T, void_t<typename T::device_type>> : std::true_type {};
+
 //----------------------------------------------------------------------------
 /** \brief  Given a Functor and Execution Policy query an execution space.
  *
@@ -79,48 +93,33 @@ namespace Impl {
  *  else if  the Functor has a device_type use that for backward compatibility
  *  else     use the default
  */
-template <class Functor, class Policy, class EnableFunctor, class EnablePolicy>
+
+template <class Functor, class Policy, class Enable>
 struct FunctorPolicyExecutionSpace {
   using execution_space = Kokkos::DefaultExecutionSpace;
 };
 
 template <class Functor, class Policy>
 struct FunctorPolicyExecutionSpace<
-    Functor, Policy,
-    typename enable_if_type<typename Functor::device_type>::type,
-    typename enable_if_type<typename Policy ::execution_space>::type> {
+    Functor, Policy, std::enable_if_t<has_execution_space<Policy>::value>> {
   using execution_space = typename Policy::execution_space;
 };
 
 template <class Functor, class Policy>
 struct FunctorPolicyExecutionSpace<
     Functor, Policy,
-    typename enable_if_type<typename Functor::execution_space>::type,
-    typename enable_if_type<typename Policy ::execution_space>::type> {
-  using execution_space = typename Policy::execution_space;
-};
-
-template <class Functor, class Policy, class EnableFunctor>
-struct FunctorPolicyExecutionSpace<
-    Functor, Policy, EnableFunctor,
-    typename enable_if_type<typename Policy::execution_space>::type> {
-  using execution_space = typename Policy::execution_space;
-};
-
-template <class Functor, class Policy, class EnablePolicy>
-struct FunctorPolicyExecutionSpace<
-    Functor, Policy,
-    typename enable_if_type<typename Functor::device_type>::type,
-    EnablePolicy> {
-  using execution_space = typename Functor::device_type::execution_space;
-};
-
-template <class Functor, class Policy, class EnablePolicy>
-struct FunctorPolicyExecutionSpace<
-    Functor, Policy,
-    typename enable_if_type<typename Functor::execution_space>::type,
-    EnablePolicy> {
+    std::enable_if_t<!has_execution_space<Policy>::value &&
+                     has_execution_space<Functor>::value>> {
   using execution_space = typename Functor::execution_space;
+};
+
+template <class Functor, class Policy>
+struct FunctorPolicyExecutionSpace<
+    Functor, Policy,
+    std::enable_if_t<!has_execution_space<Policy>::value &&
+                     !has_execution_space<Functor>::value &&
+                     has_device_type<Functor>::value>> {
+  using execution_space = typename Functor::device_type::execution_space;
 };
 
 }  // namespace Impl
