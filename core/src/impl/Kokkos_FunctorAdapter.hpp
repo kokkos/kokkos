@@ -159,9 +159,8 @@ template <class FunctorType, class ArgTag, class Enable = void>
 struct FunctorDeclaresValueType : public std::false_type {};
 
 template <class FunctorType, class ArgTag>
-struct FunctorDeclaresValueType<
-    FunctorType, ArgTag,
-    typename Impl::enable_if_type<typename FunctorType::value_type>::type>
+struct FunctorDeclaresValueType<FunctorType, ArgTag,
+                                void_t<typename FunctorType::value_type>>
     : public std::true_type {};
 
 template <class FunctorType,
