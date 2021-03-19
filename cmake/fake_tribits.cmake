@@ -326,10 +326,6 @@ ENDIF()
 ENDFUNCTION()
 
 
-MACRO(KOKKOS_ADD_COMPILE_OPTIONS)
-ADD_COMPILE_OPTIONS(${ARGN})
-ENDMACRO()
-
 MACRO(PRINTALL match)
 get_cmake_property(_variableNames VARIABLES)
 list (SORT _variableNames)
