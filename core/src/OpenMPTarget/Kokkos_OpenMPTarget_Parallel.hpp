@@ -999,7 +999,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
 #pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
                                                                        : f) \
-    is_device_ptr(scratch_ptr)
+    is_device_ptr(scratch_ptr) reduction(custom                             \
+                                         : result)
 #pragma omp parallel reduction(custom : result)
     {
       const int blockIdx = omp_get_team_num();
