@@ -65,6 +65,14 @@ struct identity {
 template <typename T>
 using identity_t = typename identity<T>::type;
 
+#if defined(__cpp_lib_void_t)
+// since C++17
+using std::void_t;
+#else
+template <class...>
+using void_t = void;
+#endif
+
 //==============================================================================
 // <editor-fold desc="remove_cvref_t"> {{{1
 
