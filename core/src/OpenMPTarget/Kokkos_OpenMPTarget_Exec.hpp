@@ -616,23 +616,24 @@ class OpenMPTargetExecTeamMember {
   }
 
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& /*value*/,
-                                             const int& /*thread_id*/) const {
-    // FIXME_OPENMPTARGET
-    /*#if ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-        { }
-    #else
-        // Make sure there is enough scratch space:
-        using type  = typename if_c< sizeof(ValueType) < TEAM_REDUCE_SIZE
-                             , ValueType , void >::type;
+  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& value,
+                                             const int& thread_id) const {
+    // Make sure there is enough scratch space:
+    using type = typename if_c<sizeof(ValueType) < TEAM_REDUCE_SIZE, ValueType,
+                               void>::type;
+    type* team_scratch =
+        (type*)((char*)m_glb_scratch + TEAM_REDUCE_SIZE * omp_get_team_num());
+#pragma omp barrier
+    if (team_rank() == thread_id) *team_scratch = value;
+#pragma omp barrier
+    value = *team_scratch;
+  }
 
-        type * const local_value = ((type*) m_exec.scratch_thread());
-        if(team_rank() == thread_id)
-          *local_value = value;
-        memory_fence();
-        team_barrier();
-        value = *local_value;
-    #endif*/
+  template <class Closure, class ValueType>
+  KOKKOS_INLINE_FUNCTION void team_broadcast(const Closure& f, ValueType& value,
+                                             const int& thread_id) const {
+    f(value);
+    team_broadcast(value, thread_id);
   }
 
   template <class ValueType, class JoinOp>
