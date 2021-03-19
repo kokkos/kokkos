@@ -792,7 +792,7 @@ struct TestScratchTeam {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
     team_exec = p_type(64 / team_size, team_size);
 #else
-    team_exec     = p_type(8192 / team_size, team_size);
+    team_exec          = p_type(8192 / team_size, team_size);
 #endif
 
     Kokkos::parallel_reduce(
@@ -1286,8 +1286,16 @@ struct TestTeamBroadcast<
     using policy_type_f =
         Kokkos::TeamPolicy<ScheduleType, ExecSpace, BroadcastTag>;
 
+    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    int fake_team_size =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
+                                                                           : 1;
+#else
+    int fake_team_size = 1;
+#endif
     const int team_size =
-        policy_type_f(league_size, 1)
+        policy_type_f(league_size, fake_team_size)
             .team_size_max(
                 functor,
                 Kokkos::
@@ -1432,13 +1440,20 @@ struct TestTeamBroadcast<
     using policy_type_f =
         Kokkos::TeamPolicy<ScheduleType, ExecSpace, BroadcastTag>;
 
+    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+    int fake_team_size =
+        std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value ? 32
+                                                                           : 1;
+#else
+    int fake_team_size = 1;
+#endif
     const int team_size =
-        policy_type_f(league_size, 1)
+        policy_type_f(league_size, fake_team_size)
             .team_size_max(
                 functor,
                 Kokkos::
                     ParallelReduceTag());  // printf("team_size=%d\n",team_size);
-
     // team_broadcast with value
     value_type total = 0;
 
@@ -1493,7 +1508,7 @@ struct TestScratchAlignment {
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
     int team_size = 32;
 #else
-    int team_size = 1;
+    int team_size      = 1;
 #endif
     if (allocate_small) shmem_size += ScratchViewInt::shmem_size(1);
     Kokkos::parallel_for(

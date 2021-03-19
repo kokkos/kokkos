@@ -67,8 +67,6 @@ TEST(TEST_CATEGORY, team_for) {
 
 // FIXME_SYCL team reduction and broadcast not yet implemented
 #ifndef KOKKOS_ENABLE_SYCL
-// FIXME_OPENMPTARGET wrong results
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE,
                  Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
@@ -83,14 +81,8 @@ TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE,
                  Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
 }
-#endif
 
 TEST(TEST_CATEGORY, team_broadcast_long) {
-  // FIXME_OPENMPTARGET
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if constexpr (!std::is_same<TEST_EXECSPACE,
-                              Kokkos::Experimental::OpenMPTarget>::value)
-#endif
   {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
                       long>::test_teambroadcast(0, 1);
@@ -115,11 +107,6 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
 }
 
 TEST(TEST_CATEGORY, team_broadcast_char) {
-  // FIXME_OPENMPTARGET
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if constexpr (!std::is_same<TEST_EXECSPACE,
-                              Kokkos::Experimental::OpenMPTarget>::value)
-#endif
   {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
                       unsigned char>::test_teambroadcast(0, 1);
@@ -144,11 +131,6 @@ TEST(TEST_CATEGORY, team_broadcast_char) {
 }
 
 TEST(TEST_CATEGORY, team_broadcast_float) {
-  // FIXME_OPENMPTARGET
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if constexpr (!std::is_same<TEST_EXECSPACE,
-                              Kokkos::Experimental::OpenMPTarget>::value)
-#endif
   {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
                       float>::test_teambroadcast(0, 1.3);
@@ -183,11 +165,6 @@ TEST(TEST_CATEGORY, team_broadcast_float) {
 }
 
 TEST(TEST_CATEGORY, team_broadcast_double) {
-  // FIXME_OPENMPTARGET
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if constexpr (!std::is_same<TEST_EXECSPACE,
-                              Kokkos::Experimental::OpenMPTarget>::value)
-#endif
   {
     TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>,
                       double>::test_teambroadcast(0, 1.3);
