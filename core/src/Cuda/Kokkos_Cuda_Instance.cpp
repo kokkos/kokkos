@@ -253,7 +253,7 @@ void CudaInternal::print_configuration(std::ostream &s) const {
 #endif
 #if defined(CUDA_VERSION)
   s << "macro  CUDA_VERSION          = " << CUDA_VERSION << " = version "
-    << CUDA_VERSION / 1000 << "." << (CUDA_VERSION % 1000) / 10 << 'n';
+    << CUDA_VERSION / 1000 << "." << (CUDA_VERSION % 1000) / 10 << '\n';
 #endif
 
   for (int i = 0; i < dev_info.m_cudaDevCount; ++i) {
