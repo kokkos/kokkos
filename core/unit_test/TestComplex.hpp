@@ -428,4 +428,36 @@ TEST(TEST_CATEGORY, complex_trivially_copyable) {
 #endif
 }
 
+template <class ExecSpace>
+struct TestBugPowAndLogComplex {
+  Kokkos::View<Kokkos::complex<double> *, ExecSpace> d_pow;
+  Kokkos::View<Kokkos::complex<double> *, ExecSpace> d_log;
+  TestBugPowAndLogComplex() : d_pow("pow", 2), d_log("log", 2) { test(); }
+  void test() {
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 1), *this);
+    auto h_pow =
+        Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), d_pow);
+    ASSERT_FLOAT_EQ(h_pow(0).real(), 18);
+    ASSERT_FLOAT_EQ(h_pow(0).imag(), 26);
+    ASSERT_FLOAT_EQ(h_pow(1).real(), -18);
+    ASSERT_FLOAT_EQ(h_pow(1).imag(), 26);
+    auto h_log =
+        Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), d_log);
+    ASSERT_FLOAT_EQ(h_log(0).real(), 1.151292546497023);
+    ASSERT_FLOAT_EQ(h_log(0).imag(), 0.3217505543966422);
+    ASSERT_FLOAT_EQ(h_log(1).real(), 1.151292546497023);
+    ASSERT_FLOAT_EQ(h_log(1).imag(), 2.819842099193151);
+  }
+  KOKKOS_FUNCTION void operator()(int) const {
+    d_pow(0) = Kokkos::pow(Kokkos::complex<double>(+3., 1.), 3.);
+    d_pow(1) = Kokkos::pow(Kokkos::complex<double>(-3., 1.), 3.);
+    d_log(0) = Kokkos::log(Kokkos::complex<double>(+3., 1.));
+    d_log(1) = Kokkos::log(Kokkos::complex<double>(-3., 1.));
+  }
+};
+
+TEST(TEST_CATEGORY, complex_issue_3865) {
+  TestBugPowAndLogComplex<TEST_EXECSPACE>();
+}
+
 }  // namespace Test

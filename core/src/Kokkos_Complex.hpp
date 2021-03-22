@@ -710,17 +710,17 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> pow(const complex<RealType>& x,
                                                      const RealType& e) {
   RealType r = abs(x);
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using sycl::atan;
+  using sycl::atan2;
   using sycl::cos;
   using sycl::pow;
   using sycl::sin;
 #else
-  using std::atan;
+  using std::atan2;
   using std::cos;
   using std::pow;
   using std::sin;
 #endif
-  RealType phi = atan(x.imag() / x.real());
+  RealType phi = atan2(x.imag(), x.real());
   return pow(r, e) * Kokkos::complex<RealType>(cos(phi * e), sin(phi * e));
 }
 
@@ -779,13 +779,13 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> log(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using sycl::atan;
+  using sycl::atan2;
   using sycl::log;
 #else
-  using std::atan;
+  using std::atan2;
   using std::log;
 #endif
-  RealType phi = atan(x.imag() / x.real());
+  RealType phi = atan2(x.imag(), x.real());
   return Kokkos::complex<RealType>(log(abs(x)), phi);
 }
 
