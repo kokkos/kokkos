@@ -984,89 +984,6 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 
 //----------------------------------------------------------------------------
 
-/** \brief  Intra-thread vector parallel exclusive prefix sum.
- *
- *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
- *
- *  The range [0..N) is mapped to all vector lanes in the
- *  thread and a scan operation is performed.
- *  The last call to closure has final == true.
- */
-template <typename iType, class Closure>
-KOKKOS_INLINE_FUNCTION void parallel_scan(
-    const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::CudaTeamMember>&
-        loop_boundaries,
-    const Closure& closure) {
-  (void)loop_boundaries;
-  (void)closure;
-#ifdef __CUDA_ARCH__
-
-  // Extract value_type from closure
-
-  using value_type = typename Kokkos::Impl::FunctorAnalysis<
-      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
-
-  // Loop through boundaries by vector-length chunks
-  // must scan at each iteration
-
-  value_type accum = 0;
-
-  // All thread "lanes" must loop the same number of times.
-  // Determine an loop end for all thread "lanes."
-  // Requires:
-  //   blockDim.x is power of two and thus
-  //     ( end % blockDim.x ) == ( end & ( blockDim.x - 1 ) )
-  //   1 <= blockDim.x <= CudaTraits::WarpSize
-
-  const int mask = blockDim.x - 1;
-  const unsigned active_mask =
-      blockDim.x == 32 ? 0xffffffff
-                       : ((1 << blockDim.x) - 1)
-                             << (threadIdx.y % (32 / blockDim.x)) * blockDim.x;
-  const int rem = loop_boundaries.end & mask;  // == end % blockDim.x
-  const int end = loop_boundaries.end + (rem ? blockDim.x - rem : 0);
-
-  for (int i = threadIdx.x; i < end; i += blockDim.x) {
-    value_type val = 0;
-
-    // First acquire per-lane contributions:
-    if (i < loop_boundaries.end) closure(i, val, false);
-
-    value_type sval = val;
-
-    // Bottom up inclusive scan in triangular pattern
-    // where each CUDA thread is the root of a reduction tree
-    // from the zeroth "lane" to itself.
-    //  [t] += [t-1] if t >= 1
-    //  [t] += [t-2] if t >= 2
-    //  [t] += [t-4] if t >= 4
-    //  ...
-
-    for (int j = 1; j < (int)blockDim.x; j <<= 1) {
-      value_type tmp = 0;
-      Impl::in_place_shfl_up(tmp, sval, j, blockDim.x, active_mask);
-      if (j <= (int)threadIdx.x) {
-        sval += tmp;
-      }
-    }
-
-    // Include accumulation and remove value for exclusive scan:
-    val = accum + sval - val;
-
-    // Provide exclusive scan value:
-    if (i < loop_boundaries.end) closure(i, val, true);
-
-    // Accumulate the last value in the inclusive scan:
-    Impl::in_place_shfl(sval, sval, mask, blockDim.x, active_mask);
-
-    accum += sval;
-  }
-
-#endif
-}
-
-//----------------------------------------------------------------------------
-
 /** \brief  Intra-thread vector parallel scan with reducer.
  *
  *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
@@ -1083,6 +1000,7 @@ KOKKOS_INLINE_FUNCTION
                   const Closure& closure, const ReducerType& reducer) {
   (void)loop_boundaries;
   (void)closure;
+  (void)reducer;
 #ifdef __CUDA_ARCH__
 
   using value_type = typename ReducerType::value_type;
@@ -1148,6 +1066,27 @@ KOKKOS_INLINE_FUNCTION
   }
 
 #endif
+}
+
+//----------------------------------------------------------------------------
+
+/** \brief  Intra-thread vector parallel exclusive prefix sum.
+ *
+ *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
+ *
+ *  The range [0..N) is mapped to all vector lanes in the
+ *  thread and a scan operation is performed.
+ *  The last call to closure has final == true.
+ */
+template <typename iType, class Closure>
+KOKKOS_INLINE_FUNCTION void parallel_scan(
+    const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::CudaTeamMember>&
+        loop_boundaries,
+    const Closure& closure) {
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
+  value_type dummy;
+  parallel_scan(loop_boundaries, closure, Kokkos::Sum<value_type>(dummy));
 }
 
 }  // namespace Kokkos
