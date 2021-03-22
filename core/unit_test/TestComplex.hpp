@@ -461,6 +461,19 @@ TEST(TEST_CATEGORY, complex_issue_3865) {
 }
 
 TEST(TEST_CATEGORY, complex_issue_3867) {
+  ASSERT_EQ(Kokkos::pow(Kokkos::complex<double>(2., 1.), 3.),
+            Kokkos::pow(Kokkos::complex<double>(2., 1.), 3));
+  ASSERT_EQ(
+      Kokkos::pow(Kokkos::complex<double>(2., 1.), 3.),
+      Kokkos::pow(Kokkos::complex<double>(2., 1.), Kokkos::complex<double>(3)));
+
+  auto x = Kokkos::pow(Kokkos::complex<double>(2, 1),
+                       Kokkos::complex<double>(-3, 4));
+  auto y = Kokkos::complex<double>(
+      std::pow(std::complex<double>(2, 1), std::complex<double>(-3, 4)));
+  ASSERT_FLOAT_EQ(x.real(), y.real());
+  ASSERT_FLOAT_EQ(x.imag(), y.imag());
+
 #define CHECK_POW_COMPLEX_PROMOTION(ARGTYPE1, ARGTYPE2, RETURNTYPE)         \
   static_assert(                                                            \
       std::is_same<RETURNTYPE,                                              \
