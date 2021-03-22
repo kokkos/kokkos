@@ -864,6 +864,88 @@ class TestTripleNestedReduce {
 
 #endif
 
+template <typename ExecutionSpace, bool bInclusive, class Reducer>
+void checkScan() {
+  static constexpr int n = 1000000;
+  using size_type        = typename TEST_EXECSPACE::size_type;
+  using value_type       = typename Reducer::value_type;
+
+  Kokkos::View<value_type[n], TEST_EXECSPACE> inputs("inputs");
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<TEST_EXECSPACE>(0, n),
+      KOKKOS_LAMBDA(size_type i) { inputs(i) = i * 1. / n; });
+
+  static constexpr int nTeamThreadRange   = 1e3;
+  static constexpr int nThreadVectorRange = 1e2;
+  static constexpr int nPerTeam = nTeamThreadRange * nThreadVectorRange;
+  static constexpr int nTeams   = n / nPerTeam;
+
+  value_type result;
+  Reducer reducer(result);
+
+  Kokkos::View<typename Reducer::value_type[n], ExecutionSpace> outputs(
+      "outputs");
+
+  // run ThreadVectorRange parallel_scan
+  Kokkos::TeamPolicy<ExecutionSpace> policy(nTeams, Kokkos::AUTO, Kokkos::AUTO);
+  const std::string label =
+      (bInclusive ? std::string("inclusive") : std::string("exclusive")) +
+      std::string("Scan") + std::string(typeid(Reducer).name());
+  Kokkos::parallel_for(
+      label, policy,
+      KOKKOS_LAMBDA(
+          const typename Kokkos::TeamPolicy<ExecutionSpace>::member_type
+              &team) {
+        const int iTeam       = team.league_rank();
+        const int iTeamOffset = iTeam * nPerTeam;
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(team, nTeamThreadRange), [&](const int i) {
+              const int iThreadOffset = i * nThreadVectorRange;
+              Kokkos::parallel_scan(
+                  Kokkos::ThreadVectorRange(team, nThreadVectorRange),
+                  [&](const int j, value_type &update, const bool bFinal) {
+                    const int iElement = j + iTeamOffset + iThreadOffset;
+                    const auto tmp     = inputs(iElement);
+                    if (bInclusive) {
+                      reducer.join(update, tmp);
+                      if (bFinal) {
+                        outputs(iElement) = update;
+                      }
+                    } else {
+                      if (bFinal) {
+                        outputs(iElement) = update;
+                      }
+                      reducer.join(update, tmp);
+                    }
+                  },
+                  reducer);
+            });
+      });
+  Kokkos::fence();
+
+  auto host_outputs =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, outputs);
+  auto host_inputs =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, inputs);
+
+  Kokkos::View<value_type[n], Kokkos::HostSpace> expected("expected");
+  {
+    value_type identity;
+    reducer.init(identity);
+    for (int i = 0; i < expected.extent_int(0); ++i) {
+      const int iVector      = i % nThreadVectorRange;
+      const value_type accum = iVector == 0 ? identity : expected(i - 1);
+      const value_type val =
+          bInclusive ? host_inputs(i)
+                     : (iVector == 0 ? identity : host_inputs(i - 1));
+      expected(i) = accum;
+      reducer.join(expected(i), val);
+    }
+  }
+  for (int i = 0; i < host_outputs.extent_int(0); ++i)
+    ASSERT_EQ(host_outputs(i), expected(i));
+}
+
 #if !(defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ENABLE_HIP))
 TEST(TEST_CATEGORY, team_vector) {
   ASSERT_TRUE((TestTeamVector::Test<TEST_EXECSPACE>(0)));
@@ -898,6 +980,21 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 33);
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 19);
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 7, 16);
+}
+#endif
+
+#if (!defined(KOKKOS_ENABLE_CUDA)) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
+TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
+  using T = double;
+
+  checkScan<TEST_EXECSPACE, false, Kokkos::Prod<T, TEST_EXECSPACE>>();
+  checkScan<TEST_EXECSPACE, true, Kokkos::Prod<T, TEST_EXECSPACE>>();
+
+  checkScan<TEST_EXECSPACE, false, Kokkos::Max<T, TEST_EXECSPACE>>();
+  checkScan<TEST_EXECSPACE, true, Kokkos::Max<T, TEST_EXECSPACE>>();
+
+  checkScan<TEST_EXECSPACE, false, Kokkos::Min<T, TEST_EXECSPACE>>();
+  checkScan<TEST_EXECSPACE, true, Kokkos::Min<T, TEST_EXECSPACE>>();
 }
 #endif
 
