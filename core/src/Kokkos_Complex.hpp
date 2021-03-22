@@ -45,7 +45,9 @@
 #define KOKKOS_COMPLEX_HPP
 
 #include <Kokkos_Atomic.hpp>
+#include <Kokkos_MathematicalFunctions.hpp>
 #include <Kokkos_NumericTraits.hpp>
+#include <impl/Kokkos_Error.hpp>
 #include <complex>
 #include <iosfwd>
 
@@ -691,6 +693,15 @@ KOKKOS_INLINE_FUNCTION RealType imag(const complex<RealType>& x) noexcept {
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType real(const complex<RealType>& x) noexcept {
   return x.real();
+}
+
+//! Constructs a complex number from magnitude and phase angle
+template <class T>
+KOKKOS_INLINE_FUNCTION complex<T> polar(const T& r, const T& theta = T()) {
+  using Kokkos::Experimental::cos;
+  using Kokkos::Experimental::sin;
+  KOKKOS_EXPECTS(r >= 0);
+  return complex<T>(r * cos(theta), r * sin(theta));
 }
 
 //! Absolute value (magnitude) of a complex number.
