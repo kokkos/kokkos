@@ -314,6 +314,53 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
           "DualView constructed with incompatible views");
     }
   }
+  // does the DualView have only one device
+  struct impl_dualview_is_single_device {
+    enum : bool {
+      value = std::is_same<typename t_dev::device_type,
+                           typename t_host::device_type>::value
+    };
+  };
+
+  // does the given device match the device of t_dev?
+  template <typename Device>
+  struct impl_device_matches_tdev_device {
+    enum : bool {
+      value = std::is_same<typename t_dev::device_type, Device>::value
+    };
+  };
+  // does the given device match the device of t_host?
+  template <typename Device>
+  struct impl_device_matches_thost_device {
+    enum : bool {
+      value = std::is_same<typename t_host::device_type, Device>::value
+    };
+  };
+
+  // does the given device match the execution space of t_host?
+  template <typename Device>
+  struct impl_device_matches_thost_exec {
+    enum : bool {
+      value = std::is_same<typename t_host::execution_space, Device>::value
+    };
+  };
+
+  // does the given device match the execution space of t_dev?
+  template <typename Device>
+  struct impl_device_matches_tdev_exec {
+    enum : bool {
+      value = std::is_same<typename t_dev::execution_space, Device>::value
+    };
+  };
+
+  // does the given device's memory space match the memory space of t_dev?
+  template <typename Device>
+  struct impl_device_matches_tdev_memory_space {
+    enum : bool {
+      value = std::is_same<typename t_dev::memory_space,
+                           typename Device::memory_space>::value
+    };
+  };
 
   //@}
   //! \name Methods for synchronizing, marking as modified, and getting Views.
@@ -321,7 +368,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
 
   /// \brief Return a View on a specific device \c Device.
   ///
-  /// Please don't be afraid of the if_c expression in the return
+  /// Please don't be afraid of the nested if_c expressions in the return
   /// value's type.  That just tells the method what the return type
   /// should be: t_dev if the \c Device template parameter matches
   /// this DualView's device type, else t_host.
@@ -343,9 +390,16 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   /// \endcode
   template <class Device>
   KOKKOS_INLINE_FUNCTION const typename Impl::if_c<
-      std::is_same<typename t_dev::memory_space,
-                   typename Device::memory_space>::value,
-      t_dev, t_host>::type&
+      impl_device_matches_tdev_device<Device>::value, t_dev,
+      typename Impl::if_c<
+          impl_device_matches_thost_device<Device>::value, t_host,
+          typename Impl::if_c<
+              impl_device_matches_thost_exec<Device>::value, t_host,
+              typename Impl::if_c<
+                  impl_device_matches_tdev_exec<Device>::value, t_dev,
+                  typename Impl::if_c<
+                      impl_device_matches_tdev_memory_space<Device>::value,
+                      t_dev, t_host>::type>::type>::type>::type>::type
   view() const {
     constexpr bool device_is_memspace =
         std::is_same<Device, typename Device::memory_space>::value;
@@ -725,6 +779,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   template <class Device>
   void modify() {
     if (modified_flags.data() == nullptr) return;
+    if (impl_dualview_is_single_device::value) return;
     int dev = get_device_side<Device>();
 
     if (dev == 1) {  // if Device is the same as DualView's device type
@@ -757,6 +812,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   inline void modify_host() {
+    if (impl_dualview_is_single_device::value) return;
     if (modified_flags.data() != nullptr) {
       modified_flags(0) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
@@ -777,6 +833,7 @@ class DualView : public ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type> {
   }
 
   inline void modify_device() {
+    if (impl_dualview_is_single_device::value) return;
     if (modified_flags.data() != nullptr) {
       modified_flags(1) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
