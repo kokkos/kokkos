@@ -732,6 +732,32 @@ KOKKOS_INLINE_FUNCTION
 
 //----------------------------------------------------------------------------
 
+/** \brief  Intra-thread vector parallel exclusive prefix sum with reducer.
+ *
+ *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
+ *
+ *  The range [0..N) is mapped to all vector lanes in the
+ *  thread and a scan operation is performed.
+ *  The last call to closure has final == true.
+ */
+template <typename iType, class Closure, typename ReducerType>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+    parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
+                      iType, Impl::SYCLTeamMember>& loop_boundaries,
+                  const Closure& closure, const ReducerType& reducer) {
+  // FIXME_SYCL modify for vector_length!=1
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
+
+  value_type accum;
+  reducer.init(accum);
+
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
+    closure(i, accum, true);
+  }
+}
+
 /** \brief  Intra-thread vector parallel exclusive prefix sum.
  *
  *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
@@ -745,15 +771,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::SYCLTeamMember>&
         loop_boundaries,
     const Closure& closure) {
-  // FIXME_SYCL modify for vector_length!=1
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
-
-  value_type accum{};
-
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
-    closure(i, accum, true);
-  }
+  value_type dummy;
+  parallel_scan(loop_boundaries, closure, Kokkos::Sum<value_type>{dummy});
 }
 
 }  // namespace Kokkos
