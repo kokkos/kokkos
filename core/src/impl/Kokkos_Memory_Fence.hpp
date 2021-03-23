@@ -45,6 +45,7 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ATOMIC_HPP) && !defined(KOKKOS_MEMORY_FENCE_HPP)
 #define KOKKOS_MEMORY_FENCE_HPP
+
 namespace Kokkos {
 
 //----------------------------------------------------------------------------
@@ -57,7 +58,7 @@ void memory_fence() {
 #pragma omp flush
 #elif defined(__HIP_DEVICE_COMPILE__)
   __threadfence();
-#elif defined(__SYCL_DEVICE_ONLY__)
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
   sycl::ONEAPI::atomic_fence(sycl::ONEAPI::memory_order::acq_rel,
                              sycl::ONEAPI::memory_scope::device);
 #elif defined(KOKKOS_ENABLE_ASM) && defined(KOKKOS_ENABLE_ISA_X86_64)

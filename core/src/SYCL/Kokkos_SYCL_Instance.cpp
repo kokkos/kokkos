@@ -44,6 +44,7 @@
 
 #include <Kokkos_Concepts.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
+#include <KokkosCore_Config_DeclareBackend.hpp>
 #include <Kokkos_SYCL.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Serial.hpp>
