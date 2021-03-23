@@ -162,7 +162,7 @@ template <class DataType, class Layout, class Space>
 struct NormalizeViewProperties<DataType, type_list<Layout, Space>,
                                std::enable_if_t<is_array_layout<Layout>::value>>
     : NormalizeViewProperties<
-          DataType, type_list<Layout, Kokkos::DefaultExecutionSpace>> {
+          DataType, type_list<Layout, Space, Kokkos::DefaultMemoryTraits>> {
   // This is unambigous, so use static_assert instead of SFINAE
   static_assert(is_space<Space>::value || is_device<Space>::value,
                 "Third template parameter to Kokkos View must be a space or a "
@@ -171,9 +171,9 @@ struct NormalizeViewProperties<DataType, type_list<Layout, Space>,
 };
 
 /// View< DataType , Layout , Space, MemoryTraits >
-template <class DataType, class Layout, class Space, class MemoryTraits>
+template <class DataType, class Layout, class Space, class MemTraits>
 struct NormalizeViewProperties<DataType,
-                               type_list<Layout, Space, MemoryTraits>> {
+                               type_list<Layout, Space, MemTraits>> {
   // This is unambigous, so use static_assert instead of SFINAE
   static_assert(is_array_layout<Layout>::value,
                 "The second template parameter to Kokkos::View must be an "
@@ -181,7 +181,7 @@ struct NormalizeViewProperties<DataType,
   static_assert(is_space<Space>::value || is_device<Space>::value,
                 "Third template parameter to Kokkos::View must be a space or a "
                 "device when four paramters are given");
-  static_assert(is_memory_traits<Layout>::value,
+  static_assert(is_memory_traits<MemTraits>::value,
                 "The fourth template parameter to Kokkos::View must be memory "
                 "traits when four paramters are given");
 
@@ -193,7 +193,7 @@ struct NormalizeViewProperties<DataType,
 
  public:
   using type = Kokkos::BasicView<DataType, normalized_layout, normalized_device,
-                                 MemoryTraits>;
+                                 MemTraits>;
 };
 
 // </editor-fold> end NormalizeViewProperties }}}2

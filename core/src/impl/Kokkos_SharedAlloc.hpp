@@ -582,6 +582,20 @@ union SharedAllocationTracker {
 #undef KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
 };
 
+//==============================================================================
+// <editor-fold desc="shared_allocation_tracking_(disable/enable)"> {{{1
+
+inline void shared_allocation_tracking_disable() {
+  Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_disable();
+}
+
+inline void shared_allocation_tracking_enable() {
+  Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enable();
+}
+
+// </editor-fold> end shared_allocation_tracking_(disable/enable) }}}1
+//==============================================================================
+
 } /* namespace Impl */
 } /* namespace Kokkos */
 #endif
