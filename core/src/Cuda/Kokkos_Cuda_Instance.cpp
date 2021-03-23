@@ -249,11 +249,11 @@ void CudaInternal::print_configuration(std::ostream &s) const {
   const CudaInternalDevices &dev_info = CudaInternalDevices::singleton();
 
 #if defined(KOKKOS_ENABLE_CUDA)
-  s << "macro  KOKKOS_ENABLE_CUDA      : defined" << std::endl;
+  s << "macro  KOKKOS_ENABLE_CUDA      : defined\n";
 #endif
 #if defined(CUDA_VERSION)
   s << "macro  CUDA_VERSION          = " << CUDA_VERSION << " = version "
-    << CUDA_VERSION / 1000 << "." << (CUDA_VERSION % 1000) / 10 << std::endl;
+    << CUDA_VERSION / 1000 << "." << (CUDA_VERSION % 1000) / 10 << '\n';
 #endif
 
   for (int i = 0; i < dev_info.m_cudaDevCount; ++i) {
@@ -275,7 +275,6 @@ CudaInternal::~CudaInternal() {
       m_scratchConcurrentBitset) {
     std::cerr << "Kokkos::Cuda ERROR: Failed to call Kokkos::Cuda::finalize()"
               << std::endl;
-    std::cerr.flush();
   }
 
   m_cudaDev                   = -1;
@@ -359,8 +358,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 
     if (m_cudaArch == 0) {
       std::stringstream ss;
-      ss << "Kokkos::Cuda::initialize ERROR: likely mismatch of architecture"
-         << std::endl;
+      ss << "Kokkos::Cuda::initialize ERROR: likely mismatch of architecture\n";
       std::string msg = ss.str();
       Kokkos::abort(msg.c_str());
     }
@@ -374,7 +372,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
             "compute capability "
          << compiled_major << "." << compiled_minor
          << " on device with compute capability " << cudaProp.major << "."
-         << cudaProp.minor << " is not supported by CUDA!" << std::endl;
+         << cudaProp.minor << " is not supported by CUDA!\n";
       std::string msg = ss.str();
       Kokkos::abort(msg.c_str());
     }
@@ -493,17 +491,11 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 
 #ifdef KOKKOS_ENABLE_CUDA_UVM
   if (Kokkos::show_warnings() && !cuda_launch_blocking()) {
-    std::cerr << "Kokkos::Cuda::initialize WARNING: Cuda is allocating into "
-                 "UVMSpace by default"
-              << std::endl;
-    std::cerr << "                                  without setting "
-                 "CUDA_LAUNCH_BLOCKING=1."
-              << std::endl;
-    std::cerr << "                                  The code must call "
-                 "Cuda().fence() after each kernel"
-              << std::endl;
-    std::cerr << "                                  or will likely crash when "
-                 "accessing data on the host."
+    std::cerr << R"warning(
+Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
+                                  without setting CUDA_LAUNCH_BLOCKING=1.
+                                  The code must call Cuda().fence() after each kernel
+                                  or will likely crash when accessing data on the host.)warning"
               << std::endl;
   }
 
@@ -521,19 +513,13 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
 
   if (Kokkos::show_warnings() &&
       (!visible_devices_one && !force_device_alloc)) {
-    std::cerr << "Kokkos::Cuda::initialize WARNING: Cuda is allocating into "
-                 "UVMSpace by default"
+    std::cerr << R"warning(
+Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
+                                  without setting CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or
+                                  setting CUDA_VISIBLE_DEVICES.
+                                  This could on multi GPU systems lead to severe performance"
+                                  penalties.)warning"
               << std::endl;
-    std::cerr << "                                  without setting "
-                 "CUDA_MANAGED_FORCE_DEVICE_ALLOC=1 or "
-              << std::endl;
-    std::cerr
-        << "                                  setting CUDA_VISIBLE_DEVICES."
-        << std::endl;
-    std::cerr << "                                  This could on multi GPU "
-                 "systems lead to severe performance"
-              << std::endl;
-    std::cerr << "                                  penalties." << std::endl;
   }
 #endif
 
@@ -886,54 +872,53 @@ void CudaSpaceInitializer::fence() { Kokkos::Cuda::impl_static_fence(); }
 
 void CudaSpaceInitializer::print_configuration(std::ostream &msg,
                                                const bool detail) {
-  msg << "Device Execution Space:" << std::endl;
-  msg << "  KOKKOS_ENABLE_CUDA: ";
-  msg << "yes" << std::endl;
+  msg << "Device Execution Space:\n";
+  msg << "  KOKKOS_ENABLE_CUDA: yes\n";
 
-  msg << "Cuda Atomics:" << std::endl;
+  msg << "Cuda Atomics:\n";
   msg << "  KOKKOS_ENABLE_CUDA_ATOMICS: ";
 #ifdef KOKKOS_ENABLE_CUDA_ATOMICS
-  msg << "yes" << std::endl;
+  msg << "yes\n";
 #else
-  msg << "no" << std::endl;
+  msg << "no\n";
 #endif
 
-  msg << "Cuda Options:" << std::endl;
+  msg << "Cuda Options:\n";
   msg << "  KOKKOS_ENABLE_CUDA_LAMBDA: ";
 #ifdef KOKKOS_ENABLE_CUDA_LAMBDA
-  msg << "yes" << std::endl;
+  msg << "yes\n";
 #else
-  msg << "no" << std::endl;
+  msg << "no\n";
 #endif
   msg << "  KOKKOS_ENABLE_CUDA_LDG_INTRINSIC: ";
 #ifdef KOKKOS_ENABLE_CUDA_LDG_INTRINSIC
-  msg << "yes" << std::endl;
+  msg << "yes\n";
 #else
-  msg << "no" << std::endl;
+  msg << "no\n";
 #endif
   msg << "  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE: ";
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-  msg << "yes" << std::endl;
+  msg << "yes\n";
 #else
-  msg << "no" << std::endl;
+  msg << "no\n";
 #endif
   msg << "  KOKKOS_ENABLE_CUDA_UVM: ";
 #ifdef KOKKOS_ENABLE_CUDA_UVM
-  msg << "yes" << std::endl;
+  msg << "yes\n";
 #else
-  msg << "no" << std::endl;
+  msg << "no\n";
 #endif
   msg << "  KOKKOS_ENABLE_CUSPARSE: ";
 #ifdef KOKKOS_ENABLE_CUSPARSE
-  msg << "yes" << std::endl;
+  msg << "yes\n";
 #else
-  msg << "no" << std::endl;
+  msg << "no\n";
 #endif
   msg << "  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: ";
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
-  msg << "yes" << std::endl;
+  msg << "yes\n";
 #else
-  msg << "no" << std::endl;
+  msg << "no\n";
 #endif
 
   msg << "\nCuda Runtime Configuration:" << std::endl;
