@@ -54,16 +54,17 @@ namespace Impl {
 // trying to assign a literal 0 int ( = 0 );
 struct AtomicViewConstTag {};
 
-template <class ViewTraits>
-class AtomicDataElement {
+// TODO replace this with atomic_ref at some point
+template <class PointerType>
+class AtomicReference {
  public:
-  using value_type           = typename ViewTraits::value_type;
-  using const_value_type     = typename ViewTraits::const_value_type;
-  using non_const_value_type = typename ViewTraits::non_const_value_type;
-  volatile value_type* const ptr;
+  std::add_volatile_t<PointerType> const ptr;
+  using value_type = decltype(*std::declval<PointerType>());
+  using const_value_type = std::add_const_t<value_type>;
+  using non_const_value_type = std::remove_const_t<value_type>;
 
   KOKKOS_INLINE_FUNCTION
-  AtomicDataElement(value_type* ptr_, AtomicViewConstTag) : ptr(ptr_) {}
+  AtomicReference(value_type* ptr_, AtomicViewConstTag) : ptr(ptr_) {}
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator=(const_value_type& val) const {
@@ -299,16 +300,16 @@ class AtomicDataElement {
   }
 
   KOKKOS_INLINE_FUNCTION
-  bool operator==(const AtomicDataElement& val) const { return *ptr == val; }
+  bool operator==(const AtomicReference& val) const { return *ptr == val; }
   KOKKOS_INLINE_FUNCTION
-  bool operator==(volatile const AtomicDataElement& val) const {
+  bool operator==(volatile const AtomicReference& val) const {
     return *ptr == val;
   }
 
   KOKKOS_INLINE_FUNCTION
-  bool operator!=(const AtomicDataElement& val) const { return *ptr != val; }
+  bool operator!=(const AtomicReference& val) const { return *ptr != val; }
   KOKKOS_INLINE_FUNCTION
-  bool operator!=(volatile const AtomicDataElement& val) const {
+  bool operator!=(volatile const AtomicReference& val) const {
     return *ptr != val;
   }
 
@@ -342,6 +343,14 @@ class AtomicDataElement {
   operator non_const_value_type() volatile const {
     return Kokkos::Impl::atomic_load(ptr);
   }
+};
+
+template <class ViewTraits>
+class AtomicDataElement
+  : AtomicReference<typename ViewTraits::ValueType*>
+{
+  using base_t = AtomicReference<typename ViewTraits::ValueType*>;
+  using base_t::base_t;
 };
 
 template <class ViewTraits>

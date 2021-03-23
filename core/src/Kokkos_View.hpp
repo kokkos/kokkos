@@ -45,6 +45,15 @@
 #ifndef KOKKOS_VIEW_HPP
 #define KOKKOS_VIEW_HPP
 
+#include <Kokkos_Macros.hpp>
+
+// FIXME MDSPAN also check for mdspan availability
+#if !defined(KOKKOS_USE_LEGACY_VIEW)
+
+#include <View/Kokkos_MDSpanView.hpp>
+
+#else
+
 #include <type_traits>
 #include <string>
 #include <algorithm>
@@ -2104,5 +2113,7 @@ using Kokkos::is_view;
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+#endif /* KOKKOS_IMPL_USE_LEGACY_VIEW */
 
 #endif /* #ifndef KOKKOS_VIEW_HPP */

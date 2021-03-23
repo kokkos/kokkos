@@ -59,12 +59,13 @@ namespace Kokkos {
  *  A zero value is the default for a View, indicating that none of
  *  these traits are present.
  */
-enum MemoryTraitsFlags {
+enum MemoryTraitsFlags : unsigned {
   Unmanaged    = 0x01,
   RandomAccess = 0x02,
   Atomic       = 0x04,
   Restrict     = 0x08,
-  Aligned      = 0x10
+  Aligned      = 0x10,
+  END_OF_FLAGS = 0x20,
 };
 
 template <unsigned T>
@@ -94,6 +95,9 @@ using MemoryManaged   = Kokkos::MemoryTraits<0>;
 using MemoryUnmanaged = Kokkos::MemoryTraits<Kokkos::Unmanaged>;
 using MemoryRandomAccess =
     Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess>;
+// TODO VIEW provide a build system hook to change this default for things like
+//           resilience and checkpointing?
+using DefaultMemoryTraits = MemoryManaged;
 
 }  // namespace Kokkos
 
