@@ -248,8 +248,7 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   // The reference_type for an array is 'value_type *'
   // The reference_type for a single value is 'value_type &'
 
-  using reference_type =
-      typename Impl::if_c<IsArray, value_type*, value_type&>::type;
+  using reference_type = std::conditional_t<IsArray, value_type*, value_type&>;
 
   // Number of values if single value
   template <class F>
@@ -287,8 +286,8 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   struct REJECTTAG {
   };  // Reject tagged operator() when using non-tagged execution policy.
 
-  using tag_type = typename Impl::if_c<std::is_same<ArgTag, void>::value,
-                                       VOIDTAG, ArgTag>::type;
+  using tag_type =
+      std::conditional_t<std::is_same<ArgTag, void>::value, VOIDTAG, ArgTag>;
 
   //----------------------------------------
   // parallel_for operator without a tag:
@@ -1329,12 +1328,11 @@ struct FunctorValueTraits<FunctorType, ArgTag,
   enum { IS_REJECT = std::is_same<REJECTTAG, ValueType>::value };
 
  public:
-  using value_type =
-      typename Impl::if_c<IS_VOID || IS_REJECT, void, ValueType>::type;
+  using value_type = std::conditional_t<IS_VOID || IS_REJECT, void, ValueType>;
   using pointer_type =
-      typename Impl::if_c<IS_VOID || IS_REJECT, void, ValueType*>::type;
+      std::conditional_t<IS_VOID || IS_REJECT, void, ValueType*>;
   using reference_type =
-      typename Impl::if_c<IS_VOID || IS_REJECT, void, ValueType&>::type;
+      std::conditional_t<IS_VOID || IS_REJECT, void, ValueType&>;
   using functor_type = FunctorType;
 
   static_assert(
