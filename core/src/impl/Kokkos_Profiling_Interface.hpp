@@ -101,9 +101,24 @@ namespace Tools {
 
 namespace Experimental {
 using EventSet = Kokkos_Profiling_EventSet;
-static_assert(sizeof(EventSet) / sizeof(function_pointer) == 275,
+static_assert(sizeof(EventSet) / sizeof(Kokkos_Tools_functionPointer) == 275,
               "sizeof EventSet has changed, this is an error on the part of a "
               "Kokkos developer");
+static_assert(sizeof(Kokkos_Tools_ToolSettings) / sizeof(bool) == 256,
+              "sizeof EventSet has changed, this is an error on the part of a "
+              "Kokkos developer");
+static_assert(sizeof(Kokkos_Tools_ToolProgrammingInterface) /
+                      sizeof(Kokkos_Tools_functionPointer) ==
+                  32,
+              "sizeof EventSet has changed, this is an error on the part of a "
+              "Kokkos developer");
+
+using toolInvokedFenceFunction = Kokkos_Tools_toolInvokedFenceFunction;
+using provideToolProgrammingInterfaceFunction =
+    Kokkos_Tools_provideToolProgrammingInterfaceFunction;
+using requestToolSettingsFunction = Kokkos_Tools_requestToolSettingsFunction;
+using ToolSettings                = Kokkos_Tools_ToolSettings;
+using ToolProgrammingInterface    = Kokkos_Tools_ToolProgrammingInterface;
 }  // namespace Experimental
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;

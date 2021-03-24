@@ -523,14 +523,6 @@ struct MemorySpaceAccess<Kokkos::Experimental::HPX::memory_space,
   enum : bool { deepcopy = false };
 };
 
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::Experimental::HPX::memory_space,
-    Kokkos::Experimental::HPX::scratch_memory_space> {
-  enum : bool { value = true };
-  inline static void verify() {}
-  inline static void verify(const void *) {}
-};
 }  // namespace Impl
 }  // namespace Kokkos
 

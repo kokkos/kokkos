@@ -45,8 +45,11 @@
 #define KOKKOS_COMPLEX_HPP
 
 #include <Kokkos_Atomic.hpp>
+#include <Kokkos_MathematicalFunctions.hpp>
 #include <Kokkos_NumericTraits.hpp>
+#include <impl/Kokkos_Error.hpp>
 #include <complex>
+#include <type_traits>
 #include <iosfwd>
 
 #ifdef KOKKOS_ENABLE_SYCL
@@ -693,6 +696,15 @@ KOKKOS_INLINE_FUNCTION RealType real(const complex<RealType>& x) noexcept {
   return x.real();
 }
 
+//! Constructs a complex number from magnitude and phase angle
+template <class T>
+KOKKOS_INLINE_FUNCTION complex<T> polar(const T& r, const T& theta = T()) {
+  using Kokkos::Experimental::cos;
+  using Kokkos::Experimental::sin;
+  KOKKOS_EXPECTS(r >= 0);
+  return complex<T>(r * cos(theta), r * sin(theta));
+}
+
 //! Absolute value (magnitude) of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType abs(const complex<RealType>& x) {
@@ -705,23 +717,79 @@ KOKKOS_INLINE_FUNCTION RealType abs(const complex<RealType>& x) {
 }
 
 //! Power of a complex number
-template <class RealType>
-KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> pow(const complex<RealType>& x,
-                                                     const RealType& e) {
-  RealType r = abs(x);
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using sycl::atan;
-  using sycl::cos;
-  using sycl::pow;
-  using sycl::sin;
-#else
-  using std::atan;
-  using std::cos;
-  using std::pow;
-  using std::sin;
-#endif
-  RealType phi = atan(x.imag() / x.real());
-  return pow(r, e) * Kokkos::complex<RealType>(cos(phi * e), sin(phi * e));
+template <class T>
+KOKKOS_INLINE_FUNCTION complex<T> pow(const complex<T>& x, const T& y) {
+  using Kokkos::Experimental::atan2;
+  using Kokkos::Experimental::pow;
+  T r     = abs(x);
+  T theta = atan2(x.imag(), x.real());
+  return polar(pow(r, y), y * theta);
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION complex<T> pow(const T& x, const complex<T>& y) {
+  return pow(complex<T>(x), y);
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION complex<T> pow(const complex<T>& x,
+                                      const complex<T>& y) {
+  using Kokkos::Experimental::log;
+
+  return x == T() ? T() : exp(y * log(x));
+}
+
+namespace Impl {
+// NOTE promote would also be useful for math functions
+template <class T, bool = std::is_integral<T>::value>
+struct promote {
+  using type = double;
+};
+template <class T>
+struct promote<T, false> {};
+template <>
+struct promote<long double> {
+  using type = long double;
+};
+template <>
+struct promote<double> {
+  using type = double;
+};
+template <>
+struct promote<float> {
+  using type = float;
+};
+template <class T>
+using promote_t = typename promote<T>::type;
+template <class T, class U>
+struct promote_2 {
+  using type = decltype(promote_t<T>() + promote_t<U>());
+};
+template <class T, class U>
+using promote_2_t = typename promote_2<T, U>::type;
+}  // namespace Impl
+
+template <class T, class U,
+          class = std::enable_if_t<std::is_arithmetic<T>::value>>
+KOKKOS_INLINE_FUNCTION complex<Impl::promote_2_t<T, U>> pow(
+    const T& x, const complex<U>& y) {
+  using type = Impl::promote_2_t<T, U>;
+  return pow(type(x), complex<type>(y));
+}
+
+template <class T, class U,
+          class = std::enable_if_t<std::is_arithmetic<U>::value>>
+KOKKOS_INLINE_FUNCTION complex<Impl::promote_2_t<T, U>> pow(const complex<T>& x,
+                                                            const U& y) {
+  using type = Impl::promote_2_t<T, U>;
+  return pow(complex<type>(x), type(y));
+}
+
+template <class T, class U>
+KOKKOS_INLINE_FUNCTION complex<Impl::promote_2_t<T, U>> pow(
+    const complex<T>& x, const complex<U>& y) {
+  using type = Impl::promote_2_t<T, U>;
+  return pow(complex<type>(x), complex<type>(y));
 }
 
 //! Square root of a complex number. This is intended to match the stdc++
@@ -779,13 +847,13 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> log(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using sycl::atan;
+  using sycl::atan2;
   using sycl::log;
 #else
-  using std::atan;
+  using std::atan2;
   using std::log;
 #endif
-  RealType phi = atan(x.imag() / x.real());
+  RealType phi = atan2(x.imag(), x.real());
   return Kokkos::complex<RealType>(log(abs(x)), phi);
 }
 
@@ -1046,7 +1114,7 @@ std::istream& operator>>(std::istream& is, complex<RealType>& x) {
 }
 
 template <class T>
-struct reduction_identity<Kokkos::complex<T> > {
+struct reduction_identity<Kokkos::complex<T>> {
   using t_red_ident = reduction_identity<T>;
   KOKKOS_FORCEINLINE_FUNCTION constexpr static Kokkos::complex<T>
   sum() noexcept {

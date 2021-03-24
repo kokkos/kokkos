@@ -47,6 +47,7 @@
 #include <Kokkos_SYCL.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Serial.hpp>
+#include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_Error.hpp>
 
 namespace Kokkos {
@@ -57,15 +58,13 @@ std::vector<std::optional<sycl::queue>*> SYCLInternal::all_queues;
 std::mutex SYCLInternal::mutex;
 
 SYCLInternal::~SYCLInternal() {
-  if (!was_finalized || m_scratchSpace || m_scratchFlags) {
+  if (!was_finalized || m_scratchSpace || m_scratchFlags ||
+      m_scratchConcurrentBitset) {
     std::cerr << "Kokkos::Experimental::SYCL ERROR: Failed to call "
                  "Kokkos::Experimental::SYCL::finalize()"
               << std::endl;
     std::cerr.flush();
   }
-
-  m_scratchSpace = nullptr;
-  m_scratchFlags = nullptr;
 }
 
 int SYCLInternal::verify_is_initialized(const char* const label) const {
@@ -124,8 +123,31 @@ void SYCLInternal::initialize(const sycl::queue& q) {
     const sycl::device& d = m_queue->get_device();
     std::cout << SYCL::SYCLDevice(d) << '\n';
 
-    m_maxThreadsPerSM =
+    m_maxWorkgroupSize =
         d.template get_info<sycl::info::device::max_work_group_size>();
+    // FIXME_SYCL this should give the correct value for NVIDIA GPUs
+    m_maxConcurrency =
+        m_maxWorkgroupSize * 2 *
+        d.template get_info<sycl::info::device::max_compute_units>();
+
+    // Setup concurent bitset for obtaining unique tokens from within an
+    // executing kernel.
+    {
+      const int32_t buffer_bound =
+          Kokkos::Impl::concurrent_bitset::buffer_bound(m_maxConcurrency);
+      using Record = Kokkos::Impl::SharedAllocationRecord<
+          Kokkos::Experimental::SYCLDeviceUSMSpace, void>;
+      Record* const r =
+          Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(),
+                           "Kokkos::SYCL::InternalScratchBitset",
+                           sizeof(uint32_t) * buffer_bound);
+      Record::increment(r);
+      m_scratchConcurrentBitset = reinterpret_cast<uint32_t*>(r->data());
+      auto event                = m_queue->memset(m_scratchConcurrentBitset, 0,
+                                   sizeof(uint32_t) * buffer_bound);
+      fence(event);
+    }
+
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
     m_indirectKernelMem.reset(*m_queue);
@@ -148,6 +170,11 @@ void SYCLInternal::finalize() {
     // FIXME_SYCL
     std::abort();
   }
+
+  using RecordSYCL =
+      Kokkos::Impl::SharedAllocationRecord<Experimental::SYCLDeviceUSMSpace>;
+  RecordSYCL::decrement(RecordSYCL::get_record(m_scratchConcurrentBitset));
+  m_scratchConcurrentBitset = nullptr;
 
   m_indirectKernelMem.reset();
   m_indirectReducerMem.reset();

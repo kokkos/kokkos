@@ -120,8 +120,8 @@ class CudaSpace {
 
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access CudaSpace */
-  static void access_error();
-  static void access_error(const void* const);
+  KOKKOS_DEPRECATED static void access_error();
+  KOKKOS_DEPRECATED static void access_error(const void* const);
 
  private:
   int m_device;  ///< Which Cuda device
@@ -277,6 +277,8 @@ class CudaHostPinnedSpace {
 
 namespace Kokkos {
 namespace Impl {
+
+cudaStream_t cuda_get_deep_copy_stream();
 
 static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaSpace,
                                               Kokkos::CudaSpace>::assignable,
@@ -738,91 +740,6 @@ struct DeepCopy<HostSpace, CudaHostPinnedSpace, ExecutionSpace> {
     exec.fence();
     DeepCopyAsyncCuda(dst, src, n);
   }
-};
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
-/** Running in CudaSpace attempting to access HostSpace: error */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
-                                           Kokkos::HostSpace> {
-  enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify() {
-    Kokkos::abort("Cuda code attempted to access HostSpace memory");
-  }
-
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {
-    Kokkos::abort("Cuda code attempted to access HostSpace memory");
-  }
-};
-
-/** Running in CudaSpace accessing CudaUVMSpace: ok */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
-                                           Kokkos::CudaUVMSpace> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-
-/** Running in CudaSpace accessing CudaHostPinnedSpace: ok */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
-                                           Kokkos::CudaHostPinnedSpace> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-
-/** Running in CudaSpace attempting to access an unknown space: error */
-template <class OtherSpace>
-struct VerifyExecutionCanAccessMemorySpace<
-    typename std::enable_if<!std::is_same<Kokkos::CudaSpace, OtherSpace>::value,
-                            Kokkos::CudaSpace>::type,
-    OtherSpace> {
-  enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify() {
-    Kokkos::abort("Cuda code attempted to access unknown Space memory");
-  }
-
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {
-    Kokkos::abort("Cuda code attempted to access unknown Space memory");
-  }
-};
-
-//----------------------------------------------------------------------------
-/** Running in HostSpace attempting to access CudaSpace */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
-                                           Kokkos::CudaSpace> {
-  enum : bool { value = false };
-  inline static void verify() { CudaSpace::access_error(); }
-  inline static void verify(const void* p) { CudaSpace::access_error(p); }
-};
-
-/** Running in HostSpace accessing CudaUVMSpace is OK */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
-                                           Kokkos::CudaUVMSpace> {
-  enum : bool { value = true };
-  inline static void verify() {}
-  inline static void verify(const void*) {}
-};
-
-/** Running in HostSpace accessing CudaHostPinnedSpace is OK */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
-                                           Kokkos::CudaHostPinnedSpace> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
 };
 
 }  // namespace Impl

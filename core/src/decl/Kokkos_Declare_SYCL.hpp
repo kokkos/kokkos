@@ -53,6 +53,7 @@
 #include <SYCL/Kokkos_SYCL_Parallel_Reduce.hpp>
 #include <SYCL/Kokkos_SYCL_Parallel_Scan.hpp>
 #include <SYCL/Kokkos_SYCL_Parallel_Team.hpp>
+#include <SYCL/Kokkos_SYCL_UniqueToken.hpp>
 #endif
 
 #endif

@@ -72,14 +72,15 @@ namespace {
 
 static std::atomic<int> num_uvm_allocations(0);
 
-cudaStream_t get_deep_copy_stream() {
+}  // namespace
+
+cudaStream_t cuda_get_deep_copy_stream() {
   static cudaStream_t s = nullptr;
   if (s == nullptr) {
     cudaStreamCreate(&s);
   }
   return s;
 }
-}  // namespace
 
 DeepCopy<CudaSpace, CudaSpace, Cuda>::DeepCopy(void *dst, const void *src,
                                                size_t n) {
@@ -115,7 +116,7 @@ DeepCopy<CudaSpace, HostSpace, Cuda>::DeepCopy(const Cuda &instance, void *dst,
 }
 
 void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
-  cudaStream_t s = get_deep_copy_stream();
+  cudaStream_t s = cuda_get_deep_copy_stream();
   CUDA_SAFE_CALL(cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, s));
   cudaStreamSynchronize(s);
 }
@@ -128,14 +129,14 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
 
 namespace Kokkos {
 
-void CudaSpace::access_error() {
+KOKKOS_DEPRECATED void CudaSpace::access_error() {
   const std::string msg(
       "Kokkos::CudaSpace::access_error attempt to execute Cuda function from "
       "non-Cuda space");
   Kokkos::Impl::throw_runtime_exception(msg);
 }
 
-void CudaSpace::access_error(const void *const) {
+KOKKOS_DEPRECATED void CudaSpace::access_error(const void *const) {
   const std::string msg(
       "Kokkos::CudaSpace::access_error attempt to execute Cuda function from "
       "non-Cuda space");

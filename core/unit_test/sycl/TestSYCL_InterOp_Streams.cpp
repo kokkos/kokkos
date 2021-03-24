@@ -75,8 +75,6 @@ TEST(sycl, raw_sycl_queues) {
                              space0, {0, 0}, {10, 10}),
                          FunctorMDRange<MemorySpace>(v));
     space0.fence();
-    // FIXME_SYCL needs MDRangePolicy reduce
-#ifndef KOKKOS_ENABLE_SYCL
     Kokkos::parallel_reduce(
         "Test::sycl::raw_sycl_queue::MDRangeReduce",
         Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(space0, {0, 0},
@@ -84,21 +82,17 @@ TEST(sycl, raw_sycl_queues) {
         FunctorMDRangeReduce<MemorySpace>(v), sum);
     space0.fence();
     ASSERT_EQ(7 * 100, sum);
-#endif
 
     Kokkos::parallel_for("Test::sycl::raw_sycl_queue::Team",
                          Kokkos::TeamPolicy<TEST_EXECSPACE>(space0, 10, 10),
                          FunctorTeam<MemorySpace, TEST_EXECSPACE>(v));
     space0.fence();
-    // FIXME_SYCL needs TeamPolicy reduce
-#ifndef KOKKOS_ENABLE_SYCL
     Kokkos::parallel_reduce("Test::sycl::raw_sycl_queue::Team",
                             Kokkos::TeamPolicy<TEST_EXECSPACE>(space0, 10, 10),
                             FunctorTeamReduce<MemorySpace, TEST_EXECSPACE>(v),
                             sum);
     space0.fence();
     ASSERT_EQ(8 * 100, sum);
-#endif
   }
   Kokkos::finalize();
 

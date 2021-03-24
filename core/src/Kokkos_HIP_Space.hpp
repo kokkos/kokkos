@@ -118,8 +118,8 @@ class HIPSpace {
 
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access HIPSpace */
-  static void access_error();
-  static void access_error(const void* const);
+  KOKKOS_DEPRECATED static void access_error();
+  KOKKOS_DEPRECATED static void access_error(const void* const);
 
  private:
   int m_device;  ///< Which HIP device
@@ -447,77 +447,6 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
 namespace Kokkos {
 namespace Impl {
 
-/** Running in HIPSpace attempting to access HostSpace: error */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::Experimental::HIPSpace,
-                                           Kokkos::HostSpace> {
-  enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify() {
-    Kokkos::abort("HIP code attempted to access HostSpace memory");
-  }
-
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {
-    Kokkos::abort("HIP code attempted to access HostSpace memory");
-  }
-};
-
-/** Running in HIPSpace accessing HIPHostPinnedSpace: ok */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPHostPinnedSpace> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-
-/** Running in HIPSpace attempting to access an unknown space: error */
-template <class OtherSpace>
-struct VerifyExecutionCanAccessMemorySpace<
-    typename std::enable_if<
-        !std::is_same<Kokkos::Experimental::HIPSpace, OtherSpace>::value,
-        Kokkos::Experimental::HIPSpace>::type,
-    OtherSpace> {
-  enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify() {
-    Kokkos::abort("HIP code attempted to access unknown Space memory");
-  }
-
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {
-    Kokkos::abort("HIP code attempted to access unknown Space memory");
-  }
-};
-
-//----------------------------------------------------------------------------
-/** Running in HostSpace attempting to access HIPSpace */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
-                                           Kokkos::Experimental::HIPSpace> {
-  enum : bool { value = false };
-  inline static void verify() {
-    Kokkos::Experimental::HIPSpace::access_error();
-  }
-  inline static void verify(const void* p) {
-    Kokkos::Experimental::HIPSpace::access_error(p);
-  }
-};
-
-/** Running in HostSpace accessing HIPHostPinnedSpace is OK */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::HostSpace, Kokkos::Experimental::HIPHostPinnedSpace> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-}  // namespace Impl
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
 template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
     : public HostInaccessibleSharedAllocationRecordCommon<
@@ -706,27 +635,6 @@ struct MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
-};
-
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::Experimental::HIP::memory_space,
-    Kokkos::Experimental::HIP::scratch_memory_space> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::HostSpace, Kokkos::Experimental::HIP::scratch_memory_space> {
-  enum : bool { value = false };
-  inline static void verify() {
-    Kokkos::Experimental::HIPSpace::access_error();
-  }
-  inline static void verify(const void* p) {
-    Kokkos::Experimental::HIPSpace::access_error(p);
-  }
 };
 
 }  // namespace Impl

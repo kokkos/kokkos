@@ -119,10 +119,10 @@ auto SharedAllocationRecordCommon<MemorySpace>::get_record(void* alloc_ptr)
   Header const* const h = alloc_ptr ? Header::get_header(alloc_ptr) : nullptr;
 
   if (!alloc_ptr || h->m_record->m_alloc_ptr != h) {
-    using namespace std::literals::string_literals;
     Kokkos::Impl::throw_runtime_exception(
-        "Kokkos::Impl::SharedAllocationRecordCommon<"s +
-        std::string(MemorySpace::name()) + ">::get_record() ERROR"s);
+        std::string("Kokkos::Impl::SharedAllocationRecordCommon<") +
+        std::string(MemorySpace::name()) +
+        std::string(">::get_record() ERROR"));
   }
 
   return static_cast<derived_t*>(h->m_record);
@@ -156,10 +156,11 @@ void SharedAllocationRecordCommon<MemorySpace>::print_records(
   SharedAllocationRecord<void, void>::print_host_accessible_records(
       s, MemorySpace::name(), &derived_t::s_root_record, detail);
 #else
-  using namespace std::literals::string_literals;
   Kokkos::Impl::throw_runtime_exception(
-      "SharedAllocationHeader<"s + std::string(MemorySpace::name()) +
-      ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"s);
+      std::string("SharedAllocationHeader<") +
+      std::string(MemorySpace::name()) +
+      std::string(
+          ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"));
 #endif
 }
 
@@ -234,10 +235,11 @@ void HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::print_records(
     } while (r != &derived_t::s_root_record);
   }
 #else
-  using namespace std::literals::string_literals;
   Kokkos::Impl::throw_runtime_exception(
-      "SharedAllocationHeader<"s + std::string(MemorySpace::name()) +
-      ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"s);
+      std::string("SharedAllocationHeader<") +
+      std::string(MemorySpace::name()) +
+      std::string(
+          ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"));
 #endif
 }
 
@@ -259,10 +261,10 @@ auto HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::get_record(
       alloc_ptr ? static_cast<derived_t*>(head.m_record) : nullptr;
 
   if (!alloc_ptr || record->m_alloc_ptr != head_cuda) {
-    using namespace std::literals::string_literals;
     Kokkos::Impl::throw_runtime_exception(
-        "Kokkos::Impl::SharedAllocationRecord<"s +
-        std::string(MemorySpace::name()) + ", void>::get_record ERROR"s);
+        std::string("Kokkos::Impl::SharedAllocationRecord<") +
+        std::string(MemorySpace::name()) +
+        std::string(", void>::get_record ERROR"));
   }
 
   return record;

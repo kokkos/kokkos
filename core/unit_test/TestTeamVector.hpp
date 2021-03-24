@@ -881,8 +881,6 @@ TEST(TEST_CATEGORY, team_vector) {
 }
 #endif
 
-// FIXME_SYCL requires outer TeamPolicy parallel_reduce
-#ifndef KOKKOS_ENABLE_SYCL
 #if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST(TEST_CATEGORY, triple_nested_parallelism) {
 // With KOKKOS_ENABLE_DEBUG enabled, the functor uses too many registers to run
@@ -901,7 +899,6 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 19);
   TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 7, 16);
 }
-#endif
 #endif
 
 }  // namespace Test

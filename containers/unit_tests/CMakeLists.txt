@@ -41,10 +41,6 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       configure_file(${dir}/dummy.cpp ${file})
       list(APPEND UnitTestSources ${file})
     endforeach()
-    list(REMOVE_ITEM UnitTestSources
-        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_ScatterView.cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_UnorderedMap.cpp
-        )
     KOKKOS_ADD_EXECUTABLE_AND_TEST(UnitTest_${Tag} SOURCES ${UnitTestSources})
   endif()
 endforeach()
