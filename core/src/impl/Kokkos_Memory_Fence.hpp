@@ -45,7 +45,6 @@
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ATOMIC_HPP) && !defined(KOKKOS_MEMORY_FENCE_HPP)
 #define KOKKOS_MEMORY_FENCE_HPP
-
 namespace Kokkos {
 
 //----------------------------------------------------------------------------
