@@ -223,10 +223,11 @@ class
   // Conditional noexcept, just in case RType throws on divide-by-zero
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator/=(
       const complex<RealType>& y) noexcept(noexcept(RealType{} / RealType{})) {
+    using Kokkos::Experimental::fabs;
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
-    const RealType s = std::fabs(y.real()) + std::fabs(y.imag());
+    const RealType s = fabs(y.real()) + fabs(y.imag());
 
     // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
     // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
@@ -251,10 +252,11 @@ class
   KOKKOS_INLINE_FUNCTION complex& operator/=(
       const std::complex<RealType>& y) noexcept(noexcept(RealType{} /
                                                          RealType{})) {
+    using Kokkos::Experimental::fabs;
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
-    const RealType s = std::fabs(y.real()) + std::fabs(y.imag());
+    const RealType s = fabs(y.real()) + fabs(y.imag());
 
     // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
     // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
@@ -1064,12 +1066,13 @@ KOKKOS_INLINE_FUNCTION
     operator/(const complex<RealType1>& x,
               const complex<RealType2>& y) noexcept(noexcept(RealType1{} /
                                                              RealType2{})) {
+  using Kokkos::Experimental::fabs;
   // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
   // If the real part is +/-Inf and the imaginary part is -/+Inf,
   // this won't change the result.
   using common_real_type =
       typename std::common_type<RealType1, RealType2>::type;
-  const common_real_type s = std::fabs(real(y)) + std::fabs(imag(y));
+  const common_real_type s = fabs(real(y)) + fabs(imag(y));
 
   // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
   // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
