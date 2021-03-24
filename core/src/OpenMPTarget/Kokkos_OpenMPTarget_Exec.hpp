@@ -1632,7 +1632,7 @@ KOKKOS_INLINE_FUNCTION
   static_assert(sizeof(ValueType) <=
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
-  ValueType* TeamThread_scratch =
+  ValueType* TeamVector_scratch =
       static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
 
 #pragma omp declare reduction(                                               \
@@ -1644,12 +1644,12 @@ KOKKOS_INLINE_FUNCTION
 #pragma omp barrier
   ValueType tmp;
   result.init(tmp);
-  TeamThread_scratch[0] = tmp;
+  TeamVector_scratch[0] = tmp;
 #pragma omp barrier
 
   iType team_size = iType(omp_get_num_threads());
 #pragma omp for simd reduction(omp_red_teamthread_reducer \
-                               : TeamThread_scratch[:1]) schedule(static, 1)
+                               : TeamVector_scratch[:1]) schedule(static, 1)
   for (iType t = 0; t < team_size; t++) {
     ValueType tmp2;
     result.init(tmp2);
@@ -1658,10 +1658,10 @@ KOKKOS_INLINE_FUNCTION
          i += team_size) {
       lambda(i, tmp2);
     }
-    TeamThread_scratch[0] = tmp2;
+    TeamVector_scratch[0] = tmp2;
   }
 
-  result.reference() = TeamThread_scratch[0];
+  result.reference() = TeamVector_scratch[0];
 }
 #endif  // KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 }  // namespace Kokkos

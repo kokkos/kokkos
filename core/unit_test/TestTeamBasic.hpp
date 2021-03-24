@@ -82,6 +82,7 @@ TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE,
                  Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
 }
+#endif
 
 TEST(TEST_CATEGORY, team_broadcast_long) {
   {
