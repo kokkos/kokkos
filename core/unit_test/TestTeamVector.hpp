@@ -941,9 +941,7 @@ struct checkScan {
   void run() {
     const int n_teams = n / n_per_team;
 
-    using size_type = typename TEST_EXECSPACE::size_type;
-
-    Kokkos::parallel_for(Kokkos::RangePolicy<TEST_EXECSPACE>(0, n), *this);
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, n), *this);
 
     // run ThreadVectorRange parallel_scan
     Kokkos::TeamPolicy<ExecutionSpace> policy(n_teams, Kokkos::AUTO,
