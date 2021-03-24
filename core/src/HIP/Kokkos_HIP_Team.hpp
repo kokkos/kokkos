@@ -1003,7 +1003,7 @@ KOKKOS_INLINE_FUNCTION
     // This sets i's val to i-1's contribution
     // to make the latter in_place_shfl_up an
     // exclusive scan -- the final accumulation
-    // of i's val will be inclucded in the second
+    // of i's val will be included in the second
     // closure call later.
     if (i < loop_boundaries.end && threadIdx.x > 0) closure(i - 1, val, false);
 
