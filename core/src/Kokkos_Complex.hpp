@@ -798,10 +798,10 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sqrt(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using sycl::abs;
+  using sycl::fabs;
   using sycl::sqrt;
 #else
-  using std::abs;
+  using std::fabs;
   using std::sqrt;
 #endif
 
@@ -809,14 +809,14 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sqrt(
   RealType i = x.imag();
 
   if (r == RealType()) {
-    RealType t = sqrt(abs(i) / 2);
+    RealType t = sqrt(fabs(i) / 2);
     return Kokkos::complex<RealType>(t, i < RealType() ? -t : t);
   } else {
-    RealType t = sqrt(2 * (abs(x) + abs(r)));
+    RealType t = sqrt(2 * (abs(x) + fabs(r)));
     RealType u = t / 2;
-    return r > RealType()
-               ? Kokkos::complex<RealType>(u, i / t)
-               : Kokkos::complex<RealType>(abs(i) / t, i < RealType() ? -u : u);
+    return r > RealType() ? Kokkos::complex<RealType>(u, i / t)
+                          : Kokkos::complex<RealType>(fabs(i) / t,
+                                                      i < RealType() ? -u : u);
   }
 }
 
