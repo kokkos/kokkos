@@ -66,6 +66,9 @@ class SYCLInternal {
   SYCLInternal& operator=(SYCLInternal&&) = delete;
   SYCLInternal(SYCLInternal&&)            = delete;
 
+  void* scratch_space(const size_type size);
+  void* scratch_flags(const size_type size);
+
   int m_syclDev = -1;
 
   size_t m_maxWorkgroupSize   = 0;
@@ -73,7 +76,9 @@ class SYCLInternal {
   uint64_t m_maxShmemPerBlock = 0;
 
   uint32_t* m_scratchConcurrentBitset = nullptr;
+  size_type m_scratchSpaceCount       = 0;
   size_type* m_scratchSpace           = nullptr;
+  size_type m_scratchFlagsCount       = 0;
   size_type* m_scratchFlags           = nullptr;
 
   std::optional<sycl::queue> m_queue;
