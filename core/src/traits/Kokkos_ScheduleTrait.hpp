@@ -84,8 +84,6 @@ struct ScheduleTrait : TraitSpecificationBase<ScheduleTrait> {
                   "type of the errant tag.");
     static constexpr bool schedule_type_is_defaulted = false;
   };
-  // template <class T>
-  // using trait_matches_specification = is_schedule_type<T>;
 };
 
 // </editor-fold> end trait specification }}}1
