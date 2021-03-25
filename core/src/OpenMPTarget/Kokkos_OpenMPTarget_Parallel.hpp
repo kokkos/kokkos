@@ -286,8 +286,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                          FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
-      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
+                         void>;
 
   // Static Assert WorkTag void if ReducerType not InvalidType
 
@@ -979,8 +979,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                          FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
-      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
+                         void>;
 
   using ValueTraits =
       Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
