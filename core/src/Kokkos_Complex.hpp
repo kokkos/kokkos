@@ -223,10 +223,11 @@ class
   // Conditional noexcept, just in case RType throws on divide-by-zero
   KOKKOS_CONSTEXPR_14 KOKKOS_INLINE_FUNCTION complex& operator/=(
       const complex<RealType>& y) noexcept(noexcept(RealType{} / RealType{})) {
+    using Kokkos::Experimental::fabs;
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
-    const RealType s = std::fabs(y.real()) + std::fabs(y.imag());
+    const RealType s = fabs(y.real()) + fabs(y.imag());
 
     // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
     // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
@@ -251,10 +252,11 @@ class
   KOKKOS_INLINE_FUNCTION complex& operator/=(
       const std::complex<RealType>& y) noexcept(noexcept(RealType{} /
                                                          RealType{})) {
+    using Kokkos::Experimental::fabs;
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
-    const RealType s = std::fabs(y.real()) + std::fabs(y.imag());
+    const RealType s = fabs(y.real()) + fabs(y.imag());
 
     // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
     // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
@@ -798,10 +800,10 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sqrt(
     const complex<RealType>& x) {
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_SYCL
-  using sycl::abs;
+  using sycl::fabs;
   using sycl::sqrt;
 #else
-  using std::abs;
+  using std::fabs;
   using std::sqrt;
 #endif
 
@@ -809,14 +811,14 @@ KOKKOS_INLINE_FUNCTION Kokkos::complex<RealType> sqrt(
   RealType i = x.imag();
 
   if (r == RealType()) {
-    RealType t = sqrt(abs(i) / 2);
+    RealType t = sqrt(fabs(i) / 2);
     return Kokkos::complex<RealType>(t, i < RealType() ? -t : t);
   } else {
-    RealType t = sqrt(2 * (abs(x) + abs(r)));
+    RealType t = sqrt(2 * (abs(x) + fabs(r)));
     RealType u = t / 2;
-    return r > RealType()
-               ? Kokkos::complex<RealType>(u, i / t)
-               : Kokkos::complex<RealType>(abs(i) / t, i < RealType() ? -u : u);
+    return r > RealType() ? Kokkos::complex<RealType>(u, i / t)
+                          : Kokkos::complex<RealType>(fabs(i) / t,
+                                                      i < RealType() ? -u : u);
   }
 }
 
@@ -1064,12 +1066,13 @@ KOKKOS_INLINE_FUNCTION
     operator/(const complex<RealType1>& x,
               const complex<RealType2>& y) noexcept(noexcept(RealType1{} /
                                                              RealType2{})) {
+  using Kokkos::Experimental::fabs;
   // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
   // If the real part is +/-Inf and the imaginary part is -/+Inf,
   // this won't change the result.
   using common_real_type =
       typename std::common_type<RealType1, RealType2>::type;
-  const common_real_type s = std::fabs(real(y)) + std::fabs(imag(y));
+  const common_real_type s = fabs(real(y)) + fabs(imag(y));
 
   // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
   // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
