@@ -55,26 +55,122 @@
 namespace Kokkos {
 namespace Impl {
 
+template <class T, class MemTraits>
+struct AccessorForMemoryTraitsFlags;
+
+template <class ViewTraits, unsigned Flags, MemoryTraitsFlags CurrentFlag,
+          bool FlagIsSet = CurrentFlag bitand Flags, class Enable = void>
+struct BuildAccessorForMemoryTraitsFlags;
+
+template <class Self>
+struct MixinAccessorFlagConvertibility;
+
+// Avoid having to rewrite the converting constructors everywhere, since most of
+// our memory traits are convertible to and from their negation. There's a lot
+// of boilerplate involved in doing this that makes the code less readable,
+// but with this mixin and `using base_t::base_t` we don't have to repeat that
+// boilerplate for each trait. The mixin is also constructed in such a
+// way as to maintain linear inheritance by advancing the current flag in its
+// base class specification.
+template <class ViewTraits, unsigned Flags, MemoryTraitsFlags CurrentFlag,
+          bool FlagIsSet>
+struct MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+    ViewTraits, Flags, CurrentFlag, FlagIsSet>>
+    : BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, next_flag_v<MemoryTraitsFlags, CurrentFlag>> {
+  using base_t = BuildAccessorForMemoryTraitsFlags<
+      ViewTraits, Flags, next_flag_v<MemoryTraitsFlags, CurrentFlag>>;
+  template <class T, unsigned OtherFlags>
+  using analogous_opposite_flag_accessor =
+      BuildAccessorForMemoryTraitsFlags<T, OtherFlags, CurrentFlag, !FlagIsSet>;
+
+  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  // <editor-fold desc="rule of 6 ctors, destructor, and assignment"> {{{3
+
+  MixinAccessorFlagConvertibility() = default;
+
+  MixinAccessorFlagConvertibility(MixinAccessorFlagConvertibility const&) =
+      default;
+
+  MixinAccessorFlagConvertibility(MixinAccessorFlagConvertibility&&) = default;
+
+  MixinAccessorFlagConvertibility& operator   =(
+      MixinAccessorFlagConvertibility const&) = default;
+
+  MixinAccessorFlagConvertibility& operator=(
+      MixinAccessorFlagConvertibility&&) = default;
+
+  ~MixinAccessorFlagConvertibility() = default;
+
+  // </editor-fold> end rule of 6 ctors, destructor, and assignment }}}3
+  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  // Convertible copy constructor
+  template <class T, unsigned OtherFlags,
+            //----------------------------------------
+            /* requires
+             *  std::is_convertible_v<
+             *    base_t,
+             *    analogous_opposite_flag_accessor<T, OtherFlags>>,
+             */
+            std::enable_if_t<
+                std::is_convertible<base_t, analogous_opposite_flag_accessor<
+                                                T, OtherFlags>>::value,
+                int> = 0
+            //----------------------------------------
+            >
+  MixinAccessorFlagConvertibility(
+      analogous_opposite_flag_accessor<T, OtherFlags> const& other)
+      : base_t(other) {}
+
+  // Convertible move constructor
+  template <class T, unsigned OtherFlags,
+            //----------------------------------------
+            /* requires
+             *  std::is_convertible_v<
+             *    base_t,
+             *    analogous_opposite_flag_accessor<T, OtherFlags>>,
+             */
+            std::enable_if_t<
+                std::is_convertible<base_t, analogous_opposite_flag_accessor<
+                                                T, OtherFlags>>::value,
+                int> = 0
+            //----------------------------------------
+            >
+  MixinAccessorFlagConvertibility(
+      analogous_opposite_flag_accessor<T, OtherFlags>&& other)
+      : base_t(std::move(other)) {}
+};
+
 //==============================================================================
 // <editor-fold desc="MDSpanAccessorFromKokkosMemoryTraits"> {{{1
 
 // default case: don't do anything to the accessor
-template <class ElementType, unsigned Flags, MemoryTraitsFlags CurrentFlag,
-          bool FlagIsSet = CurrentFlag bitand Flags>
+template <class ViewTraits, unsigned Flags, MemoryTraitsFlags CurrentFlag,
+          bool FlagIsSet, class Enable>
 struct BuildAccessorForMemoryTraitsFlags
     // Some flags don't need to mixin anything for enablement and/or disablement
     // of the flag (i.e., either or both of the false and true FlagIsSet cases
     // are unspecialized), so we can just move on to the next flag for those.
-    : BuildAccessorForMemoryTraitsFlags<
-          ElementType, Flags, next_flag_v<MemoryTraitsFlags, CurrentFlag>> {};
+    : MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, CurrentFlag, FlagIsSet>> {
+  // Enable convertability from the opposite FlagIsSet version by default
+  using base_t =
+      MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, CurrentFlag, FlagIsSet>>;
+  using base_t::base_t;
+};
 
 // Base case (end of flags)
-template <class ElementType, unsigned Flags>
-struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
                                          MemoryTraitsFlags::END_OF_FLAGS,
                                          /* FlagIsSet = */ false>
-    : private std::experimental::accessor_basic<ElementType> {
-  using base_t = std::experimental::accessor_basic<ElementType>;
+    : protected std::experimental::accessor_basic<
+          typename ViewTraits::mdspan_element_type> {
+  using base_t = std::experimental::accessor_basic<
+      typename ViewTraits::mdspan_element_type>;
+  using base_t::base_t;
 
   // Base versions of CRTP-like call for composition purposes
   template <class Self, class Ptr>
@@ -94,19 +190,15 @@ struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
 // <editor-fold desc="Handle Managed/Unmanaged"> {{{2
 
 // Managed memory case
-template <class ElementType, unsigned Flags>
-struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
                                          MemoryTraitsFlags::Unmanaged,
                                          /* FlagIsSet = */ false>
-    : BuildAccessorForMemoryTraitsFlags<
-          ElementType, Flags,
-          next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::Unmanaged>> {
- private:
-  using base_t = BuildAccessorForMemoryTraitsFlags<
-      ElementType, Flags,
-      next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::Unmanaged>>;
-
- public:
+    : MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Unmanaged, false>> {
+  using base_t =
+      MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Unmanaged, false>>;
   using base_t::base_t;
 
   using tracker_type = SharedAllocationTracker;
@@ -126,16 +218,16 @@ struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
 // <editor-fold desc="Handle RandomAccess"> {{{2
 
 // RandomAccess case
-template <class ElementType, unsigned Flags>
-struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
                                          MemoryTraitsFlags::RandomAccess,
                                          /* FlagIsSet = */ true>
     : BuildAccessorForMemoryTraitsFlags<
-          ElementType, Flags,
+          ViewTraits, Flags,
           next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::RandomAccess>> {
  private:
   using base_t = BuildAccessorForMemoryTraitsFlags<
-      ElementType, Flags,
+      ViewTraits, Flags,
       next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::RandomAccess>>;
 
  public:
@@ -151,19 +243,15 @@ struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
 // <editor-fold desc="Handle Atomic"> {{{2
 
 // Atomic Case
-template <class ElementType, unsigned Flags>
-struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
                                          MemoryTraitsFlags::Atomic,
                                          /* FlagIsSet = */ true>
-    : BuildAccessorForMemoryTraitsFlags<
-          ElementType, Flags,
-          next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::Atomic>> {
- private:
-  using base_t = BuildAccessorForMemoryTraitsFlags<
-      ElementType, Flags,
-      next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::Atomic>>;
-
- public:
+    : MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Atomic, true>> {
+  using base_t =
+      MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Atomic, true>>;
   using base_t::base_t;
   using reference = AtomicReference<typename base_t::pointer>;
 
@@ -182,20 +270,17 @@ struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
 // <editor-fold desc="Handle Restrict"> {{{2
 
 // Non-aliasing memory case
-template <class ElementType, unsigned Flags>
-struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
                                          MemoryTraitsFlags::Restrict,
                                          /* FlagIsSet = */ true>
-    : BuildAccessorForMemoryTraitsFlags<
-          ElementType, Flags,
-          next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::Restrict>> {
- private:
-  using base_t = BuildAccessorForMemoryTraitsFlags<
-      ElementType, Flags,
-      next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::Restrict>>;
-
- public:
+    : MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Restrict, true>> {
+  using base_t =
+      MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Restrict, true>>;
   using base_t::base_t;
+
   using reference = add_restrict_t<typename base_t::reference>;
   using pointer   = add_restrict_t<typename base_t::pointer>;
 };
@@ -207,28 +292,21 @@ struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
 // <editor-fold desc="Handle Align"> {{{2
 
 // Aligned memory case
-template <class ElementType, unsigned Flags>
-struct BuildAccessorForMemoryTraitsFlags<ElementType, Flags,
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
                                          MemoryTraitsFlags::Aligned,
                                          /* FlagIsSet = */ true>
-    : BuildAccessorForMemoryTraitsFlags<
-          ElementType, Flags,
-          next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::Aligned>> {
- private:
-  using base_t = BuildAccessorForMemoryTraitsFlags<
-      ElementType, Flags,
-      next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::Aligned>>;
-
- public:
+    : MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Aligned>> {
+  using base_t =
+      MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Aligned>>;
   using base_t::base_t;
   using pointer = align_ptr_t<typename base_t::pointer>;
 };
 
 // </editor-fold> end Handle Align }}}2
 //----------------------------------------------------------------------------
-
-template <class T, class MemTraits>
-struct AccessorForMemoryTraitsFlags;
 
 template <class T, unsigned Flags>
 struct AccessorForMemoryTraitsFlags<T, MemoryTraits<Flags>>
@@ -251,11 +329,13 @@ struct AccessorForMemoryTraitsFlags<T, MemoryTraits<Flags>>
 };
 
 template <class T, class MemTraits>
-struct MDSpanAccessorFromKokkosMemoryTraits;
+struct MDSpanAccessorFromKokkosMemoryTraits
+    : AccessorForMemoryTraitsFlags<T, MemTraits> {
+ private:
+  using base_t = AccessorForMemoryTraitsFlags<T, MemTraits>;
 
-template <class T>
-struct MDSpanAccessorFromKokkosMemoryTraits<T, Kokkos::MemoryManaged> {
-  using type = std::experimental::accessor_basic<T>;
+ public:
+  using base_t::base_t;
 };
 
 // </editor-fold> end MDSpanAccessorFromKokkosMemoryTraits }}}1
