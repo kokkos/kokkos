@@ -305,7 +305,9 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
         Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                                              void>;
 
-    static Record *const r = Record::allocate(
+    if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
+
+    Record *const r = Record::allocate(
         Kokkos::Experimental::HIPSpace(), "InternalScratchSpace",
         (sizeScratchGrain * m_scratchSpaceCount));
 
@@ -326,6 +328,8 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
     using Record =
         Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                                              void>;
+
+    if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
 
     Record *const r = Record::allocate(
         Kokkos::Experimental::HIPSpace(), "InternalScratchFlags",
