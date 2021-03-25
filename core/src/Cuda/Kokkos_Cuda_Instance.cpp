@@ -709,6 +709,7 @@ void CudaInternal::finalize() {
   if (this == &singleton()) {
     cudaFreeHost(constantMemHostStaging);
     cudaEventDestroy(constantMemReusable);
+    cudaStreamDestroy(cuda_get_deep_copy_stream());
   }
 }
 
