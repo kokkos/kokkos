@@ -65,6 +65,14 @@
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+cudaStream_t Kokkos::Impl::cuda_get_deep_copy_stream() {
+  static cudaStream_t s = nullptr;
+  if (s == nullptr) {
+    cudaStreamCreate(&s);
+  }
+  return s;
+}
+
 namespace Kokkos {
 namespace Impl {
 
@@ -73,14 +81,6 @@ namespace {
 static std::atomic<int> num_uvm_allocations(0);
 
 }  // namespace
-
-cudaStream_t cuda_get_deep_copy_stream() {
-  static cudaStream_t s = nullptr;
-  if (s == nullptr) {
-    cudaStreamCreate(&s);
-  }
-  return s;
-}
 
 DeepCopy<CudaSpace, CudaSpace, Cuda>::DeepCopy(void *dst, const void *src,
                                                size_t n) {
