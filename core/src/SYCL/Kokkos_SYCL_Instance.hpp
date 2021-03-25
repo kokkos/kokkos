@@ -68,6 +68,8 @@ class SYCLInternal {
 
   void* scratch_space(const size_type size);
   void* scratch_flags(const size_type size);
+  void* resize_team_scratch_space(std::int64_t bytes,
+                                  bool force_shrink = false);
 
   int m_syclDev = -1;
 
@@ -80,6 +82,9 @@ class SYCLInternal {
   size_type* m_scratchSpace           = nullptr;
   size_type m_scratchFlagsCount       = 0;
   size_type* m_scratchFlags           = nullptr;
+
+  int64_t m_team_scratch_current_size = 0;
+  void* m_team_scratch_ptr            = nullptr;
 
   std::optional<sycl::queue> m_queue;
 

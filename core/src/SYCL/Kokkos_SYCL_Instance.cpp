@@ -42,6 +42,7 @@
 //@HEADER
 */
 
+#include <Kokkos_Core.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <KokkosCore_Config_DeclareBackend.hpp>
@@ -162,6 +163,27 @@ void SYCLInternal::initialize(const sycl::queue& q) {
     }
     Kokkos::Impl::throw_runtime_exception(msg.str());
   }
+
+  m_team_scratch_current_size = 0;
+  m_team_scratch_ptr          = nullptr;
+}
+
+void* SYCLInternal::resize_team_scratch_space(std::int64_t bytes,
+                                              bool force_shrink) {
+  if (m_team_scratch_current_size == 0) {
+    m_team_scratch_current_size = bytes;
+    m_team_scratch_ptr =
+        Kokkos::kokkos_malloc<Experimental::SYCLDeviceUSMSpace>(
+            "SYCLDeviceUSMSpace::ScratchMemory", m_team_scratch_current_size);
+  }
+  if ((bytes > m_team_scratch_current_size) ||
+      ((bytes < m_team_scratch_current_size) && (force_shrink))) {
+    m_team_scratch_current_size = bytes;
+    m_team_scratch_ptr =
+        Kokkos::kokkos_realloc<Experimental::SYCLDeviceUSMSpace>(
+            m_team_scratch_ptr, m_team_scratch_current_size);
+  }
+  return m_team_scratch_ptr;
 }
 
 void SYCLInternal::finalize() {
@@ -181,6 +203,12 @@ void SYCLInternal::finalize() {
 
   RecordSYCL::decrement(RecordSYCL::get_record(m_scratchConcurrentBitset));
   m_scratchConcurrentBitset = nullptr;
+
+  if (m_team_scratch_current_size > 0)
+    Kokkos::kokkos_free<Kokkos::Experimental::SYCLDeviceUSMSpace>(
+        m_team_scratch_ptr);
+  m_team_scratch_current_size = 0;
+  m_team_scratch_ptr          = nullptr;
 
   m_indirectKernelMem.reset();
   m_indirectReducerMem.reset();

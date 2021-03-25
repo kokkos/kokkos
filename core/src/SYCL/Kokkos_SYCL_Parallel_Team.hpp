@@ -451,11 +451,15 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_SYCL so far accessors used instead of these pointers
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
-    const auto& space    = *m_policy.space().impl_internal_space_instance();
-    const sycl::queue& q = *space.m_queue;
-    m_scratch_ptr[0]     = nullptr;
-    m_scratch_ptr[1]     = sycl::malloc_device(
-        sizeof(char) * m_scratch_size[1] * m_league_size, q);
+    const auto& space = *m_policy.space().impl_internal_space_instance();
+    m_scratch_ptr[0]  = nullptr;
+    m_scratch_ptr[1]  = m_team_size <= 0
+                           ? nullptr
+                           : m_policy.space()
+                                 .impl_internal_space_instance()
+                                 ->resize_team_scratch_space(
+                                     static_cast<ptrdiff_t>(m_scratch_size[1]) *
+                                     m_league_size);
 
     if (static_cast<int>(space.m_maxShmemPerBlock) <
         m_shmem_size - m_shmem_begin) {
@@ -471,19 +475,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_team_size > m_policy.team_size_max(arg_functor, ParallelForTag{}))
       Kokkos::Impl::throw_runtime_exception(
           "Kokkos::Impl::ParallelFor<SYCL> requested too large team size.");
-  }
-
-  // FIXME_SYCL remove when managing m_scratch_ptr[1] in the execution space
-  // instance
-  ParallelFor(const ParallelFor&) = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-
-  ~ParallelFor() {
-    const Kokkos::Experimental::SYCL& space = m_policy.space();
-    Kokkos::Experimental::Impl::SYCLInternal& instance =
-        *space.impl_internal_space_instance();
-    sycl::queue& q = *instance.m_queue;
-    sycl::free(m_scratch_ptr[1], q);
   }
 };
 
@@ -779,11 +770,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_SYCL so far accessors used instead of these pointers
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
-    const auto& space    = *m_policy.space().impl_internal_space_instance();
-    const sycl::queue& q = *space.m_queue;
-    m_scratch_ptr[0]     = nullptr;
-    m_scratch_ptr[1]     = sycl::malloc_device(
-        sizeof(char) * m_scratch_size[1] * m_league_size, q);
+    const auto& space = *m_policy.space().impl_internal_space_instance();
+    m_scratch_ptr[0]  = nullptr;
+    m_scratch_ptr[1]  = m_team_size <= 0
+                           ? nullptr
+                           : m_policy.space()
+                                 .impl_internal_space_instance()
+                                 ->resize_team_scratch_space(
+                                     static_cast<ptrdiff_t>(m_scratch_size[1]) *
+                                     m_league_size);
 
     if (static_cast<int>(space.m_maxShmemPerBlock) <
         m_shmem_size - m_shmem_begin) {
