@@ -1421,21 +1421,21 @@ template <typename Op          = Kokkos::Experimental::ScatterSum,
 ScatterView<
     RT, typename ViewTraits<RT, RP...>::array_layout,
     typename ViewTraits<RT, RP...>::device_type, Op,
-    typename Kokkos::Impl::if_c<
+    std::conditional_t<
         std::is_same<Duplication, void>::value,
         typename Kokkos::Impl::Experimental::DefaultDuplication<
             typename ViewTraits<RT, RP...>::execution_space>::type,
-        Duplication>::type,
-    typename Kokkos::Impl::if_c<
+        Duplication>,
+    std::conditional_t<
         std::is_same<Contribution, void>::value,
         typename Kokkos::Impl::Experimental::DefaultContribution<
             typename ViewTraits<RT, RP...>::execution_space,
-            typename Kokkos::Impl::if_c<
+            typename std::conditional_t<
                 std::is_same<Duplication, void>::value,
                 typename Kokkos::Impl::Experimental::DefaultDuplication<
                     typename ViewTraits<RT, RP...>::execution_space>::type,
-                Duplication>::type>::type,
-        Contribution>::type>
+                Duplication>>::type,
+        Contribution>>
 create_scatter_view(View<RT, RP...> const& original_view) {
   return original_view;  // implicit ScatterView constructor call
 }

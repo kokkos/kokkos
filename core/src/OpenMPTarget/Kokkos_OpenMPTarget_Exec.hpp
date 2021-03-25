@@ -650,8 +650,8 @@ class OpenMPTargetExecTeamMember {
     const JoinLambdaAdapter<value_type, JoinOp> op(op_in);
 
     // Make sure there is enough scratch space:
-    using type = typename if_c<sizeof(value_type) < TEAM_REDUCE_SIZE,
-                               value_type, void>::type;
+    using type = std::conditional_t<(sizeof(value_type) < TEAM_REDUCE_SIZE),
+                                    value_type, void>;
 
     const int n_values = TEAM_REDUCE_SIZE / sizeof(value_type);
     type* team_scratch =
@@ -691,7 +691,7 @@ class OpenMPTargetExecTeamMember {
     // FIXME_OPENMPTARGET
     /*  // Make sure there is enough scratch space:
       using type =
-        typename if_c<sizeof(ArgType) < TEAM_REDUCE_SIZE, ArgType, void>::type;
+        std::conditional_t<(sizeof(ArgType) < TEAM_REDUCE_SIZE), ArgType, void>;
 
       volatile type * const work_value  = ((type*) m_exec.scratch_thread());
 
