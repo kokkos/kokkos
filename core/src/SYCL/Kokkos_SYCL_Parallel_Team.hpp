@@ -560,16 +560,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
             selected_reducer);
-    auto deleter = [&q](pointer_type ptr) { sycl::free(ptr, q); };
-    std::unique_ptr<value_type, decltype(deleter)> results_ptr(
-        static_cast<pointer_type>(sycl::malloc_shared(
-            sizeof(value_type) * std::max(value_count, 1u) * init_size, q)),
-        deleter);
+    // FIXME_SYCL only use the first half
+    const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
+        sizeof(value_type) * std::max(value_count, 1u) * init_size * 2));
     // FIXME_SYCL without this we are running into a race condition
-    std::unique_ptr<value_type, decltype(deleter)> results_ptr2(
-        static_cast<pointer_type>(sycl::malloc_shared(
-            sizeof(value_type) * std::max(value_count, 1u) * init_size, q)),
-        deleter);
+    const auto results_ptr2 =
+        results_ptr + std::max(value_count, 1u) * init_size;
 
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
@@ -588,7 +584,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const auto shmem_begin     = m_shmem_begin;
         const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
         void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
-        auto* local_results_ptr    = results_ptr.get();
 
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
@@ -597,7 +592,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                   static_cast<const FunctorType&>(functor),
                   static_cast<const ReducerType&>(reducer));
               reference_type update =
-                  ValueInit::init(selected_reducer, local_results_ptr);
+                  ValueInit::init(selected_reducer, results_ptr);
               if (size == 1) {
                 const member_type team_member(
                     team_scratch_memory_L0.get_pointer(), shmem_begin,
@@ -610,8 +605,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               }
               if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
                 FunctorFinal<FunctorType, WorkTag>::final(
-                    static_cast<const FunctorType&>(functor),
-                    local_results_ptr);
+                    static_cast<const FunctorType&>(functor), results_ptr);
             });
       });
       space.fence();
@@ -641,8 +635,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
         const auto shmem_begin     = m_shmem_begin;
         const int scratch_size[2]  = {m_scratch_size[0], m_scratch_size[1]};
         void* const scratch_ptr[2] = {m_scratch_ptr[0], m_scratch_ptr[1]};
-        auto* local_results_ptr    = results_ptr.get();
-        auto* local_results_ptr2   = results_ptr2.get();
 
         cgh.parallel_for(
             sycl::nd_range<2>(
@@ -681,7 +673,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                   &local_mem[local_id * value_count]);
                 else {
                   ValueOps::copy(functor, &local_mem[local_id * value_count],
-                                 &local_results_ptr[global_id * value_count]);
+                                 &results_ptr[global_id * value_count]);
                 }
               }
               item.barrier(sycl::access::fence_space::local_space);
@@ -710,15 +702,14 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               if (local_id == 0) {
                 ValueOps::copy(
                     functor,
-                    &local_results_ptr2[(item.get_group_linear_id()) *
-                                        value_count],
+                    &results_ptr2[(item.get_group_linear_id()) * value_count],
                     &local_mem[0]);
                 if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
                   if (n_wgroups <= 1 && item.get_group_linear_id() == 0) {
                     FunctorFinal<FunctorType, WorkTag>::final(
                         static_cast<const FunctorType&>(functor),
-                        &local_results_ptr2[(item.get_group_linear_id()) *
-                                            value_count]);
+                        &results_ptr2[(item.get_group_linear_id()) *
+                                      value_count]);
                   }
               }
             });
@@ -728,7 +719,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       // FIXME_SYCL this is likely not necessary, see above
       Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
-          space, results_ptr.get(), results_ptr2.get(),
+          space, results_ptr, results_ptr2,
           sizeof(*m_result_ptr) * value_count * n_wgroups);
       space.fence();
 
@@ -742,7 +733,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     if (m_result_ptr) {
       Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
-          space, m_result_ptr, results_ptr.get(),
+          space, m_result_ptr, results_ptr,
           sizeof(*m_result_ptr) * value_count);
       space.fence();
     }
