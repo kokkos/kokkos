@@ -58,18 +58,18 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
 
-template <class T>
+template <class Traits, class T>
 struct MDSpanLayoutFromKokkosLayout : identity<T> {
   static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
 };
 
-template <>
-struct MDSpanLayoutFromKokkosLayout<Kokkos::LayoutLeft> {
+template <class Traits>
+struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
   using type = std::experimental::layout_left;
 };
 
-template <>
-struct MDSpanLayoutFromKokkosLayout<Kokkos::LayoutRight> {
+template <class Traits>
+struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
   using type = std::experimental::layout_right;
 };
 

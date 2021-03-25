@@ -77,51 +77,24 @@
 
 namespace Kokkos {
 
-//==============================================================================
-// <editor-fold desc="BasicView"> {{{1
+// A lot of the analysis of view type traits that leads to member types of
+// BasicView is useful as part of customization point constraints (like
+// MDSpanAccessorFromKokkosMemoryTraits), so it's useful to have them
+// instantiated before the BasicView class itself gets instantiated.
+template <class BasicViewType>
+struct ViewTypeTraits;
 
 template <class DataType, class Layout, class Space, class MemoryTraits>
-class BasicView {
- private:
+struct ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>> {
+ protected:
   //----------------------------------------------------------------------------
   // <editor-fold desc="private member types"> {{{2
 
   using _extracted          = Impl::ExtractExtents<DataType>;
   using mdspan_element_type = typename _extracted::value_type;
   using mdspan_extents_type = typename _extracted::extents_type;
-  using mdspan_layout_type =
-      typename Impl::MDSpanLayoutFromKokkosLayout<Layout>::type;
-  using mdspan_accessor_type =
-      typename Impl::MDSpanAccessorFromKokkosMemoryTraits<mdspan_element_type,
-                                                          MemoryTraits>::type;
-
-  using mdspan_type =
-      std::experimental::basic_mdspan<mdspan_element_type, mdspan_extents_type,
-                                      mdspan_layout_type, mdspan_accessor_type>;
-
-  using view_tracker_type = Impl::ViewTracker<BasicView>;
 
   // </editor-fold> end private member types }}}2
-  //----------------------------------------------------------------------------
-
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="friends"> {{{2
-
-  template <class>
-  friend struct Impl::ViewTracker;
-
-  template <class, class, class, class>
-  friend class BasicView;
-
-  // </editor-fold> end friends }}}2
-  //----------------------------------------------------------------------------
-
-  //----------------------------------------------------------------------------
-  // <editor-fold desc="private data members"> {{{2
-
-  mdspan_type m_data;
-
-  // </editor-fold> end private data members }}}2
   //----------------------------------------------------------------------------
 
  public:
@@ -165,15 +138,6 @@ class BasicView {
   using const_data_type     = const_scalar_array_type;
   using non_const_data_type = non_const_scalar_array_type;
 
-  using reference_type = typename mdspan_type::reference;
-  using pointer_type   = typename mdspan_type::pointer;
-
-  using runtime_data_type =
-      typename Impl::ViewScalarToDataType<value_type, mdspan_type::rank()>;
-  using runtime_const_data_type =
-      typename Impl::ViewScalarToDataType<const_value_type,
-                                          mdspan_type::rank()>;
-
   // </editor-fold> end Value type traits }}}3
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -211,22 +175,11 @@ class BasicView {
       Kokkos::View<data_type, array_layout, device_type, memory_traits>;
   using uniform_const_type =
       Kokkos::View<const_data_type, array_layout, device_type, memory_traits>;
-  using uniform_runtime_type =
-      Kokkos::View<runtime_data_type, array_layout, device_type, memory_traits>;
-  using uniform_runtime_const_type =
-      Kokkos::View<runtime_const_data_type, array_layout, device_type,
-                   memory_traits>;
   using uniform_nomemspace_type =
       Kokkos::View<data_type, array_layout, anonymous_device_type,
                    memory_traits>;
   using uniform_const_nomemspace_type =
       Kokkos::View<const_data_type, array_layout, anonymous_device_type,
-                   memory_traits>;
-  using uniform_runtime_nomemspace_type =
-      Kokkos::View<runtime_data_type, array_layout, anonymous_device_type,
-                   memory_traits>;
-  using uniform_runtime_const_nomemspace_type =
-      Kokkos::View<runtime_const_data_type, array_layout, anonymous_device_type,
                    memory_traits>;
 
   // </editor-fold> end uniform View types }}}3
@@ -234,11 +187,98 @@ class BasicView {
 
   // </editor-fold> end public member types }}}2
   //----------------------------------------------------------------------------
+};
+
+//==============================================================================
+// <editor-fold desc="BasicView"> {{{1
+
+template <class DataType, class Layout, class Space, class MemoryTraits>
+class BasicView
+    : ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>> {
+ public:
+  using traits =
+      ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>>;
+
+ private:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="private member types"> {{{2
+
+  using mdspan_layout_type =
+      typename Impl::MDSpanLayoutFromKokkosLayout<traits, Layout>::type;
+  using mdspan_accessor_type =
+      typename Impl::MDSpanAccessorFromKokkosMemoryTraits<
+          traits, MemoryTraits>::type;
+
+  using mdspan_type =
+      std::experimental::basic_mdspan<typename traits::mdspan_element_type,
+                                      typename traits::mdspan_extents_type,
+                                      mdspan_layout_type, mdspan_accessor_type>;
+
+  using view_tracker_type = Impl::ViewTracker<BasicView>;
+
+  // </editor-fold> end private member types }}}2
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="friends"> {{{2
+
+  template <class>
+  friend struct Impl::ViewTracker;
+
+  template <class, class, class, class>
+  friend class BasicView;
+
+  // </editor-fold> end friends }}}2
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="private data members"> {{{2
+
+  mdspan_type m_data;
+
+  // </editor-fold> end private data members }}}2
+  //----------------------------------------------------------------------------
+
+ public:
+  //----------------------------------------------------------------------------
+  // <editor-fold desc="public member types"> {{{2
+
+  using reference_type = typename mdspan_type::reference;
+  using pointer_type   = typename mdspan_type::pointer;
+
+  using runtime_data_type =
+      typename Impl::ViewScalarToDataType<typename traits::value_type,
+                                          mdspan_type::rank()>;
+  using runtime_const_data_type =
+      typename Impl::ViewScalarToDataType<typename traits::const_value_type,
+                                          mdspan_type::rank()>;
+
+  using uniform_runtime_type =
+      Kokkos::View<runtime_data_type, typename traits::array_layout,
+                   typename traits::device_type,
+                   typename traits::memory_traits>;
+  using uniform_runtime_const_type =
+      Kokkos::View<runtime_const_data_type, typename traits::array_layout,
+                   typename traits::device_type,
+                   typename traits::memory_traits>;
+  using uniform_runtime_nomemspace_type =
+      Kokkos::View<runtime_data_type, typename traits::array_layout,
+                   typename traits::anonymous_device_type,
+                   typename traits::memory_traits>;
+  using uniform_runtime_const_nomemspace_type =
+      Kokkos::View<runtime_const_data_type, typename traits::array_layout,
+                   typename traits::anonymous_device_type,
+                   typename traits::memory_traits>;
+
+  // </editor-fold> end public member types }}}2
+  //----------------------------------------------------------------------------
 
   //----------------------------------------------------------------------------
   // <editor-fold desc="inline static data members"> {{{2
 
-  enum : bool { is_hostspace = std::is_same<memory_space, HostSpace>::value };
+  enum : bool {
+    is_hostspace = std::is_same<typename traits::memory_space, HostSpace>::value
+  };
   enum : bool { is_managed = MemoryTraits::is_unmanaged == 0 };
   enum : bool { is_random_access = MemoryTraits::is_random_access == 1 };
 
@@ -334,7 +374,7 @@ class BasicView {
       >
   KOKKOS_FUNCTION BasicView(BasicView<RT, RL, RS, RMP> const& rhs)
       : m_data(rhs.m_data) {
-    // TODO @mdspan check runtime dimension compatibility!!!
+    // TODO @mdspan check runtime dimension compatibility (check in the mapping)
   }
 
   template <class RT, class RL, class RS, class RMP,
@@ -378,7 +418,8 @@ class BasicView {
   explicit inline BasicView(Impl::ViewCtorProp<P...> const& arg_prop,
                             array_layout const& arg_layout)
       : m_data(arg_prop.value, arg_layout,
-               mdspan_accessor_type(/* TODO @mdspan non-owning constructor of the accessor */) {
+               mdspan_accessor_type(
+                   /* TODO @mdspan non-owning constructor of the accessor */)) {
     static_assert(
         std::is_same<pointer_type,
                      typename Impl::ViewCtorProp<P...>::pointer_type>::value,
