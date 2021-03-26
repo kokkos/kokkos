@@ -354,21 +354,15 @@ struct IsSpaceAvailable<Serial> : std::false_type {};
 #endif
 
 class Threads;
-class ThreadsExec;
 #if !defined(KOKKOS_ENABLE_THREADS)
 template <>
 struct IsSpaceAvailable<Threads> : std::false_type {};
-template <>
-struct IsSpaceAvailable<ThreadsExec> : std::false_type {};
 #endif
 
 class OpenMP;
-class OpenMPExec;
 #if !defined(KOKKOS_ENABLE_OPENMP)
 template <>
 struct IsSpaceAvailable<OpenMP> : std::false_type {};
-template <>
-struct IsSpaceAvailable<OpenMPExec> : std::false_type {};
 #endif
 
 class Cuda;
