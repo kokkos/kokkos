@@ -66,8 +66,7 @@ TEST(TEST_CATEGORY, team_for) {
 }
 
 // FIXME_OPENMPTARGET wrong results
-// FIXME_SYCL team reduction and broadcast not yet implemented
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE,
                  Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
