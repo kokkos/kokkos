@@ -451,15 +451,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_SYCL so far accessors used instead of these pointers
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
-    const auto& space = *m_policy.space().impl_internal_space_instance();
-    m_scratch_ptr[0]  = nullptr;
-    m_scratch_ptr[1]  = m_team_size <= 0
-                           ? nullptr
-                           : m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->resize_team_scratch_space(
-                                     static_cast<ptrdiff_t>(m_scratch_size[1]) *
-                                     m_league_size);
+    auto& space      = *m_policy.space().impl_internal_space_instance();
+    m_scratch_ptr[0] = nullptr;
+    m_scratch_ptr[1] = space.resize_team_scratch_space(
+        static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size);
 
     if (static_cast<int>(space.m_maxShmemPerBlock) <
         m_shmem_size - m_shmem_begin) {
@@ -467,8 +462,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "
           << m_shmem_size - m_shmem_begin << " bytes but maximum is "
-          << m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock
-          << '\n';
+          << space.m_maxShmemPerBlock << '\n';
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
@@ -770,15 +764,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // FIXME_SYCL so far accessors used instead of these pointers
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
-    const auto& space = *m_policy.space().impl_internal_space_instance();
-    m_scratch_ptr[0]  = nullptr;
-    m_scratch_ptr[1]  = m_team_size <= 0
-                           ? nullptr
-                           : m_policy.space()
-                                 .impl_internal_space_instance()
-                                 ->resize_team_scratch_space(
-                                     static_cast<ptrdiff_t>(m_scratch_size[1]) *
-                                     m_league_size);
+    auto& space      = *m_policy.space().impl_internal_space_instance();
+    m_scratch_ptr[0] = nullptr;
+    m_scratch_ptr[1] = space.resize_team_scratch_space(
+        static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size);
 
     if (static_cast<int>(space.m_maxShmemPerBlock) <
         m_shmem_size - m_shmem_begin) {
@@ -786,8 +775,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "
           << m_shmem_size - m_shmem_begin << " bytes but maximum is "
-          << m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock
-          << '\n';
+          << space.m_maxShmemPerBlock << '\n';
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
