@@ -49,6 +49,7 @@
 #define KOKKOS_SERIAL_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_DummyStream.hpp>
 #if defined(KOKKOS_ENABLE_SERIAL)
 
 #include <cstddef>
@@ -105,6 +106,11 @@ class Serial {
   /// \brief  Scratch memory space
   using scratch_memory_space = ScratchMemorySpace<Kokkos::Serial>;
 
+  using stream_type = Kokkos::DummyStream;
+  Serial() = default;
+  Serial(stream_type& stream){}
+
+  stream_type get_stream() { return stream_type(); }
   //@}
 
   /// \brief True if and only if this method is being called in a
@@ -158,6 +164,9 @@ class Serial {
   static const char* name();
   //--------------------------------------------------------------------------
 };
+
+template<>
+auto create_stream<Kokkos::Serial>() -> Kokkos::Serial::stream_type;
 
 namespace Tools {
 namespace Experimental {

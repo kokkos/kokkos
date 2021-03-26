@@ -141,6 +141,13 @@ HostThreadTeamData* serial_get_thread_team_data() {
 }
 
 }  // namespace Impl
+
+template<>
+auto create_stream<Kokkos::Serial>() -> Kokkos::Serial::stream_type {
+  return Kokkos::Serial::stream_type();
+}
+
+
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

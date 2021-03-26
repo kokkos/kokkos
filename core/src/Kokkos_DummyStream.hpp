@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -43,18 +42,16 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+/// \file Kokkos_DummyStream.hpp
+/// \brief Declaration and definition of the Dummy Stream type
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
 
-#include <default/TestDefaultDeviceType_Category.hpp>
+namespace Kokkos {
+  class DummyStream {};
+} // namespace Kokkos
 
-namespace Test {
+#ifndef KOKKOS_KOKKOS_DUMMYSTREAM_HPP
+#define KOKKOS_KOKKOS_DUMMYSTREAM_HPP
 
-TEST(defaultdevicetype, development_test) {
-   using stream_type = Kokkos::DefaultExecutionSpace::stream_type;
-   stream_type stream = Kokkos::create_stream<Kokkos::DefaultExecutionSpace>();
-   Kokkos::DefaultExecutionSpace space(stream);
-   auto stream_2 = space.get_stream();
-}
-}  // namespace Test
+#endif  // KOKKOS_KOKKOS_DUMMYSTREAM_HPP

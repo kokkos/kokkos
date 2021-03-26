@@ -91,6 +91,9 @@ class AnonymousSpace;
 template <class ExecutionSpace, class MemorySpace>
 struct Device;
 
+template<typename ExecutionSpace>
+auto create_stream() -> typename ExecutionSpace::stream_type;
+
 // forward declare here so that backend initializer calls can use it.
 struct InitArguments;
 
