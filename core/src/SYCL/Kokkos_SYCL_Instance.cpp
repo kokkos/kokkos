@@ -174,7 +174,8 @@ void* SYCLInternal::resize_team_scratch_space(std::int64_t bytes,
     m_team_scratch_current_size = bytes;
     m_team_scratch_ptr =
         Kokkos::kokkos_malloc<Experimental::SYCLDeviceUSMSpace>(
-            "SYCLDeviceUSMSpace::ScratchMemory", m_team_scratch_current_size);
+            "Kokkos::SYCLDeviceUSMSpace::TeamScratchMemory",
+            m_team_scratch_current_size);
   }
   if ((bytes > m_team_scratch_current_size) ||
       ((bytes < m_team_scratch_current_size) && (force_shrink))) {
