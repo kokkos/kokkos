@@ -168,6 +168,9 @@ class Serial {
 template<>
 auto create_stream<Kokkos::Serial>() -> Kokkos::Serial::stream_type;
 
+template<>
+void destroy_stream<Kokkos::Serial>(Kokkos::Serial::stream_type &);
+
 namespace Tools {
 namespace Experimental {
 template <>

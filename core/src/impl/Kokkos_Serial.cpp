@@ -146,6 +146,10 @@ template<>
 auto create_stream<Kokkos::Serial>() -> Kokkos::Serial::stream_type {
   return Kokkos::Serial::stream_type();
 }
+template<>
+void destroy_stream<Kokkos::Serial>(Kokkos::Serial::stream_type &) {
+
+}
 
 
 }  // namespace Kokkos
