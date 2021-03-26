@@ -57,7 +57,7 @@
 #include <Kokkos_MasterLock.hpp>
 #endif
 
-#include <type_traits>
+#include <type_traits>  // std::true_type, std::false_type
 
 //----------------------------------------------------------------------------
 // Have assumed a 64bit build (8byte pointers) throughout the code base.
