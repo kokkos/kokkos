@@ -344,51 +344,57 @@ struct LOr;
 template <typename Tp>
 struct IsSpaceAvailable : std::true_type {};
 
-#define KOKKOS_IMPL_DISABLE_TYPE(TYPE) \
-  template <>                          \
-  struct IsSpaceAvailable<TYPE> : std::false_type {};
-
 //--------------------------------------------------------------------------------------//
 //  declare any spaces that might not be available and mark them as unavailable
 //
 #if !defined(KOKKOS_ENABLE_SERIAL)
 class Serial;
-KOKKOS_IMPL_DISABLE_TYPE(Serial)
+template <>
+struct IsSpaceAvailable<Serial> : std::false_type {};
 #endif
 
 #if !defined(KOKKOS_ENABLE_THREADS)
 class Threads;
 class ThreadsExec;
-KOKKOS_IMPL_DISABLE_TYPE(Threads)
-KOKKOS_IMPL_DISABLE_TYPE(ThreadsExec)
+template <>
+struct IsSpaceAvailable<Threads> : std::false_type {};
+template <>
+struct IsSpaceAvailable<ThreadsExec> : std::false_type {};
 #endif
 
 #if !defined(KOKKOS_ENABLE_OPENMP)
 class OpenMP;
 class OpenMPExec;
-KOKKOS_IMPL_DISABLE_TYPE(OpenMP)
-KOKKOS_IMPL_DISABLE_TYPE(OpenMPExec)
+template <>
+struct IsSpaceAvailable<OpenMP> : std::false_type {};
+template <>
+struct IsSpaceAvailable<OpenMPExec> : std::false_type {};
 #endif
 
 #if !defined(KOKKOS_ENABLE_CUDA)
 class Cuda;
 class CudaSpace;
 class CudaHostPinnedSpace;
-KOKKOS_IMPL_DISABLE_TYPE(Cuda)
-KOKKOS_IMPL_DISABLE_TYPE(CudaSpace)
-KOKKOS_IMPL_DISABLE_TYPE(CudaHostPinnedSpace)
+template <>
+struct IsSpaceAvailable<Cuda> : std::false_type {};
+template <>
+struct IsSpaceAvailable<CudaSpace> : std::false_type {};
+template <>
+struct IsSpaceAvailable<CudaHostPinnedSpace> : std::false_type {};
 #endif
 
 #if !defined(KOKKOS_ENABLE_CUDA_UVM)
 class CudaUVMSpace;
-KOKKOS_IMPL_DISABLE_TYPE(CudaUVMSpace)
+template <>
+struct IsSpaceAvailable<CudaUVMSpace> : std::false_type {};
 #endif
 
 #if !defined(KOKKOS_ENABLE_HBWSPACE)
 namespace Experimental {
 class HBWSpace;
 }  // namespace Experimental
-KOKKOS_IMPL_DISABLE_TYPE(Experimental::HBWSpace)
+template <>
+struct IsSpaceAvailable<Experimental::HBWSpace> : std::false_type {};
 #endif
 
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
@@ -396,8 +402,10 @@ namespace Experimental {
 class OpenMPTarget;
 class OpenMPTargetSpace;
 }  // namespace Experimental
-KOKKOS_IMPL_DISABLE_TYPE(Experimental::OpenMPTarget)
-KOKKOS_IMPL_DISABLE_TYPE(Experimental::OpenMPTargetSpace)
+template <>
+struct IsSpaceAvailable<Experimental::OpenMPTarget> : std::false_type {};
+template <>
+struct IsSpaceAvailable<Experimental::OpenMPTargetSpace> : std::false_type {};
 #endif
 
 #if !defined(KOKKOS_ENABLE_HIP)
@@ -406,9 +414,12 @@ class HIP;
 class HIPSpace;
 class HIPHostPinnedSpace;
 }  // namespace Experimental
-KOKKOS_IMPL_DISABLE_TYPE(Experimental::HIP)
-KOKKOS_IMPL_DISABLE_TYPE(Experimental::HIPSpace)
-KOKKOS_IMPL_DISABLE_TYPE(Experimental::HIPHostPinnedSpace)
+template <>
+struct IsSpaceAvailable<Experimental::HIP> : std::false_type {};
+template <>
+struct IsSpaceAvailable<Experimental::HIPSpace> : std::false_type {};
+template <>
+struct IsSpaceAvailable<Experimental::HIPHostPinnedSpace> : std::false_type {};
 #endif
 
 #if !defined(KOKKOS_ENABLE_SYCL)
@@ -417,13 +428,14 @@ class SYCL;
 class SYCLDeviceUSMSpace;
 class SYCLSharedUSMSpace;
 }  // namespace Experimental
-KOKKOS_IMPL_DISABLE_TYPE(Experimental::SYCL)
-KOKKOS_IMPL_DISABLE_TYPE(Experimental::SYCLDeviceUSMSpace)
-KOKKOS_IMPL_DISABLE_TYPE(Experimental::SYCLSharedUSMSpace)
+template <>
+struct IsSpaceAvailable<Experimental::SYCL> : std::false_type {};
+template <>
+struct IsSpaceAvailable<Experimental::SYCLDeviceUSMSpace> : std::false_type {};
+template <>
+struct IsSpaceAvailable<Experimental::SYCLSharedUSMSpace> : std::false_type {};
 #endif
 
 }  // namespace Kokkos
-
-#undef KOKKOS_IMPL_DISABLE_TYPE
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
