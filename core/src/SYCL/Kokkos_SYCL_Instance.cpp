@@ -206,9 +206,10 @@ void* SYCLInternal::scratch_space(
     if (nullptr != m_scratchSpace)
       Record::decrement(Record::get_record(m_scratchSpace));
 
-    Record* const r = Record::allocate(
-        Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-        "InternalScratchSpace", (sizeScratchGrain * m_scratchSpaceCount));
+    Record* const r =
+        Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
+                         "Kokkos::InternalScratchSpace",
+                         (sizeScratchGrain * m_scratchSpaceCount));
 
     Record::increment(r);
 
@@ -232,9 +233,10 @@ void* SYCLInternal::scratch_flags(
     if (nullptr != m_scratchFlags)
       Record::decrement(Record::get_record(m_scratchFlags));
 
-    Record* const r = Record::allocate(
-        Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-        "InternalScratchFlags", (sizeScratchGrain * m_scratchFlagsCount));
+    Record* const r =
+        Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
+                         "Kokkos::InternalScratchFlags",
+                         (sizeScratchGrain * m_scratchFlagsCount));
 
     Record::increment(r);
 
