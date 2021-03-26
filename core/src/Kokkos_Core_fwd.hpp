@@ -353,67 +353,64 @@ template <>
 struct IsSpaceAvailable<Serial> : std::false_type {};
 #endif
 
-#if !defined(KOKKOS_ENABLE_THREADS)
 class Threads;
 class ThreadsExec;
+#if !defined(KOKKOS_ENABLE_THREADS)
 template <>
 struct IsSpaceAvailable<Threads> : std::false_type {};
 template <>
 struct IsSpaceAvailable<ThreadsExec> : std::false_type {};
 #endif
 
-#if !defined(KOKKOS_ENABLE_OPENMP)
 class OpenMP;
 class OpenMPExec;
+#if !defined(KOKKOS_ENABLE_OPENMP)
 template <>
 struct IsSpaceAvailable<OpenMP> : std::false_type {};
 template <>
 struct IsSpaceAvailable<OpenMPExec> : std::false_type {};
 #endif
 
-#if !defined(KOKKOS_ENABLE_CUDA)
 class Cuda;
 class CudaSpace;
 class CudaHostPinnedSpace;
+class CudaUVMSpace;
+#if !defined(KOKKOS_ENABLE_CUDA)
 template <>
 struct IsSpaceAvailable<Cuda> : std::false_type {};
 template <>
 struct IsSpaceAvailable<CudaSpace> : std::false_type {};
 template <>
 struct IsSpaceAvailable<CudaHostPinnedSpace> : std::false_type {};
-#endif
-
-#if !defined(KOKKOS_ENABLE_CUDA_UVM)
-class CudaUVMSpace;
 template <>
 struct IsSpaceAvailable<CudaUVMSpace> : std::false_type {};
 #endif
 
-#if !defined(KOKKOS_ENABLE_HBWSPACE)
 namespace Experimental {
 class HBWSpace;
 }  // namespace Experimental
+#if !defined(KOKKOS_ENABLE_HBWSPACE)
 template <>
 struct IsSpaceAvailable<Experimental::HBWSpace> : std::false_type {};
 #endif
 
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
 namespace Experimental {
 class OpenMPTarget;
 class OpenMPTargetSpace;
 }  // namespace Experimental
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
 template <>
 struct IsSpaceAvailable<Experimental::OpenMPTarget> : std::false_type {};
 template <>
 struct IsSpaceAvailable<Experimental::OpenMPTargetSpace> : std::false_type {};
 #endif
 
-#if !defined(KOKKOS_ENABLE_HIP)
 namespace Experimental {
 class HIP;
 class HIPSpace;
 class HIPHostPinnedSpace;
 }  // namespace Experimental
+#if !defined(KOKKOS_ENABLE_HIP)
 template <>
 struct IsSpaceAvailable<Experimental::HIP> : std::false_type {};
 template <>
@@ -422,12 +419,12 @@ template <>
 struct IsSpaceAvailable<Experimental::HIPHostPinnedSpace> : std::false_type {};
 #endif
 
-#if !defined(KOKKOS_ENABLE_SYCL)
 namespace Experimental {
 class SYCL;
 class SYCLDeviceUSMSpace;
 class SYCLSharedUSMSpace;
 }  // namespace Experimental
+#if !defined(KOKKOS_ENABLE_SYCL)
 template <>
 struct IsSpaceAvailable<Experimental::SYCL> : std::false_type {};
 template <>
