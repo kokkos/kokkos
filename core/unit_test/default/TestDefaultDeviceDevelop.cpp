@@ -56,5 +56,6 @@ TEST(defaultdevicetype, development_test) {
    stream_type stream = Kokkos::create_stream<Kokkos::DefaultExecutionSpace>();
    Kokkos::DefaultExecutionSpace space(stream);
    auto stream_2 = space.get_stream();
+   Kokkos::destroy_stream<Kokkos::DefaultExecutionSpace>(stream);
 }
 }  // namespace Test
