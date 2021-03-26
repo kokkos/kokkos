@@ -53,7 +53,7 @@
 
 // FIXME_OPENMPTARGET - Using this macro to implement a workaround for
 // hierarchical reducers. It avoids hitting the code path which we wanted to
-// write but dosen't work. undef'ed at the end.
+// write but doesn't work. undef'ed at the end.
 #define KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 
 //----------------------------------------------------------------------------
@@ -622,12 +622,13 @@ class OpenMPTargetExecTeamMember {
 
   template <class ValueType>
   KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& value,
-                                             const int& thread_id) const {
+                                             int thread_id) const {
     // Make sure there is enough scratch space:
-    using type = typename if_c<sizeof(ValueType) < TEAM_REDUCE_SIZE, ValueType,
-                               void>::type;
-    type* team_scratch =
-        (type*)((char*)m_glb_scratch + TEAM_REDUCE_SIZE * omp_get_team_num());
+    using type =
+        typename std::conditional<(sizeof(ValueType) < TEAM_REDUCE_SIZE),
+                                  ValueType, void>::type;
+    type* team_scratch = reinterpret_cast<type*>(
+        ((char*)(m_glb_scratch) + TEAM_REDUCE_SIZE * omp_get_team_num()));
 #pragma omp barrier
     if (team_rank() == thread_id) *team_scratch = value;
 #pragma omp barrier
@@ -1217,7 +1218,7 @@ KOKKOS_INLINE_FUNCTION
 
 #if !defined(KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND)
 // For some reason the actual version we wanted to write doesn't work
-// and crashes. We should trye this with every new compiler
+// and crashes. We should try this with every new compiler
 // This is the variant we actually wanted to write
 template <typename iType, class Lambda, typename ReducerType>
 KOKKOS_INLINE_FUNCTION
@@ -1234,6 +1235,9 @@ KOKKOS_INLINE_FUNCTION
     initializer(                                                             \
         Impl::OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
+  // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
+  // elements in the array <= 32. For reduction we allocate, 16 bytes per
+  // element in the scratch space, hence, 16*32 = 512.
   static_assert(sizeof(ValueType) <=
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
@@ -1269,6 +1273,9 @@ KOKKOS_INLINE_FUNCTION
         const Lambda& lambda, ReducerType result) {
   using ValueType = typename ReducerType::value_type;
 
+  // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
+  // elements in the array <= 32. For reduction we allocate, 16 bytes per
+  // element in the scratch space, hence, 16*32 = 512.
   static_assert(sizeof(ValueType) <=
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
@@ -1322,6 +1329,12 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
   ValueType* TeamThread_scratch =
       static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+
+  // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
+  // elements in the array <= 32. For reduction we allocate, 16 bytes per
+  // element in the scratch space, hence, 16*32 = 512.
+  static_assert(sizeof(ValueType) <=
+                Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
 #pragma omp barrier
   TeamThread_scratch[0] = init_result;
@@ -1389,6 +1402,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 }
 
 }  // namespace Kokkos
+#undef KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 
 namespace Kokkos {
 /** \brief  Intra-thread vector parallel_for. Executes lambda(iType i) for each
@@ -1556,6 +1570,12 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
   ValueType* TeamVector_scratch =
       static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
 
+  // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
+  // elements in the array <= 32. For reduction we allocate, 16 bytes per
+  // element in the scratch space, hence, 16*32 = 512.
+  static_assert(sizeof(ValueType) <=
+                Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
+
 #pragma omp barrier
   TeamVector_scratch[0] = ValueType();
 #pragma omp barrier
@@ -1591,6 +1611,9 @@ KOKKOS_INLINE_FUNCTION
         const Lambda& lambda, ReducerType const& result) {
   using ValueType = typename ReducerType::value_type;
 
+  // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
+  // elements in the array <= 32. For reduction we allocate, 16 bytes per
+  // element in the scratch space, hence, 16*32 = 512.
   static_assert(sizeof(ValueType) <=
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
@@ -1629,6 +1652,9 @@ KOKKOS_INLINE_FUNCTION
         const Lambda& lambda, ReducerType const& result) {
   using ValueType = typename ReducerType::value_type;
 
+  // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
+  // elements in the array <= 32. For reduction we allocate, 16 bytes per
+  // element in the scratch space, hence, 16*32 = 512.
   static_assert(sizeof(ValueType) <=
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
@@ -1704,5 +1730,4 @@ KOKKOS_INLINE_FUNCTION void single(
 }
 }  // namespace Kokkos
 
-#undef KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 #endif /* #ifndef KOKKOS_OPENMPTARGETEXEC_HPP */
