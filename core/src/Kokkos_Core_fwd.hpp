@@ -427,6 +427,42 @@ template <>
 struct IsSpaceAvailable<Experimental::SYCLSharedUSMSpace> : std::false_type {};
 #endif
 
+namespace Impl {
+template <typename... T>
+struct GatherActiveSpaces;
+
+template <class, class>
+struct Concatenate;
+template <class... First, class... Second>
+struct Concatenate<type_list<First...>, type_list<Second...>> {
+  using type = type_list<First..., Second...>;
+};
+
+template <typename... T>
+struct GatherActiveSpaces;
+template <>
+struct GatherActiveSpaces<> {
+  using type = type_list<>;
+};
+template <typename T, typename... Ts>
+struct GatherActiveSpaces<T, Ts...> {
+  using other_types = typename GatherActiveSpaces<Ts...>::type;
+  using type        = typename std::conditional<
+      IsSpaceAvailable<T>{},
+      typename Concatenate<type_list<T>, other_types>::type, other_types>::type;
+};
+}  // namespace Impl
+
+using ActiveExecutionSpaces =
+    Impl::GatherActiveSpaces<Serial, Threads, OpenMP, Cuda,
+                             Experimental::OpenMPTarget, Experimental::HIP,
+                             Experimental::SYCL>::type;
+using ActiveMemorySpaces = Impl::GatherActiveSpaces<
+    HostSpace, Experimental::HBWSpace, CudaSpace, CudaHostPinnedSpace,
+    CudaUVMSpace, Experimental::OpenMPTargetSpace, Experimental::HIPSpace,
+    Experimental::HIPHostPinnedSpace, Experimental::SYCLDeviceUSMSpace,
+    Experimental::SYCLSharedUSMSpace>::type;
+
 }  // namespace Kokkos
 
 #endif /* #ifndef KOKKOS_CORE_FWD_HPP */
