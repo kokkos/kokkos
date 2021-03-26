@@ -258,7 +258,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
                                                void>;
 
       Record *const r = Record::allocate(Kokkos::Experimental::HIPSpace(),
-                                         "InternalScratchBitset",
+                                         "Kokkos::InternalScratchBitset",
                                          sizeof(uint32_t) * buffer_bound);
 
       Record::increment(r);
@@ -308,7 +308,7 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
     if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
 
     Record *const r = Record::allocate(
-        Kokkos::Experimental::HIPSpace(), "InternalScratchSpace",
+        Kokkos::Experimental::HIPSpace(), "Kokkos::InternalScratchSpace",
         (sizeScratchGrain * m_scratchSpaceCount));
 
     Record::increment(r);
@@ -332,7 +332,7 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
     if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
 
     Record *const r = Record::allocate(
-        Kokkos::Experimental::HIPSpace(), "InternalScratchFlags",
+        Kokkos::Experimental::HIPSpace(), "Kokkos::InternalScratchFlags",
         (sizeScratchGrain * m_scratchFlagsCount));
 
     Record::increment(r);
