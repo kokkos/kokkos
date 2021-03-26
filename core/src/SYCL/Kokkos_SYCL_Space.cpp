@@ -127,11 +127,13 @@ namespace Experimental {
 
 SYCLDeviceUSMSpace::SYCLDeviceUSMSpace()
     : m_queue(*SYCL().impl_internal_space_instance()->m_queue) {}
-SYCLDeviceUSMSpace::SYCLDeviceUSMSpace(sycl::queue queue) : m_queue(queue) {}
+SYCLDeviceUSMSpace::SYCLDeviceUSMSpace(sycl::queue queue)
+    : m_queue(std::move(queue)) {}
 
 SYCLSharedUSMSpace::SYCLSharedUSMSpace()
     : m_queue(*SYCL().impl_internal_space_instance()->m_queue) {}
-SYCLSharedUSMSpace::SYCLSharedUSMSpace(sycl::queue queue) : m_queue(queue) {}
+SYCLSharedUSMSpace::SYCLSharedUSMSpace(sycl::queue queue)
+    : m_queue(std::move(queue)) {}
 
 void* allocate_sycl(
     const char* arg_label, const size_t arg_alloc_size,

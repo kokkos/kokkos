@@ -65,7 +65,7 @@ class SYCLDeviceUSMSpace {
   using size_type       = Impl::SYCLInternal::size_type;
 
   SYCLDeviceUSMSpace();
-  SYCLDeviceUSMSpace(sycl::queue queue);
+  explicit SYCLDeviceUSMSpace(sycl::queue queue);
 
   void* allocate(const std::size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
@@ -96,7 +96,7 @@ class SYCLSharedUSMSpace {
   using size_type       = Impl::SYCLInternal::size_type;
 
   SYCLSharedUSMSpace();
-  SYCLSharedUSMSpace(sycl::queue queue);
+  explicit SYCLSharedUSMSpace(sycl::queue queue);
 
   void* allocate(const std::size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
