@@ -222,7 +222,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
     // theoretically, we can get 40 WF's / CU, but only can sustain 32
     // see
     // https://github.com/ROCm-Developer-Tools/HIP/blob/a0b5dfd625d99af7e288629747b40dd057183173/vdi/hip_platform.cpp#L742
-    m_maxBlocksPerSM = 32;
+    m_maxWavesPerCU = 32;
     // FIXME_HIP - Nick to implement this upstream
     //             Register count comes from Sec. 2.2. "Data Sharing" of the
     //             Vega 7nm ISA document (see the diagram)
@@ -232,7 +232,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
     m_regsPerSM        = 65536;
     m_shmemPerSM       = hipProp.maxSharedMemoryPerMultiProcessor;
     m_maxShmemPerBlock = hipProp.sharedMemPerBlock;
-    m_maxThreadsPerSM  = m_maxBlocksPerSM * HIPTraits::WarpSize;
+    m_maxThreadsPerSM  = m_maxWavesPerCU * HIPTraits::WarpSize;
     //----------------------------------
     // Multiblock reduction uses scratch flags for counters
     // and scratch space for partial reduction values.
