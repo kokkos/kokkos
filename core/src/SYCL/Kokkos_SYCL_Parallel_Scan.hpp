@@ -84,12 +84,11 @@ class ParallelScanSYCLBase {
  private:
   template <typename Functor>
   void scan_internal(sycl::queue& q, const Functor& functor,
-                     pointer_type global_mem, std::size_t size,
-                     pointer_type global_mem_nested) const {
+                     pointer_type global_mem, std::size_t size) const {
     // FIXME_SYCL optimize
     constexpr size_t wgroup_size = 32;
     auto n_wgroups               = (size + wgroup_size - 1) / wgroup_size;
-    auto group_results           = global_mem_nested;
+    auto group_results           = global_mem + size;
 
     q.submit([&](sycl::handler& cgh) {
       sycl::accessor<value_type, 1, sycl::access::mode::read_write,
@@ -152,9 +151,7 @@ class ParallelScanSYCLBase {
           });
     });
 
-    if (n_wgroups > 1)
-      scan_internal(q, functor, group_results, n_wgroups,
-                    group_results + n_wgroups);
+    if (n_wgroups > 1) scan_internal(q, functor, group_results, n_wgroups);
     m_policy.space().fence();
 
     q.submit([&](sycl::handler& cgh) {
@@ -199,7 +196,7 @@ class ParallelScanSYCLBase {
     space.fence();
 
     // Perform the actual exclusive scan
-    scan_internal(q, functor, m_scratch_space, len, m_scratch_space + len);
+    scan_internal(q, functor, m_scratch_space, len);
 
     // Write results to global memory
     q.submit([&](sycl::handler& cgh) {
