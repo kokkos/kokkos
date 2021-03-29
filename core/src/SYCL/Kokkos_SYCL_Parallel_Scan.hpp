@@ -84,18 +84,12 @@ class ParallelScanSYCLBase {
  private:
   template <typename Functor>
   void scan_internal(sycl::queue& q, const Functor& functor,
-                     pointer_type global_mem, std::size_t size) const {
+                     pointer_type global_mem, std::size_t size,
+                     pointer_type global_mem_nested) const {
     // FIXME_SYCL optimize
     constexpr size_t wgroup_size = 32;
     auto n_wgroups               = (size + wgroup_size - 1) / wgroup_size;
-
-    // FIXME_SYCL The allocation should be handled by the execution space
-    auto deleter = [&q](value_type* ptr) { sycl::free(ptr, q); };
-    std::unique_ptr<value_type[], decltype(deleter)> group_results_memory(
-        static_cast<pointer_type>(sycl::malloc(sizeof(value_type) * n_wgroups,
-                                               q, sycl::usm::alloc::shared)),
-        deleter);
-    auto group_results = group_results_memory.get();
+    auto group_results           = global_mem_nested;
 
     q.submit([&](sycl::handler& cgh) {
       sycl::accessor<value_type, 1, sycl::access::mode::read_write,
@@ -158,7 +152,9 @@ class ParallelScanSYCLBase {
           });
     });
 
-    if (n_wgroups > 1) scan_internal(q, functor, group_results, n_wgroups);
+    if (n_wgroups > 1)
+      scan_internal(q, functor, group_results, n_wgroups,
+                    group_results + n_wgroups);
     m_policy.space().fence();
 
     q.submit([&](sycl::handler& cgh) {
@@ -202,8 +198,8 @@ class ParallelScanSYCLBase {
     });
     space.fence();
 
-    // Perform the actual exlcusive scan
-    scan_internal(q, functor, m_scratch_space, len);
+    // Perform the actual exclusive scan
+    scan_internal(q, functor, m_scratch_space, len, m_scratch_space + len);
 
     // Write results to global memory
     q.submit([&](sycl::handler& cgh) {
@@ -230,13 +226,27 @@ class ParallelScanSYCLBase {
     const auto& q = *m_policy.space().impl_internal_space_instance()->m_queue;
     const std::size_t len = m_policy.end() - m_policy.begin();
 
+    // compute the total amount of memory we will need.
+    std::size_t total_memory = 0;
+    {
+      size_t wgroup_size   = 32;
+      size_t n_nested_size = len;
+      size_t n_nested_wgroups;
+      do {
+        total_memory += sizeof(value_type) * n_nested_size;
+        n_nested_wgroups = (n_nested_size + wgroup_size - 1) / wgroup_size;
+        n_nested_size    = n_nested_wgroups;
+      } while (n_nested_wgroups > 1);
+      total_memory += sizeof(value_type) * wgroup_size;
+    }
+
     // FIXME_SYCL The allocation should be handled by the execution space
     // consider only storing one value per block and recreate initial results in
     // the end before doing the final pass
     auto deleter = [&q](value_type* ptr) { sycl::free(ptr, q); };
     std::unique_ptr<value_type[], decltype(deleter)> result_memory(
-        static_cast<pointer_type>(sycl::malloc(sizeof(value_type) * len, q,
-                                               sycl::usm::alloc::shared)),
+        static_cast<pointer_type>(sycl::malloc(
+            sizeof(value_type) * total_memory, q, sycl::usm::alloc::shared)),
         deleter);
     m_scratch_space = result_memory.get();
 
