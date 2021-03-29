@@ -1479,12 +1479,6 @@ class TestViewAPI {
                      Kokkos::Experimental::OpenMPTargetSpace>::value)
       return;
 #endif
-// FIXME_SYCL
-#ifdef KOKKOS_ENABLE_SYCL
-    if (std::is_same<typename dView1::memory_space,
-                     Kokkos::Experimental::SYCLDeviceUSMSpace>::value)
-      return;
-#endif
     auto alloc_size = std::numeric_limits<size_t>::max() - 42;
     try {
       auto should_always_fail = dView1("hello_world_failure", alloc_size);
@@ -1501,9 +1495,12 @@ class TestViewAPI {
       // quickly.
       if (msg.find("is not a valid size") != std::string::npos) {
         ASSERT_PRED_FORMAT2(::testing::IsSubstring, "is not a valid size", msg);
-      } else {
-        // Otherwise, there has to be some sort of "insufficient memory" error
+      } else if (msg.find("insufficient memory") != std::string::npos) {
         ASSERT_PRED_FORMAT2(::testing::IsSubstring, "insufficient memory", msg);
+      } else {
+        // Otherwise, there has to be some sort of "unknown error" error
+        ASSERT_PRED_FORMAT2(::testing::IsSubstring,
+                            "because of an unknown error.", msg);
       }
     }
   }

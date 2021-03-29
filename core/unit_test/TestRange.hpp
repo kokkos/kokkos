@@ -432,8 +432,6 @@ TEST(TEST_CATEGORY, range_reduce) {
   }
 }
 
-// FIXME_SYCL needs parallel_scan
-#ifndef KOKKOS_ENABLE_SYCL
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, range_scan) {
   {
@@ -484,6 +482,5 @@ TEST(TEST_CATEGORY, range_scan) {
   }
 #endif
 }
-#endif
 #endif
 }  // namespace Test

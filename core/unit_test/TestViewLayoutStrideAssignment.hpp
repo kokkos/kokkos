@@ -661,9 +661,8 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_right_to_layoutleft_assignment) {
     ASSERT_EQ(dst.span(), src.span());
     ASSERT_EQ(test, true);
   }
-// FIXME_SYCL deadlocks
 // WORKAROUND OPENMPTARGET : death tests don't seem to work ...
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
   return;
 #endif
   {  // Assignment of rank-2 LayoutLeft = LayoutStride (LayoutRight compatible)
@@ -817,9 +816,8 @@ TEST(TEST_CATEGORY_DEATH, view_layoutstride_left_to_layoutright_assignment) {
     ASSERT_EQ(dst.span(), src.span());
     ASSERT_EQ(test, true);
   }
-// FIXME_SYCL deadlocks
 // WORKAROUND OPENMPTARGET : death tests don't seem to work ...
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
   return;
 #endif
   {  // Assignment of rank-2 LayoutRight = LayoutStride (LayoutLeft compatible)
