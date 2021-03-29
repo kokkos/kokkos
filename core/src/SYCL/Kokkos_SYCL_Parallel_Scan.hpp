@@ -220,7 +220,7 @@ class ParallelScanSYCLBase {
   void impl_execute(const PostFunctor& post_functor) {
     if (m_policy.begin() == m_policy.end()) return;
 
-    const auto& q = *m_policy.space().impl_internal_space_instance()->m_queue;
+    auto& instance        = *m_policy.space().impl_internal_space_instance();
     const std::size_t len = m_policy.end() - m_policy.begin();
 
     // compute the total amount of memory we will need.
@@ -237,20 +237,13 @@ class ParallelScanSYCLBase {
       total_memory += sizeof(value_type) * wgroup_size;
     }
 
-    // FIXME_SYCL The allocation should be handled by the execution space
-    // consider only storing one value per block and recreate initial results in
-    // the end before doing the final pass
-    auto deleter = [&q](value_type* ptr) { sycl::free(ptr, q); };
-    std::unique_ptr<value_type[], decltype(deleter)> result_memory(
-        static_cast<pointer_type>(sycl::malloc(
-            sizeof(value_type) * total_memory, q, sycl::usm::alloc::shared)),
-        deleter);
-    m_scratch_space = result_memory.get();
+    // FIXME_SYCL consider only storing one value per block and recreate initial
+    // results in the end before doing the final pass
+    m_scratch_space = static_cast<pointer_type>(
+        instance.scratch_space(sizeof(value_type) * total_memory));
 
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
-        indirectKernelMem = m_policy.space()
-                                .impl_internal_space_instance()
-                                ->m_indirectKernelMem;
+        indirectKernelMem = instance.m_indirectKernelMem;
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
