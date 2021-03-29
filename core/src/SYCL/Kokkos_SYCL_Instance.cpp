@@ -248,6 +248,64 @@ void* SYCLInternal::scratch_flags(
   return m_scratchFlags;
 }
 
+template <sycl::usm::alloc Kind>
+size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
+  assert(m_size == 0);
+  assert(m_q);
+
+  if (m_capacity < n) {
+    using Space  = std::conditional_t<Kind == sycl::usm::alloc::device,
+                                     Kokkos::Experimental::SYCLDeviceUSMSpace,
+                                     Kokkos::Experimental::SYCLSharedUSMSpace>;
+    using Record = Kokkos::Impl::SharedAllocationRecord<Space, void>;
+    // First free what we have (in case malloc can reuse it)
+    if (m_data) Record::decrement(Record::get_record(m_data));
+
+    Record* const r = Record::allocate(Space(*m_q), "Kokkos::USMObjectMem", n);
+    Record::increment(r);
+
+    m_data     = r->data();
+    m_capacity = n;
+  }
+
+  return m_capacity;
+}
+
+template <sycl::usm::alloc Kind>
+void SYCLInternal::USMObjectMem<Kind>::reset() {
+  assert(m_size == 0);
+
+  if (m_data) {
+    using Record = Kokkos::Impl::SharedAllocationRecord<
+        std::conditional_t<Kind == sycl::usm::alloc::device,
+                           Kokkos::Experimental::SYCLDeviceUSMSpace,
+                           Kokkos::Experimental::SYCLSharedUSMSpace>,
+        void>;
+    Record::decrement(Record::get_record(m_data));
+
+    m_capacity = 0;
+    m_data     = nullptr;
+  }
+  m_q.reset();
+}
+
+template <sycl::usm::alloc Kind>
+SYCLInternal::USMObjectMem<Kind>::~USMObjectMem<Kind>() {
+  assert(m_size == 0);
+
+  if (m_data) {
+    using Record = Kokkos::Impl::SharedAllocationRecord<
+        std::conditional_t<Kind == sycl::usm::alloc::device,
+                           Kokkos::Experimental::SYCLDeviceUSMSpace,
+                           Kokkos::Experimental::SYCLSharedUSMSpace>,
+        void>;
+    Record::decrement(Record::get_record(m_data));
+  }
+}
+
+template class SYCLInternal::USMObjectMem<sycl::usm::alloc::shared>;
+template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;
+
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
