@@ -1177,7 +1177,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 
 template <typename iType, class Lambda, typename ValueType>
 KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<!Kokkos::is_reducer_type<ValueType>::value>::type
+    std::enable_if_t<!Kokkos::is_reducer_type<ValueType>::value>
     parallel_reduce(
         const Impl::TeamThreadRangeBoundariesStruct<
             iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
@@ -1222,7 +1222,7 @@ KOKKOS_INLINE_FUNCTION
 // This is the variant we actually wanted to write
 template <typename iType, class Lambda, typename ReducerType>
 KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer_type<ReducerType>::value>::type
+    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
     parallel_reduce(
         const Impl::TeamThreadRangeBoundariesStruct<
             iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
@@ -1266,7 +1266,7 @@ KOKKOS_INLINE_FUNCTION
 #else
 template <typename iType, class Lambda, typename ReducerType>
 KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer_type<ReducerType>::value>::type
+    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
     parallel_reduce(
         const Impl::TeamThreadRangeBoundariesStruct<
             iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
@@ -1453,7 +1453,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 
 template <typename iType, class Lambda, typename ReducerType>
 KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer_type<ReducerType>::value>::type
+    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
     parallel_reduce(
         const Impl::ThreadVectorRangeBoundariesStruct<
             iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
@@ -1564,17 +1564,14 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamVectorRangeBoundariesStruct<
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, ValueType& result) {
-  static_assert(sizeof(ValueType) <=
-                Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
-
-  ValueType* TeamVector_scratch =
-      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
-
   // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
   // elements in the array <= 32. For reduction we allocate, 16 bytes per
   // element in the scratch space, hence, 16*32 = 512.
   static_assert(sizeof(ValueType) <=
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
+
+  ValueType* TeamVector_scratch =
+      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
 
 #pragma omp barrier
   TeamVector_scratch[0] = ValueType();
@@ -1604,7 +1601,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
 #if !defined(KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND)
 template <typename iType, class Lambda, typename ReducerType>
 KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer_type<ReducerType>::value>::type
+    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
     parallel_reduce(
         const Impl::TeamVectorRangeBoundariesStruct<
             iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
@@ -1622,9 +1619,6 @@ KOKKOS_INLINE_FUNCTION
     : Impl::OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(                                                             \
         Impl::OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
-
-  static_assert(sizeof(ValueType) <=
-                Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
   ValueType* TeamVector_scratch =
       static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
@@ -1645,7 +1639,7 @@ KOKKOS_INLINE_FUNCTION
 #else
 template <typename iType, class Lambda, typename ReducerType>
 KOKKOS_INLINE_FUNCTION
-    typename std::enable_if<Kokkos::is_reducer_type<ReducerType>::value>::type
+    std::enable_if_t<Kokkos::is_reducer_type<ReducerType>::value>
     parallel_reduce(
         const Impl::TeamVectorRangeBoundariesStruct<
             iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
@@ -1691,6 +1685,8 @@ KOKKOS_INLINE_FUNCTION
 }
 #endif  // KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 }  // namespace Kokkos
+
+#undef KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 
 namespace Kokkos {
 
