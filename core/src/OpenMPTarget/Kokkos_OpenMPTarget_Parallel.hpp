@@ -121,8 +121,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class PolicyType, class ReducerType,
-          class PointerType, class ValueType, int FunctorHasJoin,
-          int UseReducerType>
+          class PointerType, class ValueType, bool FunctorHasJoin,
+          bool UseReducerType>
 struct ParallelReduceSpecialize {
   static inline void execute(const FunctorType& /*f*/, const PolicyType& /*p*/,
                              PointerType /*result_ptr*/) {
@@ -137,7 +137,8 @@ struct ParallelReduceSpecialize {
 template <class FunctorType, class ReducerType, class PointerType,
           class ValueType, class... PolicyArgs>
 struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
-                                ReducerType, PointerType, ValueType, 0, 0> {
+                                ReducerType, PointerType, ValueType, false,
+                                false> {
   using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
   template <class TagType>
   inline static void execute_impl(const FunctorType& f, const PolicyType& p,
@@ -174,7 +175,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 template <class FunctorType, class PolicyType, class ReducerType,
           class PointerType, class ValueType>
 struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
-                                PointerType, ValueType, 0, 1> {
+                                PointerType, ValueType, false, true> {
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
@@ -632,7 +633,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 template <class FunctorType, class ReducerType, class PointerType,
           class ValueType, class... PolicyArgs>
 struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
-                                ReducerType, PointerType, ValueType, 0, 0> {
+                                ReducerType, PointerType, ValueType, false,
+                                false> {
   using PolicyType = TeamPolicyInternal<PolicyArgs...>;
 
   template <class TagType>
@@ -737,7 +739,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 template <class FunctorType, class ReducerType, class PointerType,
           class ValueType, class... PolicyArgs>
 struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
-                                ReducerType, PointerType, ValueType, 0, 1> {
+                                ReducerType, PointerType, ValueType, false,
+                                true> {
   using PolicyType = TeamPolicyInternal<PolicyArgs...>;
   template <class TagType>
   inline static void execute_impl(const FunctorType& f, const PolicyType& p,
