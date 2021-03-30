@@ -663,9 +663,6 @@ void *CudaInternal::resize_team_scratch_space(std::int64_t bytes,
 //----------------------------------------------------------------------------
 
 void CudaInternal::finalize() {
-  // skip if Kokkos::finalize() has already been called
-  if (!singleton().was_finalized) return;
-
   was_finalized = true;
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     // Only finalize this if we're the singleton
