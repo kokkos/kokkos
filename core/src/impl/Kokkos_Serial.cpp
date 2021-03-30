@@ -147,6 +147,10 @@ HostThreadTeamData* serial_get_thread_team_data() {
 
 namespace Kokkos {
 
+template<>
+Kokkos::Serial create_execspace_instance<Kokkos::Serial>(int concurrency, Kokkos::FencingSyncsSubInstances syncs) {
+  return Kokkos::Serial();
+}
 bool Serial::impl_is_initialized() { return Impl::g_serial_is_initialized; }
 
 void Serial::impl_initialize() {

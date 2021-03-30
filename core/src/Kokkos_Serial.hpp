@@ -49,6 +49,7 @@
 #define KOKKOS_SERIAL_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_ExecutionSpacePartitioning.hpp>
 #if defined(KOKKOS_ENABLE_SERIAL)
 
 #include <cstddef>
@@ -85,11 +86,12 @@ namespace Kokkos {
 /// sequentially.  This is useful if you really do not want to use
 /// threads, or if you want to explore different combinations of MPI
 /// and shared-memory parallel programming models.
-class Serial {
+class Serial : public ExecutionSpacePartitioner<Serial,ConcurrencyImpliesDeviceResources>{
  public:
   //! \name Type declarations that all Kokkos devices must provide.
   //@{
-
+  using partitioning_scheme = ConcurrencyImpliesDeviceResources;
+  using partitioner = ExecutionSpacePartitioner<Serial,ConcurrencyImpliesDeviceResources>;
   //! Tag this class as an execution space:
   using execution_space = Serial;
   //! This device's preferred memory space.
@@ -122,9 +124,15 @@ class Serial {
   /// method does not return until all dispatched functors on this
   /// device have completed.
   static void impl_static_fence() {}
-
-  void fence() const {}
-
+  void fence() const {
+    fence_sub_instances();
+  }
+  resource_count_type get_max_partition_size() const {
+    return get_max_partition_size_impl(*this);
+  }
+  execution_space_collection_type partition_instances(int num_instances) {
+    return partition_instances_impl(*this, num_instances);
+  }
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency() { return 1; }
 
@@ -158,6 +166,9 @@ class Serial {
   static const char* name();
   //--------------------------------------------------------------------------
 };
+
+template<>
+Kokkos::Serial create_execspace_instance<Kokkos::Serial>(int concurrency, Kokkos::FencingSyncsSubInstances syncs);
 
 namespace Tools {
 namespace Experimental {
@@ -1096,4 +1107,4 @@ class UniqueToken<Serial, UniqueTokenScope::Global> {
 #include <impl/Kokkos_Serial_Task.hpp>
 
 #endif  // defined( KOKKOS_ENABLE_SERIAL )
-#endif  /* #define KOKKOS_SERIAL_HPP */
+#endif /* #define KOKKOS_SERIAL_HPP */

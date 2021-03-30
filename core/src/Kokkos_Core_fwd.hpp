@@ -94,6 +94,10 @@ struct Device;
 // forward declare here so that backend initializer calls can use it.
 struct InitArguments;
 
+enum class FencingSyncsSubInstances { yes, no };
+template <typename ExecutionSpace>
+ExecutionSpace create_execspace_instance(const int concurrency = -1, Kokkos::FencingSyncsSubInstances syncs = Kokkos::FencingSyncsSubInstances::yes);
+
 }  // namespace Kokkos
 
 // Include backend forward statements as determined by build options

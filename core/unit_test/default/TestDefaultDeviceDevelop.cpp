@@ -51,6 +51,11 @@
 
 namespace Test {
 
-TEST(defaultdevicetype, development_test) {}
+TEST(defaultdevicetype, development_test) {
 
+  Kokkos::DefaultExecutionSpace space;
+  space.fence();
+  auto instances = space.partition_instances(space.get_max_partition_size());
+
+}
 }  // namespace Test
