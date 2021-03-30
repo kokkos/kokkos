@@ -233,7 +233,7 @@ endforeach()
 
 # capture submit error so it doesn't fail because of a submission error
 ctest_submit(RETURN_VALUE submit_ret
-    RETRY_COUNT 10
+    RETRY_COUNT 6
     RETRY_DELAY 30
     CAPTURE_CMAKE_ERROR submit_err)
 
