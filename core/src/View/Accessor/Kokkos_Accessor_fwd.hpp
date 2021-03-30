@@ -42,43 +42,27 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_ACCESSOR_FWD_HPP
+#define KOKKOS_KOKKOS_ACCESSOR_FWD_HPP
 
 #include <Kokkos_Macros.hpp>
 
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
-
-#include <experimental/mdspan>
+#include <Kokkos_Core_fwd.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+template <class T, class MemTraits>
+struct AccessorForMemoryTraitsFlags;
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
-};
+template <class ViewTraits, unsigned Flags, MemoryTraitsFlags CurrentFlag,
+          bool FlagIsSet = CurrentFlag bitand Flags, class Enable = void>
+struct BuildAccessorForMemoryTraitsFlags;
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
-
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
-
-// TODO @mdspan layout stride
-
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
+template <class Self>
+struct MixinAccessorFlagConvertibility;
 
 }  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_ACCESSOR_FWD_HPP

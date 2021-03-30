@@ -42,43 +42,35 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_VIEWALLOC_HPP
+#define KOKKOS_KOKKOS_VIEWALLOC_HPP
 
 #include <Kokkos_Macros.hpp>
-
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
-
-#include <experimental/mdspan>
+#include <Kokkos_Core_fwd.hpp>
+#include <View/Constructor/Kokkos_ViewCtorTraits.hpp>
 
 namespace Kokkos {
-namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+/** \brief  Create View allocation parameter bundle from argument list.
+ *
+ *  Valid argument list members are:
+ *    1) label as a "string" or std::string
+ *    2) memory space instance of the View::memory_space type
+ *    3) execution space instance compatible with the View::memory_space
+ *    4) Kokkos::WithoutInitializing to bypass initialization
+ *    4) Kokkos::AllowPadding to allow allocation to pad dimensions for memory
+ * alignment
+ */
+template <class... Args>
+inline auto view_alloc(Args const&... args) {
+  using return_type = Impl::ViewConstructorDescription<Args...>;
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
-};
+  static_assert(!return_type::has_pointer,
+                "Cannot give pointer-to-memory for view allocation");
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
+  return return_type(Impl::view_ctor_trait_ctor_tag{}, args...);
+}
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
+}  // namespace Kokkos
 
-// TODO @mdspan layout stride
-
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
-
-}  // end namespace Impl
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_VIEWALLOC_HPP

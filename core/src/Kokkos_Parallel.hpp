@@ -50,6 +50,7 @@
 
 #include <cstddef>
 #include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Parallel_fwd.hpp>
 #include <Kokkos_View.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 
@@ -156,10 +157,9 @@ namespace Kokkos {
 template <class ExecPolicy, class FunctorType>
 inline void parallel_for(
     const ExecPolicy& policy, const FunctorType& functor,
-    const std::string& str = "",
-    typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecPolicy>::value>::type* =
-        nullptr) {
+    const std::string& str /*= ""*/,
+    typename std::enable_if<Kokkos::Impl::is_execution_policy<
+        ExecPolicy>::value>::type* /*= nullptr*/) {
   uint64_t kpID = 0;
 
   ExecPolicy inner_policy = policy;
@@ -176,7 +176,7 @@ inline void parallel_for(
 
 template <class FunctorType>
 inline void parallel_for(const size_t work_count, const FunctorType& functor,
-                         const std::string& str = "") {
+                         const std::string& str /*= ""*/) {
   using execution_space =
       typename Impl::FunctorPolicyExecutionSpace<FunctorType,
                                                  void>::execution_space;

@@ -57,6 +57,12 @@ class BasicView;
 template <class DataType, class... Properties>
 class View;
 
-} // end namespace Kokkos
+namespace Impl {
+
+struct runtime_non_owning_accessor_tag_t {};
+
+}  // namespace Impl
+
+}  // end namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_VIEW_FWD_HPP

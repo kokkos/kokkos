@@ -42,43 +42,44 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_VIEWALLOCATION_HPP
+#define KOKKOS_KOKKOS_VIEWALLOCATION_HPP
 
-#include <Kokkos_Macros.hpp>
-
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
-
-#include <experimental/mdspan>
+#include <impl/Kokkos_SharedAlloc.hpp>
+#include <View/Kokkos_ViewValueFunctor.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+// This code only depends on execution space, memory space, and value type,
+// so we can save a lot of compilation time by only depending on those three
+// template parameters.
+// Naming note: I intentionally avoided the term "allocator" for now
+template <class ValueType>
+struct ViewAllocationMechanism {
+  template <class ExecutionSpace, class MemorySpace>
+  static auto* allocate_shared(ExecutionSpace const& ex, MemorySpace const& mem,
+                               std::string const& arg_label,
+                               std::size_t arg_size, bool initialize) {
+    using functor_type = ViewValueFunctor<ExecutionSpace, ValueType>;
+    using record_type  = SharedAllocationRecord<MemorySpace, functor_type>;
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
+    // TODO @mdspan pad for alignment
+    auto alloc_size = arg_size;
+
+    auto* record = record_type::allocate(mem, arg_label, alloc_size);
+    if (arg_size > 0 && initialize) {
+      record->m_destroy = functor_type(static_cast<ValueType*>(record->data()),
+                                       arg_size, arg_label);
+      // The construction code is, counterintuitively, on the deleter...
+      record->m_destroy.construct_shared_allocation();
+    }
+
+    return record;
+  }
 };
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
+}  // namespace Impl
+}  // namespace Kokkos
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
-
-// TODO @mdspan layout stride
-
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
-
-}  // end namespace Impl
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_VIEWALLOCATION_HPP

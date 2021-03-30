@@ -42,43 +42,40 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_ACCESSOR_RANDOMACCESS_HPP
+#define KOKKOS_KOKKOS_ACCESSOR_RANDOMACCESS_HPP
 
 #include <Kokkos_Macros.hpp>
 
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
+#include <View/Accessor/Kokkos_Accessor_fwd.hpp>
+#include <View/Accessor/Kokkos_Accessor_Convertibility.hpp>
 
-#include <experimental/mdspan>
+#include <Kokkos_MemoryTraits.hpp>
+#include <impl/Kokkos_Utilities.hpp>  // next_flag_v
 
 namespace Kokkos {
 namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+// RandomAccess case
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
+                                         MemoryTraitsFlags::RandomAccess,
+                                         /* FlagIsSet = */ true>
+    // TODO decide on convertibility??
+    : BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags,
+          next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::RandomAccess>> {
+ private:
+  using base_t = BuildAccessorForMemoryTraitsFlags<
+      ViewTraits, Flags,
+      next_flag_v<MemoryTraitsFlags, MemoryTraitsFlags::RandomAccess>>;
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
+ public:
+  using base_t::base_t;
+
+  // TODO handle RandomAccess special handle case
 };
-
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
-
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
-
-// TODO @mdspan layout stride
-
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
-
 }  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_ACCESSOR_RANDOMACCESS_HPP
