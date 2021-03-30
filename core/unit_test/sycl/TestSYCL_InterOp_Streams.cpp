@@ -48,8 +48,8 @@
 namespace Test {
 // Test Interoperability with SYCL Streams
 TEST(sycl, raw_sycl_queues) {
-  cl::sycl::default_selector device_selector;
-  cl::sycl::queue queue(device_selector);
+  sycl::default_selector device_selector;
+  sycl::queue queue(device_selector);
   Kokkos::InitArguments arguments{-1, -1, -1, false};
   Kokkos::initialize(arguments);
   int* p            = sycl::malloc_device<int>(100, queue);
@@ -98,7 +98,7 @@ TEST(sycl, raw_sycl_queues) {
 
   // Try to use the queue after Kokkos' copy got out-of-scope.
   // This kernel corresponds to "offset_streams" in the HIP and CUDA tests.
-  queue.submit([&](cl::sycl::handler& cgh) {
+  queue.submit([&](sycl::handler& cgh) {
     cgh.parallel_for(sycl::range<1>(100), [=](int idx) { p[idx] += idx; });
   });
   queue.wait_and_throw();
