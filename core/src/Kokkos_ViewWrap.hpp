@@ -42,43 +42,21 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_VIEWWRAP_HPP
+#define KOKKOS_KOKKOS_VIEWWRAP_HPP
 
 #include <Kokkos_Macros.hpp>
-
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
-
-#include <experimental/mdspan>
+#include <Kokkos_Core_fwd.hpp>
+#include <View/Constructor/Kokkos_ViewCtorTraits.hpp>
 
 namespace Kokkos {
-namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+template <class T>
+KOKKOS_INLINE_FUNCTION auto view_wrap(T* arg) {
+  using return_type = Impl::ViewConstructorDescription<T*>;
+  return return_type(Impl::view_ctor_trait_ctor_tag{}, arg);
+}
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
-};
+}  // namespace Kokkos
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
-
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
-
-// TODO @mdspan layout stride
-
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
-
-}  // end namespace Impl
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_VIEWWRAP_HPP

@@ -173,8 +173,8 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
 // <editor-fold desc="ViewVerifySpace"> {{{1
 
 template <class Space,
-    bool =
-    MemorySpaceAccess<Space, ActiveExecutionMemorySpace>::accessible>
+          bool =
+              MemorySpaceAccess<Space, ActiveExecutionMemorySpace>::accessible>
 struct ViewVerifySpace {
   KOKKOS_FORCEINLINE_FUNCTION static void check() {}
 };
@@ -189,7 +189,6 @@ struct ViewVerifySpace<Space, false> {
 
 // </editor-fold> end ViewVerifySpace }}}1
 //==============================================================================
-
 
 //==============================================================================
 // <editor-fold desc="runtime_check_rank_*"> {{{1
@@ -251,7 +250,7 @@ void runtime_check_rank_host(const size_t dyn_rank, const bool is_void_spec,
 // </editor-fold> end runtime_check_rank_* }}}1
 //==============================================================================
 
-} // end namespace Impl
-} // end namespace Kokkos
+}  // end namespace Impl
+}  // end namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_VIEWVERIFY_HPP

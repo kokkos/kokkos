@@ -442,7 +442,7 @@ struct is_always_assignable_impl;
 
 template <class... ViewTDst, class... ViewTSrc>
 struct is_always_assignable_impl<Kokkos::View<ViewTDst...>,
-                                 Kokkos::View<ViewTSrc...>> {
+                                 Kokkos::View<ViewTSrc...> > {
   using mapping_type = Kokkos::Impl::ViewMapping<
       typename Kokkos::View<ViewTDst...>::traits,
       typename Kokkos::View<ViewTSrc...>::traits,
@@ -477,10 +477,10 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
 
 #ifdef KOKKOS_ENABLE_CXX17
   return is_always_assignable_v<Kokkos::View<ViewTDst...>,
-                                Kokkos::View<ViewTSrc...>> ||
+                                Kokkos::View<ViewTSrc...> > ||
 #else
   return is_always_assignable<Kokkos::View<ViewTDst...>,
-                              Kokkos::View<ViewTSrc...>>::value ||
+                              Kokkos::View<ViewTSrc...> >::value ||
 #endif
          (mapping_type::is_assignable &&
           ((DstTraits::dimension::rank_dynamic >= 1) ||
@@ -577,10 +577,10 @@ template <class>
 struct is_view : public std::false_type {};
 
 template <class D, class... P>
-struct is_view<View<D, P...>> : public std::true_type {};
+struct is_view<View<D, P...> > : public std::true_type {};
 
 template <class D, class... P>
-struct is_view<const View<D, P...>> : public std::true_type {};
+struct is_view<const View<D, P...> > : public std::true_type {};
 
 template <class DataType, class... Properties>
 class View : public ViewTraits<DataType, Properties...> {
@@ -625,7 +625,7 @@ class View : public ViewTraits<DataType, Properties...> {
   using HostMirror =
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
-                  typename traits::host_mirror_space::memory_space>>;
+                  typename traits::host_mirror_space::memory_space> >;
 
   /** \brief  Compatible HostMirror view */
   using host_mirror_type =

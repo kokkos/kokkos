@@ -81,7 +81,7 @@ struct DataTypeFromExtents;
 template <class T, std::ptrdiff_t Ext, std::ptrdiff_t... Exts>
 struct DataTypeFromExtents<T, std::experimental::extents<Ext, Exts...>>
     : DataTypeFromExtents<T[std::size_t{Ext}],
-        std::experimental::extents<Exts...>> {};
+                          std::experimental::extents<Exts...>> {};
 
 template <class T, std::ptrdiff_t... Exts>
 struct DataTypeFromExtents<
@@ -96,7 +96,7 @@ struct DataTypeFromExtents<T, std::experimental::extents<>> {
 // </editor-fold> end DataTypeFromExtents }}}1
 //==============================================================================
 
-} // end namespace Impl
-} // end namespace Kokkos
+}  // end namespace Impl
+}  // end namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_EXTRACTEXTENTS_HPP

@@ -42,43 +42,50 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_VIEWCTOR_LABEL_HPP
+#define KOKKOS_KOKKOS_VIEWCTOR_LABEL_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Core_fwd.hpp>
 
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
+#include <View/Constructor/Kokkos_ViewCtor_fwd.hpp>
 
-#include <experimental/mdspan>
+#include <string>
 
 namespace Kokkos {
 namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+struct LabelViewCtorTrait {
+  template <class T>
+  using trait_matches_specification = std::is_convertible<T, std::string>;
+  struct base_traits {
+    static constexpr bool has_label = false;
+    static std::string get_label() { return ""; }
+  };
+  template <class T, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t                                      = AnalyzeNextTrait;
+    mixin_matching_trait()                            = default;
+    mixin_matching_trait(mixin_matching_trait const&) = default;
+    mixin_matching_trait(mixin_matching_trait&&)      = default;
+    mixin_matching_trait& operator=(mixin_matching_trait const&) = default;
+    mixin_matching_trait& operator=(mixin_matching_trait&&) = default;
+    ~mixin_matching_trait()                                 = default;
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
+    template <class... OtherProps>
+    mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
+                         std::string const& label, OtherProps const& other...)
+        : base_t(tag, other...), m_label(label) {}
+
+    static constexpr bool has_label = true;
+    std::string get_label() const { return m_label; }
+
+   private:
+    std::string m_label;
+  };
 };
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
+}  // namespace Impl
+}  // namespace Kokkos
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
-
-// TODO @mdspan layout stride
-
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
-
-}  // end namespace Impl
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_VIEWCTOR_LABEL_HPP

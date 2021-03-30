@@ -59,8 +59,8 @@ template <class PointerType>
 class AtomicReference {
  public:
   std::add_volatile_t<PointerType> const ptr;
-  using value_type = decltype(*std::declval<PointerType>());
-  using const_value_type = std::add_const_t<value_type>;
+  using value_type           = decltype(*std::declval<PointerType>());
+  using const_value_type     = std::add_const_t<value_type>;
   using non_const_value_type = std::remove_const_t<value_type>;
 
   KOKKOS_INLINE_FUNCTION
@@ -346,9 +346,7 @@ class AtomicReference {
 };
 
 template <class ViewTraits>
-class AtomicDataElement
-  : AtomicReference<typename ViewTraits::ValueType*>
-{
+class AtomicDataElement : AtomicReference<typename ViewTraits::ValueType*> {
   using base_t = AtomicReference<typename ViewTraits::ValueType*>;
   using base_t::base_t;
 };

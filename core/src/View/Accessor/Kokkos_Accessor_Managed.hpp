@@ -42,43 +42,47 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_ACCESSOR_MANAGED_HPP
+#define KOKKOS_KOKKOS_ACCESSOR_MANAGED_HPP
 
 #include <Kokkos_Macros.hpp>
 
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
+#include <View/Accessor/Kokkos_Accessor_fwd.hpp>
 
-#include <experimental/mdspan>
+#include <Kokkos_MemoryTraits.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+// Managed memory case
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
+                                         MemoryTraitsFlags::Unmanaged,
+                                         /* FlagIsSet = */ false>
+    : MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Unmanaged, false>> {
+  using base_t =
+      MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Unmanaged, false>>;
+  using base_t::base_t;
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
+  using tracker_type = SharedAllocationTracker;
+
+  template <class Record, class Pointer>
+  BuildAccessorForMemoryTraitsFlags(Record* arg_record, Pointer pointer)
+      : base_t(pointer), tracker_type() {
+    m_tracker.assign_allocated_record_to_uninitialized(arg_record);
+  }
+
+  // TODO assignment operator
+
+ private:
+  tracker_type m_tracker;
 };
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
-
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
-
-// TODO @mdspan layout stride
-
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
+// The unmanaged memory case doesn't add any members for now
 
 }  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_ACCESSOR_MANAGED_HPP

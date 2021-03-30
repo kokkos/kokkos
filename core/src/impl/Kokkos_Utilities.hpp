@@ -291,7 +291,8 @@ struct next_flag {
   // Since we can't do casts like this in constexpr, we still have to use an
   // enum here
   enum : std::underlying_type_t<T> {
-    underlying_value = std::underlying_type_t<T>(Flag << 1) };
+    underlying_value = std::underlying_type_t<T>(Flag << 1)
+  };
   static constexpr T value = static_cast<T>(underlying_value);
 };
 
@@ -340,7 +341,6 @@ using align_ptr_t = typename align_ptr<T>::type;
 
 // </editor-fold> end add_restrict }}}1
 //==============================================================================
-
 
 }  // namespace Impl
 }  // namespace Kokkos

@@ -42,43 +42,41 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_VIEWCTOR_FWD_HPP
+#define KOKKOS_KOKKOS_VIEWCTOR_FWD_HPP
 
 #include <Kokkos_Macros.hpp>
-
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
-
-#include <experimental/mdspan>
+#include <Kokkos_Core_fwd.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+template <class TraitSpec, class Trait, class Enable = void>
+struct ViewCtorTraitMatcher;
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
-};
+struct WithoutInitializingViewCtorTrait;
+struct AllowPaddingViewCtorTrait;
+struct LabelViewCtorTrait;
+struct PointerViewCtorTrait;
+struct ExecutionSpaceViewCtorTrait;
+struct MemorySpaceViewCtorTrait;
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
+// clang-format off
+using view_constructor_trait_specifications =
+  type_list<
+    WithoutInitializingViewCtorTrait,
+    AllowPaddingViewCtorTrait,
+    LabelViewCtorTrait,
+    PointerViewCtorTrait,
+    ExecutionSpaceViewCtorTrait,
+    MemorySpaceViewCtorTrait
+  >;
+// clang-format on
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
+// used to avoid conflicts with rule of 6 constructors
+struct view_ctor_trait_ctor_tag {};
 
-// TODO @mdspan layout stride
+}  // namespace Impl
+}  // namespace Kokkos
 
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
-
-}  // end namespace Impl
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_VIEWCTOR_FWD_HPP

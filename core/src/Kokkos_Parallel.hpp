@@ -50,8 +50,9 @@
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_DetectionIdiom.hpp>
-#include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_Parallel_fwd.hpp>
 #include <Kokkos_View.hpp>
+#include <Kokkos_ExecPolicy.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_Traits.hpp>
@@ -146,7 +147,7 @@ inline void parallel_for(
 
 template <class FunctorType>
 inline void parallel_for(const size_t work_count, const FunctorType& functor,
-                         const std::string& str = "") {
+                         const std::string& str /*= ""*/) {
   using execution_space =
       typename Impl::FunctorPolicyExecutionSpace<FunctorType,
                                                  void>::execution_space;

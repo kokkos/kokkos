@@ -42,43 +42,34 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_ACCESSOR_RESTRICT_HPP
+#define KOKKOS_KOKKOS_ACCESSOR_RESTRICT_HPP
 
 #include <Kokkos_Macros.hpp>
 
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
-
-#include <experimental/mdspan>
+#include <View/Accessor/Kokkos_Accessor_fwd.hpp>
+#include <View/Accessor/Kokkos_Accessor_Convertibility.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+// Non-aliasing memory case
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
+                                         MemoryTraitsFlags::Restrict,
+                                         /* FlagIsSet = */ true>
+    : MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Restrict, true>> {
+  using base_t =
+      MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Restrict, true>>;
+  using base_t::base_t;
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
+  using reference = add_restrict_t<typename base_t::reference>;
+  using pointer   = add_restrict_t<typename base_t::pointer>;
 };
-
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
-
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
-
-// TODO @mdspan layout stride
-
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
 
 }  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_ACCESSOR_RESTRICT_HPP

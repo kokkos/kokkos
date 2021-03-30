@@ -70,6 +70,6 @@ using Kokkos::is_view;
 
 } /* namespace Impl */
 
-} // end namespace Kokkos
+}  // end namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_ISVIEW_HPP

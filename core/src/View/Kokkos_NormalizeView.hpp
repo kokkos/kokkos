@@ -48,9 +48,9 @@
 #include <Kokkos_Core_fwd.hpp>
 
 #include <View/Kokkos_ExtractExtents.hpp>
-#include <Kokkos_Concepts.hpp> // is_execution_space, is_memory_space
-#include <Kokkos_Layout.hpp> // LayoutRight
-#include <impl/Kokkos_Utilities.hpp> // type_list
+#include <Kokkos_Concepts.hpp>        // is_execution_space, is_memory_space
+#include <Kokkos_Layout.hpp>          // LayoutRight
+#include <impl/Kokkos_Utilities.hpp>  // type_list
 
 namespace Kokkos {
 
@@ -172,8 +172,7 @@ struct NormalizeViewProperties<DataType, type_list<Layout, Space>,
 
 /// View< DataType , Layout , Space, MemoryTraits >
 template <class DataType, class Layout, class Space, class MemTraits>
-struct NormalizeViewProperties<DataType,
-                               type_list<Layout, Space, MemTraits>> {
+struct NormalizeViewProperties<DataType, type_list<Layout, Space, MemTraits>> {
   // This is unambigous, so use static_assert instead of SFINAE
   static_assert(is_array_layout<Layout>::value,
                 "The second template parameter to Kokkos::View must be an "
@@ -204,6 +203,6 @@ struct NormalizeViewProperties<DataType,
 // </editor-fold> end View parameter normalization }}}1
 //==============================================================================
 
-} // end namespace Kokkos
+}  // end namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_NORMALIZEVIEW_HPP

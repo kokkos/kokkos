@@ -42,43 +42,34 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
-#define KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#ifndef KOKKOS_KOKKOS_PARALLEL_FWD_HPP
+#define KOKKOS_KOKKOS_PARALLEL_FWD_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Core_fwd.hpp>
 
-#include <Kokkos_Layout.hpp>    // LayoutLeft, LayoutRight
-#include <Kokkos_Concepts.hpp>  // is_array_layout
-
-#include <experimental/mdspan>
+// TODO remove this once is_execution_policy is forward declared somewhere
+#include <Kokkos_Concepts.hpp>  // is_execution_policy
 
 namespace Kokkos {
-namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="MDSpanLayoutFromKokkosLayout"> {{{1
+template <class ExecPolicy, class FunctorType>
+inline void parallel_for(
+    const ExecPolicy& policy, const FunctorType& functor,
+    const std::string& str = "",
+    typename std::enable_if<
+        Kokkos::Impl::is_execution_policy<ExecPolicy>::value>::type* = nullptr);
 
-template <class Traits, class T>
-struct MDSpanLayoutFromKokkosLayout : identity<T> {
-  static_assert(is_array_layout<T>::value, "Internal Kokkos Error!");
-};
+template <class FunctorType>
+inline void parallel_for(size_t work_count, const FunctorType& functor,
+                         const std::string& str = "");
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  using type = std::experimental::layout_left;
-};
+template <class ExecPolicy, class FunctorType>
+inline void parallel_for(const std::string& str, const ExecPolicy& policy,
+                         const FunctorType& functor);
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
-  using type = std::experimental::layout_right;
-};
+// TODO more forward declarations
 
-// TODO @mdspan layout stride
+}  // namespace Kokkos
 
-// </editor-fold> end MDSpanLayoutFromKokkosLayout }}}1
-//==============================================================================
-
-}  // end namespace Impl
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_MDSPANLAYOUT_HPP
+#endif  // KOKKOS_KOKKOS_PARALLEL_FWD_HPP

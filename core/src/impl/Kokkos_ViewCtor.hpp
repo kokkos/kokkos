@@ -47,7 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Concepts.hpp>
-#include <impl/Kokkos_Traits.hpp> // has_condition
+#include <impl/Kokkos_Traits.hpp>  // has_condition
 
 #include <type_traits>
 #include <string>
