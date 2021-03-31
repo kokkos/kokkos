@@ -501,7 +501,8 @@ TEST(TEST_CATEGORY, dualview_device_correct_kokkos_device) {
   using vdt_d   = vdt::device_type;
   using vdt_d_e = vdt_d::execution_space;
 
-  ASSERT_TRUE(std::string(vdt_d_e::name()) == std::string(Kokkos::DefaultExecutionSpace::name()));
+  ASSERT_TRUE(std::string(vdt_d_e::name()) ==
+              std::string(Kokkos::DefaultExecutionSpace::name()));
 }
 TEST(TEST_CATEGORY, dualview_host_correct_kokkos_device) {
   DualViewType dv("myView", 100);
@@ -510,7 +511,8 @@ TEST(TEST_CATEGORY, dualview_host_correct_kokkos_device) {
   using vht     = decltype(v_h);
   using vht_d   = vht::device_type;
   using vht_d_e = vht_d::execution_space;
-  ASSERT_TRUE(std::string(vht_d_e::name()) == std::string(Kokkos::DefaultHostExecutionSpace::name()));
+  ASSERT_TRUE(std::string(vht_d_e::name()) ==
+              std::string(Kokkos::DefaultHostExecutionSpace::name()));
 }
 
 TEST(TEST_CATEGORY, dualview_host_modify_template_device_sync) {
