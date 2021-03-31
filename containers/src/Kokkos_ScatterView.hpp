@@ -775,7 +775,7 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
       : internal_view(original_view) {}
 
   template <typename RT, typename... P, typename... RP>
-  ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& /* arg_prop */,
+  ScatterView(execution_space const& /* exec_space */,
               View<RT, RP...> const& original_view)
       : internal_view(original_view) {}
 
@@ -970,20 +970,16 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
 
   template <typename RT, typename... RP>
   ScatterView(View<RT, RP...> const& original_view)
-      : ScatterView(view_alloc(execution_space()), original_view) {}
+      : ScatterView(execution_space(), original_view) {}
 
   template <typename RT, typename... P, typename... RP>
-  ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
+  ScatterView(execution_space const& exec_space,
               View<RT, RP...> const& original_view)
       : unique_token(),
         internal_view(
-            view_alloc(
-                WithoutInitializing,
-                std::string("duplicated_") + original_view.label(),
-                static_cast<
-                    ::Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
-                    arg_prop)
-                    .value),
+            view_alloc(WithoutInitializing,
+                       std::string("duplicated_") + original_view.label(),
+                       exec_space),
             unique_token.size(),
             original_view.rank_dynamic > 0 ? original_view.extent(0)
                                            : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -1001,10 +997,6 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
                                            : KOKKOS_IMPL_CTOR_DEFAULT_ARG)
 
   {
-    auto const exec_space =
-        static_cast<::Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
-            arg_prop)
-            .value;
     reset(exec_space);
   }
 
@@ -1164,17 +1156,12 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
 
   template <typename RT, typename... RP>
   ScatterView(View<RT, RP...> const& original_view)
-      : ScatterView(view_alloc(execution_space()), original_view) {}
+      : ScatterView(execution_space(), original_view) {}
 
   template <typename RT, typename... P, typename... RP>
-  ScatterView(::Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
+  ScatterView(execution_space const& exec_space,
               View<RT, RP...> const& original_view)
       : unique_token() {
-    auto const exec_space =
-        static_cast<::Kokkos::Impl::ViewCtorProp<void, execution_space> const&>(
-            arg_prop)
-            .value;
-
     size_t arg_N[8] = {original_view.rank > 0 ? original_view.extent(0)
                                               : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                        original_view.rank > 1 ? original_view.extent(1)
