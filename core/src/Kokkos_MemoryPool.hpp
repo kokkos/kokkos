@@ -408,7 +408,7 @@ class MemoryPool {
     const size_t alloc_size =
         header_size + (size_t(m_sb_count) << m_sb_size_lg2);
 
-    Record *rec = Record::allocate(memspace, "MemoryPool", alloc_size);
+    Record *rec = Record::allocate(memspace, "Kokkos::MemoryPool", alloc_size);
 
     m_tracker.assign_allocated_record_to_uninitialized(rec);
 

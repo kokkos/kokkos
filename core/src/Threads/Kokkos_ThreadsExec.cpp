@@ -427,7 +427,7 @@ void ThreadsExec::execute_resize_scratch(ThreadsExec &exec, const void *) {
     // Allocate tracked memory:
     {
       Record *const r =
-          Record::allocate(Kokkos::HostSpace(), "thread_scratch",
+          Record::allocate(Kokkos::HostSpace(), "Kokkos::thread_scratch",
                            s_threads_process.m_scratch_thread_end);
 
       Record::increment(r);
