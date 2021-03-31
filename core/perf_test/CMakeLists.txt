@@ -9,6 +9,14 @@
 # that in TriBITS KokkosAlgorithms can be disabled...
 #INCLUDE_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/../../algorithms/src")
 
+# FIXME_OPENMPTARGET - the NVIDIA HPC compiler nvc++ in the OpenMPTarget backend does not pass the perf_tests.
+IF (KOKKOS_ENABLE_OPENMPTARGET
+    AND (KOKKOS_CXX_COMPILER_ID STREQUAL PGI
+         OR KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC))
+  RETURN()
+ENDIF()
+
+
 SET(SOURCES
   PerfTestMain.cpp
   PerfTestGramSchmidt.cpp
