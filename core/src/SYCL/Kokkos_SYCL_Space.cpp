@@ -125,16 +125,21 @@ DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace, Kokkos::HostSpace,
 namespace Kokkos {
 namespace Experimental {
 
-SYCLDeviceUSMSpace::SYCLDeviceUSMSpace() : m_device(SYCL().sycl_device()) {}
+SYCLDeviceUSMSpace::SYCLDeviceUSMSpace()
+    : m_queue(*SYCL().impl_internal_space_instance()->m_queue) {}
+SYCLDeviceUSMSpace::SYCLDeviceUSMSpace(sycl::queue queue)
+    : m_queue(std::move(queue)) {}
 
-SYCLSharedUSMSpace::SYCLSharedUSMSpace() : m_device(SYCL().sycl_device()) {}
+SYCLSharedUSMSpace::SYCLSharedUSMSpace()
+    : m_queue(*SYCL().impl_internal_space_instance()->m_queue) {}
+SYCLSharedUSMSpace::SYCLSharedUSMSpace(sycl::queue queue)
+    : m_queue(std::move(queue)) {}
 
 void* allocate_sycl(
     const char* arg_label, const size_t arg_alloc_size,
     const size_t arg_logical_size, const Kokkos::Tools::SpaceHandle arg_handle,
     const RawMemoryAllocationFailure::AllocationMechanism failure_tag,
-    const sycl::usm::alloc allocation_kind) {
-  const sycl::queue& queue = *SYCL().impl_internal_space_instance()->m_queue;
+    const sycl::usm::alloc allocation_kind, const sycl::queue& queue) {
   void* const hostPtr = sycl::malloc(arg_alloc_size, queue, allocation_kind);
 
   if (hostPtr == nullptr)
@@ -163,7 +168,7 @@ void* SYCLDeviceUSMSpace::allocate(const char* arg_label,
       arg_label, arg_alloc_size, arg_logical_size,
       Kokkos::Tools::make_space_handle(name()),
       RawMemoryAllocationFailure::AllocationMechanism::SYCLMallocDevice,
-      sycl::usm::alloc::device);
+      sycl::usm::alloc::device, m_queue);
 }
 
 void* SYCLSharedUSMSpace::allocate(const size_t arg_alloc_size) const {
@@ -176,19 +181,20 @@ void* SYCLSharedUSMSpace::allocate(const char* arg_label,
       arg_label, arg_alloc_size, arg_logical_size,
       Kokkos::Tools::make_space_handle(name()),
       RawMemoryAllocationFailure::AllocationMechanism::SYCLMallocShared,
-      sycl::usm::alloc::shared);
+      sycl::usm::alloc::shared, m_queue);
 }
 
 void sycl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                      const size_t arg_alloc_size, const size_t arg_logical_size,
-                     const Kokkos::Tools::SpaceHandle arg_handle) {
+                     const Kokkos::Tools::SpaceHandle arg_handle,
+                     const sycl::queue& queue) {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     const size_t reported_size =
         (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
-  const sycl::queue& queue = *SYCL().impl_internal_space_instance()->m_queue;
+
   sycl::free(arg_alloc_ptr, queue);
 }
 
@@ -201,7 +207,7 @@ void SYCLDeviceUSMSpace::deallocate(const char* arg_label,
                                     const size_t arg_alloc_size,
                                     const size_t arg_logical_size) const {
   sycl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size,
-                  Kokkos::Tools::make_space_handle(name()));
+                  Kokkos::Tools::make_space_handle(name()), m_queue);
 }
 
 void SYCLSharedUSMSpace::deallocate(void* const arg_alloc_ptr,
@@ -214,7 +220,7 @@ void SYCLSharedUSMSpace::deallocate(const char* arg_label,
                                     const size_t arg_alloc_size,
                                     const size_t arg_logical_size) const {
   sycl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size,
-                  Kokkos::Tools::make_space_handle(name()));
+                  Kokkos::Tools::make_space_handle(name()), m_queue);
 }
 
 }  // namespace Experimental
