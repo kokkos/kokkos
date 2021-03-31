@@ -17,9 +17,8 @@ KOKKOS_ADD_TEST_LIBRARY(
 TARGET_COMPILE_DEFINITIONS(kokkos_gtest PUBLIC GTEST_HAS_TR1_TUPLE=0 GTEST_HAS_PTHREAD=0)
 
 TARGET_INCLUDE_DIRECTORIES(kokkos_gtest PUBLIC ${GTEST_SOURCE_DIR})
-#Gtest minimally requires C++11
 IF((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
-TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_11)
+  TARGET_COMPILE_FEATURES(kokkos_gtest PUBLIC cxx_std_14)
 ENDIF()
 
 # Suppress clang-tidy diagnostics on code that we do not have control over
