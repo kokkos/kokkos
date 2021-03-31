@@ -500,8 +500,8 @@ TEST(TEST_CATEGORY, dualview_device_correct_kokkos_device) {
   using vdt     = decltype(v_d);
   using vdt_d   = vdt::device_type;
   using vdt_d_e = vdt_d::execution_space;
-
-  ASSERT_TRUE(vdt_d_e::name() == Kokkos::DefaultExecutionSpace::name());
+  ASSERT_TRUE(strcmp(vdt_d_e::name(), Kokkos::DefaultExecutionSpace::name()) ==
+              0);
 }
 TEST(TEST_CATEGORY, dualview_host_correct_kokkos_device) {
   DualViewType dv("myView", 100);
@@ -510,7 +510,8 @@ TEST(TEST_CATEGORY, dualview_host_correct_kokkos_device) {
   using vht     = decltype(v_h);
   using vht_d   = vht::device_type;
   using vht_d_e = vht_d::execution_space;
-  ASSERT_TRUE(vht_d_e::name() == Kokkos::DefaultHostExecutionSpace::name());
+  ASSERT_TRUE(
+      strcmp(vht_d_e::name(), Kokkos::DefaultHostExecutionSpace::name()) == 0);
 }
 
 TEST(TEST_CATEGORY, dualview_host_modify_template_device_sync) {
@@ -558,10 +559,10 @@ TEST(TEST_CATEGORY,
   dv.clear_sync_state();
   using hvt = decltype(dv.view<typename Kokkos::DefaultHostExecutionSpace>());
   using dvt = decltype(dv.view<typename Kokkos::DefaultExecutionSpace>());
-  ASSERT_TRUE(Kokkos::DefaultExecutionSpace::name() ==
-              dvt::device_type::execution_space::name());
-  ASSERT_TRUE(Kokkos::DefaultHostExecutionSpace::name() ==
-              hvt::device_type::execution_space::name());
+  ASSERT_TRUE(strcmp(Kokkos::DefaultExecutionSpace::name(),
+                     dvt::device_type::execution_space::name()) == 0);
+  ASSERT_TRUE(strcmp(Kokkos::DefaultHostExecutionSpace::name(),
+                     hvt::device_type::execution_space::name()) == 0);
 }
 
 }  // anonymous namespace
