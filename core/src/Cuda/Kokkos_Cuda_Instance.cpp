@@ -650,7 +650,7 @@ void *CudaInternal::resize_team_scratch_space(std::int64_t bytes,
   if (m_team_scratch_current_size == 0) {
     m_team_scratch_current_size = bytes;
     m_team_scratch_ptr          = Kokkos::kokkos_malloc<Kokkos::CudaSpace>(
-        "CudaSpace::ScratchMemory", m_team_scratch_current_size);
+        "Kokkos::CudaSpace::TeamScratchMemory", m_team_scratch_current_size);
   }
   if ((bytes > m_team_scratch_current_size) ||
       ((bytes < m_team_scratch_current_size) && (force_shrink))) {
