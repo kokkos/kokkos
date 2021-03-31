@@ -561,8 +561,6 @@ void test_memory_pool_huge() {
 
 namespace Test {
 
-// FIXME_SYCL needs Kokkos::memory_fence
-#ifndef KOKKOS_ENABLE_SYCL
 TEST(TEST_CATEGORY, memory_pool) {
   TestMemoryPool::test_host_memory_pool_defaults<>();
   TestMemoryPool::test_host_memory_pool_stats<>();
@@ -572,7 +570,6 @@ TEST(TEST_CATEGORY, memory_pool) {
   TestMemoryPool::test_memory_pool_huge<TEST_EXECSPACE>();
 #endif
 }
-#endif
 
 }  // namespace Test
 
