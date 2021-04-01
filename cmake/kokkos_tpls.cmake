@@ -89,7 +89,7 @@ IF (KOKKOS_ENABLE_MEMKIND)
    LIST(APPEND KOKKOS_MEMSPACE_LIST HBWSpace)
 ENDIF()
 
-KOKKOS_OPTION(ENABLE_COMPILE_TIME_PERF OFF BOOL "Enable per-file compile time measurements")
+KOKKOS_ENABLE_OPTION(COMPILE_TIME_PERF OFF "Enable per-file compile time measurements")
 IF(Kokkos_ENABLE_COMPILE_TIME_PERF)
     FIND_PACKAGE(compile-time-perf REQUIRED)
     enable_compile_time_perf(kokkos-compile-time)
