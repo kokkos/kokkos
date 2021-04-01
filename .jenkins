@@ -112,6 +112,7 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
+                        sh './scripts/install-compile-time-perf.sh'
                         sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -122,6 +123,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
+                                -DKokkos_ENABLE_COMPILE_TIME_PERF=ON \
                                 -DBUILD_NAME=${STAGE_NAME} \
                               -P cmake/KokkosCI.cmake'''
                     }
