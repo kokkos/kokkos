@@ -88,7 +88,7 @@ class ParallelScanSYCLBase {
     // FIXME_SYCL optimize
     constexpr size_t wgroup_size = 32;
     auto n_wgroups               = (size + wgroup_size - 1) / wgroup_size;
-    auto group_results           = global_mem + size;
+    pointer_type group_results   = global_mem + size;
 
     q.submit([&](sycl::handler& cgh) {
       sycl::accessor<value_type, 1, sycl::access::mode::read_write,
