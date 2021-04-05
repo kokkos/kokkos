@@ -663,6 +663,9 @@ void *CudaInternal::resize_team_scratch_space(std::int64_t bytes,
 //----------------------------------------------------------------------------
 
 void CudaInternal::finalize() {
+  // skip if finalize() has already been called
+  if (was_finalized) return;
+
   was_finalized = true;
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     // Only finalize this if we're the singleton
@@ -706,6 +709,10 @@ void CudaInternal::finalize() {
   if (this == &singleton()) {
     cudaFreeHost(constantMemHostStaging);
     cudaEventDestroy(constantMemReusable);
+    auto &deep_copy_space =
+        Kokkos::Impl::cuda_get_deep_copy_space(/*initialize*/ false);
+    if (deep_copy_space)
+      deep_copy_space->impl_internal_space_instance()->finalize();
     cudaStreamDestroy(cuda_get_deep_copy_stream());
   }
 }

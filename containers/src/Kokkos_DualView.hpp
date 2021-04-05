@@ -99,8 +99,7 @@ namespace Impl {
 inline const Kokkos::Cuda& get_cuda_space(const Kokkos::Cuda& in) { return in; }
 
 inline const Kokkos::Cuda& get_cuda_space() {
-  static Cuda space(Kokkos::Impl::cuda_get_deep_copy_stream());
-  return space;
+  return *Kokkos::Impl::cuda_get_deep_copy_space();
 }
 
 template <typename NonCudaExecSpace>

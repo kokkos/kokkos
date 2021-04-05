@@ -73,6 +73,14 @@ cudaStream_t Kokkos::Impl::cuda_get_deep_copy_stream() {
   return s;
 }
 
+const std::unique_ptr<Kokkos::Cuda> &Kokkos::Impl::cuda_get_deep_copy_space(
+    bool initialize) {
+  static std::unique_ptr<Cuda> space = nullptr;
+  if (!space && initialize)
+    space = std::make_unique<Cuda>(Kokkos::Impl::cuda_get_deep_copy_stream());
+  return space;
+}
+
 namespace Kokkos {
 namespace Impl {
 
