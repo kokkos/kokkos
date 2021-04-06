@@ -208,7 +208,7 @@ void* SYCLInternal::scratch_space(
 
     Record* const r =
         Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                         "Kokkos::InternalScratchSpace",
+                         "Kokkos::SYCL::InternalScratchSpace",
                          (sizeScratchGrain * m_scratchSpaceCount));
 
     Record::increment(r);
@@ -235,7 +235,7 @@ void* SYCLInternal::scratch_flags(
 
     Record* const r =
         Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                         "Kokkos::InternalScratchFlags",
+                         "Kokkos::SYCL::InternalScratchFlags",
                          (sizeScratchGrain * m_scratchFlagsCount));
 
     Record::increment(r);
@@ -258,8 +258,8 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
     // First free what we have (in case malloc can reuse it)
     if (m_data) Record::decrement(Record::get_record(m_data));
 
-    Record* const r =
-        Record::allocate(AllocationSpace(*m_q), "Kokkos::USMObjectMem", n);
+    Record* const r = Record::allocate(AllocationSpace(*m_q),
+                                       "Kokkos::SYCL::USMObjectMem", n);
     Record::increment(r);
 
     m_data     = r->data();
