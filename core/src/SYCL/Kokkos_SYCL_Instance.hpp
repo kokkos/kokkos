@@ -134,7 +134,7 @@ class SYCLInternal {
     USMObjectMem& operator=(USMObjectMem&&) = delete;
     USMObjectMem& operator=(USMObjectMem const&) = delete;
 
-    ~USMObjectMem();
+    ~USMObjectMem() { reset(); };
 
     void* data() noexcept { return m_data; }
     const void* data() const noexcept { return m_data; }

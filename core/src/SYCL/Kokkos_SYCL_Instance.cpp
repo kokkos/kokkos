@@ -283,16 +283,6 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
   m_q.reset();
 }
 
-template <sycl::usm::alloc Kind>
-SYCLInternal::USMObjectMem<Kind>::~USMObjectMem<Kind>() {
-  assert(m_size == 0);
-
-  if (m_data) {
-    using Record = Kokkos::Impl::SharedAllocationRecord<AllocationSpace, void>;
-    Record::decrement(Record::get_record(m_data));
-  }
-}
-
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::shared>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;
 
