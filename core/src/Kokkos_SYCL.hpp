@@ -127,7 +127,6 @@ class SYCL {
     explicit SYCLDevice(sycl::device d);
     explicit SYCLDevice(const sycl::device_selector& selector);
     explicit SYCLDevice(size_t id);
-    explicit SYCLDevice(const std::function<bool(const sycl::device&)>& pred);
 
     sycl::device get_device() const;
 
