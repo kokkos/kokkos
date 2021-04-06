@@ -254,14 +254,12 @@ size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
   assert(m_q);
 
   if (m_capacity < n) {
-    using Space  = std::conditional_t<Kind == sycl::usm::alloc::device,
-                                     Kokkos::Experimental::SYCLDeviceUSMSpace,
-                                     Kokkos::Experimental::SYCLSharedUSMSpace>;
-    using Record = Kokkos::Impl::SharedAllocationRecord<Space, void>;
+    using Record = Kokkos::Impl::SharedAllocationRecord<AllocationSpace, void>;
     // First free what we have (in case malloc can reuse it)
     if (m_data) Record::decrement(Record::get_record(m_data));
 
-    Record* const r = Record::allocate(Space(*m_q), "Kokkos::USMObjectMem", n);
+    Record* const r =
+        Record::allocate(AllocationSpace(*m_q), "Kokkos::USMObjectMem", n);
     Record::increment(r);
 
     m_data     = r->data();
@@ -276,11 +274,7 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
   assert(m_size == 0);
 
   if (m_data) {
-    using Record = Kokkos::Impl::SharedAllocationRecord<
-        std::conditional_t<Kind == sycl::usm::alloc::device,
-                           Kokkos::Experimental::SYCLDeviceUSMSpace,
-                           Kokkos::Experimental::SYCLSharedUSMSpace>,
-        void>;
+    using Record = Kokkos::Impl::SharedAllocationRecord<AllocationSpace, void>;
     Record::decrement(Record::get_record(m_data));
 
     m_capacity = 0;
@@ -294,11 +288,7 @@ SYCLInternal::USMObjectMem<Kind>::~USMObjectMem<Kind>() {
   assert(m_size == 0);
 
   if (m_data) {
-    using Record = Kokkos::Impl::SharedAllocationRecord<
-        std::conditional_t<Kind == sycl::usm::alloc::device,
-                           Kokkos::Experimental::SYCLDeviceUSMSpace,
-                           Kokkos::Experimental::SYCLSharedUSMSpace>,
-        void>;
+    using Record = Kokkos::Impl::SharedAllocationRecord<AllocationSpace, void>;
     Record::decrement(Record::get_record(m_data));
   }
 }
