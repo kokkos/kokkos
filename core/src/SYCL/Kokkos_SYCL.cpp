@@ -132,7 +132,7 @@ SYCL::SYCLDevice::SYCLDevice(size_t id) {
     std::stringstream error_message;
     error_message << "Requested GPU with id " << id << " but only "
                   << gpu_devices.size() << " GPU(s) available!\n";
-    Kokkos::abort(error_message.str().c_str());
+    Kokkos::Impl::throw_runtime_exception(error_message.str());
   }
   m_device = gpu_devices[id];
 }
