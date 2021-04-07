@@ -432,12 +432,12 @@ class BasicView
             >
   inline BasicView(Impl::ViewConstructorDescription<P...> const& arg_desc,
                    typename traits::array_layout const& arg_layout)
-      : m_data(arg_desc.get_pointer(), mdspan_layout_type{arg_layout},
+      : m_data(arg_desc.get_pointer(), mdspan_mapping_type{arg_layout},
                mdspan_accessor_type{}) {
+    using desc_type = typename Impl::ViewConstructorDescription<P...>;
     static_assert(
-        std::is_same<typename traits::pointer_type,
-                     typename Impl::ViewConstructorDescription<
-                         P...>::pointer_type>::value,
+        std::is_convertible<typename desc_type::pointer_type,
+                            typename mdspan_type::pointer>::value,
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
     Impl::verify_pointer_construction_for_accessor(m_data.accessor(),
@@ -572,9 +572,9 @@ class BasicView
                              int> = 0
             //----------------------------------------
             >
-  explicit inline BasicView(const Impl::ViewCtorProp<P...>& arg_prop,
-                            Integral... dims)
-      : BasicView(arg_prop, array_layout(dims...)) {
+  explicit inline BasicView(
+      const Impl::ViewConstructorDescription<P...>& arg_prop, Integral... dims)
+      : BasicView(arg_prop, typename traits::array_layout(dims...)) {
     /* delegating constructor; body must be empty */
   }
 
