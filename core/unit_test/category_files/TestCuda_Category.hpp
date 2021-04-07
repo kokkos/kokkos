@@ -42,12 +42,15 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_HIPHOSTPINNED_HPP
-#define KOKKOS_TEST_HIPHOSTPINNED_HPP
+#ifndef KOKKOS_TEST_CUDA_HPP
+#define KOKKOS_TEST_CUDA_HPP
 
 #include <gtest/gtest.h>
 
-#define TEST_CATEGORY hip_hostpinned
-#define TEST_EXECSPACE Kokkos::Experimental::HIPHostPinnedSpace
+#define TEST_CATEGORY cuda
+#define TEST_CATEGORY_NUMBER 5
+#define TEST_CATEGORY_DEATH cuda_DeathTest
+#define TEST_EXECSPACE Kokkos::Cuda
+#define TEST_CATEGORY_FIXTURE(name) cuda_##name
 
 #endif

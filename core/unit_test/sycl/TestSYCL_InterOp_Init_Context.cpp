@@ -43,7 +43,7 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <sycl/TestSYCL_Category.hpp>
+#include <TestSYCL_Category.hpp>
 
 #include <array>
 

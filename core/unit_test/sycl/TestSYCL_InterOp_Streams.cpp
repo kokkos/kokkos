@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <sycl/TestSYCL_Category.hpp>
+#include <TestSYCL_Category.hpp>
 #include <Test_InterOp_Streams.hpp>
 
 namespace Test {

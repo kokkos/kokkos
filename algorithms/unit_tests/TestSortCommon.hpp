@@ -42,36 +42,14 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_OPENMP
+#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_COMMON_HPP
+#define KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_COMMON_HPP
 
-#include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
-
-//----------------------------------------------------------------------------
-#include <TestRandom.hpp>
-#include <iomanip>
+#include <TestSort.hpp>
 
 namespace Test {
-
-#define OPENMP_RANDOM_XORSHIFT64(num_draws)                             \
-  TEST(openmp, Random_XorShift64) {                                     \
-    Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::OpenMP> >( \
-        num_draws);                                                     \
-  }
-
-#define OPENMP_RANDOM_XORSHIFT1024(num_draws)                             \
-  TEST(openmp, Random_XorShift1024) {                                     \
-    Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> >( \
-        num_draws);                                                       \
-  }
-
-OPENMP_RANDOM_XORSHIFT64(10240000)
-OPENMP_RANDOM_XORSHIFT1024(10130144)
-
-#undef OPENMP_RANDOM_XORSHIFT64
-#undef OPENMP_RANDOM_XORSHIFT1024
+TEST(TEST_CATEGORY, SortUnsigned) {
+  Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
+}
 }  // namespace Test
-#else
-void KOKKOS_ALGORITHMS_UNITTESTS_TESTOPENMP_PREVENT_LINK_ERROR() {}
 #endif
