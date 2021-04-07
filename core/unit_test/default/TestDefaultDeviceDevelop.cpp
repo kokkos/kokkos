@@ -54,6 +54,12 @@ namespace Test {
 TEST(defaultdevicetype, development_test) {
   // Instantiate default constructor
   auto v = Kokkos::View<int*>{};
+  // Instantiate with label and size
+  auto v2 = Kokkos::View<int*>{"hello", 42};
+  // Instantiate with raw pointer
+  int data[] = {1, 2, 3, 4};
+  auto v3 = Kokkos::View<int[4]>{Kokkos::view_wrap(data)};
+
 }
 
 }  // namespace Test
