@@ -239,6 +239,8 @@ int get_gpu(const InitArguments& args) {
                                          sycl::device::get_devices(
                                              sycl::info::device_type::gpu)
                                              .size();
+#else
+                                         args.ndevices;
 #endif
   const int skip_device = args.skip_device;
 
