@@ -125,7 +125,8 @@ void OpenMPTargetExec::resize_scratch(int64_t team_size, int64_t shmem_size_L0,
   // Total amount of scratch memory allocated is depenedent
   // on the maximum number of in-flight teams possible.
   int64_t total_size =
-      (shmem_size + 16 + padding) * (MAX_ACTIVE_THREADS / team_size);
+      (shmem_size + OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE + padding) *
+      (MAX_ACTIVE_THREADS / team_size);
 
   if (total_size > m_scratch_size) {
     space.deallocate(m_scratch_ptr, m_scratch_size);
