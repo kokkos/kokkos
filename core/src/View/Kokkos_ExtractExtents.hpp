@@ -96,6 +96,20 @@ struct DataTypeFromExtents<T, std::experimental::extents<>> {
 // </editor-fold> end DataTypeFromExtents }}}1
 //==============================================================================
 
+template <class>
+struct RemoveFirstExtent;
+
+template <std::ptrdiff_t Extent, std::ptrdiff_t... Extents>
+struct RemoveFirstExtent<std::experimental::extents<Extent, Extents...>>
+    : identity<std::experimental::extents<Extents...>> {};
+
+template <class>
+struct FirstExtentOnly;
+
+template <std::ptrdiff_t Extent, std::ptrdiff_t... Extents>
+struct FirstExtentOnly<std::experimental::extents<Extent, Extents...>>
+    : identity<std::experimental::extents<Extent>> {};
+
 }  // end namespace Impl
 }  // end namespace Kokkos
 

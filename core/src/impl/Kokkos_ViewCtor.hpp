@@ -48,6 +48,8 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <impl/Kokkos_Traits.hpp>  // has_condition
+#include <View/Constructor/Kokkos_ViewCtor_WithoutInitializing.hpp>
+#include <View/Constructor/Kokkos_ViewCtor_AllowPadding.hpp>
 
 #include <type_traits>
 #include <string>
@@ -58,8 +60,6 @@
 namespace Kokkos {
 namespace Impl {
 
-struct WithoutInitializing_t {};
-struct AllowPadding_t {};
 struct NullSpace_t {};
 
 template <typename>

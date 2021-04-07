@@ -308,20 +308,6 @@ struct ViewDimensionAssignable<ViewDimension<DstArgs...>,
 namespace Kokkos {
 namespace Impl {
 
-struct ALL_t {
-  KOKKOS_INLINE_FUNCTION
-  constexpr const ALL_t& operator()() const { return *this; }
-
-  KOKKOS_INLINE_FUNCTION
-  constexpr bool operator==(const ALL_t&) const { return true; }
-};
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-namespace Kokkos {
-namespace Impl {
-
 template <class T>
 struct is_integral_extent_type {
   enum : bool { value = std::is_same<T, Kokkos::Impl::ALL_t>::value ? 1 : 0 };

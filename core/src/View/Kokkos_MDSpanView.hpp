@@ -45,6 +45,8 @@
 #ifndef KOKKOS_MDSPANVIEW_HPP
 #define KOKKOS_MDSPANVIEW_HPP
 
+#include <View/Kokkos_View_fwd.hpp>
+
 #include <View/Kokkos_NormalizeView.hpp>
 #include <View/Kokkos_ExtractExtents.hpp>
 #include <View/Kokkos_MDSpanLayout.hpp>
@@ -54,6 +56,7 @@
 #include <View/Kokkos_ViewAllocation.hpp>
 
 #include <Kokkos_ViewAlloc.hpp>
+#include <Kokkos_ViewWrap.hpp>
 
 #include <impl/Kokkos_ViewTracker.hpp>
 #include <impl/Kokkos_ViewUniformType.hpp>
@@ -67,8 +70,9 @@
 
 #define KOKKOS_IMPL_SINK(ARG) ARG
 
+// TODO @mdspan bounds checking in the layout
 #define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG) \
-  Kokkos::Impl::view_verify_operator_bounds<memory_space> ARG;
+  /* Kokkos::Impl::view_verify_operator_bounds<memory_space> ARG; */
 
 #else
 
@@ -93,9 +97,7 @@ struct ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>> {
   //----------------------------------------------------------------------------
   // <editor-fold desc="private member types"> {{{2
 
-  using _extracted          = Impl::ExtractExtents<DataType>;
-  using mdspan_element_type = typename _extracted::value_type;
-  using mdspan_extents_type = typename _extracted::extents_type;
+  using _extracted = Impl::ExtractExtents<DataType>;
 
   // </editor-fold> end private member types }}}2
   //----------------------------------------------------------------------------
@@ -103,6 +105,9 @@ struct ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>> {
  public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="public member types"> {{{2
+
+  using mdspan_element_type = typename _extracted::value_type;
+  using mdspan_extents_type = typename _extracted::extents_type;
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // <editor-fold desc="Spaces, memory access, mirrors, etc."> {{{3
@@ -207,7 +212,9 @@ class BasicView
   // <editor-fold desc="private member types"> {{{2
 
   using mdspan_layout_type =
-      typename Impl::MDSpanLayoutFromKokkosLayout<traits, Layout>::type;
+      typename Impl::MDSpanLayoutFromKokkosLayout<traits, Layout>;
+  using mdspan_mapping_type = typename mdspan_layout_type::template mapping<
+      typename traits::mdspan_extents_type>;
   using mdspan_accessor_type =
       typename Impl::MDSpanAccessorFromKokkosMemoryTraits<traits,
                                                           MemoryTraits>::type;
@@ -410,6 +417,9 @@ class BasicView
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // <editor-fold desc="View Ctor Prop constructors"> {{{3
 
+  // Readability note: almost all of the Kokkos constructors delegate to
+  // one of these first two constructors
+
   // The view_wrap() and layout version
   template <class... P,
             //----------------------------------------
@@ -420,21 +430,18 @@ class BasicView
                 Impl::ViewConstructorDescription<P...>::has_pointer, int> = 0
             //----------------------------------------
             >
-  explicit inline BasicView(
-      Impl::ViewConstructorDescription<P...> const& arg_desc,
-      typename traits::array_layout const& arg_layout)
-      : m_data(arg_desc.get_pointer(), arg_layout,
-               mdspan_accessor_type(
-                   Impl::runtime_non_owning_accessor_tag_t{},
-                   // Potentially needed to check alignment, etc.
-                   arg_desc.get_pointer()
-               ) {
+  inline BasicView(Impl::ViewConstructorDescription<P...> const& arg_desc,
+                   typename traits::array_layout const& arg_layout)
+      : m_data(arg_desc.get_pointer(), mdspan_layout_type{arg_layout},
+               mdspan_accessor_type{}) {
     static_assert(
         std::is_same<typename traits::pointer_type,
                      typename Impl::ViewConstructorDescription<
                          P...>::pointer_type>::value,
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
+    Impl::verify_pointer_construction_for_accessor(m_data.accessor(),
+                                                   arg_desc.get_pointer());
   }
 
   // The view_alloc() and layout version
@@ -442,20 +449,32 @@ class BasicView
             //----------------------------------------
             /* requires
              *   !Impl::ViewConstructorDescription<P...>::has_pointer
+             *
+             *   (Note: basically, this currently means that the first argument
+             *   is the return of a call to `Kokkos::view_alloc()`)
              */
             std::enable_if_t<
                 !Impl::ViewConstructorDescription<P...>::has_pointer, int> = 0
             //----------------------------------------
             >
-  explicit inline BasicView(Impl::ViewConstructorDescription<P...> const& arg_desc,
-                            typename traits::array_layout const& arg_layout)
+  inline BasicView(Impl::ViewConstructorDescription<P...> const& arg_desc,
+                   typename traits::array_layout const& arg_layout)
       : m_data() {
-    using alloc_prop = Impl::ViewConstructorDescription<P...>;
+    //------------------------------------------------------------
+    // add default memory and execution spaces in
+    using desc_with_defaults_t = typename Impl::ViewConstructorDescription<
+        P...>::template with_default_traits<typename traits::execution_space,
+                                            typename traits::memory_space>;
+    auto desc_with_defaults = desc_with_defaults_t{arg_desc};
+
+    //------------------------------------------------------------
+    // some sanity checks
+
     static_assert(is_managed,
                   "View allocation constructor requires managed memory");
 
-    if (alloc_prop::initialize &&
-        !arg_desc.get_execution_space().impl_is_initialized()) {
+    if (desc_with_defaults_t::initialize &&
+        !desc_with_defaults.get_execution_space().impl_is_initialized()) {
       // If initializing view data then
       // the execution space must be initialized.
       Kokkos::Impl::throw_runtime_exception(
@@ -463,7 +482,7 @@ class BasicView
           "execution space");
     }
 
-//------------------------------------------------------------
+    //------------------------------------------------------------
 #if defined(KOKKOS_ENABLE_CUDA)
     // If allocating in CudaUVMSpace must fence before and after
     // the allocation to protect against possible concurrent access
@@ -472,34 +491,74 @@ class BasicView
     // to avoid incomplete type errors from using Kokkos::Cuda directly.
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
-      // TODO @mdspan should this actually translate into device synchronize?
-      arg_desc.get_execution_space().fence();
+      // TODO @mdspan should this actually translate into device synchronize
+      //      since it works around a bug that might not be addressed by fencing
+      //      the stream?
+      desc_with_defaults.get_execution_space().fence();
     }
 #endif
+
     //------------------------------------------------------------
+    // Set up the layout mapping
 
-    // TODO handle padding in the layout (incorporate arg_desc::allow_padding)
+    auto mapping = mdspan_mapping_type{arg_layout};
+    Impl::HandleLayoutPadding<
+        desc_with_defaults_t::allow_padding,
+        typename traits::value_type>::apply_padding(mapping);
 
-    auto* record = ViewAllocationMechanism<ValueType>::allocate_shared(
-        arg_desc.get_execution_space(), typename traits::memory_space{},
-        arg_desc.get_label(), arg_layout.span(), arg_desc::initialize);
+    //------------------------------------------------------------
+    // Allocate/initialize the data and set up the
 
-//------------------------------------------------------------
+    // Note: This is new behavior in refactored View code. The old code aligned
+    // the allocation to an 8 byte boundary and then re-aligned the allocation
+    // to a Kokkos::Impl::MEMORY_ALIGNMENT boundary, which is redundant almost
+    // always (unless for some reason someone compiled with
+    // KOKKOS_MEMORY_ALIGNMENT less than 8, in which case we were still not
+    // doing what the user actually asked for).
+
+    using construct_destroy_functor_type =
+        Impl::ViewValueFunctor<typename desc_with_defaults_t::execution_space,
+                               typename traits::value_type>;
+    // note: owning raw pointer
+    auto* record =
+        Impl::SharedAllocationRecord<typename traits::memory_space,
+                                     construct_destroy_functor_type>::
+            allocate(typename traits::memory_space{},
+                     desc_with_defaults.get_label(),
+                     mapping.required_span_size());
+    // TODO @mdspan decide whether thish should depend on the required span size
+    //      or the number of elements in the View (we could still have nonzero
+    //      values for the former even if the latter is 0)
+    if (mapping.required_span_size() > 0 && desc_with_defaults_t::initialize) {
+      // a better name for m_destroy might be m_construct_and_destroy
+      // or something like that
+      record->m_destroy = construct_destroy_functor_type{
+          desc_with_defaults.get_execution_space(),
+          static_cast<typename traits::value_type*>(record->data()),
+          typename traits::size_type(mapping.required_span_size()),
+          desc_with_defaults.get_label()};
+      record->m_destroy.construct_shared_allocation();
+    }
+
+    // note: ownership transfer of the `record` raw pointer
+    auto accessor = mdspan_accessor_type{record};
+
+    //------------------------------------------------------------
 #if defined(KOKKOS_ENABLE_CUDA)
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
-      // TODO @mdspan should this actually translate into device synchronize?
-      arg_desc.get_execution_space().fence();
+      // TODO @mdspan should this actually translate into device synchronize
+      //      since it works around a bug that might not be addressed by fencing
+      //      the stream?
+      desc_with_defaults.get_execution_space().fence();
     }
 #endif
+
     //------------------------------------------------------------
-
-    m_data = mdspan_type {
-      record->data(), arg_layout, mdspan_accessor_type { record }
-    }
-
-    // Setup and initialization complete, start tracking
-    // m_track.m_tracker.assign_allocated_record_to_uninitialized(record);
+    // We can now finally construct the mdspan that backs this View
+    m_data = mdspan_type{
+        reinterpret_cast<typename mdspan_type::pointer>(record->data()),
+        std::move(mapping), std::move(accessor)};
   }
 
   // Properties and dimensions: just forward to prop/layout ctor
@@ -516,24 +575,15 @@ class BasicView
   explicit inline BasicView(const Impl::ViewCtorProp<P...>& arg_prop,
                             Integral... dims)
       : BasicView(arg_prop, array_layout(dims...)) {
-  // TODO @mdspan Rewrite runtime_check_rank_*()
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(
-        rank_dynamic,
-        /*std::is_same<typename traits::specialize, void>::value*/ true,
-        dims..., label());
-#else
-    Impl::runtime_check_rank_device(
-        rank_dynamic,
-        /*std::is_same<typename traits::specialize, void>::value*/ true,
-        dims..., label());
-#endif
+    /* delegating constructor; body must be empty */
   }
 
   // Allocate with label and layout
   explicit inline BasicView(std::string const& arg_label,
-                            array_layout const& arg_layout)
-      : BasicView(Impl::ViewCtorProp<std::string>(arg_label), arg_layout) {}
+                            typename traits::array_layout const& arg_layout)
+      : BasicView(Kokkos::view_alloc(arg_label), arg_layout) {
+    /* delegating constructor; body must be empty */
+  }
 
   // Allocate with label + layout dimensions
   template <
@@ -541,7 +591,7 @@ class BasicView
       //----------------------------------------
       /* requires
        *   (std::is_integral_v<IntegralTypes> && ...)
-       *   && TODO layout is constructible from dimensions only
+       *   && TODO @mdspan layout is constructible from dimensions only
        */
       std::enable_if_t<
           _MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
@@ -550,8 +600,8 @@ class BasicView
       >
   explicit inline BasicView(std::string const& arg_label,
                             IntegralTypes... dimensions)
-      : BasicView(Impl::ViewCtorProp<std::string>(arg_label),
-                  array_layout(dimensions...)) {}
+      : BasicView(Kokkos::view_alloc(arg_label),
+                  typename traits::array_layout(dimensions...)) {}
 
   // </editor-fold> end View Ctor Prop constructor }}}3
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -559,8 +609,11 @@ class BasicView
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // <editor-fold desc="Pointer and sizes constructor"> {{{3
 
-  explicit BasicView(pointer_type arg_ptr, array_layout const& arg_layout)
-      : BasicView(Impl::ViewCtorProp<pointer_type>(arg_ptr), arg_layout) {}
+  explicit BasicView(pointer_type arg_ptr,
+                     typename traits::array_layout const& arg_layout)
+      : BasicView(Kokkos::view_wrap(arg_ptr), arg_layout) {
+    /* delegating ctor; must be empty */
+  }
 
   template <class... IntegralTypes,
             //----------------------------------------
@@ -574,19 +627,9 @@ class BasicView
             //----------------------------------------
             >
   explicit BasicView(pointer_type arg_ptr, IntegralTypes... arg_dims)
-      : BasicView(Impl::ViewCtorProp<pointer_type>(arg_ptr),
-                  array_layout(std::size_t{arg_dims}...)) {
-#ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
-    Impl::runtime_check_rank_host(
-        rank_dynamic,
-        /*std::is_same<typename traits::specialize, void>::value*/ true,
-        std::size_t{arg_dims}..., label());
-#else
-    Impl::runtime_check_rank_device(
-        rank_dynamic,
-        /*std::is_same<typename traits::specialize, void>::value*/ true,
-        std::size_t{arg_dims}..., label());
-#endif
+      : BasicView(Kokkos::view_wrap(arg_ptr),
+                  typename traits::array_layout(std::size_t{arg_dims}...)) {
+    /* delegating ctor; must be empty */
   }
 
   // </editor-fold> end Pointer and sizes constructor }}}3
@@ -596,14 +639,16 @@ class BasicView
   // <editor-fold desc="Scratch memory space constructors"> {{{3
 
   explicit BasicView(
-      typename execution_space::scratch_memory_space const& arg_space,
-      array_layout const& arg_layout)
-      : BasicView(
-            Impl::ViewCtorProp<pointer_type>{
-                reinterpret_cast<pointer_type>(arg_space.get_shmem_aligned(
-                    BasicView::required_allocation_size(arg_layout),
-                    sizeof(value_type)))},
-            arg_layout) {}
+      typename traits::execution_space::scratch_memory_space const& arg_space,
+      typename traits::array_layout const& arg_layout)
+      // Delegate to the view wrap constructor
+      : BasicView(Kokkos::view_wrap(reinterpret_cast<pointer_type>(
+                      arg_space.get_shmem_aligned(
+                          BasicView::required_allocation_size(arg_layout),
+                          sizeof(typename traits::value_type)))),
+                  arg_layout) {
+    /* delegating ctor; must be empty */
+  }
 
   template <class... IntegralTypes,
             //----------------------------------------
@@ -617,9 +662,11 @@ class BasicView
             //----------------------------------------
             >
   explicit BasicView(
-      typename execution_space::scratch_memory_space const& arg_space,
+      typename traits::execution_space::scratch_memory_space const& arg_space,
       IntegralTypes... arg_dims)
-      : BasicView(arg_space, array_layout{arg_dims...}) {
+      : BasicView(arg_space, typename traits::array_layout{arg_dims...}) {
+    /* delegating ctor; must be empty */
+#if 0  // TODO @mdspan check rank at runtime??
 #ifdef KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST
     Impl::runtime_check_rank_host(
         rank_dynamic,
@@ -630,6 +677,7 @@ class BasicView
         rank_dynamic,
         /*std::is_same<typename traits::specialize, void>::value*/ true,
         std::size_t{arg_dims}..., label());
+#endif
 #endif
   }
 
@@ -646,13 +694,14 @@ class BasicView
   //----------------------------------------------------------------------------
   // <editor-fold desc="public member functions"> {{{2
 
-  KOKKOS_FUNCTION constexpr array_layout layout() const {
+  KOKKOS_FUNCTION constexpr typename traits::array_layout layout() const {
     return _layout_helper(
-        std::integral_constant<bool, array_layout::is_extent_constructible>{},
+        std::integral_constant<bool,
+                               traits::array_layout::is_extent_constructible>{},
         std::make_index_sequence <
                 // sorry for the apparently obfuscated code; we need to double
                 // length to rifle the sequence if we need the strides also, so:
-                array_layout::is_extent_constructible
+                traits::array_layout::is_extent_constructible
             ? rank
             : rank * 2 > {});
   }
@@ -673,8 +722,7 @@ class BasicView
     return m_data.data() != nullptr;
   }
 
-  KOKKOS_FUNCTION constexpr pointer_type data() const {
-    return m_data.data(); }
+  KOKKOS_FUNCTION constexpr pointer_type data() const { return m_data.data(); }
 
   // TODO @mdspan assign_data
 
@@ -713,29 +761,21 @@ class BasicView
   // <editor-fold desc="strides"> {{{3
 
   // TENTATIVELY DEPRECATED
-  KOKKOS_FUNCTION constexpr size_t stride_0() const {
-    return m_data.stride(0); }
+  KOKKOS_FUNCTION constexpr size_t stride_0() const { return m_data.stride(0); }
   // TENTATIVELY DEPRECATED
-  KOKKOS_FUNCTION constexpr size_t stride_1() const {
-    return m_data.stride(1); }
+  KOKKOS_FUNCTION constexpr size_t stride_1() const { return m_data.stride(1); }
   // TENTATIVELY DEPRECATED
-  KOKKOS_FUNCTION constexpr size_t stride_2() const {
-    return m_data.stride(2); }
+  KOKKOS_FUNCTION constexpr size_t stride_2() const { return m_data.stride(2); }
   // TENTATIVELY DEPRECATED
-  KOKKOS_FUNCTION constexpr size_t stride_3() const {
-    return m_data.stride(3); }
+  KOKKOS_FUNCTION constexpr size_t stride_3() const { return m_data.stride(3); }
   // TENTATIVELY DEPRECATED
-  KOKKOS_FUNCTION constexpr size_t stride_4() const {
-    return m_data.stride(4); }
+  KOKKOS_FUNCTION constexpr size_t stride_4() const { return m_data.stride(4); }
   // TENTATIVELY DEPRECATED
-  KOKKOS_FUNCTION constexpr size_t stride_5() const {
-    return m_data.stride(5); }
+  KOKKOS_FUNCTION constexpr size_t stride_5() const { return m_data.stride(5); }
   // TENTATIVELY DEPRECATED
-  KOKKOS_FUNCTION constexpr size_t stride_6() const {
-    return m_data.stride(6); }
+  KOKKOS_FUNCTION constexpr size_t stride_6() const { return m_data.stride(6); }
   // TENTATIVELY DEPRECATED
-  KOKKOS_FUNCTION constexpr size_t stride_7() const {
-    return m_data.stride(7); }
+  KOKKOS_FUNCTION constexpr size_t stride_7() const { return m_data.stride(7); }
 
   template <class IntegralType>
   KOKKOS_FUNCTION constexpr std::size_t stride(IntegralType i) const noexcept {
@@ -772,7 +812,7 @@ class BasicView
     static_assert(sizeof...(IntegralTypes) == m_data.rank(),
                   "Wrong number of indices given to Kokkos::View::operator() "
                   "(argument count must match rank).");
-    Impl::ViewVerifySpace<memory_space>::check();
+    Impl::ViewVerifySpace<typename traits::memory_space>::check();
     KOKKOS_IMPL_VIEW_OPERATOR_VERIFY((m_tracker, m_data, i...))
     return m_data(i...);
   }
@@ -803,12 +843,14 @@ class BasicView
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   // <editor-fold desc="allocation tracking"> {{{3
 
+  // TODO @mdspan
   KOKKOS_FUNCTION
   int use_count() const {
-    return m_tracker.m_tracker.use_count(); }
+    return Impl::use_count_for_accessor(m_data.accessor());
+  }
 
-  inline const std::string label() const {
-    return m_tracker.m_tracker.template get_label<memory_space>();
+  inline std::string label() const {
+    return Impl::get_label_from_accessor(m_data.accessor());
   }
 
   // </editor-fold> end allocation tracking }}}3
@@ -821,7 +863,7 @@ class BasicView
   // <editor-fold desc="static member functions"> {{{2
 
   static constexpr size_t required_allocation_size(
-      array_layout const& arg_layout) {
+      typename traits::array_layout const& arg_layout) {
     return typename mdspan_type::mapping_type{arg_layout}.required_span_size();
   }
 
@@ -831,12 +873,12 @@ class BasicView
         _MDSPAN_FOLD_AND(
             std::is_convertible<IntegralTypes, std::size_t>::value /* ... */),
         "Arguments to View::required_allocation_size() must be integral");
-    static_assert(array_layout::is_extent_constructible,
+    static_assert(traits::array_layout::is_extent_constructible,
                   "View::required_allocation_size(Dimensions...) can only be "
                   "called if the layout is constructible from the dimensions "
                   "alone (e.g., not something like LayoutStride)");
     return BasicView::required_allocation_size(
-        array_layout{std::size_t{dims}...});
+        typename traits::array_layout{std::size_t{dims}...});
   }
 
   template <class... IntegralTypes>
@@ -845,16 +887,18 @@ class BasicView
         _MDSPAN_FOLD_AND(
             std::is_convertible<IntegralTypes, std::size_t>::value /* ... */),
         "Arguments to View::shmem_size(Dimensions...) must be integral");
-    static_assert(array_layout::is_extent_constructible,
+    static_assert(traits::array_layout::is_extent_constructible,
                   "View::shmem_size(Dimensions...) can only be called if the "
                   "layout is constructible from the dimensions alone (e.g., "
                   "not something like LayoutStride)");
-    return BasicView::shmem_size(array_layout{std::size_t{dims}...});
+    return BasicView::shmem_size(
+        typename traits::array_layout{std::size_t{dims}...});
   }
 
-  static constexpr size_t shmem_size(array_layout const& arg_layout) {
+  static constexpr size_t shmem_size(
+      typename traits::array_layout const& arg_layout) {
     return typename mdspan_type::mapping_type{arg_layout}.required_span_size() +
-           sizeof(value_type);
+           sizeof(typename traits::value_type);
   }
 
   // </editor-fold> end static member functions }}}2

@@ -45,7 +45,8 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+//#include <Kokkos_Core.hpp>
+#include <Kokkos_View.hpp>
 
 #include <TestDefaultDeviceType_Category.hpp>
 

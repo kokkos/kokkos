@@ -42,51 +42,32 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_VIEWCTOR_ALLOWPADDING_HPP
-#define KOKKOS_KOKKOS_VIEWCTOR_ALLOWPADDING_HPP
+#ifndef KOKKOS_KOKKOS_ALLTAG_HPP
+#define KOKKOS_KOKKOS_ALLTAG_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
-#include <View/Constructor/Kokkos_ViewCtor_fwd.hpp>
+
 
 namespace Kokkos {
 namespace Impl {
 
-struct AllowPadding_t {};
+struct ALL_t {
+  KOKKOS_INLINE_FUNCTION
+  constexpr const ALL_t& operator()() const { return *this; }
 
-struct AllowPaddingViewCtorTrait {
-  struct base_traits {
-    static constexpr bool allow_padding = false;
-  };
-  template <class T, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    // TODO @mdspan check that this trait isn't given twice
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-
-    template <class... OtherProps>
-    mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
-                         AllowPadding_t const&,
-                         OtherProps const&... other)
-        : base_t(tag, other...) {}
-
-    static constexpr bool allow_padding = true;
-  };
+  KOKKOS_INLINE_FUNCTION
+  constexpr bool operator==(const ALL_t&) const { return true; }
 };
-
-template <>
-struct ViewCtorTraitMatcher<AllowPaddingViewCtorTrait,
-    AllowPadding_t> : std::true_type {};
 
 }  // namespace Impl
 
 namespace {
 
-constexpr /* inline */ Kokkos::Impl::AllowPadding_t AllowPadding =
-    Kokkos::Impl::AllowPadding_t();
+constexpr /* inline */ Kokkos::Impl::ALL_t ALL = Kokkos::Impl::ALL_t();
 
 } // end anonymous namespace
 
 }  // namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_VIEWCTOR_ALLOWPADDING_HPP
+#endif  // KOKKOS_KOKKOS_ALLTAG_HPP

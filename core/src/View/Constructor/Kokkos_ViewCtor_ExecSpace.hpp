@@ -49,8 +49,51 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <View/Constructor/Kokkos_ViewCtor_fwd.hpp>
 
+#include <Kokkos_Concepts.hpp>  // is_execution_space
+
 namespace Kokkos {
-namespace Impl {}  // namespace Impl
+namespace Impl {
+
+struct ExecutionSpaceViewCtorTrait {
+  template <class T>
+  using trait_matches_specification = is_execution_space<T>;
+  struct base_traits {
+    // Note: the default needs to be given by the View, so don't define anything
+    // here to avoid accidentally using it
+  };
+  template <class ExecutionSpace, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+
+    using execution_space = ExecutionSpace;
+
+    mixin_matching_trait() = default;
+
+    mixin_matching_trait(mixin_matching_trait const&) = default;
+
+    mixin_matching_trait(mixin_matching_trait&&) = default;
+
+    mixin_matching_trait& operator=(mixin_matching_trait const&) = default;
+
+    mixin_matching_trait& operator=(mixin_matching_trait&&) = default;
+
+    ~mixin_matching_trait() = default;
+
+    template <class... OtherProps>
+    mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
+                         ExecutionSpace const& arg_exec,
+                         OtherProps const&... other)
+        : base_t(tag, other...), m_exec(arg_exec) {}
+
+    constexpr auto get_execution_space() const { return m_exec; }
+
+   private:
+    ExecutionSpace m_exec = {};
+  };
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_VIEWCTOR_EXECSPACE_HPP

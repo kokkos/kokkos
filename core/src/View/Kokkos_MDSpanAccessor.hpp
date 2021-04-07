@@ -64,6 +64,45 @@
 namespace Kokkos {
 namespace Impl {
 
+//==============================================================================
+// <editor-fold desc="Call the verify_pointer customization point"> {{{1
+
+// All of this is basically just boilerplate for invoking a customization point
+// called `verify_pointer` on accessors that support checking the pointer that
+// a View is constructed with (for instance, aligned accessors).
+// This can be simplified a bit once we have detection idiom in Kokkos
+
+template <class Accessor, class SFINAESafeDetectionSlot = void>
+struct InvokeVerifyPointerCustomization {
+  KOKKOS_INLINE_FUNCTION
+  static constexpr void verify_pointer(Accessor const& acc,
+                                       typename Accessor::pointer const& ptr) {}
+};
+
+template <class Accessor>
+struct InvokeVerifyPointerCustomization<
+    Accessor, void_t<decltype(std::declval<Accessor const&>().verify_pointer(
+                  std::declval<typename Accessor::pointer const&>()))>> {
+  KOKKOS_INLINE_FUNCTION
+  static constexpr void verify_pointer(Accessor const& acc,
+                                       typename Accessor::pointer const& ptr) {
+    acc.verify_pointer(ptr);
+  }
+};
+
+template <class Accessor>
+KOKKOS_INLINE_FUNCTION
+void verify_pointer_construction_for_accessor(
+    Accessor const& acc, typename Accessor::pointer const& ptr) {
+  InvokeVerifyPointerCustomization<Accessor>::verify_pointer(acc, ptr);
+}
+
+// TODO @mdspan implement pointer verification for accessors where it makes
+//              sense to do so
+
+// </editor-fold> end Call the verify_pointer customization point }}}1
+//==============================================================================
+
 template <class T, unsigned Flags>
 struct AccessorForMemoryTraitsFlags<T, MemoryTraits<Flags>>
     : BuildAccessorForMemoryTraitsFlags<T, Flags,
@@ -74,29 +113,26 @@ struct AccessorForMemoryTraitsFlags<T, MemoryTraits<Flags>>
 
  public:
   using base_t::base_t;
+  using pointer = typename base_t::pointer;
+  using reference = typename base_t::reference;
+  using offset_policy = typename base_t::offset_policy;
 
   KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto access(typename base_t::pointer p, ptrdiff_t i) const
-      noexcept {
+  constexpr auto access(typename base_t::pointer p,
+                        ptrdiff_t i) const noexcept {
     base_t::crtp_access_mixin(*this, p, i);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto offset(typename base_t::pointer p, ptrdiff_t i) const
-      noexcept {
+  constexpr auto offset(typename base_t::pointer p,
+                        ptrdiff_t i) const noexcept {
     base_t::crtp_offset_mixin(*this, p, i);
   }
 };
 
 template <class T, class MemTraits, class Enable = void>
 struct MDSpanAccessorFromKokkosMemoryTraits
-    : AccessorForMemoryTraitsFlags<T, MemTraits> {
- private:
-  using base_t = AccessorForMemoryTraitsFlags<T, MemTraits>;
-
- public:
-  using base_t::base_t;
-};
+    : identity<AccessorForMemoryTraitsFlags<T, MemTraits>> {};
 
 }  // end namespace Impl
 }  // end namespace Kokkos

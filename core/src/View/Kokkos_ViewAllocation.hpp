@@ -61,21 +61,7 @@ struct ViewAllocationMechanism {
   static auto* allocate_shared(ExecutionSpace const& ex, MemorySpace const& mem,
                                std::string const& arg_label,
                                std::size_t arg_size, bool initialize) {
-    using functor_type = ViewValueFunctor<ExecutionSpace, ValueType>;
-    using record_type  = SharedAllocationRecord<MemorySpace, functor_type>;
-
-    // TODO @mdspan pad for alignment
-    auto alloc_size = arg_size;
-
-    auto* record = record_type::allocate(mem, arg_label, alloc_size);
-    if (arg_size > 0 && initialize) {
-      record->m_destroy = functor_type(static_cast<ValueType*>(record->data()),
-                                       arg_size, arg_label);
-      // The construction code is, counterintuitively, on the deleter...
-      record->m_destroy.construct_shared_allocation();
-    }
-
-    return record;
+    // TODO @mdspan remove this?
   }
 };
 
