@@ -95,7 +95,8 @@ using MemoryManaged   = Kokkos::MemoryTraits<0>;
 using MemoryUnmanaged = Kokkos::MemoryTraits<Kokkos::Unmanaged>;
 using MemoryRandomAccess =
     Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess>;
-// TODO VIEW provide a build system hook to change this default for things like
+// TODO @mdspan provide a build system hook to change this default for things
+// like
 //           resilience and checkpointing?
 using DefaultMemoryTraits = MemoryManaged;
 
