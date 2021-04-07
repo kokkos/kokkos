@@ -454,9 +454,7 @@ struct rand<Generator, Kokkos::Experimental::half_t> {
   KOKKOS_INLINE_FUNCTION
   static half max() { return half(1.0); }
   KOKKOS_INLINE_FUNCTION
-  static half draw(Generator& gen) {
-    return half(gen.frand());
-  }
+  static half draw(Generator& gen) { return half(gen.frand()); }
   KOKKOS_INLINE_FUNCTION
   static half draw(Generator& gen, const half& range) {
     return half(gen.frand(range));
@@ -466,7 +464,7 @@ struct rand<Generator, Kokkos::Experimental::half_t> {
     return half(gen.frand(start, end));
   }
 };
-#endif // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#endif  // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
 
 template <class Generator>
 struct rand<Generator, float> {
