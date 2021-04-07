@@ -51,6 +51,7 @@
 #include <Kokkos_Concepts.hpp>        // is_execution_space, is_memory_space
 #include <Kokkos_Layout.hpp>          // LayoutRight
 #include <impl/Kokkos_Utilities.hpp>  // type_list
+#include <Kokkos_MemoryTraits.hpp> // DefaultMemoryTraits
 
 namespace Kokkos {
 

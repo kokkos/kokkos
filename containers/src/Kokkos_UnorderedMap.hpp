@@ -207,7 +207,7 @@ template <typename Key, typename Value,
 class UnorderedMap {
  private:
   using host_mirror_space =
-      typename ViewTraits<Key, Device, void, void>::host_mirror_space;
+      typename View<Key, Device>::host_mirror_space;
 
  public:
   //! \name Public types and constants
