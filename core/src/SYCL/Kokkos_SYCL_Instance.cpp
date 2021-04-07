@@ -208,7 +208,7 @@ void* SYCLInternal::scratch_space(
 
     Record* const r =
         Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                         "Kokkos::InternalScratchSpace",
+                         "Kokkos::SYCL::InternalScratchSpace",
                          (sizeScratchGrain * m_scratchSpaceCount));
 
     Record::increment(r);
@@ -235,7 +235,7 @@ void* SYCLInternal::scratch_flags(
 
     Record* const r =
         Record::allocate(Kokkos::Experimental::SYCLDeviceUSMSpace(*m_queue),
-                         "Kokkos::InternalScratchFlags",
+                         "Kokkos::SYCL::InternalScratchFlags",
                          (sizeScratchGrain * m_scratchFlagsCount));
 
     Record::increment(r);
@@ -247,6 +247,44 @@ void* SYCLInternal::scratch_flags(
 
   return m_scratchFlags;
 }
+
+template <sycl::usm::alloc Kind>
+size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
+  assert(m_size == 0);
+  assert(m_q);
+
+  if (m_capacity < n) {
+    using Record = Kokkos::Impl::SharedAllocationRecord<AllocationSpace, void>;
+    // First free what we have (in case malloc can reuse it)
+    if (m_data) Record::decrement(Record::get_record(m_data));
+
+    Record* const r = Record::allocate(AllocationSpace(*m_q),
+                                       "Kokkos::SYCL::USMObjectMem", n);
+    Record::increment(r);
+
+    m_data     = r->data();
+    m_capacity = n;
+  }
+
+  return m_capacity;
+}
+
+template <sycl::usm::alloc Kind>
+void SYCLInternal::USMObjectMem<Kind>::reset() {
+  assert(m_size == 0);
+
+  if (m_data) {
+    using Record = Kokkos::Impl::SharedAllocationRecord<AllocationSpace, void>;
+    Record::decrement(Record::get_record(m_data));
+
+    m_capacity = 0;
+    m_data     = nullptr;
+  }
+  m_q.reset();
+}
+
+template class SYCLInternal::USMObjectMem<sycl::usm::alloc::shared>;
+template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;
 
 }  // namespace Impl
 }  // namespace Experimental
