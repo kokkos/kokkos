@@ -106,8 +106,8 @@ struct MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
              *    analogous_opposite_flag_accessor<T, OtherFlags>>,
              */
             std::enable_if_t<
-                std::is_convertible<base_t, analogous_opposite_flag_accessor<
-                                                T, OtherFlags>>::value,
+                std::is_convertible<analogous_opposite_flag_accessor<T,OtherFlags >,
+                                                base_t >::value,
                 int> = 0
             //----------------------------------------
             >
@@ -132,6 +132,8 @@ struct MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
   MixinAccessorFlagConvertibility(
       analogous_opposite_flag_accessor<T, OtherFlags>&& other)
       : base_t(std::move(other)) {}
+
+  using base_t::base_t;
 };
 
 }  // end namespace Impl

@@ -56,7 +56,7 @@ template <class T, class MemTraits>
 struct AccessorForMemoryTraitsFlags;
 
 template <class ViewTraits, unsigned Flags, MemoryTraitsFlags CurrentFlag,
-          bool FlagIsSet = CurrentFlag bitand Flags, class Enable = void>
+          bool FlagIsSet = bool(CurrentFlag bitand Flags), class Enable = void>
 struct BuildAccessorForMemoryTraitsFlags;
 
 template <class Self>
