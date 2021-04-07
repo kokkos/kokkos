@@ -64,6 +64,8 @@
 #include <Kokkos_UniqueToken.hpp>
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 
+#include <Kokkos_View.hpp>
+
 #include <omp.h>
 
 //----------------------------------------------------------------------------
