@@ -85,6 +85,22 @@ struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
       typename ViewTraits::value_type>;
   using base_t::base_t;
 
+  // Allow casting to protected base from within the hierarchy
+  template <class, unsigned, MemoryTraitsFlags, bool, class>
+  friend struct BuildAccessorForMemoryTraitsFlags;
+
+  // Allow convertibility if it's been passed through this far
+  template <class T, unsigned OtherFlags>
+  BuildAccessorForMemoryTraitsFlags(
+    AccessorForMemoryTraitsFlags<T, MemoryTraits<OtherFlags>> const& other
+  ) : base_t(other)
+  {}
+  template <class T, unsigned OtherFlags>
+  BuildAccessorForMemoryTraitsFlags(
+      AccessorForMemoryTraitsFlags<T, MemoryTraits<OtherFlags>>&& other
+  ) : base_t(std::move(other))
+  {}
+
   // Base versions of CRTP-like call for composition purposes. Basically, if
   // these symbols are not shadowed, they call through to the underlying
   // accessor_basic implementation

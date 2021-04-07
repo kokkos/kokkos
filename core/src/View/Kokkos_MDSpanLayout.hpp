@@ -122,190 +122,25 @@ struct HandleLayoutPadding</* AllowPadding = */ false, ValueType> {
 // </editor-fold> end Call the with_padding_for_type customization point }}}1
 //==============================================================================
 
-// template <class Traits, class Layout>
-// struct AdaptMDSpanLayoutForKokkosLayout;
-//
-////==============================================================================
-//// <editor-fold desc="Convert Kokkos layouts to leading/trailing extents">
-///{{{1
-//
-//// TODO @mdspan make sure a non-recursive version of this isn't faster
-// template <class FinalExtentsType, std::size_t FirstIdx,
-//          class = FinalExtentsType>
-// struct _extract_extents_from_offset_in_layout;
-//
-// template <class FinalExtentsType, std::ptrdiff_t Extent,
-//          std::ptrdiff_t... Extents, std::size_t Idx>
-// struct _extract_extents_from_offset_in_layout<
-//    FinalExtentsType, Idx, std::experimental::extents<Extent, Extents...> > {
-//  template <class Layout, class... DynExtents>
-//  KOKKOS_INLINE_FUNCTION static constexpr auto extract(Layout const& l,
-//                                                       DynExtents... exts) {
-//    // Layout objects take all of the extents, but we only need to pass the
-//    // dynamic ones on to the extents constructor
-//    using next_t = _extract_extents_from_offset_in_layout<
-//        FinalExtentsType, Idx + 1, std::experimental::extents<Extents...> >;
-//    return next_t::extract(l, exts...);
-//  }
-//};
-//
-// template <class FinalExtentsType, std::ptrdiff_t... Extents, std::size_t Idx>
-// struct _extract_extents_from_offset_in_layout<
-//    FinalExtentsType, Idx,
-//    std::experimental::extents<std::experimental::dynamic_extent, Extents...>
-//    >
-//    {
-//  template <class Layout, class... DynExtents>
-//  KOKKOS_INLINE_FUNCTION static constexpr auto extract(Layout const& l,
-//                                                       DynExtents... exts) {
-//    using next_t = _extract_extents_from_offset_in_layout<
-//        FinalExtentsType, Idx + 1, std::experimental::extents<Extents...> >;
-//    return next_t::extract(l, exts..., l.dimension[Idx]);
-//  }
-//};
-//
-// template <class FinalExtentsType, std::size_t Idx>
-// struct _extract_extents_from_offset_in_layout<FinalExtentsType, Idx,
-//                                              std::experimental::extents<> > {
-//  template <class Layout, class... DynExtents>
-//  KOKKOS_INLINE_FUNCTION static constexpr auto extract(Layout const&,
-//                                                       DynExtents... exts) {
-//    return FinalExtentsType{exts...};
-//  }
-//};
-//
-//// </editor-fold> end Convert Kokkos layouts to leading/trailing extents }}}1
-////==============================================================================
-//
-//// typename FirstExtentOnly<typename Traits::mdspan_extents_type>::type;
-//
-//// TODO @mdspan avoid instantiating this for every View type
-//
-// template <class Traits, class LeadingLayout, class TrailingLayout>
-// struct SplitLayoutImpl {
-// private:
-//  using leading_extents_t =
-//      decltype(std::declval<LeadingLayout const&>().extents());
-//  using trailing_extents_t =
-//    decltype(std::declval<TrailingLayout const&>().extents());
-//  using leading_layout_t = LeadingLayout;
-//  using trailing_layout_t = TrailingLayout;
-//  using extents_type = typename Traits::mdspan_extents_type;
-//
-//  // TODO @mdspan no unique address (EBO) optimization
-//  typename Traits::size_type m_stride = {1};
-//
-//  leading_layout_t m_leading_layout;
-//  trailing_layout_t m_trailing_layout;
-//
-// public:
-//  template <class KokkosLayout>
-//  KOKKOS_FUNCTION
-//  constexpr explicit SplitLayoutImpl(KokkosLayout const& ll)
-//      : m_stride(1),
-//        m_leading_layout(
-//            _extract_extents_from_offset_in_layout<leading_extents_t,
-//                                                   0>::extract(ll)),
-//        m_trailing_layout(
-//            _extract_extents_from_offset_in_layout<trailing_extents_t,
-//                                                   1>::extract(ll)) {}
-//
-//  template <class IntegralType, class... IntegralTypes>
-//  KOKKOS_FORCEINLINE_FUNCTION constexpr
-//      typename Traits::mdspan_extents_type::index_type
-//      map_with_stride_like_layout_left(IntegralType first_idx,
-//                                       IntegralTypes... last_idxs) const {
-//    return m_leading_layout(first_idx) +
-//           m_stride * m_trailing_layout(last_idxs...);
-//  }
-//
-//  template <class IntegralType, class... IntegralTypes>
-//  KOKKOS_FORCEINLINE_FUNCTION constexpr
-//      typename Traits::mdspan_extents_type::index_type
-//      map_with_stride_like_layout_right(IntegralType last_idx,
-//                                        IntegralTypes... first_idxs) const {
-//    return m_leading_layout(first_idxs...) * m_stride +
-//           m_trailing_layout(last_idx);
-//  }
-//};
-//
-// template <class Traits, class T>
-// struct AdaptKokkosLayoutToMDSpanLayout;
-//
-// template <class Traits>
-// struct AdaptKokkosLayoutToMDSpanLayout<Traits, Kokkos::LayoutLeft>
-//  : SplitLayoutImpl<Traits
-//
-//{
-//
-//};
-
 namespace {
 
 // We'll use odd offsets from min to be layout left dimension strides and
 // even offsets from min to be layout right dimension strides
 constexpr std::ptrdiff_t stride_as_fixed_layout_tag_offset =
     std::numeric_limits<std::ptrdiff_t>::min();
-// constexpr std::ptrdiff_t stride_as_layout_left_tag =
-//    stride_as_fixed_layout_tag_offset + 1;
-// constexpr std::ptrdiff_t stride_as_layout_right_tag =
-//    stride_as_fixed_layout_tag_offset + 2;
 
 template <std::ptrdiff_t StaticStride>
 constexpr bool is_static_dimension_stride =
     (StaticStride < 0) && StaticStride != std::experimental::dynamic_extent &&
     ((StaticStride - stride_as_fixed_layout_tag_offset) % 2 == 0);
+
 template <std::ptrdiff_t StaticStride>
 constexpr bool extract_static_dimension_stride =
     StaticStride - stride_as_fixed_layout_tag_offset;
+
 template <std::ptrdiff_t DimensionStride = 1>
 constexpr std::ptrdiff_t fixed_layout_dimension_stride =
     stride_as_fixed_layout_tag_offset + DimensionStride;
-
-// template <std::ptrdiff_t StaticStride>
-// constexpr bool is_layout_left_with_dimension_stride =
-//    (StaticStride < 0) && StaticStride != std::experimental::dynamic_extent &&
-//    ((StaticStride - stride_as_layout_left_tag) % 2 == 0);
-// template <std::ptrdiff_t StaticStride>
-// constexpr bool extract_static_dimension_stride_for_layout_left =
-//    (StaticStride - stride_as_layout_left_tag) / 2;
-//
-// template <std::ptrdiff_t StaticStride>
-// constexpr bool is_layout_right_with_dimension_stride =
-//    (StaticStride < 0) && StaticStride != std::experimental::dynamic_extent &&
-//    ((StaticStride - stride_as_layout_right_tag) % 2 == 0);
-// template <std::ptrdiff_t StaticStride>
-// constexpr bool extract_static_dimension_stride_for_layout_right =
-//    (StaticStride - stride_as_layout_right_tag) / 2;
-
-}  // end anonymous namespace
-
-namespace {
-
-// There are still too many compiler bugs to use a constexpr function here :-(
-// template <std::ptrdiff_t DimensionStride = 1>
-// struct stride_as_layout_left_with_dimension_stride_t {
-//  static_assert(DimensionStride > 0, "");
-//  // Make an odd offset from std::numeric_limits<std::ptrdiff_t>::min()
-//  static constexpr std::ptrdiff_t value =
-//      stride_as_layout_left_tag + 2 * DimensionStride;
-//};
-//
-// template <std::ptrdiff_t DimensionStride = 1>
-// constexpr std::ptrdiff_t stride_as_layout_left_with_dimension_stride =
-//    stride_as_layout_left_with_dimension_stride_t<DimensionStride>::value;
-//
-// template <std::ptrdiff_t DimensionStride = 1>
-// struct stride_as_layout_right_with_dimension_stride_t {
-//  static_assert(DimensionStride > 0, "");
-//  // Make an odd offset from std::numeric_limits<std::ptrdiff_t>::min()
-//  static constexpr std::ptrdiff_t value =
-//      stride_as_layout_right_tag + 2 * DimensionStride;
-//};
-//
-// template <std::ptrdiff_t DimensionStride = 1>
-// constexpr std::ptrdiff_t stride_as_layout_right_with_dimension_stride =
-//    stride_as_layout_right_with_dimension_stride_t<DimensionStride>::value;
 
 }  // end anonymous namespace
 
@@ -481,6 +316,18 @@ struct stride_storage_common<
     return static_cast<derived_t const&>(*this).extents().extent(Idx);
 #endif
   }
+
+  stride_storage_common() = default;
+
+  stride_storage_common(stride_storage_common const&) = default;
+
+  stride_storage_common(stride_storage_common&&) = default;
+
+  stride_storage_common& operator=(stride_storage_common const&) = default;
+
+  stride_storage_common& operator=(stride_storage_common&&) = default;
+
+  ~stride_storage_common() = default;
 };
 
 //------------------------------------------------------------------------------
@@ -495,12 +342,11 @@ struct stride_storage_impl<
                      StaticStride != std::experimental::dynamic_extent>>
     : stride_storage_common<Idx, Extent, Strides, Extents, Idxs,
                             LayoutLeftBased> {
- private:
+ public:
   using base_t = stride_storage_common<Idx, Extent, Strides, Extents, Idxs,
                                        LayoutLeftBased>;
   static constexpr std::ptrdiff_t m_stride = StaticStride;
 
- public:
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr std::ptrdiff_t _get_element_stride() const noexcept {
     return m_stride;
@@ -515,6 +361,26 @@ struct stride_storage_impl<
     auto const& next = this->base_t::self_as_next_storage();
     return (m_stride == next._contiguous_size()) && next._is_contiguous();
   }
+
+  static constexpr auto static_stride = StaticStride;
+
+  using base_t::base_t;
+
+  // conversion
+  // ignore extents
+  template <std::ptrdiff_t OtherExtent, class OtherStrides, class OtherExtents>
+  KOKKOS_INLINE_FUNCTION stride_storage_impl(
+      stride_storage_impl<StaticStride, OtherExtent, Idx, OtherStrides,
+                          OtherExtents, Idxs, LayoutLeftBased> const& other) {}
+  // convert from dynamic stride
+  template <std::ptrdiff_t OtherExtent, class OtherStrides, class OtherExtents>
+  KOKKOS_INLINE_FUNCTION stride_storage_impl(
+      stride_storage_impl<std::experimental::dynamic_extent, OtherExtent, Idx,
+                          OtherStrides, OtherExtents, Idxs,
+                          LayoutLeftBased> const& other) {
+    KOKKOS_EXPECTS(other._get_element_stride() == _get_element_stride());
+  }
+  // TODO @mdspan convert from fixed-layout-like stride?
 };
 
 //------------------------------------------------------------------------------
@@ -550,8 +416,20 @@ struct stride_storage_impl<
     return (m_dimension_stride == 1) &&
            this->base_t::self_as_next_storage()._is_contiguous();
   }
+
+  static constexpr auto static_stride = StaticStride;
+
+  using base_t::base_t;
+
+  // conversion
+  // ignore extents
+  template <std::ptrdiff_t OtherExtent, class OtherStrides, class OtherExtents>
+  KOKKOS_INLINE_FUNCTION stride_storage_impl(
+      stride_storage_impl<StaticStride, OtherExtent, Idx, OtherStrides,
+                          OtherExtents, Idxs, LayoutLeftBased> const& other) {}
 };
 
+//------------------------------------------------------------------------------
 // Dynamic stride
 template <std::ptrdiff_t Extent, std::ptrdiff_t Idx, class StaticStrides,
           class Extents, class Idxs, bool LayoutLeftBased>
@@ -560,9 +438,11 @@ struct stride_storage_impl<std::experimental::dynamic_extent, Extent, Idx,
     : stride_storage_common<Idx, Extent, StaticStrides, Extents, Idxs,
                             LayoutLeftBased> {
  private:
+  using base_t = stride_storage_common<Idx, Extent, StaticStrides, Extents,
+                                       Idxs, LayoutLeftBased>;
   std::ptrdiff_t m_stride = {0};
 
- protected:
+ public:
   // The stride between two consecutive elements in the dimension (i.e., _not_
   // the dimension stride that's independent of the strides around it). This
   // is what we usually call stride in, e.g., mdspan
@@ -582,6 +462,26 @@ struct stride_storage_impl<std::experimental::dynamic_extent, Extent, Idx,
       std::ptrdiff_t new_stride) noexcept {
     m_stride = new_stride;
   }
+
+  static constexpr auto static_stride = std::experimental::dynamic_extent;
+
+  using base_t::base_t;
+
+  // conversion
+  // ignore extents
+  template <std::ptrdiff_t OtherExtent, class OtherStrides, class OtherExtents>
+  KOKKOS_INLINE_FUNCTION stride_storage_impl(
+      stride_storage_impl<std::experimental::dynamic_extent, OtherExtent, Idx,
+                          OtherStrides, OtherExtents, Idxs,
+                          LayoutLeftBased> const& other)
+      : m_stride(other._get_element_stride()) {}
+  // convert from static stride
+  template <std::ptrdiff_t OtherStride, std::ptrdiff_t OtherExtent,
+            class OtherStrides, class OtherExtents>
+  KOKKOS_INLINE_FUNCTION stride_storage_impl(
+      stride_storage_impl<OtherStride, OtherExtent, Idx, OtherStrides,
+                          OtherExtents, Idxs, LayoutLeftBased> const& other)
+      : m_stride(other._get_element_stride()) {}
 };
 
 //==============================================================================
@@ -590,7 +490,7 @@ struct stride_storage_impl<std::experimental::dynamic_extent, Extent, Idx,
 // <editor-fold desc="layout_stride_general_impl"> {{{1
 
 template <bool LayoutLeftBased, std::ptrdiff_t... StaticStrides,
-          std::ptrdiff_t... Extents, std::ptrdiff_t... Idxs>
+          std::ptrdiff_t... Extents, std::size_t... Idxs>
 struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION layout_stride_general_impl<
     LayoutLeftBased, std::integer_sequence<std::ptrdiff_t, StaticStrides...>,
     std::experimental::extents<Extents...>,
@@ -621,6 +521,9 @@ struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION layout_stride_general_impl<
       std::conditional_t<LayoutLeftBased,
                          stride_storage_base_for_idx<sizeof...(Extents) - 1>,
                          stride_storage_base_for_idx<0>>;
+  // frinedship for conversion purposes
+  template <bool, class, class, class>
+  friend struct layout_stride_general_impl;
 
   // If we're getting here, something has gone wrong internally
   static_assert(sizeof...(Idxs) >= 2, "");
@@ -648,10 +551,6 @@ struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION layout_stride_general_impl<
          this->extents().template __extent<Idxs>()),
         /* + ... + */ 0);
   }
-  KOKKOS_FUNCTION constexpr auto size() const noexcept {
-    return _MDSPAN_FOLD_TIMES_RIGHT(this->extents().template __extent<Idxs>(),
-                                    /* + ... + */ 0);
-  }
 
   //----------------------------------------------------------------------------
   // <editor-fold desc="Ctor, destructor, and assignment"> {{{2
@@ -673,8 +572,54 @@ struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION layout_stride_general_impl<
   // TODO default values for strides
 
   KOKKOS_INLINE_FUNCTION
-  constexpr explicit layout_stride_general_impl(extents_t const& exts)
+  constexpr layout_stride_general_impl(extents_t const& exts)
       : extents_storage_base_t(exts), stride_storage_base_for_idx<Idxs>()... {}
+
+  // TODO @mdspan clean this up. there's too much repeated code here
+  template <
+      bool OtherLayoutLeftBased, std::ptrdiff_t... OtherStaticStrides,
+      std::ptrdiff_t... OtherExtents, std::size_t... OtherIdxs,
+      //----------------------------------------
+      /* requires
+       *   std::is_convertible_v<
+       *     BasicView<RT, RL, RS, RMP>::mdspan_type,
+       *     mdspan_type>
+       */
+      std::enable_if_t<
+          OtherLayoutLeftBased == LayoutLeftBased &&
+              std::is_convertible<std::experimental::extents<OtherExtents...>,
+                                  extents_t>::value &&
+              // TODO @mdspan a version of this that SFINAEs correctly even
+              //      if the parameter pack lengths aren't the same
+              _MDSPAN_FOLD_AND(
+                  std::is_convertible<
+                      typename layout_stride_general_impl<
+                          OtherLayoutLeftBased,
+                          std::integer_sequence<std::ptrdiff_t,
+                                                OtherStaticStrides...>,
+                          std::experimental::extents<OtherExtents...>,
+                          std::integer_sequence<std::size_t, OtherIdxs...>>::
+                          template stride_storage_base_for_idx<Idxs>,
+                      stride_storage_base_for_idx<Idxs>>::value /* && ... */
+                  ),
+          int> = 0
+      //----------------------------------------
+      >
+  KOKKOS_INLINE_FUNCTION constexpr layout_stride_general_impl(
+      layout_stride_general_impl<
+          OtherLayoutLeftBased,
+          std::integer_sequence<std::ptrdiff_t, OtherStaticStrides...>,
+          std::experimental::extents<OtherExtents...>,
+          std::integer_sequence<std::size_t, OtherIdxs...>> const& other)
+      : extents_storage_base_t(other.extents()),
+        stride_storage_base_for_idx<Idxs>(
+            static_cast<typename layout_stride_general_impl<
+                OtherLayoutLeftBased,
+                std::integer_sequence<std::ptrdiff_t, OtherStaticStrides...>,
+                std::experimental::extents<OtherExtents...>,
+                std::integer_sequence<std::size_t, OtherIdxs...>>::
+                            template stride_storage_base_for_idx<Idxs> const&>(
+                other))... {}
 
   // </editor-fold> end Ctor, destructor, and assignment }}}2
   //----------------------------------------------------------------------------
@@ -725,50 +670,19 @@ struct contiguous_mapping_1d_common {
 template <class Extents>
 struct contiguous_mapping_1d;
 
-// static extent case
-template <std::ptrdiff_t Extent>
-struct contiguous_mapping_1d<std::experimental::extents<Extent>>
-    : contiguous_mapping_1d_common {
- private:
-  using base_t = contiguous_mapping_1d_common;
-  using base_t::base_t;
-  using extents_t = std::experimental::extents<Extent>;
-
- public:
-  // The analog of this isn't explicit in P0009, so I didn't do that here
-  KOKKOS_INLINE_FUNCTION
-  constexpr contiguous_mapping_1d(extents_t const&) noexcept {}
-  // TODO @mdspan a constexpr macro that goes away when the assertion active?
-  KOKKOS_INLINE_FUNCTION
-  contiguous_mapping_1d(
-      std::experimental::extents<std::experimental::dynamic_extent> const&
-          arg_ext) noexcept {
-    KOKKOS_EXPECTS(arg_ext.extent(0) == Extent);
-    (void)arg_ext;  // handle unused argument warnings
-  }
-  // We want to force inline this because it's on the path of the view element
-  // access operator evaluation
-  KOKKOS_FORCEINLINE_FUNCTION constexpr extents_t extents() const noexcept {
-    return extents_t{};
-  }
-  KOKKOS_FUNCTION constexpr typename extents_t::index_type required_span_size()
-      const noexcept {
-    return Extent;
-  }
-};
-
-// static extent case
+// dynamic extent case
 template <>
 struct contiguous_mapping_1d<
     std::experimental::extents<std::experimental::dynamic_extent>>
     : contiguous_mapping_1d_common {
   using base_t = contiguous_mapping_1d_common;
-  using base_t::base_t;
   using extents_t =
       std::experimental::extents<std::experimental::dynamic_extent>;
   extents_t m_extents;
 
  public:
+  using base_t::base_t;
+
   // The analog of this isn't explicit in P0009, so I didn't do that here
   KOKKOS_INLINE_FUNCTION
   constexpr contiguous_mapping_1d(extents_t const&) noexcept {}
@@ -797,6 +711,57 @@ struct contiguous_mapping_1d<
       const noexcept {
     // NOTE: nonstandard mdspan extension
     return m_extents.template __extent<0>();
+  }
+  template <
+      std::ptrdiff_t Extent,
+      //----------------------------------------
+      /* requires
+       *   Extent != std::experimental::dynamic_extent
+       */
+      std::enable_if_t<Extent != std::experimental::dynamic_extent, int> = 0
+      //----------------------------------------
+      >
+  KOKKOS_INLINE_FUNCTION contiguous_mapping_1d(
+      contiguous_mapping_1d<std::experimental::extents<Extent>> const&)
+      : m_extents(Extent) {}
+};
+
+// static extent case
+template <std::ptrdiff_t Extent>
+struct contiguous_mapping_1d<std::experimental::extents<Extent>>
+    : contiguous_mapping_1d_common {
+ private:
+  using base_t    = contiguous_mapping_1d_common;
+  using extents_t = std::experimental::extents<Extent>;
+
+ public:
+  using base_t::base_t;
+
+  // The analog of this isn't explicit in P0009, so I didn't do that here
+  KOKKOS_INLINE_FUNCTION
+  constexpr contiguous_mapping_1d(extents_t const&) noexcept {}
+  // TODO @mdspan a constexpr macro that goes away when the assertion active?
+  KOKKOS_INLINE_FUNCTION
+  contiguous_mapping_1d(
+      std::experimental::extents<std::experimental::dynamic_extent> const&
+          arg_ext) noexcept {
+    KOKKOS_EXPECTS(arg_ext.extent(0) == Extent);
+    (void)arg_ext;  // handle unused argument warnings
+  }
+  // We want to force inline this because it's on the path of the view element
+  // access operator evaluation
+  KOKKOS_FORCEINLINE_FUNCTION constexpr extents_t extents() const noexcept {
+    return extents_t{};
+  }
+  KOKKOS_FUNCTION constexpr typename extents_t::index_type required_span_size()
+      const noexcept {
+    return Extent;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  contiguous_mapping_1d(contiguous_mapping_1d<std::experimental::extents<
+                            std::experimental::dynamic_extent>> const& other) {
+    KOKKOS_EXPECTS(other.extents().extent(0) == Extent);
   }
 };
 
@@ -976,10 +941,10 @@ struct MDSpanLayoutForLayoutLeftImpl<
   // Deduce extents here to avoid instantiating _set_stride when it's not
   // available
   template <std::ptrdiff_t Ext0, std::ptrdiff_t Ext1,
-      std::ptrdiff_t... ExtsDeduced>
+            std::ptrdiff_t... ExtsDeduced>
   void _setup_dynamic_stride(
       std::experimental::extents<Ext0, Ext1, ExtsDeduced...> const& exts)
-  const {
+      noexcept {
     // Note: Nonstandard mdspan extension
     // set the dynamic stride to be the extent of the last dimension by default
     // Since we only have one dynamic stride, this should be unambiguous
@@ -1052,7 +1017,7 @@ struct MDSpanLayoutForLayoutRightImpl
             std::ptrdiff_t... ExtsDeduced>
   void _setup_dynamic_stride(
       std::experimental::extents<Ext0, Ext1, ExtsDeduced...> const& exts)
-      const {
+      noexcept {
     // Note: Nonstandard mdspan extension
     // set the dynamic stride to be the extent of the last dimension by default
     // Since we only have one dynamic stride, this should be unambiguous

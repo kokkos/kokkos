@@ -57,9 +57,36 @@ TEST(defaultdevicetype, development_test) {
   // Instantiate with label and size
   auto v2 = Kokkos::View<int*>{"hello", 42};
   // Instantiate with raw pointer
-  int data[] = {1, 2, 3, 4};
-  auto v3 = Kokkos::View<int[4]>{Kokkos::view_wrap(data)};
+  int data[]   = {1, 2, 3, 4};
+  auto vstatic = Kokkos::View<int[4]>{Kokkos::view_wrap(data)};
+  // Instantiate with view_alloc
+  auto v4 = Kokkos::View<int*>{
+      Kokkos::view_alloc("hello", Kokkos::WithoutInitializing), 42};
+  // Instantiate with view_alloc allow padding (TODO make this actually work)
+  // TODO this should fail if the layout doesn't support padding
+  auto v5 =
+      Kokkos::View<int*>{Kokkos::view_alloc("hello", Kokkos::AllowPadding), 42};
 
+  // Conversion to compatible accessor
+  using view_atomic =
+      Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Atomic>>::basic_view_type;
+  auto vatomic = view_atomic{v2};
+
+  // Conversion to dynamic
+  auto vdyn = Kokkos::View<int*>{vstatic};
+
+  auto vstatic2 = Kokkos::View<int*[4]>{"hello2", 10};
+  auto vstatic3 = Kokkos::View<int[3][4]>{Kokkos::view_wrap(data)};
+  auto vdyn2 = Kokkos::View<int**>{vstatic2};
+  auto vdyn3 = Kokkos::View<int**>{vstatic3};
+  // TODO converting assignment operator
+  // vstatic2 = vstatic3;
+
+  // Instantiate default 2d ctor
+  auto v2d = Kokkos::View<int**>{};
+  auto v2static1 = Kokkos::View<int*[3]>{};
+  auto v2static2 = Kokkos::View<int[7][3]>{};
+  auto v2staticr1 = Kokkos::View<int*[3], Kokkos::LayoutRight>{};
 }
 
 }  // namespace Test

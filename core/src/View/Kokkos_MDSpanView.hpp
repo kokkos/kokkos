@@ -207,9 +207,8 @@ class BasicView
   using traits =
       ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>>;
 
- private:
   //----------------------------------------------------------------------------
-  // <editor-fold desc="private member types"> {{{2
+  // <editor-fold desc="new member types"> {{{2
 
   using mdspan_layout_type =
       typename Impl::MDSpanLayoutFromKokkosLayout<traits, Layout>;
@@ -224,11 +223,10 @@ class BasicView
                                       typename traits::mdspan_extents_type,
                                       mdspan_layout_type, mdspan_accessor_type>;
 
-  using view_tracker_type = Impl::ViewTracker<BasicView>;
-
   // </editor-fold> end private member types }}}2
   //----------------------------------------------------------------------------
 
+ private:
   //----------------------------------------------------------------------------
   // <editor-fold desc="friends"> {{{2
 
@@ -388,6 +386,7 @@ class BasicView
     // TODO @mdspan check runtime dimension compatibility (check in the mapping)
   }
 
+  // TODO @mdspan does this need to be SFINAE, or should we just static assert?
   template <class RT, class RL, class RS, class RMP,
             //----------------------------------------
             /* requires
@@ -914,23 +913,25 @@ class BasicView
 template <class DataType, class... Properties>
 class View : public Impl::NormalizeViewProperties<
                  DataType, Impl::type_list<Properties...>>::type {
- private:
-  using base_t = typename Impl::NormalizeViewProperties<
+ public:
+  using basic_view_type = typename Impl::NormalizeViewProperties<
       DataType, Impl::type_list<Properties...>>::type;
+
+ private:
   static constexpr void _deferred_instantiation_static_assertions() {
     // Needs to be here because View needs to be complete for this static
     // assertion.
     // It's important to assert that we're layout-compatible with base_t so that
     // coverting between this type and a compatible `BasicView` is safe and
     // doesn't slice any data.
-    static_assert(sizeof(View) == sizeof(base_t),
+    static_assert(sizeof(View) == sizeof(basic_view_type),
                   "Kokkos internal implementation error: View type isn't "
                   "layout compatible"
                   " with normalized BasicView type that it's based on.");
   }
 
  public:
-  using base_t::base_t;
+  using basic_view_type::basic_view_type;
 };
 
 // </editor-fold> end View }}}1
