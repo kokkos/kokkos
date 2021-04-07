@@ -50,7 +50,43 @@
 #include <View/Constructor/Kokkos_ViewCtor_fwd.hpp>
 
 namespace Kokkos {
-namespace Impl {}  // namespace Impl
+namespace Impl {
+
+struct WithoutInitializing_t {};
+
+struct WithoutInitializingViewCtorTrait {
+  struct base_traits {
+    static constexpr bool initialize = true;
+  };
+  template <class T, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    // TODO @mdspan check that this trait isn't given twice
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+
+    template <class... OtherProps>
+    mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
+                         WithoutInitializing_t const&,
+                         OtherProps const&... other)
+        : base_t(tag, other...) {}
+
+    static constexpr bool initialize = false;
+  };
+};
+
+template <>
+struct ViewCtorTraitMatcher<WithoutInitializingViewCtorTrait,
+                            WithoutInitializing_t> : std::true_type {};
+
+}  // namespace Impl
+
+namespace {
+
+constexpr /* inline */ Kokkos::Impl::WithoutInitializing_t WithoutInitializing =
+    Kokkos::Impl::WithoutInitializing_t();
+
+} // end anonymous namespace
+
 }  // namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_VIEWCTOR_WITHOUTINITIALIZING_HPP

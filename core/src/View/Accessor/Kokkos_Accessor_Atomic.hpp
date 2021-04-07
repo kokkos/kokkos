@@ -50,6 +50,8 @@
 #include <View/Accessor/Kokkos_Accessor_fwd.hpp>
 #include <View/Accessor/Kokkos_Accessor_Convertibility.hpp>
 
+#include <impl/Kokkos_Atomic_View.hpp> // AtomicReference
+
 namespace Kokkos {
 namespace Impl {
 

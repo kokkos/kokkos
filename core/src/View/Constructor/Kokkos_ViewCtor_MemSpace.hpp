@@ -49,8 +49,51 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <View/Constructor/Kokkos_ViewCtor_fwd.hpp>
 
+#include <Kokkos_Concepts.hpp> // is_memory_space
+
 namespace Kokkos {
-namespace Impl {}  // namespace Impl
+namespace Impl {
+
+struct MemorySpaceViewCtorTrait {
+  template <class T>
+  using trait_matches_specification = is_memory_space<T>;
+  struct base_traits {
+    // Note: the default needs to be given by the View, so don't define anything
+    // here to avoid accidentally using it
+  };
+  template <class MemorySpace, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+
+    using memory_space = MemorySpace;
+
+    mixin_matching_trait() = default;
+
+    mixin_matching_trait(mixin_matching_trait const&) = default;
+
+    mixin_matching_trait(mixin_matching_trait&&) = default;
+
+    mixin_matching_trait& operator=(mixin_matching_trait const&) = default;
+
+    mixin_matching_trait& operator=(mixin_matching_trait&&) = default;
+
+    ~mixin_matching_trait() = default;
+
+    template <class... OtherProps>
+    mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
+                         MemorySpace const& arg_mem,
+                         OtherProps const&... other)
+        : base_t(tag, other...), m_mem(arg_mem) {}
+
+    auto get_memory_space() const { return m_mem; }
+
+   private:
+    MemorySpace m_mem = {};
+  };
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 #endif  // KOKKOS_KOKKOS_VIEWCTOR_MEMSPACE_HPP

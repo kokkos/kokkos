@@ -81,11 +81,11 @@ namespace Kokkos {
 /// <li> <tt> entries( row_map[i0] + i1 , i2 , i3 , ... ); </tt> </li>
 /// </ul>
 template <class DataType, class Arg1Type, class Arg2Type = void,
-          typename SizeType = typename ViewTraits<DataType*, Arg1Type, Arg2Type,
+          typename SizeType = typename View<DataType*, Arg1Type, Arg2Type,
                                                   void>::size_type>
 class Crs {
  protected:
-  using traits = ViewTraits<DataType*, Arg1Type, Arg2Type, void>;
+  using traits = View<DataType*, Arg1Type, Arg2Type, void>;
 
  public:
   using data_type       = DataType;

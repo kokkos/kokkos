@@ -42,15 +42,61 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_VIEWCTOR_EXECSPACE_HPP
-#define KOKKOS_KOKKOS_VIEWCTOR_EXECSPACE_HPP
+#ifndef KOKKOS_KOKKOS_VIEWCTOR_POINTER_HPP
+#define KOKKOS_KOKKOS_VIEWCTOR_POINTER_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 #include <View/Constructor/Kokkos_ViewCtor_fwd.hpp>
 
+#include <type_traits>  // std::is_pointer
+
 namespace Kokkos {
-namespace Impl {}  // namespace Impl
+namespace Impl {
+
+struct PointerViewCtorTrait {
+  template <class T>
+  using trait_matches_specification = std::is_pointer<T>;
+  struct base_traits {
+    static constexpr bool has_pointer = false;
+  };
+  // PointerType is of the form T*
+  template <class PointerType, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+
+    mixin_matching_trait() = default;
+
+    mixin_matching_trait(mixin_matching_trait const&) = default;
+
+    mixin_matching_trait(mixin_matching_trait&&) = default;
+
+    mixin_matching_trait& operator=(mixin_matching_trait const&) = default;
+
+    mixin_matching_trait& operator=(mixin_matching_trait&&) = default;
+
+    ~mixin_matching_trait() = default;
+
+    // We need this for calling `view_wrap` on the device
+    KOKKOS_INLINE_FUNCTION
+    mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
+                         PointerType const& pointer)
+        : m_pointer(pointer) {}
+
+    template <class... OtherProps>
+    mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
+                         PointerType const& pointer, OtherProps const&... other)
+        : base_t(tag, other...), m_pointer(pointer) {}
+
+    static constexpr bool has_pointer = true;
+    std::string get_pointer() const { return m_pointer; }
+
+   private:
+    PointerType m_pointer;
+  };
+};
+
+}  // namespace Impl
 }  // namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_VIEWCTOR_EXECSPACE_HPP
+#endif  // KOKKOS_KOKKOS_VIEWCTOR_POINTER_HPP

@@ -80,9 +80,9 @@ struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
                                          /* FlagIsSet = */ false>
     // Protected to avoid accidental convertibility
     : protected std::experimental::accessor_basic<
-          typename ViewTraits::mdspan_element_type> {
+          typename ViewTraits::value_type> {
   using base_t = std::experimental::accessor_basic<
-      typename ViewTraits::mdspan_element_type>;
+      typename ViewTraits::value_type>;
   using base_t::base_t;
 
   // Base versions of CRTP-like call for composition purposes. Basically, if

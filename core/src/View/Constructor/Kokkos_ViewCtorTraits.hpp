@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_VIEWCTOR_EXECSPACE_HPP
-#define KOKKOS_KOKKOS_VIEWCTOR_EXECSPACE_HPP
+#ifndef KOKKOS_KOKKOS_VIEWCTORTRAITS_HPP
+#define KOKKOS_KOKKOS_VIEWCTORTRAITS_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
@@ -66,10 +66,10 @@ template <class TraitSpec, class Trait, class Enable /*= void*/>
 struct ViewCtorTraitMatcher : std::false_type {};
 
 template <class TraitSpec, class Trait>
-    struct ViewCtorTraitMatcher<
-        TraitSpec, Trait,
-        std::enable_if_t<
-            TraitSpec::template trait_matches_specification<Trait>::value>>>
+struct ViewCtorTraitMatcher<
+    TraitSpec, Trait,
+    std::enable_if_t<
+        TraitSpec::template trait_matches_specification<Trait>::value>>
     : std::true_type {};
 
 // </editor-fold> end ViewCtorTraitMatcher" }}}1
@@ -82,11 +82,11 @@ struct FindViewCtorSpec;
 template <class TraitSpec, class... TraitSpecs, class Trait, class... Traits>
 struct FindViewCtorSpec<
     type_list<TraitSpec, TraitSpecs...>, type_list<Trait, Traits...>,
-    enable_if_t<ViewCtorTraitMatcher<TraitSpec, Trait>::value>> {
+    std::enable_if_t<ViewCtorTraitMatcher<TraitSpec, Trait>::value>> {
   // Mixing in only the found versions (rather than inheriting and passing
   // through in the not found case) limits the size of the
   // hierarchy and avoids extra using base_t::base_t passthroughs
-  using mixin_trait = TraitSpec::template mixin_matching_trait<
+  using mixin_trait = typename TraitSpec::template mixin_matching_trait<
       Trait, typename FindViewCtorSpec<view_constructor_trait_specifications,
                                        type_list<Traits...>>::mixin_trait>;
 };
@@ -95,16 +95,44 @@ struct FindViewCtorSpec<
 template <class TraitSpec, class... TraitSpecs, class Trait, class... Traits>
 struct FindViewCtorSpec<
     type_list<TraitSpec, TraitSpecs...>, type_list<Trait, Traits...>,
-    enable_if_t<!ViewCtorTraitMatcher<TraitSpec, Trait>::value>>
+    std::enable_if_t<!ViewCtorTraitMatcher<TraitSpec, Trait>::value>>
     : FindViewCtorSpec<type_list<TraitSpecs...>, type_list<Trait, Traits...>> {
 };
 
 // Base case
 template <class... TraitSpecs>
-struct FindViewCtorSpec<type_list<TraitSpecs...>, type_list<Traits...>>
-    // We don't need to work around the MSVC EBO bug because ViewCtor traits
-    // isn't a persistent object so its size doesn't really matter
-    : TraitSpecs::base_traits... {};
+struct FindViewCtorSpec<type_list<TraitSpecs...>, type_list<>> {
+  // We don't need to work around the MSVC EBO bug because ViewCtor traits
+  // isn't a persistent object so its size doesn't really matter
+  struct mixin_trait : TraitSpecs::base_traits... {
+    // this needs to compile on the device because of view_wrap
+    KOKKOS_FUNCTION
+    explicit mixin_trait(view_ctor_trait_ctor_tag const&) {}
+
+    mixin_trait() = default;
+
+    mixin_trait(mixin_trait const&) = default;
+
+    mixin_trait(mixin_trait&&) = default;
+
+    mixin_trait& operator=(mixin_trait const&) = default;
+
+    mixin_trait& operator=(mixin_trait&&) = default;
+
+    ~mixin_trait() = default;
+
+    template <class... DefaultTraits>
+    struct with_default_traits
+        : FindViewCtorSpec<type_list<TraitSpecs...>,
+                           type_list<DefaultTraits...>>::mixin_trait {
+      using base_t =
+          typename FindViewCtorSpec<type_list<TraitSpecs...>,
+                                    type_list<DefaultTraits...>>::mixin_trait;
+      using base_t::base_t;
+      with_default_traits(mixin_trait const&) {}
+    };
+  };
+};
 
 template <class... Traits>
 struct ViewConstructorDescription
@@ -119,4 +147,4 @@ struct ViewConstructorDescription
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_VIEWCTOR_EXECSPACE_HPP
+#endif  // KOKKOS_KOKKOS_VIEWCTORTRAITS_HPP

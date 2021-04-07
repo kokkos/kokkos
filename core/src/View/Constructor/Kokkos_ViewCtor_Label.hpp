@@ -74,7 +74,7 @@ struct LabelViewCtorTrait {
 
     template <class... OtherProps>
     mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
-                         std::string const& label, OtherProps const& other...)
+                         std::string const& label, OtherProps const&... other)
         : base_t(tag, other...), m_label(label) {}
 
     static constexpr bool has_label = true;

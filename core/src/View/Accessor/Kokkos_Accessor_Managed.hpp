@@ -50,9 +50,59 @@
 #include <View/Accessor/Kokkos_Accessor_fwd.hpp>
 
 #include <Kokkos_MemoryTraits.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 namespace Kokkos {
 namespace Impl {
+
+//==============================================================================
+// <editor-fold desc="use_count is an optional accessor customization"> {{{1
+
+template <class Accessor, class SFINAESafeDetectionSlot = void>
+struct InvokeUseCountCustomization {
+  KOKKOS_INLINE_FUNCTION
+  static constexpr auto use_count(Accessor const& acc) { return 0; }
+};
+
+template <class Accessor>
+struct InvokeUseCountCustomization<
+    Accessor, void_t<decltype(std::declval<Accessor const&>().use_count())>> {
+  KOKKOS_INLINE_FUNCTION
+  static constexpr auto use_count(Accessor const& acc) { acc.use_count(); }
+};
+
+template <class Accessor>
+KOKKOS_INLINE_FUNCTION auto use_count_for_accessor(
+    Accessor const& acc) {
+  return InvokeUseCountCustomization<Accessor>::use_count(acc);
+}
+
+// </editor-fold> end use_count is an optional accessor customization }}}1
+//==============================================================================
+
+
+//==============================================================================
+// <editor-fold desc="get_label is an optional accessor customization"> {{{1
+
+template <class Accessor, class SFINAESafeDetectionSlot = void>
+struct InvokeGetLabelCustomization {
+  static constexpr auto get_label(Accessor const& acc) { return ""; }
+};
+
+template <class Accessor>
+struct InvokeGetLabelCustomization<
+    Accessor, void_t<decltype(std::declval<Accessor const&>().get_label())>> {
+static constexpr auto get_label(Accessor const& acc) { acc.get_label(); }
+};
+
+template <class Accessor>
+KOKKOS_INLINE_FUNCTION auto get_label_from_accessor(
+    Accessor const& acc) {
+  return InvokeGetLabelCustomization<Accessor>::get_label(acc);
+}
+
+// </editor-fold> end get_label is an optional accessor customization }}}1
+//==============================================================================
 
 // Managed memory case
 template <class ViewTraits, unsigned Flags>
@@ -68,19 +118,25 @@ struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
 
   using tracker_type = SharedAllocationTracker;
 
-  template <class Record, class Pointer>
-  BuildAccessorForMemoryTraitsFlags(Record* arg_record, Pointer pointer)
-      : base_t(pointer), tracker_type() {
+  template <class Record>
+  BuildAccessorForMemoryTraitsFlags(Record* arg_record)
+      : base_t(), m_tracker() {
     m_tracker.assign_allocated_record_to_uninitialized(arg_record);
   }
 
   // TODO assignment operator
 
+  KOKKOS_FUNCTION
+  auto use_count() const { return m_tracker.use_count(); }
+
+  KOKKOS_FUNCTION
+  auto get_label() const {
+    return m_tracker.template get_label<typename ViewTraits::memory_space>();
+  }
+
  private:
   tracker_type m_tracker;
 };
-
-// The unmanaged memory case doesn't add any members for now
 
 }  // end namespace Impl
 }  // end namespace Kokkos

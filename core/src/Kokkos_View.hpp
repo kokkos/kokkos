@@ -47,10 +47,11 @@
 
 #include <Kokkos_Macros.hpp>
 
-// FIXME MDSPAN also check for mdspan availability
+// TODO @mdspan also check for mdspan availability
 #if !defined(KOKKOS_USE_LEGACY_VIEW)
 
 #include <View/Kokkos_MDSpanView.hpp>
+#include <impl/Kokkos_AllTag.hpp>
 
 #else
 

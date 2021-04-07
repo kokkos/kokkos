@@ -51,17 +51,6 @@
 namespace Kokkos {
 namespace Impl {
 
-/*
- *  The construction, assignment to default, and destruction
- *  are merged into a single functor.
- *  Primarily to work around an unresolved CUDA back-end bug
- *  that would lose the destruction cuda device function when
- *  called from the shared memory tracking destruction.
- *  Secondarily to have two fewer partial specializations.
- */
-template <class ExecSpace, class ValueType>
-struct ViewValueFunctor;
-
 struct ViewValueConstructTag {};
 struct ViewValueDestroyTag {};
 
@@ -95,6 +84,9 @@ struct ViewValueFunctorStorage {
         n(arg_n),
         name(std::move(arg_name)) {}
 };
+
+//==============================================================================
+// <editor-fold desc="ViewValueDestroy: specialize destruction behavior"> {{{1
 
 // General case: we need to call the destructor
 template <class Space, class ValueType, class Enable = void>
@@ -144,9 +136,20 @@ struct ViewValueDestroy<
   }
 };
 
+// </editor-fold> end ViewValueDestroy: specialize destruction behavior }}}1
+//==============================================================================
+
+/*
+ *  The construction, assignment to default, and destruction
+ *  are merged into a single functor.
+ *  Primarily to work around an unresolved CUDA back-end bug
+ *  that would lose the destruction cuda device function when
+ *  called from the shared memory tracking destruction.
+ *  Secondarily to have two fewer partial specializations.
+ */
 template <class Space, class ValueType>
 struct ViewValueFunctor : ViewValueDestroy<Space, ValueType> {
-  using base_t = ViewValueFunctorStorage<Space, ValueType>;
+  using base_t = ViewValueDestroy<Space, ValueType>;
   using base_t::base_t;
 
   KOKKOS_INLINE_FUNCTION
@@ -164,7 +167,7 @@ struct ViewValueFunctor : ViewValueDestroy<Space, ValueType> {
     Kokkos::parallel_for(
         "Kokkos::View::initialization [" + this->name + "]",
         RangePolicy<typename base_t::execution_space, ViewValueConstructTag,
-                    IndexType<int64_t>>{0, this->n},
+                    IndexType<int64_t> >{0, static_cast<int64_t>(this->n)},
         *this);
     // TODO add a view trait that makes this fence optional?
     this->space.fence();
