@@ -42,15 +42,7 @@
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
-#include <Kokkos_Concepts.hpp>
-#include <SYCL/Kokkos_SYCL_Instance.hpp>
-#include <KokkosCore_Config_DeclareBackend.hpp>
-#include <Kokkos_SYCL.hpp>
-#include <Kokkos_HostSpace.hpp>
-#include <Kokkos_Serial.hpp>
-#include <impl/Kokkos_ConcurrentBitset.hpp>
-#include <impl/Kokkos_Error.hpp>
+#include <Kokkos_Core.hpp>  //kokkos_malloc
 
 namespace Kokkos {
 namespace Experimental {
