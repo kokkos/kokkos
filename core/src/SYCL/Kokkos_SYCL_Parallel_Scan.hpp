@@ -223,7 +223,10 @@ class ParallelScanSYCLBase {
     auto& instance        = *m_policy.space().impl_internal_space_instance();
     const std::size_t len = m_policy.end() - m_policy.begin();
 
-    // compute the total amount of memory we will need.
+    // Compute the total amount of memory we will need. We emulate the recursive
+    // structure that is used to do the actual scan. Essentially, we need to
+    // allocate memory for the whole range and then recursively for the reduced
+    // group results until only one group is left.
     std::size_t total_memory = 0;
     {
       size_t wgroup_size   = 32;
