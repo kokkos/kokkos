@@ -51,7 +51,7 @@
 #include <Kokkos_Concepts.hpp>        // is_execution_space, is_memory_space
 #include <Kokkos_Layout.hpp>          // LayoutRight
 #include <impl/Kokkos_Utilities.hpp>  // type_list
-#include <Kokkos_MemoryTraits.hpp> // DefaultMemoryTraits
+#include <Kokkos_MemoryTraits.hpp>    // DefaultMemoryTraits
 
 namespace Kokkos {
 
@@ -122,7 +122,11 @@ struct NormalizeViewProperties;
 template <class DataType>
 struct NormalizeViewProperties<DataType, type_list<>>
     : NormalizeViewProperties<DataType,
-                              type_list<Kokkos::DefaultExecutionSpace>> {};
+                              type_list<Kokkos::DefaultExecutionSpace>> {
+  static_assert(is_space<Kokkos::DefaultExecutionSpace>::value,
+                "Kokkos include order has led to incomplete default execution "
+                "space instance. Contact a developer.");
+};
 
 ///  View< DataType, Space >
 template <class DataType, class Space>

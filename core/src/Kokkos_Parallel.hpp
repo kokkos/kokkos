@@ -51,7 +51,6 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_Parallel_fwd.hpp>
-#include <Kokkos_View.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 
 #include <impl/Kokkos_Tools.hpp>

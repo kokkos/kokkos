@@ -45,13 +45,15 @@
 
 #include <gtest/gtest.h>
 
-//#include <Kokkos_Core.hpp>
-#include <Kokkos_View.hpp>
+#include <Kokkos_Core.hpp>
 
 #include <TestDefaultDeviceType_Category.hpp>
 
 namespace Test {
 
-TEST(defaultdevicetype, development_test) {}
+TEST(defaultdevicetype, development_test) {
+  // Instantiate default constructor
+  auto v = Kokkos::View<int*>{};
+}
 
 }  // namespace Test
