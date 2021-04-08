@@ -229,19 +229,18 @@ int get_ctest_gpu(const char* local_rank_str) {
 // function to extract gpu # from args
 int get_gpu(const InitArguments& args) {
   int use_gpu        = args.device_id;
-  const int ndevices = args.ndevices > 0 ? args.ndevices :
+  const int ndevices = [](int num_devices) -> int {
+    if (num_devices > 0) return num_devices;
 #if defined(KOKKOS_ENABLE_CUDA)
-                                         Cuda::detect_device_count();
+    return Cuda::detect_device_count();
 #elif defined(KOKKOS_ENABLE_HIP)
-                                         Experimental::HIP::
-                                             detect_device_count();
+    return Experimental::HIP::detect_device_count();
 #elif defined(KOKKOS_ENABLE_SYCL)
-                                         sycl::device::get_devices(
-                                             sycl::info::device_type::gpu)
-                                             .size();
+    return sycl::device::get_devices(sycl::info::device_type::gpu).size();
 #else
-                                         args.ndevices;
+    return num_devices;
 #endif
+  }(args.ndevices);
   const int skip_device = args.skip_device;
 
   // if the exact device is not set, but ndevices was given, assign round-robin
