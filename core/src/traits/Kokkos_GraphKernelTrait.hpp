@@ -58,9 +58,7 @@ namespace Impl {
 // <editor-fold desc="trait specification"> {{{1
 
 struct GraphKernelTrait : TraitSpecificationBase<GraphKernelTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+  struct base_traits {
     using is_graph_kernel = std::false_type;
   };
   template <class T>

@@ -57,9 +57,7 @@ namespace Impl {
 // <editor-fold desc="trait specification"> {{{1
 
 struct WorkTagTrait : TraitSpecificationBase<WorkTagTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+  struct base_traits {
     using work_tag = void;
   };
 };

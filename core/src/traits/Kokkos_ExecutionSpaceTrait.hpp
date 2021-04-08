@@ -57,9 +57,7 @@ namespace Impl {
 // <editor-fold desc="trait specification"> {{{1
 
 struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+  struct base_traits {
     static constexpr auto execution_space_is_defaulted = true;
 
     using execution_space = Kokkos::DefaultExecutionSpace;

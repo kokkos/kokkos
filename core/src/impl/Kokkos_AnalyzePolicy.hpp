@@ -83,24 +83,12 @@ struct AnalyzeExecPolicy<void, void, Traits...>
 //------------------------------------------------------------------------------
 // Mix in the defaults (base_traits) for the traits that aren't yet handled
 
-// MSVC workaround: inheriting from more than one base_traits causes EBO to no
-// longer work, so we need to linearize the inheritance hierarchy
-template <class>
-struct msvc_workaround_get_next_base_traits;
-template <class T>
-struct msvc_workaround_get_next_base_traits {
-  template <class... Ts>
-  using apply =
-      typename T::template base_traits<msvc_workaround_get_next_base_traits,
-                                       Ts...>;
-};
-
 template <class TraitSpecList>
 struct AnalyzeExecPolicyBaseTraits;
 template <class... TraitSpecifications>
-struct AnalyzeExecPolicyBaseTraits<type_list<TraitSpecifications...>>
-    : linearize_bases<msvc_workaround_get_next_base_traits,
-                      TraitSpecifications...> {};
+struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
+    AnalyzeExecPolicyBaseTraits<type_list<TraitSpecifications...>>
+    : TraitSpecifications::base_traits... {};
 
 template <>
 struct AnalyzeExecPolicy<void>
