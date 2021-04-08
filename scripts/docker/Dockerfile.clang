@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
         git \
         wget \
         ccache \
+        python3 \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -23,7 +24,12 @@ RUN CMAKE_KEY=2D2CEF1034921684 && \
     grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
     mkdir -p ${CMAKE_DIR} && \
     sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
-    rm cmake*
+    rm cmake* && \
+    git clone https://github.com/jrmadsen/compile-time-perf.git && \
+    ${CMAKE_DIR}/bin/cmake -B build-ctp compile-time-perf && \
+    ${CMAKE_DIR}/bin/cmake --build build-ctp --target all && \
+    ${CMAKE_DIR}/bin/cmake --build build-ctp --target install && \
+    rm -rf build-ctp compile-time-perf
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
 ENV LLVM_DIR=/opt/llvm
