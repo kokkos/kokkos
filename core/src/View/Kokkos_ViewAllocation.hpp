@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -43,50 +42,30 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#ifndef KOKKOS_KOKKOS_VIEWALLOCATION_HPP
+#define KOKKOS_KOKKOS_VIEWALLOCATION_HPP
 
-#include <Kokkos_Core.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
+#include <View/Kokkos_ViewValueFunctor.hpp>
 
-#include <TestDefaultDeviceType_Category.hpp>
+namespace Kokkos {
+namespace Impl {
 
-namespace Test {
+// This code only depends on execution space, memory space, and value type,
+// so we can save a lot of compilation time by only depending on those three
+// template parameters.
+// Naming note: I intentionally avoided the term "allocator" for now
+template <class ValueType>
+struct ViewAllocationMechanism {
+  template <class ExecutionSpace, class MemorySpace>
+  static auto* allocate_shared(ExecutionSpace const& ex, MemorySpace const& mem,
+                               std::string const& arg_label,
+                               std::size_t arg_size, bool initialize) {
+    // TODO @mdspan remove this?
+  }
+};
 
-TEST(defaultdevicetype, development_test) {
-  // Instantiate default constructor
-  auto v = Kokkos::View<int*>{};
-  // Instantiate with label and size
-  auto v2 = Kokkos::View<int*>{"hello", 42};
-  // Instantiate with raw pointer
-  int data[]   = {1, 2, 3, 4};
-  auto vstatic = Kokkos::View<int[4]>{Kokkos::view_wrap(data)};
-  // Instantiate with view_alloc
-  auto v4 = Kokkos::View<int*>{
-      Kokkos::view_alloc("hello", Kokkos::WithoutInitializing), 42};
-  // Instantiate with view_alloc allow padding (TODO make this actually work at runtime)
-  // TODO this should fail if the layout doesn't support padding
-  auto v5 =
-      Kokkos::View<int*>{Kokkos::view_alloc("hello", Kokkos::AllowPadding), 42};
+}  // namespace Impl
+}  // namespace Kokkos
 
-  // Conversion to compatible accessor
-  using view_atomic =
-      Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Atomic>>::basic_view_type;
-  auto vatomic = view_atomic{v2};
-
-  // Conversion to dynamic
-  auto vdyn = Kokkos::View<int*>{vstatic};
-
-  auto vstatic2 = Kokkos::View<int*[4]>{"hello2", 10};
-  auto vstatic3 = Kokkos::View<int[3][4]>{Kokkos::view_wrap(data)};
-  auto vdyn2 = Kokkos::View<int**>{vstatic2};
-  auto vdyn3 = Kokkos::View<int**>{vstatic3};
-  // TODO converting assignment operator
-  // vstatic2 = vstatic3;
-
-  // Instantiate default 2d ctor
-  auto v2d = Kokkos::View<int**>{};
-  auto v2static1 = Kokkos::View<int*[3]>{};
-  auto v2static2 = Kokkos::View<int[7][3]>{};
-  auto v2staticr1 = Kokkos::View<int*[3], Kokkos::LayoutRight>{};
-}
-
-}  // namespace Test
+#endif  // KOKKOS_KOKKOS_VIEWALLOCATION_HPP

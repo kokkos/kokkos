@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -43,50 +42,63 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#ifndef KOKKOS_KOKKOS_VIEWCTOR_POINTER_HPP
+#define KOKKOS_KOKKOS_VIEWCTOR_POINTER_HPP
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
+#include <Kokkos_Core_fwd.hpp>
+#include <View/Constructor/Kokkos_ViewCtor_fwd.hpp>
 
-#include <TestDefaultDeviceType_Category.hpp>
+#include <type_traits>  // std::is_pointer
 
-namespace Test {
+namespace Kokkos {
+namespace Impl {
 
-TEST(defaultdevicetype, development_test) {
-  // Instantiate default constructor
-  auto v = Kokkos::View<int*>{};
-  // Instantiate with label and size
-  auto v2 = Kokkos::View<int*>{"hello", 42};
-  // Instantiate with raw pointer
-  int data[]   = {1, 2, 3, 4};
-  auto vstatic = Kokkos::View<int[4]>{Kokkos::view_wrap(data)};
-  // Instantiate with view_alloc
-  auto v4 = Kokkos::View<int*>{
-      Kokkos::view_alloc("hello", Kokkos::WithoutInitializing), 42};
-  // Instantiate with view_alloc allow padding (TODO make this actually work at runtime)
-  // TODO this should fail if the layout doesn't support padding
-  auto v5 =
-      Kokkos::View<int*>{Kokkos::view_alloc("hello", Kokkos::AllowPadding), 42};
+struct PointerViewCtorTrait {
+  template <class T>
+  using trait_matches_specification = std::is_pointer<T>;
+  struct base_traits {
+    static constexpr bool has_pointer = false;
+  };
+  // PointerType is of the form T*
+  template <class PointerType, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
 
-  // Conversion to compatible accessor
-  using view_atomic =
-      Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Atomic>>::basic_view_type;
-  auto vatomic = view_atomic{v2};
+    mixin_matching_trait() = default;
 
-  // Conversion to dynamic
-  auto vdyn = Kokkos::View<int*>{vstatic};
+    mixin_matching_trait(mixin_matching_trait const&) = default;
 
-  auto vstatic2 = Kokkos::View<int*[4]>{"hello2", 10};
-  auto vstatic3 = Kokkos::View<int[3][4]>{Kokkos::view_wrap(data)};
-  auto vdyn2 = Kokkos::View<int**>{vstatic2};
-  auto vdyn3 = Kokkos::View<int**>{vstatic3};
-  // TODO converting assignment operator
-  // vstatic2 = vstatic3;
+    mixin_matching_trait(mixin_matching_trait&&) = default;
 
-  // Instantiate default 2d ctor
-  auto v2d = Kokkos::View<int**>{};
-  auto v2static1 = Kokkos::View<int*[3]>{};
-  auto v2static2 = Kokkos::View<int[7][3]>{};
-  auto v2staticr1 = Kokkos::View<int*[3], Kokkos::LayoutRight>{};
-}
+    mixin_matching_trait& operator=(mixin_matching_trait const&) = default;
 
-}  // namespace Test
+    mixin_matching_trait& operator=(mixin_matching_trait&&) = default;
+
+    ~mixin_matching_trait() = default;
+
+    // We need this for calling `view_wrap` on the device
+    KOKKOS_INLINE_FUNCTION
+    mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
+                         PointerType const& pointer)
+        : m_pointer(pointer) {}
+
+    template <class... OtherProps>
+    mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
+                         PointerType const& pointer, OtherProps const&... other)
+        : base_t(tag, other...), m_pointer(pointer) {}
+
+    static constexpr bool has_pointer = true;
+    using pointer_type = PointerType;
+    KOKKOS_FUNCTION
+    constexpr PointerType get_pointer() const { return m_pointer; }
+
+   private:
+    PointerType m_pointer;
+  };
+};
+
+}  // namespace Impl
+}  // namespace Kokkos
+
+#endif  // KOKKOS_KOKKOS_VIEWCTOR_POINTER_HPP

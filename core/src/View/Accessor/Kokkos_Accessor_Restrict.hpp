@@ -1,4 +1,3 @@
-
 /*
 //@HEADER
 // ************************************************************************
@@ -43,50 +42,34 @@
 //@HEADER
 */
 
-#include <gtest/gtest.h>
+#ifndef KOKKOS_KOKKOS_ACCESSOR_RESTRICT_HPP
+#define KOKKOS_KOKKOS_ACCESSOR_RESTRICT_HPP
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
 
-#include <TestDefaultDeviceType_Category.hpp>
+#include <View/Accessor/Kokkos_Accessor_fwd.hpp>
+#include <View/Accessor/Kokkos_Accessor_Convertibility.hpp>
 
-namespace Test {
+namespace Kokkos {
+namespace Impl {
 
-TEST(defaultdevicetype, development_test) {
-  // Instantiate default constructor
-  auto v = Kokkos::View<int*>{};
-  // Instantiate with label and size
-  auto v2 = Kokkos::View<int*>{"hello", 42};
-  // Instantiate with raw pointer
-  int data[]   = {1, 2, 3, 4};
-  auto vstatic = Kokkos::View<int[4]>{Kokkos::view_wrap(data)};
-  // Instantiate with view_alloc
-  auto v4 = Kokkos::View<int*>{
-      Kokkos::view_alloc("hello", Kokkos::WithoutInitializing), 42};
-  // Instantiate with view_alloc allow padding (TODO make this actually work at runtime)
-  // TODO this should fail if the layout doesn't support padding
-  auto v5 =
-      Kokkos::View<int*>{Kokkos::view_alloc("hello", Kokkos::AllowPadding), 42};
+// Non-aliasing memory case
+template <class ViewTraits, unsigned Flags>
+struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
+                                         MemoryTraitsFlags::Restrict,
+                                         /* FlagIsSet = */ true>
+    : MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Restrict, true>> {
+  using base_t =
+      MixinAccessorFlagConvertibility<BuildAccessorForMemoryTraitsFlags<
+          ViewTraits, Flags, MemoryTraitsFlags::Restrict, true>>;
+  using base_t::base_t;
 
-  // Conversion to compatible accessor
-  using view_atomic =
-      Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Atomic>>::basic_view_type;
-  auto vatomic = view_atomic{v2};
+  using reference = add_restrict_t<typename base_t::reference>;
+  using pointer   = add_restrict_t<typename base_t::pointer>;
+};
 
-  // Conversion to dynamic
-  auto vdyn = Kokkos::View<int*>{vstatic};
+}  // end namespace Impl
+}  // end namespace Kokkos
 
-  auto vstatic2 = Kokkos::View<int*[4]>{"hello2", 10};
-  auto vstatic3 = Kokkos::View<int[3][4]>{Kokkos::view_wrap(data)};
-  auto vdyn2 = Kokkos::View<int**>{vstatic2};
-  auto vdyn3 = Kokkos::View<int**>{vstatic3};
-  // TODO converting assignment operator
-  // vstatic2 = vstatic3;
-
-  // Instantiate default 2d ctor
-  auto v2d = Kokkos::View<int**>{};
-  auto v2static1 = Kokkos::View<int*[3]>{};
-  auto v2static2 = Kokkos::View<int[7][3]>{};
-  auto v2staticr1 = Kokkos::View<int*[3], Kokkos::LayoutRight>{};
-}
-
-}  // namespace Test
+#endif  // KOKKOS_KOKKOS_ACCESSOR_RESTRICT_HPP

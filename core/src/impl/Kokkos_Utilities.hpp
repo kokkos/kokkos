@@ -65,6 +65,13 @@ struct identity {
 template <typename T>
 using identity_t = typename identity<T>::type;
 
+// Make a type dependent on something in order to avoid ODR-using it (e.g.,
+// in order to avoid requiring it to be complete).
+template <class T, class /*Ignored*/>
+struct dependent_identity {
+  using type = T;
+};
+
 struct not_a_type {
   not_a_type()                  = delete;
   ~not_a_type()                 = delete;
@@ -180,6 +187,77 @@ template <template <class> class GetBase>
 struct linearize_bases<GetBase> {};
 
 // </editor-fold> end MSVC linearize base workaround }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="repeated_type"> {{{1
+
+template <class T, std::size_t I>
+using repeated_type = T;
+
+template <class T, T val, std::size_t I>
+struct repeated_value { static constexpr T value = val; };
+
+// </editor-fold> end repeated_type }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="Tools for iterating through flags in an enum"> {{{1
+
+template <class T, T Flag>
+struct next_flag {
+  // Since we can't do casts like this in constexpr, we still have to use an
+  // enum here
+  enum : std::underlying_type_t<T> {
+    underlying_value = std::underlying_type_t<T>(Flag << 1)
+  };
+  static constexpr T value = static_cast<T>(underlying_value);
+};
+
+template <class T, T Flag>
+/* KOKKOS_INLINE_VARIABLE */
+constexpr T next_flag_v = next_flag<T, Flag>::value;
+
+// </editor-fold> end Tools for iterating through flags in an enum }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="add_restrict"> {{{1
+
+template <class T>
+struct add_restrict;
+
+template <class T>
+struct add_restrict<T*> {
+  using type = T* KOKKOS_RESTRICT;
+};
+
+template <class T>
+struct add_restrict<T&> {
+  using type = T& KOKKOS_RESTRICT;
+};
+
+template <class T>
+using add_restrict_t = typename add_restrict<T>::type;
+
+// </editor-fold> end add_restrict }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="align_ptr"> {{{1
+
+template <class T>
+struct align_ptr;
+
+template <class T>
+struct align_ptr<T*> {
+  using type = T* KOKKOS_IMPL_ALIGN_PTR(KOKKOS_MEMORY_ALIGNMENT);
+};
+
+template <class T>
+using align_ptr_t = typename align_ptr<T>::type;
+
+// </editor-fold> end add_restrict }}}1
 //==============================================================================
 
 }  // namespace Impl
