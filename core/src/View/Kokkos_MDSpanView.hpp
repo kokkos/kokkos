@@ -193,6 +193,9 @@ struct ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>> {
   // </editor-fold> end uniform View types }}}3
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+  // For legacy reasons:
+  using specialize = void;
+
   // </editor-fold> end public member types }}}2
   //----------------------------------------------------------------------------
 };
@@ -202,7 +205,7 @@ struct ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>> {
 
 template <class DataType, class Layout, class Space, class MemoryTraits>
 class BasicView
-    : ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>> {
+    : public ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>> {
  public:
   using traits =
       ViewTypeTraits<BasicView<DataType, Layout, Space, MemoryTraits>>;
@@ -808,7 +811,7 @@ class BasicView
     static_assert(
         _MDSPAN_FOLD_AND(std::is_integral<IntegralTypes>::value /* && ... */),
         "Kokkos::View::operator() must be called with integral index types.");
-    static_assert(sizeof...(IntegralTypes) == m_data.rank(),
+    static_assert(sizeof...(IntegralTypes) == rank,
                   "Wrong number of indices given to Kokkos::View::operator() "
                   "(argument count must match rank).");
     Impl::ViewVerifySpace<typename traits::memory_space>::check();
