@@ -62,7 +62,7 @@ TEST(defaultdevicetype, development_test) {
   // Instantiate with view_alloc
   auto v4 = Kokkos::View<int*>{
       Kokkos::view_alloc("hello", Kokkos::WithoutInitializing), 42};
-  // Instantiate with view_alloc allow padding (TODO make this actually work)
+  // Instantiate with view_alloc allow padding (TODO make this actually work at runtime)
   // TODO this should fail if the layout doesn't support padding
   auto v5 =
       Kokkos::View<int*>{Kokkos::view_alloc("hello", Kokkos::AllowPadding), 42};
