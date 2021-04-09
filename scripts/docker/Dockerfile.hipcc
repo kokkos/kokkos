@@ -1,43 +1,26 @@
 ARG BASE=rocm/dev-ubuntu-20.04:3.8
 FROM $BASE
 
-RUN apt-get update && apt-get install -y \
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update && \
+    apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget && \
+    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null && \
+    apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(cat /etc/lsb-release | grep DISTRIB_CODENAME | awk -F '=' '{print $NF}') main" && \
+    apt-get update && apt-get install -y \
         git \
-        gpg \
-        dirmngr \
         kmod \
-        wget \
         file \
+        cmake \
         ccache \
         python3 \
         && \
     apt-get clean && \
-    mkdir -p ~/.gnupg && \
-    echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf && \
-    find ~/.gnupg -type f -exec chmod 600 {} \; && \
-    find ~/.gnupg -type d -exec chmod 700 {} \; && \
     rm -rf /var/lib/apt/lists/*
 
 ENV PATH=/opt/rocm/bin:$PATH
 
-ARG CMAKE_VERSION=3.16.8
-ENV CMAKE_DIR=/opt/cmake
-RUN CMAKE_KEY=2D2CEF1034921684 && \
-    CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
-    CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh && \
-    CMAKE_SHA256=cmake-${CMAKE_VERSION}-SHA-256.txt && \
-    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} && \
-    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
-    wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
-    gpg --keyserver pool.sks-keyservers.net --recv-keys ${CMAKE_KEY} && \
-    gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
-    grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
-    mkdir -p ${CMAKE_DIR} && \
-    sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
-    rm cmake* && \
-    git clone https://github.com/jrmadsen/compile-time-perf.git && \
-    ${CMAKE_DIR}/bin/cmake -B build-ctp compile-time-perf && \
-    ${CMAKE_DIR}/bin/cmake --build build-ctp --target all && \
-    ${CMAKE_DIR}/bin/cmake --build build-ctp --target install && \
+RUN git clone https://github.com/jrmadsen/compile-time-perf.git && \
+    cmake -B build-ctp compile-time-perf && \
+    cmake --build build-ctp --target all && \
+    cmake --build build-ctp --target install && \
     rm -rf build-ctp compile-time-perf
-ENV PATH=${CMAKE_DIR}/bin:$PATH
