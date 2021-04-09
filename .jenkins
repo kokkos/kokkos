@@ -262,7 +262,6 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/install \
-                                -DKokkos_ENABLE_COMPILE_TIME_PERF=ON \
                                 -DBUILD_NAME=${STAGE_NAME} \
                                 -DTARGET=install \
                               -P cmake/KokkosCI.cmake && \
