@@ -977,6 +977,10 @@ struct checkScan {
       ASSERT_EQ(host_outputs(i), expected(i));
   }
 };
+template <typename ExecutionSpace, ScanType scan_type, class Reducer>
+constexpr int checkScan<ExecutionSpace, scan_type, Reducer>::n;
+template <typename ExecutionSpace, ScanType scan_type, class Reducer>
+constexpr int checkScan<ExecutionSpace, scan_type, Reducer>::n_vector_range;
 }  // namespace VectorScanReducer
 
 #if !(defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ENABLE_HIP))
