@@ -84,7 +84,7 @@ struct AnalyzeExecPolicy<void, void, Traits...>
 // Mix in the defaults (base_traits) for the traits that aren't yet handled
 
 template <class TraitSpecList>
-struct AnalyzeExecPolicyBaseTraits;
+struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION AnalyzeExecPolicyBaseTraits;
 template <class... TraitSpecifications>
 struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
     AnalyzeExecPolicyBaseTraits<type_list<TraitSpecifications...>>
