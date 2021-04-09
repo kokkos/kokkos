@@ -3,11 +3,15 @@ FROM nvidia/cuda:9.2-devel
 RUN apt-get update && apt-get install -y \
         bc \
         git \
+        gpg \
+        dirmngr \
         wget \
         ccache \
         python3 \
         && \
     apt-get clean && \
+    mkdir -p ~/.gnupg && \
+    echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf && \
     rm -rf /var/lib/apt/lists/*
 
 ARG CMAKE_VERSION=3.16.8
@@ -19,7 +23,6 @@ RUN CMAKE_KEY=2D2CEF1034921684 && \
     wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} && \
     wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
     wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
-    mkdir -p ~/.gnupg && echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf && \
     gpg --keyserver pool.sks-keyservers.net --recv-keys ${CMAKE_KEY} && \
     gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
     grep ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sha256sum --check && \
