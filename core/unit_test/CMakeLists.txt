@@ -705,6 +705,10 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       SOURCES tools/printing-tool.cpp
     )
 
+    if((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
+      TARGET_COMPILE_FEATURES(kokkosprinter-tool PUBLIC cxx_std_14)
+    endif()
+
     KOKKOS_ADD_TEST_EXECUTABLE(
       ProfilingAllCalls
       tools/TestAllCalls.cpp
