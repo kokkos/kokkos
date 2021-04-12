@@ -867,12 +867,11 @@ class TestTripleNestedReduce {
 namespace VectorScanReducer {
 enum class ScanType : bool { Inclusive, Exclusive };
 
-template <typename ExecutionSpace, ScanType scan_type, class Reducer>
+template <typename ExecutionSpace, ScanType scan_type, int n,
+          int n_vector_range, class Reducer>
 struct checkScan {
-  static constexpr int n              = 1000000;
-  static constexpr int n_vector_range = 100;
-  const int n_team_thread_range       = 1000;
-  const int n_per_team                = n_team_thread_range * n_vector_range;
+  const int n_team_thread_range = 1000;
+  const int n_per_team          = n_team_thread_range * n_vector_range;
 
   using size_type  = typename ExecutionSpace::size_type;
   using value_type = typename Reducer::value_type;
@@ -1020,24 +1019,27 @@ TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
   using T = double;
   using namespace VectorScanReducer;
 
-  checkScan<TEST_EXECSPACE, ScanType::Exclusive,
+  static constexpr int n              = 1000000;
+  static constexpr int n_vector_range = 100;
+
+  checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
             Kokkos::Prod<T, TEST_EXECSPACE>>()
       .run();
-  checkScan<TEST_EXECSPACE, ScanType::Inclusive,
+  checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
             Kokkos::Prod<T, TEST_EXECSPACE>>()
       .run();
 
-  checkScan<TEST_EXECSPACE, ScanType::Exclusive,
+  checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
             Kokkos::Max<T, TEST_EXECSPACE>>()
       .run();
-  checkScan<TEST_EXECSPACE, ScanType::Inclusive,
+  checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
             Kokkos::Max<T, TEST_EXECSPACE>>()
       .run();
 
-  checkScan<TEST_EXECSPACE, ScanType::Exclusive,
+  checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
             Kokkos::Min<T, TEST_EXECSPACE>>()
       .run();
-  checkScan<TEST_EXECSPACE, ScanType::Inclusive,
+  checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
             Kokkos::Min<T, TEST_EXECSPACE>>()
       .run();
 }
