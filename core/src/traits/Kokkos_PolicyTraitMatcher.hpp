@@ -42,61 +42,36 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_WORKITEMPROPERTYTRAIT_HPP
-#define KOKKOS_KOKKOS_WORKITEMPROPERTYTRAIT_HPP
+#include <impl/Kokkos_Utilities.hpp>  // type_list
 
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Concepts.hpp>  // WorkItemProperty
-#include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
+
+#ifndef KOKKOS_KOKKOS_POLICYTRAITMATCHER_HPP
+#define KOKKOS_KOKKOS_POLICYTRAITMATCHER_HPP
 
 namespace Kokkos {
 namespace Impl {
 
 //==============================================================================
-// <editor-fold desc="trait specification"> {{{1
+// <editor-fold desc="PolicyTraitMatcher"> {{{1
 
-struct WorkItemPropertyTrait : TraitSpecificationBase<WorkItemPropertyTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
-    using work_item_property = Kokkos::Experimental::WorkItemProperty::None_t;
-  };
-  template <class WorkItemProp, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-    using work_item_property = WorkItemProp;
-  };
-  template <class T>
-  using trait_matches_specification =
-      Kokkos::Experimental::is_work_item_property<T>;
-};
+// To handle the WorkTag case, we need more than just a predicate; we need
+// something that we can default to in the unspecialized case, just like we
+// do for AnalyzeExecPolicy
+template <class TraitSpec, class Trait, class Enable = void>
+struct PolicyTraitMatcher : std::false_type {};
 
-// </editor-fold> end trait specification }}}1
+template <class TraitSpec, class Trait>
+struct PolicyTraitMatcher<
+    TraitSpec, Trait,
+    std::enable_if_t<
+        TraitSpec::template trait_matches_specification<Trait>::value>>
+    : std::true_type {};
+
+// </editor-fold> end PolicyTraitMatcher }}}1
 //==============================================================================
 
 }  // end namespace Impl
-
-namespace Experimental {
-
-//==============================================================================
-// <editor-fold desc="User interface"> {{{1
-
-template <class Policy, unsigned long Property>
-constexpr auto require(const Policy p,
-                       WorkItemProperty::ImplWorkItemProperty<Property>) {
-  static_assert(Kokkos::is_execution_policy<Policy>::value, "");
-  using new_policy_t = Kokkos::Impl::WorkItemPropertyTrait::policy_with_trait<
-      Policy, WorkItemProperty::ImplWorkItemProperty<Property>>;
-  return new_policy_t{p};
-}
-
-// </editor-fold> end User interface }}}1
-//==============================================================================
-
-}  // namespace Experimental
-
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_WORKITEMPROPERTYTRAIT_HPP
+#endif  // KOKKOS_KOKKOS_POLICYTRAITMATCHER_HPP
