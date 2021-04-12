@@ -55,9 +55,7 @@ namespace Impl {
 // <editor-fold desc="trait specification"> {{{1
 
 struct IterationPatternTrait : TraitSpecificationBase<IterationPatternTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+  struct base_traits {
     using iteration_pattern = void;  // TODO set default iteration pattern
   };
   template <class T>
