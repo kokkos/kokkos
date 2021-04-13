@@ -464,7 +464,7 @@ struct rand<Generator, Kokkos::Experimental::half_t> {
     return half(gen.frand(float(start), float(end)));
   }
 };
-#endif // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#endif  // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
 
 template <class Generator>
 struct rand<Generator, float> {
