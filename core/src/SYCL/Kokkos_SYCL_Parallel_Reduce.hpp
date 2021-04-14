@@ -218,10 +218,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               item.barrier(sycl::access::fence_space::local_space);
 
               // from the Intel implementation for sub group reduce without init
-              auto sg     = item.get_sub_group();
-              auto result = &local_mem[local_id * value_count];
-              for (int mask = 1; mask < sg.get_max_local_range()[0];
-                   mask *= 2) {
+              auto sg                   = item.get_sub_group();
+              auto result               = &local_mem[local_id * value_count];
+              const int max_local_range = sg.get_max_local_range()[0];
+              for (int mask = 1; mask < max_local_range; mask *= 2) {
                 auto tmp = sg.shuffle_xor(result, sycl::id<1>(mask));
                 if ((sg.get_local_id()[0] ^ mask) < sg.get_local_range()[0]) {
                   ValueJoin::join(selected_reducer, result, tmp);
