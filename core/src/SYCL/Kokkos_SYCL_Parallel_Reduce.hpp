@@ -217,16 +217,35 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               }
               item.barrier(sycl::access::fence_space::local_space);
 
+              // from the Intel implementation for sub group reduce without init
+              auto sg     = item.get_sub_group();
+              auto result = &local_mem[local_id * value_count];
+              for (int mask = 1; mask < sg.get_max_local_range()[0];
+                   mask *= 2) {
+                auto tmp = sg.shuffle_xor(result, sycl::id<1>(mask));
+                if ((sg.get_local_id()[0] ^ mask) < sg.get_local_range()[0]) {
+                  ValueJoin::join(selected_reducer, result, tmp);
+                }
+              }
+              result = sg.shuffle(result, 0);
+
+              item.barrier(sycl::access::fence_space::local_space);
+              if (sg.get_local_id()[0] == 0)
+                ValueOps::copy(functor,
+                               &local_mem[sg.get_group_id()[0] * value_count],
+                               result);
+              item.barrier(sycl::access::fence_space::local_space);
+
               // Perform the actual workgroup reduction. To achieve a better
               // memory access pattern, we use sequential addressing and a
               // reversed loop. If the workgroup size is 8, the first element
               // contains all the values with index%4==0, after the second one
               // the values with index%2==0 and after the third one index%1==0,
               // i.e., all values.
-              for (unsigned int stride = wgroup_size / 2; stride > 0;
-                   stride >>= 1) {
+              for (unsigned int stride = sg.get_group_range()[0] / 2;
+                   stride > 0; stride >>= 1) {
                 const auto idx = local_id;
-                if (idx < stride) {
+                if (idx < stride && idx + stride < sg.get_group_range()[0]) {
                   ValueJoin::join(selected_reducer,
                                   &local_mem[idx * value_count],
                                   &local_mem[(idx + stride) * value_count]);
