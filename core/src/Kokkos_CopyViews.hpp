@@ -1331,27 +1331,6 @@ struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
 };
 #endif
 
-#ifdef KOKKOS_ENABLE_HIP
-template <class DT, class... DP>
-struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
-  static void execute(const Kokkos::Experimental::HIP& exec_space,
-                      const View<DT, DP...>& dst,
-                      typename ViewTraits<DT, DP...>::const_value_type&) {
-    HIP_SAFE_CALL(hipMemsetAsync(
-        dst.data(), 0,
-        dst.size() * sizeof(typename View<DT, DP...>::value_type),
-        exec_space.hip_stream()));
-  }
-
-  static void execute(const View<DT, DP...>& dst,
-                      typename ViewTraits<DT, DP...>::const_value_type&) {
-    HIP_SAFE_CALL(
-        hipMemset(dst.data(), 0,
-                  dst.size() * sizeof(typename View<DT, DP...>::value_type)));
-  }
-};
-#endif
-
 template <typename ExecutionSpace, class DT, class... DP>
 inline void memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
                    typename ViewTraits<DT, DP...>::const_value_type& value) {
