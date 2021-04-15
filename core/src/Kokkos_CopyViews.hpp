@@ -1364,15 +1364,13 @@ struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
 };
 #endif
 
-template <class DT, class... DP>
-inline void memset(const typename View<DT, DP...>::execution_space& exec_space,
-                   const View<DT, DP...>& dst,
+template <typename ExecutionSpace, class DT, class... DP>
+inline void memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
                    typename ViewTraits<DT, DP...>::const_value_type& value) {
-  using ViewType        = View<DT, DP...>;
-  using exec_space_type = typename ViewType::execution_space;
+  using ViewType = View<DT, DP...>;
 
   if (Impl::is_zero_byte(value))
-    ZeroMemset<exec_space_type, DT, DP...>::execute(exec_space, dst);
+    ZeroMemset<ExecutionSpace, DT, DP...>::execute(exec_space, dst);
   else
     plain_memcpy(exec_space, dst, value);
 }
