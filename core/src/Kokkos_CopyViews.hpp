@@ -1270,6 +1270,71 @@ bool is_zero_byte(const T& t) {
   return true;
 }
 
+template <class DT, class... DP>
+inline void memset(const typename View<DT, DP...>::execution_space& exec_space,
+                   const View<DT, DP...>& dst,
+                   typename ViewTraits<DT, DP...>::const_value_type& value) {
+  using ViewType        = View<DT, DP...>;
+  using exec_space_type = typename ViewType::execution_space;
+
+#ifdef KOKKOS_ENABLE_CUDA
+  if (Impl::is_zero_byte(value) &&
+      std::is_same<exec_space_type, Kokkos::Cuda>::value)
+    CUDA_SAFE_CALL(cudaMemsetAsync(
+        dst.data(), 0, dst.size() * sizeof(typename ViewType::value_type),
+        exec_space.cuda_stream()));
+  else
+#elif defined KOKKOS_ENABLE_SYCL
+  if (Impl::is_zero_byte(value) &&
+      std::is_same<exec_space_type, Kokkos::Experimental::SYCL>::value)
+    exec_space.impl_internal_space_instance()->m_queue->memset(
+        dst.data(), 0, dst.size() * sizeof(typename ViewType::value_type));
+  else
+#endif
+  {
+    using ViewTypeFlat = Kokkos::View<
+        typename ViewType::value_type*, Kokkos::LayoutRight,
+        Kokkos::Device<typename ViewType::execution_space,
+                       typename std::conditional<
+                           ViewType::Rank == 0, typename ViewType::memory_space,
+                           Kokkos::AnonymousSpace>::type>,
+        Kokkos::MemoryTraits<0>>;
+
+    ViewTypeFlat dst_flat(dst.data(), dst.size());
+    if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
+      Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
+                             ViewTypeFlat::Rank, int>(dst_flat, value,
+                                                      exec_space);
+    } else
+      Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
+                             ViewTypeFlat::Rank, int64_t>(dst_flat, value,
+                                                          exec_space);
+  }
+}
+
+template <class DT, class... DP>
+inline void memset(const View<DT, DP...>& dst,
+                   typename ViewTraits<DT, DP...>::const_value_type& value) {
+  using ViewType        = View<DT, DP...>;
+  using exec_space_type = typename ViewType::execution_space;
+
+#ifdef KOKKOS_ENABLE_CUDA
+  if (Impl::is_zero_byte(value) &&
+      std::is_same<exec_space_type, Kokkos::Cuda>::value)
+    CUDA_SAFE_CALL(cudaMemset(
+        dst.data(), 0, dst.size() * sizeof(typename ViewType::value_type)));
+  else
+#elif defined KOKKOS_ENABLE_SYCL
+  if (Impl::is_zero_byte(value) &&
+      std::is_same<exec_space_type, Kokkos::Experimental::SYCL>::value)
+    exec_space_type().impl_internal_space_instance()->m_queue->memset(
+        dst.data(), 0, dst.size() * sizeof(typename ViewType::value_type));
+  else
+#endif
+  {
+    memset(exec_space_type(), dst, value);
+  }
+}
 }  // namespace Impl
 
 /** \brief  Deep copy a value from Host memory into a view.  */
@@ -1304,35 +1369,9 @@ inline void deep_copy(
                              typename ViewType::value_type>::value,
                 "deep_copy requires non-const type");
 
-  // If contiguous we can simply do a 1D flat loop
+  // If contiguous we can simply do a 1D flat loop or use memset
   if (dst.span_is_contiguous()) {
-#ifdef KOKKOS_ENABLE_CUDA
-    if (Impl::is_zero_byte(value) &&
-        std::is_same<exec_space_type, Kokkos::Cuda>::value)
-      CUDA_SAFE_CALL(cudaMemset(
-          dst.data(), 0, dst.size() * sizeof(typename ViewType::value_type)));
-    else
-#endif
-    {
-      using ViewTypeFlat =
-          Kokkos::View<typename ViewType::value_type*, Kokkos::LayoutRight,
-                       Kokkos::Device<typename ViewType::execution_space,
-                                      typename std::conditional<
-                                          ViewType::Rank == 0,
-                                          typename ViewType::memory_space,
-                                          Kokkos::AnonymousSpace>::type>,
-                       Kokkos::MemoryTraits<0>>;
-
-      ViewTypeFlat dst_flat(dst.data(), dst.size());
-      if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
-        Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight,
-                               exec_space_type, ViewTypeFlat::Rank, int>(
-            dst_flat, value, exec_space_type());
-      } else
-        Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight,
-                               exec_space_type, ViewTypeFlat::Rank, int64_t>(
-            dst_flat, value, exec_space_type());
-    }
+    Impl::memset(dst, value);
     Kokkos::fence();
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
@@ -2464,6 +2503,8 @@ inline void deep_copy(
   }
   if (dst.data() == nullptr) {
     space.fence();
+  } else if (dst.span_is_contiguous()) {
+    Impl::memset(space, dst, value);
   } else {
     using ViewTypeUniform = typename std::conditional<
         View<DT, DP...>::Rank == 0,
@@ -2506,13 +2547,17 @@ inline void deep_copy(
     space.fence();
   } else {
     space.fence();
-    using ViewTypeUniform = typename std::conditional<
-        View<DT, DP...>::Rank == 0,
-        typename View<DT, DP...>::uniform_runtime_type,
-        typename View<DT, DP...>::uniform_runtime_nomemspace_type>::type;
     using fill_exec_space = typename dst_traits::memory_space::execution_space;
-    Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
-                           fill_exec_space>(dst, value, fill_exec_space());
+    if (dst.span_is_contiguous()) {
+      Impl::memset(fill_exec_space(), dst, value);
+    } else {
+      using ViewTypeUniform = typename std::conditional<
+          View<DT, DP...>::Rank == 0,
+          typename View<DT, DP...>::uniform_runtime_type,
+          typename View<DT, DP...>::uniform_runtime_nomemspace_type>::type;
+      Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
+                             fill_exec_space>(dst, value, fill_exec_space());
+    }
     fill_exec_space().fence();
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
