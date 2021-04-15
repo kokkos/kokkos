@@ -1367,8 +1367,6 @@ struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
 template <typename ExecutionSpace, class DT, class... DP>
 inline void memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
                    typename ViewTraits<DT, DP...>::const_value_type& value) {
-  using ViewType = View<DT, DP...>;
-
   if (Impl::is_zero_byte(value))
     ZeroMemset<ExecutionSpace, DT, DP...>::execute(exec_space, dst);
   else
