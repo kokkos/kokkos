@@ -1271,45 +1271,110 @@ bool is_zero_byte(const T& t) {
 }
 
 template <class DT, class... DP>
+inline void plain_memcpy(
+    const typename View<DT, DP...>::execution_space& exec_space,
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
+  using ViewType        = View<DT, DP...>;
+  using exec_space_type = typename ViewType::execution_space;
+  using ViewTypeFlat    = Kokkos::View<
+      typename ViewType::value_type*, Kokkos::LayoutRight,
+      Kokkos::Device<typename ViewType::execution_space,
+                     typename std::conditional<ViewType::Rank == 0,
+                                               typename ViewType::memory_space,
+                                               Kokkos::AnonymousSpace>::type>,
+      Kokkos::MemoryTraits<0>>;
+
+  ViewTypeFlat dst_flat(dst.data(), dst.size());
+  if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
+    Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
+                           ViewTypeFlat::Rank, int>(dst_flat, value,
+                                                    exec_space);
+  } else
+    Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
+                           ViewTypeFlat::Rank, int64_t>(dst_flat, value,
+                                                        exec_space);
+}
+
+template <typename ExecutionSpace, class DT, class... DP>
+struct ZeroMemset {
+  static void execute(const ExecutionSpace& exec_space,
+                      const View<DT, DP...>& dst) {
+    plain_memcpy(exec_space, dst, 0);
+  }
+
+  static void execute(const View<DT, DP...>& dst) {
+    plain_memcpy(ExecutionSpace(), dst, 0);
+  }
+};
+
+#ifdef KOKKOS_ENABLE_CUDA
+template <class DT, class... DP>
+struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
+  static void execute(const Kokkos::Cuda& exec_space,
+                      const View<DT, DP...>& dst) {
+    CUDA_SAFE_CALL(cudaMemsetAsync(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type),
+        exec_space.cuda_stream()));
+  }
+
+  static void execute(const View<DT, DP...>& dst) {
+    CUDA_SAFE_CALL(
+        cudaMemset(dst.data(), 0,
+                   dst.size() * sizeof(typename View<DT, DP...>::value_type)));
+  }
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_HIP
+template <class DT, class... DP>
+struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
+  static void execute(const Kokkos::Experimental::HIP& exec_space,
+                      const View<DT, DP...>& dst) {
+    HIP_SAFE_CALL(hipMemsetAsync(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type),
+        exec_space.hip_stream()));
+  }
+
+  static void execute(const View<DT, DP...>& dst) {
+    HIP_SAFE_CALL(
+        hipMemset(dst.data(), 0,
+                  dst.size() * sizeof(typename View<DT, DP...>::value_type)));
+  }
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_SYCL
+template <class DT, class... DP>
+struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
+  static void execute(const Kokkos::Experimental::SYCL& exec_space,
+                      const View<DT, DP...>& dst) {
+    exec_space.impl_internal_space_instance()->m_queue->memset(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type));
+  }
+
+  static void execute(const View<DT, DP...>& dst) {
+    Experimental::Impl::SYCLInternal::singleton().m_queue->memset(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type));
+  }
+};
+#endif
+
+template <class DT, class... DP>
 inline void memset(const typename View<DT, DP...>::execution_space& exec_space,
                    const View<DT, DP...>& dst,
                    typename ViewTraits<DT, DP...>::const_value_type& value) {
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
 
-#ifdef KOKKOS_ENABLE_CUDA
-  if (Impl::is_zero_byte(value) &&
-      std::is_same<exec_space_type, Kokkos::Cuda>::value)
-    CUDA_SAFE_CALL(cudaMemsetAsync(
-        dst.data(), 0, dst.size() * sizeof(typename ViewType::value_type),
-        exec_space.cuda_stream()));
+  if (Impl::is_zero_byte(value))
+    ZeroMemset<exec_space_type, DT, DP...>::execute(exec_space, dst);
   else
-#elif defined KOKKOS_ENABLE_SYCL
-  if (Impl::is_zero_byte(value) &&
-      std::is_same<exec_space_type, Kokkos::Experimental::SYCL>::value)
-    exec_space.impl_internal_space_instance()->m_queue->memset(
-        dst.data(), 0, dst.size() * sizeof(typename ViewType::value_type));
-  else
-#endif
-  {
-    using ViewTypeFlat = Kokkos::View<
-        typename ViewType::value_type*, Kokkos::LayoutRight,
-        Kokkos::Device<typename ViewType::execution_space,
-                       typename std::conditional<
-                           ViewType::Rank == 0, typename ViewType::memory_space,
-                           Kokkos::AnonymousSpace>::type>,
-        Kokkos::MemoryTraits<0>>;
-
-    ViewTypeFlat dst_flat(dst.data(), dst.size());
-    if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
-      Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
-                             ViewTypeFlat::Rank, int>(dst_flat, value,
-                                                      exec_space);
-    } else
-      Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
-                             ViewTypeFlat::Rank, int64_t>(dst_flat, value,
-                                                          exec_space);
-  }
+    plain_memcpy(exec_space, dst, value);
 }
 
 template <class DT, class... DP>
@@ -1318,22 +1383,10 @@ inline void memset(const View<DT, DP...>& dst,
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
 
-#ifdef KOKKOS_ENABLE_CUDA
-  if (Impl::is_zero_byte(value) &&
-      std::is_same<exec_space_type, Kokkos::Cuda>::value)
-    CUDA_SAFE_CALL(cudaMemset(
-        dst.data(), 0, dst.size() * sizeof(typename ViewType::value_type)));
+  if (Impl::is_zero_byte(value))
+    ZeroMemset<exec_space_type, DT, DP...>::execute(dst);
   else
-#elif defined KOKKOS_ENABLE_SYCL
-  if (Impl::is_zero_byte(value) &&
-      std::is_same<exec_space_type, Kokkos::Experimental::SYCL>::value)
-    exec_space_type().impl_internal_space_instance()->m_queue->memset(
-        dst.data(), 0, dst.size() * sizeof(typename ViewType::value_type));
-  else
-#endif
-  {
-    memset(exec_space_type(), dst, value);
-  }
+    plain_memcpy(exec_space_type(), dst, value);
 }
 }  // namespace Impl
 
