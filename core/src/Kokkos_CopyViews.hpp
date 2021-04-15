@@ -1270,13 +1270,12 @@ bool is_zero_byte(const T& t) {
   return true;
 }
 
-template <class DT, class... DP>
+template <typename ExecutionSpace, class DT, class... DP>
 inline void plain_memcpy(
-    const typename View<DT, DP...>::execution_space& exec_space,
+    const ExecutionSpace& exec_space,
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
   using ViewType        = View<DT, DP...>;
-  using exec_space_type = typename ViewType::execution_space;
   using ViewTypeFlat    = Kokkos::View<
       typename ViewType::value_type*, Kokkos::LayoutRight,
       Kokkos::Device<typename ViewType::execution_space,
@@ -1287,11 +1286,11 @@ inline void plain_memcpy(
 
   ViewTypeFlat dst_flat(dst.data(), dst.size());
   if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
-    Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
+    Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, ExecutionSpace,
                            ViewTypeFlat::Rank, int>(dst_flat, value,
                                                     exec_space);
   } else
-    Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
+    Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, ExecutionSpace,
                            ViewTypeFlat::Rank, int64_t>(dst_flat, value,
                                                         exec_space);
 }
