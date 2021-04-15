@@ -274,6 +274,24 @@ class CudaSpaceInitializer : public ExecSpaceInitializerBase {
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
+template <class DT, class... DP>
+struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
+  static void execute(const Kokkos::Cuda& exec_space,
+                      const View<DT, DP...>& dst,
+                     typename View<DT, DP...>::const_value_type&) {
+    CUDA_SAFE_CALL(cudaMemsetAsync(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type),
+        exec_space.cuda_stream()));
+  }
+
+  static void execute(const View<DT, DP...>& dst,
+                      typename View<DT, DP...>::const_value_type&) {
+    CUDA_SAFE_CALL(
+        cudaMemset(dst.data(), 0,
+                   dst.size() * sizeof(typename View<DT, DP...>::value_type)));
+  }
+};
 }  // namespace Impl
 }  // namespace Kokkos
 
