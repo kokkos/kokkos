@@ -53,6 +53,24 @@
 namespace Kokkos {
 namespace Impl {
 
+template <class DT, class... DP>
+struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
+  static void execute(const Kokkos::Experimental::SYCL& exec_space,
+                      const View<DT, DP...>& dst,
+                      typename View<DT, DP...>::const_value_type&) {
+    exec_space.impl_internal_space_instance()->m_queue->memset(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type));
+  }
+
+  static void execute(const View<DT, DP...>& dst,
+                      typename View<DT, DP...>::const_value_type&) {
+    Experimental::Impl::SYCLInternal::singleton().m_queue->memset(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type));
+  }
+};
+
 template <>
 struct DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
                 Kokkos::Experimental::SYCLDeviceUSMSpace,

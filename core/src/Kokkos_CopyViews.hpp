@@ -1352,26 +1352,6 @@ struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
 };
 #endif
 
-#ifdef KOKKOS_ENABLE_SYCL
-template <class DT, class... DP>
-struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
-  static void execute(const Kokkos::Experimental::SYCL& exec_space,
-                      const View<DT, DP...>& dst,
-                      typename ViewTraits<DT, DP...>::const_value_type&) {
-    exec_space.impl_internal_space_instance()->m_queue->memset(
-        dst.data(), 0,
-        dst.size() * sizeof(typename View<DT, DP...>::value_type));
-  }
-
-  static void execute(const View<DT, DP...>& dst,
-                      typename ViewTraits<DT, DP...>::const_value_type&) {
-    Experimental::Impl::SYCLInternal::singleton().m_queue->memset(
-        dst.data(), 0,
-        dst.size() * sizeof(typename View<DT, DP...>::value_type));
-  }
-};
-#endif
-
 template <typename ExecutionSpace, class DT, class... DP>
 inline void memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
                    typename ViewTraits<DT, DP...>::const_value_type& value) {
