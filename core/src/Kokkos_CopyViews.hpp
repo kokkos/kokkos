@@ -1299,12 +1299,14 @@ inline void plain_memcpy(
 template <typename ExecutionSpace, class DT, class... DP>
 struct ZeroMemset {
   static void execute(const ExecutionSpace& exec_space,
-                      const View<DT, DP...>& dst) {
-    plain_memcpy(exec_space, dst, 0);
+                      const View<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type& value) {
+    plain_memcpy(exec_space, dst, value);
   }
 
-  static void execute(const View<DT, DP...>& dst) {
-    plain_memcpy(ExecutionSpace(), dst, 0);
+  static void execute(const View<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type& value) {
+    plain_memcpy(ExecutionSpace(), dst, value);
   }
 };
 
@@ -1312,14 +1314,16 @@ struct ZeroMemset {
 template <class DT, class... DP>
 struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
   static void execute(const Kokkos::Cuda& exec_space,
-                      const View<DT, DP...>& dst) {
+                      const View<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type&) {
     CUDA_SAFE_CALL(cudaMemsetAsync(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
         exec_space.cuda_stream()));
   }
 
-  static void execute(const View<DT, DP...>& dst) {
+  static void execute(const View<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type&) {
     CUDA_SAFE_CALL(
         cudaMemset(dst.data(), 0,
                    dst.size() * sizeof(typename View<DT, DP...>::value_type)));
@@ -1331,14 +1335,16 @@ struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
 template <class DT, class... DP>
 struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
   static void execute(const Kokkos::Experimental::HIP& exec_space,
-                      const View<DT, DP...>& dst) {
+                      const View<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type&) {
     HIP_SAFE_CALL(hipMemsetAsync(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
         exec_space.hip_stream()));
   }
 
-  static void execute(const View<DT, DP...>& dst) {
+  static void execute(const View<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type&) {
     HIP_SAFE_CALL(
         hipMemset(dst.data(), 0,
                   dst.size() * sizeof(typename View<DT, DP...>::value_type)));
@@ -1350,13 +1356,15 @@ struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
 template <class DT, class... DP>
 struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
   static void execute(const Kokkos::Experimental::SYCL& exec_space,
-                      const View<DT, DP...>& dst) {
+                      const View<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type&) {
     exec_space.impl_internal_space_instance()->m_queue->memset(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type));
   }
 
-  static void execute(const View<DT, DP...>& dst) {
+  static void execute(const View<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type&) {
     Experimental::Impl::SYCLInternal::singleton().m_queue->memset(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type));
@@ -1368,7 +1376,7 @@ template <typename ExecutionSpace, class DT, class... DP>
 inline void memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
                    typename ViewTraits<DT, DP...>::const_value_type& value) {
   if (Impl::is_zero_byte(value))
-    ZeroMemset<ExecutionSpace, DT, DP...>::execute(exec_space, dst);
+    ZeroMemset<ExecutionSpace, DT, DP...>::execute(exec_space, dst, value);
   else
     plain_memcpy(exec_space, dst, value);
 }
@@ -1380,7 +1388,7 @@ inline void memset(const View<DT, DP...>& dst,
   using exec_space_type = typename ViewType::execution_space;
 
   if (Impl::is_zero_byte(value))
-    ZeroMemset<exec_space_type, DT, DP...>::execute(dst);
+    ZeroMemset<exec_space_type, DT, DP...>::execute(dst, value);
   else
     plain_memcpy(exec_space_type(), dst, value);
 }
