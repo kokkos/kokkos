@@ -1272,11 +1272,10 @@ bool is_zero_byte(const T& t) {
 
 template <typename ExecutionSpace, class DT, class... DP>
 inline void plain_memcpy(
-    const ExecutionSpace& exec_space,
-    const View<DT, DP...>& dst,
+    const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
-  using ViewType        = View<DT, DP...>;
-  using ViewTypeFlat    = Kokkos::View<
+  using ViewType     = View<DT, DP...>;
+  using ViewTypeFlat = Kokkos::View<
       typename ViewType::value_type*, Kokkos::LayoutRight,
       Kokkos::Device<typename ViewType::execution_space,
                      typename std::conditional<ViewType::Rank == 0,
