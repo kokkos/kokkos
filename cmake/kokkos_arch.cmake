@@ -457,7 +457,7 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
   ENDIF()
   IF (KOKKOS_ARCH_INTEL_GEN)
     COMPILER_SPECIFIC_FLAGS(
-      IntelClang -fopenmp-targets=spir64 -D__STRICT_ANSI__
+      IntelLLVM -fopenmp-targets=spir64 -D__STRICT_ANSI__
     )
   ENDIF()
 ENDIF()
