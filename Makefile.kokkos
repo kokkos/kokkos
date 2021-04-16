@@ -744,6 +744,14 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_A64FX), 1)
 
   KOKKOS_CXXFLAGS += -march=armv8.2-a+sve
   KOKKOS_LDFLAGS += -march=armv8.2-a+sve
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+    KOKKOS_CXXFLAGS += -msve-vector-bits=512
+    KOKKOS_LDFLAGS += -msve-vector-bits=512
+  endif
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_GCC), 1)
+    KOKKOS_CXXFLAGS += -msve-vector-bits=512
+    KOKKOS_LDFLAGS += -msve-vector-bits=512
+  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN), 1)
