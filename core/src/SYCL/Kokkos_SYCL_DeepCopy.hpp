@@ -58,9 +58,13 @@ struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
   static void execute(const Kokkos::Experimental::SYCL& exec_space,
                       const View<DT, DP...>& dst,
                       typename View<DT, DP...>::const_value_type&) {
-    exec_space.impl_internal_space_instance()->m_queue->memset(
+    auto event = exec_space.impl_internal_space_instance()->m_queue->memset(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type));
+    // FIXME_SYCL this should rather be
+    // exec_space.impl_internal_space_instance()->m_queue->submit_barrier();
+    // but that gives currently a segfault using the CUDA backend
+    Experimental::Impl::SYCLInternal::fence(event);
   }
 
   static void execute(const View<DT, DP...>& dst,
