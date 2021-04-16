@@ -192,6 +192,8 @@ ENDIF()
 IF (KOKKOS_ARCH_A64FX)
   COMPILER_SPECIFIC_FLAGS(
     DEFAULT -march=armv8.2-a+sve
+    Clang -march=armv8.2-a+sve -msve-vector-bits=512
+    GCC -march=armv8.2-a+sve -msve-vector-bits=512
   )
 ENDIF()
 
