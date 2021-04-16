@@ -492,7 +492,8 @@ bool try_std_sort(ViewType view) {
                       view.stride_3(), view.stride_4(), view.stride_5(),
                       view.stride_6(), view.stride_7()};
   possible         = possible &&
-             std::is_same<typename ViewType::memory_space, HostSpace>::value;
+             SpaceAccessibility<HostSpace,
+                                typename ViewType::memory_space>::accessible;
   possible = possible && (ViewType::Rank == 1);
   possible = possible && (stride[0] == 1);
   if (possible) {
