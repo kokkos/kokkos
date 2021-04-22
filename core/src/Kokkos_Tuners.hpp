@@ -559,7 +559,7 @@ struct CategoricalTuner {
   CategoricalTuner(std::string name, choice_list m_choices)
       : choices(m_choices) {
     std::vector<int64_t> indices;
-    for (int x = 0; x < choices.size(); ++x) {
+    for (typename decltype(choices)::size_type x = 0; x < choices.size(); ++x) {
       indices.push_back(x);
     }
     VariableInfo info;
