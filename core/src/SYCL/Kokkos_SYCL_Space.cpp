@@ -252,12 +252,6 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace, void>::
           Kokkos::Impl::checked_allocation_with_header(space, label, size),
           sizeof(SharedAllocationHeader) + size, dealloc),
       m_space(space) {
-  if (Kokkos::Profiling::profileLibraryLoaded()) {
-    Kokkos::Profiling::allocateData(
-        Kokkos::Profiling::make_space_handle(space.name()), label, data(),
-        size);
-  }
-
   SharedAllocationHeader header;
 
   this->base_t::_fill_host_accessible_header_info(header, label);
@@ -299,20 +293,17 @@ namespace Impl {
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLDeviceUSMSpace,
                        void>::~SharedAllocationRecord() {
+  const char* label = nullptr;
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     SharedAllocationHeader header;
     Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
                            Kokkos::HostSpace>(&header, RecordBase::m_alloc_ptr,
                                               sizeof(SharedAllocationHeader));
-
-    Kokkos::Profiling::deallocateData(
-        Kokkos::Profiling::make_space_handle(
-            Kokkos::Experimental::SYCLDeviceUSMSpace::name()),
-        header.m_label, data(), size());
+    label = header.label();
   }
-
-  m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
-                     SharedAllocationRecord<void, void>::m_alloc_size);
+  const auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
+  m_space.deallocate(label, SharedAllocationRecord<void, void>::m_alloc_ptr,
+                     alloc_size, alloc_size - sizeof(SharedAllocationHeader));
 }
 
 SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace,
@@ -321,10 +312,9 @@ SharedAllocationRecord<Kokkos::Experimental::SYCLSharedUSMSpace,
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     label = RecordBase::m_alloc_ptr->m_label;
   }
+  const auto alloc_size = SharedAllocationRecord<void, void>::m_alloc_size;
   m_space.deallocate(label, SharedAllocationRecord<void, void>::m_alloc_ptr,
-                     SharedAllocationRecord<void, void>::m_alloc_size,
-                     (SharedAllocationRecord<void, void>::m_alloc_size -
-                      sizeof(SharedAllocationHeader)));
+                     alloc_size, alloc_size - sizeof(SharedAllocationHeader));
 }
 
 //----------------------------------------------------------------------------
