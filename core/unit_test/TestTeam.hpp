@@ -1529,6 +1529,36 @@ struct TestScratchAlignment {
 
 }  // namespace
 
+namespace {
+
+template <class ExecSpace>
+struct TestTeamPolicyHandleByValue {
+  using scalar     = double;
+  using exec_space = ExecSpace;
+  using mem_space  = typename ExecSpace::memory_space;
+
+  TestTeamPolicyHandleByValue() {
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+    const int M = 1, N = 1;
+    Kokkos::View<scalar **, mem_space> a("a", M, N);
+    Kokkos::View<scalar **, mem_space> b("b", M, N);
+    Kokkos::deep_copy(a, 0.0);
+    Kokkos::deep_copy(b, 1.0);
+    Kokkos::parallel_for(
+        "test_tphandle_by_value",
+        Kokkos::TeamPolicy<exec_space>(M, Kokkos::AUTO(), 1),
+        KOKKOS_LAMBDA(
+            const typename Kokkos::TeamPolicy<exec_space>::member_type team) {
+          const int i = team.league_rank();
+          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 0, N),
+                               [&](const int j) { a(i, j) += b(i, j); });
+        });
+#endif
+  }
+};
+
+}  // namespace
+
 }  // namespace Test
 
 /*--------------------------------------------------------------------------*/
