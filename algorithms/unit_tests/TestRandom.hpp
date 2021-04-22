@@ -353,10 +353,10 @@ struct test_random_scalar {
       pass_hist1d_mean =
           ((-mean_eps_expect < mean_eps) && (mean_eps_expect > mean_eps)) ? 1
                                                                           : 0;
-      pass_hist1d_var   = ((-variance_eps_expect < variance_eps) &&
+      pass_hist1d_var = ((-variance_eps_expect < variance_eps) &&
                          (variance_eps_expect > variance_eps))
-                              ? 1
-                              : 0;
+                            ? 1
+                            : 0;
       pass_hist1d_covar = ((-covariance_eps_expect < covariance_eps) &&
                            (covariance_eps_expect > covariance_eps))
                               ? 1
@@ -398,10 +398,10 @@ struct test_random_scalar {
 
       pass_hist3d_mean =
           ((-tolerance < mean_eps) && (tolerance > mean_eps)) ? 1 : 0;
-      pass_hist3d_var   = ((-variance_factor * tolerance < variance_eps) &&
+      pass_hist3d_var = ((-variance_factor * tolerance < variance_eps) &&
                          (variance_factor * tolerance > variance_eps))
-                              ? 1
-                              : 0;
+                            ? 1
+                            : 0;
       pass_hist3d_covar = ((-variance_factor * tolerance < covariance_eps) &&
                            (variance_factor * tolerance > covariance_eps))
                               ? 1
