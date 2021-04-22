@@ -299,6 +299,25 @@ namespace Kokkos {
 
 namespace Impl {
 
+#ifdef KOKKOS_ENABLE_SERIAL
+template <class DT, class... DP>
+struct ZeroMemset<Kokkos::Serial, DT, DP...> {
+  ZeroMemset(const Kokkos::Serial&, const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
+    std::memset(
+        dst.data(), 0,
+        sizeof(typename View<DT, DP...>::const_value_type) * dst.size());
+  }
+
+  ZeroMemset(const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
+    std::memset(
+        dst.data(), 0,
+        sizeof(typename View<DT, DP...>::const_value_type) * dst.size());
+  }
+};
+#endif
+
 template <class ExecutionSpace>
 struct DeepCopy<HostSpace, HostSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
