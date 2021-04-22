@@ -1537,7 +1537,9 @@ struct TestTeamPolicyHandleByValue {
   using exec_space = ExecSpace;
   using mem_space  = typename ExecSpace::memory_space;
 
-  TestTeamPolicyHandleByValue() {
+  TestTeamPolicyHandleByValue() { test(); }
+
+  void test() {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
     const int M = 1, N = 1;
     Kokkos::View<scalar **, mem_space> a("a", M, N);
