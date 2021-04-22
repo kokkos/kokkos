@@ -1296,14 +1296,13 @@ inline void plain_memcpy(
 
 template <typename ExecutionSpace, class DT, class... DP>
 struct ZeroMemset {
-  static void execute(const ExecutionSpace& exec_space,
-                      const View<DT, DP...>& dst,
-                      typename ViewTraits<DT, DP...>::const_value_type& value) {
+  ZeroMemset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
+             typename ViewTraits<DT, DP...>::const_value_type& value) {
     plain_memcpy(exec_space, dst, value);
   }
 
-  static void execute(const View<DT, DP...>& dst,
-                      typename ViewTraits<DT, DP...>::const_value_type& value) {
+  ZeroMemset(const View<DT, DP...>& dst,
+             typename ViewTraits<DT, DP...>::const_value_type& value) {
     plain_memcpy(ExecutionSpace(), dst, value);
   }
 };
@@ -1312,7 +1311,7 @@ template <typename ExecutionSpace, class DT, class... DP>
 inline void memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
                    typename ViewTraits<DT, DP...>::const_value_type& value) {
   if (Impl::is_zero_byte(value))
-    ZeroMemset<ExecutionSpace, DT, DP...>::execute(exec_space, dst, value);
+    ZeroMemset<ExecutionSpace, DT, DP...>(exec_space, dst, value);
   else
     plain_memcpy(exec_space, dst, value);
 }
@@ -1324,7 +1323,7 @@ inline void memset(const View<DT, DP...>& dst,
   using exec_space_type = typename ViewType::execution_space;
 
   if (Impl::is_zero_byte(value))
-    ZeroMemset<exec_space_type, DT, DP...>::execute(dst, value);
+    ZeroMemset<exec_space_type, DT, DP...>(dst, value);
   else
     plain_memcpy(exec_space_type(), dst, value);
 }

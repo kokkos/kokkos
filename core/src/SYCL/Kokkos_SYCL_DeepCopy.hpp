@@ -55,9 +55,9 @@ namespace Impl {
 
 template <class DT, class... DP>
 struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
-  static void execute(const Kokkos::Experimental::SYCL& exec_space,
-                      const View<DT, DP...>& dst,
-                      typename View<DT, DP...>::const_value_type&) {
+  ZeroMemset(const Kokkos::Experimental::SYCL& exec_space,
+             const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
     auto event = exec_space.impl_internal_space_instance()->m_queue->memset(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type));
@@ -67,8 +67,8 @@ struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
     Experimental::Impl::SYCLInternal::fence(event);
   }
 
-  static void execute(const View<DT, DP...>& dst,
-                      typename View<DT, DP...>::const_value_type&) {
+  ZeroMemset(const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
     Experimental::Impl::SYCLInternal::singleton().m_queue->memset(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type));

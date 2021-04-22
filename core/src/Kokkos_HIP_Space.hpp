@@ -625,17 +625,17 @@ class HIPSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
 
 template <class DT, class... DP>
 struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
-  static void execute(const Kokkos::Experimental::HIP& exec_space,
-                      const View<DT, DP...>& dst,
-                      typename View<DT, DP...>::const_value_type&) {
+  ZeroMemset(const Kokkos::Experimental::HIP& exec_space,
+             const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
     HIP_SAFE_CALL(hipMemsetAsync(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type),
         exec_space.hip_stream()));
   }
 
-  static void execute(const View<DT, DP...>& dst,
-                      typename View<DT, DP...>::const_value_type&) {
+  ZeroMemset(const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
     HIP_SAFE_CALL(
         hipMemset(dst.data(), 0,
                   dst.size() * sizeof(typename View<DT, DP...>::value_type)));
