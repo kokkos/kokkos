@@ -51,11 +51,13 @@ struct point {
   float y;
   float z;
 };
+void do_computation(const point& test_point) {
+  usleep(((unsigned int)test_point.x) * 100);
+}
 using namespace Kokkos::Tools::Experimental;
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   {
-    std::vector<point> points;
     VariableInfo info;
     info.category              = StatisticalCategory::kokkos_value_categorical;
     info.valueQuantity         = CandidateValueType::kokkos_value_unbounded;
@@ -65,16 +67,19 @@ int main(int argc, char* argv[]) {
     size_t kernel_context      = get_new_context_id();
     begin_context(kernel_context);
     set_input_values(kernel_context, 1, &kernel_value);
+
+    std::vector<point> points;
     points.push_back({1.0, 1.0, 1.0});
     points.push_back({10.0, 10.0, 10.0});
     points.push_back({0.0, 0.0, 0.0});
     auto tuner =
         Kokkos::Tools::Experimental::make_categorical_tuner("points", points);
-    for (int x = 0; x < 3000; ++x) {
+    for (decltype(points)::size_type x = 0; x < 3000; ++x) {
       point test_point = tuner.begin();
-      usleep(((unsigned int)test_point.x) * 100);
+      do_computation(test_point);
       tuner.end();
     }
+
     end_context(kernel_context);
   }
   Kokkos::finalize();
