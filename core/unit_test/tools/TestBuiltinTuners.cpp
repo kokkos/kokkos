@@ -58,7 +58,7 @@ int main() {
       Kokkos::Tools::Impl::Impl::SimpleTeamSizeCalculator{});
 
   Kokkos::Tools::Experimental::MDRangeTuner<2> md_tune_this(
-      "md_tuner", mdp, TestTeamFunctor{}, Kokkos::ParallelForTag{},
+      "md_tuner", mdp, TestMDFunctor{}, Kokkos::ParallelForTag{},
       Kokkos::Tools::Impl::Impl::SimpleTeamSizeCalculator{});
 
   std::vector<int> options{1, 2, 3, 4, 5};
@@ -79,6 +79,7 @@ int main() {
   for (int x = 0; x < 10000; ++x) {
     auto config = new_md_tuner.begin();
     int option  = std::get<0>(config);
+    (void)option;
     int tile_x  = std::get<1>(config);
     int tile_y  = std::get<2>(config);
     Kokkos::parallel_for("mdrange",
@@ -93,6 +94,7 @@ int main() {
   for (int x = 0; x < 10000; ++x) {
     auto config = new_team_tuner.begin();
     int option  = std::get<0>(config);
+    (void)option;
     int team    = std::get<1>(config);
     int vector  = std::get<2>(config);
     Kokkos::parallel_for("mdrange",
