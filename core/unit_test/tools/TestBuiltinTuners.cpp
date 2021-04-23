@@ -45,10 +45,10 @@
 using ExecSpace  = Kokkos::DefaultHostExecutionSpace;
 using TeamMember = Kokkos::TeamPolicy<ExecSpace>::member_type;
 struct TestTeamFunctor {
-  void operator()(TeamMember) const {}
+  KOKKOS_FUNCTION void operator()(TeamMember) const {}
 };
 struct TestMDFunctor {
-  void operator()(const int, const int) const {}
+  KOKKOS_FUNCTION void operator()(const int, const int) const {}
 };
 int main() {
   Kokkos::TeamPolicy<ExecSpace> teamp(1, Kokkos::AUTO, Kokkos::AUTO);
