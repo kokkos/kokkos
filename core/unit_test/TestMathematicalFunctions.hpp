@@ -601,7 +601,9 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2.f, 3.f);
   do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2., 3.);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+#if !(defined(KOKKOS_ARCH_POWER8) || defined(KOKKOS_ARCH_POWER9))  // FIXME
   do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2.l, 3.l);
+#endif
 #endif
 }
 
