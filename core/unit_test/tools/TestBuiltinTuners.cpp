@@ -80,8 +80,8 @@ int main() {
     auto config = new_md_tuner.begin();
     int option  = std::get<0>(config);
     (void)option;
-    int tile_x  = std::get<1>(config);
-    int tile_y  = std::get<2>(config);
+    int tile_x = std::get<1>(config);
+    int tile_y = std::get<2>(config);
     Kokkos::parallel_for("mdrange",
                          Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
                              {0, 0}, {1, 1}, {tile_x, tile_y}),
@@ -95,8 +95,8 @@ int main() {
     auto config = new_team_tuner.begin();
     int option  = std::get<0>(config);
     (void)option;
-    int team    = std::get<1>(config);
-    int vector  = std::get<2>(config);
+    int team   = std::get<1>(config);
+    int vector = std::get<2>(config);
     Kokkos::parallel_for("mdrange",
                          Kokkos::TeamPolicy<ExecSpace>(1, team, vector),
                          TestTeamFunctor{});
