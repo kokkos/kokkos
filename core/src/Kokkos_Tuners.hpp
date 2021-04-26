@@ -306,32 +306,38 @@ class MultidimensionalSparseTuningProblem {
   static constexpr size_t max_space_dimension_size = MaxDimensionSize;
   static constexpr double tuning_min               = 0.0;
   static constexpr double tuning_max = 0.999;
-    static double tuning_step = tuning_max / max_space_dimension_size;
+    double tuning_step;
 
   using StoredProblemSpace =
       typename Impl::MapTypeConverter<ProblemSpaceInput>::type;
   using HierarchyConstructor =
-      typename Impl::ValueHierarchyConstructor<Container<TemplateArguments...>>;
+  typename Impl::ValueHierarchyConstructor<Container<TemplateArguments...>>;
 
-  using ValueArray = std::array<Kokkos::Tools::Experimental::VariableValue,
-                                space_dimensionality>;
+    using ValueArray = std::array<Kokkos::Tools::Experimental::VariableValue,
+            space_dimensionality>;
 
- private:
-  StoredProblemSpace m_space;
-  std::array<size_t, space_dimensionality> variable_ids;
-  size_t context;
+private:
+    StoredProblemSpace m_space;
+    std::array<size_t, space_dimensionality> variable_ids;
+    size_t context;
 
- public:
-  MultidimensionalSparseTuningProblem() = default;
-  MultidimensionalSparseTuningProblem(ProblemSpaceInput space,
-                                      const std::vector<std::string>& names)
-      : m_space(HierarchyConstructor::build(space)) {
-    assert(names.size() == space_dimensionality);
-    for (unsigned long x = 0; x < names.size(); ++x) {
-      VariableInfo info;
-      info.type = Kokkos::Tools::Experimental::ValueType::kokkos_value_double;
-      info.category = Kokkos::Tools::Experimental::StatisticalCategory::
-          kokkos_value_interval;
+    void impl_initialize() {
+        tuning_step = tuning_max / max_space_dimension_size;
+    }
+
+public:
+    MultidimensionalSparseTuningProblem() { impl_initialize(); }
+
+    MultidimensionalSparseTuningProblem(ProblemSpaceInput space,
+                                        const std::vector<std::string> &names)
+            : m_space(HierarchyConstructor::build(space)) {
+        impl_initialize();
+        assert(names.size() == space_dimensionality);
+        for (unsigned long x = 0; x < names.size(); ++x) {
+            VariableInfo info;
+            info.type = Kokkos::Tools::Experimental::ValueType::kokkos_value_double;
+            info.category = Kokkos::Tools::Experimental::StatisticalCategory::
+            kokkos_value_interval;
       info.valueQuantity =
           Kokkos::Tools::Experimental::CandidateValueType::kokkos_value_range;
       info.candidates = Kokkos::Tools::Experimental::make_candidate_range(
