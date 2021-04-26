@@ -249,7 +249,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
 
     auto& queue = scheduler.queue();
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize("kokkos.cuda.pre_execute_task");
 
     // Query the stack size, in bytes:
 
@@ -270,7 +270,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
 
     CUDA_SAFE_CALL(cudaGetLastError());
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize("kokkos.cuda.post_execute_task");
 
     if (previous_stack_size < larger_stack_size) {
       CUDA_SAFE_CALL(
@@ -295,13 +295,15 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     destroy_type* dtor_ptr =
         (destroy_type*)((char*)storage + sizeof(function_type));
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "kokkos.cuda.pre_get_function_pointer_for_tasks");
 
     set_cuda_task_base_apply_function_pointer<TaskType>
         <<<1, 1>>>(ptr_ptr, dtor_ptr);
 
     CUDA_SAFE_CALL(cudaGetLastError());
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "kokkos.cuda.post_get_function_pointer_for_tasks");
 
     ptr  = *ptr_ptr;
     dtor = *dtor_ptr;
@@ -475,7 +477,7 @@ class TaskQueueSpecializationConstrained<
     auto& queue = scheduler.queue();
     queue.initialize_team_queues(warps_per_block * grid.x);
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize("kokkos.cuda.pre_execute_task");
 
     // Query the stack size, in bytes:
 
@@ -496,7 +498,7 @@ class TaskQueueSpecializationConstrained<
 
     CUDA_SAFE_CALL(cudaGetLastError());
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize("kokkos.cuda.post_execute_task");
 
     if (previous_stack_size < larger_stack_size) {
       CUDA_SAFE_CALL(
@@ -516,13 +518,15 @@ class TaskQueueSpecializationConstrained<
     destroy_type* dtor_ptr =
         (destroy_type*)((char*)storage + sizeof(function_type));
 
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "kokkos.cuda.pre_get_function_pointer_for_tasks");
 
     set_cuda_task_base_apply_function_pointer<TaskType>
         <<<1, 1>>>(ptr_ptr, dtor_ptr);
 
     CUDA_SAFE_CALL(cudaGetLastError());
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    Impl::cuda_device_synchronize(
+        "kokkos.cuda.post_get_function_pointer_for_tasks");
 
     ptr  = *ptr_ptr;
     dtor = *dtor_ptr;

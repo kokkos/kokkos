@@ -141,7 +141,20 @@ bool cuda_launch_blocking() {
 
 }  // namespace
 
-void cuda_device_synchronize() { CUDA_SAFE_CALL(cudaDeviceSynchronize()); }
+void cuda_device_synchronize(const std::string &name) {
+  uint64_t handle;
+  Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
+  CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  Kokkos::Tools::endFence(handle);
+}
+
+void cuda_stream_synchronize(const cudaStream_t stream,
+                             const std::string &name) {
+  uint64_t handle;
+  Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
+  CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+  Kokkos::Tools::endFence(handle);
+}
 
 void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
                                const int line) {
@@ -310,8 +323,11 @@ CudaInternal &CudaInternal::singleton() {
   static CudaInternal self;
   return self;
 }
+void CudaInternal::fence(const std::string &name) const {
+  Impl::cuda_stream_synchronize(m_stream, name);
+}
 void CudaInternal::fence() const {
-  CUDA_SAFE_CALL(cudaStreamSynchronize(m_stream));
+  fence("kokkos.cuda.unnamed_instance_fence");
 }
 
 void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
@@ -351,7 +367,7 @@ void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
     m_deviceProp = cudaProp;
 
     CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
-    Kokkos::Impl::cuda_device_synchronize();
+    Kokkos::Impl::cuda_device_synchronize("kokkos.cuda.fence_on_initialize");
 
     // Query what compute capability architecture a kernel executes:
     m_cudaArch = cuda_kernel_arch();
@@ -838,9 +854,17 @@ void Cuda::print_configuration(std::ostream &s, const bool) {
   Impl::CudaInternal::singleton().print_configuration(s);
 }
 
-void Cuda::impl_static_fence() { Kokkos::Impl::cuda_device_synchronize(); }
+void Cuda::impl_static_fence(const std::string &name) {
+  Kokkos::Impl::cuda_device_synchronize(name);
+}
+void Cuda::impl_static_fence() {
+  impl_static_fence("kokkos.cuda.unlabeled_static_fence");
+}
 
-void Cuda::fence() const { m_space_instance->fence(); }
+void Cuda::fence() const { fence("kokkos.cuda.instance_unnamed_fence"); }
+void Cuda::fence(const std::string &name) const {
+  m_space_instance->fence(name);
+}
 
 const char *Cuda::name() { return "Cuda"; }
 
@@ -877,7 +901,9 @@ void CudaSpaceInitializer::finalize(bool all_spaces) {
   }
 }
 
-void CudaSpaceInitializer::fence() { Kokkos::Cuda::impl_static_fence(); }
+void CudaSpaceInitializer::fence() {
+  Kokkos::Cuda::impl_static_fence("kokkos.cuda.space_initialization_fence");
+}
 
 void CudaSpaceInitializer::print_configuration(std::ostream &msg,
                                                const bool detail) {

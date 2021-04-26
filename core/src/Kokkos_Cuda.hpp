@@ -184,8 +184,10 @@ class Cuda {
   /// method does not return until all dispatched functors on this
   /// device have completed.
   static void impl_static_fence();
+  static void impl_static_fence(const std::string&);
 
   void fence() const;
+  void fence(const std::string&) const;
 
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();

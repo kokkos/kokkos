@@ -145,6 +145,7 @@ class CudaInternal {
   static void cuda_set_serial_execution(bool);
 #endif
 
+  void fence(const std::string&) const;
   void fence() const;
 
   ~CudaInternal();
