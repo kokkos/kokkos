@@ -359,7 +359,7 @@ class MultidimensionalSparseTuningProblem {
     std::vector<std::string> extended_names;
     extended_names.reserve(m_variable_names.size()+1);
     extended_names.push_back(axis_name);
-    extended_names.insert(extened_names.end(), 
+    extended_names.insert(extended_names.end(), 
                           m_variable_names.begin(), 
                           m_variable_names.end());
     return extended_problem<Key>(extended_space, extended_names);
