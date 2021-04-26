@@ -1,16 +1,18 @@
-ARG BASE=intel/oneapi-basekit:devel-ubuntu18.04
+ARG BASE=nvidia/cuda:10.2-devel
 FROM $BASE
 
 RUN apt-get update && apt-get install -y \
+        bc \
+        git \
         wget \
         ccache \
+        ninja-build \
+        python3 \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ENV PATH=/opt/intel/oneapi/compiler/latest/linux/bin/:$PATH
-
-ARG CMAKE_VERSION=3.10.3
+ARG CMAKE_VERSION=3.18.5
 ENV CMAKE_DIR=/opt/cmake
 RUN CMAKE_KEY=2D2CEF1034921684 && \
     CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
@@ -26,3 +28,20 @@ RUN CMAKE_KEY=2D2CEF1034921684 && \
     sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
     rm cmake*
 ENV PATH=${CMAKE_DIR}/bin:$PATH
+
+ENV SYCL_DIR=/opt/sycl
+RUN SYCL_VERSION=20210311 && \
+    SYCL_URL=https://github.com/intel/llvm/archive/sycl-nightly && \
+    SYCL_ARCHIVE=${SYCL_VERSION}.tar.gz && \
+    SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
+    wget --quiet ${SYCL_URL}/${SYCL_ARCHIVE} && \
+    mkdir llvm && \
+    tar -xf ${SYCL_ARCHIVE} -C llvm --strip-components=1 && \
+    cd llvm && \
+    python3 buildbot/configure.py --cuda && \
+    python3 buildbot/compile.py && \
+    mkdir -p ${SYCL_DIR} && \
+    mv ${SCRATCH_DIR}/llvm/build/install/* ${SYCL_DIR} && \
+    echo "${SYCL_DIR}/lib" > /etc/ld.so.conf.d/sycl.conf && ldconfig && \
+    rm -rf ${SCRATCH_DIR}
+ENV PATH=${SYCL_DIR}/bin:$PATH

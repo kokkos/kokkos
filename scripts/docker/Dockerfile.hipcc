@@ -2,6 +2,7 @@ ARG BASE=rocm/dev-ubuntu-20.04:3.8
 FROM $BASE
 
 RUN apt-get update && apt-get install -y \
+        git \
         kmod \
         wget \
         ccache \
@@ -12,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 
 ENV PATH=/opt/rocm/bin:$PATH
 
-ARG CMAKE_VERSION=3.10.3
+ARG CMAKE_VERSION=3.16.8
 ENV CMAKE_DIR=/opt/cmake
 RUN CMAKE_KEY=2D2CEF1034921684 && \
     CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \

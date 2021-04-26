@@ -112,6 +112,10 @@ if [[ "$HOSTNAME" == kokkos-dev\.sandia\.gov* ]]; then
   MACHINE=kokkos-dev
 fi
 
+if [[ "$HOSTNAME" == sogpu01* ]]; then
+  MACHINE=sogpu
+fi
+
 if [ ! -z "$SEMS_MODULEFILES_ROOT" ]; then
   if [[ "$MACHINE" = "" ]]; then
     MACHINE=sems
@@ -269,9 +273,9 @@ if [ "$MACHINE" = "sems" ]; then
   # On rhel7 sems machines gcc/7.3.0, clang/4.0.1, and intel/16.0.3 are missing
   # Remove kokkkos-env module use
 
-  module load sems-cmake/3.12.2
-  BASE_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  CUDA9_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.2.0"
+  module load sems-cmake/3.17.1
+  BASE_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
+  CUDA9_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.2.0"
   SKIP_HWLOC=True
   # No sems hwloc module
 
@@ -304,15 +308,47 @@ if [ "$MACHINE" = "sems" ]; then
                "cuda/9.2 $CUDA9_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
     )
   fi
+elif [ "$MACHINE" = "sogpu" ]; then
+  source /projects/sems/modulefiles/utils/sems-modules-init.sh
+
+  module load sems-cmake/3.17.1 sems-git
+  BASE_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
+  CUDA_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.2.0"
+  CUDA11_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/8.3.0"
+  SKIP_HWLOC=True
+  # No sems hwloc module
+
+  if [ -z "$ARCH_FLAG" ]; then
+    ARCH_FLAG="--arch=Volta70"
+  fi
+
+    # Format: (compiler module-list build-list exe-name warning-flag)
+    COMPILERS=("gcc/5.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+               "gcc/6.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+               "gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+               "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+               "gcc/7.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+               "gcc/8.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+               "gcc/9.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+               "clang/5.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/7.0.1 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/9.0.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "clang/10.0.0 $BASE_MODULE_LIST $CLANG_BUILD_LIST clang++ $CLANG_WARNING_FLAGS"
+               "intel/17.0.1 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+               "intel/18.0.5 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+               "intel/19.0.5 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+               "cuda/10.1 $CUDA_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+               "cuda/11.1 $CUDA11_MODULE_LIST $CUDA_BUILD_LIST $KOKKOS_PATH/bin/nvcc_wrapper $CUDA_WARNING_FLAGS"
+              )
 elif [ "$MACHINE" = "kokkos-dev" ]; then
   source /projects/sems/modulefiles/utils/sems-modules-init.sh
 
-  module load sems-cmake/3.12.2
-  BASE_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  CUDA9_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0"
-  CUDA10_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.2.0"
-  CUDA11_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/9.2.0"
-  CLANG7_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-cuda/9.2"
+  module load sems-cmake/3.17.1
+  BASE_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
+  CUDA9_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/6.1.0"
+  CUDA10_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.2.0"
+  CUDA11_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/9.2.0"
+  CLANG7_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-cuda/9.2"
   SKIP_HWLOC=True
 
   if [ -z "$ARCH_FLAG" ]; then
@@ -354,10 +390,10 @@ elif [ "$MACHINE" = "white" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=32
 
-  BASE_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>"
-  IBM_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
-  CUDA_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.1"
-  CUDA10_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.1"
+  BASE_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>"
+  IBM_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
+  CUDA_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.1"
+  CUDA10_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.1"
 
   # Don't do pthread with Power
   GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -372,7 +408,8 @@ elif [ "$MACHINE" = "white" ]; then
     )
   else
     # Format: (compiler module-list build-list exe-name warning-flag)
-    COMPILERS=("gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+    COMPILERS=("gcc/5.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+               "gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/7.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
                "gcc/9.3.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
@@ -391,10 +428,10 @@ elif [ "$MACHINE" = "weaver" ]; then
   source /etc/profile.d/modules.sh
   SKIP_HWLOC=True
 
-  BASE_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>"
-  IBM_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
-  CUDA_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.1"
-  CUDA10_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.1"
+  BASE_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>"
+  IBM_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/xl/<COMPILER_VERSION>,gcc/7.2.0"
+  CUDA_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.2.0,ibm/xl/16.1.1"
+  CUDA10_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/7.4.0,ibm/xl/16.1.1"
 
   # Don't do pthread with Power
   GCC_BUILD_LIST="OpenMP,Serial,OpenMP_Serial"
@@ -430,7 +467,7 @@ elif [ "$MACHINE" = "voltrino" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=32
 
-  BASE_MODULE_LIST="PrgEnv-intel,craype-mic-knl,cmake/3.16.2,slurm/19.05.5a,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/9.3.0"
+  BASE_MODULE_LIST="PrgEnv-intel,craype-mic-knl,cmake/3.16.2,slurm/20.11.4a,<COMPILER_NAME>/<COMPILER_VERSION>,gcc/9.3.0"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("intel/17.0.4 $BASE_MODULE_LIST $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
@@ -446,11 +483,12 @@ elif [ "$MACHINE" = "mayer" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=96
 
-  BASE_MODULE_LIST="cmake/3.14.5,<COMPILER_NAME>/<COMPILER_VERSION>"
+  BASE_MODULE_LIST="cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>"
 
   # Format: (compiler module-list build-list exe-name warning-flag)
   COMPILERS=("gnu7/7.2.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
-             "arm/20.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
+             "gnu9/9.3.0 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "arm/20.1 $BASE_MODULE_LIST $ARM_GCC_BUILD_LIST armclang++ $CLANG_WARNING_FLAGS")
 
   if [ -z "$ARCH_FLAG" ]; then
     ARCH_FLAG="--arch=ARMV8_THUNDERX2"
@@ -461,10 +499,12 @@ elif [ "$MACHINE" = "blake" ]; then
   SKIP_HWLOC=True
   export SLURM_TASKS_PER_NODE=32
 
-  module load cmake/3.12.3
+  module load cmake/3.19.3
 
-  BASE_MODULE_LIST="cmake/3.12.3,<COMPILER_NAME>/<COMPILER_VERSION>"
-  BASE_MODULE_LIST_INTEL="cmake/3.12.3,<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
+  BASE_MODULE_LIST="cmake/3.19.3,<COMPILER_NAME>/<COMPILER_VERSION>"
+  BASE_MODULE_LIST_INTEL="cmake/3.19.3,<COMPILER_NAME>/compilers/<COMPILER_VERSION>"
+  BASE_MODULE_LIST_ONEAPI="cmake/3.19.3,<COMPILER_NAME>/oneAPI/base-toolkit/<COMPILER_VERSION>"
+  ONEAPI_WARNING_FLAGS=""
 
   if [ "$SPOT_CHECK" = "True" ]; then
 
@@ -479,12 +519,14 @@ elif [ "$MACHINE" = "blake" ]; then
              "intel/19.1.144 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
              "intel/19.3.199 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
              "intel/19.5.281 $BASE_MODULE_LIST_INTEL $INTEL_BUILD_LIST icpc $INTEL_WARNING_FLAGS"
+             "intel/2021.1.1 $BASE_MODULE_LIST_ONEAPI $INTEL_BUILD_LIST icpx $ONEAPI_WARNING_FLAGS"
              "gcc/5.5.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/6.4.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/7.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/8.1.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/8.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
              "gcc/9.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
+             "gcc/10.2.0 $BASE_MODULE_LIST $GCC_BUILD_LIST g++ $GCC_WARNING_FLAGS"
   )
 
   fi
@@ -498,18 +540,18 @@ elif [ "$MACHINE" = "apollo" ]; then
 
   module load sems-git
   module load sems-tex
-  module load sems-cmake/3.12.2
+  module load sems-cmake/3.17.1
   module load sems-gdb
   module load binutils
 
   SKIP_HWLOC=True
 
-  BASE_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  CLANG_MODULE_LIST="sems-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>"
-  CUDA10_MODULE_LIST="sems-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
-  CUDA10X_MODULE_LIST="sems-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
+  BASE_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
+  CLANG_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>"
+  CUDA10_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
+  CUDA10X_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
 
-  HPX3_MODULE_LIST="sems-env,sems-cmake/3.12.2,compilers/hpx/1.3.0,sems-gcc/6.1.0,binutils"
+  HPX3_MODULE_LIST="sems-env,sems-cmake/3.17.1,compilers/hpx/1.3.0,sems-gcc/6.1.0,binutils"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_OpenMP"
   BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_Pthread"
@@ -548,19 +590,19 @@ elif [ "$MACHINE" = "kokkos-dev-2" ]; then
 
   module load sems-git
   module load sems-tex
-  module load sems-cmake/3.12.2
+  module load sems-cmake/3.17.1
   module load sems-gdb
 
   SKIP_HWLOC=True
 
-  BASE_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
-  GCC91_MODULE_LIST="sems-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>"
-  NVCC9_MODULE_LIST="sems-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
-  NVCC_MODULE_LIST="sems-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
-  NVCC11_MODULE_LIST="sems-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/9.2.0"
+  BASE_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
+  GCC91_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>"
+  NVCC9_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/5.3.0"
+  NVCC_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.3.0"
+  NVCC11_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/9.2.0"
 
-  CLANG8_MODULE_LIST="sems-env,sems-cmake/3.12.2,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
-  PGI_MODULE_LIST="sems-env,sems-cmake/3.12.2,sems-gcc/7.3.0,<COMPILER_NAME>/<COMPILER_VERSION>"
+  CLANG8_MODULE_LIST="sems-env,sems-cmake/3.17.1,<COMPILER_NAME>/<COMPILER_VERSION>,cuda/10.0"
+  PGI_MODULE_LIST="sems-env,sems-cmake/3.17.1,sems-gcc/7.3.0,<COMPILER_NAME>/<COMPILER_VERSION>"
 
   BUILD_LIST_CUDA_NVCC="Cuda_Serial,Cuda_Pthread"
   BUILD_LIST_CUDA_CLANG="Cuda_Serial,Cuda_OpenMP"
@@ -768,8 +810,8 @@ setup_env() {
   done
 
   if [ -e ${CM_ALL_SCRIPT_PATH}/update_lib.sh ]; then
-     echo "calling ${CM_ALL_SCRIPT_PATH}/update_lib.sh $MACHINE"
-     source ${CM_ALL_SCRIPT_PATH}/update_lib.sh $MACHINE
+     echo "calling ${CM_ALL_SCRIPT_PATH}/update_lib.sh $MACHINE $compiler"
+     source ${CM_ALL_SCRIPT_PATH}/update_lib.sh $MACHINE $compiler
   fi
   return 0
 }
@@ -851,8 +893,12 @@ single_build_and_test() {
     echo "        \$KOKKOS_PATH/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=\$KOKKOS_PATH --with-options=${KOKKOS_OPTIONS} --with-cuda-options=${KOKKOS_CUDA_OPTIONS} ${KOKKOS_BOUNDS_CHECK} --no-examples $extra_args" &> call_generate_makefile_genericpath.sh
 
     run_cmd ${KOKKOS_PATH}/generate_makefile.bash --with-devices=$LOCAL_KOKKOS_DEVICES $ARCH_FLAG --compiler=$(which $compiler_exe) --cxxflags=\"$cxxflags\" --cxxstandard=\"$cxx_standard\" --ldflags=\"$ldflags\" $CUDA_ENABLE_CMD --kokkos-path=${KOKKOS_PATH} ${KOKKOS_BOUNDS_CHECK} --no-examples $extra_args &>> ${desc}.configure.log || { report_and_log_test_result 1 ${desc} configure && return 0; }
+    local make_par_lvl=12
+    if [[ "$MACHINE" = white* ]]; then
+      make_par_lvl=48
+    fi
     local -i build_start_time=$(date +%s)
-    run_cmd make -j 48 all >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
+    run_cmd make -j  $make_par_lvl all >& ${desc}.build.log || { report_and_log_test_result 1 ${desc} build && return 0; }
     local -i build_end_time=$(date +%s)
     comment="build_time=$(($build_end_time-$build_start_time))"
 
