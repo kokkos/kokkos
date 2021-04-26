@@ -3,6 +3,14 @@
 ## [3.4.00](https://github.com/kokkos/kokkos/tree/3.4.00) (2021-04-25)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/3.3.01...3.4.00)
 
+**Highlights:**
+- SYCL Backend Almost Feature Complete
+- OpenMPTarget Backend Almost Feature Complete
+- Performance Improvements for HIP backend
+- Require CMake 3.16 or newer
+- Tool Callback Interface Enhancements
+- cmath wrapper functions available now in Kokkos::Experimental
+
 **Features:**
 - Implement parallel_scan with ThreadVectorRange and Reducer [\#3861](https://github.com/kokkos/kokkos/pull/3861)
 - Implement SYCL Random [\#3849](https://github.com/kokkos/kokkos/pull/3849)
@@ -48,7 +56,6 @@
 - Change SYCLInternal::m_queue std::unique_ptr -> std::optional [\#3677](https://github.com/kokkos/kokkos/pull/3677)
 - Use alternative SYCL parallel_reduce implementation [\#3671](https://github.com/kokkos/kokkos/pull/3671)
 - Use runtime values in KokkosExp_MDRangePolicy.hpp [\#3626](https://github.com/kokkos/kokkos/pull/3626)
-- Introduce KOKKOS_PRINTF [\#3615](https://github.com/kokkos/kokkos/pull/3615)
 - Clean up AnalyzePolicy [\#3564](https://github.com/kokkos/kokkos/pull/3564)
 - Changes for indirect launch of SYCL parallel reduce [\#3511](https://github.com/kokkos/kokkos/pull/3511)
 
