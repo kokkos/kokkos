@@ -1308,27 +1308,55 @@ struct ZeroMemset {
 };
 
 template <typename ExecutionSpace, class DT, class... DP>
-inline void memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
-                   typename ViewTraits<DT, DP...>::const_value_type& value) {
-  using ValueType = typename ViewTraits<DT, DP...>::value_type;
-
-  if (std::is_trivially_copyable<ValueType>::value && Impl::is_zero_byte(value))
+inline std::enable_if_t<
+    std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
+    std::is_trivially_copy_assignable<
+        typename ViewTraits<DT, DP...>::const_value_type>::value>
+memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
+       typename ViewTraits<DT, DP...>::const_value_type& value) {
+  if (Impl::is_zero_byte(value))
     ZeroMemset<ExecutionSpace, DT, DP...>(exec_space, dst, value);
   else
     plain_memcpy(exec_space, dst, value);
 }
 
+template <typename ExecutionSpace, class DT, class... DP>
+inline std::enable_if_t<!(
+    std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
+    std::is_trivially_copy_assignable<
+        typename ViewTraits<DT, DP...>::const_value_type>::value)>
+memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
+       typename ViewTraits<DT, DP...>::const_value_type& value) {
+  plain_memcpy(exec_space, dst, value);
+}
+
 template <class DT, class... DP>
-inline void memset(const View<DT, DP...>& dst,
-                   typename ViewTraits<DT, DP...>::const_value_type& value) {
+inline std::enable_if_t<
+    std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
+    std::is_trivially_copy_assignable<
+        typename ViewTraits<DT, DP...>::const_value_type>::value>
+memset(const View<DT, DP...>& dst,
+       typename ViewTraits<DT, DP...>::const_value_type& value) {
   using ViewType        = View<DT, DP...>;
-  using ValueType       = typename ViewTraits<DT, DP...>::value_type;
   using exec_space_type = typename ViewType::execution_space;
 
-  if (std::is_trivially_copyable<ValueType>::value && Impl::is_zero_byte(value))
+  if (Impl::is_zero_byte(value))
     ZeroMemset<exec_space_type, DT, DP...>(dst, value);
   else
     plain_memcpy(exec_space_type(), dst, value);
+}
+
+template <class DT, class... DP>
+inline std::enable_if_t<!(
+    std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
+    std::is_trivially_copy_assignable<
+        typename ViewTraits<DT, DP...>::const_value_type>::value)>
+memset(const View<DT, DP...>& dst,
+       typename ViewTraits<DT, DP...>::const_value_type& value) {
+  using ViewType        = View<DT, DP...>;
+  using exec_space_type = typename ViewType::execution_space;
+
+  plain_memcpy(exec_space_type(), dst, value);
 }
 }  // namespace Impl
 

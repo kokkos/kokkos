@@ -308,9 +308,8 @@ struct ZeroMemset<typename HostSpace::execution_space, DT, DP...> {
 
   ZeroMemset(const View<DT, DP...>& dst,
              typename View<DT, DP...>::const_value_type&) {
-    std::memset(
-        dst.data(), 0,
-        sizeof(typename View<DT, DP...>::const_value_type) * dst.size());
+    using ValueType = typename View<DT, DP...>::value_type;
+    std::memset(dst.data(), 0, sizeof(ValueType) * dst.size());
   }
 };
 
