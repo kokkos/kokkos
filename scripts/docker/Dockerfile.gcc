@@ -1,6 +1,6 @@
 FROM gcc:5.3.0
 
-ARG CMAKE_VERSION=3.10.3
+ARG CMAKE_VERSION=3.16.8
 ENV CMAKE_DIR=/opt/cmake
 RUN CMAKE_KEY=2D2CEF1034921684 && \
     CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \

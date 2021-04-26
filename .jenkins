@@ -5,6 +5,8 @@ pipeline {
         CCACHE_DIR = '/tmp/ccache'
         CCACHE_MAXSIZE = '10G'
         CCACHE_CPP2 = 'true'
+        BUILD_JOBS = 8
+        SITE = 'Jenkins'
     }
     stages {
         stage('Clang-Format') {
@@ -28,25 +30,27 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.sycl'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=intel/oneapi-basekit:devel-ubuntu18.04'
-                            label 'docker'
+                            label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache'
                         }
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
-                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-Werror" \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version -Wno-gnu-zero-variadic-macro-arguments" \
+                                -DKokkos_ARCH_VOLTA70=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_SYCL=ON \
+                                -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=${STAGE_NAME} \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -68,11 +72,12 @@ pipeline {
                         OMP_NUM_THREADS = 8
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
+                        LC_ALL = 'C'
                     }
                     steps {
                         sh 'ccache --zero-stats'
                         sh 'echo "/opt/rocm/llvm/lib" > /etc/ld.so.conf.d/llvm.conf && ldconfig'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=hipcc \
@@ -83,8 +88,8 @@ pipeline {
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=${STAGE_NAME} \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -102,9 +107,12 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
+                    environment {
+                        LC_ALL = 'C'
+                    }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=hipcc \
@@ -114,8 +122,8 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                                 -DKokkos_ARCH_VEGA906=ON \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=${STAGE_NAME} \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -134,19 +142,19 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
-                                -DCMAKE_BUILD_TYPE=Debug \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-Wno-unknown-cuda-version -Werror" \
+                                -DCMAKE_CXX_FLAGS="-Wno-unknown-cuda-version -Werror -Wno-undefined-internal -Wno-pass-failed" \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ENABLE_OPENMPTARGET=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=${STAGE_NAME} \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -165,7 +173,7 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
@@ -179,8 +187,8 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
-                              .. && \
-                              make -j8 && ctest --verbose'''
+                                -DBUILD_NAME=${STAGE_NAME} \
+                              -P cmake/KokkosCI.cmake'''
                     }
                     post {
                         always {
@@ -222,7 +230,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.0-devel --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran" --build-arg CMAKE_VERSION=3.17.3'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:11.0-devel --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran clang" --build-arg CMAKE_VERSION=3.17.3'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -236,7 +244,7 @@ pipeline {
                     steps {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf install && mkdir -p install && \
-                              rm -rf build && mkdir -p build && cd build && \
+                              rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER=g++-8 \
@@ -248,11 +256,10 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_LAMBDA=OFF \
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
-                                -DKokkos_ARCH_VOLTA70=ON \
-                                -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
-                              .. && \
-                              make -j8 install && \
-                              cd .. && \
+                                -DCMAKE_INSTALL_PREFIX=${PWD}/install \
+                                -DBUILD_NAME=${STAGE_NAME} \
+                                -DTARGET=install \
+                              -P cmake/KokkosCI.cmake && \
                               rm -rf build-tests && mkdir -p build-tests && cd build-tests && \
                               export CMAKE_PREFIX_PATH=${PWD}/../install && \
                               cmake \
@@ -271,7 +278,11 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && ctest --verbose'''
+                              make -j8 && ctest --verbose && \
+                              cd ../.. && \
+                              cmake -B build_cmake_installed_different_compiler/build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_CXX_STANDARD=17 build_cmake_installed_different_compiler && \
+                              cmake --build build_cmake_installed_different_compiler/build --target all && \
+                              cmake --build build_cmake_installed_different_compiler/build --target test'''
                     }
                     post {
                         always {
@@ -284,14 +295,14 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel --build-arg CMAKE_VERSION=3.15.5'
+                            additionalBuildArgs '--build-arg BASE=nvidia/cuda:10.1-devel'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -305,9 +316,10 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_LAMBDA=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
-                              .. && \
-                              make -j8 && ctest --verbose && \
-                              cd ../example/build_cmake_in_tree && \
+                                -DBUILD_NAME=${STAGE_NAME} \
+                                -DTARGET=install \
+                              -P cmake/KokkosCI.cmake && \
+                              cd example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=14 .. && make -j8 && ctest --verbose'''
                     }
@@ -330,7 +342,7 @@ pipeline {
                         OMP_PROC_BIND = 'true'
                     }
                     steps {
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_STANDARD=14 \
@@ -339,8 +351,9 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
-                              .. && \
-                              make -j8 && ctest --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
+                                -DBUILD_NAME=${STAGE_NAME} \
+                              -P cmake/KokkosCI.cmake && \
+                              gcc -I$PWD/core/src core/unit_test/tools/TestCInterface.c'''
                     }
                 }
             }
