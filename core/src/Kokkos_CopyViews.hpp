@@ -1312,8 +1312,9 @@ inline std::enable_if_t<
     std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
     std::is_trivially_copy_assignable<
         typename ViewTraits<DT, DP...>::const_value_type>::value>
-memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
-       typename ViewTraits<DT, DP...>::const_value_type& value) {
+contiguous_fill_or_memset(
+    const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
   if (Impl::is_zero_byte(value))
     ZeroMemset<ExecutionSpace, DT, DP...>(exec_space, dst, value);
   else
@@ -1325,8 +1326,9 @@ inline std::enable_if_t<!(
     std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
     std::is_trivially_copy_assignable<
         typename ViewTraits<DT, DP...>::const_value_type>::value)>
-memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
-       typename ViewTraits<DT, DP...>::const_value_type& value) {
+contiguous_fill_or_memset(
+    const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
   contiguous_fill(exec_space, dst, value);
 }
 
@@ -1335,8 +1337,9 @@ inline std::enable_if_t<
     std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
     std::is_trivially_copy_assignable<
         typename ViewTraits<DT, DP...>::const_value_type>::value>
-memset(const View<DT, DP...>& dst,
-       typename ViewTraits<DT, DP...>::const_value_type& value) {
+contiguous_fill_or_memset(
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
 
@@ -1351,8 +1354,9 @@ inline std::enable_if_t<!(
     std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
     std::is_trivially_copy_assignable<
         typename ViewTraits<DT, DP...>::const_value_type>::value)>
-memset(const View<DT, DP...>& dst,
-       typename ViewTraits<DT, DP...>::const_value_type& value) {
+contiguous_fill_or_memset(
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
 
@@ -1394,7 +1398,7 @@ inline void deep_copy(
 
   // If contiguous we can simply do a 1D flat loop or use memset
   if (dst.span_is_contiguous()) {
-    Impl::memset(dst, value);
+    Impl::contiguous_fill_or_memset(dst, value);
     Kokkos::fence();
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
@@ -2527,7 +2531,7 @@ inline void deep_copy(
   if (dst.data() == nullptr) {
     space.fence();
   } else if (dst.span_is_contiguous()) {
-    Impl::memset(space, dst, value);
+    Impl::contiguous_fill_or_memset(space, dst, value);
   } else {
     using ViewTypeUniform = typename std::conditional<
         View<DT, DP...>::Rank == 0,
@@ -2572,7 +2576,7 @@ inline void deep_copy(
     space.fence();
     using fill_exec_space = typename dst_traits::memory_space::execution_space;
     if (dst.span_is_contiguous()) {
-      Impl::memset(fill_exec_space(), dst, value);
+      Impl::contiguous_fill_or_memset(fill_exec_space(), dst, value);
     } else {
       using ViewTypeUniform = typename std::conditional<
           View<DT, DP...>::Rank == 0,
