@@ -116,6 +116,9 @@ unsigned hip_internal_get_block_size(const HIPInternal *hip_instance,
 
 // Standardized blocksize deduction for parallel constructs with no LDS usage
 // Returns the preferred blocksize as dictated by register usage
+//
+// Note: a returned block_size of zero indicates that the algorithm could not
+//       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds>
 unsigned hip_get_preferred_blocksize() {
   return Kokkos::Experimental::Impl::get_preferred_blocksize_impl<
@@ -124,6 +127,9 @@ unsigned hip_get_preferred_blocksize() {
 
 // Standardized blocksize deduction for parallel constructs with no LDS usage
 // Returns the max blocksize as dictated by register usage
+//
+// Note: a returned block_size of zero indicates that the algorithm could not
+//       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds>
 unsigned hip_get_max_blocksize() {
   return Kokkos::Experimental::Impl::get_max_blocksize_impl<DriverType,
@@ -136,6 +142,9 @@ unsigned hip_get_max_blocksize() {
 //
 // The ShmemFunctor takes a single argument of the current blocksize under
 // consideration, and returns the LDS usage
+//
+// Note: a returned block_size of zero indicates that the algorithm could not
+//       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds, typename ShmemFunctor>
 unsigned hip_get_preferred_blocksize(HIPInternal const *hip_instance,
                                      ShmemFunctor const &f) {
@@ -152,6 +161,9 @@ unsigned hip_get_preferred_blocksize(HIPInternal const *hip_instance,
 //
 // The ShmemTeamsFunctor takes two arguments: the hipFunctionAttributes and
 //  the current blocksize under consideration, and returns the LDS usage
+//
+// Note: a returned block_size of zero indicates that the algorithm could not
+//       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds,
           typename ShmemTeamsFunctor>
 unsigned hip_get_preferred_team_blocksize(HIPInternal const *hip_instance,
@@ -174,6 +186,9 @@ unsigned hip_get_preferred_team_blocksize(HIPInternal const *hip_instance,
 //
 // The ShmemFunctor takes a single argument of the current blocksize under
 // consideration, and returns the LDS usage
+//
+// Note: a returned block_size of zero indicates that the algorithm could not
+//       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds, typename ShmemFunctor>
 unsigned hip_get_max_blocksize(HIPInternal const *hip_instance,
                                ShmemFunctor const &f) {
@@ -189,6 +204,9 @@ unsigned hip_get_max_blocksize(HIPInternal const *hip_instance,
 //
 // The ShmemTeamsFunctor takes two arguments: the hipFunctionAttributes and
 //  the current blocksize under consideration, and returns the LDS usage
+//
+// Note: a returned block_size of zero indicates that the algorithm could not
+//       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds,
           typename ShmemTeamsFunctor>
 unsigned hip_get_max_team_blocksize(HIPInternal const *hip_instance,

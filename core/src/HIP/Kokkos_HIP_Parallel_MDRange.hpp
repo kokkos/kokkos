@@ -189,8 +189,16 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     using closure_type =
         ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                     Kokkos::Experimental::HIP>;
-    return Kokkos::Experimental::Impl::hip_get_max_blocksize<closure_type,
-                                                             LaunchBounds>(f);
+    unsigned block_size =
+        Kokkos::Experimental::Impl::hip_get_max_blocksize<closure_type,
+                                                          LaunchBounds>(f);
+    if (block_size > 0) {
+      return block_size;
+    } else {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelFor< HIP > could not find a valid "
+                      "tile size."));
+    }
   }
 };
 
@@ -309,10 +317,19 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
                                                       WorkTag>(f, n);
     };
-    using ClosureType = ParallelReduce<FunctorType, Policy, ReducerType,
-                                       Kokkos::Experimental::HIP>;
-    return Kokkos::Experimental::Impl::hip_get_preferred_blocksize<
-        ClosureType, LaunchBounds>(instance, shmem_functor);
+    using closure_type = ParallelReduce<FunctorType, Policy, ReducerType,
+                                        Kokkos::Experimental::HIP>;
+
+    unsigned block_size =
+        Kokkos::Experimental::Impl::hip_get_preferred_blocksize<closure_type,
+                                                                LaunchBounds>(
+            instance, shmem_functor);
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
+                      "valid tile size."));
+    }
+    return block_size;
   }
 
   inline void execute() {
@@ -408,8 +425,15 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     using closure_type =
         ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                        ReducerType, Kokkos::Experimental::HIP>;
-    return Kokkos::Experimental::Impl::hip_get_max_blocksize<closure_type,
-                                                             LaunchBounds>(f);
+    unsigned block_size =
+        Kokkos::Experimental::Impl::hip_get_max_blocksize<closure_type,
+                                                          LaunchBounds>(f);
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
+                      "valid tile size."));
+    }
+    return block_size;
   }
 };
 }  // namespace Impl

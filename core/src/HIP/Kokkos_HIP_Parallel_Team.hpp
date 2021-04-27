@@ -381,8 +381,11 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
               ClosureType, typename traits::launch_bounds>(
               space().impl_internal_space_instance(), functor);
     }
-    KOKKOS_ASSERT(block_size > 0);
-
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelFor< HIP > could not find a valid "
+                      "team size."));
+    }
     return block_size / impl_vector_length();
   }
 
@@ -418,8 +421,12 @@ class TeamPolicyInternal<Kokkos::Experimental::HIP, Properties...>
               ClosureType, typename traits::launch_bounds>(
               space().impl_internal_space_instance(), functor);
     }
-    KOKKOS_ASSERT(block_size > 0);
 
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
+                      "valid team size."));
+    }
     // Currently we require Power-of-2 team size for reductions.
     int p2 = 1;
     while (p2 <= block_size) p2 *= 2;

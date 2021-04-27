@@ -117,6 +117,11 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     const dim3 grid(
         typename Policy::index_type((nwork + block.y - 1) / block.y), 1, 1);
 
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelFor< HIP > could not find a "
+                      "valid execution configuration."));
+    }
     Kokkos::Experimental::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
         *this, grid, block, 0, m_policy.space().impl_internal_space_instance(),
         false);
@@ -347,7 +352,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
-      KOKKOS_ASSERT(block_size > 0);
+      if (block_size == 0) {
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
+                        "valid execution configuration."));
+      }
 
       m_scratch_space =
           ::Kokkos::Experimental::Impl::hip_internal_scratch_space(
@@ -620,7 +629,11 @@ class ParallelScanHIPBase {
       const int gridMaxComputeCapability_2x = 0x01fff;
 
       const int block_size = static_cast<int>(local_block_size(m_functor));
-      KOKKOS_ASSERT(block_size > 0);
+      if (block_size == 0) {
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
+                        "valid execution configuration."));
+      }
 
       const int grid_max =
           std::min(block_size * block_size, gridMaxComputeCapability_2x);
