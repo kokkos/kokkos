@@ -45,9 +45,7 @@
 #ifndef KOKKOS_THREADS_FWD_HPP_
 #define KOKKOS_THREADS_FWD_HPP_
 
-#if defined(KOKKOS_ENABLE_THREADS)
 namespace Kokkos {
 class Threads;  ///< Execution space with pthreads back-end.
 }  // namespace Kokkos
-#endif
 #endif
