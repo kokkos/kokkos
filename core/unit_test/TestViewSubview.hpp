@@ -240,8 +240,8 @@ void test_1d_strided_assignment_impl(bool a, bool b, bool c, bool d, int n,
   int col = n > 2 ? 2 : 0;
   int row = m > 2 ? 2 : 0;
 
-  if (Kokkos::Impl::SpaceAccessibility<
-          Kokkos::HostSpace, typename Space::memory_space>::accessible) {
+  if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename Space::memory_space>::accessible) {
     if (a) {
       Kokkos::View<double*, LD, Space> l1da =
           Kokkos::subview(l2d, Kokkos::ALL, row);
@@ -326,8 +326,8 @@ void test_left_0(bool constr) {
   using view_static_8_type =
       Kokkos::View<int[2][3][4][5][2][3][4][5], Kokkos::LayoutLeft, Space>;
 
-  if (Kokkos::Impl::SpaceAccessibility<
-          Kokkos::HostSpace, typename Space::memory_space>::accessible) {
+  if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename Space::memory_space>::accessible) {
     view_static_8_type x_static_8("x_static_left_8");
 
     ASSERT_TRUE(x_static_8.span_is_contiguous());
@@ -420,8 +420,8 @@ void test_left_1(bool use_constr) {
   using view_type =
       Kokkos::View<int*** * [2][3][4][5], Kokkos::LayoutLeft, Space>;
 
-  if (Kokkos::Impl::SpaceAccessibility<
-          Kokkos::HostSpace, typename Space::memory_space>::accessible) {
+  if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename Space::memory_space>::accessible) {
     view_type x8("x_left_8", 2, 3, 4, 5);
 
     ASSERT_TRUE(x8.span_is_contiguous());
@@ -520,8 +520,8 @@ template <class Space>
 void test_left_2() {
   using view_type = Kokkos::View<int****, Kokkos::LayoutLeft, Space>;
 
-  if (Kokkos::Impl::SpaceAccessibility<
-          Kokkos::HostSpace, typename Space::memory_space>::accessible) {
+  if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename Space::memory_space>::accessible) {
     view_type x4("x4", 2, 3, 4, 5);
 
     ASSERT_TRUE(x4.span_is_contiguous());
@@ -586,8 +586,8 @@ template <class Space>
 void test_left_3() {
   using view_type = Kokkos::View<int**, Kokkos::LayoutLeft, Space>;
 
-  if (Kokkos::Impl::SpaceAccessibility<
-          Kokkos::HostSpace, typename Space::memory_space>::accessible) {
+  if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename Space::memory_space>::accessible) {
     view_type xm("x4", 10, 5);
 
     ASSERT_TRUE(xm.span_is_contiguous());
@@ -644,8 +644,8 @@ void test_right_0(bool use_constr) {
   using view_static_8_type =
       Kokkos::View<int[2][3][4][5][2][3][4][5], Kokkos::LayoutRight, Space>;
 
-  if (Kokkos::Impl::SpaceAccessibility<
-          Kokkos::HostSpace, typename Space::memory_space>::accessible) {
+  if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename Space::memory_space>::accessible) {
     view_static_8_type x_static_8("x_static_right_8");
 
     Kokkos::View<int, Kokkos::LayoutRight, Space> x0;
@@ -722,8 +722,8 @@ void test_right_1(bool use_constr) {
   using view_type =
       Kokkos::View<int*** * [2][3][4][5], Kokkos::LayoutRight, Space>;
 
-  if (Kokkos::Impl::SpaceAccessibility<
-          Kokkos::HostSpace, typename Space::memory_space>::accessible) {
+  if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename Space::memory_space>::accessible) {
     view_type x8("x_right_8", 2, 3, 4, 5);
 
     Kokkos::View<int, Kokkos::LayoutRight, Space> x0;
@@ -803,8 +803,8 @@ template <class Space>
 void test_right_3() {
   using view_type = Kokkos::View<int**, Kokkos::LayoutRight, Space>;
 
-  if (Kokkos::Impl::SpaceAccessibility<
-          Kokkos::HostSpace, typename Space::memory_space>::accessible) {
+  if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename Space::memory_space>::accessible) {
     view_type xm("x4", 10, 5);
 
     ASSERT_TRUE(xm.span_is_contiguous());

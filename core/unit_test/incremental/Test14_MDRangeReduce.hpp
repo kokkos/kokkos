@@ -91,8 +91,8 @@ struct TestMDRangeReduce {
   using int_index = Kokkos::IndexType<int>;
 
   // An MDRangePolicy for 2 nested loops
-  using MDPolicyType_2D = typename Kokkos::Experimental::MDRangePolicy<
-      ExecSpace, Kokkos::Experimental::Rank<2>, int_index>;
+  using MDPolicyType_2D =
+      typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>, int_index>;
 
   //  1D - complex View
   using Complex_View_1D = typename Kokkos::View<MyComplex*, ExecSpace>;

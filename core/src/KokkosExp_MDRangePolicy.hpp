@@ -385,9 +385,12 @@ struct MDRangePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 // For backward compatibility
 namespace Kokkos {
 namespace Experimental {
-using Kokkos::Iterate;
-using Kokkos::MDRangePolicy;
-using Kokkos::Rank;
+using Iterate KOKKOS_DEPRECATED = Kokkos::Iterate;
+template <typename... Properties>
+using MDRangePolicy KOKKOS_DEPRECATED = Kokkos::MDRangePolicy<Properties...>;
+template <unsigned N, Iterate OuterDir = Iterate::Default,
+          Iterate InnerDir = Iterate::Default>
+using Rank KOKKOS_DEPRECATED = Kokkos::Rank<N, OuterDir, InnerDir>;
 }  // namespace Experimental
 }  // namespace Kokkos
 
