@@ -315,17 +315,45 @@ class MultidimensionalSparseTuningProblem {
 
   using ValueArray = std::array<Kokkos::Tools::Experimental::VariableValue,
                                 space_dimensionality>;
+  template <class Key, class Value>
+  using extended_map = std::map<Key, Value>;
+  template <typename Key>
+  using extended_problem =
+      MultidimensionalSparseTuningProblem<extended_map, MaxDimensionSize, Key,
+                                          ProblemSpaceInput>;
+  template <typename Key, typename Value>
+  using ExtendedProblemSpace =
+      typename Impl::MapTypeConverter<extended_map<Key, Value>>::type;
+
+  template <typename Key>
+  auto extend(const std::string& axis_name,
+              const std::vector<Key>& new_tuning_axis) const
+      -> extended_problem<Key> {
+    ExtendedProblemSpace<Key, ProblemSpaceInput> extended_space;
+    for (auto& key : new_tuning_axis) {
+      extended_space.add_root_value(key);
+      extended_space.add_sub_container(m_space);
+    }
+    std::vector<std::string> extended_names;
+    extended_names.reserve(m_variable_names.size() + 1);
+    extended_names.push_back(axis_name);
+    extended_names.insert(extended_names.end(), m_variable_names.begin(),
+                          m_variable_names.end());
+    return extended_problem<Key>(extended_space, extended_names);
+  }
 
  private:
   StoredProblemSpace m_space;
   std::array<size_t, space_dimensionality> variable_ids;
+  std::vector<std::string> m_variable_names;
   size_t context;
 
  public:
   MultidimensionalSparseTuningProblem() = default;
-  MultidimensionalSparseTuningProblem(ProblemSpaceInput space,
+
+  MultidimensionalSparseTuningProblem(StoredProblemSpace space,
                                       const std::vector<std::string>& names)
-      : m_space(HierarchyConstructor::build(space)) {
+      : m_space(std::move(space)), m_variable_names(names) {
     assert(names.size() == space_dimensionality);
     for (unsigned long x = 0; x < names.size(); ++x) {
       VariableInfo info;
@@ -339,6 +367,11 @@ class MultidimensionalSparseTuningProblem {
       variable_ids[x] = declare_output_type(names[x], info);
     }
   }
+
+  MultidimensionalSparseTuningProblem(ProblemSpaceInput space,
+                                      const std::vector<std::string>& names)
+      : MultidimensionalSparseTuningProblem(HierarchyConstructor::build(space),
+                                            names) {}
 
   auto begin() {
     context = Kokkos::Tools::Experimental::get_new_context_id();
@@ -355,6 +388,16 @@ class MultidimensionalSparseTuningProblem {
   auto end() { end_context(context); }
 };
 
+template <typename Tuner>
+struct ExtendableTunerMixin {
+  template <typename Key>
+  auto combine(const std::string& axis_name,
+               const std::vector<Key>& new_axis) const {
+    const auto& sub_tuner = static_cast<const Tuner*>(this)->get_tuner();
+    return sub_tuner.extend(axis_name, new_axis);
+  }
+};
+
 template <size_t MaxDimensionSize = 100, template <class...> class Container,
           class... TemplateArguments>
 auto make_multidimensional_sparse_tuning_problem(
@@ -362,7 +405,8 @@ auto make_multidimensional_sparse_tuning_problem(
   return MultidimensionalSparseTuningProblem<Container, MaxDimensionSize,
                                              TemplateArguments...>(in, names);
 }
-class TeamSizeTuner {
+
+class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
  private:
   using SpaceDescription = std::map<int64_t, std::vector<int64_t>>;
   using TunerType = decltype(make_multidimensional_sparse_tuning_problem<20>(
@@ -481,7 +525,7 @@ class TeamSizeTuner {
     }
   }
 
- private:
+  TunerType get_tuner() const { return tuner; }
 };
 
 namespace Impl {
@@ -501,7 +545,7 @@ void fill_tile(std::map<T, Mapped>& cont, int tile_size) {
 }  // namespace Impl
 
 template <int MDRangeRank>
-struct MDRangeTuner {
+struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
  private:
   static constexpr int rank       = MDRangeRank;
   static constexpr int max_slices = 15;
@@ -548,6 +592,8 @@ struct MDRangeTuner {
       tuner.end();
     }
   }
+
+  TunerType get_tuner() const { return tuner; }
 };
 
 template <class Choice>
