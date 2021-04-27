@@ -1271,7 +1271,7 @@ bool is_zero_byte(const T& t) {
 }
 
 template <typename ExecutionSpace, class DT, class... DP>
-inline void plain_memcpy(
+inline void contiguous_fill(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
   using ViewType     = View<DT, DP...>;
@@ -1298,12 +1298,12 @@ template <typename ExecutionSpace, class DT, class... DP>
 struct ZeroMemset {
   ZeroMemset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
              typename ViewTraits<DT, DP...>::const_value_type& value) {
-    plain_memcpy(exec_space, dst, value);
+    contiguous_fill(exec_space, dst, value);
   }
 
   ZeroMemset(const View<DT, DP...>& dst,
              typename ViewTraits<DT, DP...>::const_value_type& value) {
-    plain_memcpy(ExecutionSpace(), dst, value);
+    contiguous_fill(ExecutionSpace(), dst, value);
   }
 };
 
@@ -1317,7 +1317,7 @@ memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
   if (Impl::is_zero_byte(value))
     ZeroMemset<ExecutionSpace, DT, DP...>(exec_space, dst, value);
   else
-    plain_memcpy(exec_space, dst, value);
+    contiguous_fill(exec_space, dst, value);
 }
 
 template <typename ExecutionSpace, class DT, class... DP>
@@ -1327,7 +1327,7 @@ inline std::enable_if_t<!(
         typename ViewTraits<DT, DP...>::const_value_type>::value)>
 memset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
        typename ViewTraits<DT, DP...>::const_value_type& value) {
-  plain_memcpy(exec_space, dst, value);
+  contiguous_fill(exec_space, dst, value);
 }
 
 template <class DT, class... DP>
@@ -1343,7 +1343,7 @@ memset(const View<DT, DP...>& dst,
   if (Impl::is_zero_byte(value))
     ZeroMemset<exec_space_type, DT, DP...>(dst, value);
   else
-    plain_memcpy(exec_space_type(), dst, value);
+    contiguous_fill(exec_space_type(), dst, value);
 }
 
 template <class DT, class... DP>
@@ -1356,7 +1356,7 @@ memset(const View<DT, DP...>& dst,
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
 
-  plain_memcpy(exec_space_type(), dst, value);
+  contiguous_fill(exec_space_type(), dst, value);
 }
 }  // namespace Impl
 
