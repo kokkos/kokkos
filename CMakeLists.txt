@@ -48,6 +48,7 @@ INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_pick_cxx_std.cmake)
 
 SET(KOKKOS_ENABLED_OPTIONS)      #exported in config file
 SET(KOKKOS_ENABLED_DEVICES)      #exported in config file
+SET(KOKKOS_ALL_DEVICES)
 SET(KOKKOS_ENABLED_TPLS)         #exported in config file
 SET(KOKKOS_ENABLED_ARCH_LIST)    #exported in config file
 
