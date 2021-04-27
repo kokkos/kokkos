@@ -47,5 +47,9 @@
 
 namespace Kokkos {
 class OpenMP;  ///< OpenMP execution space.
+#if !defined(KOKKOS_ENABLE_OPENMP)
+template <>
+struct IsSpaceAvailable<OpenMP> : std::false_type {};
+#endif
 }  // namespace Kokkos
 #endif

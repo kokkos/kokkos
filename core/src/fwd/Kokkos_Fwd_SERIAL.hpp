@@ -47,5 +47,9 @@
 
 namespace Kokkos {
 class Serial;  ///< Execution space main process on CPU.
+#if !defined(KOKKOS_ENABLE_SERIAL)
+template <>
+struct IsSpaceAvailable<Serial> : std::false_type {};
+#endif
 }  // namespace Kokkos
 #endif

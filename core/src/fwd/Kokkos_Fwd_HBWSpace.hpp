@@ -51,5 +51,9 @@ namespace Experimental {
 class HBWSpace;  /// Memory space for hbw_malloc from memkind (e.g. for KNL
                  /// processor)
 }  // namespace Experimental
+#if !defined(KOKKOS_ENABLE_HBWSPACE)
+template <>
+struct IsSpaceAvailable<Experimental::HBWSpace> : std::false_type {};
+#endif
 }  // namespace Kokkos
 #endif

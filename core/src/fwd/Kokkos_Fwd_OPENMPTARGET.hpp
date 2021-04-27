@@ -50,5 +50,11 @@ namespace Experimental {
 class OpenMPTarget;  ///< OpenMPTarget execution space.
 class OpenMPTargetSpace;
 }  // namespace Experimental
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
+template <>
+struct IsSpaceAvailable<Experimental::OpenMPTarget> : std::false_type {};
+template <>
+struct IsSpaceAvailable<Experimental::OpenMPTargetSpace> : std::false_type {};
+#endif
 }  // namespace Kokkos
 #endif

@@ -100,6 +100,14 @@ struct InitArguments;
 
 }  // namespace Kokkos
 
+//--------------------------------------------------------------------------------------//
+//  this is used to mark execution or memory spaces as not available
+//
+namespace Kokkos {
+template <typename Tp>
+struct IsSpaceAvailable : std::true_type {};
+}  // namespace Kokkos
+
 // Include backend forward statements as determined by build options
 #include <KokkosCore_Config_FwdBackend.hpp>
 
@@ -337,71 +345,6 @@ template <class ScalarType, class Space = HostSpace>
 struct LAnd;
 template <class ScalarType, class Space = HostSpace>
 struct LOr;
-
-//--------------------------------------------------------------------------------------//
-//  this is used to mark execution or memory spaces as not available
-//
-template <typename Tp>
-struct IsSpaceAvailable : std::true_type {};
-
-//--------------------------------------------------------------------------------------//
-//  declare any spaces that might not be available and mark them as unavailable
-//
-#if !defined(KOKKOS_ENABLE_SERIAL)
-template <>
-struct IsSpaceAvailable<Serial> : std::false_type {};
-#endif
-
-#if !defined(KOKKOS_ENABLE_THREADS)
-template <>
-struct IsSpaceAvailable<Threads> : std::false_type {};
-#endif
-
-#if !defined(KOKKOS_ENABLE_OPENMP)
-template <>
-struct IsSpaceAvailable<OpenMP> : std::false_type {};
-#endif
-
-#if !defined(KOKKOS_ENABLE_CUDA)
-template <>
-struct IsSpaceAvailable<Cuda> : std::false_type {};
-template <>
-struct IsSpaceAvailable<CudaSpace> : std::false_type {};
-template <>
-struct IsSpaceAvailable<CudaHostPinnedSpace> : std::false_type {};
-template <>
-struct IsSpaceAvailable<CudaUVMSpace> : std::false_type {};
-#endif
-
-#if !defined(KOKKOS_ENABLE_HBWSPACE)
-template <>
-struct IsSpaceAvailable<Experimental::HBWSpace> : std::false_type {};
-#endif
-
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
-template <>
-struct IsSpaceAvailable<Experimental::OpenMPTarget> : std::false_type {};
-template <>
-struct IsSpaceAvailable<Experimental::OpenMPTargetSpace> : std::false_type {};
-#endif
-
-#if !defined(KOKKOS_ENABLE_HIP)
-template <>
-struct IsSpaceAvailable<Experimental::HIP> : std::false_type {};
-template <>
-struct IsSpaceAvailable<Experimental::HIPSpace> : std::false_type {};
-template <>
-struct IsSpaceAvailable<Experimental::HIPHostPinnedSpace> : std::false_type {};
-#endif
-
-#if !defined(KOKKOS_ENABLE_SYCL)
-template <>
-struct IsSpaceAvailable<Experimental::SYCL> : std::false_type {};
-template <>
-struct IsSpaceAvailable<Experimental::SYCLDeviceUSMSpace> : std::false_type {};
-template <>
-struct IsSpaceAvailable<Experimental::SYCLSharedUSMSpace> : std::false_type {};
-#endif
 
 namespace Impl {
 template <typename... T>
