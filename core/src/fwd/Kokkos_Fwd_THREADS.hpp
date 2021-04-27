@@ -47,5 +47,9 @@
 
 namespace Kokkos {
 class Threads;  ///< Execution space with pthreads back-end.
+#if !defined(KOKKOS_ENABLE_THREADS)
+template <>
+struct IsSpaceAvailable<Threads> : std::false_type {};
+#endif
 }  // namespace Kokkos
 #endif

@@ -51,5 +51,13 @@ class HIPSpace;            ///< Memory space on HIP GPU
 class HIPHostPinnedSpace;  ///< Memory space on Host accessible to HIP GPU
 class HIP;                 ///< Execution space for HIP GPU
 }  // namespace Experimental
+#if !defined(KOKKOS_ENABLE_HIP)
+template <>
+struct IsSpaceAvailable<Experimental::HIP> : std::false_type {};
+template <>
+struct IsSpaceAvailable<Experimental::HIPSpace> : std::false_type {};
+template <>
+struct IsSpaceAvailable<Experimental::HIPHostPinnedSpace> : std::false_type {};
+#endif
 }  // namespace Kokkos
 #endif

@@ -61,6 +61,15 @@ void cuda_prefetch_pointer(const ExecSpace& /*space*/, const void* /*ptr*/,
 void cuda_prefetch_pointer(const Cuda& space, const void* ptr, size_t bytes,
                            bool to_device);
 }  // namespace Impl
+#else
+template <>
+struct IsSpaceAvailable<Cuda> : std::false_type {};
+template <>
+struct IsSpaceAvailable<CudaSpace> : std::false_type {};
+template <>
+struct IsSpaceAvailable<CudaHostPinnedSpace> : std::false_type {};
+template <>
+struct IsSpaceAvailable<CudaUVMSpace> : std::false_type {};
 #endif
 }  // namespace Kokkos
 #endif
