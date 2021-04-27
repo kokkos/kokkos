@@ -45,11 +45,9 @@
 #ifndef KOKKOS_HPX_FWD_HPP_
 #define KOKKOS_HPX_FWD_HPP_
 
-#if defined(KOKKOS_ENABLE_HPX)
 namespace Kokkos {
 namespace Experimental {
 class HPX;  ///< Execution space with HPX back-end.
 }  // namespace Experimental
 }  // namespace Kokkos
-#endif
 #endif

@@ -45,7 +45,6 @@
 #ifndef KOKKOS_SYCL_FWD_HPP_
 #define KOKKOS_SYCL_FWD_HPP_
 
-#if defined(KOKKOS_ENABLE_SYCL)
 namespace Kokkos {
 namespace Experimental {
 class SYCLDeviceUSMSpace;  ///< Memory space on SYCL device, not accessible from
@@ -55,5 +54,4 @@ class SYCLSharedUSMSpace;  ///< Memory space accessible from both the SYCL
 class SYCL;                ///< Execution space for SYCL
 }  // namespace Experimental
 }  // namespace Kokkos
-#endif
 #endif

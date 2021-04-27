@@ -348,27 +348,20 @@ struct IsSpaceAvailable : std::true_type {};
 //  declare any spaces that might not be available and mark them as unavailable
 //
 #if !defined(KOKKOS_ENABLE_SERIAL)
-class Serial;
 template <>
 struct IsSpaceAvailable<Serial> : std::false_type {};
 #endif
 
-class Threads;
 #if !defined(KOKKOS_ENABLE_THREADS)
 template <>
 struct IsSpaceAvailable<Threads> : std::false_type {};
 #endif
 
-class OpenMP;
 #if !defined(KOKKOS_ENABLE_OPENMP)
 template <>
 struct IsSpaceAvailable<OpenMP> : std::false_type {};
 #endif
 
-class Cuda;
-class CudaSpace;
-class CudaHostPinnedSpace;
-class CudaUVMSpace;
 #if !defined(KOKKOS_ENABLE_CUDA)
 template <>
 struct IsSpaceAvailable<Cuda> : std::false_type {};
@@ -380,18 +373,11 @@ template <>
 struct IsSpaceAvailable<CudaUVMSpace> : std::false_type {};
 #endif
 
-namespace Experimental {
-class HBWSpace;
-}  // namespace Experimental
 #if !defined(KOKKOS_ENABLE_HBWSPACE)
 template <>
 struct IsSpaceAvailable<Experimental::HBWSpace> : std::false_type {};
 #endif
 
-namespace Experimental {
-class OpenMPTarget;
-class OpenMPTargetSpace;
-}  // namespace Experimental
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
 template <>
 struct IsSpaceAvailable<Experimental::OpenMPTarget> : std::false_type {};
@@ -399,11 +385,6 @@ template <>
 struct IsSpaceAvailable<Experimental::OpenMPTargetSpace> : std::false_type {};
 #endif
 
-namespace Experimental {
-class HIP;
-class HIPSpace;
-class HIPHostPinnedSpace;
-}  // namespace Experimental
 #if !defined(KOKKOS_ENABLE_HIP)
 template <>
 struct IsSpaceAvailable<Experimental::HIP> : std::false_type {};
@@ -413,11 +394,6 @@ template <>
 struct IsSpaceAvailable<Experimental::HIPHostPinnedSpace> : std::false_type {};
 #endif
 
-namespace Experimental {
-class SYCL;
-class SYCLDeviceUSMSpace;
-class SYCLSharedUSMSpace;
-}  // namespace Experimental
 #if !defined(KOKKOS_ENABLE_SYCL)
 template <>
 struct IsSpaceAvailable<Experimental::SYCL> : std::false_type {};
