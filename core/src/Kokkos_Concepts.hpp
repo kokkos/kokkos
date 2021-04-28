@@ -326,7 +326,8 @@ struct is_space {
   // For backward compatibility, deprecated in favor of
   // Kokkos::Impl::HostMirror<S>::host_mirror_space
 
-  using host_memory_space KOKKOS_DEPRECATED = typename std::conditional<
+ private:
+  using impl_host_memory_space = typename std::conditional<
       std::is_same<memory_space, Kokkos::HostSpace>::value
 #if defined(KOKKOS_ENABLE_CUDA)
           || std::is_same<memory_space, Kokkos::CudaUVMSpace>::value ||
@@ -341,7 +342,7 @@ struct is_space {
       ,
       memory_space, Kokkos::HostSpace>::type;
 
-  using host_execution_space KOKKOS_DEPRECATED = typename std::conditional<
+  using impl_host_execution_space = typename std::conditional<
 #if defined(KOKKOS_ENABLE_CUDA)
       std::is_same<execution_space, Kokkos::Cuda>::value ||
 #elif defined(KOKKOS_ENABLE_HIP)
@@ -355,10 +356,14 @@ struct is_space {
           false,
       Kokkos::DefaultHostExecutionSpace, execution_space>::type;
 
-  using host_mirror_space KOKKOS_DEPRECATED = typename std::conditional<
-      std::is_same<execution_space, host_execution_space>::value &&
-          std::is_same<memory_space, host_memory_space>::value,
-      T, Kokkos::Device<host_execution_space, host_memory_space>>::type;
+ public:
+  using host_memory_space KOKKOS_DEPRECATED    = impl_host_memory_space;
+  using host_execution_space KOKKOS_DEPRECATED = impl_host_execution_space;
+  using host_mirror_space KOKKOS_DEPRECATED    = typename std::conditional<
+      std::is_same<execution_space, impl_host_execution_space>::value &&
+          std::is_same<memory_space, impl_host_memory_space>::value,
+      T,
+      Kokkos::Device<impl_host_execution_space, impl_host_memory_space>>::type;
 };
 
 // For backward compatibility
