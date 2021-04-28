@@ -388,8 +388,8 @@ namespace Experimental {
 using Iterate KOKKOS_DEPRECATED = Kokkos::Iterate;
 template <typename... Properties>
 using MDRangePolicy KOKKOS_DEPRECATED = Kokkos::MDRangePolicy<Properties...>;
-template <unsigned N, Iterate OuterDir = Iterate::Default,
-          Iterate InnerDir = Iterate::Default>
+template <unsigned N, Kokkos::Iterate OuterDir = Kokkos::Iterate::Default,
+          Kokkos::Iterate InnerDir = Kokkos::Iterate::Default>
 using Rank KOKKOS_DEPRECATED = Kokkos::Rank<N, OuterDir, InnerDir>;
 }  // namespace Experimental
 }  // namespace Kokkos
