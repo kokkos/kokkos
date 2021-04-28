@@ -253,6 +253,9 @@ template <class DstSpace, class SrcSpace,
           class ExecutionSpace = typename DstSpace::execution_space>
 struct DeepCopy;
 
+template <typename ExecutionSpace, class DT, class... DP>
+struct ZeroMemset;
+
 template <class ViewType, class Layout = typename ViewType::array_layout,
           class ExecSpace = typename ViewType::execution_space,
           int Rank = ViewType::Rank, typename iType = int64_t>
