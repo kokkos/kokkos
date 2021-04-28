@@ -596,6 +596,41 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
   TunerType get_tuner() const { return tuner; }
 };
 
+template <class Choice>
+struct CategoricalTuner {
+  using choice_list = std::vector<Choice>;
+  choice_list choices;
+  size_t context;
+  size_t tuning_variable_id;
+  CategoricalTuner(std::string name, choice_list m_choices)
+      : choices(m_choices) {
+    std::vector<int64_t> indices;
+    for (typename decltype(choices)::size_type x = 0; x < choices.size(); ++x) {
+      indices.push_back(x);
+    }
+    VariableInfo info;
+    info.category      = StatisticalCategory::kokkos_value_categorical;
+    info.valueQuantity = CandidateValueType::kokkos_value_set;
+    info.type          = ValueType::kokkos_value_int64;
+    info.candidates    = make_candidate_set(indices.size(), indices.data());
+    tuning_variable_id = declare_output_type(name, info);
+  }
+  const Choice& begin() {
+    context = get_new_context_id();
+    begin_context(context);
+    VariableValue value = make_variable_value(tuning_variable_id, int64_t(0));
+    request_output_values(context, 1, &value);
+    return choices[value.value.int_value];
+  }
+  void end() { end_context(context); }
+};
+
+template <typename Choice>
+auto make_categorical_tuner(std::string name, std::vector<Choice> choices)
+    -> CategoricalTuner<Choice> {
+  return CategoricalTuner<Choice>(name, choices);
+}
+
 }  // namespace Experimental
 }  // namespace Tools
 }  // namespace Kokkos
