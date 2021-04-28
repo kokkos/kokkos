@@ -1518,16 +1518,6 @@ struct Tile_Loop_Type<
 };
 // end Structs for calling loops
 
-template <typename T>
-struct is_type_array : std::false_type {
-  using value_type = T;
-};
-
-template <typename T>
-struct is_type_array<T[]> : std::true_type {
-  using value_type = T;
-};
-
 template <typename RP, typename Functor, typename Tag = void,
           typename ValueType = void, typename Enable = void>
 struct HostIterateTile;
@@ -1945,7 +1935,7 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
 template <typename RP, typename Functor, typename Tag, typename ValueType>
 struct HostIterateTile<RP, Functor, Tag, ValueType,
                        std::enable_if_t<!std::is_void<ValueType>::value &&
-                                        !is_type_array<ValueType>::value>> {
+                                        !std::is_array<ValueType>::value>> {
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
 
@@ -2367,14 +2357,14 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
 template <typename RP, typename Functor, typename Tag, typename ValueType>
 struct HostIterateTile<RP, Functor, Tag, ValueType,
                        std::enable_if_t<!std::is_void<ValueType>::value &&
-                                        is_type_array<ValueType>::value>> {
+                                        std::is_array<ValueType>::value>> {
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
 
   using value_type =
-      typename is_type_array<ValueType>::value_type;  // strip away the
-                                                      // 'array-ness' [], only
-                                                      // underlying type remains
+      std::remove_extent_t<ValueType>;  // strip away the
+                                        // 'array-ness' [], only
+                                        // underlying type remains
 
   inline HostIterateTile(
       RP const& rp, Functor const& func,
