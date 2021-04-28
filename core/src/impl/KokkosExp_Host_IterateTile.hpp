@@ -1519,9 +1519,6 @@ struct Tile_Loop_Type<
 // end Structs for calling loops
 
 template <typename T>
-using is_void_type = std::is_same<T, void>;
-
-template <typename T>
 struct is_type_array : std::false_type {
   using value_type = T;
 };
@@ -1537,9 +1534,8 @@ struct HostIterateTile;
 
 // For ParallelFor
 template <typename RP, typename Functor, typename Tag, typename ValueType>
-struct HostIterateTile<
-    RP, Functor, Tag, ValueType,
-    typename std::enable_if<is_void_type<ValueType>::value>::type> {
+struct HostIterateTile<RP, Functor, Tag, ValueType,
+                       std::enable_if_t<std::is_void<ValueType>::value>> {
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
 
@@ -1947,10 +1943,9 @@ struct HostIterateTile<
 // For ParallelReduce
 // ValueType - scalar: For reductions
 template <typename RP, typename Functor, typename Tag, typename ValueType>
-struct HostIterateTile<
-    RP, Functor, Tag, ValueType,
-    typename std::enable_if<!is_void_type<ValueType>::value &&
-                            !is_type_array<ValueType>::value>::type> {
+struct HostIterateTile<RP, Functor, Tag, ValueType,
+                       std::enable_if_t<!std::is_void<ValueType>::value &&
+                                        !is_type_array<ValueType>::value>> {
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
 
@@ -2370,10 +2365,9 @@ struct HostIterateTile<
 // Extra specialization for array reductions
 // ValueType[]: For array reductions
 template <typename RP, typename Functor, typename Tag, typename ValueType>
-struct HostIterateTile<
-    RP, Functor, Tag, ValueType,
-    typename std::enable_if<!is_void_type<ValueType>::value &&
-                            is_type_array<ValueType>::value>::type> {
+struct HostIterateTile<RP, Functor, Tag, ValueType,
+                       std::enable_if_t<!std::is_void<ValueType>::value &&
+                                        is_type_array<ValueType>::value>> {
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
 
