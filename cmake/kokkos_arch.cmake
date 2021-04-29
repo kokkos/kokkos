@@ -445,8 +445,19 @@ CHECK_AMDGPU_ARCH(VEGA906 gfx906) # Radeon Instinct MI50 and MI60
 CHECK_AMDGPU_ARCH(VEGA908 gfx908)
 
 IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
-  MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
-                     "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
+    FIND_PROGRAM(ROCM_ENUMERATOR rocm_agent_enumerator)
+    EXECUTE_PROCESS(COMMAND ${ROCM_ENUMERATOR} OUTPUT_VARIABLE GPU_ARCHS)
+    STRING(LENGTH "${GPU_ARCHS}" len_str)
+    # enumerator always output gfx000 as the first line
+    IF(${len_str} LESS 8)
+      MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
+                         "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+    ENDIF()
+  ELSE()
+    MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
+                       "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+  ENDIF()
 ENDIF()
 
 IF (KOKKOS_ENABLE_OPENMPTARGET)
