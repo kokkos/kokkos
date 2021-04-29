@@ -90,14 +90,12 @@ using device_type_t = typename T::device_type;
 
 template <class Functor, class Policy>
 struct FunctorPolicyExecutionSpace {
-  using execution_space = detected_or_t<
-      detected_or_t<
-          std::conditional_t<
-              is_detected<device_type_t, Functor>::value,
-              detected_t<execution_space_t, detected_t<device_type_t, Functor>>,
-              Kokkos::DefaultExecutionSpace>,
-          execution_space_t, Functor>,
-      execution_space_t, Policy>;
+  using execution_space =
+      detected_or_t<detected_or_t<typename detected_or_t<
+                                      Kokkos::DefaultExecutionSpace,
+                                      device_type_t, Functor>::execution_space,
+                                  execution_space_t, Functor>,
+                    execution_space_t, Policy>;
 };
 
 }  // namespace Impl
