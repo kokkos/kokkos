@@ -687,14 +687,19 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
 
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
-            UnitTest_TuningBuiltins
-            SOURCES
-            tools/TestBuiltinTuners.cpp
+      UnitTest_TuningBuiltins
+      SOURCES
+      tools/TestBuiltinTuners.cpp
     )
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
       UnitTest_TuningBasics
       SOURCES
         tools/TestTuning.cpp
+    )
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_CategoricalTuner
+      SOURCES
+      tools/TestCategoricalTuner.cpp
     )
   endif()
   if(NOT Kokkos_ENABLE_OPENMPTARGET)
