@@ -327,7 +327,10 @@ struct is_space {
   // Kokkos::Impl::HostMirror<S>::host_mirror_space
 
  private:
-  using impl_host_memory_space = typename std::conditional<
+  // The actual definitions for host_memory_space and host_execution_spaces are
+  // in do_not_use_host_memory_space and do_not_use_host_execution_space to be
+  // able to use them within this class without deprecation warnings.
+  using do_not_use_host_memory_space = std::conditional_t<
       std::is_same<memory_space, Kokkos::HostSpace>::value
 #if defined(KOKKOS_ENABLE_CUDA)
           || std::is_same<memory_space, Kokkos::CudaUVMSpace>::value ||
@@ -340,9 +343,9 @@ struct is_space {
                           Kokkos::Experimental::SYCLSharedUSMSpace>::value
 #endif
       ,
-      memory_space, Kokkos::HostSpace>::type;
+      memory_space, Kokkos::HostSpace>;
 
-  using impl_host_execution_space = typename std::conditional<
+  using do_not_use_host_execution_space = std::conditional_t<
 #if defined(KOKKOS_ENABLE_CUDA)
       std::is_same<execution_space, Kokkos::Cuda>::value ||
 #elif defined(KOKKOS_ENABLE_HIP)
@@ -354,16 +357,18 @@ struct is_space {
                    Kokkos::Experimental::OpenMPTarget>::value ||
 #endif
           false,
-      Kokkos::DefaultHostExecutionSpace, execution_space>::type;
+      Kokkos::DefaultHostExecutionSpace, execution_space>;
 
  public:
-  using host_memory_space KOKKOS_DEPRECATED    = impl_host_memory_space;
-  using host_execution_space KOKKOS_DEPRECATED = impl_host_execution_space;
-  using host_mirror_space KOKKOS_DEPRECATED    = typename std::conditional<
-      std::is_same<execution_space, impl_host_execution_space>::value &&
-          std::is_same<memory_space, impl_host_memory_space>::value,
+  using host_memory_space KOKKOS_DEPRECATED = do_not_use_host_memory_space;
+  using host_execution_space KOKKOS_DEPRECATED =
+      do_not_use_host_execution_space;
+  using host_mirror_space KOKKOS_DEPRECATED = std::conditional_t<
+      std::is_same<execution_space, do_not_use_host_execution_space>::value &&
+          std::is_same<memory_space, do_not_use_host_memory_space>::value,
       T,
-      Kokkos::Device<impl_host_execution_space, impl_host_memory_space>>::type;
+      Kokkos::Device<do_not_use_host_execution_space,
+                     do_not_use_host_memory_space>>;
 };
 
 // For backward compatibility
