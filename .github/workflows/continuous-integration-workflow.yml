@@ -43,6 +43,9 @@ jobs:
           mkdir ~/Licenses
           curl https://dynamicinstaller.intel.com/api/v2/license > ~/Licenses/intel.lic
       - name: maybe_disable_death_tests
+        if: ${{ matrix.cxx == 'clang++' }}
+        run: echo "FC=flang" >> $GITHUB_ENV
+      - name: maybe_disable_death_tests
         if: ${{ matrix.distro == 'fedora:rawhide' }}
         run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
       - name: build-and-test
