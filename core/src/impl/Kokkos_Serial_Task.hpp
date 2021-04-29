@@ -210,16 +210,6 @@ class TaskQueueSpecializationConstrained<
 
         (*task->m_apply)(task, &exec);
 
-#if 0
-        printf( "TaskQueue<Serial>::executed: 0x%lx { 0x%lx 0x%lx %d %d %d }\n"
-        , uintptr_t(task)
-        , uintptr_t(task->m_wait)
-        , uintptr_t(task->m_next)
-        , task->m_task_type
-        , task->m_priority
-        , task->m_ref_count );
-#endif
-
         // If a respawn then re-enqueue otherwise the task is complete
         // and all tasks waiting on this task are updated.
         queue->complete(task);

@@ -335,19 +335,6 @@ class HostThreadTeamData {
     m_team_shared  = m_team_reduce + team_reduce_size;
     m_thread_local = m_team_shared + team_shared_size;
     m_scratch_size = align_to_int64(alloc_size);
-
-#if 0
-fprintf(stdout,"HostThreadTeamData::scratch_assign { %d %d %d %d %d %d %d }\n"
-       , int(m_pool_members)
-       , int(m_pool_rendezvous)
-       , int(m_pool_reduce)
-       , int(m_team_reduce)
-       , int(m_team_shared)
-       , int(m_thread_local)
-       , int(m_scratch_size)
-       );
-fflush(stdout);
-#endif
   }
 
   //----------------------------------------
