@@ -66,7 +66,6 @@ int main(int argc, char *argv[]) {
     Kokkos::Tools::Experimental::MDRangeTuner<2> md_tune_this(
         "md_tuner", mdp, TestMDFunctor{}, Kokkos::ParallelForTag{},
         Kokkos::Tools::Impl::Impl::SimpleTeamSizeCalculator{});
-
     std::vector<int> options{1, 2, 3, 4, 5};
 
     auto new_team_tuner = team_tune_this.combine("options", options);
