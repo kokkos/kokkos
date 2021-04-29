@@ -65,8 +65,8 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
-add_executable(CompileOnly TestDetectionIdiom.cpp)
-target_link_libraries(CompileOnly PRIVATE Kokkos::kokkos)
+add_executable(TestCompileOnly TestDetectionIdiom.cpp)
+target_link_libraries(TestCompileOnly PRIVATE Kokkos::kokkos)
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
   # Because there is always an exception to the rule
