@@ -662,7 +662,7 @@ struct CategoricalTuner {
     info.candidates    = make_candidate_set(indices.size(), indices.data());
     tuning_variable_id = declare_output_type(name, info);
   }
-  const Choice& begin() {
+  const Choice &begin() {
     context = get_new_context_id();
     begin_context(context);
     VariableValue value = make_variable_value(tuning_variable_id, int64_t(0));
