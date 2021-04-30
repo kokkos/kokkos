@@ -214,7 +214,7 @@ do
         rdc_flag="$1 $2"
         cuda_args="$cuda_args $rdc_flag"
         shift
-    elif [ "$rdc_flag" = "$1 $2" ]; then
+    elif [ "$rdc_flag" != "$1 $2" ]; then
         echo "RDC is being set twice with different flags, which is not handled"
         echo "$rdc_flag"
         echo "$1 $2"
@@ -373,7 +373,7 @@ do
         arch_flag="$1 $2"
         cuda_args="$cuda_args $arch_flag"
         shift
-    elif [ "$arch_flag" = "$1 $2" ]; then
+    elif [ "$arch_flag" != "$1 $2" ]; then
         echo "ARCH is being set twice with different flags, which is not handled"
         echo "$arch_flag"
         echo "$1 $2"
