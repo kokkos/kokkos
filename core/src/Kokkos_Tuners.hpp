@@ -61,32 +61,23 @@
 
 namespace Kokkos {
 namespace Tools {
+
 namespace Experimental {
 
 // forward declarations
-SetOrRange make_candidate_set(size_t size, int64_t *data);
-
+SetOrRange make_candidate_set(size_t size, int64_t* data);
 bool have_tuning_tool();
-
-size_t declare_output_type(const std::string &,
+size_t declare_output_type(const std::string&,
                            Kokkos::Tools::Experimental::VariableInfo);
-
 void request_output_values(size_t, size_t,
-                           Kokkos::Tools::Experimental::VariableValue *);
-
+                           Kokkos::Tools::Experimental::VariableValue*);
 VariableValue make_variable_value(size_t, int64_t);
-
 VariableValue make_variable_value(size_t, double);
-
 SetOrRange make_candidate_range(double lower, double upper, double step,
                                 bool openLower, bool openUpper);
-
 size_t get_new_context_id();
-
 void begin_context(size_t context_id);
-
 void end_context(size_t context_id);
-
 namespace Impl {
 
 /** We're going to take in search space descriptions
@@ -101,18 +92,14 @@ template <typename ValueType, typename ContainedType>
 struct ValueHierarchyNode {
   std::vector<ValueType> root_values;
   std::vector<ContainedType> sub_values;
-
-  void add_root_value(const ValueType &in) noexcept {
+  void add_root_value(const ValueType& in) noexcept {
     root_values.push_back(in);
   }
-
-  void add_sub_container(const ContainedType &in) { sub_values.push_back(in); }
-
-  const ValueType &get_root_value(const size_t index) const {
+  void add_sub_container(const ContainedType& in) { sub_values.push_back(in); }
+  const ValueType& get_root_value(const size_t index) const {
     return root_values[index];
   }
-
-  const ContainedType &get_sub_value(const size_t index) const {
+  const ContainedType& get_sub_value(const size_t index) const {
     return sub_values[index];
   }
 };
@@ -120,15 +107,12 @@ struct ValueHierarchyNode {
 template <typename ValueType>
 struct ValueHierarchyNode<ValueType, void> {
   std::vector<ValueType> root_values;
-
   explicit ValueHierarchyNode(std::vector<ValueType> rv)
       : root_values(std::move(rv)) {}
-
-  void add_root_value(const ValueType &in) noexcept {
+  void add_root_value(const ValueType& in) noexcept {
     root_values.push_back(in);
   }
-
-  const ValueType &get_root_value(const size_t index) const {
+  const ValueType& get_root_value(const size_t index) const {
     return root_values[index];
   }
 };
@@ -166,8 +150,7 @@ struct ValueHierarchyConstructor;
 template <class T>
 struct ValueHierarchyConstructor<std::vector<T>> {
   using return_type = typename MapTypeConverter<std::vector<T>>::type;
-
-  static return_type build(const std::vector<T> &in) { return return_type{in}; }
+  static return_type build(const std::vector<T>& in) { return return_type{in}; }
 };
 
 // For maps, we need to fill in the fundamental values, and construct child
@@ -175,10 +158,9 @@ struct ValueHierarchyConstructor<std::vector<T>> {
 template <class K, class V>
 struct ValueHierarchyConstructor<std::map<K, V>> {
   using return_type = typename MapTypeConverter<std::map<K, V>>::type;
-
-  static return_type build(const std::map<K, V> &in) {
+  static return_type build(const std::map<K, V>& in) {
     return_type node_to_build;
-    for (auto &entry : in) {
+    for (auto& entry : in) {
       node_to_build.add_root_value(entry.first);
       node_to_build.add_sub_container(
           ValueHierarchyConstructor<V>::build(entry.second));
@@ -238,7 +220,7 @@ struct DimensionValueExtractor;
 // At any given level, just return your value at that level
 template <class RootType, class Subtype>
 struct DimensionValueExtractor<ValueHierarchyNode<RootType, Subtype>> {
-  static RootType get(const ValueHierarchyNode<RootType, Subtype> &dimension,
+  static RootType get(const ValueHierarchyNode<RootType, Subtype>& dimension,
                       double fraction_to_traverse) {
     size_t index = dimension.root_values.size() * fraction_to_traverse;
     return dimension.get_root_value(index);
@@ -259,8 +241,7 @@ template <class ValueType>
 struct GetMultidimensionalPoint<ValueHierarchyNode<ValueType, void>, double> {
   using node_type   = ValueHierarchyNode<ValueType, void>;
   using return_type = std::tuple<ValueType>;
-
-  static return_type build(const node_type &in, double index) {
+  static return_type build(const node_type& in, double index) {
     return std::make_tuple(DimensionValueExtractor<node_type>::get(in, index));
   }
 };
@@ -275,8 +256,7 @@ struct GetMultidimensionalPoint<ValueHierarchyNode<ValueType, Subtype>, double,
       typename GetMultidimensionalPoint<Subtype, Indices...>::return_type;
   using return_type = decltype(std::tuple_cat(
       std::declval<std::tuple<ValueType>>(), std::declval<sub_tuple>()));
-
-  static return_type build(const node_type &in, double fraction_to_traverse,
+  static return_type build(const node_type& in, double fraction_to_traverse,
                            Indices... indices) {
     size_t index         = in.sub_values.size() * fraction_to_traverse;
     auto dimension_value = std::make_tuple(
@@ -288,7 +268,7 @@ struct GetMultidimensionalPoint<ValueHierarchyNode<ValueType, Subtype>, double,
 };
 
 template <typename PointType, class ArrayType, size_t... Is>
-auto get_point_helper(const PointType &in, const ArrayType &indices,
+auto get_point_helper(const PointType& in, const ArrayType& indices,
                       std::index_sequence<Is...>) {
   using helper = GetMultidimensionalPoint<
       PointType,
@@ -304,14 +284,13 @@ struct GetPoint<PointType,
                 std::array<Kokkos::Tools::Experimental::VariableValue, X>> {
   using index_set_type =
       std::array<Kokkos::Tools::Experimental::VariableValue, X>;
-
-  static auto build(const PointType &in, const index_set_type &indices) {
+  static auto build(const PointType& in, const index_set_type& indices) {
     return get_point_helper(in, indices, std::make_index_sequence<X>{});
   }
 };
 
 template <typename PointType, typename ArrayType>
-auto get_point(const PointType &point, const ArrayType &indices) {
+auto get_point(const PointType& point, const ArrayType& indices) {
   return GetPoint<PointType, ArrayType>::build(point, indices);
 }
 
@@ -347,11 +326,11 @@ class MultidimensionalSparseTuningProblem {
       typename Impl::MapTypeConverter<extended_map<Key, Value>>::type;
 
   template <typename Key>
-  auto extend(const std::string &axis_name,
-              const std::vector<Key> &new_tuning_axis) const
+  auto extend(const std::string& axis_name,
+              const std::vector<Key>& new_tuning_axis) const
       -> extended_problem<Key> {
     ExtendedProblemSpace<Key, ProblemSpaceInput> extended_space;
-    for (auto &key : new_tuning_axis) {
+    for (auto& key : new_tuning_axis) {
       extended_space.add_root_value(key);
       extended_space.add_sub_container(m_space);
     }
@@ -373,7 +352,7 @@ class MultidimensionalSparseTuningProblem {
   MultidimensionalSparseTuningProblem() = default;
 
   MultidimensionalSparseTuningProblem(StoredProblemSpace space,
-                                      const std::vector<std::string> &names)
+                                      const std::vector<std::string>& names)
       : m_space(std::move(space)), m_variable_names(names) {
     assert(names.size() == space_dimensionality);
     for (unsigned long x = 0; x < names.size(); ++x) {
@@ -390,7 +369,7 @@ class MultidimensionalSparseTuningProblem {
   }
 
   MultidimensionalSparseTuningProblem(ProblemSpaceInput space,
-                                      const std::vector<std::string> &names)
+                                      const std::vector<std::string>& names)
       : MultidimensionalSparseTuningProblem(HierarchyConstructor::build(space),
                                             names) {}
 
@@ -421,15 +400,15 @@ class MultidimensionalSparseTuningProblem {
 template <typename Tuner>
 struct ExtendableTunerMixin {
   template <typename Key>
-  auto combine(const std::string &axis_name,
-               const std::vector<Key> &new_axis) const {
-    const auto &sub_tuner = static_cast<const Tuner *>(this)->get_tuner();
+  auto combine(const std::string& axis_name,
+               const std::vector<Key>& new_axis) const {
+    const auto& sub_tuner = static_cast<const Tuner*>(this)->get_tuner();
     return sub_tuner.extend(axis_name, new_axis);
   }
 
   template <typename... Coordinates>
   auto get_point(Coordinates... coordinates) {
-    const auto &sub_tuner = static_cast<const Tuner *>(this)->get_tuner();
+    const auto& sub_tuner = static_cast<const Tuner*>(this)->get_tuner();
     return sub_tuner.get_point(coordinates...);
   }
 };
@@ -437,7 +416,7 @@ struct ExtendableTunerMixin {
 template <size_t MaxDimensionSize = 100, template <class...> class Container,
           class... TemplateArguments>
 auto make_multidimensional_sparse_tuning_problem(
-    const Container<TemplateArguments...> &in, std::vector<std::string> names) {
+    const Container<TemplateArguments...>& in, std::vector<std::string> names) {
   return MultidimensionalSparseTuningProblem<Container, MaxDimensionSize,
                                              TemplateArguments...>(in, names);
 }
@@ -451,21 +430,16 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
   TunerType tuner;
 
  public:
-  TeamSizeTuner() = default;
-
-  TeamSizeTuner &operator=(const TeamSizeTuner &other) = default;
-
-  TeamSizeTuner(const TeamSizeTuner &other) = default;
-
-  TeamSizeTuner &operator=(TeamSizeTuner &&other) = default;
-
-  TeamSizeTuner(TeamSizeTuner &&other) = default;
-
+  TeamSizeTuner()        = default;
+  TeamSizeTuner& operator=(const TeamSizeTuner& other) = default;
+  TeamSizeTuner(const TeamSizeTuner& other)            = default;
+  TeamSizeTuner& operator=(TeamSizeTuner&& other) = default;
+  TeamSizeTuner(TeamSizeTuner&& other)            = default;
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
-  TeamSizeTuner(const std::string &name,
-                Kokkos::TeamPolicy<Properties...> &policy,
-                const Functor &functor, const TagType &tag,
+  TeamSizeTuner(const std::string& name,
+                Kokkos::TeamPolicy<Properties...>& policy,
+                const Functor& functor, const TagType& tag,
                 ViableConfigurationCalculator calc) {
     using PolicyType           = Kokkos::TeamPolicy<Properties...>;
     auto initial_vector_length = policy.impl_vector_length();
@@ -533,7 +507,7 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
       policy.impl_set_vector_length(vector_length);
       auto max_team_size = calc.get_max_team_size(policy, functor, tag);
       if (policy.impl_auto_team_size()) {  // case 1 or 3, try all legal team
-        // sizes
+                                           // sizes
         for (int team_size = max_team_size; team_size >= 1; team_size /= 2) {
           allowed_team_sizes.push_back(team_size);
         }
@@ -549,7 +523,7 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
   }
 
   template <typename... Properties>
-  void tune(Kokkos::TeamPolicy<Properties...> &policy) {
+  void tune(Kokkos::TeamPolicy<Properties...>& policy) {
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       auto configuration = tuner.begin();
       auto team_size     = std::get<1>(configuration);
@@ -560,7 +534,6 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
       }
     }
   }
-
   void end() {
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       tuner.end();
@@ -573,14 +546,13 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
 namespace Impl {
 
 template <typename T>
-void fill_tile(std::vector<T> &cont, int tile_size) {
+void fill_tile(std::vector<T>& cont, int tile_size) {
   for (int x = 1; x < tile_size; x *= 2) {
     cont.push_back(x);
   }
 }
-
 template <typename T, typename Mapped>
-void fill_tile(std::map<T, Mapped> &cont, int tile_size) {
+void fill_tile(std::map<T, Mapped>& cont, int tile_size) {
   for (int x = 1; x < tile_size; x *= 2) {
     fill_tile(cont[x], tile_size / x);
   }
@@ -602,12 +574,11 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
 
  public:
   MDRangeTuner() = default;
-
   template <typename Functor, typename TagType, typename Calculator,
             typename... Properties>
-  MDRangeTuner(const std::string &name,
-               const Kokkos::MDRangePolicy<Properties...> &policy,
-               const Functor &functor, const TagType &tag, Calculator calc) {
+  MDRangeTuner(const std::string& name,
+               const Kokkos::MDRangePolicy<Properties...>& policy,
+               const Functor& functor, const TagType& tag, Calculator calc) {
     SpaceDescription desc;
     int max_tile_size =
         calc.get_mdrange_max_tile_size_product(policy, functor, tag);
@@ -619,21 +590,18 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
     tuner = make_multidimensional_sparse_tuning_problem<max_slices>(
         desc, feature_names);
   }
-
   template <typename Policy, typename Tuple, size_t... Indices>
-  void set_policy_tile(Policy &policy, const Tuple &tuple,
-                       const std::index_sequence<Indices...> &) {
+  void set_policy_tile(Policy& policy, const Tuple& tuple,
+                       const std::index_sequence<Indices...>&) {
     policy.impl_change_tile_size({std::get<Indices>(tuple)...});
   }
-
   template <typename... Properties>
-  void tune(Kokkos::MDRangePolicy<Properties...> &policy) {
+  void tune(Kokkos::MDRangePolicy<Properties...>& policy) {
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       auto configuration = tuner.begin();
       set_policy_tile(policy, configuration, std::make_index_sequence<rank>{});
     }
   }
-
   void end() {
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       tuner.end();
@@ -662,7 +630,7 @@ struct CategoricalTuner {
     info.candidates    = make_candidate_set(indices.size(), indices.data());
     tuning_variable_id = declare_output_type(name, info);
   }
-  const Choice &begin() {
+  const Choice& begin() {
     context = get_new_context_id();
     begin_context(context);
     VariableValue value = make_variable_value(tuning_variable_id, int64_t(0));

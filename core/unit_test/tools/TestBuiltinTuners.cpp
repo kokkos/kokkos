@@ -42,19 +42,15 @@
 //@HEADER
 */
 #include <Kokkos_Core.hpp>
-
 using ExecSpace  = Kokkos::DefaultHostExecutionSpace;
 using TeamMember = Kokkos::TeamPolicy<ExecSpace>::member_type;
-
 struct TestTeamFunctor {
   KOKKOS_FUNCTION void operator()(TeamMember) const {}
 };
-
 struct TestMDFunctor {
   KOKKOS_FUNCTION void operator()(const int, const int) const {}
 };
-
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   {
     Kokkos::TeamPolicy<ExecSpace> teamp(1, Kokkos::AUTO, Kokkos::AUTO);
@@ -66,6 +62,7 @@ int main(int argc, char *argv[]) {
     Kokkos::Tools::Experimental::MDRangeTuner<2> md_tune_this(
         "md_tuner", mdp, TestMDFunctor{}, Kokkos::ParallelForTag{},
         Kokkos::Tools::Impl::Impl::SimpleTeamSizeCalculator{});
+
     std::vector<int> options{1, 2, 3, 4, 5};
 
     auto new_team_tuner = team_tune_this.combine("options", options);
