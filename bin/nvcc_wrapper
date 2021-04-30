@@ -222,7 +222,7 @@ do
     fi
     ;;
   #Handle known nvcc args
-  --dryrun|--verbose|--keep|--keep-dir*|-G|-lineinfo|-expt-extended-lambda|-expt-relaxed-constexpr|--resource-usage|-Xptxas*|--fmad*|--use_fast_math|--Wext-lambda-captures-this|-Wext-lambda-captures-this)
+  --dryrun|--verbose|--keep|--keep-dir*|-G|-lineinfo|-expt-extended-lambda|-expt-relaxed-constexpr|--resource-usage|-Xptxas*|--fmad=*|--use_fast_math|--Wext-lambda-captures-this|-Wext-lambda-captures-this)
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
@@ -230,12 +230,12 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument
+  -maxrregcount=*|--maxrregcount=*)
+    cuda_args="$cuda_args $1"
+    ;;
   -maxrregcount|--default-stream|-Xnvlink|--fmad|-cudart|--cudart|-include)
     cuda_args="$cuda_args $1 $2"
     shift
-    ;;
-  -maxrregcount*|--maxrregcount*)
-    cuda_args="$cuda_args $1"
     ;;
   #Handle unsupported standard flags
   --std=c++1y|-std=c++1y|--std=gnu++1y|-std=gnu++1y|--std=c++1z|-std=c++1z|--std=gnu++1z|-std=gnu++1z|--std=c++2a|-std=c++2a)
