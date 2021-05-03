@@ -1,0 +1,124 @@
+#
+# Usage:
+# ------
+#
+# This docker compose file parameterizes build configurations using environment
+# variables from the host. The default values for the build configuration
+# variables are set in `.env`.
+#
+# Variables:
+#   ARCH={amd64, arm64v8, ...}
+#   COMPILER_TYPE={gnu}
+#   COMPILER={gcc-5, gcc-6, gcc-7, gcc-8, gcc-9, gcc-10}
+#   REPO=<docker-hub-repo>
+#   UBUNTU={18.04, 20.04}
+#   ULIMIT_CORE=0
+#
+# Kokkos Configuration Variables:
+#   CMAKE_BUILD_TYPE=release        # CMake build type
+#   Kokkos_BACKEND={OPENMP, PTHREAD, CUDA, SERIAL, HIP, HPX} # Default: OPENMP
+#   Kokkos_ARCH={HSW, ARMV80, BPQ, ...} # Default: HSW
+#
+# In order to run in the container, there are two stages. First, one must build
+# or pull the base container with the variables exported (or using the defaults
+# in `kokkos/.env` that configure it:
+#
+# For instance, if you want an interactive gcc build with gcc-8, run the
+# following commands:
+#
+# $ export COMPILER_TYPE=gcc
+# $ export COMPILER=gcc-8
+# $ docker-compose pull ubuntu-cpp-interactive
+# $ docker-compose run ubuntu-cpp-interactive
+#              (Container will start)
+# # /kokkos/scripts/docker/build_cpp.sh /kokkos /build
+#
+
+# Need verision >= 3.5 for the features in use
+version: '3.5'
+
+# Named volumes must be predefined according the docker compose rules. Many
+# combinations have already been added, but if a needed configuration is missing
+# add it to this list. For example, for ARM64v8 on Ubuntu 20.04 with clang-9,
+# add `arm64v8-ubuntu-20.04-clang-9-cache`.
+volumes:
+  kokkos-amd64-ubuntu-18.04-gcc-5-cache:
+  kokkos-amd64-ubuntu-18.04-gcc-6-cache:
+  kokkos-amd64-ubuntu-18.04-gcc-7-cache:
+  kokkos-amd64-ubuntu-18.04-gcc-8-cache:
+  kokkos-amd64-ubuntu-20.04-gcc-9-cache:
+  kokkos-amd64-ubuntu-20.04-gcc-10-cache:
+
+# Define basic rules for ccache used across multiple services. The beauty of
+# docker compose with cached volumes is that similarly configured builds will
+# reuse a ccache volume making build speeds much faster than a fresh build each
+# time.
+x-ccache: &ccache
+  CCACHE_COMPILERCHECK: content
+  CCACHE_COMPRESS: 1
+  CCACHE_COMPRESSLEVEL: 5
+  CCACHE_MAXSIZE: 700M
+  CCACHE_DIR: /build/ccache
+
+# Define rules for kokkos configuration options across various services
+x-kokkosopts: &kokkosopts
+  https_proxy: ${PROXY-}
+  http_proxy: ${PROXY-}
+  CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE:-Release}
+  Kokkos_ENABLE_TESTS: ${Kokkos_ENABLE_TESTS:-1}
+  Kokkos_BACKEND: ${Kokkos_BACKEND:-OPENMP}
+  Kokkos_ARCH: ${Kokkos_ARCH:-HSW}
+
+services:
+  ##############################################################################
+  # C++ builds of Kokkos on ubuntu/alpine platform from container baseline
+  # Ubuntu gcc-7 debug build:
+  #   docker-compose run -e CMAKE_BUILD_TYPE=debug ubuntu-cpp
+  ubuntu-cpp:
+    image: ${REPO}:kokkos-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}
+    build:
+      context: .
+      target: base
+      dockerfile: scripts/docker/dev-ubuntu-${UBUNTU}-${COMPILER_TYPE}.dockerfile
+      cache_from:
+        - ${REPO}:kokkos-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}
+      args: &default-args
+        arch: ${ARCH}
+        proxy: ${PROXY}
+        compiler: ${COMPILER}
+    ulimits: &ulimits
+      core: ${ULIMIT_CORE}
+    environment:
+      <<: *ccache
+      <<: *kokkosopts
+    volumes: &ubuntu-volumes
+      - .:/kokkos:delegated
+      - ${CACHE}kokkos-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}-cache:/build:delegated
+    command: &kokkos-cpp-command >
+      /bin/bash -c "
+        /kokkos/scripts/docker/build_cpp.sh /kokkos /build &&
+        /kokkos/scripts/docker/test_cpp.sh  /kokkos /build"
+
+  ##############################################################################
+  # C++ builds of Kokkos on ubuntu platform from container baseline
+  # Ubuntu gcc-7 debug build using interactive mode for development.
+  #
+  # Note that the volumes are set up as delegated so any changes on the host
+  # platform to the kokkos directory will be sync'ed to the container as changes
+  # are made.
+  #
+  # docker-compose run -e CMAKE_BUILD_TYPE=debug ubuntu-cpp-interactive
+  ubuntu-cpp-interactive:
+    image: ${REPO}:kokkos-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}
+    build:
+      context: .
+      target: base
+      dockerfile: scripts/docker/dev-ubuntu-${UBUNTU}-${COMPILER_TYPE}.dockerfile
+      cache_from:
+        - ${REPO}:kokkos-${ARCH}-ubuntu-${UBUNTU}-${COMPILER}
+      args: *default-args
+    ulimits: *ulimits
+    environment:
+      <<: *ccache
+      <<: *kokkosopts
+    volumes: *ubuntu-volumes
