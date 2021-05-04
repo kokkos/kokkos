@@ -86,7 +86,6 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
-                                -DKokkos_ARCH_VEGA906=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DBUILD_NAME=${STAGE_NAME} \
                               -P cmake/KokkosCI.cmake'''
@@ -121,7 +120,6 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
-                                -DKokkos_ARCH_VEGA906=ON \
                                 -DBUILD_NAME=${STAGE_NAME} \
                               -P cmake/KokkosCI.cmake'''
                     }
