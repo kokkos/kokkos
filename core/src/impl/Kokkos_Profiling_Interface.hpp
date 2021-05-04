@@ -119,6 +119,8 @@ using provideToolProgrammingInterfaceFunction =
 using requestToolSettingsFunction = Kokkos_Tools_requestToolSettingsFunction;
 using ToolSettings                = Kokkos_Tools_ToolSettings;
 using ToolProgrammingInterface    = Kokkos_Tools_ToolProgrammingInterface;
+using ToolEventSetRequest = Kokkos_Tools_ToolEventSetRequest;
+using ToolEventIds = Kokkos_Tools_EventIds;
 }  // namespace Experimental
 using initFunction           = Kokkos_Profiling_initFunction;
 using finalizeFunction       = Kokkos_Profiling_finalizeFunction;

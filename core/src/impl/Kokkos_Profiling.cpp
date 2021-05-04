@@ -72,6 +72,110 @@ void tool_invoked_fence(const uint32_t /* devID */) {
    */
   Kokkos::fence();
 }
+bool tool_set_event_hook(Kokkos::Tools::Experimental::ToolEventSetRequest request){
+    void* target = request.function_pointer;
+    switch(request.id){
+        case Kokkos_Tools_init_event:
+           Kokkos::Tools::Experimental::set_init_callback(*reinterpret_cast<initFunction*>(&target));
+           break;
+        case Kokkos_Tools_finalize_event:
+            Kokkos::Tools::Experimental::set_finalize_callback(*reinterpret_cast<finalizeFunction *>(&target));
+            break;
+        case Kokkos_Tools_parse_args_event:
+            Kokkos::Tools::Experimental::set_parse_args_callback(*reinterpret_cast<parseArgsFunction *>(&target));
+            break;
+        case Kokkos_Tools_print_help_event:
+            Kokkos::Tools::Experimental::set_print_help_callback(*reinterpret_cast<printHelpFunction *>(&target));
+            break;
+        case Kokkos_Tools_begin_parallel_for_event:
+            Kokkos::Tools::Experimental::set_begin_parallel_for_callback(*reinterpret_cast<beginFunction *>(&target));
+            break;
+        case Kokkos_Tools_end_parallel_for_event:
+            Kokkos::Tools::Experimental::set_end_parallel_for_callback(*reinterpret_cast<endFunction *>(&target));
+            break;
+        case Kokkos_Tools_begin_parallel_reduce_event:
+            Kokkos::Tools::Experimental::set_begin_parallel_reduce_callback(*reinterpret_cast<beginFunction *>(&target));
+            break;
+        case Kokkos_Tools_end_parallel_reduce_event:
+            Kokkos::Tools::Experimental::set_end_parallel_reduce_callback(*reinterpret_cast<endFunction *>(&target));
+            break;
+        case Kokkos_Tools_begin_parallel_scan_event:
+            Kokkos::Tools::Experimental::set_begin_parallel_scan_callback(*reinterpret_cast<beginFunction *>(&target));
+            break;
+        case Kokkos_Tools_end_parallel_scan_event:
+            Kokkos::Tools::Experimental::set_end_parallel_scan_callback(*reinterpret_cast<endFunction *>(&target));
+            break;
+        case Kokkos_Tools_push_region_event:
+            Kokkos::Tools::Experimental::set_push_region_callback(*reinterpret_cast<pushFunction *>(&target));
+            break;
+        case Kokkos_Tools_pop_region_event:
+            Kokkos::Tools::Experimental::set_pop_region_callback(*reinterpret_cast<popFunction *>(&target));
+            break;
+        case Kokkos_Tools_allocate_data_event:
+            Kokkos::Tools::Experimental::set_allocate_data_callback(*reinterpret_cast<allocateDataFunction *>(&target));
+            break;
+        case Kokkos_Tools_deallocate_data_event:
+            Kokkos::Tools::Experimental::set_deallocate_data_callback(*reinterpret_cast<deallocateDataFunction *>(&target));
+            break;
+        case Kokkos_Tools_create_profile_section_event:
+            Kokkos::Tools::Experimental::set_create_profile_section_callback(*reinterpret_cast<createProfileSectionFunction *>(&target));
+            break;
+        case Kokkos_Tools_start_profile_section_event:
+            Kokkos::Tools::Experimental::set_start_profile_section_callback(*reinterpret_cast<startProfileSectionFunction *>(&target));
+            break;
+        case Kokkos_Tools_stop_profile_section_event:
+            Kokkos::Tools::Experimental::set_stop_profile_section_callback(*reinterpret_cast<stopProfileSectionFunction *>(&target));
+            break;
+        case Kokkos_Tools_destroy_profile_section_event:
+            Kokkos::Tools::Experimental::set_destroy_profile_section_callback(*reinterpret_cast<destroyProfileSectionFunction *>(&target));
+            break;
+        case Kokkos_Tools_profile_event_event:
+            Kokkos::Tools::Experimental::set_profile_event_callback(*reinterpret_cast<profileEventFunction *>(&target));
+            break;
+        case Kokkos_Tools_begin_deep_copy_event:
+            Kokkos::Tools::Experimental::set_begin_deep_copy_callback(*reinterpret_cast<beginDeepCopyFunction *>(&target));
+            break;
+        case Kokkos_Tools_end_deep_copy_event:
+            Kokkos::Tools::Experimental::set_end_deep_copy_callback(*reinterpret_cast<endDeepCopyFunction *>(&target));
+            break;
+        case Kokkos_Tools_begin_fence_event:
+            Kokkos::Tools::Experimental::set_begin_fence_callback(*reinterpret_cast<beginFenceFunction *>(&target));
+            break;
+        case Kokkos_Tools_end_fence_event:
+            Kokkos::Tools::Experimental::set_end_fence_callback(*reinterpret_cast<endFenceFunction *>(&target));
+            break;
+        case Kokkos_Tools_sync_dual_view_event:
+            Kokkos::Tools::Experimental::set_dual_view_sync_callback(*reinterpret_cast<dualViewSyncFunction *>(&target));
+            break;
+        case Kokkos_Tools_modify_dual_view_event:
+            Kokkos::Tools::Experimental::set_dual_view_modify_callback(*reinterpret_cast<dualViewModifyFunction *>(&target));
+            break;
+        case Kokkos_Tools_declare_metadata_event:
+            Kokkos::Tools::Experimental::set_declare_metadata_callback(*reinterpret_cast<declareMetadataFunction *>(&target));
+            break;
+        case Kokkos_Tools_declare_output_type_event:
+            Kokkos::Tools::Experimental::set_declare_output_type_callback(*reinterpret_cast<outputTypeDeclarationFunction *>(&target));
+            break;
+        case Kokkos_Tools_declare_input_type_event:
+            Kokkos::Tools::Experimental::set_declare_input_type_callback(*reinterpret_cast<inputTypeDeclarationFunction *>(&target));
+            break;
+        case Kokkos_Tools_request_output_values_event:
+            Kokkos::Tools::Experimental::set_request_output_values_callback(*reinterpret_cast<requestValueFunction *>(&target));
+            break;
+        case Kokkos_Tools_begin_tuning_context_event:
+            Kokkos::Tools::Experimental::set_begin_context_callback(*reinterpret_cast<contextBeginFunction *>(&target));
+            break;
+        case Kokkos_Tools_end_tuning_context_event:
+            Kokkos::Tools::Experimental::set_end_context_callback(*reinterpret_cast<contextEndFunction *>(&target));
+            break;
+        case Kokkos_Tools_declare_optimization_goal_event:
+            Kokkos::Tools::Experimental::set_declare_optimization_goal_callback(*reinterpret_cast<optimizationGoalDeclarationFunction *>(&target));
+            break;
+        default:
+            return false;
+    }
+    return true;
+}
 }  // namespace Impl
 #ifdef KOKKOS_ENABLE_TUNING
 static size_t kernel_name_context_variable_id;
@@ -588,10 +692,11 @@ void initialize(const std::string& profileLibrary) {
 
   Experimental::ToolProgrammingInterface actions;
   actions.fence = &Experimental::Impl::tool_invoked_fence;
+  actions.set_tool_hook = &Experimental::Impl::tool_set_event_hook;
 
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
-      Experimental::current_callbacks.provide_tool_programming_interface, 1,
+      Experimental::current_callbacks.provide_tool_programming_interface, 2,
       actions);
 
 #ifdef KOKKOS_ENABLE_TUNING
