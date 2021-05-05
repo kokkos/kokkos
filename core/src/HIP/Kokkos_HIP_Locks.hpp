@@ -52,7 +52,7 @@
 #include <HIP/Kokkos_HIP_Error.hpp>
 
 #ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
-#include <desul/atomics/Lock_Array_Cuda.hpp>
+#include <desul/atomics/Lock_Array_HIP.hpp>
 #endif
 
 namespace Kokkos {

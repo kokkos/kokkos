@@ -148,10 +148,10 @@ inline int eliminate_warning_for_lock_array() { return lock_array_copied; }
 #define DESUL_IMPL_COPY_HIP_LOCK_ARRAYS_TO_DEVICE()                               \
   {                                                                               \
     if (::desul::Impl::lock_array_copied == 0) {                                  \
-      hipMemcpyToSymbol(HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE), \
+      (void) hipMemcpyToSymbol(HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE), \
                         &::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,          \
                         sizeof(int32_t*));                                        \
-      hipMemcpyToSymbol(HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE),   \
+      (void) hipMemcpyToSymbol(HIP_SYMBOL(::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE),   \
                         &::desul::Impl::HIP_SPACE_ATOMIC_LOCKS_NODE_h,            \
                         sizeof(int32_t*));                                        \
     }                                                                             \
