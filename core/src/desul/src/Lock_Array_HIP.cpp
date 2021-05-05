@@ -8,6 +8,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <cinttypes>
 #include <desul/atomics/Lock_Array.hpp>
+#include <string>
+#include <sstream>
 
 #ifdef DESUL_HAVE_HIP_ATOMICS
 #ifdef DESUL_HIP_RDC
@@ -38,24 +40,44 @@ namespace Impl {
 int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
 int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 
+void check_error_and_throw_hip(hipError_t e, const std::string msg) {
+  if(e != hipSuccess) {
+    std::ostringstream out;
+    out << "Desul::Error: " << msg << " error(" << hipGetErrorName(e)
+                  << "): " << hipGetErrorString(e);
+    throw std::runtime_error(out.str());
+  }
+}
+
 template<typename T>
 void init_lock_arrays_hip() {
   if (HIP_SPACE_ATOMIC_LOCKS_DEVICE_h != nullptr) return;
-  hipMalloc(&HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,
+
+  auto error_malloc1 = hipMalloc(&HIP_SPACE_ATOMIC_LOCKS_DEVICE_h,
             sizeof(int32_t) * (HIP_SPACE_ATOMIC_MASK + 1));
-  hipHostMalloc(&HIP_SPACE_ATOMIC_LOCKS_NODE_h,
+  check_error_and_throw_hip(error_malloc1, "init_lock_arrays_hip: hipMalloc device locks");
+
+  auto error_malloc2 = hipHostMalloc(&HIP_SPACE_ATOMIC_LOCKS_NODE_h,
                 sizeof(int32_t) * (HIP_SPACE_ATOMIC_MASK + 1));
-  hipDeviceSynchronize();
+  check_error_and_throw_hip(error_malloc2, "init_lock_arrays_hip: hipMallocHost host locks");
+
+  auto error_sync1 = hipDeviceSynchronize();
   DESUL_IMPL_COPY_HIP_LOCK_ARRAYS_TO_DEVICE();
+  check_error_and_throw_hip(error_sync1, "init_lock_arrays_hip: post malloc");
+
   init_lock_arrays_hip_kernel<<<(HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256>>>();
-  hipDeviceSynchronize();
+
+  auto error_sync2 = hipDeviceSynchronize();
+  check_error_and_throw_hip(error_sync2, "init_lock_arrays_hip: post init");
 }
 
 template<typename T>
 void finalize_lock_arrays_hip() {
   if (HIP_SPACE_ATOMIC_LOCKS_DEVICE_h == nullptr) return;
-  hipFree(HIP_SPACE_ATOMIC_LOCKS_DEVICE_h);
-  hipHostFree(HIP_SPACE_ATOMIC_LOCKS_NODE_h);
+  auto error_free1 = hipFree(HIP_SPACE_ATOMIC_LOCKS_DEVICE_h);
+  check_error_and_throw_hip(error_free1, "finalize_lock_arrays_hip: free device locks");
+  auto error_free2 = hipHostFree(HIP_SPACE_ATOMIC_LOCKS_NODE_h);
+  check_error_and_throw_hip(error_free2, "finalize_lock_arrays_hip: free host locks");
   HIP_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
   HIP_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 #ifdef DESUL_HIP_RDC
