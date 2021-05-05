@@ -42,36 +42,45 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_OPENMP
+// This file tests the categorical tuner
 
-#include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
+#include <unistd.h>
+struct point {
+  float x;
+  float y;
+  float z;
+};
+void do_computation(const point& test_point) {
+  usleep(((unsigned int)test_point.x) * 100);
+}
+using namespace Kokkos::Tools::Experimental;
+int main(int argc, char* argv[]) {
+  Kokkos::initialize(argc, argv);
+  {
+    VariableInfo info;
+    info.category              = StatisticalCategory::kokkos_value_categorical;
+    info.valueQuantity         = CandidateValueType::kokkos_value_unbounded;
+    info.type                  = ValueType::kokkos_value_string;
+    size_t input               = declare_input_type("kernel", info);
+    VariableValue kernel_value = make_variable_value(input, "abs");
+    size_t kernel_context      = get_new_context_id();
+    begin_context(kernel_context);
+    set_input_values(kernel_context, 1, &kernel_value);
 
-//----------------------------------------------------------------------------
-#include <TestRandom.hpp>
-#include <iomanip>
+    std::vector<point> points;
+    points.push_back({1.0, 1.0, 1.0});
+    points.push_back({10.0, 10.0, 10.0});
+    points.push_back({0.0, 0.0, 0.0});
+    auto tuner =
+        Kokkos::Tools::Experimental::make_categorical_tuner("points", points);
+    for (decltype(points)::size_type x = 0; x < 3000; ++x) {
+      point test_point = tuner.begin();
+      do_computation(test_point);
+      tuner.end();
+    }
 
-namespace Test {
-
-#define OPENMP_RANDOM_XORSHIFT64(num_draws)                             \
-  TEST(openmp, Random_XorShift64) {                                     \
-    Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::OpenMP> >( \
-        num_draws);                                                     \
+    end_context(kernel_context);
   }
-
-#define OPENMP_RANDOM_XORSHIFT1024(num_draws)                             \
-  TEST(openmp, Random_XorShift1024) {                                     \
-    Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::OpenMP> >( \
-        num_draws);                                                       \
-  }
-
-OPENMP_RANDOM_XORSHIFT64(10240000)
-OPENMP_RANDOM_XORSHIFT1024(10130144)
-
-#undef OPENMP_RANDOM_XORSHIFT64
-#undef OPENMP_RANDOM_XORSHIFT1024
-}  // namespace Test
-#else
-void KOKKOS_ALGORITHMS_UNITTESTS_TESTOPENMP_PREVENT_LINK_ERROR() {}
-#endif
+  Kokkos::finalize();
+}

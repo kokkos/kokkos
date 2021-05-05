@@ -258,7 +258,7 @@ void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {
                                                void>;
 
       Record *const r = Record::allocate(Kokkos::Experimental::HIPSpace(),
-                                         "InternalScratchBitset",
+                                         "Kokkos::InternalScratchBitset",
                                          sizeof(uint32_t) * buffer_bound);
 
       Record::increment(r);
@@ -305,8 +305,10 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_space(
         Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                                              void>;
 
-    static Record *const r = Record::allocate(
-        Kokkos::Experimental::HIPSpace(), "InternalScratchSpace",
+    if (m_scratchSpace) Record::decrement(Record::get_record(m_scratchSpace));
+
+    Record *const r = Record::allocate(
+        Kokkos::Experimental::HIPSpace(), "Kokkos::InternalScratchSpace",
         (sizeScratchGrain * m_scratchSpaceCount));
 
     Record::increment(r);
@@ -327,8 +329,10 @@ Kokkos::Experimental::HIP::size_type *HIPInternal::scratch_flags(
         Kokkos::Impl::SharedAllocationRecord<Kokkos::Experimental::HIPSpace,
                                              void>;
 
+    if (m_scratchFlags) Record::decrement(Record::get_record(m_scratchFlags));
+
     Record *const r = Record::allocate(
-        Kokkos::Experimental::HIPSpace(), "InternalScratchFlags",
+        Kokkos::Experimental::HIPSpace(), "Kokkos::InternalScratchFlags",
         (sizeScratchGrain * m_scratchFlagsCount));
 
     Record::increment(r);
@@ -347,7 +351,7 @@ void *HIPInternal::resize_team_scratch_space(std::int64_t bytes,
   if (m_team_scratch_current_size == 0) {
     m_team_scratch_current_size = bytes;
     m_team_scratch_ptr = Kokkos::kokkos_malloc<Kokkos::Experimental::HIPSpace>(
-        "HIPSpace::ScratchMemory", m_team_scratch_current_size);
+        "Kokkos::HIPSpace::TeamScratchMemory", m_team_scratch_current_size);
   }
   if ((bytes > m_team_scratch_current_size) ||
       ((bytes < m_team_scratch_current_size) && (force_shrink))) {
@@ -397,6 +401,7 @@ void HIPInternal::finalize() {
 }
 
 char *HIPInternal::get_next_driver(size_t driverTypeSize) const {
+  std::lock_guard<std::mutex> const lock(m_mutexWorkArray);
   if (d_driverWorkArray == nullptr) {
     HIP_SAFE_CALL(
         hipHostMalloc(&d_driverWorkArray,

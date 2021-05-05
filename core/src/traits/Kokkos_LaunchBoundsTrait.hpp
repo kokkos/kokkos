@@ -42,10 +42,56 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_CUDA_HPP
-#define KOKKOS_TEST_CUDA_HPP
+#ifndef KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+#define KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
 
-#define TEST_CATEGORY cuda
-#define TEST_EXECSPACE Kokkos::Cuda
+#include <Kokkos_Macros.hpp>
+#include <Kokkos_Concepts.hpp>  // LaunchBounds
+#include <traits/Kokkos_PolicyTraitAdaptor.hpp>
+#include <traits/Kokkos_Traits_fwd.hpp>
 
-#endif
+namespace Kokkos {
+namespace Impl {
+
+//==============================================================================
+// <editor-fold desc="trait specification"> {{{1
+
+struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
+  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
+  template <template <class> class GetBase, class... OtherTraits>
+  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+    static constexpr bool launch_bounds_is_defaulted = true;
+
+    using launch_bounds = LaunchBounds<>;
+  };
+  template <class LaunchBoundParam, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+
+    static constexpr bool launch_bounds_is_defaulted = false;
+
+    static_assert(base_t::launch_bounds_is_defaulted,
+                  "Kokkos Error: More than one launch_bounds given");
+
+    using launch_bounds = LaunchBoundParam;
+  };
+};
+
+// </editor-fold> end trait specification }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
+
+template <unsigned int maxT, unsigned int minB>
+struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
+    : std::true_type {};
+
+// </editor-fold> end PolicyTraitMatcher specialization }}}1
+//==============================================================================
+
+}  // end namespace Impl
+}  // end namespace Kokkos
+
+#endif  // KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP

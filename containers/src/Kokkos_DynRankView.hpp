@@ -572,37 +572,22 @@ class DynRankView : public ViewTraits<DataType, Properties...> {
                      (is_layout_left || is_layout_right || is_layout_stride)
   };
 
-  template <class Space, bool = Kokkos::Impl::MemorySpaceAccess<
-                             Space, typename traits::memory_space>::accessible>
-  struct verify_space {
-    KOKKOS_FORCEINLINE_FUNCTION static void check() {}
-  };
-
-  template <class Space>
-  struct verify_space<Space, false> {
-    KOKKOS_FORCEINLINE_FUNCTION static void check() {
-      Kokkos::abort(
-          "Kokkos::DynRankView ERROR: attempt to access inaccessible memory "
-          "space");
-    };
-  };
-
 // Bounds checking macros
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
 
 // rank of the calling operator - included as first argument in ARG
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)             \
-  DynRankView::template verify_space<                     \
-      Kokkos::Impl::ActiveExecutionMemorySpace>::check(); \
-  Kokkos::Impl::dyn_rank_view_verify_operator_bounds<     \
-      typename traits::memory_space>                      \
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                          \
+  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
+                             typename traits::memory_space>::check();  \
+  Kokkos::Impl::dyn_rank_view_verify_operator_bounds<                  \
+      typename traits::memory_space>                                   \
       ARG;
 
 #else
 
-#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG) \
-  DynRankView::template verify_space<         \
-      Kokkos::Impl::ActiveExecutionMemorySpace>::check();
+#define KOKKOS_IMPL_VIEW_OPERATOR_VERIFY(ARG)                          \
+  Kokkos::Impl::verify_space<Kokkos::Impl::ActiveExecutionMemorySpace, \
+                             typename traits::memory_space>::check();
 
 #endif
 

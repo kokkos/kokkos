@@ -387,6 +387,7 @@ DEFINE_UNARY_FUNCTION_EVAL(nearbyint, 2);
   constexpr char math_function_name<MathBinaryFunction_##FUNC>::name[]
 
 DEFINE_BINARY_FUNCTION_EVAL(pow, 2);
+DEFINE_BINARY_FUNCTION_EVAL(hypot, 2);
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
 
@@ -595,6 +596,12 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2., 3.);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_binary_function<TEST_EXECSPACE, kk_pow>(2.l, 3.l);
+#endif
+
+  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2.f, 3.f);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2., 3.);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(2.l, 3.l);
 #endif
 }
 

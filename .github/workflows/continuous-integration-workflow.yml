@@ -19,6 +19,14 @@ jobs:
             cxx: 'icpc'
             cmake_build_type: 'Debug'
             openmp: 'ON'
+          - distro: 'fedora:intel-oneapi'
+            cxx: 'icpx'
+            cmake_build_type: 'Release'
+            openmp: 'ON'
+          - distro: 'fedora:intel-oneapi'
+            cxx: 'icpx'
+            cmake_build_type: 'Debug'
+            openmp: 'ON'
     runs-on: ubuntu-latest
     container: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
     steps:
@@ -34,6 +42,9 @@ jobs:
         run: |
           mkdir ~/Licenses
           curl https://dynamicinstaller.intel.com/api/v2/license > ~/Licenses/intel.lic
+      - name: maybe_disable_death_tests
+        if: ${{ matrix.distro == 'fedora:rawhide' }}
+        run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV
       - name: build-and-test
         run: |
           ccache -z
@@ -43,6 +54,7 @@ jobs:
             -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
             -DBUILD_NAME=${{ matrix.distro }}-${{ matrix.cxx }} \

@@ -63,6 +63,7 @@ KOKKOS_ARCH_OPTION(AMPERE80        GPU  "NVIDIA Ampere generation CC 8.0")
 KOKKOS_ARCH_OPTION(AMPERE86        GPU  "NVIDIA Ampere generation CC 8.6")
 KOKKOS_ARCH_OPTION(ZEN             HOST "AMD Zen architecture")
 KOKKOS_ARCH_OPTION(ZEN2            HOST "AMD Zen2 architecture")
+KOKKOS_ARCH_OPTION(ZEN3            HOST "AMD Zen3 architecture")
 KOKKOS_ARCH_OPTION(VEGA900         GPU  "AMD GPU MI25 GFX900")
 KOKKOS_ARCH_OPTION(VEGA906         GPU  "AMD GPU MI50/MI60 GFX906")
 KOKKOS_ARCH_OPTION(VEGA908         GPU  "AMD GPU MI100 GFX908")
@@ -142,8 +143,16 @@ ENDIF()
 #------------------------------- KOKKOS_HIP_OPTIONS ---------------------------
 #clear anything that might be in the cache
 GLOBAL_SET(KOKKOS_AMDGPU_OPTIONS)
-IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIP)
-  SET(AMDGPU_ARCH_FLAG "--amdgpu-target")
+IF(KOKKOS_ENABLE_HIP)
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
+    SET(AMDGPU_ARCH_FLAG "--amdgpu-target")
+  ELSE()
+    SET(AMDGPU_ARCH_FLAG "--offload-arch")
+    GLOBAL_APPEND(KOKKOS_AMDGPU_OPTIONS -x hip)
+    IF(DEFINED ENV{ROCM_PATH})
+      GLOBAL_APPEND(KOKKOS_AMDGPU_OPTIONS --rocm-path=$ENV{ROCM_PATH})
+    ENDIF()
+  ENDIF()
 ENDIF()
 
 
@@ -184,6 +193,8 @@ ENDIF()
 IF (KOKKOS_ARCH_A64FX)
   COMPILER_SPECIFIC_FLAGS(
     DEFAULT -march=armv8.2-a+sve
+    Clang -march=armv8.2-a+sve -msve-vector-bits=512
+    GCC -march=armv8.2-a+sve -msve-vector-bits=512
   )
 ENDIF()
 
@@ -202,6 +213,15 @@ IF (KOKKOS_ARCH_ZEN2)
     DEFAULT -march=znver2 -mtune=znver2
   )
   SET(KOKKOS_ARCH_AMD_ZEN2 ON)
+  SET(KOKKOS_ARCH_AMD_AVX2 ON)
+ENDIF()
+
+IF (KOKKOS_ARCH_ZEN3)
+  COMPILER_SPECIFIC_FLAGS(
+    Intel   -mavx2
+    DEFAULT -march=znver3 -mtune=znver3
+  )
+  SET(KOKKOS_ARCH_AMD_ZEN3 ON)
   SET(KOKKOS_ARCH_AMD_AVX2 ON)
 ENDIF()
 
@@ -274,7 +294,7 @@ IF (KOKKOS_ARCH_SKX)
   )
 ENDIF()
 
-IF (KOKKOS_ARCH_WSM OR KOKKOS_ARCH_SNB OR KOKKOS_ARCH_HSW OR KOKKOS_ARCH_BDW OR KOKKOS_ARCH_KNL OR KOKKOS_ARCH_SKX OR KOKKOS_ARCH_ZEN OR KOKKOS_ARCH_ZEN2)
+IF (KOKKOS_ARCH_WSM OR KOKKOS_ARCH_SNB OR KOKKOS_ARCH_HSW OR KOKKOS_ARCH_BDW OR KOKKOS_ARCH_KNL OR KOKKOS_ARCH_SKX OR KOKKOS_ARCH_ZEN OR KOKKOS_ARCH_ZEN2 OR KOKKOS_ARCH_ZEN3)
   SET(KOKKOS_USE_ISA_X86_64 ON)
 ENDIF()
 
@@ -310,7 +330,7 @@ IF (KOKKOS_ARCH_POWER8 OR KOKKOS_ARCH_POWER9)
   SET(KOKKOS_USE_ISA_POWERPCLE ON)
 ENDIF()
 
-IF (Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+IF (KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
   COMPILER_SPECIFIC_FLAGS(
     Clang  -fcuda-rdc
     NVIDIA --relocatable-device-code=true
@@ -334,8 +354,8 @@ ENDIF()
 
 #Right now we cannot get the compiler ID when cross-compiling, so just check
 #that HIP is enabled
-IF (Kokkos_ENABLE_HIP)
-  IF (Kokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE)
+IF (KOKKOS_ENABLE_HIP)
+  IF (KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE)
     COMPILER_SPECIFIC_FLAGS(
       DEFAULT -fgpu-rdc
     )
@@ -346,8 +366,7 @@ IF (Kokkos_ENABLE_HIP)
   ENDIF()
 ENDIF()
 
-
-IF (Kokkos_ENABLE_SYCL)
+IF (KOKKOS_ENABLE_SYCL)
   COMPILER_SPECIFIC_FLAGS(
     DEFAULT -fsycl
   )
@@ -407,12 +426,12 @@ FUNCTION(CHECK_AMDGPU_ARCH ARCH FLAG)
     ENDIF()
     SET(AMDGPU_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
     IF (NOT KOKKOS_ENABLE_HIP AND NOT KOKKOS_ENABLE_OPENMPTARGET)
-      MESSAGE(WARNING "Given HIP arch ${ARCH}, but Kokkos_ENABLE_AMDGPU and Kokkos_ENABLE_OPENMPTARGET are OFF. Option will be ignored.")
+      MESSAGE(WARNING "Given AMD GPU architecture ${ARCH}, but Kokkos_ENABLE_HIP and Kokkos_ENABLE_OPENMPTARGET are OFF. Option will be ignored.")
       UNSET(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
     ELSE()
       SET(KOKKOS_AMDGPU_ARCH_FLAG ${FLAG} PARENT_SCOPE)
       GLOBAL_APPEND(KOKKOS_AMDGPU_OPTIONS "${AMDGPU_ARCH_FLAG}=${FLAG}")
-      IF(KOKKOS_ENABLE_HIP)
+      IF(KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE)
         GLOBAL_APPEND(KOKKOS_LINK_OPTIONS "${AMDGPU_ARCH_FLAG}=${FLAG}")
       ENDIF()
     ENDIF()
@@ -426,8 +445,19 @@ CHECK_AMDGPU_ARCH(VEGA906 gfx906) # Radeon Instinct MI50 and MI60
 CHECK_AMDGPU_ARCH(VEGA908 gfx908)
 
 IF(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED)
-  MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
-                     "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+  IF(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC)
+    FIND_PROGRAM(ROCM_ENUMERATOR rocm_agent_enumerator)
+    EXECUTE_PROCESS(COMMAND ${ROCM_ENUMERATOR} OUTPUT_VARIABLE GPU_ARCHS)
+    STRING(LENGTH "${GPU_ARCHS}" len_str)
+    # enumerator always output gfx000 as the first line
+    IF(${len_str} LESS 8)
+      MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
+                         "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+    ENDIF()
+  ELSE()
+    MESSAGE(SEND_ERROR "HIP enabled but no AMD GPU architecture currently enabled. "
+                       "Please enable one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'.")
+  ENDIF()
 ENDIF()
 
 IF (KOKKOS_ENABLE_OPENMPTARGET)
@@ -448,7 +478,7 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
   ENDIF()
   IF (KOKKOS_ARCH_INTEL_GEN)
     COMPILER_SPECIFIC_FLAGS(
-      IntelClang -fopenmp-targets=spir64 -D__STRICT_ANSI__
+      IntelLLVM -fopenmp-targets=spir64 -D__STRICT_ANSI__
     )
   ENDIF()
 ENDIF()

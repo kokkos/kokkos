@@ -42,13 +42,14 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_SYCL_HPP
-#define KOKKOS_TEST_SYCL_HPP
+#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_COMMON_HPP
+#define KOKKOS_ALGORITHMS_UNITTESTS_TESTSORT_COMMON_HPP
 
-#include <gtest/gtest.h>
+#include <TestSort.hpp>
 
-#define TEST_CATEGORY sycl
-#define TEST_CATEGORY_NUMBER 7
-#define TEST_EXECSPACE Kokkos::Experimental::SYCL
-
+namespace Test {
+TEST(TEST_CATEGORY, SortUnsigned) {
+  Impl::test_sort<TEST_EXECSPACE, unsigned>(171);
+}
+}  // namespace Test
 #endif

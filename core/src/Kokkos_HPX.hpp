@@ -523,14 +523,6 @@ struct MemorySpaceAccess<Kokkos::Experimental::HPX::memory_space,
   enum : bool { deepcopy = false };
 };
 
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::Experimental::HPX::memory_space,
-    Kokkos::Experimental::HPX::scratch_memory_space> {
-  enum : bool { value = true };
-  inline static void verify() {}
-  inline static void verify(const void *) {}
-};
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -2624,6 +2616,27 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   using value_type  = typename ValueTraits::value_type;
 
   value_type scan_val = value_type();
+
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, scan_val, true);
+  }
+}
+
+/** \brief  Intra-thread vector parallel scan with reducer
+ *
+ */
+template <typename iType, class FunctorType, typename ReducerType>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+    parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
+                      iType, Impl::HPXTeamMember> &loop_boundaries,
+                  const FunctorType &lambda, const ReducerType &reducer) {
+  typename ReducerType::value_type scan_val;
+  reducer.init(scan_val);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep

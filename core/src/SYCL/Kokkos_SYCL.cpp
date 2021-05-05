@@ -94,9 +94,7 @@ SYCL::SYCL(const sycl::queue& stream)
 }
 
 int SYCL::concurrency() {
-  // FIXME_SYCL We need a value larger than 1 here for some tests to pass,
-  // clearly this is true but not the roght value
-  return 2;
+  return Impl::SYCLInternal::singleton().m_maxConcurrency;
 }
 
 const char* SYCL::name() { return "SYCL"; }
@@ -126,6 +124,18 @@ SYCL::SYCLDevice::SYCLDevice(sycl::device d) : m_device(std::move(d)) {}
 
 SYCL::SYCLDevice::SYCLDevice(const sycl::device_selector& selector)
     : m_device(selector.select_device()) {}
+
+SYCL::SYCLDevice::SYCLDevice(size_t id) {
+  std::vector<sycl::device> gpu_devices =
+      sycl::device::get_devices(sycl::info::device_type::gpu);
+  if (id >= gpu_devices.size()) {
+    std::stringstream error_message;
+    error_message << "Requested GPU with id " << id << " but only "
+                  << gpu_devices.size() << " GPU(s) available!\n";
+    Kokkos::Impl::throw_runtime_exception(error_message.str());
+  }
+  m_device = gpu_devices[id];
+}
 
 sycl::device SYCL::SYCLDevice::get_device() const { return m_device; }
 
@@ -259,9 +269,13 @@ void SYCLSpaceInitializer::initialize(const InitArguments& args) {
   if (std::is_same<Kokkos::Experimental::SYCL,
                    Kokkos::DefaultExecutionSpace>::value ||
       0 < use_gpu) {
-    // FIXME_SYCL choose a specific device
-    Kokkos::Experimental::SYCL::impl_initialize(
-        Kokkos::Experimental::SYCL::SYCLDevice(sycl::default_selector()));
+    if (use_gpu > -1) {
+      Kokkos::Experimental::SYCL::impl_initialize(
+          Kokkos::Experimental::SYCL::SYCLDevice(use_gpu));
+    } else {
+      Kokkos::Experimental::SYCL::impl_initialize(
+          Kokkos::Experimental::SYCL::SYCLDevice(sycl::default_selector()));
+    }
   }
 }
 

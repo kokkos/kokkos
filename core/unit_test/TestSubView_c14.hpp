@@ -42,22 +42,15 @@
 //@HEADER
 */
 
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_OPENMP
-
-#include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
-
-//----------------------------------------------------------------------------
-#include <TestRandom.hpp>
-#include <TestSort.hpp>
-#include <iomanip>
+#ifndef KOKKOS_TEST_SUBVIEW_C14_HPP
+#define KOKKOS_TEST_SUBVIEW_C14_HPP
+#include <TestViewSubview.hpp>
 
 namespace Test {
 
-TEST(openmp, SortIssue1160) { Impl::test_issue_1160_sort<Kokkos::OpenMP>(); }
+TEST(TEST_CATEGORY, view_subview_memory_traits_construction) {
+  TestViewSubview::test_subview_memory_traits_construction();
+}
 
 }  // namespace Test
-#else
-void KOKKOS_ALGORITHMS_UNITTESTS_TESTOPENMP_PREVENT_LINK_ERROR() {}
 #endif

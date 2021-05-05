@@ -243,7 +243,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy& policy, const Functor&) {
-    return policy.space().impl_internal_space_instance()->m_maxThreadsPerSM;
+    return policy.space().impl_internal_space_instance()->m_maxWorkgroupSize;
   }
 
   void execute() const {

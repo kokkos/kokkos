@@ -66,13 +66,25 @@ class SYCLInternal {
   SYCLInternal& operator=(SYCLInternal&&) = delete;
   SYCLInternal(SYCLInternal&&)            = delete;
 
+  void* scratch_space(const size_type size);
+  void* scratch_flags(const size_type size);
+  void* resize_team_scratch_space(std::int64_t bytes,
+                                  bool force_shrink = false);
+
   int m_syclDev = -1;
 
-  size_t m_maxThreadsPerSM    = 0;
+  size_t m_maxWorkgroupSize   = 0;
+  uint32_t m_maxConcurrency   = 0;
   uint64_t m_maxShmemPerBlock = 0;
 
-  size_type* m_scratchSpace = nullptr;
-  size_type* m_scratchFlags = nullptr;
+  uint32_t* m_scratchConcurrentBitset = nullptr;
+  size_type m_scratchSpaceCount       = 0;
+  size_type* m_scratchSpace           = nullptr;
+  size_type m_scratchFlagsCount       = 0;
+  size_type* m_scratchFlags           = nullptr;
+
+  int64_t m_team_scratch_current_size = 0;
+  void* m_team_scratch_ptr            = nullptr;
 
   std::optional<sycl::queue> m_queue;
 
@@ -84,10 +96,6 @@ class SYCLInternal {
 
   // USMObjectMem is a reusable buffer for a single object
   // in USM memory
-  //
-  // FIXME_SYCL replace direct calls to sycl memory management
-  // (sycl::malloc, sycl::free) with Kokkos memory spaces so
-  // memory usage is tracked.
   template <sycl::usm::alloc Kind>
   class USMObjectMem {
    public:
@@ -116,16 +124,7 @@ class SYCLInternal {
 
     static constexpr sycl::usm::alloc kind = Kind;
 
-    void reset() {
-      assert(m_size == 0);
-
-      if (m_data) {
-        sycl::free(m_data, *m_q);
-        m_capacity = 0;
-        m_data     = nullptr;
-      }
-      m_q.reset();
-    }
+    void reset();
 
     void reset(sycl::queue q) {
       reset();
@@ -140,11 +139,7 @@ class SYCLInternal {
     USMObjectMem& operator=(USMObjectMem&&) = delete;
     USMObjectMem& operator=(USMObjectMem const&) = delete;
 
-    ~USMObjectMem() {
-      assert(m_size == 0);
-
-      if (m_data) sycl::free(m_data, *m_q);
-    }
+    ~USMObjectMem() { reset(); };
 
     void* data() noexcept { return m_data; }
     const void* data() const noexcept { return m_data; }
@@ -154,29 +149,14 @@ class SYCLInternal {
 
     // reserve() allocates space for at least n bytes
     // returns the new capacity
-    size_t reserve(size_t n) {
-      assert(m_size == 0);
-      assert(m_q);
-
-      if (m_capacity < n) {
-        // First free what we have (in case malloc can reuse it)
-        sycl::free(m_data, *m_q);
-
-        // FIXME_SYCL replace malloc with Kokkos memory spaces
-        m_data = sycl::malloc(n, *m_q, kind);
-        if (!m_data) {
-          m_capacity = 0;
-          Kokkos::Impl::throw_runtime_exception(
-              "bad_alloc: sycl::malloc failed");
-        }
-
-        m_capacity = n;
-      }
-
-      return m_capacity;
-    }
+    size_t reserve(size_t n);
 
    private:
+    using AllocationSpace =
+        std::conditional_t<Kind == sycl::usm::alloc::device,
+                           Kokkos::Experimental::SYCLDeviceUSMSpace,
+                           Kokkos::Experimental::SYCLSharedUSMSpace>;
+
     // This will memcpy an object T into memory held by this object
     // returns: a T* to that object
     //

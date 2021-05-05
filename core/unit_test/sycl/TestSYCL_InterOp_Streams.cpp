@@ -42,14 +42,14 @@
 //@HEADER
 */
 
-#include <sycl/TestSYCL_Category.hpp>
+#include <TestSYCL_Category.hpp>
 #include <Test_InterOp_Streams.hpp>
 
 namespace Test {
 // Test Interoperability with SYCL Streams
 TEST(sycl, raw_sycl_queues) {
-  cl::sycl::default_selector device_selector;
-  cl::sycl::queue queue(device_selector);
+  sycl::default_selector device_selector;
+  sycl::queue queue(device_selector);
   Kokkos::InitArguments arguments{-1, -1, -1, false};
   Kokkos::initialize(arguments);
   int* p            = sycl::malloc_device<int>(100, queue);
@@ -75,8 +75,6 @@ TEST(sycl, raw_sycl_queues) {
                              space0, {0, 0}, {10, 10}),
                          FunctorMDRange<MemorySpace>(v));
     space0.fence();
-    // FIXME_SYCL needs MDRangePolicy reduce
-#ifndef KOKKOS_ENABLE_SYCL
     Kokkos::parallel_reduce(
         "Test::sycl::raw_sycl_queue::MDRangeReduce",
         Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>(space0, {0, 0},
@@ -84,27 +82,23 @@ TEST(sycl, raw_sycl_queues) {
         FunctorMDRangeReduce<MemorySpace>(v), sum);
     space0.fence();
     ASSERT_EQ(7 * 100, sum);
-#endif
 
     Kokkos::parallel_for("Test::sycl::raw_sycl_queue::Team",
                          Kokkos::TeamPolicy<TEST_EXECSPACE>(space0, 10, 10),
                          FunctorTeam<MemorySpace, TEST_EXECSPACE>(v));
     space0.fence();
-    // FIXME_SYCL needs TeamPolicy reduce
-#ifndef KOKKOS_ENABLE_SYCL
     Kokkos::parallel_reduce("Test::sycl::raw_sycl_queue::Team",
                             Kokkos::TeamPolicy<TEST_EXECSPACE>(space0, 10, 10),
                             FunctorTeamReduce<MemorySpace, TEST_EXECSPACE>(v),
                             sum);
     space0.fence();
     ASSERT_EQ(8 * 100, sum);
-#endif
   }
   Kokkos::finalize();
 
   // Try to use the queue after Kokkos' copy got out-of-scope.
   // This kernel corresponds to "offset_streams" in the HIP and CUDA tests.
-  queue.submit([&](cl::sycl::handler& cgh) {
+  queue.submit([&](sycl::handler& cgh) {
     cgh.parallel_for(sycl::range<1>(100), [=](int idx) { p[idx] += idx; });
   });
   queue.wait_and_throw();

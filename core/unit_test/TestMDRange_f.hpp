@@ -46,9 +46,8 @@
 
 namespace Test {
 
-// FIXME_SYCL requires MDRange parallel_reduce
 // FIXME_OPENMPTARGET requires MDRange parallel_reduce
-#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENMPTARGET)
+#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, mdrange_scalar) {
   TestMDRange_ReduceScalar<TEST_EXECSPACE>::test_scalar_reduce(12, 11);
 }

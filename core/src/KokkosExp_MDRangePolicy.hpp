@@ -48,6 +48,7 @@
 #include <initializer_list>
 
 #include <Kokkos_Layout.hpp>
+#include <Kokkos_Rank.hpp>
 #include <Kokkos_Array.hpp>
 #include <impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
@@ -76,22 +77,6 @@ template <typename ExecSpace>
 struct default_inner_direction {
   using type                     = Iterate;
   static constexpr Iterate value = Iterate::Right;
-};
-
-// Iteration Pattern
-template <unsigned N, Iterate OuterDir = Iterate::Default,
-          Iterate InnerDir = Iterate::Default>
-struct Rank {
-  static_assert(N != 0u, "Kokkos Error: rank 0 undefined");
-  static_assert(N != 1u,
-                "Kokkos Error: rank 1 is not a multi-dimensional range");
-  static_assert(N < 7u, "Kokkos Error: Unsupported rank...");
-
-  using iteration_pattern = Rank<N, OuterDir, InnerDir>;
-
-  static constexpr int rank                = N;
-  static constexpr Iterate outer_direction = OuterDir;
-  static constexpr Iterate inner_direction = InnerDir;
 };
 
 namespace Impl {

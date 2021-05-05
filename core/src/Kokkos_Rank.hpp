@@ -42,47 +42,30 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_KOKKOS_RANK_HPP
+#define KOKKOS_KOKKOS_RANK_HPP
+
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_SERIAL
+#include <Kokkos_Layout.hpp>  // Iterate
 
-#include <gtest/gtest.h>
+namespace Kokkos {
 
-#include <Kokkos_Core.hpp>
+// Iteration Pattern
+template <unsigned N, Iterate OuterDir = Iterate::Default,
+          Iterate InnerDir = Iterate::Default>
+struct Rank {
+  static_assert(N != 0u, "Kokkos Error: rank 0 undefined");
+  static_assert(N != 1u,
+                "Kokkos Error: rank 1 is not a multi-dimensional range");
+  static_assert(N < 7u, "Kokkos Error: Unsupported rank...");
 
-#include <TestRandom.hpp>
-#include <TestSort.hpp>
-#include <iomanip>
+  using iteration_pattern = Rank<N, OuterDir, InnerDir>;
 
-//----------------------------------------------------------------------------
+  static constexpr int rank                = N;
+  static constexpr Iterate outer_direction = OuterDir;
+  static constexpr Iterate inner_direction = InnerDir;
+};
 
-namespace Test {
+}  // end namespace Kokkos
 
-#define SERIAL_RANDOM_XORSHIFT64(num_draws)                             \
-  TEST(serial, Random_XorShift64) {                                     \
-    Impl::test_random<Kokkos::Random_XorShift64_Pool<Kokkos::Serial> >( \
-        num_draws);                                                     \
-  }
-
-#define SERIAL_RANDOM_XORSHIFT1024(num_draws)                             \
-  TEST(serial, Random_XorShift1024) {                                     \
-    Impl::test_random<Kokkos::Random_XorShift1024_Pool<Kokkos::Serial> >( \
-        num_draws);                                                       \
-  }
-
-#define SERIAL_SORT_UNSIGNED(size)                   \
-  TEST(serial, SortUnsigned) {                       \
-    Impl::test_sort<Kokkos::Serial, unsigned>(size); \
-  }
-
-SERIAL_RANDOM_XORSHIFT64(10240000)
-SERIAL_RANDOM_XORSHIFT1024(10130144)
-SERIAL_SORT_UNSIGNED(171)
-
-#undef SERIAL_RANDOM_XORSHIFT64
-#undef SERIAL_RANDOM_XORSHIFT1024
-#undef SERIAL_SORT_UNSIGNED
-
-}  // namespace Test
-#else
-void KOKKOS_ALGORITHMS_UNITTESTS_TESTSERIAL_PREVENT_LINK_ERROR() {}
-#endif  // KOKKOS_ENABLE_SERIAL
+#endif  // KOKKOS_KOKKOS_RANK_HPP

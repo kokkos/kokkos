@@ -274,6 +274,23 @@ class CudaSpaceInitializer : public ExecSpaceInitializerBase {
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
+template <class DT, class... DP>
+struct ZeroMemset<Kokkos::Cuda, DT, DP...> {
+  ZeroMemset(const Kokkos::Cuda& exec_space, const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
+    CUDA_SAFE_CALL(cudaMemsetAsync(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type),
+        exec_space.cuda_stream()));
+  }
+
+  ZeroMemset(const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
+    CUDA_SAFE_CALL(
+        cudaMemset(dst.data(), 0,
+                   dst.size() * sizeof(typename View<DT, DP...>::value_type)));
+  }
+};
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -308,22 +325,6 @@ struct MemorySpaceAccess<Kokkos::CudaUVMSpace,
 };
 
 #endif
-
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::CudaSpace,
-                                           Kokkos::Cuda::scratch_memory_space> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
-                                           Kokkos::Cuda::scratch_memory_space> {
-  enum : bool { value = false };
-  inline static void verify() { CudaSpace::access_error(); }
-  inline static void verify(const void* p) { CudaSpace::access_error(p); }
-};
 
 }  // namespace Impl
 }  // namespace Kokkos

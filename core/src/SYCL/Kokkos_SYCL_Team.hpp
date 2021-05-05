@@ -78,13 +78,13 @@ class SYCLTeamMember {
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(
-      const int& level) const {
+      const int level) const {
     return m_team_shared.set_team_thread_mode(level, 1, 0);
   }
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& thread_scratch(
-      const int& level) const {
+      const int level) const {
     return m_team_shared.set_team_thread_mode(level, team_size(), team_rank());
   }
 
@@ -109,15 +109,22 @@ class SYCLTeamMember {
   //--------------------------------------------------------------------------
 
   template <class ValueType>
-  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& /*val*/,
-                                             const int& /*thread_id*/) const {
-    // FIXME_SYCL
-    Kokkos::abort("Not implemented!");
+  KOKKOS_INLINE_FUNCTION void team_broadcast(ValueType& val,
+                                             const int thread_id) const {
+    // Wait for shared data write until all threads arrive here
+    m_item.barrier(sycl::access::fence_space::local_space);
+    if (m_item.get_local_id(1) == 0 &&
+        static_cast<int>(m_item.get_local_id(0)) == thread_id) {
+      *static_cast<ValueType*>(m_team_reduce) = val;
+    }
+    // Wait for shared data read until root thread writes
+    m_item.barrier(sycl::access::fence_space::local_space);
+    val = *static_cast<ValueType*>(m_team_reduce);
   }
 
   template <class Closure, class ValueType>
   KOKKOS_INLINE_FUNCTION void team_broadcast(Closure const& f, ValueType& val,
-                                             const int& thread_id) const {
+                                             const int thread_id) const {
     f(val);
     team_broadcast(val, thread_id);
   }
@@ -161,7 +168,7 @@ class SYCLTeamMember {
     for (int start = maximum_work_range; start < team_size();
          start += maximum_work_range) {
       if (idx >= start &&
-          idx < std::max(start + maximum_work_range, team_size()))
+          idx < std::min(start + maximum_work_range, team_size()))
         reducer.join(reduction_array[idx - start], value);
       m_item.barrier(sycl::access::fence_space::local_space);
     }
@@ -173,6 +180,44 @@ class SYCLTeamMember {
     }
     reducer.reference() = reduction_array[0];
     m_item.barrier(sycl::access::fence_space::local_space);
+  }
+
+  // FIXME_SYCL move somewhere else and combine with other places that do
+  // parallel_scan
+  // Exclusive scan returning the total sum.
+  // n is required to be a power of two and
+  // temp must point to an array containing the data to be processed
+  // The accumulated value is returned.
+  template <typename Type>
+  static Type prescan(sycl::nd_item<2> m_item, Type* temp, int n) {
+    int thid = m_item.get_local_id(0);
+
+    // First do a reduction saving intermediate results
+    for (int stride = 1; stride < n; stride <<= 1) {
+      auto idx = 2 * stride * (thid + 1) - 1;
+      if (idx < n) temp[idx] += temp[idx - stride];
+      m_item.barrier(sycl::access::fence_space::local_space);
+    }
+
+    Type total_sum = temp[n - 1];
+    m_item.barrier(sycl::access::fence_space::local_space);
+
+    // clear the last element so we get an exclusive scan
+    if (thid == 0) temp[n - 1] = Type{};
+    m_item.barrier(sycl::access::fence_space::local_space);
+
+    // Now add the intermediate results to the remaining items again
+    for (int stride = n / 2; stride > 0; stride >>= 1) {
+      auto idx = 2 * stride * (thid + 1) - 1;
+      if (idx < n) {
+        Type dummy         = temp[idx - stride];
+        temp[idx - stride] = temp[idx];
+        temp[idx] += dummy;
+      }
+      m_item.barrier(sycl::access::fence_space::local_space);
+    }
+
+    return total_sum;
   }
 
   //--------------------------------------------------------------------------
@@ -187,10 +232,53 @@ class SYCLTeamMember {
    */
   template <typename Type>
   KOKKOS_INLINE_FUNCTION Type team_scan(const Type& value,
-                                        Type* const /*global_accum*/) const {
-    // FIXME_SYCL
-    Kokkos::abort("Not implemented!");
-    return value;
+                                        Type* const global_accum) const {
+    // We need to chunk up the whole reduction because we might not have
+    // allocated enough memory.
+    const int maximum_work_range =
+        std::min<int>(m_team_reduce_size / sizeof(Type), team_size());
+
+    int not_greater_power_of_two = 1;
+    while ((not_greater_power_of_two << 1) < maximum_work_range + 1)
+      not_greater_power_of_two <<= 1;
+
+    Type intermediate;
+    Type total{};
+
+    const int idx        = team_rank();
+    const auto base_data = static_cast<Type*>(m_team_reduce);
+
+    // Load values into the first not_greater_power_of_two values of the
+    // reduction array in chunks. This means that only threads with an id in the
+    // corresponding chunk load values and the reduction is always done by the
+    // first not_greater_power_of_two threads.
+    for (int start = 0; start < team_size();
+         start += not_greater_power_of_two) {
+      m_item.barrier(sycl::access::fence_space::local_space);
+      if (idx >= start && idx < start + not_greater_power_of_two) {
+        base_data[idx - start] = value;
+      }
+      m_item.barrier(sycl::access::fence_space::local_space);
+
+      const Type partial_total =
+          prescan(m_item, base_data, not_greater_power_of_two);
+      if (idx >= start && idx < start + not_greater_power_of_two)
+        intermediate = base_data[idx - start] + total;
+      if (start == 0)
+        total = partial_total;
+      else
+        total += partial_total;
+    }
+
+    if (global_accum) {
+      if (team_size() == idx + 1) {
+        base_data[team_size()] = atomic_fetch_add(global_accum, total);
+      }
+      m_item.barrier();  // Wait for atomic
+      intermediate += base_data[team_size()];
+    }
+
+    return intermediate;
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering.
@@ -366,13 +454,14 @@ KOKKOS_INLINE_FUNCTION
       thread, count);
 }
 
-template <typename iType>
-KOKKOS_INLINE_FUNCTION
-    Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::SYCLTeamMember>
-    ThreadVectorRange(const Impl::SYCLTeamMember& thread, iType arg_begin,
-                      iType arg_end) {
+template <typename iType1, typename iType2>
+KOKKOS_INLINE_FUNCTION Impl::ThreadVectorRangeBoundariesStruct<
+    typename std::common_type<iType1, iType2>::type, Impl::SYCLTeamMember>
+ThreadVectorRange(const Impl::SYCLTeamMember& thread, iType1 arg_begin,
+                  iType2 arg_end) {
+  using iType = typename std::common_type<iType1, iType2>::type;
   return Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::SYCLTeamMember>(
-      thread, arg_begin, arg_end);
+      thread, iType(arg_begin), iType(arg_end));
 }
 
 KOKKOS_INLINE_FUNCTION
@@ -643,6 +732,32 @@ KOKKOS_INLINE_FUNCTION
 
 //----------------------------------------------------------------------------
 
+/** \brief  Intra-thread vector parallel exclusive prefix sum with reducer.
+ *
+ *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
+ *
+ *  The range [0..N) is mapped to all vector lanes in the
+ *  thread and a scan operation is performed.
+ *  The last call to closure has final == true.
+ */
+template <typename iType, class Closure, typename ReducerType>
+KOKKOS_INLINE_FUNCTION
+    typename std::enable_if<Kokkos::is_reducer<ReducerType>::value>::type
+    parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
+                      iType, Impl::SYCLTeamMember>& loop_boundaries,
+                  const Closure& closure, const ReducerType& reducer) {
+  // FIXME_SYCL modify for vector_length!=1
+  using value_type = typename Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
+
+  value_type accum;
+  reducer.init(accum);
+
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
+    closure(i, accum, true);
+  }
+}
+
 /** \brief  Intra-thread vector parallel exclusive prefix sum.
  *
  *  Executes closure(iType i, ValueType & val, bool final) for each i=[0..N)
@@ -656,15 +771,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::SYCLTeamMember>&
         loop_boundaries,
     const Closure& closure) {
-  // FIXME_SYCL modify for vector_length!=1
   using value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, Closure>::value_type;
-
-  value_type accum{};
-
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
-    closure(i, accum, true);
-  }
+  value_type dummy;
+  parallel_scan(loop_boundaries, closure, Kokkos::Sum<value_type>{dummy});
 }
 
 }  // namespace Kokkos

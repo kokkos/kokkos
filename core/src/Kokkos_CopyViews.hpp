@@ -1254,6 +1254,114 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
   }
 };
 
+template <typename T>
+bool is_zero_byte(const T& t) {
+  using comparison_type = std::conditional_t<
+      sizeof(T) % sizeof(long long int) == 0, long long int,
+      std::conditional_t<
+          sizeof(T) % sizeof(long int) == 0, long int,
+          std::conditional_t<
+              sizeof(T) % sizeof(int) == 0, int,
+              std::conditional_t<sizeof(T) % sizeof(short int) == 0, short int,
+                                 char>>>>;
+  const auto* const ptr = reinterpret_cast<const comparison_type*>(&t);
+  for (std::size_t i = 0; i < sizeof(T) / sizeof(comparison_type); ++i)
+    if (ptr[i] != 0) return false;
+  return true;
+}
+
+template <typename ExecutionSpace, class DT, class... DP>
+inline void contiguous_fill(
+    const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
+  using ViewType     = View<DT, DP...>;
+  using ViewTypeFlat = Kokkos::View<
+      typename ViewType::value_type*, Kokkos::LayoutRight,
+      Kokkos::Device<typename ViewType::execution_space,
+                     typename std::conditional<ViewType::Rank == 0,
+                                               typename ViewType::memory_space,
+                                               Kokkos::AnonymousSpace>::type>,
+      Kokkos::MemoryTraits<0>>;
+
+  ViewTypeFlat dst_flat(dst.data(), dst.size());
+  if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
+    Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, ExecutionSpace,
+                           ViewTypeFlat::Rank, int>(dst_flat, value,
+                                                    exec_space);
+  } else
+    Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, ExecutionSpace,
+                           ViewTypeFlat::Rank, int64_t>(dst_flat, value,
+                                                        exec_space);
+}
+
+template <typename ExecutionSpace, class DT, class... DP>
+struct ZeroMemset {
+  ZeroMemset(const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
+             typename ViewTraits<DT, DP...>::const_value_type& value) {
+    contiguous_fill(exec_space, dst, value);
+  }
+
+  ZeroMemset(const View<DT, DP...>& dst,
+             typename ViewTraits<DT, DP...>::const_value_type& value) {
+    contiguous_fill(ExecutionSpace(), dst, value);
+  }
+};
+
+template <typename ExecutionSpace, class DT, class... DP>
+inline std::enable_if_t<
+    std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
+    std::is_trivially_copy_assignable<
+        typename ViewTraits<DT, DP...>::const_value_type>::value>
+contiguous_fill_or_memset(
+    const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
+  if (Impl::is_zero_byte(value))
+    ZeroMemset<ExecutionSpace, DT, DP...>(exec_space, dst, value);
+  else
+    contiguous_fill(exec_space, dst, value);
+}
+
+template <typename ExecutionSpace, class DT, class... DP>
+inline std::enable_if_t<!(
+    std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
+    std::is_trivially_copy_assignable<
+        typename ViewTraits<DT, DP...>::const_value_type>::value)>
+contiguous_fill_or_memset(
+    const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
+  contiguous_fill(exec_space, dst, value);
+}
+
+template <class DT, class... DP>
+inline std::enable_if_t<
+    std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
+    std::is_trivially_copy_assignable<
+        typename ViewTraits<DT, DP...>::const_value_type>::value>
+contiguous_fill_or_memset(
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
+  using ViewType        = View<DT, DP...>;
+  using exec_space_type = typename ViewType::execution_space;
+
+  if (Impl::is_zero_byte(value))
+    ZeroMemset<exec_space_type, DT, DP...>(dst, value);
+  else
+    contiguous_fill(exec_space_type(), dst, value);
+}
+
+template <class DT, class... DP>
+inline std::enable_if_t<!(
+    std::is_trivial<typename ViewTraits<DT, DP...>::const_value_type>::value &&
+    std::is_trivially_copy_assignable<
+        typename ViewTraits<DT, DP...>::const_value_type>::value)>
+contiguous_fill_or_memset(
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
+  using ViewType        = View<DT, DP...>;
+  using exec_space_type = typename ViewType::execution_space;
+
+  contiguous_fill(exec_space_type(), dst, value);
+}
 }  // namespace Impl
 
 /** \brief  Deep copy a value from Host memory into a view.  */
@@ -1288,25 +1396,9 @@ inline void deep_copy(
                              typename ViewType::value_type>::value,
                 "deep_copy requires non-const type");
 
-  // If contiguous we can simply do a 1D flat loop
+  // If contiguous we can simply do a 1D flat loop or use memset
   if (dst.span_is_contiguous()) {
-    using ViewTypeFlat = Kokkos::View<
-        typename ViewType::value_type*, Kokkos::LayoutRight,
-        Kokkos::Device<typename ViewType::execution_space,
-                       typename std::conditional<
-                           ViewType::Rank == 0, typename ViewType::memory_space,
-                           Kokkos::AnonymousSpace>::type>,
-        Kokkos::MemoryTraits<0>>;
-
-    ViewTypeFlat dst_flat(dst.data(), dst.size());
-    if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
-      Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
-                             ViewTypeFlat::Rank, int>(dst_flat, value,
-                                                      exec_space_type());
-    } else
-      Kokkos::Impl::ViewFill<ViewTypeFlat, Kokkos::LayoutRight, exec_space_type,
-                             ViewTypeFlat::Rank, int64_t>(dst_flat, value,
-                                                          exec_space_type());
+    Impl::contiguous_fill_or_memset(dst, value);
     Kokkos::fence();
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
       Kokkos::Profiling::endDeepCopy();
@@ -2438,6 +2530,8 @@ inline void deep_copy(
   }
   if (dst.data() == nullptr) {
     space.fence();
+  } else if (dst.span_is_contiguous()) {
+    Impl::contiguous_fill_or_memset(space, dst, value);
   } else {
     using ViewTypeUniform = typename std::conditional<
         View<DT, DP...>::Rank == 0,
@@ -2480,13 +2574,17 @@ inline void deep_copy(
     space.fence();
   } else {
     space.fence();
-    using ViewTypeUniform = typename std::conditional<
-        View<DT, DP...>::Rank == 0,
-        typename View<DT, DP...>::uniform_runtime_type,
-        typename View<DT, DP...>::uniform_runtime_nomemspace_type>::type;
     using fill_exec_space = typename dst_traits::memory_space::execution_space;
-    Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
-                           fill_exec_space>(dst, value, fill_exec_space());
+    if (dst.span_is_contiguous()) {
+      Impl::contiguous_fill_or_memset(fill_exec_space(), dst, value);
+    } else {
+      using ViewTypeUniform = typename std::conditional<
+          View<DT, DP...>::Rank == 0,
+          typename View<DT, DP...>::uniform_runtime_type,
+          typename View<DT, DP...>::uniform_runtime_nomemspace_type>::type;
+      Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
+                             fill_exec_space>(dst, value, fill_exec_space());
+    }
     fill_exec_space().fence();
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {

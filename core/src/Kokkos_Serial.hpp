@@ -197,14 +197,6 @@ struct MemorySpaceAccess<Kokkos::Serial::memory_space,
   enum : bool { deepcopy = false };
 };
 
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::Serial::memory_space, Kokkos::Serial::scratch_memory_space> {
-  enum : bool { value = true };
-  inline static void verify() {}
-  inline static void verify(const void*) {}
-};
-
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -474,8 +466,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
-      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
+                         void>;
 
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::REDUCE, Policy, FunctorType>;
@@ -759,8 +751,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                          FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
-      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
+                         void>;
 
   using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
                                    MDRangePolicy, FunctorType>;
@@ -940,8 +932,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                          FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
-      typename Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                                  WorkTag, void>::type;
+      std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
+                         void>;
 
   using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd, WorkTagFwd>;
 

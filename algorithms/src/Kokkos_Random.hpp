@@ -447,6 +447,25 @@ struct rand<Generator, unsigned long long> {
   }
 };
 
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+template <class Generator>
+struct rand<Generator, Kokkos::Experimental::half_t> {
+  using half = Kokkos::Experimental::half_t;
+  KOKKOS_INLINE_FUNCTION
+  static half max() { return half(1.0); }
+  KOKKOS_INLINE_FUNCTION
+  static half draw(Generator& gen) { return half(gen.frand()); }
+  KOKKOS_INLINE_FUNCTION
+  static half draw(Generator& gen, const half& range) {
+    return half(gen.frand(float(range)));
+  }
+  KOKKOS_INLINE_FUNCTION
+  static half draw(Generator& gen, const half& start, const half& end) {
+    return half(gen.frand(float(start), float(end)));
+  }
+};
+#endif  // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+
 template <class Generator>
 struct rand<Generator, float> {
   KOKKOS_INLINE_FUNCTION
@@ -664,6 +683,25 @@ struct Random_UniqueIndex<Kokkos::Experimental::HIP> {
     (void)locks_;
     return 0;
 #endif
+  }
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct Random_UniqueIndex<Kokkos::Experimental::SYCL> {
+  using locks_view_type = View<int*, Kokkos::Experimental::SYCL>;
+  KOKKOS_FUNCTION
+  static int get_state_idx(const locks_view_type& locks_) {
+#ifdef KOKKOS_ARCH_INTEL_GEN
+    int i = Kokkos::Impl::clock_tic() % locks_.extent(0);
+#else
+    int i = 0;
+#endif
+    while (Kokkos::atomic_compare_exchange(&locks_(i), 0, 1)) {
+      i = (i + 1) % static_cast<int>(locks_.extent(0));
+    }
+    return i;
   }
 };
 #endif

@@ -118,8 +118,8 @@ class HIPSpace {
 
   /*--------------------------------*/
   /** \brief  Error reporting for HostSpace attempt to access HIPSpace */
-  static void access_error();
-  static void access_error(const void* const);
+  KOKKOS_DEPRECATED static void access_error();
+  KOKKOS_DEPRECATED static void access_error(const void* const);
 
  private:
   int m_device;  ///< Which HIP device
@@ -447,87 +447,20 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
 namespace Kokkos {
 namespace Impl {
 
-/** Running in HIPSpace attempting to access HostSpace: error */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::Experimental::HIPSpace,
-                                           Kokkos::HostSpace> {
-  enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify() {
-    Kokkos::abort("HIP code attempted to access HostSpace memory");
-  }
-
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {
-    Kokkos::abort("HIP code attempted to access HostSpace memory");
-  }
-};
-
-/** Running in HIPSpace accessing HIPHostPinnedSpace: ok */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPHostPinnedSpace> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-
-/** Running in HIPSpace attempting to access an unknown space: error */
-template <class OtherSpace>
-struct VerifyExecutionCanAccessMemorySpace<
-    typename std::enable_if<
-        !std::is_same<Kokkos::Experimental::HIPSpace, OtherSpace>::value,
-        Kokkos::Experimental::HIPSpace>::type,
-    OtherSpace> {
-  enum : bool { value = false };
-  KOKKOS_INLINE_FUNCTION static void verify() {
-    Kokkos::abort("HIP code attempted to access unknown Space memory");
-  }
-
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {
-    Kokkos::abort("HIP code attempted to access unknown Space memory");
-  }
-};
-
-//----------------------------------------------------------------------------
-/** Running in HostSpace attempting to access HIPSpace */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
-                                           Kokkos::Experimental::HIPSpace> {
-  enum : bool { value = false };
-  inline static void verify() {
-    Kokkos::Experimental::HIPSpace::access_error();
-  }
-  inline static void verify(const void* p) {
-    Kokkos::Experimental::HIPSpace::access_error(p);
-  }
-};
-
-/** Running in HostSpace accessing HIPHostPinnedSpace is OK */
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::HostSpace, Kokkos::Experimental::HIPHostPinnedSpace> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-}  // namespace Impl
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
 template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
-    : public SharedAllocationRecord<void, void> {
+    : public HostInaccessibleSharedAllocationRecordCommon<
+          Kokkos::Experimental::HIPSpace> {
  private:
+  friend class SharedAllocationRecordCommon<Kokkos::Experimental::HIPSpace>;
+  friend class HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::HIPSpace>;
+  using base_t = HostInaccessibleSharedAllocationRecordCommon<
+      Kokkos::Experimental::HIPSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
-
-  static void deallocate(RecordBase*);
 
 #ifdef KOKKOS_ENABLE_DEBUG
   static RecordBase s_root_record;
@@ -541,44 +474,22 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPSpace, void>
   SharedAllocationRecord(
       const Kokkos::Experimental::HIPSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &deallocate);
-
- public:
-  std::string get_label() const;
-
-  static SharedAllocationRecord* allocate(
-      const Kokkos::Experimental::HIPSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size);
-
-  /**\brief  Allocate tracked memory in the space */
-  static void* allocate_tracked(const Kokkos::Experimental::HIPSpace& arg_space,
-                                const std::string& arg_label,
-                                const size_t arg_alloc_size);
-
-  /**\brief  Reallocate tracked memory in the space */
-  static void* reallocate_tracked(void* const arg_alloc_ptr,
-                                  const size_t arg_alloc_size);
-
-  /**\brief  Deallocate tracked memory in the space */
-  static void deallocate_tracked(void* const arg_alloc_ptr);
-
-  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
-
-  static void print_records(std::ostream&,
-                            const Kokkos::Experimental::HIPSpace&,
-                            bool detail = false);
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
 };
 
 template <>
 class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
-    : public SharedAllocationRecord<void, void> {
+    : public SharedAllocationRecordCommon<
+          Kokkos::Experimental::HIPHostPinnedSpace> {
  private:
+  friend class SharedAllocationRecordCommon<
+      Kokkos::Experimental::HIPHostPinnedSpace>;
+  using base_t =
+      SharedAllocationRecordCommon<Kokkos::Experimental::HIPHostPinnedSpace>;
   using RecordBase = SharedAllocationRecord<void, void>;
 
   SharedAllocationRecord(const SharedAllocationRecord&) = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
-
-  static void deallocate(RecordBase*);
 
 #ifdef KOKKOS_ENABLE_DEBUG
   static RecordBase s_root_record;
@@ -588,36 +499,12 @@ class SharedAllocationRecord<Kokkos::Experimental::HIPHostPinnedSpace, void>
 
  protected:
   ~SharedAllocationRecord();
-  SharedAllocationRecord() : RecordBase(), m_space() {}
+  SharedAllocationRecord() = default;
 
   SharedAllocationRecord(
       const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
       const std::string& arg_label, const size_t arg_alloc_size,
-      const RecordBase::function_type arg_dealloc = &deallocate);
-
- public:
-  std::string get_label() const;
-
-  static SharedAllocationRecord* allocate(
-      const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size);
-  /**\brief  Allocate tracked memory in the space */
-  static void* allocate_tracked(
-      const Kokkos::Experimental::HIPHostPinnedSpace& arg_space,
-      const std::string& arg_label, const size_t arg_alloc_size);
-
-  /**\brief  Reallocate tracked memory in the space */
-  static void* reallocate_tracked(void* const arg_alloc_ptr,
-                                  const size_t arg_alloc_size);
-
-  /**\brief  Deallocate tracked memory in the space */
-  static void deallocate_tracked(void* const arg_alloc_ptr);
-
-  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
-
-  static void print_records(std::ostream&,
-                            const Kokkos::Experimental::HIPHostPinnedSpace&,
-                            bool detail = false);
+      const RecordBase::function_type arg_dealloc = &base_t::deallocate);
 };
 }  // namespace Impl
 }  // namespace Kokkos
@@ -736,6 +623,24 @@ class HIPSpaceInitializer : public Kokkos::Impl::ExecSpaceInitializerBase {
   void print_configuration(std::ostream& msg, const bool detail) final;
 };
 
+template <class DT, class... DP>
+struct ZeroMemset<Kokkos::Experimental::HIP, DT, DP...> {
+  ZeroMemset(const Kokkos::Experimental::HIP& exec_space,
+             const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
+    HIP_SAFE_CALL(hipMemsetAsync(
+        dst.data(), 0,
+        dst.size() * sizeof(typename View<DT, DP...>::value_type),
+        exec_space.hip_stream()));
+  }
+
+  ZeroMemset(const View<DT, DP...>& dst,
+             typename View<DT, DP...>::const_value_type&) {
+    HIP_SAFE_CALL(
+        hipMemset(dst.data(), 0,
+                  dst.size() * sizeof(typename View<DT, DP...>::value_type)));
+  }
+};
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -748,27 +653,6 @@ struct MemorySpaceAccess<Kokkos::Experimental::HIPSpace,
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
-};
-
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::Experimental::HIP::memory_space,
-    Kokkos::Experimental::HIP::scratch_memory_space> {
-  enum : bool { value = true };
-  KOKKOS_INLINE_FUNCTION static void verify() {}
-  KOKKOS_INLINE_FUNCTION static void verify(const void*) {}
-};
-
-template <>
-struct VerifyExecutionCanAccessMemorySpace<
-    Kokkos::HostSpace, Kokkos::Experimental::HIP::scratch_memory_space> {
-  enum : bool { value = false };
-  inline static void verify() {
-    Kokkos::Experimental::HIPSpace::access_error();
-  }
-  inline static void verify(const void* p) {
-    Kokkos::Experimental::HIPSpace::access_error(p);
-  }
 };
 
 }  // namespace Impl

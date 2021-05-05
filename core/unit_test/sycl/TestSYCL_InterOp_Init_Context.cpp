@@ -43,7 +43,7 @@
 */
 
 #include <Kokkos_Core.hpp>
-#include <sycl/TestSYCL_Category.hpp>
+#include <TestSYCL_Category.hpp>
 
 #include <array>
 
@@ -54,8 +54,8 @@ TEST(sycl, raw_sycl_interop_context_1) {
   Kokkos::Experimental::SYCL default_space;
   sycl::context default_context = default_space.sycl_context();
 
-  cl::sycl::default_selector device_selector;
-  cl::sycl::queue queue(default_context, device_selector);
+  sycl::default_selector device_selector;
+  sycl::queue queue(default_context, device_selector);
   constexpr int n = 100;
   int* p          = sycl::malloc_device<int>(n, queue);
 
@@ -63,7 +63,7 @@ TEST(sycl, raw_sycl_interop_context_1) {
   Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Unmanaged>> v(p, n);
   Kokkos::deep_copy(v, 5);
 
-  queue.submit([&](cl::sycl::handler& cgh) {
+  queue.submit([&](sycl::handler& cgh) {
     cgh.parallel_for(sycl::range<1>(n), [=](int idx) { p[idx] += idx; });
   });
   queue.wait_and_throw();
@@ -88,8 +88,8 @@ TEST(sycl, raw_sycl_interop_context_2) {
   Kokkos::Experimental::SYCL default_space;
   sycl::context default_context = default_space.sycl_context();
 
-  cl::sycl::default_selector device_selector;
-  cl::sycl::queue queue(default_context, device_selector);
+  sycl::default_selector device_selector;
+  sycl::queue queue(default_context, device_selector);
   constexpr int n = 100;
 
   Kokkos::Experimental::SYCL space(queue);
@@ -98,7 +98,7 @@ TEST(sycl, raw_sycl_interop_context_2) {
   Kokkos::deep_copy(space, v, 5);
 
   auto* v_ptr = v.data();
-  queue.submit([&](cl::sycl::handler& cgh) {
+  queue.submit([&](sycl::handler& cgh) {
     cgh.parallel_for(sycl::range<1>(n), [=](int idx) { v_ptr[idx] += idx; });
   });
   queue.wait_and_throw();

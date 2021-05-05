@@ -42,13 +42,19 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_TEST_OMPTARGET_HPP
-#define KOKKOS_TEST_OMPTARGET_HPP
+#ifndef KOKKOS_ALGORITHMS_UNITTESTS_TESTRANDOM_COMMON_HPP
+#define KOKKOS_ALGORITHMS_UNITTESTS_TESTRANDOM_COMMON_HPP
 
-#include <gtest/gtest.h>
+#include <TestRandom.hpp>
 
-#define TEST_CATEGORY openmptarget
-#define TEST_CATEGORY_DEATH openmptarget_DeathTest
-#define TEST_EXECSPACE Kokkos::Experimental::OpenMPTarget
+namespace Test {
+
+TEST(TEST_CATEGORY, Random_XorShift64) {
+  test_random_xorshift64<TEST_EXECSPACE>();
+}
+TEST(TEST_CATEGORY, Random_XorShift1024_0) {
+  test_random_xorshift1024<TEST_EXECSPACE>();
+}
+}  // namespace Test
 
 #endif

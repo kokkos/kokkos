@@ -49,6 +49,8 @@
 
 #include <Kokkos_HIP_Space.hpp>
 
+#include <mutex>
+
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -104,6 +106,8 @@ class HIPInternal {
   mutable size_t m_maxDriverTypeSize = 1024 * 10;
   // the current index in the driverWorkArray
   mutable int m_cycleId = 0;
+  // mutex to access d_driverWorkArray
+  mutable std::mutex m_mutexWorkArray;
 
   // Scratch Spaces for Reductions
   size_type m_scratchSpaceCount = 0;
@@ -120,6 +124,7 @@ class HIPInternal {
   // Team Scratch Level 1 Space
   mutable int64_t m_team_scratch_current_size = 0;
   mutable void *m_team_scratch_ptr            = nullptr;
+  mutable std::mutex m_team_scratch_mutex;
 
   bool was_finalized = false;
 

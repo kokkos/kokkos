@@ -328,9 +328,11 @@ struct test_random_scalar {
       using functor_type =
           test_histogram1d_functor<typename RandomGenerator::device_type>;
       parallel_reduce(HIST_DIM1D, functor_type(density_1d, num_draws), result);
-
-      double tolerance   = 6 * std::sqrt(1.0 / HIST_DIM1D);
-      double mean_expect = 1.0 * num_draws * 3 / HIST_DIM1D;
+      double mean_eps_expect       = 0.0001;
+      double variance_eps_expect   = 0.07;
+      double covariance_eps_expect = 0.06;
+      double tolerance             = 6 * std::sqrt(1.0 / HIST_DIM1D);
+      double mean_expect           = 1.0 * num_draws * 3 / HIST_DIM1D;
       double variance_expect =
           1.0 * num_draws * 3 / HIST_DIM1D * (1.0 - 1.0 / HIST_DIM1D);
       double covariance_expect = -1.0 * num_draws * 3 / HIST_DIM1D / HIST_DIM1D;
@@ -339,11 +341,26 @@ struct test_random_scalar {
           variance_expect / (result.variance / HIST_DIM1D) - 1.0;
       double covariance_eps =
           (result.covariance / HIST_DIM1D - covariance_expect) / mean_expect;
-      pass_hist1d_mean = ((-0.0001 < mean_eps) && (0.0001 > mean_eps)) ? 1 : 0;
-      pass_hist1d_var =
-          ((-0.07 < variance_eps) && (0.07 > variance_eps)) ? 1 : 0;
-      pass_hist1d_covar =
-          ((-0.06 < covariance_eps) && (0.06 > covariance_eps)) ? 1 : 0;
+
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+      if (std::is_same<Scalar, Kokkos::Experimental::half_t>::value) {
+        mean_eps_expect       = 0.0003;
+        variance_eps_expect   = 1.0;
+        covariance_eps_expect = 5.0e4;
+      }
+#endif
+
+      pass_hist1d_mean =
+          ((-mean_eps_expect < mean_eps) && (mean_eps_expect > mean_eps)) ? 1
+                                                                          : 0;
+      pass_hist1d_var = ((-variance_eps_expect < variance_eps) &&
+                         (variance_eps_expect > variance_eps))
+                            ? 1
+                            : 0;
+      pass_hist1d_covar = ((-covariance_eps_expect < covariance_eps) &&
+                           (covariance_eps_expect > covariance_eps))
+                              ? 1
+                              : 0;
 
       cout << "Density 1D: " << mean_eps << " " << variance_eps << " "
            << (result.covariance / HIST_DIM1D / HIST_DIM1D) << " || "
@@ -361,8 +378,9 @@ struct test_random_scalar {
           test_histogram3d_functor<typename RandomGenerator::device_type>;
       parallel_reduce(HIST_DIM1D, functor_type(density_3d, num_draws), result);
 
-      double tolerance   = 6 * std::sqrt(1.0 / HIST_DIM1D);
-      double mean_expect = 1.0 * num_draws / HIST_DIM1D;
+      double variance_factor = 1.2;
+      double tolerance       = 6 * std::sqrt(1.0 / HIST_DIM1D);
+      double mean_expect     = 1.0 * num_draws / HIST_DIM1D;
       double variance_expect =
           1.0 * num_draws / HIST_DIM1D * (1.0 - 1.0 / HIST_DIM1D);
       double covariance_expect = -1.0 * num_draws / HIST_DIM1D / HIST_DIM1D;
@@ -371,15 +389,23 @@ struct test_random_scalar {
           variance_expect / (result.variance / HIST_DIM1D) - 1.0;
       double covariance_eps =
           (result.covariance / HIST_DIM1D - covariance_expect) / mean_expect;
+
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+      if (std::is_same<Scalar, Kokkos::Experimental::half_t>::value) {
+        variance_factor = 7;
+      }
+#endif
+
       pass_hist3d_mean =
           ((-tolerance < mean_eps) && (tolerance > mean_eps)) ? 1 : 0;
-      pass_hist3d_var = ((-1.2 * tolerance < variance_eps) &&
-                         (1.2 * tolerance > variance_eps))
+      pass_hist3d_var = ((-variance_factor * tolerance < variance_eps) &&
+                         (variance_factor * tolerance > variance_eps))
                             ? 1
                             : 0;
-      pass_hist3d_covar =
-          ((-tolerance < covariance_eps) && (tolerance > covariance_eps)) ? 1
-                                                                          : 0;
+      pass_hist3d_covar = ((-variance_factor * tolerance < covariance_eps) &&
+                           (variance_factor * tolerance > covariance_eps))
+                              ? 1
+                              : 0;
 
       cout << "Density 3D: " << mean_eps << " " << variance_eps << " "
            << result.covariance / HIST_DIM1D / HIST_DIM1D << " || " << tolerance
@@ -461,6 +487,21 @@ void test_random(unsigned int num_draws) {
   deep_copy(density_1d, 0);
   deep_copy(density_3d, 0);
 
+  cout << "Test Scalar=half" << endl;
+  test_random_scalar<RandomGenerator, Kokkos::Experimental::half_t> test_half(
+      density_1d, density_3d, pool, num_draws);
+  ASSERT_EQ(test_half.pass_mean, 1);
+  ASSERT_EQ(test_half.pass_var, 1);
+  ASSERT_EQ(test_half.pass_covar, 1);
+  ASSERT_EQ(test_half.pass_hist1d_mean, 1);
+  ASSERT_EQ(test_half.pass_hist1d_var, 1);
+  ASSERT_EQ(test_half.pass_hist1d_covar, 1);
+  ASSERT_EQ(test_half.pass_hist3d_mean, 1);
+  ASSERT_EQ(test_half.pass_hist3d_var, 1);
+  ASSERT_EQ(test_half.pass_hist3d_covar, 1);
+  deep_copy(density_1d, 0);
+  deep_copy(density_3d, 0);
+
   cout << "Test Scalar=float" << endl;
   test_random_scalar<RandomGenerator, float> test_float(density_1d, density_3d,
                                                         pool, num_draws);
@@ -491,6 +532,34 @@ void test_random(unsigned int num_draws) {
 }
 }  // namespace Impl
 
+template <typename ExecutionSpace>
+void test_random_xorshift64() {
+#if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA) || \
+    defined(KOKKOS_ENABLE_HIP)
+  const int num_draws = 132141141;
+#else  // SERIAL, HPX, OPENMP
+  const int num_draws = 10240000;
+#endif
+  Impl::test_random<Kokkos::Random_XorShift64_Pool<ExecutionSpace>>(num_draws);
+  Impl::test_random<Kokkos::Random_XorShift64_Pool<
+      Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
+      num_draws);
+}
+
+template <typename ExecutionSpace>
+void test_random_xorshift1024() {
+#if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA) || \
+    defined(KOKKOS_ENABLE_HIP)
+  const int num_draws = 52428813;
+#else  // SERIAL, HPX, OPENMP
+  const int num_draws = 10130144;
+#endif
+  Impl::test_random<Kokkos::Random_XorShift1024_Pool<ExecutionSpace>>(
+      num_draws);
+  Impl::test_random<Kokkos::Random_XorShift1024_Pool<
+      Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
+      num_draws);
+}
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_UNORDERED_MAP_HPP

@@ -146,6 +146,7 @@ display_help_text() {
       echo "--with-cuda[=/Path/To/Cuda]:          Enable Cuda and set path to Cuda Toolkit."
       echo "--with-hip[=/Path/To/Hip]:            Enable Hip and set path to ROCM Toolkit."
       echo "--with-openmptarget:                  Enable OpenMPTarget backend."
+      echo "--with-sycl:                          Enable Sycl backend."
       echo "--with-openmp:                        Enable OpenMP backend."
       echo "--with-pthread:                       Enable Pthreads backend."
       echo "--with-serial:                        Enable Serial backend."
@@ -156,6 +157,7 @@ display_help_text() {
       echo "                 AMDAVX          = AMD CPU"
       echo "                 ZEN             = AMD Zen-Core CPU"
       echo "                 ZEN2            = AMD Zen2-Core CPU"
+      echo "                 ZEN3            = AMD Zen3-Core CPU"
       echo "               [AMD: GPU]"
       echo "                 VEGA900         = AMD GPU MI25 GFX900"
       echo "                 VEGA906         = AMD GPU MI50/MI60 GFX906"
@@ -284,6 +286,9 @@ do
       ;;
     --with-openmp)
       update_kokkos_devices OpenMP
+      ;;
+    --with-sycl)
+      update_kokkos_devices Sycl
       ;;
     --with-pthread)
       update_kokkos_devices Pthread

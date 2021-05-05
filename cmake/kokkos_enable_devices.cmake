@@ -61,7 +61,7 @@ IF(KOKKOS_ENABLE_OPENMP)
     COMPILER_SPECIFIC_FLAGS(
       COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
       Clang      -Xcompiler ${ClangOpenMPFlag}
-      IntelClang -Xcompiler -fiopenmp
+      IntelLLVM  -Xcompiler -fiopenmp
       PGI        -Xcompiler -mp
       Cray       NO-VALUE-SPECIFIED
       XL         -Xcompiler -qsmp=omp
@@ -70,7 +70,7 @@ IF(KOKKOS_ENABLE_OPENMP)
   ELSE()
     COMPILER_SPECIFIC_FLAGS(
       Clang      ${ClangOpenMPFlag}
-      IntelClang -fiopenmp
+      IntelLLVM  -fiopenmp
       AppleClang -Xpreprocessor -fopenmp
       PGI        -mp
       Cray       NO-VALUE-SPECIFIED
@@ -92,7 +92,7 @@ IF (KOKKOS_ENABLE_OPENMPTARGET)
 
   COMPILER_SPECIFIC_FLAGS(
     Clang      ${ClangOpenMPFlag} -Wno-openmp-mapping
-    IntelClang -fiopenmp -Wno-openmp-mapping
+    IntelLLVM  -fiopenmp -Wno-openmp-mapping
     XL         -qsmp=omp -qoffload -qnoeh
     PGI        -mp=gpu
     DEFAULT    -fopenmp
@@ -154,5 +154,8 @@ KOKKOS_DEVICE_OPTION(SYCL OFF DEVICE "Whether to build SYCL backend")
 
 ## SYCL has extra setup requirements, turn on Kokkos_Setup_SYCL.hpp in macros
 IF (KOKKOS_ENABLE_SYCL)
+  IF(KOKKOS_CXX_STANDARD LESS 17)
+    MESSAGE(FATAL_ERROR "SYCL backend requires C++17 or newer!")
+  ENDIF()
   LIST(APPEND DEVICE_SETUP_LIST SYCL)
 ENDIF()

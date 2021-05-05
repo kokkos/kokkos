@@ -65,6 +65,21 @@ struct identity {
 template <typename T>
 using identity_t = typename identity<T>::type;
 
+struct not_a_type {
+  not_a_type()                  = delete;
+  ~not_a_type()                 = delete;
+  not_a_type(not_a_type const&) = delete;
+  void operator=(not_a_type const&) = delete;
+};
+
+#if defined(__cpp_lib_void_t)
+// since C++17
+using std::void_t;
+#else
+template <class...>
+using void_t = void;
+#endif
+
 //==============================================================================
 // <editor-fold desc="remove_cvref_t"> {{{1
 
@@ -134,6 +149,95 @@ struct destruct_delete {
     p->~T();
   }
 };
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="type_list"> {{{1
+
+// An intentionally uninstantiateable type_list for metaprogramming purposes
+template <class...>
+struct type_list;
+
+//------------------------------------------------------------------------------
+// <editor-fold desc="type_list_remove_first"> {{{2
+
+// Currently linear complexity; if we use this a lot, maybe make it better?
+
+template <class Entry, class InList, class OutList>
+struct _type_list_remove_first_impl;
+
+template <class Entry, class T, class... Ts, class... OutTs>
+struct _type_list_remove_first_impl<Entry, type_list<T, Ts...>,
+                                    type_list<OutTs...>>
+    : _type_list_remove_first_impl<Entry, type_list<Ts...>,
+                                   type_list<OutTs..., T>> {};
+
+template <class Entry, class... Ts, class... OutTs>
+struct _type_list_remove_first_impl<Entry, type_list<Entry, Ts...>,
+                                    type_list<OutTs...>>
+    : _type_list_remove_first_impl<Entry, type_list<>,
+                                   type_list<OutTs..., Ts...>> {};
+
+template <class Entry, class... OutTs>
+struct _type_list_remove_first_impl<Entry, type_list<>, type_list<OutTs...>>
+    : identity<type_list<OutTs...>> {};
+
+template <class Entry, class List>
+struct type_list_remove_first
+    : _type_list_remove_first_impl<Entry, List, type_list<>> {};
+
+// </editor-fold> end type_list_remove_first }}}2
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// <editor-fold desc="type_list_any"> {{{2
+
+template <template <class> class UnaryPred, class List>
+struct type_list_any;
+
+#ifdef KOKKOS_ENABLE_CXX17
+template <template <class> class UnaryPred, class... Ts>
+struct type_list_any<UnaryPred, type_list<Ts...>>
+    : std::bool_constant<(UnaryPred<Ts>::value || ...)> {};
+#else
+template <template <class> class UnaryPred, class T, class... Ts>
+struct type_list_any<UnaryPred, type_list<T, Ts...>> {
+  using type = typename std::conditional_t<
+      UnaryPred<T>::value, std::true_type,
+      type_list_any<UnaryPred, type_list<Ts...>>>::type;
+  static constexpr auto value = type::value;
+};
+
+template <template <class> class UnaryPred>
+struct type_list_any<UnaryPred, type_list<>> : std::false_type {};
+
+#endif
+
+// </editor-fold> end type_list_any }}}2
+//------------------------------------------------------------------------------
+
+// </editor-fold> end type_list }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="MSVC linearize base workaround"> {{{1
+
+// MSVC workaround: more than two base classes (and more than one if the
+// hierarchy gets too deep) causes problems with EBO, so we need to linearize
+// the inheritance hierarchy to avoid losing EBO and ending up with an object
+// representation that is larger than it needs to be.
+// Note: by convention, the nested template in a higher-order metafunction like
+// GetBase is named apply, so we use that name here (this convention grew out
+// of Boost MPL)
+template <template <class> class GetBase, class...>
+struct linearize_bases;
+template <template <class> class GetBase, class T, class... Ts>
+struct linearize_bases<GetBase, T, Ts...> : GetBase<T>::template apply<Ts...> {
+};
+template <template <class> class GetBase>
+struct linearize_bases<GetBase> {};
+
+// </editor-fold> end MSVC linearize base workaround }}}1
 //==============================================================================
 
 }  // namespace Impl
