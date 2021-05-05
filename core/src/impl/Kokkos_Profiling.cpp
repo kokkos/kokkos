@@ -594,7 +594,7 @@ void initialize(const std::string& profileLibrary) {
 #ifdef KOKKOS_ENABLE_PROFILING_LOAD_PRINT
         std::cout << "KokkosP: Library Loaded: " << profileLibraryName
                   << std::endl;
-#endif
+#endif // KOKKOS_ENABLE_PROFILING_LOAD_PRINT
         lookup_function(
             firstProfileLibrary, "kokkosp_begin_parallel_scan",
             Kokkos::Tools::Experimental::current_callbacks.begin_parallel_scan);
@@ -707,15 +707,15 @@ void initialize(const std::string& profileLibrary) {
         lookup_function(firstProfileLibrary, "kokkosp_request_tool_settings",
                         Kokkos::Tools::Experimental::current_callbacks
                             .request_tool_settings);
-      }
-    }
+      } // firstProfileLibrary not null
+    } // strcmp
+#ifdef KOKKOS_ENABLE_LIBDL
+      free(envProfileCopy);
+#endif
+  }
 #else
   (void)profileLibrary;
-}
 #endif  // KOKKOS_ENABLE_LIBDL
-#ifdef KOKKOS_ENABLE_LIBDL
-    free(envProfileCopy);
-#endif
     Experimental::invoke_kokkosp_callback(
         Kokkos::Tools::Experimental::MayRequireGlobalFencing::No,
         Kokkos::Tools::Experimental::current_callbacks.init, 0,
@@ -798,7 +798,7 @@ void initialize(const std::string& profileLibrary) {
     Experimental::no_profiling.declare_output_type   = nullptr;
     Experimental::no_profiling.request_output_values = nullptr;
     Experimental::no_profiling.end_tuning_context    = nullptr;
-  }  // namespace Tools
+  }
 
   void finalize() {
     // Make sure finalize calls happens only once
