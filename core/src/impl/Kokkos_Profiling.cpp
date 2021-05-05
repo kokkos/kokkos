@@ -539,7 +539,7 @@ void initialize(const std::string& profileLibrary) {
 #ifdef KOKKOS_ENABLE_LIBDL
   void* firstProfileLibrary = nullptr;
 
-  if (profileLibrary.empty()) return;
+  if (!profileLibrary.empty()) {
 
   char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
@@ -678,6 +678,10 @@ void initialize(const std::string& profileLibrary) {
 #else
   (void)profileLibrary;
 #endif  // KOKKOS_ENABLE_LIBDL
+#ifdef KOKKOS_ENABLE_LIBDL
+      free(envProfileCopy);
+#endif
+  }
   Experimental::invoke_kokkosp_callback(
       Kokkos::Tools::Experimental::MayRequireGlobalFencing::No,
       Kokkos::Tools::Experimental::current_callbacks.init, 0,
@@ -693,7 +697,6 @@ void initialize(const std::string& profileLibrary) {
   Experimental::ToolProgrammingInterface actions;
   actions.fence = &Experimental::Impl::tool_invoked_fence;
   actions.set_tool_hook = &Experimental::Impl::tool_set_event_hook;
-
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
       Experimental::current_callbacks.provide_tool_programming_interface, 2,
@@ -761,9 +764,6 @@ void initialize(const std::string& profileLibrary) {
   Experimental::no_profiling.declare_output_type   = nullptr;
   Experimental::no_profiling.request_output_values = nullptr;
   Experimental::no_profiling.end_tuning_context    = nullptr;
-#ifdef KOKKOS_ENABLE_LIBDL
-  free(envProfileCopy);
-#endif
 }
 
 void finalize() {
@@ -919,6 +919,9 @@ void set_begin_context_callback(contextBeginFunction callback) {
 void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction callback) {
   current_callbacks.declare_optimization_goal = callback;
+}
+void set_provide_tool_programming_interface_callback(provideToolProgrammingInterfaceFunction callback) {
+  current_callbacks.provide_tool_programming_interface = callback;
 }
 
 void pause_tools() {

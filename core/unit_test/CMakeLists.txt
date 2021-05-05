@@ -701,6 +701,11 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
       SOURCES
       tools/TestCategoricalTuner.cpp
     )
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+            UnitTest_ToolInvokedActions
+            SOURCES
+            tools/TestToolInvokedActions.cpp
+    )
   endif()
   if(NOT Kokkos_ENABLE_OPENMPTARGET)
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
@@ -714,10 +719,6 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
     KOKKOS_ADD_TEST_LIBRARY(
       kokkosprinter-tool SHARED
       SOURCES tools/printing-tool.cpp
-    )
-    KOKKOS_ADD_TEST_LIBRARY(
-      kokkosadaptive-tool SHARED
-      SOURCES tools/adaptive-tool.cpp
     )
 
     if((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))

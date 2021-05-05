@@ -170,7 +170,7 @@ void set_declare_optimization_goal_callback(
     optimizationGoalDeclarationFunction callback);
 void set_end_context_callback(contextEndFunction callback);
 void set_begin_context_callback(contextBeginFunction callback);
-
+void set_provide_tool_programming_interface_callback(provideToolProgrammingInterfaceFunction callback);
 void pause_tools();
 void resume_tools();
 
