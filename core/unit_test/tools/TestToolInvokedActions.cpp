@@ -46,31 +46,32 @@
 Kokkos::Tools::Experimental::ToolProgrammingInterface interface;
 
 struct SampleFunctor {
-    KOKKOS_FUNCTION void operator()(int) const {}
+  KOKKOS_FUNCTION void operator()(int) const {}
 };
-void next_cb (const char *, const uint32_t, uint64_t *) {
-    interface.fence(0);
-    std::cout << "Called the next callback\n";
+void next_cb(const char *, const uint32_t, uint64_t *) {
+  interface.fence(0);
+  std::cout << "Called the next callback\n";
 };
 
 int main(int argc, char *argv[]) {
-    /**
-     * Calling this function before initialize is necessary,
-     * intialize is what invokes the callback we're setting
-     */
-    Kokkos::Tools::Experimental::set_provide_tool_programming_interface_callback([](const unsigned int,
-                                                                                    Kokkos::Tools::Experimental::ToolProgrammingInterface
-                                                                                    provided_interface) {
-        interface = provided_interface;
-    });
-    Kokkos::initialize(argc, argv);
-    {
-        Kokkos::Tools::Experimental::set_begin_parallel_for_callback([](const char*, const uint32_t, uint64_t*){
-          interface.set_tool_hook({Kokkos_Tools_begin_parallel_for_event, reinterpret_cast<void*>(&next_cb)});
+  /**
+   * Calling this function before initialize is necessary,
+   * intialize is what invokes the callback we're setting
+   */
+  Kokkos::Tools::Experimental::set_provide_tool_programming_interface_callback(
+      [](const unsigned int,
+         Kokkos::Tools::Experimental::ToolProgrammingInterface
+             provided_interface) { interface = provided_interface; });
+  Kokkos::initialize(argc, argv);
+  {
+    Kokkos::Tools::Experimental::set_begin_parallel_for_callback(
+        [](const char *, const uint32_t, uint64_t *) {
+          interface.set_tool_hook({Kokkos_Tools_begin_parallel_for_event,
+                                   reinterpret_cast<void *>(&next_cb)});
         });
-        SampleFunctor samp;
-        Kokkos::parallel_for("dummy_kernel", Kokkos::RangePolicy<>(0,1), samp);
-        Kokkos::parallel_for("dummy_kernel", Kokkos::RangePolicy<>(0,1), samp);
-    }
-    Kokkos::finalize();
+    SampleFunctor samp;
+    Kokkos::parallel_for("dummy_kernel", Kokkos::RangePolicy<>(0, 1), samp);
+    Kokkos::parallel_for("dummy_kernel", Kokkos::RangePolicy<>(0, 1), samp);
+  }
+  Kokkos::finalize();
 }

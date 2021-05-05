@@ -135,52 +135,53 @@ typedef void (*Kokkos_Profiling_declareMetadataFunction)(const char*,
 typedef void (*Kokkos_Tools_toolInvokedFenceFunction)(const uint32_t);
 
 enum Kokkos_Tools_EventIds {
-    Kokkos_Tools_init_event = 0,
-    Kokkos_Tools_finalize_event,
-    Kokkos_Tools_parse_args_event,
-    Kokkos_Tools_print_help_event,
-    Kokkos_Tools_begin_parallel_for_event,
-    Kokkos_Tools_end_parallel_for_event,
-    Kokkos_Tools_begin_parallel_reduce_event,
-    Kokkos_Tools_end_parallel_reduce_event,
-    Kokkos_Tools_begin_parallel_scan_event,
-    Kokkos_Tools_end_parallel_scan_event,
-    Kokkos_Tools_push_region_event,
-    Kokkos_Tools_pop_region_event,
-    Kokkos_Tools_allocate_data_event,
-    Kokkos_Tools_deallocate_data_event,
-    Kokkos_Tools_create_profile_section_event,
-    Kokkos_Tools_start_profile_section_event,
-    Kokkos_Tools_stop_profile_section_event,
-    Kokkos_Tools_destroy_profile_section_event,
-    Kokkos_Tools_profile_event_event,
-    Kokkos_Tools_begin_deep_copy_event,
-    Kokkos_Tools_end_deep_copy_event,
-    Kokkos_Tools_begin_fence_event,
-    Kokkos_Tools_end_fence_event,
-    Kokkos_Tools_sync_dual_view_event,
-    Kokkos_Tools_modify_dual_view_event,
-    Kokkos_Tools_declare_metadata_event,
-    Kokkos_Tools_declare_output_type_event,
-    Kokkos_Tools_declare_input_type_event,
-    Kokkos_Tools_request_output_values_event,
-    Kokkos_Tools_begin_tuning_context_event,
-    Kokkos_Tools_end_tuning_context_event,
-    Kokkos_Tools_declare_optimization_goal_event
+  Kokkos_Tools_init_event = 0,
+  Kokkos_Tools_finalize_event,
+  Kokkos_Tools_parse_args_event,
+  Kokkos_Tools_print_help_event,
+  Kokkos_Tools_begin_parallel_for_event,
+  Kokkos_Tools_end_parallel_for_event,
+  Kokkos_Tools_begin_parallel_reduce_event,
+  Kokkos_Tools_end_parallel_reduce_event,
+  Kokkos_Tools_begin_parallel_scan_event,
+  Kokkos_Tools_end_parallel_scan_event,
+  Kokkos_Tools_push_region_event,
+  Kokkos_Tools_pop_region_event,
+  Kokkos_Tools_allocate_data_event,
+  Kokkos_Tools_deallocate_data_event,
+  Kokkos_Tools_create_profile_section_event,
+  Kokkos_Tools_start_profile_section_event,
+  Kokkos_Tools_stop_profile_section_event,
+  Kokkos_Tools_destroy_profile_section_event,
+  Kokkos_Tools_profile_event_event,
+  Kokkos_Tools_begin_deep_copy_event,
+  Kokkos_Tools_end_deep_copy_event,
+  Kokkos_Tools_begin_fence_event,
+  Kokkos_Tools_end_fence_event,
+  Kokkos_Tools_sync_dual_view_event,
+  Kokkos_Tools_modify_dual_view_event,
+  Kokkos_Tools_declare_metadata_event,
+  Kokkos_Tools_declare_output_type_event,
+  Kokkos_Tools_declare_input_type_event,
+  Kokkos_Tools_request_output_values_event,
+  Kokkos_Tools_begin_tuning_context_event,
+  Kokkos_Tools_end_tuning_context_event,
+  Kokkos_Tools_declare_optimization_goal_event
 };
 
 struct Kokkos_Tools_ToolEventSetRequest {
-    enum Kokkos_Tools_EventIds id;
-    void* function_pointer;
+  enum Kokkos_Tools_EventIds id;
+  void* function_pointer;
 };
 
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
-typedef bool(*Kokkos_Tools_setToolHookFunction)(struct Kokkos_Tools_ToolEventSetRequest);
+typedef bool (*Kokkos_Tools_setToolHookFunction)(
+    struct Kokkos_Tools_ToolEventSetRequest);
 // NOLINTNEXTLINE(modernize-use-using): C compatibility
 typedef void (*Kokkos_Tools_functionPointer)();
 struct Kokkos_Tools_ToolProgrammingInterface {
   Kokkos_Tools_toolInvokedFenceFunction fence;
-    Kokkos_Tools_setToolHookFunction set_tool_hook;
+  Kokkos_Tools_setToolHookFunction set_tool_hook;
   // allow addition of more actions
   Kokkos_Tools_functionPointer padding[30];
 };
@@ -290,7 +291,6 @@ typedef void (*Kokkos_Tools_contextEndFunction)(
     const size_t, struct Kokkos_Tools_VariableValue);
 typedef void (*Kokkos_Tools_optimizationGoalDeclarationFunction)(
     const size_t, const struct Kokkos_Tools_OptimzationGoal goal);
-
 
 struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_initFunction init;
