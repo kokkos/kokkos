@@ -1012,6 +1012,25 @@ parallel_scan(Impl::ThreadVectorRangeBoundariesStruct<iType, Member> const&
   }
 }
 
+template <typename iType, class Lambda, typename ReducerType, typename Member>
+KOKKOS_INLINE_FUNCTION typename std::enable_if<
+    Kokkos::is_reducer<ReducerType>::value &&
+    Impl::is_host_thread_team_member<Member>::value>::type
+parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<iType, Member>&
+                  loop_boundaries,
+              const Lambda& lambda, const ReducerType& reducer) {
+  typename ReducerType::value_type scan_val;
+  reducer.init(scan_val);
+
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i, scan_val, true);
+  }
+}
+
 //----------------------------------------------------------------------------
 
 template <class Member>

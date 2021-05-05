@@ -124,6 +124,7 @@ class HIPInternal {
   // Team Scratch Level 1 Space
   mutable int64_t m_team_scratch_current_size = 0;
   mutable void *m_team_scratch_ptr            = nullptr;
+  mutable std::mutex m_team_scratch_mutex;
 
   bool was_finalized = false;
 

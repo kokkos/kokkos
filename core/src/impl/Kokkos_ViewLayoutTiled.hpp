@@ -659,6 +659,91 @@ struct ViewOffset<
                                : 0) {}
 };
 
+// FIXME Remove the out-of-class definitions when we require C++17
+#define KOKKOS_ITERATE_VIEW_OFFSET_ENABLE                                      \
+  typename std::enable_if<((Dimension::rank <= 8) && (Dimension::rank >= 2) && \
+                           is_array_layout<Layout>::value &&                   \
+                           is_array_layout_tiled<Layout>::value)>::type
+template <class Dimension, class Layout>
+constexpr Kokkos::Iterate ViewOffset<
+    Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::outer_pattern;
+template <class Dimension, class Layout>
+constexpr Kokkos::Iterate ViewOffset<
+    Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::inner_pattern;
+template <class Dimension, class Layout>
+constexpr int
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::VORank;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_0;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_1;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_2;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_3;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_4;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_5;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_6;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_7;
+template <class Dimension, class Layout>
+constexpr int
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::MASK_0;
+template <class Dimension, class Layout>
+constexpr int
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::MASK_1;
+template <class Dimension, class Layout>
+constexpr int
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::MASK_2;
+template <class Dimension, class Layout>
+constexpr int
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::MASK_3;
+template <class Dimension, class Layout>
+constexpr int
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::MASK_4;
+template <class Dimension, class Layout>
+constexpr int
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::MASK_5;
+template <class Dimension, class Layout>
+constexpr int
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::MASK_6;
+template <class Dimension, class Layout>
+constexpr int
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::MASK_7;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_2T;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_3T;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_4T;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_5T;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_6T;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_7T;
+template <class Dimension, class Layout>
+constexpr unsigned
+    ViewOffset<Dimension, Layout, KOKKOS_ITERATE_VIEW_OFFSET_ENABLE>::SHIFT_8T;
+#undef KOKKOS_ITERATE_VIEW_OFFSET_ENABLE
+
 //----------------------------------------
 
 // ViewMapping assign method needed in order to return a 'subview' tile as a

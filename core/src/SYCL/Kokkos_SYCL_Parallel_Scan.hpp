@@ -88,14 +88,7 @@ class ParallelScanSYCLBase {
     // FIXME_SYCL optimize
     constexpr size_t wgroup_size = 32;
     auto n_wgroups               = (size + wgroup_size - 1) / wgroup_size;
-
-    // FIXME_SYCL The allocation should be handled by the execution space
-    auto deleter = [&q](value_type* ptr) { sycl::free(ptr, q); };
-    std::unique_ptr<value_type[], decltype(deleter)> group_results_memory(
-        static_cast<pointer_type>(sycl::malloc(sizeof(value_type) * n_wgroups,
-                                               q, sycl::usm::alloc::shared)),
-        deleter);
-    auto group_results = group_results_memory.get();
+    pointer_type group_results   = global_mem + size;
 
     q.submit([&](sycl::handler& cgh) {
       sycl::accessor<value_type, 1, sycl::access::mode::read_write,
@@ -202,7 +195,7 @@ class ParallelScanSYCLBase {
     });
     space.fence();
 
-    // Perform the actual exlcusive scan
+    // Perform the actual exclusive scan
     scan_internal(q, functor, m_scratch_space, len);
 
     // Write results to global memory
@@ -227,23 +220,33 @@ class ParallelScanSYCLBase {
   void impl_execute(const PostFunctor& post_functor) {
     if (m_policy.begin() == m_policy.end()) return;
 
-    const auto& q = *m_policy.space().impl_internal_space_instance()->m_queue;
+    auto& instance        = *m_policy.space().impl_internal_space_instance();
     const std::size_t len = m_policy.end() - m_policy.begin();
 
-    // FIXME_SYCL The allocation should be handled by the execution space
-    // consider only storing one value per block and recreate initial results in
-    // the end before doing the final pass
-    auto deleter = [&q](value_type* ptr) { sycl::free(ptr, q); };
-    std::unique_ptr<value_type[], decltype(deleter)> result_memory(
-        static_cast<pointer_type>(sycl::malloc(sizeof(value_type) * len, q,
-                                               sycl::usm::alloc::shared)),
-        deleter);
-    m_scratch_space = result_memory.get();
+    // Compute the total amount of memory we will need. We emulate the recursive
+    // structure that is used to do the actual scan. Essentially, we need to
+    // allocate memory for the whole range and then recursively for the reduced
+    // group results until only one group is left.
+    std::size_t total_memory = 0;
+    {
+      size_t wgroup_size   = 32;
+      size_t n_nested_size = len;
+      size_t n_nested_wgroups;
+      do {
+        total_memory += sizeof(value_type) * n_nested_size;
+        n_nested_wgroups = (n_nested_size + wgroup_size - 1) / wgroup_size;
+        n_nested_size    = n_nested_wgroups;
+      } while (n_nested_wgroups > 1);
+      total_memory += sizeof(value_type) * wgroup_size;
+    }
+
+    // FIXME_SYCL consider only storing one value per block and recreate initial
+    // results in the end before doing the final pass
+    m_scratch_space =
+        static_cast<pointer_type>(instance.scratch_space(total_memory));
 
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
-        indirectKernelMem = m_policy.space()
-                                .impl_internal_space_instance()
-                                ->m_indirectKernelMem;
+        indirectKernelMem = instance.m_indirectKernelMem;
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);

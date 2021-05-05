@@ -42,61 +42,30 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_WORKITEMPROPERTYTRAIT_HPP
-#define KOKKOS_KOKKOS_WORKITEMPROPERTYTRAIT_HPP
+#ifndef KOKKOS_KOKKOS_RANK_HPP
+#define KOKKOS_KOKKOS_RANK_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_Concepts.hpp>  // WorkItemProperty
-#include <traits/Kokkos_PolicyTraitAdaptor.hpp>
-#include <traits/Kokkos_Traits_fwd.hpp>
+#include <Kokkos_Layout.hpp>  // Iterate
 
 namespace Kokkos {
-namespace Impl {
 
-//==============================================================================
-// <editor-fold desc="trait specification"> {{{1
+// Iteration Pattern
+template <unsigned N, Iterate OuterDir = Iterate::Default,
+          Iterate InnerDir = Iterate::Default>
+struct Rank {
+  static_assert(N != 0u, "Kokkos Error: rank 0 undefined");
+  static_assert(N != 1u,
+                "Kokkos Error: rank 1 is not a multi-dimensional range");
+  static_assert(N < 7u, "Kokkos Error: Unsupported rank...");
 
-struct WorkItemPropertyTrait : TraitSpecificationBase<WorkItemPropertyTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
-    using work_item_property = Kokkos::Experimental::WorkItemProperty::None_t;
-  };
-  template <class WorkItemProp, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-    using work_item_property = WorkItemProp;
-  };
-  template <class T>
-  using trait_matches_specification =
-      Kokkos::Experimental::is_work_item_property<T>;
+  using iteration_pattern = Rank<N, OuterDir, InnerDir>;
+
+  static constexpr int rank                = N;
+  static constexpr Iterate outer_direction = OuterDir;
+  static constexpr Iterate inner_direction = InnerDir;
 };
-
-// </editor-fold> end trait specification }}}1
-//==============================================================================
-
-}  // end namespace Impl
-
-namespace Experimental {
-
-//==============================================================================
-// <editor-fold desc="User interface"> {{{1
-
-template <class Policy, unsigned long Property>
-constexpr auto require(const Policy p,
-                       WorkItemProperty::ImplWorkItemProperty<Property>) {
-  static_assert(Kokkos::is_execution_policy<Policy>::value, "");
-  using new_policy_t = Kokkos::Impl::WorkItemPropertyTrait::policy_with_trait<
-      Policy, WorkItemProperty::ImplWorkItemProperty<Property>>;
-  return new_policy_t{p};
-}
-
-// </editor-fold> end User interface }}}1
-//==============================================================================
-
-}  // namespace Experimental
 
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_WORKITEMPROPERTYTRAIT_HPP
+#endif  // KOKKOS_KOKKOS_RANK_HPP
