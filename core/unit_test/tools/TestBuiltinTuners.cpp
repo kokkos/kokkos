@@ -98,7 +98,7 @@ int main(int argc, char* argv[]) {
      * Note that 0.0 is basically a floating point index into
      * the outermost index in this, which is the options vector
      * above. The At 0.0, this will be the first element (1).
-     * At 0.,9 this will be the last element (5)
+     * At 0.9 this will be the last element (5)
      */
     auto begin_point = new_team_tuner.get_point(0.0, 0.0, 0.0);
     assert(std::get<0>(begin_point) == 1);
