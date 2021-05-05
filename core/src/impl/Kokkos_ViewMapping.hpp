@@ -49,6 +49,7 @@
 #include <initializer_list>
 
 #include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_Extents.hpp>
@@ -3842,24 +3843,21 @@ struct OperatorBoundsErrorOnDevice<MapType, true> {
    this defined by default.
    The existence of this alias indicates the existence of MapType::is_managed
  */
-template <class T, class Enable = void>
-struct has_printable_label_typedef : public std::false_type {};
-
 template <class T>
-struct has_printable_label_typedef<T,
-                                   void_t<typename T::printable_label_typedef>>
-    : public std::true_type {};
+using printable_label_typedef_t = typename T::printable_label_typedef;
 
-template <class MapType>
-KOKKOS_INLINE_FUNCTION void operator_bounds_error_on_device(MapType const&,
-                                                            std::false_type) {
+template <class Map>
+KOKKOS_FUNCTION
+    std::enable_if_t<!is_detected<printable_label_typedef_t, Map>::value>
+    operator_bounds_error_on_device(Map const&) {
   Kokkos::abort("View bounds error");
 }
 
-template <class MapType>
-KOKKOS_INLINE_FUNCTION void operator_bounds_error_on_device(MapType const& map,
-                                                            std::true_type) {
-  OperatorBoundsErrorOnDevice<MapType>::run(map);
+template <class Map>
+KOKKOS_FUNCTION
+    std::enable_if_t<is_detected<printable_label_typedef_t, Map>::value>
+    operator_bounds_error_on_device(Map const& map) {
+  OperatorBoundsErrorOnDevice<Map>::run(map);
 }
 
 #endif  // ! defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
@@ -3885,8 +3883,7 @@ KOKKOS_INLINE_FUNCTION void view_verify_operator_bounds(
        This check should cover the case of Views that don't
        have the Unmanaged trait but were initialized by pointer. */
     if (tracker.m_tracker.has_record()) {
-      operator_bounds_error_on_device<MapType>(
-          map, has_printable_label_typedef<MapType>());
+      operator_bounds_error_on_device(map);
     } else {
       Kokkos::abort("View bounds error");
     }
