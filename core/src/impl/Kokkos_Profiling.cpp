@@ -594,7 +594,7 @@ void initialize(const std::string& profileLibrary) {
 #ifdef KOKKOS_ENABLE_PROFILING_LOAD_PRINT
         std::cout << "KokkosP: Library Loaded: " << profileLibraryName
                   << std::endl;
-#endif // KOKKOS_ENABLE_PROFILING_LOAD_PRINT
+#endif  // KOKKOS_ENABLE_PROFILING_LOAD_PRINT
         lookup_function(
             firstProfileLibrary, "kokkosp_begin_parallel_scan",
             Kokkos::Tools::Experimental::current_callbacks.begin_parallel_scan);
@@ -707,149 +707,149 @@ void initialize(const std::string& profileLibrary) {
         lookup_function(firstProfileLibrary, "kokkosp_request_tool_settings",
                         Kokkos::Tools::Experimental::current_callbacks
                             .request_tool_settings);
-      } // firstProfileLibrary not null
-    } // strcmp
+      }  // firstProfileLibrary not null
+    }    // strcmp
 #ifdef KOKKOS_ENABLE_LIBDL
-      free(envProfileCopy);
+    free(envProfileCopy);
 #endif
   }
 #else
   (void)profileLibrary;
 #endif  // KOKKOS_ENABLE_LIBDL
-    Experimental::invoke_kokkosp_callback(
-        Kokkos::Tools::Experimental::MayRequireGlobalFencing::No,
-        Kokkos::Tools::Experimental::current_callbacks.init, 0,
-        (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
+  Experimental::invoke_kokkosp_callback(
+      Kokkos::Tools::Experimental::MayRequireGlobalFencing::No,
+      Kokkos::Tools::Experimental::current_callbacks.init, 0,
+      (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
 
-    Experimental::tool_requirements.requires_global_fencing = true;
+  Experimental::tool_requirements.requires_global_fencing = true;
 
-    Experimental::invoke_kokkosp_callback(
-        Experimental::MayRequireGlobalFencing::No,
-        Experimental::current_callbacks.request_tool_settings, 1,
-        &Experimental::tool_requirements);
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::No,
+      Experimental::current_callbacks.request_tool_settings, 1,
+      &Experimental::tool_requirements);
 
-    Experimental::ToolProgrammingInterface actions;
-    actions.fence         = &Experimental::Impl::tool_invoked_fence;
-    actions.set_tool_hook = &Experimental::Impl::tool_set_event_hook;
-    Experimental::invoke_kokkosp_callback(
-        Experimental::MayRequireGlobalFencing::No,
-        Experimental::current_callbacks.provide_tool_programming_interface, 2,
-        actions);
+  Experimental::ToolProgrammingInterface actions;
+  actions.fence         = &Experimental::Impl::tool_invoked_fence;
+  actions.set_tool_hook = &Experimental::Impl::tool_set_event_hook;
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::No,
+      Experimental::current_callbacks.provide_tool_programming_interface, 2,
+      actions);
 
 #ifdef KOKKOS_ENABLE_TUNING
-    Experimental::VariableInfo kernel_name;
-    kernel_name.type = Experimental::ValueType::kokkos_value_string;
-    kernel_name.category =
-        Experimental::StatisticalCategory::kokkos_value_categorical;
-    kernel_name.valueQuantity =
-        Experimental::CandidateValueType::kokkos_value_unbounded;
+  Experimental::VariableInfo kernel_name;
+  kernel_name.type = Experimental::ValueType::kokkos_value_string;
+  kernel_name.category =
+      Experimental::StatisticalCategory::kokkos_value_categorical;
+  kernel_name.valueQuantity =
+      Experimental::CandidateValueType::kokkos_value_unbounded;
 
-    std::array<std::string, 4> candidate_values = {
-        "parallel_for",
-        "parallel_reduce",
-        "parallel_scan",
-        "parallel_copy",
-    };
+  std::array<std::string, 4> candidate_values = {
+      "parallel_for",
+      "parallel_reduce",
+      "parallel_scan",
+      "parallel_copy",
+  };
 
-    Experimental::SetOrRange kernel_type_variable_candidates =
-        Experimental::make_candidate_set(4, candidate_values.data());
+  Experimental::SetOrRange kernel_type_variable_candidates =
+      Experimental::make_candidate_set(4, candidate_values.data());
 
-    Experimental::kernel_name_context_variable_id =
-        Experimental::declare_input_type("kokkos.kernel_name", kernel_name);
+  Experimental::kernel_name_context_variable_id =
+      Experimental::declare_input_type("kokkos.kernel_name", kernel_name);
 
-    Experimental::VariableInfo kernel_type;
-    kernel_type.type = Experimental::ValueType::kokkos_value_string;
-    kernel_type.category =
-        Experimental::StatisticalCategory::kokkos_value_categorical;
-    kernel_type.valueQuantity =
-        Experimental::CandidateValueType::kokkos_value_set;
-    kernel_type.candidates = kernel_type_variable_candidates;
-    Experimental::kernel_type_context_variable_id =
-        Experimental::declare_input_type("kokkos.kernel_type", kernel_type);
+  Experimental::VariableInfo kernel_type;
+  kernel_type.type = Experimental::ValueType::kokkos_value_string;
+  kernel_type.category =
+      Experimental::StatisticalCategory::kokkos_value_categorical;
+  kernel_type.valueQuantity =
+      Experimental::CandidateValueType::kokkos_value_set;
+  kernel_type.candidates = kernel_type_variable_candidates;
+  Experimental::kernel_type_context_variable_id =
+      Experimental::declare_input_type("kokkos.kernel_type", kernel_type);
 
 #endif
 
-    Experimental::no_profiling.init     = nullptr;
-    Experimental::no_profiling.finalize = nullptr;
+  Experimental::no_profiling.init     = nullptr;
+  Experimental::no_profiling.finalize = nullptr;
 
-    Experimental::no_profiling.begin_parallel_for    = nullptr;
-    Experimental::no_profiling.begin_parallel_scan   = nullptr;
-    Experimental::no_profiling.begin_parallel_reduce = nullptr;
-    Experimental::no_profiling.end_parallel_scan     = nullptr;
-    Experimental::no_profiling.end_parallel_for      = nullptr;
-    Experimental::no_profiling.end_parallel_reduce   = nullptr;
+  Experimental::no_profiling.begin_parallel_for    = nullptr;
+  Experimental::no_profiling.begin_parallel_scan   = nullptr;
+  Experimental::no_profiling.begin_parallel_reduce = nullptr;
+  Experimental::no_profiling.end_parallel_scan     = nullptr;
+  Experimental::no_profiling.end_parallel_for      = nullptr;
+  Experimental::no_profiling.end_parallel_reduce   = nullptr;
 
-    Experimental::no_profiling.push_region     = nullptr;
-    Experimental::no_profiling.pop_region      = nullptr;
-    Experimental::no_profiling.allocate_data   = nullptr;
-    Experimental::no_profiling.deallocate_data = nullptr;
+  Experimental::no_profiling.push_region     = nullptr;
+  Experimental::no_profiling.pop_region      = nullptr;
+  Experimental::no_profiling.allocate_data   = nullptr;
+  Experimental::no_profiling.deallocate_data = nullptr;
 
-    Experimental::no_profiling.begin_deep_copy = nullptr;
-    Experimental::no_profiling.end_deep_copy   = nullptr;
+  Experimental::no_profiling.begin_deep_copy = nullptr;
+  Experimental::no_profiling.end_deep_copy   = nullptr;
 
-    Experimental::no_profiling.create_profile_section  = nullptr;
-    Experimental::no_profiling.start_profile_section   = nullptr;
-    Experimental::no_profiling.stop_profile_section    = nullptr;
-    Experimental::no_profiling.destroy_profile_section = nullptr;
+  Experimental::no_profiling.create_profile_section  = nullptr;
+  Experimental::no_profiling.start_profile_section   = nullptr;
+  Experimental::no_profiling.stop_profile_section    = nullptr;
+  Experimental::no_profiling.destroy_profile_section = nullptr;
 
-    Experimental::no_profiling.profile_event = nullptr;
+  Experimental::no_profiling.profile_event = nullptr;
 
-    Experimental::no_profiling.declare_input_type    = nullptr;
-    Experimental::no_profiling.declare_output_type   = nullptr;
-    Experimental::no_profiling.request_output_values = nullptr;
-    Experimental::no_profiling.end_tuning_context    = nullptr;
+  Experimental::no_profiling.declare_input_type    = nullptr;
+  Experimental::no_profiling.declare_output_type   = nullptr;
+  Experimental::no_profiling.request_output_values = nullptr;
+  Experimental::no_profiling.end_tuning_context    = nullptr;
+}
+
+void finalize() {
+  // Make sure finalize calls happens only once
+  static int is_finalized = 0;
+  if (is_finalized) return;
+  is_finalized = 1;
+
+  if (Experimental::current_callbacks.finalize != nullptr) {
+    Experimental::invoke_kokkosp_callback(
+        Experimental::MayRequireGlobalFencing::No,
+        Experimental::current_callbacks.finalize);
+
+    Experimental::pause_tools();
   }
-
-  void finalize() {
-    // Make sure finalize calls happens only once
-    static int is_finalized = 0;
-    if (is_finalized) return;
-    is_finalized = 1;
-
-    if (Experimental::current_callbacks.finalize != nullptr) {
-      Experimental::invoke_kokkosp_callback(
-          Experimental::MayRequireGlobalFencing::No,
-          Experimental::current_callbacks.finalize);
-
-      Experimental::pause_tools();
-    }
 #ifdef KOKKOS_ENABLE_TUNING
-    // clean up string candidate set
-    for (auto& metadata_pair : Experimental::variable_metadata) {
-      auto metadata = metadata_pair.second;
-      if ((metadata.type == Experimental::ValueType::kokkos_value_string) &&
-          (metadata.valueQuantity ==
-           Experimental::CandidateValueType::kokkos_value_set)) {
-        auto candidate_set = metadata.candidates.set;
-        delete[] candidate_set.values.string_value;
-      }
+  // clean up string candidate set
+  for (auto& metadata_pair : Experimental::variable_metadata) {
+    auto metadata = metadata_pair.second;
+    if ((metadata.type == Experimental::ValueType::kokkos_value_string) &&
+        (metadata.valueQuantity ==
+         Experimental::CandidateValueType::kokkos_value_set)) {
+      auto candidate_set = metadata.candidates.set;
+      delete[] candidate_set.values.string_value;
     }
+  }
 #endif
-  }
+}
 
-  void syncDualView(const std::string& label, const void* const ptr,
-                    bool to_device) {
-    Experimental::invoke_kokkosp_callback(
-        Experimental::MayRequireGlobalFencing::No,
-        Experimental::current_callbacks.sync_dual_view, label.c_str(), ptr,
-        to_device);
-  }
-  void modifyDualView(const std::string& label, const void* const ptr,
-                      bool on_device) {
-    Experimental::invoke_kokkosp_callback(
-        Experimental::MayRequireGlobalFencing::No,
-        Experimental::current_callbacks.modify_dual_view, label.c_str(), ptr,
-        on_device);
-  }
+void syncDualView(const std::string& label, const void* const ptr,
+                  bool to_device) {
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::No,
+      Experimental::current_callbacks.sync_dual_view, label.c_str(), ptr,
+      to_device);
+}
+void modifyDualView(const std::string& label, const void* const ptr,
+                    bool on_device) {
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::No,
+      Experimental::current_callbacks.modify_dual_view, label.c_str(), ptr,
+      on_device);
+}
 
-  void declareMetadata(const std::string& key, const std::string& value) {
-    Experimental::invoke_kokkosp_callback(
-        Experimental::MayRequireGlobalFencing::No,
-        Experimental::current_callbacks.declare_metadata, key.c_str(),
-        value.c_str());
-  }
+void declareMetadata(const std::string& key, const std::string& value) {
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::No,
+      Experimental::current_callbacks.declare_metadata, key.c_str(),
+      value.c_str());
+}
 
-}  // namespace Kokkos
+}  // namespace Tools
 
 namespace Tools {
 namespace Experimental {
@@ -1049,7 +1049,7 @@ SpaceHandle make_space_handle(const char* space_name) {
 }
 }  // namespace Profiling
 
-}  // namespace Tools
+}  // namespace Kokkos
 
 // Tuning
 
