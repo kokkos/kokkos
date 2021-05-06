@@ -107,7 +107,8 @@ void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
 void SYCL::print_configuration(std::ostream& s, const bool detailed) {
   s << "macro  KOKKOS_ENABLE_SYCL : defined" << '\n';
-  if (detailed) SYCL::info(s, m_space_instance->m_queue->get_device());
+  if (detailed)
+    SYCL::impl_sycl_info(s, m_space_instance->m_queue->get_device());
 }
 
 void SYCL::fence() const {
@@ -148,7 +149,8 @@ void SYCL::impl_initialize(SYCL::SYCLDevice d) {
   Impl::SYCLInternal::singleton().initialize(d.get_device());
 }
 
-std::ostream& SYCL::info(std::ostream& os, const sycl::device& device) {
+std::ostream& SYCL::impl_sycl_info(std::ostream& os,
+                                   const sycl::device& device) {
   using namespace sycl::info;
   return os << "Name: " << device.get_info<device::name>()
             << "\nDriver Version: " << device.get_info<device::driver_version>()
