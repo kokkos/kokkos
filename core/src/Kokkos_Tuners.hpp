@@ -373,6 +373,15 @@ class MultidimensionalSparseTuningProblem {
       : MultidimensionalSparseTuningProblem(HierarchyConstructor::build(space),
                                             names) {}
 
+  template <typename... Coordinates>
+  auto get_point(Coordinates... coordinates) {
+    using ArrayType = std::array<Kokkos::Tools::Experimental::VariableValue,
+                                 sizeof...(coordinates)>;
+    return Impl::get_point(
+        m_space, ArrayType({Kokkos::Tools::Experimental::make_variable_value(
+                     0, static_cast<double>(coordinates))...}));
+  }
+
   auto begin() {
     context = Kokkos::Tools::Experimental::get_new_context_id();
     ValueArray values;
@@ -382,7 +391,7 @@ class MultidimensionalSparseTuningProblem {
     }
     begin_context(context);
     request_output_values(context, space_dimensionality, values.data());
-    return get_point(m_space, values);
+    return Impl::get_point(m_space, values);
   }
 
   auto end() { end_context(context); }
@@ -395,6 +404,12 @@ struct ExtendableTunerMixin {
                const std::vector<Key>& new_axis) const {
     const auto& sub_tuner = static_cast<const Tuner*>(this)->get_tuner();
     return sub_tuner.extend(axis_name, new_axis);
+  }
+
+  template <typename... Coordinates>
+  auto get_point(Coordinates... coordinates) {
+    const auto& sub_tuner = static_cast<const Tuner*>(this)->get_tuner();
+    return sub_tuner.get_point(coordinates...);
   }
 };
 
