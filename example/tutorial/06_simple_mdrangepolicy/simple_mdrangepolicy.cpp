@@ -107,8 +107,8 @@ int main(int argc, char* argv[]) {
 
   // ViewType aliases for Rank<2>, Rank<3> for example usage
   using ScalarType  = double;
-  using ViewType_2D = typename Kokkos::View<ScalarType**>;
-  using ViewType_3D = typename Kokkos::View<ScalarType***>;
+  using ViewType_2D = Kokkos::View<ScalarType**>;
+  using ViewType_3D = Kokkos::View<ScalarType***>;
 
   /////////////////////////////////////////////////////////////////////////////
   // Explanation of MDRangePolicy usage, template parameters, constructor
@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
   long incorrect_count_2d = 0;
   {
     // Rank<2> Case: Rank is provided, all other parameters are default
-    using MDPolicyType_2D = typename Kokkos::MDRangePolicy<Kokkos::Rank<2> >;
+    using MDPolicyType_2D = Kokkos::MDRangePolicy<Kokkos::Rank<2> >;
 
     // Construct 2D MDRangePolicy: lower and upper bounds provided, tile dims
     // defaulted
@@ -184,7 +184,7 @@ int main(int argc, char* argv[]) {
   long incorrect_count_3d = 0;
   {
     // Rank<3> Case: Rank, inner iterate pattern, outer iterate pattern provided
-    using MDPolicyType_3D = typename Kokkos::MDRangePolicy<
+    using MDPolicyType_3D = Kokkos::MDRangePolicy<
         Kokkos::Rank<3, Kokkos::Iterate::Left, Kokkos::Iterate::Left> >;
 
     // Construct 3D MDRangePolicy: lower, upper bounds, tile dims provided
