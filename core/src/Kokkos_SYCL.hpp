@@ -131,7 +131,7 @@ class SYCL {
     sycl::device get_device() const;
 
     friend std::ostream& operator<<(std::ostream& os, const SYCLDevice& that) {
-      return SYCL::info(os, that.m_device);
+      return SYCL::impl_sycl_info(os, that.m_device);
     }
 
    private:
@@ -152,7 +152,8 @@ class SYCL {
   }
 
  private:
-  static std::ostream& info(std::ostream& os, const sycl::device& device);
+  static std::ostream& impl_sycl_info(std::ostream& os,
+                                      const sycl::device& device);
 
   Kokkos::Impl::HostSharedPtr<Impl::SYCLInternal> m_space_instance;
 };
