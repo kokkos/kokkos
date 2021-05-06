@@ -298,15 +298,13 @@ void SYCLSpaceInitializer::fence() {
 }
 
 void SYCLSpaceInitializer::print_configuration(std::ostream& msg,
-                                               const bool /*detail*/) {
+                                               const bool detail) {
   msg << "Devices:" << std::endl;
   msg << "  KOKKOS_ENABLE_SYCL: ";
   msg << "yes" << std::endl;
 
   msg << "\nRuntime Configuration:" << std::endl;
-  // FIXME_SYCL not implemented
-  std::abort();
-  // Experimental::SYCL::print_configuration(msg, detail);
+  Experimental::SYCL{}.print_configuration(msg, detail);
 }
 
 }  // namespace Impl
