@@ -107,5 +107,7 @@ TEST(TEST_CATEGORY, IncrTest_01_execspace) {
   ASSERT_TRUE(Kokkos::is_execution_space<TEST_EXECSPACE>::value);
   ASSERT_FALSE(Kokkos::is_execution_space<
                TestIncrExecSpaceTypedef<TEST_EXECSPACE>>::value);
+  TestIncrExecSpace<TEST_EXECSPACE> test;
+  test.testit();
 }
 }  // namespace Test
