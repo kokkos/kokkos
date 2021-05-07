@@ -530,6 +530,18 @@
 #endif
 #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
 
+#ifdef _MSC_VER
+#define KOKKOS_STRINGIZE_HELPER(x) #x
+#define KOKKOS_STRINGIZE(x) KOKKOS_STRINGIZE_HELPER(x)
+#define KOKKOS_DO_PRAGMA(x) __pragma(x)
+#define KOKKOS_WARNING(desc) \
+  KOKKOS_DO_PRAGMA(          \
+      message(__FILE__ "(" KOKKOS_STRINGIZE(__LINE__) ") : warning: " #desc))
+#else
+#define KOKKOS_DO_PRAGMA(x) _Pragma(#x)
+#define KOKKOS_WARNING(desc) KOKKOS_DO_PRAGMA(message(#desc))
+#endif
+
 // DJS 05/28/2019: Bugfix: Issue 2155
 // Use KOKKOS_ENABLE_CUDA_LDG_INTRINSIC to avoid memory leak in RandomAccess
 // View
