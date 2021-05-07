@@ -530,13 +530,14 @@
 #endif
 #define KOKKOS_DEPRECATED_TRAILING_ATTRIBUTE
 
+#define KOKKOS_IMPL_STRINGIFY(x) #x
+#define KOKKOS_IMPL_TOSTRING(x) KOKKOS_IMPL_STRINGIFY(x)
+
 #ifdef _MSC_VER
-#define KOKKOS_STRINGIZE_HELPER(x) #x
-#define KOKKOS_STRINGIZE(x) KOKKOS_STRINGIZE_HELPER(x)
 #define KOKKOS_DO_PRAGMA(x) __pragma(x)
 #define KOKKOS_WARNING(desc) \
-  KOKKOS_DO_PRAGMA(          \
-      message(__FILE__ "(" KOKKOS_STRINGIZE(__LINE__) ") : warning: " #desc))
+  KOKKOS_DO_PRAGMA(message(  \
+      __FILE__ "(" KOKKOS_IMPL_TOSTRING(__LINE__) ") : warning: " #desc))
 #else
 #define KOKKOS_DO_PRAGMA(x) _Pragma(#x)
 #define KOKKOS_WARNING(desc) KOKKOS_DO_PRAGMA(message(#desc))
