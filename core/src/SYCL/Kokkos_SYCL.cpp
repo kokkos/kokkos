@@ -126,12 +126,12 @@ void SYCL::impl_static_fence() {
 }
 void SYCL::impl_static_fence(const std::string& name) {
   // guard accessing all_queues
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::SYCL>(
-      name, *this, [&]() {
-        std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
-        for (auto& queue : Impl::SYCLInternal::all_queues)
-          Impl::SYCLInternal::fence(**queue);
-      });
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::SYCL>(name, [&]() {
+    std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
+    for (auto& queue : Impl::SYCLInternal::all_queues)
+      Impl::SYCLInternal::fence(**queue);
+  });
 }
 
 int SYCL::sycl_device() const {

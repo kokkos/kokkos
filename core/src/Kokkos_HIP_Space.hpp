@@ -580,6 +580,7 @@ class HIP {
    * until all dispatched functors on this device have completed.
    */
   static void impl_static_fence();
+  static void impl_static_fence(const std::string&);
 
   void fence() const;
 
