@@ -305,7 +305,10 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace, Kokkos::Experimental::HIPSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, "
+        "Kokkos::Experimental::HIPSpace, ExecutionSpace>::DeepCopy: fence "
+        "before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -319,7 +322,9 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace, ExecutionSpace> {
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, HostSpace, "
+        "ExecutionSpace>::DeepCopy: fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -333,7 +338,9 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace, ExecutionSpace> {
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<HostSpace, Kokkos::Experimental::HIPSpace, "
+        "ExecutionSpace>::DeepCopy: fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -373,7 +380,10 @@ struct DeepCopy<Kokkos::Experimental::HIPSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPSpace, "
+        "Kokkos::Experimental::HIPHostPinnedSpace, ExecutionSpace>::DeepCopy: "
+        "fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -388,7 +398,10 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, "
+        "Kokkos::Experimental::HIPSpace, ExecutionSpace>::DeepCopy: fence "
+        "before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -404,7 +417,10 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, "
+        "Kokkos::Experimental::HIPHostPinnedSpace, ExecutionSpace>::DeepCopy: "
+        "fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -419,7 +435,9 @@ struct DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, "
+        "HostSpace, ExecutionSpace>::DeepCopy: fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };
@@ -434,7 +452,11 @@ struct DeepCopy<HostSpace, Kokkos::Experimental::HIPHostPinnedSpace,
 
   inline DeepCopy(const ExecutionSpace& exec, void* dst, const void* src,
                   size_t n) {
-    exec.fence();
+    exec.fence(
+        "Kokkos::Impl::DeepCopy<HostSpace, "
+        "Kokkos::Experimental::HIPHostPinnedSpace, "
+        "ExecutionSpace>::Experimental::HIPHostPinnedSpace, HostSpace, "
+        "ExecutionSpace>::DeepCopy: fence before copy");
     DeepCopyAsyncHIP(dst, src, n);
   }
 };

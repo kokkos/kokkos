@@ -135,6 +135,33 @@ Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 
 namespace Experimental {
 
+namespace Impl {
+template <typename FencingFunctor>
+void profile_fence_event(const std::string& name, int devID,
+                         const FencingFunctor& func) {
+  uint64_t handle = 0;
+  Kokkos::Tools::beginFence(name, devID, &handle);
+  func();
+  Kokkos::Tools::endFence(handle);
+}
+
+template <typename Space, typename FencingFunctor>
+void profile_fence_event(const std::string& name, const Space& space,
+                         const FencingFunctor& func) {
+  uint64_t handle = 0;
+  Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
+  func();
+  Kokkos::Tools::endFence(handle);
+}
+
+template <typename Space, typename FencingFunctor>
+void profile_fence_event(const std::string& name, const FencingFunctor& func) {
+  uint64_t handle = 0;
+  Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
+  func();
+  Kokkos::Tools::endFence(handle);
+}
+}  // namespace Impl
 void set_init_callback(initFunction callback);
 void set_finalize_callback(finalizeFunction callback);
 void set_parse_args_callback(parseArgsFunction callback);

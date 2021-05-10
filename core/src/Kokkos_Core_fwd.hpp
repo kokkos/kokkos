@@ -238,7 +238,8 @@ class LogicalMemorySpace;
 
 namespace Kokkos {
 void fence();
-}
+void fence(const std::string &);
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 

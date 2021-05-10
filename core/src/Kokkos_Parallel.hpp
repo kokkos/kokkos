@@ -201,14 +201,16 @@ template <class ExecPolicy, class FunctorType>
 inline void parallel_for(const std::string& str, const ExecPolicy& policy,
                          const FunctorType& functor) {
 #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
+  Kokkos::fence(
+      "Kokkos::parallel_for: debug fence printing kernel names before launch");
   std::cout << "KOKKOS_DEBUG Start parallel_for kernel: " << str << std::endl;
 #endif
 
   ::Kokkos::parallel_for(policy, functor, str);
 
 #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
+  Kokkos::fence(
+      "Kokkos::parallel_for: debug fence printing kernel names after launch");
   std::cout << "KOKKOS_DEBUG End   parallel_for kernel: " << str << std::endl;
 #endif
   (void)str;
@@ -431,14 +433,16 @@ template <class ExecutionPolicy, class FunctorType>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor) {
 #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
+  Kokkos::fence(
+      "Kokkos::parallel_scan: debug fence printing kernel names before launch");
   std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
 #endif
 
   ::Kokkos::parallel_scan(policy, functor, str);
 
 #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
+  Kokkos::fence(
+      "Kokkos::parallel_scan: debug fence printing kernel names after launch");
   std::cout << "KOKKOS_DEBUG End parallel_scan kernel: " << str << std::endl;
 #endif
   (void)str;
@@ -464,7 +468,8 @@ inline void parallel_scan(
 
   Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
 
-  policy.space().fence();
+  Kokkos::fence(
+      "Kokkos::parallel_scan: fence due to result being a value, not a view");
 }
 
 template <class FunctorType, class ReturnType>
@@ -499,14 +504,16 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
 #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
+  Kokkos::fence(
+      "Kokkos::parallel_scan: debug fence printing kernel names before launch");
   std::cout << "KOKKOS_DEBUG Start parallel_scan kernel: " << str << std::endl;
 #endif
 
   ::Kokkos::parallel_scan(policy, functor, return_value, str);
 
 #if KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
-  Kokkos::fence();
+  Kokkos::fence(
+      "Kokkos::parallel_scan: debug fence printing kernel names after launch");
   std::cout << "KOKKOS_DEBUG End parallel_scan kernel: " << str << std::endl;
 #endif
   (void)str;

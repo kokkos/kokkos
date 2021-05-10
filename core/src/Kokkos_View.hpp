@@ -1543,7 +1543,8 @@ class View : public ViewTraits<DataType, Properties...> {
     // to avoid incomplete type errors from using Kokkos::Cuda directly.
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
-      typename traits::device_type::memory_space::execution_space().fence();
+      typename traits::device_type::memory_space::execution_space().fence(
+          "Kokkos::View<...>::View: fence before allocating UVM");
     }
 #endif
     //------------------------------------------------------------
@@ -1555,7 +1556,8 @@ class View : public ViewTraits<DataType, Properties...> {
 #if defined(KOKKOS_ENABLE_CUDA)
     if (std::is_same<Kokkos::CudaUVMSpace,
                      typename traits::device_type::memory_space>::value) {
-      typename traits::device_type::memory_space::execution_space().fence();
+      typename traits::device_type::memory_space::execution_space().fence(
+          "Kokkos::View<...>::View: fence after allocating UVM");
     }
 #endif
     //------------------------------------------------------------
