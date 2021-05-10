@@ -474,6 +474,9 @@ void OpenMPSpaceInitializer::finalize(const bool) {
 }
 
 void OpenMPSpaceInitializer::fence() { Kokkos::OpenMP::impl_static_fence(); }
+void OpenMPSpaceInitializer::fence(const std::string &name) {
+  Kokkos::OpenMP::impl_static_fence(name);
+}
 
 void OpenMPSpaceInitializer::print_configuration(std::ostream &msg,
                                                  const bool detail) {

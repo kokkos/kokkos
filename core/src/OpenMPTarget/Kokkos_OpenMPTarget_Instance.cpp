@@ -106,6 +106,9 @@ int OpenMPTarget::concurrency() {
 void OpenMPTarget::fence() {
   Impl::OpenMPTargetInternal::impl_singleton()->fence();
 }
+void OpenMPTarget::fence(const std::string& name) {
+  Impl::OpenMPTargetInternal::impl_singleton()->fence(name);
+}
 
 void OpenMPTarget::impl_initialize() { m_space_instance->impl_initialize(); }
 void OpenMPTarget::impl_finalize() { m_space_instance->impl_finalize(); }

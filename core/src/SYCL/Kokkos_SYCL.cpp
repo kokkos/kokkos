@@ -296,6 +296,9 @@ void SYCLSpaceInitializer::finalize(const bool all_spaces) {
 void SYCLSpaceInitializer::fence() {
   Kokkos::Experimental::SYCL::impl_static_fence();
 }
+void SYCLSpaceInitializer::fence(const std::string& name) {
+  Kokkos::Experimental::SYCL::impl_static_fence(name);
+}
 
 void SYCLSpaceInitializer::print_configuration(std::ostream& msg,
                                                const bool detail) {
