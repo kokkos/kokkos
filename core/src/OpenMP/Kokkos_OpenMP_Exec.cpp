@@ -447,7 +447,12 @@ OpenMP OpenMP::create_instance(...) { return OpenMP(); }
 
 int OpenMP::concurrency() { return Impl::g_openmp_hardware_max_threads; }
 
-void OpenMP::fence() const {}
+void OpenMP::fence() const {
+  fence("Kokkos::OpenMP::fence: Unnamed Instance fence");
+}
+void OpenMP::fence(const std::string &name) const {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event(name, *this, []() {});
+}
 
 namespace Impl {
 
@@ -475,7 +480,7 @@ void OpenMPSpaceInitializer::finalize(const bool) {
 
 void OpenMPSpaceInitializer::fence() { Kokkos::OpenMP::impl_static_fence(); }
 void OpenMPSpaceInitializer::fence(const std::string &name) {
-  Kokkos::OpenMP::impl_static_fence(name);
+  Kokkos::OpenMP::impl_static_fence(OpenMP(), name);
 }
 
 void OpenMPSpaceInitializer::print_configuration(std::ostream &msg,

@@ -474,6 +474,7 @@ class ThreadsExec {
 
   static int in_parallel();
   static void fence();
+  static void fence(const std::string &);
   static bool sleep();
   static bool wake();
 
@@ -636,6 +637,9 @@ inline void Threads::print_configuration(std::ostream &s, const bool detail) {
 }
 
 inline void Threads::impl_static_fence() { Impl::ThreadsExec::fence(); }
+inline void Threads::impl_static_fence(const std::string &name) {
+  Impl::ThreadsExec::fence(name);
+}
 } /* namespace Kokkos */
 
 //----------------------------------------------------------------------------
