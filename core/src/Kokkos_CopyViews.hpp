@@ -2598,7 +2598,8 @@ inline void deep_copy(
       Kokkos::Impl::ViewFill<ViewTypeUniform, typename dst_traits::array_layout,
                              fill_exec_space>(dst, value, fill_exec_space());
     }
-    fill_exec_space().fence("Kokkos::deep_copy: scalar-to-view copy on space, fence after fill");
+    fill_exec_space().fence(
+        "Kokkos::deep_copy: scalar-to-view copy on space, fence after fill");
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
     Kokkos::Profiling::endDeepCopy();

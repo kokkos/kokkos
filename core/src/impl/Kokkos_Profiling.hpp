@@ -146,7 +146,7 @@ void profile_fence_event(const std::string& name, int devID,
 }
 
 template <typename Space, typename FencingFunctor>
-void profile_fence_event(const std::string& name, const Space& space,
+void profile_fence_event(const std::string& name, const Space& /**space*/,
                          const FencingFunctor& func) {
   uint64_t handle = 0;
   Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
