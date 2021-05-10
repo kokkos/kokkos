@@ -65,6 +65,12 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
+KOKKOS_ADD_EXECUTABLE(
+  TestCompileOnly
+  SOURCES
+  TestDetectionIdiom.cpp
+)
+
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
@@ -687,9 +693,19 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
 
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_TuningBuiltins
+      SOURCES
+      tools/TestBuiltinTuners.cpp
+    )
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
       UnitTest_TuningBasics
       SOURCES
         tools/TestTuning.cpp
+    )
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_CategoricalTuner
+      SOURCES
+      tools/TestCategoricalTuner.cpp
     )
   endif()
   if(NOT Kokkos_ENABLE_OPENMPTARGET)

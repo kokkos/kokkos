@@ -19,11 +19,11 @@ jobs:
             cxx: 'icpc'
             cmake_build_type: 'Debug'
             openmp: 'ON'
-          - distro: 'fedora:intel-oneapi'
+          - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Release'
             openmp: 'ON'
-          - distro: 'fedora:intel-oneapi'
+          - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Debug'
             openmp: 'ON'
@@ -54,6 +54,7 @@ jobs:
             -DKokkos_ENABLE_OPENMP=${{ matrix.openmp }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_3=ON \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }} \
             -DBUILD_NAME=${{ matrix.distro }}-${{ matrix.cxx }} \
