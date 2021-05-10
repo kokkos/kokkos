@@ -583,6 +583,7 @@ class HIP {
   static void impl_static_fence(const std::string&);
 
   void fence() const;
+  void fence(const std::string&) const;
 
   hipStream_t hip_stream() const;
 
