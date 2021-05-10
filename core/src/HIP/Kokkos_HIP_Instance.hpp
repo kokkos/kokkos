@@ -140,6 +140,7 @@ class HIPInternal {
   void print_configuration(std::ostream &) const;
 
   void fence() const;
+  void fence(const std::string) const;
 
   // returns the next driver type pointer in our work array
   char *get_next_driver(size_t driverTypeSize) const;

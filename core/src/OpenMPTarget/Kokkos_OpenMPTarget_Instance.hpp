@@ -59,6 +59,7 @@ class OpenMPTargetInternal {
 
  public:
   void fence();
+  void fence(const std::string& name);
 
   /** \brief  Return the maximum amount of concurrency.  */
   int concurrency();

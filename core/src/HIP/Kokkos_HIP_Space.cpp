@@ -441,9 +441,18 @@ void HIP::print_configuration(std::ostream& s, const bool) {
   Impl::HIPInternal::singleton().print_configuration(s);
 }
 
-void HIP::impl_static_fence() { HIP_SAFE_CALL(hipDeviceSynchronize()); }
+void HIP::impl_static_fence(const std::string& name) {
+  Kokkos::Tools::Experimental::profile_fence_event<Kokkos::HIP>(
+      name, [&]() { HIP_SAFE_CALL(hipDeviceSynchronize()); });
+}
+void HIP::impl_static_fence() {
+  impl_static_fence("Kokkos::HIP::impl_static_fence: Unnamed Static Fence");
+}
 
-void HIP::fence() const { m_space_instance->fence(); }
+void HIP::fence() const {
+  fence("Kokkos::HIP::fence(): Unnamed Instance Fence");
+}
+void HIP::fence(const std::string&) const { m_space_instance->fence(); }
 
 hipStream_t HIP::hip_stream() const { return m_space_instance->m_stream; }
 

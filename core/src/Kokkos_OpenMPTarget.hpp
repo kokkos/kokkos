@@ -92,6 +92,7 @@ class OpenMPTarget {
   inline static bool in_parallel() { return omp_in_parallel(); }
 
   static void fence();
+  static void fence(const std::string&);
 
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();

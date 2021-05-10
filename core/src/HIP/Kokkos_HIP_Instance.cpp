@@ -163,9 +163,14 @@ HIPInternal &HIPInternal::singleton() {
 }
 
 void HIPInternal::fence() const {
-  HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
-  // can reset our cycle id now as well
-  m_cycleId = 0;
+  fence("Kokkos::HIPInternal::fence: Unnamed Internal Fence");
+}
+void HIPInternal::fence(const std::string &name) const {
+  Kokkos::Tools::Experimental::profile_fence_event(name, *this, [&]() {
+    HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
+    // can reset our cycle id now as well
+    m_cycleId = 0;
+  });
 }
 
 void HIPInternal::initialize(int hip_device_id, hipStream_t stream) {

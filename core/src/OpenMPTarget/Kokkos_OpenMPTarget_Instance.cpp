@@ -59,7 +59,14 @@
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
-void OpenMPTargetInternal::fence() {}
+void OpenMPTargetInternal::fence() {
+  fence(
+      "Kokkos::Experimental::Impl::OpenMPTargetInternal::fence: Unnamed "
+      "Internal Fence");
+}
+void OpenMPTargetInternal::fence(const std::string& name) {
+  Kokkos::Tools::Experimental::profile_fence_event(name, *this, [&]() {});
+}
 int OpenMPTargetInternal::concurrency() { return 128000; }
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
 void OpenMPTargetInternal::print_configuration(std::ostream& /*stream*/,
@@ -150,6 +157,9 @@ void OpenMPTargetSpaceInitializer::finalize(const bool all_spaces) {
 
 void OpenMPTargetSpaceInitializer::fence() {
   Kokkos::Experimental::OpenMPTarget::fence();
+}
+void OpenMPTargetSpaceInitializer::fence(const std::string& name) {
+  Kokkos::Experimental::OpenMPTarget::fence(name);
 }
 
 void OpenMPTargetSpaceInitializer::print_configuration(std::ostream& msg,
