@@ -112,14 +112,26 @@ void SYCL::print_configuration(std::ostream& s, const bool detailed) {
 }
 
 void SYCL::fence() const {
-  Impl::SYCLInternal::fence(*m_space_instance->m_queue);
+  fence("Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence");
+}
+void SYCL::fence(const std::string& name) const {
+  Kokkos::Tools::Experimental::profile_fence_event(name, *this, [&]() {
+    Impl::SYCLInternal::fence(*m_space_instance->m_queue);
+  });
 }
 
 void SYCL::impl_static_fence() {
+  impl_static_fence(
+      "Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence");
+}
+void SYCL::impl_static_fence(const std::string& name) {
   // guard accessing all_queues
-  std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
-  for (auto& queue : Impl::SYCLInternal::all_queues)
-    Impl::SYCLInternal::fence(**queue);
+  Kokkos::Tools::Experimental::profile_fence_event<Kokkos::SYCL>(
+      name, *this, [&]() {
+        std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
+        for (auto& queue : Impl::SYCLInternal::all_queues)
+          Impl::SYCLInternal::fence(**queue);
+      });
 }
 
 int SYCL::sycl_device() const {

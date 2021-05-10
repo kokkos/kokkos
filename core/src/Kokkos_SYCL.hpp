@@ -110,7 +110,9 @@ class SYCL {
 
   /** \brief Wait until all dispatched functors complete. A noop for OpenMP. */
   static void impl_static_fence();
+  static void impl_static_fence(const std::string&);
   void fence() const;
+  void fence(const std::string&) const;
 
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream&, const bool detail = false);
