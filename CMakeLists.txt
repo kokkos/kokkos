@@ -292,3 +292,7 @@ IF (HAS_PARENT)
     SET_PROPERTY(GLOBAL PROPERTY Kokkos_ENABLE_${DEV} ON)
   ENDFOREACH()
 ENDIF()
+
+#ifdef KOKKOS_ENABLE_TESTS
+  add_subdirectory(benchmarks/axpby_dot)
+#endif

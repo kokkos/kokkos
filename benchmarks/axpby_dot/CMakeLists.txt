@@ -1,0 +1,3 @@
+add_executable(KokkosBenchmark_dot_axpby main.cpp)
+target_include_directories(KokkosBenchmark_dot_axpby PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(KokkosBenchmark_dot_axpby Kokkos::kokkos)
