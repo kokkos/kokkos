@@ -442,7 +442,7 @@ void HIP::print_configuration(std::ostream& s, const bool) {
 }
 
 void HIP::impl_static_fence(const std::string& name) {
-  Kokkos::Tools::Experimental::profile_fence_event<Kokkos::HIP>(
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::HIP>(
       name, [&]() { HIP_SAFE_CALL(hipDeviceSynchronize()); });
 }
 void HIP::impl_static_fence() {

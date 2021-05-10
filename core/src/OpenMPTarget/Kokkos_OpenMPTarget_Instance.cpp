@@ -65,7 +65,7 @@ void OpenMPTargetInternal::fence() {
       "Internal Fence");
 }
 void OpenMPTargetInternal::fence(const std::string& name) {
-  Kokkos::Tools::Experimental::profile_fence_event(name, *this, [&]() {});
+  Kokkos::Tools::Experimental::Impl::profile_fence_event(name, *this, [&]() {});
 }
 int OpenMPTargetInternal::concurrency() { return 128000; }
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }

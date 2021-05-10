@@ -166,7 +166,7 @@ void HIPInternal::fence() const {
   fence("Kokkos::HIPInternal::fence: Unnamed Internal Fence");
 }
 void HIPInternal::fence(const std::string &name) const {
-  Kokkos::Tools::Experimental::profile_fence_event(name, *this, [&]() {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event(name, *this, [&]() {
     HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
     // can reset our cycle id now as well
     m_cycleId = 0;
