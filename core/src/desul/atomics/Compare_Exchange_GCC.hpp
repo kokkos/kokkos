@@ -17,7 +17,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #endif
 namespace desul {
 
-#if defined(__clang__) && (__clang_major__>=7)
+#if defined(__clang__) && (__clang_major__>=7) && !defined(__APPLE__)
 // Disable warning for large atomics on clang 7 and up (checked with godbolt)
 // error: large atomic operation may incur significant performance penalty [-Werror,-Watomic-alignment]
 #pragma GCC diagnostic push
@@ -67,7 +67,7 @@ atomic_compare_exchange(
   return compare;
 }
 
-#if defined(__clang__) && (__clang_major__>=7)
+#if defined(__clang__) && (__clang_major__>=7) && !defined(__APPLE__)
 #pragma GCC diagnostic pop
 #endif
 }  // namespace desul
