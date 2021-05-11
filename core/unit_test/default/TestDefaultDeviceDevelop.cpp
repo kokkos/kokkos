@@ -51,6 +51,10 @@
 
 namespace Test {
 
-TEST(defaultdevicetype, development_test) {}
+    TEST(defaultdevicetype, development_test) {
+
+        Kokkos::RangePolicy<> pol(0, 10000);
+        auto next_pol = Kokkos::Experimental::require(pol, Kokkos::Experimental::MaximizeOccupancy{});
+    }
 
 }  // namespace Test

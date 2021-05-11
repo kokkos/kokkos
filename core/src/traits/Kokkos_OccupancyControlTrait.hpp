@@ -75,6 +75,10 @@ struct MaximizeOccupancy {
   explicit MaximizeOccupancy() = default;
 };
 
+struct TunedOccupancy {
+    explicit TunedOccupancy() = default;
+};
+
 // </editor-fold> end Occupancy control user interface }}}1
 //==============================================================================
 
