@@ -29,7 +29,7 @@ void atomic_thread_fence(MemoryOrder, MemoryScope) {
 
 template <typename T, class MemoryScope>
 typename std::enable_if<sizeof(T) == 1, T>::type atomic_exchange(
-    T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
+    T* const dest, T val, MemoryOrderRelaxed, MemoryScope) {
   char return_val =
       _InterlockedExchange8((char*)dest, *((char*)&val));
   return *(reinterpret_cast<T*>(&return_val));
@@ -37,7 +37,7 @@ typename std::enable_if<sizeof(T) == 1, T>::type atomic_exchange(
 
 template <typename T, class MemoryScope>
 typename std::enable_if<sizeof(T) == 2, T>::type atomic_exchange(
-    T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
+    T* const dest, T val, MemoryOrderRelaxed, MemoryScope) {
   short return_val =
       _InterlockedExchange16((short*)dest, *((short*)&val));
   return *(reinterpret_cast<T*>(&return_val));
@@ -45,7 +45,7 @@ typename std::enable_if<sizeof(T) == 2, T>::type atomic_exchange(
 
 template <typename T, class MemoryScope>
 typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(
-    T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
+    T* const dest, T val, MemoryOrderRelaxed, MemoryScope) {
   long return_val =
       _InterlockedExchange((long*)dest, *((long*)&val));
   return *(reinterpret_cast<T*>(&return_val));
@@ -53,7 +53,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(
 
 template <typename T, class MemoryScope>
 typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
-    T* const dest, T compare, T val, MemoryOrderRelaxed, MemoryScope) {
+    T* const dest, T val, MemoryOrderRelaxed, MemoryScope) {
   __int64 return_val = _InterlockedExchange64(
       (__int64*)dest, *((__int64*)&val));
   return *(reinterpret_cast<T*>(&return_val));
@@ -61,7 +61,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
 
 template <typename T, class MemoryScope>
 typename std::enable_if<sizeof(T) == 1, T>::type atomic_exchange(
-    T* const dest, T compare, T val, MemoryOrderSeqCst, MemoryScope) {
+    T* const dest, T val, MemoryOrderSeqCst, MemoryScope) {
   char return_val =
       _InterlockedExchange8((char*)dest, *((char*)&val));
   return *(reinterpret_cast<T*>(&return_val));
@@ -69,7 +69,7 @@ typename std::enable_if<sizeof(T) == 1, T>::type atomic_exchange(
 
 template <typename T, class MemoryScope>
 typename std::enable_if<sizeof(T) == 2, T>::type atomic_exchange(
-    T* const dest, T compare, T val, MemoryOrderSeqCst, MemoryScope) {
+    T* const dest, T val, MemoryOrderSeqCst, MemoryScope) {
   short return_val =
       _InterlockedExchange16((short*)dest, *((short*)&val));
   return *(reinterpret_cast<T*>(&return_val));
@@ -77,7 +77,7 @@ typename std::enable_if<sizeof(T) == 2, T>::type atomic_exchange(
 
 template <typename T, class MemoryScope>
 typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(
-    T* const dest, T compare, T val, MemoryOrderSeqCst, MemoryScope) {
+    T* const dest, T val, MemoryOrderSeqCst, MemoryScope) {
   long return_val =
       _InterlockedExchange((long*)dest, *((long*)&val));
   return *(reinterpret_cast<T*>(&return_val));
@@ -85,7 +85,7 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(
 
 template <typename T, class MemoryScope>
 typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
-    T* const dest, T compare, T val, MemoryOrderSeqCst, MemoryScope) {
+    T* const dest, T val, MemoryOrderSeqCst, MemoryScope) {
   __int64 return_val = _InterlockedExchange64(
       (__int64*)dest, *((__int64*)&val));
   return *(reinterpret_cast<T*>(&return_val));
@@ -177,6 +177,25 @@ typename std::enable_if<sizeof(T) == 16, T>::type atomic_compare_exchange(
   return compare;
 }
 
+
+template <typename T, class MemoryOrder, class MemoryScope>
+typename std::enable_if<(sizeof(T) != 1 && sizeof(T) != 4 && sizeof(T) != 8 && sizeof(T) != 16), T>::type atomic_compare_exchange(
+     T* const dest, T compare, T val, MemoryOrder, MemoryScope scope) {
+  while (!Impl::lock_address((void*)dest, scope)) {}
+  if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
+          atomic_thread_fence(MemoryOrderRelease(), scope);
+  atomic_thread_fence(MemoryOrderAcquire(),scope);
+  T return_val = *dest;
+  if(return_val == compare) {
+    *dest = val;
+    atomic_thread_fence(MemoryOrderRelease(),scope);
+  }
+
+  Impl::unlock_address((void*)dest, scope);
+  return return_val;
+}
+
 }  // namespace desul
+
 #endif
 #endif
