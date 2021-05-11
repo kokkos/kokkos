@@ -501,6 +501,9 @@ void HIPSpaceInitializer::finalize(const bool all_spaces) {
 void HIPSpaceInitializer::fence() {
   Kokkos::Experimental::HIP::impl_static_fence();
 }
+void HIPSpaceInitializer::fence(const std::string& name) {
+  Kokkos::Experimental::HIP::impl_static_fence(name);
+}
 
 void HIPSpaceInitializer::print_configuration(std::ostream& msg,
                                               const bool detail) {
