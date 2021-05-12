@@ -49,14 +49,50 @@
 #include <cmath>
 #include <algorithm>
 #include <type_traits>
-
-#ifdef KOKKOS_ENABLE_SYCL
-#include <CL/sycl.hpp>
-#endif
+#include "Kokkos_NumericTraits.hpp"
 
 namespace Kokkos {
 namespace Experimental {
 
+//! Compute exponential integral E1(x) (x > 0).
+template<class RealType>
+KOKKOS_INLINE_FUNCTION RealType expint(const RealType& x) {
+//This function is a conversion of the corresponding Fortran program in
+//S. Zhang & J. Jin "Computation of Special Functions" (Wiley, 1996).
+  using Kokkos::Experimental::infinity;
+  using Kokkos::Experimental::epsilon;
+
+  RealType e1;
+
+  if (x < 0) {
+    e1 = -infinity<RealType>::value;
+  }
+  else if (x == 0.0) {
+    e1 = infinity<RealType>::value;
+  }
+  else if (x <= 1.0) {
+    e1 = 1.0;
+    RealType r = 1.0;
+    for (int k=1; k<=25; k++) {
+      RealType k_real = static_cast<RealType> (k);
+      r  = -r*k_real*x/Kokkos::pow(k_real+1.0,2.0);
+      e1 = e1+r;
+      if (Kokkos::abs(r) <= Kokkos::abs(e1)*epsilon<RealType>::value) 
+        break;
+    }
+    e1 = -0.5772156649015328-Kokkos::log(x)+x*e1;
+  }
+  else {
+    int m = 20 + static_cast<int>(80.0/x);
+    RealType t0 = 0.0;
+    for (int k=m; k>=1; k--) {
+      RealType k_real = static_cast<RealType> (k);
+      t0 = k_real/(1.0+k_real/(x+t0));
+    }
+    e1 = Kokkos::exp(-x)*(1.0/(x+t0));
+  }
+  return e1;
+}
 
 }  // namespace Experimental
 }  // namespace Kokkos
