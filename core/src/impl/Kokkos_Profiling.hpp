@@ -59,7 +59,29 @@ namespace Kokkos {
 bool tune_internals() noexcept;
 
 namespace Tools {
-
+namespace Impl {
+    template<class T>
+    struct TuningResult;
+    template<class Policy>
+    struct TuningResult {
+        using type = Policy;
+    };
+    template<class input>
+            struct translate { using type = input; };
+    template<>
+    struct translate<Kokkos::Experimental::TuneOccupancy> { using type = Kokkos::Experimental::DesiredOccupancy; };
+    template<class... Properties>
+    struct TuningResult<Kokkos::RangePolicy<Properties...>> {
+        //using type = Kokkos::RangePolicy<Properties...>;
+        using type = Kokkos::RangePolicy<
+                typename translate<Properties>::type...
+                >;
+    };
+   template<typename PolicyType, typename Functor>
+   struct ToolResponse {
+       typename TuningResult<PolicyType>::type policy;
+   };
+}
 bool profileLibraryLoaded();
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
@@ -189,6 +211,9 @@ namespace Impl {
 static std::map<std::string, Kokkos::Tools::Experimental::TeamSizeTuner>
     team_tuners;
 
+    static std::map<std::string, Kokkos::Tools::Experimental::RangePolicyOccupancyTuner>
+            range_policy_tuners;
+
 template <int Rank>
 using MDRangeTuningMap =
     std::map<std::string, Kokkos::Tools::Experimental::MDRangeTuner<Rank>>;
@@ -198,13 +223,17 @@ static MDRangeTuningMap<Rank> mdrange_tuners;
 
 // For any policies without a tuning implementation, with a reducer
 template <class ReducerType, class ExecPolicy, class Functor, typename TagType>
-void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
-                 TagType) {}
+auto tune_policy(const size_t, const std::string&, ExecPolicy& policy, const Functor&,
+                 TagType) {
+   return policy;
+}
 
 // For any policies without a tuning implementation, without a reducer
 template <class ExecPolicy, class Functor, typename TagType>
-void tune_policy(const size_t, const std::string&, ExecPolicy&, const Functor&,
-                 const TagType&) {}
+auto tune_policy(const size_t, const std::string&, ExecPolicy& policy, const Functor&,
+                 const TagType&) {
+    return policy;
+}
 
 /**
  * Tuning for parallel_fors and parallel_scans is a fairly simple process.
@@ -295,11 +324,20 @@ struct ComplexReducerSizeCalculator {
   }
 };
 
+template<typename Policy>
+auto default_tuned_version_of(const Policy& policy){
+    return policy;
+}
+template<class... Properties>
+auto default_tuned_version_of(const Kokkos::RangePolicy<Properties...>& policy){
+    return Kokkos::Experimental::prefer(policy, Kokkos::Experimental::DesiredOccupancy(100));
+}
+
 }  // namespace Impl
 
 template <class Tuner, class Functor, class TagType,
           class TuningPermissionFunctor, class Map, class Policy>
-void generic_tune_policy(const std::string& label_in, Map& map, Policy& policy,
+auto generic_tune_policy(const std::string& label_in, Map& map, Policy& policy,
                          const Functor& functor, const TagType& tag,
                          const TuningPermissionFunctor& should_tune) {
   if (should_tune(policy)) {
@@ -320,8 +358,9 @@ void generic_tune_policy(const std::string& label_in, Map& map, Policy& policy,
       }
       return my_tuner;
     }();
-    tuner_iter->second.tune(policy);
+    return tuner_iter->second.tune(policy);
   }
+  return Impl::default_tuned_version_of(policy);
 }
 template <class Tuner, class ReducerType, class Functor, class TagType,
           class TuningPermissionFunctor, class Map, class Policy>
@@ -348,8 +387,9 @@ void generic_tune_policy(const std::string& label_in, Map& map, Policy& policy,
       }
       return my_tuner;
     }();
-    tuner_iter->second.tune(policy);
+    return tuner_iter->second.tune(policy);
   }
+  return Impl::default_tuned_version_of(policy);
 }
 
 // tune a TeamPolicy, without reducer
@@ -357,7 +397,7 @@ template <class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
-  generic_tune_policy<Experimental::TeamSizeTuner>(
+  return generic_tune_policy<Experimental::TeamSizeTuner>(
       label_in, team_tuners, policy, functor, tag,
       [](const Kokkos::TeamPolicy<Properties...>& candidate_policy) {
         return (candidate_policy.impl_auto_team_size() ||
@@ -370,7 +410,7 @@ template <class ReducerType, class Functor, class TagType, class... Properties>
 void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::TeamPolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
-  generic_tune_policy<Experimental::TeamSizeTuner, ReducerType>(
+  return generic_tune_policy<Experimental::TeamSizeTuner, ReducerType>(
       label_in, team_tuners, policy, functor, tag,
       [](const Kokkos::TeamPolicy<Properties...>& candidate_policy) {
         return (candidate_policy.impl_auto_team_size() ||
@@ -378,14 +418,39 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
       });
 }
 
+// tune a RangePolicy, without reducer
+        template <class Functor, class TagType, class... Properties>
+        auto tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
+                         Kokkos::RangePolicy<Properties...>& policy,
+                         const Functor& functor, const TagType& tag) {
+            return generic_tune_policy<Experimental::RangePolicyOccupancyTuner>(
+                    label_in, range_policy_tuners, policy, functor, tag,
+                    [](const Kokkos::RangePolicy<Properties...>& candidate_policy) {
+                        return Kokkos::RangePolicy<Properties...>::traits::experimental_contains_desired_occupancy;
+                    });
+        }
+
+// tune a RangePolicy, with reducer
+        template <class ReducerType, class Functor, class TagType, class... Properties>
+        auto tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
+                         Kokkos::RangePolicy<Properties...>& policy,
+                         const Functor& functor, const TagType& tag) {
+            return generic_tune_policy<Experimental::RangePolicyOccupancyTuner, ReducerType>(
+                    label_in, range_policy_tuners, policy, functor, tag,
+                    [](const Kokkos::RangePolicy<Properties...>& candidate_policy) {
+                        return (candidate_policy.impl_auto_team_size() ||
+                                candidate_policy.impl_auto_vector_length());
+                    });
+        }
+
 // tune a MDRangePolicy, without reducer
 template <class Functor, class TagType, class... Properties>
-void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
+auto tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::MDRangePolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   using Policy              = Kokkos::MDRangePolicy<Properties...>;
   static constexpr int rank = Policy::rank;
-  generic_tune_policy<Experimental::MDRangeTuner<rank>>(
+  return generic_tune_policy<Experimental::MDRangeTuner<rank>>(
       label_in, mdrange_tuners<rank>, policy, functor, tag,
       [](const Policy& candidate_policy) {
         return candidate_policy.impl_tune_tile_size();
@@ -394,12 +459,12 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
 
 // tune a MDRangePolicy, with reducer
 template <class ReducerType, class Functor, class TagType, class... Properties>
-void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
+auto tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  Kokkos::MDRangePolicy<Properties...>& policy,
                  const Functor& functor, const TagType& tag) {
   using Policy              = Kokkos::MDRangePolicy<Properties...>;
   static constexpr int rank = Policy::rank;
-  generic_tune_policy<Experimental::MDRangeTuner<rank>, ReducerType>(
+  return generic_tune_policy<Experimental::MDRangeTuner<rank>, ReducerType>(
       label_in, mdrange_tuners<rank>, policy, functor, tag,
       [](const Policy& candidate_policy) {
         return candidate_policy.impl_tune_tile_size();
@@ -409,11 +474,11 @@ void tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
 template <class ReducerType>
 struct ReductionSwitcher {
   template <class Functor, class TagType, class ExecPolicy>
-  static void tune(const size_t tuning_context, const std::string& label,
+  static auto tune(const size_t tuning_context, const std::string& label,
                    ExecPolicy& policy, const Functor& functor,
                    const TagType& tag) {
     if (Kokkos::tune_internals()) {
-      tune_policy<ReducerType>(tuning_context, label, policy, functor, tag);
+      return tune_policy<ReducerType>(tuning_context, label, policy, functor, tag);
     }
   }
 };
@@ -421,11 +486,11 @@ struct ReductionSwitcher {
 template <>
 struct ReductionSwitcher<Kokkos::InvalidType> {
   template <class Functor, class TagType, class ExecPolicy>
-  static void tune(const size_t tuning_context, const std::string& label,
+  static auto tune(const size_t tuning_context, const std::string& label,
                    ExecPolicy& policy, const Functor& functor,
                    const TagType& tag) {
     if (Kokkos::tune_internals()) {
-      tune_policy(tuning_context, label, policy, functor, tag);
+      return tune_policy(tuning_context, label, policy, functor, tag);
     }
   }
 };
@@ -483,9 +548,23 @@ void report_policy_results(const size_t /**tuning_context*/,
       });
 }
 
+// report results for an MDRangePolicy
+template <class Functor, class TagType, class... Properties>
+void report_policy_results(const size_t /**tuning_context*/,
+                           const std::string& label_in,
+                           Kokkos::RangePolicy<Properties...>& policy,
+                           const Functor& functor, const TagType& tag) {
+    using Policy              = Kokkos::RangePolicy<Properties...>;
+    generic_report_results<Experimental::RangePolicyOccupancyTuner>(
+            label_in, range_policy_tuners, policy, functor, tag,
+            [](const Policy& candidate_policy) {
+                return Kokkos::RangePolicy<Properties...>::traits::experimental_contains_desired_occupancy;
+            });
+}
 template <class ExecPolicy, class FunctorType>
-void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
+auto begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
                         const std::string& label, uint64_t& kpID) {
+    Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType> response { policy };
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag>
@@ -497,11 +576,12 @@ void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
   if (Kokkos::tune_internals()) {
-    tune_policy(context_id, label, policy, functor, Kokkos::ParallelForTag{});
+    response.policy = tune_policy(context_id, label, policy, functor, Kokkos::ParallelForTag{});
   }
 #else
   (void)functor;
 #endif
+  return response;
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -526,6 +606,7 @@ void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
 template <class ExecPolicy, class FunctorType>
 void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
                          const std::string& label, uint64_t& kpID) {
+    Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType> response { policy };
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag>
@@ -537,11 +618,12 @@ void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
   if (Kokkos::tune_internals()) {
-    tune_policy(context_id, label, policy, functor, Kokkos::ParallelScanTag{});
+    response.policy = tune_policy(context_id, label, policy, functor, Kokkos::ParallelScanTag{});
   }
 #else
   (void)functor;
 #endif
+    return response;
 }
 
 template <class ExecPolicy, class FunctorType>
@@ -566,6 +648,7 @@ void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 template <class ReducerType, class ExecPolicy, class FunctorType>
 void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
                            const std::string& label, uint64_t& kpID) {
+    Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType> response { policy };
   if (Kokkos::Tools::profileLibraryLoaded()) {
     Kokkos::Impl::ParallelConstructName<FunctorType,
                                         typename ExecPolicy::work_tag>
@@ -576,11 +659,12 @@ void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
   }
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
-  ReductionSwitcher<ReducerType>::tune(context_id, label, policy, functor,
+  response.policy = ReductionSwitcher<ReducerType>::tune(context_id, label, policy, functor,
                                        Kokkos::ParallelReduceTag{});
 #else
   (void)functor;
 #endif
+    return response;
 }
 
 template <class ReducerType, class ExecPolicy, class FunctorType>
