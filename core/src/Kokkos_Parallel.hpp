@@ -139,6 +139,7 @@ inline void parallel_for(
   uint64_t kpID = 0;
 
   ExecPolicy policy_copy = policy;
+  /** Request a tuned policy from the tools subsystem */
   auto response =
       Kokkos::Tools::Impl::begin_parallel_for(policy_copy, functor, str, kpID);
   auto inner_policy = response.policy;
@@ -163,6 +164,7 @@ inline void parallel_for(const size_t work_count, const FunctorType& functor,
 
   policy execution_policy = policy(0, work_count);
 
+  /** Request a tuned policy from the tools subsystem */
   auto response     = Kokkos::Tools::Impl::begin_parallel_for(execution_policy,
                                                           functor, str, kpID);
   auto inner_policy = response.policy;
@@ -371,6 +373,7 @@ inline void parallel_scan(
         nullptr) {
   uint64_t kpID               = 0;
   ExecutionPolicy policy_copy = policy;
+  /** Request a tuned policy from the tools subsystem */
   auto response =
       Kokkos::Tools::Impl::begin_parallel_scan(policy_copy, functor, str, kpID);
   auto inner_policy = response.policy;
@@ -395,6 +398,7 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
 
   uint64_t kpID = 0;
   policy execution_policy(0, work_count);
+  /** Request a tuned policy from the tools subsystem */
   auto response     = Kokkos::Tools::Impl::begin_parallel_scan(execution_policy,
                                                            functor, str, kpID);
   auto inner_policy = response.policy;
@@ -433,6 +437,7 @@ inline void parallel_scan(
         nullptr) {
   uint64_t kpID               = 0;
   ExecutionPolicy policy_copy = policy;
+  /** Request a tuned policy from the tools subsystem */
   auto response =
       Kokkos::Tools::Impl::begin_parallel_scan(policy_copy, functor, str, kpID);
   auto inner_policy = response.policy;
@@ -459,7 +464,8 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
   using policy = Kokkos::RangePolicy<execution_space>;
 
   policy execution_policy(0, work_count);
-  uint64_t kpID     = 0;
+  uint64_t kpID = 0;
+  /** Request a tuned policy from the tools subsystem */
   auto response     = Kokkos::Tools::Impl::begin_parallel_scan(execution_policy,
                                                            functor, str, kpID);
   auto inner_policy = response.policy;
