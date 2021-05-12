@@ -162,7 +162,9 @@ DeepCopy<Kokkos::Experimental::HIPHostPinnedSpace, HostSpace,
 void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
   hipStream_t s = get_deep_copy_stream();
   HIP_SAFE_CALL(hipMemcpyAsync(dst, src, n, hipMemcpyDefault, s));
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Experimental::HIP>("Kokkos::Impl::DeepCopyAsyncHIP: Post Deep Copy Fence on Deep-Copy stream",[&](){
   HIP_SAFE_CALL(hipStreamSynchronize(s));
+  });
 }
 
 }  // namespace Impl

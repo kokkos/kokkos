@@ -142,16 +142,35 @@ bool cuda_launch_blocking() {
 }  // namespace
 
 void cuda_device_synchronize(const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event(
-      name, 0, []() {  // TODO: correct device ID
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      name, Kokkos::Tools::Experimental::SpecialSynchronizationCases::GlobalDeviceSynchronization, []() {  // TODO: correct device ID
         CUDA_SAFE_CALL(cudaDeviceSynchronize());
       });
 }
 
-void cuda_stream_synchronize(const cudaStream_t stream,
+
+Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle idForStream(const cudaStream_t stream){
+  static std::map<uintptr_t, uint32_t> map;
+  static uint32_t value;
+  constexpr const uint32_t offset = Kokkos::Tools::Experimental::NumReservedDeviceIDs;
+  auto find = map.find(reinterpret_cast<uintptr_t>(stream));
+  if(find == map.end()){
+    find->second = (offset + value++);  
+  }
+  return Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{find->second};
+}
+void cuda_stream_synchronize(const cudaStream_t stream, 
                              const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event(
-      name, 0, [&]() {  // TODO: correct device ID
+      name, idForStream(stream), [&]() {  // TODO: correct device ID
+        CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+      });
+}
+
+void cuda_stream_synchronize(const cudaStream_t stream, Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
+                             const std::string &name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      name, reason, [&]() {  // TODO: correct device ID
         CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
       });
 }
