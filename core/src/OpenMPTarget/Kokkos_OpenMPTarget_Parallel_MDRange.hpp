@@ -757,91 +757,6 @@ map(tofrom: result) reduction(custom: result) for(int i=begin; i<end; i++)
     }
 };*/
 
-// template <class FunctorType, class ReducerType, class... Traits>
-// class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>,
-// ReducerType,
-//                     Kokkos::Experimental::OpenMPTarget> {
-// private:
-//  using Policy = Kokkos::MDRangePolicy<Traits...>;
-//
-//  using WorkTag = typename Policy::work_tag;
-//  using WorkRange = typename Policy::WorkRange;
-//  using Member = typename Policy::member_type;
-//
-//  using ReducerConditional =
-//      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-//                         FunctorType, ReducerType>;
-//  using ReducerTypeFwd = typename ReducerConditional::type;
-//  using WorkTagFwd =
-//      typename Kokkos::Impl::if_c<std::is_same<InvalidType,
-//      ReducerType>::value,
-//                                               WorkTag, void>::type;
-//
-//  // Static Assert WorkTag void if ReducerType not InvalidType
-//
-//  using ValueTraits =
-//      Kokkos::Impl::FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>;
-//  using ValueInit = Kokkos::Impl::FunctorValueInit<ReducerTypeFwd,
-//  WorkTagFwd>; using ValueJoin =
-//  Kokkos::Impl::FunctorValueJoin<ReducerTypeFwd, WorkTagFwd>;
-//
-//  enum { HasJoin = ReduceFunctorHasJoin<FunctorType>::value };
-//  enum { UseReducer = is_reducer_type<ReducerType>::value };
-//
-//  using pointer_type = typename ValueTraits::pointer_type;
-//  using reference_type = typename ValueTraits::reference_type;
-//
-//  using ParForSpecialize = ParallelReduceSpecialize<
-//      FunctorType, Policy, ReducerType, pointer_type,
-//      typename ValueTraits::value_type, HasJoin, UseReducer>;
-//
-//  const FunctorType m_functor;
-//  const Policy m_policy;
-//  const ReducerType m_reducer;
-//  const pointer_type m_result_ptr;
-//
-// public:
-//  inline void execute() const {
-//    ParForSpecialize::execute(m_functor, m_policy, m_result_ptr);
-//  }
-//
-//  template <class ViewType>
-//  inline ParallelReduce(
-//      const FunctorType& arg_functor, Policy arg_policy,
-//      const ViewType& arg_result_view,
-//      typename std::enable_if<Kokkos::is_view<ViewType>::value &&
-//                                  !Kokkos::is_reducer_type<ReducerType>::value,
-//                              void*>::type = NULL)
-//      : m_functor(arg_functor),
-//        m_policy(arg_policy),
-//        m_reducer(InvalidType()),
-//        m_result_ptr(arg_result_view.data()) {
-//    //static_assert( std::is_same< typename ViewType::memory_space
-//    //                                , Kokkos::HostSpace >::value
-//    //  , "Reduction result on Kokkos::Experimental::OpenMPTarget must be a
-//    //  Kokkos::View in HostSpace" );
-//  }
-//
-//  inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
-//                        const ReducerType& reducer)
-//      : m_functor(arg_functor),
-//        m_policy(arg_policy),
-//        m_reducer(reducer),
-//        m_result_ptr(reducer.view().data()) {
-//    //static_assert( std::is_same< typename ViewType::memory_space
-//    //                                , Kokkos::HostSpace >::value
-//    //  , "Reduction result on Kokkos::Experimental::OpenMPTarget must be a
-//    //  Kokkos::View in HostSpace" );
-//  }
-//  // TODO DZP: based on a conversation with Christian, we're using 256 as a
-// heuristic
-//  // here. We need something better once we can query these kinds of
-//  properties template<typename Policy, typename Functor>
-// static int max_tile_size_product(const Policy&, const Functor&) {
-//    return 256;
-//  }
-//};
-
 template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::OpenMPTarget> {
@@ -916,6 +831,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
     ValueType result = ValueType();
 
+    // FIXME_OPENMPTARGET: Unable to separate directives and their companion
+    // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
@@ -969,6 +886,8 @@ reduction(+:result)
 
     ValueType result = ValueType();
 
+    // FIXME_OPENMPTARGET: Unable to separate directives and their companion
+    // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
@@ -1028,6 +947,8 @@ reduction(+:result)
 
     ValueType result = ValueType();
 
+    // FIXME_OPENMPTARGET: Unable to separate directives and their companion
+    // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
@@ -1094,6 +1015,9 @@ reduction(+:result)
     const auto end_4 = policy.m_upper[4];
 
     ValueType result = ValueType();
+
+    // FIXME_OPENMPTARGET: Unable to separate directives and their companion
+    // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
@@ -1168,6 +1092,9 @@ reduction(+:result)
     const auto end_5 = policy.m_upper[5];
 
     ValueType result = ValueType();
+
+    // FIXME_OPENMPTARGET: Unable to separate directives and their companion
+    // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
@@ -1248,6 +1175,9 @@ reduction(+:result)
     const auto end_6 = policy.m_upper[6];
 
     ValueType result = ValueType();
+
+    // FIXME_OPENMPTARGET: Unable to separate directives and their companion
+    // loops which leads to code duplication for different reduction types.
     if constexpr (UseReducer) {
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
