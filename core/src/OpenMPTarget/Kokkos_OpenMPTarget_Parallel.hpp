@@ -155,11 +155,11 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     ValueType result = ValueType();
     if constexpr (std::is_same<TagType, void>::value) {
 #pragma omp target teams distribute parallel for num_teams(512) \
-                map(to:f) map(tofrom:result) reduction(+: result)
+                map(to:f) reduction(+: result)
       for (auto i = begin; i < end; i++) f(i, result);
     } else {
 #pragma omp target teams distribute parallel for num_teams(512) \
-                map(to:f) map(tofrom:result) reduction(+: result)
+                map(to:f) reduction(+: result)
       for (auto i = begin; i < end; i++) f(TagType(), i, result);
     }
 
