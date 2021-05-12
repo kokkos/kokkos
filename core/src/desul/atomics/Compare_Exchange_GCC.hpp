@@ -20,6 +20,7 @@ namespace desul {
 #if defined(__clang__) && (__clang_major__>=7) && !defined(__APPLE__)
 // Disable warning for large atomics on clang 7 and up (checked with godbolt)
 // error: large atomic operation may incur significant performance penalty [-Werror,-Watomic-alignment]
+// https://godbolt.org/z/G7YhqhbG6
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Watomic-alignment"
 #endif

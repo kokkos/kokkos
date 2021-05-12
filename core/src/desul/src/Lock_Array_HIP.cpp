@@ -40,6 +40,10 @@ namespace Impl {
 int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
 int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 
+// Putting this into anonymous namespace so we don't have multiple defined symbols
+// When linking in more than one copy of the object file
+namespace {
+
 void check_error_and_throw_hip(hipError_t e, const std::string msg) {
   if(e != hipSuccess) {
     std::ostringstream out;
@@ -47,6 +51,8 @@ void check_error_and_throw_hip(hipError_t e, const std::string msg) {
                   << "): " << hipGetErrorString(e);
     throw std::runtime_error(out.str());
   }
+}
+
 }
 
 template<typename T>

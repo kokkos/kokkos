@@ -37,8 +37,13 @@ __global__ void init_lock_arrays_cuda_kernel() {
 
 namespace Impl {
 
+
 int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
 int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
+
+// Putting this into anonymous namespace so we don't have multiple defined symbols
+// When linking in more than one copy of the object file
+namespace {
 
 void check_error_and_throw_cuda(cudaError e, const std::string msg) {
   if(e != cudaSuccess) {
@@ -47,6 +52,8 @@ void check_error_and_throw_cuda(cudaError e, const std::string msg) {
                   << "): " << cudaGetErrorString(e);
     throw std::runtime_error(out.str());
   }
+}
+
 }
 
 // define functions

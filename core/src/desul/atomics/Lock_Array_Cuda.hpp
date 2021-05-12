@@ -38,8 +38,8 @@ extern int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h;
 ///
 /// This call is idempotent.
 /// The function is templated to make it a weak symbol to deal with Kokkos/RAJA
-///   snappshotted version while also linking against pure Desul
-template<typename T = int>
+///   snapshotted version while also linking against pure Desul
+template<typename /*AlwaysInt*/ = int>
 void init_lock_arrays_cuda();
 
 /// \brief After this call, the g_host_cuda_lock_arrays variable has
