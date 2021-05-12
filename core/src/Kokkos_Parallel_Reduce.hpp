@@ -864,12 +864,13 @@ struct ParallelReduceAdaptor {
     auto& inner_policy = response.policy;
     Kokkos::Impl::shared_allocation_tracking_disable();
 #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
-    Impl::ParallelReduce<typename functor_adaptor::functor_type, PolicyType,
+    Impl::ParallelReduce<typename functor_adaptor::functor_type,
+                         decltype(inner_policy),
                          typename return_value_adapter::reducer_type>
         closure(functor_adaptor::functor(functor), inner_policy,
                 return_value_adapter::return_value(return_value, functor));
 #else
-    Impl::ParallelReduce<FunctorType, PolicyType,
+    Impl::ParallelReduce<FunctorType, decltype(inner_policy),
                          typename return_value_adapter::reducer_type>
         closure(functor, inner_policy,
                 return_value_adapter::return_value(return_value, functor));
