@@ -553,16 +553,18 @@ template <>
 struct tuning_type_for<double> {
   static constexpr Kokkos::Tools::Experimental::ValueType value =
       Kokkos::Tools::Experimental::ValueType::kokkos_value_double;
-  static double get(const Kokkos::Tools::Experimental::VariableValue& value) {
-    return value.value.double_value;
+  static double get(
+      const Kokkos::Tools::Experimental::VariableValue& value_struct) {
+    return value_struct.value.double_value;
   }
 };
 template <>
 struct tuning_type_for<int64_t> {
   static constexpr Kokkos::Tools::Experimental::ValueType value =
       Kokkos::Tools::Experimental::ValueType::kokkos_value_int64;
-  static int64_t get(const Kokkos::Tools::Experimental::VariableValue& value) {
-    return value.value.int_value;
+  static int64_t get(
+      const Kokkos::Tools::Experimental::VariableValue& value_struct) {
+    return value_struct.value.int_value;
   }
 };
 }  // namespace Impl
@@ -627,9 +629,8 @@ class RangePolicyOccupancyTuner {
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
   RangePolicyOccupancyTuner(const std::string& name,
-                            Kokkos::RangePolicy<Properties...>& policy,
-                            const Functor& functor, const TagType& tag,
-                            ViableConfigurationCalculator calc)
+                            Kokkos::RangePolicy<Properties...>&, const Functor&,
+                            const TagType&, ViableConfigurationCalculator)
       : tuner(TunerType(name,
                         Kokkos::Tools::Experimental::StatisticalCategory::
                             kokkos_value_ratio,

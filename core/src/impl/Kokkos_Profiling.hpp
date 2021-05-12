@@ -430,7 +430,7 @@ auto tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
                  const Functor& functor, const TagType& tag) {
   return generic_tune_policy<Experimental::RangePolicyOccupancyTuner>(
       label_in, range_policy_tuners, policy, functor, tag,
-      [](const Kokkos::RangePolicy<Properties...>& candidate_policy) {
+      [](const Kokkos::RangePolicy<Properties...>&) {
         return Kokkos::RangePolicy<
             Properties...>::traits::experimental_contains_desired_occupancy;
       });
@@ -564,8 +564,7 @@ void report_policy_results(const size_t /**tuning_context*/,
                            const Functor& functor, const TagType& tag) {
   using Policy = Kokkos::RangePolicy<Properties...>;
   generic_report_results<Experimental::RangePolicyOccupancyTuner>(
-      label_in, range_policy_tuners, policy, functor, tag,
-      [](const Policy& candidate_policy) {
+      label_in, range_policy_tuners, policy, functor, tag, [](const Policy&) {
         return Kokkos::RangePolicy<
             Properties...>::traits::experimental_contains_desired_occupancy;
       });
