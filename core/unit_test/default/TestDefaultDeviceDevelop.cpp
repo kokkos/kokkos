@@ -54,9 +54,6 @@ struct TF {
 namespace Test {
 
 TEST(defaultdevicetype, development_test) {
-  Kokkos::RangePolicy<> pol(0, 10000);
-  auto next_pol =
-      Kokkos::Experimental::prefer(pol, Kokkos::Experimental::TuneOccupancy{});
   TF f;
   using namespace Kokkos::Tools::Experimental;
   VariableInfo info;
@@ -74,7 +71,7 @@ TEST(defaultdevicetype, development_test) {
         "puppies",
         Kokkos::Experimental::prefer(Kokkos::RangePolicy<>(0, 1),
                                      Kokkos::Experimental::TuneOccupancy{}),
-        KOKKOS_LAMBDA(int){});
+        f);
   }
   end_context(ctx);
 }
