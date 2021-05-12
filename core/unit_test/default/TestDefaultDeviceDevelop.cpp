@@ -68,14 +68,8 @@ TEST(defaultdevicetype, development_test) {
   auto v             = make_variable_value(id, int64_t(1));
   begin_context(ctx);
   set_input_values(ctx, 1, &v);
-  Kokkos::Tools::Experimental::RangePolicyOccupancyTuner tuner(
-      "dogs", next_pol, f, Kokkos::ParallelForTag{},
-      Kokkos::Tools::Impl::Impl::SimpleTeamSizeCalculator{});
 
   for (int x = 0; x < 10000; ++x) {
-    // auto nexter_pol = tuner.tune(next_pol);
-    // usleep(10 * abs(33 - nexter_pol.impl_get_desired_occupancy().value()));
-    // tuner.end();
     Kokkos::parallel_for(
         "puppies",
         Kokkos::Experimental::prefer(Kokkos::RangePolicy<>(0, 1),
