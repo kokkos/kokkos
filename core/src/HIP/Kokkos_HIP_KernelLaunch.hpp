@@ -111,6 +111,8 @@ enum class HIPLaunchMechanism : unsigned {
   LocalMemory    = 4
 };
 
+enum BlockType : unsigned { Max = 0, Preferred = 1 };
+
 constexpr inline HIPLaunchMechanism operator|(HIPLaunchMechanism p1,
                                               HIPLaunchMechanism p2) {
   return static_cast<HIPLaunchMechanism>(static_cast<unsigned>(p1) |
@@ -136,17 +138,51 @@ template <typename DriverType, unsigned int MaxThreadsPerBlock,
 struct HIPParallelLaunchKernelFunc<
     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
     HIPLaunchMechanism::LocalMemory> {
+  static constexpr auto default_launchbounds() { return false; }
+
   static auto get_kernel_func() {
     return hip_parallel_launch_local_memory<DriverType, MaxThreadsPerBlock,
                                             MinBlocksPerSM>;
+  }
+
+  static unsigned int get_scratch_size() {
+    return get_hip_func_attributes().localSizeBytes;
+  }
+
+  static hipFuncAttributes get_hip_func_attributes() {
+    static hipFuncAttributes attr = []() {
+      hipFuncAttributes attr;
+      HIP_SAFE_CALL(hipFuncGetAttributes(
+          &attr, reinterpret_cast<void const *>(get_kernel_func())));
+      return attr;
+    }();
+    return attr;
   }
 };
 
 template <typename DriverType>
 struct HIPParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
                                    HIPLaunchMechanism::LocalMemory> {
+  static constexpr auto default_launchbounds() { return true; }
+
   static auto get_kernel_func() {
-    return hip_parallel_launch_local_memory<DriverType, 1024, 1>;
+    return HIPParallelLaunchKernelFunc<
+        DriverType, Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
+        HIPLaunchMechanism::LocalMemory>::get_kernel_func();
+  }
+
+  static unsigned int get_scratch_size() {
+    return get_hip_func_attributes().localSizeBytes;
+  }
+
+  static hipFuncAttributes get_hip_func_attributes() {
+    static hipFuncAttributes attr = []() {
+      hipFuncAttributes attr;
+      HIP_SAFE_CALL(hipFuncGetAttributes(
+          &attr, reinterpret_cast<void const *>(get_kernel_func())));
+      return attr;
+    }();
+    return attr;
   }
 };
 
@@ -210,17 +246,110 @@ struct HIPParallelLaunch<
 #endif
     }
   }
-
-  static hipFuncAttributes get_hip_func_attributes() {
-    static hipFuncAttributes attr = []() {
-      hipFuncAttributes attr;
-      HIP_SAFE_CALL(hipFuncGetAttributes(
-          &attr, reinterpret_cast<void const *>(base_t::get_kernel_func())));
-      return attr;
-    }();
-    return attr;
-  }
 };
+
+template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
+          HIPLaunchMechanism LaunchMechanism = HIPLaunchMechanism::LocalMemory>
+unsigned get_preferred_blocksize_impl() {
+  // FIXME_HIP - could be if constexpr for c++17
+  if (!HIPParallelLaunch<DriverType, LaunchBounds,
+                         LaunchMechanism>::default_launchbounds()) {
+    // use the user specified value
+    return LaunchBounds::maxTperB;
+  } else {
+    if (static_cast<bool>(
+            HIPParallelLaunch<DriverType, LaunchBounds,
+                              LaunchMechanism>::get_scratch_size())) {
+      return HIPTraits::ConservativeThreadsPerBlock;
+    }
+    return HIPTraits::MaxThreadsPerBlock;
+  }
+}
+
+// FIXME_HIP - entire function could be constexpr for c++17
+template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
+          HIPLaunchMechanism LaunchMechanism = HIPLaunchMechanism::LocalMemory>
+unsigned get_max_blocksize_impl() {
+  // FIXME_HIP - could be if constexpr for c++17
+  if (!HIPParallelLaunch<DriverType, LaunchBounds,
+                         LaunchMechanism>::default_launchbounds()) {
+    // use the user specified value
+    return LaunchBounds::maxTperB;
+  } else {
+    // we can always fit 1024 threads blocks if we only care about registers
+    // ... and don't mind spilling
+    return HIPTraits::MaxThreadsPerBlock;
+  }
+}
+
+// convenience method to select and return the proper function attributes
+// for a kernel, given the launch bounds et al.
+template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
+          BlockType BlockSize                = BlockType::Max,
+          HIPLaunchMechanism LaunchMechanism = HIPLaunchMechanism::LocalMemory>
+hipFuncAttributes get_hip_func_attributes_impl() {
+  // FIXME_HIP - could be if constexpr for c++17
+  if (!HIPParallelLaunch<DriverType, LaunchBounds,
+                         LaunchMechanism>::default_launchbounds()) {
+    // for user defined, we *always* honor the request
+    return HIPParallelLaunch<DriverType, LaunchBounds,
+                             LaunchMechanism>::get_hip_func_attributes();
+  } else {
+    // FIXME_HIP - could be if constexpr for c++17
+    if (BlockSize == BlockType::Max) {
+      return HIPParallelLaunch<
+          DriverType, Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
+          LaunchMechanism>::get_hip_func_attributes();
+    } else {
+      const int blocksize =
+          get_preferred_blocksize_impl<DriverType, LaunchBounds,
+                                       LaunchMechanism>();
+      if (blocksize == HIPTraits::MaxThreadsPerBlock) {
+        return HIPParallelLaunch<
+            DriverType, Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
+            LaunchMechanism>::get_hip_func_attributes();
+      } else {
+        return HIPParallelLaunch<
+            DriverType,
+            Kokkos::LaunchBounds<HIPTraits::ConservativeThreadsPerBlock, 1>,
+            LaunchMechanism>::get_hip_func_attributes();
+      }
+    }
+  }
+}
+
+// convenience method to launch the correct kernel given the launch bounds et
+// al.
+template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
+          HIPLaunchMechanism LaunchMechanism = HIPLaunchMechanism::LocalMemory>
+void hip_parallel_launch(const DriverType &driver, const dim3 &grid,
+                         const dim3 &block, const int shmem,
+                         const HIPInternal *hip_instance,
+                         const bool prefer_shmem) {
+  // FIXME_HIP - could be if constexpr for c++17
+  if (!HIPParallelLaunch<DriverType, LaunchBounds,
+                         LaunchMechanism>::default_launchbounds()) {
+    // for user defined, we *always* honor the request
+    HIPParallelLaunch<DriverType, LaunchBounds, LaunchMechanism>(
+        driver, grid, block, shmem, hip_instance, prefer_shmem);
+  } else {
+    // we can do what we like
+    const unsigned flat_block_size = block.x * block.y * block.z;
+    if (flat_block_size <= HIPTraits::ConservativeThreadsPerBlock) {
+      // we have to use the large blocksize
+      HIPParallelLaunch<
+          DriverType,
+          Kokkos::LaunchBounds<HIPTraits::ConservativeThreadsPerBlock, 1>,
+          LaunchMechanism>(driver, grid, block, shmem, hip_instance,
+                           prefer_shmem);
+    } else {
+      HIPParallelLaunch<DriverType,
+                        Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
+                        LaunchMechanism>(driver, grid, block, shmem,
+                                         hip_instance, prefer_shmem);
+    }
+  }
+}
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos

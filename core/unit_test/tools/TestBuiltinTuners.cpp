@@ -93,6 +93,19 @@ int main(int argc, char* argv[]) {
     end_context(kernel_context);
     begin_context(kernel_context);
     set_input_values(kernel_context, 1, &md_kernel_value);
+
+    /**
+     * Note that 0.0 is basically a floating point index into
+     * the outermost index in this, which is the options vector
+     * above. The At 0.0, this will be the first element (1).
+     * At 0.9 this will be the last element (5)
+     */
+    auto begin_point = new_team_tuner.get_point(0.0, 0.0, 0.0);
+    assert(std::get<0>(begin_point) == 1);
+    (void)begin_point;  // to avoid warnings in some compilers
+    auto end_point = new_team_tuner.get_point(0.9, 0.0, 0.0);
+    (void)end_point;  // to avoid warnings in some compilers
+    assert(std::get<0>(end_point) == 5);
     for (int x = 0; x < 10000; ++x) {
       auto config = new_team_tuner.begin();
       int option  = std::get<0>(config);

@@ -65,6 +65,12 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
+KOKKOS_ADD_EXECUTABLE(
+  TestCompileOnly
+  SOURCES
+  TestDetectionIdiom.cpp
+)
+
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
   # Because there is always an exception to the rule
   if(Tag STREQUAL "Threads")
