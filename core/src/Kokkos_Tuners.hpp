@@ -633,7 +633,7 @@ class RangePolicyOccupancyTuner {
       : tuner(TunerType(name,
                         Kokkos::Tools::Experimental::StatisticalCategory::
                             kokkos_value_ratio,
-                        72, 0, 100, 1)) {}
+                        100, 1, 100, 1)) {}
 
   template <typename... Properties>
   auto tune(Kokkos::RangePolicy<Properties...>& policy) {
