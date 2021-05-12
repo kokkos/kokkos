@@ -74,7 +74,7 @@ TEST(defaultdevicetype, development_test) {
         "puppies",
         Kokkos::Experimental::prefer(Kokkos::RangePolicy<>(0, 1),
                                      Kokkos::Experimental::TuneOccupancy{}),
-        KOKKOS_LAMBDA(int i){});
+        KOKKOS_LAMBDA(int){});
   }
   end_context(ctx);
 }
