@@ -70,6 +70,7 @@
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_CopyViews.hpp>
+#include <Kokkos_MathematicalSpecialFunctions.hpp>
 #include <functional>
 #include <iosfwd>
 #include <map>
