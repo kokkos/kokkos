@@ -91,7 +91,7 @@ DESUL_GCC_INTEGRAL_OP_ATOMICS(MemoryOrderSeqCst, MemoryScopeDevice)
 DESUL_GCC_INTEGRAL_OP_ATOMICS(MemoryOrderSeqCst, MemoryScopeCore)
 
 template <typename T, class MemoryOrder, class MemoryScope>
-std::enable_if_t<!std::is_trivially_copyable<T>::value, T>
+std::enable_if_t<!Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_exchange(T* const dest,
                   Impl::dont_deduce_this_parameter_t<const T> val,
                   MemoryOrder /*order*/,
@@ -108,7 +108,7 @@ atomic_exchange(T* const dest,
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-std::enable_if_t<!std::is_trivially_copyable<T>::value, T>
+std::enable_if_t<!Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(T* const dest,
                   Impl::dont_deduce_this_parameter_t<const T> compare,
                   Impl::dont_deduce_this_parameter_t<const T> val,

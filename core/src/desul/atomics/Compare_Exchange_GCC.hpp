@@ -17,6 +17,21 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #endif
 namespace desul {
 
+namespace Impl {
+template<class T>
+struct atomic_exchange_available_gcc {
+  constexpr static bool value =
+#ifndef DESUL_HAVE_LIBATOMIC
+    (sizeof(T)==4 ||
+#ifdef DESUL_HAVE_16BYTE_COMPARE_AND_SWAP
+     sizeof(T)==16 ||
+#endif
+     sizeof(T)==8 ) &&
+#endif
+    std::is_trivially_copyable<T>::value;
+};
+} //namespace Impl
+
 #if defined(__clang__) && (__clang_major__>=7) && !defined(__APPLE__)
 // Disable warning for large atomics on clang 7 and up (checked with godbolt)
 // error: large atomic operation may incur significant performance penalty [-Werror,-Watomic-alignment]
@@ -30,7 +45,7 @@ void atomic_thread_fence(MemoryOrder, MemoryScope) {
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
-std::enable_if_t<std::is_trivially_copyable<T>::value, T>
+std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_exchange(
     T* dest, T value, MemoryOrder, MemoryScope) {
   T return_val;
@@ -42,7 +57,7 @@ atomic_exchange(
 // Failure mode for atomic_compare_exchange_n cannot be RELEASE nor ACQREL so
 // Those two get handled separatly.
 template <typename T, class MemoryOrder, class MemoryScope>
-std::enable_if_t<std::is_trivially_copyable<T>::value, T>
+std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
   (void)__atomic_compare_exchange(
@@ -51,7 +66,7 @@ atomic_compare_exchange(
 }
 
 template <typename T, class MemoryScope>
-std::enable_if_t<std::is_trivially_copyable<T>::value, T>
+std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
   (void)__atomic_compare_exchange(
@@ -60,7 +75,7 @@ atomic_compare_exchange(
 }
 
 template <typename T, class MemoryScope>
-std::enable_if_t<std::is_trivially_copyable<T>::value, T>
+std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderAcqRel, MemoryScope) {
   (void)__atomic_compare_exchange(
