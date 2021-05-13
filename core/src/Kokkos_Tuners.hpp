@@ -640,11 +640,12 @@ class RangePolicyOccupancyTuner {
   auto tune(Kokkos::RangePolicy<Properties...>& policy) {
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       auto occupancy = tuner.begin();
-      return Kokkos::Experimental::prefer(
-          policy, Kokkos::Experimental::DesiredOccupancy(occupancy));
+      // return Kokkos::Experimental::prefer(
+      //    policy, Kokkos::Experimental::DesiredOccupancy(occupancy));
+      policy.impl_set_desired_occupancy(
+          Kokkos::Experimental::DesiredOccupancy{static_cast<int>(occupancy)});
     }
-    return Kokkos::Experimental::prefer(
-        policy, Kokkos::Experimental::DesiredOccupancy(100));
+    return policy;
   }
   void end() {
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {

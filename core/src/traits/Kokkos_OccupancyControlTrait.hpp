@@ -68,7 +68,6 @@ struct DesiredOccupancy {
   }
   explicit constexpr DesiredOccupancy(const Kokkos::AUTO_t)
       : m_occ(100), tune(true) {
-    KOKKOS_EXPECTS(0 <= occ && occ <= 100);
   }
   explicit constexpr operator int() const { return m_occ; }
   constexpr int value() const { return m_occ; }
