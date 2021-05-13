@@ -221,14 +221,14 @@ void *CudaSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
 
-  #ifndef CUDART_VERSION
-  # no CUDART_VERSION
-  #elif (CUDART_VERSION >= 11020)
+#ifndef CUDART_VERSION
+#no CUDART_VERSION
+#elif (CUDART_VERSION >= 11020)
   auto error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
   cudaDeviceSynchronize();
-  #else
+#else
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
-  #endif
+#endif
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     cudaGetLastError();  // This is the only way to clear the last error, which
                          // we should do here since we're turning it into an
@@ -346,14 +346,14 @@ void CudaSpace::impl_deallocate(
   }
 
   try {
-    #ifndef CUDART_VERSION
-    # no CUDART_VERSION
-    #elif (CUDART_VERSION >= 11020)
+#ifndef CUDART_VERSION
+#no CUDART_VERSION
+#elif (CUDART_VERSION >= 11020)
     CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
     cudaDeviceSynchronize();
-    #else
+#else
     CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
-    #endif
+#endif
   } catch (...) {
   }
 }
