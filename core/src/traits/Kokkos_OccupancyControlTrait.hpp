@@ -67,8 +67,7 @@ struct DesiredOccupancy {
     KOKKOS_EXPECTS(0 <= occ && occ <= 100);
   }
   explicit constexpr DesiredOccupancy(const Kokkos::AUTO_t)
-      : m_occ(100), tune(true) {
-  }
+      : m_occ(100), tune(true) {}
   explicit constexpr operator int() const { return m_occ; }
   constexpr int value() const { return m_occ; }
   constexpr bool should_tune() const { return tune; }
@@ -79,7 +78,6 @@ struct DesiredOccupancy {
 struct MaximizeOccupancy {
   explicit MaximizeOccupancy() = default;
 };
-
 
 // </editor-fold> end Occupancy control user interface }}}1
 //==============================================================================
@@ -167,7 +165,6 @@ struct OccupancyControlPolicyMixin<Kokkos::Experimental::DesiredOccupancy,
     m_desired_occupancy = desired_occupancy;
   }
 };
-
 
 template <class AnalyzeNextTrait>
 struct OccupancyControlPolicyMixin<Kokkos::Experimental::MaximizeOccupancy,
