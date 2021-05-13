@@ -326,33 +326,49 @@ struct is_space {
   // For backward compatibility, deprecated in favor of
   // Kokkos::Impl::HostMirror<S>::host_mirror_space
 
-  using host_memory_space = typename std::conditional<
+ private:
+  // The actual definitions for host_memory_space and host_execution_spaces are
+  // in do_not_use_host_memory_space and do_not_use_host_execution_space to be
+  // able to use them within this class without deprecation warnings.
+  using do_not_use_host_memory_space = std::conditional_t<
       std::is_same<memory_space, Kokkos::HostSpace>::value
 #if defined(KOKKOS_ENABLE_CUDA)
           || std::is_same<memory_space, Kokkos::CudaUVMSpace>::value ||
           std::is_same<memory_space, Kokkos::CudaHostPinnedSpace>::value
-#endif /* #if defined( KOKKOS_ENABLE_CUDA ) */
+#elif defined(KOKKOS_ENABLE_HIP)
+          || std::is_same<memory_space,
+                          Kokkos::Experimental::HIPHostPinnedSpace>::value
+#elif defined(KOKKOS_ENABLE_SYCL)
+          || std::is_same<memory_space,
+                          Kokkos::Experimental::SYCLSharedUSMSpace>::value
+#endif
       ,
-      memory_space, Kokkos::HostSpace>::type;
+      memory_space, Kokkos::HostSpace>;
 
+  using do_not_use_host_execution_space = std::conditional_t<
 #if defined(KOKKOS_ENABLE_CUDA)
-  using host_execution_space = typename std::conditional<
-      std::is_same<execution_space, Kokkos::Cuda>::value,
-      Kokkos::DefaultHostExecutionSpace, execution_space>::type;
-#else
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-  using host_execution_space = typename std::conditional<
-      std::is_same<execution_space, Kokkos::Experimental::OpenMPTarget>::value,
-      Kokkos::DefaultHostExecutionSpace, execution_space>::type;
-#else
-  using host_execution_space = execution_space;
+      std::is_same<execution_space, Kokkos::Cuda>::value ||
+#elif defined(KOKKOS_ENABLE_HIP)
+      std::is_same<execution_space, Kokkos::Experimental::HIP>::value ||
+#elif defined(KOKKOS_ENABLE_SYCL)
+      std::is_same<execution_space, Kokkos::Experimental::SYCL>::value ||
+#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
+      std::is_same<execution_space,
+                   Kokkos::Experimental::OpenMPTarget>::value ||
 #endif
-#endif
+          false,
+      Kokkos::DefaultHostExecutionSpace, execution_space>;
 
-  using host_mirror_space = typename std::conditional<
-      std::is_same<execution_space, host_execution_space>::value &&
-          std::is_same<memory_space, host_memory_space>::value,
-      T, Kokkos::Device<host_execution_space, host_memory_space>>::type;
+ public:
+  using host_memory_space KOKKOS_DEPRECATED = do_not_use_host_memory_space;
+  using host_execution_space KOKKOS_DEPRECATED =
+      do_not_use_host_execution_space;
+  using host_mirror_space KOKKOS_DEPRECATED = std::conditional_t<
+      std::is_same<execution_space, do_not_use_host_execution_space>::value &&
+          std::is_same<memory_space, do_not_use_host_memory_space>::value,
+      T,
+      Kokkos::Device<do_not_use_host_execution_space,
+                     do_not_use_host_memory_space>>;
 };
 
 // For backward compatibility
