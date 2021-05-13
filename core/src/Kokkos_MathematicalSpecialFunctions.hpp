@@ -134,7 +134,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cerf(const CmplxType& z) {
   const RealType eh    = 0.606530659712633;
   const RealType ef    = 0.778800783071405;
   //const RealType tol   = 1.0e-13;
-  const RealType pi    = M_PIl;
+  const RealType pi    = M_PI;
 
   CmplxType cans;
 
@@ -309,7 +309,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cerfcx(const CmplxType& z) {
   const RealType eh    = 0.606530659712633;
   const RealType ef    = 0.778800783071405;
   //const RealType tol   = 1.0e-13;
-  const RealType pi    = M_PIl;
+  const RealType pi    = M_PI;
 
   CmplxType cans;
 
@@ -465,7 +465,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cbesselj0(const CmplxType& z,
   using Kokkos::Experimental::pow;
 
   CmplxType cbj0;
-  const RealType pi    = M_PIl;
+  const RealType pi = M_PI;
   const RealType a[12] = {-0.703125e-01,           0.112152099609375e+00, 
                           -0.5725014209747314e+00, 0.6074042001273483e+01,
                           -0.1100171402692467e+03, 0.3038090510922384e+04,
@@ -557,7 +557,7 @@ KOKKOS_INLINE_FUNCTION CmplxType cbessely0(const CmplxType& z,
   auto const inf = infinity<RealType>::value;
 
   CmplxType cby0, cbj0;
-  const RealType pi    = M_PIl;
+  const RealType pi = M_PI;
   const RealType el    = 0.57721566490153286060651209008240;
   const RealType a[12] = {-0.703125e-01,           0.112152099609375e+00, 
                           -0.5725014209747314e+00, 0.6074042001273483e+01,
@@ -638,6 +638,206 @@ KOKKOS_INLINE_FUNCTION CmplxType cbessely0(const CmplxType& z,
     }
   }
   return cby0;
+}
+
+//! Compute Bessel function J1(z) of the first kind of order one
+//! for a complex argument
+template<class CmplxType, class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION CmplxType cbesselj1(const CmplxType& z, 
+                                           const RealType& joint_val=25,
+                                           const IntType& bw_start=70) {
+//This function is converted and modified from the corresponding Fortran 
+//program CJYNB in S. Zhang & J. Jin "Computation of Special Functions"
+//(Wiley, 1996).
+//    Input :  z         --- Complex argument
+//             joint_val --- Joint point of abs(z) separating small and large
+//                           argument regions
+//             bw_start  --- Starting point for backward recurrence
+//    Output:  cbj1      --- J1(z)
+  using Kokkos::Experimental::fabs;
+  using Kokkos::Experimental::pow;
+  
+  CmplxType cbj1;
+  const RealType pi = M_PI;
+  const RealType a1[12] = {0.1171875e+00,         -0.144195556640625e+00,
+                           0.6765925884246826e+00,-0.6883914268109947e+01,
+                           0.1215978918765359e+03,-0.3302272294480852e+04,
+                           0.1276412726461746e+06,-0.6656367718817688e+07,
+                           0.4502786003050393e+09,-0.3833857520742790e+11,
+                           0.4011838599133198e+13,-0.5060568503314727e+15};
+  const RealType b1[12] = {-0.1025390625e+00,      0.2775764465332031e+00,
+                           -0.1993531733751297e+01,0.2724882731126854e+02,
+                           -0.6038440767050702e+03,0.1971837591223663e+05,
+                           -0.8902978767070678e+06,0.5310411010968522e+08,
+                           -0.4043620325107754e+10,0.3827011346598605e+12,
+                           -0.4406481417852278e+14,0.6065091351222699e+16};
+
+  RealType  r2p = 2.0/pi;
+  RealType  a0  = Kokkos::abs(z);
+  RealType  y0  = fabs(z.imag());
+  CmplxType z1  = z;
+
+  if (a0 < 1e-100) { // Treat z=0 as a special case
+    cbj1 = CmplxType(0.0, 0.0);
+  }
+  else {
+    if (z.real() < 0.0) z1 = -z; 
+    if (a0 <= joint_val) { //Using backward recurrence for |z|<=joint_val (default:25)
+      CmplxType cbs = CmplxType(0.0,0.0);
+      CmplxType csu = CmplxType(0.0,0.0);
+      CmplxType csv = CmplxType(0.0,0.0);
+      CmplxType cf2 = CmplxType(0.0,0.0);
+      CmplxType cf1 = CmplxType(1e-100,0.0);
+      CmplxType cf, cs0;
+      for (int k=bw_start; k>=0; k--) { //Backward recurrence (default: 70)
+        cf = 2.0*(k+1.0)/z*cf1-cf2;
+        RealType tmp_exponent = static_cast<RealType> (k/2);
+        if (k==1) cbj1 = cf;
+        if ((k == 2*(k/2)) && (k != 0)) {
+          if (y0 <= 1.0) 
+            cbs = cbs+2.0*cf;
+          else 
+            cbs = cbs+pow(-1.0,tmp_exponent)*2.0*cf;
+          csu = csu+pow(-1.0,tmp_exponent)*cf/k;
+        }
+        else if (k > 1) {
+          csv=csv+pow(-1.0,tmp_exponent)*k/(k*k-1.0)*cf;
+        }
+        cf2=cf1;
+        cf1=cf;
+      }
+      if (y0 <= 1.0)
+        cs0 = cbs+cf;
+      else
+        cs0 = (cbs+cf)/Kokkos::cos(z);
+      cbj1 = cbj1/cs0;
+    }
+    else { //Using asymptotic expansion (5.2.5) for |z|>joint_val (default:25)
+      CmplxType ct2 = z1-0.75*pi;
+      CmplxType cp1 = CmplxType(1.0,0.0);
+      for (int k=1; k<=12; k++) { //Calculate (5.2.11)
+        cp1 = cp1+a1[k-1]*Kokkos::pow(z1,-2.0*k);
+      }
+      CmplxType cq1 = 0.375/z1;
+      for (int k=1; k<=12; k++) { //Calculate (5.2.12)
+        cq1 = cq1+b1[k-1]*Kokkos::pow(z1,-2.0*k-1);
+      }
+      CmplxType cu = Kokkos::sqrt(r2p/z1);
+      cbj1 = cu*(cp1*Kokkos::cos(ct2)-cq1*Kokkos::sin(ct2));
+
+      if(real(z)< 0.0) { //Apply (5.4.2)
+        cbj1=-cbj1;
+      }
+    }
+  }
+  return cbj1;
+}
+
+//! Compute Bessel function Y1(z) of the second kind of order one
+//! for a complex argument
+template<class CmplxType, class RealType, class IntType>
+KOKKOS_INLINE_FUNCTION CmplxType cbessely1(const CmplxType& z, 
+                                           const RealType& joint_val=25,
+                                           const IntType& bw_start=70) {
+//This function is converted and modified from the corresponding Fortran 
+//program CJYNB in S. Zhang & J. Jin "Computation of Special Functions"
+//(Wiley, 1996).
+//    Input :  z         --- Complex argument
+//             joint_val --- Joint point of abs(z) separating small and large
+//                           argument regions
+//             bw_start  --- Starting point for backward recurrence
+//    Output:  cby1      --- Y1(z)
+  using Kokkos::Experimental::infinity;
+  using Kokkos::Experimental::fabs;
+  using Kokkos::Experimental::pow;
+
+  auto const inf = infinity<RealType>::value;
+
+  CmplxType cby1, cbj0, cbj1, cby0;
+  const RealType pi = M_PI;
+  const RealType el = 0.57721566490153286060651209008240;
+  const RealType a1[12] = {0.1171875e+00,         -0.144195556640625e+00,
+                           0.6765925884246826e+00,-0.6883914268109947e+01,
+                           0.1215978918765359e+03,-0.3302272294480852e+04,
+                           0.1276412726461746e+06,-0.6656367718817688e+07,
+                           0.4502786003050393e+09,-0.3833857520742790e+11,
+                           0.4011838599133198e+13,-0.5060568503314727e+15};
+  const RealType b1[12] = {-0.1025390625e+00,      0.2775764465332031e+00,
+                           -0.1993531733751297e+01,0.2724882731126854e+02,
+                           -0.6038440767050702e+03,0.1971837591223663e+05,
+                           -0.8902978767070678e+06,0.5310411010968522e+08,
+                           -0.4043620325107754e+10,0.3827011346598605e+12,
+                           -0.4406481417852278e+14,0.6065091351222699e+16};
+
+  RealType  r2p = 2.0/pi;
+  RealType  a0  = Kokkos::abs(z);
+  RealType  y0  = fabs(z.imag());
+  CmplxType ci  = CmplxType(0.0,1.0);
+  CmplxType z1  = z;
+
+  if (a0 < 1e-100) { // Treat z=0 as a special case
+    cby1 = -CmplxType(inf, 0.0);
+  }
+  else {
+    if (z.real() < 0.0) z1 = -z; 
+    if (a0 <= joint_val) { //Using backward recurrence for |z|<=joint_val (default:25)
+      CmplxType cbs = CmplxType(0.0,0.0);
+      CmplxType csu = CmplxType(0.0,0.0);
+      CmplxType csv = CmplxType(0.0,0.0);
+      CmplxType cf2 = CmplxType(0.0,0.0);
+      CmplxType cf1 = CmplxType(1e-100,0.0);
+      CmplxType cf, cs0, ce;
+      for (int k=bw_start; k>=0; k--) { //Backward recurrence (default: 70)
+        cf = 2.0*(k+1.0)/z*cf1-cf2;
+        RealType tmp_exponent = static_cast<RealType> (k/2);
+        if (k==1) cbj1 = cf;
+        if (k==0) cbj0 = cf;
+        if ((k == 2*(k/2)) && (k != 0)) {
+          if (y0 <= 1.0) 
+            cbs = cbs+2.0*cf;
+          else 
+            cbs = cbs+pow(-1.0,tmp_exponent)*2.0*cf;
+          csu = csu+pow(-1.0,tmp_exponent)*cf/k;
+        }
+        else if (k > 1) {
+          csv=csv+pow(-1.0,tmp_exponent)*k/(k*k-1.0)*cf;
+        }
+        cf2=cf1;
+        cf1=cf;
+      }
+      if (y0 <= 1.0)
+        cs0 = cbs+cf;
+      else
+        cs0 = (cbs+cf)/Kokkos::cos(z);
+      cbj0 = cbj0/cs0;
+      ce   = Kokkos::log(z/2.0)+el;
+      cby0 = r2p*(ce*cbj0-4.0*csu/cs0);
+      cbj1 = cbj1/cs0;
+      cby1 = (cbj1*cby0-2.0/(pi*z))/cbj0;
+    }
+    else { //Using asymptotic expansion (5.2.5) for |z|>joint_val (default:25)
+      CmplxType ct2 = z1-0.75*pi;
+      CmplxType cp1 = CmplxType(1.0,0.0);
+      for (int k=1; k<=12; k++) { //Calculate (5.2.11)
+        cp1 = cp1+a1[k-1]*Kokkos::pow(z1,-2.0*k);
+      }
+      CmplxType cq1 = 0.375/z1;
+      for (int k=1; k<=12; k++) { //Calculate (5.2.12)
+        cq1 = cq1+b1[k-1]*Kokkos::pow(z1,-2.0*k-1);
+      }
+      CmplxType cu = Kokkos::sqrt(r2p/z1);
+      cbj1 = cu*(cp1*Kokkos::cos(ct2)-cq1*Kokkos::sin(ct2));
+      cby1 = cu*(cp1*Kokkos::sin(ct2)+cq1*Kokkos::cos(ct2));
+
+      if (z.real() < 0.0) { //Apply (5.4.2)
+        if (z.imag() < 0.0)
+          cby1=-(cby1-2.0*ci*cbj1);
+        if (z.imag() >= 0.0)
+          cby1=-(cby1+2.0*ci*cbj1);
+      }
+    }
+  }
+  return cby1;
 }
 
 }  // namespace Experimental
