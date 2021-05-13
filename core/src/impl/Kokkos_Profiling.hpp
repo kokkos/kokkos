@@ -60,28 +60,9 @@ bool tune_internals() noexcept;
 
 namespace Tools {
 namespace Impl {
-template <class T>
-struct TuningResult;
-template <class Policy>
-struct TuningResult {
-  using type = Policy;
-};
-template <class input>
-struct translate {
-  using type = input;
-};
-template <>
-struct translate<Kokkos::Experimental::TuneOccupancy> {
-  using type = Kokkos::Experimental::DesiredOccupancy;
-};
-template <class... Properties>
-struct TuningResult<Kokkos::RangePolicy<Properties...>> {
-  // using type = Kokkos::RangePolicy<Properties...>;
-  using type = Kokkos::RangePolicy<typename translate<Properties>::type...>;
-};
 template <typename PolicyType, typename Functor>
 struct ToolResponse {
-  typename TuningResult<PolicyType>::type policy;
+  PolicyType policy;
 };
 }  // namespace Impl
 bool profileLibraryLoaded();
@@ -423,17 +404,48 @@ auto tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
       });
 }
 
-// tune a RangePolicy, without reducer
+namespace Impl {
 template <class Functor, class TagType, class... Properties>
-auto tune_policy(const size_t /**tuning_context*/, const std::string& label_in,
-                 Kokkos::RangePolicy<Properties...>& policy,
-                 const Functor& functor, const TagType& tag) {
+auto tune_occupancy_controlled_policy(
+    const size_t /**tuning_context*/, const std::string& label_in,
+    Kokkos::RangePolicy<Properties...>& policy, const Functor& functor,
+    const TagType& tag) {
   return generic_tune_policy<Experimental::RangePolicyOccupancyTuner>(
       label_in, range_policy_tuners, policy, functor, tag,
-      [](const Kokkos::RangePolicy<Properties...>&) {
-        return Kokkos::RangePolicy<
-            Properties...>::traits::experimental_contains_desired_occupancy;
+      [](const Kokkos::RangePolicy<Properties...>& policy) {
+        return policy.impl_get_occupancy_control().should_tune();
+        //       return Kokkos::RangePolicy<
+        //           Properties...>::traits::experimental_contains_desired_occupancy;
       });
+}
+template <class Functor, class TagType, class... Properties>
+auto tune_range_policy(const size_t tuning_context, const std::string& label_in,
+                       Kokkos::RangePolicy<Properties...>& policy,
+                       const Functor& functor, const TagType& tag,
+                       std::true_type) {
+  return tune_occupancy_controlled_policy(tuning_context, label_in, policy,
+                                          functor, tag);
+}
+template <class Functor, class TagType, class... Properties>
+auto tune_range_policy(const size_t tuning_context, const std::string& label_in,
+                       Kokkos::RangePolicy<Properties...>& policy,
+                       const Functor& functor, const TagType& tag,
+                       std::false_type) {
+  return policy;
+}
+
+}  // namespace Impl
+// tune a RangePolicy, without reducer
+template <class Functor, class TagType, class... Properties>
+auto tune_policy(const size_t tuning_context, const std::string& label_in,
+                 Kokkos::RangePolicy<Properties...>& policy,
+                 const Functor& functor, const TagType& tag) {
+  using policy_t = Kokkos::RangePolicy<Properties...>;
+  using has_desired_occupancy =
+      typename std::is_same<typename policy_t::occupancy_control,
+                            Kokkos::Experimental::DesiredOccupancy>::type;
+  return Impl::tune_range_policy(tuning_context, label_in, policy, functor, tag,
+                                 has_desired_occupancy{});
 }
 
 // tune a RangePolicy, with reducer
