@@ -96,11 +96,14 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBDL)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBRT)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC PTHREAD)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
+# FIXME: We need a proper solution to figure out whether to enable
+#        libatomic
 IF (KOKKOS_ENABLE_IMPL_DESUL_ATOMICS AND
-    (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU") AND
-    (NOT APPLE))
-#  list(APPEND CMAKE_REQUIRED_LIBRARIES "atomic")
-#  target_link_libraries(kokkoscore PUBLIC atomic)
+    KOKKOS_ENABLE_OPENMPTARGET)
+#  (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU") AND
+#    (NOT APPLE))
+  list(APPEND CMAKE_REQUIRED_LIBRARIES "atomic")
+  target_link_libraries(kokkoscore PUBLIC atomic)
 ENDIF()
 
 
