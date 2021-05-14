@@ -1039,6 +1039,268 @@ struct TestComplexBesselI1K1Function {
   }
 };
 
+template <class ExecSpace>
+struct TestComplexBesselH1Function {
+  using ViewType     = Kokkos::View<Kokkos::complex<double>*, ExecSpace>;
+  using HostViewType = Kokkos::View<Kokkos::complex<double>*, Kokkos::HostSpace>;
+
+  ViewType d_z, d_ch10, d_ch11;
+  typename ViewType::HostMirror h_z, h_ch10, h_ch11;
+  HostViewType h_ref_ch10, h_ref_ch11;
+
+  void testit() {
+    int N = 25;
+    d_z        = ViewType("d_z", N);
+    d_ch10     = ViewType("d_ch10", N);
+    d_ch11     = ViewType("d_ch11", N);
+    h_z        = Kokkos::create_mirror_view(d_z);
+    h_ch10     = Kokkos::create_mirror_view(d_ch10);
+    h_ch11     = Kokkos::create_mirror_view(d_ch11);
+    h_ref_ch10 = HostViewType("h_ref_ch10", N);
+    h_ref_ch11 = HostViewType("h_ref_ch11", N);
+
+    //Generate test inputs
+    h_z(0)  = Kokkos::complex<double>( 0.0, 0.0);
+    h_z(1)  = Kokkos::complex<double>( 3.0, 2.0);
+    h_z(2)  = Kokkos::complex<double>( 3.0,-2.0);
+    h_z(3)  = Kokkos::complex<double>(-3.0, 2.0);
+    h_z(4)  = Kokkos::complex<double>(-3.0,-2.0);
+    h_z(5)  = Kokkos::complex<double>( 23.0, 10.0);
+    h_z(6)  = Kokkos::complex<double>( 23.0,-10.0);
+    h_z(7)  = Kokkos::complex<double>(-23.0, 10.0);
+    h_z(8)  = Kokkos::complex<double>(-23.0,-10.0);
+    h_z(9)  = Kokkos::complex<double>( 3.0, 0.0);
+    h_z(10) = Kokkos::complex<double>(-3.0, 0.0);
+    h_z(11) = Kokkos::complex<double>( 23.0,0.0);
+    h_z(12) = Kokkos::complex<double>(-23.0,0.0);
+    h_z(13) = Kokkos::complex<double>( 28.0, 10.0);
+    h_z(14) = Kokkos::complex<double>( 28.0,-10.0);
+    h_z(15) = Kokkos::complex<double>(-28.0, 10.0);
+    h_z(16) = Kokkos::complex<double>(-28.0,-10.0);
+    h_z(17) = Kokkos::complex<double>( 200.0, 60.0);
+    h_z(18) = Kokkos::complex<double>( 200.0,-60.0);
+    h_z(19) = Kokkos::complex<double>(-200.0, 60.0);
+    h_z(20) = Kokkos::complex<double>(-200.0,-60.0);
+    h_z(21) = Kokkos::complex<double>( 28.0, 0.0);
+    h_z(22) = Kokkos::complex<double>(-28.0, 0.0);
+    h_z(23) = Kokkos::complex<double>( 200.0,0.0);
+    h_z(24) = Kokkos::complex<double>(-200.0,0.0);
+
+    Kokkos::deep_copy(d_z, h_z);
+
+    //Call Hankel functions
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+    Kokkos::fence();
+
+    Kokkos::deep_copy(h_ch10, d_ch10);
+    Kokkos::deep_copy(h_ch11, d_ch11);
+
+    //Reference values computed with Octave
+    h_ref_ch10(0)  = Kokkos::complex<double>( std::numeric_limits<double>::quiet_NaN(),
+                                              std::numeric_limits<double>::quiet_NaN());
+    h_ref_ch10(1)  = Kokkos::complex<double>(-1.779327030399459e-02, +5.281940449715537e-02);
+    h_ref_ch10(2)  = Kokkos::complex<double>(-2.480676488910849e+00, +1.948786988612626e+00);
+    h_ref_ch10(3)  = Kokkos::complex<double>( 1.779327030399459e-02, +5.281940449715537e-02);
+    h_ref_ch10(4)  = Kokkos::complex<double>(-2.516263029518839e+00, -1.843148179618315e+00);
+    h_ref_ch10(5)  = Kokkos::complex<double>(-7.217716938222564e-06, -1.002796203581228e-07);
+    h_ref_ch10(6)  = Kokkos::complex<double>(-3.204879955218674e+03, -1.446133490498241e+03);
+    h_ref_ch10(7)  = Kokkos::complex<double>( 7.217716938222564e-06, -1.002796203581228e-07);
+    h_ref_ch10(8)  = Kokkos::complex<double>(-3.204879969654108e+03, +1.446133490297682e+03);
+    h_ref_ch10(9)  = Kokkos::complex<double>(-2.600519549019334e-01, +3.768500100127903e-01);
+    h_ref_ch10(10) = Kokkos::complex<double>( 2.600519549019334e-01, +3.768500100127903e-01);
+    h_ref_ch10(11) = Kokkos::complex<double>(-1.624127813134865e-01, -3.598179027370283e-02);
+    h_ref_ch10(12) = Kokkos::complex<double>( 1.624127813134865e-01, -3.598179027370283e-02);
+    h_ref_ch10(13) = Kokkos::complex<double>(-2.184905481759440e-06, +6.263387166445335e-06);
+    h_ref_ch10(14) = Kokkos::complex<double>(-2.025824374843011e+03, +2.512479278555672e+03);
+    h_ref_ch10(15) = Kokkos::complex<double>( 2.184905481759440e-06, +6.263387166445335e-06);
+    h_ref_ch10(16) = Kokkos::complex<double>(-2.025824379212821e+03, -2.512479266028897e+03);
+    h_ref_ch10(17) = Kokkos::complex<double>(-1.983689762743337e-28, -4.408449940359881e-28);
+    h_ref_ch10(18) = Kokkos::complex<double>(-8.261945332108929e+23, -6.252486138159269e+24);
+    h_ref_ch10(19) = Kokkos::complex<double>( 1.983689762743337e-28, -4.408449940359881e-28);
+    h_ref_ch10(20) = Kokkos::complex<double>(-8.261945332108929e+23, +6.252486138159269e+24);
+    h_ref_ch10(21) = Kokkos::complex<double>(-7.315701054899959e-02, +1.318364704235323e-01);
+    h_ref_ch10(22) = Kokkos::complex<double>( 7.315701054899959e-02, +1.318364704235323e-01);
+    h_ref_ch10(23) = Kokkos::complex<double>(-1.543743993056510e-02, -5.426577524981793e-02);
+    h_ref_ch10(24) = Kokkos::complex<double>( 1.543743993056510e-02, -5.426577524981793e-02);
+   
+    h_ref_ch11(0)  = Kokkos::complex<double>( std::numeric_limits<double>::quiet_NaN(),
+                                              std::numeric_limits<double>::quiet_NaN());
+    h_ref_ch11(1)  = Kokkos::complex<double>( 5.506759533731469e-02, +2.486728122475093e-02);
+    h_ref_ch11(2)  = Kokkos::complex<double>( 1.505230101821194e+00, +2.546831401702448e+00);
+    h_ref_ch11(3)  = Kokkos::complex<double>( 5.506759533731469e-02, -2.486728122475093e-02);
+    h_ref_ch11(4)  = Kokkos::complex<double>(-1.615365292495823e+00, +2.497096839252946e+00);
+    h_ref_ch11(5)  = Kokkos::complex<double>(-2.319863729607219e-07, +7.274197719836158e-06);
+    h_ref_ch11(6)  = Kokkos::complex<double>(-1.493895250453947e+03, +3.153217017782819e+03);
+    h_ref_ch11(7)  = Kokkos::complex<double>(-2.319863729607210e-07, -7.274197719836158e-06);
+    h_ref_ch11(8)  = Kokkos::complex<double>( 1.493895250917918e+03, +3.153217003234423e+03);
+    h_ref_ch11(9)  = Kokkos::complex<double>( 3.390589585259364e-01, +3.246744247918000e-01);
+    h_ref_ch11(10) = Kokkos::complex<double>( 3.390589585259364e-01, -3.246744247918000e-01);
+    h_ref_ch11(11) = Kokkos::complex<double>(-3.951932188370152e-02, +1.616692009926331e-01);
+    h_ref_ch11(12) = Kokkos::complex<double>(-3.951932188370151e-02, -1.616692009926331e-01);
+    h_ref_ch11(13) = Kokkos::complex<double>( 6.265071091331731e-06, +2.296112637347948e-06);
+    h_ref_ch11(14) = Kokkos::complex<double>( 2.466294194249553e+03, +2.054604534104335e+03);
+    h_ref_ch11(15) = Kokkos::complex<double>( 6.265071091331731e-06, -2.296112637347947e-06);
+    h_ref_ch11(16) = Kokkos::complex<double>(-2.466294206779695e+03, +2.054604529512110e+03);
+    h_ref_ch11(17) = Kokkos::complex<double>(-4.416040381930448e-28, +1.974955285825768e-28);
+    h_ref_ch11(18) = Kokkos::complex<double>(-6.250095237987940e+24, +8.112776606830997e+23);
+    h_ref_ch11(19) = Kokkos::complex<double>(-4.416040381930448e-28, -1.974955285825769e-28);
+    h_ref_ch11(20) = Kokkos::complex<double>( 6.250095237987940e+24, +8.112776606831005e+23);
+    h_ref_ch11(21) = Kokkos::complex<double>( 1.305514883350938e-01, +7.552212658226459e-02);
+    h_ref_ch11(22) = Kokkos::complex<double>( 1.305514883350938e-01, -7.552212658226456e-02);
+    h_ref_ch11(23) = Kokkos::complex<double>(-5.430453818237824e-02, +1.530182458038999e-02);
+    h_ref_ch11(24) = Kokkos::complex<double>(-5.430453818237824e-02, -1.530182458039000e-02);
+  
+    EXPECT_TRUE(std::isnan(h_ch10(0).real()));
+    EXPECT_TRUE(std::isnan(h_ch10(0).imag()));
+    for (int i=1; i<N; i++) {
+      EXPECT_LE(Kokkos::abs(h_ch10(i) - h_ref_ch10(i)), Kokkos::abs(h_ref_ch10(i))*1e-13);
+    }
+
+    EXPECT_TRUE(std::isnan(h_ch11(0).real()));
+    EXPECT_TRUE(std::isnan(h_ch11(0).imag()));
+    for (int i=1; i<N; i++) {
+      EXPECT_LE(Kokkos::abs(h_ch11(i) - h_ref_ch11(i)), Kokkos::abs(h_ref_ch11(i))*1e-13);
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int & i) const {
+    d_ch10(i) = Kokkos::Experimental::cbesselh10(d_z(i));
+    d_ch11(i) = Kokkos::Experimental::cbesselh11(d_z(i));
+  }
+};
+
+template <class ExecSpace>
+struct TestComplexBesselH2Function {
+  using ViewType     = Kokkos::View<Kokkos::complex<double>*, ExecSpace>;
+  using HostViewType = Kokkos::View<Kokkos::complex<double>*, Kokkos::HostSpace>;
+
+  ViewType d_z, d_ch20, d_ch21;
+  typename ViewType::HostMirror h_z, h_ch20, h_ch21;
+  HostViewType h_ref_ch20, h_ref_ch21;
+
+  void testit() {
+    int N = 25;
+    d_z        = ViewType("d_z", N);
+    d_ch20     = ViewType("d_ch20", N);
+    d_ch21     = ViewType("d_ch21", N);
+    h_z        = Kokkos::create_mirror_view(d_z);
+    h_ch20     = Kokkos::create_mirror_view(d_ch20);
+    h_ch21     = Kokkos::create_mirror_view(d_ch21);
+    h_ref_ch20 = HostViewType("h_ref_ch20", N);
+    h_ref_ch21 = HostViewType("h_ref_ch21", N);
+
+    //Generate test inputs
+    h_z(0)  = Kokkos::complex<double>( 0.0, 0.0);
+    h_z(1)  = Kokkos::complex<double>( 3.0, 2.0);
+    h_z(2)  = Kokkos::complex<double>( 3.0,-2.0);
+    h_z(3)  = Kokkos::complex<double>(-3.0, 2.0);
+    h_z(4)  = Kokkos::complex<double>(-3.0,-2.0);
+    h_z(5)  = Kokkos::complex<double>( 23.0, 10.0);
+    h_z(6)  = Kokkos::complex<double>( 23.0,-10.0);
+    h_z(7)  = Kokkos::complex<double>(-23.0, 10.0);
+    h_z(8)  = Kokkos::complex<double>(-23.0,-10.0);
+    h_z(9)  = Kokkos::complex<double>( 3.0, 0.0);
+    h_z(10) = Kokkos::complex<double>(-3.0, 0.0);
+    h_z(11) = Kokkos::complex<double>( 23.0,0.0);
+    h_z(12) = Kokkos::complex<double>(-23.0,0.0);
+    h_z(13) = Kokkos::complex<double>( 28.0, 10.0);
+    h_z(14) = Kokkos::complex<double>( 28.0,-10.0);
+    h_z(15) = Kokkos::complex<double>(-28.0, 10.0);
+    h_z(16) = Kokkos::complex<double>(-28.0,-10.0);
+    h_z(17) = Kokkos::complex<double>( 200.0, 60.0);
+    h_z(18) = Kokkos::complex<double>( 200.0,-60.0);
+    h_z(19) = Kokkos::complex<double>(-200.0, 60.0);
+    h_z(20) = Kokkos::complex<double>(-200.0,-60.0);
+    h_z(21) = Kokkos::complex<double>( 28.0, 0.0);
+    h_z(22) = Kokkos::complex<double>(-28.0, 0.0);
+    h_z(23) = Kokkos::complex<double>( 200.0,0.0);
+    h_z(24) = Kokkos::complex<double>(-200.0,0.0);
+
+    Kokkos::deep_copy(d_z, h_z);
+
+    //Call Hankel functions
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+    Kokkos::fence();
+
+    Kokkos::deep_copy(h_ch20, d_ch20);
+    Kokkos::deep_copy(h_ch21, d_ch21);
+
+    //Reference values computed with Octave
+    h_ref_ch20(0)  = Kokkos::complex<double>( std::numeric_limits<double>::quiet_NaN(), 
+                                              std::numeric_limits<double>::quiet_NaN() );
+    h_ref_ch20(1)  = Kokkos::complex<double>(-2.480676488910849e+00, -1.948786988612626e+00);
+    h_ref_ch20(2)  = Kokkos::complex<double>(-1.779327030399459e-02, -5.281940449715537e-02);
+    h_ref_ch20(3)  = Kokkos::complex<double>(-2.516263029518839e+00, +1.843148179618315e+00);
+    h_ref_ch20(4)  = Kokkos::complex<double>( 1.779327030399459e-02, -5.281940449715537e-02);
+    h_ref_ch20(5)  = Kokkos::complex<double>(-3.204879955218674e+03, +1.446133490498241e+03);
+    h_ref_ch20(6)  = Kokkos::complex<double>(-7.217716938222564e-06, +1.002796203581228e-07);
+    h_ref_ch20(7)  = Kokkos::complex<double>(-3.204879969654108e+03, -1.446133490297682e+03);
+    h_ref_ch20(8)  = Kokkos::complex<double>( 7.217716938222564e-06, +1.002796203581228e-07);
+    h_ref_ch20(9)  = Kokkos::complex<double>(-2.600519549019334e-01, -3.768500100127903e-01);
+    h_ref_ch20(10) = Kokkos::complex<double>(-7.801558647058006e-01, -3.768500100127903e-01);
+    h_ref_ch20(11) = Kokkos::complex<double>(-1.624127813134865e-01, +3.598179027370283e-02);
+    h_ref_ch20(12) = Kokkos::complex<double>(-4.872383439404597e-01, +3.598179027370281e-02);
+    h_ref_ch20(13) = Kokkos::complex<double>(-2.025824374843011e+03, -2.512479278555672e+03);
+    h_ref_ch20(14) = Kokkos::complex<double>(-2.184905481759440e-06, -6.263387166445335e-06);
+    h_ref_ch20(15) = Kokkos::complex<double>(-2.025824379212821e+03, +2.512479266028897e+03);
+    h_ref_ch20(16) = Kokkos::complex<double>( 2.184905481759440e-06, -6.263387166445335e-06);
+    h_ref_ch20(17) = Kokkos::complex<double>(-8.261945332108929e+23, +6.252486138159269e+24);
+    h_ref_ch20(18) = Kokkos::complex<double>(-1.983689762743337e-28, +4.408449940359881e-28);
+    h_ref_ch20(19) = Kokkos::complex<double>(-8.261945332108929e+23, -6.252486138159269e+24);
+    h_ref_ch20(20) = Kokkos::complex<double>( 1.983689762743337e-28, +4.408449940359881e-28);
+    h_ref_ch20(21) = Kokkos::complex<double>(-7.315701054899959e-02, -1.318364704235323e-01);
+    h_ref_ch20(22) = Kokkos::complex<double>(-2.194710316469988e-01, -1.318364704235323e-01);
+    h_ref_ch20(23) = Kokkos::complex<double>(-1.543743993056510e-02, +5.426577524981793e-02);
+    h_ref_ch20(24) = Kokkos::complex<double>(-4.631231979169528e-02, +5.426577524981793e-02);
+
+    h_ref_ch21(0)  = Kokkos::complex<double>( std::numeric_limits<double>::quiet_NaN(), 
+                                              std::numeric_limits<double>::quiet_NaN() );
+    h_ref_ch21(1)  = Kokkos::complex<double>( 1.505230101821194e+00, -2.546831401702448e+00);
+    h_ref_ch21(2)  = Kokkos::complex<double>( 5.506759533731469e-02, -2.486728122475093e-02);
+    h_ref_ch21(3)  = Kokkos::complex<double>(-1.615365292495823e+00, -2.497096839252946e+00);
+    h_ref_ch21(4)  = Kokkos::complex<double>( 5.506759533731469e-02, +2.486728122475093e-02);
+    h_ref_ch21(5)  = Kokkos::complex<double>(-1.493895250453947e+03, -3.153217017782819e+03);
+    h_ref_ch21(6)  = Kokkos::complex<double>(-2.319863729607219e-07, -7.274197719836158e-06);
+    h_ref_ch21(7)  = Kokkos::complex<double>( 1.493895250917918e+03, -3.153217003234423e+03);
+    h_ref_ch21(8)  = Kokkos::complex<double>(-2.319863729607210e-07, +7.274197719836158e-06);
+    h_ref_ch21(9)  = Kokkos::complex<double>( 3.390589585259364e-01, -3.246744247918000e-01);
+    h_ref_ch21(10) = Kokkos::complex<double>(-1.017176875577809e+00, +3.246744247918000e-01);
+    h_ref_ch21(11) = Kokkos::complex<double>(-3.951932188370152e-02, -1.616692009926331e-01);
+    h_ref_ch21(12) = Kokkos::complex<double>( 1.185579656511045e-01, +1.616692009926332e-01);
+    h_ref_ch21(13) = Kokkos::complex<double>( 2.466294194249553e+03, -2.054604534104335e+03);
+    h_ref_ch21(14) = Kokkos::complex<double>( 6.265071091331731e-06, -2.296112637347948e-06);
+    h_ref_ch21(15) = Kokkos::complex<double>(-2.466294206779695e+03, -2.054604529512110e+03);
+    h_ref_ch21(16) = Kokkos::complex<double>( 6.265071091331731e-06, +2.296112637347947e-06);
+    h_ref_ch21(17) = Kokkos::complex<double>(-6.250095237987940e+24, -8.112776606830997e+23);
+    h_ref_ch21(18) = Kokkos::complex<double>(-4.416040381930448e-28, -1.974955285825768e-28);
+    h_ref_ch21(19) = Kokkos::complex<double>( 6.250095237987940e+24, -8.112776606831005e+23);
+    h_ref_ch21(20) = Kokkos::complex<double>(-4.416040381930448e-28, +1.974955285825769e-28);
+    h_ref_ch21(21) = Kokkos::complex<double>( 1.305514883350938e-01, -7.552212658226459e-02);
+    h_ref_ch21(22) = Kokkos::complex<double>(-3.916544650052814e-01, +7.552212658226461e-02);
+    h_ref_ch21(23) = Kokkos::complex<double>(-5.430453818237824e-02, -1.530182458038999e-02);
+    h_ref_ch21(24) = Kokkos::complex<double>( 1.629136145471347e-01, +1.530182458039000e-02);
+  
+    EXPECT_TRUE(std::isnan(h_ch20(0).real()));
+    EXPECT_TRUE(std::isnan(h_ch20(0).imag()));
+    for (int i=1; i<N; i++) {
+      EXPECT_LE(Kokkos::abs(h_ch20(i) - h_ref_ch20(i)), Kokkos::abs(h_ref_ch20(i))*1e-13);
+    }
+
+    EXPECT_TRUE(std::isnan(h_ch21(0).real()));
+    EXPECT_TRUE(std::isnan(h_ch21(0).imag()));
+    for (int i=1; i<N; i++) {
+      EXPECT_LE(Kokkos::abs(h_ch21(i) - h_ref_ch21(i)), Kokkos::abs(h_ref_ch21(i))*1e-13);
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int & i) const {
+    d_ch20(i) = Kokkos::Experimental::cbesselh20(d_z(i));
+    d_ch21(i) = Kokkos::Experimental::cbesselh21(d_z(i));
+  }
+};
+
 TEST(TEST_CATEGORY, mathspecialfunc_expint) {
   TestExponentialIntergralFunction<TEST_EXECSPACE> test;
   test.testit();
@@ -1066,6 +1328,16 @@ TEST(TEST_CATEGORY, mathspecialfunc_cbesseli0k0) {
 
 TEST(TEST_CATEGORY, mathspecialfunc_cbesseli1k1) {
   TestComplexBesselI1K1Function<TEST_EXECSPACE> test;
+  test.testit();
+}
+
+TEST(TEST_CATEGORY, mathspecialfunc_cbesselh1stkind) {
+  TestComplexBesselH1Function<TEST_EXECSPACE> test;
+  test.testit();
+}
+
+TEST(TEST_CATEGORY, mathspecialfunc_cbesselh2ndkind) {
+  TestComplexBesselH2Function<TEST_EXECSPACE> test;
   test.testit();
 }
 
