@@ -406,8 +406,8 @@ auto tune_occupancy_controlled_policy(
     const TagType& tag) {
   return generic_tune_policy<Experimental::RangePolicyOccupancyTuner>(
       label_in, range_policy_tuners, policy, functor, tag,
-      [](const Kokkos::RangePolicy<Properties...>& policy) {
-        return policy.impl_get_occupancy_control().should_tune();
+      [](const Kokkos::RangePolicy<Properties...>& candidate_policy) {
+        return candidate_policy.impl_get_occupancy_control().should_tune();
         //       return Kokkos::RangePolicy<
         //           Properties...>::traits::experimental_contains_desired_occupancy;
       });
@@ -437,8 +437,8 @@ auto tune_occupancy_controlled_policy(
     const TagType& tag) {
   return generic_tune_policy<Experimental::RangePolicyOccupancyTuner>(
       label_in, range_policy_tuners, policy, functor, tag,
-      [](const Kokkos::RangePolicy<Properties...>& policy) {
-        return policy.impl_get_occupancy_control().should_tune();
+      [](const Kokkos::RangePolicy<Properties...>& candidate_policy) {
+        return candidate_policy.impl_get_occupancy_control().should_tune();
         //       return Kokkos::RangePolicy<
         //           Properties...>::traits::experimental_contains_desired_occupancy;
       });
