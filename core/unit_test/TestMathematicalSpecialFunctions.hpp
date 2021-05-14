@@ -476,7 +476,7 @@ struct TestComplexBesselJ0Y0Function {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( const TestLargeArgTag&, const int & i ) const {
+  void operator()( const TestLargeArgTag&, const int & /*i*/ ) const {
     d_cbj0_large(0) = Kokkos::Experimental::cbesselj0<Kokkos::complex<double>,double,int>(d_z_large(0));
     d_cbj0_large(1) = Kokkos::Experimental::cbesselj0<Kokkos::complex<double>,double,int>(d_z_large(1),11000,3000);
     d_cbj0_large(2) = Kokkos::Experimental::cbesselj0<Kokkos::complex<double>,double,int>(d_z_large(2),11000,7500);
@@ -676,7 +676,7 @@ struct TestComplexBesselJ1Y1Function {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( const TestLargeArgTag&, const int & i ) const {
+  void operator()( const TestLargeArgTag&, const int & /*i*/ ) const {
     d_cbj1_large(0) = Kokkos::Experimental::cbesselj1<Kokkos::complex<double>,double,int>(d_z_large(0));
     d_cbj1_large(1) = Kokkos::Experimental::cbesselj1<Kokkos::complex<double>,double,int>(d_z_large(1),11000,3000);
     d_cbj1_large(2) = Kokkos::Experimental::cbesselj1<Kokkos::complex<double>,double,int>(d_z_large(2),11000,7500);
@@ -856,7 +856,7 @@ struct TestComplexBesselI0K0Function {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( const TestLargeArgTag&, const int & i ) const {
+  void operator()( const TestLargeArgTag&, const int & /*i*/ ) const {
     d_cbi0_large(0) = Kokkos::Experimental::cbesseli0<Kokkos::complex<double>,double,int>(d_z_large(0));
     d_cbi0_large(1) = Kokkos::Experimental::cbesseli0<Kokkos::complex<double>,double,int>(d_z_large(1),110,35);
     d_cbi0_large(2) = Kokkos::Experimental::cbesseli0<Kokkos::complex<double>,double,int>(d_z_large(2),110,190);
@@ -1029,7 +1029,7 @@ struct TestComplexBesselI1K1Function {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()( const TestLargeArgTag&, const int & i ) const {
+  void operator()( const TestLargeArgTag&, const int & /*i*/ ) const {
     d_cbi1_large(0) = Kokkos::Experimental::cbesseli1<Kokkos::complex<double>,double,int>(d_z_large(0));
     d_cbi1_large(1) = Kokkos::Experimental::cbesseli1<Kokkos::complex<double>,double,int>(d_z_large(1),110,35);
     d_cbi1_large(2) = Kokkos::Experimental::cbesseli1<Kokkos::complex<double>,double,int>(d_z_large(2),110,190);
