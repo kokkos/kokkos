@@ -10,7 +10,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #ifdef DESUL_HAVE_SYCL_ATOMICS
 
-#ifdef __SYCL_DEVICE_ONLY__
 namespace desul {
 namespace Impl {
 template<class T>
@@ -99,6 +98,5 @@ atomic_fetch_or(T* dest, T val, MemoryOrder, MemoryScopeDevice) {
 }
 
 } // desul
-#endif  // SYCL_DEVICE_ONLY
 #endif  // DESUL_HAVE_SYCL_ATOMICS
 #endif  // DESUL_ATOMICS_SYCL_HPP_

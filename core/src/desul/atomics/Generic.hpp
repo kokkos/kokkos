@@ -255,7 +255,7 @@ atomic_fetch_oper(const Oper& op,
   }
   return return_val;
 // FIXME_SYCL
-#elif defined (__SYCL_DEVICE_ONLY__)
+#elif defined(__SYCL_DEVICE_ONLY__)
   assert(false);
   return val;
 #else

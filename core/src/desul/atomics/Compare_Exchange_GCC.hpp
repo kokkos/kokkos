@@ -56,19 +56,14 @@ atomic_exchange(
   return return_val;
 }
 
-//#ifndef __SYCL_DEVICE_ONLY__
 // Failure mode for atomic_compare_exchange_n cannot be RELEASE nor ACQREL so
 // Those two get handled separatly.
 template <typename T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
-#ifndef KOKKOS_ENABLE_SYCL
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, GCCMemoryOrder<MemoryOrder>::value, GCCMemoryOrder<MemoryOrder>::value);
-#else
-  assert(false);
-#endif
   return value;
 }
 
@@ -76,12 +71,8 @@ template <typename T, class MemoryScope>
 std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
-#ifndef KOKKOS_ENABLE_SYCL
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
-#else
-  assert(false);
-#endif
   return value;
 }
 
@@ -89,12 +80,8 @@ template <typename T, class MemoryScope>
 std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderAcqRel, MemoryScope) {
-#ifndef KOKKOS_ENABLE_SYCL
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
-#else
-  assert(false);
-#endif
   return value;
 }
 //#endif

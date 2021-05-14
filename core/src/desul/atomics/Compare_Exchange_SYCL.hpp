@@ -20,44 +20,44 @@ template<class MemoryOrder>
 struct DesulToSYCLMemoryOrder;
 template<>
 struct DesulToSYCLMemoryOrder<MemoryOrderSeqCst> {
-  using type = sycl::ONEAPI::memory_order::seq_cst;
+  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::seq_cst;
 };
 template<>
 struct DesulToSYCLMemoryOrder<MemoryOrderAcquire> {
-  using type = sycl::ONEAPI::memory_order::acquire;;
+  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::acquire;;
 };
 template<>
 struct DesulToSYCLMemoryOrder<MemoryOrderRelease> {
-  using type = sycl::ONEAPI::memory_order::release;
+  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::release;
 };
 template<>
 struct DesulToSYCLMemoryOrder<MemoryOrderAcqRel> {
-  using sycl::ONEAPI::memory_order::acq_rel;
+  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::acq_rel;
 };
 template<>
 struct DesulToSYCLMemoryOrder<MemoryOrderRelaxed> {
-  using sycl::ONEAPI::memory_order::relaxed;
+  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::relaxed;
 };
 
 template<class MemoryScope>
 struct DesulToSYCLMemoryScope;
 template<>
-struct DesulToSYCLMemoryOrder<MemoryScopeCore> {
-  using type = sycl::ONEAPI::memory_scope::work_group;
+struct DesulToSYCLMemoryScope<MemoryScopeCore> {
+  static constexpr sycl::ONEAPI::memory_scope value = sycl::ONEAPI::memory_scope::work_group;
 };
 template<>
-struct DesulToSYCLMemoryOrder<MemoryScopeDevice> {
-  using type = sycl::ONEAPI::memory_scope::device;
+struct DesulToSYCLMemoryScope<MemoryScopeDevice> {
+  static constexpr sycl::ONEAPI::memory_scope value = sycl::ONEAPI::memory_scope::device;
 };
 template<>
-struct DesulToSYCLMemoryOrder<MemoryScopeSystem> {
-  using type = sycl::ONEAPI::memory_scope::system;
+struct DesulToSYCLMemoryScope<MemoryScopeSystem> {
+  static constexpr sycl::ONEAPI::memory_scope value = sycl::ONEAPI::memory_scope::system;
 };
 
 template<class MemoryOrder, class MemoryScope>
-inline void atomic_thread_fence(MemoryOrder, MemoryScopeDevice) {
-  sycl::ONEAPI::atomic_fence(typename DesulToSYCLMemoryOrder<MemoryOrder>::type,
-                             typename DesulToSYCLMemoryScope<MemoryScope>::type);
+inline void atomic_thread_fence(MemoryOrder, MemoryScope) {
+  sycl::ONEAPI::atomic_fence(DesulToSYCLMemoryOrder<MemoryOrder>::value,
+                             DesulToSYCLMemoryScope<MemoryScope>::value);
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
@@ -66,8 +66,8 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_compare_exchange(
   static_assert(sizeof(unsigned int) == 4, "this function assumes an unsigned int is 32-bit");
   sycl::ONEAPI::atomic_ref<
     unsigned int, 
-    typename DesulToSYCLMemoryOrder<MemoryOrder>::type, 
-    typename DesulToSYCLMemoryScope<MemoryScope>::type, 
+    DesulToSYCLMemoryOrder<MemoryOrder>::value, 
+    DesulToSYCLMemoryScope<MemoryScope>::value, 
     sycl::access::address_space::global_device_space> 
   dest_ref(*reinterpret_cast<unsigned int*>(dest));
   dest_ref.compare_exchange_strong(*reinterpret_cast<unsigned int*>(&compare), 
@@ -80,8 +80,8 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_exchange(
   static_assert(sizeof(unsigned long long int) == 8, "this function assumes an unsigned long long  is 64-bit");
   sycl::ONEAPI::atomic_ref<
     unsigned long long int, 
-    typename DesulToSYCLMemoryOrder<MemoryOrder>::type,
-    typename DesulToSYCLMemoryScope<MemoryScope>::type, 
+    DesulToSYCLMemoryOrder<MemoryOrder>::value,
+    DesulToSYCLMemoryScope<MemoryScope>::value, 
     sycl::access::address_space::global_device_space> 
   dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
   dest_ref.compare_exchange_strong(*reinterpret_cast<unsigned long long int*>(&compare),
@@ -95,8 +95,8 @@ typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(
   static_assert(sizeof(unsigned int) == 4, "this function assumes an unsigned int is 32-bit");
   sycl::ONEAPI::atomic_ref<
     unsigned int, 
-    typename DesulToSYCLMemoryOrder<MemoryOrder>::type, 
-    typename DesulToSYCLMemoryScope<MemoryScope>::type,  
+    DesulToSYCLMemoryOrder<MemoryOrder>::value, 
+    DesulToSYCLMemoryScope<MemoryScope>::value,  
     sycl::access::address_space::global_device_space> 
   dest_ref(*reinterpret_cast<unsigned int*>(dest));
   unsigned int return_val = dest_ref.exchange(*reinterpret_cast<unsigned int*>(&value));
@@ -108,8 +108,8 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
   static_assert(sizeof(unsigned long long int) == 8, "this function assumes an unsigned long long  is 64-bit");
   sycl::ONEAPI::atomic_ref<
     unsigned long long int,
-    typename DesulToSYCLMemoryOrder<MemoryOrder>::type,
-    typename DesulToSYCLMemoryScope<MemoryScope>::type,
+    DesulToSYCLMemoryOrder<MemoryOrder>::value,
+    DesulToSYCLMemoryScope<MemoryScope>::value,
     sycl::access::address_space::global_device_space>
   dest_ref(*reinterpret_cast<unsigned long long int*>(dest));
   unsigned long long int return_val =
