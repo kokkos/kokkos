@@ -421,9 +421,10 @@ auto tune_range_policy(const size_t tuning_context, const std::string& label_in,
                                           functor, tag);
 }
 template <class Functor, class TagType, class... Properties>
-auto tune_range_policy(const size_t tuning_context, const std::string& label_in,
-                       Kokkos::RangePolicy<Properties...>& policy,
-                       const Functor& functor, const TagType& tag,
+auto tune_range_policy(const size_t /**tuning_context*/,
+                       const std::string& /*label_in*/,
+                       Kokkos::RangePolicy<Properties...>& /**policy*/,
+                       const Functor& /**functor*/, const TagType& /**tag*/,
                        std::false_type) {
   return policy;
 }
@@ -451,9 +452,10 @@ auto tune_range_policy(const size_t tuning_context, const std::string& label_in,
                                               functor, tag);
 }
 template <class ReducerType, class Functor, class TagType, class... Properties>
-auto tune_range_policy(const size_t tuning_context, const std::string& label_in,
-                       Kokkos::RangePolicy<Properties...>& policy,
-                       const Functor& functor, const TagType& tag,
+auto tune_range_policy(const size_t /**tuning_context*/,
+                       const std::string& /**label_in*/,
+                       Kokkos::RangePolicy<Properties...>& /**policy*/,
+                       const Functor& /**functor*/, const TagType& /**tag*/,
                        std::false_type) {
   return policy;
 }
