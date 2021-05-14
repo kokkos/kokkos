@@ -222,7 +222,7 @@ void *CudaSpace::impl_allocate(
   void *ptr = nullptr;
 
 #ifndef CUDART_VERSION
-#no CUDART_VERSION
+#error CUDART_VERSION undefined!
 #elif (CUDART_VERSION >= 11020)
   auto error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
   cudaDeviceSynchronize();
