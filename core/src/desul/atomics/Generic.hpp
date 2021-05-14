@@ -254,6 +254,10 @@ atomic_fetch_oper(const Oper& op,
     done_active = DESUL_IMPL_BALLOT_MASK(done);
   }
   return return_val;
+// FIXME_SYCL
+#elif defined (__SYCL_DEVICE_ONLY__)
+  assert(false);
+  return val;
 #else
   unsigned int mask = DESUL_IMPL_ACTIVEMASK;
   unsigned int active = DESUL_IMPL_BALLOT_MASK(mask, 1);
@@ -321,6 +325,10 @@ atomic_oper_fetch(const Oper& op,
     done_active = DESUL_IMPL_BALLOT_MASK(done);
   }
   return return_val;
+  // FIXME_SYCL
+#elif defined(__SYCL_DEVICE_ONLY__)
+  assert(false);
+  return val;
 #else
   unsigned int mask = DESUL_IMPL_ACTIVEMASK;
   unsigned int active = DESUL_IMPL_BALLOT_MASK(mask, 1);
@@ -662,6 +670,7 @@ DESUL_INLINE_FUNCTION bool atomic_compare_exchange_weak(T* const dest,
 
 }  // namespace desul
 
+#include <desul/atomics/SYCL.hpp>
 #include <desul/atomics/CUDA.hpp>
 #include <desul/atomics/GCC.hpp>
 #include <desul/atomics/HIP.hpp>

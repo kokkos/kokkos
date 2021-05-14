@@ -10,6 +10,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_ATOMICS_COMPARE_EXCHANGE_GCC_HPP_
 #include "desul/atomics/Common.hpp"
 
+#include <cstdlib>
+
 #ifdef DESUL_HAVE_GCC_ATOMICS
 #if !defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP) && !defined(__CUDACC__)
 // This doesn't work in WSL??
@@ -54,34 +56,48 @@ atomic_exchange(
   return return_val;
 }
 
+//#ifndef __SYCL_DEVICE_ONLY__
 // Failure mode for atomic_compare_exchange_n cannot be RELEASE nor ACQREL so
 // Those two get handled separatly.
 template <typename T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
+#ifndef KOKKOS_ENABLE_SYCL
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, GCCMemoryOrder<MemoryOrder>::value, GCCMemoryOrder<MemoryOrder>::value);
-  return compare;
+#else
+  assert(false);
+#endif
+  return value;
 }
 
 template <typename T, class MemoryScope>
 std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
+#ifndef KOKKOS_ENABLE_SYCL
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
-  return compare;
+#else
+  assert(false);
+#endif
+  return value;
 }
 
 template <typename T, class MemoryScope>
 std::enable_if_t<Impl::atomic_exchange_available_gcc<T>::value, T>
 atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderAcqRel, MemoryScope) {
+#ifndef KOKKOS_ENABLE_SYCL
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
-  return compare;
+#else
+  assert(false);
+#endif
+  return value;
 }
+//#endif
 
 #if defined(__clang__) && (__clang_major__>=7) && !defined(__APPLE__)
 #pragma GCC diagnostic pop
