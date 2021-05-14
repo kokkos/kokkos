@@ -129,7 +129,7 @@ enum class HIPLaunchMechanism : unsigned {
   LocalMemory    = 4
 };
 
-enum BlockType : unsigned { Max = 0, Preferred = 1 };
+enum class BlockType { Max, Preferred };
 
 constexpr inline HIPLaunchMechanism operator|(HIPLaunchMechanism p1,
                                               HIPLaunchMechanism p2) {
