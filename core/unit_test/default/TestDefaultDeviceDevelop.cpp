@@ -48,32 +48,9 @@
 #include <Kokkos_Core.hpp>
 
 #include <TestDefaultDeviceType_Category.hpp>
-struct TF {
-  KOKKOS_FUNCTION void operator()(const int) const {}
-};
+
 namespace Test {
 
-TEST(defaultdevicetype, development_test) {
-  TF f;
-  using namespace Kokkos::Tools::Experimental;
-  VariableInfo info;
-  info.category      = StatisticalCategory::kokkos_value_categorical;
-  info.type          = ValueType::kokkos_value_int64;
-  info.valueQuantity = CandidateValueType::kokkos_value_unbounded;
-  size_t id          = declare_input_type("dogggo", info);
-  auto ctx           = get_new_context_id();
-  auto v             = make_variable_value(id, int64_t(1));
-  begin_context(ctx);
-  set_input_values(ctx, 1, &v);
-
-  for (int x = 0; x < 10000; ++x) {
-    Kokkos::parallel_for(
-        "puppies",
-        Kokkos::Experimental::prefer(Kokkos::RangePolicy<>(0, 1),
-                                     Kokkos::Experimental::TuneOccupancy{}),
-        f);
-  }
-  end_context(ctx);
-}
+TEST(defaultdevicetype, development_test) {}
 
 }  // namespace Test
