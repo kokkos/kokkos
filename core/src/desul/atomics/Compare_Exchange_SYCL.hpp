@@ -9,50 +9,13 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #ifndef DESUL_ATOMICS_COMPARE_EXCHANGE_SYCL_HPP_
 #define DESUL_ATOMICS_COMPARE_EXCHANGE_SYCL_HPP_
 #include "desul/atomics/Common.hpp"
+#include "desul/atomics/SYCLConversions.hpp"
 #include <CL/sycl.hpp>
 
 
 #ifdef DESUL_HAVE_SYCL_ATOMICS
 
 namespace desul {
-
-template<class MemoryOrder>
-struct DesulToSYCLMemoryOrder;
-template<>
-struct DesulToSYCLMemoryOrder<MemoryOrderSeqCst> {
-  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::seq_cst;
-};
-template<>
-struct DesulToSYCLMemoryOrder<MemoryOrderAcquire> {
-  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::acquire;;
-};
-template<>
-struct DesulToSYCLMemoryOrder<MemoryOrderRelease> {
-  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::release;
-};
-template<>
-struct DesulToSYCLMemoryOrder<MemoryOrderAcqRel> {
-  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::acq_rel;
-};
-template<>
-struct DesulToSYCLMemoryOrder<MemoryOrderRelaxed> {
-  static constexpr sycl::ONEAPI::memory_order value = sycl::ONEAPI::memory_order::relaxed;
-};
-
-template<class MemoryScope>
-struct DesulToSYCLMemoryScope;
-template<>
-struct DesulToSYCLMemoryScope<MemoryScopeCore> {
-  static constexpr sycl::ONEAPI::memory_scope value = sycl::ONEAPI::memory_scope::work_group;
-};
-template<>
-struct DesulToSYCLMemoryScope<MemoryScopeDevice> {
-  static constexpr sycl::ONEAPI::memory_scope value = sycl::ONEAPI::memory_scope::device;
-};
-template<>
-struct DesulToSYCLMemoryScope<MemoryScopeSystem> {
-  static constexpr sycl::ONEAPI::memory_scope value = sycl::ONEAPI::memory_scope::system;
-};
 
 template<class MemoryOrder, class MemoryScope>
 inline void atomic_thread_fence(MemoryOrder, MemoryScope) {
@@ -119,7 +82,7 @@ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
 
 template <typename T, class MemoryOrder, class MemoryScope>
 typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type atomic_compare_exchange(
-    T* const dest, T compare, T value, MemoryOrder, MemoryScope scope) {
+    T* const /*dest*/, T compare, T /*value*/, MemoryOrder, MemoryScope) {
   // FIXME_SYCL not implemented
   assert(false);
   return compare;  
@@ -127,7 +90,8 @@ typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type atomic_co
 
 template <typename T, class MemoryOrder, class MemoryScope>
 typename std::enable_if<(sizeof(T) != 8) && (sizeof(T) != 4), T>::type atomic_exchange(
-    T* const dest, T value, MemoryOrder, MemoryScope scope) {
+    T* const /*dest*/, T value, MemoryOrder, MemoryScope) {
+  // FIXME_SYCL not implemented
   assert(false);
   return value;
 }
