@@ -10,8 +10,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_ATOMICS_COMPARE_EXCHANGE_GCC_HPP_
 #include "desul/atomics/Common.hpp"
 
-#include <cstdlib>
-
 #ifdef DESUL_HAVE_GCC_ATOMICS
 #if !defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP) && !defined(__CUDACC__)
 // This doesn't work in WSL??
@@ -64,7 +62,7 @@ atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, GCCMemoryOrder<MemoryOrder>::value, GCCMemoryOrder<MemoryOrder>::value);
-  return value;
+  return compare;
 }
 
 template <typename T, class MemoryScope>
@@ -73,7 +71,7 @@ atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_RELEASE, __ATOMIC_RELAXED);
-  return value;
+  return compare;
 }
 
 template <typename T, class MemoryScope>
@@ -82,7 +80,7 @@ atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrderAcqRel, MemoryScope) {
   (void)__atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
-  return value;
+  return compare;
 }
 //#endif
 
