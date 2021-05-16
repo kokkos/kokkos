@@ -171,8 +171,13 @@ inline int atomic_fetch_sub(volatile int* const dest, const int val) {
   return __sync_fetch_and_sub(dest, val);
 }
 
+#ifdef _WIN32
+inline long long int atomic_fetch_sub(volatile long long int* const dest,
+                                 const long long int val) {
+#else
 inline long int atomic_fetch_sub(volatile long int* const dest,
                                  const long int val) {
+#endif
 #if defined(KOKKOS_ENABLE_RFO_PREFETCH)
   _mm_prefetch((const char*)dest, _MM_HINT_ET0);
 #endif
