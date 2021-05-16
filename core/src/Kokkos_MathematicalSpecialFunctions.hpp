@@ -53,6 +53,10 @@
 #include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_Complex.hpp>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -1134,14 +1138,13 @@ KOKKOS_INLINE_FUNCTION CmplxType cbesselh10(const CmplxType& z) {
   // programs CH12N in S. Zhang & J. Jin "Computation of Special Functions"
   //(Wiley, 1996).
   using RealType = typename CmplxType::value_type;
-  using Kokkos::Experimental::nan;
 
   CmplxType ch10, cbk0, cbj0, cby0;
   const RealType pi = M_PI;
   CmplxType ci      = CmplxType(0.0, 1.0);
 
   if ((z.real() == 0.0) && (z.imag() == 0.0)) {
-    ch10 = CmplxType(nan(""), nan(""));
+    ch10 = CmplxType(0.0 / 0.0, 0.0 / 0.0);
   } else if (z.imag() <= 0.0) {
     cbj0 = cbesselj0<CmplxType, RealType, int>(z);
     cby0 = cbessely0<CmplxType, RealType, int>(z);
@@ -1162,14 +1165,14 @@ KOKKOS_INLINE_FUNCTION CmplxType cbesselh11(const CmplxType& z) {
   // programs CH12N in S. Zhang & J. Jin "Computation of Special Functions"
   //(Wiley, 1996).
   using RealType = typename CmplxType::value_type;
-  using Kokkos::Experimental::nan;
 
   CmplxType ch11, cbk1, cbj1, cby1;
   const RealType pi = M_PI;
   CmplxType ci      = CmplxType(0.0, 1.0);
 
   if ((z.real() == 0.0) && (z.imag() == 0.0)) {
-    ch11 = CmplxType(nan(""), nan(""));
+    ch11 = CmplxType(0.0 / 0.0, 0.0 / 0.0);
+    ;
   } else if (z.imag() <= 0.0) {
     cbj1 = cbesselj1<CmplxType, RealType, int>(z);
     cby1 = cbessely1<CmplxType, RealType, int>(z);
@@ -1190,14 +1193,14 @@ KOKKOS_INLINE_FUNCTION CmplxType cbesselh20(const CmplxType& z) {
   // programs CH12N in S. Zhang & J. Jin "Computation of Special Functions"
   //(Wiley, 1996).
   using RealType = typename CmplxType::value_type;
-  using Kokkos::Experimental::nan;
 
   CmplxType ch20, cbk0, cbj0, cby0;
   const RealType pi = M_PI;
   CmplxType ci      = CmplxType(0.0, 1.0);
 
   if ((z.real() == 0.0) && (z.imag() == 0.0)) {
-    ch20 = CmplxType(nan(""), nan(""));
+    ch20 = CmplxType(0.0 / 0.0, 0.0 / 0.0);
+    ;
   } else if (z.imag() >= 0.0) {
     cbj0 = cbesselj0<CmplxType, RealType, int>(z);
     cby0 = cbessely0<CmplxType, RealType, int>(z);
@@ -1218,14 +1221,14 @@ KOKKOS_INLINE_FUNCTION CmplxType cbesselh21(const CmplxType& z) {
   // programs CH12N in S. Zhang & J. Jin "Computation of Special Functions"
   //(Wiley, 1996).
   using RealType = typename CmplxType::value_type;
-  using Kokkos::Experimental::nan;
 
   CmplxType ch21, cbk1, cbj1, cby1;
   const RealType pi = M_PI;
   CmplxType ci      = CmplxType(0.0, 1.0);
 
   if ((z.real() == 0.0) && (z.imag() == 0.0)) {
-    ch21 = CmplxType(nan(""), nan(""));
+    ch21 = CmplxType(0.0 / 0.0, 0.0 / 0.0);
+    ;
   } else if (z.imag() >= 0.0) {
     cbj1 = cbesselj1<CmplxType, RealType, int>(z);
     cby1 = cbessely1<CmplxType, RealType, int>(z);
