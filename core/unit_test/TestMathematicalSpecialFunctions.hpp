@@ -1282,7 +1282,7 @@ struct TestComplexBesselH2Function {
     h_ref_ch21(24) = Kokkos::complex<double>( 1.629136145471347e-01, +1.530182458039000e-02);
   
     EXPECT_TRUE(std::isnan(h_ch20(0).real())); 
-    std::cout << "TEST: " << h_ch20(0).real() << ", " << (h_ch20(0).real()!= h_ch20(0).real()) << ", 0/0 =" << 0.0/0.0 << ", isnan(0/0)=" << std::isnan(0.0/0.0) << std::endl; 
+    std::cout << "TEST: " << h_ch20(0).real() << ", " << (h_ch20(0).real()!= h_ch20(0).real()) << ", 0/0 =" << -0.0/0.0 << ", isnan(0/0)=" << std::isnan(-0.0/0.0) << std::endl; 
     EXPECT_TRUE(std::isnan(h_ch20(0).imag()));
     for (int i=1; i<N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch20(i) - h_ref_ch20(i)), Kokkos::abs(h_ref_ch20(i))*1e-13);
