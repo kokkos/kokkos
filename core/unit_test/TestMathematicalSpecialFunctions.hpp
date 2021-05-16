@@ -1283,7 +1283,7 @@ struct TestComplexBesselH2Function {
   
     EXPECT_TRUE(std::isnan(h_ch20(0).real())); 
     std::cout << "TEST: " << h_ch20(0).real() << ", " << (h_ch20(0).real()!= h_ch20(0).real()) << ", 0/0 =" << -0.0/0.0 << ", isnan(0/0)=" << std::isnan(-0.0/0.0) << std::endl;
-    std::cout << "TEST: std::numeric_limits<double>::quiet_NaN()=" << std::numeric_limits<double>::quiet_NaN()<< ", isnan()=" << isnan(std::numeric_limits<double>::quiet_NaN()) << std::endl;
+    std::cout << "TEST: std::numeric_limits<double>::quiet_NaN()=" << std::numeric_limits<double>::quiet_NaN()<< ", isnan()=" << std::isnan(std::numeric_limits<double>::quiet_NaN()) << std::endl;
  
     EXPECT_TRUE(std::isnan(h_ch20(0).imag()));
     for (int i=1; i<N; i++) {
