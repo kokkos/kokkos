@@ -652,111 +652,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 
-template <class FunctorType, class ReducerType, class PointerType,
-          class ValueType, class... PolicyArgs>
-struct ParallelReduceSpecialize<FunctorType,
-                                Kokkos::MDRangePolicy<PolicyArgs...>,
-                                ReducerType, PointerType, ValueType, 0, 0> {
-  using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
-  template <class TagType>
-  inline static
-      typename std::enable_if<std::is_same<TagType, void>::value>::type
-      execute_impl(const FunctorType& f, const PolicyType& p,
-                   PointerType result_ptr) {
-    OpenMPTargetExec::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const typename PolicyType::member_type begin = p.begin();
-    const typename PolicyType::member_type end   = p.end();
-
-    ValueType result = ValueType();
-#pragma omp target teams distribute parallel for num_teams(512) map(to:f) map(tofrom:result) reduction(+: result)
-    for (int i = begin; i < end; i++) f(i, result);
-
-    *result_ptr = result;
-  }
-
-  template <class TagType>
-  inline static
-      typename std::enable_if<!std::is_same<TagType, void>::value>::type
-      execute_impl(const FunctorType& f, const PolicyType& p,
-                   PointerType result_ptr) {
-    OpenMPTargetExec::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    OpenMPTargetExec::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    const typename PolicyType::member_type begin = p.begin();
-    const typename PolicyType::member_type end   = p.end();
-
-    ValueType result = ValueType();
-#pragma omp target teams distribute parallel for num_teams(512) map(to:f) map(tofrom: result) reduction(+: result)
-    for (int i = begin; i < end; i++) f(TagType(), i, result);
-
-    *result_ptr = result;
-  }
-
-  inline static void execute(const FunctorType& f, const PolicyType& p,
-                             PointerType ptr) {
-    execute_impl<typename PolicyType::work_tag>(f, p, ptr);
-  }
-};
-/*
-template<class FunctorType, class PolicyType, class ReducerType, class
-PointerType, class ValueType> struct ParallelReduceSpecialize<FunctorType,
-PolicyType, ReducerType, PointerType, ValueType, 0,1> {
-
-  #pragma omp declare reduction(custom: ValueType : ReducerType::join(omp_out,
-omp_in)) initializer ( ReducerType::init(omp_priv) )
-
-  template< class TagType >
-  inline static
-  typename std::enable_if< std::is_same< TagType , void >::value >::type
-  execute_impl(const FunctorType& f, const PolicyType& p, PointerType
-result_ptr)
-    {
-      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget
-parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget
-parallel_for"); const typename PolicyType::member_type begin = p.begin(); const
-typename PolicyType::member_type end = p.end();
-
-      ValueType result = ValueType();
-      #pragma omp target teams distribute parallel for num_teams(512) map(to:f)
-map(tofrom:result) reduction(custom: result) for(int i=begin; i<end; i++)
-        f(i,result);
-
-      *result_ptr=result;
-    }
-
-
-  template< class TagType >
-  inline static
-  typename std::enable_if< ! std::is_same< TagType , void >::value >::type
-  execute_impl(const FunctorType& f, const PolicyType& p, PointerType
-result_ptr)
-    {
-      OpenMPTargetExec::verify_is_process("Kokkos::Experimental::OpenMPTarget
-parallel_for");
-      OpenMPTargetExec::verify_initialized("Kokkos::Experimental::OpenMPTarget
-parallel_for"); const typename PolicyType::member_type begin = p.begin(); const
-typename PolicyType::member_type end = p.end();
-
-      ValueType result = ValueType();
-      #pragma omp target teams distribute parallel for num_teams(512) map(to:f)
-map(tofrom: result) reduction(custom: result) for(int i=begin; i<end; i++)
-        f(TagType(),i,result);
-
-      *result_ptr=result;
-    }
-
-
-    inline static
-    void execute(const FunctorType& f, const PolicyType& p, PointerType ptr) {
-      execute_impl<typename PolicyType::work_tag>(f,p,ptr);
-    }
-};*/
-
 template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::OpenMPTarget> {
@@ -788,7 +683,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   const Policy m_policy;
   const ReducerType m_reducer;
 
-  bool is_view_on_device = false;
+  bool m_result_ptr_on_device;
 
  public:
   inline void execute() const {
@@ -806,18 +701,21 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
-        m_result_ptr(arg_result_view.data()) {
-    if constexpr (!std::is_same<typename ViewType::memory_space,
-                                Kokkos::HostSpace>::value)
-      is_view_on_device = true;
-  }
+        m_result_ptr(arg_result_view.data()),
+        m_result_ptr_on_device(
+            MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
+                              typename ViewType::memory_space>::accessible) {}
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
                         const ReducerType& reducer)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
-        m_result_ptr(reducer.view().data()) {}
+        m_result_ptr(reducer.view().data()),
+        m_result_ptr_on_device(
+            MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
+                              typename ReducerType::result_view_type::
+                                  memory_space>::accessible) {}
 
   template <int Rank, class ValueType>
   inline typename std::enable_if<Rank == 2>::type execute_tile(
@@ -864,7 +762,7 @@ reduction(+:result)
       }
     }
 
-    if (is_view_on_device)
+    if (m_result_ptr_on_device)
       OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
                                        omp_get_default_device(),
                                        omp_get_initial_device()));
@@ -900,7 +798,7 @@ reduction(+:result)
               : result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
             if constexpr (std::is_same<typename Policy::work_tag, void>::value)
               functor(i0, i1, i2, result);
             else
@@ -913,7 +811,7 @@ reduction(+:result)
 reduction(+:result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
             if constexpr (std::is_same<typename Policy::work_tag, void>::value)
               functor(i0, i1, i2, result);
             else
@@ -923,7 +821,7 @@ reduction(+:result)
       }
     }
 
-    if (is_view_on_device)
+    if (m_result_ptr_on_device)
       OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
                                        omp_get_default_device(),
                                        omp_get_initial_device()));
@@ -961,8 +859,8 @@ reduction(+:result)
               : result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
-            for (auto i3 = begin_3; i1 < end_3; i3++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
+            for (auto i3 = begin_3; i3 < end_3; i3++) {
               if constexpr (std::is_same<typename Policy::work_tag,
                                          void>::value)
                 functor(i0, i1, i2, i3, result);
@@ -977,8 +875,8 @@ reduction(+:result)
 reduction(+:result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
-            for (auto i3 = begin_3; i1 < end_3; i3++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
+            for (auto i3 = begin_3; i3 < end_3; i3++) {
               if constexpr (std::is_same<typename Policy::work_tag,
                                          void>::value)
                 functor(i0, i1, i2, i3, result);
@@ -990,7 +888,7 @@ reduction(+:result)
       }
     }
 
-    if (is_view_on_device)
+    if (m_result_ptr_on_device)
       OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
                                        omp_get_default_device(),
                                        omp_get_initial_device()));
@@ -1030,9 +928,9 @@ reduction(+:result)
               : result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
-            for (auto i3 = begin_3; i1 < end_3; i3++) {
-              for (auto i4 = begin_4; i1 < end_4; i4++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
+            for (auto i3 = begin_3; i3 < end_3; i3++) {
+              for (auto i4 = begin_4; i4 < end_4; i4++) {
                 if constexpr (std::is_same<typename Policy::work_tag,
                                            void>::value)
                   functor(i0, i1, i2, i3, i4, result);
@@ -1049,9 +947,9 @@ reduction(+:result)
 reduction(+:result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
-            for (auto i3 = begin_3; i1 < end_3; i3++) {
-              for (auto i4 = begin_4; i1 < end_4; i4++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
+            for (auto i3 = begin_3; i3 < end_3; i3++) {
+              for (auto i4 = begin_4; i4 < end_4; i4++) {
                 if constexpr (std::is_same<typename Policy::work_tag,
                                            void>::value)
                   functor(i0, i1, i2, i3, i4, result);
@@ -1065,7 +963,7 @@ reduction(+:result)
       }
     }
 
-    if (is_view_on_device)
+    if (m_result_ptr_on_device)
       OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
                                        omp_get_default_device(),
                                        omp_get_initial_device()));
@@ -1107,10 +1005,10 @@ reduction(+:result)
               : result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
-            for (auto i3 = begin_3; i1 < end_3; i3++) {
-              for (auto i4 = begin_4; i1 < end_4; i4++) {
-                for (auto i5 = begin_5; i1 < end_5; i5++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
+            for (auto i3 = begin_3; i3 < end_3; i3++) {
+              for (auto i4 = begin_4; i4 < end_4; i4++) {
+                for (auto i5 = begin_5; i5 < end_5; i5++) {
                   if constexpr (std::is_same<typename Policy::work_tag,
                                              void>::value)
                     functor(i0, i1, i2, i3, i4, i5, result);
@@ -1128,10 +1026,10 @@ reduction(+:result)
 reduction(+:result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
-            for (auto i3 = begin_3; i1 < end_3; i3++) {
-              for (auto i4 = begin_4; i1 < end_4; i4++) {
-                for (auto i5 = begin_5; i1 < end_5; i5++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
+            for (auto i3 = begin_3; i3 < end_3; i3++) {
+              for (auto i4 = begin_4; i4 < end_4; i4++) {
+                for (auto i5 = begin_5; i5 < end_5; i5++) {
                   if constexpr (std::is_same<typename Policy::work_tag,
                                              void>::value)
                     functor(i0, i1, i2, i3, i4, i5, result);
@@ -1146,7 +1044,7 @@ reduction(+:result)
       }
     }
 
-    if (is_view_on_device)
+    if (m_result_ptr_on_device)
       OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
                                        omp_get_default_device(),
                                        omp_get_initial_device()));
@@ -1190,11 +1088,11 @@ reduction(+:result)
               : result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
-            for (auto i3 = begin_3; i1 < end_3; i3++) {
-              for (auto i4 = begin_4; i1 < end_4; i4++) {
-                for (auto i5 = begin_5; i1 < end_5; i5++) {
-                  for (auto i6 = begin_6; i1 < end_6; i6++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
+            for (auto i3 = begin_3; i3 < end_3; i3++) {
+              for (auto i4 = begin_4; i4 < end_4; i4++) {
+                for (auto i5 = begin_5; i5 < end_5; i5++) {
+                  for (auto i6 = begin_6; i6 < end_6; i6++) {
                     if constexpr (std::is_same<typename Policy::work_tag,
                                                void>::value)
                       functor(i0, i1, i2, i3, i4, i5, i6, result);
@@ -1213,11 +1111,11 @@ reduction(+:result)
 reduction(+:result)
       for (auto i0 = begin_0; i0 < end_0; i0++) {
         for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i1 < end_2; i2++) {
-            for (auto i3 = begin_3; i1 < end_3; i3++) {
-              for (auto i4 = begin_4; i1 < end_4; i4++) {
-                for (auto i5 = begin_5; i1 < end_5; i5++) {
-                  for (auto i6 = begin_6; i1 < end_6; i6++) {
+          for (auto i2 = begin_2; i2 < end_2; i2++) {
+            for (auto i3 = begin_3; i3 < end_3; i3++) {
+              for (auto i4 = begin_4; i4 < end_4; i4++) {
+                for (auto i5 = begin_5; i5 < end_5; i5++) {
+                  for (auto i6 = begin_6; i6 < end_6; i6++) {
                     if constexpr (std::is_same<typename Policy::work_tag,
                                                void>::value)
                       functor(i0, i1, i2, i3, i4, i5, i6, result);
@@ -1233,7 +1131,7 @@ reduction(+:result)
       }
     }
 
-    if (is_view_on_device)
+    if (m_result_ptr_on_device)
       OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
                                        omp_get_default_device(),
                                        omp_get_initial_device()));
