@@ -50,8 +50,10 @@
 #include <iosfwd>
 #include <typeinfo>
 
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
 #include <Kokkos_Core_fwd.hpp>
+
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Error.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <omp.h>
