@@ -66,8 +66,8 @@ struct TestExponentialIntergralFunction {
     h_ref(13) = 2.996734771597901e-06;     // x(13)=10.3
     h_ref(14) = 1.254522935050609e-08;     // x(14)=15.4
 
-    EXPECT_EQ(h_expint(0), h_ref(0));
-    EXPECT_EQ(h_expint(1), h_ref(1));
+    EXPECT_EQ(h_ref(0), h_expint(0));
+    EXPECT_EQ(h_ref(1), h_expint(1));
     for (int i = 2; i < 15; i++) {
       EXPECT_LE(fabs(h_expint(i) - h_ref(i)), fabs(h_ref(i)) * 1e-15);
       // printf("%d. %.15e vs. %.15e\n",i, fabs(h_expint(i) - h_ref(i)),
@@ -550,7 +550,7 @@ struct TestComplexBesselJ0Y0Function {
                 Kokkos::abs(h_ref_cbj0(i)) * 1e-13);
     }
 
-    EXPECT_EQ(h_cby0(0), h_ref_cby0(0));
+    EXPECT_EQ(h_ref_cby0(0), h_cby0(0));
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cby0(i) - h_ref_cby0(i)),
                 Kokkos::abs(h_ref_cby0(i)) * 1e-13);
@@ -842,7 +842,7 @@ struct TestComplexBesselJ1Y1Function {
                 Kokkos::abs(h_ref_cbj1(i)) * 1e-13);
     }
 
-    EXPECT_EQ(h_cby1(0), h_ref_cby1(0));
+    EXPECT_EQ(h_ref_cby1(0), h_cby1(0));
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cby1(i) - h_ref_cby1(i)),
                 Kokkos::abs(h_ref_cby1(i)) * 1e-13);
@@ -1128,7 +1128,7 @@ struct TestComplexBesselI0K0Function {
                 Kokkos::abs(h_ref_cbi0(i)) * 1e-13);
     }
 
-    EXPECT_EQ(h_cbk0(0), h_ref_cbk0(0));
+    EXPECT_EQ(h_ref_cbk0(0), h_cbk0(0));
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cbk0(i) - h_ref_cbk0(i)),
                 Kokkos::abs(h_ref_cbk0(i)) * 1e-13);
@@ -1365,7 +1365,7 @@ struct TestComplexBesselI1K1Function {
                 Kokkos::abs(h_ref_cbi1(i)) * 1e-13);
     }
 
-    EXPECT_EQ(h_cbk1(0), h_ref_cbk1(0));
+    EXPECT_EQ(h_ref_cbk1(0), h_cbk1(0));
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cbk1(i) - h_ref_cbk1(i)),
                 Kokkos::abs(h_ref_cbk1(i)) * 1e-13);
@@ -1456,6 +1456,8 @@ struct TestComplexBesselH1Function {
   HostViewType h_ref_ch10, h_ref_ch11;
 
   void testit() {
+    using Kokkos::Experimental::infinity;
+
     int N      = 25;
     d_z        = ViewType("d_z", N);
     d_ch10     = ViewType("d_ch10", N);
@@ -1503,9 +1505,7 @@ struct TestComplexBesselH1Function {
     Kokkos::deep_copy(h_ch11, d_ch11);
 
     // Reference values computed with Octave
-    h_ref_ch10(0) =
-        Kokkos::complex<double>(std::numeric_limits<double>::quiet_NaN(),
-                                std::numeric_limits<double>::quiet_NaN());
+    h_ref_ch10(0) = Kokkos::complex<double>(1.0, -infinity<double>::value);
     h_ref_ch10(1) =
         Kokkos::complex<double>(-1.779327030399459e-02, +5.281940449715537e-02);
     h_ref_ch10(2) =
@@ -1555,9 +1555,7 @@ struct TestComplexBesselH1Function {
     h_ref_ch10(24) =
         Kokkos::complex<double>(1.543743993056510e-02, -5.426577524981793e-02);
 
-    h_ref_ch11(0) =
-        Kokkos::complex<double>(std::numeric_limits<double>::quiet_NaN(),
-                                std::numeric_limits<double>::quiet_NaN());
+    h_ref_ch11(0) = Kokkos::complex<double>(0.0, -infinity<double>::value);
     h_ref_ch11(1) =
         Kokkos::complex<double>(5.506759533731469e-02, +2.486728122475093e-02);
     h_ref_ch11(2) =
@@ -1607,14 +1605,28 @@ struct TestComplexBesselH1Function {
     h_ref_ch11(24) =
         Kokkos::complex<double>(-5.430453818237824e-02, -1.530182458039000e-02);
 
+    EXPECT_EQ(h_ref_ch10(0), h_ch10(0));
+    std::cout << "h_ch10(0): " << h_ch10(0)
+              << ", h_ref_ch10(0): " << h_ref_ch10(0) << std::endl;
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch10(i) - h_ref_ch10(i)),
                 Kokkos::abs(h_ref_ch10(i)) * 1e-13);
+      std::cout << i
+                << ", actual diff: " << Kokkos::abs(h_ch10(i) - h_ref_ch10(i))
+                << ", expected diff: " << Kokkos::abs(h_ref_ch10(i)) * 1e-13
+                << std::endl;
     }
 
+    EXPECT_EQ(h_ref_ch11(0), h_ch11(0));
+    std::cout << "h_ch11(0): " << h_ch11(0)
+              << ", h_ref_ch11(0): " << h_ref_ch11(0) << std::endl;
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch11(i) - h_ref_ch11(i)),
                 Kokkos::abs(h_ref_ch11(i)) * 1e-13);
+      std::cout << i
+                << ", actual diff: " << Kokkos::abs(h_ch11(i) - h_ref_ch11(i))
+                << ", expected diff: " << Kokkos::abs(h_ref_ch11(i)) * 1e-13
+                << std::endl;
     }
   }
 
@@ -1636,6 +1648,8 @@ struct TestComplexBesselH2Function {
   HostViewType h_ref_ch20, h_ref_ch21;
 
   void testit() {
+    using Kokkos::Experimental::infinity;
+
     int N      = 25;
     d_z        = ViewType("d_z", N);
     d_ch20     = ViewType("d_ch20", N);
@@ -1683,9 +1697,7 @@ struct TestComplexBesselH2Function {
     Kokkos::deep_copy(h_ch21, d_ch21);
 
     // Reference values computed with Octave
-    h_ref_ch20(0) =
-        Kokkos::complex<double>(std::numeric_limits<double>::quiet_NaN(),
-                                std::numeric_limits<double>::quiet_NaN());
+    h_ref_ch20(0) = Kokkos::complex<double>(1.0, infinity<double>::value);
     h_ref_ch20(1) =
         Kokkos::complex<double>(-2.480676488910849e+00, -1.948786988612626e+00);
     h_ref_ch20(2) =
@@ -1735,9 +1747,7 @@ struct TestComplexBesselH2Function {
     h_ref_ch20(24) =
         Kokkos::complex<double>(-4.631231979169528e-02, +5.426577524981793e-02);
 
-    h_ref_ch21(0) =
-        Kokkos::complex<double>(std::numeric_limits<double>::quiet_NaN(),
-                                std::numeric_limits<double>::quiet_NaN());
+    h_ref_ch21(0) = Kokkos::complex<double>(0.0, infinity<double>::value);
     h_ref_ch21(1) =
         Kokkos::complex<double>(1.505230101821194e+00, -2.546831401702448e+00);
     h_ref_ch21(2) =
@@ -1787,11 +1797,13 @@ struct TestComplexBesselH2Function {
     h_ref_ch21(24) =
         Kokkos::complex<double>(1.629136145471347e-01, +1.530182458039000e-02);
 
+    EXPECT_EQ(h_ref_ch20(0), h_ch20(0));
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch20(i) - h_ref_ch20(i)),
                 Kokkos::abs(h_ref_ch20(i)) * 1e-13);
     }
 
+    EXPECT_EQ(h_ref_ch21(0), h_ch21(0));
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch21(i) - h_ref_ch21(i)),
                 Kokkos::abs(h_ref_ch21(i)) * 1e-13);
