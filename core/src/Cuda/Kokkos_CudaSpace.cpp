@@ -347,7 +347,7 @@ void CudaSpace::impl_deallocate(
 
   try {
 #ifndef CUDART_VERSION
-#no CUDART_VERSION
+#error CUDART_VERSION undefined!
 #elif (CUDART_VERSION >= 11020)
     CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
     cudaDeviceSynchronize();
