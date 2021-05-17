@@ -100,10 +100,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     if constexpr (std::is_same<TagType, void>::value) {
 #pragma omp target teams distribute parallel for map(to : a_functor)
-      for (auto i = begin; i < end; i++) a_functor(i);
+      for (auto i = begin; i < end; ++i) a_functor(i);
     } else {
 #pragma omp target teams distribute parallel for map(to : a_functor)
-      for (auto i = begin; i < end; i++) a_functor(TagType(), i);
+      for (auto i = begin; i < end; ++i) a_functor(TagType(), i);
     }
   }
 
@@ -156,11 +156,11 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     if constexpr (std::is_same<TagType, void>::value) {
 #pragma omp target teams distribute parallel for num_teams(512) \
                 map(to:f) reduction(+: result)
-      for (auto i = begin; i < end; i++) f(i, result);
+      for (auto i = begin; i < end; ++i) f(i, result);
     } else {
 #pragma omp target teams distribute parallel for num_teams(512) \
                 map(to:f) reduction(+: result)
-      for (auto i = begin; i < end; i++) f(TagType(), i, result);
+      for (auto i = begin; i < end; ++i) f(TagType(), i, result);
     }
 
     // The reduction variable passed to the OpenMP `target` region should be on
@@ -209,13 +209,13 @@ struct ParallelReduceSpecialize<FunctorType, PolicyType, ReducerType,
                                                                     : f) \
     reduction(custom                                                     \
               : result)
-      for (auto i = begin; i < end; i++) f(i, result);
+      for (auto i = begin; i < end; ++i) f(i, result);
     } else {
 #pragma omp target teams distribute parallel for num_teams(512) map(to   \
                                                                     : f) \
     reduction(custom                                                     \
               : result)
-      for (auto i = begin; i < end; i++) f(TagType(), i, result);
+      for (auto i = begin; i < end; ++i) f(TagType(), i, result);
     }
 
     // Copy results back to device if `parallel_reduce` is on a device view.
@@ -372,13 +372,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 #pragma omp target teams distribute map(to                             \
                                         : a_functor) num_teams(nteams) \
     thread_limit(team_size)
-    for (idx_type team_id = 0; team_id < n_chunks; team_id++) {
+    for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
 #pragma omp parallel num_threads(team_size)
       {
         const idx_type local_offset = team_id * chunk_size;
 
 #pragma omp for
-        for (idx_type i = 0; i < chunk_size; i++) {
+        for (idx_type i = 0; i < chunk_size; ++i) {
           const idx_type idx = local_offset + i;
           value_type val;
           ValueInit::init(a_functor, &val);
@@ -389,7 +389,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         if (omp_get_thread_num() == 0) {
           value_type sum;
           ValueInit::init(a_functor, &sum);
-          for (idx_type i = 0; i < chunk_size; i++) {
+          for (idx_type i = 0; i < chunk_size; ++i) {
             ValueJoin::join(a_functor, &sum, &element_values(team_id, i));
             element_values(team_id, i) = sum;
           }
@@ -400,7 +400,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
           if (Kokkos::atomic_fetch_add(&count(), 1) == n_chunks - 1) {
             value_type sum;
             ValueInit::init(a_functor, &sum);
-            for (idx_type i = 0; i < n_chunks; i++) {
+            for (idx_type i = 0; i < n_chunks; ++i) {
               ValueJoin::join(a_functor, &sum, &chunk_values(i));
               chunk_values(i) = sum;
             }
@@ -412,7 +412,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 #pragma omp target teams distribute map(to                             \
                                         : a_functor) num_teams(nteams) \
     thread_limit(team_size)
-    for (idx_type team_id = 0; team_id < n_chunks; team_id++) {
+    for (idx_type team_id = 0; team_id < n_chunks; ++team_id) {
 #pragma omp parallel num_threads(team_size)
       {
         const idx_type local_offset = team_id * chunk_size;
@@ -423,7 +423,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
           ValueInit::init(a_functor, &offset_value);
 
 #pragma omp for
-        for (idx_type i = 0; i < chunk_size; i++) {
+        for (idx_type i = 0; i < chunk_size; ++i) {
           const idx_type idx = local_offset + i;
           value_type local_offset_value;
           if (i > 0) {
@@ -612,7 +612,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                         : a_functor)         \
     is_device_ptr(scratch_ptr, lock_array) num_teams(nteams) \
         thread_limit(team_size)
-    for (int i = 0; i < league_size; i++) {
+    for (int i = 0; i < league_size; ++i) {
       int shmem_block_index = -1, lock_team = 99999, iter = -1;
       iter = (omp_get_team_num() % max_active_teams);
 

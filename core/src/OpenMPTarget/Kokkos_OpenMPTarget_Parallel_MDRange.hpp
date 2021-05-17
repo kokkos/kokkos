@@ -91,7 +91,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
 #pragma omp target teams distribute map(to : functor) num_teams(end - begin)
     {
-      for (ptrdiff_t tile_idx = begin; tile_idx < end; tile_idx++) {
+      for (ptrdiff_t tile_idx = begin; tile_idx < end; ++tile_idx) {
 
 #pragma omp parallel
         {
@@ -127,7 +127,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const auto end_0 = policy.m_upper[0];
 
 #pragma omp target teams distribute parallel for map(to : functor)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0) {
       functor(i0);
     }
 #else
@@ -135,7 +135,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     ptrdiff_t end_0         = begin_0 + policy.m_tile[0];
     end_0 = end_0 < policy.m_upper[0] ? end_0 : policy.m_upper[0];
 #pragma omp for
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0) {
       functor(i0);
     }
 #endif
@@ -154,8 +154,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const auto end_1 = policy.m_upper[1];
 
 #pragma omp target teams distribute parallel for collapse(2) map(to : functor)
-    for (auto i0 = begin_0; i0 < end_0; i0++) {
-      for (auto i1 = begin_1; i1 < end_1; i1++) {
+    for (auto i0 = begin_0; i0 < end_0; ++i0) {
+      for (auto i1 = begin_1; i1 < end_1; ++i1) {
         if constexpr (std::is_same<typename Policy::work_tag, void>::value)
           functor(i0, i1);
         else
@@ -172,8 +172,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     end_1 = end_1 < policy.m_upper[1] ? end_1 : policy.m_upper[1];
 
 #pragma omp for collapse(2)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
-      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1) {
         if constexpr (std::is_same<typename Policy::work_tag, void>::value)
           functor(i0, i1);
         else
@@ -197,9 +197,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const auto end_2 = policy.m_upper[2];
 
 #pragma omp target teams distribute parallel for collapse(3) map(to : functor)
-    for (auto i0 = begin_0; i0 < end_0; i0++) {
-      for (auto i1 = begin_1; i1 < end_1; i1++) {
-        for (auto i2 = begin_2; i2 < end_2; i2++) {
+    for (auto i0 = begin_0; i0 < end_0; ++i0) {
+      for (auto i1 = begin_1; i1 < end_1; ++i1) {
+        for (auto i2 = begin_2; i2 < end_2; ++i2) {
           if constexpr (std::is_same<typename Policy::work_tag, void>::value)
             functor(i0, i1, i2);
           else
@@ -221,9 +221,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     end_2 = end_2 < policy.m_upper[2] ? end_2 : policy.m_upper[2];
 
 #pragma omp for collapse(3)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
-      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
-        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2) {
           if constexpr (std::is_same<typename Policy::work_tag, void>::value)
             functor(i0, i1, i2);
           else
@@ -249,10 +249,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const auto end_3 = policy.m_upper[3];
 
 #pragma omp target teams distribute parallel for collapse(4) map(to : functor)
-    for (auto i0 = begin_0; i0 < end_0; i0++) {
-      for (auto i1 = begin_1; i1 < end_1; i1++) {
-        for (auto i2 = begin_2; i2 < end_2; i2++) {
-          for (auto i3 = begin_3; i3 < end_3; i3++) {
+    for (auto i0 = begin_0; i0 < end_0; ++i0) {
+      for (auto i1 = begin_1; i1 < end_1; ++i1) {
+        for (auto i2 = begin_2; i2 < end_2; ++i2) {
+          for (auto i3 = begin_3; i3 < end_3; ++i3) {
             if constexpr (std::is_same<typename Policy::work_tag, void>::value)
               functor(i0, i1, i2, i3);
             else
@@ -279,10 +279,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     end_3 = end_3 < policy.m_upper[3] ? end_3 : policy.m_upper[3];
 
 #pragma omp for collapse(4)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
-      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
-        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++)
-          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2)
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; ++i3) {
             if constexpr (std::is_same<typename Policy::work_tag, void>::value)
               functor(i0, i1, i2, i3);
             else
@@ -310,11 +310,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const auto end_4 = policy.m_upper[4];
 
 #pragma omp target teams distribute parallel for collapse(5) map(to : functor)
-    for (auto i0 = begin_0; i0 < end_0; i0++) {
-      for (auto i1 = begin_1; i1 < end_1; i1++) {
-        for (auto i2 = begin_2; i2 < end_2; i2++) {
-          for (auto i3 = begin_3; i3 < end_3; i3++) {
-            for (auto i4 = begin_4; i4 < end_4; i4++) {
+    for (auto i0 = begin_0; i0 < end_0; ++i0) {
+      for (auto i1 = begin_1; i1 < end_1; ++i1) {
+        for (auto i2 = begin_2; i2 < end_2; ++i2) {
+          for (auto i3 = begin_3; i3 < end_3; ++i3) {
+            for (auto i4 = begin_4; i4 < end_4; ++i4) {
               if constexpr (std::is_same<typename Policy::work_tag,
                                          void>::value)
                 functor(i0, i1, i2, i3, i4);
@@ -347,11 +347,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     end_4 = end_4 < policy.m_upper[4] ? end_4 : policy.m_upper[4];
 
 #pragma omp for collapse(5)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
-      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
-        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++)
-          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++)
-            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2)
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; ++i3)
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; ++i4) {
               if constexpr (std::is_same<typename Policy::work_tag,
                                          void>::value)
                 functor(i0, i1, i2, i3, i4);
@@ -382,12 +382,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const auto end_5 = policy.m_upper[5];
 
 #pragma omp target teams distribute parallel for collapse(6) map(to : functor)
-    for (auto i0 = begin_0; i0 < end_0; i0++) {
-      for (auto i1 = begin_1; i1 < end_1; i1++) {
-        for (auto i2 = begin_2; i2 < end_2; i2++) {
-          for (auto i3 = begin_3; i3 < end_3; i3++) {
-            for (auto i4 = begin_4; i4 < end_4; i4++) {
-              for (auto i5 = begin_5; i5 < end_5; i5++) {
+    for (auto i0 = begin_0; i0 < end_0; ++i0) {
+      for (auto i1 = begin_1; i1 < end_1; ++i1) {
+        for (auto i2 = begin_2; i2 < end_2; ++i2) {
+          for (auto i3 = begin_3; i3 < end_3; ++i3) {
+            for (auto i4 = begin_4; i4 < end_4; ++i4) {
+              for (auto i5 = begin_5; i5 < end_5; ++i5) {
                 {
                   if constexpr (std::is_same<typename Policy::work_tag,
                                              void>::value)
@@ -428,12 +428,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     end_5 = end_5 < policy.m_upper[5] ? end_5 : policy.m_upper[5];
 
 #pragma omp for collapse(6)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
-      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
-        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++)
-          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++)
-            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++)
-              for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2)
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; ++i3)
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; ++i4)
+              for (ptrdiff_t i5 = begin_5; i5 < end_5; ++i5) {
                 if constexpr (std::is_same<typename Policy::work_tag,
                                            void>::value)
                   functor(i0, i1, i2, i3, i4, i5);
@@ -466,13 +466,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const int end_6 = policy.m_upper[6];
 
 #pragma omp target teams distribute parallel for collapse(7) map(to : functor)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
-      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
-        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) {
-          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++) {
-            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++) {
-              for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++) {
-                for (ptrdiff_t i6 = begin_6; i6 < end_6; i6++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0) {
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1) {
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2) {
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; ++i3) {
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; ++i4) {
+              for (ptrdiff_t i5 = begin_5; i5 < end_5; ++i5) {
+                for (ptrdiff_t i6 = begin_6; i6 < end_6; ++i6) {
                   if constexpr (std::is_same<typename Policy::work_tag,
                                              void>::value)
                     functor(i0, i1, i2, i3, i4, i5, i6);
@@ -516,13 +516,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     end_6 = end_6 < policy.m_upper[6] ? end_6 : policy.m_upper[6];
 
 #pragma omp for collapse(7)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
-      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
-        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++)
-          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++)
-            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++)
-              for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++)
-                for (ptrdiff_t i6 = begin_6; i6 < end_6; i6++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2)
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; ++i3)
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; ++i4)
+              for (ptrdiff_t i5 = begin_5; i5 < end_5; ++i5)
+                for (ptrdiff_t i6 = begin_6; i6 < end_6; ++i6) {
                   if constexpr (std::is_same<typename Policy::work_tag,
                                              void>::value)
                     functor(i0, i1, i2, i3, i4, i5, i6);
@@ -558,13 +558,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const int end_7 = policy.m_upper[7];
 
 #pragma omp target teams distribute parallel for collapse(8) map(to : functor)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++) {
-      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++) {
-        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++) {
-          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++) {
-            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++) {
-              for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++) {
-                for (ptrdiff_t i6 = begin_6; i6 < end_6; i6++) {
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0) {
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1) {
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2) {
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; ++i3) {
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; ++i4) {
+              for (ptrdiff_t i5 = begin_5; i5 < end_5; ++i5) {
+                for (ptrdiff_t i6 = begin_6; i6 < end_6; ++i6) {
                   for (ptrdiff_t i7 = begin_7; i7 < end_7; i7++) {
                     if constexpr (std::is_same<typename Policy::work_tag,
                                                void>::value)
@@ -614,13 +614,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     end_7 = end_7 < policy.m_upper[7] ? end_7 : policy.m_upper[7];
 
 #pragma omp for collapse(8)
-    for (ptrdiff_t i0 = begin_0; i0 < end_0; i0++)
-      for (ptrdiff_t i1 = begin_1; i1 < end_1; i1++)
-        for (ptrdiff_t i2 = begin_2; i2 < end_2; i2++)
-          for (ptrdiff_t i3 = begin_3; i3 < end_3; i3++)
-            for (ptrdiff_t i4 = begin_4; i4 < end_4; i4++)
-              for (ptrdiff_t i5 = begin_5; i5 < end_5; i5++)
-                for (ptrdiff_t i6 = begin_6; i6 < end_6; i6++)
+    for (ptrdiff_t i0 = begin_0; i0 < end_0; ++i0)
+      for (ptrdiff_t i1 = begin_1; i1 < end_1; ++i1)
+        for (ptrdiff_t i2 = begin_2; i2 < end_2; ++i2)
+          for (ptrdiff_t i3 = begin_3; i3 < end_3; ++i3)
+            for (ptrdiff_t i4 = begin_4; i4 < end_4; ++i4)
+              for (ptrdiff_t i5 = begin_5; i5 < end_5; ++i5)
+                for (ptrdiff_t i6 = begin_6; i6 < end_6; ++i6)
                   for (ptrdiff_t i7 = begin_7; i7 < end_7; i7++) {
                     if constexpr (std::is_same<typename Policy::work_tag,
                                                void>::value)
@@ -741,8 +741,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
           if constexpr (std::is_same<typename Policy::work_tag, void>::value)
             functor(i0, i1, result);
           else
@@ -752,8 +752,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     } else {
 #pragma omp target teams distribute parallel for collapse(2) map(to : functor) \
 reduction(+:result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
           if constexpr (std::is_same<typename Policy::work_tag, void>::value)
             functor(i0, i1, result);
           else
@@ -796,9 +796,9 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
             if constexpr (std::is_same<typename Policy::work_tag, void>::value)
               functor(i0, i1, i2, result);
             else
@@ -809,9 +809,9 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(3) map(to : functor) \
 reduction(+:result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
             if constexpr (std::is_same<typename Policy::work_tag, void>::value)
               functor(i0, i1, i2, result);
             else
@@ -857,10 +857,10 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
-            for (auto i3 = begin_3; i3 < end_3; i3++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
               if constexpr (std::is_same<typename Policy::work_tag,
                                          void>::value)
                 functor(i0, i1, i2, i3, result);
@@ -873,10 +873,10 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(4) map(to : functor) \
 reduction(+:result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
-            for (auto i3 = begin_3; i3 < end_3; i3++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
               if constexpr (std::is_same<typename Policy::work_tag,
                                          void>::value)
                 functor(i0, i1, i2, i3, result);
@@ -926,11 +926,11 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
-            for (auto i3 = begin_3; i3 < end_3; i3++) {
-              for (auto i4 = begin_4; i4 < end_4; i4++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
                 if constexpr (std::is_same<typename Policy::work_tag,
                                            void>::value)
                   functor(i0, i1, i2, i3, i4, result);
@@ -945,11 +945,11 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(5) map(to : functor) \
 reduction(+:result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
-            for (auto i3 = begin_3; i3 < end_3; i3++) {
-              for (auto i4 = begin_4; i4 < end_4; i4++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
                 if constexpr (std::is_same<typename Policy::work_tag,
                                            void>::value)
                   functor(i0, i1, i2, i3, i4, result);
@@ -1003,12 +1003,12 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
-            for (auto i3 = begin_3; i3 < end_3; i3++) {
-              for (auto i4 = begin_4; i4 < end_4; i4++) {
-                for (auto i5 = begin_5; i5 < end_5; i5++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
+                for (auto i5 = begin_5; i5 < end_5; ++i5) {
                   if constexpr (std::is_same<typename Policy::work_tag,
                                              void>::value)
                     functor(i0, i1, i2, i3, i4, i5, result);
@@ -1024,12 +1024,12 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(6) map(to : functor) \
 reduction(+:result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
-            for (auto i3 = begin_3; i3 < end_3; i3++) {
-              for (auto i4 = begin_4; i4 < end_4; i4++) {
-                for (auto i5 = begin_5; i5 < end_5; i5++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
+                for (auto i5 = begin_5; i5 < end_5; ++i5) {
                   if constexpr (std::is_same<typename Policy::work_tag,
                                              void>::value)
                     functor(i0, i1, i2, i3, i4, i5, result);
@@ -1086,13 +1086,13 @@ reduction(+:result)
                                                                  : functor) \
     reduction(custom                                                        \
               : result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
-            for (auto i3 = begin_3; i3 < end_3; i3++) {
-              for (auto i4 = begin_4; i4 < end_4; i4++) {
-                for (auto i5 = begin_5; i5 < end_5; i5++) {
-                  for (auto i6 = begin_6; i6 < end_6; i6++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
+                for (auto i5 = begin_5; i5 < end_5; ++i5) {
+                  for (auto i6 = begin_6; i6 < end_6; ++i6) {
                     if constexpr (std::is_same<typename Policy::work_tag,
                                                void>::value)
                       functor(i0, i1, i2, i3, i4, i5, i6, result);
@@ -1109,13 +1109,13 @@ reduction(+:result)
     } else {
 #pragma omp target teams distribute parallel for collapse(7) map(to : functor) \
 reduction(+:result)
-      for (auto i0 = begin_0; i0 < end_0; i0++) {
-        for (auto i1 = begin_1; i1 < end_1; i1++) {
-          for (auto i2 = begin_2; i2 < end_2; i2++) {
-            for (auto i3 = begin_3; i3 < end_3; i3++) {
-              for (auto i4 = begin_4; i4 < end_4; i4++) {
-                for (auto i5 = begin_5; i5 < end_5; i5++) {
-                  for (auto i6 = begin_6; i6 < end_6; i6++) {
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        for (auto i1 = begin_1; i1 < end_1; ++i1) {
+          for (auto i2 = begin_2; i2 < end_2; ++i2) {
+            for (auto i3 = begin_3; i3 < end_3; ++i3) {
+              for (auto i4 = begin_4; i4 < end_4; ++i4) {
+                for (auto i5 = begin_5; i5 < end_5; ++i5) {
+                  for (auto i6 = begin_6; i6 < end_6; ++i6) {
                     if constexpr (std::is_same<typename Policy::work_tag,
                                                void>::value)
                       functor(i0, i1, i2, i3, i4, i5, i6, result);
