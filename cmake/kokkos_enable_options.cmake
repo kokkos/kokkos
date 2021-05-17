@@ -28,9 +28,6 @@ KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 
 # Set the Default for Desul Atomics usage. SYCL is not supported yet.
 set(_DESUL_ATOMICS_DEFAULT ON)
-if(KOKKOS_ENABLE_SYCL)
-   set(_DESUL_ATOMICS_DEFAULT OFF)
-endif()
 # Intel 17 has an issue where it generates illegal instructions
 # by padding instructions incorrectly, which appears to happen
 # when asking for a few relaxed atomics close to each other
