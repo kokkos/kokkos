@@ -877,6 +877,16 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   friend class TeamPolicyInternal;
 
  public:
+  // FIXME_OPENMPTARGET : Currently this routine is a copy of the Cuda
+  // implementation, but this has to be tailored to be architecture specific.
+  inline static int scratch_size_max(int level) {
+    return (
+        level == 0 ? 1024 * 40 :  // 48kB is the max for CUDA, but we need some
+                                  // for team_member.reduce etc.
+            20 * 1024 *
+                1024);  // arbitrarily setting this to 20MB, for a Volta V100
+                        // that would give us about 3.2GB for 2 teams per SM
+  }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline void impl_set_team_size(const size_t size) { m_team_size = size; }
