@@ -698,24 +698,71 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
                               void*>::type = NULL)
-      : m_functor(arg_functor),
+      : m_result_ptr(arg_result_view.data()),
+        m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
-        m_result_ptr(arg_result_view.data()),
         m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ViewType::memory_space>::accessible) {}
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
                         const ReducerType& reducer)
-      : m_functor(arg_functor),
+      : m_result_ptr(reducer.view().data()),
+        m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
-        m_result_ptr(reducer.view().data()),
         m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ReducerType::result_view_type::
                                   memory_space>::accessible) {}
+
+  template <int Rank, class ValueType>
+  inline typename std::enable_if<Rank == 1>::type execute_tile(
+      const FunctorType& functor, const Policy& policy,
+      pointer_type ptr) const {
+    const auto begin_0 = policy.m_lower[0];
+
+    const auto end_0 = policy.m_upper[0];
+
+    ValueType result = ValueType();
+
+    // FIXME_OPENMPTARGET: Unable to separate directives and their companion
+    // loops which leads to code duplication for different reduction types.
+    if constexpr (UseReducer) {
+#pragma omp declare reduction(                                         \
+    custom:ValueType                                                   \
+    : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
+    initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
+
+#pragma omp target teams distribute parallel for map(to         \
+                                                     : functor) \
+    reduction(custom                                            \
+              : result)
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+          functor(i0, result);
+        else
+          functor(typename Policy::work_tag(), i0, result);
+      }
+    } else {
+#pragma omp target teams distribute parallel for map(to : functor) \
+reduction(+:result)
+      for (auto i0 = begin_0; i0 < end_0; ++i0) {
+        if constexpr (std::is_same<typename Policy::work_tag, void>::value)
+          functor(i0, result);
+        else
+          functor(typename Policy::work_tag(), i0, result);
+      }
+    }
+
+    if (m_result_ptr_on_device)
+      OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
+                                       omp_get_default_device(),
+                                       omp_get_initial_device()));
+    else
+      *ptr = result;
+  }
 
   template <int Rank, class ValueType>
   inline typename std::enable_if<Rank == 2>::type execute_tile(
@@ -1137,6 +1184,11 @@ reduction(+:result)
                                        omp_get_initial_device()));
     else
       *ptr = result;
+  }
+
+  template <typename Policy, typename Functor>
+  static int max_tile_size_product(const Policy&, const Functor&) {
+    return 256;
   }
 };
 

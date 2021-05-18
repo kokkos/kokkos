@@ -838,30 +838,30 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
                               void*>::type = nullptr)
-      : m_functor(arg_functor),
+      : m_result_ptr_on_device(
+            MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
+                              typename ViewType::memory_space>::accessible),
+        m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
         m_result_ptr(arg_result.data()),
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
-                         arg_functor, arg_policy.team_size())),
-        m_result_ptr_on_device(
-            MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
-                              typename ViewType::memory_space>::accessible) {}
+                         arg_functor, arg_policy.team_size())) {}
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
                         const ReducerType& reducer)
-      : m_functor(arg_functor),
+      : m_result_ptr_on_device(
+            MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
+                              typename ReducerType::result_view_type::
+                                  memory_space>::accessible),
+        m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
         m_result_ptr(reducer.view().data()),
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
-                         arg_functor, arg_policy.team_size())),
-        m_result_ptr_on_device(
-            MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
-                              typename ReducerType::result_view_type::
-                                  memory_space>::accessible) {}
+                         arg_functor, arg_policy.team_size())) {}
 };
 
 }  // namespace Impl
