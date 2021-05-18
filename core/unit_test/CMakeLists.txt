@@ -124,6 +124,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         MDRange_a
         MDRange_b
         MDRange_c
+        MultiThreadsRange
         HostSharedPtr
         HostSharedPtrAccessOnDevice
         QuadPrecisionMath
