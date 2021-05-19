@@ -867,3 +867,44 @@ TEST(TEST_CATEGORY,
 #endif
 #endif
 }
+
+template <class Space>
+struct TestAbsoluteValueFunction {
+  TestAbsoluteValueFunction() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using Kokkos::Experimental::abs;
+    if (abs(+1) != 1 || abs(-1) != 1) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(int)\n");
+    }
+    if (abs(2.) != 2. || abs(-2.) != 2.) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(double)\n");
+    }
+    // special values
+    using Kokkos::Experimental::isinf;
+    using Kokkos::Experimental::isnan;
+    if (abs(-0.) != 0. || !isinf(abs(-INFINITY)) || !isnan(-NAN)) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(double) special values\n");
+    }
+
+    static_assert(std::is_same<decltype(abs(1)), int>::value, "");
+    static_assert(std::is_same<decltype(abs(2l)), long>::value, "");
+    static_assert(std::is_same<decltype(abs(3ll)), long long>::value, "");
+    static_assert(std::is_same<decltype(abs(4.f)), float>::value, "");
+    static_assert(std::is_same<decltype(abs(5.)), double>::value, "");
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    static_assert(std::is_same<decltype(abs(6.l)), long double>::value, "");
+#endif
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_absolute_value) {
+  TestAbsoluteValueFunction<TEST_EXECSPACE>();
+}
