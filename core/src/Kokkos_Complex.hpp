@@ -718,9 +718,10 @@ KOKKOS_INLINE_FUNCTION RealType imag(const complex<RealType>& x) noexcept {
   return x.imag();
 }
 
-template <class T>
-KOKKOS_INLINE_FUNCTION constexpr Impl::promote_t<T> imag(T) {
-  return T();
+template <class ArithmeticType>
+KOKKOS_INLINE_FUNCTION constexpr Impl::promote_t<ArithmeticType> imag(
+    ArithmeticType) {
+  return ArithmeticType();
 }
 
 //! Real part of a complex number.
@@ -729,8 +730,9 @@ KOKKOS_INLINE_FUNCTION RealType real(const complex<RealType>& x) noexcept {
   return x.real();
 }
 
-template <class T>
-KOKKOS_INLINE_FUNCTION constexpr Impl::promote_t<T> real(T x) {
+template <class ArithmeticType>
+KOKKOS_INLINE_FUNCTION constexpr Impl::promote_t<ArithmeticType> real(
+    ArithmeticType x) {
   return x;
 }
 
@@ -826,9 +828,10 @@ KOKKOS_INLINE_FUNCTION complex<RealType> conj(
   return complex<RealType>(real(x), -imag(x));
 }
 
-template <class T>
-KOKKOS_INLINE_FUNCTION constexpr complex<Impl::promote_t<T>> conj(T x) {
-  using type = Impl::promote_t<T>;
+template <class ArithmeticType>
+KOKKOS_INLINE_FUNCTION constexpr complex<Impl::promote_t<ArithmeticType>> conj(
+    ArithmeticType x) {
+  using type = Impl::promote_t<ArithmeticType>;
   return complex<type>(x, -type());
 }
 
