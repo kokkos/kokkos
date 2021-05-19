@@ -878,18 +878,36 @@ struct TestAbsoluteValueFunction {
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
     using Kokkos::Experimental::abs;
-    if (abs(+1) != 1 || abs(-1) != 1) {
+    if (abs(1) != 1 || abs(-1) != 1) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(int)\n");
     }
-    if (abs(2.) != 2. || abs(-2.) != 2.) {
+    if (abs(2l) != 2l || abs(-2l) != 2l) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(long int)\n");
+    }
+    if (abs(3ll) != 3ll || abs(-3ll) != 3ll) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(long long int)\n");
+    }
+    if (abs(4.f) != 4.f || abs(-4.f) != 4.f) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(float)\n");
+    }
+    if (abs(5.) != 5. || abs(-5.) != 5.) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(double)\n");
     }
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    if (abs(6.l) != 6.l || abs(-6.l) != 6.l) {
+      ++e;
+      KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(long double)\n");
+    }
+#endif
     // special values
     using Kokkos::Experimental::isinf;
     using Kokkos::Experimental::isnan;
-    if (abs(-0.) != 0. || !isinf(abs(-INFINITY)) || !isnan(-NAN)) {
+    if (abs(-0.) != 0. || !isinf(abs(-INFINITY)) || !isnan(abs(-NAN))) {
       ++e;
       KOKKOS_IMPL_DO_NOT_USE_PRINTF("failed abs(double) special values\n");
     }
