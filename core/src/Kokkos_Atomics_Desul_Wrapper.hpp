@@ -11,7 +11,7 @@
 // clang-format off
 namespace Kokkos {
 
-// These functions don't have any use/test in unit tests ...
+// FIXME: These functions don't have any use/test in unit tests ...
 // ==========================================================
 inline const char* atomic_query_version() { return "KOKKOS_DESUL_ATOMICS"; }
 

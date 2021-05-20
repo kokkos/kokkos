@@ -100,9 +100,6 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
 #        libatomic
 IF (KOKKOS_ENABLE_IMPL_DESUL_ATOMICS AND
     KOKKOS_ENABLE_OPENMPTARGET)
-#  (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU") AND
-#    (NOT APPLE))
-  list(APPEND CMAKE_REQUIRED_LIBRARIES "atomic")
   target_link_libraries(kokkoscore PUBLIC atomic)
 ENDIF()
 
