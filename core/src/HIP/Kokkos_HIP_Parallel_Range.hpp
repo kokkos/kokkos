@@ -108,16 +108,21 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   inline void execute() const {
     const typename Policy::index_type nwork = m_policy.end() - m_policy.begin();
 
+    using DriverType =
+        ParallelFor<FunctorType, Policy, Kokkos::Experimental::HIP>;
     const int block_size =
-        LaunchBounds::maxTperB
-            ? LaunchBounds::maxTperB
-            : ::Kokkos::Experimental::Impl::HIPTraits::
-                  MaxThreadsPerBlock;  // FIXME_HIP Choose block_size better
+        Kokkos::Experimental::Impl::hip_get_preferred_blocksize<DriverType,
+                                                                LaunchBounds>();
     const dim3 block(1, block_size, 1);
     const dim3 grid(
         typename Policy::index_type((nwork + block.y - 1) / block.y), 1, 1);
 
-    Kokkos::Experimental::Impl::HIPParallelLaunch<ParallelFor, LaunchBounds>(
+    if (block_size == 0) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelFor< HIP > could not find a "
+                      "valid execution configuration."));
+    }
+    Kokkos::Experimental::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
         *this, grid, block, 0, m_policy.space().impl_internal_space_instance(),
         false);
   }
@@ -328,30 +333,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    unsigned int n =
-        ::Kokkos::Experimental::Impl::HIPTraits::MaxThreadsPerBlock;
-    int shmem_size =
-        hip_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
-            f, n);
-    using closure_type = Impl::ParallelReduce<FunctorType, Policy, ReducerType>;
-    hipFuncAttributes attr = ::Kokkos::Experimental::Impl::HIPParallelLaunch<
-        closure_type, LaunchBounds>::get_hip_func_attributes();
-    while (
-        (n &&
-         (m_policy.space().impl_internal_space_instance()->m_maxShmemPerBlock <
-          shmem_size)) ||
-        (n >
-         static_cast<unsigned int>(
-             ::Kokkos::Experimental::Impl::hip_get_max_block_size<FunctorType,
-                                                                  LaunchBounds>(
-                 m_policy.space().impl_internal_space_instance(), attr, f, 1,
-                 shmem_size, 0)))) {
-      n >>= 1;
-      shmem_size =
-          hip_single_inter_block_reduce_scan_shmem<false, FunctorType, WorkTag>(
-              f, n);
-    }
-    return n;
+    const auto& instance = m_policy.space().impl_internal_space_instance();
+    auto shmem_functor   = [&f](unsigned n) {
+      return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
+                                                      WorkTag>(f, n);
+    };
+    using DriverType = ParallelReduce<FunctorType, Policy, ReducerType,
+                                      Kokkos::Experimental::HIP>;
+    return Kokkos::Experimental::Impl::hip_get_preferred_blocksize<
+        DriverType, LaunchBounds>(instance, shmem_functor);
   }
 
   inline void execute() {
@@ -362,7 +352,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  !std::is_same<ReducerType, InvalidType>::value;
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
-      KOKKOS_ASSERT(block_size > 0);
+      if (block_size == 0) {
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
+                        "valid execution configuration."));
+      }
 
       m_scratch_space =
           ::Kokkos::Experimental::Impl::hip_internal_scratch_space(
@@ -391,8 +385,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                                          WorkTag>(m_functor,
                                                                   block.y);
 
-      Kokkos::Experimental::Impl::HIPParallelLaunch<ParallelReduce,
-                                                    LaunchBounds>(
+      using DriverType = ParallelReduce<FunctorType, Policy, ReducerType,
+                                        Kokkos::Experimental::HIP>;
+      Kokkos::Experimental::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space().impl_internal_space_instance(),
           false);  // copy to device and execute
@@ -624,22 +619,7 @@ class ParallelScanHIPBase {
   }
 
   // Determine block size constrained by shared memory:
-  inline unsigned local_block_size(const FunctorType& f) {
-    // blockDim.y must be power of two = 128 (2 warps) or 256 (4 warps) or
-    // 512 (8 warps) gridDim.x <= blockDim.y * blockDim.y
-    //
-    // TODO check best option
-
-    unsigned n = Experimental::Impl::HIPTraits::WarpSize * 4;
-    while (n && static_cast<unsigned>(m_policy.space()
-                                          .impl_internal_space_instance()
-                                          ->m_maxShmemPerBlock) <
-                    hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
-                                                             WorkTag>(f, n)) {
-      n >>= 1;
-    }
-    return n;
-  }
+  virtual inline unsigned local_block_size(const FunctorType& f) = 0;
 
   inline void impl_execute() {
     const index_type nwork = m_policy.end() - m_policy.begin();
@@ -649,7 +629,11 @@ class ParallelScanHIPBase {
       const int gridMaxComputeCapability_2x = 0x01fff;
 
       const int block_size = static_cast<int>(local_block_size(m_functor));
-      KOKKOS_ASSERT(block_size > 0);
+      if (block_size == 0) {
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
+                        "valid execution configuration."));
+      }
 
       const int grid_max =
           std::min(block_size * block_size, gridMaxComputeCapability_2x);
@@ -674,15 +658,16 @@ class ParallelScanHIPBase {
       const int shmem = ValueTraits::value_size(m_functor) * (block_size + 2);
 
       m_final = false;
-      Kokkos::Experimental::Impl::HIPParallelLaunch<ParallelScanHIPBase,
-                                                    LaunchBounds>(
+      // these ones are OK to be just the base because the specializations
+      // do not modify the kernel at all
+      using DriverType = ParallelScanHIPBase<FunctorType, Traits...>;
+      Kokkos::Experimental::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space().impl_internal_space_instance(),
           false);  // copy to device and execute
 
       m_final = true;
-      Kokkos::Experimental::Impl::HIPParallelLaunch<ParallelScanHIPBase,
-                                                    LaunchBounds>(
+      Kokkos::Experimental::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space().impl_internal_space_instance(),
           false);  // copy to device and execute
@@ -696,7 +681,7 @@ class ParallelScanHIPBase {
 template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Experimental::HIP>
-    : private ParallelScanHIPBase<FunctorType, Traits...> {
+    : public ParallelScanHIPBase<FunctorType, Traits...> {
  public:
   using Base = ParallelScanHIPBase<FunctorType, Traits...>;
   using Base::operator();
@@ -706,6 +691,23 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   ParallelScan(const FunctorType& arg_functor,
                const typename Base::Policy& arg_policy)
       : Base(arg_functor, arg_policy) {}
+
+  inline unsigned local_block_size(const FunctorType& f) {
+    // blockDim.y must be power of two = 128 (2 warps) or 256 (4 warps) or
+    // 512 (8 warps) gridDim.x <= blockDim.y * blockDim.y
+
+    const auto& instance =
+        Base::m_policy.space().impl_internal_space_instance();
+    auto shmem_functor = [&f](unsigned n) {
+      return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
+                                                      typename Base::WorkTag>(
+          f, n);
+    };
+    using DriverType = ParallelScan<FunctorType, typename Base::Policy,
+                                    Kokkos::Experimental::HIP>;
+    return Kokkos::Experimental::Impl::hip_get_preferred_blocksize<
+        DriverType, typename Base::LaunchBounds>(instance, shmem_functor);
+  }
 };
 
 //----------------------------------------------------------------------------
@@ -713,7 +715,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::HIP>
-    : private ParallelScanHIPBase<FunctorType, Traits...> {
+    : public ParallelScanHIPBase<FunctorType, Traits...> {
  public:
   using Base = ParallelScanHIPBase<FunctorType, Traits...>;
   using Base::operator();
@@ -737,6 +739,24 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                         const typename Base::Policy& arg_policy,
                         ReturnType& arg_returnvalue)
       : Base(arg_functor, arg_policy), m_returnvalue(arg_returnvalue) {}
+
+  inline unsigned local_block_size(const FunctorType& f) {
+    // blockDim.y must be power of two = 128 (2 warps) or 256 (4 warps) or
+    // 512 (8 warps) gridDim.x <= blockDim.y * blockDim.y
+
+    const auto& instance =
+        Base::m_policy.space().impl_internal_space_instance();
+    auto shmem_functor = [&f](unsigned n) {
+      return hip_single_inter_block_reduce_scan_shmem<false, FunctorType,
+                                                      typename Base::WorkTag>(
+          f, n);
+    };
+    using DriverType =
+        ParallelScanWithTotal<FunctorType, typename Base::Policy, ReturnType,
+                              Kokkos::Experimental::HIP>;
+    return Kokkos::Experimental::Impl::hip_get_preferred_blocksize<
+        DriverType, typename Base::LaunchBounds>(instance, shmem_functor);
+  }
 };
 
 }  // namespace Impl

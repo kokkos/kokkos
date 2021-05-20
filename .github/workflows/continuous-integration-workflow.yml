@@ -19,11 +19,11 @@ jobs:
             cxx: 'icpc'
             cmake_build_type: 'Debug'
             openmp: 'ON'
-          - distro: 'fedora:intel-oneapi'
+          - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Release'
             openmp: 'ON'
-          - distro: 'fedora:intel-oneapi'
+          - distro: 'fedora:intel'
             cxx: 'icpx'
             cmake_build_type: 'Debug'
             openmp: 'ON'
@@ -37,11 +37,6 @@ jobs:
           path: ~/.ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${github.ref}-${{ github.sha }}
           restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{github.ref}}
-      - name: Get trial license
-        if: ${{ matrix.cxx == 'icpc' }}
-        run: |
-          mkdir ~/Licenses
-          curl https://dynamicinstaller.intel.com/api/v2/license > ~/Licenses/intel.lic
       - name: maybe_disable_death_tests
         if: ${{ matrix.distro == 'fedora:rawhide' }}
         run: echo "GTEST_FILTER=-*DeathTest*" >> $GITHUB_ENV

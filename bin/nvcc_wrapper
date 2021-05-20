@@ -96,7 +96,7 @@ replace_pragma_ident=0
 first_xcompiler_arg=1
 
 # Allow for setting temp dir without setting TMPDIR in parent (see https://docs.olcf.ornl.gov/systems/summit_user_guide.html#setting-tmpdir-causes-jsm-jsrun-errors-job-state-flip-flop)
-if [[ ! -z ${NVCC_WRAPPER_TMPDIR+x} ]]; then
+if [[ -z ${NVCC_WRAPPER_TMPDIR+x} ]]; then
   temp_dir=${TMPDIR:-/tmp}
 else
   temp_dir=${NVCC_WRAPPER_TMPDIR+x}
@@ -214,7 +214,7 @@ do
         rdc_flag="$1 $2"
         cuda_args="$cuda_args $rdc_flag"
         shift
-    elif [ "$rdc_flag" = "$1 $2" ]; then
+    elif [ "$rdc_flag" != "$1 $2" ]; then
         echo "RDC is being set twice with different flags, which is not handled"
         echo "$rdc_flag"
         echo "$1 $2"
@@ -222,7 +222,7 @@ do
     fi
     ;;
   #Handle known nvcc args
-  --dryrun|--verbose|--keep|--keep-dir*|-G|-lineinfo|-expt-extended-lambda|-expt-relaxed-constexpr|--resource-usage|-Xptxas*|--fmad*|--use_fast_math|--Wext-lambda-captures-this|-Wext-lambda-captures-this)
+  --dryrun|--verbose|--keep|--keep-dir*|-G|-lineinfo|-expt-extended-lambda|-expt-relaxed-constexpr|--resource-usage|-Xptxas*|--fmad=*|--use_fast_math|--Wext-lambda-captures-this|-Wext-lambda-captures-this)
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
@@ -230,12 +230,12 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument
-  -maxrregcount|--default-stream|-Xnvlink|--fmad|-cudart|--cudart|-include)
+  -maxrregcount=*|--maxrregcount=*|-time=*)
+    cuda_args="$cuda_args $1"
+    ;;
+  -maxrregcount|--default-stream|-Xnvlink|--fmad|-cudart|--cudart|-include|-time)
     cuda_args="$cuda_args $1 $2"
     shift
-    ;;
-  -maxrregcount*|--maxrregcount*)
-    cuda_args="$cuda_args $1"
     ;;
   #Handle unsupported standard flags
   --std=c++1y|-std=c++1y|--std=gnu++1y|-std=gnu++1y|--std=c++1z|-std=c++1z|--std=gnu++1z|-std=gnu++1z|--std=c++2a|-std=c++2a)
@@ -373,7 +373,7 @@ do
         arch_flag="$1 $2"
         cuda_args="$cuda_args $arch_flag"
         shift
-    elif [ "$arch_flag" = "$1 $2" ]; then
+    elif [ "$arch_flag" != "$1 $2" ]; then
         echo "ARCH is being set twice with different flags, which is not handled"
         echo "$arch_flag"
         echo "$1 $2"
@@ -552,14 +552,14 @@ if [ $host_only -eq 1 ]; then
   $host_command
 elif [ -n "$nvcc_depfile_command" ]; then
   if [ "$NVCC_WRAPPER_SHOW_COMMANDS_BEING_RUN" == "1" ] ; then
-    echo "$nvcc_command && $nvcc_depfile_command"
+    echo "TMPDIR=${temp_dir} $nvcc_command && TMPDIR=${temp_dir} $nvcc_depfile_command"
   fi
-  $nvcc_command && $nvcc_depfile_command
+  TMPDIR=${temp_dir} $nvcc_command && TMPDIR=${temp_dir} $nvcc_depfile_command
 else
   if [ "$NVCC_WRAPPER_SHOW_COMMANDS_BEING_RUN" == "1" ] ; then
-    echo "$nvcc_command"
+    echo "TMPDIR=${temp_dir} $nvcc_command"
   fi
-  $nvcc_command
+  TMPDIR=${temp_dir} $nvcc_command
 fi
 error_code=$?
 
