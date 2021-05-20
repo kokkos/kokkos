@@ -66,6 +66,21 @@ bool g_serial_is_initialized = false;
 
 }  // namespace
 
+SerialInternal& SerialInternal::singleton() {
+  static SerialInternal* self = nullptr;
+  if (!self) {
+    self = new SerialInternal();
+  }
+  return *self;
+}
+}  // namespace Impl
+
+Serial::Serial()
+    : m_space_instance(&Impl::SerialInternal::singleton(),
+                       [](Impl::SerialInternal*) {}) {}
+
+namespace Impl {
+
 // Resize thread team data scratch memory
 void serial_resize_thread_team_data(size_t pool_reduce_bytes,
                                     size_t team_reduce_bytes,
