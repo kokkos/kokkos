@@ -610,15 +610,11 @@ struct TestLambdaSharedTeam {
         Kokkos::View<int *, shmem_space, Kokkos::MemoryUnmanaged>;
 
     const int SHARED_COUNT = 1000;
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    int team_size = 32;
-#else
-    int team_size = 1;
-#endif
-
-#ifdef KOKKOS_ENABLE_CUDA
-    if (std::is_same<ExecSpace, Kokkos::Cuda>::value) team_size = 128;
-#endif
+    int team_size          = 1;
+    if (std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value)
+      team_size = 32;
+    else if (std::is_same<ExecSpace, Kokkos::Cuda>::value)
+      team_size = 128;
 
     Kokkos::TeamPolicy<ScheduleType, ExecSpace> team_exec(8192 / team_size,
                                                           team_size);

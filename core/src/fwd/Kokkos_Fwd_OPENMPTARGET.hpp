@@ -45,12 +45,16 @@
 #ifndef KOKKOS_OPENMPTARGET_FWD_HPP_
 #define KOKKOS_OPENMPTARGET_FWD_HPP_
 
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
 namespace Kokkos {
 namespace Experimental {
 class OpenMPTarget;  ///< OpenMPTarget execution space.
 class OpenMPTargetSpace;
 }  // namespace Experimental
-}  // namespace Kokkos
+#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
+template <>
+struct IsSpaceAvailable<Experimental::OpenMPTarget> : std::false_type {};
+template <>
+struct IsSpaceAvailable<Experimental::OpenMPTargetSpace> : std::false_type {};
 #endif
+}  // namespace Kokkos
 #endif

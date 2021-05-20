@@ -45,9 +45,11 @@
 #ifndef KOKKOS_OPENMP_FWD_HPP_
 #define KOKKOS_OPENMP_FWD_HPP_
 
-#if defined(KOKKOS_ENABLE_OPENMP)
 namespace Kokkos {
 class OpenMP;  ///< OpenMP execution space.
-}  // namespace Kokkos
+#if !defined(KOKKOS_ENABLE_OPENMP)
+template <>
+struct IsSpaceAvailable<OpenMP> : std::false_type {};
 #endif
+}  // namespace Kokkos
 #endif

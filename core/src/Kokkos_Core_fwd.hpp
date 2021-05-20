@@ -55,6 +55,8 @@
 
 #include <Kokkos_MasterLock.hpp>
 
+#include <type_traits>  // std::true_type, std::false_type
+
 //----------------------------------------------------------------------------
 // Have assumed a 64bit build (8byte pointers) throughout the code base.
 
@@ -94,6 +96,14 @@ struct Device;
 // forward declare here so that backend initializer calls can use it.
 struct InitArguments;
 
+}  // namespace Kokkos
+
+//--------------------------------------------------------------------------------------//
+//  this is used to mark execution or memory spaces as not available
+//
+namespace Kokkos {
+template <typename Tp>
+struct IsSpaceAvailable : std::true_type {};
 }  // namespace Kokkos
 
 // Include backend forward statements as determined by build options
@@ -332,6 +342,42 @@ template <class ScalarType, class Space = HostSpace>
 struct LAnd;
 template <class ScalarType, class Space = HostSpace>
 struct LOr;
+
+namespace Impl {
+template <typename... T>
+struct GatherActiveSpaces;
+
+template <class, class>
+struct Concatenate;
+template <class... First, class... Second>
+struct Concatenate<type_list<First...>, type_list<Second...>> {
+  using type = type_list<First..., Second...>;
+};
+
+template <typename... T>
+struct GatherActiveSpaces;
+template <>
+struct GatherActiveSpaces<> {
+  using type = type_list<>;
+};
+template <typename T, typename... Ts>
+struct GatherActiveSpaces<T, Ts...> {
+  using other_types = typename GatherActiveSpaces<Ts...>::type;
+  using type        = typename std::conditional<
+      IsSpaceAvailable<T>{},
+      typename Concatenate<type_list<T>, other_types>::type, other_types>::type;
+};
+}  // namespace Impl
+
+using ActiveExecutionSpaces =
+    Impl::GatherActiveSpaces<Serial, Threads, OpenMP, Cuda,
+                             Experimental::OpenMPTarget, Experimental::HIP,
+                             Experimental::SYCL>::type;
+using ActiveMemorySpaces = Impl::GatherActiveSpaces<
+    HostSpace, Experimental::HBWSpace, CudaSpace, CudaHostPinnedSpace,
+    CudaUVMSpace, Experimental::OpenMPTargetSpace, Experimental::HIPSpace,
+    Experimental::HIPHostPinnedSpace, Experimental::SYCLDeviceUSMSpace,
+    Experimental::SYCLSharedUSMSpace>::type;
 
 }  // namespace Kokkos
 

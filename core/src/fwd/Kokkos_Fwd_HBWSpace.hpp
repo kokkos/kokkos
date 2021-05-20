@@ -45,13 +45,15 @@
 #ifndef KOKKOS_HBWSPACE_FWD_HPP_
 #define KOKKOS_HBWSPACE_FWD_HPP_
 
-#ifdef KOKKOS_ENABLE_HBWSPACE
 namespace Kokkos {
 
 namespace Experimental {
 class HBWSpace;  /// Memory space for hbw_malloc from memkind (e.g. for KNL
                  /// processor)
 }  // namespace Experimental
-}  // namespace Kokkos
+#if !defined(KOKKOS_ENABLE_HBWSPACE)
+template <>
+struct IsSpaceAvailable<Experimental::HBWSpace> : std::false_type {};
 #endif
+}  // namespace Kokkos
 #endif

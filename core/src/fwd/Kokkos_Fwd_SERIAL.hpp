@@ -45,9 +45,11 @@
 #ifndef KOKKOS_SERIAL_FWD_HPP_
 #define KOKKOS_SERIAL_FWD_HPP_
 
-#if defined(KOKKOS_ENABLE_SERIAL)
 namespace Kokkos {
 class Serial;  ///< Execution space main process on CPU.
-}  // namespace Kokkos
+#if !defined(KOKKOS_ENABLE_SERIAL)
+template <>
+struct IsSpaceAvailable<Serial> : std::false_type {};
 #endif
+}  // namespace Kokkos
 #endif

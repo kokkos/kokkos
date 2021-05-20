@@ -265,11 +265,9 @@ void check_correct_initialization(const Kokkos::InitArguments& argstruct) {
       expected_numa = 1;
     }
 
-#ifdef KOKKOS_ENABLE_SERIAL
     if (std::is_same<Kokkos::DefaultExecutionSpace, Kokkos::Serial>::value ||
         std::is_same<Kokkos::DefaultHostExecutionSpace, Kokkos::Serial>::value)
       expected_numa = 1;
-#endif
   }
 
   ASSERT_EQ(Kokkos::HostSpace::execution_space::impl_thread_pool_size(),
