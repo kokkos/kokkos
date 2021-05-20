@@ -52,41 +52,76 @@
 namespace Test {
 
 TEST(defaultdevicetype, development_test) {
-  // Instantiate default constructor
-  auto v = Kokkos::View<int*>{};
-  // Instantiate with label and size
-  auto v2 = Kokkos::View<int*>{"hello", 42};
-  // Instantiate with raw pointer
-  int data[]   = {1, 2, 3, 4};
-  auto vstatic = Kokkos::View<int[4]>{Kokkos::view_wrap(data)};
-  // Instantiate with view_alloc
-  auto v4 = Kokkos::View<int*>{
-      Kokkos::view_alloc("hello", Kokkos::WithoutInitializing), 42};
-  // Instantiate with view_alloc allow padding (TODO make this actually work at runtime)
-  // TODO this should fail if the layout doesn't support padding
-  auto v5 =
-      Kokkos::View<int*>{Kokkos::view_alloc("hello", Kokkos::AllowPadding), 42};
+/*
+template <std::size_t Idx, std::ptrdiff_t Extent, class Strides, class Exts,
+          class Idxs, bool LayoutLeftBased>
+struct stride_storage_common;
+template <std::size_t Idx, std::ptrdiff_t Extent,
+          std::ptrdiff_t... StaticStrides, std::ptrdiff_t... Exts,
+          std::size_t... Idxs, bool LayoutLeftBased>
+struct stride_storage_common<
+    Idx, Extent, std::integer_sequence<std::ptrdiff_t, StaticStrides...>,
+    std::experimental::extents<Exts...>,
+    std::integer_sequence<std::size_t, Idxs...>, LayoutLeftBased> {
+*/
+ /*           
+template <std::ptrdiff_t StaticStride, std::ptrdiff_t Extent,
+          std::ptrdiff_t Idx, class StaticStrides, class Extents, class IdxPack,
+          bool LayoutLeftDerived, class Enable = void>
+struct stride_storage_impl;*/
+/*
+// Integer compile-time constant stride case
+template <std::ptrdiff_t StaticStride, std::ptrdiff_t Extent,
+          std::ptrdiff_t Idx, class Strides, class Extents, class Idxs,
+          bool LayoutLeftBased>
+struct stride_storage_impl<
+    StaticStride, Extent, Idx, Strides, Extents, Idxs, LayoutLeftBased,
+    std::enable_if_t<(StaticStride > 0) &&
+                     StaticStride != std::experimental::dynamic_extent>>
+    : stride_storage_common<Idx, Extent, Strides, Extents, Idxs,
+                            LayoutLeftBased> {
+                            */
+/*
+template <std::ptrdiff_t StaticStride, std::ptrdiff_t Extent,
+          std::ptrdiff_t Idx, class Strides, class Extents, class Idxs,
+          bool LayoutLeftBased>
+struct stride_storage_impl<
+    StaticStride, Extent, Idx, Strides, Extents, Idxs, LayoutLeftBased,
+    std::enable_if_t<is_static_dimension_stride<StaticStride>>>
+    : stride_storage_common<Idx, Extent, Strides, Extents, Idxs,
+                            LayoutLeftBased> {
+*/
+        //using dyn = std::experimental::dynamic_extent;
+        //Kokkos::Impl::MDSpanLayoutForLayoutRightImpl<std::experimental::extents<-1,-1,-1>> foo;
+        //Kokkos::Impl::layout_stride_general_impl<false, std::integer_sequence<long, 1, -1, -9223372036854775807>, std::experimental::extents<-1, -1, -1>, std::integer_sequence<unsigned long, 0, 1, 2>> bar;
+        //Kokkos::Impl::layout_stride_general_impl<false, std::integer_sequence<long, -9223372036854775807, -1, 1>, std::experimental::extents<-1, -1, -1>, std::integer_sequence<unsigned long, 0, 1, 2>> bar;
+        //Kokkos::Impl::layout_stride_general_impl<false, std::integer_sequence<long, 1, -1, 1>, std::experimental::extents<-1, -1, -1>, std::integer_sequence<unsigned long, 0, 1, 2>> bar;
 
-  // Conversion to compatible accessor
-  using view_atomic =
-      Kokkos::View<int*, Kokkos::MemoryTraits<Kokkos::Atomic>>::basic_view_type;
-  auto vatomic = view_atomic{v2};
+        std::array<ptrdiff_t,1> array{1};
+        std::experimental::extents<-1> ext(array);
+        {
+          Kokkos::BasicView<int ***, Kokkos::LayoutRight, Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>> foo("A",7,3,5);
 
-  // Conversion to dynamic
-  auto vdyn = Kokkos::View<int*>{vstatic};
+          printf("%p %p %p %p %p\n",foo.data(),&foo(0,0,1),&foo(0,1,0),&foo(1,0,0),&foo(3,2,3));
+          printf("%p %li %li %li %li\n",foo.data(),ptrdiff_t(&foo(0,2,3)-foo.data()),ptrdiff_t(&foo(0,1,0)-foo.data()),ptrdiff_t(&foo(1,0,0)-foo.data()),ptrdiff_t(&foo(3,2,3)-foo.data()));
+        }
+        {
+          Kokkos::BasicView<int ***, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>> foo("A",7,3,5);
 
-  auto vstatic2 = Kokkos::View<int*[4]>{"hello2", 10};
-  auto vstatic3 = Kokkos::View<int[3][4]>{Kokkos::view_wrap(data)};
-  auto vdyn2 = Kokkos::View<int**>{vstatic2};
-  auto vdyn3 = Kokkos::View<int**>{vstatic3};
-  // TODO converting assignment operator
-  // vstatic2 = vstatic3;
+          printf("%p %p %p %p %p\n",foo.data(),&foo(0,0,1),&foo(0,1,0),&foo(1,0,0),&foo(3,2,3));
+          printf("%p %li %li %li %li\n",foo.data(),ptrdiff_t(&foo(0,2,3)-foo.data()),ptrdiff_t(&foo(0,1,0)-foo.data()),ptrdiff_t(&foo(1,0,0)-foo.data()),ptrdiff_t(&foo(3,2,3)-foo.data()));
+        }
 
-  // Instantiate default 2d ctor
-  auto v2d = Kokkos::View<int**>{};
-  auto v2static1 = Kokkos::View<int*[3]>{};
-  auto v2static2 = Kokkos::View<int[7][3]>{};
-  auto v2staticr1 = Kokkos::View<int*[3], Kokkos::LayoutRight>{};
+
+        Kokkos::View<int**,Kokkos::OpenMP> a("A",5,5);
+        Kokkos::View<int**,Kokkos::LayoutRight> b =a;
+//        using View_3D      = typename Kokkos::View<int ***, Kokkos::OpenMP>;
+  //        View_3D foo;
+//            using Host_View_3D = typename View_3D::HostMirror;
+//              Host_View_3D hostDataView_3D;
+  printf("%i\n",Kokkos::Impl::is_static_dimension_stride<-9223372036854775807>?1:0);
+  //Kokkos::Impl::stride_storage_impl<-9223372036854775807, -1, 0, std::integer_sequence<long, -9223372036854775807, -1, 1>, std::experimental::extents<-1, -1, -1>, std::integer_sequence<unsigned long, 0, 1, 2>, false> foo;
+  //Kokkos::Impl::stride_storage_impl<-9223372036854775807, -1, 0, std::integer_sequence<long, -9223372036854775807, -1, 1>, std::experimental::extents<-1, -1, -1>, std::integer_sequence<unsigned long, 0, 1, 2>, true> foo;
 }
 
 }  // namespace Test

@@ -167,7 +167,8 @@ template <std::size_t Idx, class T, T... Vals, std::size_t... Idxs>
 struct _cheap_index_pack_at_impl<Idx, std::integer_sequence<T, Vals...>,
                                  std::integer_sequence<std::size_t, Idxs...>> {
   static constexpr auto value =
-      _MDSPAN_FOLD_PLUS_RIGHT((Idx == Idxs) ? Vals : 0, /* + ... + */ 0);
+//      _MDSPAN_FOLD_PLUS_RIGHT((Idx == Idxs) ? Vals : 0, /* + ... + */ 0);
+      _MDSPAN_FOLD_PLUS_RIGHT([](auto x) { return (Idx == x) ? Vals : 0; }(Idxs), /* + ... + */ 0);
 };
 
 template <std::size_t Idx, class T, T... Vals>
@@ -774,6 +775,10 @@ struct contiguous_mapping_1d<std::experimental::extents<Extent>>
 // All reasonable 0D layouts work exactly the same way, so we can reduce
 // compile-time by having exactly one of these
 struct mapping_0d {
+ private:
+  using extents_t = std::experimental::extents<>;
+
+ public:
   KOKKOS_FUNCTION constexpr bool is_unique() const noexcept { return true; }
   KOKKOS_FUNCTION constexpr bool is_always_unique() const noexcept {
     return true;
@@ -793,6 +798,13 @@ struct mapping_0d {
   KOKKOS_FORCEINLINE_FUNCTION constexpr std::ptrdiff_t operator()()
       const noexcept {
     return 0;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  mapping_0d(extents_t const&) noexcept {}
+
+  KOKKOS_FORCEINLINE_FUNCTION constexpr extents_t extents() const noexcept {
+    return extents_t{};
   }
 };
 
@@ -1048,16 +1060,188 @@ struct MDSpanLayoutForLayoutRightImpl
 template <class Traits, class Layout>
 struct MDSpanLayoutFromKokkosLayout;
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
-  template <class Extents>
-  using mapping = MDSpanLayoutForLayoutLeftImpl<Extents>;
+template<class Extents>
+struct MDSpanMappingForLayoutRight {
+
+    // (i0*E(1)+i1)*E(2) + i2
+    template<int r, int Rank, class Extents_>
+    struct compute_offset_layout_right {
+      template<class I, class ... Indices>
+      constexpr static size_t op(size_t value, const Extents_& ext, const size_t& stride, const I& i, Indices ... idx) {
+        return compute_offset_layout_right<r+1, Rank, Extents_>::op(value*ext.extent(r)+i,ext,stride,idx...);
+      }
+    };
+
+    template<int Rank, class Extents_>
+    struct compute_offset_layout_right<Rank-1,Rank,Extents_> {
+      template<class I>
+      constexpr static size_t op(size_t value, const Extents_&, const size_t& stride, const I& i) {
+        return value*stride+i;
+      }
+    };
+    template<class Extents_>
+    struct compute_offset_layout_right<0,1,Extents_> {
+      template<class I>
+      constexpr static size_t op(size_t, const Extents_&, const size_t&, const I& i) {
+        return i;
+      }
+    };
+    template<class Extents_>
+    struct compute_offset_layout_right<-1,0,Extents_> {
+      constexpr static size_t op(size_t, const Extents_&, const size_t&) {
+        return 0;
+      }
+    };
+
+    using index_type = size_t;
+    constexpr MDSpanMappingForLayoutRight() noexcept = default;
+    constexpr MDSpanMappingForLayoutRight(const MDSpanMappingForLayoutRight&) noexcept = default;
+    constexpr MDSpanMappingForLayoutRight(const Extents& ext):extents_(ext),stride_(ext.extent(Extents::rank()-1)) {}
+    constexpr MDSpanMappingForLayoutRight(const LayoutRight& layout) {
+      int k=0;
+      std::array<ptrdiff_t, Extents::rank_dynamic()> dyn_exts;
+      for(int r=0; r<Extents::rank(); r++) {
+        if(Extents::static_extent(r) == -1) dyn_exts[k++] = layout.dimension[r];
+      }
+      extents_ = Extents(dyn_exts);
+      stride_ = extents_.extent(Extents::rank()-1);
+    }
+
+    template<class OtherExtents>
+      constexpr MDSpanMappingForLayoutRight(const MDSpanMappingForLayoutRight<OtherExtents>& other_map):extents_(other_map.extents()),stride_(other_map.stride_) {}
+
+    constexpr MDSpanMappingForLayoutRight& operator=(const MDSpanMappingForLayoutRight&) noexcept = default;
+    template<class OtherExtents>
+    constexpr MDSpanMappingForLayoutRight& operator=(const MDSpanMappingForLayoutRight<OtherExtents>& other_map) noexcept { extents_ = other_map.extents(); }
+
+    constexpr Extents extents() const noexcept { return extents_; }
+
+    constexpr index_type required_span_size() const noexcept {return 1;};
+
+    template<class... Indices>
+    index_type operator()(Indices... idxs) const noexcept {
+       return compute_offset_layout_right<0,Extents::rank(),Extents>::op(0,extents_,stride_,idxs...);
+    }
+
+    static constexpr bool is_always_unique() noexcept { return true; }
+    static constexpr bool is_always_contiguous() noexcept { return false; }
+    static constexpr bool is_always_strided() noexcept { return true; }
+
+    constexpr bool is_unique() const noexcept { return true; }
+    constexpr bool is_contiguous() const noexcept { return true; }
+    constexpr bool is_strided() const noexcept { return true; }
+
+    index_type stride(const size_t r) const noexcept { return 1; };
+
+    template<class OtherExtents>
+      constexpr bool operator==(const MDSpanMappingForLayoutRight<OtherExtents>& other_map) const noexcept { return extents() == other_map.extents(); }
+    template<class OtherExtents>
+      constexpr bool operator!=(const MDSpanMappingForLayoutRight<OtherExtents>& rhs) const noexcept
+      { return !(*this == rhs); }
+
+ private:
+   Extents extents_;
+   ptrdiff_t stride_;
 };
 
 template <class Traits>
 struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
   template <class Extents>
-  using mapping = MDSpanLayoutForLayoutRightImpl<Extents>;
+  using mapping =
+    MDSpanMappingForLayoutRight<Extents>;
+    //MDSpanLayoutForLayoutRightImpl<Extents>;
+};
+
+template<class Extents>
+struct MDSpanMappingForLayoutLeft {
+
+    using index_type = size_t;
+    constexpr MDSpanMappingForLayoutLeft() noexcept = default;
+    constexpr MDSpanMappingForLayoutLeft(const MDSpanMappingForLayoutLeft&) noexcept = default;
+    constexpr MDSpanMappingForLayoutLeft(const Extents& ext):extents_(ext),stride_(ext.extent(0)) {}
+    constexpr MDSpanMappingForLayoutLeft(const LayoutLeft& layout) {
+      int k=0;
+      std::array<ptrdiff_t, Extents::rank_dynamic()> dyn_exts;
+      for(int r=0; r<Extents::rank(); r++) {
+        if(Extents::static_extent(r) == -1) dyn_exts[k++] = layout.dimension[r];
+      }
+      extents_ = Extents(dyn_exts);
+      stride_ = extents_.extent(0);
+    }
+
+    template<class OtherExtents>
+      constexpr MDSpanMappingForLayoutLeft(const MDSpanMappingForLayoutLeft<OtherExtents>& other_map):extents_(other_map.extents()),stride_(other_map.stride_) {}
+
+    constexpr MDSpanMappingForLayoutLeft& operator=(const MDSpanMappingForLayoutLeft&) noexcept = default;
+    template<class OtherExtents>
+    constexpr MDSpanMappingForLayoutLeft& operator=(const MDSpanMappingForLayoutLeft<OtherExtents>& other_map) noexcept { extents_ = other_map.extents(); }
+
+    constexpr Extents extents() const noexcept { return extents_; }
+
+    constexpr index_type required_span_size() const noexcept {return 1;};
+
+    // i0+stride*(i1 + E(1)*(i2 + E(2)*i3))
+    template<int r, int Rank, class Extents_>
+    struct compute_offset_layout_left {
+      template<class I, class ... Indices>
+      constexpr static size_t op(const Extents_& ext, const size_t& stride, const I& i, Indices ... idx) {
+        return compute_offset_layout_left<r+1, Rank, Extents_>::op(ext,stride,idx...)*ext.extent(r)+i;
+      }
+    };
+
+    template<int Rank, class Extents_>
+    struct compute_offset_layout_left<Rank-1,Rank,Extents_> {
+      template<class I>
+      constexpr static size_t op(const Extents_&, const size_t&, const I& i) {
+        return i;
+      }
+    };
+    template<class Extents_>
+    struct compute_offset_layout_left<0,1,Extents_> {
+      template<class I>
+      constexpr static size_t op(const Extents_&, const size_t&) {
+        return 0;
+      }
+    };
+    template<int Rank, class Extents_>
+    struct compute_offset_layout_left<0,Rank,Extents_> {
+      template<class I, class ... Indices>
+      constexpr static size_t op(const Extents_& ext, const size_t& stride, const I& i, Indices ... idx) {
+        return compute_offset_layout_left<1, Rank, Extents_>::op(ext,stride,idx...)*stride+i;
+      }
+    };
+
+    template<class... Indices>
+    index_type operator()(Indices... idxs) const noexcept {
+       return compute_offset_layout_left<0,Extents::rank(),Extents>::op(extents_,stride_,idxs...);
+    }
+
+    static constexpr bool is_always_unique() noexcept { return true; }
+    static constexpr bool is_always_contiguous() noexcept { return false; }
+    static constexpr bool is_always_strided() noexcept { return true; }
+
+    constexpr bool is_unique() const noexcept { return true; }
+    constexpr bool is_contiguous() const noexcept { return true; }
+    constexpr bool is_strided() const noexcept { return true; }
+
+    index_type stride(const size_t r) const noexcept { return 1; };
+
+    template<class OtherExtents>
+      constexpr bool operator==(const MDSpanMappingForLayoutLeft<OtherExtents>& other_map) const noexcept { return extents() == other_map.extents(); }
+    template<class OtherExtents>
+      constexpr bool operator!=(const MDSpanMappingForLayoutLeft<OtherExtents>& rhs) const noexcept
+      { return !(*this == rhs); }
+
+ private:
+   Extents extents_;
+   ptrdiff_t stride_;
+};
+
+template <class Traits>
+struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
+  template <class Extents>
+  using mapping =
+    MDSpanMappingForLayoutLeft<Extents>;
 };
 
 // TODO @mdspan layout stride

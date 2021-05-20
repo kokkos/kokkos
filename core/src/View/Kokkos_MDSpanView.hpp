@@ -229,7 +229,7 @@ class BasicView
   // </editor-fold> end private member types }}}2
   //----------------------------------------------------------------------------
 
- private:
+ protected:
   //----------------------------------------------------------------------------
   // <editor-fold desc="friends"> {{{2
 
@@ -410,6 +410,10 @@ class BasicView
     // TODO @mdspan check runtime dimension compatibility!!!
     return *this;
   }
+
+  template<class ... Args>
+  KOKKOS_FUNCTION BasicView(std::experimental::basic_mdspan<Args...> const& rhs)
+     : m_data(rhs) {}
 
   // </editor-fold> end compatible View conversion }}}3
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -725,6 +729,7 @@ class BasicView
   }
 
   KOKKOS_FUNCTION constexpr pointer_type data() const { return m_data.data(); }
+  KOKKOS_FUNCTION constexpr mdspan_type get_mdspan() const { return m_data; }
 
   // TODO @mdspan assign_data
 
@@ -919,6 +924,23 @@ class View : public Impl::NormalizeViewProperties<
  public:
   using basic_view_type = typename Impl::NormalizeViewProperties<
       DataType, Impl::type_list<Properties...>>::type;
+
+  template<class ... Args,
+      std::enable_if_t<
+          std::is_convertible<typename View<Args...>::basic_view_type::mdspan_type,
+                              typename basic_view_type::mdspan_type>::value,
+          int> = 0
+      >
+  View(const View<Args...>& other_view):basic_view_type(other_view.get_mdspan()) {};
+  template<class ... Args,
+      std::enable_if_t<
+          std::is_assignable<typename View<Args...>::basic_view_type::mdspan_type,
+                             typename basic_view_type::mdspan_type>::value,
+          int> = 0
+      >
+  View& operator=(const View<Args...>& other_view) {
+    basic_view_type::m_data = other_view.get_mdspan();
+  };
 
  private:
   static constexpr void _deferred_instantiation_static_assertions() {

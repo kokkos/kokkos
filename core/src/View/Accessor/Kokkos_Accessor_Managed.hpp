@@ -86,17 +86,17 @@ KOKKOS_INLINE_FUNCTION auto use_count_for_accessor(
 
 template <class Accessor, class SFINAESafeDetectionSlot = void>
 struct InvokeGetLabelCustomization {
-  static constexpr auto get_label(Accessor const& acc) { return ""; }
+  static const std::string& get_label(Accessor const& acc) { return ""; }
 };
 
 template <class Accessor>
 struct InvokeGetLabelCustomization<
     Accessor, void_t<decltype(std::declval<Accessor const&>().get_label())>> {
-static constexpr auto get_label(Accessor const& acc) { acc.get_label(); }
+static const std::string& get_label(Accessor const& acc) { return acc.get_label(); }
 };
 
 template <class Accessor>
-KOKKOS_INLINE_FUNCTION auto get_label_from_accessor(
+KOKKOS_INLINE_FUNCTION const std::string& get_label_from_accessor(
     Accessor const& acc) {
   return InvokeGetLabelCustomization<Accessor>::get_label(acc);
 }

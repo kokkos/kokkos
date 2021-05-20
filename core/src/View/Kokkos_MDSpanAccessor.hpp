@@ -107,26 +107,26 @@ template <class T, unsigned Flags>
 struct AccessorForMemoryTraitsFlags<T, MemoryTraits<Flags>>
     : BuildAccessorForMemoryTraitsFlags<T, Flags,
                                         MemoryTraitsFlags::Unmanaged> {
- private:
+ public:
   using base_t =
       BuildAccessorForMemoryTraitsFlags<T, Flags, MemoryTraitsFlags::Unmanaged>;
 
- public:
   using base_t::base_t;
   using pointer = typename base_t::pointer;
   using reference = typename base_t::reference;
   using offset_policy = typename base_t::offset_policy;
 
   KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto access(typename base_t::pointer p,
+  constexpr reference access(typename base_t::pointer p,
                         ptrdiff_t i) const noexcept {
-    base_t::crtp_access_mixin(*this, p, i);
+    //return p[i];
+    return base_t::crtp_access_mixin(*this, p, i);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
   constexpr auto offset(typename base_t::pointer p,
                         ptrdiff_t i) const noexcept {
-    base_t::crtp_offset_mixin(*this, p, i);
+    return base_t::crtp_offset_mixin(*this, p, i);
   }
 };
 

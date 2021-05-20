@@ -106,14 +106,14 @@ struct BuildAccessorForMemoryTraitsFlags<ViewTraits, Flags,
   // accessor_basic implementation
 
   template <class Self, class Ptr>
-  KOKKOS_FORCEINLINE_FUNCTION static auto crtp_access_mixin(Self const& self,
+  KOKKOS_FORCEINLINE_FUNCTION static typename Self::reference crtp_access_mixin(Self const& self,
                                                             Ptr p,
                                                             ptrdiff_t i) {
     return self.base_t::access(p, i);
   }
 
   template <class Self, class Ptr>
-  KOKKOS_FORCEINLINE_FUNCTION static auto crtp_offset_mixin(Self const& self,
+  KOKKOS_FORCEINLINE_FUNCTION static typename Self::reference crtp_offset_mixin(Self const& self,
                                                             Ptr p,
                                                             ptrdiff_t i) {
     return self.base_t::offset(p, i);
