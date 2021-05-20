@@ -363,3 +363,24 @@ CHECK_TRAIT_IS_SFINAE_FRIENDLY(max_exponent)
 CHECK_TRAIT_IS_SFINAE_FRIENDLY(max_exponent10)
 
 }  // namespace NumericTraitsSFINAE
+
+// Example detecting presence or absence of values
+template <class T>
+using infinity_value_t = decltype(Kokkos::Experimental::infinity<T>::value);
+
+template <class T>
+using has_infinity = Kokkos::is_detected<infinity_value_t, T>;
+
+template <class T, std::enable_if_t<has_infinity<T>::value>* = nullptr>
+constexpr T legacy_std_numeric_limits_infinity() {
+  return Kokkos::Experimental::infinity<T>::value;
+}
+
+template <class T, std::enable_if_t<!has_infinity<T>::value>* = nullptr>
+constexpr T legacy_std_numeric_limits_infinity() {
+  return T();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_sfinae_friendly) {
+  ASSERT_EQ(legacy_std_numeric_limits_infinity<int>(), 0);
+}
