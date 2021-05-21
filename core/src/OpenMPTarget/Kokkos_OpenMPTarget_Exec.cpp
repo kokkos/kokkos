@@ -77,7 +77,7 @@ namespace Kokkos {
 namespace Impl {
 
 void OpenMPTargetExec::verify_is_process(const char* const label) {
-  if (omp_in_parallel()) {
+  if (omp_in_parallel() && (!omp_is_initial_device())) {
     std::string msg(label);
     msg.append(" ERROR: in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
