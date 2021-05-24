@@ -49,84 +49,8 @@
 
 #include <TestDefaultDeviceType_Category.hpp>
 
-#include <Kokkos_Core.hpp>
-void foo(Kokkos::View<float**> A, int R, int occ) {
-  Kokkos::RangePolicy<> p(0, A.extent(0));
-  auto const p_occ = Kokkos::Experimental::prefer(
-      p, Kokkos::Experimental::DesiredOccupancy{Kokkos::AUTO});
-  const int M = A.extent_int(1);
-  Kokkos::parallel_for(
-      "Bench", p_occ, KOKKOS_LAMBDA(int i) {
-        for (int r = 0; r < R; r++) {
-          float f = 0.;
-          for (int m = 0; m < M; m++) {
-            f += A(i, m);
-            A(i, m) += f;
-          }
-        }
-      });
-}
-int romain() {
-  {
-    int argc     = 1;
-    char* argv[] = {"", "", "", ""};
-    int N        = (argc > 1) ? atoi(argv[1]) : 1000000;
-    int M        = (argc > 2) ? atoi(argv[2]) : 25;
-    int R        = (argc > 3) ? atoi(argv[3]) : 20;
-    int K        = (argc > 4) ? atoi(argv[4]) : 10000;
-    Kokkos::View<float**> A("A", N, M);
-    foo(A, R, 100);
-    Kokkos::fence();
-    Kokkos::Timer timer;
-    for (int k = 0; k < K; k++) foo(A, R, 100);
-    Kokkos::fence();
-    double time = timer.seconds();
-    printf("%lf\n", time);
-    foo(A, R, 33);
-    Kokkos::fence();
-    timer.reset();
-    for (int k = 0; k < K; k++) foo(A, R, 33);
-    Kokkos::fence();
-    time = timer.seconds();
-    printf("%lf\n", time);
-  }
-  return 0;
-}
-
-struct TF {
-  KOKKOS_FUNCTION void operator()(const int) const {}
-};
 namespace Test {
-void foo() {
-  romain();
-  Kokkos::finalize();
-  exit(0);
-  TF f;
-  using namespace Kokkos::Tools::Experimental;
-  VariableInfo info;
-  info.category      = StatisticalCategory::kokkos_value_categorical;
-  info.type          = ValueType::kokkos_value_int64;
-  info.valueQuantity = CandidateValueType::kokkos_value_unbounded;
-  size_t id          = declare_input_type("dogggo", info);
-  auto ctx           = get_new_context_id();
-  auto v             = make_variable_value(id, int64_t(1));
-  begin_context(ctx);
-  set_input_values(ctx, 1, &v);
-  constexpr const int data_size = 100000000;
-  Kokkos::View<float*> a("a", data_size);
-  Kokkos::View<float*> b("b", data_size);
-  Kokkos::View<float*> c("c", data_size);
-  int scalar = 1.0;
-  for (int x = 0; x < 10000; ++x) {
-    Kokkos::parallel_for(
-        "puppies",
-        Kokkos::Experimental::prefer(
-            Kokkos::RangePolicy<>(0, data_size),
-            Kokkos::Experimental::DesiredOccupancy{Kokkos::AUTO}),
-        KOKKOS_LAMBDA(int index) { a[index] = b[index] + scalar * c[index]; });
-  }
-  end_context(ctx);
-}
-TEST(defaultdevicetype, development_test) { foo(); }
+
+TEST(defaultdevicetype, development_test) {}
 
 }  // namespace Test
