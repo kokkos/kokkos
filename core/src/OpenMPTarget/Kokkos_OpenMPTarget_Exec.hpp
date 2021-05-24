@@ -1641,7 +1641,8 @@ KOKKOS_INLINE_FUNCTION
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     ValueType tmp = ValueType();
     lambda(i, tmp);
-    TeamVector_scratch[0] += tmp;
+    Impl::OpenMPTargetReducerWrapper<ReducerType>::join(TeamVector_scratch[0],
+                                                        tmp);
   }
 
   result.reference() = TeamVector_scratch[0];
