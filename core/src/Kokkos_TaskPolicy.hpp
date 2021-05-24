@@ -45,7 +45,7 @@
 // For backward compatibility:
 #include <Kokkos_Macros.hpp>
 
-KOKKOS_WARNING(
+KOKKOS_IMPL_WARNING(
     "This file is deprecated. Use <Kokkos_TaskScheduler.hpp> instead.")
 
 #include <Kokkos_TaskScheduler.hpp>
