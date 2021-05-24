@@ -53,7 +53,6 @@
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_View.hpp>
 
-#include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
