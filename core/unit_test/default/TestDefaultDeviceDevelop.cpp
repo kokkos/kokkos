@@ -48,35 +48,9 @@
 #include <Kokkos_Core.hpp>
 
 #include <TestDefaultDeviceType_Category.hpp>
-struct TF{
-    KOKKOS_FUNCTION void operator()(const int) const {}
-};
+
 namespace Test {
 
-    TEST(defaultdevicetype, development_test) {
-
-        Kokkos::RangePolicy<> pol(0, 10000);
-        auto next_pol = Kokkos::Experimental::prefer(pol, Kokkos::Experimental::TuneOccupancy{});
-        TF f;
-        using namespace Kokkos::Tools::Experimental;
-        VariableInfo info;
-        info.category= StatisticalCategory::kokkos_value_categorical;
-        info.type = ValueType::kokkos_value_int64;
-        info.valueQuantity = CandidateValueType::kokkos_value_unbounded;
-        size_t id = declare_input_type("dogggo", info);
-        auto ctx = get_new_context_id();
-        auto v = make_variable_value(id, int64_t(1));
-        begin_context(ctx);
-        set_input_values(ctx, 1, &v);
-        Kokkos::Tools::Experimental::RangePolicyOccupancyTuner tuner("dogs", next_pol, f, Kokkos::ParallelForTag{}, Kokkos::Tools::Impl::Impl::SimpleTeamSizeCalculator{});
-
-        for(int x =0 ; x<10000; ++x) {
-            //auto nexter_pol = tuner.tune(next_pol);
-            //usleep(10 * abs(33 - nexter_pol.impl_get_desired_occupancy().value()));
-            //tuner.end();
-            Kokkos::parallel_for("puppies", Kokkos::Experimental::prefer(Kokkos::RangePolicy<>(0,1), Kokkos::Experimental::TuneOccupancy{}), KOKKOS_LAMBDA(int i){});
-        }
-        end_context(ctx);
-    }
+TEST(defaultdevicetype, development_test) {}
 
 }  // namespace Test
