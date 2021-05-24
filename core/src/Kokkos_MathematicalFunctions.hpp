@@ -55,6 +55,36 @@
 #endif
 
 namespace Kokkos {
+
+namespace Impl {
+template <class T, bool = std::is_integral<T>::value>
+struct promote {
+  using type = double;
+};
+template <class T>
+struct promote<T, false> {};
+template <>
+struct promote<long double> {
+  using type = long double;
+};
+template <>
+struct promote<double> {
+  using type = double;
+};
+template <>
+struct promote<float> {
+  using type = float;
+};
+template <class T>
+using promote_t = typename promote<T>::type;
+template <class T, class U>
+struct promote_2 {
+  using type = decltype(promote_t<T>() + promote_t<U>());
+};
+template <class T, class U>
+using promote_2_t = typename promote_2<T, U>::type;
+}  // namespace Impl
+
 namespace Experimental {
 
 #if defined(KOKKOS_ENABLE_SYCL)
