@@ -856,11 +856,10 @@ struct ParallelReduceAdaptor {
                              ReturnType& return_value) {
     uint64_t kpID = 0;
 
-    PolicyType policy_copy = policy;
     /** Request a tuned policy from the tools subsystem */
     auto response = Kokkos::Tools::Impl::begin_parallel_reduce<
-        typename return_value_adapter::reducer_type>(policy_copy, functor,
-                                                     label, kpID);
+        typename return_value_adapter::reducer_type>(policy, functor, label,
+                                                     kpID);
     auto& inner_policy = response.policy;
     Kokkos::Impl::shared_allocation_tracking_disable();
 #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER

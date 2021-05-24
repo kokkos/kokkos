@@ -440,10 +440,11 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
   TeamSizeTuner(const std::string& name,
-                Kokkos::TeamPolicy<Properties...>& policy,
+                const Kokkos::TeamPolicy<Properties...>& policy_in,
                 const Functor& functor, const TagType& tag,
                 ViableConfigurationCalculator calc) {
-    using PolicyType           = Kokkos::TeamPolicy<Properties...>;
+    using PolicyType = Kokkos::TeamPolicy<Properties...>;
+    PolicyType policy(policy_in);
     auto initial_vector_length = policy.impl_vector_length();
     if (initial_vector_length < 1) {
       policy.impl_set_vector_length(1);
@@ -630,15 +631,17 @@ class RangePolicyOccupancyTuner {
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
   RangePolicyOccupancyTuner(const std::string& name,
-                            Kokkos::RangePolicy<Properties...>&, const Functor&,
-                            const TagType&, ViableConfigurationCalculator)
+                            const Kokkos::RangePolicy<Properties...>&,
+                            const Functor&, const TagType&,
+                            ViableConfigurationCalculator)
       : tuner(TunerType(name,
                         Kokkos::Tools::Experimental::StatisticalCategory::
                             kokkos_value_ratio,
                         100, 1, 100, 1)) {}
 
   template <typename... Properties>
-  auto tune(Kokkos::RangePolicy<Properties...>& policy) {
+  auto tune(const Kokkos::RangePolicy<Properties...>& policy_in) {
+    Kokkos::RangePolicy<Properties...> policy(policy_in);
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       auto occupancy = tuner.begin();
       // return Kokkos::Experimental::prefer(
