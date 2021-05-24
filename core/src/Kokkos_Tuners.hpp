@@ -525,7 +525,8 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
   }
 
   template <typename... Properties>
-  auto tune(Kokkos::TeamPolicy<Properties...>& policy) {
+  auto tune(const Kokkos::TeamPolicy<Properties...>& policy_in) {
+    Kokkos::TeamPolicy<Properties...> policy(policy_in);
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       auto configuration = tuner.begin();
       auto team_size     = std::get<1>(configuration);
@@ -695,7 +696,8 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
     policy.impl_change_tile_size({std::get<Indices>(tuple)...});
   }
   template <typename... Properties>
-  auto tune(Kokkos::MDRangePolicy<Properties...>& policy) {
+  auto tune(const Kokkos::MDRangePolicy<Properties...>& policy_in) {
+    Kokkos::MDRangePolicy<Properties...> policy(policy_in);
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       auto configuration = tuner.begin();
       set_policy_tile(policy, configuration, std::make_index_sequence<rank>{});
