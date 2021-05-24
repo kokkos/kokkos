@@ -58,7 +58,6 @@
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_TaskPolicy.hpp>
 #include <Kokkos_Layout.hpp>
-#include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <impl/Kokkos_ExecSpaceInitializer.hpp>
