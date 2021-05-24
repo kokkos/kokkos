@@ -90,6 +90,41 @@ namespace Impl {
 }  // namespace Kokkos
 
 namespace Kokkos {
+namespace Impl {
+
+//----------------------------------------
+
+template <>
+struct MemorySpaceAccess<Kokkos::HostSpace,
+                         Kokkos::Experimental::OpenMPTargetSpace> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = true };
+};
+
+//----------------------------------------
+
+template <>
+struct MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
+                         Kokkos::HostSpace> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = true };
+};
+
+//----------------------------------------
+
+template <>
+struct MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
+                         Kokkos::Experimental::OpenMPTargetSpace> {
+  enum : bool { assignable = true };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+}  // namespace Impl
+}  // namespace Kokkos
+
+namespace Kokkos {
 namespace Experimental {
 
 /// \class OpenMPTargetSpace
