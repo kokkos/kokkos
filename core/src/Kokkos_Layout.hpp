@@ -53,6 +53,16 @@
 
 namespace Kokkos {
 
+// Forward declare mappings
+namespace Impl {
+
+template<class Extents>
+struct MDSpanMappingForLayoutLeft;
+
+template<class Extents>
+struct MDSpanMappingForLayoutRight;
+}
+
 enum { ARRAY_LAYOUT_MAX_RANK = 8 };
 
 //----------------------------------------------------------------------------
@@ -98,6 +108,10 @@ struct LayoutLeft {
   friend bool operator!=(const LayoutLeft& left, const LayoutLeft& right) {
     return !(left == right);
   }
+
+  template <class Extents>
+  using mapping =
+    Kokkos::Impl::MDSpanMappingForLayoutLeft<Extents>;
 };
 
 //----------------------------------------------------------------------------
@@ -142,6 +156,10 @@ struct LayoutRight {
   friend bool operator!=(const LayoutRight& left, const LayoutRight& right) {
     return !(left == right);
   }
+
+  template <class Extents>
+  using mapping =
+    Kokkos::Impl::MDSpanMappingForLayoutRight<Extents>;
 };
 
 //----------------------------------------------------------------------------
@@ -369,5 +387,6 @@ struct layout_iterate_type_selector<Kokkos::Experimental::LayoutTiled<
 };
 
 }  // namespace Kokkos
+#include <View/Kokkos_MDSpanLayout.hpp>
 
 #endif  // #ifndef KOKKOS_LAYOUT_HPP

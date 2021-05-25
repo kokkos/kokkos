@@ -50,6 +50,9 @@ namespace Kokkos {
 template <class DataType, class... Properties>
 class View;
 
+template <class DataType, class Layout, class Space, class MemoryTraits>
+class BasicView;
+
 namespace Impl {
 
 /*
@@ -75,7 +78,13 @@ struct ViewTracker {
 
   KOKKOS_INLINE_FUNCTION
   ViewTracker(const ViewTracker& vt) noexcept
-      : m_tracker(vt.m_tracker, view_traits::is_managed) {}
+      : m_tracker(vt.m_tracker,
+#ifndef KOKKOS_USE_LEGACY_VIEW
+        ParentView::is_managed
+#else
+        view_traits::is_managed
+#endif
+  ) {}
 
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const ParentView& vt) noexcept : m_tracker() {
@@ -90,9 +99,14 @@ struct ViewTracker {
   }
 
   template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION void assign(const View<RT, RP...>& vt) noexcept {
+  KOKKOS_INLINE_FUNCTION void assign(const BasicView<RT, RP...>& vt) noexcept {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (view_traits::is_managed &&
+    if (
+#ifndef KOKKOS_USE_LEGACY_VIEW
+        ParentView::is_managed &&
+#else
+        view_traits::is_managed &&
+#endif
         Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()) {
       m_tracker.assign_direct(vt.m_track.m_tracker);
     } else {
@@ -106,7 +120,12 @@ struct ViewTracker {
   KOKKOS_INLINE_FUNCTION
   ViewTracker& operator=(const ViewTracker& rhs) noexcept {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (view_traits::is_managed &&
+    if (
+#ifndef KOKKOS_USE_LEGACY_VIEW
+        ParentView::is_managed &&
+#else
+        view_traits::is_managed &&
+#endif
         Kokkos::Impl::SharedAllocationRecord<void, void>::tracking_enabled()) {
       m_tracker.assign_direct(rhs.m_tracker);
     } else {

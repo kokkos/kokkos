@@ -104,6 +104,36 @@ struct stride_storage_impl<
 
           printf("%p %p %p %p %p\n",foo.data(),&foo(0,0,1),&foo(0,1,0),&foo(1,0,0),&foo(3,2,3));
           printf("%p %li %li %li %li\n",foo.data(),ptrdiff_t(&foo(0,2,3)-foo.data()),ptrdiff_t(&foo(0,1,0)-foo.data()),ptrdiff_t(&foo(1,0,0)-foo.data()),ptrdiff_t(&foo(3,2,3)-foo.data()));
+          printf("UseCount: %i\n",foo.use_count());
+        }
+        {
+          //Kokkos::BasicView<int ***, Kokkos::LayoutRight, Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>> foo_v("A",7,3,5);
+          Kokkos::BasicView<int ***, std::experimental::layout_right, Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>> foo("A",7,3,5);
+          //auto foo_sub = subspan(foo.get_mdspan(),1,std::experimental::all, std::experimental::all);
+          //std::experimental::basic_mdspan<int,std::experimental::extents<-1,-1>,std::experimental::layout_stride<-1,-1>,std::experimental::accessor_basic<int>> foo_sub2 = foo_sub;
+
+          //printf("%s\n",typeid(decltype(foo_sub)).name());
+          Kokkos::BasicView<int **, std::experimental::layout_stride<-1,-1>, Kokkos::HostSpace> foo_sub1(foo, std::experimental::all, std::experimental::all, 3);
+          for(int i=0; i<7; i++)
+          for(int j=0; j<3; j++) if(&foo_sub1(i,j)!=&foo(i,j,3)) printf("Error A %i %i\n",i,j);
+          //auto foo_sub = subspan(foo.get_mdspan(),3,std::experimental::all, std::experimental::all);
+          Kokkos::BasicView<int **, std::experimental::layout_right, Kokkos::HostSpace> foo_sub2(foo, 3, std::experimental::all, std::experimental::all);
+          for(int i=0; i<3; i++)
+          for(int j=0; j<5; j++) if(&foo_sub2(i,j)!=&foo(3,i,j)) printf("Error B %i %i\n",i,j);
+
+          auto foo_sub3 = Kokkos::subview(foo, std::experimental::all, std::experimental::all, 3);
+          for(int i=0; i<7; i++)
+          for(int j=0; j<3; j++) if(&foo_sub3(i,j)!=&foo(i,j,3)) printf("Error A %i %i\n",i,j);
+
+          auto foo_sub4 = Kokkos::subview(foo, 3, std::experimental::all, std::experimental::all);
+          for(int i=0; i<3; i++)
+          for(int j=0; j<5; j++) if(&foo_sub4(i,j)!=&foo(3,i,j)) printf("Error B %i %i\n",i,j);
+
+          //std::experimental::basic_mdspan<int,std::experimental::extents<-1,-1,-1>,std::experimental::layout_right,std::experimental::accessor_basic<int>>
+          //  foo(foo_v.data(),7,3,5);
+          printf("%p %p %p %p %p\n",foo.data(),&foo(0,0,1),&foo(0,1,0),&foo(1,0,0),&foo(3,2,3));
+          printf("%p %li %li %li %li\n",foo.data(),ptrdiff_t(&foo(0,2,3)-foo.data()),ptrdiff_t(&foo(0,1,0)-foo.data()),ptrdiff_t(&foo(1,0,0)-foo.data()),ptrdiff_t(&foo(3,2,3)-foo.data()));
+          printf("UseCount: %i\n",foo.use_count());
         }
         {
           Kokkos::BasicView<int ***, Kokkos::LayoutLeft, Kokkos::Device<Kokkos::OpenMP, Kokkos::HostSpace>> foo("A",7,3,5);
@@ -114,12 +144,23 @@ struct stride_storage_impl<
 
 
         Kokkos::View<int**,Kokkos::OpenMP> a("A",5,5);
-        Kokkos::View<int**,Kokkos::LayoutRight> b =a;
+        {
+          Kokkos::View<int**,Kokkos::LayoutRight> b =a;
+          printf("%i\n",int(a.use_count()));
+          auto c = a;
+          printf("%i\n",int(a.use_count()));
+          Kokkos::View<int**,Kokkos::OpenMP> d("D",7,7);
+          d = a;
+          printf("%i\n",int(a.use_count()));
+
+        }
+//        printf("%i\n",int(a.use_count()));
+//        Kokkos::View<int*,Kokkos::LayoutRight> c(a,2,Kokkos::ALL);
 //        using View_3D      = typename Kokkos::View<int ***, Kokkos::OpenMP>;
   //        View_3D foo;
 //            using Host_View_3D = typename View_3D::HostMirror;
 //              Host_View_3D hostDataView_3D;
-  printf("%i\n",Kokkos::Impl::is_static_dimension_stride<-9223372036854775807>?1:0);
+//  printf("%i\n",Kokkos::Impl::is_static_dimension_stride<-9223372036854775807>?1:0);
   //Kokkos::Impl::stride_storage_impl<-9223372036854775807, -1, 0, std::integer_sequence<long, -9223372036854775807, -1, 1>, std::experimental::extents<-1, -1, -1>, std::integer_sequence<unsigned long, 0, 1, 2>, false> foo;
   //Kokkos::Impl::stride_storage_impl<-9223372036854775807, -1, 0, std::integer_sequence<long, -9223372036854775807, -1, 1>, std::experimental::extents<-1, -1, -1>, std::integer_sequence<unsigned long, 0, 1, 2>, true> foo;
 }

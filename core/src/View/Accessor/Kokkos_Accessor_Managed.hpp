@@ -68,7 +68,7 @@ template <class Accessor>
 struct InvokeUseCountCustomization<
     Accessor, void_t<decltype(std::declval<Accessor const&>().use_count())>> {
   KOKKOS_INLINE_FUNCTION
-  static constexpr auto use_count(Accessor const& acc) { acc.use_count(); }
+  static constexpr auto use_count(Accessor const& acc) { return acc.use_count(); }
 };
 
 template <class Accessor>
