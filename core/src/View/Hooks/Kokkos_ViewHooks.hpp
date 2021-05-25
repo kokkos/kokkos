@@ -14,30 +14,42 @@ namespace Detail
 template< typename View >
 using copy_subscription_function_type = void (*)( View &, const View & );
 
-template< typename FunType, FunType *...Rems >
+template< template< typename > class Invoker, typename... Subscribers >
 struct invoke_subscriber_impl;
 
-template< typename FunType >
-struct invoke_subscriber_impl< FunType >
+template< template< typename > class Invoker >
+struct invoke_subscriber_impl< Invoker >
 {
   template< typename... Args >
   static void invoke( Args &&... ) {}
 };
 
-template< typename FunType, FunType *First, FunType *...Rems >
-struct invoke_subscriber_impl< FunType, First, Rems... >
+template< template< typename > class Invoker, typename Subscriber, typename... RemSubscribers >
+struct invoke_subscriber_impl< Invoker, Subscriber, RemSubscribers... >
 {
   template< typename... Args >
   static void invoke( Args &&..._args )
   {
-    First( std::forward< Args >( _args )... );
-    invoke_subscriber_impl< FunType, Rems... >::invoke( std::forward< Args >( _args )... );
+    Invoker< Subscriber >::call( std::forward< Args >( _args )... );
+    invoke_subscriber_impl< Invoker, RemSubscribers... >::invoke( std::forward< Args >( _args )... );
+  }
+};
+
+template< typename Subscriber >
+struct copy_constructor_invoker
+{
+  template< typename View >
+  static void call( View &self, const View &other )
+  {
+    Subscriber::copy_constructed( self, other );
   }
 };
 }
 
 struct DefaultViewHooks
 {
+  using hooks_policy = DefaultViewHooks;
+
   template< typename View >
   static void construct( View &view ) {}
   template< typename View >
@@ -55,11 +67,13 @@ struct DefaultViewHooks
 template< class... Subscribers >
 struct SubscribableViewHooks
 {
+  using hooks_policy = SubscribableViewHooks< Subscribers... >;
+
   template< typename View >
   static void construct( View &view ) {}
   template< typename View >
   static void copy_construct( View &self, const View &other ) {
-    Detail::invoke_subscriber_impl< Detail::copy_subscription_function_type< View >, &Subscribers::copy_constructed... >::invoke( self, other );
+    Detail::invoke_subscriber_impl< Detail::copy_constructor_invoker, Subscribers... >::invoke( self, other );
   }
   template< typename View >
   static void copy_assign( View &view ) {}
