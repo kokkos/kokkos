@@ -41,8 +41,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_VIEWHOOKS_HPP
-#define KOKKOS_VIEWHOOKS_HPP
+#ifndef KOKKOS_VIEWHOLDER_HPP
+#define KOKKOS_VIEWHOLDER_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_HostSpace.hpp>
@@ -251,4 +251,4 @@ struct ViewHooksCaller<
 
 }  // namespace Kokkos
 
-#endif  // KOKKOS_VIEWHOOKS_HPP
+#endif  // KOKKOS_VIEWHOLDER_HPP
