@@ -551,7 +551,7 @@ auto parallel_reduce(std::string const& label, PolicyType const& policy,
                      ReturnType2&& returnType2,
                      ReturnTypes&&... returnTypes) noexcept ->
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<PolicyType>::value>::type {
+        Kokkos::is_execution_policy<PolicyType>::value>::type {
   //----------------------------------------
   // Since we don't support asynchronous combined reducers yet for various
   // reasons, we actually just want to work with the pointers and references
@@ -596,7 +596,7 @@ auto parallel_reduce(PolicyType const& policy, Functor const& functor,
                      ReturnType1&& returnType1, ReturnType2&& returnType2,
                      ReturnTypes&&... returnTypes) noexcept ->
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<PolicyType>::value>::type {
+        Kokkos::is_execution_policy<PolicyType>::value>::type {
   //----------------------------------------
   Kokkos::parallel_reduce("", policy, functor,
                           std::forward<ReturnType1>(returnType1),
