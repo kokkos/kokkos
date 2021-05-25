@@ -66,8 +66,7 @@ struct AllowPaddingViewCtorTrait {
 
     template <class... OtherProps>
     mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
-                         AllowPadding_t const&,
-                         OtherProps const&... other)
+                         AllowPadding_t const&, OtherProps const&... other)
         : base_t(tag, other...) {}
 
     static constexpr bool allow_padding = true;
@@ -75,8 +74,8 @@ struct AllowPaddingViewCtorTrait {
 };
 
 template <>
-struct ViewCtorTraitMatcher<AllowPaddingViewCtorTrait,
-    AllowPadding_t> : std::true_type {};
+struct ViewCtorTraitMatcher<AllowPaddingViewCtorTrait, AllowPadding_t>
+    : std::true_type {};
 
 }  // namespace Impl
 
@@ -85,7 +84,7 @@ namespace {
 constexpr /* inline */ Kokkos::Impl::AllowPadding_t AllowPadding =
     Kokkos::Impl::AllowPadding_t();
 
-} // end anonymous namespace
+}  // end anonymous namespace
 
 }  // namespace Kokkos
 

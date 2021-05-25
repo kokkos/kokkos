@@ -49,7 +49,7 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <View/Constructor/Kokkos_ViewCtor_fwd.hpp>
 
-#include <Kokkos_Concepts.hpp> // is_memory_space
+#include <Kokkos_Concepts.hpp>  // is_memory_space
 
 namespace Kokkos {
 namespace Impl {
@@ -82,8 +82,7 @@ struct MemorySpaceViewCtorTrait {
 
     template <class... OtherProps>
     mixin_matching_trait(view_ctor_trait_ctor_tag const& tag,
-                         MemorySpace const& arg_mem,
-                         OtherProps const&... other)
+                         MemorySpace const& arg_mem, OtherProps const&... other)
         : base_t(tag, other...), m_mem(arg_mem) {}
 
     auto get_memory_space() const { return m_mem; }

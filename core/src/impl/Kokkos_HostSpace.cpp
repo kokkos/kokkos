@@ -253,7 +253,7 @@ void *HostSpace::impl_allocate(
 #endif
   }
 
-  //printf("Allocated: %p %i\n",ptr,int(arg_alloc_size));
+  // printf("Allocated: %p %i\n",ptr,int(arg_alloc_size));
   if ((ptr == nullptr) || (reinterpret_cast<uintptr_t>(ptr) == ~uintptr_t(0)) ||
       (reinterpret_cast<uintptr_t>(ptr) & alignment_mask)) {
     Experimental::RawMemoryAllocationFailure::FailureMode failure_mode =
@@ -294,8 +294,8 @@ void *HostSpace::impl_allocate(
 
 void HostSpace::deallocate(void *const arg_alloc_ptr,
                            const size_t arg_alloc_size) const {
-//printf("Deallocate Unlabeled %p\n",arg_alloc_ptr);
-        deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
+  // printf("Deallocate Unlabeled %p\n",arg_alloc_ptr);
+  deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 
 void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
@@ -303,7 +303,7 @@ void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
                            const size_t
 
                                arg_logical_size) const {
-//printf("Deallocate %s %p\n",arg_label,arg_alloc_ptr);
+  // printf("Deallocate %s %p\n",arg_label,arg_alloc_ptr);
   impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
 }
 void HostSpace::impl_deallocate(

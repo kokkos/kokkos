@@ -63,7 +63,6 @@ inline auto view_alloc(Args const&... args);
 template <class T>
 KOKKOS_INLINE_FUNCTION auto view_wrap(T* arg);
 
-
 namespace Impl {
 
 struct runtime_non_owning_accessor_tag_t {};

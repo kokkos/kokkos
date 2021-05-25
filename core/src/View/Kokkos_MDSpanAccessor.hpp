@@ -91,8 +91,7 @@ struct InvokeVerifyPointerCustomization<
 };
 
 template <class Accessor>
-KOKKOS_INLINE_FUNCTION
-void verify_pointer_construction_for_accessor(
+KOKKOS_INLINE_FUNCTION void verify_pointer_construction_for_accessor(
     Accessor const& acc, typename Accessor::pointer const& ptr) {
   InvokeVerifyPointerCustomization<Accessor>::verify_pointer(acc, ptr);
 }
@@ -112,20 +111,20 @@ struct AccessorForMemoryTraitsFlags<T, MemoryTraits<Flags>>
       BuildAccessorForMemoryTraitsFlags<T, Flags, MemoryTraitsFlags::Unmanaged>;
 
   using base_t::base_t;
-  using pointer = typename base_t::pointer;
-  using reference = typename base_t::reference;
+  using pointer       = typename base_t::pointer;
+  using reference     = typename base_t::reference;
   using offset_policy = typename base_t::offset_policy;
 
   KOKKOS_FORCEINLINE_FUNCTION
-  constexpr reference access(typename base_t::pointer p,
-                        ptrdiff_t i) const noexcept {
-    //return p[i];
+  constexpr reference access(typename base_t::pointer p, ptrdiff_t i) const
+      noexcept {
+    // return p[i];
     return base_t::crtp_access_mixin(*this, p, i);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto offset(typename base_t::pointer p,
-                        ptrdiff_t i) const noexcept {
+  constexpr auto offset(typename base_t::pointer p, ptrdiff_t i) const
+      noexcept {
     return base_t::crtp_offset_mixin(*this, p, i);
   }
 };

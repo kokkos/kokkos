@@ -85,7 +85,7 @@ namespace {
 constexpr /* inline */ Kokkos::Impl::WithoutInitializing_t WithoutInitializing =
     Kokkos::Impl::WithoutInitializing_t();
 
-} // end anonymous namespace
+}  // end anonymous namespace
 
 }  // namespace Kokkos
 

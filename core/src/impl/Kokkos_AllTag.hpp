@@ -48,7 +48,6 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Core_fwd.hpp>
 
-
 namespace Kokkos {
 namespace Impl {
 
@@ -66,7 +65,7 @@ namespace {
 
 constexpr /* inline */ Kokkos::Impl::ALL_t ALL = Kokkos::Impl::ALL_t();
 
-} // end anonymous namespace
+}  // end anonymous namespace
 
 }  // namespace Kokkos
 

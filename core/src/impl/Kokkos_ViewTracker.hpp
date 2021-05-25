@@ -80,11 +80,12 @@ struct ViewTracker {
   ViewTracker(const ViewTracker& vt) noexcept
       : m_tracker(vt.m_tracker,
 #ifndef KOKKOS_USE_LEGACY_VIEW
-        ParentView::is_managed
+                  ParentView::is_managed
 #else
-        view_traits::is_managed
+                  view_traits::is_managed
 #endif
-  ) {}
+        ) {
+  }
 
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const ParentView& vt) noexcept : m_tracker() {

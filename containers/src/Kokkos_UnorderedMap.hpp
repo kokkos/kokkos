@@ -206,8 +206,7 @@ template <typename Key, typename Value,
               pod_equal_to<typename std::remove_const<Key>::type> >
 class UnorderedMap {
  private:
-  using host_mirror_space =
-      typename View<Key, Device>::host_mirror_space;
+  using host_mirror_space = typename View<Key, Device>::host_mirror_space;
 
  public:
   //! \name Public types and constants

@@ -89,7 +89,7 @@ struct PointerViewCtorTrait {
         : base_t(tag, other...), m_pointer(pointer) {}
 
     static constexpr bool has_pointer = true;
-    using pointer_type = PointerType;
+    using pointer_type                = PointerType;
     KOKKOS_FUNCTION
     constexpr PointerType get_pointer() const { return m_pointer; }
 

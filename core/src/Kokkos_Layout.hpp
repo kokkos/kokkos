@@ -56,12 +56,12 @@ namespace Kokkos {
 // Forward declare mappings
 namespace Impl {
 
-template<class Extents>
+template <class Extents>
 struct MDSpanMappingForLayoutLeft;
 
-template<class Extents>
+template <class Extents>
 struct MDSpanMappingForLayoutRight;
-}
+}  // namespace Impl
 
 enum { ARRAY_LAYOUT_MAX_RANK = 8 };
 
@@ -110,8 +110,7 @@ struct LayoutLeft {
   }
 
   template <class Extents>
-  using mapping =
-    Kokkos::Impl::MDSpanMappingForLayoutLeft<Extents>;
+  using mapping = Kokkos::Impl::MDSpanMappingForLayoutLeft<Extents>;
 };
 
 //----------------------------------------------------------------------------
@@ -158,8 +157,7 @@ struct LayoutRight {
   }
 
   template <class Extents>
-  using mapping =
-    Kokkos::Impl::MDSpanMappingForLayoutRight<Extents>;
+  using mapping = Kokkos::Impl::MDSpanMappingForLayoutRight<Extents>;
 };
 
 //----------------------------------------------------------------------------

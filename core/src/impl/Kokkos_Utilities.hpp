@@ -281,7 +281,9 @@ template <class T, std::size_t I>
 using repeated_type = T;
 
 template <class T, T val, std::size_t I>
-struct repeated_value { static constexpr T value = val; };
+struct repeated_value {
+  static constexpr T value = val;
+};
 
 // </editor-fold> end repeated_type }}}1
 //==============================================================================
