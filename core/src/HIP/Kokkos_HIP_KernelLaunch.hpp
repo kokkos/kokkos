@@ -129,8 +129,6 @@ enum class HIPLaunchMechanism : unsigned {
   LocalMemory    = 4
 };
 
-enum class BlockType { Max, Preferred };
-
 constexpr inline HIPLaunchMechanism operator|(HIPLaunchMechanism p1,
                                               HIPLaunchMechanism p2) {
   return static_cast<HIPLaunchMechanism>(static_cast<unsigned>(p1) |

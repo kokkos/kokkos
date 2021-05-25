@@ -57,6 +57,8 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+enum class BlockType { Max, Preferred };
+
 template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
           HIPLaunchMechanism LaunchMechanism =
               DeduceHIPLaunchMechanism<DriverType>::launch_mechanism>
