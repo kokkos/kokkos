@@ -630,8 +630,9 @@ class RangePolicyOccupancyTuner {
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
   RangePolicyOccupancyTuner(const std::string& name,
-                            Kokkos::RangePolicy<Properties...>&, const Functor&,
-                            const TagType&, ViableConfigurationCalculator)
+                            const Kokkos::RangePolicy<Properties...>&,
+                            const Functor&, const TagType&,
+                            ViableConfigurationCalculator)
       : tuner(TunerType(name,
                         Kokkos::Tools::Experimental::StatisticalCategory::
                             kokkos_value_ratio,
@@ -639,7 +640,7 @@ class RangePolicyOccupancyTuner {
 
   template <typename... Properties>
   auto tune(const Kokkos::RangePolicy<Properties...>& policy_in) {
-    Kokkos::RangePolicy<Properties...>& policy(policy_in);
+    Kokkos::RangePolicy<Properties...> policy(policy_in);
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       auto occupancy = tuner.begin();
       policy.impl_set_desired_occupancy(

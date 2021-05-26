@@ -48,7 +48,6 @@
 #include <cstddef>
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_Tags.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

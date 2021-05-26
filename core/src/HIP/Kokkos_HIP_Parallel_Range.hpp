@@ -179,14 +179,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   size_type* m_scratch_space = nullptr;
   size_type* m_scratch_flags = nullptr;
 
-#if HIP_VERSION < 401
-  static bool constexpr UseShflReduction =
-      ((sizeof(value_type) > 2 * sizeof(double)) &&
-       static_cast<bool>(ValueTraits::StaticValueSize));
-#else
   static bool constexpr UseShflReduction =
       static_cast<bool>(ValueTraits::StaticValueSize);
-#endif
 
  private:
   struct ShflReductionTag {};

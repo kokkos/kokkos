@@ -44,7 +44,7 @@ SET(KOKKOS_OPENMP_NAME OpenMP)
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL PGI OR KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 10)
 ELSE()
-  SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 13)
+  SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 14)
 ENDIF()
 
 SET(KOKKOS_OPENMPTARGET_NAME Experimental::OpenMPTarget)
@@ -270,9 +270,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Crs.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_LocalDeepCopy.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Other.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reductions_DeviceView.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamTeamSize.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewCopy_a.cpp
@@ -287,6 +285,8 @@ endif()
 IF(KOKKOS_ENABLE_OPENMPTARGET
    AND (KOKKOS_CXX_COMPILER_ID STREQUAL PGI OR KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC))
   list(REMOVE_ITEM OpenMPTarget_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamTeamSize.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reductions_DeviceView.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamVectorRange.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_UniqueToken.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_HostSharedPtr.cpp

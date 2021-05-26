@@ -811,7 +811,7 @@ struct ParallelReducePolicyType;
 template <class PolicyType, class FunctorType>
 struct ParallelReducePolicyType<
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<PolicyType>::value>::type,
+        Kokkos::is_execution_policy<PolicyType>::value>::type,
     PolicyType, FunctorType> {
   using policy_type = PolicyType;
   static PolicyType policy(const PolicyType& policy_) { return policy_; }
@@ -856,11 +856,10 @@ struct ParallelReduceAdaptor {
                              ReturnType& return_value) {
     uint64_t kpID = 0;
 
-    PolicyType policy_copy = policy;
     /** Request a tuned policy from the tools subsystem */
     auto response = Kokkos::Tools::Impl::begin_parallel_reduce<
-        typename return_value_adapter::reducer_type>(policy_copy, functor,
-                                                     label, kpID);
+        typename return_value_adapter::reducer_type>(policy, functor, label,
+                                                     kpID);
     auto& inner_policy = response.policy;
     Kokkos::Impl::shared_allocation_tracking_disable();
 #ifdef KOKKOS_IMPL_NEED_FUNCTOR_WRAPPER
@@ -1002,7 +1001,7 @@ struct ParallelReduceFence {
 
 template <class PolicyType, class FunctorType, class ReturnType>
 inline typename std::enable_if<
-    Kokkos::Impl::is_execution_policy<PolicyType>::value>::type
+    Kokkos::is_execution_policy<PolicyType>::value>::type
 parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, ReturnType& return_value) {
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
@@ -1013,7 +1012,7 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
 
 template <class PolicyType, class FunctorType, class ReturnType>
 inline typename std::enable_if<
-    Kokkos::Impl::is_execution_policy<PolicyType>::value>::type
+    Kokkos::is_execution_policy<PolicyType>::value>::type
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 ReturnType& return_value) {
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
@@ -1051,7 +1050,7 @@ inline void parallel_reduce(const std::string& label, const size_t& policy,
 
 template <class PolicyType, class FunctorType, class ReturnType>
 inline typename std::enable_if<
-    Kokkos::Impl::is_execution_policy<PolicyType>::value>::type
+    Kokkos::is_execution_policy<PolicyType>::value>::type
 parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, const ReturnType& return_value) {
   ReturnType return_value_impl = return_value;
@@ -1063,7 +1062,7 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
 
 template <class PolicyType, class FunctorType, class ReturnType>
 inline typename std::enable_if<
-    Kokkos::Impl::is_execution_policy<PolicyType>::value>::type
+    Kokkos::is_execution_policy<PolicyType>::value>::type
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 const ReturnType& return_value) {
   ReturnType return_value_impl = return_value;
@@ -1107,8 +1106,7 @@ inline void parallel_reduce(
     const std::string& label, const PolicyType& policy,
     const FunctorType& functor,
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* =
-        nullptr) {
+        Kokkos::is_execution_policy<PolicyType>::value>::type* = nullptr) {
   using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
   using value_type  = std::conditional_t<(ValueTraits::StaticValueSize != 0),
                                         typename ValueTraits::value_type,
@@ -1132,8 +1130,7 @@ template <class PolicyType, class FunctorType>
 inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<PolicyType>::value>::type* =
-        nullptr) {
+        Kokkos::is_execution_policy<PolicyType>::value>::type* = nullptr) {
   using ValueTraits = Kokkos::Impl::FunctorValueTraits<FunctorType, void>;
   using value_type  = std::conditional_t<(ValueTraits::StaticValueSize != 0),
                                         typename ValueTraits::value_type,

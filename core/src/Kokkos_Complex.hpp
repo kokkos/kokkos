@@ -682,16 +682,58 @@ KOKKOS_INLINE_FUNCTION
       x * y.real(), x * y.imag());
 }
 
+namespace Impl {
+// NOTE promote would also be useful for math functions
+template <class T, bool = std::is_integral<T>::value>
+struct promote {
+  using type = double;
+};
+template <class T>
+struct promote<T, false> {};
+template <>
+struct promote<long double> {
+  using type = long double;
+};
+template <>
+struct promote<double> {
+  using type = double;
+};
+template <>
+struct promote<float> {
+  using type = float;
+};
+template <class T>
+using promote_t = typename promote<T>::type;
+template <class T, class U>
+struct promote_2 {
+  using type = decltype(promote_t<T>() + promote_t<U>());
+};
+template <class T, class U>
+using promote_2_t = typename promote_2<T, U>::type;
+}  // namespace Impl
+
 //! Imaginary part of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType imag(const complex<RealType>& x) noexcept {
   return x.imag();
 }
 
+template <class ArithmeticType>
+KOKKOS_INLINE_FUNCTION constexpr Impl::promote_t<ArithmeticType> imag(
+    ArithmeticType) {
+  return ArithmeticType();
+}
+
 //! Real part of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType real(const complex<RealType>& x) noexcept {
   return x.real();
+}
+
+template <class ArithmeticType>
+KOKKOS_INLINE_FUNCTION constexpr Impl::promote_t<ArithmeticType> real(
+    ArithmeticType x) {
+  return x;
 }
 
 //! Constructs a complex number from magnitude and phase angle
@@ -732,36 +774,6 @@ KOKKOS_INLINE_FUNCTION complex<T> pow(const complex<T>& x,
 
   return x == T() ? T() : exp(y * log(x));
 }
-
-namespace Impl {
-// NOTE promote would also be useful for math functions
-template <class T, bool = std::is_integral<T>::value>
-struct promote {
-  using type = double;
-};
-template <class T>
-struct promote<T, false> {};
-template <>
-struct promote<long double> {
-  using type = long double;
-};
-template <>
-struct promote<double> {
-  using type = double;
-};
-template <>
-struct promote<float> {
-  using type = float;
-};
-template <class T>
-using promote_t = typename promote<T>::type;
-template <class T, class U>
-struct promote_2 {
-  using type = decltype(promote_t<T>() + promote_t<U>());
-};
-template <class T, class U>
-using promote_2_t = typename promote_2<T, U>::type;
-}  // namespace Impl
 
 template <class T, class U,
           class = std::enable_if_t<std::is_arithmetic<T>::value>>
@@ -814,6 +826,13 @@ template <class RealType>
 KOKKOS_INLINE_FUNCTION complex<RealType> conj(
     const complex<RealType>& x) noexcept {
   return complex<RealType>(real(x), -imag(x));
+}
+
+template <class ArithmeticType>
+KOKKOS_INLINE_FUNCTION constexpr complex<Impl::promote_t<ArithmeticType>> conj(
+    ArithmeticType x) {
+  using type = Impl::promote_t<ArithmeticType>;
+  return complex<type>(x, -type());
 }
 
 //! Exponential of a complex number.
