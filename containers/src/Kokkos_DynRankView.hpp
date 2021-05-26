@@ -1606,15 +1606,13 @@ struct DynRankViewFill {
   }
 
   template <typename ExecSpace>
-  DynRankViewFill(ExecSpace const& exec_space,
-		  const OutputView& arg_out,
-		  const_value_type& arg_in)
+  DynRankViewFill(ExecSpace const& exec_space, const OutputView& arg_out,
+                  const_value_type& arg_in)
       : output(arg_out), input(arg_in) {
-    using Policy          = Kokkos::RangePolicy<ExecSpace>;
+    using Policy = Kokkos::RangePolicy<ExecSpace>;
 
     Kokkos::parallel_for("Kokkos::DynRankViewFill",
-			 Policy(exec_space, 0, output.extent(0)),
-                         *this);
+                         Policy(exec_space, 0, output.extent(0)), *this);
   }
 
   DynRankViewFill(const OutputView& arg_out, const_value_type& arg_in)
@@ -1712,8 +1710,7 @@ inline void deep_copy(
 
 template <class ExecSpace, class DT, class... DP>
 inline void deep_copy(
-    ExecSpace const& exec_space,
-    const DynRankView<DT, DP...>& dst,
+    ExecSpace const& exec_space, const DynRankView<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     typename std::enable_if<std::is_same<
         typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
@@ -1723,7 +1720,8 @@ inline void deep_copy(
                    typename ViewTraits<DT, DP...>::value_type>::value,
       "deep_copy requires non-const type");
 
-  Kokkos::Impl::DynRankViewFill<ExecSpace, DynRankView<DT, DP...> >(exec_space, dst, value);
+  Kokkos::Impl::DynRankViewFill<ExecSpace, DynRankView<DT, DP...> >(exec_space,
+                                                                    dst, value);
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
@@ -1759,8 +1757,8 @@ inline void deep_copy(
   using src_traits       = ViewTraits<ST, SP...>;
   using src_memory_space = typename src_traits::memory_space;
 
-  Kokkos::Impl::DeepCopy<HostSpace, src_memory_space, ExecSpace>
-    (exec_space, &dst, src.data(), sizeof(ST));
+  Kokkos::Impl::DeepCopy<HostSpace, src_memory_space, ExecSpace>(
+      exec_space, &dst, src.data(), sizeof(ST));
 }
 
 //----------------------------------------------------------------------------
@@ -1883,8 +1881,7 @@ inline void deep_copy(
 
 template <class ExecSpace, class DstType, class SrcType>
 inline void deep_copy(
-    ExecSpace const& exec_space,
-    const DstType& dst, const SrcType& src,
+    ExecSpace const& exec_space, const DstType& dst, const SrcType& src,
     typename std::enable_if<
         (std::is_same<typename DstType::traits::specialize, void>::value &&
          std::is_same<typename SrcType::traits::specialize, void>::value &&
@@ -1898,19 +1895,17 @@ inline void deep_copy(
   using dst_type = DstType;
   using src_type = SrcType;
 
-  using dst_memory_space    = typename dst_type::memory_space;
-  using src_memory_space    = typename src_type::memory_space;
+  using dst_memory_space = typename dst_type::memory_space;
+  using src_memory_space = typename src_type::memory_space;
 
   enum {
     ExecCanAccessSrc =
-        Kokkos::SpaceAccessibility<ExecSpace,
-                                   src_memory_space>::accessible
+        Kokkos::SpaceAccessibility<ExecSpace, src_memory_space>::accessible
   };
 
   enum {
     ExecCanAccessDst =
-        Kokkos::SpaceAccessibility<ExecSpace,
-                                   dst_memory_space>::accessible
+        Kokkos::SpaceAccessibility<ExecSpace, dst_memory_space>::accessible
   };
 
   if ((void*)dst.data() != (void*)src.data()) {
@@ -1980,7 +1975,7 @@ inline void deep_copy(
       // Copying data between views in accessible memory spaces and either
       // non-contiguous or incompatible shape.
       Kokkos::Impl::DynRankViewRemap<dst_type, src_type, ExecSpace>(dst, src,
-								    exec_space);
+                                                                    exec_space);
     } else {
       Kokkos::Impl::throw_runtime_exception(
           "deep_copy given views that would require a temporary allocation");
