@@ -1063,7 +1063,7 @@ namespace Kokkos {
 
 namespace Impl {
 
-template <class Traits, class Layout>
+template <class Layout>
 struct MDSpanLayoutFromKokkosLayout;
 
 template <class Extents>
@@ -1187,8 +1187,8 @@ struct MDSpanMappingForLayoutRight {
   ptrdiff_t stride_;
 };
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutRight> {
+template <>
+struct MDSpanLayoutFromKokkosLayout<Kokkos::LayoutRight> {
   template <class Extents>
   using mapping = MDSpanMappingForLayoutRight<Extents>;
   // MDSpanLayoutForLayoutRightImpl<Extents>;
@@ -1200,8 +1200,8 @@ struct MDSpanMappingForLayoutLeft {
   constexpr MDSpanMappingForLayoutLeft() noexcept = default;
   constexpr MDSpanMappingForLayoutLeft(
       const MDSpanMappingForLayoutLeft&) noexcept = default;
-  constexpr MDSpanMappingForLayoutLeft(const Extents& ext)
-      : extents_(ext), stride_(ext.extent(0)) {}
+  constexpr MDSpanMappingForLayoutLeft(const Extents& ext, ptrdiff_t stride = ext.extent(0))
+      : extents_(ext), stride_(stride) {}
   constexpr MDSpanMappingForLayoutLeft(const LayoutLeft& layout) {
     int k = 0;
     std::array<ptrdiff_t, Extents::rank_dynamic()> dyn_exts;
@@ -1319,14 +1319,14 @@ struct MDSpanMappingForLayoutLeft {
   ptrdiff_t stride_;
 };
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutLeft> {
+template <>
+struct MDSpanLayoutFromKokkosLayout<Kokkos::LayoutLeft> {
   template <class Extents>
   using mapping = MDSpanMappingForLayoutLeft<Extents>;
 };
 
-template <class Traits>
-struct MDSpanLayoutFromKokkosLayout<Traits, Kokkos::LayoutStride> {
+template <>
+struct MDSpanLayoutFromKokkosLayout<Kokkos::LayoutStride> {
   template <int R, ptrdiff_t... Args>
   struct get_stride_args {
     using type = typename get_stride_args<R - 1, -1, Args...>::type;

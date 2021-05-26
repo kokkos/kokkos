@@ -177,14 +177,31 @@ TEST(defaultdevicetype, development_test) {
     // std::experimental::all);
     auto foo_sub1 = subspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
                             std::experimental::all, std::experimental::all, 3);
-    //          auto foo_sub1 = Kokkos::subview(foo, std::experimental::all,
-    //          std::experimental::all, 3);
     for (int i = 0; i < 7; i++)
       for (int j = 0; j < 3; j++)
         if (&foo_sub1(i, j) != &foo(i, j, 3)) printf("Error A %i %i\n", i, j);
-    // auto foo_sub2 = Kokkos::subview(foo, 3, std::experimental::all,
-    // std::experimental::all); for(int i=0; i<3; i++) for(int j=0; j<5; j++)
-    // if(&foo_sub2(i,j)!=&foo(3,i,j)) printf("Error B %i %i\n",i,j);
+    auto foo_sub2 = subspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
+                            3, std::experimental::all, std::experimental::all);
+    for (int i = 0; i < 3; i++)
+      for (int j = 0; j < 5; j++)
+        if (&foo_sub2(i, j) != &foo(3, i, j)) printf("Error B %i %i\n",i,j);
+
+    auto foo_sub3 = subview(foo,
+                            std::experimental::all, std::experimental::all, 3);
+    for (int i = 0; i < 7; i++)
+      for (int j = 0; j < 3; j++)
+        if (&foo_sub3(i, j) != &foo(i, j, 3)) printf("Error C %i %i\n", i, j);
+    auto foo_sub4 = subview(foo,
+                            3, std::experimental::all, std::experimental::all);
+    for (int i = 0; i < 3; i++)
+      for (int j = 0; j < 5; j++)
+        if (&foo_sub4(i, j) != &foo(3, i, j)) printf("Error D %i %i\n",i,j);
+
+    auto foo_sub5 = subspan(Kokkos::LayoutLeft(), foo.get_mdspan(),
+                            std::experimental::all, 2, std::experimental::all);
+    for (int i = 0; i < 7; i++)
+      for (int j = 0; j < 5; j++)
+        if (&foo_sub5(i, j) != &foo(i, 2, j)) printf("Error E %i %i\n", i, j);
     printf("%p %p %p %p %p\n", foo.data(), &foo(0, 0, 1), &foo(0, 1, 0),
            &foo(1, 0, 0), &foo(3, 2, 3));
     printf("%p %li %li %li %li\n", foo.data(),
