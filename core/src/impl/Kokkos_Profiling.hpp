@@ -136,11 +136,15 @@ Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 namespace Experimental {
 
 namespace Impl {
-template <typename DeviceType, typename FencingFunctor>
-void profile_fence_event(const std::string& name, int devID,
+struct DirectFenceIDHandle {
+  uint32_t value;
+};
+
+template <typename FencingFunctor>
+void profile_fence_event(const std::string& name, DirectFenceIDHandle devIDTag,
                          const FencingFunctor& func) {
   uint64_t handle = 0;
-  Kokkos::Tools::beginFence(name, devID, &handle);
+  Kokkos::Tools::beginFence(name, devIDTag.value, &handle);
   func();
   Kokkos::Tools::endFence(handle);
 }
@@ -155,7 +159,7 @@ void profile_fence_event(const std::string& name, const Space& /**space*/,
 }
 
 template <typename Space, typename FencingFunctor>
-void profile_fence_event(const std::string& name, const FencingFunctor& func) {
+void profile_fence_event(const std::string& name, Kokkos::Tools::Experimental::SpecialSynchronizationCases reason, const FencingFunctor& func) {
   uint64_t handle = 0;
   Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
   func();

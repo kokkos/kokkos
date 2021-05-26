@@ -127,7 +127,7 @@ class Serial {
   }
   static void impl_static_fence(const std::string& name) {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
-        name, []() {});  // TODO: correct device ID
+        name, Kokkos::Tools::Experimental::SpecialSynchronizationCases::GlobalDeviceSynchronization, []() {});  // TODO: correct device ID
   }
 
   void fence() const { fence("Kokkos::Serial::fence: Unnamed Fence"); }

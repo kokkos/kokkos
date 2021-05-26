@@ -467,7 +467,11 @@ Kokkos::Experimental::HIP::size_type *hip_internal_scratch_flags(
 
 namespace Kokkos {
 namespace Impl {
-void hip_device_synchronize() { HIP_SAFE_CALL(hipDeviceSynchronize()); }
+void hip_device_synchronize(const std::string& name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Experimental::HIP>(name, [&](){
+       	HIP_SAFE_CALL(hipDeviceSynchronize());
+	});
+}
 
 void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
                               const int line) {

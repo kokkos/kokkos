@@ -49,12 +49,15 @@
 #ifdef KOKKOS_ENABLE_CUDA
 
 #include <impl/Kokkos_Error.hpp>
-
+#include <impl/Kokkos_Profiling.hpp>
 #include <iosfwd>
 
 namespace Kokkos {
 namespace Impl {
 
+void cuda_stream_synchronize(const cudaStream_t stream,               const std::string &name);
+void cuda_stream_synchronize(const cudaStream_t stream, Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
+                             const std::string &name) ;
 void cuda_device_synchronize(const std::string& name);
 void cuda_stream_synchronize(const cudaStream_t stream,
                              const std::string& name);
