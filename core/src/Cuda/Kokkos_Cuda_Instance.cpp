@@ -151,17 +151,6 @@ void cuda_device_synchronize(const std::string &name) {
       });
 }
 
-// Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle idForInstance(const
-// uintptr_t instance){
-//  static std::map<uintptr_t, uint32_t> map;
-//  static uint32_t value;
-//  constexpr const uint32_t offset =
-//  Kokkos::Tools::Experimental::NumReservedDeviceIDs; auto find =
-//  map.find(instance); if(find == map.end()){
-//    find->second = (offset + value++);
-//  }
-//  return Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{find->second};
-//}
 void cuda_stream_synchronize(const cudaStream_t stream, const uintptr_t ptr,
                              const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
