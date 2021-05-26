@@ -1666,6 +1666,22 @@ struct DynRankViewRemap {
     Kokkos::parallel_for("Kokkos::DynRankViewRemap", Policy(0, n0), *this);
   }
 
+  DynRankViewRemap(ExecSpace const& exec_space, const OutputView& arg_out, const InputView& arg_in)
+      : output(arg_out),
+        input(arg_in),
+        n0(std::min((size_t)arg_out.extent(0), (size_t)arg_in.extent(0))),
+        n1(std::min((size_t)arg_out.extent(1), (size_t)arg_in.extent(1))),
+        n2(std::min((size_t)arg_out.extent(2), (size_t)arg_in.extent(2))),
+        n3(std::min((size_t)arg_out.extent(3), (size_t)arg_in.extent(3))),
+        n4(std::min((size_t)arg_out.extent(4), (size_t)arg_in.extent(4))),
+        n5(std::min((size_t)arg_out.extent(5), (size_t)arg_in.extent(5))),
+        n6(std::min((size_t)arg_out.extent(6), (size_t)arg_in.extent(6))),
+        n7(std::min((size_t)arg_out.extent(7), (size_t)arg_in.extent(7))) {
+    using Policy = Kokkos::RangePolicy<ExecSpace>;
+
+    Kokkos::parallel_for("Kokkos::DynRankViewRemap", Policy(exec_space, 0, n0), *this);
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const size_t i0) const {
     for (size_t i1 = 0; i1 < n1; ++i1) {
@@ -1974,8 +1990,8 @@ inline void deep_copy(
     } else if (ExecCanAccessSrc && ExecCanAccessDst) {
       // Copying data between views in accessible memory spaces and either
       // non-contiguous or incompatible shape.
-      Kokkos::Impl::DynRankViewRemap<dst_type, src_type, ExecSpace>(dst, src,
-                                                                    exec_space);
+      Kokkos::Impl::DynRankViewRemap<dst_type, src_type, ExecSpace>(exec_space,
+                                                                    dst, src);
     } else {
       Kokkos::Impl::throw_runtime_exception(
           "deep_copy given views that would require a temporary allocation");
