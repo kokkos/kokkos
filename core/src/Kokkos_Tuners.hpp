@@ -638,11 +638,10 @@ class RangePolicyOccupancyTuner {
                         100, 1, 100, 1)) {}
 
   template <typename... Properties>
-  auto tune(Kokkos::RangePolicy<Properties...>& policy) {
+  auto tune(const Kokkos::RangePolicy<Properties...>& policy_in) {
+    Kokkos::RangePolicy<Properties...>& policy(policy_in);
     if (Kokkos::Tools::Experimental::have_tuning_tool()) {
       auto occupancy = tuner.begin();
-      // return Kokkos::Experimental::prefer(
-      //    policy, Kokkos::Experimental::DesiredOccupancy(occupancy));
       policy.impl_set_desired_occupancy(
           Kokkos::Experimental::DesiredOccupancy{static_cast<int>(occupancy)});
     }
