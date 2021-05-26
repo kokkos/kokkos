@@ -136,7 +136,7 @@ Kokkos_Profiling_SpaceHandle make_space_handle(const char* space_name);
 namespace Experimental {
 
 namespace Impl {
-template <typename FencingFunctor>
+template <typename DeviceType, typename FencingFunctor>
 void profile_fence_event(const std::string& name, int devID,
                          const FencingFunctor& func) {
   uint64_t handle = 0;

@@ -142,16 +142,16 @@ bool cuda_launch_blocking() {
 }  // namespace
 
 void cuda_device_synchronize(const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event(
-      name, 0, []() {  // TODO: correct device ID
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      name, 0, []() {
         CUDA_SAFE_CALL(cudaDeviceSynchronize());
       });
 }
 
-void cuda_stream_synchronize(const cudaStream_t stream,
+void cuda_stream_synchronize(const cudaStream_t stream, const int devID,
                              const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event(
-      name, 0, [&]() {  // TODO: correct device ID
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      name, devID, [&]() {
         CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
       });
 }
