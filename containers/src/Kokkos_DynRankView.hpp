@@ -1605,6 +1605,18 @@ struct DynRankViewFill {
     }
   }
 
+  template <typename ExecSpace>
+  DynRankViewFill(ExecSpace const& exec_space,
+		  const OutputView& arg_out,
+		  const_value_type& arg_in)
+      : output(arg_out), input(arg_in) {
+    using Policy          = Kokkos::RangePolicy<ExecSpace>;
+
+    Kokkos::parallel_for("Kokkos::DynRankViewFill",
+			 Policy(exec_space, 0, output.extent(0)),
+                         *this);
+  }
+
   DynRankViewFill(const OutputView& arg_out, const_value_type& arg_in)
       : output(arg_out), input(arg_in) {
     using execution_space = typename OutputView::execution_space;
@@ -1698,6 +1710,22 @@ inline void deep_copy(
   Kokkos::fence();
 }
 
+template <class ExecSpace, class DT, class... DP>
+inline void deep_copy(
+    ExecSpace const& exec_space,
+    const DynRankView<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
+    typename std::enable_if<std::is_same<
+        typename ViewTraits<DT, DP...>::specialize, void>::value>::type* =
+        nullptr) {
+  static_assert(
+      std::is_same<typename ViewTraits<DT, DP...>::non_const_value_type,
+                   typename ViewTraits<DT, DP...>::value_type>::value,
+      "deep_copy requires non-const type");
+
+  Kokkos::Impl::DynRankViewFill<ExecSpace, DynRankView<DT, DP...> >(exec_space, dst, value);
+}
+
 /** \brief  Deep copy into a value in Host memory from a view.  */
 template <class ST, class... SP>
 inline void deep_copy(
@@ -1715,6 +1743,24 @@ inline void deep_copy(
   Kokkos::Impl::DeepCopy<HostSpace, src_memory_space>(&dst, src.data(),
                                                       sizeof(ST));
   Kokkos::fence();
+}
+
+template <class ExecSpace, class ST, class... SP>
+inline void deep_copy(
+    ExecSpace const& exec_space,
+    typename ViewTraits<ST, SP...>::non_const_value_type& dst,
+    const DynRankView<ST, SP...>& src,
+    typename std::enable_if<std::is_same<
+        typename ViewTraits<ST, SP...>::specialize, void>::value>::type* = 0) {
+  if (src.rank() != 0) {
+    Kokkos::abort("");
+  }
+
+  using src_traits       = ViewTraits<ST, SP...>;
+  using src_memory_space = typename src_traits::memory_space;
+
+  Kokkos::Impl::DeepCopy<HostSpace, src_memory_space, ExecSpace>
+    (exec_space, &dst, src.data(), sizeof(ST));
 }
 
 //----------------------------------------------------------------------------
