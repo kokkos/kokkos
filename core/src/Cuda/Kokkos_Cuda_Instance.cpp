@@ -143,32 +143,38 @@ bool cuda_launch_blocking() {
 
 void cuda_device_synchronize(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
-      name, Kokkos::Tools::Experimental::SpecialSynchronizationCases::GlobalDeviceSynchronization, []() {  // TODO: correct device ID
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      []() {  // TODO: correct device ID
         CUDA_SAFE_CALL(cudaDeviceSynchronize());
       });
 }
 
-
-Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle idForStream(const cudaStream_t stream){
-  static std::map<uintptr_t, uint32_t> map;
-  static uint32_t value;
-  constexpr const uint32_t offset = Kokkos::Tools::Experimental::NumReservedDeviceIDs;
-  auto find = map.find(reinterpret_cast<uintptr_t>(stream));
-  if(find == map.end()){
-    find->second = (offset + value++);  
-  }
-  return Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{find->second};
-}
-void cuda_stream_synchronize(const cudaStream_t stream, 
+// Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle idForInstance(const
+// uintptr_t instance){
+//  static std::map<uintptr_t, uint32_t> map;
+//  static uint32_t value;
+//  constexpr const uint32_t offset =
+//  Kokkos::Tools::Experimental::NumReservedDeviceIDs; auto find =
+//  map.find(instance); if(find == map.end()){
+//    find->second = (offset + value++);
+//  }
+//  return Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{find->second};
+//}
+void cuda_stream_synchronize(const cudaStream_t stream, const uintptr_t ptr,
                              const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event(
-      name, idForStream(stream), [&]() {  // TODO: correct device ID
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
+      name, Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(ptr),
+      [&]() {  // TODO: correct device ID
         CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
       });
 }
 
-void cuda_stream_synchronize(const cudaStream_t stream, Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
-                             const std::string &name) {
+void cuda_stream_synchronize(
+    const cudaStream_t stream,
+    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
+    const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
       name, reason, [&]() {  // TODO: correct device ID
         CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
@@ -343,7 +349,8 @@ CudaInternal &CudaInternal::singleton() {
   return self;
 }
 void CudaInternal::fence(const std::string &name) const {
-  Impl::cuda_stream_synchronize(m_stream, name);
+  Impl::cuda_stream_synchronize(m_stream, reinterpret_cast<uintptr_t>(this),
+                                name);
 }
 void CudaInternal::fence() const {
   fence("Kokkos::CudaInternal::fence(): Unnamed Instance Fence");

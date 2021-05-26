@@ -140,26 +140,45 @@ struct DirectFenceIDHandle {
   uint32_t value;
 };
 
-template <typename FencingFunctor>
+template <typename Space>
+DirectFenceIDHandle idForInstance(const uintptr_t instance) {
+  static std::map<uintptr_t, uint32_t> map;
+  static uint32_t value;
+  constexpr const uint32_t offset =
+      Kokkos::Tools::Experimental::NumReservedDeviceIDs;
+  auto find = map.find(instance);
+  if (find == map.end()) {
+    find->second = (offset + value++);
+  }
+  return Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{find->second};
+}
+
+template <typename Space, typename FencingFunctor>
 void profile_fence_event(const std::string& name, DirectFenceIDHandle devIDTag,
                          const FencingFunctor& func) {
   uint64_t handle = 0;
-  Kokkos::Tools::beginFence(name, devIDTag.value, &handle);
+  Kokkos::Tools::beginFence(
+      name,
+      Kokkos::Tools::Experimental::device_id_root<Space>() + devIDTag.value,
+      &handle);
   func();
   Kokkos::Tools::endFence(handle);
 }
 
-template <typename Space, typename FencingFunctor>
-void profile_fence_event(const std::string& name, const Space& /**space*/,
-                         const FencingFunctor& func) {
-  uint64_t handle = 0;
-  Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
-  func();
-  Kokkos::Tools::endFence(handle);
-}
+// template <typename Space, typename FencingFunctor>
+// void profile_fence_event(const std::string& name, const Space& /**space*/,
+//                         const FencingFunctor& func) {
+//  uint64_t handle = 0;
+//  Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
+//  func();
+//  Kokkos::Tools::endFence(handle);
+//}
 
 template <typename Space, typename FencingFunctor>
-void profile_fence_event(const std::string& name, Kokkos::Tools::Experimental::SpecialSynchronizationCases reason, const FencingFunctor& func) {
+void profile_fence_event(
+    const std::string& name,
+    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
+    const FencingFunctor& func) {
   uint64_t handle = 0;
   Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
   func();

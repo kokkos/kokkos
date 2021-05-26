@@ -115,9 +115,12 @@ void SYCL::fence() const {
   fence("Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence");
 }
 void SYCL::fence(const std::string& name) const {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event(name, *this, [&]() {
-    Impl::SYCLInternal::fence(*m_space_instance->m_queue);
-  });
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::SYCL>(
+      name,
+      Kokkos::Impl::idForInstance<Kokkos::Experimental::SYCL>(
+          reinterpret_cast<uintptr_t>(this)),
+      [&]() { Impl::SYCLInternal::fence(*m_space_instance->m_queue); });
 }
 
 void SYCL::impl_static_fence() {
@@ -127,11 +130,15 @@ void SYCL::impl_static_fence() {
 void SYCL::impl_static_fence(const std::string& name) {
   // guard accessing all_queues
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
-      Kokkos::Experimental::SYCL>(name, [&]() {
-    std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
-    for (auto& queue : Impl::SYCLInternal::all_queues)
-      Impl::SYCLInternal::fence(**queue);
-  });
+      Kokkos::Experimental::SYCL>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      [&]() {
+        std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
+        for (auto& queue : Impl::SYCLInternal::all_queues)
+          Impl::SYCLInternal::fence(**queue);
+      });
 }
 
 int SYCL::sycl_device() const {

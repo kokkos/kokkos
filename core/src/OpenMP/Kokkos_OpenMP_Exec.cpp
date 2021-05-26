@@ -451,7 +451,8 @@ void OpenMP::fence() const {
   fence("Kokkos::OpenMP::fence: Unnamed Instance fence");
 }
 void OpenMP::fence(const std::string &name) const {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event(name, *this, []() {});
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
+      name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1}, []() {});
 }
 
 namespace Impl {

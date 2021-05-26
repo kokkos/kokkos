@@ -127,13 +127,17 @@ class Serial {
   }
   static void impl_static_fence(const std::string& name) {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
-        name, Kokkos::Tools::Experimental::SpecialSynchronizationCases::GlobalDeviceSynchronization, []() {});  // TODO: correct device ID
+        name,
+        Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+            GlobalDeviceSynchronization,
+        []() {});  // TODO: correct device ID
   }
 
   void fence() const { fence("Kokkos::Serial::fence: Unnamed Fence"); }
   void fence(const std::string& name) const {
-    Kokkos::Tools::Experimental::Impl::profile_fence_event(
-        name, *this, []() {});  // TODO: correct device ID
+    Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
+        name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
+        []() {});  // TODO: correct device ID
   }
 
   /** \brief  Return the maximum amount of concurrency.  */
