@@ -457,10 +457,9 @@ void initialize(const std::string& profileLibrary) {
 #ifdef KOKKOS_ENABLE_LIBDL
   void* firstProfileLibrary = nullptr;
 
-  if (profileLibrary.empty())
-  {
-      invoke_init_callbacks();
-      return;
+  if (profileLibrary.empty()) {
+    invoke_init_callbacks();
+    return;
   }
 
   char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
