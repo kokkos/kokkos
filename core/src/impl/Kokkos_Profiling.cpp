@@ -432,10 +432,36 @@ void initialize(const std::string& profileLibrary) {
   if (is_initialized) return;
   is_initialized = 1;
 
+  auto invoke_init_callbacks = []() {
+    Experimental::invoke_kokkosp_callback(
+        Kokkos::Tools::Experimental::MayRequireGlobalFencing::No,
+        Kokkos::Tools::Experimental::current_callbacks.init, 0,
+        (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
+
+    Experimental::tool_requirements.requires_global_fencing = true;
+
+    Experimental::invoke_kokkosp_callback(
+        Experimental::MayRequireGlobalFencing::No,
+        Experimental::current_callbacks.request_tool_settings, 1,
+        &Experimental::tool_requirements);
+
+    Experimental::ToolProgrammingInterface actions;
+    actions.fence = &Experimental::Impl::tool_invoked_fence;
+
+    Experimental::invoke_kokkosp_callback(
+        Experimental::MayRequireGlobalFencing::No,
+        Experimental::current_callbacks.provide_tool_programming_interface, 1,
+        actions);
+  };
+
 #ifdef KOKKOS_ENABLE_LIBDL
   void* firstProfileLibrary = nullptr;
 
-  if (profileLibrary.empty()) return;
+  if (profileLibrary.empty())
+  {
+      invoke_init_callbacks();
+      return;
+  }
 
   char* envProfileLibrary = const_cast<char*>(profileLibrary.c_str());
 
@@ -574,25 +600,8 @@ void initialize(const std::string& profileLibrary) {
 #else
   (void)profileLibrary;
 #endif  // KOKKOS_ENABLE_LIBDL
-  Experimental::invoke_kokkosp_callback(
-      Kokkos::Tools::Experimental::MayRequireGlobalFencing::No,
-      Kokkos::Tools::Experimental::current_callbacks.init, 0,
-      (uint64_t)KOKKOSP_INTERFACE_VERSION, (uint32_t)0, nullptr);
 
-  Experimental::tool_requirements.requires_global_fencing = true;
-
-  Experimental::invoke_kokkosp_callback(
-      Experimental::MayRequireGlobalFencing::No,
-      Experimental::current_callbacks.request_tool_settings, 1,
-      &Experimental::tool_requirements);
-
-  Experimental::ToolProgrammingInterface actions;
-  actions.fence = &Experimental::Impl::tool_invoked_fence;
-
-  Experimental::invoke_kokkosp_callback(
-      Experimental::MayRequireGlobalFencing::No,
-      Experimental::current_callbacks.provide_tool_programming_interface, 1,
-      actions);
+  invoke_init_callbacks();
 
 #ifdef KOKKOS_ENABLE_TUNING
   Experimental::VariableInfo kernel_name;
