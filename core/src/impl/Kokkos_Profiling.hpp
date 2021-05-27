@@ -180,6 +180,7 @@ inline uint32_t int_for_synchronization_reason(
     case GlobalDeviceSynchronization: return 0;
     case DeepCopyResourceSynchronization: return 0x00ffffff;
   }
+  return 0;
 }
 
 template <typename Space, typename FencingFunctor>
