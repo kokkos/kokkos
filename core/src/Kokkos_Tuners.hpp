@@ -440,10 +440,11 @@ class TeamSizeTuner : public ExtendableTunerMixin<TeamSizeTuner> {
   template <typename ViableConfigurationCalculator, typename Functor,
             typename TagType, typename... Properties>
   TeamSizeTuner(const std::string& name,
-                Kokkos::TeamPolicy<Properties...>& policy,
+                const Kokkos::TeamPolicy<Properties...>& policy_in,
                 const Functor& functor, const TagType& tag,
                 ViableConfigurationCalculator calc) {
-    using PolicyType           = Kokkos::TeamPolicy<Properties...>;
+    using PolicyType = Kokkos::TeamPolicy<Properties...>;
+    PolicyType policy(policy_in);
     auto initial_vector_length = policy.impl_vector_length();
     if (initial_vector_length < 1) {
       policy.impl_set_vector_length(1);
