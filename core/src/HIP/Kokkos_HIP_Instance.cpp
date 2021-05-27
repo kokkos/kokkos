@@ -169,8 +169,8 @@ void HIPInternal::fence(const std::string &name) const {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::HIP>(
       name,
-      Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::HIP>(
-          reinterpret_cast<uintptr_t>(this)),
+      Kokkos::Tools::Experimental::Impl::idForInstance<
+          Kokkos::Experimental::HIP>(reinterpret_cast<uintptr_t>(this)),
       [&]() {
         HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
         // can reset our cycle id now as well

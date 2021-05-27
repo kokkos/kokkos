@@ -166,6 +166,8 @@ void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
       Kokkos::Experimental::HIP>(
       "Kokkos::Impl::DeepCopyAsyncHIP: Post Deep Copy Fence on Deep-Copy "
       "stream",
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          DeepCopyResourceSynchronization,
       [&]() { HIP_SAFE_CALL(hipStreamSynchronize(s)); });
 }
 
