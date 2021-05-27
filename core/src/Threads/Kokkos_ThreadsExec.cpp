@@ -296,7 +296,11 @@ void ThreadsExec::fence() {
 // Wait for root thread to become inactive
 void ThreadsExec::fence(const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
-      name, [&]() {
+
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      [&]() {
         if (s_thread_pool_size[0]) {
           // Wait for the root thread to complete:
           Impl::spinwait_while_equal<int>(s_threads_exec[0]->m_pool_state,
