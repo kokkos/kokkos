@@ -65,7 +65,13 @@ void OpenMPTargetInternal::fence() {
       "Internal Fence");
 }
 void OpenMPTargetInternal::fence(const std::string& name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event(name, *this, [&]() {});
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::OpenMPTarget>(
+      name,
+      Kokkos::Tools::Experimental::Impl::idForInstance<
+          Kokkos::Experimental::OpenMPTarget>(
+          reinterpret_cast<uintptr_t>(this)),
+      [&]() {});
 }
 int OpenMPTargetInternal::concurrency() { return 128000; }
 const char* OpenMPTargetInternal::name() { return "OpenMPTarget"; }
