@@ -38,7 +38,7 @@ KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_3    OFF "Whether code deprecated in major 
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_4    ON "Whether code deprecated in major release 4 is available" )
 KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")
-KOKKOS_ENABLE_OPTION(HPX_ASYNC_DISPATCH   OFF "Whether HPX supports asynchronous dispatch")
+KOKKOS_ENABLE_OPTION(HPX_ASYNC_DISPATCH   ON "Whether HPX supports asynchronous dispatch")
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
 KOKKOS_ENABLE_OPTION(BENCHMARKS    OFF  "Whether to build the benchmarks")
 KOKKOS_ENABLE_OPTION(EXAMPLES      OFF  "Whether to build the examples")

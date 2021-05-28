@@ -27,30 +27,153 @@
 
 #include <hpx/local/condition_variable.hpp>
 #include <hpx/local/init.hpp>
+#include <hpx/local/runtime.hpp>
 #include <hpx/local/thread.hpp>
 #include <hpx/local/mutex.hpp>
 
 #include <atomic>
 #include <chrono>
-#include <iostream>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <type_traits>
 
 namespace Kokkos {
+namespace Impl {
+void hpx_thread_buffer::resize(const std::size_t num_threads,
+                               const std::size_t size_per_thread,
+                               const std::size_t extra_space) noexcept {
+  m_num_threads     = num_threads;
+  m_size_per_thread = size_per_thread;
+  m_extra_space     = extra_space;
+
+  pad_to_cache_line(m_size_per_thread);
+
+  std::size_t size_total_new = m_num_threads * m_size_per_thread + extra_space;
+
+  if (m_size_total < size_total_new) {
+    delete[] m_data;
+    m_data       = new char[size_total_new];
+    m_size_total = size_total_new;
+  }
+}
+
+void *hpx_thread_buffer::get(std::size_t thread_num) const noexcept {
+#if defined(KOKKOS_ENABLE_DEBUG)
+  if (thread_num >= m_num_threads) {
+    Kokkos::abort(
+        "Kokkos::Impl::hpx_thread_buffer: trying to access thread buffer for "
+        "index >= number of threads\n");
+  }
+#endif
+  if (m_data == nullptr) {
+    return nullptr;
+  }
+  return &m_data[thread_num * m_size_per_thread];
+}
+
+void *hpx_thread_buffer::get_extra_space() const noexcept {
+#if defined(KOKKOS_ENABLE_DEBUG)
+  if (m_extra_space == 0) {
+    Kokkos::abort(
+        "Kokkos::Impl::hpx_thread_buffer: trying to access extra space when "
+        "none "
+        "was allocated\n");
+  }
+#endif
+  if (m_data == nullptr) {
+    return nullptr;
+  }
+  return &m_data[m_num_threads * m_size_per_thread];
+}
+}  // namespace Impl
+
 namespace Experimental {
 
 bool HPX::m_hpx_initialized = false;
-#if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
 std::atomic<uint32_t> HPX::m_next_instance_id{HPX::impl_default_instance_id() +
                                               1};
 uint32_t HPX::m_active_parallel_region_count{0};
 hpx::spinlock HPX::m_active_parallel_region_count_mutex;
 hpx::condition_variable_any HPX::m_active_parallel_region_count_cond;
 HPX::instance_data HPX::m_default_instance_data;
-#else
-Kokkos::Impl::thread_buffer HPX::m_default_buffer;
-#endif
+
+void HPX::print_configuration(std::ostream &os, const bool) const {
+  os << "HPX backend\n";
+  os << "HPX Execution Space:\n";
+  os << "  KOKKOS_ENABLE_HPX: yes\n";
+  os << "\nHPX Runtime Configuration:\n";
+}
+
+void HPX::impl_decrement_active_parallel_region_count() {
+  std::unique_lock<hpx::spinlock> l(m_active_parallel_region_count_mutex);
+  if (--m_active_parallel_region_count == 0) {
+    l.unlock();
+    m_active_parallel_region_count_cond.notify_all();
+  };
+}
+
+void HPX::impl_increment_active_parallel_region_count() {
+  std::unique_lock<hpx::spinlock> l(m_active_parallel_region_count_mutex);
+  ++m_active_parallel_region_count;
+}
+
+void HPX::impl_instance_fence(const std::string &name) const {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::HPX>(
+      name,
+      Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
+          impl_instance_id()},
+      [&]() {
+        auto sen = hpx::execution::experimental::unique_any_sender<>(
+            hpx::execution::experimental::just());
+
+        // Swap a new, immediately ready sender into the instance's sender.
+        {
+          std::lock_guard<hpx::spinlock> l(impl_get_sender_mutex());
+          std::swap(impl_get_sender(), sen);
+        }
+
+        // The old sender from the instance was swapped into the local sender.
+        // If new work has been scheduled in the meantime it will not be waited
+        // for here. Only work scheduled until the impl_get_sender_mutex is
+        // taken is waited for here.
+        hpx::this_thread::experimental::sync_wait(std::move(sen));
+      });
+}
+
+void HPX::impl_static_fence(const std::string &name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<
+      Kokkos::Experimental::HPX>(
+      name,
+      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+          GlobalDeviceSynchronization,
+      [&]() {
+        auto sen = hpx::execution::experimental::unique_any_sender<>(
+            hpx::execution::experimental::just());
+
+        // Swap a new, immediately ready sender into the instance's sender.
+        {
+          std::lock_guard<hpx::spinlock> l(HPX().impl_get_sender_mutex());
+          std::swap(HPX().impl_get_sender(), sen);
+        }
+
+        // This is a loose fence. Any work scheduled before this will be waited
+        // for, but work scheduled while waiting may also be waited for.
+        {
+          std::unique_lock<hpx::spinlock> l_count(
+              m_active_parallel_region_count_mutex);
+          m_active_parallel_region_count_cond.wait(
+              l_count, [&]() { return m_active_parallel_region_count == 0; });
+        }
+
+        // The old sender from the instance was swapped into the local sender.
+        // If new work has been scheduled in the meantime it will not be waited
+        // for here. Only work scheduled until the impl_get_sender_mutex is
+        // taken is waited for here.
+        hpx::this_thread::experimental::sync_wait(std::move(sen));
+      });
+}
 
 int HPX::concurrency() {
   hpx::runtime *rt = hpx::get_runtime_ptr();
@@ -106,10 +229,78 @@ void HPX::impl_finalize() {
   }
 }
 
+int HPX::impl_thread_pool_size() noexcept {
+  hpx::runtime *rt = hpx::get_runtime_ptr();
+  if (rt == nullptr) {
+    return 0;
+  } else {
+    if (hpx::threads::get_self_ptr() == nullptr) {
+      return hpx::resource::get_thread_pool(0).get_os_thread_count();
+    } else {
+      return hpx::this_thread::get_pool()->get_os_thread_count();
+    }
+  }
+}
+
+int HPX::impl_thread_pool_rank() noexcept {
+  hpx::runtime *rt = hpx::get_runtime_ptr();
+  if (rt == nullptr) {
+    return 0;
+  } else {
+    if (hpx::threads::get_self_ptr() == nullptr) {
+      return 0;
+    } else {
+      return hpx::this_thread::get_pool()->get_pool_index();
+    }
+  }
+}
+
+int HPX::impl_thread_pool_size(int depth) {
+  if (depth == 0) {
+    return impl_thread_pool_size();
+  } else {
+    return 1;
+  }
+}
+
+template void HPX::impl_bulk_plain_erased<int>(
+    bool, std::function<void(int)> &&, int const,
+    hpx::threads::thread_stacksize stacksize) const;
+
+template void HPX::impl_bulk_plain_erased<unsigned int>(
+    bool, std::function<void(unsigned int)> &&, unsigned int const,
+    hpx::threads::thread_stacksize stacksize) const;
+
+template void HPX::impl_bulk_plain_erased<long>(
+    bool, std::function<void(long)> &&, long const,
+    hpx::threads::thread_stacksize stacksize) const;
+
+template void HPX::impl_bulk_plain_erased<std::size_t>(
+    bool, std::function<void(std::size_t)> &&, std::size_t const,
+    hpx::threads::thread_stacksize stacksize) const;
+
+template void HPX::impl_bulk_setup_finalize_erased<int>(
+    bool, std::function<void(int)> &&, std::function<void()> &&,
+    std::function<void()> &&, int const,
+    hpx::threads::thread_stacksize stacksize) const;
+
+template void HPX::impl_bulk_setup_finalize_erased<unsigned int>(
+    bool, std::function<void(unsigned int)> &&, std::function<void()> &&,
+    std::function<void()> &&, unsigned int const,
+    hpx::threads::thread_stacksize stacksize) const;
+
+template void HPX::impl_bulk_setup_finalize_erased<long>(
+    bool, std::function<void(long)> &&, std::function<void()> &&,
+    std::function<void()> &&, long const,
+    hpx::threads::thread_stacksize stacksize) const;
+
+template void HPX::impl_bulk_setup_finalize_erased<std::size_t>(
+    bool, std::function<void(std::size_t)> &&, std::function<void()> &&,
+    std::function<void()> &&, std::size_t const,
+    hpx::threads::thread_stacksize stacksize) const;
 }  // namespace Experimental
 
 namespace Impl {
-
 int g_hpx_space_factory_initialized =
     initialize_space_factory<Kokkos::Experimental::HPX>("060_HPX");
 
