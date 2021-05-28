@@ -221,13 +221,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               auto sg                   = item.get_sub_group();
               auto result               = &local_mem[local_id * value_count];
               const int max_local_range = sg.get_max_local_range()[0];
-              for (int mask = 1; mask < max_local_range; mask *= 2) {
-                auto tmp = sg.shuffle_xor(result, sycl::id<1>(mask));
+              for (int mask = 1; mask < max_local_range; mask <<= 1) {
+                auto tmp = sg.shuffle_down(result, sycl::id<1>(mask));
                 if ((sg.get_local_id()[0] ^ mask) < sg.get_local_range()[0]) {
                   ValueJoin::join(selected_reducer, result, tmp);
                 }
               }
-              result = sg.shuffle(result, 0);
 
               item.barrier(sycl::access::fence_space::local_space);
               if (sg.get_local_id()[0] == 0)
