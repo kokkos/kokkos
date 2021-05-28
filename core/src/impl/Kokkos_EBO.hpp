@@ -79,20 +79,6 @@ struct EBOBaseImpl;
 
 template <class T, template <class...> class CtorNotOnDevice>
 struct EBOBaseImpl<T, true, CtorNotOnDevice> {
-  /*
-   * Workaround for constexpr in C++11: we need to still call T(args...), but we
-   * can't do so in the body of a constexpr function (in C++11), and there's no
-   * data member to construct into. But we can construct into an argument
-   * of a delegating constructor...
-   */
-  // TODO @minor DSH the destructor gets called too early with this workaround
-  struct _constexpr_14_workaround_tag {};
-  struct _constexpr_14_workaround_no_device_tag {};
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr EBOBaseImpl(_constexpr_14_workaround_tag, T&&) noexcept {}
-  inline constexpr EBOBaseImpl(_constexpr_14_workaround_no_device_tag,
-                               T&&) noexcept {}
-
   template <
       class... Args, class _ignored = void,
       typename std::enable_if<std::is_void<_ignored>::value &&
@@ -100,10 +86,7 @@ struct EBOBaseImpl<T, true, CtorNotOnDevice> {
                                   !CtorNotOnDevice<Args...>::value,
                               int>::type = 0>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit EBOBaseImpl(
-      Args&&... args) noexcept(noexcept(T(std::forward<Args>(args)...)))
-      // still call the constructor
-      : EBOBaseImpl(_constexpr_14_workaround_tag{},
-                    T(std::forward<Args>(args)...)) {}
+      Args&&...) noexcept {}
 
   template <
       class... Args, class _ignored = void,
@@ -111,11 +94,7 @@ struct EBOBaseImpl<T, true, CtorNotOnDevice> {
                                   std::is_constructible<T, Args...>::value &&
                                   CtorNotOnDevice<Args...>::value,
                               long>::type = 0>
-  inline constexpr explicit EBOBaseImpl(Args&&... args) noexcept(
-      noexcept(T(std::forward<Args>(args)...)))
-      // still call the constructor
-      : EBOBaseImpl(_constexpr_14_workaround_no_device_tag{},
-                    T(std::forward<Args>(args)...)) {}
+  inline constexpr explicit EBOBaseImpl(Args&&...) noexcept {}
 
   KOKKOS_DEFAULTED_FUNCTION
   constexpr EBOBaseImpl(EBOBaseImpl const&) = default;
