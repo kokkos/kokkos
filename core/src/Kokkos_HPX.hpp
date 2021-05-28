@@ -79,6 +79,7 @@
 #include <hpx/include/util.hpp>
 #include <hpx/lcos/local/barrier.hpp>
 #include <hpx/lcos/local/latch.hpp>
+#include <hpx/lcos/local/spinlock.hpp>
 #include <hpx/parallel/algorithms/for_loop.hpp>
 #include <hpx/parallel/algorithms/reduce.hpp>
 #include <hpx/parallel/executors/static_chunk_size.hpp>
@@ -220,6 +221,7 @@ class HPX {
     instance_data(hpx::shared_future<void> future) : m_future(future) {}
     Kokkos::Impl::thread_buffer m_buffer;
     hpx::shared_future<void> m_future = hpx::make_ready_future<void>();
+    hpx::lcos::local::spinlock m_mutex;
   };
 
   mutable std::shared_ptr<instance_data> m_independent_instance_data;
@@ -227,6 +229,7 @@ class HPX {
 
   std::reference_wrapper<Kokkos::Impl::thread_buffer> m_buffer;
   std::reference_wrapper<hpx::shared_future<void>> m_future;
+  std::reference_wrapper<hpx::lcos::local::spinlock> m_mutex;
 #else
   static Kokkos::Impl::thread_buffer m_global_buffer;
 #endif
@@ -245,7 +248,8 @@ class HPX {
       : m_instance_id(0),
         m_mode(instance_mode::global),
         m_buffer(m_global_instance_data.m_buffer),
-        m_future(m_global_instance_data.m_future) {}
+        m_future(m_global_instance_data.m_future),
+        m_mutex(m_global_instance_data.m_mutex) {}
 
   HPX(instance_mode mode)
       : m_instance_id(mode == instance_mode::independent ? m_next_instance_id++
@@ -259,7 +263,10 @@ class HPX {
                      : m_global_instance_data.m_buffer),
         m_future(mode == instance_mode::independent
                      ? m_independent_instance_data->m_future
-                     : m_global_instance_data.m_future) {}
+                     : m_global_instance_data.m_future),
+        m_mutex(mode == instance_mode::independent
+                     ? m_independent_instance_data->m_mutex
+                     : m_global_instance_data.m_mutex) {}
 
   HPX(hpx::shared_future<void> future)
       : m_instance_id(m_next_instance_id++),
@@ -267,14 +274,16 @@ class HPX {
 
         m_independent_instance_data(new instance_data(future)),
         m_buffer(m_independent_instance_data->m_buffer),
-        m_future(m_independent_instance_data->m_future) {}
+        m_future(m_independent_instance_data->m_future),
+        m_mutex(m_independent_instance_data->m_mutex) {}
 
   HPX(const HPX &other)
       : m_instance_id(other.m_instance_id),
         m_mode(other.m_mode),
         m_independent_instance_data(other.m_independent_instance_data),
         m_buffer(other.m_buffer),
-        m_future(other.m_future) {}
+        m_future(other.m_future),
+        m_mutex(other.m_mutex) {}
 
   HPX &operator=(const HPX &other) {
     m_instance_id =
@@ -287,6 +296,9 @@ class HPX {
     m_future = m_mode == instance_mode::independent
                    ? m_independent_instance_data->m_future
                    : m_global_instance_data.m_future;
+    m_mutex = m_mode == instance_mode::independent
+                   ? m_independent_instance_data->m_mutex
+                   : m_global_instance_data.m_mutex;
     return *this;
   }
 #else
@@ -450,6 +462,10 @@ class HPX {
   hpx::shared_future<void> &impl_get_future() const noexcept {
     return m_future;
   }
+
+  hpx::lcos::local::spinlock &impl_get_mutex() const noexcept {
+    return m_mutex;
+  }
 #endif
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
@@ -501,6 +517,7 @@ inline void dispatch_execute_task(Closure *closure,
 
   if (hpx::threads::get_self_ptr() == nullptr) {
     hpx::threads::run_as_hpx_thread([closure, &instance]() {
+      std::unique_lock<hpx::lcos::local::spinlock> l(instance.impl_get_mutex());
       hpx::shared_future<void> &fut = instance.impl_get_future();
       Closure closure_copy          = *closure;
       fut = fut.then([closure_copy](hpx::shared_future<void> &&) {
@@ -508,6 +525,7 @@ inline void dispatch_execute_task(Closure *closure,
       });
     });
   } else {
+    std::unique_lock<hpx::lcos::local::spinlock> l(instance.impl_get_mutex());
     hpx::shared_future<void> &fut = instance.impl_get_future();
     Closure closure_copy          = *closure;
     fut = fut.then([closure_copy](hpx::shared_future<void> &&) {
