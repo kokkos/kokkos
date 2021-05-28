@@ -124,19 +124,16 @@ struct EBOBaseImpl<T, true, CtorNotOnDevice> {
   constexpr EBOBaseImpl(EBOBaseImpl&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  EBOBaseImpl& operator=(EBOBaseImpl const&) = default;
+  constexpr EBOBaseImpl& operator=(EBOBaseImpl const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  EBOBaseImpl& operator=(EBOBaseImpl&&) = default;
+  constexpr EBOBaseImpl& operator=(EBOBaseImpl&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   ~EBOBaseImpl() = default;
 
   KOKKOS_INLINE_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  T& _ebo_data_member() & { return *reinterpret_cast<T*>(this); }
+  constexpr T& _ebo_data_member() & { return *reinterpret_cast<T*>(this); }
 
   KOKKOS_INLINE_FUNCTION
   constexpr T const& _ebo_data_member() const& {
@@ -154,8 +151,9 @@ struct EBOBaseImpl<T, true, CtorNotOnDevice> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  T&& _ebo_data_member() && { return std::move(*reinterpret_cast<T*>(this)); }
+  constexpr T&& _ebo_data_member() && {
+    return std::move(*reinterpret_cast<T*>(this));
+  }
 };
 
 template <class T, template <class...> class CTorsNotOnDevice>
@@ -191,12 +189,10 @@ struct EBOBaseImpl<T, false, CTorsNotOnDevice> {
   constexpr EBOBaseImpl(EBOBaseImpl&&) noexcept = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  EBOBaseImpl& operator=(EBOBaseImpl const&) = default;
+  constexpr EBOBaseImpl& operator=(EBOBaseImpl const&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  EBOBaseImpl& operator=(EBOBaseImpl&&) = default;
+  constexpr EBOBaseImpl& operator=(EBOBaseImpl&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   ~EBOBaseImpl() = default;
@@ -232,8 +228,7 @@ struct StandardLayoutNoUniqueAddressMemberEmulation
   using ebo_base_t::ebo_base_t;
 
   KOKKOS_FORCEINLINE_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  T& no_unique_address_data_member() & {
+  constexpr T& no_unique_address_data_member() & {
     return this->ebo_base_t::_ebo_data_member();
   }
 
@@ -253,8 +248,7 @@ struct StandardLayoutNoUniqueAddressMemberEmulation
   }
 
   KOKKOS_FORCEINLINE_FUNCTION
-  KOKKOS_CONSTEXPR_14
-  T&& no_unique_address_data_member() && {
+  constexpr T&& no_unique_address_data_member() && {
     return this->ebo_base_t::_ebo_data_member();
   }
 };
