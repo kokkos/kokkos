@@ -47,7 +47,8 @@
 #ifdef KOKKOS_ENABLE_HPX
 #include <Kokkos_HPX.hpp>
 
-#include <hpx/util/yield_while.hpp>
+#include <hpx/init.hpp>
+#include <hpx/local/thread.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -77,7 +78,8 @@ int HPX::concurrency() {
 void HPX::impl_initialize(int thread_count) {
   hpx::runtime *rt = hpx::get_runtime_ptr();
   if (rt == nullptr) {
-    std::vector<std::string> config = {
+    hpx::local::init_params i;
+    i.cfg = {
         "hpx.os_threads=" + std::to_string(thread_count),
 #ifdef KOKKOS_ENABLE_DEBUG
         "--hpx:attach-debugger=exception",
@@ -86,21 +88,7 @@ void HPX::impl_initialize(int thread_count) {
     int argc_hpx     = 1;
     char name[]      = "kokkos_hpx";
     char *argv_hpx[] = {name, nullptr};
-    hpx::start(nullptr, argc_hpx, argv_hpx, config);
-
-#if HPX_VERSION_FULL < 0x010400
-    // This has been fixed in HPX 1.4.0.
-    //
-    // NOTE: Wait for runtime to start. hpx::start returns as soon as
-    // possible, meaning some operations are not allowed immediately
-    // after hpx::start. Notably, hpx::stop needs state_running. This
-    // needs to be fixed in HPX itself.
-
-    // Get runtime pointer again after it has been started.
-    rt = hpx::get_runtime_ptr();
-    hpx::util::yield_while(
-        [rt]() { return rt->get_state() < hpx::state_running; });
-#endif
+    hpx::local::start(nullptr, argc_hpx, argv_hpx, i);
 
     m_hpx_initialized = true;
   }
@@ -109,7 +97,8 @@ void HPX::impl_initialize(int thread_count) {
 void HPX::impl_initialize() {
   hpx::runtime *rt = hpx::get_runtime_ptr();
   if (rt == nullptr) {
-    std::vector<std::string> config = {
+    hpx::local::init_params i;
+    i.cfg = {
 #ifdef KOKKOS_ENABLE_DEBUG
         "--hpx:attach-debugger=exception",
 #endif
@@ -117,17 +106,7 @@ void HPX::impl_initialize() {
     int argc_hpx     = 1;
     char name[]      = "kokkos_hpx";
     char *argv_hpx[] = {name, nullptr};
-    hpx::start(nullptr, argc_hpx, argv_hpx, config);
-
-    // NOTE: Wait for runtime to start. hpx::start returns as soon as
-    // possible, meaning some operations are not allowed immediately
-    // after hpx::start. Notably, hpx::stop needs state_running. This
-    // needs to be fixed in HPX itself.
-
-    // Get runtime pointer again after it has been started.
-    rt = hpx::get_runtime_ptr();
-    hpx::util::yield_while(
-        [rt]() { return rt->get_state() < hpx::state_running; });
+    hpx::local::start(nullptr, argc_hpx, argv_hpx, i);
 
     m_hpx_initialized = true;
   }
@@ -142,8 +121,8 @@ void HPX::impl_finalize() {
   if (m_hpx_initialized) {
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt != nullptr) {
-      hpx::apply([]() { hpx::finalize(); });
-      hpx::stop();
+      hpx::apply([]() { hpx::local::finalize(); });
+      hpx::local::stop();
     } else {
       Kokkos::abort(
           "Kokkos::Experimental::HPX::impl_finalize: Kokkos started "

@@ -47,8 +47,8 @@
 
 #include <Kokkos_HPX.hpp>
 
-#include <hpx/apply.hpp>
-#include <hpx/lcos/local/latch.hpp>
+#include <hpx/local/future.hpp>
+#include <hpx/local/latch.hpp>
 
 namespace Kokkos {
 namespace Impl {

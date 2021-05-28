@@ -74,19 +74,16 @@
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
-#include <hpx/apply.hpp>
-#include <hpx/hpx_start.hpp>
-#include <hpx/include/util.hpp>
-#include <hpx/lcos/local/barrier.hpp>
-#include <hpx/lcos/local/latch.hpp>
-#include <hpx/lcos/local/spinlock.hpp>
-#include <hpx/parallel/algorithms/for_loop.hpp>
-#include <hpx/parallel/algorithms/reduce.hpp>
-#include <hpx/parallel/executors/static_chunk_size.hpp>
-#include <hpx/runtime.hpp>
-#include <hpx/runtime/threads/run_as_hpx_thread.hpp>
-#include <hpx/runtime/threads/threadmanager.hpp>
-#include <hpx/runtime/thread_pool_helpers.hpp>
+#include <hpx/local/algorithm.hpp>
+#include <hpx/local/barrier.hpp>
+#include <hpx/local/condition_variable.hpp>
+#include <hpx/local/execution.hpp>
+#include <hpx/local/future.hpp>
+#include <hpx/local/init.hpp>
+#include <hpx/local/latch.hpp>
+#include <hpx/local/mutex.hpp>
+#include <hpx/local/runtime.hpp>
+#include <hpx/local/thread.hpp>
 
 #include <Kokkos_UniqueToken.hpp>
 
@@ -221,7 +218,7 @@ class HPX {
     instance_data(hpx::shared_future<void> future) : m_future(future) {}
     Kokkos::Impl::thread_buffer m_buffer;
     hpx::shared_future<void> m_future = hpx::make_ready_future<void>();
-    hpx::lcos::local::spinlock m_mutex;
+    hpx::spinlock m_mutex;
   };
 
   mutable std::shared_ptr<instance_data> m_independent_instance_data;
@@ -515,22 +512,18 @@ inline void dispatch_execute_task(Closure *closure,
                                   bool force_synchronous = false) {
   Kokkos::Experimental::HPX::impl_increment_active_parallel_region_count();
 
-  if (hpx::threads::get_self_ptr() == nullptr) {
-    hpx::threads::run_as_hpx_thread([closure, &instance]() {
-      std::unique_lock<hpx::lcos::local::spinlock> l(instance.impl_get_mutex());
-      hpx::shared_future<void> &fut = instance.impl_get_future();
-      Closure closure_copy          = *closure;
-      fut = fut.then([closure_copy](hpx::shared_future<void> &&) {
-        closure_copy.execute_task();
-      });
-    });
-  } else {
-    std::unique_lock<hpx::lcos::local::spinlock> l(instance.impl_get_mutex());
+  Closure closure_copy = *closure;
+
+  {
+    std::unique_lock<hpx::spinlock> l(instance.impl_get_future_mutex());
+    hpx::util::ignore_lock(&instance.impl_get_future_mutex());
     hpx::shared_future<void> &fut = instance.impl_get_future();
-    Closure closure_copy          = *closure;
-    fut = fut.then([closure_copy](hpx::shared_future<void> &&) {
-      closure_copy.execute_task();
-    });
+
+    fut = fut.then(hpx::execution::parallel_executor(
+                       hpx::threads::thread_schedule_hint(0)),
+                   [closure_copy](hpx::shared_future<void> &&) {
+                     closure_copy.execute_task();
+                   });
   }
 
   if (force_synchronous) {
@@ -548,11 +541,7 @@ inline void dispatch_execute_task(Closure *closure,
   Kokkos::Experimental::HPX::impl_increment_active_parallel_region_count();
 #endif
 
-  if (hpx::threads::get_self_ptr() == nullptr) {
-    hpx::threads::run_as_hpx_thread([closure]() { closure->execute_task(); });
-  } else {
-    closure->execute_task();
-  }
+  closure->execute_task();
 }
 #endif
 }  // namespace Impl
@@ -759,8 +748,6 @@ struct HPXTeamMember {
 template <class... Properties>
 class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     : public PolicyTraits<Properties...> {
-  using traits = PolicyTraits<Properties...>;
-
   int m_league_size;
   int m_team_size;
   std::size_t m_team_scratch_size[2];
@@ -768,6 +755,8 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
   int m_chunk_size;
 
  public:
+  using traits = PolicyTraits<Properties...>;
+
   //! Tag this class as a kokkos execution policy
   using execution_policy = TeamPolicyInternal;
 
@@ -1098,9 +1087,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     num_tasks_remaining.wait();
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 2
-    using hpx::parallel::for_loop_strided;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    // std::cerr << "ParallelFor<HPX> impl 2\n";
+    using hpx::for_loop_strided;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
 
     const int num_tasks =
         (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
@@ -1149,9 +1139,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #endif
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-    using hpx::parallel::for_loop;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::for_loop;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
 
     for_loop(par.with(static_chunk_size(m_policy.chunk_size())),
              m_policy.begin(), m_policy.end(), [this](const Member i) {
@@ -1160,7 +1150,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::apply;
-    using hpx::lcos::local::latch;
+    using hpx::latch;
 
     const int num_tasks =
         (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
@@ -1184,9 +1174,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     num_tasks_remaining.wait();
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 2
-    using hpx::parallel::for_loop_strided;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::for_loop_strided;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
 
     const int num_tasks =
         (m_policy.end() - m_policy.begin() + m_policy.chunk_size() - 1) /
@@ -1484,10 +1474,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     thread_buffer &buffer = m_policy.space().impl_get_buffer();
     buffer.resize(num_worker_threads, value_size);
 
-    using hpx::parallel::for_loop;
-    using hpx::parallel::for_loop_strided;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::for_loop;
+    using hpx::for_loop_strided;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
 
     {
       ChunkedRoundRobinExecutor exec(num_worker_threads);
@@ -1619,9 +1609,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     buffer.resize(num_worker_threads, value_size);
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-    using hpx::parallel::for_loop;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::for_loop;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
 
     for_loop(par, 0, num_worker_threads, [this, &buffer](std::size_t t) {
       ValueInit::init(ReducerConditional::select(m_functor, m_reducer),
@@ -1638,7 +1628,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::apply;
-    using hpx::lcos::local::latch;
+    using hpx::latch;
 
     {
       latch num_tasks_remaining(num_worker_threads);
@@ -1682,10 +1672,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     num_tasks_remaining.wait();
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 2
-    using hpx::parallel::for_loop;
-    using hpx::parallel::for_loop_strided;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::for_loop;
+    using hpx::for_loop_strided;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
 
     {
       ChunkedRoundRobinExecutor exec(num_worker_threads);
@@ -1838,10 +1828,10 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     buffer.resize(num_worker_threads, 2 * value_size);
 
     using hpx::apply;
-    using hpx::lcos::local::barrier;
-    using hpx::lcos::local::latch;
+    using hpx::barrier;
+    using hpx::latch;
 
-    barrier bar(num_worker_threads);
+    barrier<> bar(num_worker_threads);
     latch num_tasks_remaining(num_worker_threads);
     ChunkedRoundRobinExecutor exec(num_worker_threads);
 
@@ -1855,7 +1845,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
         execute_functor_range<WorkTag>(m_functor, range.begin(), range.end(),
                                        update_sum, false);
 
-        bar.wait();
+        bar.arrive_and_wait();
 
         if (t == 0) {
           ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
@@ -1877,7 +1867,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
           }
         }
 
-        bar.wait();
+        bar.arrive_and_wait();
 
         reference_type update_base = ValueOps::reference(
             reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
@@ -1958,10 +1948,10 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     buffer.resize(num_worker_threads, 2 * value_size);
 
     using hpx::apply;
-    using hpx::lcos::local::barrier;
-    using hpx::lcos::local::latch;
+    using hpx::barrier;
+    using hpx::latch;
 
-    barrier bar(num_worker_threads);
+    barrier<> bar(num_worker_threads);
     latch num_tasks_remaining(num_worker_threads);
     ChunkedRoundRobinExecutor exec(num_worker_threads);
 
@@ -1975,7 +1965,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         execute_functor_range<WorkTag>(m_functor, range.begin(), range.end(),
                                        update_sum, false);
 
-        bar.wait();
+        bar.arrive_and_wait();
 
         if (t == 0) {
           ValueInit::init(m_functor, reinterpret_cast<pointer_type>(
@@ -1997,7 +1987,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
           }
         }
 
-        bar.wait();
+        bar.arrive_and_wait();
 
         reference_type update_base = ValueOps::reference(
             reinterpret_cast<pointer_type>(buffer.get(t) + value_size));
@@ -2105,9 +2095,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     buffer.resize(num_worker_threads, m_shared);
 
 #if KOKKOS_HPX_IMPLEMENTATION == 0
-    using hpx::parallel::for_loop;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::for_loop;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
 
     for_loop(
         par.with(static_chunk_size(m_policy.chunk_size())), 0,
@@ -2120,7 +2110,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 1
     using hpx::apply;
-    using hpx::lcos::local::latch;
+    using hpx::latch;
 
     const int num_tasks = (m_policy.league_size() + m_policy.chunk_size() - 1) /
                           m_policy.chunk_size();
@@ -2144,9 +2134,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     num_tasks_remaining.wait();
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 2
-    using hpx::parallel::for_loop_strided;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::for_loop_strided;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
 
     const int num_tasks = (m_policy.league_size() + m_policy.chunk_size() - 1) /
                           m_policy.chunk_size();
@@ -2360,10 +2350,10 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     num_tasks_remaining.wait();
 
 #elif KOKKOS_HPX_IMPLEMENTATION == 2
-    using hpx::parallel::for_loop;
-    using hpx::parallel::for_loop_strided;
-    using hpx::parallel::execution::par;
-    using hpx::parallel::execution::static_chunk_size;
+    using hpx::for_loop;
+    using hpx::for_loop_strided;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
 
     {
       ChunkedRoundRobinExecutor exec(num_worker_threads);

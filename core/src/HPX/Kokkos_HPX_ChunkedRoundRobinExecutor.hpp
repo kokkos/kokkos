@@ -46,15 +46,11 @@
 #define KOKKOS_HPX_CHUNKEDROUNDROBINEXECUTOR_HPP
 
 #include <hpx/config.hpp>
-#include <hpx/async_launch_policy_dispatch.hpp>
-#include <hpx/lcos/local/latch.hpp>
-#include <hpx/parallel/executors/execution.hpp>
-#include <hpx/parallel/executors/post_policy_dispatch.hpp>
-#include <hpx/runtime/get_os_thread_count.hpp>
-#include <hpx/runtime/threads/thread_helpers.hpp>
-#include <hpx/traits/is_executor.hpp>
-#include <hpx/traits/is_launch_policy.hpp>
-#include <hpx/util/deferred_call.hpp>
+#include <hpx/local/thread.hpp>
+#include <hpx/local/latch.hpp>
+#include <hpx/local/execution.hpp>
+#include <hpx/local/runtime.hpp>
+#include <hpx/local/functional.hpp>
 
 #include <cstddef>
 #include <type_traits>
@@ -90,7 +86,7 @@ namespace Impl {
 ///               | 7 | 8
 ///               | 9 | 10
 struct ChunkedRoundRobinExecutor {
-  using execution_category = hpx::parallel::execution::parallel_execution_tag;
+  using execution_category = hpx::execution::parallel_execution_tag;
 
   HPX_CONSTEXPR explicit ChunkedRoundRobinExecutor(
       std::size_t num_tasks = std::size_t(-1), std::size_t core_offset = 0,
@@ -125,15 +121,17 @@ struct ChunkedRoundRobinExecutor {
     hpx::util::thread_description const desc(
         f, "Kokkos::Impl::ChunkedRoundRobinExecutor::async_execute");
     hpx::threads::thread_schedule_hint const hint(
-        hpx::threads::thread_schedule_hint_mode_thread,
+        hpx::threads::thread_schedule_hint_mode::thread,
         core_offset_ + std::floor(double(num_tasks_spawned_ % num_tasks_) /
                                   num_tasks_per_core_));
 
-    hpx::threads::register_thread_nullary(
-        hpx::util::deferred_call(std::forward<F>(f), std::forward<Ts>(ts)...),
-        desc, hpx::threads::pending, false,
-        hpx::threads::thread_priority_normal, hint,
-        hpx::threads::thread_stacksize_default);
+    hpx::threads::thread_init_data data(
+        hpx::threads::make_thread_function_nullary(hpx::util::deferred_call(
+            std::forward<F>(f), std::forward<Ts>(ts)...)),
+        desc, hpx::threads::thread_priority::normal, hint,
+        hpx::threads::thread_stacksize::default_,
+        hpx::threads::thread_schedule_state::pending, false);
+    hpx::threads::register_thread(data);
 
     ++num_tasks_spawned_;
   }
@@ -151,18 +149,19 @@ struct ChunkedRoundRobinExecutor {
 
     for (auto const &s : shape) {
       hpx::threads::thread_schedule_hint const hint(
-          hpx::threads::thread_schedule_hint_mode_thread,
+          hpx::threads::thread_schedule_hint_mode::thread,
           core_offset_ + std::floor(double(num_tasks_spawned % num_tasks_) /
                                     num_tasks_per_core_));
 
-      hpx::threads::register_thread_nullary(
-          [&, s]() {
+      hpx::threads::thread_init_data data(
+          hpx::threads::make_thread_function_nullary([&, s]() {
             hpx::util::invoke(f, s, ts...);
             l.count_down(1);
-          },
-          desc, hpx::threads::pending, false,
-          hpx::threads::thread_priority_normal, hint,
-          hpx::threads::thread_stacksize_default);
+          }),
+          desc, hpx::threads::thread_priority::normal, hint,
+          hpx::threads::thread_stacksize::default_,
+          hpx::threads::thread_schedule_state::pending, false);
+      hpx::threads::register_thread(data);
 
       ++num_tasks_spawned;
     }
