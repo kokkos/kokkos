@@ -55,6 +55,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <atomic>
+#include <limits>
 
 //#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -224,8 +225,14 @@ void *CudaSpace::impl_allocate(
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (CUDART_VERSION >= 11020)
-  auto error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
-  cudaDeviceSynchronize();
+  cudaError_t error_code;
+  if ( (size_t)arg_alloc_size < (std::numeric_limits<size_t>::max() - 1000) ) {
+    error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
+    cudaDeviceSynchronize();
+  }
+  else {
+    error_code = cudaErrorInvalidValue;
+  }
 #else
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
 #endif
