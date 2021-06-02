@@ -1738,6 +1738,13 @@ inline void deep_copy(
                    typename ViewTraits<DT, DP...>::value_type>::value,
       "deep_copy requires non-const type");
 
+  using dst_traits       = ViewTraits<DT, DP...>;
+  using dst_memory_space = typename dst_traits::memory_space;
+  static_assert(
+      Kokkos::Impl::SpaceAccessibility<ExecSpace, dst_memory_space>::accessible,
+      "Destination DynRankView must live in a memory space "
+      "accessible to the given execution space");
+
   Kokkos::Impl::DynRankViewFill<ExecSpace, DynRankView<DT, DP...> >(exec_space,
                                                                     dst, value);
 }
