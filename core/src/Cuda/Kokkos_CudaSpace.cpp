@@ -229,7 +229,7 @@ void *CudaSpace::impl_allocate(
   // FIXME_CUDA Checks for bug (info in PR 4026, fixed in Cuda 11.4)
   if ((size_t)arg_alloc_size < (std::numeric_limits<size_t>::max() - 1000)) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
-    cudaDeviceSynchronize();
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
   } else {
     error_code = cudaMalloc(&ptr, arg_alloc_size);
   }
