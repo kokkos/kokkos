@@ -226,12 +226,12 @@ void *CudaSpace::impl_allocate(
 #error CUDART_VERSION undefined!
 #elif (CUDART_VERSION >= 11020)
   cudaError_t error_code;
-  if ( (size_t)arg_alloc_size < (std::numeric_limits<size_t>::max() - 1000) ) {
+  // FIXME_CUDA Checks for bug (info in PR 4026, fixed in Cuda 11.4)
+  if ((size_t)arg_alloc_size < (std::numeric_limits<size_t>::max() - 1000)) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
     cudaDeviceSynchronize();
-  }
-  else {
-    error_code = cudaErrorInvalidValue;
+  } else {
+    error_code = cudaMalloc(&ptr, arg_alloc_size);
   }
 #else
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
