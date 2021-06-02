@@ -2962,7 +2962,9 @@ resize(Kokkos::View<T, P...>& v, const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
 
   view_type v_resized(v.label(), n0, n1, n2, n3, n4, n5, n6, n7);
 
+  Kokkos::fence();
   Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
+  Kokkos::fence();
 
   v = v_resized;
 }
@@ -3060,7 +3062,11 @@ resize(const I& arg_prop, Kokkos::View<T, P...>& v,
   view_type v_resized(view_alloc(v.label(), std::forward<const I>(arg_prop)),
                       n0, n1, n2, n3, n4, n5, n6, n7);
 
+  // These fences really ought to look for an execution space in
+  // arg_prop, and just fence that if there is one
+  Kokkos::fence();
   Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
+  Kokkos::fence();
 
   v = v_resized;
 }
@@ -3077,7 +3083,9 @@ inline void resize(Kokkos::View<T, P...>& v,
 
   view_type v_resized(v.label(), layout);
 
+  Kokkos::fence();
   Kokkos::Impl::ViewRemap<view_type, view_type>(v_resized, v);
+  Kokkos::fence();
 
   v = v_resized;
 }
