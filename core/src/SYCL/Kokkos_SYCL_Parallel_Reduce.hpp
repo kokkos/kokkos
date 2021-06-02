@@ -217,16 +217,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               }
               item.barrier(sycl::access::fence_space::local_space);
 
-              // from the Intel implementation for sub group reduce without init
               auto sg                   = item.get_sub_group();
-              auto result               = &local_mem[local_id * value_count];
+              auto* result              = &local_mem[local_id * value_count];
               const int max_local_range = sg.get_max_local_range()[0];
-              for (int mask = 1; mask < max_local_range; mask <<= 1) {
-                auto tmp = sg.shuffle_down(result, sycl::id<1>(mask));
-                if ((sg.get_local_id()[0] ^ mask) < sg.get_local_range()[0]) {
-                  ValueJoin::join(selected_reducer, result, tmp);
-                }
-              }
+              for (unsigned int stride = max_local_range / 2; stride > 0;
+                   stride >>= 1)
+                ValueJoin::join(selected_reducer, result,
+                                sg.shuffle_down(result, stride));
 
               item.barrier(sycl::access::fence_space::local_space);
               if (sg.get_local_id()[0] == 0)
@@ -241,16 +238,25 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               // contains all the values with index%4==0, after the second one
               // the values with index%2==0 and after the third one index%1==0,
               // i.e., all values.
-              for (unsigned int stride = sg.get_group_range()[0] / 2;
-                   stride > 0; stride >>= 1) {
-                const auto idx = local_id;
-                if (idx < stride && idx + stride < sg.get_group_range()[0]) {
-                  ValueJoin::join(selected_reducer,
-                                  &local_mem[idx * value_count],
-                                  &local_mem[(idx + stride) * value_count]);
+              if (sg.get_group_id()[0] == 0) {
+                const auto local_range = sg.get_local_range()[0];
+                const auto n_subgroups = sg.get_group_range()[0];
+                const auto id_in_sg    = sg.get_local_id()[0];
+                auto* result_          = &local_mem[id_in_sg * value_count];
+                for (unsigned int offset = local_range; offset < n_subgroups;
+                     offset += local_range)
+                  if (id_in_sg + offset < n_subgroups)
+                    ValueJoin::join(
+                        selected_reducer, result_,
+                        &local_mem[(id_in_sg + offset) * value_count]);
+                for (unsigned int stride = local_range / 2; stride > 0;
+                     stride >>= 1) {
+                  auto* tmp = sg.shuffle_down(result_, stride);
+                  if (id_in_sg + stride < n_subgroups)
+                    ValueJoin::join(selected_reducer, result_, tmp);
                 }
-                item.barrier(sycl::access::fence_space::local_space);
               }
+              item.barrier(sycl::access::fence_space::local_space);
 
               // Finally, we copy the workgroup results back to global memory to
               // be used in the next iteration. If this is the last iteration,
