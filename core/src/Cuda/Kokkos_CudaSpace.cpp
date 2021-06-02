@@ -358,7 +358,7 @@ void CudaSpace::impl_deallocate(
 #elif (CUDART_VERSION >= 11020)
     CUDA_SAFE_CALL(cudaDeviceSynchronize());
     CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
-    cudaDeviceSynchronize();
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
 #else
     CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
 #endif
