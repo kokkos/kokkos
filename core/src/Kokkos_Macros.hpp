@@ -524,6 +524,7 @@
 
 #if defined(KOKKOS_ENABLE_DEPRECATED_CODE_3)
 #define KOKKOS_DEPRECATED
+#define KOKKOS_CONSTEXPR_14 constexpr
 #else
 #define KOKKOS_DEPRECATED [[deprecated]]
 #endif
