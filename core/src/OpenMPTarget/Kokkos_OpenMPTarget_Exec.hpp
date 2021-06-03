@@ -1258,11 +1258,7 @@ KOKKOS_INLINE_FUNCTION
       static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
 
 #pragma omp barrier
-  // These three lines all cause crash
   Impl::OpenMPTargetReducerWrapper<ReducerType>::init(TeamThread_scratch[0]);
-//  result.init(TeamThread_scratch[0]);
-//  Impl::OpenMPTargetReducerWrapper<ReducerType> red;
-//  red.init(TeamThread_scratch[0]);
 #pragma omp barrier
 
 #pragma omp for reduction(custominner : TeamThread_scratch[:1])
@@ -1313,6 +1309,12 @@ KOKKOS_INLINE_FUNCTION
          i += team_size) {
       lambda(i, tmp2);
     }
+
+    // FIXME_OPENMPTARGET: Join should work but doesn't. Every threads gets a
+    // private TeamThread_scratch[0] and at the end of the for-loop the `join`
+    // operation is performed by OpenMP itself and hence the simple assignment
+    // works.
+    //    result.join(TeamThread_scratch[0], tmp2);
     TeamThread_scratch[0] = tmp2;
   }
 
