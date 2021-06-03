@@ -251,24 +251,23 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   if (id_in_sg + stride < n_subgroups)
                     ValueJoin::join(selected_reducer, result_, tmp);
                 }
-              }
-              item.barrier(sycl::access::fence_space::local_space);
 
-              // Finally, we copy the workgroup results back to global memory to
-              // be used in the next iteration. If this is the last iteration,
-              // i.e., there is only one workgroup also call final() if
-              // necessary.
-              if (local_id == 0) {
-                ValueOps::copy(
-                    functor,
-                    &results_ptr[(item.get_group_linear_id()) * value_count],
-                    &local_mem[0]);
-                if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
-                  if (n_wgroups <= 1)
-                    FunctorFinal<FunctorType, WorkTag>::final(
-                        static_cast<const FunctorType&>(functor),
-                        &results_ptr[(item.get_group_linear_id()) *
-                                     value_count]);
+                // Finally, we copy the workgroup results back to global memory
+                // to be used in the next iteration. If this is the last
+                // iteration, i.e., there is only one workgroup also call
+                // final() if necessary.
+                if (id_in_sg == 0) {
+                  ValueOps::copy(
+                      functor,
+                      &results_ptr[(item.get_group_linear_id()) * value_count],
+                      &local_mem[0]);
+                  if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
+                    if (n_wgroups <= 1)
+                      FunctorFinal<FunctorType, WorkTag>::final(
+                          static_cast<const FunctorType&>(functor),
+                          &results_ptr[(item.get_group_linear_id()) *
+                                       value_count]);
+                }
               }
             });
       });
