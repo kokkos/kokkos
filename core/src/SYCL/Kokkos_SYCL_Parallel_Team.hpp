@@ -545,12 +545,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
             selected_reducer);
-    // FIXME_SYCL only use the first half
     const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
-        sizeof(value_type) * std::max(value_count, 1u) * init_size * 2));
-    // FIXME_SYCL without this we are running into a race condition
-    const auto results_ptr2 =
-        results_ptr + std::max(value_count, 1u) * init_size;
+        sizeof(value_type) * std::max(value_count, 1u) * init_size));
 
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
@@ -663,49 +659,64 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               }
               item.barrier(sycl::access::fence_space::local_space);
 
+              auto sg                   = item.get_sub_group();
+              auto* result              = &local_mem[local_id * value_count];
+              const int max_local_range = sg.get_max_local_range()[0];
+              for (unsigned int stride = max_local_range / 2; stride > 0;
+                   stride >>= 1)
+                ValueJoin::join(selected_reducer, result,
+                                sg.shuffle_down(result, stride));
+
+              item.barrier(sycl::access::fence_space::local_space);
+              if (sg.get_local_id()[0] == 0)
+                ValueOps::copy(functor,
+                               &local_mem[sg.get_group_id()[0] * value_count],
+                               result);
+              item.barrier(sycl::access::fence_space::local_space);
+
               // Perform the actual workgroup reduction. To achieve a better
               // memory access pattern, we use sequential addressing and a
               // reversed loop. If the workgroup size is 8, the first element
               // contains all the values with index%4==0, after the second one
               // the values with index%2==0 and after the third one index%1==0,
               // i.e., all values.
-              for (unsigned int stride = wgroup_size / 2; stride > 0;
-                   stride >>= 1) {
-                const auto idx = local_id;
-                if (idx < stride) {
-                  ValueJoin::join(selected_reducer,
-                                  &local_mem[idx * value_count],
-                                  &local_mem[(idx + stride) * value_count]);
+              if (sg.get_group_id()[0] == 0) {
+                const auto local_range = sg.get_local_range()[0];
+                const auto n_subgroups = sg.get_group_range()[0];
+                const auto id_in_sg    = sg.get_local_id()[0];
+                auto* result_          = &local_mem[id_in_sg * value_count];
+                for (unsigned int offset = local_range; offset < n_subgroups;
+                     offset += local_range)
+                  if (id_in_sg + offset < n_subgroups)
+                    ValueJoin::join(
+                        selected_reducer, result_,
+                        &local_mem[(id_in_sg + offset) * value_count]);
+                for (unsigned int stride = local_range / 2; stride > 0;
+                     stride >>= 1) {
+                  auto* tmp = sg.shuffle_down(result_, stride);
+                  if (id_in_sg + stride < n_subgroups)
+                    ValueJoin::join(selected_reducer, result_, tmp);
                 }
-                item.barrier(sycl::access::fence_space::local_space);
-              }
 
-              // Finally, we copy the workgroup results back to global memory to
-              // be used in the next iteration. If this is the last iteration,
-              // i.e., there is only one workgroup also call final() if
-              // necessary.
-              if (local_id == 0) {
-                ValueOps::copy(
-                    functor,
-                    &results_ptr2[(item.get_group_linear_id()) * value_count],
-                    &local_mem[0]);
-                if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
-                  if (n_wgroups <= 1 && item.get_group_linear_id() == 0) {
-                    FunctorFinal<FunctorType, WorkTag>::final(
-                        static_cast<const FunctorType&>(functor),
-                        &results_ptr2[(item.get_group_linear_id()) *
-                                      value_count]);
-                  }
+                // Finally, we copy the workgroup results back to global memory
+                // to be used in the next iteration. If this is the last
+                // iteration, i.e., there is only one workgroup also call
+                // final() if necessary.
+                if (id_in_sg == 0) {
+                  ValueOps::copy(
+                      functor,
+                      &results_ptr[(item.get_group_linear_id()) * value_count],
+                      &local_mem[0]);
+                  if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
+                    if (n_wgroups <= 1 && item.get_group_linear_id() == 0)
+                      FunctorFinal<FunctorType, WorkTag>::final(
+                          static_cast<const FunctorType&>(functor),
+                          &results_ptr[(item.get_group_linear_id()) *
+                                       value_count]);
+                }
               }
             });
       });
-      space.fence();
-
-      // FIXME_SYCL this is likely not necessary, see above
-      Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                             Kokkos::Experimental::SYCLDeviceUSMSpace>(
-          space, results_ptr, results_ptr2,
-          sizeof(*m_result_ptr) * value_count * n_wgroups);
       space.fence();
 
       first_run = false;
