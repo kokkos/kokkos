@@ -287,6 +287,9 @@ KOKKOS_INLINE_FUNCTION long double nanl(char const* arg) { return ::nanl(arg); }
 #endif
 #else
 // FIXME_SYCL
+// sycl::nan does not follow the C/C++ standard library and takes an unsigned
+// integer as argument.  The current implementation does not attempt to convert
+// the character string arg into the quiet NaN value.
 KOKKOS_INLINE_FUNCTION float nanf(char const*) { return sycl::nan(0u); }
 KOKKOS_INLINE_FUNCTION double nan(char const*) { return sycl::nan(0ul); }
 #endif
