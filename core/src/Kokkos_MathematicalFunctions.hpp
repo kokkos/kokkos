@@ -254,7 +254,15 @@ KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmin)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmax)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fdim)
 #ifndef KOKKOS_ENABLE_SYCL
-KOKKOS_IMPL_MATH_NAN()
+KOKKOS_INLINE_FUNCTION float nanf(char const* arg) { return ::nanf(arg); }
+KOKKOS_INLINE_FUNCTION double nan(char const* arg) { return ::nan(arg); }
+#if defined(KOKKOS_IMPL_MATH_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS)
+KOKKOS_INLINE_FUNCTION long double nanl(char const* arg) { return ::nanl(arg); }
+#endif
+#else
+// FIXME_SYCL
+KOKKOS_INLINE_FUNCTION float nanf(char const*) { return sycl::nan(0u); }
+KOKKOS_INLINE_FUNCTION double nan(char const*) { return sycl::nan(0ul); }
 #endif
 // Power functions
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(pow)
@@ -293,6 +301,7 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(lgamma)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(ceil)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(floor)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(trunc)
+// FIXME_SYCL
 #ifndef KOKKOS_ENABLE_SYCL
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(nearbyint)
 #endif
@@ -306,7 +315,6 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnan)
 #undef KOKKOS_IMPL_MATH_UNARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION
-#undef KOKKOS_IMPL_MATH_NAN
 
 // clang-format off
 #ifdef KOKKOS_ENABLE_SYCL
