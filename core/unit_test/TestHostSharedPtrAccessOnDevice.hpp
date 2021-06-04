@@ -56,9 +56,11 @@ class Data {
 
  public:
   // Because strncpy is not supported within device code
-  KOKKOS_FUNCTION void my_strncpy(char* dst, const char* src, size_t cnt) {
-    while (cnt-- > 0 && (*dst++ = *src++))
+  static KOKKOS_FUNCTION void my_strncpy(char* dst, const char* src,
+                                         size_t cnt) {
+    while (cnt-- > 0 && (*dst++ = *src++) != '\0')
       ;
+    while (cnt-- > 0) *dst++ = '\0';
   }
   KOKKOS_FUNCTION void write(char const* s) { my_strncpy(d, s, sizeof(d)); }
 };
