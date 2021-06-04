@@ -88,109 +88,137 @@ using promote_2_t = typename promote_2<T, U>::type;
 namespace Experimental {
 
 #if defined(KOKKOS_ENABLE_SYCL)
-#define NAMESPACE_MATH_FUNCTIONS sycl
+#define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE sycl
 #else
-#define NAMESPACE_MATH_FUNCTIONS std
+#define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE std
 #endif
-
-#define KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, RETURNTYPE, ARGTYPE) \
-  KOKKOS_INLINE_FUNCTION RETURNTYPE FUNC(ARGTYPE x) {                        \
-    using NAMESPACE_MATH_FUNCTIONS::FUNC;                                    \
-    return FUNC(x);                                                          \
-  }
-
-#define KOKKOS_IMPL_UNARY_FUNCTION_INTEGRAL(FUNC, RETURNTYPE)              \
-  template <typename Integer,                                              \
-            typename = std::enable_if_t<std::is_integral<Integer>::value>> \
-  KOKKOS_INLINE_FUNCTION RETURNTYPE FUNC(Integer x) {                      \
-    return Kokkos::Experimental::FUNC(static_cast<double>(x));             \
-  }
-
-#define KOKKOS_IMPL_BINARY_FUNCTION_FLOATING_POINT(FUNC, TYPE) \
-  KOKKOS_INLINE_FUNCTION TYPE FUNC(TYPE x, TYPE y) {           \
-    using NAMESPACE_MATH_FUNCTIONS::FUNC;                      \
-    return FUNC(x, y);                                         \
-  }
 
 // NOTE long double overloads are not available on the device
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+#else
+#define KOKKOS_IMPL_MATH_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+#endif
 
-#define KOKKOS_IMPL_BINARY_FUNCTION_ARITHMETIC(FUNC)                         \
-  template <typename Arithmetic1, typename Arithmetic2,                      \
-            typename = std::enable_if_t<                                     \
-                std::is_arithmetic<Arithmetic1>::value &&                    \
-                std::is_arithmetic<Arithmetic2>::value &&                    \
-                !std::is_same<Arithmetic1, long double>::value &&            \
-                !std::is_same<Arithmetic2, long double>::value>>             \
-  KOKKOS_INLINE_FUNCTION double FUNC(Arithmetic1 x, Arithmetic2 y) {         \
-    return Kokkos::Experimental::FUNC(                                       \
-        static_cast<std::conditional_t<std::is_integral<Arithmetic1>::value, \
-                                       double, Arithmetic1>>(x),             \
-        static_cast<std::conditional_t<std::is_integral<Arithmetic2>::value, \
-                                       double, Arithmetic2>>(y));            \
+#if defined(KOKKOS_IMPL_MATH_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS)
+
+#define KOKKOS_IMPL_MATH_UNARY_FUNCTION(FUNC)                                 \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x) {                                \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(x);                                                           \
+  }                                                                           \
+  KOKKOS_INLINE_FUNCTION double FUNC(double x) {                              \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(x);                                                           \
+  }                                                                           \
+  KOKKOS_INLINE_FUNCTION long double FUNC(long double x) {                    \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(x);                                                           \
+  }                                                                           \
+  template <class T>                                                          \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, double> \
+  FUNC(T x) {                                                                 \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(static_cast<double>(x));                                      \
   }
 
-#define KOKKOS_IMPL_MATH_UNARY_FUNCTION(FUNC)                     \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, float, float)   \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, double, double) \
-  KOKKOS_IMPL_UNARY_FUNCTION_INTEGRAL(FUNC, double)
-
-#define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                  \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, bool, float)  \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, bool, double) \
-  KOKKOS_IMPL_UNARY_FUNCTION_INTEGRAL(FUNC, bool)
-
-#define KOKKOS_IMPL_MATH_BINARY_FUNCTION(FUNC)             \
-  KOKKOS_IMPL_BINARY_FUNCTION_FLOATING_POINT(FUNC, float)  \
-  KOKKOS_IMPL_BINARY_FUNCTION_FLOATING_POINT(FUNC, double) \
-  KOKKOS_IMPL_BINARY_FUNCTION_ARITHMETIC(FUNC)
-
-#define KOKKOS_IMPL_MATH_NAN()                                        \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(nanf, float, char const*) \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(nan, double, char const*)
-
-#else  // long double overloads are available
-
-#define KOKKOS_IMPL_BINARY_FUNCTION_ARITHMETIC(FUNC)                         \
-  template <typename Arithmetic1, typename Arithmetic2,                      \
-            typename =                                                       \
-                std::enable_if_t<std::is_arithmetic<Arithmetic1>::value &&   \
-                                 std::is_arithmetic<Arithmetic2>::value>,    \
-            typename Promoted = std::conditional_t<                          \
-                std::is_same<Arithmetic1, long double>::value ||             \
-                    std::is_same<Arithmetic2, long double>::value,           \
-                long double, double>>                                        \
-  KOKKOS_INLINE_FUNCTION Promoted FUNC(Arithmetic1 x, Arithmetic2 y) {       \
-    return Kokkos::Experimental::FUNC(                                       \
-        static_cast<std::conditional_t<std::is_integral<Arithmetic1>::value, \
-                                       double, Arithmetic1>>(x),             \
-        static_cast<std::conditional_t<std::is_integral<Arithmetic2>::value, \
-                                       double, Arithmetic2>>(y));            \
+#define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                              \
+  KOKKOS_INLINE_FUNCTION bool FUNC(float x) {                               \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  KOKKOS_INLINE_FUNCTION bool FUNC(double x) {                              \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  KOKKOS_INLINE_FUNCTION bool FUNC(long double x) {                         \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  template <class T>                                                        \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, bool> \
+  FUNC(T x) {                                                               \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(static_cast<double>(x));                                    \
   }
 
-#define KOKKOS_IMPL_MATH_UNARY_FUNCTION(FUNC)                               \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, float, float)             \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, double, double)           \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, long double, long double) \
-  KOKKOS_IMPL_UNARY_FUNCTION_INTEGRAL(FUNC, double)
+#define KOKKOS_IMPL_MATH_BINARY_FUNCTION(FUNC)                               \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, float y) {                      \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                        \
+    return FUNC(x, y);                                                       \
+  }                                                                          \
+  KOKKOS_INLINE_FUNCTION double FUNC(double x, double y) {                   \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                        \
+    return FUNC(x, y);                                                       \
+  }                                                                          \
+  KOKKOS_INLINE_FUNCTION long double FUNC(long double x, long double y) {    \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                        \
+    return FUNC(x, y);                                                       \
+  }                                                                          \
+  template <class T1, class T2>                                              \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_arithmetic<T1>::value &&   \
+                                              std::is_arithmetic<T2>::value, \
+                                          Kokkos::Impl::promote_2_t<T1, T2>> \
+  FUNC(T1 x, T2 y) {                                                         \
+    using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                      \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                        \
+    return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));         \
+  }
 
-#define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                       \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, bool, float)       \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, bool, double)      \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(FUNC, bool, long double) \
-  KOKKOS_IMPL_UNARY_FUNCTION_INTEGRAL(FUNC, bool)
+#else  // long double overloads are not available
 
-#define KOKKOS_IMPL_MATH_BINARY_FUNCTION(FUNC)                  \
-  KOKKOS_IMPL_BINARY_FUNCTION_FLOATING_POINT(FUNC, float)       \
-  KOKKOS_IMPL_BINARY_FUNCTION_FLOATING_POINT(FUNC, double)      \
-  KOKKOS_IMPL_BINARY_FUNCTION_FLOATING_POINT(FUNC, long double) \
-  KOKKOS_IMPL_BINARY_FUNCTION_ARITHMETIC(FUNC)
+#define KOKKOS_IMPL_MATH_UNARY_FUNCTION(FUNC)                                 \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x) {                                \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(x);                                                           \
+  }                                                                           \
+  KOKKOS_INLINE_FUNCTION double FUNC(double x) {                              \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(x);                                                           \
+  }                                                                           \
+  template <class T>                                                          \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, double> \
+  FUNC(T x) {                                                                 \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(static_cast<double>(x));                                      \
+  }
 
-#define KOKKOS_IMPL_MATH_NAN()                                        \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(nanf, float, char const*) \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(nan, double, char const*) \
-  KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT(nanl, long double, char const*)
+#define KOKKOS_IMPL_MATH_UNARY_PREDICATE(FUNC)                              \
+  KOKKOS_INLINE_FUNCTION bool FUNC(float x) {                               \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  KOKKOS_INLINE_FUNCTION bool FUNC(double x) {                              \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(x);                                                         \
+  }                                                                         \
+  template <class T>                                                        \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, bool> \
+  FUNC(T x) {                                                               \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
+    return FUNC(static_cast<double>(x));                                    \
+  }
+
+#define KOKKOS_IMPL_MATH_BINARY_FUNCTION(FUNC)                          \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, float y) {                 \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                   \
+    return FUNC(x, y);                                                  \
+  }                                                                     \
+  KOKKOS_INLINE_FUNCTION double FUNC(double x, double y) {              \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                   \
+    return FUNC(x, y);                                                  \
+  }                                                                     \
+  template <class T1, class T2>                                         \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<                              \
+      std::is_arithmetic<T1>::value && std::is_arithmetic<T2>::value && \
+          !std::is_same<T1, long double>::value &&                      \
+          !std::is_same<T2, long double>::value,                        \
+      Kokkos::Impl::promote_2_t<T1, T2>>                                \
+  FUNC(T1 x, T2 y) {                                                    \
+    using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                 \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                   \
+    return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));    \
+  }
 
 #endif
 
@@ -249,10 +277,8 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(isfinite)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isinf)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnan)
 
-#undef KOKKOS_IMPL_UNARY_FUNCTION_FLOATING_POINT
-#undef KOKKOS_IMPL_UNARY_FUNCTION_INTEGRAL
-#undef KOKKOS_IMPL_BINARY_FUNCTION_FLOATING_POINT
-#undef KOKKOS_IMPL_BINARY_FUNCTION_ARITHMETIC
+#undef KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE
+#undef KOKKOS_IMPL_MATH_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #undef KOKKOS_IMPL_MATH_UNARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION
