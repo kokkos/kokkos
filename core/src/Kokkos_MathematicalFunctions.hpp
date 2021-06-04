@@ -252,16 +252,17 @@ namespace Experimental {
 KOKKOS_INLINE_FUNCTION int abs(int n) { return sycl::abs(n); }
 KOKKOS_INLINE_FUNCTION long abs(long n) { return sycl::abs(n); }
 KOKKOS_INLINE_FUNCTION long long abs(long long n) { return sycl::abs(n); }
+// NOTE sycl::abs(genfloat) -> genfloat math function not available
 KOKKOS_INLINE_FUNCTION float abs(float x) { return sycl::fabs(x); }
 KOKKOS_INLINE_FUNCTION double abs(double x) { return sycl::fabs(x); }
 #else
-KOKKOS_INLINE_FUNCTION int abs(int n) { return ::abs(n); }
-KOKKOS_INLINE_FUNCTION long abs(long n) { return ::labs(n); }
-KOKKOS_INLINE_FUNCTION long long abs(long long n) { return ::llabs(n); }
-KOKKOS_INLINE_FUNCTION float abs(float x) { return ::fabsf(x); }
-KOKKOS_INLINE_FUNCTION double abs(double x) { return ::fabs(x); }
+KOKKOS_INLINE_FUNCTION int abs(int n) { using std::abs; return abs(n); }
+KOKKOS_INLINE_FUNCTION long abs(long n) { using std::abs; return abs(n); }
+KOKKOS_INLINE_FUNCTION long long abs(long long n) { using std::abs; return abs(n); }
+KOKKOS_INLINE_FUNCTION float abs(float x) { using std::abs; return abs(x); }
+KOKKOS_INLINE_FUNCTION double abs(double x) { using std::abs; return abs(x); }
 #if !(defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_OPENMPTARGET))
-KOKKOS_INLINE_FUNCTION long double abs(long double x) { return ::fabsl(x); }
+KOKKOS_INLINE_FUNCTION long double abs(long double x) { using std::abs; return abs(x); }
 #endif
 #endif
 // clang-format on
