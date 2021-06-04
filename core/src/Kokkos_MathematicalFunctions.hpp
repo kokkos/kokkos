@@ -115,6 +115,14 @@ namespace Experimental {
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
     return FUNC(x);                                                           \
   }                                                                           \
+  KOKKOS_INLINE_FUNCTION float FUNC##f(float x) {                             \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(x);                                                           \
+  }                                                                           \
+  KOKKOS_INLINE_FUNCTION long double FUNC##l(long double x) {                 \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(x);                                                           \
+  }                                                                           \
   template <class T>                                                          \
   KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral<T>::value, double> \
   FUNC(T x) {                                                                 \
@@ -155,6 +163,14 @@ namespace Experimental {
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                        \
     return FUNC(x, y);                                                       \
   }                                                                          \
+  KOKKOS_INLINE_FUNCTION float FUNC##f(float x, float y) {                   \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                        \
+    return FUNC(x, y);                                                       \
+  }                                                                          \
+  KOKKOS_INLINE_FUNCTION long double FUNC##l(long double x, long double y) { \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                        \
+    return FUNC(x, y);                                                       \
+  }                                                                          \
   template <class T1, class T2>                                              \
   KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_arithmetic<T1>::value &&   \
                                               std::is_arithmetic<T2>::value, \
@@ -173,6 +189,10 @@ namespace Experimental {
     return FUNC(x);                                                           \
   }                                                                           \
   KOKKOS_INLINE_FUNCTION double FUNC(double x) {                              \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
+    return FUNC(x);                                                           \
+  }                                                                           \
+  KOKKOS_INLINE_FUNCTION float FUNC##f(float x) {                             \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                         \
     return FUNC(x);                                                           \
   }                                                                           \
@@ -205,6 +225,10 @@ namespace Experimental {
     return FUNC(x, y);                                                  \
   }                                                                     \
   KOKKOS_INLINE_FUNCTION double FUNC(double x, double y) {              \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                   \
+    return FUNC(x, y);                                                  \
+  }                                                                     \
+  KOKKOS_INLINE_FUNCTION float FUNC##f(float x, float y) {              \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                   \
     return FUNC(x, y);                                                  \
   }                                                                     \
