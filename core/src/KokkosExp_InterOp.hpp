@@ -63,37 +63,42 @@ using type_list = Kokkos::Impl::type_list<T...>;
 // ------------------------------------------------------------------ //
 //  concat_type_list combines types in multiple type_lists
 
-// default definition
+// forward declaration
 template <typename... T>
-struct concat_type_list {
+struct concat_type_list;
+
+// alias
+template <typename... T>
+using concat_type_list_t = typename concat_type_list<T...>::type;
+
+// final instantiation
+template <typename... T>
+struct concat_type_list<type_list<T...>> {
   using type = type_list<T...>;
 };
-
-// append to type_list
-template <typename... T, typename... Tail>
-struct concat_type_list<type_list<T...>, Tail...>
-    : concat_type_list<T..., Tail...> {};
 
 // combine consecutive type_lists
 template <typename... T, typename... U, typename... Tail>
 struct concat_type_list<type_list<T...>, type_list<U...>, Tail...>
     : concat_type_list<type_list<T..., U...>, Tail...> {};
 
-// alias
-template <typename... T>
-using concat_type_list_t = typename concat_type_list<T...>::type;
-
 // ------------------------------------------------------------------ //
-//  gather filters out types which satisfy PredicateT<T>::Value = ValueT
+//  gather generates type-list of types which satisfy
+//  PredicateT<T>::value == ValueT
 
-template <template <typename> class PredicateT, bool ValueT, typename... T>
-struct gather {
-  using type = concat_type_list_t<std::conditional_t<
-      PredicateT<T>::value == ValueT, concat_type_list_t<T>, type_list<>>...>;
+template <template <typename> class PredicateT, typename TypeListT,
+          bool ValueT = false>
+struct gather;
+
+template <template <typename> class PredicateT, typename... T, bool ValueT>
+struct gather<PredicateT, type_list<T...>, ValueT> {
+  using type =
+      concat_type_list_t<std::conditional_t<PredicateT<T>::value == ValueT,
+                                            type_list<T>, type_list<>>...>;
 };
 
-template <template <typename> class PredicateT, bool ValueT, typename... T>
-using gather_t = typename gather<PredicateT, ValueT, T...>::type;
+template <template <typename> class PredicateT, typename T, bool ValueT = false>
+using gather_t = typename gather<PredicateT, T, ValueT>::type;
 
 // ------------------------------------------------------------------ //
 //  this is used to convert
@@ -138,7 +143,8 @@ template <template <typename...> class ViewT, typename ValueT,
           typename... Types>
 struct python_view_type<ViewT<ValueT, Types...>>
     : python_view_type<ViewT<ValueT>,
-                       gather_t<is_default_memory_trait, false, Types...>> {};
+                       gather_t<is_default_memory_trait, type_list<Types...>>> {
+};
 
 template <typename... T>
 using python_view_type_t = typename python_view_type<T...>::type;
