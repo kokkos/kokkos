@@ -215,8 +215,10 @@ class TaskQueueSpecializationConstrained<
 
   // Must provide task queue execution function
   void execute_task() const {
-    using hpx::apply;
-    using hpx::lcos::local::latch;
+    using hpx::for_loop;
+    using hpx::execution::par;
+    using hpx::execution::static_chunk_size;
+
     using task_base_type = typename scheduler_type::task_base;
     using queue_type     = typename scheduler_type::queue_type;
 
@@ -230,54 +232,47 @@ class TaskQueueSpecializationConstrained<
     auto &queue = scheduler->queue();
     queue.initialize_team_queues(num_worker_threads);
 
-    latch num_tasks_remaining(num_worker_threads);
-    ChunkedRoundRobinExecutor exec(num_worker_threads);
+    auto exec = Kokkos::Experimental::HPX::impl_get_executor();
 
-    for (int thread = 0; thread < num_worker_threads; ++thread) {
-      apply(exec, [this, &num_tasks_remaining, &buffer, num_worker_threads]() {
-        // NOTE: This implementation has been simplified based on the assumption
-        // that team_size = 1. The HPX backend currently only supports a team
-        // size of 1.
-        std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
+    for_loop(
+        par.on(exec).with(static_chunk_size(1)), 0, num_worker_threads,
+        [this, &buffer, num_worker_threads](int t) {
+          // NOTE: This implementation has been simplified based on the
+          // assumption that team_size = 1. The HPX backend currently only
+          // supports a team size of 1.
+          buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id());
+          HPXTeamMember member(
+              TeamPolicyInternal<Kokkos::Experimental::HPX>(
+                  Kokkos::Experimental::HPX(), num_worker_threads, 1),
+              0, t, buffer.get(t), 512);
 
-        buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id());
-        HPXTeamMember member(
-            TeamPolicyInternal<Kokkos::Experimental::HPX>(
-                Kokkos::Experimental::HPX(), num_worker_threads, 1),
-            0, t, buffer.get(t), 512);
+          member_type single_exec(*scheduler, member);
+          member_type &team_exec = single_exec;
 
-        member_type single_exec(*scheduler, member);
-        member_type &team_exec = single_exec;
+          auto &team_queue     = team_exec.scheduler().queue();
+          task_base_type *task = no_more_tasks_sentinel;
 
-        auto &team_queue     = team_exec.scheduler().queue();
-        task_base_type *task = no_more_tasks_sentinel;
-
-        do {
-          if (task != no_more_tasks_sentinel && task != end) {
-            team_queue.complete(task);
-          }
-
-          if (*((volatile int *)&team_queue.m_ready_count) > 0) {
-            task = end;
-            for (int i = 0; i < queue_type::NumQueue && end == task; ++i) {
-              for (int j = 0; j < 2 && end == task; ++j) {
-                task = queue_type::pop_ready_task(&team_queue.m_ready[i][j]);
-              }
+          do {
+            if (task != no_more_tasks_sentinel && task != end) {
+              team_queue.complete(task);
             }
-          } else {
-            task = team_queue.attempt_to_steal_task();
-          }
 
-          if (task != no_more_tasks_sentinel && task != end) {
-            (*task->m_apply)(task, &single_exec);
-          }
-        } while (task != no_more_tasks_sentinel);
+            if (*((volatile int *)&team_queue.m_ready_count) > 0) {
+              task = end;
+              for (int i = 0; i < queue_type::NumQueue && end == task; ++i) {
+                for (int j = 0; j < 2 && end == task; ++j) {
+                  task = queue_type::pop_ready_task(&team_queue.m_ready[i][j]);
+                }
+              }
+            } else {
+              task = team_queue.attempt_to_steal_task();
+            }
 
-        num_tasks_remaining.count_down(1);
-      });
-    }
-
-    num_tasks_remaining.wait();
+            if (task != no_more_tasks_sentinel && task != end) {
+              (*task->m_apply)(task, &single_exec);
+            }
+          } while (task != no_more_tasks_sentinel);
+        });
 
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
     Kokkos::Experimental::HPX::impl_decrement_active_parallel_region_count();

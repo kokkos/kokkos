@@ -45,6 +45,8 @@
 #include <Kokkos_Core.hpp>
 #include <TestHPX_Category.hpp>
 
+#include <hpx/local/future.hpp>
+
 #ifdef KOKKOS_ENABLE_HPX_ASYNC_DISPATCH
 
 namespace Test {

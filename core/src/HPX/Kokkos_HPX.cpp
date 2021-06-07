@@ -47,8 +47,17 @@
 #ifdef KOKKOS_ENABLE_HPX
 #include <Kokkos_HPX.hpp>
 
-#include <hpx/init.hpp>
+#include <hpx/local/condition_variable.hpp>
+#include <hpx/local/init.hpp>
 #include <hpx/local/thread.hpp>
+#include <hpx/local/mutex.hpp>
+
+#include <atomic>
+#include <chrono>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <type_traits>
 
 namespace Kokkos {
 namespace Experimental {
@@ -56,7 +65,9 @@ namespace Experimental {
 bool HPX::m_hpx_initialized = false;
 std::atomic<uint32_t> HPX::m_next_instance_id{1};
 #if defined(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH)
-std::atomic<uint32_t> HPX::m_active_parallel_region_count{0};
+uint32_t HPX::m_active_parallel_region_count{0};
+hpx::spinlock HPX::m_active_parallel_region_count_mutex;
+hpx::condition_variable_any HPX::m_active_parallel_region_count_cond;
 HPX::instance_data HPX::m_global_instance_data;
 #else
 Kokkos::Impl::thread_buffer HPX::m_global_buffer;
