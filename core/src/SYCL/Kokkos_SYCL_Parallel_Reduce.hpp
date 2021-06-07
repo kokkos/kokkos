@@ -52,7 +52,83 @@
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
+
 namespace Impl {
+
+namespace SYCLReduction {
+template <class ValueJoin, class ValueOps, typename WorkTag, typename ValueType,
+          typename ReducerType, typename FunctorType, int dim>
+void workgroup_reduction(sycl::nd_item<dim>& item,
+                         sycl::local_ptr<ValueType> local_mem,
+                         ValueType* results_ptr, const unsigned int value_count,
+                         const ReducerType& selected_reducer,
+                         const FunctorType& functor, bool final) {
+  const auto local_id = item.get_local_linear_id();
+  // FIXME_SYCL should be item.get_group().get_local_linear_range();
+  size_t wgroup_size = 1;
+  for (unsigned int i = 0; i < dim; ++i) wgroup_size *= item.get_local_range(i);
+
+  // Perform the actual workgroup reduction in each subgroup
+  // separately. To achieve a better memory access pattern, we use
+  // sequential addressing and a reversed loop. If the workgroup
+  // size is 8, the first element contains all the values with
+  // index%4==0, after the second one the values with index%2==0 and
+  // after the third one index%1==0, i.e., all values.
+  auto sg                = item.get_sub_group();
+  auto* result           = &local_mem[local_id * value_count];
+  const auto id_in_sg    = sg.get_local_id()[0];
+  const auto local_range = std::min(sg.get_local_range()[0], wgroup_size);
+  for (unsigned int stride = local_range / 2; stride > 0; stride >>= 1) {
+    auto* tmp = sg.shuffle_down(result, stride);
+    if (id_in_sg + stride < local_range)
+      ValueJoin::join(selected_reducer, result, tmp);
+  }
+  item.barrier(sycl::access::fence_space::local_space);
+
+  // Copy the subgroup results into the first positions of the
+  // reduction array.
+  if (sg.get_local_id()[0] == 0 && sg.get_local_id()[0] < wgroup_size)
+    ValueOps::copy(functor, &local_mem[sg.get_group_id()[0] * value_count],
+                   result);
+  item.barrier(sycl::access::fence_space::local_space);
+
+  // Do the final reduction only using the first subgroup.
+  if (sg.get_group_id()[0] == 0) {
+    const auto n_subgroups = sg.get_group_range()[0];
+    auto* result_          = &local_mem[id_in_sg * value_count];
+    // In case the number of subgroups is larger than the range of
+    // the first subgroup, we first combine the items with a higher
+    // index.
+    for (unsigned int offset = local_range; offset < n_subgroups;
+         offset += local_range)
+      if (id_in_sg + offset < n_subgroups)
+        ValueJoin::join(selected_reducer, result_,
+                        &local_mem[(id_in_sg + offset) * value_count]);
+    // Then, we proceed as before.
+    for (unsigned int stride = local_range / 2; stride > 0; stride >>= 1) {
+      auto* tmp = sg.shuffle_down(result_, stride);
+      if (id_in_sg + stride < n_subgroups)
+        ValueJoin::join(selected_reducer, result_, tmp);
+    }
+
+    // Finally, we copy the workgroup results back to global memory
+    // to be used in the next iteration. If this is the last
+    // iteration, i.e., there is only one workgroup also call
+    // final() if necessary.
+    if (id_in_sg == 0) {
+      ValueOps::copy(functor,
+                     &results_ptr[(item.get_group_linear_id()) * value_count],
+                     &local_mem[0]);
+      if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
+        if (final)
+          FunctorFinal<FunctorType, WorkTag>::final(
+              functor,
+              &results_ptr[(item.get_group_linear_id()) * value_count]);
+    }
+  }
+}
+
+}  // namespace SYCLReduction
 
 template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
@@ -213,72 +289,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               }
               item.barrier(sycl::access::fence_space::local_space);
 
-              // Perform the actual workgroup reduction in each subgroup
-              // separately. To achieve a better memory access pattern, we use
-              // sequential addressing and a reversed loop. If the workgroup
-              // size is 8, the first element contains all the values with
-              // index%4==0, after the second one the values with index%2==0 and
-              // after the third one index%1==0, i.e., all values.
-              auto sg             = item.get_sub_group();
-              auto* result        = &local_mem[local_id * value_count];
-              const auto id_in_sg = sg.get_local_id()[0];
-              const auto local_range =
-                  std::min(sg.get_local_range()[0], wgroup_size);
-              for (unsigned int stride = local_range / 2; stride > 0;
-                   stride >>= 1) {
-                auto* tmp = sg.shuffle_down(result, stride);
-                if (id_in_sg + stride < local_range)
-                  ValueJoin::join(selected_reducer, result, tmp);
-              }
-              item.barrier(sycl::access::fence_space::local_space);
-
-              // Copy the subgroup results into the first positions of the
-              // reduction array.
-              if (sg.get_local_id()[0] == 0 &&
-                  sg.get_local_id()[0] < wgroup_size)
-                ValueOps::copy(functor,
-                               &local_mem[sg.get_group_id()[0] * value_count],
-                               result);
-              item.barrier(sycl::access::fence_space::local_space);
-
-              // Do the final reduction only using the first subgroup.
-              if (sg.get_group_id()[0] == 0) {
-                const auto n_subgroups = sg.get_group_range()[0];
-                auto* result_          = &local_mem[id_in_sg * value_count];
-                // In case the number of subgroups is larger than the range of
-                // the first subgroup, we first combine the items with a higher
-                // index.
-                for (unsigned int offset = local_range; offset < n_subgroups;
-                     offset += local_range)
-                  if (id_in_sg + offset < n_subgroups)
-                    ValueJoin::join(
-                        selected_reducer, result_,
-                        &local_mem[(id_in_sg + offset) * value_count]);
-                // Then, we proceed as before.
-                for (unsigned int stride = local_range / 2; stride > 0;
-                     stride >>= 1) {
-                  auto* tmp = sg.shuffle_down(result_, stride);
-                  if (id_in_sg + stride < n_subgroups)
-                    ValueJoin::join(selected_reducer, result_, tmp);
-                }
-
-                // Finally, we copy the workgroup results back to global memory
-                // to be used in the next iteration. If this is the last
-                // iteration, i.e., there is only one workgroup also call
-                // final() if necessary.
-                if (id_in_sg == 0) {
-                  ValueOps::copy(
-                      functor,
-                      &results_ptr[(item.get_group_linear_id()) * value_count],
-                      &local_mem[0]);
-                  if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
-                    if (n_wgroups <= 1)
-                      FunctorFinal<FunctorType, WorkTag>::final(
-                          static_cast<const FunctorType&>(functor),
-                          &results_ptr[(item.get_group_linear_id()) *
-                                       value_count]);
-                }
-              }
+              SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
+                  item, local_mem.get_pointer(), results_ptr, value_count,
+                  selected_reducer, static_cast<const FunctorType&>(functor),
+                  n_wgroups <= 1);
             });
       });
       space.fence();
@@ -520,69 +534,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           }
           item.barrier(sycl::access::fence_space::local_space);
 
-          // Perform the actual workgroup reduction in each subgroup separately.
-          // To achieve a better memory access pattern, we use sequential
-          // addressing and a reversed loop. If the workgroup size is 8, the
-          // first element contains all the values with index%4==0, after the
-          // second one the values with index%2==0 and after the third one
-          // index%1==0, i.e., all values.
-          auto sg             = item.get_sub_group();
-          auto* result        = &local_mem[local_id * value_count];
-          const auto id_in_sg = sg.get_local_id()[0];
-          const auto local_range =
-              std::min(sg.get_local_range()[0], wgroup_size);
-          for (unsigned int stride = local_range / 2; stride > 0;
-               stride >>= 1) {
-            auto* tmp = sg.shuffle_down(result, stride);
-            if (id_in_sg + stride < local_range)
-              ValueJoin::join(selected_reducer, result, tmp);
-          }
-          item.barrier(sycl::access::fence_space::local_space);
-
-          // Copy the subgroup results into the first positions of the reduction
-          // array.
-          if (sg.get_local_id()[0] == 0 && sg.get_local_id()[0] < wgroup_size)
-            ValueOps::copy(functor,
-                           &local_mem[sg.get_group_id()[0] * value_count],
-                           result);
-          item.barrier(sycl::access::fence_space::local_space);
-
-          // Do the final reduction only using the first subgroup.
-          if (sg.get_group_id()[0] == 0) {
-            const auto n_subgroups = sg.get_group_range()[0];
-            auto* result_          = &local_mem[id_in_sg * value_count];
-            // In case the number of subgroups is larger than the range of the
-            // first subgroup, we first combine the items with a higher index.
-            for (unsigned int offset = local_range; offset < n_subgroups;
-                 offset += local_range)
-              if (id_in_sg + offset < n_subgroups)
-                ValueJoin::join(selected_reducer, result_,
-                                &local_mem[(id_in_sg + offset) * value_count]);
-            // Then, we proceed as before.
-            for (unsigned int stride = local_range / 2; stride > 0;
-                 stride >>= 1) {
-              auto* tmp = sg.shuffle_down(result_, stride);
-              if (id_in_sg + stride < n_subgroups)
-                ValueJoin::join(selected_reducer, result_, tmp);
-            }
-
-            // Finally, we copy the workgroup results back to global memory
-            // to be used in the next iteration. If this is the last
-            // iteration, i.e., there is only one workgroup also call
-            // final() if necessary.
-            if (id_in_sg == 0) {
-              ValueOps::copy(
-                  functor,
-                  &results_ptr2[(item.get_group_linear_id()) * value_count],
-                  &local_mem[0]);
-              if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
-                if (n_wgroups <= 1)
-                  FunctorFinal<FunctorType, WorkTag>::final(
-                      static_cast<const FunctorType&>(functor),
-                      &results_ptr2[(item.get_group_linear_id()) *
-                                    value_count]);
-            }
-          }
+          SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
+              item, local_mem.get_pointer(), results_ptr2, value_count,
+              selected_reducer, static_cast<const FunctorType&>(functor),
+              n_wgroups <= 1);
         });
       });
       m_space.fence();
