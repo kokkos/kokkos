@@ -418,8 +418,12 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
             selected_reducer);
+    // FIXME_SYCL only use the first half
     const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
-        sizeof(value_type) * std::max(value_count, 1u) * init_size));
+        sizeof(value_type) * std::max(value_count, 1u) * init_size * 2));
+    // FIXME_SYCL without this we are running into a race condition
+    const auto results_ptr2 =
+        results_ptr + std::max(value_count, 1u) * init_size;
 
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
@@ -569,17 +573,25 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
             if (id_in_sg == 0) {
               ValueOps::copy(
                   functor,
-                  &results_ptr[(item.get_group_linear_id()) * value_count],
+                  &results_ptr2[(item.get_group_linear_id()) * value_count],
                   &local_mem[0]);
               if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
                 if (n_wgroups <= 1)
                   FunctorFinal<FunctorType, WorkTag>::final(
                       static_cast<const FunctorType&>(functor),
-                      &results_ptr[(item.get_group_linear_id()) * value_count]);
+                      &results_ptr2[(item.get_group_linear_id()) *
+                                    value_count]);
             }
           }
         });
       });
+      m_space.fence();
+
+      // FIXME_SYCL this is likely not necessary, see above
+      Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                             Kokkos::Experimental::SYCLDeviceUSMSpace>(
+          m_space, results_ptr, results_ptr2,
+          sizeof(*m_result_ptr) * value_count * n_wgroups);
       m_space.fence();
 
       first_run = false;
