@@ -164,7 +164,6 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     : OpenMPTargetReducerWrapper <ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper <ReducerType>::init(omp_priv))
 
-
     OpenMPTargetReducerWrapper<ReducerType>::init(result);
 #pragma omp target teams distribute parallel for num_teams(512) map(to   \
                                                                     : f) \
@@ -196,7 +195,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     using TagType    = typename PolicyType::work_tag;
     ValueType result = ValueType();
 
-    // Enter the loop if the reduction is on an arithmetic type.
+    // Enter the loop if the reduction is on a scalar type.
     if constexpr (NumReductions == 1) {
 #pragma omp target teams distribute parallel for num_teams(512) \
          map(to:f) reduction(+: result)
@@ -209,12 +208,13 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         }
     } else {
 #pragma omp target teams distribute parallel for map(to:f) reduction(+:result[:NumReductions])
-      for (auto i = begin; i < end; ++i){
+      for (auto i = begin; i < end; ++i) {
         if constexpr (std::is_same<TagType, void>::value) {
           f(i, result);
         } else {
           f(TagType(), i, result);
         }
+      }
     }
 
     memcpy_result(result_ptr, &result, sizeof(ValueType), ptr_on_device);
