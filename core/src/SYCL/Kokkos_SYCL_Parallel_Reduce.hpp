@@ -219,18 +219,23 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               // size is 8, the first element contains all the values with
               // index%4==0, after the second one the values with index%2==0 and
               // after the third one index%1==0, i.e., all values.
-              auto sg                = item.get_sub_group();
-              auto* result           = &local_mem[local_id * value_count];
-              const auto local_range = sg.get_local_range()[0];
+              auto sg             = item.get_sub_group();
+              auto* result        = &local_mem[local_id * value_count];
+              const auto id_in_sg = sg.get_local_id()[0];
+              const auto local_range =
+                  std::min(sg.get_local_range()[0], wgroup_size);
               for (unsigned int stride = local_range / 2; stride > 0;
-                   stride >>= 1)
-                ValueJoin::join(selected_reducer, result,
-                                sg.shuffle_down(result, stride));
+                   stride >>= 1) {
+                auto* tmp = sg.shuffle_down(result, stride);
+                if (id_in_sg + stride < local_range)
+                  ValueJoin::join(selected_reducer, result, tmp);
+              }
               item.barrier(sycl::access::fence_space::local_space);
 
               // Copy the subgroup results into the first positions of the
               // reduction array.
-              if (sg.get_local_id()[0] == 0)
+              if (sg.get_local_id()[0] == 0 &&
+                  sg.get_local_id()[0] < wgroup_size)
                 ValueOps::copy(functor,
                                &local_mem[sg.get_group_id()[0] * value_count],
                                result);
@@ -239,7 +244,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               // Do the final reduction only using the first subgroup.
               if (sg.get_group_id()[0] == 0) {
                 const auto n_subgroups = sg.get_group_range()[0];
-                const auto id_in_sg    = sg.get_local_id()[0];
                 auto* result_          = &local_mem[id_in_sg * value_count];
                 // In case the number of subgroups is larger than the range of
                 // the first subgroup, we first combine the items with a higher
@@ -518,17 +522,22 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           // first element contains all the values with index%4==0, after the
           // second one the values with index%2==0 and after the third one
           // index%1==0, i.e., all values.
-          auto sg                = item.get_sub_group();
-          auto* result           = &local_mem[local_id * value_count];
-          const auto local_range = sg.get_local_range()[0];
-          for (unsigned int stride = local_range / 2; stride > 0; stride >>= 1)
-            ValueJoin::join(selected_reducer, result,
-                            sg.shuffle_down(result, stride));
+          auto sg             = item.get_sub_group();
+          auto* result        = &local_mem[local_id * value_count];
+          const auto id_in_sg = sg.get_local_id()[0];
+          const auto local_range =
+              std::min(sg.get_local_range()[0], wgroup_size);
+          for (unsigned int stride = local_range / 2; stride > 0;
+               stride >>= 1) {
+            auto* tmp = sg.shuffle_down(result, stride);
+            if (id_in_sg + stride < local_range)
+              ValueJoin::join(selected_reducer, result, tmp);
+          }
           item.barrier(sycl::access::fence_space::local_space);
 
           // Copy the subgroup results into the first positions of the reduction
           // array.
-          if (sg.get_local_id()[0] == 0)
+          if (sg.get_local_id()[0] == 0 && sg.get_local_id()[0] < wgroup_size)
             ValueOps::copy(functor,
                            &local_mem[sg.get_group_id()[0] * value_count],
                            result);
@@ -537,7 +546,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           // Do the final reduction only using the first subgroup.
           if (sg.get_group_id()[0] == 0) {
             const auto n_subgroups = sg.get_group_range()[0];
-            const auto id_in_sg    = sg.get_local_id()[0];
             auto* result_          = &local_mem[id_in_sg * value_count];
             // In case the number of subgroups is larger than the range of the
             // first subgroup, we first combine the items with a higher index.
