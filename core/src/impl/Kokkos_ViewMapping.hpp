@@ -3729,7 +3729,7 @@ class ViewMapping<
 
   template <class MemoryTraits>
   struct apply {
-    static_assert(Kokkos::Impl::is_memory_traits<MemoryTraits>::value, "");
+    static_assert(Kokkos::is_memory_traits<MemoryTraits>::value, "");
 
     using traits_type =
         Kokkos::ViewTraits<data_type, array_layout,

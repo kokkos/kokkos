@@ -70,7 +70,7 @@ struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
     using execution_space = Kokkos::DefaultExecutionSpace;
   };
   template <class T>
-  using trait_matches_specification = is_execution_space<T>;
+  using trait_matches_specification = Kokkos::is_execution_space<T>;
   template <class ExecSpace, class AnalyzeNextTrait>
   struct mixin_matching_trait : AnalyzeNextTrait {
     using base_t = AnalyzeNextTrait;

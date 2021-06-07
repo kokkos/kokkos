@@ -46,7 +46,6 @@
 #define KOKKOS_MEMORYTRAITS_HPP
 
 #include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_Tags.hpp>
 
 //----------------------------------------------------------------------------
 

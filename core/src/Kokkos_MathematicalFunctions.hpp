@@ -227,6 +227,25 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnan)
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_NAN
+
+// clang-format off
+#ifdef KOKKOS_ENABLE_SYCL
+KOKKOS_INLINE_FUNCTION int abs(int n) { return sycl::abs(n); }
+KOKKOS_INLINE_FUNCTION long abs(long n) { return sycl::abs(n); }
+KOKKOS_INLINE_FUNCTION long long abs(long long n) { return sycl::abs(n); }
+KOKKOS_INLINE_FUNCTION float abs(float x) { return sycl::fabs(x); }
+KOKKOS_INLINE_FUNCTION double abs(double x) { return sycl::fabs(x); }
+#else
+KOKKOS_INLINE_FUNCTION int abs(int n) { return ::abs(n); }
+KOKKOS_INLINE_FUNCTION long abs(long n) { return ::labs(n); }
+KOKKOS_INLINE_FUNCTION long long abs(long long n) { return ::llabs(n); }
+KOKKOS_INLINE_FUNCTION float abs(float x) { return ::fabsf(x); }
+KOKKOS_INLINE_FUNCTION double abs(double x) { return ::fabs(x); }
+#if !(defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_OPENMPTARGET))
+KOKKOS_INLINE_FUNCTION long double abs(long double x) { return ::fabsl(x); }
+#endif
+#endif
+// clang-format on
 }  // namespace Experimental
 }  // namespace Kokkos
 
