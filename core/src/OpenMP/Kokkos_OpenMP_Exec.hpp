@@ -65,6 +65,7 @@
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 
 #include <omp.h>
+#include <mutex>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -112,6 +113,8 @@ class OpenMPExec {
   inline HostThreadTeamData* get_thread_data(int i) const noexcept {
     return m_pool[i];
   }
+
+  std::mutex m_pool_mutex;
 };
 
 }  // namespace Impl
