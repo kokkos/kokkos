@@ -142,7 +142,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
   }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy) {}
 };
@@ -222,7 +222,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   inline ParallelFor(const FunctorType& arg_functor, MDRangePolicy arg_policy)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)) {}
@@ -390,7 +390,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
                               void*>::type = nullptr)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -403,7 +403,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
                         const ReducerType& reducer)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
@@ -545,7 +545,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
                               void*>::type = nullptr)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
@@ -559,7 +559,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
 
   inline ParallelReduce(const FunctorType& arg_functor,
                         MDRangePolicy arg_policy, const ReducerType& reducer)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_mdr_policy(arg_policy),
         m_policy(Policy(0, m_mdr_policy.m_num_tiles).set_chunk_size(1)),
@@ -695,7 +695,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   //----------------------------------------
 
   inline ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy) {}
 
@@ -813,7 +813,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   inline ParallelScanWithTotal(const FunctorType& arg_functor,
                                const Policy& arg_policy,
                                ReturnType& arg_returnvalue)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_returnvalue(arg_returnvalue) {}
@@ -937,7 +937,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
@@ -1135,7 +1135,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
                                   !Kokkos::is_reducer_type<ReducerType>::value,
                               void*>::type = nullptr)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(InvalidType()),
@@ -1146,7 +1146,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
                         const ReducerType& reducer)
-      : m_instance(t_openmp_instance),
+      : m_instance(g_openmp_instance),
         m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),

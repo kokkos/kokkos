@@ -62,18 +62,12 @@ namespace Kokkos {
 namespace Impl {
 
 int g_openmp_hardware_max_threads = 1;
+OpenMPExec *g_openmp_instance     = nullptr;
 
-__thread int t_openmp_hardware_id            = 0;
-__thread Impl::OpenMPExec *t_openmp_instance = nullptr;
-
-}  // namespace Impl
-}  // namespace Kokkos
+thread_local int t_openmp_hardware_id = 0;
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
 
 void OpenMPExec::clear_thread_data() {
   const size_t member_bytes =
@@ -215,7 +209,7 @@ void OpenMP::impl_initialize(int thread_count) {
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 
-  if (Impl::t_openmp_instance) {
+  if (Impl::g_openmp_instance) {
     finalize();
   }
 
@@ -271,7 +265,6 @@ void OpenMP::impl_initialize(int thread_count) {
 // setup thread local
 #pragma omp parallel num_threads(Impl::g_openmp_hardware_max_threads)
     {
-      Impl::t_openmp_instance    = nullptr;
       Impl::t_openmp_hardware_id = omp_get_thread_num();
       Impl::SharedAllocationRecord<void, void>::tracking_enable();
     }
@@ -284,7 +277,7 @@ void OpenMP::impl_initialize(int thread_count) {
       Kokkos::Impl::throw_runtime_exception(f.get_error_message());
     }
 
-    Impl::t_openmp_instance =
+    Impl::g_openmp_instance =
         new (ptr) Impl::OpenMPExec(Impl::g_openmp_hardware_max_threads);
 
     // New, unified host thread team data:
@@ -294,7 +287,7 @@ void OpenMP::impl_initialize(int thread_count) {
       size_t team_shared_bytes  = 1024 * thread_count;
       size_t thread_local_bytes = 1024;
 
-      Impl::t_openmp_instance->resize_thread_data(
+      Impl::g_openmp_instance->resize_thread_data(
           pool_reduce_bytes, team_reduce_bytes, team_shared_bytes,
           thread_local_bytes);
     }
@@ -324,21 +317,21 @@ void OpenMP::impl_initialize(int thread_count) {
 void OpenMP::impl_finalize() {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR ");
-    if (!Impl::t_openmp_instance) msg.append(": not initialized");
+    if (!Impl::g_openmp_instance) msg.append(": not initialized");
     if (omp_in_parallel()) msg.append(": in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 
-  if (Impl::t_openmp_instance) {
+  if (Impl::g_openmp_instance) {
     // Silence Cuda Warning
-    const int nthreads = Impl::t_openmp_instance->m_pool_size <=
+    const int nthreads = Impl::g_openmp_instance->m_pool_size <=
                                  Impl::g_openmp_hardware_max_threads
                              ? Impl::g_openmp_hardware_max_threads
-                             : Impl::t_openmp_instance->m_pool_size;
+                             : Impl::g_openmp_instance->m_pool_size;
     (void)nthreads;
 
     using Exec     = Impl::OpenMPExec;
-    Exec *instance = Impl::t_openmp_instance;
+    Exec *instance = Impl::g_openmp_instance;
     instance->~Exec();
 
     OpenMP::memory_space space;
@@ -347,9 +340,9 @@ void OpenMP::impl_finalize() {
 #pragma omp parallel num_threads(nthreads)
     {
       Impl::t_openmp_hardware_id = 0;
-      Impl::t_openmp_instance    = nullptr;
       Impl::SharedAllocationRecord<void, void>::tracking_disable();
     }
+    Impl::g_openmp_instance = nullptr;
 
     // allow main thread to track
     Impl::SharedAllocationRecord<void, void>::tracking_enable();
@@ -365,7 +358,7 @@ void OpenMP::impl_finalize() {
 void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
   s << "Kokkos::OpenMP";
 
-  const bool is_initialized = Impl::t_openmp_instance != nullptr;
+  const bool is_initialized = Impl::g_openmp_instance != nullptr;
 
   if (is_initialized) {
     const int numa_count      = 1;

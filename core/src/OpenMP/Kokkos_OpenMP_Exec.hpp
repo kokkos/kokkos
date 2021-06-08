@@ -75,9 +75,9 @@ namespace Impl {
 class OpenMPExec;
 
 extern int g_openmp_hardware_max_threads;
+extern OpenMPExec* g_openmp_instance;
 
-extern __thread int t_openmp_hardware_id;
-extern __thread OpenMPExec* t_openmp_instance;
+extern thread_local int t_openmp_hardware_id;
 
 //----------------------------------------------------------------------------
 /** \brief  Data for OpenMP thread execution */
@@ -123,24 +123,23 @@ class OpenMPExec {
 namespace Kokkos {
 
 inline bool OpenMP::impl_is_initialized() noexcept {
-  return Impl::t_openmp_instance != nullptr;
+  return Impl::g_openmp_instance != nullptr;
 }
 
 inline bool OpenMP::in_parallel(OpenMP const&) noexcept {
-  // t_openmp_instance is only non-null on a master thread
-  return !Impl::t_openmp_instance ||
-         Impl::t_openmp_instance->m_level < omp_get_level();
+  return !Impl::g_openmp_instance ||
+         Impl::g_openmp_instance->m_level < omp_get_level();
 }
 
 inline int OpenMP::impl_thread_pool_size() noexcept {
   return OpenMP::in_parallel() ? omp_get_num_threads()
-                               : Impl::t_openmp_instance->m_pool_size;
+                               : Impl::g_openmp_instance->m_pool_size;
 }
 
 KOKKOS_INLINE_FUNCTION
 int OpenMP::impl_thread_pool_rank() noexcept {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-  return Impl::t_openmp_instance ? 0 : omp_get_thread_num();
+  return omp_get_thread_num();
 #else
   return -1;
 #endif
