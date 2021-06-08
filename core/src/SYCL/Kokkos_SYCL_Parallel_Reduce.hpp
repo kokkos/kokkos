@@ -87,7 +87,7 @@ void workgroup_reduction(sycl::nd_item<dim>& item,
 
   // Copy the subgroup results into the first positions of the
   // reduction array.
-  if (sg.get_local_id()[0] == 0 && sg.get_local_id()[0] < wgroup_size)
+  if (id_in_sg == 0)
     ValueOps::copy(functor, &local_mem[sg.get_group_id()[0] * value_count],
                    result);
   item.barrier(sycl::access::fence_space::local_space);
