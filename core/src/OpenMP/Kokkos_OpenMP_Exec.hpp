@@ -105,8 +105,6 @@ class OpenMPExec {
   HostThreadTeamData* m_pool[MAX_THREAD_COUNT];
 
  public:
-  static void verify_is_master(const char* const);
-
   void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
                           size_t team_shared_bytes, size_t thread_local_bytes);
 

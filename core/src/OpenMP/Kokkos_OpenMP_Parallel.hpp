@@ -113,7 +113,6 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
     if (OpenMP::in_parallel()) {
       exec_range<WorkTag>(m_functor, m_policy.begin(), m_policy.end());
     } else {
-      OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
 
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
       {
@@ -193,7 +192,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       ParallelFor::exec_range(m_mdr_policy, m_functor, m_policy.begin(),
                               m_policy.end());
     } else {
-      OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
 
 #pragma omp parallel num_threads(OpenMP::impl_thread_pool_size())
       {
@@ -319,8 +317,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       is_dynamic = std::is_same<typename Policy::schedule_type::type,
                                 Kokkos::Dynamic>::value
     };
-
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_bytes =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -475,8 +471,6 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
       is_dynamic = std::is_same<typename Policy::schedule_type::type,
                                 Kokkos::Dynamic>::value
     };
-
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_bytes =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));
@@ -643,8 +637,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_scan");
-
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
 
@@ -758,8 +750,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
  public:
   inline void execute() const {
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_scan");
-
     const int value_count          = Analysis::value_count(m_functor);
     const size_t pool_reduce_bytes = 2 * Analysis::value_size(m_functor);
 
@@ -900,8 +890,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   inline void execute() const {
     enum { is_dynamic = std::is_same<SchedTag, Kokkos::Dynamic>::value };
-
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_for");
 
     const size_t pool_reduce_size  = 0;  // Never shrinks
     const size_t team_reduce_size  = TEAM_REDUCE_SIZE * m_policy.team_size();
@@ -1050,7 +1038,6 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       }
       return;
     }
-    OpenMPExec::verify_is_master("Kokkos::OpenMP parallel_reduce");
 
     const size_t pool_reduce_size =
         Analysis::value_size(ReducerConditional::select(m_functor, m_reducer));

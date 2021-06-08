@@ -118,14 +118,6 @@ void OpenMPExec::validate_partition(const int nthreads, int &num_partitions,
   }
 }
 
-void OpenMPExec::verify_is_master(const char *const label) {
-  if (!t_openmp_instance) {
-    std::string msg(label);
-    msg.append(" ERROR: in parallel or not initialized");
-    Kokkos::Impl::throw_runtime_exception(msg);
-  }
-}
-
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -428,8 +420,6 @@ void OpenMP::print_configuration(std::ostream &s, const bool /*verbose*/) {
   const bool is_initialized = Impl::t_openmp_instance != nullptr;
 
   if (is_initialized) {
-    Impl::OpenMPExec::verify_is_master("OpenMP::print_configuration");
-
     const int numa_count      = 1;
     const int core_per_numa   = Impl::g_openmp_hardware_max_threads;
     const int thread_per_core = 1;
