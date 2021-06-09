@@ -997,6 +997,19 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
 namespace Kokkos {
 namespace Impl {
 
+template <typename Policy>
+typename Policy::member_type get_hpx_adjusted_chunk_size(Policy const &policy) {
+  const int concurrency = Kokkos::Experimental::HPX::concurrency();
+  const typename Policy::member_type n        = policy.end() - policy.begin();
+  typename Policy::member_type new_chunk_size = policy.chunk_size();
+
+  while (n >= 4 * concurrency * new_chunk_size) {
+    new_chunk_size *= 2;
+  }
+
+  return new_chunk_size;
+}
+
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                   Kokkos::Experimental::HPX> {
