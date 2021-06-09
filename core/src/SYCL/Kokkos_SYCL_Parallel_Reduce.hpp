@@ -60,7 +60,9 @@ template <class ValueJoin, class ValueOps, typename WorkTag, typename ValueType,
           typename ReducerType, typename FunctorType, int dim>
 void workgroup_reduction(sycl::nd_item<dim>& item,
                          sycl::local_ptr<ValueType> local_mem,
-                         ValueType* results_ptr, const unsigned int value_count,
+                         ValueType* results_ptr,
+                         ValueType* device_accessible_result_ptr,
+                         const unsigned int value_count,
                          const ReducerType& selected_reducer,
                          const FunctorType& functor, bool final) {
   const auto local_id = item.get_local_linear_id();
@@ -116,14 +118,18 @@ void workgroup_reduction(sycl::nd_item<dim>& item,
     // iteration, i.e., there is only one workgroup also call
     // final() if necessary.
     if (id_in_sg == 0) {
-      ValueOps::copy(functor,
-                     &results_ptr[(item.get_group_linear_id()) * value_count],
-                     &local_mem[0]);
-      if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
-        if (final)
-          FunctorFinal<FunctorType, WorkTag>::final(
-              functor,
-              &results_ptr[(item.get_group_linear_id()) * value_count]);
+      if (final) {
+        if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
+          FunctorFinal<FunctorType, WorkTag>::final(functor, &local_mem[0]);
+        if (device_accessible_result_ptr != nullptr)
+          ValueOps::copy(functor, &device_accessible_result_ptr[0],
+                         &local_mem[0]);
+        else
+          ValueOps::copy(functor, &results_ptr[0], &local_mem[0]);
+      } else
+        ValueOps::copy(functor,
+                       &results_ptr[(item.get_group_linear_id()) * value_count],
+                       &local_mem[0]);
     }
   }
 }
@@ -152,14 +158,23 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   ParallelReduce(
       const FunctorType& f, const Policy& p, const V& v,
       typename std::enable_if<Kokkos::is_view<V>::value, void*>::type = nullptr)
-      : m_functor(f), m_policy(p), m_result_ptr(v.data()) {}
+      : m_functor(f),
+        m_policy(p),
+        m_result_ptr(v.data()),
+        m_result_ptr_device_accessible(
+            MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                              typename V::memory_space>::accessible) {}
 
   ParallelReduce(const FunctorType& f, const Policy& p,
                  const ReducerType& reducer)
       : m_functor(f),
         m_policy(p),
         m_reducer(reducer),
-        m_result_ptr(reducer.view().data()) {}
+        m_result_ptr(reducer.view().data()),
+        m_result_ptr_device_accessible(
+            MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                              typename ReducerType::result_view_type::
+                                  memory_space>::accessible) {}
 
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
@@ -199,6 +214,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             selected_reducer);
     const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
         sizeof(value_type) * std::max(value_count, 1u) * init_size));
+    value_type* device_accessible_result_ptr =
+        m_result_ptr_device_accessible ? m_result_ptr : nullptr;
 
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
@@ -221,6 +238,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
           if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
             FunctorFinal<FunctorType, WorkTag>::final(
                 static_cast<const FunctorType&>(functor), results_ptr);
+          if (device_accessible_result_ptr != nullptr)
+            ValueOps::copy(functor, &device_accessible_result_ptr[0],
+                           &results_ptr[0]);
         });
       });
       space.fence();
@@ -290,9 +310,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
               item.barrier(sycl::access::fence_space::local_space);
 
               SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
-                  item, local_mem.get_pointer(), results_ptr, value_count,
-                  selected_reducer, static_cast<const FunctorType&>(functor),
-                  n_wgroups <= 1);
+                  item, local_mem.get_pointer(), results_ptr,
+                  device_accessible_result_ptr, value_count, selected_reducer,
+                  static_cast<const FunctorType&>(functor), n_wgroups <= 1);
             });
       });
       space.fence();
@@ -304,7 +324,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // At this point, the reduced value is written to the entry in results_ptr
     // and all that is left is to copy it back to the given result pointer if
     // necessary.
-    if (m_result_ptr) {
+    if (m_result_ptr && !m_result_ptr_device_accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           space, m_result_ptr, results_ptr,
@@ -336,6 +356,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   Policy m_policy;
   ReducerType m_reducer;
   pointer_type m_result_ptr;
+  const bool m_result_ptr_device_accessible;
 };
 
 template <class FunctorType, class ReducerType, class... Traits>
@@ -383,7 +404,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   ParallelReduce(
       const FunctorType& f, const Policy& p, const V& v,
       typename std::enable_if<Kokkos::is_view<V>::value, void*>::type = nullptr)
-      : m_functor(f), m_policy(p), m_space(p.space()), m_result_ptr(v.data()) {}
+      : m_functor(f),
+        m_policy(p),
+        m_space(p.space()),
+        m_result_ptr(v.data()),
+        m_result_ptr_device_accessible(
+            MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                              typename V::memory_space>::accessible) {}
 
   ParallelReduce(const FunctorType& f, const Policy& p,
                  const ReducerType& reducer)
@@ -391,7 +418,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_policy(p),
         m_space(p.space()),
         m_reducer(reducer),
-        m_result_ptr(reducer.view().data()) {}
+        m_result_ptr(reducer.view().data()),
+        m_result_ptr_device_accessible(
+            MemorySpaceAccess<Kokkos::Experimental::SYCLDeviceUSMSpace,
+                              typename ReducerType::result_view_type::
+                                  memory_space>::accessible) {}
 
  private:
   template <typename PolicyType, typename Functor, typename Reducer>
@@ -438,6 +469,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     // FIXME_SYCL without this we are running into a race condition
     const auto results_ptr2 =
         results_ptr + std::max(value_count, 1u) * init_size;
+    value_type* device_accessible_result_ptr =
+        m_result_ptr_device_accessible ? m_result_ptr : nullptr;
 
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
@@ -460,6 +493,9 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
             FunctorFinal<FunctorType, WorkTag>::final(
                 static_cast<const FunctorType&>(functor), results_ptr);
+          if (device_accessible_result_ptr)
+            ValueOps::copy(functor, &device_accessible_result_ptr[0],
+                           &results_ptr[0]);
         });
       });
       m_space.fence();
@@ -535,9 +571,10 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
           item.barrier(sycl::access::fence_space::local_space);
 
           SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
-              item, local_mem.get_pointer(), results_ptr2, value_count,
-              selected_reducer, static_cast<const FunctorType&>(functor),
-              n_wgroups <= 1);
+              item, local_mem.get_pointer(), results_ptr2,
+              device_accessible_result_ptr, value_count, selected_reducer,
+              static_cast<const FunctorType&>(functor),
+              n_wgroups <= 1 && item.get_group_linear_id() == 0);
         });
       });
       m_space.fence();
@@ -556,7 +593,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
     // At this point, the reduced value is written to the entry in results_ptr
     // and all that is left is to copy it back to the given result pointer if
     // necessary.
-    if (m_result_ptr) {
+    if (m_result_ptr && !m_result_ptr_device_accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
                              Kokkos::Experimental::SYCLDeviceUSMSpace>(
           m_space, m_result_ptr, results_ptr,
@@ -594,6 +631,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   const Kokkos::Experimental::SYCL& m_space;
   ReducerType m_reducer;
   pointer_type m_result_ptr;
+  const bool m_result_ptr_device_accessible;
 };
 
 }  // namespace Impl
