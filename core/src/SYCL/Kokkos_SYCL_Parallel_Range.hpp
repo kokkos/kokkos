@@ -82,8 +82,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
           functor(WorkTag(), id);
       });
     });
-
+    // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
     q.submit_barrier(sycl::vector_class<sycl::event>{parallel_for_event});
+#else
+    space.fence();
+#endif
 
     return parallel_for_event;
   }
@@ -236,8 +240,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             .exec_range();
       });
     });
-
+    // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
     q.submit_barrier(sycl::vector_class<sycl::event>{parallel_for_event});
+#else
+    m_space.fence();
+#endif
 
     return parallel_for_event;
   }
