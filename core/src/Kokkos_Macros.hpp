@@ -220,10 +220,18 @@
 #define KOKKOS_MEMORY_ALIGNMENT 64
 #endif
 
+#if defined(_WIN32)
+#define KOKKOS_RESTRICT __restrict
+#else
 #define KOKKOS_RESTRICT __restrict__
+#endif
 
 #ifndef KOKKOS_IMPL_ALIGN_PTR
+#if defined(_WIN32)
+#define KOKKOS_IMPL_ALIGN_PTR(size) __declspec(align_value(size))
+#else
 #define KOKKOS_IMPL_ALIGN_PTR(size) __attribute__((align_value(size)))
+#endif
 #endif
 
 #if (1700 > KOKKOS_COMPILER_INTEL)
@@ -541,7 +549,7 @@
 
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||  \
      defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_PGI)) && \
-    !defined(KOKKOS_COMPILER_MSVC)
+    !defined(_WIN32)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
 #define KOKKOS_IMPL_ENABLE_CXXABI
 #endif
@@ -553,7 +561,8 @@
 #undef __CUDA_ARCH__
 #endif
 
-#if defined(KOKKOS_COMPILER_MSVC) && !defined(KOKKOS_COMPILER_CLANG)
+#if (defined(KOKKOS_COMPILER_MSVC) && !defined(KOKKOS_COMPILER_CLANG)) || \
+    (defined(KOKKOS_COMPILER_INTEL) && defined(_WIN32))
 #define KOKKOS_THREAD_LOCAL __declspec(thread)
 #else
 #define KOKKOS_THREAD_LOCAL __thread
