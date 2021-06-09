@@ -122,13 +122,6 @@ void test_team_policy_max_recommended_static_size(int scratch_size) {
                        FunctorFor<T, N, PolicyType, S>());
   MyArray<T, N> val;
   double n_leagues = 10000;
-  // FIXME_HIP
-#ifdef KOKKOS_ENABLE_HIP
-  if (N == 2)
-    n_leagues = 1000;
-  else
-    n_leagues = 500;
-#endif
 
   Kokkos::parallel_reduce(
       PolicyType(n_leagues, team_size_max_reduce, 4)

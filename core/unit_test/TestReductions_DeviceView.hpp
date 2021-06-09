@@ -128,8 +128,6 @@ TEST(TEST_CATEGORY, reduce_device_view_mdrange_policy) {
       MDRangePolicyFunctor());
 }
 
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
 TEST(TEST_CATEGORY, reduce_device_view_team_policy) {
 // FIXME_SYCL The number of workgroups on CUDA devices can not be larger than
 // 65535
@@ -145,5 +143,4 @@ TEST(TEST_CATEGORY, reduce_device_view_team_policy) {
       TeamPolicyFunctor(1024));
 #endif
 }
-#endif
 }  // namespace Test
