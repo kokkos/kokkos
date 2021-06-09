@@ -48,19 +48,19 @@
 #ifndef KOKKOS_PARALLEL_HPP
 #define KOKKOS_PARALLEL_HPP
 
-#include <cstddef>
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_View.hpp>
+#include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_View.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
-#include <type_traits>
-#include <typeinfo>
-
-#include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_FunctorAdapter.hpp>
+
+#include <cstddef>
+#include <type_traits>
+#include <typeinfo>
 
 #ifdef KOKKOS_ENABLE_DEBUG_PRINT_KERNEL_NAMES
 #include <iostream>
@@ -72,34 +72,11 @@
 namespace Kokkos {
 namespace Impl {
 
-template <class T, class = void>
-struct is_detected_execution_space : std::false_type {
-  using type = not_a_type;
-};
+template <class T>
+using execution_space_t = typename T::execution_space;
 
 template <class T>
-struct is_detected_execution_space<T, void_t<typename T::execution_space>>
-    : std::true_type {
-  using type = typename T::execution_space;
-};
-
-template <class T>
-using detected_execution_space_t =
-    typename is_detected_execution_space<T>::type;
-
-template <class T, class = void>
-struct is_detected_device_type : std::false_type {
-  using type = not_a_type;
-};
-
-template <class T>
-struct is_detected_device_type<T, void_t<typename T::device_type>>
-    : std::true_type {
-  using type = typename T::device_type;
-};
-
-template <class T>
-using detected_device_type_t = typename is_detected_device_type<T>::type;
+using device_type_t = typename T::device_type;
 
 //----------------------------------------------------------------------------
 /** \brief  Given a Functor and Execution Policy query an execution space.
@@ -112,16 +89,14 @@ using detected_device_type_t = typename is_detected_device_type<T>::type;
 
 template <class Functor, class Policy>
 struct FunctorPolicyExecutionSpace {
-  using execution_space = std::conditional_t<
-      is_detected_execution_space<Policy>::value,
-      detected_execution_space_t<Policy>,
-      std::conditional_t<
-          is_detected_execution_space<Functor>::value,
-          detected_execution_space_t<Functor>,
+  using execution_space = detected_or_t<
+      detected_or_t<
           std::conditional_t<
-              is_detected_device_type<Functor>::value,
-              detected_execution_space_t<detected_device_type_t<Functor>>,
-              Kokkos::DefaultExecutionSpace>>>;
+              is_detected<device_type_t, Functor>::value,
+              detected_t<execution_space_t, detected_t<device_type_t, Functor>>,
+              Kokkos::DefaultExecutionSpace>,
+          execution_space_t, Functor>,
+      execution_space_t, Policy>;
 };
 
 }  // namespace Impl
@@ -158,8 +133,7 @@ inline void parallel_for(
     const ExecPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecPolicy>::value>::type* =
-        nullptr) {
+        Kokkos::is_execution_policy<ExecPolicy>::value>::type* = nullptr) {
   uint64_t kpID = 0;
 
   ExecPolicy inner_policy = policy;
@@ -389,8 +363,7 @@ inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
-        nullptr) {
+        Kokkos::is_execution_policy<ExecutionPolicy>::value>::type* = nullptr) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
   Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
@@ -449,8 +422,7 @@ inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     ReturnType& return_value, const std::string& str = "",
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
-        nullptr) {
+        Kokkos::is_execution_policy<ExecutionPolicy>::value>::type* = nullptr) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
   Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);

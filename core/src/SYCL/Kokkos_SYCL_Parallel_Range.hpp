@@ -47,11 +47,11 @@
 
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
-template <class FunctorType, class ExecPolicy>
-class Kokkos::Impl::ParallelFor<FunctorType, ExecPolicy,
+template <class FunctorType, class... Traits>
+class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::SYCL> {
  public:
-  using Policy = ExecPolicy;
+  using Policy = Kokkos::RangePolicy<Traits...>;
 
  private:
   using Member       = typename Policy::member_type;

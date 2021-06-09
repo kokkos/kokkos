@@ -42,54 +42,55 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
-#define KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+#include <Kokkos_DetectionIdiom.hpp>
 
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Concepts.hpp>  // LaunchBounds
-#include <traits/Kokkos_PolicyTraitAdaptor.hpp>
-#include <traits/Kokkos_Traits_fwd.hpp>
+#define STATIC_ASSERT(cond) static_assert(cond, "");
 
-namespace Kokkos {
-namespace Impl {
+void test_nonesuch() {
+  using Kokkos::nonesuch;
+  STATIC_ASSERT(!std::is_constructible<nonesuch>::value);
+  STATIC_ASSERT(!std::is_destructible<nonesuch>::value);
+  STATIC_ASSERT(!std::is_copy_constructible<nonesuch>::value);
+  STATIC_ASSERT(!std::is_move_constructible<nonesuch>::value);
+#ifdef KOKKOS_ENABLE_CXX17
+  STATIC_ASSERT(!std::is_aggregate<nonesuch>::value);
+#endif
+}
 
-//==============================================================================
-// <editor-fold desc="trait specification"> {{{1
+#undef STATIC_ASSERT
 
-struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
-  struct base_traits {
-    static constexpr bool launch_bounds_is_defaulted = true;
+namespace Example {
+// Example from https://en.cppreference.com/w/cpp/experimental/is_detected
+template <class T>
+using copy_assign_t = decltype(std::declval<T&>() = std::declval<const T&>());
 
-    using launch_bounds = LaunchBounds<>;
-  };
-  template <class LaunchBoundParam, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-
-    static constexpr bool launch_bounds_is_defaulted = false;
-
-    static_assert(base_t::launch_bounds_is_defaulted,
-                  "Kokkos Error: More than one launch_bounds given");
-
-    using launch_bounds = LaunchBoundParam;
-  };
+struct Meow {};
+struct Purr {
+  void operator=(const Purr&) = delete;
 };
 
-// </editor-fold> end trait specification }}}1
-//==============================================================================
+static_assert(Kokkos::is_detected<copy_assign_t, Meow>::value,
+              "Meow should be copy assignable!");
+static_assert(!Kokkos::is_detected<copy_assign_t, Purr>::value,
+              "Purr should not be copy assignable!");
+static_assert(Kokkos::is_detected_exact<Meow&, copy_assign_t, Meow>::value,
+              "Copy assignment of Meow should return Meow&!");
 
-//==============================================================================
-// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
+template <class T>
+using diff_t = typename T::difference_type;
 
-template <unsigned int maxT, unsigned int minB>
-struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
-    : std::true_type {};
+template <class Ptr>
+using difference_type = Kokkos::detected_or_t<std::ptrdiff_t, diff_t, Ptr>;
 
-// </editor-fold> end PolicyTraitMatcher specialization }}}1
-//==============================================================================
+struct Woof {
+  using difference_type = int;
+};
+struct Bark {};
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+static_assert(std::is_same<difference_type<Woof>, int>::value,
+              "Woof's difference_type should be int!");
+static_assert(std::is_same<difference_type<Bark>, std::ptrdiff_t>::value,
+              "Bark's difference_type should be ptrdiff_t!");
+}  // namespace Example
 
-#endif  // KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+int main() {}

@@ -476,7 +476,7 @@ class TaskQueueCommonMixin {
   }
 
   template <class ExecutionSpace, class MemorySpace, class MemoryPool>
-  static /* KOKKOS_CONSTEXPR_14 */ size_t task_queue_allocation_size(
+  static /* constexpr */ size_t task_queue_allocation_size(
       ExecutionSpace const&, MemorySpace const&, MemoryPool const&)
   // requires Same<ExecutionSpace, typename Derived::execution_space>
   //            && Same<MemorySpace, typename Derived::memory_space>

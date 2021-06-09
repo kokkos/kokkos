@@ -77,7 +77,18 @@ void OpenMPTargetInternal::impl_finalize() {
     Kokkos::kokkos_free<Kokkos::Experimental::OpenMPTargetSpace>(
         space.m_uniquetoken_ptr);
 }
-void OpenMPTargetInternal::impl_initialize() { m_is_initialized = true; }
+void OpenMPTargetInternal::impl_initialize() {
+  m_is_initialized = true;
+
+  // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
+  // from Pascal and upwards.
+#if defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_VOLTA) || \
+    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE)
+#if defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300)
+  omp_set_num_teams(512);
+#endif
+#endif
+}
 int OpenMPTargetInternal::impl_is_initialized() {
   return m_is_initialized ? 1 : 0;
 }

@@ -1404,7 +1404,7 @@ class ViewMapping<
 
   template <class MemoryTraits>
   struct apply {
-    static_assert(Kokkos::Impl::is_memory_traits<MemoryTraits>::value, "");
+    static_assert(Kokkos::is_memory_traits<MemoryTraits>::value, "");
 
     using traits_type =
         Kokkos::ViewTraits<data_type, array_layout,
@@ -1744,14 +1744,14 @@ inline void deep_copy(
 
   enum {
     DstExecCanAccessSrc =
-        Kokkos::Impl::SpaceAccessibility<dst_execution_space,
-                                         src_memory_space>::accessible
+        Kokkos::SpaceAccessibility<dst_execution_space,
+                                   src_memory_space>::accessible
   };
 
   enum {
     SrcExecCanAccessDst =
-        Kokkos::Impl::SpaceAccessibility<src_execution_space,
-                                         dst_memory_space>::accessible
+        Kokkos::SpaceAccessibility<src_execution_space,
+                                   dst_memory_space>::accessible
   };
 
   if ((void*)dst.data() != (void*)src.data()) {

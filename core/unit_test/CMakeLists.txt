@@ -42,9 +42,9 @@ SET(KOKKOS_OPENMP_NAME OpenMP)
 
 # FIXME_OPENMPTARGET - The NVIDIA HPC compiler nvc++ only compiles the first 8 incremental tests for the OpenMPTarget backend.
 IF(KOKKOS_CXX_COMPILER_ID STREQUAL PGI OR KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-  SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 8)
+  SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 10)
 ELSE()
-  SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 13)
+  SET(KOKKOS_OPENMPTARGET_FEATURE_LEVEL 14)
 ENDIF()
 
 SET(KOKKOS_OPENMPTARGET_NAME Experimental::OpenMPTarget)
@@ -64,6 +64,12 @@ SET(KOKKOS_THREADS_NAME Threads)
 KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
+
+KOKKOS_ADD_EXECUTABLE(
+  TestCompileOnly
+  SOURCES
+  TestDetectionIdiom.cpp
+)
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
   # Because there is always an exception to the rule
@@ -264,9 +270,7 @@ if(Kokkos_ENABLE_OPENMPTARGET)
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Crs.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_LocalDeepCopy.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Other.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reductions_DeviceView.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamReductionScan.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamTeamSize.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewAPI_e.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_ViewCopy_a.cpp
@@ -281,6 +285,9 @@ endif()
 IF(KOKKOS_ENABLE_OPENMPTARGET
    AND (KOKKOS_CXX_COMPILER_ID STREQUAL PGI OR KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC))
   list(REMOVE_ITEM OpenMPTarget_SOURCES
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamTeamSize.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reductions_DeviceView.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamVectorRange.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_UniqueToken.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_HostSharedPtr.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_HostSharedPtrAccessOnDevice.cpp
@@ -686,9 +693,19 @@ KOKKOS_ADD_ADVANCED_TEST( UnitTest_PushFinalizeHook_terminate
 
   if(KOKKOS_ENABLE_TUNING)
     KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_TuningBuiltins
+      SOURCES
+      tools/TestBuiltinTuners.cpp
+    )
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
       UnitTest_TuningBasics
       SOURCES
         tools/TestTuning.cpp
+    )
+    KOKKOS_ADD_EXECUTABLE_AND_TEST(
+      UnitTest_CategoricalTuner
+      SOURCES
+      tools/TestCategoricalTuner.cpp
     )
   endif()
   if(NOT Kokkos_ENABLE_OPENMPTARGET)

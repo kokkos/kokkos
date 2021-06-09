@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <impl/Kokkos_Tools.hpp>
+#include <atomic>
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 // These functions fulfill the purpose of allowing to work around
@@ -116,8 +117,10 @@ class CudaInternal {
   cudaStream_t m_stream;
 
   // Team Scratch Level 1 Space
-  mutable int64_t m_team_scratch_current_size;
-  mutable void* m_team_scratch_ptr;
+  int m_n_team_scratch = 10;
+  mutable int64_t m_team_scratch_current_size[10];
+  mutable void* m_team_scratch_ptr[10];
+  mutable std::atomic_int m_team_scratch_pool[10];
 
   bool was_initialized = false;
   bool was_finalized   = false;
@@ -174,9 +177,13 @@ class CudaInternal {
         m_scratchUnified(nullptr),
         m_scratchFunctor(nullptr),
         m_scratchConcurrentBitset(nullptr),
-        m_stream(nullptr),
-        m_team_scratch_current_size(0),
-        m_team_scratch_ptr(nullptr) {}
+        m_stream(nullptr) {
+    for (int i = 0; i < m_n_team_scratch; ++i) {
+      m_team_scratch_current_size[i] = 0;
+      m_team_scratch_ptr[i]          = nullptr;
+      m_team_scratch_pool[i]         = 0;
+    }
+  }
 
   // Resizing of reduction related scratch spaces
   size_type* scratch_space(const size_type size) const;
@@ -185,8 +192,8 @@ class CudaInternal {
   size_type* scratch_functor(const size_type size) const;
 
   // Resizing of team level 1 scratch
-  void* resize_team_scratch_space(std::int64_t bytes,
-                                  bool force_shrink = false);
+  std::pair<void*, int> resize_team_scratch_space(std::int64_t bytes,
+                                                  bool force_shrink = false);
 };
 
 }  // Namespace Impl

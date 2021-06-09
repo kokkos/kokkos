@@ -42,54 +42,36 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
-#define KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+#include <impl/Kokkos_Utilities.hpp>  // type_list
 
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Concepts.hpp>  // LaunchBounds
-#include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
+
+#ifndef KOKKOS_KOKKOS_POLICYTRAITMATCHER_HPP
+#define KOKKOS_KOKKOS_POLICYTRAITMATCHER_HPP
 
 namespace Kokkos {
 namespace Impl {
 
 //==============================================================================
-// <editor-fold desc="trait specification"> {{{1
+// <editor-fold desc="PolicyTraitMatcher"> {{{1
 
-struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
-  struct base_traits {
-    static constexpr bool launch_bounds_is_defaulted = true;
+// To handle the WorkTag case, we need more than just a predicate; we need
+// something that we can default to in the unspecialized case, just like we
+// do for AnalyzeExecPolicy
+template <class TraitSpec, class Trait, class Enable = void>
+struct PolicyTraitMatcher : std::false_type {};
 
-    using launch_bounds = LaunchBounds<>;
-  };
-  template <class LaunchBoundParam, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-
-    static constexpr bool launch_bounds_is_defaulted = false;
-
-    static_assert(base_t::launch_bounds_is_defaulted,
-                  "Kokkos Error: More than one launch_bounds given");
-
-    using launch_bounds = LaunchBoundParam;
-  };
-};
-
-// </editor-fold> end trait specification }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
-
-template <unsigned int maxT, unsigned int minB>
-struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
+template <class TraitSpec, class Trait>
+struct PolicyTraitMatcher<
+    TraitSpec, Trait,
+    std::enable_if_t<
+        TraitSpec::template trait_matches_specification<Trait>::value>>
     : std::true_type {};
 
-// </editor-fold> end PolicyTraitMatcher specialization }}}1
+// </editor-fold> end PolicyTraitMatcher }}}1
 //==============================================================================
 
 }  // end namespace Impl
 }  // end namespace Kokkos
 
-#endif  // KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+#endif  // KOKKOS_KOKKOS_POLICYTRAITMATCHER_HPP

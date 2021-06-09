@@ -68,6 +68,8 @@ class SYCLInternal {
 
   void* scratch_space(const size_type size);
   void* scratch_flags(const size_type size);
+  void* resize_team_scratch_space(std::int64_t bytes,
+                                  bool force_shrink = false);
 
   int m_syclDev = -1;
 
@@ -80,6 +82,9 @@ class SYCLInternal {
   size_type* m_scratchSpace           = nullptr;
   size_type m_scratchFlagsCount       = 0;
   size_type* m_scratchFlags           = nullptr;
+
+  int64_t m_team_scratch_current_size = 0;
+  void* m_team_scratch_ptr            = nullptr;
 
   std::optional<sycl::queue> m_queue;
 
@@ -104,7 +109,7 @@ class SYCLInternal {
         assert(m_mem);
         assert(sizeof(T) == m_mem->size());
 
-        if constexpr (sycl::usm::alloc::device == kind)
+        if constexpr (sycl::usm::alloc::device == Kind)
           // Only skipping the dtor on trivially copyable types
           static_assert(std::is_trivially_copyable_v<T>);
         else
@@ -116,8 +121,6 @@ class SYCLInternal {
      private:
       USMObjectMem* m_mem = nullptr;
     };
-
-    static constexpr sycl::usm::alloc kind = Kind;
 
     void reset();
 
@@ -177,7 +180,7 @@ class SYCLInternal {
     // Note:  This will not work with USM device memory
     template <typename T>
     std::unique_ptr<T, Deleter> copy_construct_from(const T& t) {
-      static_assert(kind != sycl::usm::alloc::device,
+      static_assert(Kind != sycl::usm::alloc::device,
                     "Cannot copy construct into USM device memory");
 
       reserve(sizeof(T));
@@ -198,7 +201,7 @@ class SYCLInternal {
     // unique_ptr<T, ...>
     template <typename T>
     std::unique_ptr<T, Deleter> copy_from(const T& t) {
-      if constexpr (sycl::usm::alloc::device == kind)
+      if constexpr (sycl::usm::alloc::device == Kind)
         return memcpy_from(t);
       else
         return copy_construct_from(t);
@@ -219,7 +222,7 @@ class SYCLInternal {
     // Returns a reference to t (helpful when debugging)
     template <typename T>
     T& move_assign_to(T& t) {
-      static_assert(kind != sycl::usm::alloc::device,
+      static_assert(Kind != sycl::usm::alloc::device,
                     "Cannot move_assign_to from USM device memory");
 
       assert(sizeof(T) == m_size);
@@ -233,7 +236,7 @@ class SYCLInternal {
     // Returns a reference to t (helpful when debugging)
     template <typename T>
     T& transfer_to(T& t) {
-      if constexpr (sycl::usm::alloc::device == kind)
+      if constexpr (sycl::usm::alloc::device == Kind)
         return memcpy_to(t);
       else
         return move_assign_to(t);

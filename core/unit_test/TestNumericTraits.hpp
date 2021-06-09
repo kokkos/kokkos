@@ -334,3 +334,53 @@ TEST(TEST_CATEGORY, numeric_traits_min_max_exponent10) {
   TestNumericTraits<TEST_EXECSPACE, long double, MinExponent10>();
   TestNumericTraits<TEST_EXECSPACE, long double, MaxExponent10>();
 }
+
+namespace NumericTraitsSFINAE {
+
+struct HasNoSpecialization {};
+
+#define CHECK_TRAIT_IS_SFINAE_FRIENDLY(TRAIT)                              \
+  template <class T>                                                       \
+  using TRAIT##_value_t = decltype(Kokkos::Experimental::TRAIT<T>::value); \
+  template <class T>                                                       \
+  using has_##TRAIT = Kokkos::is_detected<TRAIT##_value_t, T>;             \
+  static_assert(!has_##TRAIT<HasNoSpecialization>::value, "");
+
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(infinity)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(finite_min)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(finite_max)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(epsilon)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(round_error)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(norm_min)
+
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(digits)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(digits10)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(max_digits10)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(radix)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(min_exponent)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(min_exponent10)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(max_exponent)
+CHECK_TRAIT_IS_SFINAE_FRIENDLY(max_exponent10)
+
+}  // namespace NumericTraitsSFINAE
+
+// Example detecting presence or absence of values
+template <class T>
+using infinity_value_t = decltype(Kokkos::Experimental::infinity<T>::value);
+
+template <class T>
+using has_infinity = Kokkos::is_detected<infinity_value_t, T>;
+
+template <class T, std::enable_if_t<has_infinity<T>::value>* = nullptr>
+constexpr T legacy_std_numeric_limits_infinity() {
+  return Kokkos::Experimental::infinity<T>::value;
+}
+
+template <class T, std::enable_if_t<!has_infinity<T>::value>* = nullptr>
+constexpr T legacy_std_numeric_limits_infinity() {
+  return T();
+}
+
+TEST(TEST_CATEGORY, numeric_traits_sfinae_friendly) {
+  ASSERT_EQ(legacy_std_numeric_limits_infinity<int>(), 0);
+}

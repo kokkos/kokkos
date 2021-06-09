@@ -116,8 +116,7 @@ KOKKOS_INLINE_FUNCTION void offsetview_verify_operator_bounds(
       This check should cover the case of Views that don't
       have the Unmanaged trait but were initialized by pointer. */
     if (tracker.has_record()) {
-      Kokkos::Impl::operator_bounds_error_on_device<MapType>(
-          map, Kokkos::Impl::has_printable_label_typedef<MapType>());
+      Kokkos::Impl::operator_bounds_error_on_device(map);
     } else {
       Kokkos::abort("OffsetView bounds error");
     }

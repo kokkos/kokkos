@@ -42,54 +42,45 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
-#define KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+// This file tests the categorical tuner
 
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Concepts.hpp>  // LaunchBounds
-#include <traits/Kokkos_PolicyTraitAdaptor.hpp>
-#include <traits/Kokkos_Traits_fwd.hpp>
-
-namespace Kokkos {
-namespace Impl {
-
-//==============================================================================
-// <editor-fold desc="trait specification"> {{{1
-
-struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
-  struct base_traits {
-    static constexpr bool launch_bounds_is_defaulted = true;
-
-    using launch_bounds = LaunchBounds<>;
-  };
-  template <class LaunchBoundParam, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-
-    static constexpr bool launch_bounds_is_defaulted = false;
-
-    static_assert(base_t::launch_bounds_is_defaulted,
-                  "Kokkos Error: More than one launch_bounds given");
-
-    using launch_bounds = LaunchBoundParam;
-  };
+#include <Kokkos_Core.hpp>
+#include <unistd.h>
+struct point {
+  float x;
+  float y;
+  float z;
 };
+void do_computation(const point& test_point) {
+  usleep(((unsigned int)test_point.x) * 100);
+}
+using namespace Kokkos::Tools::Experimental;
+int main(int argc, char* argv[]) {
+  Kokkos::initialize(argc, argv);
+  {
+    VariableInfo info;
+    info.category              = StatisticalCategory::kokkos_value_categorical;
+    info.valueQuantity         = CandidateValueType::kokkos_value_unbounded;
+    info.type                  = ValueType::kokkos_value_string;
+    size_t input               = declare_input_type("kernel", info);
+    VariableValue kernel_value = make_variable_value(input, "abs");
+    size_t kernel_context      = get_new_context_id();
+    begin_context(kernel_context);
+    set_input_values(kernel_context, 1, &kernel_value);
 
-// </editor-fold> end trait specification }}}1
-//==============================================================================
+    std::vector<point> points;
+    points.push_back({1.0, 1.0, 1.0});
+    points.push_back({10.0, 10.0, 10.0});
+    points.push_back({0.0, 0.0, 0.0});
+    auto tuner =
+        Kokkos::Tools::Experimental::make_categorical_tuner("points", points);
+    for (decltype(points)::size_type x = 0; x < 3000; ++x) {
+      point test_point = tuner.begin();
+      do_computation(test_point);
+      tuner.end();
+    }
 
-//==============================================================================
-// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
-
-template <unsigned int maxT, unsigned int minB>
-struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
-    : std::true_type {};
-
-// </editor-fold> end PolicyTraitMatcher specialization }}}1
-//==============================================================================
-
-}  // end namespace Impl
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+    end_context(kernel_context);
+  }
+  Kokkos::finalize();
+}
