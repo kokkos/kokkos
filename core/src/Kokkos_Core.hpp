@@ -59,6 +59,7 @@
 #include <Kokkos_LogicalSpaces.hpp>
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
+#include <Kokkos_MathematicalSpecialFunctions.hpp>
 #include <Kokkos_MemoryPool.hpp>
 #include <Kokkos_Array.hpp>
 #include <Kokkos_View.hpp>
@@ -70,7 +71,6 @@
 #include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_CopyViews.hpp>
-#include <Kokkos_MathematicalSpecialFunctions.hpp>
 #include <functional>
 #include <iosfwd>
 #include <map>
