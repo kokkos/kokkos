@@ -679,36 +679,6 @@ KOKKOS_INLINE_FUNCTION
       x * y.real(), x * y.imag());
 }
 
-namespace Impl {
-// NOTE promote would also be useful for math functions
-template <class T, bool = std::is_integral<T>::value>
-struct promote {
-  using type = double;
-};
-template <class T>
-struct promote<T, false> {};
-template <>
-struct promote<long double> {
-  using type = long double;
-};
-template <>
-struct promote<double> {
-  using type = double;
-};
-template <>
-struct promote<float> {
-  using type = float;
-};
-template <class T>
-using promote_t = typename promote<T>::type;
-template <class T, class U>
-struct promote_2 {
-  using type = decltype(promote_t<T>() + promote_t<U>());
-};
-template <class T, class U>
-using promote_2_t = typename promote_2<T, U>::type;
-}  // namespace Impl
-
 //! Imaginary part of a complex number.
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType imag(const complex<RealType>& x) noexcept {
