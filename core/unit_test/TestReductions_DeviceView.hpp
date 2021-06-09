@@ -75,13 +75,13 @@ void test_reduce_device_view(int64_t N, PolicyType policy,
 
   ASSERT_EQ(N, scalar_result);
   if (is_async) {
-    printf("Time: %lf < %lf ?\n",time1,time_fence1);
+    printf("Time: %lf < %lf ?\n", time1, time_fence1);
     ASSERT_TRUE(time1 < time_fence1);
   }
   if (is_async) {
-    printf("Time: %lf < %lf ?\n",time2,time_fence2);
+    printf("Time: %lf < %lf ?\n", time2, time_fence2);
     ASSERT_TRUE(time2 < time_fence2);
-    printf("Time: %lf > %lf ?\n",time3,time_fence3);
+    printf("Time: %lf > %lf ?\n", time3, time_fence3);
     ASSERT_TRUE(time3 > time_fence3);
   }
 }
