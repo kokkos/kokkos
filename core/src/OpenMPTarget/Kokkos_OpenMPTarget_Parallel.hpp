@@ -67,10 +67,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
  public:
-  inline void execute() const { execute_impl<WorkTag>(); }
+  void execute() const { execute_impl<WorkTag>(); }
 
   template <class TagType>
-  inline void execute_impl() const {
+  void execute_impl() const {
     OpenMPTargetExec::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
@@ -91,7 +91,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
+  ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
 };
 
@@ -109,8 +109,8 @@ namespace Impl {
 template <class PointerType>
 struct ParallelReduceCommon {
   // Copy the result back to device if the view is on the device.
-  inline static void memcpy_result(PointerType dest, PointerType src,
-                                   size_t size, bool ptr_on_device) {
+  static void memcpy_result(PointerType dest, PointerType src, size_t size,
+                            bool ptr_on_device) {
     if (ptr_on_device) {
       OMPT_SAFE_CALL(omp_target_memcpy(dest, src, size, 0, 0,
                                        omp_get_default_device(),
@@ -124,8 +124,8 @@ struct ParallelReduceCommon {
 template <class FunctorType, class PolicyType, class ReducerType,
           class PointerType, class ValueType>
 struct ParallelReduceSpecialize {
-  static inline void execute(const FunctorType& /*f*/, const PolicyType& /*p*/,
-                             PointerType /*result_ptr*/) {
+  static void execute(const FunctorType& /*f*/, const PolicyType& /*p*/,
+                      PointerType /*result_ptr*/) {
     enum { FunctorHasJoin = ReduceFunctorHasJoin<FunctorType>::value };
     enum { UseReducerType = is_reducer_type<ReducerType>::value };
 
@@ -159,9 +159,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
   using ParReduceCommon = ParallelReduceCommon<PointerType>;
 
-  inline static void execute_reducer(const FunctorType& f, const PolicyType& p,
-                                     PointerType result_ptr,
-                                     bool ptr_on_device) {
+  static void execute_reducer(const FunctorType& f, const PolicyType& p,
+                              PointerType result_ptr, bool ptr_on_device) {
     OpenMPTargetExec::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
@@ -196,8 +195,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   }
 
   template <class TagType, int NumReductions>
-  inline static void execute_array(const FunctorType& f, const PolicyType& p,
-                                   PointerType result_ptr, bool ptr_on_device) {
+  static void execute_array(const FunctorType& f, const PolicyType& p,
+                            PointerType result_ptr, bool ptr_on_device) {
     OpenMPTargetExec::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
@@ -235,9 +234,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
                                    ptr_on_device);
   }
 
-  inline static void execute_init_join(const FunctorType& f,
-                                       const PolicyType& p, PointerType ptr,
-                                       const bool ptr_on_device) {
+  static void execute_init_join(const FunctorType& f, const PolicyType& p,
+                                PointerType ptr, const bool ptr_on_device) {
     const auto begin = p.begin();
     const auto end   = p.end();
     if (end <= begin) return;
@@ -319,8 +317,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       FunctorFinal<FunctorType, TagType>::final(f, &host_result[0]);
     }
 
-    memcpy_result(ptr, host_result, sizeof(ValueType) * value_count,
-                  ptr_on_device);
+    ParReduceCommon::memcpy_result(
+        ptr, host_result, sizeof(ValueType) * value_count, ptr_on_device);
   }
 };
 
@@ -364,7 +362,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using TagType = typename Policy::work_tag;
 
  public:
-  inline void execute() const {
+  void execute() const {
     if constexpr (HasJoin) {
       // Enter this loop if the Functor has a init-join.
       ParReduceSpecialize::execute_init_join(m_functor, m_policy, m_result_ptr,
@@ -403,7 +401,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
   template <class ViewType>
-  inline ParallelReduce(
+  ParallelReduce(
       const FunctorType& arg_functor, Policy arg_policy,
       const ViewType& arg_result_view,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
@@ -418,8 +416,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                               typename ViewType::memory_space>::accessible),
         m_result_ptr_num_elems(arg_result_view.size()) {}
 
-  inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
-                        const ReducerType& reducer)
+  ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
+                 const ReducerType& reducer)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_reducer(reducer),
@@ -464,20 +462,20 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <class TagType>
-  inline typename std::enable_if<std::is_same<TagType, void>::value>::type
+  typename std::enable_if<std::is_same<TagType, void>::value>::type
   call_with_tag(const FunctorType& f, const idx_type& idx, value_type& val,
                 const bool& is_final) const {
     f(idx, val, is_final);
   }
   template <class TagType>
-  inline typename std::enable_if<!std::is_same<TagType, void>::value>::type
+  typename std::enable_if<!std::is_same<TagType, void>::value>::type
   call_with_tag(const FunctorType& f, const idx_type& idx, value_type& val,
                 const bool& is_final) const {
     f(WorkTag(), idx, val, is_final);
   }
 
  public:
-  inline void impl_execute(
+  void impl_execute(
       Kokkos::View<value_type**, Kokkos::LayoutRight,
                    Kokkos::Experimental::OpenMPTargetSpace>
           element_values,
@@ -561,7 +559,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     }
   }
 
-  inline void execute() const {
+  void execute() const {
     OpenMPTargetExec::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
@@ -584,7 +582,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   //----------------------------------------
 
-  inline ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
+  ParallelScan(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
 
   //----------------------------------------
@@ -601,7 +599,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   value_type& m_returnvalue;
 
  public:
-  inline void execute() const {
+  void execute() const {
     OpenMPTargetExec::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
@@ -659,7 +657,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_shmem_size;
 
  public:
-  inline void execute() const {
+  void execute() const {
     OpenMPTargetExec::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
@@ -669,7 +667,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  private:
   template <class TagType>
-  inline void execute_impl() const {
+  void execute_impl() const {
     OpenMPTargetExec::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
@@ -728,7 +726,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
  public:
-  inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
+  ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
@@ -758,9 +756,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
   using ParReduceCommon = ParallelReduceCommon<PointerType>;
 
-  inline static void execute_reducer(const FunctorType& f, const PolicyType& p,
-                                     PointerType result_ptr,
-                                     bool ptr_on_device) {
+  static void execute_reducer(const FunctorType& f, const PolicyType& p,
+                              PointerType result_ptr, bool ptr_on_device) {
     OpenMPTargetExec::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
@@ -819,8 +816,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   }
 
   template <int NumReductions>
-  inline static void execute_array(const FunctorType& f, const PolicyType& p,
-                                   PointerType result_ptr, bool ptr_on_device) {
+  static void execute_array(const FunctorType& f, const PolicyType& p,
+                            PointerType result_ptr, bool ptr_on_device) {
     OpenMPTargetExec::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     OpenMPTargetExec::verify_initialized(
@@ -932,9 +929,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
   // FIXME_OPENMPTARGET : This routine is a copy from `parallel_reduce` over
   // RangePolicy. Need a new implementation.
-  inline static void execute_init_join(const FunctorType& f,
-                                       const PolicyType& p, PointerType ptr,
-                                       const bool ptr_on_device) {
+  static void execute_init_join(const FunctorType& f, const PolicyType& p,
+                                PointerType ptr, const bool ptr_on_device) {
     const auto begin = p.begin();
     const auto end   = p.end();
     if (end <= begin) return;
@@ -1067,7 +1063,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_shmem_size;
 
  public:
-  inline void execute() const {
+  void execute() const {
     if constexpr (HasJoin) {
       ParReduceSpecialize::execute_init_join(m_functor, m_policy, m_result_ptr,
                                              m_result_ptr_on_device);
@@ -1101,7 +1097,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   template <class ViewType>
-  inline ParallelReduce(
+  ParallelReduce(
       const FunctorType& arg_functor, const Policy& arg_policy,
       const ViewType& arg_result,
       typename std::enable_if<Kokkos::is_view<ViewType>::value &&
@@ -1119,8 +1115,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                      FunctorTeamShmemSize<FunctorType>::value(
                          arg_functor, arg_policy.team_size())) {}
 
-  inline ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
-                        const ReducerType& reducer)
+  ParallelReduce(const FunctorType& arg_functor, Policy arg_policy,
+                 const ReducerType& reducer)
       : m_result_ptr_on_device(
             MemorySpaceAccess<Kokkos::Experimental::OpenMPTargetSpace,
                               typename ReducerType::result_view_type::
@@ -1148,11 +1144,11 @@ struct TeamThreadRangeBoundariesStruct<iType, OpenMPTargetExecTeamMember> {
   const iType end;
   const OpenMPTargetExecTeamMember& team;
 
-  inline TeamThreadRangeBoundariesStruct(
-      const OpenMPTargetExecTeamMember& thread_, iType count)
+  TeamThreadRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
+                                  iType count)
       : start(0), end(count), team(thread_) {}
-  inline TeamThreadRangeBoundariesStruct(
-      const OpenMPTargetExecTeamMember& thread_, iType begin_, iType end_)
+  TeamThreadRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
+                                  iType begin_, iType end_)
       : start(begin_), end(end_), team(thread_) {}
 };
 
@@ -1163,12 +1159,11 @@ struct ThreadVectorRangeBoundariesStruct<iType, OpenMPTargetExecTeamMember> {
   const index_type end;
   const OpenMPTargetExecTeamMember& team;
 
-  inline ThreadVectorRangeBoundariesStruct(
-      const OpenMPTargetExecTeamMember& thread_, index_type count)
+  ThreadVectorRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
+                                    index_type count)
       : start(0), end(count), team(thread_) {}
-  inline ThreadVectorRangeBoundariesStruct(
-      const OpenMPTargetExecTeamMember& thread_, index_type begin_,
-      index_type end_)
+  ThreadVectorRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
+                                    index_type begin_, index_type end_)
       : start(begin_), end(end_), team(thread_) {}
 };
 
@@ -1179,12 +1174,11 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenMPTargetExecTeamMember> {
   const index_type end;
   const OpenMPTargetExecTeamMember& team;
 
-  inline TeamVectorRangeBoundariesStruct(
-      const OpenMPTargetExecTeamMember& thread_, index_type count)
+  TeamVectorRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
+                                  index_type count)
       : start(0), end(count), team(thread_) {}
-  inline TeamVectorRangeBoundariesStruct(
-      const OpenMPTargetExecTeamMember& thread_, index_type begin_,
-      index_type end_)
+  TeamVectorRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
+                                  index_type begin_, index_type end_)
       : start(begin_), end(end_), team(thread_) {}
 };
 
