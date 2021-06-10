@@ -47,6 +47,7 @@
 
 #include <Kokkos_Parallel.hpp>
 
+#include <SYCL/Kokkos_SYCL_Parallel_Reduce.hpp>  // workgroup_reduction
 #include <SYCL/Kokkos_SYCL_Team.hpp>
 
 namespace Kokkos {
@@ -538,19 +539,15 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     sycl::queue& q = *instance.m_queue;
 
     // FIXME_SYCL optimize
-    const size_t wgroup_size = m_team_size;
-    std::size_t size         = m_league_size * m_team_size;
+    const size_t wgroup_size = m_team_size * m_vector_size;
+    std::size_t size         = m_league_size * m_team_size * m_vector_size;
     const auto init_size =
         std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);
     const unsigned int value_count =
         FunctorValueTraits<ReducerTypeFwd, WorkTagFwd>::value_count(
             selected_reducer);
-    // FIXME_SYCL only use the first half
     const auto results_ptr = static_cast<pointer_type>(instance.scratch_space(
-        sizeof(value_type) * std::max(value_count, 1u) * init_size * 2));
-    // FIXME_SYCL without this we are running into a race condition
-    const auto results_ptr2 =
-        results_ptr + std::max(value_count, 1u) * init_size;
+        sizeof(value_type) * std::max(value_count, 1u) * init_size));
 
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
@@ -636,9 +633,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               // In the first iteration, we call functor to initialize the local
               // memory. Otherwise, the local memory is initialized with the
               // results from the previous iteration that are stored in global
-              // memory. Note that we load values_per_thread values per thread
-              // and immediately combine them to avoid too many threads being
-              // idle in the actual workgroup reduction.
+              // memory.
               if (first_run) {
                 reference_type update = ValueInit::init(
                     selected_reducer, &local_mem[local_id * value_count]);
@@ -663,49 +658,12 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               }
               item.barrier(sycl::access::fence_space::local_space);
 
-              // Perform the actual workgroup reduction. To achieve a better
-              // memory access pattern, we use sequential addressing and a
-              // reversed loop. If the workgroup size is 8, the first element
-              // contains all the values with index%4==0, after the second one
-              // the values with index%2==0 and after the third one index%1==0,
-              // i.e., all values.
-              for (unsigned int stride = wgroup_size / 2; stride > 0;
-                   stride >>= 1) {
-                const auto idx = local_id;
-                if (idx < stride) {
-                  ValueJoin::join(selected_reducer,
-                                  &local_mem[idx * value_count],
-                                  &local_mem[(idx + stride) * value_count]);
-                }
-                item.barrier(sycl::access::fence_space::local_space);
-              }
-
-              // Finally, we copy the workgroup results back to global memory to
-              // be used in the next iteration. If this is the last iteration,
-              // i.e., there is only one workgroup also call final() if
-              // necessary.
-              if (local_id == 0) {
-                ValueOps::copy(
-                    functor,
-                    &results_ptr2[(item.get_group_linear_id()) * value_count],
-                    &local_mem[0]);
-                if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
-                  if (n_wgroups <= 1 && item.get_group_linear_id() == 0) {
-                    FunctorFinal<FunctorType, WorkTag>::final(
-                        static_cast<const FunctorType&>(functor),
-                        &results_ptr2[(item.get_group_linear_id()) *
-                                      value_count]);
-                  }
-              }
+              SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
+                  item, local_mem.get_pointer(), results_ptr, value_count,
+                  selected_reducer, static_cast<const FunctorType&>(functor),
+                  n_wgroups <= 1 && item.get_group_linear_id() == 0);
             });
       });
-      space.fence();
-
-      // FIXME_SYCL this is likely not necessary, see above
-      Kokkos::Impl::DeepCopy<Kokkos::Experimental::SYCLDeviceUSMSpace,
-                             Kokkos::Experimental::SYCLDeviceUSMSpace>(
-          space, results_ptr, results_ptr2,
-          sizeof(*m_result_ptr) * value_count * n_wgroups);
       space.fence();
 
       first_run = false;
