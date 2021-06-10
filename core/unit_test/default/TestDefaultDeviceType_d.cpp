@@ -59,7 +59,7 @@ TEST(defaultdevicetype, malloc) {
   Kokkos::kokkos_free(data);
 
   int* data2 = (int*)Kokkos::kokkos_malloc(0);
-  ASSERT_TRUE(data2 == nullptr);
+  ASSERT_EQ(data2, nullptr);
   Kokkos::kokkos_free(data2);
 }
 

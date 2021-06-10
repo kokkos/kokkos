@@ -88,7 +88,7 @@ struct TestIncrExecSpace {
     ExecSpace().fence();
 
     auto concurrency = ExecSpace().concurrency();
-    ASSERT_TRUE(concurrency > 0);
+    ASSERT_GT(concurrency, 0);
 
     int in_parallel = ExecSpace::in_parallel();
     ASSERT_FALSE(in_parallel);
