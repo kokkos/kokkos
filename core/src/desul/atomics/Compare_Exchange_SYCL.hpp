@@ -19,15 +19,15 @@ namespace desul {
 
 template<class MemoryOrder, class MemoryScope>
 inline void atomic_thread_fence(MemoryOrder, MemoryScope) {
-  sycl::ONEAPI::atomic_fence(DesulToSYCLMemoryOrder<MemoryOrder>::value,
-                             DesulToSYCLMemoryScope<MemoryScope>::value);
+  DESUL_SYCL_NAMESPACE::atomic_fence(DesulToSYCLMemoryOrder<MemoryOrder>::value,
+                                     DesulToSYCLMemoryScope<MemoryScope>::value);
 }
 
 template <typename T, class MemoryOrder, class MemoryScope>
 typename std::enable_if<sizeof(T) == 4, T>::type atomic_compare_exchange(
     T* const dest, T compare, T value, MemoryOrder, MemoryScope) {
   static_assert(sizeof(unsigned int) == 4, "this function assumes an unsigned int is 32-bit");
-  sycl::ONEAPI::atomic_ref<
+  DESUL_SYCL_NAMESPACE::atomic_ref<
     unsigned int, 
     DesulToSYCLMemoryOrder<MemoryOrder>::value, 
     DesulToSYCLMemoryScope<MemoryScope>::value, 
@@ -41,7 +41,7 @@ template <typename T, class MemoryOrder, class MemoryScope>
 typename std::enable_if<sizeof(T) == 8, T>::type atomic_compare_exchange(
     T* const dest, T compare, T value, MemoryOrder, MemoryScope) {
   static_assert(sizeof(unsigned long long int) == 8, "this function assumes an unsigned long long  is 64-bit");
-  sycl::ONEAPI::atomic_ref<
+  DESUL_SYCL_NAMESPACE::atomic_ref<
     unsigned long long int, 
     DesulToSYCLMemoryOrder<MemoryOrder>::value,
     DesulToSYCLMemoryScope<MemoryScope>::value, 
@@ -56,7 +56,7 @@ template <typename T, class MemoryOrder, class MemoryScope>
 typename std::enable_if<sizeof(T) == 4, T>::type atomic_exchange(
     T* const dest, T value, MemoryOrder, MemoryScope) {
   static_assert(sizeof(unsigned int) == 4, "this function assumes an unsigned int is 32-bit");
-  sycl::ONEAPI::atomic_ref<
+  DESUL_SYCL_NAMESPACE::atomic_ref<
     unsigned int, 
     DesulToSYCLMemoryOrder<MemoryOrder>::value, 
     DesulToSYCLMemoryScope<MemoryScope>::value,  
@@ -69,7 +69,7 @@ template <typename T, class MemoryOrder, class MemoryScope>
 typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
     T* const dest, T value, MemoryOrder, MemoryScope) {
   static_assert(sizeof(unsigned long long int) == 8, "this function assumes an unsigned long long  is 64-bit");
-  sycl::ONEAPI::atomic_ref<
+  DESUL_SYCL_NAMESPACE::atomic_ref<
     unsigned long long int,
     DesulToSYCLMemoryOrder<MemoryOrder>::value,
     DesulToSYCLMemoryScope<MemoryScope>::value,
