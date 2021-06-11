@@ -47,6 +47,10 @@
 
 #include <Kokkos_Macros.hpp>
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
+#error Kokkos::Experimental::MasterLock has been deprecated.
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
