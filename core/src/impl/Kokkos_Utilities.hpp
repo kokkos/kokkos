@@ -212,27 +212,6 @@ struct type_list_any<UnaryPred, type_list<>> : std::false_type {};
 // </editor-fold> end type_list }}}1
 //==============================================================================
 
-//==============================================================================
-// <editor-fold desc="MSVC linearize base workaround"> {{{1
-
-// MSVC workaround: more than two base classes (and more than one if the
-// hierarchy gets too deep) causes problems with EBO, so we need to linearize
-// the inheritance hierarchy to avoid losing EBO and ending up with an object
-// representation that is larger than it needs to be.
-// Note: by convention, the nested template in a higher-order metafunction like
-// GetBase is named apply, so we use that name here (this convention grew out
-// of Boost MPL)
-template <template <class> class GetBase, class...>
-struct linearize_bases;
-template <template <class> class GetBase, class T, class... Ts>
-struct linearize_bases<GetBase, T, Ts...> : GetBase<T>::template apply<Ts...> {
-};
-template <template <class> class GetBase>
-struct linearize_bases<GetBase> {};
-
-// </editor-fold> end MSVC linearize base workaround }}}1
-//==============================================================================
-
 }  // namespace Impl
 }  // namespace Kokkos
 
