@@ -352,10 +352,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   }
 
  private:
-  FunctorType m_functor;
-  Policy m_policy;
-  ReducerType m_reducer;
-  pointer_type m_result_ptr;
+  const FunctorType m_functor;
+  const Policy m_policy;
+  const ReducerType m_reducer;
+  const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
 };
 
@@ -626,11 +626,11 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   }
 
  private:
-  FunctorType m_functor;
-  BarePolicy m_policy;
+  const FunctorType m_functor;
+  const BarePolicy m_policy;
   const Kokkos::Experimental::SYCL& m_space;
-  ReducerType m_reducer;
-  pointer_type m_result_ptr;
+  const ReducerType m_reducer;
+  const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
 };
 
