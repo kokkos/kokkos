@@ -41,3 +41,52 @@
 // ************************************************************************
 //@HEADER
 */
+
+#ifndef KOKKOS_QUAD_PRECISION_MATH_HPP
+#define KOKKOS_QUAD_PRECISION_MATH_HPP
+
+#include <Kokkos_NumericTraits.hpp>
+
+#include <quadmath.h>
+
+//<editor-fold desc="numeric traits __float128 specializations">
+#if defined(KOKKOS_ENABLE_CXX17)
+#define KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(TRAIT, TYPE, VALUE_TYPE, VALUE) \
+  template <>                                                                \
+  struct Kokkos::Experimental::TRAIT<TYPE> {                                 \
+    static constexpr VALUE_TYPE value = VALUE;                               \
+  };                                                                         \
+  template <>                                                                \
+  inline constexpr auto Kokkos::Experimental::TRAIT##_v<TYPE> =              \
+      Kokkos::Experimental::TRAIT<TYPE>::value;
+#else
+#define KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(TRAIT, TYPE, VALUE_TYPE, VALUE) \
+  template <>                                                                \
+  struct Kokkos::Experimental::TRAIT<TYPE> {                                 \
+    static constexpr VALUE_TYPE value = VALUE;                               \
+  };
+#endif
+
+// clang-format off
+// Numeric distinguished value traits
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(infinity,       __float128, __float128, HUGE_VALQ)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(finite_min,     __float128, __float128, -FLT128_MAX)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(finite_max,     __float128, __float128, FLT128_MAX)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(epsilon,        __float128, __float128, FLT128_EPSILON)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(round_error,    __float128, __float128, static_cast<__float128>(0.5))
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(norm_min,       __float128, __float128, FLT128_MIN)
+
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(digits,         __float128,        int, FLT128_MANT_DIG)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(digits10,       __float128,        int, FLT128_DIG)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_digits10,   __float128,        int, 36)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(radix,          __float128,        int, 2)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(min_exponent,   __float128,        int, FLT128_MIN_EXP)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_exponent,   __float128,        int, FLT128_MAX_EXP)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(min_exponent10, __float128,        int, FLT128_MIN_10_EXP)
+KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_exponent10, __float128,        int, FLT128_MAX_10_EXP)
+// clang-format on
+
+#undef KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT
+//</editor-fold>
+
+#endif
