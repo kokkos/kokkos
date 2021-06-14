@@ -82,12 +82,13 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     FunctorType a_functor(m_functor);
 
-    if constexpr (std::is_same<TagType, void>::value) {
 #pragma omp target teams distribute parallel for map(to : a_functor)
-      for (auto i = begin; i < end; ++i) a_functor(i);
-    } else {
-#pragma omp target teams distribute parallel for map(to : a_functor)
-      for (auto i = begin; i < end; ++i) a_functor(TagType(), i);
+    for (auto i = begin; i < end; ++i) {
+      if constexpr (std::is_same<TagType, void>::value) {
+        a_functor(i);
+      } else {
+        a_functor(TagType(), i);
+      }
     }
   }
 
@@ -210,15 +211,31 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
 
     // Enter the loop if the reduction is on a scalar type.
     if constexpr (NumReductions == 1) {
+      // Case where reduction is on a native data type.
+      if constexpr (std::is_arithmetic<ValueType>::value) {
 #pragma omp target teams distribute parallel for num_teams(512) \
          map(to:f) reduction(+: result)
-      for (auto i = begin; i < end; ++i)
+        for (auto i = begin; i < end; ++i)
 
-        if constexpr (std::is_same<TagType, void>::value) {
-          f(i, result);
-        } else {
-          f(TagType(), i, result);
-        }
+          if constexpr (std::is_same<TagType, void>::value) {
+            f(i, result);
+          } else {
+            f(TagType(), i, result);
+          }
+      } else {
+#pragma omp declare reduction(custom:ValueType : omp_out += omp_in)
+#pragma omp target teams distribute parallel for num_teams(512) map(to   \
+                                                                    : f) \
+    reduction(custom                                                     \
+              : result)
+        for (auto i = begin; i < end; ++i)
+
+          if constexpr (std::is_same<TagType, void>::value) {
+            f(i, result);
+          } else {
+            f(TagType(), i, result);
+          }
+      }
     } else {
 #pragma omp target teams distribute parallel for map(to:f) reduction(+:result[:NumReductions])
       for (auto i = begin; i < end; ++i) {
@@ -252,7 +269,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto value_count =
         FunctorValueTraits<FunctorType, TagType>::value_count(f);
 
-    // Allocate scratch per active thread.
+    // Allocate scratch per active thread. Achieved by setting the first
+    // parameter of `resize_scratch=1`.
     OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType));
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
@@ -268,10 +286,12 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         const auto team_begin = begin + team_num * chunk_size;
         const auto team_end =
             (team_num == num_teams - 1) ? end : (team_begin + chunk_size);
-        ValueType* tmp_scratch = static_cast<ValueType*>(scratch_ptr) +
-                                 team_num * max_team_threads * value_count;
+        ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr) +
+                                  team_num * max_team_threads * value_count;
         ReferenceType result = ValueInit::init(
-            f, &tmp_scratch[omp_get_thread_num() * value_count]);
+            f, &team_scratch[omp_get_thread_num() * value_count]);
+
+        // Accumulate partial results in thread specific storage.
 #pragma omp for simd
         for (auto i = team_begin; i < team_end; i++) {
           if constexpr (std::is_same<TagType, void>::value) {
@@ -280,16 +300,17 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
             f(TagType(), i, result);
           }
         }
-        const int team_size = max_team_threads;
 
+        // Reduce all paritial results within a team.
+        const int team_size      = max_team_threads;
         int tree_neighbor_offset = 1;
         do {
 #pragma omp for simd
           for (int i = 0; i < team_size - tree_neighbor_offset;
                i += 2 * tree_neighbor_offset) {
             const int neighbor = i + tree_neighbor_offset;
-            ValueJoin::join(f, &tmp_scratch[i * value_count],
-                            &tmp_scratch[neighbor * value_count]);
+            ValueJoin::join(f, &team_scratch[i * value_count],
+                            &team_scratch[neighbor * value_count]);
           }
           tree_neighbor_offset *= 2;
         } while (tree_neighbor_offset < team_size);
@@ -303,22 +324,27 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     is_device_ptr(scratch_ptr)
       for (int i = 0; i < max_teams - tree_neighbor_offset;
            i += 2 * tree_neighbor_offset) {
-        ValueType* tmp_scratch = static_cast<ValueType*>(scratch_ptr);
-        const int team_offset  = max_team_threads * value_count;
-        ValueJoin::join(f, &tmp_scratch[i * team_offset],
-                        &tmp_scratch[(i + tree_neighbor_offset) * team_offset]);
+        ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr);
+        const int team_offset   = max_team_threads * value_count;
+        ValueJoin::join(
+            f, &team_scratch[i * team_offset],
+            &team_scratch[(i + tree_neighbor_offset) * team_offset]);
       }
       tree_neighbor_offset *= 2;
     } while (tree_neighbor_offset < max_teams);
+
     ValueType host_result[value_count];
-    omp_target_memcpy(host_result, scratch_ptr, value_count * sizeof(ValueType),
-                      0, 0, omp_get_default_device(), omp_get_initial_device());
-    if constexpr (ReduceFunctorHasFinal<FunctorType>::value) {
-      FunctorFinal<FunctorType, TagType>::final(f, &host_result[0]);
-    }
+    //    omp_target_memcpy(host_result, scratch_ptr, value_count *
+    //    sizeof(ValueType),
+    //                      0, 0, omp_get_default_device(),
+    //                      omp_get_initial_device());
 
     ParReduceCommon::memcpy_result(
         ptr, host_result, sizeof(ValueType) * value_count, ptr_on_device);
+
+    if constexpr (ReduceFunctorHasFinal<FunctorType>::value) {
+      FunctorFinal<FunctorType, TagType>::final(f, &host_result[0]);
+    }
   }
 };
 
@@ -937,12 +963,27 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 
     const auto size = end - begin;
 
-    // FIXME_OPENMPTARGET: The team size and MAX_ACTIVE_THREADS are currently
-    // based on NVIDIA-V100 and should be modifid to be based on the
-    // architecture in the future.
-    const int max_team_threads = 32;
-    const int max_teams =
-        OpenMPTargetExec::MAX_ACTIVE_THREADS / max_team_threads;
+    const int league_size   = p.league_size();
+    const int team_size     = p.team_size();
+    const int vector_length = p.impl_vector_length();
+
+    const size_t shmem_size_L0 = p.scratch_size(0, team_size);
+    const size_t shmem_size_L1 = p.scratch_size(1, team_size);
+
+    // FIXME_OPENMPTARGET: This would oversubscribe scratch memory since we are
+    // already using the available scratch memory to create temporaries for each
+    // thread.
+    if constexpr ((shmem_size_L0 + shmem_size_L1) > 0) {
+      Kokkos::abort(
+          "OpenMPTarget: Scratch memory is not supported in `parallel_reduce` "
+          "over functors with init/join.");
+    }
+
+    // Maximum active teams possible.
+    int max_active_teams = OpenMPTargetExec::MAX_ACTIVE_THREADS / team_size;
+    const auto nteams =
+        league_size < max_active_teams ? league_size : max_active_teams;
+
     // Number of elements in the reduction
     const auto value_count =
         FunctorValueTraits<FunctorType, TagType>::value_count(f);
@@ -951,9 +992,9 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType));
     void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
 
-#pragma omp target teams num_teams(max_teams) thread_limit(max_team_threads) \
-    map(to                                                                   \
-        : f) is_device_ptr(scratch_ptr)
+#pragma omp target teams num_teams(nteams) thread_limit(team_size) map(to   \
+                                                                       : f) \
+    is_device_ptr(scratch_ptr)
     {
 #pragma omp parallel
       {
@@ -963,31 +1004,22 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         const auto team_begin = begin + team_num * chunk_size;
         const auto team_end =
             (team_num == num_teams - 1) ? end : (team_begin + chunk_size);
-        ValueType* tmp_scratch = static_cast<ValueType*>(scratch_ptr) +
-                                 team_num * max_team_threads * value_count;
+        ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr) +
+                                  team_num * team_size * value_count;
         ReferenceType result = ValueInit::init(
-            f, &tmp_scratch[omp_get_thread_num() * value_count]);
-#pragma omp for simd
-        for (auto i = team_begin; i < team_end; i++) {
+            f, &team_scratch[omp_get_thread_num() * value_count]);
+
+        for (int league_id = team_num; league_id < league_size;
+             league_id += num_teams) {
+          typename PolicyType::member_type team(
+              league_id, league_size, team_size, vector_length, scratch_ptr,
+              team_num, shmem_size_L0, shmem_size_L1);
           if constexpr (std::is_same<TagType, void>::value) {
-            f(i, result);
+            f(team, result);
           } else {
-            f(TagType(), i, result);
+            f(TagType(), team, result);
           }
         }
-        const int team_size = max_team_threads;
-
-        int tree_neighbor_offset = 1;
-        do {
-#pragma omp for simd
-          for (int i = 0; i < team_size - tree_neighbor_offset;
-               i += 2 * tree_neighbor_offset) {
-            const int neighbor = i + tree_neighbor_offset;
-            ValueJoin::join(f, &tmp_scratch[i * value_count],
-                            &tmp_scratch[neighbor * value_count]);
-          }
-          tree_neighbor_offset *= 2;
-        } while (tree_neighbor_offset < team_size);
       }  // end parallel
     }    // end target
 
@@ -996,15 +1028,17 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 #pragma omp target teams distribute parallel for simd map(to   \
                                                           : f) \
     is_device_ptr(scratch_ptr)
-      for (int i = 0; i < max_teams - tree_neighbor_offset;
+      for (int i = 0; i < nteams - tree_neighbor_offset;
            i += 2 * tree_neighbor_offset) {
-        ValueType* tmp_scratch = static_cast<ValueType*>(scratch_ptr);
-        const int team_offset  = max_team_threads * value_count;
-        ValueJoin::join(f, &tmp_scratch[i * team_offset],
-                        &tmp_scratch[(i + tree_neighbor_offset) * team_offset]);
+        ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr);
+        const int team_offset   = team_size * value_count;
+        ValueJoin::join(
+            f, &team_scratch[i * team_offset],
+            &team_scratch[(i + tree_neighbor_offset) * team_offset]);
       }
       tree_neighbor_offset *= 2;
-    } while (tree_neighbor_offset < max_teams);
+    } while (tree_neighbor_offset < nteams);
+
     ValueType host_result[value_count];
     omp_target_memcpy(host_result, scratch_ptr, value_count * sizeof(ValueType),
                       0, 0, omp_get_default_device(), omp_get_initial_device());
