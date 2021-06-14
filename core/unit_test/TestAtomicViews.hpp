@@ -398,7 +398,7 @@ struct PlusEqualAtomicViewFunctor {
 
 template <class T, class execution_space>
 T PlusEqualAtomicView(const int64_t input_length) {
-  using view_type      = Kokkos::View<T*, execution_space>;
+  using view_type      = Kokkos::View<T*, typename execution_space::memory_space>;
   using host_view_type = typename view_type::HostMirror;
 
   const int64_t length = input_length;
@@ -406,10 +406,10 @@ T PlusEqualAtomicView(const int64_t input_length) {
   view_type input("input_view", length);
   view_type result_view("result_view", 2);
 
-  InitFunctor_Seq<T, execution_space> init_f(input, length);
+  InitFunctor_Seq<T, typename execution_space::memory_space> init_f(input, length);
   Kokkos::parallel_for(Kokkos::RangePolicy<execution_space>(0, length), init_f);
 
-  PlusEqualAtomicViewFunctor<T, execution_space> functor(input, result_view,
+  PlusEqualAtomicViewFunctor<T, typename execution_space::memory_space> functor(input, result_view,
                                                          length);
   Kokkos::parallel_for(Kokkos::RangePolicy<execution_space>(0, length),
                        functor);

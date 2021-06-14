@@ -47,6 +47,34 @@
 
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
+namespace Kokkos::Impl
+{
+  template <typename Functor, typename Policy>
+  struct FunctorWrapperRangePolicyParallelFor
+  {
+    using WorkTag = typename Policy::work_tag;
+
+          void operator()(sycl::item<1> item) const
+          {
+           const typename Policy::index_type id = item.get_linear_id() + m_begin;
+        if constexpr (std::is_same<WorkTag, void>::value)
+          m_functor(id);
+        else
+          m_functor(WorkTag(), id);
+          }
+
+	  // We get ambiguous specialization if this class is trivially_copyable
+	  ~FunctorWrapperRangePolicyParallelFor() {}
+
+          typename Policy::index_type m_begin;
+    Functor m_functor;
+  };
+}
+
+template <class Functor, class Policy>
+struct sycl::is_device_copyable<
+ Kokkos::Impl::FunctorWrapperRangePolicyParallelFor<Functor, Policy>> : std::true_type{};
+
 template <class FunctorType, class... Traits>
 class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::SYCL> {
@@ -70,17 +98,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
+    FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(), functor};
+
     auto parallel_for_event = q.submit([functor, policy](sycl::handler& cgh) {
       sycl::range<1> range(policy.end() - policy.begin());
       const auto begin = policy.begin();
 
-      cgh.parallel_for(range, [=](sycl::item<1> item) {
-        const typename Policy::index_type id = item.get_linear_id() + begin;
-        if constexpr (std::is_same<WorkTag, void>::value)
-          functor(id);
-        else
-          functor(WorkTag(), id);
-      });
+      cgh.parallel_for(range, f);
     });
     // FIXME_SYCL remove guard once implemented for SYCL+CUDA
 #ifdef KOKKOS_ARCH_INTEL_GEN
@@ -109,12 +133,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         sycl_direct_launch(m_policy, functor_wrapper.get_functor());
     functor_wrapper.register_event(indirectKernelMem, event);
   }
-
-  ParallelFor(const ParallelFor&) = delete;
-  ParallelFor(ParallelFor&&)      = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-  ParallelFor& operator=(ParallelFor&&) = delete;
-  ~ParallelFor()                        = default;
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
