@@ -45,9 +45,17 @@
 #ifndef KOKKOS_QUAD_PRECISION_MATH_HPP
 #define KOKKOS_QUAD_PRECISION_MATH_HPP
 
+#include <Kokkos_Macros.hpp>
+
+#if defined(KOKKOS_ENABLE_LIBQUADMATH)
+
 #include <Kokkos_NumericTraits.hpp>
 
 #include <quadmath.h>
+
+#if !(defined(__FLOAT128__) || defined(__SIZEOF_FLOAT128__))
+#error __float128 not supported on this host
+#endif
 
 //<editor-fold desc="numeric traits __float128 specializations">
 #if defined(KOKKOS_ENABLE_CXX17)
@@ -162,5 +170,7 @@ inline bool isnan(__float128 x) { return ::isnanq(x); }
 }  // namespace Experimental
 }  // namespace Kokkos
 //</editor-fold>
+
+#endif
 
 #endif
