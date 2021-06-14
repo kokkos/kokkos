@@ -63,9 +63,7 @@ template <>
 struct show_extra_iteration_pattern_erroneously_given_to_execution_policy<
     void> {};
 struct IterationPatternTrait : TraitSpecificationBase<IterationPatternTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+  struct base_traits {
     using iteration_pattern = void;  // TODO set default iteration pattern
   };
   template <class IterPattern, class AnalyzeNextTrait>

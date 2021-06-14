@@ -53,7 +53,6 @@
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_View.hpp>
 
-#include <impl/Kokkos_Tags.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
@@ -134,8 +133,7 @@ inline void parallel_for(
     const ExecPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecPolicy>::value>::type* =
-        nullptr) {
+        Kokkos::is_execution_policy<ExecPolicy>::value>::type* = nullptr) {
   uint64_t kpID = 0;
 
   ExecPolicy inner_policy = policy;
@@ -367,8 +365,7 @@ inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     const std::string& str = "",
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
-        nullptr) {
+        Kokkos::is_execution_policy<ExecutionPolicy>::value>::type* = nullptr) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
   Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
@@ -429,8 +426,7 @@ inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
     ReturnType& return_value, const std::string& str = "",
     typename std::enable_if<
-        Kokkos::Impl::is_execution_policy<ExecutionPolicy>::value>::type* =
-        nullptr) {
+        Kokkos::is_execution_policy<ExecutionPolicy>::value>::type* = nullptr) {
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
   Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);

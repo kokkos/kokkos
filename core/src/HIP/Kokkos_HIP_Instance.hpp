@@ -59,9 +59,10 @@ struct HIPTraits {
   static int constexpr WarpSize       = 64;
   static int constexpr WarpIndexMask  = 0x003f; /* hexadecimal for 63 */
   static int constexpr WarpIndexShift = 6;      /* WarpSize == 1 << WarpShift*/
+  static int constexpr ConservativeThreadsPerBlock =
+      256;  // conservative fallback blocksize in case of spills
   static int constexpr MaxThreadsPerBlock =
-      1024;  // FIXME_HIP -- assumed constant for now
-
+      1024;  // the maximum we can fit in a block
   static int constexpr ConstantMemoryUsage        = 0x008000; /* 32k bytes */
   static int constexpr ConstantMemoryUseThreshold = 0x000200; /* 512 bytes */
 };
@@ -90,7 +91,7 @@ class HIPInternal {
   unsigned m_multiProcCount = 0;
   unsigned m_maxWarpCount   = 0;
   unsigned m_maxBlock       = 0;
-  unsigned m_maxBlocksPerSM = 0;
+  unsigned m_maxWavesPerCU  = 0;
   unsigned m_maxSharedWords = 0;
   int m_regsPerSM;
   int m_shmemPerSM       = 0;

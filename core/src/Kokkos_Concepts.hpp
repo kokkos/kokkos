@@ -182,11 +182,16 @@ namespace Impl {
 
 // For backward compatibility:
 
-using Kokkos::is_array_layout;
-using Kokkos::is_execution_policy;
-using Kokkos::is_execution_space;
-using Kokkos::is_memory_space;
-using Kokkos::is_memory_traits;
+template <typename T>
+using is_array_layout KOKKOS_DEPRECATED = Kokkos::is_array_layout<T>;
+template <typename T>
+using is_execution_policy KOKKOS_DEPRECATED = Kokkos::is_execution_policy<T>;
+template <typename T>
+using is_execution_space KOKKOS_DEPRECATED = Kokkos::is_execution_space<T>;
+template <typename T>
+using is_memory_space KOKKOS_DEPRECATED = Kokkos::is_memory_space<T>;
+template <typename T>
+using is_memory_traits KOKKOS_DEPRECATED = Kokkos::is_memory_traits<T>;
 
 // Implementation concept:
 
@@ -375,7 +380,8 @@ struct is_space {
 
 namespace Impl {
 
-using Kokkos::is_space;
+template <typename T>
+using is_space KOKKOS_DEPRECATED = Kokkos::is_space<T>;
 
 }
 
@@ -500,9 +506,12 @@ struct SpaceAccessibility {
 namespace Kokkos {
 namespace Impl {
 
-using Kokkos::SpaceAccessibility;  // For backward compatibility
+// For backward compatibility
+template <typename AccessSpace, typename MemorySpace>
+using SpaceAccessibility KOKKOS_DEPRECATED =
+    Kokkos::SpaceAccessibility<AccessSpace, MemorySpace>;
 
-}
+}  // namespace Impl
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

@@ -487,8 +487,8 @@ inline void deep_copy(const View<T, DP...>& dst,
 
   enum {
     DstExecCanAccessSrc =
-        Kokkos::Impl::SpaceAccessibility<dst_execution_space,
-                                         src_memory_space>::accessible
+        Kokkos::SpaceAccessibility<dst_execution_space,
+                                   src_memory_space>::accessible
   };
 
   if (DstExecCanAccessSrc) {
@@ -512,8 +512,8 @@ inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
 
   enum {
     DstExecCanAccessSrc =
-        Kokkos::Impl::SpaceAccessibility<dst_execution_space,
-                                         src_memory_space>::accessible
+        Kokkos::SpaceAccessibility<dst_execution_space,
+                                   src_memory_space>::accessible
   };
 
   if (DstExecCanAccessSrc) {

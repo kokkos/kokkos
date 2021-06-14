@@ -544,13 +544,11 @@ void view_copy(const ExecutionSpace& space, const DstType& dst,
 
   enum {
     ExecCanAccessSrc =
-        Kokkos::Impl::SpaceAccessibility<ExecutionSpace,
-                                         src_memory_space>::accessible
+        Kokkos::SpaceAccessibility<ExecutionSpace, src_memory_space>::accessible
   };
   enum {
     ExecCanAccessDst =
-        Kokkos::Impl::SpaceAccessibility<ExecutionSpace,
-                                         dst_memory_space>::accessible
+        Kokkos::SpaceAccessibility<ExecutionSpace, dst_memory_space>::accessible
   };
 
   if (!(ExecCanAccessSrc && ExecCanAccessDst)) {
@@ -624,14 +622,14 @@ void view_copy(const DstType& dst, const SrcType& src) {
 
   enum {
     DstExecCanAccessSrc =
-        Kokkos::Impl::SpaceAccessibility<dst_execution_space,
-                                         src_memory_space>::accessible
+        Kokkos::SpaceAccessibility<dst_execution_space,
+                                   src_memory_space>::accessible
   };
 
   enum {
     SrcExecCanAccessDst =
-        Kokkos::Impl::SpaceAccessibility<src_execution_space,
-                                         dst_memory_space>::accessible
+        Kokkos::SpaceAccessibility<src_execution_space,
+                                   dst_memory_space>::accessible
   };
 
   if (!DstExecCanAccessSrc && !SrcExecCanAccessDst) {
@@ -1627,14 +1625,14 @@ inline void deep_copy(
 
   enum {
     DstExecCanAccessSrc =
-        Kokkos::Impl::SpaceAccessibility<dst_execution_space,
-                                         src_memory_space>::accessible
+        Kokkos::SpaceAccessibility<dst_execution_space,
+                                   src_memory_space>::accessible
   };
 
   enum {
     SrcExecCanAccessDst =
-        Kokkos::Impl::SpaceAccessibility<src_execution_space,
-                                         dst_memory_space>::accessible
+        Kokkos::SpaceAccessibility<src_execution_space,
+                                   dst_memory_space>::accessible
   };
 
   // Checking for Overlapping Views.
@@ -2522,9 +2520,9 @@ inline void deep_copy(
     const ExecSpace& space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     typename std::enable_if<
-        Kokkos::Impl::is_execution_space<ExecSpace>::value &&
+        Kokkos::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
-        Kokkos::Impl::SpaceAccessibility<
+        Kokkos::SpaceAccessibility<
             ExecSpace,
             typename ViewTraits<DT, DP...>::memory_space>::accessible>::type* =
         nullptr) {
@@ -2564,9 +2562,9 @@ inline void deep_copy(
     const ExecSpace& space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     typename std::enable_if<
-        Kokkos::Impl::is_execution_space<ExecSpace>::value &&
+        Kokkos::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
-        !Kokkos::Impl::SpaceAccessibility<
+        !Kokkos::SpaceAccessibility<
             ExecSpace,
             typename ViewTraits<DT, DP...>::memory_space>::accessible>::type* =
         nullptr) {
@@ -2613,7 +2611,7 @@ inline void deep_copy(
     typename ViewTraits<ST, SP...>::non_const_value_type& dst,
     const View<ST, SP...>& src,
     typename std::enable_if<
-        Kokkos::Impl::is_execution_space<ExecSpace>::value &&
+        Kokkos::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize,
                      void>::value>::type* = nullptr) {
   using src_traits       = ViewTraits<ST, SP...>;
@@ -2651,7 +2649,7 @@ inline void deep_copy(
     const ExecSpace& exec_space, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
     typename std::enable_if<(
-        Kokkos::Impl::is_execution_space<ExecSpace>::value &&
+        Kokkos::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
         (unsigned(ViewTraits<DT, DP...>::rank) == unsigned(0) &&
@@ -2702,7 +2700,7 @@ inline void deep_copy(
     const ExecSpace& exec_space, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
     typename std::enable_if<(
-        Kokkos::Impl::is_execution_space<ExecSpace>::value &&
+        Kokkos::is_execution_space<ExecSpace>::value &&
         std::is_same<typename ViewTraits<DT, DP...>::specialize, void>::value &&
         std::is_same<typename ViewTraits<ST, SP...>::specialize, void>::value &&
         (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
@@ -2776,21 +2774,19 @@ inline void deep_copy(
 
   enum {
     ExecCanAccessSrcDst =
-        Kokkos::Impl::SpaceAccessibility<ExecSpace,
-                                         dst_memory_space>::accessible &&
-        Kokkos::Impl::SpaceAccessibility<ExecSpace,
-                                         src_memory_space>::accessible
+        Kokkos::SpaceAccessibility<ExecSpace, dst_memory_space>::accessible &&
+        Kokkos::SpaceAccessibility<ExecSpace, src_memory_space>::accessible
   };
   enum {
     DstExecCanAccessSrc =
-        Kokkos::Impl::SpaceAccessibility<dst_execution_space,
-                                         src_memory_space>::accessible
+        Kokkos::SpaceAccessibility<dst_execution_space,
+                                   src_memory_space>::accessible
   };
 
   enum {
     SrcExecCanAccessDst =
-        Kokkos::Impl::SpaceAccessibility<src_execution_space,
-                                         dst_memory_space>::accessible
+        Kokkos::SpaceAccessibility<src_execution_space,
+                                   dst_memory_space>::accessible
   };
 
   // Error out for non-identical overlapping views.
