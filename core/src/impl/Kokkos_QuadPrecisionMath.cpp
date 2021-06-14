@@ -105,4 +105,62 @@ struct Kokkos::reduction_identity<__float128> {
   }
 };
 
+//<editor-fold desc="Common mathematical functions __float128 overloads">
+namespace Kokkos {
+namespace Experimental {
+// clang-format off
+// Basic operations
+inline __float128 fabs(__float128 x) { return ::fabsq(x); }
+inline __float128 fmod(__float128 x, __float128 y) { return ::fmodq(x, y); }
+inline __float128 remainder(__float128 x, __float128 y) { return ::remainderq(x, y); }
+inline __float128 fmin(__float128 x, __float128 y) { return ::fminq(x, y); }
+inline __float128 fmax(__float128 x, __float128 y) { return ::fmaxq(x, y); }
+inline __float128 fdim(__float128 x, __float128 y) { return ::fdimq(x, y); }
+inline __float128 nanq(char const* arg) { return ::nanq(arg); }
+// Power functions
+inline __float128 pow(__float128 x, __float128 y) { return ::powq(x, y); }
+inline __float128 sqrt(__float128 x) { return ::sqrtq(x); }
+inline __float128 cbrt(__float128 x) { return ::cbrtq(x); }
+inline __float128 hypot(__float128 x, __float128 y) { return ::hypotq(x, y); }
+// Exponential functions
+inline __float128 exp(__float128 x) { return ::expq(x); }
+inline __float128 exp2(__float128 x) { return ::exp2q(x); }
+inline __float128 expm1(__float128 x) { return ::expm1q(x); }
+inline __float128 log(__float128 x) { return ::logq(x); }
+inline __float128 log10(__float128 x) { return ::log10q(x); }
+inline __float128 log2(__float128 x) { return ::log2q(x); }
+inline __float128 log1p(__float128 x) { return ::log1pq(x); }
+// Trigonometric functions
+inline __float128 sin(__float128 x) { return ::sinq(x); }
+inline __float128 cos(__float128 x) { return ::cosq(x); }
+inline __float128 tan(__float128 x) { return ::tanq(x); }
+inline __float128 asin(__float128 x) { return ::asinq(x); }
+inline __float128 acos(__float128 x) { return ::acosq(x); }
+inline __float128 atan(__float128 x) { return ::atanq(x); }
+inline __float128 atan2(__float128 x, __float128 y) { return ::atan2q(x, y); }
+// Hyperbolic functions
+inline __float128 sinh(__float128 x) { return ::sinhq(x); }
+inline __float128 cosh(__float128 x) { return ::coshq(x); }
+inline __float128 tanh(__float128 x) { return ::tanhq(x); }
+inline __float128 asinh(__float128 x) { return ::asinhq(x); }
+inline __float128 acosh(__float128 x) { return ::acoshq(x); }
+inline __float128 atanh(__float128 x) { return ::atanhq(x); }
+// Error and gamma functions
+inline __float128 erf(__float128 x) { return ::erfq(x); }
+inline __float128 erfc(__float128 x) { return ::erfcq(x); }
+inline __float128 tgamma(__float128 x) { return ::tgammaq(x); }
+inline __float128 lgamma(__float128 x) { return ::lgammaq(x); }
+// Nearest integer floating point operations
+inline __float128 ceil(__float128 x) { return ::ceilq(x); }
+inline __float128 floor(__float128 x) { return ::floorq(x); }
+inline __float128 trunc(__float128 x) { return ::truncq(x); }
+inline __float128 nearbyint(__float128 x) { return ::nearbyintq(x); }
+// Classification and comparison
+inline bool isfinite(__float128 x) { return !::isinfq(x); }  // isfiniteq not provided
+inline bool isinf(__float128 x) { return ::isinfq(x); }
+inline bool isnan(__float128 x) { return ::isnanq(x); }
+}  // namespace Experimental
+}  // namespace Kokkos
+//</editor-fold>
+
 #endif
