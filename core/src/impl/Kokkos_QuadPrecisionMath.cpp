@@ -89,4 +89,20 @@ KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_exponent10, __float128,        int, FLT
 #undef KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT
 //</editor-fold>
 
+template <>
+struct Kokkos::reduction_identity<__float128> {
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static __float128 sum() {
+    return static_cast<__float128>(0.0);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static __float128 prod() {
+    return static_cast<__float128>(1.0);
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static __float128 max() {
+    return -FLT128_MAX;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static __float128 min() {
+    return FLT128_MAX;
+  }
+};
+
 #endif
