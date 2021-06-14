@@ -55,7 +55,6 @@
 
 namespace Kokkos {
 namespace Experimental {
-namespace Impl {
 
 template <typename... T>
 using type_list = Kokkos::Impl::type_list<T...>;
@@ -83,22 +82,23 @@ struct concat_type_list<type_list<T...>, type_list<U...>, Tail...>
     : concat_type_list<type_list<T..., U...>, Tail...> {};
 
 // ------------------------------------------------------------------ //
-//  gather generates type-list of types which satisfy
+//  filter_type_list generates type-list of types which satisfy
 //  PredicateT<T>::value == ValueT
 
 template <template <typename> class PredicateT, typename TypeListT,
           bool ValueT = false>
-struct gather;
+struct filter_type_list;
 
 template <template <typename> class PredicateT, typename... T, bool ValueT>
-struct gather<PredicateT, type_list<T...>, ValueT> {
+struct filter_type_list<PredicateT, type_list<T...>, ValueT> {
   using type =
       concat_type_list_t<std::conditional_t<PredicateT<T>::value == ValueT,
                                             type_list<T>, type_list<>>...>;
 };
 
 template <template <typename> class PredicateT, typename T, bool ValueT = false>
-using gather_t = typename gather<PredicateT, T, ValueT>::type;
+using filter_type_list_t =
+    typename filter_type_list<PredicateT, T, ValueT>::type;
 
 // ------------------------------------------------------------------ //
 //  this is used to convert
@@ -131,27 +131,25 @@ struct is_default_memory_trait<Kokkos::MemoryTraits<0>> : std::true_type {};
 //  view type
 //
 template <typename, typename...>
-struct python_view_type;
+struct python_view_type_impl;
 
 template <template <typename...> class ViewT, typename ValueT,
           typename... Types>
-struct python_view_type<ViewT<ValueT>, type_list<Types...>> {
+struct python_view_type_impl<ViewT<ValueT>, type_list<Types...>> {
   using type = ViewT<ValueT, device_memory_space_t<Types>...>;
 };
 
 template <template <typename...> class ViewT, typename ValueT,
           typename... Types>
-struct python_view_type<ViewT<ValueT, Types...>>
-    : python_view_type<ViewT<ValueT>,
-                       gather_t<is_default_memory_trait, type_list<Types...>>> {
-};
+struct python_view_type_impl<ViewT<ValueT, Types...>>
+    : python_view_type_impl<
+          ViewT<ValueT>,
+          filter_type_list_t<is_default_memory_trait, type_list<Types...>>> {};
 
 template <typename... T>
-using python_view_type_t = typename python_view_type<T...>::type;
+using python_view_type_impl_t = typename python_view_type_impl<T...>::type;
 
-}  // namespace Impl
-
-//--------------------------------------------------------------------------------------//
+// ------------------------------------------------------------------ //
 //  this is used to extract the uniform type of a view
 //
 template <typename ViewT>
@@ -161,7 +159,7 @@ struct python_view_type {
                 "Error! python_view_type only supports Kokkos::View and "
                 "Kokkos::DynRankView");
 
-  using type = Impl::python_view_type_t<typename ViewT::array_type>;
+  using type = python_view_type_impl_t<typename ViewT::array_type>;
 };
 
 template <typename ViewT>
