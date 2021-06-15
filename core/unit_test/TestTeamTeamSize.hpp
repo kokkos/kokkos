@@ -110,9 +110,9 @@ void test_team_policy_max_recommended_static_size(int scratch_size) {
   int team_size_rec_reduce = p.team_size_recommended(
       FunctorReduce<T, N, PolicyType, S>(), Kokkos::ParallelReduceTag());
 
-  ASSERT_TRUE(team_size_max_for >= team_size_rec_for);
-  ASSERT_TRUE(team_size_max_reduce >= team_size_rec_reduce);
-  ASSERT_TRUE(team_size_max_for >= team_size_max_reduce);
+  ASSERT_GE(team_size_max_for, team_size_rec_for);
+  ASSERT_GE(team_size_max_reduce, team_size_rec_reduce);
+  ASSERT_GE(team_size_max_for, team_size_max_reduce);
 
   Kokkos::parallel_for(PolicyType(10000, team_size_max_for, 4)
                            .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),

@@ -854,11 +854,11 @@ void __test_half_operators(half_t h_lhs, half_t h_rhs) {
   h_arr_ptr = reinterpret_cast<char*>(h_arr);
 
   std::memcpy(c_arr, h_arr, n_bytes);
-  for (i = 0; i < n_bytes; i++) ASSERT_TRUE(c_arr[i] == h_arr_ptr[i]);
+  for (i = 0; i < n_bytes; i++) ASSERT_EQ(c_arr[i], h_arr_ptr[i]);
 
   std::memcpy(h_arr, c_arr, n_bytes);
-  ASSERT_TRUE(h_arr[0] == h_arr0);
-  ASSERT_TRUE(h_arr[1] == h_arr1);
+  ASSERT_EQ(h_arr[0], h_arr0);
+  ASSERT_EQ(h_arr[1], h_arr1);
 }
 
 void test_half_operators() {

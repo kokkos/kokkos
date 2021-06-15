@@ -291,34 +291,34 @@ class TestRangePolicyConstruction {
     using policy_t = Kokkos::RangePolicy<>;
     {
       policy_t p(5, 15);
-      ASSERT_TRUE((p.begin() == 5));
-      ASSERT_TRUE((p.end() == 15));
+      ASSERT_EQ(p.begin(), 5);
+      ASSERT_EQ(p.end(), 15);
     }
     {
       policy_t p(Kokkos::DefaultExecutionSpace(), 5, 15);
-      ASSERT_TRUE((p.begin() == 5));
-      ASSERT_TRUE((p.end() == 15));
+      ASSERT_EQ(p.begin(), 5);
+      ASSERT_EQ(p.end(), 15);
     }
     {
       policy_t p(5, 15, Kokkos::ChunkSize(10));
-      ASSERT_TRUE((p.begin() == 5));
-      ASSERT_TRUE((p.end() == 15));
-      ASSERT_TRUE((p.chunk_size() == 10));
+      ASSERT_EQ(p.begin(), 5);
+      ASSERT_EQ(p.end(), 15);
+      ASSERT_EQ(p.chunk_size(), 10);
     }
     {
       policy_t p(Kokkos::DefaultExecutionSpace(), 5, 15, Kokkos::ChunkSize(10));
-      ASSERT_TRUE((p.begin() == 5));
-      ASSERT_TRUE((p.end() == 15));
-      ASSERT_TRUE((p.chunk_size() == 10));
+      ASSERT_EQ(p.begin(), 5);
+      ASSERT_EQ(p.end(), 15);
+      ASSERT_EQ(p.chunk_size(), 10);
     }
     {
       policy_t p;
-      ASSERT_TRUE((p.begin() == 0));
-      ASSERT_TRUE((p.end() == 0));
+      ASSERT_EQ(p.begin(), 0);
+      ASSERT_EQ(p.end(), 0);
       p = policy_t(5, 15, Kokkos::ChunkSize(10));
-      ASSERT_TRUE((p.begin() == 5));
-      ASSERT_TRUE((p.end() == 15));
-      ASSERT_TRUE((p.chunk_size() == 10));
+      ASSERT_EQ(p.begin(), 5);
+      ASSERT_EQ(p.end(), 15);
+      ASSERT_EQ(p.chunk_size(), 10);
     }
   }
 };
@@ -582,7 +582,7 @@ class TestTeamPolicyConstruction {
     ASSERT_EQ(p1.team_size(), team_size);
 // FIXME_SYCL implement chunk_size
 #ifndef KOKKOS_ENABLE_SYCL
-    ASSERT_TRUE(p1.chunk_size() > 0);
+    ASSERT_GT(p1.chunk_size(), 0);
 #endif
     ASSERT_EQ(p1.scratch_size(0), 0);
 
