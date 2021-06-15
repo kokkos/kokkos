@@ -51,6 +51,32 @@
 
 namespace Kokkos::Impl
 {
+	template <class ValueInit, class ValueOps, class Functor, class Policy, typename ValueType>
+	struct FunctorWrapperRangePolicyParallelScanInitializeGlobal
+	{
+		using WorkTag = typename Policy::work_tag;
+
+		void operator()(sycl::item<1> item) const {
+        const typename Policy::index_type id =
+            static_cast<typename Policy::index_type>(item.get_id()) + m_begin;
+        ValueType update{};
+        ValueInit::init(m_functor, &update);
+        if constexpr (std::is_same<WorkTag, void>::value)
+          m_functor(id, update, false);
+        else
+          m_functor(WorkTag(), id, update, false);
+        ValueOps::copy(m_functor, &m_global_mem[id], &update);
+      }
+
+		 // We get ambiguous specialization if this class is trivially_copyable
+          ~FunctorWrapperRangePolicyParallelScanInitializeGlobal() {}
+
+typename Policy::index_type m_begin;
+   Functor    m_functor;
+    ValueType* m_global_mem;
+		};
+
+
   template <class ValueOps, class Functor, class Policy, typename ValueType>
   struct FunctorWrapperRangePolicyParallelScanUpdateGlobalResults
   {
@@ -74,6 +100,11 @@ namespace Kokkos::Impl
     ValueType* m_global_mem;
   };
 }
+
+
+template <class ValueInit, class ValueOps, class Functor, class Policy, typename ValueType>
+struct sycl::is_device_copyable<
+Kokkos::Impl::FunctorWrapperRangePolicyParallelScanInitializeGlobal<ValueInit, ValueOps, Functor, Policy, ValueType>> : std::true_type{};
 
 template <class ValueOps, class Functor, class Policy, typename ValueType>
 struct sycl::is_device_copyable<
@@ -230,39 +261,15 @@ class ParallelScanSYCLBase {
     const std::size_t len = m_policy.end() - m_policy.begin();
 
     // Initialize global memory
-    /*auto initialize_global_memory = q.submit([&](sycl::handler& cgh) {
+    auto initialize_global_memory = q.submit([&](sycl::handler& cgh) {
       auto global_mem = m_scratch_space;
       auto begin      = m_policy.begin();
-      static_assert(sycl::is_device_copyable_v<decltype(functor)>, "");
-      static_assert(sycl::is_device_copyable_v<decltype(begin)>, "");
-      static_assert(sycl::is_device_copyable_v<decltype(global_mem)>, "");
 
-      auto lambda = [functor, begin, global_mem](sycl::item<1> item) {
-        const typename Policy::index_type id =
-            static_cast<typename Policy::index_type>(item.get_id()) + begin;
-        value_type update{};
-        ValueInit::init(functor, &update);
-        if constexpr (std::is_same<WorkTag, void>::value)
-          functor(id, update, false);
-        else
-          functor(WorkTag(), id, update, false);
-        ValueOps::copy(functor, &global_mem[id], &update);
-      };
-
-      static_assert(sycl::is_device_copyable_v<decltype(lambda)>, "");
-
-      cgh.parallel_for(sycl::range<1>(len), [functor, begin, global_mem](sycl::item<1> item) {
-        const typename Policy::index_type id =
-            static_cast<typename Policy::index_type>(item.get_id()) + begin;
-        value_type update{};
-        ValueInit::init(functor, &update);
-        if constexpr (std::is_same<WorkTag, void>::value)
-          functor(id, update, false);
-        else
-          functor(WorkTag(), id, update, false);
-        global_mem[id] = update;
-      });
-    });*/
+      cgh.parallel_for(sycl::range<1>(len), 
+                       FunctorWrapperRangePolicyParallelScanInitializeGlobal
+		       <ValueInit, ValueOps, Functor, Policy, value_type>
+		       {begin, functor, global_mem});
+    });
     // FIXME_SYCL remove guard once implemented for SYCL+CUDA
 #ifdef KOKKOS_ARCH_INTEL_GEN
     q.submit_barrier(sycl::vector_class<sycl::event>{initialize_global_memory});
@@ -286,8 +293,7 @@ class ParallelScanSYCLBase {
 #else
     space.fence();
 #endif
-//    return update_global_results;
-    return {};
+    return update_global_results;
   }
 
  public:

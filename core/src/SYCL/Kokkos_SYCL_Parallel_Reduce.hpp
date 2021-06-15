@@ -135,7 +135,7 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
 }  // namespace SYCLReduction
 
 
-  template <class ValueJoin, class ValueInit, class ValueOps, typename ReducerConditional, typename Functor, typename Reducer, typename Policy, typename ValueType>
+  template <class ValueJoin, class ValueInit, class ValueOps, typename ReducerConditional, typename Functor, typename FunctorCastType, typename Reducer, typename ReducerCastType, typename Policy, typename ValueType, typename ReferenceType>
   struct FunctorWrapperRangePolicyParallelReduce
   {
     using WorkTag = typename Policy::work_tag;
@@ -147,8 +147,8 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
                   m_wgroup_size * item.get_group_linear_id() * m_values_per_thread +
                   local_id;
               const auto& selected_reducer = ReducerConditional::select(
-                  static_cast<const Functor&>(m_functor),
-                  static_cast<const Reducer&>(m_reducer));
+                  static_cast<const FunctorCastType&>(m_functor),
+                  static_cast<const ReducerCastType&>(m_reducer));
 
               // In the first iteration, we call functor to initialize the local
               // memory. Otherwise, the local memory is initialized with the
@@ -160,7 +160,7 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
               const auto upper_bound = std::min<index_type>(
                   global_id + m_values_per_thread * m_wgroup_size, m_size);
               if (m_first_run) {
-                auto& update = ValueInit::init(
+                ReferenceType update = ValueInit::init(
                     selected_reducer, &m_local_mem[local_id * m_value_count]);
                 for (index_type id = global_id; id < upper_bound;
                      id += m_wgroup_size) {
@@ -189,7 +189,7 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
               SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
                   item, m_local_mem.get_pointer(), m_results_ptr,
                   m_device_accessible_result_ptr, m_value_count, selected_reducer,
-                  static_cast<const Functor&>(m_functor), m_n_wgroups <= 1);
+                  static_cast<const FunctorCastType&>(m_functor), m_n_wgroups <= 1);
           }
 
           // We get ambiguous specialization if this class is trivially_copyable
@@ -211,9 +211,9 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
   };
 }
 
-template <class ValueJoin, class ValueInit, class ValueOps, typename ReducerConditional, typename Functor, typename Reducer, typename Policy, typename ValueType>
+template <class ValueJoin, class ValueInit, class ValueOps, typename ReducerConditional, typename Functor, typename FunctorCastType, typename Reducer, typename ReducerCastType, typename Policy, typename ValueType, typename ReferenceType>
 struct sycl::is_device_copyable<
- Kokkos::Impl::FunctorWrapperRangePolicyParallelReduce<ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor, Reducer, Policy, ValueType>> : std::true_type{};
+ Kokkos::Impl::FunctorWrapperRangePolicyParallelReduce<ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor, FunctorCastType, Reducer, ReducerCastType, Policy, ValueType, ReferenceType>> : std::true_type{};
 
 namespace Kokkos {
 	namespace Impl {
@@ -354,7 +354,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-            FunctorWrapperRangePolicyParallelReduce<ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor, Reducer, Policy, value_type> {policy.begin(), functor, reducer, wgroup_size, n_wgroups, values_per_thread, size, first_run, local_mem, results_ptr, device_accessible_result_ptr, value_count});
+            FunctorWrapperRangePolicyParallelReduce<ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor, FunctorType, Reducer, ReducerType, Policy, value_type, reference_type> {policy.begin(), functor, reducer, wgroup_size, n_wgroups, values_per_thread, size, first_run, local_mem, results_ptr, device_accessible_result_ptr, value_count});
       });
 
 // FIXME_SYCL remove guard once implemented for SYCL+CUDA
