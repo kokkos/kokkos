@@ -464,9 +464,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
+    #ifdef SYCL_DEVICE_COPYABLE
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+    #else
     sycl::event event =
         sycl_direct_launch(m_policy, functor_wrapper.get_functor());
     functor_wrapper.register_event(indirectKernelMem, event);
+    #endif
   }
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)

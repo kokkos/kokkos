@@ -296,15 +296,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
+#ifdef SYCL_DEVICE_COPYABLE
+    sycl_direct_launch(functor_wrapper.get_functor());
+#else
     sycl::event event = sycl_direct_launch(functor_wrapper.get_functor());
     functor_wrapper.register_event(indirectKernelMem, event);
+#endif
   }
-
-  ParallelFor(const ParallelFor&) = delete;
-  ParallelFor(ParallelFor&&)      = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-  ParallelFor& operator=(ParallelFor&&) = delete;
-  ~ParallelFor()                        = default;
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
