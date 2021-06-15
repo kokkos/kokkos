@@ -86,7 +86,7 @@ struct concat_type_list<type_list<T...>, type_list<U...>, Tail...>
 //  PredicateT<T>::value == ValueT
 
 template <template <typename> class PredicateT, typename TypeListT,
-          bool ValueT = false>
+          bool ValueT = true>
 struct filter_type_list;
 
 template <template <typename> class PredicateT, typename... T, bool ValueT>
@@ -96,7 +96,7 @@ struct filter_type_list<PredicateT, type_list<T...>, ValueT> {
                                             type_list<T>, type_list<>>...>;
 };
 
-template <template <typename> class PredicateT, typename T, bool ValueT = false>
+template <template <typename> class PredicateT, typename T, bool ValueT = true>
 using filter_type_list_t =
     typename filter_type_list<PredicateT, T, ValueT>::type;
 
@@ -142,9 +142,9 @@ struct python_view_type_impl<ViewT<ValueT>, type_list<Types...>> {
 template <template <typename...> class ViewT, typename ValueT,
           typename... Types>
 struct python_view_type_impl<ViewT<ValueT, Types...>>
-    : python_view_type_impl<
-          ViewT<ValueT>,
-          filter_type_list_t<is_default_memory_trait, type_list<Types...>>> {};
+    : python_view_type_impl<ViewT<ValueT>,
+                            filter_type_list_t<is_default_memory_trait,
+                                               type_list<Types...>, false>> {};
 
 template <typename... T>
 using python_view_type_impl_t = typename python_view_type_impl<T...>::type;
