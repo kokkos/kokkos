@@ -304,7 +304,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
-/*    if (size <= 1) {
+    if (size <= 1) {
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         const auto begin = policy.begin();
         cgh.single_task([=]() {
@@ -334,7 +334,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       space.fence();
 #endif
       last_reduction_event = parallel_reduce_event;
-    }*/
+    }
 
     // Otherwise, we perform a reduction on the values in all workgroups
     // separately, write the workgroup results back to global memory and recurse
