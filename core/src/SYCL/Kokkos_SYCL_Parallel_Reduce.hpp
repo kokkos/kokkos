@@ -187,7 +187,7 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
               item.barrier(sycl::access::fence_space::local_space);
 
               SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
-                  item, m_local_mem, m_results_ptr,
+                  item, m_local_mem.get_pointer(), m_results_ptr,
                   m_device_accessible_result_ptr, m_value_count, selected_reducer,
                   static_cast<const Functor&>(m_functor), m_n_wgroups <= 1);
           }
@@ -203,7 +203,8 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
     const size_t m_values_per_thread;
     const size_t m_size;
     const bool m_first_run;
-    mutable sycl::local_ptr<ValueType> m_local_mem;
+    const sycl::accessor<ValueType, 1, sycl::access::mode::read_write,
+                       sycl::access::target::local> /*sycl::local_ptr<ValueType>*/ m_local_mem;
     ValueType* const m_results_ptr;
     ValueType* const m_device_accessible_result_ptr;
     const unsigned int m_value_count; 
@@ -303,7 +304,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     // If size<=1 we only call init(), the functor and possibly final once
     // working with the global scratch memory but don't copy back to
     // m_result_ptr yet.
-    if (size <= 1) {
+/*    if (size <= 1) {
       auto parallel_reduce_event = q.submit([&](sycl::handler& cgh) {
         const auto begin = policy.begin();
         cgh.single_task([=]() {
@@ -333,7 +334,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       space.fence();
 #endif
       last_reduction_event = parallel_reduce_event;
-    }
+    }*/
 
     // Otherwise, we perform a reduction on the values in all workgroups
     // separately, write the workgroup results back to global memory and recurse
@@ -353,7 +354,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-            FunctorWrapperRangePolicyParallelReduce<ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor, Reducer, Policy, value_type> {policy.begin(), functor, reducer, wgroup_size, n_wgroups, values_per_thread, size, first_run, local_mem.get_pointer(), results_ptr, device_accessible_result_ptr, value_count});
+            FunctorWrapperRangePolicyParallelReduce<ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor, Reducer, Policy, value_type> {policy.begin(), functor, reducer, wgroup_size, n_wgroups, values_per_thread, size, first_run, local_mem, results_ptr, device_accessible_result_ptr, value_count});
       });
 
 // FIXME_SYCL remove guard once implemented for SYCL+CUDA
