@@ -90,7 +90,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <typename Functor>
-  static sycl::event sycl_direct_launch(const Policy& policy,
+  static 
+  sycl::event 
+  sycl_direct_launch(const Policy& policy,
                                         const Functor& functor) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
@@ -100,7 +102,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(), functor};
 
-    auto parallel_for_event = q.submit([functor, policy](sycl::handler& cgh) {
+    auto parallel_for_event = q.submit([f, policy](sycl::handler& cgh) {
       sycl::range<1> range(policy.end() - policy.begin());
       const auto begin = policy.begin();
 
@@ -129,9 +131,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
+#ifdef SYCL_DEVICE_COPYABLE
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+#else
     sycl::event event =
         sycl_direct_launch(m_policy, functor_wrapper.get_functor());
     functor_wrapper.register_event(indirectKernelMem, event);
+#endif
   }
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
