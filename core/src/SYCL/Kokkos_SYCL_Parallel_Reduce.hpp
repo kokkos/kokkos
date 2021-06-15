@@ -196,15 +196,15 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
           ~FunctorWrapperRangePolicyParallelReduce() {}
 
           const typename Policy::index_type m_begin;
-    Functor m_functor;
-    Reducer m_reducer;
+    const Functor m_functor;
+    const Reducer m_reducer;
     const size_t m_wgroup_size;
     const size_t m_n_wgroups;
     const size_t m_values_per_thread;
     const size_t m_size;
     const bool m_first_run;
     const sycl::accessor<ValueType, 1, sycl::access::mode::read_write,
-                       sycl::access::target::local> /*sycl::local_ptr<ValueType>*/ m_local_mem;
+                       sycl::access::target::local> m_local_mem;
     ValueType* const m_results_ptr;
     ValueType* const m_device_accessible_result_ptr;
     const unsigned int m_value_count; 
