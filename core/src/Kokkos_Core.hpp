@@ -274,6 +274,23 @@ class ScopeGuard {
 
 }  // namespace Kokkos
 
+namespace Kokkos {
+// Partitioning an Execution Space: expects space and integer arguments for
+// relative weight
+//   Customization point for backends
+//   Default behavior is to return the passed in instance
+template <class ExecSpace, class... Args>
+std::array<ExecSpace, sizeof...(Args)> partition_space(ExecSpace space,
+                                                       Args...) {
+  static_assert(is_execution_space<ExecSpace>::value,
+                "Kokkos Error: partition_space expects an Execution Space as "
+                "first argument");
+  std::array<ExecSpace, sizeof...(Args)> instances;
+  for (int s = 0; s < int(sizeof...(Args)); s++) instances[s] = space;
+  return instances;
+}
+}  // namespace Kokkos
+
 #include <Kokkos_Crs.hpp>
 #include <Kokkos_WorkGraphPolicy.hpp>
 // Including this in Kokkos_Parallel_Reduce.hpp led to a circular dependency

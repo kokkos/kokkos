@@ -316,7 +316,8 @@ void CudaInternal::fence() const {
   CUDA_SAFE_CALL(cudaStreamSynchronize(m_stream));
 }
 
-void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream) {
+void CudaInternal::initialize(int cuda_device_id, cudaStream_t stream,
+                              bool manage_stream) {
   if (was_finalized)
     Kokkos::abort("Calling Cuda::initialize after Cuda::finalize is illegal\n");
   was_initialized = true;
@@ -543,7 +544,8 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
     CUDA_SAFE_CALL(cudaEventCreate(&constantMemReusable));
   }
 
-  m_stream = stream;
+  m_stream        = stream;
+  m_manage_stream = manage_stream;
   for (int i = 0; i < m_n_team_scratch; ++i) {
     m_team_scratch_current_size[i] = 0;
     m_team_scratch_ptr[i]          = nullptr;
@@ -711,6 +713,8 @@ void CudaInternal::finalize() {
         Kokkos::kokkos_free<Kokkos::CudaSpace>(m_team_scratch_ptr[i]);
     }
 
+    if (m_manage_stream && m_stream != nullptr) cudaStreamDestroy(m_stream);
+
     m_cudaDev                 = -1;
     m_multiProcCount          = 0;
     m_maxWarpCount            = 0;
@@ -848,7 +852,7 @@ Cuda::Cuda()
       "Cuda instance constructor");
 }
 
-Cuda::Cuda(cudaStream_t stream)
+Cuda::Cuda(cudaStream_t stream, bool manage_stream)
     : m_space_instance(new Impl::CudaInternal, [](Impl::CudaInternal *ptr) {
         ptr->finalize();
         delete ptr;
@@ -856,7 +860,7 @@ Cuda::Cuda(cudaStream_t stream)
   Impl::CudaInternal::singleton().verify_is_initialized(
       "Cuda instance constructor");
   m_space_instance->initialize(Impl::CudaInternal::singleton().m_cudaDev,
-                               stream);
+                               stream, manage_stream);
 }
 
 void Cuda::print_configuration(std::ostream &s, const bool) {

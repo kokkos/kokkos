@@ -115,6 +115,7 @@ class CudaInternal {
   mutable size_type* m_scratchFunctor;
   uint32_t* m_scratchConcurrentBitset;
   cudaStream_t m_stream;
+  bool m_manage_stream;
 
   // Team Scratch Level 1 Space
   int m_n_team_scratch = 10;
@@ -138,7 +139,8 @@ class CudaInternal {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
   }
 
-  void initialize(int cuda_device_id, cudaStream_t stream = nullptr);
+  void initialize(int cuda_device_id, cudaStream_t stream = nullptr,
+                  bool manage_stream = false);
   void finalize();
 
   void print_configuration(std::ostream&) const;

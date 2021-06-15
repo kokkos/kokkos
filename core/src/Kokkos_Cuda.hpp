@@ -198,7 +198,7 @@ class Cuda {
 
   Cuda();
 
-  Cuda(cudaStream_t stream);
+  Cuda(cudaStream_t stream, bool manage_stream = false);
 
   //--------------------------------------------------------------------------
   //! \name Device-specific functions
@@ -250,6 +250,21 @@ class Cuda {
  private:
   Kokkos::Impl::HostSharedPtr<Impl::CudaInternal> m_space_instance;
 };
+
+// Partitioning an Execution Space: expects space and integer arguments for
+// relative weight
+//   Customization point for backends
+//   Default behavior is to return the passed in instance
+template <class... Args>
+std::array<Cuda, sizeof...(Args)> partition_space(Cuda space, Args...) {
+  std::array<Cuda, sizeof...(Args)> instances;
+  for (int s = 0; s < int(sizeof...(Args)); s++) {
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
+    instances[s] = Cuda(stream, true);
+  }
+  return instances;
+}
 
 namespace Tools {
 namespace Experimental {
