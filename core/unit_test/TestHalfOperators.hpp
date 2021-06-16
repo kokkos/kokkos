@@ -870,7 +870,15 @@ void test_half_operators() {
     // TODO: __test_half_operators(h_lhs + cast_to_half(i + 1), half_t(0));
     // TODO: __test_half_operators(half_t(0), h_rhs + cast_to_half(i));
   }
-  // TODO: __test_half_operators(0, 0);
+  // Test volatile support
+  volatile half_t _h_lhs = h_lhs;
+  volatile half_t _h_rhs = h_rhs;
+  ASSERT_TRUE(_h_lhs < _h_rhs);
+  ASSERT_TRUE(_h_lhs <= _h_rhs);
+  ASSERT_TRUE(_h_lhs != _h_rhs);
+  ASSERT_FALSE(_h_lhs > _h_rhs);
+  ASSERT_FALSE(_h_lhs >= _h_rhs);
+  ASSERT_FALSE(_h_lhs == _h_rhs);
 }
 
 TEST(TEST_CATEGORY, half_operators) { test_half_operators(); }

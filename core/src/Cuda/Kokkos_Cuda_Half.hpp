@@ -685,6 +685,78 @@ class half_t {
 #endif
   }
 
+  KOKKOS_FUNCTION
+  friend bool operator==(const volatile half_t& lhs,
+                         const volatile half_t& rhs) {
+#ifdef __CUDA_ARCH__
+    return static_cast<bool>(const_cast<impl_type&>(lhs.val) ==
+                             const_cast<impl_type&>(rhs.val));
+#else
+    return __half2float(const_cast<impl_type&>(lhs.val)) ==
+           __half2float(const_cast<impl_type&>(rhs.val));
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  friend bool operator!=(const volatile half_t& lhs,
+                         const volatile half_t& rhs) {
+#ifdef __CUDA_ARCH__
+    return static_cast<bool>(const_cast<impl_type&>(lhs.val) !=
+                             const_cast<impl_type&>(rhs.val));
+#else
+    return __half2float(const_cast<impl_type&>(lhs.val)) !=
+           __half2float(const_cast<impl_type&>(rhs.val));
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  friend bool operator<(const volatile half_t& lhs,
+                        const volatile half_t& rhs) {
+#ifdef __CUDA_ARCH__
+    return static_cast<bool>(const_cast<impl_type&>(lhs.val) <
+                             const_cast<impl_type&>(rhs.val));
+#else
+    return __half2float(const_cast<impl_type&>(lhs.val)) <
+           __half2float(const_cast<impl_type&>(rhs.val));
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  friend bool operator>(const volatile half_t& lhs,
+                        const volatile half_t& rhs) {
+#ifdef __CUDA_ARCH__
+    return static_cast<bool>(const_cast<impl_type&>(lhs.val) >
+                             const_cast<impl_type&>(rhs.val));
+#else
+    return __half2float(const_cast<impl_type&>(lhs.val)) >
+           __half2float(const_cast<impl_type&>(rhs.val));
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  friend bool operator<=(const volatile half_t& lhs,
+                         const volatile half_t& rhs) {
+#ifdef __CUDA_ARCH__
+    return static_cast<bool>(const_cast<impl_type&>(lhs.val) <=
+                             const_cast<impl_type&>(rhs.val));
+#else
+    return __half2float(const_cast<impl_type&>(lhs.val)) <=
+           __half2float(const_cast<impl_type&>(rhs.val));
+#endif
+  }
+
+  KOKKOS_FUNCTION
+  friend bool operator>=(const volatile half_t& lhs,
+                         const volatile half_t& rhs) {
+#ifdef __CUDA_ARCH__
+    return static_cast<bool>(const_cast<impl_type&>(lhs.val) >=
+                             const_cast<impl_type&>(rhs.val));
+#else
+    return __half2float(const_cast<impl_type&>(lhs.val)) >=
+           __half2float(const_cast<impl_type&>(rhs.val));
+#endif
+  }
+
   // Insertion and extraction operators
   friend std::ostream& operator<<(std::ostream& os, const half_t& x) {
     os << static_cast<float>(x);
