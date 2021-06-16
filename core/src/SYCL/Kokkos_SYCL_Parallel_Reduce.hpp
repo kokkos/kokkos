@@ -134,93 +134,99 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
 
 }  // namespace SYCLReduction
 
+template <class ValueJoin, class ValueInit, class ValueOps,
+          typename ReducerConditional, typename Functor,
+          typename FunctorCastType, typename Reducer, typename ReducerCastType,
+          typename Policy, typename ValueType, typename ReferenceType>
+struct FunctorWrapperRangePolicyParallelReduce {
+  using WorkTag = typename Policy::work_tag;
 
-  template <class ValueJoin, class ValueInit, class ValueOps, typename ReducerConditional, typename Functor, typename FunctorCastType, typename Reducer, typename ReducerCastType, typename Policy, typename ValueType, typename ReferenceType>
-  struct FunctorWrapperRangePolicyParallelReduce
-  {
-    using WorkTag = typename Policy::work_tag;
+  void operator()(sycl::nd_item<1> item) const {
+    const auto local_id = item.get_local_linear_id();
+    const auto global_id =
+        m_wgroup_size * item.get_group_linear_id() * m_values_per_thread +
+        local_id;
+    const auto& selected_reducer = ReducerConditional::select(
+        static_cast<const FunctorCastType&>(m_functor),
+        static_cast<const ReducerCastType&>(m_reducer));
 
-          void operator()(sycl::nd_item<1> item) const
-          {
-              const auto local_id = item.get_local_linear_id();
-              const auto global_id =
-                  m_wgroup_size * item.get_group_linear_id() * m_values_per_thread +
-                  local_id;
-              const auto& selected_reducer = ReducerConditional::select(
-                  static_cast<const FunctorCastType&>(m_functor),
-                  static_cast<const ReducerCastType&>(m_reducer));
+    // In the first iteration, we call functor to initialize the local
+    // memory. Otherwise, the local memory is initialized with the
+    // results from the previous iteration that are stored in global
+    // memory. Note that we load m_values_per_thread values per thread
+    // and immediately combine them to avoid too many threads being
+    // idle in the actual workgroup reduction.
+    using index_type       = typename Policy::index_type;
+    const auto upper_bound = std::min<index_type>(
+        global_id + m_values_per_thread * m_wgroup_size, m_size);
+    if (m_first_run) {
+      ReferenceType update = ValueInit::init(
+          selected_reducer, &m_local_mem[local_id * m_value_count]);
+      for (index_type id = global_id; id < upper_bound; id += m_wgroup_size) {
+        if constexpr (std::is_same<WorkTag, void>::value)
+          m_functor(id + m_begin, update);
+        else
+          m_functor(WorkTag(), id + m_begin, update);
+      }
+    } else {
+      if (global_id >= m_size)
+        ValueInit::init(selected_reducer,
+                        &m_local_mem[local_id * m_value_count]);
+      else {
+        ValueOps::copy(m_functor, &m_local_mem[local_id * m_value_count],
+                       &m_results_ptr[global_id * m_value_count]);
+        for (index_type id = global_id + m_wgroup_size; id < upper_bound;
+             id += m_wgroup_size) {
+          ValueJoin::join(selected_reducer,
+                          &m_local_mem[local_id * m_value_count],
+                          &m_results_ptr[id * m_value_count]);
+        }
+      }
+    }
+    item.barrier(sycl::access::fence_space::local_space);
 
-              // In the first iteration, we call functor to initialize the local
-              // memory. Otherwise, the local memory is initialized with the
-              // results from the previous iteration that are stored in global
-              // memory. Note that we load m_values_per_thread values per thread
-              // and immediately combine them to avoid too many threads being
-              // idle in the actual workgroup reduction.
-              using index_type       = typename Policy::index_type;
-              const auto upper_bound = std::min<index_type>(
-                  global_id + m_values_per_thread * m_wgroup_size, m_size);
-              if (m_first_run) {
-                ReferenceType update = ValueInit::init(
-                    selected_reducer, &m_local_mem[local_id * m_value_count]);
-                for (index_type id = global_id; id < upper_bound;
-                     id += m_wgroup_size) {
-                  if constexpr (std::is_same<WorkTag, void>::value)
-                    m_functor(id + m_begin, update);
-                  else
-                    m_functor(WorkTag(), id + m_begin, update);
-                }
-              } else {
-                if (global_id >= m_size)
-                  ValueInit::init(selected_reducer,
-                                  &m_local_mem[local_id * m_value_count]);
-                else {
-                  ValueOps::copy(m_functor, &m_local_mem[local_id * m_value_count],
-                                 &m_results_ptr[global_id * m_value_count]);
-                  for (index_type id = global_id + m_wgroup_size;
-                       id < upper_bound; id += m_wgroup_size) {
-                    ValueJoin::join(selected_reducer,
-                                    &m_local_mem[local_id * m_value_count],
-                                    &m_results_ptr[id * m_value_count]);
-                  }
-                }
-              }
-              item.barrier(sycl::access::fence_space::local_space);
-
-              SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
-                  item, m_local_mem.get_pointer(), m_results_ptr,
-                  m_device_accessible_result_ptr, m_value_count, selected_reducer,
-                  static_cast<const FunctorCastType&>(m_functor), m_n_wgroups <= 1);
-          }
-
-	  #ifdef SYCL_DEVICE_COPYABLE
-          // We get ambiguous specialization if this class is trivially_copyable
-          ~FunctorWrapperRangePolicyParallelReduce() {}
-#endif
-
-          const typename Policy::index_type m_begin;
-    const Functor m_functor;
-    const Reducer m_reducer;
-    const size_t m_wgroup_size;
-    const size_t m_n_wgroups;
-    const size_t m_values_per_thread;
-    const size_t m_size;
-    const bool m_first_run;
-    const sycl::accessor<ValueType, 1, sycl::access::mode::read_write,
-                       sycl::access::target::local> m_local_mem;
-    ValueType* const m_results_ptr;
-    ValueType* const m_device_accessible_result_ptr;
-    const unsigned int m_value_count; 
-  };
-}
+    SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
+        item, m_local_mem.get_pointer(), m_results_ptr,
+        m_device_accessible_result_ptr, m_value_count, selected_reducer,
+        static_cast<const FunctorCastType&>(m_functor), m_n_wgroups <= 1);
+  }
 
 #ifdef SYCL_DEVICE_COPYABLE
-template <class ValueJoin, class ValueInit, class ValueOps, typename ReducerConditional, typename Functor, typename FunctorCastType, typename Reducer, typename ReducerCastType, typename Policy, typename ValueType, typename ReferenceType>
+  // We get ambiguous specialization if this class is trivially_copyable
+  ~FunctorWrapperRangePolicyParallelReduce() {}
+#endif
+
+  const typename Policy::index_type m_begin;
+  const Functor m_functor;
+  const Reducer m_reducer;
+  const size_t m_wgroup_size;
+  const size_t m_n_wgroups;
+  const size_t m_values_per_thread;
+  const size_t m_size;
+  const bool m_first_run;
+  const sycl::accessor<ValueType, 1, sycl::access::mode::read_write,
+                       sycl::access::target::local>
+      m_local_mem;
+  ValueType* const m_results_ptr;
+  ValueType* const m_device_accessible_result_ptr;
+  const unsigned int m_value_count;
+};
+}  // namespace Kokkos::Impl
+
+#ifdef SYCL_DEVICE_COPYABLE
+template <class ValueJoin, class ValueInit, class ValueOps,
+          typename ReducerConditional, typename Functor,
+          typename FunctorCastType, typename Reducer, typename ReducerCastType,
+          typename Policy, typename ValueType, typename ReferenceType>
 struct sycl::is_device_copyable<
- Kokkos::Impl::FunctorWrapperRangePolicyParallelReduce<ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor, FunctorCastType, Reducer, ReducerCastType, Policy, ValueType, ReferenceType>> : std::true_type{};
+    Kokkos::Impl::FunctorWrapperRangePolicyParallelReduce<
+        ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor,
+        FunctorCastType, Reducer, ReducerCastType, Policy, ValueType,
+        ReferenceType>> : std::true_type {};
 #endif
 
 namespace Kokkos {
-	namespace Impl {
+namespace Impl {
 template <class FunctorType, class ReducerType, class... Traits>
 class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                      Kokkos::Experimental::SYCL> {
@@ -357,7 +363,13 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-            FunctorWrapperRangePolicyParallelReduce<ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor, FunctorType, Reducer, ReducerType, Policy, value_type, reference_type> {policy.begin(), functor, reducer, wgroup_size, n_wgroups, values_per_thread, size, first_run, local_mem, results_ptr, device_accessible_result_ptr, value_count});
+            FunctorWrapperRangePolicyParallelReduce<
+                ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor,
+                FunctorType, Reducer, ReducerType, Policy, value_type,
+                reference_type>{policy.begin(), functor, reducer, wgroup_size,
+                                n_wgroups, values_per_thread, size, first_run,
+                                local_mem, results_ptr,
+                                device_accessible_result_ptr, value_count});
       });
 
 // FIXME_SYCL remove guard once implemented for SYCL+CUDA
@@ -402,8 +414,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         m_reducer, indirectReducerMem);
 
 #ifdef SYCL_DEVICE_COPYABLE
-    sycl_direct_launch(
-        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
+                       reducer_wrapper.get_functor());
 #else
     sycl::event event = sycl_direct_launch(
         m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());
@@ -704,8 +716,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
         m_reducer, indirectReducerMem);
 
 #ifdef SYCL_DEVICE_COPYABLE
-    sycl_direct_launch(
-        m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
+                       reducer_wrapper.get_functor());
 #else
     sycl::event event = sycl_direct_launch(
         m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());

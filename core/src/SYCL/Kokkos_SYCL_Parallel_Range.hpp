@@ -47,36 +47,34 @@
 
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
-namespace Kokkos::Impl
-{
-  template <typename Functor, typename Policy>
-  struct FunctorWrapperRangePolicyParallelFor
-  {
-    using WorkTag = typename Policy::work_tag;
+namespace Kokkos::Impl {
+template <typename Functor, typename Policy>
+struct FunctorWrapperRangePolicyParallelFor {
+  using WorkTag = typename Policy::work_tag;
 
-          void operator()(sycl::item<1> item) const
-          {
-           const typename Policy::index_type id = item.get_linear_id() + m_begin;
-        if constexpr (std::is_same<WorkTag, void>::value)
-          m_functor(id);
-        else
-          m_functor(WorkTag(), id);
-          }
+  void operator()(sycl::item<1> item) const {
+    const typename Policy::index_type id = item.get_linear_id() + m_begin;
+    if constexpr (std::is_same<WorkTag, void>::value)
+      m_functor(id);
+    else
+      m_functor(WorkTag(), id);
+  }
 
-	  #ifdef SYCL_DEVICE_COPYABLE
-	   // We get ambiguous specialization if this class is trivially_copyable
-         ~FunctorWrapperRangePolicyParallelFor() {}
+#ifdef SYCL_DEVICE_COPYABLE
+  // We get ambiguous specialization if this class is trivially_copyable
+  ~FunctorWrapperRangePolicyParallelFor() {}
 #endif
 
-          typename Policy::index_type m_begin;
-    Functor m_functor;
-  };
-}
+  typename Policy::index_type m_begin;
+  Functor m_functor;
+};
+}  // namespace Kokkos::Impl
 
 #ifdef SYCL_DEVICE_COPYABLE
 template <class Functor, class Policy>
 struct sycl::is_device_copyable<
- Kokkos::Impl::FunctorWrapperRangePolicyParallelFor<Functor, Policy>> : std::true_type{};
+    Kokkos::Impl::FunctorWrapperRangePolicyParallelFor<Functor, Policy>>
+    : std::true_type {};
 #endif
 
 template <class FunctorType, class... Traits>
@@ -94,9 +92,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <typename Functor>
-  static 
-  sycl::event 
-  sycl_direct_launch(const Policy& policy,
+  static sycl::event sycl_direct_launch(const Policy& policy,
                                         const Functor& functor) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
@@ -104,7 +100,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
-    FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(), functor};
+    FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
+                                                            functor};
 
     auto parallel_for_event = q.submit([f, policy](sycl::handler& cgh) {
       sycl::range<1> range(policy.end() - policy.begin());
