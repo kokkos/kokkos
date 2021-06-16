@@ -143,8 +143,10 @@ void SYCLInternal::initialize(const sycl::queue& q) {
 
     m_maxShmemPerBlock =
         d.template get_info<sycl::info::device::local_mem_size>();
+#ifndef SYCL_DEVICE_COPYABLE
     m_indirectKernelMem.reset(*m_queue);
     m_indirectReducerMem.reset(*m_queue);
+#endif
   } else {
     std::ostringstream msg;
     msg << "Kokkos::Experimental::SYCL::initialize(...) FAILED";
@@ -204,8 +206,10 @@ void SYCLInternal::finalize() {
   m_team_scratch_current_size = 0;
   m_team_scratch_ptr          = nullptr;
 
+#ifndef SYCL_DEVICE_COPYABLE
   m_indirectKernelMem.reset();
   m_indirectReducerMem.reset();
+#endif
   // guard erasing from all_queues
   {
     std::lock_guard<std::mutex> lock(mutex);
@@ -270,6 +274,7 @@ void* SYCLInternal::scratch_flags(
   return m_scratchFlags;
 }
 
+#ifndef SYCL_DEVICE_COPYABLE
 template <sycl::usm::alloc Kind>
 size_t SYCLInternal::USMObjectMem<Kind>::reserve(size_t n) {
   assert(m_size == 0);
@@ -308,6 +313,7 @@ void SYCLInternal::USMObjectMem<Kind>::reset() {
 
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::shared>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;
+#endif
 
 }  // namespace Impl
 }  // namespace Experimental

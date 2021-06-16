@@ -332,8 +332,12 @@ class ParallelScanSYCLBase {
     m_scratch_space =
         static_cast<pointer_type>(instance.scratch_space(total_memory));
 
+#ifdef SYCL_DEVICE_COPYABLE
+    struct Dummy {} indirectKernelMem;
+#else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = instance.m_indirectKernelMem;
+#endif
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
