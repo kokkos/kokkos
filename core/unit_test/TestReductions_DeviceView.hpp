@@ -32,11 +32,17 @@ void test_reduce_device_view(int64_t N, PolicyType policy,
   typename ExecSpace::execution_space().fence();
   double time_fence0 = timer.seconds();
   Kokkos::deep_copy(result, 0);
+
+  // We need a warm-up to get reasonable results
+  Kokkos::parallel_reduce("Test::ReduceDeviceView::TestReducer", policy,
+                          functor,
+                          Kokkos::Sum<int64_t, TEST_EXECSPACE>(result));
+  Kokkos::fence();
+
   timer.reset();
   bool is_async = time0 < time_fence0;
 
   // Test Reducer
-
   Kokkos::parallel_reduce("Test::ReduceDeviceView::TestReducer", policy,
                           functor,
                           Kokkos::Sum<int64_t, TEST_EXECSPACE>(result));
@@ -75,13 +81,10 @@ void test_reduce_device_view(int64_t N, PolicyType policy,
 
   ASSERT_EQ(N, scalar_result);
   if (is_async) {
-    printf("Time: %lf < %lf ?\n", time1, time_fence1);
     ASSERT_TRUE(time1 < time_fence1);
   }
   if (is_async) {
-    printf("Time: %lf < %lf ?\n", time2, time_fence2);
     ASSERT_TRUE(time2 < time_fence2);
-    printf("Time: %lf > %lf ?\n", time3, time_fence3);
     ASSERT_TRUE(time3 > time_fence3);
   }
 }
