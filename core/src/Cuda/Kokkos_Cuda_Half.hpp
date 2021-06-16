@@ -51,6 +51,7 @@
     !(defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL50) ||  \
       defined(KOKKOS_ARCH_MAXWELL52))
 #include <cuda_fp16.h>
+#include <iostream>  // istream & ostream for extraction and insertion ops
 
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 // Make sure no one else tries to define half_t
@@ -682,6 +683,19 @@ class half_t {
 #else
     return __half2float(val) >= __half2float(rhs.val);
 #endif
+  }
+
+  // Insertion and extraction operators
+  friend std::ostream& operator<<(std::ostream& os, const half_t& x) {
+    os << static_cast<float>(x);
+    return os;
+  }
+
+  friend std::istream& operator>>(std::istream& is, half_t& x) {
+    float s_x;
+    is >> s_x;
+    x = static_cast<half_t>(s_x);
+    return is;
   }
 };
 
