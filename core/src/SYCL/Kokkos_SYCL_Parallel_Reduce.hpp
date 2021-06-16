@@ -192,8 +192,10 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
                   static_cast<const FunctorCastType&>(m_functor), m_n_wgroups <= 1);
           }
 
+	  #ifdef SYCL_DEVICE_COPYABLE
           // We get ambiguous specialization if this class is trivially_copyable
           ~FunctorWrapperRangePolicyParallelReduce() {}
+#endif
 
           const typename Policy::index_type m_begin;
     const Functor m_functor;
@@ -211,9 +213,11 @@ void workgroup_reduction(const sycl::nd_item<dim>& item,
   };
 }
 
+#ifdef SYCL_DEVICE_COPYABLE
 template <class ValueJoin, class ValueInit, class ValueOps, typename ReducerConditional, typename Functor, typename FunctorCastType, typename Reducer, typename ReducerCastType, typename Policy, typename ValueType, typename ReferenceType>
 struct sycl::is_device_copyable<
  Kokkos::Impl::FunctorWrapperRangePolicyParallelReduce<ValueJoin, ValueInit, ValueOps, ReducerConditional, Functor, FunctorCastType, Reducer, ReducerCastType, Policy, ValueType, ReferenceType>> : std::true_type{};
+#endif
 
 namespace Kokkos {
 	namespace Impl {
@@ -350,7 +354,6 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                        sycl::access::target::local>
             local_mem(sycl::range<1>(wgroup_size) * std::max(value_count, 1u),
                       cgh);
-        const auto begin = policy.begin();
 
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),

@@ -68,8 +68,10 @@ namespace Kokkos::Impl
         ValueOps::copy(m_functor, &m_global_mem[id], &update);
       }
 
+		#ifdef SYCL_DEVICE_COPYABLE
 		 // We get ambiguous specialization if this class is trivially_copyable
           ~FunctorWrapperRangePolicyParallelScanInitializeGlobal() {}
+#endif
 
 typename Policy::index_type m_begin;
    Functor    m_functor;
@@ -93,15 +95,17 @@ typename Policy::index_type m_begin;
         ValueOps::copy(m_functor, &m_global_mem[global_id], &update);
           }
 
+	  #ifdef SYCL_DEVICE_COPYABLE
           // We get ambiguous specialization if this class is trivially_copyable
           ~FunctorWrapperRangePolicyParallelScanUpdateGlobalResults() {}
+#endif
 
     Functor    m_functor;
     ValueType* m_global_mem;
   };
 }
 
-
+#ifdef SYCL_DEVICE_COPYABLE
 template <class ValueInit, class ValueOps, class Functor, class Policy, typename ValueType>
 struct sycl::is_device_copyable<
 Kokkos::Impl::FunctorWrapperRangePolicyParallelScanInitializeGlobal<ValueInit, ValueOps, Functor, Policy, ValueType>> : std::true_type{};
@@ -109,6 +113,7 @@ Kokkos::Impl::FunctorWrapperRangePolicyParallelScanInitializeGlobal<ValueInit, V
 template <class ValueOps, class Functor, class Policy, typename ValueType>
 struct sycl::is_device_copyable<
 Kokkos::Impl::FunctorWrapperRangePolicyParallelScanUpdateGlobalResults<ValueOps, Functor, Policy, ValueType>> : std::true_type{};
+#endif
 
 namespace Kokkos {
 namespace Impl {

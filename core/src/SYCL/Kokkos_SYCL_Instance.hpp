@@ -345,6 +345,7 @@ auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
 }  // namespace Experimental
 }  // namespace Kokkos
 
+#ifdef SYCL_DEVICE_COPYABLE
 template <typename Functor, typename Storage>
 struct sycl::is_device_copyable<
  Kokkos::Experimental::Impl::SYCLFunctionWrapper<Functor, Storage, false>> : std::true_type{};
@@ -352,4 +353,5 @@ struct sycl::is_device_copyable<
 template <typename Functor, typename Storage>
 struct sycl::is_device_copyable<
  const Kokkos::Experimental::Impl::SYCLFunctionWrapper<Functor, Storage, false>> : std::true_type{};
+#endif
 #endif

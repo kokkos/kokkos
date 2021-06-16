@@ -63,17 +63,21 @@ namespace Kokkos::Impl
           m_functor(WorkTag(), id);
           }
 
-	  // We get ambiguous specialization if this class is trivially_copyable
-	  ~FunctorWrapperRangePolicyParallelFor() {}
+	  #ifdef SYCL_DEVICE_COPYABLE
+	   // We get ambiguous specialization if this class is trivially_copyable
+         ~FunctorWrapperRangePolicyParallelFor() {}
+#endif
 
           typename Policy::index_type m_begin;
     Functor m_functor;
   };
 }
 
+#ifdef SYCL_DEVICE_COPYABLE
 template <class Functor, class Policy>
 struct sycl::is_device_copyable<
  Kokkos::Impl::FunctorWrapperRangePolicyParallelFor<Functor, Policy>> : std::true_type{};
+#endif
 
 template <class FunctorType, class... Traits>
 class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
@@ -104,8 +108,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     auto parallel_for_event = q.submit([f, policy](sycl::handler& cgh) {
       sycl::range<1> range(policy.end() - policy.begin());
-      const auto begin = policy.begin();
-
       cgh.parallel_for(range, f);
     });
     // FIXME_SYCL remove guard once implemented for SYCL+CUDA
