@@ -399,6 +399,8 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
+                                -DKokkos_ENABLE_LIBQUADMATH=ON \
+                                -DCMAKE_PREFIX_PATH=/usr/local/lib/gcc/x86_64-unknown-linux-gnu/5.3.0 \
                                 -DBUILD_NAME=${STAGE_NAME} \
                               -P cmake/KokkosCI.cmake && \
                               gcc -I$PWD/core/src core/unit_test/tools/TestCInterface.c'''
