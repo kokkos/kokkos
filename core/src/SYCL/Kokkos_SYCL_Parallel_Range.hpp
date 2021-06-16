@@ -124,7 +124,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     if (m_policy.begin() == m_policy.end()) return;
 
 #ifdef SYCL_DEVICE_COPYABLE
-    struct Dummy {} indirectKernelMem;
+    struct Dummy {
+    } indirectKernelMem;
 #else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = m_policy.space()
@@ -294,7 +295,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   void execute() const {
 #ifdef SYCL_DEVICE_COPYABLE
-	  struct Dummy {} indirectKernelMem;
+    struct Dummy {
+    } indirectKernelMem;
 #else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem =
