@@ -141,7 +141,9 @@ inline __float128 cbrt(__float128 x) { return ::cbrtq(x); }
 inline __float128 hypot(__float128 x, __float128 y) { return ::hypotq(x, y); }
 // Exponential functions
 inline __float128 exp(__float128 x) { return ::expq(x); }
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 910)
 inline __float128 exp2(__float128 x) { return ::exp2q(x); }
+#endif
 inline __float128 expm1(__float128 x) { return ::expm1q(x); }
 inline __float128 log(__float128 x) { return ::logq(x); }
 inline __float128 log10(__float128 x) { return ::log10q(x); }
