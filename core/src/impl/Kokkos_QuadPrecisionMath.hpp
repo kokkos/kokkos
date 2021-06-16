@@ -58,19 +58,20 @@
 #endif
 
 //<editor-fold desc="numeric traits __float128 specializations">
+namespace Kokkos {
+namespace Experimental {
 #if defined(KOKKOS_ENABLE_CXX17)
 #define KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(TRAIT, TYPE, VALUE_TYPE, VALUE) \
   template <>                                                                \
-  struct Kokkos::Experimental::TRAIT<TYPE> {                                 \
+  struct TRAIT<TYPE> {                                                       \
     static constexpr VALUE_TYPE value = VALUE;                               \
   };                                                                         \
   template <>                                                                \
-  inline constexpr auto Kokkos::Experimental::TRAIT##_v<TYPE> =              \
-      Kokkos::Experimental::TRAIT<TYPE>::value;
+  inline constexpr auto TRAIT##_v<TYPE> = TRAIT<TYPE>::value;
 #else
 #define KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(TRAIT, TYPE, VALUE_TYPE, VALUE) \
   template <>                                                                \
-  struct Kokkos::Experimental::TRAIT<TYPE> {                                 \
+  struct TRAIT<TYPE> {                                                       \
     static constexpr VALUE_TYPE value = VALUE;                               \
   };
 #endif
@@ -95,10 +96,13 @@ KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_exponent10, __float128,        int, FLT
 // clang-format on
 
 #undef KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT
+}  // namespace Experimental
+}  // namespace Kokkos
 //</editor-fold>
 
+namespace Kokkos {
 template <>
-struct Kokkos::reduction_identity<__float128> {
+struct reduction_identity<__float128> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr static __float128 sum() {
     return static_cast<__float128>(0.0);
   }
@@ -112,6 +116,7 @@ struct Kokkos::reduction_identity<__float128> {
     return FLT128_MAX;
   }
 };
+}  // namespace Kokkos
 
 //<editor-fold desc="Common mathematical functions __float128 overloads">
 namespace Kokkos {
