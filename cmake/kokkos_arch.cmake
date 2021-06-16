@@ -76,6 +76,12 @@ IF(KOKKOS_ENABLE_COMPILER_WARNINGS)
     "-Wall" "-Wunused-parameter" "-Wshadow" "-pedantic"
     "-Wsign-compare" "-Wtype-limits" "-Wuninitialized")
 
+  # NOTE KOKKOS_ prefixed variable (all uppercase) is not set yet because TPLs are processed after ARCH
+  IF(Kokkos_ENABLE_LIBQUADMATH)
+    # warning: non-standard suffix on floating constant [-Wpedantic]
+    LIST(REMOVE_ITEM COMMON_WARNINGS "-pedantic")
+  ENDIF()
+
   # OpenMPTarget compilers give erroneous warnings about sign comparison in loops
   IF(KOKKOS_ENABLE_OPENMPTARGET)
     LIST(REMOVE_ITEM COMMON_WARNINGS "-Wsign-compare")
