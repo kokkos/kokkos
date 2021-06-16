@@ -50,6 +50,8 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Tuners.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
+#include <memory>
+#include <unordered_map>
 #include <map>
 #include <string>
 #include <type_traits>
@@ -139,17 +141,26 @@ namespace Impl {
 struct DirectFenceIDHandle {
   uint32_t value;
 };
-
+//
 template <typename Space>
 DirectFenceIDHandle idForInstance(const uintptr_t instance) {
-  static std::map<uintptr_t, uint32_t> map;
+  /** Needed to be a ptr due to initialization order problems*/
+  using map_type = std::map<uintptr_t, uint32_t>;
+
+  static std::shared_ptr<map_type> map;
+  if (map == nullptr) {
+    map = std::make_shared<map_type>();
+  }
+
   static uint32_t value;
   constexpr const uint32_t offset =
       Kokkos::Tools::Experimental::NumReservedDeviceIDs;
-  auto find = map.find(instance);
-  if (find == map.end()) {
+
+  auto find = map->find(instance);
+  if (find == map->end()) {
     find->second = (offset + value++);
   }
+
   return Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{find->second};
 }
 
