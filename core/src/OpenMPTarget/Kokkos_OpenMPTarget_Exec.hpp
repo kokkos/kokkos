@@ -54,7 +54,10 @@
 // FIXME_OPENMPTARGET - Using this macro to implement a workaround for
 // hierarchical reducers. It avoids hitting the code path which we wanted to
 // write but doesn't work. undef'ed at the end.
+// Intel compilers prefer the non-workaround version.
+#ifndef KOKKOS_ARCH_INTEL_GEN
 #define KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
+#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -877,6 +880,16 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
   friend class TeamPolicyInternal;
 
  public:
+  // FIXME_OPENMPTARGET : Currently this routine is a copy of the Cuda
+  // implementation, but this has to be tailored to be architecture specific.
+  inline static int scratch_size_max(int level) {
+    return (
+        level == 0 ? 1024 * 40 :  // 48kB is the max for CUDA, but we need some
+                                  // for team_member.reduce etc.
+            20 * 1024 *
+                1024);  // arbitrarily setting this to 20MB, for a Volta V100
+                        // that would give us about 3.2GB for 2 teams per SM
+  }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline void impl_set_team_size(const size_t size) { m_team_size = size; }
@@ -1245,21 +1258,12 @@ KOKKOS_INLINE_FUNCTION
       static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
 
 #pragma omp barrier
-  // These three lines all cause crash
   Impl::OpenMPTargetReducerWrapper<ReducerType>::init(TeamThread_scratch[0]);
-//  result.init(TeamThread_scratch[0]);
-//  Impl::OpenMPTargetReducerWrapper<ReducerType> red;
-//  red.init(TeamThread_scratch[0]);
 #pragma omp barrier
 
 #pragma omp for reduction(custominner : TeamThread_scratch[:1])
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    ValueType tmp;
-    result.init(tmp);
-    lambda(i, tmp);
-    // This line causes a crash
-    Impl::OpenMPTargetReducerWrapper<ReducerType>::join(TeamThread_scratch[0],
-                                                        tmp);
+    lambda(i, TeamThread_scratch[0]);
   }
   result.reference() = TeamThread_scratch[0];
 }
@@ -1305,6 +1309,12 @@ KOKKOS_INLINE_FUNCTION
          i += team_size) {
       lambda(i, tmp2);
     }
+
+    // FIXME_OPENMPTARGET: Join should work but doesn't. Every threads gets a
+    // private TeamThread_scratch[0] and at the end of the for-loop the `join`
+    // operation is performed by OpenMP itself and hence the simple assignment
+    // works.
+    //    result.join(TeamThread_scratch[0], tmp2);
     TeamThread_scratch[0] = tmp2;
   }
 
@@ -1402,7 +1412,6 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 }
 
 }  // namespace Kokkos
-#undef KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 
 namespace Kokkos {
 /** \brief  Intra-thread vector parallel_for. Executes lambda(iType i) for each
@@ -1629,9 +1638,7 @@ KOKKOS_INLINE_FUNCTION
 
 #pragma omp for simd reduction(custom : TeamVector_scratch[:1])
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    ValueType tmp = ValueType();
-    lambda(i, tmp);
-    TeamVector_scratch[0] += tmp;
+    lambda(i, TeamVector_scratch[0]);
   }
 
   result.reference() = TeamVector_scratch[0];
@@ -1686,7 +1693,9 @@ KOKKOS_INLINE_FUNCTION
 #endif  // KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
 #undef KOKKOS_IMPL_HIERARCHICAL_REDUCERS_WORKAROUND
+#endif
 
 namespace Kokkos {
 

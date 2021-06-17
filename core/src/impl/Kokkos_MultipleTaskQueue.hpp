@@ -467,7 +467,7 @@ class MultipleTaskQueue final
 
   // TODO @tasking @generalization DSH make this a property-based customization
   // point
-  static /* KOKKOS_CONSTEXPR_14 */ size_t task_queue_allocation_size(
+  static /* constexpr */ size_t task_queue_allocation_size(
       typename base_t::execution_space const& exec_space,
       typename base_t::memory_space const&,
       typename base_t::memory_pool const&) {

@@ -71,27 +71,12 @@ namespace Impl {
 //------------------------------------------------------------------------------
 // <editor-fold desc="MSVC EBO failure workaround"> {{{2
 
-// MSVC workaround: inheriting from more than one base_traits causes EBO to no
-// longer work, so we need to linearize the inheritance hierarchy
-template <class>
-struct msvc_workaround_get_next_base_traits;
-template <class T>
-struct msvc_workaround_get_next_base_traits {
-  template <class... Ts>
-  using apply =
-      typename T::template base_traits<msvc_workaround_get_next_base_traits,
-                                       Ts...>;
-};
-
-// </editor-fold> end MSVC EBO failure workaround }}}2
-//------------------------------------------------------------------------------
-
 template <class TraitSpecList>
-struct AnalyzeExecPolicyBaseTraits;
+struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION AnalyzeExecPolicyBaseTraits;
 template <class... TraitSpecifications>
-struct AnalyzeExecPolicyBaseTraits<type_list<TraitSpecifications...>>
-    : linearize_bases<msvc_workaround_get_next_base_traits,
-                      TraitSpecifications...> {};
+struct KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
+    AnalyzeExecPolicyBaseTraits<type_list<TraitSpecifications...>>
+    : TraitSpecifications::base_traits... {};
 
 // </editor-fold> end AnalyzePolicyBaseTraits }}}1
 //==============================================================================
