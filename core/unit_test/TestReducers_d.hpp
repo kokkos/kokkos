@@ -64,4 +64,9 @@ TEST(TEST_CATEGORY, reducers_struct) {
   TestReducers<array_reduce<float, 7>, TEST_EXECSPACE>::test_sum(1031);
 #endif
 }
+
+TEST(TEST_CATEGORY, reducers_half_t) {
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::execute_basic();
+}
+
 }  // namespace Test
