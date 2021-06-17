@@ -469,6 +469,8 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
   const Policy m_policy;
   const ReducerType m_reducer;
 
+  using ParReduceCommon = ParallelReduceCommon<pointer_type>;
+
   bool m_result_ptr_on_device;
 
  public:
@@ -548,12 +550,8 @@ reduction(+:result)
       }
     }
 
-    if (m_result_ptr_on_device)
-      OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
-                                       omp_get_default_device(),
-                                       omp_get_initial_device()));
-    else
-      *ptr = result;
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+                                   m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -607,12 +605,8 @@ reduction(+:result)
       }
     }
 
-    if (m_result_ptr_on_device)
-      OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
-                                       omp_get_default_device(),
-                                       omp_get_initial_device()));
-    else
-      *ptr = result;
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+                                   m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -674,12 +668,8 @@ reduction(+:result)
       }
     }
 
-    if (m_result_ptr_on_device)
-      OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
-                                       omp_get_default_device(),
-                                       omp_get_initial_device()));
-    else
-      *ptr = result;
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+                                   m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -749,12 +739,8 @@ reduction(+:result)
       }
     }
 
-    if (m_result_ptr_on_device)
-      OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
-                                       omp_get_default_device(),
-                                       omp_get_initial_device()));
-    else
-      *ptr = result;
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+                                   m_result_ptr_on_device);
   }
 
   template <int Rank, class ValueType>
@@ -830,12 +816,8 @@ reduction(+:result)
       }
     }
 
-    if (m_result_ptr_on_device)
-      OMPT_SAFE_CALL(omp_target_memcpy(ptr, &result, sizeof(double), 0, 0,
-                                       omp_get_default_device(),
-                                       omp_get_initial_device()));
-    else
-      *ptr = result;
+    ParReduceCommon::memcpy_result(ptr, &result, sizeof(ValueType),
+                                   m_result_ptr_on_device);
   }
 
   template <typename Policy, typename Functor>
