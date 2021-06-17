@@ -378,15 +378,11 @@ if(Kokkos_ENABLE_PTHREAD)
 endif()
 
 if (Kokkos_ENABLE_OPENMP)
+  set(OpenMP_EXTRA_SOURCES
+    openmp/TestOpenMP_Task.cpp
+  )
   if (Kokkos_ENABLE_DEPRECATED_CODE_3)
-    set(OpenMP_EXTRA_SOURCES
-      openmp/TestOpenMP_PartitionMaster.cpp
-      openmp/TestOpenMP_Task.cpp
-    )
-  else ()
-    set(OpenMP_EXTRA_SOURCES
-      openmp/TestOpenMP_Task.cpp
-    )
+    list(APPEND OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
   endif ()
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMP
