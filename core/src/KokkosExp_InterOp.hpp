@@ -54,51 +54,7 @@
 #include <type_traits>
 
 namespace Kokkos {
-namespace Experimental {
-
-template <typename... T>
-using type_list = Kokkos::Impl::type_list<T...>;
-
-// ------------------------------------------------------------------ //
-//  concat_type_list combines types in multiple type_lists
-
-// forward declaration
-template <typename... T>
-struct concat_type_list;
-
-// alias
-template <typename... T>
-using concat_type_list_t = typename concat_type_list<T...>::type;
-
-// final instantiation
-template <typename... T>
-struct concat_type_list<type_list<T...>> {
-  using type = type_list<T...>;
-};
-
-// combine consecutive type_lists
-template <typename... T, typename... U, typename... Tail>
-struct concat_type_list<type_list<T...>, type_list<U...>, Tail...>
-    : concat_type_list<type_list<T..., U...>, Tail...> {};
-
-// ------------------------------------------------------------------ //
-//  filter_type_list generates type-list of types which satisfy
-//  PredicateT<T>::value == ValueT
-
-template <template <typename> class PredicateT, typename TypeListT,
-          bool ValueT = true>
-struct filter_type_list;
-
-template <template <typename> class PredicateT, typename... T, bool ValueT>
-struct filter_type_list<PredicateT, type_list<T...>, ValueT> {
-  using type =
-      concat_type_list_t<std::conditional_t<PredicateT<T>::value == ValueT,
-                                            type_list<T>, type_list<>>...>;
-};
-
-template <template <typename> class PredicateT, typename T, bool ValueT = true>
-using filter_type_list_t =
-    typename filter_type_list<PredicateT, T, ValueT>::type;
+namespace Impl {
 
 // ------------------------------------------------------------------ //
 //  this is used to convert
@@ -116,15 +72,6 @@ struct device_memory_space<Kokkos::Device<ExecT, MemT>> {
 
 template <typename Tp>
 using device_memory_space_t = typename device_memory_space<Tp>::type;
-
-// ------------------------------------------------------------------ //
-//  this identifies the default memory trait
-//
-template <typename Tp>
-struct is_default_memory_trait : std::false_type {};
-
-template <>
-struct is_default_memory_trait<Kokkos::MemoryTraits<0>> : std::true_type {};
 
 // ------------------------------------------------------------------ //
 //  this is the impl version which takes a view and converts to python
@@ -149,6 +96,11 @@ struct python_view_type_impl<ViewT<ValueT, Types...>>
 template <typename... T>
 using python_view_type_impl_t = typename python_view_type_impl<T...>::type;
 
+}  // namespace Impl
+}  // namespace Kokkos
+
+namespace Kokkos {
+namespace Experimental {
 // ------------------------------------------------------------------ //
 //  this is used to extract the uniform type of a view
 //
@@ -159,7 +111,7 @@ struct python_view_type {
                 "Error! python_view_type only supports Kokkos::View and "
                 "Kokkos::DynRankView");
 
-  using type = python_view_type_impl_t<typename ViewT::array_type>;
+  using type = Kokkos::Impl::python_view_type_impl_t<typename ViewT::array_type>;
 };
 
 template <typename ViewT>
