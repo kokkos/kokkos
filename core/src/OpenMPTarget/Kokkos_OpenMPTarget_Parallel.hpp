@@ -256,7 +256,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto begin = p.begin();
     const auto end   = p.end();
 
-  enum { HasInit = ReduceFunctorHasInit<FunctorType>::value };
+    enum { HasInit = ReduceFunctorHasInit<FunctorType>::value };
 
     // Initialize the result pointer.
 
@@ -275,25 +275,31 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     // Allocate scratch per active thread. Achieved by setting the first
     // parameter of `resize_scratch=1`.
     OpenMPTargetExec::resize_scratch(1, 0, value_count * sizeof(ValueType));
-    void* scratch_ptr = OpenMPTargetExec::get_scratch_ptr();
+    ValueType* scratch_ptr =
+        static_cast<ValueType*>(OpenMPTargetExec::get_scratch_ptr());
 
     // Enter this loop if the functor has an `init`
-    if constexpr (HasInit)
-    {
-      // The `init` routine needs to be called on the device since it might need device members.
-#pragma omp target map(to: f) is_device_ptr(scratch_ptr)
-      {
-        ValueInit::init(f, static_cast<ValueType*>(scratch_ptr));
-      }
+    if constexpr (HasInit) {
+      // The `init` routine needs to be called on the device since it might need
+      // device members.
+#pragma omp target map(to : f) is_device_ptr(scratch_ptr)
+      { ValueInit::init(f, scratch_ptr); }
+    } else {
+#pragma omp target teams distribute parallel for is_device_ptr(scratch_ptr)
+      for (int i = 0; i < value_count; ++i) scratch_ptr[i] = ValueType();
     }
 
-    if (end <= begin)
-    {
-      // If there is no work to be done, copy back the initialized values and exit.
-    if(!ptr_on_device)
-      OMPT_SAFE_CALL(omp_target_memcpy(ptr, static_cast<ValueType*>(scratch_ptr), value_count * sizeof(ValueType), 0, 0, omp_get_initial_device(), omp_get_default_device()));
-    else
-      OMPT_SAFE_CALL(omp_target_memcpy(ptr, static_cast<ValueType*>(scratch_ptr), value_count * sizeof(ValueType), 0, 0, omp_get_default_device(), omp_get_default_device()));
+    if (end <= begin) {
+      // If there is no work to be done, copy back the initialized values and
+      // exit.
+      if (!ptr_on_device)
+        OMPT_SAFE_CALL(omp_target_memcpy(
+            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+            omp_get_initial_device(), omp_get_default_device()));
+      else
+        OMPT_SAFE_CALL(omp_target_memcpy(
+            ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+            omp_get_default_device(), omp_get_default_device()));
 
       return;
     }
@@ -310,8 +316,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         const auto team_begin = begin + team_num * chunk_size;
         const auto team_end =
             (team_num == num_teams - 1) ? end : (team_begin + chunk_size);
-        ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr) +
-                                  team_num * max_team_threads * value_count;
+        ValueType* team_scratch =
+            scratch_ptr + team_num * max_team_threads * value_count;
         ReferenceType result = ValueInit::init(
             f, &team_scratch[omp_get_thread_num() * value_count]);
 
@@ -348,7 +354,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     is_device_ptr(scratch_ptr)
       for (int i = 0; i < max_teams - tree_neighbor_offset;
            i += 2 * tree_neighbor_offset) {
-        ValueType* team_scratch = static_cast<ValueType*>(scratch_ptr);
+        ValueType* team_scratch = scratch_ptr;
         const int team_offset   = max_team_threads * value_count;
         ValueJoin::join(
             f, &team_scratch[i * team_offset],
@@ -357,18 +363,24 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
         // If `final` is provided by the functor.
         if constexpr (ReduceFunctorHasFinal<FunctorType>::value) {
           // Do the final only once at the end.
-            if(tree_neighbor_offset*2 >= max_teams && omp_get_team_num() == 0 && omp_get_thread_num() == 0)
-              FunctorFinal<FunctorType, TagType>::final(f, scratch_ptr);
+          if (tree_neighbor_offset * 2 >= max_teams &&
+              omp_get_team_num() == 0 && omp_get_thread_num() == 0)
+            FunctorFinal<FunctorType, TagType>::final(f, scratch_ptr);
         }
       }
       tree_neighbor_offset *= 2;
     } while (tree_neighbor_offset < max_teams);
 
     // If the result view is on the host, copy back the values via memcpy.
-    if(!ptr_on_device)
-      OMPT_SAFE_CALL(omp_target_memcpy(ptr, static_cast<ValueType*>(scratch_ptr), value_count * sizeof(ValueType), 0, 0, omp_get_initial_device(), omp_get_default_device()));
+    if (!ptr_on_device)
+      OMPT_SAFE_CALL(omp_target_memcpy(
+          ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+          omp_get_initial_device(), omp_get_default_device()));
     else
-      OMPT_SAFE_CALL(omp_target_memcpy(ptr, static_cast<ValueType*>(scratch_ptr), value_count * sizeof(ValueType), 0, 0, omp_get_default_device(), omp_get_default_device()));
+      OMPT_SAFE_CALL(omp_target_memcpy(
+          ptr, scratch_ptr),
+          value_count * sizeof(ValueType), 0, 0, omp_get_default_device(),
+          omp_get_default_device()));
   }
 };
 

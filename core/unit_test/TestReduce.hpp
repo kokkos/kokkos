@@ -400,9 +400,7 @@ class TestReduceDynamic {
   TestReduceDynamic(const size_type nwork) {
     run_test_dynamic(nwork);
     run_test_dynamic_minmax(nwork);
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
     run_test_dynamic_final(nwork);
-#endif
   }
 
   void run_test_dynamic(const size_type nwork) {
@@ -542,7 +540,8 @@ class TestReduceDynamicView {
 }  // namespace
 
 TEST(TEST_CATEGORY, int64_t_reduce) {
-  //FIXME_OPENMPTARGET : This should technically work but does not yet. Trying to fix it now.
+  // FIXME_OPENMPTARGET : This should technically work but does not yet. Trying
+  // to fix it now.
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestReduce<int64_t, TEST_EXECSPACE>(0);
 #endif
@@ -550,7 +549,8 @@ TEST(TEST_CATEGORY, int64_t_reduce) {
 }
 
 TEST(TEST_CATEGORY, double_reduce) {
-  //FIXME_OPENMPTARGET : This should technically work but does not yet. Trying to fix it now.
+  // FIXME_OPENMPTARGET : This should technically work but does not yet. Trying
+  // to fix it now.
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestReduce<double, TEST_EXECSPACE>(0);
 #endif
@@ -572,7 +572,7 @@ TEST(TEST_CATEGORY, int64_t_reduce_dynamic_view) {
   TestReduceDynamicView<int64_t, TEST_EXECSPACE>(1000000);
 }
 
-//FIXME_OPENMPTARGET: Not yet implemented.
+// FIXME_OPENMPTARGET: Not yet implemented.
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, int_combined_reduce) {
   using functor_type = CombinedReduceFunctorSameType<int64_t, TEST_EXECSPACE>;
