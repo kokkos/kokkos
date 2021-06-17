@@ -721,14 +721,16 @@ struct FunctorAnalysis {
 
     template <bool IsArray>
     KOKKOS_INLINE_FUNCTION constexpr
-        typename std::enable_if<IsArray, FunctorAnalysis::ValueType*>::type
+        typename std::enable_if<IsArray,
+                                typename FunctorAnalysis::ValueType*>::type
         ref() const noexcept {
       return m_result;
     }
 
     template <bool IsArray>
     KOKKOS_INLINE_FUNCTION constexpr
-        typename std::enable_if<!IsArray, FunctorAnalysis::ValueType&>::type
+        typename std::enable_if<!IsArray,
+                                typename FunctorAnalysis::ValueType&>::type
         ref() const noexcept {
       return *m_result;
     }
