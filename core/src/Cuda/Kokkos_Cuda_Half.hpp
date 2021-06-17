@@ -52,6 +52,7 @@
       defined(KOKKOS_ARCH_MAXWELL52))
 #include <cuda_fp16.h>
 #include <iostream>  // istream & ostream for extraction and insertion ops
+#include <Kokkos_NumericTraits.hpp>
 
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
 // Make sure no one else tries to define half_t
@@ -128,7 +129,8 @@ KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
         cast_from_half(half_t);
 
-class half_t {
+// use alignas(4) to support 32-bit alignment for reductions
+class alignas(4) half_t {
  public:
   using impl_type = Kokkos::Impl::half_impl_t::type;
 
@@ -1029,6 +1031,19 @@ KOKKOS_INLINE_FUNCTION
 }
 #endif
 }  // namespace Experimental
+
+// use float as the return type for sum and prod since cuda_fp16.h
+// has no constexpr functions for casting to __half
+template <>
+struct reduction_identity<Kokkos::Experimental::half_t> {
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static float sum() noexcept {
+    return 0.0F;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static float prod() noexcept {
+    return 1.0F;
+  }
+};
+
 }  // namespace Kokkos
 #endif  // KOKKOS_IMPL_HALF_TYPE_DEFINED
 #endif  // KOKKOS_ENABLE_CUDA
