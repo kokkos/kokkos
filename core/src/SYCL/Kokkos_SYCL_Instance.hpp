@@ -175,7 +175,7 @@ class SYCLInternal {
     // reference to the copied object.
     template <typename T>
     T& copy_from(const T& t) {
-      fence(last_event);
+      fence(m_last_event);
       m_size = 0;
       if constexpr (sycl::usm::alloc::device == Kind)
         return *memcpy_from(t);
@@ -219,10 +219,10 @@ class SYCLInternal {
     }
 
     void register_event(sycl::event event) {
-      assert(
-          last_event.get_info<sycl::info::event::command_execution_status>() ==
-          sycl::info::event_command_status::complete);
-      last_event = event;
+      assert(m_last_event
+                 .get_info<sycl::info::event::command_execution_status>() ==
+             sycl::info::event_command_status::complete);
+      m_last_event = event;
     }
 
    private:
@@ -240,14 +240,14 @@ class SYCLInternal {
     //  if m_data == nullptr then m_capacity == 0
     //
     //  m_size != 0 implies that there might be an active kernel using this
-    //  object. The status of that kernel can be queried using last_event. if
-    //  m_size == 0 then last_event is completed
+    //  object. The status of that kernel can be queried using m_last_event. if
+    //  m_size == 0 then m_last_event is completed
 
     std::optional<sycl::queue> m_q;
     void* m_data      = nullptr;
     size_t m_size     = 0;  // sizeof(T) iff m_data points to live T
     size_t m_capacity = 0;
-    sycl::event last_event;
+    sycl::event m_last_event;
   };
 
   // An indirect kernel is one where the functor to be executed is explicitly
