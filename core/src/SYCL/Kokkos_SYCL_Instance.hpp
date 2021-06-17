@@ -229,15 +229,15 @@ class SYCLInternal {
     // USMObjectMem class invariants
     // All four expressions below must evaluate to true:
     //
-    //  (m_data == nullptr) == (m_capacity == 0)
-    //     (m_q != nullopt) || (m_data == nullptr)
-    //  (m_data != nullptr) || (m_size == 0)
-    //               m_size <= m_capacity
+    //  !m_data == (m_capacity == 0)
+    //      m_q || !m_data
+    //   m_data || (m_size == 0)
+    //   m_size <= m_capacity
     //
     //  The above invariants mean that:
-    //  if m_size != 0 then m_data != 0
-    //  if m_data != 0 then m_capacity != 0 && m_q != nullopt
-    //  if m_data == 0 then m_capacity == 0
+    //  if m_size != 0 then m_data != nullptr
+    //  if m_data != nullptr then m_capacity != 0 && m_q != nullopt
+    //  if m_data == nullptr then m_capacity == 0
     //
     //  m_size != 0 implies that there might be an active kernel using this
     //  object. The status of that kernel can be queried using last_event. if
