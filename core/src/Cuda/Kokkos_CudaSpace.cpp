@@ -55,7 +55,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <atomic>
-#include <limits>
 
 //#include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -205,6 +204,8 @@ CudaUVMSpace::CudaUVMSpace() : m_device(Kokkos::Cuda().cuda_device()) {}
 
 CudaHostPinnedSpace::CudaHostPinnedSpace() {}
 
+int memory_threshold_g = 40000; // 5,000 kB
+
 //==============================================================================
 // <editor-fold desc="allocate()"> {{{1
 
@@ -226,8 +227,7 @@ void *CudaSpace::impl_allocate(
 #error CUDART_VERSION undefined!
 #elif (CUDART_VERSION >= 11020)
   cudaError_t error_code;
-  // FIXME_CUDA Checks for bug (info in PR 4026, fixed in Cuda 11.4)
-  if ((size_t)arg_alloc_size < (std::numeric_limits<size_t>::max() - 1000)) {
+  if (arg_alloc_size >= memory_threshold_g) {
     error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
     CUDA_SAFE_CALL(cudaDeviceSynchronize());
   } else {
@@ -351,14 +351,17 @@ void CudaSpace::impl_deallocate(
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
-
   try {
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
 #elif (CUDART_VERSION >= 11020)
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
-    CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
-    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    if (arg_alloc_size >= memory_threshold_g) {
+        CUDA_SAFE_CALL(cudaDeviceSynchronize());
+        CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
+        CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    } else {
+        CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
+    }
 #else
     CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
 #endif
