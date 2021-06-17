@@ -51,7 +51,8 @@
     !(defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL50) ||  \
       defined(KOKKOS_ARCH_MAXWELL52))
 #include <cuda_fp16.h>
-#include <iostream>  // istream & ostream for extraction and insertion ops
+#include <iosfwd>  // istream & ostream for extraction and insertion ops
+#include <string>
 #include <Kokkos_NumericTraits.hpp>
 
 #ifndef KOKKOS_IMPL_HALF_TYPE_DEFINED
@@ -138,8 +139,19 @@ class alignas(4) half_t {
   impl_type val;
 
  public:
-  KOKKOS_FUNCTION
-  half_t() : val(0.0F) {}
+  // Default constructor - initializes val to 0
+  // noexcept - adds compile time check to ensure exceptions are not thrown
+  // default  - has the compiler define the implicit default constructor even
+  //            though other constructors are present
+  KOKKOS_DEFAULTED_FUNCTION
+  half_t() noexcept = default;
+
+  // Copy constructors
+  KOKKOS_DEFAULTED_FUNCTION
+  half_t(const half_t&) noexcept = default;
+
+  KOKKOS_INLINE_FUNCTION
+  half_t(const volatile half_t& rhs) : val(const_cast<impl_type&>(rhs.val)) {}
 
   // Don't support implicit conversion back to impl_type.
   // impl_type is a storage only type on host.
@@ -293,7 +305,15 @@ class alignas(4) half_t {
 
   template <class T>
   KOKKOS_FUNCTION void operator=(T rhs) volatile {
+#ifdef __CUDA_ARCH__
     val = cast_to_half(rhs).val;
+#else
+    // Use non-volatile val_ref to suppress:
+    // "warning: implicit dereference will not access object of type ‘volatile
+    // __half’ in statement"
+    auto val_ref = const_cast<impl_type&>(val);
+    val_ref      = cast_to_half(rhs).val;
+#endif
   }
 
   // Compound operators
@@ -302,7 +322,7 @@ class alignas(4) half_t {
 #ifdef __CUDA_ARCH__
     val += rhs.val;
 #else
-    val = __float2half(__half2float(val) + __half2float(rhs.val));
+    val          = __float2half(__half2float(val) + __half2float(rhs.val));
 #endif
     return *this;
   }
@@ -761,14 +781,15 @@ class alignas(4) half_t {
 
   // Insertion and extraction operators
   friend std::ostream& operator<<(std::ostream& os, const half_t& x) {
-    os << static_cast<float>(x);
+    const std::string out = std::to_string(static_cast<double>(x));
+    os << out;
     return os;
   }
 
   friend std::istream& operator>>(std::istream& is, half_t& x) {
-    float s_x;
-    is >> s_x;
-    x = static_cast<half_t>(s_x);
+    std::string in;
+    is >> in;
+    x = std::stod(in);
     return is;
   }
 };
@@ -1041,6 +1062,12 @@ struct reduction_identity<Kokkos::Experimental::half_t> {
   }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static float prod() noexcept {
     return 1.0F;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() noexcept {
+    return -65504.0F;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() noexcept {
+    return 65504.0F;
   }
 };
 
