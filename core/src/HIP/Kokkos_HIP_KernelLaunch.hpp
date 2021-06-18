@@ -65,7 +65,7 @@ namespace Kokkos {
 namespace Experimental {
 template <typename T>
 inline __device__ T *kokkos_impl_hip_shared_memory() {
-  HIP_DYNAMIC_SHARED(HIPSpace::size_type, sh);
+  extern __shared__ Kokkos::Experimental::HIPSpace::size_type sh[];
   return (T *)sh;
 }
 }  // namespace Experimental

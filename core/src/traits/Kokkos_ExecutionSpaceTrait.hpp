@@ -62,15 +62,13 @@ template <>
 struct show_extra_execution_space_erroneously_given_to_execution_policy<void> {
 };
 struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+  struct base_traits {
     static constexpr auto execution_space_is_defaulted = true;
 
     using execution_space = Kokkos::DefaultExecutionSpace;
   };
   template <class T>
-  using trait_matches_specification = is_execution_space<T>;
+  using trait_matches_specification = Kokkos::is_execution_space<T>;
   template <class ExecSpace, class AnalyzeNextTrait>
   struct mixin_matching_trait : AnalyzeNextTrait {
     using base_t = AnalyzeNextTrait;

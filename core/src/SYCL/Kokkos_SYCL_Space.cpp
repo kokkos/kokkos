@@ -195,6 +195,7 @@ void sycl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                                       reported_size);
   }
 
+  SYCL::impl_static_fence();
   sycl::free(arg_alloc_ptr, queue);
 }
 

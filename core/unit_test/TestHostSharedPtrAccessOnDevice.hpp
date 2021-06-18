@@ -52,14 +52,17 @@ using Kokkos::Impl::HostSharedPtr;
 namespace {
 
 class Data {
-  Kokkos::Array<char, 64> d;
+  char d[64];
 
  public:
-  KOKKOS_FUNCTION void write(char const* c) {
-    for (int i = 0; i < 64 && c; ++i, ++c) {
-      d[i] = *c;
-    }
+  // Because strncpy is not supported within device code
+  static KOKKOS_FUNCTION void my_strncpy(char* dst, const char* src,
+                                         size_t cnt) {
+    while (cnt-- > 0 && (*dst++ = *src++) != '\0')
+      ;
+    while (cnt-- > 0) *dst++ = '\0';
   }
+  KOKKOS_FUNCTION void write(char const* s) { my_strncpy(d, s, sizeof(d)); }
 };
 
 template <class SmartPtr>

@@ -90,13 +90,11 @@ class ParallelScanSYCLBase {
     auto n_wgroups               = (size + wgroup_size - 1) / wgroup_size;
     pointer_type group_results   = global_mem + size;
 
-    q.submit([&](sycl::handler& cgh) {
+    auto local_scans = q.submit([&](sycl::handler& cgh) {
       sycl::accessor<value_type, 1, sycl::access::mode::read_write,
                      sycl::access::target::local>
           local_mem(sycl::range<1>(wgroup_size), cgh);
 
-      // FIXME_SYCL we get wrong results without this, not sure why
-      sycl::stream out(1, 1, cgh);
       cgh.parallel_for(
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
           [=](sycl::nd_item<1> item) {
@@ -150,11 +148,16 @@ class ParallelScanSYCLBase {
                              &local_mem[local_id]);
           });
     });
+    // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+    q.submit_barrier(sycl::vector_class<sycl::event>{local_scans});
+#else
+    m_policy.space().fence();
+#endif
 
     if (n_wgroups > 1) scan_internal(q, functor, group_results, n_wgroups);
-    m_policy.space().fence();
 
-    q.submit([&](sycl::handler& cgh) {
+    auto update_with_group_results = q.submit([&](sycl::handler& cgh) {
       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
                        [=](sycl::nd_item<1> item) {
                          const auto global_id = item.get_global_linear_id();
@@ -164,11 +167,17 @@ class ParallelScanSYCLBase {
                                &group_results[item.get_group_linear_id()]);
                        });
     });
+    // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+    q.submit_barrier(
+        sycl::vector_class<sycl::event>{update_with_group_results});
+#else
     m_policy.space().fence();
+#endif
   }
 
   template <typename Functor>
-  void sycl_direct_launch(const Functor& functor) const {
+  sycl::event sycl_direct_launch(const Functor& functor) const {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = m_policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
@@ -178,7 +187,7 @@ class ParallelScanSYCLBase {
     const std::size_t len = m_policy.end() - m_policy.begin();
 
     // Initialize global memory
-    q.submit([&](sycl::handler& cgh) {
+    auto initialize_global_memory = q.submit([&](sycl::handler& cgh) {
       auto global_mem = m_scratch_space;
       auto begin      = m_policy.begin();
       cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
@@ -193,13 +202,18 @@ class ParallelScanSYCLBase {
         ValueOps::copy(functor, &global_mem[id], &update);
       });
     });
+    // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+    q.submit_barrier(sycl::vector_class<sycl::event>{initialize_global_memory});
+#else
     space.fence();
+#endif
 
     // Perform the actual exclusive scan
     scan_internal(q, functor, m_scratch_space, len);
 
     // Write results to global memory
-    q.submit([&](sycl::handler& cgh) {
+    auto update_global_results = q.submit([&](sycl::handler& cgh) {
       auto global_mem = m_scratch_space;
       cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
         auto global_id = item.get_id();
@@ -212,7 +226,13 @@ class ParallelScanSYCLBase {
         ValueOps::copy(functor, &global_mem[global_id], &update);
       });
     });
+// FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+    q.submit_barrier(sycl::vector_class<sycl::event>{update_global_results});
+#else
     space.fence();
+#endif
+    return update_global_results;
   }
 
  public:
@@ -251,7 +271,8 @@ class ParallelScanSYCLBase {
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
-    sycl_direct_launch(functor_wrapper.get_functor());
+    sycl::event event = sycl_direct_launch(functor_wrapper.get_functor());
+    functor_wrapper.register_event(indirectKernelMem, event);
     post_functor();
   }
 

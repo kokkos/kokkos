@@ -81,11 +81,11 @@ void test_reduce_device_view(int64_t N, PolicyType policy,
 
   ASSERT_EQ(N, scalar_result);
   if (is_async) {
-    ASSERT_TRUE(time1 < time_fence1);
+    ASSERT_LT(time1, time_fence1);
   }
   if (is_async) {
-    ASSERT_TRUE(time2 < time_fence2);
-    ASSERT_TRUE(time3 > time_fence3);
+    ASSERT_LT(time2, time_fence2);
+    ASSERT_GT(time3, time_fence3);
   }
 }
 
@@ -134,8 +134,6 @@ TEST(TEST_CATEGORY, reduce_device_view_mdrange_policy) {
       MDRangePolicyFunctor());
 }
 
-// FIXME_HIP
-#ifndef KOKKOS_ENABLE_HIP
 TEST(TEST_CATEGORY, reduce_device_view_team_policy) {
 // FIXME_SYCL The number of workgroups on CUDA devices can not be larger than
 // 65535
@@ -151,5 +149,4 @@ TEST(TEST_CATEGORY, reduce_device_view_team_policy) {
       TeamPolicyFunctor(1024));
 #endif
 }
-#endif
 }  // namespace Test

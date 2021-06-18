@@ -64,9 +64,7 @@ struct show_extra_index_type_erroneously_given_to_execution_policy;
 template <>
 struct show_extra_index_type_erroneously_given_to_execution_policy<void> {};
 struct IndexTypeTrait : TraitSpecificationBase<IndexTypeTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+  struct base_traits {
     static constexpr bool index_type_is_defaulted = true;
     using index_type = dependent_policy_trait_default;
   };

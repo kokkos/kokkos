@@ -89,9 +89,7 @@ struct OccupancyControlPolicyMixin;
 // <editor-fold desc="Occupancy control trait specification"> {{{1
 
 struct OccupancyControlTrait : TraitSpecificationBase<OccupancyControlTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+  struct base_traits {
     using occupancy_control = Kokkos::Experimental::MaximizeOccupancy;
     static constexpr bool experimental_contains_desired_occupancy = false;
     // Default access occupancy_control, for when it is the (stateless) default
