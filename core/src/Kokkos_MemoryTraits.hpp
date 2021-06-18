@@ -118,6 +118,15 @@ enum : unsigned {
   MEMORY_ALIGNMENT_THRESHOLD = KOKKOS_MEMORY_ALIGNMENT_THRESHOLD
 };
 
+// ------------------------------------------------------------------ //
+//  this identifies the default memory trait
+//
+template <typename Tp>
+struct is_default_memory_trait : std::false_type {};
+
+template <>
+struct is_default_memory_trait<Kokkos::MemoryTraits<0>> : std::true_type {};
+
 }  // namespace Impl
 }  // namespace Kokkos
 

@@ -69,6 +69,8 @@ KOKKOS_ADD_EXECUTABLE(
   TestCompileOnly
   SOURCES
   TestDetectionIdiom.cpp
+  TestInterOp.cpp
+  TestTypeList.cpp
 )
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
