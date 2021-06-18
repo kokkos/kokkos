@@ -53,7 +53,9 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 #include <Kokkos_MasterLock.hpp>
+#endif
 
 //----------------------------------------------------------------------------
 // Have assumed a 64bit build (8byte pointers) throughout the code base.
