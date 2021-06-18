@@ -70,6 +70,12 @@
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/generate.h>
+#include <thrust/sort.h>
+#include <thrust/copy.h>
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1085,6 +1091,65 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
     return n;
   }
+/*
+  template<typename BinOpKokkos>
+  struct Binary_op_thrust {
+    const BinOpKokkos& kk_op;
+    __host__ __device__
+    Binary_op_thrust(const BinOpKokkos& op):kk_op(op){};
+    __host__ __device__
+    int64_t operator()(int64_t val1, int64_t val2) {
+        kk_op(val1,val2);
+        return val1;
+    }
+  };
+*/
+  template<typename T, typename BinOpKokkos>
+  struct Binary_op_thrust {
+    const BinOpKokkos& kk_op;
+    __host__ __device__
+    Binary_op_thrust(const BinOpKokkos& op):kk_op(op){};
+    __host__ __device__
+    T operator()(T val1, T val2) {
+        kk_op(val1,val2);
+        return val1;
+    }
+  };
+
+
+  inline void thrust_execute() {
+      printf("hello\n");
+      printf("using CUDA Thurst\n");
+
+        thrust::host_vector<int> h_vec(10);
+
+        thrust::device_vector<value_type> temp_vec_d(m_policy.end());
+
+        thrust::sequence(temp_vec_d.begin(), temp_vec_d.end());
+
+        int64_t sum;
+
+        // wrapping functor to Binary_op_thrust
+        //Binary_op_thrust<value_type, ReducerType> b_op(m_reducer);
+        //Binary_op_thrust<value_type, functor_type> b_op(m_functor);
+        //b_op(m_functor);
+        //printf("value_type: %d, functor_type: %d\n", value_type, functor_type);
+        //printf("value_type: %d, functor_type: %d\n", value_type, 3);
+
+        //sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, b_op);
+        sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, m_functor);
+        
+        thrust::copy(temp_vec_d.begin(), temp_vec_d.begin()+10, h_vec.begin());
+
+        for (auto i : h_vec){
+            printf("%d\n", h_vec[i]);    
+        } 
+
+        printf("m_policy: %d\n", m_policy.end());
+
+        printf("sum: %jd\n", sum);
+  }
+
 
   inline void execute() {
     const index_type nwork     = m_policy.end() - m_policy.begin();
@@ -1095,6 +1160,42 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  Policy::is_graph_kernel::value ||
 #endif
                                  !std::is_same<ReducerType, InvalidType>::value;
+
+    if (!ReduceFunctorHasInit<FunctorType>::value &&
+            !ReduceFunctorHasJoin<FunctorType>::value &&
+            !ReduceFunctorHasFinal<FunctorType>::value &&
+            !Policy::is_graph_kernel::value &&
+            std::is_same<ReducerType, InvalidType>::value) {
+        printf("using CUDA Thurst\n");
+        thrust_execute();
+
+        //Binary_op_thrust<value_type, reducer_type> op(m_reducer); // adding for test
+        //Binary_op_thrust<value_type, reducer_type> op(m_reducer); // adding for test
+
+        /*
+        thrust::host_vector<int> h_vec(10);
+
+        thrust::device_vector<value_type> temp_vec_d(m_policy.end());
+
+        thrust::sequence(temp_vec_d.begin(), temp_vec_d.end());
+
+        int64_t sum;
+
+        sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, m_functor);
+        //sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0);
+        
+        thrust::copy(temp_vec_d.begin(), temp_vec_d.begin()+10, h_vec.begin());
+
+        for (auto i : h_vec){
+            printf("%d\n", h_vec[i]);    
+        } 
+
+        printf("m_policy: %d\n", m_policy.end());
+
+        printf("sum: %jd\n", sum);
+        */
+    }
+
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
 
@@ -1135,7 +1236,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
       CudaParallelLaunch<ParallelReduce, LaunchBounds>(
           *this, grid, block, shmem,
-          m_policy.space().impl_internal_space_instance(),
+         m_policy.space().impl_internal_space_instance(),
           false);  // copy to device and execute
 
       if (!m_result_ptr_device_accessible) {
@@ -1143,6 +1244,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
         if (m_result_ptr) {
           if (m_unified_space) {
+            printf("yes\n");
             const int count = ValueTraits::value_count(
                 ReducerConditional::select(m_functor, m_reducer));
             for (int i = 0; i < count; ++i) {
