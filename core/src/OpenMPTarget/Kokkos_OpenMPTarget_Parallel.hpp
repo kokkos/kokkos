@@ -378,9 +378,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
           omp_get_initial_device(), omp_get_default_device()));
     else
       OMPT_SAFE_CALL(omp_target_memcpy(
-          ptr, scratch_ptr),
-          value_count * sizeof(ValueType), 0, 0, omp_get_default_device(),
-          omp_get_default_device()));
+          ptr, scratch_ptr, value_count * sizeof(ValueType), 0, 0,
+          omp_get_default_device(), omp_get_default_device()));
   }
 };
 
