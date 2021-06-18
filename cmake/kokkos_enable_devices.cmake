@@ -47,43 +47,15 @@ ELSE()
 ENDIF()
 KOKKOS_DEVICE_OPTION(OPENMP ${OMP_DEFAULT} HOST "Whether to build OpenMP backend")
 IF(KOKKOS_ENABLE_OPENMP)
-  SET(ClangOpenMPFlag -fopenmp=libomp)
-  IF(KOKKOS_CLANG_IS_CRAY)
-    SET(ClangOpenMPFlag -fopenmp)
-  ENDIF()
-  IF(KOKKOS_COMPILER_CLANG_MSVC)
-    #for clang-cl expression /openmp yields an error, so directly add the specific Clang flag
-    SET(ClangOpenMPFlag /clang:-fopenmp=libomp)
-  ENDIF()
-  IF(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-    #link omp library from LLVM lib dir, no matter if it is clang-cl or clang++
-    get_filename_component(LLVM_BIN_DIR ${CMAKE_CXX_COMPILER_AR} DIRECTORY)
-    COMPILER_SPECIFIC_LIBS(Clang "${LLVM_BIN_DIR}/../lib/libomp.lib")
-  ENDIF()
-  IF(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
-    COMPILER_SPECIFIC_FLAGS(
-      COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID
-      Clang      -Xcompiler ${ClangOpenMPFlag}
-      IntelLLVM  -Xcompiler -fiopenmp
-      NVHPC      -Xcompiler -mp
-      Cray       NO-VALUE-SPECIFIED
-      XL         -Xcompiler -qsmp=omp
-      DEFAULT    -Xcompiler -fopenmp
-    )
-  ELSE()
-    COMPILER_SPECIFIC_FLAGS(
-      Clang      ${ClangOpenMPFlag}
-      IntelLLVM  -fiopenmp
-      AppleClang -Xpreprocessor -fopenmp
-      NVHPC      -mp
-      Cray       NO-VALUE-SPECIFIED
-      XL         -qsmp=omp
-      DEFAULT    -fopenmp
-    )
-    COMPILER_SPECIFIC_LIBS(
-      AppleClang -lomp
-    )
-  ENDIF()
+  FIND_PACKAGE(OpenMP REQUIRED)
+  STRING(REPLACE ";" " " OpenMP_CXX_FLAGS "${OpenMP_CXX_FLAGS}")
+  COMPILER_SPECIFIC_FLAGS(
+    DEFAULT ${OpenMP_CXX_FLAGS}
+  )
+  STRING(REPLACE ";" " " OpenMP_CXX_LIBRARIES "${OpenMP_CXX_LIBRARIES}")
+  COMPILER_SPECIFIC_LIBS(
+    DEFAULT ${OpenMP_CXX_LIBRARIES}
+  )
 ENDIF()
 
 KOKKOS_DEVICE_OPTION(OPENMPTARGET OFF DEVICE "Whether to build the OpenMP target backend")
