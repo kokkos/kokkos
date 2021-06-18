@@ -30,7 +30,7 @@ KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable reloca
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
 KOKKOS_ENABLE_OPTION(DEPRECATED_CODE_3    ON "Whether code deprecated in major release 3 is available" )
-KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether deprecation warnings should be emitted" )
+KOKKOS_ENABLE_OPTION(DEPRECATION_WARNINGS ON "Whether to emit deprecation warnings" )
 KOKKOS_ENABLE_OPTION(HIP_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for HIP")
 KOKKOS_ENABLE_OPTION(HPX_ASYNC_DISPATCH   OFF "Whether HPX supports asynchronous dispatch")
 KOKKOS_ENABLE_OPTION(TESTS         OFF  "Whether to build the unit tests")
