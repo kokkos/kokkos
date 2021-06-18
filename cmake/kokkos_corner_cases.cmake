@@ -33,12 +33,10 @@ IF(KOKKOS_CXX_COMPILER_ID STREQUAL AppleClang AND KOKKOS_ENABLE_OPENMP)
   #I have to hackily pretend that compiler flags are compiler definitions
   #and that linker flags are libraries
   #also - this is easier to use than CMakeCheckCXXSourceCompiles
-  TRY_COMPILE(APPLECLANG_HAS_OMP
-    ${KOKKOS_TOP_BUILD_DIR}/corner_cases
-    ${KOKKOS_SOURCE_DIR}/cmake/compile_tests/clang_omp.cpp
-    COMPILE_DEFINITIONS -Xpreprocessor -fopenmp
-    LINK_LIBRARIES -lomp
-  )
+  find_package(OpenMP)
+  set(APPLECLANG_HAS_OMP ${OpenMP_FOUND})
+
+
   IF (NOT APPLECLANG_HAS_OMP)
     UNSET(APPLECLANG_HAS_OMP CACHE) #make sure CMake always re-runs this
     MESSAGE(FATAL_ERROR "AppleClang failed OpenMP check. You have requested -DKokkos_ENABLE_OPENMP=ON, but the AppleClang compiler does not appear to have been built with OpenMP support")
