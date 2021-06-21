@@ -139,19 +139,16 @@ class alignas(4) half_t {
   impl_type val;
 
  public:
-  // Default constructor - initializes val to 0
-  // noexcept - adds compile time check to ensure exceptions are not thrown
-  // default  - has the compiler define the implicit default constructor even
-  //            though other constructors are present
-  KOKKOS_DEFAULTED_FUNCTION
-  half_t() noexcept = default;
+  KOKKOS_FUNCTION
+  half_t() : val(0.0F) {}
 
   // Copy constructors
   KOKKOS_DEFAULTED_FUNCTION
   half_t(const half_t&) noexcept = default;
 
   KOKKOS_INLINE_FUNCTION
-  half_t(const volatile half_t& rhs) : val(const_cast<impl_type&>(rhs.val)) {}
+  half_t(const volatile half_t& rhs)
+      : val(const_cast<const impl_type&>(rhs.val)) {}
 
   // Don't support implicit conversion back to impl_type.
   // impl_type is a storage only type on host.
@@ -492,7 +489,7 @@ class alignas(4) half_t {
     // "warning: implicit dereference will not access object of type ‘volatile
     // __half’ in statement"
     auto val_ref = const_cast<impl_type&>(val);
-    val_ref      = __float2half(__half2float(const_cast<impl_type&>(val)) /
+    val_ref = __float2half(__half2float(const_cast<const impl_type&>(val)) /
                            __half2float(rhs.val));
 #endif
     return *this;
@@ -527,7 +524,7 @@ class alignas(4) half_t {
 #ifdef __CUDA_ARCH__
     lhs.val += rhs.val;
 #else
-    lhs.val      = __float2half(__half2float(lhs.val) + __half2float(rhs.val));
+    lhs.val = __float2half(__half2float(lhs.val) + __half2float(rhs.val));
 #endif
     return lhs;
   }
@@ -552,7 +549,7 @@ class alignas(4) half_t {
 #ifdef __CUDA_ARCH__
     lhs.val -= rhs.val;
 #else
-    lhs.val      = __float2half(__half2float(lhs.val) - __half2float(rhs.val));
+    lhs.val = __float2half(__half2float(lhs.val) - __half2float(rhs.val));
 #endif
     return lhs;
   }
@@ -577,7 +574,7 @@ class alignas(4) half_t {
 #ifdef __CUDA_ARCH__
     lhs.val *= rhs.val;
 #else
-    lhs.val      = __float2half(__half2float(lhs.val) * __half2float(rhs.val));
+    lhs.val = __float2half(__half2float(lhs.val) * __half2float(rhs.val));
 #endif
     return lhs;
   }
@@ -602,7 +599,7 @@ class alignas(4) half_t {
 #ifdef __CUDA_ARCH__
     lhs.val /= rhs.val;
 #else
-    lhs.val      = __float2half(__half2float(lhs.val) / __half2float(rhs.val));
+    lhs.val = __float2half(__half2float(lhs.val) / __half2float(rhs.val));
 #endif
     return lhs;
   }
@@ -711,11 +708,11 @@ class alignas(4) half_t {
   friend bool operator==(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
 #ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<impl_type&>(lhs.val) ==
-                             const_cast<impl_type&>(rhs.val));
+    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) ==
+                             const_cast<const impl_type&>(rhs.val));
 #else
-    return __half2float(const_cast<impl_type&>(lhs.val)) ==
-           __half2float(const_cast<impl_type&>(rhs.val));
+    return __half2float(const_cast<const impl_type&>(lhs.val)) ==
+           __half2float(const_cast<const impl_type&>(rhs.val));
 #endif
   }
 
@@ -723,11 +720,11 @@ class alignas(4) half_t {
   friend bool operator!=(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
 #ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<impl_type&>(lhs.val) !=
-                             const_cast<impl_type&>(rhs.val));
+    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) !=
+                             const_cast<const impl_type&>(rhs.val));
 #else
-    return __half2float(const_cast<impl_type&>(lhs.val)) !=
-           __half2float(const_cast<impl_type&>(rhs.val));
+    return __half2float(const_cast<const impl_type&>(lhs.val)) !=
+           __half2float(const_cast<const impl_type&>(rhs.val));
 #endif
   }
 
@@ -735,11 +732,11 @@ class alignas(4) half_t {
   friend bool operator<(const volatile half_t& lhs,
                         const volatile half_t& rhs) {
 #ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<impl_type&>(lhs.val) <
-                             const_cast<impl_type&>(rhs.val));
+    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) <
+                             const_cast<const impl_type&>(rhs.val));
 #else
-    return __half2float(const_cast<impl_type&>(lhs.val)) <
-           __half2float(const_cast<impl_type&>(rhs.val));
+    return __half2float(const_cast<const impl_type&>(lhs.val)) <
+           __half2float(const_cast<const impl_type&>(rhs.val));
 #endif
   }
 
@@ -747,11 +744,11 @@ class alignas(4) half_t {
   friend bool operator>(const volatile half_t& lhs,
                         const volatile half_t& rhs) {
 #ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<impl_type&>(lhs.val) >
-                             const_cast<impl_type&>(rhs.val));
+    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) >
+                             const_cast<const impl_type&>(rhs.val));
 #else
-    return __half2float(const_cast<impl_type&>(lhs.val)) >
-           __half2float(const_cast<impl_type&>(rhs.val));
+    return __half2float(const_cast<const impl_type&>(lhs.val)) >
+           __half2float(const_cast<const impl_type&>(rhs.val));
 #endif
   }
 
@@ -759,11 +756,11 @@ class alignas(4) half_t {
   friend bool operator<=(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
 #ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<impl_type&>(lhs.val) <=
-                             const_cast<impl_type&>(rhs.val));
+    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) <=
+                             const_cast<const impl_type&>(rhs.val));
 #else
-    return __half2float(const_cast<impl_type&>(lhs.val)) <=
-           __half2float(const_cast<impl_type&>(rhs.val));
+    return __half2float(const_cast<const impl_type&>(lhs.val)) <=
+           __half2float(const_cast<const impl_type&>(rhs.val));
 #endif
   }
 
@@ -771,11 +768,11 @@ class alignas(4) half_t {
   friend bool operator>=(const volatile half_t& lhs,
                          const volatile half_t& rhs) {
 #ifdef __CUDA_ARCH__
-    return static_cast<bool>(const_cast<impl_type&>(lhs.val) >=
-                             const_cast<impl_type&>(rhs.val));
+    return static_cast<bool>(const_cast<const impl_type&>(lhs.val) >=
+                             const_cast<const impl_type&>(rhs.val));
 #else
-    return __half2float(const_cast<impl_type&>(lhs.val)) >=
-           __half2float(const_cast<impl_type&>(rhs.val));
+    return __half2float(const_cast<const impl_type&>(lhs.val)) >=
+           __half2float(const_cast<const impl_type&>(rhs.val));
 #endif
   }
 
