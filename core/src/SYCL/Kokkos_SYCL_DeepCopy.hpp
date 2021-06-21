@@ -61,13 +61,8 @@ struct ZeroMemset<Kokkos::Experimental::SYCL, DT, DP...> {
     auto event = exec_space.impl_internal_space_instance()->m_queue->memset(
         dst.data(), 0,
         dst.size() * sizeof(typename View<DT, DP...>::value_type));
-    // FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
     exec_space.impl_internal_space_instance()->m_queue->submit_barrier(
         sycl::vector_class<sycl::event>{event});
-#else
-    Experimental::Impl::SYCLInternal::fence(event);
-#endif
   }
 
   ZeroMemset(const View<DT, DP...>& dst,

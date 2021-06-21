@@ -246,12 +246,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                            &results_ptr[0]);
         });
       });
-      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
       q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      space.fence();
-#endif
       last_reduction_event = parallel_reduce_event;
     }
 
@@ -324,12 +319,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                   static_cast<const FunctorType&>(functor), n_wgroups <= 1);
             });
       });
-// FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
       q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      space.fence();
-#endif
 
       last_reduction_event = parallel_reduce_event;
 
@@ -521,12 +511,7 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
                            &results_ptr[0]);
         });
       });
-      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
       q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      m_space.fence();
-#endif
       last_reduction_event = parallel_reduce_event;
     }
 
@@ -606,23 +591,13 @@ class ParallelReduce<FunctorType, Kokkos::MDRangePolicy<Traits...>, ReducerType,
               n_wgroups <= 1 && item.get_group_linear_id() == 0);
         });
       });
-// FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
       q.submit_barrier(sycl::vector_class<sycl::event>{parallel_reduce_event});
-#else
-      m_space.fence();
-#endif
 
       // FIXME_SYCL this is likely not necessary, see above
       auto deep_copy_event =
           q.memcpy(results_ptr, results_ptr2,
                    sizeof(*m_result_ptr) * value_count * n_wgroups);
-      // FIXME_SYCL remove guard once implemented for SYCL+CUDA
-#ifdef KOKKOS_ARCH_INTEL_GEN
       q.submit_barrier(sycl::vector_class<sycl::event>{deep_copy_event});
-#else
-      m_space.fence();
-#endif
       last_reduction_event = deep_copy_event;
 
       first_run = false;
