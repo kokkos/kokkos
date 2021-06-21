@@ -144,10 +144,6 @@ class SYCLTeamMember {
     const int maximum_work_range =
         std::min<int>(m_team_reduce_size / sizeof(value_type), team_size());
 
-    int smaller_power_of_two = 1;
-    while ((smaller_power_of_two << 1) < maximum_work_range)
-      smaller_power_of_two <<= 1;
-
     const int idx        = team_rank();
     auto reduction_array = static_cast<value_type*>(m_team_reduce);
 
@@ -166,11 +162,17 @@ class SYCLTeamMember {
       m_item.barrier(sycl::access::fence_space::local_space);
     }
 
-    for (int stride = smaller_power_of_two; stride > 0; stride >>= 1) {
-      if (idx < stride && idx + stride < maximum_work_range)
-        reducer.join(reduction_array[idx], reduction_array[idx + stride]);
-      m_item.barrier(sycl::access::fence_space::local_space);
-    }
+    auto sg            = m_item.get_sub_group();
+    const int id_in_sg = sg.get_local_id()[0];
+    Kokkos::Impl::SYCLReduction::workgroup_reduction<
+        Kokkos::Impl::FunctorValueJoin<ReducerType, void>,
+        Kokkos::Impl::FunctorValueOps<ReducerType, void>>(
+        m_item, reduction_array, 1,
+        std::min<int>(sg.get_local_range()[0],
+                      maximum_work_range - idx + id_in_sg),
+        reducer, reducer);
+
+    m_item.barrier(sycl::access::fence_space::local_space);
     reducer.reference() = reduction_array[0];
     m_item.barrier(sycl::access::fence_space::local_space);
   }
