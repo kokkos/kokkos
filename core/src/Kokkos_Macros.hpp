@@ -53,11 +53,12 @@
  *  KOKKOS_ENABLE_HPX                 Kokkos::Experimental::HPX execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
  *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget
- * execution space KOKKOS_ENABLE_HWLOC               HWLOC library is available.
+ *                                    execution space
+ *  KOKKOS_ENABLE_HIP Kokkos::Experimental::HIP execution space
+ *  KOKKOS_ENABLE_SYCL                Kokkos::Experimental::SYCL execution space
+ *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
  *  KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK  Insert array bounds checks, is expensive!
- *  KOKKOS_ENABLE_MPI                 Negotiate MPI/execution space
- * interactions. KOKKOS_ENABLE_CUDA_UVM            Use CUDA UVM for Cuda memory
- * space.
+ *  KOKKOS_ENABLE_CUDA_UVM            Use CUDA UVM for Cuda memory space.
  */
 
 #ifndef KOKKOS_DONT_INCLUDE_CORE_CONFIG_H
