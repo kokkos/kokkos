@@ -50,6 +50,28 @@
 namespace Kokkos {
 
 // initial experiments with `for_each` implementation
+
+template<class ViewType>
+auto begin(ViewType& v) -> decltype(v.data()) {
+  return v.data();
+}
+
+template<class ViewType>
+auto begin(const ViewType& v) -> decltype(v.data()) {
+  return v.data();
+}
+
+template<class ViewType>
+auto end(ViewType& v) -> decltype(v.data()) {
+  return v.data() + v.size();
+}
+
+template<class ViewType>
+auto end(const ViewType& v) -> decltype(v.data()) {
+  return v.data() + v.size();
+}
+
+// operates on pointers at the moment, but could accept random access iterators
 template <class PointerType, class FunctorType>
 FunctorType for_each(
   PointerType data, PointerType end, const FunctorType& functor
@@ -79,12 +101,14 @@ int main(int argc, char* argv[]) {
   {
     const auto fun = KOKKOS_LAMBDA(double& d) { d++; };
 
-    std::vector<double> vec(10);
-    std::for_each(vec.begin(), vec.end(), fun);
+    {
+      std::vector<double> vec(10);
+      std::for_each(vec.begin(), vec.end(), fun);
+    }
 
     Kokkos::View<double*> v("label", 10);
     Kokkos::for_each(v, fun);
-    Kokkos::for_each(v.data(), v.data() + v.size(), fun);
+    Kokkos::for_each(Kokkos::begin(v), Kokkos::end(v), fun);
 
     double sum = 0;
     Kokkos::parallel_reduce(
