@@ -108,37 +108,7 @@ void expect_fence_events(std::vector<FencePayload>& expected, Lambda lam) {
 }
 
 template <class>
-struct increment;
-template <>
-struct increment<Kokkos::Serial> {
-  constexpr static const int size = 0;
-};
-template <>
-struct increment<Kokkos::OpenMP> {
-  constexpr static const int size = 0;
-};
-template <>
-struct increment<Kokkos::Threads> {
-  constexpr static const int size = 0;
-};
-template <>
-struct increment<Kokkos::Cuda> {
-  constexpr static const int size = 1;
-};
-template <>
-struct increment<Kokkos::Experimental::HIP> {
-  constexpr static const int size = 1;
-};
-template <>
-struct increment<Kokkos::Experimental::OpenMPTarget> {
-  constexpr static const int size = 1;
-};
-template <>
-struct increment<Kokkos::Experimental::SYCL> {
-  constexpr static const int size = 1;
-};
-template <>
-struct increment<Kokkos::Experimental::HPX> {
+struct increment {
   constexpr static const int size = 0;
 };
 int num_instances = 1;
