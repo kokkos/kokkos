@@ -153,7 +153,7 @@ class HIPInternal {
   // Resizing of reduction related scratch spaces
   size_type *scratch_space(const size_type size);
   size_type *scratch_flags(const size_type size);
-
+  uint32_t impl_get_instance_id() const noexcept;
   // Resizing of team level 1 scratch
   void *resize_team_scratch_space(std::int64_t bytes,
                                   bool force_shrink = false);

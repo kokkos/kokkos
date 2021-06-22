@@ -154,7 +154,10 @@ int HIPInternal::verify_is_initialized(const char *const label) const {
   return 0 <= m_hipDev;
 }
 
-HIPInternal &HIPInternal::singleton() {
+uint32_t HIPInternal::impl_get_instance_id() const noexcept {
+    return Kokkos::Tools::Experimental::Impl::idForInstance<
+               Kokkos::Experimental::HIP>(reinterpret_cast<uintptr_t>(this)),
+} HIPInternal &HIPInternal::singleton() {
   static HIPInternal *self = nullptr;
   if (!self) {
     self = new HIPInternal();
@@ -169,8 +172,8 @@ void HIPInternal::fence(const std::string &name) const {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::HIP>(
       name,
-      Kokkos::Tools::Experimental::Impl::idForInstance<
-          Kokkos::Experimental::HIP>(reinterpret_cast<uintptr_t>(this)),
+      Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
+          impl_get_instance_id()},
       [&]() {
         HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
         // can reset our cycle id now as well

@@ -59,6 +59,11 @@
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
+// DOGS
+uint32_t OpenMPTargetInternal::impl_get_instance_id const noexcept {
+  Kokkos::Tools::Experimental::Impl::idForInstance<
+      Kokkos::Experimental::OpenMPTarget>(reinterpret_cast<uintptr_t>(this));
+}
 void OpenMPTargetInternal::fence() {
   fence(
       "Kokkos::Experimental::Impl::OpenMPTargetInternal::fence: Unnamed "
@@ -68,9 +73,8 @@ void OpenMPTargetInternal::fence(const std::string& name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::OpenMPTarget>(
       name,
-      Kokkos::Tools::Experimental::Impl::idForInstance<
-          Kokkos::Experimental::OpenMPTarget>(
-          reinterpret_cast<uintptr_t>(this)),
+      Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
+          impl_get_instance_id()},
       [&]() {});
 }
 int OpenMPTargetInternal::concurrency() { return 128000; }
@@ -122,6 +126,10 @@ const char* OpenMPTarget::name() {
 void OpenMPTarget::print_configuration(std::ostream& stream,
                                        const bool detail) {
   m_space_instance->print_configuration(stream, detail);
+}
+
+uint32_t OpenMPTarget::impl_instance_id() const noexcept {
+  return m_space_instance->impl_get_instance_id();
 }
 
 int OpenMPTarget::concurrency() {

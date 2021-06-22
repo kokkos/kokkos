@@ -447,6 +447,9 @@ void HIP::print_configuration(std::ostream& s, const bool) {
   Impl::HIPInternal::singleton().print_configuration(s);
 }
 
+uint32_t HIP::impl_instance_id() const noexcept {
+  return impl_space_instance()->impl_get_instance_id();
+}
 void HIP::impl_static_fence(const std::string& name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::HIP>(

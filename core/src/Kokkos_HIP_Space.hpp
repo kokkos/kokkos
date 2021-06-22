@@ -620,7 +620,7 @@ class HIP {
     return m_space_instance.get();
   }
 
-  uint32_t impl_instance_id() const noexcept { return 0; }
+  uint32_t impl_instance_id() const noexcept;
 
  private:
   Kokkos::Impl::HostSharedPtr<Impl::HIPInternal> m_space_instance;

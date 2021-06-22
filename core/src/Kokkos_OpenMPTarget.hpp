@@ -115,7 +115,7 @@ class OpenMPTarget {
   }
 
   OpenMPTarget();
-  uint32_t impl_instance_id() const noexcept { return 0; }
+  uint32_t impl_instance_id() const noexcept;
 
  private:
   Impl::OpenMPTargetInternal* m_space_instance;

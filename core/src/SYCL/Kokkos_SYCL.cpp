@@ -118,8 +118,9 @@ void SYCL::fence(const std::string& name) const {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::SYCL>(
       name,
-      Kokkos::Tools::Experimental::Impl::idForInstance<
-          Kokkos::Experimental::SYCL>(reinterpret_cast<uintptr_t>(this)),
+      Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
+          impl_instance_id()},
+
       [&]() { Impl::SYCLInternal::fence(*m_space_instance->m_queue); });
 }
 
