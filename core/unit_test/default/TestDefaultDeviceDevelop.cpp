@@ -46,24 +46,11 @@
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
-#include <Kokkos_UnorderedMap.hpp>
+
 #include <TestDefaultDeviceType_Category.hpp>
 
 namespace Test {
 
-void dbg(){}
-using HostExecutionSpace = Kokkos::DefaultHostExecutionSpace;
-using HostMemorySpace = HostExecutionSpace::memory_space;
-using HostDevice = Kokkos::Device<HostExecutionSpace, HostMemorySpace>;
-TEST(defaultdevicetype, development_test) {
-  Kokkos::Tools::pushRegion("dogs");
-  Kokkos::View<float***> left("left", 10, 10, 10);
-  Kokkos::Tools::pushRegion("other_dogs");
-  Kokkos::View<float***> right("right", 10, 10, 10);
-  Kokkos::deep_copy(left,right);
-  Kokkos::Tools::popRegion();
-  Kokkos::Tools::popRegion();
-  dbg();
-}
+TEST(defaultdevicetype, development_test) {}
 
 }  // namespace Test
