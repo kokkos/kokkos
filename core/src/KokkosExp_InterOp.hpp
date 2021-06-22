@@ -49,11 +49,14 @@
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_View.hpp>
-#include <Kokkos_DynRankView.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 #include <type_traits>
 
 namespace Kokkos {
+
+template <typename DataType, class... Properties>
+class DynRankView;  // forward declaration
+
 namespace Impl {
 
 // ------------------------------------------------------------------ //
