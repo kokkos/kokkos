@@ -61,23 +61,6 @@ class HPX;
 }  // namespace Experimental
 }  // namespace Kokkos
 namespace Test {
-/**
-void expect_allocation_event(const std::string evn, const std::string esn,
-                             const std::string em) {
-  expected_view_name  = evn;
-  expected_space_name = esn;
-  error_message       = em;
-  Kokkos::Tools::Experimental::set_allocate_data_callback(
-      [](const Kokkos_Profiling_SpaceHandle hand, const char* name, const void*,
-         const uint64_t) {
-        ASSERT_EQ(std::string(hand.name), expected_space_name)
-            << error_message << " (bad handle)";
-        ASSERT_EQ(std::string(name), expected_view_name)
-            << error_message << " (bad view name)";
-        expect_no_events();
-      });
-}
-*/
 struct FencePayload {
   std::string name;
   enum distinguishable_devices { yes, no };
@@ -95,15 +78,27 @@ void expect_fence_events(std::vector<FencePayload>& expected, Lambda lam) {
             FencePayload{std::string(name),
                          FencePayload::distinguishable_devices::no, dev_id});
       });
+  Kokkos::Tools::Experimental::set_begin_parallel_for_callback(
+      [](const char* name, const uint32_t dev_id, uint64_t* kID) {
+        found_payloads.push_back(
+            FencePayload{std::string(name),
+                         FencePayload::distinguishable_devices::no, dev_id});
+      });
   lam();
   for (auto& entry : expected) {
+    // std::cout << "Ref: "<< entry.dev_id << std::endl;
+    // std::cout << "Ref: "<< entry.name << std::endl;
     auto search = std::find_if(
         found_payloads.begin(), found_payloads.end(),
         [&](const auto& found_entry) {
-          // std::cout << entry.dev_id << ": "<<found_entry.dev_id << std::endl;
-          // std::cout << entry.name << ": "<<found_entry.name << std::endl;
-          return ((found_entry.name.find(entry.name) != std::string::npos) &&
-                  (entry.dev_id == found_entry.dev_id));
+          auto name_match =
+              (found_entry.name.find(entry.name) != std::string::npos);
+          auto id_match = (entry.dev_id == found_entry.dev_id);
+          // std::cout << found_entry.dev_id << std::endl;
+          // std::cout << found_entry.name << std::endl;
+          // if(!name_match) { std::cout << "Miss on name\n"; }
+          // if(!id_match) { std::cout << "Miss on id\n"; }
+          return (name_match && id_match);
         });
     auto found = (search != found_payloads.end());
     ASSERT_TRUE(found);
@@ -142,12 +137,14 @@ template <>
 struct increment<Kokkos::Experimental::SYCL> {
   constexpr static const int size = 1;
 };
-
 template <>
 struct increment<Kokkos::Experimental::HPX> {
   constexpr static const int size = 0;
 };
 int num_instances = 1;
+struct TestFunctor {
+  KOKKOS_FUNCTION void operator()(const int i) const {}
+};
 
 TEST(defaultdevicetype, test_named_instance_fence) {
   auto root = Kokkos::Tools::Experimental::device_id_root<
@@ -195,6 +192,27 @@ TEST(defaultdevicetype, test_unnamed_global_fence) {
       {"Unnamed Global Fence", FencePayload::distinguishable_devices::no,
        root}};
   expect_fence_events(expected, [=]() { Kokkos::fence(); });
+  num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
+}
+TEST(defaultdevicetype, test_kernel_sequence) {
+  auto root = Kokkos::Tools::Experimental::device_id_root<
+      Kokkos::DefaultExecutionSpace>();
+  std::vector<FencePayload> expected{
+
+      {"named_instance", FencePayload::distinguishable_devices::no,
+       root + num_instances},
+      {"test_kernel", FencePayload::distinguishable_devices::no,
+       root + num_instances}
+
+  };
+  expect_fence_events(expected, [=]() {
+    Kokkos::DefaultExecutionSpace ex;
+    TestFunctor tf;
+    ex.fence("named_instance");
+    Kokkos::parallel_for(
+        "test_kernel",
+        Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ex, 0, 1), tf);
+  });
   num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
 }
 }  // namespace Test
