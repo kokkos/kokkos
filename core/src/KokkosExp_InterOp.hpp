@@ -103,16 +103,20 @@ namespace Kokkos {
 template <typename DataType, class... Properties>
 class DynRankView;
 
-namespace Experimental {
+namespace Impl {
 
 // Duplicate from the header file for DynRankView to avoid core depending on
 // containers.
 template <class>
-struct is_dyn_rank_view : public std::false_type {};
+struct is_dyn_rank_view_dup : public std::false_type {};
 
 template <class D, class... P>
-struct is_dyn_rank_view<Kokkos::DynRankView<D, P...>> : public std::true_type {
-};
+struct is_dyn_rank_view_dup<Kokkos::DynRankView<D, P...>>
+    : public std::true_type {};
+
+}  // namespace Impl
+
+namespace Experimental {
 
 // ------------------------------------------------------------------ //
 //  this is used to extract the uniform type of a view
@@ -121,7 +125,7 @@ template <typename ViewT>
 struct python_view_type {
   static_assert(
       Kokkos::is_view<std::decay_t<ViewT>>::value ||
-          Kokkos::Experimental::is_dyn_rank_view<std::decay_t<ViewT>>::value,
+          Kokkos::Impl::is_dyn_rank_view_dup<std::decay_t<ViewT>>::value,
       "Error! python_view_type only supports Kokkos::View and "
       "Kokkos::DynRankView");
 
