@@ -73,13 +73,13 @@ template <typename Lambda>
 void expect_fence_events(std::vector<FencePayload>& expected, Lambda lam) {
   found_payloads = {};
   Kokkos::Tools::Experimental::set_begin_fence_callback(
-      [](const char* name, const uint32_t dev_id, uint64_t* kID) {
+      [](const char* name, const uint32_t dev_id, uint64_t*) {
         found_payloads.push_back(
             FencePayload{std::string(name),
                          FencePayload::distinguishable_devices::no, dev_id});
       });
   Kokkos::Tools::Experimental::set_begin_parallel_for_callback(
-      [](const char* name, const uint32_t dev_id, uint64_t* kID) {
+      [](const char* name, const uint32_t dev_id, uint64_t*) {
         found_payloads.push_back(
             FencePayload{std::string(name),
                          FencePayload::distinguishable_devices::no, dev_id});
@@ -104,7 +104,9 @@ void expect_fence_events(std::vector<FencePayload>& expected, Lambda lam) {
     ASSERT_TRUE(found);
   }
   Kokkos::Tools::Experimental::set_begin_fence_callback(
-      [](const char* name, const uint32_t dev_id, uint64_t* kID) {});
+      [](const char*, const uint32_t, uint64_t*) {});
+  Kokkos::Tools::Experimental::set_begin_parallel_for_callback(
+      [](const char*, const uint32_t, uint64_t*) {});
 }
 
 template <class>
@@ -113,7 +115,7 @@ struct increment {
 };
 int num_instances = 1;
 struct TestFunctor {
-  KOKKOS_FUNCTION void operator()(const int i) const {}
+  KOKKOS_FUNCTION void operator()(const int) const {}
 };
 
 TEST(defaultdevicetype, test_named_instance_fence) {
