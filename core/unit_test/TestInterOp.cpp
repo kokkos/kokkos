@@ -42,6 +42,8 @@
 //@HEADER
 */
 
+#include <Kokkos_Core.hpp>
+#include <Kokkos_DynRankView.hpp>
 #include <KokkosExp_InterOp.hpp>
 
 // View
