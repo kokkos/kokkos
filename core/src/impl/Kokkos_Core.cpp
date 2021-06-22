@@ -569,7 +569,6 @@ void finalize_internal(const bool all_spaces = false) {
   g_tune_internals = false;
 }
 
-void fence_internal() { Impl::ExecSpaceManager::get_instance().static_fence(); }
 void fence_internal(const std::string& name) {
   Impl::ExecSpaceManager::get_instance().static_fence(name);
 }
