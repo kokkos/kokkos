@@ -219,33 +219,6 @@ ctest_memcheck(RETURN_VALUE mem_ret
 
 
 #-------------------------------------------------------------------------#
-# Submit
-#
-message(STATUS "")
-message(STATUS "[${CTEST_BUILD_NAME}] Running CTEST_SUBMIT stage...")
-message(STATUS "")
-
-file(GLOB_RECURSE NOTE_FILES "${CTEST_BINARY_DIRECTORY}/*CTestNotes.cmake")
-foreach(_FILE ${NOTE_FILES})
-    message(STATUS "Including CTest notes files: \"${_FILE}\"...")
-    include("${_FILE}")
-endforeach()
-
-# capture submit error so it doesn't fail because of a submission error
-ctest_submit(RETURN_VALUE submit_ret
-    RETRY_COUNT 2
-    RETRY_DELAY 10
-    CAPTURE_CMAKE_ERROR submit_err)
-
-#-------------------------------------------------------------------------#
-# Submit
-#
-message(STATUS "")
-message(STATUS "[${CTEST_BUILD_NAME}] Finished ${CTEST_MODEL} Stages (${STAGES})")
-message(STATUS "")
-
-
-#-------------------------------------------------------------------------#
 # Non-zero exit codes for important errors
 #
 if(NOT config_ret EQUAL 0)
