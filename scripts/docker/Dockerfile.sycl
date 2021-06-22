@@ -39,7 +39,7 @@ ENV SYCL_DIR=/opt/sycl
 RUN SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
     git clone --branch public_vklochkov_is_device_copyable --single-branch --depth 1 https://github.com/v-klochkov/llvm && \
     cd llvm && \
-    python3 buildbot/configure.py && \
+    python3 buildbot/configure.py --cuda && \
     python3 buildbot/compile.py && \
     mkdir -p ${SYCL_DIR} && \
     mv ${SCRATCH_DIR}/llvm/build/install/* ${SYCL_DIR} && \
