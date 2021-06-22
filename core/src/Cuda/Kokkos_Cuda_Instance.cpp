@@ -151,10 +151,12 @@ void cuda_device_synchronize(const std::string &name) {
       });
 }
 
-void cuda_stream_synchronize(const cudaStream_t stream, const uintptr_t ptr,
+void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
                              const std::string &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
-      name, Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(ptr),
+      name,
+      Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
+          ptr->impl_get_instance_id()},
       [&]() {  // TODO: correct device ID
         CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
       });
@@ -334,14 +336,16 @@ int CudaInternal::verify_is_initialized(const char *const label) const {
   }
   return 0 <= m_cudaDev;
 }
-
+uint32_t CudaInternal::impl_get_instance_id() const {
+  return Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(
+      reinterpret_cast<uintptr_t>(this));
+}
 CudaInternal &CudaInternal::singleton() {
   static CudaInternal self;
   return self;
 }
 void CudaInternal::fence(const std::string &name) const {
-  Impl::cuda_stream_synchronize(m_stream, reinterpret_cast<uintptr_t>(this),
-                                name);
+  Impl::cuda_stream_synchronize(m_stream, this, name);
 }
 void CudaInternal::fence() const {
   fence("Kokkos::CudaInternal::fence(): Unnamed Instance Fence");
@@ -910,6 +914,9 @@ void Cuda::fence(const std::string &name) const {
 }
 
 const char *Cuda::name() { return "Cuda"; }
+uint32_t Cuda::impl_instance_id() const noexcept {
+  return m_space_instance->impl_get_instance_id();
+}
 
 cudaStream_t Cuda::cuda_stream() const { return m_space_instance->m_stream; }
 int Cuda::cuda_device() const { return m_space_instance->m_cudaDev; }

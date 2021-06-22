@@ -247,7 +247,7 @@ class Cuda {
   inline Impl::CudaInternal* impl_internal_space_instance() const {
     return m_space_instance.get();
   }
-  uint32_t impl_instance_id() const noexcept { return 0; }
+  uint32_t impl_instance_id() const noexcept;
 
  private:
   Kokkos::Impl::HostSharedPtr<Impl::CudaInternal> m_space_instance;

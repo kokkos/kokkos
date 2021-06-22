@@ -143,7 +143,7 @@ struct DirectFenceIDHandle {
 };
 //
 template <typename Space>
-DirectFenceIDHandle idForInstance(const uintptr_t instance) {
+uint32_t idForInstance(const uintptr_t instance) {
   /** Needed to be a ptr due to initialization order problems*/
   using map_type = std::map<uintptr_t, uint32_t>;
 
@@ -161,7 +161,7 @@ DirectFenceIDHandle idForInstance(const uintptr_t instance) {
     find->second = (offset + value++);
   }
 
-  return Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{find->second};
+  return find->second;
 }
 
 template <typename Space, typename FencingFunctor>

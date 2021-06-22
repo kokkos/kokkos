@@ -448,7 +448,7 @@ OpenMP OpenMP::create_instance(...) { return OpenMP(); }
 int OpenMP::concurrency() { return Impl::g_openmp_hardware_max_threads; }
 
 void OpenMP::fence() const {
-  fence("Kokkos::OpenMP::fence: Unnamed Instance fence");
+  fence("Kokkos::OpenMP::fence: Unnamed Instance Fence");
 }
 void OpenMP::fence(const std::string &name) const {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(

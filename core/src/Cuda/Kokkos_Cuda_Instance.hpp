@@ -191,7 +191,7 @@ class CudaInternal {
   size_type* scratch_flags(const size_type size) const;
   size_type* scratch_unified(const size_type size) const;
   size_type* scratch_functor(const size_type size) const;
-
+  uint32_t impl_get_instance_id() const;
   // Resizing of team level 1 scratch
   std::pair<void*, int> resize_team_scratch_space(std::int64_t bytes,
                                                   bool force_shrink = false);
