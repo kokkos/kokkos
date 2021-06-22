@@ -127,15 +127,6 @@ class OpenMP {
   /// This is a no-op on OpenMP since a non default instance cannot be created
   static OpenMP create_instance(...);
 
-  /// \brief Partition the default instance and call 'f' on each new 'master'
-  /// thread
-  ///
-  /// Func is a functor with the following signiture
-  ///   void( int partition_id, int num_partitions )
-  template <typename F>
-  static void partition_master(F const& f, int requested_num_partitions = 0,
-                               int requested_partition_size = 0);
-
   // use UniqueToken
   static int concurrency();
 

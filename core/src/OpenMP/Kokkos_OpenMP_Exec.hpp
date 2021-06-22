@@ -90,9 +90,6 @@ class OpenMPExec {
 
   void clear_thread_data();
 
-  static void validate_partition(const int nthreads, int& num_partitions,
-                                 int& partition_size);
-
  private:
   OpenMPExec(int arg_pool_size)
       : m_pool_size{arg_pool_size}, m_level{omp_get_level()}, m_pool() {}
@@ -153,60 +150,6 @@ inline void OpenMP::impl_static_fence(OpenMP const& /*instance*/) noexcept {}
 
 inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
   return false;
-}
-
-template <typename F>
-void OpenMP::partition_master(F const& f, int num_partitions,
-                              int partition_size) {
-#if _OPENMP >= 201811
-  if (omp_get_max_active_levels() > 1) {
-#else
-  if (omp_get_nested()) {
-#endif
-    using Exec = Impl::OpenMPExec;
-
-    Exec* prev_instance = Impl::t_openmp_instance;
-
-    Exec::validate_partition(prev_instance->m_pool_size, num_partitions,
-                             partition_size);
-
-    OpenMP::memory_space space;
-
-#pragma omp parallel num_threads(num_partitions)
-    {
-      void* ptr = nullptr;
-      try {
-        ptr = space.allocate(sizeof(Exec));
-      } catch (
-          Kokkos::Experimental::RawMemoryAllocationFailure const& failure) {
-        // For now, just rethrow the error message the existing way
-        Kokkos::Impl::throw_runtime_exception(failure.get_error_message());
-      }
-
-      Impl::t_openmp_instance = new (ptr) Exec(partition_size);
-
-      size_t pool_reduce_bytes  = 32 * partition_size;
-      size_t team_reduce_bytes  = 32 * partition_size;
-      size_t team_shared_bytes  = 1024 * partition_size;
-      size_t thread_local_bytes = 1024;
-
-      Impl::t_openmp_instance->resize_thread_data(
-          pool_reduce_bytes, team_reduce_bytes, team_shared_bytes,
-          thread_local_bytes);
-
-      omp_set_num_threads(partition_size);
-      f(omp_get_thread_num(), omp_get_num_threads());
-
-      Impl::t_openmp_instance->~Exec();
-      space.deallocate(Impl::t_openmp_instance, sizeof(Exec));
-      Impl::t_openmp_instance = nullptr;
-    }
-
-    Impl::t_openmp_instance = prev_instance;
-  } else {
-    // nested openmp not enabled
-    f(0, 1);
-  }
 }
 
 namespace Experimental {
