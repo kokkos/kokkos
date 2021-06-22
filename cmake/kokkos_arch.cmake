@@ -475,9 +475,67 @@ ENDIF()
 IF (KOKKOS_ENABLE_SYCL)
   IF(CUDA_ARCH_ALREADY_SPECIFIED)
     IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
-      COMPILER_SPECIFIC_FLAGS(
-        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice
-      )
+      # We need to pass -Xsycl-target-backend "--cuda-gpu-arch=" with the correct
+      # arch flag if we know it at configure time.
+      # We lack a good way of detecting the enabled arch and ensuring that it is
+      # an nvidia gpu arch, so manually handle for now
+      IF(KOKKOS_ARCH_KEPLER30)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_30"
+        )
+      ELSEIF(KOKKOS_ARCH_KEPLER32)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_32"
+        )
+      ELSEIF(KOKKOS_ARCH_KEPLER35)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_35"
+        )
+      ELSEIF(KOKKOS_ARCH_KEPLER37)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_37"
+        )
+      ELSEIF(KOKKOS_ARCH_MAXWELL50)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_50"
+        )
+      ELSEIF(KOKKOS_ARCH_MAXWELL52)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_52"
+        )
+      ELSEIF(KOKKOS_ARCH_MAXWELL53)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_53"
+        )
+      ELSEIF(KOKKOS_ARCH_PASCAL60)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_60"
+        )
+      ELSEIF(KOKKOS_ARCH_PASCAL61)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_61"
+        )
+      ELSEIF(KOKKOS_ARCH_VOLTA70)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_70"
+        )
+      ELSEIF(KOKKOS_ARCH_VOLTA72)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_72"
+        )
+      ELSEIF(KOKKOS_ARCH_AMPERE80)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_80"
+        )
+      ELSEIF(KOKKOS_ARCH_AMPERE86)
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "--cuda-gpu-arch=sm_86"
+        )
+      ELSE()
+        COMPILER_SPECIFIC_FLAGS(
+          DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice
+        )
+      ENDIF()
       # FIXME_SYCL The CUDA backend doesn't support printf yet.
       GLOBAL_SET(KOKKOS_IMPL_DISABLE_SYCL_DEVICE_PRINTF ON)
     ELSE()
