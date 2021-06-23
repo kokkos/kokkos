@@ -86,22 +86,22 @@ void expect_fence_events(std::vector<FencePayload>& expected, Lambda lam) {
       });
   lam();
   for (auto& entry : expected) {
-    // std::cout << "Ref: " << entry.dev_id << std::endl;
-    // std::cout << "Ref: " << entry.name << std::endl;
+    std::cout << "Ref: " << entry.dev_id << std::endl;
+    std::cout << "Ref: " << entry.name << std::endl;
     auto search = std::find_if(
         found_payloads.begin(), found_payloads.end(),
         [&](const auto& found_entry) {
           auto name_match =
               (found_entry.name.find(entry.name) != std::string::npos);
           auto id_match = (entry.dev_id == found_entry.dev_id);
-          // std::cout << found_entry.dev_id << std::endl;
-          // std::cout << found_entry.name << std::endl;
-          // if (!name_match) {
-          //  std::cout << "Miss on name\n";
-          //}
-          // if (!id_match) {
-          //  std::cout << "Miss on id\n";
-          //}
+          std::cout << found_entry.dev_id << std::endl;
+          std::cout << found_entry.name << std::endl;
+          if (!name_match) {
+            std::cout << "Miss on name\n";
+          }
+          if (!id_match) {
+            std::cout << "Miss on id\n";
+          }
           return (name_match && id_match);
         });
     auto found = (search != found_payloads.end());
