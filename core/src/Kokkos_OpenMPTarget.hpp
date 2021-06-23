@@ -93,6 +93,8 @@ class OpenMPTarget {
   static void fence();
   static void fence(const std::string&);
 
+  static void impl_static_fence();
+  static void impl_static_fence(const std::string&);
   /** \brief  Return the maximum amount of concurrency.  */
   static int concurrency();
 

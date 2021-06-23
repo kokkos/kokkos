@@ -51,6 +51,11 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+enum class openmp_fence_is_static {
+  yes,
+  no
+}
+
 class OpenMPTargetInternal {
  private:
   OpenMPTargetInternal()                            = default;
@@ -58,8 +63,9 @@ class OpenMPTargetInternal {
   OpenMPTargetInternal& operator=(const OpenMPTargetInternal&) = default;
 
  public:
-  void fence();
-  void fence(const std::string& name);
+  void fence(openmp_fence_is_static is_static = openmp_fence_is_static::no);
+  void fence(const std::string& name,
+             openmp_fence_is_static is_static = openmp_fence_is_static::no);
 
   /** \brief  Return the maximum amount of concurrency.  */
   int concurrency();
