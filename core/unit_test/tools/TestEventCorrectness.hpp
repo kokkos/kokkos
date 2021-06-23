@@ -86,22 +86,22 @@ void expect_fence_events(std::vector<FencePayload>& expected, Lambda lam) {
       });
   lam();
   for (auto& entry : expected) {
-    std::cout << "Ref: " << entry.dev_id << std::endl;
-    std::cout << "Ref: " << entry.name << std::endl;
+    // std::cout << "Ref: " << entry.dev_id << std::endl;
+    // std::cout << "Ref: " << entry.name << std::endl;
     auto search = std::find_if(
         found_payloads.begin(), found_payloads.end(),
         [&](const auto& found_entry) {
           auto name_match =
               (found_entry.name.find(entry.name) != std::string::npos);
           auto id_match = (entry.dev_id == found_entry.dev_id);
-          std::cout << found_entry.dev_id << std::endl;
-          std::cout << found_entry.name << std::endl;
-          if (!name_match) {
-            std::cout << "Miss on name\n";
-          }
-          if (!id_match) {
-            std::cout << "Miss on id\n";
-          }
+          // std::cout << found_entry.dev_id << std::endl;
+          // std::cout << found_entry.name << std::endl;
+          // if (!name_match) {
+          //  std::cout << "Miss on name\n";
+          //}
+          // if (!id_match) {
+          //  std::cout << "Miss on id\n";
+          //}
           return (name_match && id_match);
         });
     auto found = (search != found_payloads.end());
@@ -121,74 +121,124 @@ int num_instances = 1;
 struct TestFunctor {
   KOKKOS_FUNCTION void operator()(const int) const {}
 };
-
+template <typename Lambda>
+void test_wrapper(const Lambda& lambda) {
+  if (!std::is_same<Kokkos::DefaultExecutionSpace, Kokkos::Serial>::value) {
+    lambda();
+  }
+}
 TEST(defaultdevicetype, test_named_instance_fence) {
-  auto root = Kokkos::Tools::Experimental::device_id_root<
-      Kokkos::DefaultExecutionSpace>();
-  std::vector<FencePayload> expected{
+  test_wrapper([&]() {
+    auto root = Kokkos::Tools::Experimental::device_id_root<
+        Kokkos::DefaultExecutionSpace>();
+    std::vector<FencePayload> expected{
 
-      {"named_instance", FencePayload::distinguishable_devices::no,
-       root + num_instances}};
-  expect_fence_events(expected, [=]() {
-    Kokkos::DefaultExecutionSpace ex;
-    ex.fence("named_instance");
+        {"named_instance", FencePayload::distinguishable_devices::no,
+         root + num_instances}};
+    expect_fence_events(expected, [=]() {
+      Kokkos::DefaultExecutionSpace ex;
+      ex.fence("named_instance");
+    });
+    num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
   });
-  num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
 }
 TEST(defaultdevicetype, test_unnamed_instance_fence) {
-  auto root = Kokkos::Tools::Experimental::device_id_root<
-      Kokkos::DefaultExecutionSpace>();
-  std::vector<FencePayload> expected{
+  test_wrapper([&]() {
+    auto root = Kokkos::Tools::Experimental::device_id_root<
+        Kokkos::DefaultExecutionSpace>();
+    std::vector<FencePayload> expected{
 
-      {"Unnamed Instance Fence", FencePayload::distinguishable_devices::no,
-       root + num_instances}};
-  expect_fence_events(expected, [=]() {
-    Kokkos::DefaultExecutionSpace ex;
-    ex.fence();
+        {"Unnamed Instance Fence", FencePayload::distinguishable_devices::no,
+         root + num_instances}};
+    expect_fence_events(expected, [=]() {
+      Kokkos::DefaultExecutionSpace ex;
+      ex.fence();
+    });
+    num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
   });
-  num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
 }
 
 TEST(defaultdevicetype, test_named_global_fence) {
-  auto root = Kokkos::Tools::Experimental::device_id_root<
-      Kokkos::DefaultExecutionSpace>();
+  test_wrapper([&]() {
+    auto root = Kokkos::Tools::Experimental::device_id_root<
+        Kokkos::DefaultExecutionSpace>();
 
-  std::vector<FencePayload> expected{
+    std::vector<FencePayload> expected{
 
-      {"test global fence", FencePayload::distinguishable_devices::no, root}};
-  expect_fence_events(expected, [=]() { Kokkos::fence("test global fence"); });
+        {"test global fence", FencePayload::distinguishable_devices::no, root}};
+    expect_fence_events(expected,
+                        [=]() { Kokkos::fence("test global fence"); });
+  });
 }
 
 TEST(defaultdevicetype, test_unnamed_global_fence) {
-  auto root = Kokkos::Tools::Experimental::device_id_root<
-      Kokkos::DefaultExecutionSpace>();
+  test_wrapper([&]() {
+    auto root = Kokkos::Tools::Experimental::device_id_root<
+        Kokkos::DefaultExecutionSpace>();
 
-  std::vector<FencePayload> expected{
+    std::vector<FencePayload> expected{
 
-      {"Unnamed Global Fence", FencePayload::distinguishable_devices::no,
-       root}};
-  expect_fence_events(expected, [=]() { Kokkos::fence(); });
-  num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
+        {"Unnamed Global Fence", FencePayload::distinguishable_devices::no,
+         root}};
+    expect_fence_events(expected, [=]() { Kokkos::fence(); });
+    num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
+  });
 }
 TEST(defaultdevicetype, test_kernel_sequence) {
-  auto root = Kokkos::Tools::Experimental::device_id_root<
-      Kokkos::DefaultExecutionSpace>();
-  std::vector<FencePayload> expected{
+  test_wrapper([&]() {
+    auto root = Kokkos::Tools::Experimental::device_id_root<
+        Kokkos::DefaultExecutionSpace>();
+    std::vector<FencePayload> expected{
 
-      {"named_instance", FencePayload::distinguishable_devices::no,
-       root + num_instances},
-      {"test_kernel", FencePayload::distinguishable_devices::no,
-       root + num_instances}
+        {"named_instance", FencePayload::distinguishable_devices::no,
+         root + num_instances},
+        {"test_kernel", FencePayload::distinguishable_devices::no,
+         root + num_instances}
 
-  };
-  expect_fence_events(expected, [=]() {
-    Kokkos::DefaultExecutionSpace ex;
-    TestFunctor tf;
-    ex.fence("named_instance");
-    Kokkos::parallel_for(
-        "test_kernel",
-        Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ex, 0, 1), tf);
+    };
+    expect_fence_events(expected, [=]() {
+      Kokkos::DefaultExecutionSpace ex;
+      TestFunctor tf;
+      ex.fence("named_instance");
+      Kokkos::parallel_for(
+          "test_kernel",
+          Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(ex, 0, 1), tf);
+    });
+    num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
   });
-  num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
 }
+#ifdef KOKKOS_ENABLE_CUDA
+TEST(defaultdevicetype, test_streams) {
+  test_wrapper([&]() {
+    // auto root = Kokkos::Tools::Experimental::device_id_root<
+    //    Kokkos::DefaultExecutionSpace>();
+    std::vector<FencePayload> expected{};
+    expect_fence_events(expected, [=]() {
+      cudaStream_t s1, s2;
+      cudaStreamCreate(&s1);
+      cudaStreamCreate(&s2);
+      Kokkos::Cuda default_space;
+      Kokkos::Cuda space_s1(s1);
+      Kokkos::Cuda space_s2(s2);
+      default_space.fence();
+      space_s1.fence();
+      space_s2.fence();
+    });
+    num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
+    found_payloads.erase(
+        std::remove_if(found_payloads.begin(), found_payloads.end(),
+                       [&](const auto& entry) {
+                         return (
+                             entry.name.find("Fence on space initialization") !=
+                             std::string::npos);
+                       }),
+        found_payloads.end());
+    ASSERT_TRUE(found_payloads[0].dev_id != found_payloads[1].dev_id);
+    ASSERT_TRUE(found_payloads[2].dev_id != found_payloads[1].dev_id);
+    ASSERT_TRUE(found_payloads[2].dev_id != found_payloads[0].dev_id);
+  });
+}
+
+#endif
+
 }  // namespace Test
