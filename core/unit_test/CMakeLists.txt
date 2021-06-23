@@ -65,10 +65,19 @@ KOKKOS_INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 KOKKOS_INCLUDE_DIRECTORIES(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
+SET(COMPILE_ONLY_SOURCES
+  TestDetectionIdiom.cpp
+  TestInterOp.cpp
+  TestTypeList.cpp
+)
+# TestInterOp has a dependency on containers
+IF(KOKKOS_HAS_TRILINOS)
+  LIST(REMOVE_ITEM COMPILE_ONLY_SOURCES TestInterOp.cpp)
+ENDIF()
 KOKKOS_ADD_EXECUTABLE(
   TestCompileOnly
   SOURCES
-  TestDetectionIdiom.cpp
+  ${COMPILE_ONLY_SOURCES}
 )
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
@@ -113,6 +122,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         MDRange_c
         HostSharedPtr
         HostSharedPtrAccessOnDevice
+        QuadPrecisionMath
         MathematicalSpecialFunctions
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
@@ -378,14 +388,19 @@ if(Kokkos_ENABLE_PTHREAD)
   )
 endif()
 
-if(Kokkos_ENABLE_OPENMP)
+if (Kokkos_ENABLE_OPENMP)
+  set(OpenMP_EXTRA_SOURCES
+    openmp/TestOpenMP_Task.cpp
+  )
+  if (Kokkos_ENABLE_DEPRECATED_CODE_3)
+    list(APPEND OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
+  endif ()
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMP
     SOURCES
     UnitTestMainInit.cpp
     ${OpenMP_SOURCES}
-    openmp/TestOpenMP_PartitionMaster.cpp
-    openmp/TestOpenMP_Task.cpp
+    ${OpenMP_EXTRA_SOURCES}
   )
   KOKKOS_ADD_EXECUTABLE_AND_TEST(
     UnitTest_OpenMPInterOp
