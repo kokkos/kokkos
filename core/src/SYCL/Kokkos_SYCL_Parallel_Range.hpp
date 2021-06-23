@@ -62,16 +62,15 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
 
   template <typename Functor>
-  static void sycl_direct_launch(const Policy& policy, const Functor& functor) {
+  static sycl::event sycl_direct_launch(const Policy& policy,
+                                        const Functor& functor) {
     // Convenience references
     const Kokkos::Experimental::SYCL& space = policy.space();
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
-    space.fence();
-
-    q.submit([functor, policy](sycl::handler& cgh) {
+    auto parallel_for_event = q.submit([functor, policy](sycl::handler& cgh) {
       sycl::range<1> range(policy.end() - policy.begin());
       const auto begin = policy.begin();
 
@@ -83,8 +82,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
           functor(WorkTag(), id);
       });
     });
-
+    // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+    q.submit_barrier(sycl::vector_class<sycl::event>{parallel_for_event});
+#else
     space.fence();
+#endif
+
+    return parallel_for_event;
   }
 
  public:
@@ -100,7 +105,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
-    sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+    sycl::event event =
+        sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+    functor_wrapper.register_event(indirectKernelMem, event);
   }
 
   ParallelFor(const ParallelFor&) = delete;
@@ -201,19 +208,18 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   template <typename Functor>
-  void sycl_direct_launch(const Functor& functor) const {
+  sycl::event sycl_direct_launch(const Functor& functor) const {
     // Convenience references
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
-    m_space.fence();
-
-    if (m_policy.m_num_tiles == 0) return;
+    if (m_policy.m_num_tiles == 0) return {};
 
     const BarePolicy bare_policy(m_policy);
 
-    q.submit([functor, this, bare_policy](sycl::handler& cgh) {
+    auto parallel_for_event = q.submit([functor, this,
+                                        bare_policy](sycl::handler& cgh) {
       const auto range = compute_ranges();
 
       cgh.parallel_for(range, [functor, bare_policy](sycl::nd_item<3> item) {
@@ -234,8 +240,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             .exec_range();
       });
     });
-
+    // FIXME_SYCL remove guard once implemented for SYCL+CUDA
+#ifdef KOKKOS_ARCH_INTEL_GEN
+    q.submit_barrier(sycl::vector_class<sycl::event>{parallel_for_event});
+#else
     m_space.fence();
+#endif
+
+    return parallel_for_event;
   }
 
  public:
@@ -253,7 +265,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
-    sycl_direct_launch(functor_wrapper.get_functor());
+    sycl::event event = sycl_direct_launch(functor_wrapper.get_functor());
+    functor_wrapper.register_event(indirectKernelMem, event);
   }
 
   ParallelFor(const ParallelFor&) = delete;

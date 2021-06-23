@@ -42,54 +42,32 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
-#define KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+#include <impl/Kokkos_Utilities.hpp>
 
-#include <Kokkos_Macros.hpp>
-#include <Kokkos_Concepts.hpp>  // LaunchBounds
-#include <traits/Kokkos_PolicyTraitAdaptor.hpp>
-#include <traits/Kokkos_Traits_fwd.hpp>
+using TypeList2 = Kokkos::Impl::type_list<void, bool>;
+using TypeList3 = Kokkos::Impl::type_list<char, short, int>;
+using TypeList223 =
+    Kokkos::Impl::type_list<void, bool, void, bool, char, short, int>;
+using TypeList223Void   = Kokkos::Impl::type_list<void, void>;
+using TypeList223NoVoid = Kokkos::Impl::type_list<bool, bool, char, short, int>;
 
-namespace Kokkos {
-namespace Impl {
+// concat_type_list
+using ConcatTypeList2 = Kokkos::Impl::concat_type_list_t<TypeList2>;
+static_assert(std::is_same<TypeList2, ConcatTypeList2>::value,
+              "concat_type_list of a single type_list failed");
 
-//==============================================================================
-// <editor-fold desc="trait specification"> {{{1
+using ConcatTypeList223 =
+    Kokkos::Impl::concat_type_list_t<TypeList2, TypeList2, TypeList3>;
+static_assert(std::is_same<TypeList223, ConcatTypeList223>::value,
+              "concat_type_list of three type_lists failed");
 
-struct LaunchBoundsTrait : TraitSpecificationBase<LaunchBoundsTrait> {
-  struct base_traits {
-    static constexpr bool launch_bounds_is_defaulted = true;
+// filter_type_list
+using FilterTypeList223Void =
+    Kokkos::Impl::filter_type_list_t<std::is_void, TypeList223>;
+static_assert(std::is_same<TypeList223Void, FilterTypeList223Void>::value,
+              "filter_type_list with predicate value==true failed");
 
-    using launch_bounds = LaunchBounds<>;
-  };
-  template <class LaunchBoundParam, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-
-    static constexpr bool launch_bounds_is_defaulted = false;
-
-    static_assert(base_t::launch_bounds_is_defaulted,
-                  "Kokkos Error: More than one launch_bounds given");
-
-    using launch_bounds = LaunchBoundParam;
-  };
-};
-
-// </editor-fold> end trait specification }}}1
-//==============================================================================
-
-//==============================================================================
-// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
-
-template <unsigned int maxT, unsigned int minB>
-struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
-    : std::true_type {};
-
-// </editor-fold> end PolicyTraitMatcher specialization }}}1
-//==============================================================================
-
-}  // end namespace Impl
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+using FilterTypeList223NoVoid =
+    Kokkos::Impl::filter_type_list_t<std::is_void, TypeList223, false>;
+static_assert(std::is_same<TypeList223NoVoid, FilterTypeList223NoVoid>::value,
+              "filter_type_list with predicate value==false failed");

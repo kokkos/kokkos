@@ -180,6 +180,7 @@ KOKKOS_IMPL_IS_CONCEPT(work_item_property)
 
 namespace Impl {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 // For backward compatibility:
 
 template <typename T>
@@ -192,6 +193,7 @@ template <typename T>
 using is_memory_space KOKKOS_DEPRECATED = Kokkos::is_memory_space<T>;
 template <typename T>
 using is_memory_traits KOKKOS_DEPRECATED = Kokkos::is_memory_traits<T>;
+#endif
 
 // Implementation concept:
 
@@ -365,6 +367,7 @@ struct is_space {
       Kokkos::DefaultHostExecutionSpace, execution_space>;
 
  public:
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
   using host_memory_space KOKKOS_DEPRECATED = do_not_use_host_memory_space;
   using host_execution_space KOKKOS_DEPRECATED =
       do_not_use_host_execution_space;
@@ -374,8 +377,10 @@ struct is_space {
       T,
       Kokkos::Device<do_not_use_host_execution_space,
                      do_not_use_host_memory_space>>;
+#endif
 };
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 // For backward compatibility
 
 namespace Impl {
@@ -384,6 +389,7 @@ template <typename T>
 using is_space KOKKOS_DEPRECATED = Kokkos::is_space<T>;
 
 }
+#endif
 
 }  // namespace Kokkos
 
@@ -503,6 +509,7 @@ struct SpaceAccessibility {
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 namespace Kokkos {
 namespace Impl {
 
@@ -513,6 +520,7 @@ using SpaceAccessibility KOKKOS_DEPRECATED =
 
 }  // namespace Impl
 }  // namespace Kokkos
+#endif
 
 //----------------------------------------------------------------------------
 

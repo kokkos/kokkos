@@ -75,9 +75,7 @@ struct _trait_matches_spec_predicate {
 };
 
 struct WorkTagTrait : TraitSpecificationBase<WorkTagTrait> {
-  // MSVC workaround for linearizing base classes (see Impl::linearize_bases)
-  template <template <class> class GetBase, class... OtherTraits>
-  struct base_traits : linearize_bases<GetBase, OtherTraits...> {
+  struct base_traits {
     using work_tag = void;
   };
   template <class WorkTag, class AnalyzeNextTrait>
