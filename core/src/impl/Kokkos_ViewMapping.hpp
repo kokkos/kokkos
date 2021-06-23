@@ -2939,7 +2939,7 @@ struct ViewValueFunctor<ExecSpace, ValueType, true /* is_scalar */> {
           *this, PolicyType(0, n));
       closure.execute();
       space.fence(
-          "Kokkos::Impl::ViewValueFunctor: Post View Initialization fence");
+          "Kokkos::Impl::ViewValueFunctor: Fence after setting values in view");
       if (Kokkos::Profiling::profileLibraryLoaded()) {
         Kokkos::Profiling::endParallelFor(kpID);
       }
