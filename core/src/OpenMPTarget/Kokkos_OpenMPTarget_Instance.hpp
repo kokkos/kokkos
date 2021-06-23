@@ -51,10 +51,7 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-enum class openmp_fence_is_static {
-  yes,
-  no
-}
+enum class openmp_fence_is_static { yes, no };
 
 class OpenMPTargetInternal {
  private:
