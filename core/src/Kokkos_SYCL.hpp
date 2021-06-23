@@ -83,10 +83,7 @@ class SYCL {
   SYCL();
   explicit SYCL(const sycl::queue&);
 
-  uint32_t impl_instance_id() const noexcept {
-    return Kokkos::Tools::Experimental::Impl::idForInstance<
-        Kokkos::Experimental::SYCL>(reinterpret_cast<uintptr_t>(this));
-  }
+  uint32_t impl_instance_id() const noexcept { return 1; }
 
   sycl::context sycl_context() const noexcept {
     return m_space_instance->m_queue->get_context();
