@@ -1723,8 +1723,8 @@ inline void deep_copy(
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
           dst.data(), src.data(), nbytes);
       Kokkos::fence(
-          "Kokkos::deep_copy: copy between contiguous views, post same-data "
-          "view fence");
+          "Kokkos::deep_copy: copy between contiguous views, post deep copy "
+          "fence");
     }
   } else {
     Kokkos::fence(

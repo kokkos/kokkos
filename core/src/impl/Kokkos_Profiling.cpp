@@ -131,7 +131,8 @@ inline void invoke_kokkosp_callback(
     if (may_require_global_fencing == MayRequireGlobalFencing::Yes &&
         (Kokkos::Tools::Experimental::tool_requirements
              .requires_global_fencing)) {
-      Kokkos::fence();
+      Kokkos::fence(
+          "Kokkos::Tools::invoke_kokkosp_callback: Kokkos Profile Tool Fence");
     }
     (*callback)(std::forward<Args>(args)...);
   }
