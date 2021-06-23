@@ -132,7 +132,7 @@ class Serial {
         []() {});  // TODO: correct device ID
   }
 
-  void fence() const { fence("Kokkos::Serial::fence: Unnamed Fence"); }
+  void fence() const { fence("Kokkos::Serial::fence: Unnamed Instance Fence"); }
   void fence(const std::string& name) const {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
         name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
@@ -167,7 +167,7 @@ class Serial {
     return impl_thread_pool_size(0);
   }
 
-  uint32_t impl_instance_id() const noexcept { return 0; }
+  uint32_t impl_instance_id() const noexcept { return 1; }
 
   static const char* name();
   //--------------------------------------------------------------------------

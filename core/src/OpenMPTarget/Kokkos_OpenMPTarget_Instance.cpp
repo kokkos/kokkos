@@ -136,7 +136,8 @@ int OpenMPTarget::concurrency() {
   return Impl::OpenMPTargetInternal::impl_singleton()->concurrency();
 }
 void OpenMPTarget::fence() {
-  Impl::OpenMPTargetInternal::impl_singleton()->fence();
+  Impl::OpenMPTargetInternal::impl_singleton()->fence(
+      "Kokkos::OpenMPTarget::fence: Unnamed Instance Fence");
 }
 void OpenMPTarget::fence(const std::string& name) {
   Impl::OpenMPTargetInternal::impl_singleton()->fence(name);

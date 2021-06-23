@@ -168,7 +168,7 @@ class OpenMP {
   static int impl_get_current_max_threads() noexcept;
 
   static constexpr const char* name() noexcept { return "OpenMP"; }
-  uint32_t impl_instance_id() const noexcept { return 0; }
+  uint32_t impl_instance_id() const noexcept { return 1; }
 };
 
 namespace Tools {
