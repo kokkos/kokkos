@@ -129,13 +129,13 @@ void SYCL::impl_static_fence() {
       "Kokkos::Experimental::SYCL::fence: Unnamed Instance Fence");
 }
 void SYCL::impl_static_fence(const std::string& name) {
-  // guard accessing all_queues
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::SYCL>(
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
       [&]() {
+        // guard accessing all_queues
         std::lock_guard<std::mutex> lock(Impl::SYCLInternal::mutex);
         for (auto& queue : Impl::SYCLInternal::all_queues)
           Impl::SYCLInternal::fence(**queue);
