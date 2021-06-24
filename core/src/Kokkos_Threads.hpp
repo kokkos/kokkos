@@ -168,7 +168,7 @@ class Threads {
     return impl_thread_pool_rank();
   }
 
-  uint32_t impl_instance_id() const noexcept { return 0; }
+  uint32_t impl_instance_id() const noexcept { return 1; }
 
   static const char* name();
   //@}
