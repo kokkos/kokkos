@@ -289,31 +289,42 @@ int ThreadsExec::in_parallel() {
          (s_threads_process.m_pool_base || !is_process());
 }
 
-void ThreadsExec::fence() {
-  fence("Kokkos::ThreadsExec::fence: Unnamed Instance Fence");
+void ThreadsExec::fence(Impl::fence_is_static is_static) {
+  fence((is_static == Impl::fence_is_static::no)
+            ? "Kokkos::ThreadsExec::fence: Unnamed Instance Fence"
+            : "Kokkos::ThreadsExec::fence: Unnamed Global Fence");
 }
 
 // Wait for root thread to become inactive
-void ThreadsExec::fence(const std::string &name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
+void ThreadsExec::fence(const std::string &name,
+                        Impl::fence_is_static is_static) {
+  const auto &fence_lam = [&]() {
+    if (s_thread_pool_size[0]) {
+      // Wait for the root thread to complete:
+      Impl::spinwait_while_equal<int>(s_threads_exec[0]->m_pool_state,
+                                      ThreadsExec::Active);
+    }
 
-      name,
-      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-          GlobalDeviceSynchronization,
-      [&]() {
-        if (s_thread_pool_size[0]) {
-          // Wait for the root thread to complete:
-          Impl::spinwait_while_equal<int>(s_threads_exec[0]->m_pool_state,
-                                          ThreadsExec::Active);
-        }
+    s_current_function     = nullptr;
+    s_current_function_arg = nullptr;
 
-        s_current_function     = nullptr;
-        s_current_function_arg = nullptr;
+    // Make sure function and arguments are cleared before
+    // potentially re-activating threads with a subsequent launch.
+    memory_fence();
+  };
+  if (is_static == Impl::fence_is_static::yes) {
+    Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
 
-        // Make sure function and arguments are cleared before
-        // potentially re-activating threads with a subsequent launch.
-        memory_fence();
-      });
+        name,
+        Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+            GlobalDeviceSynchronization,
+        fence_lam);
+  } else {
+    Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
+
+        name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
+        fence_lam);
+  }
 }
 
 /** \brief  Begin execution of the asynchronous functor */
@@ -780,9 +791,11 @@ void ThreadsExec::finalize() {
 namespace Kokkos {
 
 int Threads::concurrency() { return impl_thread_pool_size(0); }
-void Threads::fence() const { Impl::ThreadsExec::fence(); }
+void Threads::fence() const {
+  Impl::ThreadsExec::fence(Impl::fence_is_static::no);
+}
 void Threads::fence(const std::string &name) const {
-  Impl::ThreadsExec::fence(name);
+  Impl::ThreadsExec::fence(name, Impl::fence_is_static::no);
 }
 
 Threads &Threads::impl_instance(int) {
