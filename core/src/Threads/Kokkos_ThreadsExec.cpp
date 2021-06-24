@@ -292,7 +292,8 @@ int ThreadsExec::in_parallel() {
 void ThreadsExec::fence(Impl::fence_is_static is_static) {
   fence((is_static == Impl::fence_is_static::no)
             ? "Kokkos::ThreadsExec::fence: Unnamed Instance Fence"
-            : "Kokkos::ThreadsExec::fence: Unnamed Global Fence");
+            : "Kokkos::ThreadsExec::fence: Unnamed Global Fence",
+        is_static);
 }
 
 // Wait for root thread to become inactive
