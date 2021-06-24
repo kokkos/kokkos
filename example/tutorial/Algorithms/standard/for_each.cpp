@@ -94,6 +94,7 @@ int main(int argc, char* argv[]) {
     const auto fun = KOKKOS_LAMBDA(double& d) { d++; };
     Kokkos::View<double*> v("label", 10);
 
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
     Kokkos::Experimental::for_each(v, fun);
 
     Kokkos::Experimental::for_each(Kokkos::Experimental::begin(v),
@@ -106,6 +107,7 @@ int main(int argc, char* argv[]) {
         v.extent(0), KOKKOS_LAMBDA(const int i, double& lsum) { lsum += v(i); },
         sum);
     printf("Result: %f\n", sum);
+#endif
   }
 
   Kokkos::finalize();
