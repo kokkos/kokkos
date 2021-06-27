@@ -5,6 +5,7 @@
 namespace Test {
 
 struct TestLargeArgTag {};
+struct TestRealErfcxTag {};
 
 template <class ExecSpace>
 struct TestExponentialIntergral1Function {
@@ -69,9 +70,7 @@ struct TestExponentialIntergral1Function {
     EXPECT_EQ(h_ref(0), h_expint(0));
     EXPECT_EQ(h_ref(1), h_expint(1));
     for (int i = 2; i < 15; i++) {
-      EXPECT_LE(fabs(h_expint(i) - h_ref(i)), fabs(h_ref(i)) * 1e-15);
-      // printf("%d. %.15e vs. %.15e\n",i, fabs(h_expint(i) - h_ref(i)),
-      // fabs(h_ref(i))*1e-15);
+      EXPECT_LE(std::abs(h_expint(i) - h_ref(i)), std::abs(h_ref(i)) * 1e-15);
     }
   }
 
@@ -86,12 +85,20 @@ struct TestComplexErrorFunction {
   using ViewType = Kokkos::View<Kokkos::complex<double>*, ExecSpace>;
   using HostViewType =
       Kokkos::View<Kokkos::complex<double>*, Kokkos::HostSpace>;
+  using DblViewType     = Kokkos::View<double*, ExecSpace>;
+  using DblHostViewType = Kokkos::View<double*, Kokkos::HostSpace>;
 
   ViewType d_z, d_erf, d_erfcx;
   typename ViewType::HostMirror h_z, h_erf, h_erfcx;
   HostViewType h_ref_erf, h_ref_erfcx;
 
+  DblViewType d_x, d_erfcx_dbl;
+  typename DblViewType::HostMirror h_x, h_erfcx_dbl;
+  DblHostViewType h_ref_erfcx_dbl;
+
   void testit() {
+    using Kokkos::Experimental::infinity;
+
     d_z         = ViewType("d_z", 52);
     d_erf       = ViewType("d_erf", 52);
     d_erfcx     = ViewType("d_erfcx", 52);
@@ -100,6 +107,12 @@ struct TestComplexErrorFunction {
     h_erfcx     = Kokkos::create_mirror_view(d_erfcx);
     h_ref_erf   = HostViewType("h_ref_erf", 52);
     h_ref_erfcx = HostViewType("h_ref_erfcx", 52);
+
+    d_x             = DblViewType("d_x", 6);
+    d_erfcx_dbl     = DblViewType("d_erfcx_dbl", 6);
+    h_x             = Kokkos::create_mirror_view(d_x);
+    h_erfcx_dbl     = Kokkos::create_mirror_view(d_erfcx_dbl);
+    h_ref_erfcx_dbl = DblHostViewType("h_ref_erfcx_dbl", 6);
 
     // Generate test inputs
     // abs(z)<=2
@@ -159,14 +172,27 @@ struct TestComplexErrorFunction {
     h_z(50) = Kokkos::complex<double>(-0.85, 19.7);
     h_z(51) = Kokkos::complex<double>(-0.85, -19.7);
 
+    h_x(0) = -infinity<double>::value;
+    h_x(1) = -1.2;
+    h_x(2) = 0.0;
+    h_x(3) = 1.2;
+    h_x(4) = 10.5;
+    h_x(5) = infinity<double>::value;
+
     Kokkos::deep_copy(d_z, h_z);
+    Kokkos::deep_copy(d_x, h_x);
 
     // Call erf and erfcx functions
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 52), *this);
     Kokkos::fence();
 
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, TestRealErfcxTag>(0, 1),
+                         *this);
+    Kokkos::fence();
+
     Kokkos::deep_copy(h_erf, d_erf);
     Kokkos::deep_copy(h_erfcx, d_erfcx);
+    Kokkos::deep_copy(h_erfcx_dbl, d_erfcx_dbl);
 
     // Reference values computed with Octave
     h_ref_erf(0) = Kokkos::complex<double>(0.001241216583181022, 0);
@@ -362,21 +388,28 @@ struct TestComplexErrorFunction {
     h_ref_erfcx(51) =
         Kokkos::complex<double>(-0.001238176693606428, 0.02862247416909219);
 
+    h_ref_erfcx_dbl(0) = infinity<double>::value;
+    h_ref_erfcx_dbl(1) = 8.062854217063865e+00;
+    h_ref_erfcx_dbl(2) = 1.0;
+    h_ref_erfcx_dbl(3) = 3.785374169292397e-01;
+    h_ref_erfcx_dbl(4) = 5.349189974656411e-02;
+    h_ref_erfcx_dbl(5) = 0.0;
+
     for (int i = 0; i < 52; i++) {
-      // printf("Test erf: %d\n",i);
       EXPECT_LE(Kokkos::abs(h_erf(i) - h_ref_erf(i)),
                 Kokkos::abs(h_ref_erf(i)) * 1e-13);
-      // printf("cerf %d. %.15e vs. %.15e\n", i,
-      // Kokkos::abs(h_erf(i)-h_ref_erf(i)), Kokkos::abs(h_ref_erf(i))*1e-13);
     }
 
     for (int i = 0; i < 52; i++) {
-      // printf("Test erfcx: %d\n",i);
       EXPECT_LE(Kokkos::abs(h_erfcx(i) - h_ref_erfcx(i)),
                 Kokkos::abs(h_ref_erfcx(i)) * 1e-13);
-      // printf("cerfcx %d. %.15e vs. %.15e\n", i,
-      // Kokkos::abs(h_erfcx(i)-h_ref_erfcx(i)),
-      // Kokkos::abs(h_ref_erfcx(i))*1e-13);
+    }
+
+    EXPECT_EQ(h_erfcx_dbl(0), h_ref_erfcx_dbl(0));
+    EXPECT_EQ(h_erfcx_dbl(5), h_ref_erfcx_dbl(5));
+    for (int i = 1; i < 5; i++) {
+      EXPECT_LE(std::abs(h_erfcx_dbl(i) - h_ref_erfcx_dbl(i)),
+                std::abs(h_ref_erfcx_dbl(i)) * 1e-13);
     }
   }
 
@@ -384,6 +417,16 @@ struct TestComplexErrorFunction {
   void operator()(const int& i) const {
     d_erf(i)   = Kokkos::Experimental::erf(d_z(i));
     d_erfcx(i) = Kokkos::Experimental::erfcx(d_z(i));
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const TestRealErfcxTag&, const int& /*i*/) const {
+    d_erfcx_dbl(0) = Kokkos::Experimental::erfcx(d_x(0));
+    d_erfcx_dbl(1) = Kokkos::Experimental::erfcx(d_x(1));
+    d_erfcx_dbl(2) = Kokkos::Experimental::erfcx(d_x(2));
+    d_erfcx_dbl(3) = Kokkos::Experimental::erfcx(d_x(3));
+    d_erfcx_dbl(4) = Kokkos::Experimental::erfcx(d_x(4));
+    d_erfcx_dbl(5) = Kokkos::Experimental::erfcx(d_x(5));
   }
 };
 
@@ -1814,7 +1857,7 @@ TEST(TEST_CATEGORY, mathspecialfunc_expint1) {
   test.testit();
 }
 
-TEST(TEST_CATEGORY, mathspecialfunc_cmplxerror) {
+TEST(TEST_CATEGORY, mathspecialfunc_errorfunc) {
   TestComplexErrorFunction<TEST_EXECSPACE> test;
   test.testit();
 }
