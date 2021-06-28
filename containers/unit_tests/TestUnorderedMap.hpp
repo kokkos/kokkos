@@ -327,6 +327,22 @@ TEST(TEST_CATEGORY, UnorderedMap_valid_empty) {
   ASSERT_TRUE(n.is_allocated());
 }
 
+TEST(TEST_CATEGORY, UnorderedMap_clear_zero_size) {
+  using Map = Kokkos::UnorderedMap<int, void, Kokkos::DefaultHostExecutionSpace>;
+
+  Map m(11);
+  ASSERT_EQ(0u, m.size());
+
+  m.insert(2);
+  m.insert(3);
+  m.insert(5);
+  m.insert(7);
+  ASSERT_EQ(4u, m.size());
+
+  m.clear();
+  ASSERT_EQ(0u, m.size());
+}
+
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_UNORDERED_MAP_HPP
