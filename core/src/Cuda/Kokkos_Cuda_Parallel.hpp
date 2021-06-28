@@ -1111,8 +1111,28 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     Binary_op_thrust(const BinOpKokkos& op):kk_op(op){};
     __host__ __device__
     T operator()(T val1, T val2) {
-        kk_op(val1,val2);
-        return val1;
+        kk_op(val2,val1);
+        printf("type of arg 1: %s\n", typeid(val1).name());
+        T temp = val1;
+        //printf("val1: %d\t val2: %d\n", val1, val2);
+        //return val1;
+        return temp;
+    }
+  };
+
+  //template<class FunctorType>
+  struct ThrustFunctorWrapper {
+    const FunctorType& f;
+    //KOKKOS_FUNCTION
+    __host__ __device__
+    ThrustFunctorWrapper(const FunctorType& op):f(op){};
+    //KOKKOS_FUNCTION
+    __host__ __device__
+    value_type operator() (index_type i) const {
+        //value_type val = InitValueType();
+        value_type val = (int64_t)0;
+        f(i,val);
+        return val;
     }
   };
 
@@ -1125,28 +1145,29 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
         thrust::device_vector<value_type> temp_vec_d(m_policy.end());
 
-        thrust::sequence(temp_vec_d.begin(), temp_vec_d.end());
+        thrust::sequence(temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0);
 
-        int64_t sum;
+        value_type sum;
 
         // wrapping functor to Binary_op_thrust
         //Binary_op_thrust<value_type, ReducerType> b_op(m_reducer);
-        //Binary_op_thrust<value_type, functor_type> b_op(m_functor);
+        Binary_op_thrust<value_type, functor_type> b_op(m_functor);
+
+        ThrustFunctorWrapper t_op(m_functor);
+        //ThrustFunctorWrapper<functor_type> t_op(m_functor);
+
         //b_op(m_functor);
         //printf("value_type: %d, functor_type: %d\n", value_type, functor_type);
         //printf("value_type: %d, functor_type: %d\n", value_type, 3);
 
         //sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, b_op);
-        sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, m_functor);
+        //sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, thrust::plus<int64_t>());
+        //sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, m_functor);
         
-        thrust::copy(temp_vec_d.begin(), temp_vec_d.begin()+10, h_vec.begin());
 
-        for (auto i : h_vec){
-            printf("%d\n", h_vec[i]);    
-        } 
-
-        printf("m_policy: %d\n", m_policy.end());
-
+        //sum = thrust::transform_reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), t_op, (value_type)0, m_reducer);
+        sum = thrust::transform_reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), t_op, (value_type)0, thrust::plus<value_type>());
+        
         printf("sum: %jd\n", sum);
   }
 
