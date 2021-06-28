@@ -48,23 +48,24 @@
 namespace Kokkos {
 namespace Experimental {
 
-template <class ViewType>
-auto begin(ViewType& v) -> decltype(v.data()) {
+template <class DataType, class... Properties>
+auto begin(Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
   return v.data();
 }
 
-template <class ViewType>
-auto begin(const ViewType& v) -> decltype(v.data()) {
+template <class DataType, class... Properties>
+auto begin(const Kokkos::View<DataType, Properties...>& v)
+    -> decltype(v.data()) {
   return v.data();
 }
 
-template <class ViewType>
-auto end(ViewType& v) -> decltype(v.data()) {
+template <class DataType, class... Properties>
+auto end(Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
   return v.data() + v.size();
 }
 
-template <class ViewType>
-auto end(const ViewType& v) -> decltype(v.data()) {
+template <class DataType, class... Properties>
+auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
   return v.data() + v.size();
 }
 
@@ -79,8 +80,9 @@ FunctorType for_each(PointerType data, PointerType end, FunctorType functor) {
   return functor;
 }
 
-template <class ViewType, class FunctorType>
-FunctorType for_each(ViewType v, FunctorType functor) {
+template <class DataType, class... Properties, class FunctorType>
+FunctorType for_each(Kokkos::View<DataType, Properties...> v,
+                     FunctorType functor) {
   return for_each(v.data(), v.data() + v.size(), functor);
 }
 
