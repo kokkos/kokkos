@@ -42,34 +42,70 @@
 //@HEADER
 */
 
+#ifndef KOKKOS_ALGO_HPP
+#define KOKKOS_ALGO_HPP
+
 #include <Kokkos_Core.hpp>
-#include <Kokkos_Algo.hpp>
-#include <cstdio>
 
-int main(int argc, char* argv[]) {
-  Kokkos::initialize(argc, argv);
+/// \file Kokkos_Algo.hpp
+/// \brief Kokkos counterparts for Standard C++ Library algorithms
 
-  {
-    const auto fun = KOKKOS_LAMBDA(double& d) { d++; };
-    Kokkos::View<double*> v("label", 10);
+namespace Kokkos {
+namespace Experimental {
 
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-    Kokkos::Experimental::for_each(v, fun);
-
-    Kokkos::Experimental::for_each(Kokkos::Experimental::begin(v),
-                                   Kokkos::Experimental::end(v), fun);
-
-    Kokkos::Experimental::for_each(v.data(), v.data() + v.size(), fun);
-
-    Kokkos::Experimental::for_each_n(v.data(), 5, fun);
-
-    double sum = 0;
-    Kokkos::parallel_reduce(
-        v.extent(0), KOKKOS_LAMBDA(const int i, double& lsum) { lsum += v(i); },
-        sum);
-    printf("Result: %f\n", sum);
-#endif
-  }
-
-  Kokkos::finalize();
+template <class DataType, class... Properties>
+auto begin(Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
+  return v.data();
 }
+
+template <class DataType, class... Properties>
+auto begin(const Kokkos::View<DataType, Properties...>& v)
+    -> decltype(v.data()) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
+  return v.data();
+}
+
+template <class DataType, class... Properties>
+auto end(Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
+  return v.data() + v.size();
+}
+
+template <class DataType, class... Properties>
+auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
+  return v.data() + v.size();
+}
+
+template <class PointerType, class FunctorType>
+FunctorType for_each(PointerType data, PointerType end, FunctorType functor) {
+  const auto numOfElements = end - data;
+  Kokkos::parallel_for(
+      numOfElements, KOKKOS_LAMBDA(const int i) {
+        auto element = data + i;
+        functor(*element);
+      });
+  return functor;
+}
+
+template <class DataType, class... Properties, class FunctorType>
+FunctorType for_each(Kokkos::View<DataType, Properties...> v,
+                     FunctorType functor) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
+  return for_each(v.data(), v.data() + v.size(), std::move(functor));
+}
+
+template <class PointerType, class SizeType, class FunctorType>
+PointerType for_each_n(PointerType data, SizeType n, FunctorType functor) {
+  if (n <= 0) return data;
+
+  auto last = data + n;
+  for_each(data, last, std::move(functor));
+  return last;
+}
+
+}  // namespace Experimental
+}  // namespace Kokkos
+
+#endif
