@@ -84,6 +84,15 @@ FunctorType for_each(ViewType v, FunctorType functor) {
   return for_each(v.data(), v.data() + v.size(), functor);
 }
 
+template <class PointerType, class SizeType, class FunctorType>
+PointerType for_each_n(PointerType data, SizeType n, FunctorType functor) {
+  if (n <= 0) return data;
+
+  auto last = data + n;
+  for_each(data, last, std::move(functor));
+  return last;
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
@@ -101,6 +110,8 @@ int main(int argc, char* argv[]) {
                                    Kokkos::Experimental::end(v), fun);
 
     Kokkos::Experimental::for_each(v.data(), v.data() + v.size(), fun);
+
+    Kokkos::Experimental::for_each_n(v.data(), 5, fun);
 
     double sum = 0;
     Kokkos::parallel_reduce(
