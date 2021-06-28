@@ -70,7 +70,9 @@ void tool_invoked_fence(const uint32_t /* devID */) {
    * Eventually we want to support fencing only
    * a given stream/resource
    */
-  Kokkos::fence();
+  Kokkos::fence(
+      "Kokkos::Tools::Experimental::Impl::tool_invoked_fence: Tool Requested "
+      "Fence");
 }
 }  // namespace Impl
 #ifdef KOKKOS_ENABLE_TUNING
