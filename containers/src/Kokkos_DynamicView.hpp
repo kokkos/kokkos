@@ -70,9 +70,9 @@ struct Destroy {
           value_type** arg_linked)
       : m_label(label),
         m_chunks(arg_chunk),
+        m_linked(arg_linked),
         m_chunk_max(arg_chunk_max),
-        m_chunk_size(arg_chunk_size),
-        m_linked(arg_linked) {}
+        m_chunk_size(arg_chunk_size) {}
 
   void execute() {
     // Destroy the array of chunk pointers.
@@ -133,7 +133,7 @@ struct SmartMemoryAccessor {
 
   SmartMemoryAccessor(ACCESSIBLE_TAG, pointer_type* arg_chunks,
                       const unsigned arg_chunk_max)
-      : m_chunks(arg_chunks), m_chunk_max(arg_chunk_max), m_valid(true) {}
+      : m_valid(true), m_chunk_max(arg_chunk_max), m_chunks(arg_chunks) {}
 
   SmartMemoryAccessor(INACCESSIBLE_TAG, const unsigned arg_chunk_max,
                       const unsigned arg_chunk_size)
