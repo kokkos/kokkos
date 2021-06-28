@@ -50,22 +50,26 @@ namespace Experimental {
 
 template <class DataType, class... Properties>
 auto begin(Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
   return v.data();
 }
 
 template <class DataType, class... Properties>
 auto begin(const Kokkos::View<DataType, Properties...>& v)
     -> decltype(v.data()) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
   return v.data();
 }
 
 template <class DataType, class... Properties>
 auto end(Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
   return v.data() + v.size();
 }
 
 template <class DataType, class... Properties>
 auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
   return v.data() + v.size();
 }
 
@@ -83,6 +87,7 @@ FunctorType for_each(PointerType data, PointerType end, FunctorType functor) {
 template <class DataType, class... Properties, class FunctorType>
 FunctorType for_each(Kokkos::View<DataType, Properties...> v,
                      FunctorType functor) {
+  KOKKOS_EXPECTS(v.span_is_contiguous());
   return for_each(v.data(), v.data() + v.size(), functor);
 }
 
