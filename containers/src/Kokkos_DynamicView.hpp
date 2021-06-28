@@ -119,8 +119,7 @@ struct SmartMemoryAccessor {
       m_chunk_max(rhs.m_chunk_max),
       m_chunks((ValueType**)(rhs.m_chunks)),
       m_track(rhs.m_track),
-      m_chunk_size(rhs.m_chunk_size),
-      m_mirror(rhs.m_mirror)
+      m_chunk_size(rhs.m_chunk_size)
   {
     static_assert(Kokkos::Impl::MemorySpaceAccess<MemorySpace, Space>::assignable,
                   "Incompatible SmartMemoryAccessor copy construction");
@@ -130,8 +129,7 @@ struct SmartMemoryAccessor {
   SmartMemoryAccessor(const unsigned arg_chunk_max,
                       const unsigned arg_chunk_size)
     : m_chunk_max(arg_chunk_max),
-      m_chunk_size(arg_chunk_size),
-      m_mirror(false)
+      m_chunk_size(arg_chunk_size)
   {}
 
 private:
@@ -149,8 +147,7 @@ private:
                       const unsigned arg_chunk_max,
                       const unsigned arg_chunk_size)
     : m_chunk_max(arg_chunk_max),
-      m_chunk_size(arg_chunk_size),
-      m_mirror(true)
+      m_chunk_size(arg_chunk_size)
   { }
 
 public:
@@ -245,7 +242,6 @@ private:
   pointer_type* m_chunks = nullptr;
   track_type m_track;
   unsigned m_chunk_size = 0;
-  bool m_mirror = false;
 };
 
 } /* end namespace Impl */
