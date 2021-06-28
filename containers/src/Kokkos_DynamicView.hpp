@@ -75,7 +75,7 @@ struct Destroy {
       m_linked(arg_linked)
   {}
 
-  void execute(bool arg_destroy) {
+  void execute() {
     // Destroy the array of chunk pointers.
     // Two entries beyond the max chunks are allocation counters.
     for (unsigned i = 0; i < m_chunk_max; i++) {
@@ -90,7 +90,7 @@ struct Destroy {
     }
   }
 
-  void destroy_shared_allocation() { execute(true); }
+  void destroy_shared_allocation() { execute(); }
 
   std::string m_label;
   value_type** m_chunks = nullptr;
