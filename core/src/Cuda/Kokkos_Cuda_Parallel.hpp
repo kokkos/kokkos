@@ -76,6 +76,8 @@
 #include <thrust/sort.h>
 #include <thrust/copy.h>
 
+#define KOKKOS_THRUST
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1123,14 +1125,12 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   //template<class FunctorType>
   struct ThrustFunctorWrapper {
     const FunctorType& f;
-    //KOKKOS_FUNCTION
-    __host__ __device__
+    KOKKOS_FUNCTION
     ThrustFunctorWrapper(const FunctorType& op):f(op){};
-    //KOKKOS_FUNCTION
-    __host__ __device__
+    KOKKOS_FUNCTION
     value_type operator() (index_type i) const {
         //value_type val = InitValueType();
-        value_type val = (int64_t)0;
+        value_type val = (value_type)0;
         f(i,val);
         return val;
     }
@@ -1141,17 +1141,15 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       printf("hello\n");
       printf("using CUDA Thurst\n");
 
-        thrust::host_vector<int> h_vec(10);
-
         thrust::device_vector<value_type> temp_vec_d(m_policy.end());
 
-        thrust::sequence(temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0);
+        thrust::sequence(temp_vec_d.begin(), temp_vec_d.end(), (value_type)0);
 
         value_type sum;
 
         // wrapping functor to Binary_op_thrust
         //Binary_op_thrust<value_type, ReducerType> b_op(m_reducer);
-        Binary_op_thrust<value_type, functor_type> b_op(m_functor);
+        //Binary_op_thrust<value_type, functor_type> b_op(m_functor);
 
         ThrustFunctorWrapper t_op(m_functor);
         //ThrustFunctorWrapper<functor_type> t_op(m_functor);
@@ -1169,6 +1167,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
         sum = thrust::transform_reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), t_op, (value_type)0, thrust::plus<value_type>());
         
         printf("sum: %jd\n", sum);
+        printf("sum: %f\n", sum);
+        printf("sum: %d\n", sum);
+
+        *m_result_ptr = sum;
+
+        if (m_result_ptr_host_accessible == true) printf("host_accessible\n");
+        if (m_result_ptr_device_accessible == true) printf("device_accessible\n");
+
   }
 
 
@@ -1182,6 +1188,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 #endif
                                  !std::is_same<ReducerType, InvalidType>::value;
 
+    // timing
+
+#ifdef KOKKOS_THRUST
     if (!ReduceFunctorHasInit<FunctorType>::value &&
             !ReduceFunctorHasJoin<FunctorType>::value &&
             !ReduceFunctorHasFinal<FunctorType>::value &&
@@ -1189,33 +1198,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             std::is_same<ReducerType, InvalidType>::value) {
         printf("using CUDA Thurst\n");
         thrust_execute();
-
-        //Binary_op_thrust<value_type, reducer_type> op(m_reducer); // adding for test
-        //Binary_op_thrust<value_type, reducer_type> op(m_reducer); // adding for test
-
-        /*
-        thrust::host_vector<int> h_vec(10);
-
-        thrust::device_vector<value_type> temp_vec_d(m_policy.end());
-
-        thrust::sequence(temp_vec_d.begin(), temp_vec_d.end());
-
-        int64_t sum;
-
-        sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, m_functor);
-        //sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0);
-        
-        thrust::copy(temp_vec_d.begin(), temp_vec_d.begin()+10, h_vec.begin());
-
-        for (auto i : h_vec){
-            printf("%d\n", h_vec[i]);    
-        } 
-
-        printf("m_policy: %d\n", m_policy.end());
-
-        printf("sum: %jd\n", sum);
-        */
     }
+    else {
+#endif
 
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
@@ -1286,6 +1271,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     }
   }
+#ifdef KOKKOS_THRUST
+  }
+#endif
 
   template <class ViewType>
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
