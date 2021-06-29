@@ -1447,7 +1447,7 @@ class View : public ViewTraits<DataType, Properties...> {
   View(View&&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
-  View& operator=(const View&);
+  View& operator=(const View&) = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   View& operator=(View&&) = default;
