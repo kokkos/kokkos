@@ -974,7 +974,6 @@ struct ParallelReduceFence {
  *    void join( volatile       <podType> & update ,
  *               volatile const <podType> & input ) const ;
  *
- *    using has_final = true_type;
  *    void final( <podType> & update ) const ;
  *  };
  * \endcode
@@ -991,7 +990,6 @@ struct ParallelReduceFence {
  *    void join( volatile       <podType> update[] ,
  *               volatile const <podType> input[] ) const ;
  *
- *    using has_final = true_type;
  *    void final( <podType> update[] ) const ;
  *  };
  * \endcode
