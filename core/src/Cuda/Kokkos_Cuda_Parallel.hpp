@@ -70,6 +70,14 @@
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
+#include <thrust/host_vector.h>
+#include <thrust/device_vector.h>
+#include <thrust/generate.h>
+#include <thrust/sort.h>
+#include <thrust/copy.h>
+
+#define KOKKOS_THRUST
+
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
@@ -1099,6 +1107,61 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     return n;
   }
 
+  /*
+   * This is no longer needed, keeping for notes for now
+   * Will remove in the future
+  template<typename T, typename BinOpKokkos>
+  struct Binary_op_thrust {
+    const BinOpKokkos& kk_op;
+    __host__ __device__
+    Binary_op_thrust(const BinOpKokkos& op):kk_op(op){};
+    __host__ __device__
+    T operator()(T val1, T val2) {
+        kk_op(val2,val1); // switched for Thrust
+        return val1;
+    }
+  };
+  */
+
+  //template<class FunctorType>
+  struct ThrustFunctorWrapper {
+    const FunctorType& f;
+    KOKKOS_FUNCTION
+    ThrustFunctorWrapper(const FunctorType& op):f(op){};
+    KOKKOS_FUNCTION
+    value_type operator() (index_type i) const {
+        //value_type val = InitValueType();
+        value_type val = (value_type)0; // for now, assuming no init value
+        f(i,val);
+        return val;
+    }
+  };
+
+  inline void thrust_execute() {
+      printf("using CUDA Thurst\n");
+
+        thrust::device_vector<value_type> temp_vec_d(m_policy.end());
+
+        thrust::sequence(temp_vec_d.begin(), temp_vec_d.end(), (value_type)0);
+
+        value_type sum;
+
+        ThrustFunctorWrapper t_op(m_functor);
+        //ThrustFunctorWrapper<functor_type> t_op(m_functor);
+
+        //sum = thrust::transform_reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), t_op, (value_type)0, m_reducer);
+        sum = thrust::transform_reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), t_op, (value_type)0, thrust::plus<value_type>());
+        
+        *m_result_ptr = sum; // is m_result_ptr always the type of pointer to value_type?
+
+        /*
+         * Will need to implement this logic, but for now Thrust copies sum back to Host implicitly
+        if (m_result_ptr_host_accessible == true) printf("host_accessible\n");
+        if (m_result_ptr_device_accessible == true) printf("device_accessible\n");
+        */
+
+  }
+
   inline void execute() {
     const index_type nwork     = m_policy.end() - m_policy.begin();
     const bool need_device_set = ReduceFunctorHasInit<FunctorType>::value ||
@@ -1108,6 +1171,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                  Policy::is_graph_kernel::value ||
 #endif
                                  !std::is_same<ReducerType, InvalidType>::value;
+
+#ifdef KOKKOS_THRUST
+    if (!ReduceFunctorHasInit<FunctorType>::value &&
+            !ReduceFunctorHasJoin<FunctorType>::value &&
+            !ReduceFunctorHasFinal<FunctorType>::value &&
+            !Policy::is_graph_kernel::value &&
+            std::is_same<ReducerType, InvalidType>::value) {
+        thrust_execute();
+    }
+    else {
+#endif
     if ((nwork > 0) || need_device_set) {
       const int block_size = local_block_size(m_functor);
 
@@ -1176,6 +1250,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       }
     }
   }
+#ifdef KOKKOS_THRUST
+  }
+#endif
+
+
 
   template <class ViewType>
   ParallelReduce(const FunctorType& arg_functor, const Policy& arg_policy,
