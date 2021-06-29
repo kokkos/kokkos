@@ -1093,19 +1093,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     }
     return n;
   }
-/*
-  template<typename BinOpKokkos>
-  struct Binary_op_thrust {
-    const BinOpKokkos& kk_op;
-    __host__ __device__
-    Binary_op_thrust(const BinOpKokkos& op):kk_op(op){};
-    __host__ __device__
-    int64_t operator()(int64_t val1, int64_t val2) {
-        kk_op(val1,val2);
-        return val1;
-    }
-  };
-*/
+
+  /*
+   * This is no longer needed, keeping for notes for now
+   * Will remove in the future
   template<typename T, typename BinOpKokkos>
   struct Binary_op_thrust {
     const BinOpKokkos& kk_op;
@@ -1113,14 +1104,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     Binary_op_thrust(const BinOpKokkos& op):kk_op(op){};
     __host__ __device__
     T operator()(T val1, T val2) {
-        kk_op(val2,val1);
-        printf("type of arg 1: %s\n", typeid(val1).name());
-        T temp = val1;
-        //printf("val1: %d\t val2: %d\n", val1, val2);
-        //return val1;
-        return temp;
+        kk_op(val2,val1); // switched for Thrust
+        return val1;
     }
   };
+  */
 
   //template<class FunctorType>
   struct ThrustFunctorWrapper {
@@ -1130,7 +1118,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     KOKKOS_FUNCTION
     value_type operator() (index_type i) const {
         //value_type val = InitValueType();
-        value_type val = (value_type)0;
+        value_type val = (value_type)0; // for now, assuming no init value
         f(i,val);
         return val;
     }
@@ -1147,21 +1135,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
         value_type sum;
 
-        // wrapping functor to Binary_op_thrust
-        //Binary_op_thrust<value_type, ReducerType> b_op(m_reducer);
-        //Binary_op_thrust<value_type, functor_type> b_op(m_functor);
-
         ThrustFunctorWrapper t_op(m_functor);
         //ThrustFunctorWrapper<functor_type> t_op(m_functor);
-
-        //b_op(m_functor);
-        //printf("value_type: %d, functor_type: %d\n", value_type, functor_type);
-        //printf("value_type: %d, functor_type: %d\n", value_type, 3);
-
-        //sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, b_op);
-        //sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, thrust::plus<int64_t>());
-        //sum = thrust::reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), (int64_t)0, m_functor);
-        
 
         //sum = thrust::transform_reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), t_op, (value_type)0, m_reducer);
         sum = thrust::transform_reduce(thrust::device, temp_vec_d.begin(), temp_vec_d.end(), t_op, (value_type)0, thrust::plus<value_type>());
@@ -1172,8 +1147,11 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
         *m_result_ptr = sum;
 
+        /*
+         * Will need to implement this logic, but for now Thrust copies sum back to Host implicitly
         if (m_result_ptr_host_accessible == true) printf("host_accessible\n");
         if (m_result_ptr_device_accessible == true) printf("device_accessible\n");
+        */
 
   }
 
