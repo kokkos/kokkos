@@ -155,7 +155,7 @@ struct SmartMemoryAccessor {
   template <typename Space>
   static SmartMemoryAccessor<Space, ValueType> create_mirror(
       SmartMemoryAccessor<MemorySpace, ValueType> const& other,
-      typename std::enable_if<not is_accessible_from<Space>>::type* = nullptr) {
+      typename std::enable_if<!is_accessible_from<Space>>::type* = nullptr) {
     using tag_type =
         typename SmartMemoryAccessor<Space, ValueType>::INACCESSIBLE_TAG;
     return SmartMemoryAccessor<Space, ValueType>{tag_type{}, other.m_chunk_max,
@@ -199,7 +199,7 @@ struct SmartMemoryAccessor {
   pointer_type* get_ptr() const { return m_chunks; }
 
   template <typename Space>
-  typename std::enable_if<not is_accessible_from<Space>>::type deep_copy_to(
+  typename std::enable_if<!is_accessible_from<Space>>::type deep_copy_to(
       SmartMemoryAccessor<Space, ValueType> const& other) {
     Kokkos::Impl::DeepCopy<Space, MemorySpace>(
         other.m_chunks, m_chunks, sizeof(pointer_type) * (m_chunk_max + 2));
