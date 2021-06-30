@@ -42,61 +42,32 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_BITSET_IMPL_HPP
-#define KOKKOS_BITSET_IMPL_HPP
+#include <impl/Kokkos_Utilities.hpp>
 
-#include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_BitOps.hpp>
-#include <cstdint>
+using TypeList2 = Kokkos::Impl::type_list<void, bool>;
+using TypeList3 = Kokkos::Impl::type_list<char, short, int>;
+using TypeList223 =
+    Kokkos::Impl::type_list<void, bool, void, bool, char, short, int>;
+using TypeList223Void   = Kokkos::Impl::type_list<void, void>;
+using TypeList223NoVoid = Kokkos::Impl::type_list<bool, bool, char, short, int>;
 
-#include <cstdio>
-#include <climits>
-#include <iostream>
-#include <iomanip>
+// concat_type_list
+using ConcatTypeList2 = Kokkos::Impl::concat_type_list_t<TypeList2>;
+static_assert(std::is_same<TypeList2, ConcatTypeList2>::value,
+              "concat_type_list of a single type_list failed");
 
-namespace Kokkos {
-namespace Impl {
+using ConcatTypeList223 =
+    Kokkos::Impl::concat_type_list_t<TypeList2, TypeList2, TypeList3>;
+static_assert(std::is_same<TypeList223, ConcatTypeList223>::value,
+              "concat_type_list of three type_lists failed");
 
-KOKKOS_FORCEINLINE_FUNCTION
-unsigned rotate_right(unsigned i, int r) {
-  constexpr int size = static_cast<int>(sizeof(unsigned) * CHAR_BIT);
-  return r ? ((i >> r) | (i << (size - r))) : i;
-}
+// filter_type_list
+using FilterTypeList223Void =
+    Kokkos::Impl::filter_type_list_t<std::is_void, TypeList223>;
+static_assert(std::is_same<TypeList223Void, FilterTypeList223Void>::value,
+              "filter_type_list with predicate value==true failed");
 
-template <typename Bitset>
-struct BitsetCount {
-  using bitset_type = Bitset;
-  using execution_space =
-      typename bitset_type::execution_space::execution_space;
-  using size_type  = typename bitset_type::size_type;
-  using value_type = size_type;
-
-  bitset_type m_bitset;
-
-  BitsetCount(bitset_type const& bitset) : m_bitset(bitset) {}
-
-  size_type apply() const {
-    size_type count = 0u;
-    parallel_reduce("Kokkos::Impl::BitsetCount::apply",
-                    m_bitset.m_blocks.extent(0), *this, count);
-    return count;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void init(value_type& count) const { count = 0u; }
-
-  KOKKOS_INLINE_FUNCTION
-  void join(volatile value_type& count, const volatile size_type& incr) const {
-    count += incr;
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(size_type i, value_type& count) const {
-    count += bit_count(m_bitset.m_blocks[i]);
-  }
-};
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-#endif  // KOKKOS_BITSET_IMPL_HPP
+using FilterTypeList223NoVoid =
+    Kokkos::Impl::filter_type_list_t<std::is_void, TypeList223, false>;
+static_assert(std::is_same<TypeList223NoVoid, FilterTypeList223NoVoid>::value,
+              "filter_type_list with predicate value==false failed");

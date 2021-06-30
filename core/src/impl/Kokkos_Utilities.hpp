@@ -209,6 +209,54 @@ struct type_list_any<UnaryPred, type_list<>> : std::false_type {};
 // </editor-fold> end type_list_any }}}2
 //------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
+// <editor-fold desc="concat_type_list"> {{{2
+//  concat_type_list combines types in multiple type_lists
+
+// forward declaration
+template <typename... T>
+struct concat_type_list;
+
+// alias
+template <typename... T>
+using concat_type_list_t = typename concat_type_list<T...>::type;
+
+// final instantiation
+template <typename... T>
+struct concat_type_list<type_list<T...>> {
+  using type = type_list<T...>;
+};
+
+// combine consecutive type_lists
+template <typename... T, typename... U, typename... Tail>
+struct concat_type_list<type_list<T...>, type_list<U...>, Tail...>
+    : concat_type_list<type_list<T..., U...>, Tail...> {};
+// </editor-fold> end concat_type_list }}}2
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// <editor-fold desc="filter_type_list"> {{{2
+//  filter_type_list generates type-list of types which satisfy
+//  PredicateT<T>::value == ValueT
+
+template <template <typename> class PredicateT, typename TypeListT,
+          bool ValueT = true>
+struct filter_type_list;
+
+template <template <typename> class PredicateT, typename... T, bool ValueT>
+struct filter_type_list<PredicateT, type_list<T...>, ValueT> {
+  using type =
+      concat_type_list_t<std::conditional_t<PredicateT<T>::value == ValueT,
+                                            type_list<T>, type_list<>>...>;
+};
+
+template <template <typename> class PredicateT, typename T, bool ValueT = true>
+using filter_type_list_t =
+    typename filter_type_list<PredicateT, T, ValueT>::type;
+
+// </editor-fold> end filter_type_list }}}2
+//------------------------------------------------------------------------------
+
 // </editor-fold> end type_list }}}1
 //==============================================================================
 

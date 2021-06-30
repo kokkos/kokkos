@@ -171,6 +171,7 @@ void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 namespace Kokkos {
 
 KOKKOS_DEPRECATED void Experimental::HIPSpace::access_error() {
@@ -188,6 +189,7 @@ KOKKOS_DEPRECATED void Experimental::HIPSpace::access_error(const void* const) {
 }
 
 }  // namespace Kokkos
+#endif
 
 /*--------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------------*/

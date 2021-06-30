@@ -47,7 +47,8 @@
 
 #include <Kokkos_Macros.hpp>
 
-#if defined(KOKKOS_ENABLE_MPI)
+//#define USE_MPI
+#if defined(USE_MPI)
 #include <mpi.h>
 #endif
 
@@ -61,7 +62,7 @@ int main(int argc, char** argv) {
 
   (void)argc;
   (void)argv;
-#if defined(KOKKOS_ENABLE_MPI)
+#if defined(USE_MPI)
 
   MPI_Init(&argc, &argv);
 
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
 
   std::cout << msg.str();
 
-#if defined(KOKKOS_ENABLE_MPI)
+#if defined(USE_MPI)
 
   MPI_Finalize();
 

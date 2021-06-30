@@ -942,12 +942,6 @@ void CudaSpaceInitializer::print_configuration(std::ostream &msg,
 #else
   msg << "no\n";
 #endif
-  msg << "  KOKKOS_ENABLE_CUSPARSE: ";
-#ifdef KOKKOS_ENABLE_CUSPARSE
-  msg << "yes\n";
-#else
-  msg << "no\n";
-#endif
   msg << "  KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA: ";
 #ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   msg << "yes\n";

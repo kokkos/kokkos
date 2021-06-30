@@ -213,8 +213,9 @@ void OpenMP::partition_master(F const& f, int num_partitions,
 
 namespace Experimental {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 template <>
-class MasterLock<OpenMP> {
+class KOKKOS_DEPRECATED MasterLock<OpenMP> {
  public:
   void lock() { omp_set_lock(&m_lock); }
   void unlock() { omp_unset_lock(&m_lock); }
@@ -231,6 +232,7 @@ class MasterLock<OpenMP> {
  private:
   omp_lock_t m_lock;
 };
+#endif
 
 template <>
 class UniqueToken<OpenMP, UniqueTokenScope::Instance> {

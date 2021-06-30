@@ -96,6 +96,7 @@ KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBDL)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBRT)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC PTHREAD)
 KOKKOS_LINK_TPL(kokkoscore PUBLIC ROCM)
+
 # FIXME: We need a proper solution to figure out whether to enable
 #        libatomic
 IF (KOKKOS_ENABLE_IMPL_DESUL_ATOMICS AND
@@ -104,3 +105,4 @@ IF (KOKKOS_ENABLE_IMPL_DESUL_ATOMICS AND
 ENDIF()
 
 
+KOKKOS_LINK_TPL(kokkoscore PUBLIC LIBQUADMATH)
