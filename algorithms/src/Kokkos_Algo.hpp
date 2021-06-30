@@ -85,13 +85,25 @@ auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
 }
 
 template <class PointerType, class FunctorType>
+struct ForEach {
+  FunctorType functor;
+  PointerType data;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i) const {
+    auto element = data + i;
+    functor(*element);
+  }
+
+  ForEach(PointerType _data, FunctorType _functor)
+      : data(_data), functor(_functor) {}
+};
+
+template <class PointerType, class FunctorType>
 FunctorType for_each(PointerType data, PointerType end, FunctorType functor) {
   const auto numOfElements = end - data;
-  Kokkos::parallel_for(
-      numOfElements, KOKKOS_LAMBDA(const int i) {
-        auto element = data + i;
-        functor(*element);
-      });
+  Kokkos::parallel_for(numOfElements,
+                       ForEach<PointerType, FunctorType>(data, functor));
   return functor;
 }
 
