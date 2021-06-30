@@ -161,7 +161,7 @@ struct SmartMemoryAccessor {
         Space().deallocate(m_label.c_str(), m_chunks[i],
                                  sizeof(value_type) * m_chunk_size);
       }
-      // Destroy the linked allocate if we have one.
+      // Destroy the linked allocation if we have one.
       if (m_linked != nullptr) {
         Space().deallocate(m_label.c_str(), m_linked,
                                  (sizeof(value_type*) * (m_chunk_max + 2)));
