@@ -42,36 +42,12 @@
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
-#include <Kokkos_StdAlgorithms.hpp>
-#include <cstdio>
+#ifndef KOKKOS_STD_ALGORITHMS_HPP
+#define KOKKOS_STD_ALGORITHMS_HPP
 
-int main(int argc, char* argv[]) {
-  Kokkos::initialize(argc, argv);
+/// \file Kokkos_StdAlgorithms.hpp
+/// \brief Kokkos counterparts for Standard C++ Library algorithms
 
-  {
-    const auto fun = KOKKOS_LAMBDA(double& d) { d++; };
-    Kokkos::View<double*> v("label", 10);
+#include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
 
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-    Kokkos::Experimental::for_each(v, fun);
-
-    Kokkos::Experimental::for_each(Kokkos::Experimental::begin(v),
-                                   Kokkos::Experimental::end(v), fun);
-
-    Kokkos::Experimental::for_each(v.data(), v.data() + v.size(), fun);
-
-    Kokkos::Experimental::for_each_n(v.data(), 5, fun);
-
-    Kokkos::Experimental::for_each_n(v, 3, fun);
-
-    double sum = 0;
-    Kokkos::parallel_reduce(
-        v.extent(0), KOKKOS_LAMBDA(const int i, double& lsum) { lsum += v(i); },
-        sum);
-    printf("Result: %f\n", sum);
 #endif
-  }
-
-  Kokkos::finalize();
-}

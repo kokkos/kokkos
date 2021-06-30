@@ -42,13 +42,13 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_ALGO_HPP
-#define KOKKOS_ALGO_HPP
+#ifndef KOKKOS_NON_MODIFYING_SEQUENCE_OPERATIONS_HPP
+#define KOKKOS_NON_MODIFYING_SEQUENCE_OPERATIONS_HPP
 
 #include <Kokkos_Core.hpp>
 
-/// \file Kokkos_Algo.hpp
-/// \brief Kokkos counterparts for Standard C++ Library algorithms
+/// \file Kokkos_NonModifyingSequenceOperations.hpp
+/// \brief Kokkos non-modifying sequence operations
 
 namespace Kokkos {
 namespace Experimental {
