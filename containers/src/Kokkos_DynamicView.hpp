@@ -55,6 +55,9 @@ namespace Experimental {
 
 namespace Impl {
 
+/// Utility class to manage memory for chunked arrays on the host and
+/// device. Allocates/deallocates memory on both the host and device along with
+/// providing utilities for creating mirrors and deep copying between them.
 template <typename MemorySpace, typename ValueType>
 struct ChunkedArrayManager {
   using value_type   = ValueType;
