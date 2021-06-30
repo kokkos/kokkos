@@ -58,41 +58,34 @@ struct view_admissible_to_kokkos_std_algorithms : std::false_type {};
 
 template <typename T>
 struct view_admissible_to_kokkos_std_algorithms<
-  T,
-  std::enable_if_t<
-    ::Kokkos::is_view<T>::value and T::rank==1
-    >
-  > : std::true_type{};
-
+    T, std::enable_if_t< ::Kokkos::is_view<T>::value and T::rank == 1> >
+    : std::true_type {};
 
 template <class DataType, class... Properties>
 auto begin(const Kokkos::View<DataType, Properties...>& v)
-    -> decltype(v.data())
-{
+    -> decltype(v.data()) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert
-    (view_admissible_to_kokkos_std_algorithms<ViewInType>::value,
-     "Currently, Kokkos::Experimental::begin only accepts 1D contiguous Views.");
+  static_assert(view_admissible_to_kokkos_std_algorithms<ViewInType>::value,
+                "Currently, Kokkos::Experimental::begin only accepts 1D "
+                "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
   return v.data();
 }
 
 template <class DataType, class... Properties>
-auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data())
-{
+auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert
-    (view_admissible_to_kokkos_std_algorithms<ViewInType>::value,
-     "Currently, Kokkos::Experimental::end only accepts 1D contiguous Views.");
+  static_assert(
+      view_admissible_to_kokkos_std_algorithms<ViewInType>::value,
+      "Currently, Kokkos::Experimental::end only accepts 1D contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
   return v.data() + v.size();
 }
 
 template <class PointerType, class FunctorType>
-FunctorType for_each(PointerType data, PointerType end, FunctorType functor)
-{
+FunctorType for_each(PointerType data, PointerType end, FunctorType functor) {
   const auto numOfElements = end - data;
   Kokkos::parallel_for(
       numOfElements, KOKKOS_LAMBDA(const int i) {
@@ -104,20 +97,19 @@ FunctorType for_each(PointerType data, PointerType end, FunctorType functor)
 
 template <class DataType, class... Properties, class FunctorType>
 FunctorType for_each(Kokkos::View<DataType, Properties...> v,
-                     FunctorType functor)
-{
+                     FunctorType functor) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert
-    (view_admissible_to_kokkos_std_algorithms<ViewInType>::value,
-     "Currently, Kokkos::Experimental::for_each only accepts 1D contiguous Views.");
+  static_assert(view_admissible_to_kokkos_std_algorithms<ViewInType>::value,
+                "Currently, Kokkos::Experimental::for_each only accepts 1D "
+                "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
-  return for_each(::Kokkos::Experimental::begin(v), ::Kokkos::Experimental::end(v), std::move(functor));
+  return for_each(::Kokkos::Experimental::begin(v),
+                  ::Kokkos::Experimental::end(v), std::move(functor));
 }
 
 template <class PointerType, class SizeType, class FunctorType>
-PointerType for_each_n(PointerType data, SizeType n, FunctorType functor)
-{
+PointerType for_each_n(PointerType data, SizeType n, FunctorType functor) {
   if (n <= 0) return data;
 
   auto last = data + n;
