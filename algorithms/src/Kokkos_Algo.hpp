@@ -133,6 +133,12 @@ template <class DataType, class... Properties, class SizeType,
           class FunctorType>
 void for_each_n(Kokkos::View<DataType, Properties...> v, SizeType n,
                 FunctorType functor) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(view_admissible_to_kokkos_std_algorithms<ViewInType>::value,
+                "Currently, Kokkos::Experimental::for_each_n only accepts 1D "
+                "contiguous Views.");
+
+  KOKKOS_EXPECTS(v.span_is_contiguous());
   for_each_n(begin(v), n, std::move(functor));
 }
 
