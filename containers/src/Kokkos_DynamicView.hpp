@@ -137,6 +137,8 @@ struct SmartMemoryAccessor {
   }
 
  private:
+  /// Custom destroy functor for deallocating array chunks along with a linked
+  /// allocation
   template <typename Space>
   struct Destroy {
     Destroy()               = default;
