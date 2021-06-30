@@ -56,22 +56,22 @@ namespace Experimental {
 namespace Impl {
 
 template <typename MemorySpace, typename ValueType>
-struct SmartMemoryAccessor {
+struct ChunkedArrayManager {
   using value_type   = ValueType;
   using pointer_type = ValueType*;
   using track_type   = Kokkos::Impl::SharedAllocationTracker;
 
-  SmartMemoryAccessor()                           = default;
-  SmartMemoryAccessor(SmartMemoryAccessor const&) = default;
-  SmartMemoryAccessor(SmartMemoryAccessor&&)      = default;
-  SmartMemoryAccessor& operator=(SmartMemoryAccessor&&) = default;
-  SmartMemoryAccessor& operator=(const SmartMemoryAccessor&) = default;
+  ChunkedArrayManager()                           = default;
+  ChunkedArrayManager(ChunkedArrayManager const&) = default;
+  ChunkedArrayManager(ChunkedArrayManager&&)      = default;
+  ChunkedArrayManager& operator=(ChunkedArrayManager&&) = default;
+  ChunkedArrayManager& operator=(const ChunkedArrayManager&) = default;
 
   template <typename Space, typename Value>
-  friend struct SmartMemoryAccessor;
+  friend struct ChunkedArrayManager;
 
   template <typename Space, typename Value>
-  inline SmartMemoryAccessor(const SmartMemoryAccessor<Space, Value>& rhs)
+  inline ChunkedArrayManager(const ChunkedArrayManager<Space, Value>& rhs)
       : m_valid(rhs.m_valid),
         m_chunk_max(rhs.m_chunk_max),
         m_chunks((ValueType**)(rhs.m_chunks)),
@@ -79,10 +79,10 @@ struct SmartMemoryAccessor {
         m_chunk_size(rhs.m_chunk_size) {
     static_assert(
         Kokkos::Impl::MemorySpaceAccess<MemorySpace, Space>::assignable,
-        "Incompatible SmartMemoryAccessor copy construction");
+        "Incompatible ChunkedArrayManager copy construction");
   }
 
-  SmartMemoryAccessor(const unsigned arg_chunk_max,
+  ChunkedArrayManager(const unsigned arg_chunk_max,
                       const unsigned arg_chunk_size)
       : m_chunk_max(arg_chunk_max), m_chunk_size(arg_chunk_size) {}
 
@@ -90,11 +90,11 @@ struct SmartMemoryAccessor {
   struct ACCESSIBLE_TAG {};
   struct INACCESSIBLE_TAG {};
 
-  SmartMemoryAccessor(ACCESSIBLE_TAG, pointer_type* arg_chunks,
+  ChunkedArrayManager(ACCESSIBLE_TAG, pointer_type* arg_chunks,
                       const unsigned arg_chunk_max)
       : m_valid(true), m_chunk_max(arg_chunk_max), m_chunks(arg_chunks) {}
 
-  SmartMemoryAccessor(INACCESSIBLE_TAG, const unsigned arg_chunk_max,
+  ChunkedArrayManager(INACCESSIBLE_TAG, const unsigned arg_chunk_max,
                       const unsigned arg_chunk_size)
       : m_chunk_max(arg_chunk_max), m_chunk_size(arg_chunk_size) {}
 
@@ -104,20 +104,20 @@ struct SmartMemoryAccessor {
       Kokkos::Impl::MemorySpaceAccess<MemorySpace, Space>::accessible;
 
   template <typename Space>
-  static SmartMemoryAccessor<Space, ValueType> create_mirror(
-      SmartMemoryAccessor<MemorySpace, ValueType> const& other,
+  static ChunkedArrayManager<Space, ValueType> create_mirror(
+      ChunkedArrayManager<MemorySpace, ValueType> const& other,
       typename std::enable_if<is_accessible_from<Space>>::type* = nullptr) {
-    return SmartMemoryAccessor<Space, ValueType>{
+    return ChunkedArrayManager<Space, ValueType>{
         ACCESSIBLE_TAG{}, other.m_chunks, other.m_chunk_max};
   }
 
   template <typename Space>
-  static SmartMemoryAccessor<Space, ValueType> create_mirror(
-      SmartMemoryAccessor<MemorySpace, ValueType> const& other,
+  static ChunkedArrayManager<Space, ValueType> create_mirror(
+      ChunkedArrayManager<MemorySpace, ValueType> const& other,
       typename std::enable_if<!is_accessible_from<Space>>::type* = nullptr) {
     using tag_type =
-        typename SmartMemoryAccessor<Space, ValueType>::INACCESSIBLE_TAG;
-    return SmartMemoryAccessor<Space, ValueType>{tag_type{}, other.m_chunk_max,
+        typename ChunkedArrayManager<Space, ValueType>::INACCESSIBLE_TAG;
+    return ChunkedArrayManager<Space, ValueType>{tag_type{}, other.m_chunk_max,
                                                  other.m_chunk_size};
   }
 
@@ -203,14 +203,14 @@ struct SmartMemoryAccessor {
 
   template <typename Space>
   typename std::enable_if<!is_accessible_from<Space>>::type deep_copy_to(
-      SmartMemoryAccessor<Space, ValueType> const& other) {
+      ChunkedArrayManager<Space, ValueType> const& other) {
     Kokkos::Impl::DeepCopy<Space, MemorySpace>(
         other.m_chunks, m_chunks, sizeof(pointer_type) * (m_chunk_max + 2));
   }
 
   template <typename Space>
   typename std::enable_if<is_accessible_from<Space>>::type deep_copy_to(
-      SmartMemoryAccessor<Space, ValueType> const&) {
+      ChunkedArrayManager<Space, ValueType> const&) {
     // no-op
   }
 
@@ -248,8 +248,8 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   using device_space = typename traits::memory_space;
   using host_space =
       typename Kokkos::Impl::HostMirror<device_space>::Space::memory_space;
-  using device_accessor = Impl::SmartMemoryAccessor<device_space, value_type>;
-  using host_accessor   = Impl::SmartMemoryAccessor<host_space, value_type>;
+  using device_accessor = Impl::ChunkedArrayManager<device_space, value_type>;
+  using host_accessor   = Impl::ChunkedArrayManager<host_space, value_type>;
 
  private:
   template <class, class...>
