@@ -548,8 +548,7 @@ TEST(TEST_CATEGORY, int64_t_reduce) {
 }
 
 TEST(TEST_CATEGORY, double_reduce) {
-  // FIXME_OPENMPTARGET : This should technically work but does not yet. Trying
-  // to fix it now.
+  // FIXME_OPENMPTARGET : This should technically work but does not pass in CI.
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestReduce<double, TEST_EXECSPACE>(0);
 #endif
@@ -557,10 +556,11 @@ TEST(TEST_CATEGORY, double_reduce) {
 }
 
 TEST(TEST_CATEGORY, int64_t_reduce_dynamic) {
+  // FIXME_OPENMPTARGET : This should technically work but does not yet.
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestReduceDynamic<int64_t, TEST_EXECSPACE>(0);
-#endif
   TestReduceDynamic<int64_t, TEST_EXECSPACE>(1000000);
+#endif
 }
 
 TEST(TEST_CATEGORY, double_reduce_dynamic) {
