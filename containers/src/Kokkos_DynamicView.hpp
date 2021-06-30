@@ -56,49 +56,8 @@ namespace Experimental {
 namespace Impl {
 
 template <typename MemorySpace, typename ValueType>
-struct Destroy {
-  using value_type = ValueType;
-
-  Destroy()               = default;
-  Destroy(Destroy&&)      = default;
-  Destroy(const Destroy&) = default;
-  Destroy& operator=(Destroy&&) = default;
-  Destroy& operator=(const Destroy&) = default;
-
-  Destroy(std::string label, ValueType** arg_chunk,
-          const unsigned arg_chunk_max, const unsigned arg_chunk_size,
-          value_type** arg_linked)
-      : m_label(label),
-        m_chunks(arg_chunk),
-        m_linked(arg_linked),
-        m_chunk_max(arg_chunk_max),
-        m_chunk_size(arg_chunk_size) {}
-
-  void execute() {
-    // Destroy the array of chunk pointers.
-    // Two entries beyond the max chunks are allocation counters.
-    for (unsigned i = 0; i < m_chunk_max; i++) {
-      MemorySpace().deallocate(m_label.c_str(), m_chunks[i],
-                               sizeof(value_type) * m_chunk_size);
-    }
-    // Destroy the linked allocate if we have one.
-    if (m_linked != nullptr) {
-      MemorySpace().deallocate(m_label.c_str(), m_linked,
-                               (sizeof(value_type*) * (m_chunk_max + 2)));
-    }
-  }
-
-  void destroy_shared_allocation() { execute(); }
-
-  std::string m_label;
-  value_type** m_chunks = nullptr;
-  value_type** m_linked = nullptr;
-  unsigned m_chunk_max;
-  unsigned m_chunk_size;
-};
-
-template <typename MemorySpace, typename ValueType>
 struct SmartMemoryAccessor {
+  using value_type   = ValueType;
   using pointer_type = ValueType*;
   using track_type   = Kokkos::Impl::SharedAllocationTracker;
 
@@ -177,10 +136,52 @@ struct SmartMemoryAccessor {
     m_valid = true;
   }
 
+ private:
+  template <typename Space>
+  struct Destroy {
+    Destroy()               = default;
+    Destroy(Destroy&&)      = default;
+    Destroy(const Destroy&) = default;
+    Destroy& operator=(Destroy&&) = default;
+    Destroy& operator=(const Destroy&) = default;
+
+    Destroy(std::string label, value_type** arg_chunk,
+            const unsigned arg_chunk_max, const unsigned arg_chunk_size,
+            value_type** arg_linked)
+      : m_label(label),
+        m_chunks(arg_chunk),
+        m_linked(arg_linked),
+        m_chunk_max(arg_chunk_max),
+        m_chunk_size(arg_chunk_size) {}
+
+    void execute() {
+      // Destroy the array of chunk pointers.
+      // Two entries beyond the max chunks are allocation counters.
+      for (unsigned i = 0; i < m_chunk_max; i++) {
+        Space().deallocate(m_label.c_str(), m_chunks[i],
+                                 sizeof(value_type) * m_chunk_size);
+      }
+      // Destroy the linked allocate if we have one.
+      if (m_linked != nullptr) {
+        Space().deallocate(m_label.c_str(), m_linked,
+                                 (sizeof(value_type*) * (m_chunk_max + 2)));
+      }
+    }
+
+    void destroy_shared_allocation() { execute(); }
+
+    std::string m_label;
+    value_type** m_chunks = nullptr;
+    value_type** m_linked = nullptr;
+    unsigned m_chunk_max;
+    unsigned m_chunk_size;
+  };
+
+ public:
   template <typename Space>
   void allocate_with_destroy(const std::string& label,
                              pointer_type* linked_allocation = nullptr) {
-    using destroy_type = Destroy<Space, ValueType>;
+    using destroy_type = Destroy<Space>;
     using record_type =
         Kokkos::Impl::SharedAllocationRecord<MemorySpace, destroy_type>;
 
