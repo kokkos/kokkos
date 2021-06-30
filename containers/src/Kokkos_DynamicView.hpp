@@ -153,23 +153,23 @@ struct ChunkedArrayManager {
     Destroy(std::string label, value_type** arg_chunk,
             const unsigned arg_chunk_max, const unsigned arg_chunk_size,
             value_type** arg_linked)
-      : m_label(label),
-        m_chunks(arg_chunk),
-        m_linked(arg_linked),
-        m_chunk_max(arg_chunk_max),
-        m_chunk_size(arg_chunk_size) {}
+        : m_label(label),
+          m_chunks(arg_chunk),
+          m_linked(arg_linked),
+          m_chunk_max(arg_chunk_max),
+          m_chunk_size(arg_chunk_size) {}
 
     void execute() {
       // Destroy the array of chunk pointers.
       // Two entries beyond the max chunks are allocation counters.
       for (unsigned i = 0; i < m_chunk_max; i++) {
         Space().deallocate(m_label.c_str(), m_chunks[i],
-                                 sizeof(value_type) * m_chunk_size);
+                           sizeof(value_type) * m_chunk_size);
       }
       // Destroy the linked allocation if we have one.
       if (m_linked != nullptr) {
         Space().deallocate(m_label.c_str(), m_linked,
-                                 (sizeof(value_type*) * (m_chunk_max + 2)));
+                           (sizeof(value_type*) * (m_chunk_max + 2)));
       }
     }
 
