@@ -117,6 +117,13 @@ PointerType for_each_n(PointerType data, SizeType n, FunctorType functor) {
   return last;
 }
 
+template <class DataType, class... Properties, class SizeType,
+          class FunctorType>
+void for_each_n(Kokkos::View<DataType, Properties...> v, SizeType n,
+                FunctorType functor) {
+  for_each_n(begin(v), n, std::move(functor));
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 

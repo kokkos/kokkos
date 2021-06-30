@@ -63,6 +63,8 @@ int main(int argc, char* argv[]) {
 
     Kokkos::Experimental::for_each_n(v.data(), 5, fun);
 
+    Kokkos::Experimental::for_each_n(v, 3, fun);
+
     double sum = 0;
     Kokkos::parallel_reduce(
         v.extent(0), KOKKOS_LAMBDA(const int i, double& lsum) { lsum += v(i); },
