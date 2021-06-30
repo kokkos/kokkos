@@ -204,7 +204,7 @@ CudaUVMSpace::CudaUVMSpace() : m_device(Kokkos::Cuda().cuda_device()) {}
 
 CudaHostPinnedSpace::CudaHostPinnedSpace() {}
 
-int memory_threshold_g = 40000; // 5 kB
+int memory_threshold_g = 40000;  // 40 kB
 
 //==============================================================================
 // <editor-fold desc="allocate()"> {{{1
@@ -356,11 +356,11 @@ void CudaSpace::impl_deallocate(
 #error CUDART_VERSION undefined!
 #elif (CUDART_VERSION >= 11020)
     if (arg_alloc_size >= memory_threshold_g) {
-        CUDA_SAFE_CALL(cudaDeviceSynchronize());
-        CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
-        CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
+      CUDA_SAFE_CALL(cudaDeviceSynchronize());
     } else {
-        CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
+      CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
     }
 #else
     CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
