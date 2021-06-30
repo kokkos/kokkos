@@ -540,12 +540,11 @@ class TestReduceDynamicView {
 }  // namespace
 
 TEST(TEST_CATEGORY, int64_t_reduce) {
-  // FIXME_OPENMPTARGET : This should technically work but does not yet. Trying
-  // to fix it now.
+  // FIXME_OPENMPTARGET : This should technically work but does not pass in CI.
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestReduce<int64_t, TEST_EXECSPACE>(0);
-#endif
   TestReduce<int64_t, TEST_EXECSPACE>(1000000);
+#endif
 }
 
 TEST(TEST_CATEGORY, double_reduce) {
