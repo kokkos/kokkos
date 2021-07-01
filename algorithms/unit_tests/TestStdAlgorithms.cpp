@@ -51,7 +51,7 @@ namespace Test {
 class std_algorithms : public ::testing::Test {
  protected:
   void verify_values(int expected) {
-    for (int i = 0; i < m_view.extent(0); i++) {
+    for (std::size_t i = 0; i < m_view.extent(0); i++) {
       EXPECT_EQ(expected, m_view[i]);
     }
   }
@@ -90,8 +90,8 @@ TEST_F(std_algorithms, for_each_functor) {
 }
 
 TEST_F(std_algorithms, for_each_lambda) {
-  const auto fun = KOKKOS_LAMBDA(int& i) { i++; };
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  const auto fun = KOKKOS_LAMBDA(int& i) { i++; };
   test_with(fun);
 #endif
 }

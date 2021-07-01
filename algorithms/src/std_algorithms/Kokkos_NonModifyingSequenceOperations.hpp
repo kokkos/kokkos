@@ -89,8 +89,8 @@ auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
 
 template <class PointerType, class FunctorType>
 struct ForEach {
-  FunctorType functor;
   PointerType data;
+  FunctorType functor;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int i) const {
