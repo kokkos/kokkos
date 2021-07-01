@@ -103,11 +103,17 @@ struct ForEach {
 };
 
 template <class PointerType, class FunctorType>
-FunctorType for_each(PointerType data, PointerType end, FunctorType functor) {
+FunctorType for_each(const std::string& label, PointerType data,
+                     PointerType end, FunctorType functor) {
   const auto numOfElements = end - data;
-  Kokkos::parallel_for(numOfElements,
+  Kokkos::parallel_for(label, numOfElements,
                        ForEach<PointerType, FunctorType>(data, functor));
   return functor;
+}
+
+template <class PointerType, class FunctorType>
+FunctorType for_each(PointerType data, PointerType end, FunctorType functor) {
+  return for_each("", data, end, std::move(functor));
 }
 
 template <class DataType, class... Properties, class FunctorType>

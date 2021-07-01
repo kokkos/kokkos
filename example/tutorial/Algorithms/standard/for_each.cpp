@@ -59,6 +59,9 @@ int main(int argc, char* argv[]) {
     Kokkos::Experimental::for_each(Kokkos::Experimental::begin(v),
                                    Kokkos::Experimental::end(v), fun);
 
+    Kokkos::Experimental::for_each("some-label", Kokkos::Experimental::begin(v),
+                                   Kokkos::Experimental::end(v), fun);
+
     Kokkos::Experimental::for_each(v.data(), v.data() + v.size(), fun);
 
     Kokkos::Experimental::for_each_n(v.data(), 5, fun);
