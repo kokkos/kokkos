@@ -208,6 +208,8 @@ CudaUVMSpace::CudaUVMSpace() : m_device(Kokkos::Cuda().cuda_device()) {}
 
 CudaHostPinnedSpace::CudaHostPinnedSpace() {}
 
+int memory_threshold_g = 40000;  // 40 kB
+
 //==============================================================================
 // <editor-fold desc="allocate()"> {{{1
 
@@ -225,7 +227,19 @@ void *CudaSpace::impl_allocate(
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
 
+#ifndef CUDART_VERSION
+#error CUDART_VERSION undefined!
+#elif (CUDART_VERSION >= 11020)
+  cudaError_t error_code;
+  if (arg_alloc_size >= memory_threshold_g) {
+    error_code = cudaMallocAsync(&ptr, arg_alloc_size, 0);
+    CUDA_SAFE_CALL(cudaDeviceSynchronize());
+  } else {
+    error_code = cudaMalloc(&ptr, arg_alloc_size);
+  }
+#else
   auto error_code = cudaMalloc(&ptr, arg_alloc_size);
+#endif
   if (error_code != cudaSuccess) {  // TODO tag as unlikely branch
     cudaGetLastError();  // This is the only way to clear the last error, which
                          // we should do here since we're turning it into an
@@ -341,9 +355,20 @@ void CudaSpace::impl_deallocate(
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
-
   try {
+#ifndef CUDART_VERSION
+#error CUDART_VERSION undefined!
+#elif (CUDART_VERSION >= 11020)
+    if (arg_alloc_size >= memory_threshold_g) {
+      CUDA_SAFE_CALL(cudaDeviceSynchronize());
+      CUDA_SAFE_CALL(cudaFreeAsync(arg_alloc_ptr, 0));
+      CUDA_SAFE_CALL(cudaDeviceSynchronize());
+    } else {
+      CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
+    }
+#else
     CUDA_SAFE_CALL(cudaFree(arg_alloc_ptr));
+#endif
   } catch (...) {
   }
 }
