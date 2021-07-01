@@ -198,6 +198,7 @@ ENDIF()
 
 IF (KOKKOS_ARCH_A64FX)
   COMPILER_SPECIFIC_FLAGS(
+    PGI  NO-VALUE-SPECIFIED
     DEFAULT -march=armv8.2-a+sve
     Clang -march=armv8.2-a+sve -msve-vector-bits=512
     GCC -march=armv8.2-a+sve -msve-vector-bits=512
@@ -207,6 +208,7 @@ ENDIF()
 IF (KOKKOS_ARCH_ZEN)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
+    PGI     -tp=zen
     DEFAULT -march=znver1 -mtune=znver1
   )
   SET(KOKKOS_ARCH_AMD_ZEN  ON)
@@ -216,6 +218,7 @@ ENDIF()
 IF (KOKKOS_ARCH_ZEN2)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
+    PGI     -tp=zen2
     DEFAULT -march=znver2 -mtune=znver2
   )
   SET(KOKKOS_ARCH_AMD_ZEN2 ON)
@@ -225,6 +228,7 @@ ENDIF()
 IF (KOKKOS_ARCH_ZEN3)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -mavx2
+    PGI     -tp=zen2
     DEFAULT -march=znver3 -mtune=znver3
   )
   SET(KOKKOS_ARCH_AMD_ZEN3 ON)
@@ -234,7 +238,7 @@ ENDIF()
 IF (KOKKOS_ARCH_WSM)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -xSSE4.2
-    PGI     -tp=nehalem
+    PGI     -tp=px
     Cray    NO-VALUE-SPECIFIED
     DEFAULT -msse4.2
   )
@@ -276,7 +280,7 @@ IF (KOKKOS_ARCH_KNL)
   SET(KOKKOS_ARCH_AVX512MIC ON) #not a cache variable
   COMPILER_SPECIFIC_FLAGS(
     Intel   -xMIC-AVX512
-    PGI     NO-VALUE-SPECIFIED
+    PGI     -tp=knl
     Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=knl -mtune=knl
   )
@@ -294,7 +298,7 @@ IF (KOKKOS_ARCH_SKX)
   SET(KOKKOS_ARCH_AVX512XEON ON)
   COMPILER_SPECIFIC_FLAGS(
     Intel   -xCORE-AVX512
-    PGI     NO-VALUE-SPECIFIED
+    PGI     -tp=skylake
     Cray    NO-VALUE-SPECIFIED
     DEFAULT -march=skylake-avx512 -mtune=skylake-avx512 -mrtm
   )
@@ -318,7 +322,7 @@ ENDIF()
 
 IF (KOKKOS_ARCH_POWER8)
   COMPILER_SPECIFIC_FLAGS(
-    PGI     NO-VALUE-SPECIFIED
+    PGI     -tp=host
     NVIDIA  NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power8 -mtune=power8
   )
@@ -326,7 +330,7 @@ ENDIF()
 
 IF (KOKKOS_ARCH_POWER9)
   COMPILER_SPECIFIC_FLAGS(
-    PGI     NO-VALUE-SPECIFIED
+    PGI     native
     NVIDIA  NO-VALUE-SPECIFIED
     DEFAULT -mcpu=power9 -mtune=power9
   )
