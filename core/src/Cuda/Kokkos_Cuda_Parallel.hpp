@@ -2904,5 +2904,7 @@ struct ParallelReduceFunctorType<FunctorTypeIn, ExecPolicy, ValueType, Cuda> {
 
 }  // namespace Kokkos
 
+// test edit
+
 #endif /* defined(KOKKOS_ENABLE_CUDA) */
 #endif /* #ifndef KOKKOS_CUDA_PARALLEL_HPP */
