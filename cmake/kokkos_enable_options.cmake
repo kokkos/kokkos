@@ -26,6 +26,12 @@ KOKKOS_CFG_DEPENDS(OPTIONS COMPILER_ID)
 # Put a check in just in case people are using this option
 KOKKOS_DEPRECATED_LIST(OPTIONS ENABLE)
 
+# Set the Default for Desul Atomics usage. SYCL is not supported yet.
+set(_DESUL_ATOMICS_DEFAULT ON)
+if(KOKKOS_ENABLE_SYCL)
+   set(_DESUL_ATOMICS_DEFAULT OFF)
+endif()
+
 KOKKOS_ENABLE_OPTION(CUDA_RELOCATABLE_DEVICE_CODE  OFF "Whether to enable relocatable device code (RDC) for CUDA")
 KOKKOS_ENABLE_OPTION(CUDA_UVM             OFF "Whether to use unified memory (UM) for CUDA by default")
 KOKKOS_ENABLE_OPTION(CUDA_LDG_INTRINSIC   OFF "Whether to use CUDA LDG intrinsics")
@@ -51,6 +57,9 @@ KOKKOS_ENABLE_OPTION(PROFILING_LOAD_PRINT OFF "Whether to print information abou
 KOKKOS_ENABLE_OPTION(TUNING               OFF "Whether to create bindings for tuning tools")
 KOKKOS_ENABLE_OPTION(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
 KOKKOS_ENABLE_OPTION(LAUNCH_COMPILER      ON  "Whether to potentially use the launch compiler")
+
+# This option will go away eventually, but allows fallback to old implementation when needed.
+KOKKOS_ENABLE_OPTION(IMPL_DESUL_ATOMICS   ${_DESUL_ATOMICS_DEFAULT}  "Whether to use desul based atomics - option only during beta")
 
 IF (KOKKOS_ENABLE_CUDA)
   SET(KOKKOS_COMPILER_CUDA_VERSION "${KOKKOS_COMPILER_VERSION_MAJOR}${KOKKOS_COMPILER_VERSION_MINOR}")

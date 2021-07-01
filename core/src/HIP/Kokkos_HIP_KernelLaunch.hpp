@@ -52,6 +52,7 @@
 #include <HIP/Kokkos_HIP_Error.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_Locks.hpp>
 
 // Must use global variable on the device with HIP-Clang
 #ifdef __HIP__

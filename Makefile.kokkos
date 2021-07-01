@@ -82,6 +82,7 @@ KOKKOS_INTERNAL_CUDA_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS
 KOKKOS_INTERNAL_CUDA_USE_LAMBDA := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),enable_lambda)
 KOKKOS_INTERNAL_CUDA_USE_CONSTEXPR := $(call kokkos_has_string,$(KOKKOS_CUDA_OPTIONS),enable_constexpr)
 KOKKOS_INTERNAL_HPX_ENABLE_ASYNC_DISPATCH := $(call kokkos_has_string,$(KOKKOS_HPX_OPTIONS),enable_async_dispatch)
+KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_desul_atomics)
 
 KOKKOS_INTERNAL_HIP_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_HIP_OPTIONS),rdc)
 
@@ -431,6 +432,10 @@ endif
 KOKKOS_LINK_FLAGS = 
 KOKKOS_SRC =
 KOKKOS_HEADERS =
+
+#ifeq ($(KOKKOS_INTERNAL_COMPILER_GCC), 1)
+  KOKKOS_LIBS += -latomic
+#endif
 
 # Generating the KokkosCore_config.h file.
 
@@ -1176,6 +1181,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   endif
 endif
 
+ifeq ($(KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_DESUL_ATOMICS")
+endif
 
 KOKKOS_INTERNAL_LS_CONFIG := $(shell ls KokkosCore_config.h 2>&1)
 
@@ -1250,6 +1258,9 @@ KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/containers/src/impl/*.cpp)
 
 ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
   KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.cpp)
+  ifeq ($(KOKKOS_INTERNAL_ENABLE_DESUL_ATOMICS), 1)
+    KOKKOS_SRC += $(KOKKOS_PATH)/core/src/desul/src/Lock_Array_CUDA.cpp
+  endif
   KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Cuda/*.hpp)
   ifneq ($(CUDA_PATH),)
     KOKKOS_CPPLAGS += -I$(CUDA_PATH)/include

@@ -47,6 +47,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Atomic.hpp>
+#include <impl/Kokkos_Error.hpp>
 
 #include <functional>
 

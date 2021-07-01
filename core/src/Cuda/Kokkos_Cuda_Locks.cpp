@@ -81,6 +81,11 @@ namespace Impl {
 CudaLockArrays g_host_cuda_lock_arrays = {nullptr, nullptr, 0};
 
 void initialize_host_cuda_lock_arrays() {
+#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
+  desul::Impl::init_lock_arrays();
+
+  DESUL_ENSURE_CUDA_LOCK_ARRAYS_ON_DEVICE();
+#endif
   if (g_host_cuda_lock_arrays.atomic != nullptr) return;
   CUDA_SAFE_CALL(cudaMalloc(&g_host_cuda_lock_arrays.atomic,
                             sizeof(int) * (CUDA_SPACE_ATOMIC_MASK + 1)));
@@ -97,6 +102,10 @@ void initialize_host_cuda_lock_arrays() {
 }
 
 void finalize_host_cuda_lock_arrays() {
+#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
+  desul::Impl::finalize_lock_arrays();
+#endif
+
   if (g_host_cuda_lock_arrays.atomic == nullptr) return;
   cudaFree(g_host_cuda_lock_arrays.atomic);
   g_host_cuda_lock_arrays.atomic = nullptr;
