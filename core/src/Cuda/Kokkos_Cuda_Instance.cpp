@@ -713,7 +713,8 @@ void CudaInternal::finalize() {
         Kokkos::kokkos_free<Kokkos::CudaSpace>(m_team_scratch_ptr[i]);
     }
 
-    if (m_manage_stream && m_stream != nullptr) cudaStreamDestroy(m_stream);
+    if (m_manage_stream && m_stream != nullptr)
+      CUDA_SAFE_CALL(cudaStreamDestroy(m_stream));
 
     m_cudaDev                 = -1;
     m_multiProcCount          = 0;
@@ -737,13 +738,13 @@ void CudaInternal::finalize() {
 
   // only destroy these if we're finalizing the singleton
   if (this == &singleton()) {
-    cudaFreeHost(constantMemHostStaging);
-    cudaEventDestroy(constantMemReusable);
+    CUDA_SAFE_CALL(cudaFreeHost(constantMemHostStaging));
+    CUDA_SAFE_CALL(cudaEventDestroy(constantMemReusable));
     auto &deep_copy_space =
         Kokkos::Impl::cuda_get_deep_copy_space(/*initialize*/ false);
     if (deep_copy_space)
       deep_copy_space->impl_internal_space_instance()->finalize();
-    cudaStreamDestroy(cuda_get_deep_copy_stream());
+    CUDA_SAFE_CALL(cudaStreamDestroy(cuda_get_deep_copy_stream()));
   }
 }
 

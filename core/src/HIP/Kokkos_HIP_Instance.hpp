@@ -121,6 +121,7 @@ class HIPInternal {
   hipDeviceProp_t m_deviceProp;
 
   hipStream_t m_stream = nullptr;
+  bool m_manage_stream = false;
 
   // Team Scratch Level 1 Space
   mutable int64_t m_team_scratch_current_size = 0;
@@ -135,7 +136,8 @@ class HIPInternal {
 
   int is_initialized() const { return m_hipDev >= 0; }
 
-  void initialize(int hip_device_id, hipStream_t stream = nullptr);
+  void initialize(int hip_device_id, hipStream_t stream = nullptr,
+                  bool manage_stream = false);
   void finalize();
 
   void print_configuration(std::ostream &) const;
@@ -159,6 +161,27 @@ class HIPInternal {
 };
 
 }  // namespace Impl
+
+// Partitioning an Execution Space: expects space and integer arguments for
+// relative weight
+//   Customization point for backends
+//   Default behavior is to return the passed in instance
+template <class... Args>
+std::vector<HIP> partition_space(HIP space, Args...) {
+  std::vector<HIP> instances(sizeof...(Args));
+#ifdef __cpp_fold_expressions
+  static_assert(
+      (... && std::is_arithmetic_v<Args>),
+      "Kokkos Error: partitioning arguments must be integers or floats");
+#endif
+  for (int s = 0; s < int(sizeof...(Args)); s++) {
+    hipStream_t stream;
+    HIP_SAFE_CALL(hipStreamCreate(&stream));
+    instances[s] = HIP(stream, true);
+  }
+  return instances;
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 

@@ -57,18 +57,19 @@ struct SumFunctor {
 };
 
 template <class ExecSpace>
-void check_equalness(ExecSpace, ExecSpace) {}
+void check_distinctive(ExecSpace, ExecSpace) {}
 
 #ifdef KOKKOS_ENABLE_CUDA
-void check_equalness(Kokkos::Cuda exec1, Kokkos::Cuda exec2) {
+void check_distinctive(Kokkos::Cuda exec1, Kokkos::Cuda exec2) {
   ASSERT_NE(exec1.cuda_stream(), exec2.cuda_stream());
 }
 #endif
 }  // namespace
 void test_partitioning() {
-  auto instances = partition_space(TEST_EXECSPACE(), 1, 1);
+  auto instances =
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1);
 
-  check_equalness(instances[0], instances[1]);
+  check_distinctive(instances[0], instances[1]);
   int sum1, sum2;
   int N = 3910;
   Kokkos::parallel_reduce(

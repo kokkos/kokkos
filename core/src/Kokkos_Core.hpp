@@ -74,6 +74,7 @@
 #include <iosfwd>
 #include <map>
 #include <memory>
+#include <vector>
 
 //----------------------------------------------------------------------------
 
@@ -275,20 +276,26 @@ class ScopeGuard {
 }  // namespace Kokkos
 
 namespace Kokkos {
+namespace Experimental {
 // Partitioning an Execution Space: expects space and integer arguments for
 // relative weight
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
 template <class ExecSpace, class... Args>
-std::array<ExecSpace, sizeof...(Args)> partition_space(ExecSpace space,
-                                                       Args...) {
+std::vector<ExecSpace> partition_space(ExecSpace space, Args...) {
   static_assert(is_execution_space<ExecSpace>::value,
                 "Kokkos Error: partition_space expects an Execution Space as "
                 "first argument");
-  std::array<ExecSpace, sizeof...(Args)> instances;
+#ifdef __cpp_fold_expressions
+  static_assert(
+      (... && std::is_arithmetic_v<Args>),
+      "Kokkos Error: partitioning arguments must be integers or floats");
+#endif
+  std::vector<ExecSpace> instances(sizeof...(Args));
   for (int s = 0; s < int(sizeof...(Args)); s++) instances[s] = space;
   return instances;
 }
+}  // namespace Experimental
 }  // namespace Kokkos
 
 #include <Kokkos_Crs.hpp>
