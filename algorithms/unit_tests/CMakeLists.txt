@@ -36,6 +36,10 @@ ENDIF()
 
 SET(ALGORITHM UnitTestMain.cpp)
 
+LIST(APPEND ALGORITHM_SOURCES
+TestStdAlgorithms.cpp
+)
+
 IF(Kokkos_ENABLE_OPENMP)
   LIST(APPEND ALGORITHM_SOURCES
     TestOpenMP_Sort1D.cpp
