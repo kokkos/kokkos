@@ -156,6 +156,63 @@ void for_each_n(const Kokkos::View<DataType, Properties...>& v, SizeType n,
   for_each_n("_for_each_n_default_label_2", v, n, std::move(functor));
 }
 
+// -------------------
+// count_if
+// -------------------
+template <class IteratorType, class Predicate>
+struct CountIf {
+  IteratorType m_first;
+  Predicate m_predicate;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i, std::size_t& lsum) const {
+    auto element = m_first + i;
+    if (m_predicate(*element)) {
+      lsum++;
+    }
+  }
+
+  CountIf(IteratorType _first, Predicate _predicate)
+      : m_first(_first), m_predicate(_predicate) {}
+};
+
+template <class IteratorType, class Predicate>
+std::size_t count_if(IteratorType first, IteratorType last,
+                     Predicate predicate) {
+  const auto numOfElements = last - first;
+  std::size_t count        = 0;
+
+  Kokkos::parallel_reduce(
+      numOfElements, CountIf<IteratorType, Predicate>(first, predicate), count);
+
+  return count;
+}
+
+// -------------------
+// count
+// -------------------
+template <class T>
+struct EqualsVal {
+  const T& m_value;
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator()(const T& val) const { return val == m_value; }
+
+  EqualsVal(const T& _value) : m_value(_value) {}
+};
+
+// FIXME: ensure T is the value type of InputIterator
+// see:
+// __glibcxx_function_requires(_EqualOpConcept<
+// typename iterator_traits<_InputIterator>::value_type, _Tp>)
+template <class IteratorType, class T>
+std::size_t count(IteratorType first, IteratorType last, const T& value) {
+  return count_if(
+      // FIXME: is std::equal_to usable here? also see:
+      // __gnu_cxx::__ops::__iter_equals_val(__value));
+      first, last, EqualsVal<T>(value));
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
