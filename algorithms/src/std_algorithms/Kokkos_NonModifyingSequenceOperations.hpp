@@ -117,7 +117,8 @@ FunctorType for_each(PointerType data, PointerType end, FunctorType functor) {
 }
 
 template <class DataType, class... Properties, class FunctorType>
-FunctorType for_each(Kokkos::View<DataType, Properties...> v,
+FunctorType for_each(const std::string& label,
+                     Kokkos::View<DataType, Properties...> v,
                      FunctorType functor) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
   static_assert(is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
@@ -126,22 +127,35 @@ FunctorType for_each(Kokkos::View<DataType, Properties...> v,
                 "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
-  return for_each(::Kokkos::Experimental::begin(v),
+  return for_each(label, ::Kokkos::Experimental::begin(v),
                   ::Kokkos::Experimental::end(v), std::move(functor));
+}
+
+template <class DataType, class... Properties, class FunctorType>
+FunctorType for_each(Kokkos::View<DataType, Properties...> v,
+                     FunctorType functor) {
+  return for_each("", v, std::move(functor));
+}
+
+template <class PointerType, class SizeType, class FunctorType>
+PointerType for_each_n(const std::string& label, PointerType data, SizeType n,
+                       FunctorType functor) {
+  if (n <= 0) return data;
+
+  auto last = data + n;
+  for_each(label, data, last, std::move(functor));
+  return last;
 }
 
 template <class PointerType, class SizeType, class FunctorType>
 PointerType for_each_n(PointerType data, SizeType n, FunctorType functor) {
-  if (n <= 0) return data;
-
-  auto last = data + n;
-  for_each(data, last, std::move(functor));
-  return last;
+  return for_each_n("", data, n, functor);
 }
 
 template <class DataType, class... Properties, class SizeType,
           class FunctorType>
-void for_each_n(Kokkos::View<DataType, Properties...> v, SizeType n,
+void for_each_n(const std::string& label,
+                Kokkos::View<DataType, Properties...> v, SizeType n,
                 FunctorType functor) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
   static_assert(is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
@@ -150,7 +164,14 @@ void for_each_n(Kokkos::View<DataType, Properties...> v, SizeType n,
                 "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
-  for_each_n(begin(v), n, std::move(functor));
+  for_each_n(label, begin(v), n, std::move(functor));
+}
+
+template <class DataType, class... Properties, class SizeType,
+          class FunctorType>
+void for_each_n(Kokkos::View<DataType, Properties...> v, SizeType n,
+                FunctorType functor) {
+  for_each_n("", v, n, std::move(functor));
 }
 
 }  // namespace Experimental
