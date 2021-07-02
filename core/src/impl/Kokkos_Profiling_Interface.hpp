@@ -76,6 +76,35 @@ enum struct DeviceType {
   Unknown
 };
 
+struct ExecutionSpaceIdentifier {
+  DeviceType type;
+  uint32_t device_id;
+  uint32_t instance_id;
+};
+inline DeviceType devicetype_from_uint32t(const uint32_t in) {
+  switch (in) {
+    case 0: return DeviceType::Serial;
+    case 1: return DeviceType::OpenMP;
+    case 2: return DeviceType::Cuda;
+    case 3: return DeviceType::HIP;
+    case 4: return DeviceType::OpenMPTarget;
+    case 5: return DeviceType::HPX;
+    case 6: return DeviceType::Threads;
+    case 7: return DeviceType::SYCL;
+    default: return DeviceType::Unknown;  // TODO: error out?
+  }
+}
+
+inline ExecutionSpaceIdentifier identifier_from_devid(const uint32_t in) {
+  // ExecutionSpaceIdentifier out;
+  // out.type = in >> 24;
+  // out.device_id = in >> 17;
+  // out.instance_id = ((uint32_t(-1)) << 17 ) & in;
+  return {devicetype_from_uint32t(in >> 24),
+          (~((uint32_t(-1)) << 24)) & (in >> 17),
+          (~((uint32_t(-1)) << 17)) & in};
+}
+
 template <typename ExecutionSpace>
 struct DeviceTypeTraits;
 
