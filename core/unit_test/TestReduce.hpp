@@ -540,33 +540,22 @@ class TestReduceDynamicView {
 }  // namespace
 
 TEST(TEST_CATEGORY, int64_t_reduce) {
-  // FIXME_OPENMPTARGET : The test where the iteration space is 0 should
-  // technically pass but does not.
-  // This needs to be investigated and fixed.
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestReduce<int64_t, TEST_EXECSPACE>(0);
-#endif
   TestReduce<int64_t, TEST_EXECSPACE>(1000000);
 }
 
 TEST(TEST_CATEGORY, double_reduce) {
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestReduce<double, TEST_EXECSPACE>(0);
-#endif
   TestReduce<double, TEST_EXECSPACE>(1000000);
 }
 
 TEST(TEST_CATEGORY, int64_t_reduce_dynamic) {
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestReduceDynamic<int64_t, TEST_EXECSPACE>(0);
-#endif
   TestReduceDynamic<int64_t, TEST_EXECSPACE>(1000000);
 }
 
 TEST(TEST_CATEGORY, double_reduce_dynamic) {
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
   TestReduceDynamic<double, TEST_EXECSPACE>(0);
-#endif
   TestReduceDynamic<double, TEST_EXECSPACE>(1000000);
 }
 

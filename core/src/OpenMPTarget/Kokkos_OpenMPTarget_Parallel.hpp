@@ -283,10 +283,21 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
       // The `init` routine needs to be called on the device since it might need
       // device members.
 #pragma omp target map(to : f) is_device_ptr(scratch_ptr)
-      { ValueInit::init(f, scratch_ptr); }
+      {
+        ValueInit::init(f, scratch_ptr);
+        if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
+          FunctorFinal<FunctorType, TagType>::final(f, scratch_ptr);
+      }
     } else {
-#pragma omp target teams distribute parallel for is_device_ptr(scratch_ptr)
-      for (int i = 0; i < value_count; ++i) scratch_ptr[i] = ValueType();
+#pragma omp target map(to : f) is_device_ptr(scratch_ptr)
+      {
+        for (int i = 0; i < value_count; ++i) {
+          static_cast<ValueType*>(scratch_ptr)[i] = ValueType();
+        }
+
+        if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
+          FunctorFinal<FunctorType, TagType>::final(f, scratch_ptr);
+      }
     }
 
     if (end <= begin) {
@@ -1032,11 +1043,22 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
       // The `init` routine needs to be called on the device since it might need
       // device members.
 #pragma omp target map(to : f) is_device_ptr(scratch_ptr)
-      { ValueInit::init(f, scratch_ptr); }
+      {
+        ValueInit::init(f, scratch_ptr);
+
+        if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
+          FunctorFinal<FunctorType, TagType>::final(f, scratch_ptr);
+      }
     } else {
-#pragma omp target teams distribute parallel for is_device_ptr(scratch_ptr)
-      for (int i = 0; i < value_count; ++i)
-        static_cast<ValueType*>(scratch_ptr)[i] = ValueType();
+#pragma omp target map(to : f) is_device_ptr(scratch_ptr)
+      {
+        for (int i = 0; i < value_count; ++i) {
+          static_cast<ValueType*>(scratch_ptr)[i] = ValueType();
+        }
+
+        if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
+          FunctorFinal<FunctorType, TagType>::final(f, scratch_ptr);
+      }
     }
 
     if (end <= begin) {
