@@ -60,7 +60,8 @@ __device__ inline void atomic_thread_fence(MemoryOrderSeqCst, MemoryScopeNode) {
 // Compare Exchange for PRE Volta, not supported with CLANG as CUDA compiler, since we do NOT have a way
 // of having the code included for clang only when the CC is smaller than 700
 // But on Clang the device side symbol list must be independent of __CUDA_ARCH__
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 700)
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 700) || \
+(!defined(__NVCC__) && (defined(KOKKOS_ENABLE_KEPLER) || defined(KOKKOS_ENABLE_MAXWELL) || defined(KOKKOS_ENABLE_PASCAL)))
 namespace desul {
 template <typename T, class MemoryScope>
 __device__ typename std::enable_if<sizeof(T) == 4, T>::type atomic_compare_exchange(
@@ -127,15 +128,15 @@ __device__ typename std::enable_if<sizeof(T) == 8, T>::type atomic_exchange(
 
 template <typename T, class MemoryScope>
 __device__ typename std::enable_if<sizeof(T) == 4 || sizeof(T) == 8, T>::type atomic_exchange(
-    T* const dest, T compare, T value, MemoryOrderRelease, MemoryScope) {
-  T return_val = atomic_compare_exchange(dest, compare, value, MemoryOrderRelaxed(), MemoryScope());
+    T* const dest, T value, MemoryOrderRelease, MemoryScope) {
+  T return_val = atomic_exchange(dest, value, MemoryOrderRelaxed(), MemoryScope());
   atomic_thread_fence(MemoryOrderRelease(),MemoryScope());
   return reinterpret_cast<T&>(return_val);
 }
 
 template <typename T, class MemoryScope>
 __device__ typename std::enable_if<sizeof(T) == 4 || sizeof(T) == 8, T>::type atomic_exchange(
-    T* const dest, T compare, T value, MemoryOrderAcquire, MemoryScope) {
+    T* const dest, T value, MemoryOrderAcquire, MemoryScope) {
   atomic_thread_fence(MemoryOrderAcquire(),MemoryScope());
   T return_val = atomic_exchange(dest, value, MemoryOrderRelaxed(), MemoryScope());
   return reinterpret_cast<T&>(return_val);
@@ -152,8 +153,16 @@ __device__ typename std::enable_if<sizeof(T) == 4 || sizeof(T) == 8, T>::type at
 }  // namespace desul
 #endif
 
-// Including CUDA ptx based exchange atomics 
-#if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__ >= 700)) || !defined(__NVCC__)
+// Including CUDA ptx based exchange atomics
+// When building with clang we need to include the device functions always
+// since clang must see a consistent overload set in both device and host compilation
+// but that means we need to know on the host what to make visible, i.e. we need
+// a host side compile knowledge of architecture.
+// We simply can say DESUL proper doesn't support clang CUDA build pre Volta,
+// Kokkos has that knowledge and so I use it here, allowing in Kokkos to use
+// clang with pre Volta as CUDA compiler
+#if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__>=700)) || \
+     (!defined(__NVCC__) && !defined(KOKKOS_ARCH_KEPLER) && !defined(KOKKOS_ARCH_MAXWELL) && !defined(KOKKOS_ARCH_PASCAL))
 #include <desul/atomics/cuda/CUDA_asm_exchange.hpp>
 #endif
 
