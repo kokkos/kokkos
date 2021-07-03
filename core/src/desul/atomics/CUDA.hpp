@@ -9,11 +9,21 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_ATOMICS_CUDA_HPP_
 
 #ifdef DESUL_HAVE_CUDA_ATOMICS
-#if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__>=700)) || !defined(__NVCC__)
+// When building with clang we need to include the device functions always
+// since clang must see a consistent overload set in both device and host compilation
+// but that means we need to know on the host what to make visible, i.e. we need
+// a host side compile knowledge of architecture.
+// We simply can say DESUL proper doesn't support clang CUDA build pre Volta,
+// Kokkos has that knowledge and so I use it here, allowing in Kokkos to use
+// clang with pre Volta as CUDA compiler
+#if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__>=700)) || \
+    (!defined(__NVCC__) && !defined(KOKKOS_ARCH_KEPLER) && !defined(KOKKOS_ARCH_MAXWELL) && !defined(KOKKOS_ARCH_PASCAL))
+#define DESUL_HAVE_CUDA_ATOMICS_ASM
 #include <desul/atomics/cuda/CUDA_asm.hpp>
 #endif
 
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__<700)
+#if (defined(__CUDA_ARCH__) && (__CUDA_ARCH__<700)) || \
+    (!defined(__NVCC__) && !defined(DESUL_HAVE_CUDA_ATOMICS_ASM))
 namespace desul {
 namespace Impl {
 template<class T>
@@ -65,7 +75,7 @@ atomic_fetch_add(T* dest, T val, MemoryOrder, MemoryScopeCore) {
 }
 
 
-// Atomic Sub 
+// Atomic Sub
 template<class T>
 __device__ inline
 typename std::enable_if<Impl::is_cuda_atomic_sub_type<T>::value,T>::type
@@ -260,10 +270,11 @@ atomic_fetch_or(T* dest, T val, MemoryOrder, MemoryScopeCore) {
 } // desul
 #endif
 
-#ifndef __NVCC__
+#if !defined(__NVCC__)
 // Functions defined as device functions in CUDA which don't exist in the GCC overload set
 namespace desul {
 
+#if defined(DESUL_HAVE_CUDA_ATOMICS_ASM)
   #define DESUL_IMPL_CUDA_HOST_ATOMIC_ADD(TYPE,ORDER,SCOPE) \
     inline void atomic_add(TYPE* const dest, TYPE val, ORDER order, SCOPE scope) { \
     (void) atomic_fetch_add(dest, val, order, scope); \
@@ -296,6 +307,7 @@ namespace desul {
     (void) atomic_fetch_dec(dest, order, scope); \
   }
   DESUL_IMPL_CUDA_HOST_ATOMIC_DEC(unsigned,MemoryOrderRelaxed,MemoryScopeDevice); // only for ASM?
+#endif // DESUL_HAVE_CUDA_ATOMICS_ASM
 
   #define DESUL_IMPL_CUDA_HOST_ATOMIC_FETCH_ADD(TYPE,ORDER,SCOPE) \
     inline TYPE atomic_fetch_add(TYPE* const dest, TYPE val, ORDER order, SCOPE scope) { \
