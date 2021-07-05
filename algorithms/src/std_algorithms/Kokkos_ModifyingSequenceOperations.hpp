@@ -69,7 +69,6 @@ namespace Experimental {
 // iter_swap
 // reverse_copy
 
-
 }  // namespace Experimental
 }  // namespace Kokkos
 
