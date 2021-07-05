@@ -51,8 +51,7 @@ namespace Kokkos {
 namespace Experimental {
 
 template <typename T, typename enable = void>
-struct is_admissible_view_to_kokkos_begin_end
-    : std::false_type {};
+struct is_admissible_view_to_kokkos_begin_end : std::false_type {};
 
 template <typename T>
 struct is_admissible_view_to_kokkos_begin_end<
