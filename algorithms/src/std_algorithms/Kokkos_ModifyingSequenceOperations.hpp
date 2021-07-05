@@ -42,15 +42,35 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_STD_ALGORITHMS_HPP
-#define KOKKOS_STD_ALGORITHMS_HPP
+#ifndef KOKKOS_MODIFYING_SEQUENCE_OPERATIONS_HPP
+#define KOKKOS_MODIFYING_SEQUENCE_OPERATIONS_HPP
 
-/// \file Kokkos_StdAlgorithms.hpp
-/// \brief Kokkos counterparts for Standard C++ Library algorithms
+/// \file Kokkos_NonModifyingSequenceOperations.hpp
+/// \brief Kokkos non-modifying sequence operations
 
-#include <std_algorithms/Kokkos_StdAlgorithmsConstraints.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
-#include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
+namespace Kokkos {
+namespace Experimental {
+
+// see https://github.com/kokkos/kokkos/issues/4075
+//
+// copy
+// copy_if
+// copy_n
+// copy_backward
+// move
+// move_backward
+// fill
+// fill_n
+// transform
+// generate
+// generate_n
+// swap
+// swap_ranges
+// iter_swap
+// reverse_copy
+
+
+}  // namespace Experimental
+}  // namespace Kokkos
 
 #endif

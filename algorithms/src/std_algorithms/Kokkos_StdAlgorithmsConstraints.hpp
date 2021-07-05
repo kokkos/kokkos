@@ -42,15 +42,36 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_STD_ALGORITHMS_HPP
-#define KOKKOS_STD_ALGORITHMS_HPP
+#ifndef KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
+#define KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 
-/// \file Kokkos_StdAlgorithms.hpp
-/// \brief Kokkos counterparts for Standard C++ Library algorithms
+#include <Kokkos_Core.hpp>
 
-#include <std_algorithms/Kokkos_StdAlgorithmsConstraints.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
-#include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
+namespace Kokkos {
+namespace Experimental {
+
+template <typename T, typename enable = void>
+struct is_admissible_view_to_kokkos_std_non_modifying_sequence_op
+    : std::false_type {};
+
+template <typename T>
+struct is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
+  T,
+  std::enable_if_t<
+    ::Kokkos::is_view<T>::value and T::rank == 1 and
+    (std::is_same<typename T::traits::array_layout, Kokkos::LayoutLeft>::value
+     or std::is_same<typename T::traits::array_layout, Kokkos::LayoutRight>::value
+     or std::is_same<typename T::traits::array_layout, Kokkos::LayoutStride>::value)
+    >
+  >
+  : std::true_type {};
+
+
+template <typename ... Args>
+using is_admissible_view_to_kokkos_std_modifying_sequence_op =
+  is_admissible_view_to_kokkos_std_non_modifying_sequence_op<Args...>;
+
+}  // namespace Experimental
+}  // namespace Kokkos
 
 #endif

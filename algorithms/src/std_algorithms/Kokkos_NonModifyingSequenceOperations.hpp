@@ -45,47 +45,21 @@
 #ifndef KOKKOS_NON_MODIFYING_SEQUENCE_OPERATIONS_HPP
 #define KOKKOS_NON_MODIFYING_SEQUENCE_OPERATIONS_HPP
 
-#include <Kokkos_Core.hpp>
-
 /// \file Kokkos_NonModifyingSequenceOperations.hpp
 /// \brief Kokkos non-modifying sequence operations
 
 namespace Kokkos {
 namespace Experimental {
 
-template <typename T, typename enable = void>
-struct is_admissible_view_to_kokkos_std_non_modifying_sequence_op
-    : std::false_type {};
-
-template <typename T>
-struct is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
-    T, std::enable_if_t< ::Kokkos::is_view<T>::value and T::rank == 1> >
-    : std::true_type {};
-
-template <class DataType, class... Properties>
-auto begin(const Kokkos::View<DataType, Properties...>& v)
-    -> decltype(v.data()) {
-  using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
-                    ViewInType>::value,
-                "Currently, Kokkos::Experimental::begin only accepts 1D "
-                "contiguous Views.");
-
-  KOKKOS_EXPECTS(v.span_is_contiguous());
-  return v.data();
-}
-
-template <class DataType, class... Properties>
-auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
-  using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(
-      is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
-          ViewInType>::value,
-      "Currently, Kokkos::Experimental::end only accepts 1D contiguous Views.");
-
-  KOKKOS_EXPECTS(v.span_is_contiguous());
-  return v.data() + v.size();
-}
+// see https://github.com/kokkos/kokkos/issues/4075
+// all_of (note: this might depend on find_if)
+// any_of (note: this might depend on find_if)
+// none_of (note: this might depend on find_if)
+// for_each
+// for_each_n
+// count
+// count_if
+// mismatch
 
 template <class PointerType, class FunctorType>
 struct ForEach {

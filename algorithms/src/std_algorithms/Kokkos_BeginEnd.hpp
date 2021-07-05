@@ -42,15 +42,41 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_STD_ALGORITHMS_HPP
-#define KOKKOS_STD_ALGORITHMS_HPP
+#ifndef KOKKOS_BEGIN_END_HPP
+#define KOKKOS_BEGIN_END_HPP
 
-/// \file Kokkos_StdAlgorithms.hpp
-/// \brief Kokkos counterparts for Standard C++ Library algorithms
+/// \file Kokkos_NonModifyingSequenceOperations.hpp
+/// \brief Kokkos non-modifying sequence operations
 
-#include <std_algorithms/Kokkos_StdAlgorithmsConstraints.hpp>
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
-#include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
-#include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
+namespace Kokkos {
+namespace Experimental {
+
+template <class DataType, class... Properties>
+auto begin(const Kokkos::View<DataType, Properties...>& v)
+    -> decltype(v.data()) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
+                    ViewInType>::value,
+                "Currently, Kokkos::Experimental::begin only accepts 1D "
+                "contiguous Views.");
+
+  KOKKOS_EXPECTS(v.span_is_contiguous());
+  return v.data();
+}
+
+template <class DataType, class... Properties>
+auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
+          ViewInType>::value,
+      "Currently, Kokkos::Experimental::end only accepts 1D contiguous Views.");
+
+  KOKKOS_EXPECTS(v.span_is_contiguous());
+  return v.data() + v.size();
+}
+
+}  // namespace Experimental
+}  // namespace Kokkos
 
 #endif
