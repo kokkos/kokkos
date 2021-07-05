@@ -61,33 +61,36 @@ namespace Experimental {
 // count_if
 // mismatch
 
+// -------------------
+// for_each
+// -------------------
 template <class PointerType, class FunctorType>
 struct ForEach {
-  PointerType data;
-  FunctorType functor;
+  PointerType m_first;
+  FunctorType m_functor;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int i) const {
-    auto element = data + i;
-    functor(*element);
+    auto element = m_first + i;
+    m_functor(*element);
   }
 
-  ForEach(PointerType _data, FunctorType _functor)
-      : data(_data), functor(_functor) {}
+  ForEach(PointerType _first, FunctorType _functor)
+      : m_first(_first), m_functor(_functor) {}
 };
 
 template <class PointerType, class FunctorType>
-FunctorType for_each(const std::string& label, PointerType data,
+FunctorType for_each(const std::string& label, PointerType first,
                      PointerType end, FunctorType functor) {
-  const auto numOfElements = end - data;
+  const auto numOfElements = end - first;
   Kokkos::parallel_for(label, numOfElements,
-                       ForEach<PointerType, FunctorType>(data, functor));
+                       ForEach<PointerType, FunctorType>(first, functor));
   return functor;
 }
 
 template <class PointerType, class FunctorType>
-FunctorType for_each(PointerType data, PointerType end, FunctorType functor) {
-  return for_each("", data, end, std::move(functor));
+FunctorType for_each(PointerType first, PointerType end, FunctorType functor) {
+  return for_each("", first, end, std::move(functor));
 }
 
 template <class DataType, class... Properties, class FunctorType>
@@ -111,19 +114,22 @@ FunctorType for_each(Kokkos::View<DataType, Properties...> v,
   return for_each("", v, std::move(functor));
 }
 
+// -------------------
+// for_each_n
+// -------------------
 template <class PointerType, class SizeType, class FunctorType>
-PointerType for_each_n(const std::string& label, PointerType data, SizeType n,
+PointerType for_each_n(const std::string& label, PointerType first, SizeType n,
                        FunctorType functor) {
-  if (n <= 0) return data;
+  if (n <= 0) return first;
 
-  auto last = data + n;
-  for_each(label, data, last, std::move(functor));
+  auto last = first + n;
+  for_each(label, first, last, std::move(functor));
   return last;
 }
 
 template <class PointerType, class SizeType, class FunctorType>
-PointerType for_each_n(PointerType data, SizeType n, FunctorType functor) {
-  return for_each_n("", data, n, functor);
+PointerType for_each_n(PointerType first, SizeType n, FunctorType functor) {
+  return for_each_n("", first, n, functor);
 }
 
 template <class DataType, class... Properties, class SizeType,

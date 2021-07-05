@@ -56,7 +56,8 @@ auto begin(const Kokkos::View<DataType, Properties...>& v)
     -> decltype(v.data()) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
   static_assert(is_admissible_view_to_kokkos_begin_end<ViewInType>::value,
-       "Currently, Kokkos::Experimental::begin only accepts 1D contiguous Views.");
+                "Currently, Kokkos::Experimental::begin only accepts 1D "
+                "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
   return v.data();
@@ -65,11 +66,36 @@ auto begin(const Kokkos::View<DataType, Properties...>& v)
 template <class DataType, class... Properties>
 auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(is_admissible_view_to_kokkos_begin_end<ViewInType>::value,
-       "Currently, Kokkos::Experimental::end only accepts 1D contiguous Views.");
+  static_assert(
+      is_admissible_view_to_kokkos_begin_end<ViewInType>::value,
+      "Currently, Kokkos::Experimental::end only accepts 1D contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
   return v.data() + v.size();
+}
+
+template <class DataType, class... Properties>
+auto cbegin(const Kokkos::View<DataType, Properties...>& v) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(is_admissible_view_to_kokkos_begin_end<ViewInType>::value,
+                "Currently, Kokkos::Experimental::cbegin only accepts 1D "
+                "contiguous Views.");
+
+  KOKKOS_EXPECTS(v.span_is_contiguous());
+  const typename ViewInType::const_type cv = v;
+  return cv.data();
+}
+
+template <class DataType, class... Properties>
+auto cend(const Kokkos::View<DataType, Properties...>& v) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(is_admissible_view_to_kokkos_begin_end<ViewInType>::value,
+                "Currently, Kokkos::Experimental::cend only accepts 1D "
+                "contiguous Views.");
+
+  KOKKOS_EXPECTS(v.span_is_contiguous());
+  const typename ViewInType::const_type cv = v;
+  return cv.data() + v.size();
 }
 
 }  // namespace Experimental
