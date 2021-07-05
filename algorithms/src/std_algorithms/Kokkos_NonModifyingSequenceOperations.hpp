@@ -90,7 +90,7 @@ FunctorType for_each(const std::string& label, PointerType first,
 
 template <class PointerType, class FunctorType>
 FunctorType for_each(PointerType first, PointerType end, FunctorType functor) {
-  return for_each("", first, end, std::move(functor));
+  return for_each("_for_each_default_label_1", first, end, std::move(functor));
 }
 
 template <class DataType, class... Properties, class FunctorType>
@@ -111,7 +111,7 @@ FunctorType for_each(const std::string& label,
 template <class DataType, class... Properties, class FunctorType>
 FunctorType for_each(Kokkos::View<DataType, Properties...> v,
                      FunctorType functor) {
-  return for_each("", v, std::move(functor));
+  return for_each("_for_each_default_label_2", v, std::move(functor));
 }
 
 // -------------------
@@ -129,7 +129,7 @@ PointerType for_each_n(const std::string& label, PointerType first, SizeType n,
 
 template <class PointerType, class SizeType, class FunctorType>
 PointerType for_each_n(PointerType first, SizeType n, FunctorType functor) {
-  return for_each_n("", first, n, functor);
+  return for_each_n("_for_each_n_default_label_1", first, n, functor);
 }
 
 template <class DataType, class... Properties, class SizeType,
@@ -151,7 +151,7 @@ template <class DataType, class... Properties, class SizeType,
           class FunctorType>
 void for_each_n(Kokkos::View<DataType, Properties...> v, SizeType n,
                 FunctorType functor) {
-  for_each_n("", v, n, std::move(functor));
+  for_each_n("_for_each_n_default_label_2", v, n, std::move(functor));
 }
 
 }  // namespace Experimental
