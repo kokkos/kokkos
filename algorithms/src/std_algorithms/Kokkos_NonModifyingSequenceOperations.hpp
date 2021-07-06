@@ -64,10 +64,10 @@ namespace Experimental {
 // -------------------
 // for_each
 // -------------------
-template <class PointerType, class FunctorType>
+template <class IteratorType, class UnaryFunctorType>
 struct ForEach {
-  PointerType m_first;
-  FunctorType m_functor;
+  IteratorType m_first;
+  UnaryFunctorType m_functor;
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int i) const {
@@ -75,51 +75,52 @@ struct ForEach {
     m_functor(*element);
   }
 
-  ForEach(PointerType _first, FunctorType _functor)
+  ForEach(IteratorType _first, UnaryFunctorType _functor)
       : m_first(_first), m_functor(_functor) {}
 };
 
-template <class PointerType, class FunctorType>
-FunctorType for_each(const std::string& label, PointerType first,
-                     PointerType end, FunctorType functor) {
+template <class IteratorType, class UnaryFunctorType>
+UnaryFunctorType for_each(const std::string& label, IteratorType first,
+                          IteratorType end, UnaryFunctorType functor) {
   const auto numOfElements = end - first;
   Kokkos::parallel_for(label, numOfElements,
-                       ForEach<PointerType, FunctorType>(first, functor));
+                       ForEach<IteratorType, UnaryFunctorType>(first, functor));
   return functor;
 }
 
-template <class PointerType, class FunctorType>
-FunctorType for_each(PointerType first, PointerType end, FunctorType functor) {
+template <class IteratorType, class UnaryFunctorType>
+UnaryFunctorType for_each(IteratorType first, IteratorType end,
+                          UnaryFunctorType functor) {
   return for_each("_for_each_default_label_1", first, end, std::move(functor));
 }
 
-template <class DataType, class... Properties, class FunctorType>
-FunctorType for_each(const std::string& label,
-                     Kokkos::View<DataType, Properties...> v,
-                     FunctorType functor) {
+template <class DataType, class... Properties, class UnaryFunctorType>
+UnaryFunctorType for_each(const std::string& label,
+                          const Kokkos::View<DataType, Properties...>& v,
+                          UnaryFunctorType functor) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
-                    ViewInType>::value,
-                "Currently, Kokkos::Experimental::for_each only accepts 1D "
-                "contiguous Views.");
+  static_assert(
+      is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
+      "Currently, Kokkos::Experimental::for_each only accepts 1D "
+      "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
   return for_each(label, ::Kokkos::Experimental::begin(v),
                   ::Kokkos::Experimental::end(v), std::move(functor));
 }
 
-template <class DataType, class... Properties, class FunctorType>
-FunctorType for_each(Kokkos::View<DataType, Properties...> v,
-                     FunctorType functor) {
+template <class DataType, class... Properties, class UnaryFunctorType>
+UnaryFunctorType for_each(const Kokkos::View<DataType, Properties...>& v,
+                          UnaryFunctorType functor) {
   return for_each("_for_each_default_label_2", v, std::move(functor));
 }
 
 // -------------------
 // for_each_n
 // -------------------
-template <class PointerType, class SizeType, class FunctorType>
-PointerType for_each_n(const std::string& label, PointerType first, SizeType n,
-                       FunctorType functor) {
+template <class IteratorType, class SizeType, class UnaryFunctorType>
+IteratorType for_each_n(const std::string& label, IteratorType first,
+                        SizeType n, UnaryFunctorType functor) {
   if (n <= 0) return first;
 
   auto last = first + n;
@@ -127,30 +128,31 @@ PointerType for_each_n(const std::string& label, PointerType first, SizeType n,
   return last;
 }
 
-template <class PointerType, class SizeType, class FunctorType>
-PointerType for_each_n(PointerType first, SizeType n, FunctorType functor) {
+template <class IteratorType, class SizeType, class UnaryFunctorType>
+IteratorType for_each_n(IteratorType first, SizeType n,
+                        UnaryFunctorType functor) {
   return for_each_n("_for_each_n_default_label_1", first, n, functor);
 }
 
 template <class DataType, class... Properties, class SizeType,
-          class FunctorType>
+          class UnaryFunctorType>
 void for_each_n(const std::string& label,
-                Kokkos::View<DataType, Properties...> v, SizeType n,
-                FunctorType functor) {
+                const Kokkos::View<DataType, Properties...>& v, SizeType n,
+                UnaryFunctorType functor) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
-                    ViewInType>::value,
-                "Currently, Kokkos::Experimental::for_each_n only accepts 1D "
-                "contiguous Views.");
+  static_assert(
+      is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
+      "Currently, Kokkos::Experimental::for_each_n only accepts 1D "
+      "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
   for_each_n(label, begin(v), n, std::move(functor));
 }
 
 template <class DataType, class... Properties, class SizeType,
-          class FunctorType>
-void for_each_n(Kokkos::View<DataType, Properties...> v, SizeType n,
-                FunctorType functor) {
+          class UnaryFunctorType>
+void for_each_n(const Kokkos::View<DataType, Properties...>& v, SizeType n,
+                UnaryFunctorType functor) {
   for_each_n("_for_each_n_default_label_2", v, n, std::move(functor));
 }
 
