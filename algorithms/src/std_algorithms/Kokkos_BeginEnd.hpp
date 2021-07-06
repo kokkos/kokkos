@@ -54,11 +54,10 @@ namespace Experimental {
 template <class DataType, class... Properties>
 auto begin(const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(is_admissible_to_kokkos_begin_end<ViewInType>::value,
-                "Currently, Kokkos::Experimental::begin only accepts 1D "
-                "contiguous Views.");
+  static_assert(
+      is_admissible_to_kokkos_begin_end<ViewInType>::value,
+      "Currently, Kokkos::Experimental::begin only accepts 1D Views.");
 
-  KOKKOS_EXPECTS(v.span_is_contiguous());
   using it_t = RandomAccessIterator<void, ViewInType>;
   return it_t(v);
 }
@@ -66,11 +65,9 @@ auto begin(const Kokkos::View<DataType, Properties...>& v) {
 template <class DataType, class... Properties>
 auto end(const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(
-      is_admissible_to_kokkos_begin_end<ViewInType>::value,
-      "Currently, Kokkos::Experimental::end only accepts 1D contiguous Views.");
+  static_assert(is_admissible_to_kokkos_begin_end<ViewInType>::value,
+                "Currently, Kokkos::Experimental::end only accepts 1D Views.");
 
-  KOKKOS_EXPECTS(v.span_is_contiguous());
   using it_t = RandomAccessIterator<void, ViewInType>;
   return it_t(v, v.extent(0));
 }
@@ -78,11 +75,10 @@ auto end(const Kokkos::View<DataType, Properties...>& v) {
 template <class DataType, class... Properties>
 auto cbegin(const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(is_admissible_to_kokkos_begin_end<ViewInType>::value,
-                "Currently, Kokkos::Experimental::cbegin only accepts 1D "
-                "contiguous Views.");
+  static_assert(
+      is_admissible_to_kokkos_begin_end<ViewInType>::value,
+      "Currently, Kokkos::Experimental::cbegin only accepts 1D Views.");
 
-  KOKKOS_EXPECTS(v.span_is_contiguous());
   using ViewConstType    = typename ViewInType::const_type;
   const ViewConstType cv = v;
   using it_t             = RandomAccessIterator<void, ViewConstType>;
@@ -93,10 +89,7 @@ template <class DataType, class... Properties>
 auto cend(const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
   static_assert(is_admissible_to_kokkos_begin_end<ViewInType>::value,
-                "Currently, Kokkos::Experimental::cend only accepts 1D "
-                "contiguous Views.");
-
-  KOKKOS_EXPECTS(v.span_is_contiguous());
+                "Currently, Kokkos::Experimental::cend only accepts 1D Views.");
 
   using ViewConstType    = typename ViewInType::const_type;
   const ViewConstType cv = v;

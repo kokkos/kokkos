@@ -101,10 +101,8 @@ UnaryFunctorType for_each(const std::string& label,
   using ViewInType = Kokkos::View<DataType, Properties...>;
   static_assert(
       is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
-      "Currently, Kokkos::Experimental::for_each only accepts 1D "
-      "contiguous Views.");
+      "Currently, Kokkos::Experimental::for_each only accepts 1D Views.");
 
-  KOKKOS_EXPECTS(v.span_is_contiguous());
   return for_each(label, ::Kokkos::Experimental::begin(v),
                   ::Kokkos::Experimental::end(v), std::move(functor));
 }
@@ -142,10 +140,8 @@ void for_each_n(const std::string& label,
   using ViewInType = Kokkos::View<DataType, Properties...>;
   static_assert(
       is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
-      "Currently, Kokkos::Experimental::for_each_n only accepts 1D "
-      "contiguous Views.");
+      "Currently, Kokkos::Experimental::for_each_n only accepts 1D Views.");
 
-  KOKKOS_EXPECTS(v.span_is_contiguous());
   for_each_n(label, begin(v), n, std::move(functor));
 }
 
