@@ -72,7 +72,7 @@ struct IncrementElementWiseFunctor {
 
 struct NoOpNonMutableFunctor {
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int& i) const {}
+  void operator()(const int& i) const { (void)i; }
 };
 // ------------------------------------------------------------
 
@@ -175,15 +175,15 @@ TEST_F(std_algorithms, for_each_modifying_lambda_strided_view) {
 
 // for_each, lambda with const arg
 TEST_F(std_algorithms, for_each_non_modifying_lambda_static_view) {
-  const auto fun = KOKKOS_LAMBDA(const int& i){};
+  const auto fun = KOKKOS_LAMBDA(const int& i) { (void)i; };
   test_for_each_v2(fun, m_static_view);
 }
 TEST_F(std_algorithms, for_each_non_modifying_lambda_dynamic_view) {
-  const auto fun = KOKKOS_LAMBDA(const int& i){};
+  const auto fun = KOKKOS_LAMBDA(const int& i) { (void)i; };
   test_for_each_v2(fun, m_dynamic_view);
 }
 TEST_F(std_algorithms, for_each_non_modifying_lambda_strided_view) {
-  const auto fun = KOKKOS_LAMBDA(const int& i){};
+  const auto fun = KOKKOS_LAMBDA(const int& i) { (void)i; };
   test_for_each_v2(fun, m_strided_view);
 }
 #endif
