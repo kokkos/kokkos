@@ -1110,38 +1110,16 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     return n;
   }
 
-  // template<class FunctorType>
-  //template<class TagType, class value_type>
   template<class TagType>
   struct ThrustFunctorWrapper {
     const FunctorType& f;
 
-    /*
-    template <class TagType_ = TagType,
-              typename = typename std::enable_if<std::is_same<TagType_, void>::value>::type>
     KOKKOS_FUNCTION
     ThrustFunctorWrapper(const FunctorType& op) : f(op){};
-    */
 
     template <class TagType_ = TagType,
               typename std::enable_if<std::is_same<TagType_, void>::value, bool>::type = true>
     KOKKOS_FUNCTION
-    ThrustFunctorWrapper(const FunctorType& op) : f(op){};
-
-    template <class TagType_ = TagType,
-              typename std::enable_if<!std::is_same<TagType_, void>::value, bool>::type = true>
-    KOKKOS_FUNCTION
-    ThrustFunctorWrapper(const FunctorType& op) : f(op){};
-
-  //  template <class TagType_ = TagType>
-  //  KOKKOS_FUNCTION
-  //  typename std::enable_if<!std::is_same<TagType, void>::value>::type
-  //    ThrustFunctorWrapper(const FunctorType& op) : f(TagType(), op){};
-
-    template <class TagType_ = TagType,
-              typename std::enable_if<std::is_same<TagType_, void>::value, bool>::type = true>
-    KOKKOS_FUNCTION
-    //typename std::enable_if<std::is_same<TagType_, void>::value>::type
     value_type operator()(index_type i) const {
       // value_type val = InitValueType();
       value_type val = (value_type)0; // for now, assuming no init value
@@ -1152,51 +1130,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     template <class TagType_ = TagType,
               typename std::enable_if<!std::is_same<TagType_, void>::value, bool>::type = true>
     KOKKOS_FUNCTION
-    //typename std::enable_if<!std::is_same<TagType_, void>::value>::type
     value_type operator()(index_type i) const {
       // value_type val = InitValueType();
       value_type val = (value_type)0; // for now, assuming no init value
       f(TagType(),i,val);
       return val;
     }
-
-/*
- KOKKOS_FUNCTION
-    value_type operator()(index_type i) const {
-      // value_type val = InitValueType();
-      value_type val = (value_type)0; // for now, assuming no init value
-      f(i,val);
-      return val;
-    }
-   */
-
   };
 
-/*
-  // template<class FunctorType>
-   template<class TagType>
-  class ThrustFunctorWrapper {
-    public:
-      const FunctorType& f;
-      template <class TagType_ = TagType>
-      KOKKOS_FUNCTION
-      typename std::enable_if<std::is_same<TagType_, void>::value>::type
-        ThrustFunctorWrapper(const FunctorType& op) : f(op){};
-  
-      template <class TagType_ = TagType>
-      KOKKOS_FUNCTION
-      typename std::enable_if<!std::is_same<TagType_, void>::value>::type
-        ThrustFunctorWrapper(const FunctorType& op) : f(TagType_(), op){};
-  
-      KOKKOS_FUNCTION
-      value_type operator()(index_type i) const {
-        // value_type val = InitValueType();
-        value_type val = (value_type)0; // for now, assuming no init value
-        f(i,val);
-        return val;
-      }
-    };
-*/
   inline void thrust_execute() {
     printf("using CUDA Thurst\n");
 
