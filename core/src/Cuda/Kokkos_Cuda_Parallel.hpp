@@ -1992,14 +1992,22 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelReduce,
                            LaunchBounds>::get_cuda_func_attributes();
-    m_team_size =
-        m_team_size >= 0
-            ? m_team_size
-            : Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
-                  m_policy.space().impl_internal_space_instance(), attr,
-                  m_functor, m_vector_size, m_policy.team_scratch_size(0),
-                  m_policy.thread_scratch_size(0)) /
-                  m_vector_size;
+
+    // Valid team size not provided, deduce team size
+    if (m_team_size < 0) {
+      m_team_size =
+          Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
+              m_policy.space().impl_internal_space_instance(), attr, m_functor,
+              m_vector_size, m_policy.team_scratch_size(0),
+              m_policy.thread_scratch_size(0)) /
+          m_vector_size;
+
+      // Currently we require Power-of-2 team size for reductions.
+      int p2 = 1;
+      while (p2 <= m_team_size) p2 *= 2;
+      p2 /= 2;
+      m_team_size = p2;
+    }
 
     m_team_begin =
         UseShflReduction
