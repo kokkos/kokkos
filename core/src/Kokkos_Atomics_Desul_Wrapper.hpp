@@ -35,6 +35,9 @@ T atomic_load(T* const dest) { return desul::atomic_load(dest, desul::MemoryOrde
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_store(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_store(dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
+template<class T> KOKKOS_INLINE_FUNCTION
+void atomic_assign(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { atomic_store(dest,val); }
+
 KOKKOS_INLINE_FUNCTION
 void memory_fence() {
   desul::atomic_thread_fence(desul::MemoryOrderSeqCst(), desul::MemoryScopeDevice());
