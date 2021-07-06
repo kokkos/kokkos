@@ -45,57 +45,63 @@
 #ifndef KOKKOS_BEGIN_END_HPP
 #define KOKKOS_BEGIN_END_HPP
 
-/// \file Kokkos_NonModifyingSequenceOperations.hpp
-/// \brief Kokkos non-modifying sequence operations
+/// \file Kokkos_BeginEnd.hpp
+/// \brief Kokkos begin, enc, cbegin, cend
 
 namespace Kokkos {
 namespace Experimental {
 
 template <class DataType, class... Properties>
-auto begin(const Kokkos::View<DataType, Properties...>& v)
-    -> decltype(v.data()) {
+auto begin(const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(is_admissible_view_to_kokkos_begin_end<ViewInType>::value,
+  static_assert(is_admissible_to_kokkos_begin_end<ViewInType>::value,
                 "Currently, Kokkos::Experimental::begin only accepts 1D "
                 "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
-  return v.data();
+  using it_t = RandomAccessIterator<void, ViewInType>;
+  return it_t(v);
 }
 
 template <class DataType, class... Properties>
-auto end(const Kokkos::View<DataType, Properties...>& v) -> decltype(v.data()) {
+auto end(const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
   static_assert(
-      is_admissible_view_to_kokkos_begin_end<ViewInType>::value,
+      is_admissible_to_kokkos_begin_end<ViewInType>::value,
       "Currently, Kokkos::Experimental::end only accepts 1D contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
-  return v.data() + v.size();
+  using it_t = RandomAccessIterator<void, ViewInType>;
+  return it_t(v, v.extent(0));
 }
 
 template <class DataType, class... Properties>
 auto cbegin(const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(is_admissible_view_to_kokkos_begin_end<ViewInType>::value,
+  static_assert(is_admissible_to_kokkos_begin_end<ViewInType>::value,
                 "Currently, Kokkos::Experimental::cbegin only accepts 1D "
                 "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
-  const typename ViewInType::const_type cv = v;
-  return cv.data();
+  using ViewConstType    = typename ViewInType::const_type;
+  const ViewConstType cv = v;
+  using it_t             = RandomAccessIterator<void, ViewConstType>;
+  return it_t(cv);
 }
 
 template <class DataType, class... Properties>
 auto cend(const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
-  static_assert(is_admissible_view_to_kokkos_begin_end<ViewInType>::value,
+  static_assert(is_admissible_to_kokkos_begin_end<ViewInType>::value,
                 "Currently, Kokkos::Experimental::cend only accepts 1D "
                 "contiguous Views.");
 
   KOKKOS_EXPECTS(v.span_is_contiguous());
-  const typename ViewInType::const_type cv = v;
-  return cv.data() + v.size();
+
+  using ViewConstType    = typename ViewInType::const_type;
+  const ViewConstType cv = v;
+  using it_t             = RandomAccessIterator<void, ViewConstType>;
+  return it_t(cv, cv.extent(0));
 }
 
 }  // namespace Experimental
