@@ -50,39 +50,38 @@
 namespace Kokkos {
 namespace Experimental {
 
-template<class enable, class ViewT, class ...Args>
+template <class enable, class ViewT, class... Args>
 class RandomAccessIterator;
 
-template<class DataType, class ...Args>
+template <class DataType, class... Args>
 class RandomAccessIterator<
-  std::enable_if_t<
-    Kokkos::View<DataType, Args...>::rank == 1 and
-    (std::is_same<typename Kokkos::View<DataType, Args...>::array_layout, Kokkos::LayoutStride>::value or
-     std::is_same<typename Kokkos::View<DataType, Args...>::array_layout, Kokkos::LayoutLeft>::value or
-     std::is_same<typename Kokkos::View<DataType, Args...>::array_layout, Kokkos::LayoutRight>::value)
-    >,
-  Kokkos::View<DataType, Args...>
-  > : public std::iterator<std::random_access_iterator_tag,
-			   typename Kokkos::View<DataType, Args...>::value_type,
-			   ptrdiff_t,
-			   typename Kokkos::View<DataType, Args...>::pointer_type,
-			   typename Kokkos::View<DataType, Args...>::reference_type
-			   >
-{
-
-public:
-  using view_t		= Kokkos::View<DataType, Args...>;
-  using iterator_t	= RandomAccessIterator<void, view_t>;
+    std::enable_if_t<
+        Kokkos::View<DataType, Args...>::rank == 1 and
+        (std::is_same<typename Kokkos::View<DataType, Args...>::array_layout,
+                      Kokkos::LayoutStride>::value or
+         std::is_same<typename Kokkos::View<DataType, Args...>::array_layout,
+                      Kokkos::LayoutLeft>::value or
+         std::is_same<typename Kokkos::View<DataType, Args...>::array_layout,
+                      Kokkos::LayoutRight>::value)>,
+    Kokkos::View<DataType, Args...> >
+    : public std::iterator<
+          std::random_access_iterator_tag,
+          typename Kokkos::View<DataType, Args...>::value_type, ptrdiff_t,
+          typename Kokkos::View<DataType, Args...>::pointer_type,
+          typename Kokkos::View<DataType, Args...>::reference_type> {
+ public:
+  using view_t          = Kokkos::View<DataType, Args...>;
+  using iterator_t      = RandomAccessIterator<void, view_t>;
   using difference_type = ptrdiff_t;
-  using value_type	= typename view_t::value_type;
-  using reference	= typename view_t::reference_type;
+  using value_type      = typename view_t::value_type;
+  using reference       = typename view_t::reference_type;
 
   // delete default cnstr because m_view is a const member
   RandomAccessIterator() = default;
 
   explicit RandomAccessIterator(const view_t viewIn) : m_view(viewIn) {}
   explicit RandomAccessIterator(const view_t viewIn, ptrdiff_t current_index)
-    : m_view(viewIn), m_currentIndex(current_index){}
+      : m_view(viewIn), m_currentIndex(current_index) {}
 
   KOKKOS_INLINE_FUNCTION
   iterator_t& operator++() {
@@ -128,13 +127,13 @@ public:
   KOKKOS_INLINE_FUNCTION
   bool operator==(iterator_t other) const {
     return m_currentIndex == other.m_currentIndex &&
-      m_view.data() == other.m_view.data();
+           m_view.data() == other.m_view.data();
   }
 
   KOKKOS_INLINE_FUNCTION
   bool operator!=(iterator_t other) const {
     return m_currentIndex != other.m_currentIndex ||
-      m_view.data() != other.m_view.data();
+           m_view.data() != other.m_view.data();
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -158,11 +157,9 @@ public:
   }
 
   KOKKOS_INLINE_FUNCTION
-  reference operator*() const {
-    return m_view(m_currentIndex);
-  }
+  reference operator*() const { return m_view(m_currentIndex); }
 
-private:
+ private:
   const view_t m_view;
   ptrdiff_t m_currentIndex = 0;
 };
