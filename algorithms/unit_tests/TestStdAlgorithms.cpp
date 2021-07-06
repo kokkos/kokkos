@@ -48,52 +48,144 @@
 
 namespace Test {
 
-class std_algorithms : public ::testing::Test {
- protected:
-  void verify_values(int expected) {
-    for (std::size_t i = 0; i < m_view.extent(0); i++) {
-      EXPECT_EQ(expected, m_view[i]);
-    }
-  }
+struct std_algorithms : public ::testing::Test {
+ public:
+  virtual void SetUp() {}
+  virtual void TearDown() {}
 
-  template <class FunctorType>
-  void test_with(FunctorType functor) {
-    Kokkos::Experimental::for_each(m_view, functor);
-    verify_values(1);
+  using static_view_t = Kokkos::View<int[10]>;
+  static_view_t m_static_view{"std-algo-test-1D-contiguous-view-static"};
 
-    Kokkos::Experimental::for_each(Kokkos::Experimental::begin(m_view),
-                                   Kokkos::Experimental::end(m_view), functor);
-    verify_values(2);
+  using dyn_view_t = Kokkos::View<int*>;
+  dyn_view_t m_dynamic_view{"std-algo-test-1D-contiguous-view-dynamic", 10};
 
-    Kokkos::Experimental::for_each(m_view.data(), m_view.data() + m_view.size(),
-                                   functor);
-    verify_values(3);
-
-    Kokkos::Experimental::for_each_n(m_view.data(), 10, functor);
-    verify_values(4);
-
-    Kokkos::Experimental::for_each_n(m_view, 10, functor);
-    verify_values(5);
-  }
-
-  Kokkos::View<int[10]> m_view{"1-D-contiguous-view"};
+  using strided_view_t = Kokkos::View<int*, Kokkos::LayoutStride>;
+  Kokkos::LayoutStride layout{10, 2};
+  strided_view_t m_strided_view{"std-algo-test-1D-strided-view", layout};
 };
+// ------------------------------------------------------------
 
-struct Functor {
+struct IncrementElementWiseFunctor {
   KOKKOS_INLINE_FUNCTION
-  void operator()(int& i) const { i++; }
+  void operator()(int& i) const { ++i; }
 };
 
-TEST_F(std_algorithms, for_each_functor) {
-  const auto fun = Functor();
-  test_with(fun);
+struct NoOpNonMutableFunctor {
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int& i) const {}
+};
+// ------------------------------------------------------------
+
+template <class ValueType, class ViewType>
+void verify_values(ValueType expected, const ViewType viewIn) {
+  static_assert(std::is_same<ValueType, typename ViewType::value_type>::value,
+                "Non-matching value types of view and reference value");
+  auto view_h =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), viewIn);
+  for (std::size_t i = 0; i < view_h.extent(0); i++) {
+    EXPECT_EQ(expected, view_h(i));
+  }
+}
+// ------------------------------------------------------------
+
+template <class FunctorType, class ViewType>
+void test_for_each_v1(FunctorType functor, const ViewType viewIn) {
+  Kokkos::Experimental::for_each(viewIn, functor);
+  verify_values(1, viewIn);
+
+  Kokkos::Experimental::for_each(Kokkos::Experimental::begin(viewIn),
+                                 Kokkos::Experimental::end(viewIn), functor);
+  verify_values(2, viewIn);
 }
 
-TEST_F(std_algorithms, for_each_lambda) {
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-  const auto fun = KOKKOS_LAMBDA(int& i) { i++; };
-  test_with(fun);
-#endif
+template <class FunctorType, class ViewType>
+void test_for_each_v2(FunctorType functor, const ViewType viewIn) {
+  Kokkos::Experimental::for_each(viewIn, functor);
+  verify_values(0, viewIn);
+
+  Kokkos::Experimental::for_each(Kokkos::Experimental::cbegin(viewIn),
+                                 Kokkos::Experimental::cend(viewIn), functor);
+  verify_values(0, viewIn);
 }
+
+template <class FunctorType, class ViewType>
+void test_for_each_n_v1(FunctorType functor, const ViewType viewIn) {
+  Kokkos::Experimental::for_each_n(Kokkos::Experimental::begin(viewIn), 10,
+                                   functor);
+  verify_values(3, viewIn);
+
+  Kokkos::Experimental::for_each_n(viewIn, 10, functor);
+  verify_values(4, viewIn);
+}
+
+template <class FunctorType, class ViewType>
+void test_for_each_n_v2(FunctorType functor, const ViewType viewIn) {
+  Kokkos::Experimental::for_each_n(Kokkos::Experimental::cbegin(viewIn), 10,
+                                   functor);
+  verify_values(0, viewIn);
+
+  Kokkos::Experimental::for_each_n(viewIn, 10, functor);
+  verify_values(0, viewIn);
+}
+// ------------------------------------------------------------
+// ------------------------------------------------------------
+
+// for_each, functor with non-const arg
+TEST_F(std_algorithms, for_each_modifying_functor_static_view) {
+  const auto fun = IncrementElementWiseFunctor();
+  test_for_each_v1(fun, m_static_view);
+}
+TEST_F(std_algorithms, for_each_modifying_functor_dynamic_view) {
+  const auto fun = IncrementElementWiseFunctor();
+  test_for_each_v1(fun, m_dynamic_view);
+}
+TEST_F(std_algorithms, for_each_modifying_functor_strided_view) {
+  const auto fun = IncrementElementWiseFunctor();
+  test_for_each_v1(fun, m_strided_view);
+}
+
+// for_each, functor with const arg
+TEST_F(std_algorithms, for_each_non_modifying_functor_static_view) {
+  const auto fun = NoOpNonMutableFunctor();
+  test_for_each_v2(fun, m_static_view);
+}
+TEST_F(std_algorithms, for_each_non_modifying_functor_dynamic_view) {
+  const auto fun = NoOpNonMutableFunctor();
+  test_for_each_v2(fun, m_dynamic_view);
+}
+TEST_F(std_algorithms, for_each_non_modifying_functor_strided_view) {
+  const auto fun = NoOpNonMutableFunctor();
+  test_for_each_v2(fun, m_strided_view);
+}
+
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+// for_each, lambda with non-const arg
+TEST_F(std_algorithms, for_each_modifying_lambda_static_view) {
+  const auto fun = KOKKOS_LAMBDA(int& i) { ++i; };
+  test_for_each_v1(fun, m_static_view);
+}
+TEST_F(std_algorithms, for_each_modifying_lambda_dynamic_view) {
+  const auto fun = KOKKOS_LAMBDA(int& i) { ++i; };
+  test_for_each_v1(fun, m_dynamic_view);
+}
+TEST_F(std_algorithms, for_each_modifying_lambda_strided_view) {
+  const auto fun = KOKKOS_LAMBDA(int& i) { ++i; };
+  test_for_each_v1(fun, m_strided_view);
+}
+
+// for_each, lambda with const arg
+TEST_F(std_algorithms, for_each_non_modifying_lambda_static_view) {
+  const auto fun = KOKKOS_LAMBDA(const int& i){};
+  test_for_each_v2(fun, m_static_view);
+}
+TEST_F(std_algorithms, for_each_non_modifying_lambda_dynamic_view) {
+  const auto fun = KOKKOS_LAMBDA(const int& i){};
+  test_for_each_v2(fun, m_dynamic_view);
+}
+TEST_F(std_algorithms, for_each_non_modifying_lambda_strided_view) {
+  const auto fun = KOKKOS_LAMBDA(const int& i){};
+  test_for_each_v2(fun, m_strided_view);
+}
+#endif
 
 }  // namespace Test
