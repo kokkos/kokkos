@@ -1110,32 +1110,29 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     return n;
   }
 
-  template <class TagType>
+  template <class TagType, class index_type>
   struct ThrustFunctorWrapper {
     const FunctorType& f;
 
     KOKKOS_FUNCTION
     ThrustFunctorWrapper(const FunctorType& op) : f(op){};
 
-//    template <class TagType_ = TagType,
-//              typename std::enable_if<std::is_same<TagType_, void>::value, bool>::type = true>
     template <class TagType_                      = TagType,
               typename std::enable_if<std::is_same<TagType_, void>::value,
                                       bool>::type = true>
-
-    KOKKOS_FUNCTION value_type operator()(index_type i) const {
+    KOKKOS_FUNCTION 
+    value_type operator()(index_type i) const {
       // value_type val = InitValueType();
       value_type val = (value_type)0;  // for now, assuming no init value
       f(i, val);
       return val;
     }
 
-//    template <class TagType_ = TagType,
-//              typename std::enable_if<!std::is_same<TagType_, void>::value, bool>::type = true>
     template <class TagType_                      = TagType,
-              typename std::enable_if<std::is_same<TagType_, void>::value,
+              typename std::enable_if<!std::is_same<TagType_, void>::value,
                                       bool>::type = true>
-    KOKKOS_FUNCTION value_type operator()(index_type i) const {
+    KOKKOS_FUNCTION 
+    value_type operator()(index_type i) const {
       // value_type val = InitValueType();
       value_type val = (value_type)0;  // for now, assuming no init value
       f(TagType(), i, val);
@@ -1154,8 +1151,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
     value_type sum;
 
-    ThrustFunctorWrapper<WorkTag> t_op(m_functor);
-    // ThrustFunctorWrapper<functor_type> t_op(m_functor);
+    ThrustFunctorWrapper<WorkTag, index_type> t_op(m_functor);
 
     sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
                                    t_op, (value_type)0,
