@@ -77,10 +77,12 @@ class RandomAccessIterator<
   using reference       = typename view_t::reference_type;
 
   // delete default cnstr because m_view is a const member
-  RandomAccessIterator() = default;
+  KOKKOS_INLINE_FUNCTION RandomAccessIterator() = default;
 
-  explicit RandomAccessIterator(const view_t viewIn) : m_view(viewIn) {}
-  explicit RandomAccessIterator(const view_t viewIn, ptrdiff_t current_index)
+  explicit KOKKOS_INLINE_FUNCTION RandomAccessIterator(const view_t viewIn)
+      : m_view(viewIn) {}
+  explicit KOKKOS_INLINE_FUNCTION RandomAccessIterator(const view_t viewIn,
+                                                       ptrdiff_t current_index)
       : m_view(viewIn), m_currentIndex(current_index) {}
 
   KOKKOS_INLINE_FUNCTION
