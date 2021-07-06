@@ -82,7 +82,6 @@ atomic_compare_exchange(
       dest, &compare, &value, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
   return compare;
 }
-//#endif
 
 #if defined(__clang__) && (__clang_major__>=7) && !defined(__APPLE__)
 #pragma GCC diagnostic pop

@@ -49,8 +49,6 @@ void test(const int length) {
 
     if (errors) {
       std::cerr << "Error in 100% min replacements: " << errors << std::endl;
-      T example;
-      Kokkos::deep_copy(example, Kokkos::subview(inp, 0));
       std::cerr << "inp(0)=" << inp(0) << std::endl;
     }
     std::cout << "Time for 100% min replacements: " << time << std::endl;
