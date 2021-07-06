@@ -1154,7 +1154,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
                                    t_op, (value_type)0,
                                    thrust::plus<value_type>());
-        
+
     *m_result_ptr =
         sum;  // is m_result_ptr always the type of pointer to value_type?
   }
