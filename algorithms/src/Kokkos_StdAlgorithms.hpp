@@ -49,6 +49,7 @@
 /// \brief Kokkos counterparts for Standard C++ Library algorithms
 
 #include <std_algorithms/Kokkos_StdAlgorithmsConstraints.hpp>
+#include <std_algorithms/Kokkos_RandomAccessIterator.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
 #include <std_algorithms/Kokkos_NonModifyingSequenceOperations.hpp>
 #include <std_algorithms/Kokkos_ModifyingSequenceOperations.hpp>
