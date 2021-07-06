@@ -51,10 +51,10 @@ namespace Kokkos {
 namespace Experimental {
 
 template <typename T, typename enable = void>
-struct is_admissible_view_to_kokkos_begin_end : std::false_type {};
+struct is_admissible_to_kokkos_begin_end : std::false_type {};
 
 template <typename T>
-struct is_admissible_view_to_kokkos_begin_end<
+struct is_admissible_to_kokkos_begin_end<
     T, std::enable_if_t< ::Kokkos::is_view<T>::value and T::rank == 1 and
                          (std::is_same<typename T::traits::array_layout,
                                        Kokkos::LayoutLeft>::value or
@@ -66,11 +66,11 @@ struct is_admissible_view_to_kokkos_begin_end<
 //-------------------------------------------------------------------------
 
 template <typename T, typename enable = void>
-struct is_admissible_view_to_kokkos_std_non_modifying_sequence_op
-    : std::false_type {};
+struct is_admissible_to_kokkos_std_non_modifying_sequence_op : std::false_type {
+};
 
 template <typename T>
-struct is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
+struct is_admissible_to_kokkos_std_non_modifying_sequence_op<
     T, std::enable_if_t< ::Kokkos::is_view<T>::value and T::rank == 1 and
                          (std::is_same<typename T::traits::array_layout,
                                        Kokkos::LayoutLeft>::value or
@@ -82,8 +82,8 @@ struct is_admissible_view_to_kokkos_std_non_modifying_sequence_op<
 //-------------------------------------------------------------------------
 
 template <typename... Args>
-using is_admissible_view_to_kokkos_std_modifying_sequence_op =
-    is_admissible_view_to_kokkos_std_non_modifying_sequence_op<Args...>;
+using is_admissible_to_kokkos_std_modifying_sequence_op =
+    is_admissible_to_kokkos_std_non_modifying_sequence_op<Args...>;
 
 }  // namespace Experimental
 }  // namespace Kokkos
