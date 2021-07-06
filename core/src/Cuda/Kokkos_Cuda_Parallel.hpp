@@ -1144,7 +1144,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     thrust::counting_iterator<value_type> temp_iter_d(
         0);  //  0 because no init at this stage
 
-    thrust::counting_iterator<value_type> temp_iter_end_d = 
+    thrust::counting_iterator<value_type> temp_iter_end_d =
         temp_iter_d + m_policy.end();
 
     value_type sum;
@@ -1155,7 +1155,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
                                    t_op, (value_type)0,
                                    thrust::plus<value_type>());
         
-    *m_result_ptr = 
+    *m_result_ptr =
         sum;  // is m_result_ptr always the type of pointer to value_type?
   }
 
