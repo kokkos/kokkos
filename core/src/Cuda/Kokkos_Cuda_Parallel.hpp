@@ -1110,7 +1110,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     return n;
   }
 
-  template <class TagType, class index_type>
+  template <class TagType>
   struct ThrustFunctorWrapper {
     const FunctorType& f;
 
@@ -1120,8 +1120,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     template <class TagType_                      = TagType,
               typename std::enable_if<std::is_same<TagType_, void>::value,
                                       bool>::type = true>
-    KOKKOS_FUNCTION 
-    value_type operator()(index_type i) const {
+    KOKKOS_FUNCTION value_type operator()(index_type i) const {
       // value_type val = InitValueType();
       value_type val = (value_type)0;  // for now, assuming no init value
       f(i, val);
@@ -1131,8 +1130,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     template <class TagType_                      = TagType,
               typename std::enable_if<!std::is_same<TagType_, void>::value,
                                       bool>::type = true>
-    KOKKOS_FUNCTION 
-    value_type operator()(index_type i) const {
+    KOKKOS_FUNCTION value_type operator()(index_type i) const {
       // value_type val = InitValueType();
       value_type val = (value_type)0;  // for now, assuming no init value
       f(TagType(), i, val);
@@ -1144,21 +1142,21 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
     printf("using CUDA Thurst\n");
 
     thrust::counting_iterator<value_type> temp_iter_d(
-        0); //  0 because no init at this stage
+        0);  //  0 because no init at this stage
 
     thrust::counting_iterator<value_type> temp_iter_end_d = 
         temp_iter_d + m_policy.end();
 
     value_type sum;
 
-    ThrustFunctorWrapper<WorkTag, index_type> t_op(m_functor);
+    ThrustFunctorWrapper<WorkTag> t_op(m_functor);
 
     sum = thrust::transform_reduce(thrust::device, temp_iter_d, temp_iter_end_d,
                                    t_op, (value_type)0,
                                    thrust::plus<value_type>());
         
     *m_result_ptr = 
-        sum; // is m_result_ptr always the type of pointer to value_type?
+        sum;  // is m_result_ptr always the type of pointer to value_type?
   }
 
   inline void execute() {
@@ -1239,7 +1237,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
             } else {
               const int size = ValueTraits::value_size(
                   ReducerConditional::select(m_functor, m_reducer));
-              DeepCopy<HostSpace, CudaSpace>(m_result_ptr, m_scratch_space, 
+              DeepCopy<HostSpace, CudaSpace>(m_result_ptr, m_scratch_space,
                                              size);
             }
           }
