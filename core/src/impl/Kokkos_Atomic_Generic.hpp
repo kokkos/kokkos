@@ -301,8 +301,8 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
   // This is a way to (hopefully) avoid dead lock in a warp
   T return_val;
   int done                 = 0;
-  unsigned int mask        = KOKKOS_IMPL_CUDA_ACTIVEMASK;
-  unsigned int active      = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
+  unsigned int mask        = __activemask();
+  unsigned int active      = __ballot_sync(mask, 1);
   unsigned int done_active = 0;
   while (active != done_active) {
     if (!done) {
@@ -315,7 +315,7 @@ KOKKOS_INLINE_FUNCTION T atomic_fetch_oper(
         done = 1;
       }
     }
-    done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, done);
+    done_active = __ballot_sync(mask, done);
   }
   return return_val;
 #elif defined(__HIP_DEVICE_COMPILE__)
@@ -369,8 +369,8 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
   T return_val;
   // This is a way to (hopefully) avoid dead lock in a warp
   int done                 = 0;
-  unsigned int mask        = KOKKOS_IMPL_CUDA_ACTIVEMASK;
-  unsigned int active      = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
+  unsigned int mask        = __activemask();
+  unsigned int active      = __ballot_sync(mask, 1);
   unsigned int done_active = 0;
   while (active != done_active) {
     if (!done) {
@@ -383,7 +383,7 @@ atomic_oper_fetch(const Oper& op, volatile T* const dest,
         done = 1;
       }
     }
-    done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, done);
+    done_active = __ballot_sync(mask, done);
   }
   return return_val;
 #elif defined(__HIP_DEVICE_COMPILE__)

@@ -61,7 +61,7 @@ constexpr unsigned shfl_all_mask = 0xffffffffu;
 // Shuffle operations require input to be a register (stack) variable
 
 // Derived implements do_shfl_op(unsigned mask, T& in, int lane, int width),
-// which turns in to one of KOKKOS_IMPL_CUDA_SHFL(_UP_|_DOWN_|_)MASK
+// which turns in to one of __shfl_sync(_up|_down)
 // Since the logic with respect to value sizes, etc., is the same everywhere,
 // put it all in one place.
 template <class Derived>
@@ -157,7 +157,7 @@ struct in_place_shfl_fn : in_place_shfl_op<in_place_shfl_fn> {
     (void)val;
     (void)lane;
     (void)width;
-    return KOKKOS_IMPL_CUDA_SHFL_MASK(mask, val, lane, width);
+    return __shfl_sync(mask, val, lane, width);
   }
 };
 template <class... Args>
@@ -170,7 +170,7 @@ struct in_place_shfl_up_fn : in_place_shfl_op<in_place_shfl_up_fn> {
   __device__ KOKKOS_IMPL_FORCEINLINE T do_shfl_op(unsigned mask, T& val,
                                                   int lane, int width) const
       noexcept {
-    return KOKKOS_IMPL_CUDA_SHFL_UP_MASK(mask, val, lane, width);
+    return __shfl_up_sync(mask, val, lane, width);
   }
 };
 template <class... Args>
@@ -188,7 +188,7 @@ struct in_place_shfl_down_fn : in_place_shfl_op<in_place_shfl_down_fn> {
     (void)val;
     (void)lane;
     (void)width;
-    return KOKKOS_IMPL_CUDA_SHFL_DOWN_MASK(mask, val, lane, width);
+    return __shfl_down_sync(mask, val, lane, width);
   }
 };
 template <class... Args>

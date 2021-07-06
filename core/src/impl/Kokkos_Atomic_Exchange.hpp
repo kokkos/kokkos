@@ -123,8 +123,8 @@ atomic_exchange(volatile T* const dest,
 #endif
 
   int done                 = 0;
-  unsigned int mask        = KOKKOS_IMPL_CUDA_ACTIVEMASK;
-  unsigned int active      = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, 1);
+  unsigned int mask        = __activemask();
+  unsigned int active      = __ballot_sync(mask, 1);
   unsigned int done_active = 0;
   while (active != done_active) {
     if (!done) {
@@ -137,7 +137,7 @@ atomic_exchange(volatile T* const dest,
         done = 1;
       }
     }
-    done_active = KOKKOS_IMPL_CUDA_BALLOT_MASK(mask, done);
+    done_active = __ballot_sync(mask, done);
   }
   return return_val;
 }
