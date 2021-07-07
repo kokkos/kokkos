@@ -178,7 +178,6 @@ void profile_fence_event(const std::string& name, DirectFenceIDHandle devIDTag,
   Kokkos::Tools::endFence(handle);
 }
 
-
 inline uint32_t int_for_synchronization_reason(
     Kokkos::Tools::Experimental::SpecialSynchronizationCases reason) {
   switch (reason) {
