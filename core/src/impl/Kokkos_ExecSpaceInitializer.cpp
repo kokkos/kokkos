@@ -42,34 +42,45 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_EXEC_SPACE_INITIALIZER_HPP
-#define KOKKOS_EXEC_SPACE_INITIALIZER_HPP
+#include "Kokkos_Core.hpp"
+#include "Kokkos_ExecSpaceInitializer.hpp"
 
-#include <iosfwd>
+#include <sstream>
 
 namespace Kokkos {
 namespace Impl {
+void ExecSpaceInitializerBase::initialize(const InitArguments &args) {
+  if (m_is_finalized)
+  {
+    std::stringstream abort_msg;
+    abort_msg << "Calling Kokkos::initialize after ExecSpace \"";
+    print_exec_space_name(abort_msg);
+    abort_msg << "\" was already finalized is illegal\n";
+    Kokkos::abort(abort_msg.str().c_str());
+  }
 
-class ExecSpaceInitializerBase {
- public:
-  void initialize(const InitArguments &args);
-  void finalize(const bool all_spaces);
-  virtual void fence()                                                   = 0;
-  virtual void fence(const std::string &)                                = 0;
-  virtual void print_exec_space_name(std::ostream &strm)                 = 0;
-  virtual void print_configuration(std::ostream &msg, const bool detail) = 0;
-  ExecSpaceInitializerBase()          = default;
-  virtual ~ExecSpaceInitializerBase() = default;
+  if (m_is_initialized)
+    return;
 
- private:
+  m_is_initialized = true;
 
-  virtual void do_initialize(const InitArguments &args)                     = 0;
-  virtual void do_finalize(const bool all_spaces)                           = 0;
-  bool m_is_initialized = false;
-  bool m_is_finalized = false;
-};
+  do_initialize(args);
+}
 
-}  // namespace Impl
-}  // namespace Kokkos
+void ExecSpaceInitializerBase::finalize(const bool all_spaces) {
+  if (!m_is_initialized) {
+    std::stringstream abort_msg;
+    abort_msg << "Calling Kokkos::finalize without ExecSpace \"";
+    print_exec_space_name(abort_msg);
+    abort_msg << "\" having been initialized is illegal\n";
+    Kokkos::abort(abort_msg.str().c_str());
+  }
+  if (m_is_finalized)
+    return;
 
-#endif  // KOKKOS_EXEC_SPACE_INITIALIZER_HPP
+  m_is_finalized = true;
+
+  do_finalize(all_spaces);
+}
+} // namespace Impl
+} // namespace Kokkos

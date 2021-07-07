@@ -270,8 +270,9 @@ class CudaSpaceInitializer : public ExecSpaceInitializerBase {
  public:
   CudaSpaceInitializer()  = default;
   ~CudaSpaceInitializer() = default;
-  void initialize(const InitArguments& args) final;
-  void finalize(const bool all_spaces) final;
+  void do_initialize(const InitArguments& args) final;
+  void do_finalize(const bool all_spaces) final;
+  void print_exec_space_name(std::ostream &strm) final;
   void fence() final;
   void fence(const std::string&) final;
   void print_configuration(std::ostream& msg, const bool detail) final;

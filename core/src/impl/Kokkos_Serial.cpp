@@ -189,7 +189,7 @@ namespace Impl {
 int g_serial_space_factory_initialized =
     initialize_space_factory<SerialSpaceInitializer>("100_Serial");
 
-void SerialSpaceInitializer::initialize(const InitArguments& args) {
+void SerialSpaceInitializer::do_initialize(const InitArguments& args) {
   // Prevent "unused variable" warning for 'args' input struct.  If
   // Serial::initialize() ever needs to take arguments from the input
   // struct, you may remove this line of code.
@@ -199,13 +199,17 @@ void SerialSpaceInitializer::initialize(const InitArguments& args) {
   Kokkos::Serial::impl_initialize();
 }
 
-void SerialSpaceInitializer::finalize(const bool) {
+void SerialSpaceInitializer::do_finalize(const bool) {
   if (Kokkos::Serial::impl_is_initialized()) Kokkos::Serial::impl_finalize();
 }
 
 void SerialSpaceInitializer::fence() { Kokkos::Serial::impl_static_fence(); }
 void SerialSpaceInitializer::fence(const std::string& name) {
   Kokkos::Serial::impl_static_fence(name);
+}
+
+void SerialSpaceInitializer::print_exec_space_name(std::ostream& msg) {
+  msg << "Serial";
 }
 
 void SerialSpaceInitializer::print_configuration(std::ostream& msg,
