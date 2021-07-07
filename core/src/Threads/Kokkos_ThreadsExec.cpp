@@ -315,14 +315,12 @@ void ThreadsExec::fence(const std::string &name,
   };
   if (is_static == Impl::fence_is_static::yes) {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
-
         name,
         Kokkos::Tools::Experimental::SpecialSynchronizationCases::
             GlobalDeviceSynchronization,
         fence_lam);
   } else {
     Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Threads>(
-
         name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
         fence_lam);
   }

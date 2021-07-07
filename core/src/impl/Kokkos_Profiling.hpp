@@ -161,7 +161,6 @@ uint32_t idForInstance(const uintptr_t instance) {
     auto ret         = offset + value++;
     (*map)[instance] = ret;
     return ret;
-    // find->second = (offset + value++);
   }
 
   return find->second;
@@ -179,14 +178,6 @@ void profile_fence_event(const std::string& name, DirectFenceIDHandle devIDTag,
   Kokkos::Tools::endFence(handle);
 }
 
-// template <typename Space, typename FencingFunctor>
-// void profile_fence_event(const std::string& name, const Space& /**space*/,
-//                         const FencingFunctor& func) {
-//  uint64_t handle = 0;
-//  Kokkos::Tools::beginFence(name, 0, &handle);  // TODO: correct ID
-//  func();
-//  Kokkos::Tools::endFence(handle);
-//}
 
 inline uint32_t int_for_synchronization_reason(
     Kokkos::Tools::Experimental::SpecialSynchronizationCases reason) {

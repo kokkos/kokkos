@@ -120,7 +120,6 @@ void SYCL::fence(const std::string& name) const {
       name,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           impl_instance_id()},
-
       [&]() { Impl::SYCLInternal::fence(*m_space_instance->m_queue); });
 }
 

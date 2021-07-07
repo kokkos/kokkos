@@ -59,7 +59,6 @@
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
-// DOGS
 uint32_t OpenMPTargetInternal::impl_get_instance_id() const noexcept {
   return Kokkos::Tools::Experimental::Impl::idForInstance<
       Kokkos::Experimental::OpenMPTarget>(reinterpret_cast<uintptr_t>(this));
