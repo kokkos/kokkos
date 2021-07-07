@@ -155,6 +155,9 @@ class HostSharedPtr {
     // object pointed to by m_counter and m_element_ptr.
     if (m_control) {
       int const count = Kokkos::atomic_fetch_sub(&(m_control->m_counter), 1);
+      // atomic_fetch_sub might have memory order relaxed so we need to force
+      // synchronization to avoid multiple threads doing the cleanup.
+      Kokkos::memory_fence();
       if (count == 1) {
         (m_control->m_deleter)(m_element_ptr);
         m_element_ptr = nullptr;
