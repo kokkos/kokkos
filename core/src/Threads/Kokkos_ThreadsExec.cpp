@@ -866,7 +866,7 @@ void ThreadsSpaceInitializer::fence(const std::string &name) {
   Kokkos::Threads::impl_static_fence(name);
 }
 
-void ThreadsSpaceInitializer::print_exec_space_name(std::ostream &strm) {
+void ThreadsSpaceInitializer::print_exec_space_name(std::ostream &msg) {
   msg << "Threads";
 }
 
