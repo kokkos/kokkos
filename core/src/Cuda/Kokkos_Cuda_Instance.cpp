@@ -882,7 +882,7 @@ int get_gpu(const InitArguments &args);
 int g_cuda_space_factory_initialized =
     initialize_space_factory<CudaSpaceInitializer>("150_Cuda");
 
-void CudaSpaceInitializer::initialize(const InitArguments &args) {
+void CudaSpaceInitializer::do_initialize(const InitArguments &args) {
   int use_gpu = get_gpu(args);
   if (std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
       0 < use_gpu) {
@@ -894,7 +894,7 @@ void CudaSpaceInitializer::initialize(const InitArguments &args) {
   }
 }
 
-void CudaSpaceInitializer::finalize(bool all_spaces) {
+void CudaSpaceInitializer::do_finalize(bool all_spaces) {
   if ((std::is_same<Kokkos::Cuda, Kokkos::DefaultExecutionSpace>::value ||
        all_spaces) &&
       Kokkos::Cuda::impl_is_initialized()) {
@@ -903,6 +903,10 @@ void CudaSpaceInitializer::finalize(bool all_spaces) {
 }
 
 void CudaSpaceInitializer::fence() { Kokkos::Cuda::impl_static_fence(); }
+
+void CudaSpaceInitializer::print_exec_space_name(std::ostream &strm) {
+  msg << "Cuda";
+}
 
 void CudaSpaceInitializer::print_configuration(std::ostream &msg,
                                                const bool detail) {

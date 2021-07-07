@@ -464,7 +464,7 @@ namespace Impl {
 int g_hip_space_factory_initialized =
     initialize_space_factory<HIPSpaceInitializer>("150_HIP");
 
-void HIPSpaceInitializer::initialize(const InitArguments& args) {
+void HIPSpaceInitializer::do_initialize(const InitArguments& args) {
   int use_gpu = Impl::get_gpu(args);
 
   if (std::is_same<Kokkos::Experimental::HIP,
@@ -479,7 +479,7 @@ void HIPSpaceInitializer::initialize(const InitArguments& args) {
   }
 }
 
-void HIPSpaceInitializer::finalize(const bool all_spaces) {
+void HIPSpaceInitializer::do_finalize(const bool all_spaces) {
   if (std::is_same<Kokkos::Experimental::HIP,
                    Kokkos::DefaultExecutionSpace>::value ||
       all_spaces) {
@@ -490,6 +490,10 @@ void HIPSpaceInitializer::finalize(const bool all_spaces) {
 
 void HIPSpaceInitializer::fence() {
   Kokkos::Experimental::HIP::impl_static_fence();
+}
+
+void HIPSpaceInitializer::print_exec_space_name(std::ostream& msg) {
+  msg << "HIP";
 }
 
 void HIPSpaceInitializer::print_configuration(std::ostream& msg,

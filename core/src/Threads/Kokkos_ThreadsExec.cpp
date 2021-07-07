@@ -798,7 +798,7 @@ namespace Impl {
 int g_threads_space_factory_initialized =
     initialize_space_factory<ThreadsSpaceInitializer>("050_Threads");
 
-void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
+void ThreadsSpaceInitializer::do_initialize(const InitArguments &args) {
   const int num_threads = args.num_threads;
   const int use_numa    = args.num_numa;
   if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
@@ -821,7 +821,7 @@ void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
   }
 }
 
-void ThreadsSpaceInitializer::finalize(const bool all_spaces) {
+void ThreadsSpaceInitializer::do_finalize(const bool all_spaces) {
   if (std::is_same<Kokkos::Threads, Kokkos::DefaultExecutionSpace>::value ||
       std::is_same<Kokkos::Threads,
                    Kokkos::HostSpace::execution_space>::value ||
@@ -832,6 +832,10 @@ void ThreadsSpaceInitializer::finalize(const bool all_spaces) {
 }
 
 void ThreadsSpaceInitializer::fence() { Kokkos::Threads::impl_static_fence(); }
+
+void ThreadsSpaceInitializer::print_exec_space_name(std::ostream &msg) {
+  msg << "Threads";
+}
 
 void ThreadsSpaceInitializer::print_configuration(std::ostream &msg,
                                                   const bool detail) {
