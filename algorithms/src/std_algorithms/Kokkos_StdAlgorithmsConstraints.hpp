@@ -45,7 +45,7 @@
 #ifndef KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 #define KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_View.hpp>
 
 namespace Kokkos {
 namespace Experimental {

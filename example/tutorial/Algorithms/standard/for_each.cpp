@@ -42,7 +42,7 @@
 //@HEADER
 */
 
-#include <Kokkos_Core.hpp>
+#include <Kokkos_View.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 #include <cstdio>
 

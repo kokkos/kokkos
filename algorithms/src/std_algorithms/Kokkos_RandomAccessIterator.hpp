@@ -46,6 +46,7 @@
 #define KOKKOS_RANDOM_ACCESS_ITERATOR_HPP
 
 #include <iterator>
+#include <Kokkos_View.hpp>
 
 namespace Kokkos {
 namespace Experimental {

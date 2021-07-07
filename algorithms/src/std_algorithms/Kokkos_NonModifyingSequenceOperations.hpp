@@ -45,6 +45,10 @@
 #ifndef KOKKOS_NON_MODIFYING_SEQUENCE_OPERATIONS_HPP
 #define KOKKOS_NON_MODIFYING_SEQUENCE_OPERATIONS_HPP
 
+#include <Kokkos_Core.hpp>
+#include "Kokkos_BeginEnd.hpp"
+#include "Kokkos_StdAlgorithmsConstraints.hpp"
+
 /// \file Kokkos_NonModifyingSequenceOperations.hpp
 /// \brief Kokkos non-modifying sequence operations
 
