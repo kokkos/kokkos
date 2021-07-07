@@ -374,7 +374,7 @@ __device__ inline
         value_type tmp = Kokkos::shfl_down(value, 2, 32);
         if (id + 2 < int(gridDim.x)) reducer.join(value, tmp);
       }
-      active += __ballot_sync(__activemask(), 1);
+      active += __ballot_sync(mask, 1);
       if (int(blockDim.x * blockDim.y) > 4) {
         value_type tmp = Kokkos::shfl_down(value, 4, 32);
         if (id + 4 < int(gridDim.x)) reducer.join(value, tmp);
