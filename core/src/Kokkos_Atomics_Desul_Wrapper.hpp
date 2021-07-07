@@ -35,6 +35,9 @@ T atomic_load(T* const dest) { return desul::atomic_load(dest, desul::MemoryOrde
 template<class T> KOKKOS_INLINE_FUNCTION
 void atomic_store(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_store(dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
+template<class T> KOKKOS_INLINE_FUNCTION
+void atomic_assign(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { atomic_store(dest,val); }
+
 KOKKOS_INLINE_FUNCTION
 void memory_fence() {
   desul::atomic_thread_fence(desul::MemoryOrderSeqCst(), desul::MemoryScopeDevice());
@@ -177,13 +180,14 @@ template<class T> KOKKOS_INLINE_FUNCTION
 T atomic_exchange(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> val) { return desul::atomic_exchange(dest, val, desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice()); }
 
 template<class T> KOKKOS_INLINE_FUNCTION
-bool atomic_compare_exchange_strong(T* const dest, T& expected, const T desired) {
-  return desul::atomic_compare_exchange_strong(dest, expected, desired,
+bool atomic_compare_exchange_strong(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> expected, desul::Impl::dont_deduce_this_parameter_t<const T> desired) {
+  T expected_ref = expected;
+  return desul::atomic_compare_exchange_strong(dest, expected_ref, desired,
                   desul::MemoryOrderRelaxed(), desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
 }
 
 template<class T> KOKKOS_INLINE_FUNCTION
-T atomic_compare_exchange(T* const dest, const T compare, const T desired) {
+T atomic_compare_exchange(T* const dest, desul::Impl::dont_deduce_this_parameter_t<const T> compare, desul::Impl::dont_deduce_this_parameter_t<const T> desired) {
   return desul::atomic_compare_exchange(dest, compare, desired,
                   desul::MemoryOrderRelaxed(), desul::MemoryScopeDevice());
 }
