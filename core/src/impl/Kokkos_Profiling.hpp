@@ -147,7 +147,10 @@ uint32_t idForInstance(const uintptr_t instance) {
   /** Needed to be a ptr due to initialization order problems*/
   using map_type = std::map<uintptr_t, uint32_t>;
 
-  static std::shared_ptr<map_type> map = std::make_shared<map_type>(map_type());
+  static std::shared_ptr<map_type> map;
+  if (map.get() == nullptr) {
+    map = std::make_shared<map_type>(map_type());
+  }
 
   static uint32_t value = 0;
   constexpr const uint32_t offset =
