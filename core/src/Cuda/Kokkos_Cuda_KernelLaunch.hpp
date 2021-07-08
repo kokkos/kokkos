@@ -639,7 +639,7 @@ struct CudaParallelLaunchImpl<
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
       CUDA_SAFE_CALL(cudaGetLastError());
       cuda_instance->fence(
-          "Kokkos::Impl::launch_kernel: Debug Only Bounds Check Fence");
+          "Kokkos::Impl::launch_kernel: Debug Only Check for Execution Error");
 #endif
     }
   }
