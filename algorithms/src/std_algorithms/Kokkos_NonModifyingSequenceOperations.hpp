@@ -228,6 +228,16 @@ Kokkos::pair<IteratorType1, IteratorType2> mismatch(IteratorType1 first_1,
   return pair<IteratorType1, IteratorType2>(first_1, first_2);
 }
 
+// -------------------
+// find_if
+// -------------------
+template <typename IteratorType, typename Predicate>
+IteratorType find_if(IteratorType first, IteratorType last,
+                     Predicate predicate) {
+  while (first != last && !predicate(*first)) ++first;
+  return first;
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 

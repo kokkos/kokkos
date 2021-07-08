@@ -228,4 +228,18 @@ TEST_F(std_algorithms, mismatch) {
   EXPECT_EQ(2, *p.second);
 }
 
+TEST_F(std_algorithms, find_if_lambda) {
+  namespace KE = Kokkos::Experimental;
+  EXPECT_EQ(KE::end(m_static_view),
+            KE::find_if(
+                KE::begin(m_static_view), KE::end(m_static_view),
+                KOKKOS_LAMBDA(int i) { return i != 0; }));
+
+  m_static_view(5) = 1;
+  EXPECT_EQ(KE::begin(m_static_view) + 5,
+            KE::find_if(
+                KE::begin(m_static_view), KE::end(m_static_view),
+                KOKKOS_LAMBDA(int i) { return i != 0; }));
+}
+
 }  // namespace Test
