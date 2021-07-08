@@ -71,6 +71,7 @@ class SYCLInternal {
   void* resize_team_scratch_space(std::int64_t bytes,
                                   bool force_shrink = false);
 
+  uint32_t impl_get_instance_id() const;
   int m_syclDev = -1;
 
   size_t m_maxWorkgroupSize   = 0;
@@ -127,10 +128,6 @@ class SYCLInternal {
     void reset(sycl::queue q) {
       reset();
       m_q.emplace(std::move(q));
-    }
-    auto impl_get_instance_id() const {
-      return Kokkos::Tools::Experimental::Impl::idForInstance<
-          Kokkos::Experimental::SYCL>(reinterpret_cast<uintptr_t>(this));
     }
     USMObjectMem() = default;
     explicit USMObjectMem(sycl::queue q) noexcept : m_q(std::move(q)) {}
