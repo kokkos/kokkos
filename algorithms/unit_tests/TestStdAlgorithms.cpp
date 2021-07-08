@@ -229,6 +229,7 @@ TEST_F(std_algorithms, mismatch) {
 }
 
 TEST_F(std_algorithms, find_if_lambda) {
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
   namespace KE = Kokkos::Experimental;
   EXPECT_EQ(KE::end(m_static_view),
             KE::find_if(
@@ -240,6 +241,35 @@ TEST_F(std_algorithms, find_if_lambda) {
             KE::find_if(
                 KE::begin(m_static_view), KE::end(m_static_view),
                 KOKKOS_LAMBDA(int i) { return i != 0; }));
+#endif
+}
+
+TEST_F(std_algorithms, any_of_lambda) {
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  namespace KE = Kokkos::Experimental;
+  EXPECT_EQ(false, KE::any_of(
+                       KE::begin(m_static_view), KE::end(m_static_view),
+                       KOKKOS_LAMBDA(int i) { return i != 0; }));
+
+  m_static_view(5) = 1;
+  EXPECT_EQ(true, KE::any_of(
+                      KE::begin(m_static_view), KE::end(m_static_view),
+                      KOKKOS_LAMBDA(int i) { return i != 0; }));
+#endif
+}
+
+TEST_F(std_algorithms, none_of_lambda) {
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  namespace KE = Kokkos::Experimental;
+  EXPECT_EQ(true, KE::none_of(
+                      KE::begin(m_static_view), KE::end(m_static_view),
+                      KOKKOS_LAMBDA(int i) { return i != 0; }));
+
+  m_static_view(5) = 1;
+  EXPECT_EQ(false, KE::none_of(
+                       KE::begin(m_static_view), KE::end(m_static_view),
+                       KOKKOS_LAMBDA(int i) { return i != 0; }));
+#endif
 }
 
 }  // namespace Test

@@ -238,6 +238,22 @@ IteratorType find_if(IteratorType first, IteratorType last,
   return first;
 }
 
+// -------------------
+// any_of
+// -------------------
+template <typename InputIterator, typename Predicate>
+bool any_of(InputIterator first, InputIterator last, Predicate predicate) {
+  return Kokkos::Experimental::find_if(first, last, predicate) != last;
+}
+
+// -------------------
+// none_of
+// -------------------
+template <typename IteratorType, typename Predicate>
+bool none_of(IteratorType first, IteratorType last, Predicate predicate) {
+  return Kokkos::Experimental::find_if(first, last, predicate) == last;
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
