@@ -55,8 +55,6 @@
 namespace Kokkos {
 namespace Impl {
 
-void cuda_stream_synchronize(const cudaStream_t stream,
-                             const std::string& name);
 void cuda_stream_synchronize(
     const cudaStream_t stream,
     Kokkos::Tools::Experimental::SpecialSynchronizationCases reason,
