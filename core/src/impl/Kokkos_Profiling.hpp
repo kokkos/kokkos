@@ -155,8 +155,8 @@ uint32_t idForInstance(const uintptr_t instance) {
 
   auto find = map.find(instance);
   if (find == map.end()) {
-    auto ret         = offset + value++;
-    map[instance]    = ret;
+    auto ret      = offset + value++;
+    map[instance] = ret;
     return ret;
   }
 
