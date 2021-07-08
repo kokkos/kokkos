@@ -147,19 +147,16 @@ uint32_t idForInstance(const uintptr_t instance) {
   /** Needed to be a ptr due to initialization order problems*/
   using map_type = std::map<uintptr_t, uint32_t>;
 
-  static std::shared_ptr<map_type> map;
-  if (map == nullptr) {
-    map = std::make_shared<map_type>();
-  }
+  static map_type map = map_type();
 
-  static uint32_t value;
+  static uint32_t value = 0;
   constexpr const uint32_t offset =
       Kokkos::Tools::Experimental::NumReservedDeviceIDs;
 
-  auto find = map->find(instance);
-  if (find == map->end()) {
+  auto find = map.find(instance);
+  if (find == map.end()) {
     auto ret         = offset + value++;
-    (*map)[instance] = ret;
+    map[instance]    = ret;
     return ret;
   }
 
