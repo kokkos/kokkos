@@ -184,6 +184,21 @@ TEST(defaultdevicetype, test_unnamed_global_fence) {
     num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
   });
 }
+TEST(defaultdevicetype, test_multiple_default_instances) {
+  test_wrapper([&]() {
+    auto root = Kokkos::Tools::Experimental::device_id_root<
+        Kokkos::DefaultExecutionSpace>();
+    std::vector<FencePayload> expected{};
+    expect_fence_events(expected, [=]() {
+      Kokkos::DefaultExecutionSpace ex1;
+      Kokkos::DefaultExecutionSpace ex2;
+      ex1.fence("named_instance_fence_one");
+      ex2.fence("named_instance_fence_two");
+    });
+  });
+  ASSERT_TRUE(found_payloads[0].dev_id == found_payloads[1].dev_id);
+}
+
 TEST(defaultdevicetype, test_kernel_sequence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
