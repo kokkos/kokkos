@@ -206,8 +206,6 @@ TEST(defaultdevicetype, test_unnamed_global_fence) {
  */
 TEST(defaultdevicetype, test_multiple_default_instances) {
   test_wrapper([&]() {
-    auto root = Kokkos::Tools::Experimental::device_id_root<
-        Kokkos::DefaultExecutionSpace>();
     std::vector<FencePayload> expected{};
     expect_fence_events(expected, [=]() {
       Kokkos::DefaultExecutionSpace ex1;
