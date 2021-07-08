@@ -76,12 +76,48 @@ struct NoOpNonMutableFunctor {
 };
 // ------------------------------------------------------------
 
+template <class ViewTypeFrom, class ViewTypeTo>
+struct CopyFunctor {
+  ViewTypeFrom m_viewFrom;
+  ViewTypeTo m_viewTo;
+
+  CopyFunctor() = delete;
+
+  CopyFunctor(const ViewTypeFrom viewFromIn, const ViewTypeTo viewToIn)
+      : m_viewFrom(viewFromIn), m_viewTo(viewToIn) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i) const { m_viewTo(i) = m_viewFrom(i); }
+};
+
 template <class ValueType, class ViewType>
-void verify_values(ValueType expected, const ViewType viewIn) {
+std::enable_if_t<!std::is_same<typename ViewType::traits::array_layout,
+                               Kokkos::LayoutStride>::value>
+verify_values(ValueType expected, const ViewType viewIn) {
   static_assert(std::is_same<ValueType, typename ViewType::value_type>::value,
                 "Non-matching value types of view and reference value");
   auto view_h =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), viewIn);
+  for (std::size_t i = 0; i < view_h.extent(0); i++) {
+    EXPECT_EQ(expected, view_h(i));
+  }
+}
+
+template <class ValueType, class ViewType>
+std::enable_if_t<std::is_same<typename ViewType::traits::array_layout,
+                              Kokkos::LayoutStride>::value>
+verify_values(ValueType expected, const ViewType viewIn) {
+  static_assert(std::is_same<ValueType, typename ViewType::value_type>::value,
+                "Non-matching value types of view and reference value");
+
+  using non_strided_view_t = Kokkos::View<typename ViewType::value_type*>;
+  non_strided_view_t tmpView("tmpView", viewIn.extent(0));
+
+  Kokkos::parallel_for(
+      "_std_algo_copy", viewIn.extent(0),
+      CopyFunctor<ViewType, non_strided_view_t>(viewIn, tmpView));
+  auto view_h =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), tmpView);
   for (std::size_t i = 0; i < view_h.extent(0); i++) {
     EXPECT_EQ(expected, view_h(i));
   }
