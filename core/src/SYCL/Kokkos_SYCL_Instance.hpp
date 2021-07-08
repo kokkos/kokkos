@@ -128,7 +128,10 @@ class SYCLInternal {
       reset();
       m_q.emplace(std::move(q));
     }
-
+    auto impl_get_instance_id() const {
+      return Kokkos::Tools::Experimental::Impl::idForInstance<
+          Kokkos::Experimental::SYCL>(reinterpret_cast<uintptr_t>(this));
+    }
     USMObjectMem() = default;
     explicit USMObjectMem(sycl::queue q) noexcept : m_q(std::move(q)) {}
 

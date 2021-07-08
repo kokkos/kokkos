@@ -83,7 +83,9 @@ class SYCL {
   SYCL();
   explicit SYCL(const sycl::queue&);
 
-  uint32_t impl_instance_id() const noexcept { return 1; }
+  uint32_t impl_instance_id() const noexcept {
+    return m_space_instance->impl_get_instance_id();
+  }
 
   sycl::context sycl_context() const noexcept {
     return m_space_instance->m_queue->get_context();
