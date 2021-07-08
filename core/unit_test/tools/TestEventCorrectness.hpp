@@ -127,6 +127,10 @@ void test_wrapper(const Lambda& lambda) {
     lambda();
   }
 }
+/**
+ * Test that fencing an instance with a name yields a fence
+ * event of that name, and the correct device ID
+ */
 TEST(defaultdevicetype, test_named_instance_fence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
@@ -142,6 +146,10 @@ TEST(defaultdevicetype, test_named_instance_fence) {
     num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
   });
 }
+/**
+ * Test that fencing an instance without a name yields a fence
+ * event of a correct name, and the correct device ID
+ */
 TEST(defaultdevicetype, test_unnamed_instance_fence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
@@ -158,6 +166,10 @@ TEST(defaultdevicetype, test_unnamed_instance_fence) {
   });
 }
 
+/**
+ * Test that invoking a global fence with a name yields a fence
+ * event of a correct name, and fences the root of the default device
+ */
 TEST(defaultdevicetype, test_named_global_fence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
@@ -171,6 +183,10 @@ TEST(defaultdevicetype, test_named_global_fence) {
   });
 }
 
+/**
+ * Test that invoking a global fence with no name yields a fence
+ * event of a correct name, and fences the root of the default device
+ */
 TEST(defaultdevicetype, test_unnamed_global_fence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
@@ -184,6 +200,10 @@ TEST(defaultdevicetype, test_unnamed_global_fence) {
     num_instances += increment<Kokkos::DefaultExecutionSpace>::size;
   });
 }
+/**
+ * Test that creating two default instances and fencing both yields
+ * fence on the same device ID, as these should yield the same instance
+ */
 TEST(defaultdevicetype, test_multiple_default_instances) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
@@ -199,6 +219,9 @@ TEST(defaultdevicetype, test_multiple_default_instances) {
   ASSERT_TRUE(found_payloads[0].dev_id == found_payloads[1].dev_id);
 }
 
+/**
+ * Test that fencing and kernels yield events on the correct device ID's
+ */
 TEST(defaultdevicetype, test_kernel_sequence) {
   test_wrapper([&]() {
     auto root = Kokkos::Tools::Experimental::device_id_root<
@@ -223,6 +246,10 @@ TEST(defaultdevicetype, test_kernel_sequence) {
   });
 }
 #ifdef KOKKOS_ENABLE_CUDA
+/**
+ * CUDA ONLY: test that creating instances from streams leads to events
+ * on different device ID's
+ */
 TEST(defaultdevicetype, test_streams) {
   test_wrapper([&]() {
     // auto root = Kokkos::Tools::Experimental::device_id_root<
