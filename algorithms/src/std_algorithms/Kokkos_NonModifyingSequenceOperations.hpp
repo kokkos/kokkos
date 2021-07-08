@@ -213,6 +213,21 @@ std::size_t count(IteratorType first, IteratorType last, const T& value) {
       first, last, EqualsVal<T>(value));
 }
 
+// -------------------
+// mismatch
+// -------------------
+template <class IteratorType1, class IteratorType2>
+Kokkos::pair<IteratorType1, IteratorType2> mismatch(IteratorType1 first_1,
+                                                    IteratorType1 last_1,
+                                                    IteratorType2 first_2,
+                                                    IteratorType2 last_2) {
+  while (first_1 != last_1 && first_2 != last_2 && *first_1 == *first_2) {
+    ++first_1;
+    ++first_2;
+  }
+  return pair<IteratorType1, IteratorType2>(first_1, first_2);
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 

@@ -214,4 +214,18 @@ TEST_F(std_algorithms, count_if_lambda) {
 #endif
 }
 
+TEST_F(std_algorithms, mismatch) {
+  namespace KE      = Kokkos::Experimental;
+  m_static_view(5)  = 1;
+  m_dynamic_view(5) = 2;
+
+  auto p = KE::mismatch(KE::begin(m_static_view), KE::end(m_static_view),
+                        KE::begin(m_dynamic_view), KE::end(m_dynamic_view));
+
+  EXPECT_EQ(KE::begin(m_static_view) + 5, p.first);
+  EXPECT_EQ(1, *p.first);
+  EXPECT_EQ(KE::begin(m_dynamic_view) + 5, p.second);
+  EXPECT_EQ(2, *p.second);
+}
+
 }  // namespace Test
