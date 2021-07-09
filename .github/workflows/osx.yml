@@ -29,6 +29,7 @@ jobs:
             -DCMAKE_CXX_STANDARD=14
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON
             -DKokkos_ENABLE_DEPRECATED_CODE_3=OFF
+            -DKokkos_ENABLE_DEPREACTION_WARNINGS=OFF
             -DKokkos_ENABLE_TESTS=On
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
       - name: build
