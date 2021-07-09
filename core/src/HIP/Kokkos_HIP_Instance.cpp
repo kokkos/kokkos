@@ -155,8 +155,7 @@ int HIPInternal::verify_is_initialized(const char *const label) const {
 }
 
 uint32_t HIPInternal::impl_get_instance_id() const noexcept {
-  return Kokkos::Tools::Experimental::Impl::idForInstance<
-      Kokkos::Experimental::HIP>(reinterpret_cast<uintptr_t>(this));
+  return m_instance_id;
 }
 HIPInternal &HIPInternal::singleton() {
   static HIPInternal *self = nullptr;

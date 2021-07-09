@@ -180,8 +180,7 @@ void* SYCLInternal::resize_team_scratch_space(std::int64_t bytes,
 }
 
 uint32_t SYCLInternal::impl_get_instance_id() const {
-  return Kokkos::Tools::Experimental::Impl::idForInstance<
-      Kokkos::Experimental::SYCL>(reinterpret_cast<uintptr_t>(this));
+  return m_instance_id;
 }
 
 void SYCLInternal::finalize() {

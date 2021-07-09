@@ -87,6 +87,8 @@ class SYCLInternal {
   int64_t m_team_scratch_current_size = 0;
   void* m_team_scratch_ptr            = nullptr;
 
+  uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
+      Kokkos::Experimental::SYCL>(reinterpret_cast<uintptr_t>(this));
   std::optional<sycl::queue> m_queue;
 
   // Using std::vector<std::optional<sycl::queue>> reveals a compiler bug when

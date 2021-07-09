@@ -115,6 +115,7 @@ class CudaInternal {
   mutable size_type* m_scratchFunctor;
   uint32_t* m_scratchConcurrentBitset;
   cudaStream_t m_stream;
+  uint32_t m_instance_id;
 
   // Team Scratch Level 1 Space
   int m_n_team_scratch = 10;
@@ -178,7 +179,10 @@ class CudaInternal {
         m_scratchUnified(nullptr),
         m_scratchFunctor(nullptr),
         m_scratchConcurrentBitset(nullptr),
-        m_stream(nullptr) {
+        m_stream(nullptr),
+        m_instance_id(Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(
+      reinterpret_cast<uintptr_t>(this)))
+         {
     for (int i = 0; i < m_n_team_scratch; ++i) {
       m_team_scratch_current_size[i] = 0;
       m_team_scratch_ptr[i]          = nullptr;

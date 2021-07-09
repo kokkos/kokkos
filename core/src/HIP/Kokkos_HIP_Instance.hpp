@@ -121,7 +121,8 @@ class HIPInternal {
   hipDeviceProp_t m_deviceProp;
 
   hipStream_t m_stream = nullptr;
-
+  uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
+      Kokkos::Experimental::HIP>(reinterpret_cast<uintptr_t>(this));
   // Team Scratch Level 1 Space
   mutable int64_t m_team_scratch_current_size = 0;
   mutable void *m_team_scratch_ptr            = nullptr;

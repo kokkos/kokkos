@@ -85,6 +85,8 @@ class OpenMPTargetInternal {
 
  private:
   bool m_is_initialized = false;
+  uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
+      Kokkos::Experimental::OpenMPTarget>(reinterpret_cast<uintptr_t>(this));
 };
 }  // Namespace Impl
 }  // Namespace Experimental

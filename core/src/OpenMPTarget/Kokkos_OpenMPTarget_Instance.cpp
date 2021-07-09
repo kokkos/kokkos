@@ -60,8 +60,7 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 uint32_t OpenMPTargetInternal::impl_get_instance_id() const noexcept {
-  return Kokkos::Tools::Experimental::Impl::idForInstance<
-      Kokkos::Experimental::OpenMPTarget>(reinterpret_cast<uintptr_t>(this));
+  return m_instance_id;
 }
 
 void OpenMPTargetInternal::fence(openmp_fence_is_static is_static) {
