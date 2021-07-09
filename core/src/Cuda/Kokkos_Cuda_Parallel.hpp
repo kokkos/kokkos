@@ -885,9 +885,14 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using value_type     = typename ValueTraits::value_type;
   using reference_type = typename ValueTraits::reference_type;
   using functor_type   = FunctorType;
-  using size_type      = Kokkos::Cuda::size_type;
-  using index_type     = typename Policy::index_type;
-  using reducer_type   = ReducerType;
+  // Conditionally set size_type to int16_t or int8_t if value_type is less than
+  // int32_t (Kokkos::Cuda::size_type)
+  using size_type = typename std::conditional<
+      sizeof(value_type) < sizeof(Kokkos::Cuda::size_type),
+      typename std::conditional<sizeof(value_type) == 2, int16_t, int8_t>::type,
+      Kokkos::Cuda::size_type>::type;
+  using index_type   = typename Policy::index_type;
+  using reducer_type = ReducerType;
 
   // Algorithmic constraints: blockSize is a power of two AND blockDim.y ==
   // blockDim.z == 1
@@ -899,7 +904,9 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   const bool m_result_ptr_device_accessible;
   const bool m_result_ptr_host_accessible;
   size_type* m_scratch_space;
-  size_type* m_scratch_flags;
+  // m_scratch_flags must be of type Cuda::size_type due to use of atomics in
+  // Kokkos_Cuda_ReduceScan.hpp
+  Cuda::size_type* m_scratch_flags;
   size_type* m_unified_space;
 
   // Shall we use the shfl based reduction or not (only use it for static sized
@@ -1115,13 +1122,17 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
 
       KOKKOS_ASSERT(block_size > 0);
 
-      m_scratch_space = cuda_internal_scratch_space(
+      // TODO: down casting these uses more space than required?
+      m_scratch_space = (size_type*)cuda_internal_scratch_space(
           m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
                                 m_functor, m_reducer)) *
                                 block_size /* block_size == max block_count */);
+
+      // Intentionally do not downcast to m_scratch_flags since we use Cuda
+      // atomics in Kokkos_Cuda_ReduceScan.hpp
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
-      m_unified_space = cuda_internal_scratch_unified(
+      m_unified_space = (size_type*)cuda_internal_scratch_unified(
           m_policy.space(), ValueTraits::value_size(ReducerConditional::select(
                                 m_functor, m_reducer)));
 

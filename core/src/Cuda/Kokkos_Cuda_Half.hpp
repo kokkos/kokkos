@@ -131,8 +131,7 @@ KOKKOS_INLINE_FUNCTION
     std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
         cast_from_half(half_t);
 
-// use alignas(4) to support 32-bit alignment for reductions
-class alignas(4) half_t {
+class alignas(2) half_t {
  public:
   using impl_type = Kokkos::Impl::half_impl_t::type;
 

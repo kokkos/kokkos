@@ -66,16 +66,31 @@ TEST(TEST_CATEGORY, reducers_struct) {
 }
 
 TEST(TEST_CATEGORY, reducers_half_t) {
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_sum(10);
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_sum(101);
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_sum(202);
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_sum(303);
+  using ThisTestType = Kokkos::Experimental::half_t;
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(2);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(101);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(202);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(303);
 
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(5);
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(10);
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(15);
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(20);
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(25);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(5);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(10);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(15);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(20);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(25);
+}
+
+TEST(TEST_CATEGORY, reducers_int8_t) {
+  using ThisTestType = int8_t;
+
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(1);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(2);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(3);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_sum(4);
+
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(1);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(2);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(3);
+  TestReducers<ThisTestType, TEST_EXECSPACE>::test_prod(4);
 }
 
 }  // namespace Test
