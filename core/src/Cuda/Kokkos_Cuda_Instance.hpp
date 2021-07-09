@@ -180,9 +180,9 @@ class CudaInternal {
         m_scratchFunctor(nullptr),
         m_scratchConcurrentBitset(nullptr),
         m_stream(nullptr),
-        m_instance_id(Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(
-      reinterpret_cast<uintptr_t>(this)))
-         {
+        m_instance_id(
+            Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::Cuda>(
+                reinterpret_cast<uintptr_t>(this))) {
     for (int i = 0; i < m_n_team_scratch; ++i) {
       m_team_scratch_current_size[i] = 0;
       m_team_scratch_ptr[i]          = nullptr;

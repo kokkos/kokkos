@@ -336,9 +336,7 @@ int CudaInternal::verify_is_initialized(const char *const label) const {
   }
   return 0 <= m_cudaDev;
 }
-uint32_t CudaInternal::impl_get_instance_id() const {
-  return m_instance_id;
-}
+uint32_t CudaInternal::impl_get_instance_id() const { return m_instance_id; }
 CudaInternal &CudaInternal::singleton() {
   static CudaInternal self;
   return self;
