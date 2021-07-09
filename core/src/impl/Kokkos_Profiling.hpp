@@ -145,7 +145,8 @@ struct DirectFenceIDHandle {
 //
 template <typename Space>
 uint32_t idForInstance(const uintptr_t instance) {
-  const std::lock_guard<std::mutex> lock(std::mutex{});
+  static std::mutex instance_mutex;
+  const std::lock_guard<std::mutex> lock(instance_mutex);
   /** Needed to be a ptr due to initialization order problems*/
   using map_type = std::map<uintptr_t, uint32_t>;
 
