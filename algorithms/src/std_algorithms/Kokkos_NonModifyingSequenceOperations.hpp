@@ -191,6 +191,11 @@ std::size_t count_if(IteratorType first, IteratorType last,
 template <class DataType, class... Properties, class Predicate>
 std::size_t count_if(const Kokkos::View<DataType, Properties...>& v,
                      Predicate predicate) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
+      "Currently, Kokkos::Experimental::count_if only accepts 1D Views.");
+
   return Kokkos::Experimental::count_if(begin(v), end(v), std::move(predicate));
 }
 
@@ -222,6 +227,11 @@ std::size_t count(IteratorType first, IteratorType last, const T& value) {
 template <class DataType, class... Properties, class T>
 std::size_t count(const Kokkos::View<DataType, Properties...>& v,
                   const T& value) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
+      "Currently, Kokkos::Experimental::count only accepts 1D Views.");
+
   return Kokkos::Experimental::count_if(begin(v), end(v), EqualsVal<T>(value));
 }
 
@@ -264,7 +274,7 @@ auto find_if(const Kokkos::View<DataType, Properties...>& v,
 // -------------------
 // any_of
 // -------------------
-template <typename InputIterator, typename Predicate>
+template <class InputIterator, class Predicate>
 bool any_of(InputIterator first, InputIterator last, Predicate predicate) {
   return Kokkos::Experimental::find_if(first, last, predicate) != last;
 }
@@ -272,7 +282,7 @@ bool any_of(InputIterator first, InputIterator last, Predicate predicate) {
 // -------------------
 // none_of
 // -------------------
-template <typename IteratorType, typename Predicate>
+template <class IteratorType, class Predicate>
 bool none_of(IteratorType first, IteratorType last, Predicate predicate) {
   return Kokkos::Experimental::find_if(first, last, predicate) == last;
 }
