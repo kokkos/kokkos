@@ -226,27 +226,26 @@ TEST_F(std_algorithms, for_each_non_modifying_lambda_strided_view) {
 
 TEST_F(std_algorithms, count_if_lambda) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  namespace KE = Kokkos::Experimental;
   EXPECT_EQ(m_static_view.extent(0),
-            Kokkos::Experimental::count(
-                m_static_view.data(),
-                m_static_view.data() + m_static_view.size(), 0));
+            KE::count(KE::begin(m_static_view), KE::end(m_static_view), 0));
 
   m_static_view(0) = 6;
+  m_static_view(1) = 7;
   m_static_view(9) = 7;
 
-  EXPECT_EQ(
-      0, Kokkos::Experimental::count_if(
-             m_static_view.data(), m_static_view.data() + m_static_view.size(),
-             KOKKOS_LAMBDA(const int i) { return (i < 0); }));
+  const auto is_negative = KOKKOS_LAMBDA(const int i) { return (i < 0); };
+  EXPECT_EQ(0, KE::count_if(KE::begin(m_static_view), KE::end(m_static_view),
+                            is_negative));
+  EXPECT_EQ(0, KE::count_if(m_static_view, is_negative));
 
-  EXPECT_EQ(
-      2, Kokkos::Experimental::count_if(
-             m_static_view.data(), m_static_view.data() + m_static_view.size(),
-             KOKKOS_LAMBDA(const int i) { return (i > 5); }));
+  const auto is_odd = KOKKOS_LAMBDA(const int i) { return (i % 2); };
+  EXPECT_EQ(2, KE::count_if(KE::begin(m_static_view), KE::end(m_static_view),
+                            is_odd));
+  EXPECT_EQ(2, KE::count_if(m_static_view, is_odd));
 
-  EXPECT_EQ(1, Kokkos::Experimental::count(
-                   m_static_view.data(),
-                   m_static_view.data() + m_static_view.size(), 6));
+  EXPECT_EQ(1, KE::count(KE::begin(m_static_view), KE::end(m_static_view), 6));
+  EXPECT_EQ(1, KE::count(m_static_view, 6));
 #endif
 }
 

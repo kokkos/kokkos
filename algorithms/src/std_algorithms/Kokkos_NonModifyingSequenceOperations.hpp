@@ -188,6 +188,12 @@ std::size_t count_if(IteratorType first, IteratorType last,
   return count;
 }
 
+template <class DataType, class... Properties, class Predicate>
+std::size_t count_if(const Kokkos::View<DataType, Properties...>& v,
+                     Predicate predicate) {
+  return Kokkos::Experimental::count_if(begin(v), end(v), std::move(predicate));
+}
+
 // -------------------
 // count
 // -------------------
@@ -207,10 +213,16 @@ struct EqualsVal {
 // typename iterator_traits<_InputIterator>::value_type, _Tp>)
 template <class IteratorType, class T>
 std::size_t count(IteratorType first, IteratorType last, const T& value) {
-  return count_if(
+  return Kokkos::Experimental::count_if(
       // FIXME: is std::equal_to usable here? also see:
       // __gnu_cxx::__ops::__iter_equals_val(__value));
       first, last, EqualsVal<T>(value));
+}
+
+template <class DataType, class... Properties, class T>
+std::size_t count(const Kokkos::View<DataType, Properties...>& v,
+                  const T& value) {
+  return Kokkos::Experimental::count_if(begin(v), end(v), EqualsVal<T>(value));
 }
 
 // -------------------
