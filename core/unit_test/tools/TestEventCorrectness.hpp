@@ -213,8 +213,9 @@ TEST(defaultdevicetype, test_multiple_default_instances) {
       ex1.fence("named_instance_fence_one");
       ex2.fence("named_instance_fence_two");
     });
+    ASSERT_TRUE(found_payloads[0].dev_id == found_payloads[1].dev_id);
   });
-  ASSERT_TRUE(found_payloads[0].dev_id == found_payloads[1].dev_id);
+  
 }
 
 /**
