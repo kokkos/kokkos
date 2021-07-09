@@ -34,7 +34,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #ifdef SYCL_LANGUAGE_VERSION
 #define DESUL_HAVE_SYCL_ATOMICS
-#ifdef __INTEL_LLVM_COMPILER
+#ifdef __clang__
 #define DESUL_SYCL_NAMESPACE sycl::ONEAPI
 #else
 #define DESUL_SYCL_NAMESPACE sycl
