@@ -215,7 +215,6 @@ TEST(defaultdevicetype, test_multiple_default_instances) {
     });
     ASSERT_TRUE(found_payloads[0].dev_id == found_payloads[1].dev_id);
   });
-  
 }
 
 /**
