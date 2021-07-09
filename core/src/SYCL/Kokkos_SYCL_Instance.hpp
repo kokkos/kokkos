@@ -49,7 +49,7 @@
 #include <CL/sycl.hpp>
 
 #include <impl/Kokkos_Error.hpp>
-
+#include <impl/Kokkos_Profiling.hpp>
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
