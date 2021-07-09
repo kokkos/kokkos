@@ -243,11 +243,22 @@ Kokkos::pair<IteratorType1, IteratorType2> mismatch(IteratorType1 first_1,
 // -------------------
 // find_if
 // -------------------
-template <typename IteratorType, typename Predicate>
+template <class IteratorType, class Predicate>
 IteratorType find_if(IteratorType first, IteratorType last,
                      Predicate predicate) {
   while (first != last && !predicate(*first)) ++first;
   return first;
+}
+
+template <class DataType, class... Properties, class Predicate>
+auto find_if(const Kokkos::View<DataType, Properties...>& v,
+             Predicate predicate) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
+      "Currently, Kokkos::Experimental::find_if only accepts 1D Views.");
+
+  return Kokkos::Experimental::find_if(begin(v), end(v), std::move(predicate));
 }
 
 // -------------------

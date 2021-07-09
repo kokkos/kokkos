@@ -270,12 +270,18 @@ TEST_F(std_algorithms, find_if_lambda) {
             KE::find_if(
                 KE::begin(m_static_view), KE::end(m_static_view),
                 KOKKOS_LAMBDA(int i) { return i != 0; }));
+  EXPECT_EQ(KE::end(m_static_view),
+            KE::find_if(
+                m_static_view, KOKKOS_LAMBDA(int i) { return i != 0; }));
 
   m_static_view(5) = 1;
   EXPECT_EQ(KE::begin(m_static_view) + 5,
             KE::find_if(
                 KE::begin(m_static_view), KE::end(m_static_view),
                 KOKKOS_LAMBDA(int i) { return i != 0; }));
+  EXPECT_EQ(KE::begin(m_static_view) + 5,
+            KE::find_if(
+                m_static_view, KOKKOS_LAMBDA(int i) { return i != 0; }));
 #endif
 }
 
