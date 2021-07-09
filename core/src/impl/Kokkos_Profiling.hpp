@@ -55,6 +55,7 @@
 #include <map>
 #include <string>
 #include <type_traits>
+#include <mutex>
 namespace Kokkos {
 
 // forward declaration
@@ -144,6 +145,7 @@ struct DirectFenceIDHandle {
 //
 template <typename Space>
 uint32_t idForInstance(const uintptr_t instance) {
+  const std::lock_guard<std::mutex> lock(std::mutex{});
   /** Needed to be a ptr due to initialization order problems*/
   using map_type = std::map<uintptr_t, uint32_t>;
 
