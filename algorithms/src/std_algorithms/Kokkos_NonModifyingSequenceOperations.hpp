@@ -138,7 +138,7 @@ IteratorType for_each_n(IteratorType first, SizeType n,
 
 template <class DataType, class... Properties, class SizeType,
           class UnaryFunctorType>
-void for_each_n(const std::string& label,
+auto for_each_n(const std::string& label,
                 const Kokkos::View<DataType, Properties...>& v, SizeType n,
                 UnaryFunctorType functor) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
@@ -146,14 +146,14 @@ void for_each_n(const std::string& label,
       is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
       "Currently, Kokkos::Experimental::for_each_n only accepts 1D Views.");
 
-  for_each_n(label, begin(v), n, std::move(functor));
+  return for_each_n(label, begin(v), n, std::move(functor));
 }
 
 template <class DataType, class... Properties, class SizeType,
           class UnaryFunctorType>
-void for_each_n(const Kokkos::View<DataType, Properties...>& v, SizeType n,
+auto for_each_n(const Kokkos::View<DataType, Properties...>& v, SizeType n,
                 UnaryFunctorType functor) {
-  for_each_n("_for_each_n_default_label_2", v, n, std::move(functor));
+  return for_each_n("_for_each_n_default_label_2", v, n, std::move(functor));
 }
 
 // -------------------
