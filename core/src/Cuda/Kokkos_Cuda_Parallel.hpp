@@ -1139,10 +1139,10 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   };
 
   inline void thrust_execute() {
-    printf("using CUDA Thurst\n");
+    printf("using CUDA Thrust\n");
 
     thrust::counting_iterator<value_type> temp_iter_d(
-        0);  //  0 because no init at this stage
+        m_policy.begin());
 
     thrust::counting_iterator<value_type> temp_iter_end_d =
         temp_iter_d + m_policy.end();
