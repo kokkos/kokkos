@@ -89,9 +89,9 @@
 
 #if defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_ENABLE_CUDA_ATOMICS
+#endif
 #if defined(KOKKOS_COMPILER_CLANG)
 #define KOKKOS_ENABLE_GNU_ATOMICS
-#endif
 #endif
 
 #else  // _WIN32
