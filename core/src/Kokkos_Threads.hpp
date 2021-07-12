@@ -217,9 +217,9 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
 
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Parallel.hpp>
-#include <Threads/Kokkos_ThreadsExec.hpp>
-#include <Threads/Kokkos_ThreadsTeam.hpp>
-#include <Threads/Kokkos_Threads_Parallel.hpp>
+#include <PosixThreads/Kokkos_ThreadsExec.hpp>
+#include <PosixThreads/Kokkos_ThreadsTeam.hpp>
+#include <PosixThreads/Kokkos_Threads_Parallel.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 

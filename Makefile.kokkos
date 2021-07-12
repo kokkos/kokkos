@@ -1311,8 +1311,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
-  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.cpp)
-  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/Threads/*.hpp)
+  KOKKOS_SRC += $(wildcard $(KOKKOS_PATH)/core/src/PosixThreads/*.cpp)
+  KOKKOS_HEADERS += $(wildcard $(KOKKOS_PATH)/core/src/PosixThreads/*.hpp)
   KOKKOS_LIBS += -lpthread
   KOKKOS_TPL_LIBRARY_NAMES += pthread
 endif
