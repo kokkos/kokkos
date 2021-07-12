@@ -272,6 +272,28 @@ auto find_if(const Kokkos::View<DataType, Properties...>& v,
 }
 
 // -------------------
+// find_if_not
+// -------------------
+template <class IteratorType, class Predicate>
+IteratorType find_if_not(IteratorType first, IteratorType last,
+                         Predicate predicate) {
+  while (first != last && predicate(*first)) ++first;
+  return first;
+}
+
+template <class DataType, class... Properties, class Predicate>
+auto find_if_not(const Kokkos::View<DataType, Properties...>& v,
+                 Predicate predicate) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
+      "Currently, Kokkos::Experimental::find_if_not only accepts 1D Views.");
+
+  return Kokkos::Experimental::find_if_not(begin(v), end(v),
+                                           std::move(predicate));
+}
+
+// -------------------
 // any_of
 // -------------------
 template <class InputIterator, class Predicate>
