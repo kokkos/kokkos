@@ -328,7 +328,8 @@ TEST(TEST_CATEGORY, UnorderedMap_valid_empty) {
 }
 
 TEST(TEST_CATEGORY, UnorderedMap_clear_zero_size) {
-  using Map = Kokkos::UnorderedMap<int, void, Kokkos::DefaultHostExecutionSpace>;
+  using Map =
+      Kokkos::UnorderedMap<int, void, Kokkos::DefaultHostExecutionSpace>;
 
   Map m(11);
   ASSERT_EQ(0u, m.size());
