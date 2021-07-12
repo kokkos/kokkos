@@ -71,12 +71,12 @@ namespace {
 
 std::mutex host_internal_cppthread_mutex;
 
-// Pthreads compatible driver.
+// std::thread compatible driver.
 // Recovery from an exception would require constant intra-thread health
 // verification; which would negatively impact runtime.  As such simply
 // abort the process.
 
-void* internal_pthread_driver(void*) {
+void internal_cppthread_driver() {
   try {
     ThreadsExec::driver();
   } catch (const std::exception& x) {
@@ -89,7 +89,6 @@ void* internal_pthread_driver(void*) {
     std::cerr.flush();
     std::abort();
   }
-  return nullptr;
 }
 
 }  // namespace
@@ -98,7 +97,7 @@ void* internal_pthread_driver(void*) {
 // Spawn a thread
 
 bool ThreadsExec::spawn() {
-  std::thread t(internal_pthread_driver, nullptr);
+  std::thread t(internal_cppthread_driver);
   t.detach();
 
   return true;
