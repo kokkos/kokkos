@@ -312,6 +312,19 @@ TEST_F(std_algorithms, find_if_not_lambda) {
 #endif
 }
 
+TEST_F(std_algorithms, all_of_lambda) {
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  namespace KE           = Kokkos::Experimental;
+  const auto equals_zero = KOKKOS_LAMBDA(int i) { return i == 0; };
+  EXPECT_EQ(true, KE::all_of(KE::begin(m_static_view), KE::end(m_static_view),
+                             equals_zero));
+
+  m_static_view(5) = 1;
+  EXPECT_EQ(false, KE::all_of(KE::begin(m_static_view), KE::end(m_static_view),
+                              equals_zero));
+#endif
+}
+
 TEST_F(std_algorithms, any_of_lambda) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
   namespace KE = Kokkos::Experimental;

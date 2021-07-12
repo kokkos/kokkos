@@ -294,6 +294,14 @@ auto find_if_not(const Kokkos::View<DataType, Properties...>& v,
 }
 
 // -------------------
+// all_of
+// -------------------
+template <class InputIterator, class Predicate>
+bool all_of(InputIterator first, InputIterator last, Predicate predicate) {
+  return Kokkos::Experimental::find_if_not(first, last, predicate) == last;
+}
+
+// -------------------
 // any_of
 // -------------------
 template <class InputIterator, class Predicate>
