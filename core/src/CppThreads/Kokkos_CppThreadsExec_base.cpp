@@ -111,13 +111,9 @@ bool ThreadsExec::is_process() {
   return master_pid == std::this_thread::get_id();
 }
 
-void ThreadsExec::global_lock() {
-  host_internal_cppthread_mutex.lock();
-}
+void ThreadsExec::global_lock() { host_internal_cppthread_mutex.lock(); }
 
-void ThreadsExec::global_unlock() {
-  host_internal_cppthread_mutex.unlock();
-}
+void ThreadsExec::global_unlock() { host_internal_cppthread_mutex.unlock(); }
 
 //----------------------------------------------------------------------------
 

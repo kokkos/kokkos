@@ -204,7 +204,7 @@ namespace Impl {
 
 template <>
 struct MemorySpaceAccess<::Kokkos::CppThreads::memory_space,
-			  ::Kokkos::CppThreads::scratch_memory_space> {
+                         ::Kokkos::CppThreads::scratch_memory_space> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
