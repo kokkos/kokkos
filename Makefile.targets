@@ -62,10 +62,10 @@ Kokkos_HIP_Locks.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/HIP/Kokkos_HIP
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_PTHREADS), 1)
-Kokkos_PosixThreadsExec_base.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/PosixThreads/Kokkos_PosixThreadsExec_base.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/PosixThreads/Kokkos_PosixThreadsExec_base.cpp
-Kokkos_PosixThreadsExec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/PosixThreads/Kokkos_PosixThreadsExec.cpp
-	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/PosixThreads/Kokkos_PosixThreadsExec.cpp
+Kokkos_CppThreadsExec_base.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/CppThreads/Kokkos_CppThreadsExec_base.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/CppThreads/Kokkos_CppThreadsExec_base.cpp
+Kokkos_CppThreadsExec.o: $(KOKKOS_CPP_DEPENDS) $(KOKKOS_PATH)/core/src/CppThreads/Kokkos_CppThreadsExec.cpp
+	$(CXX) $(KOKKOS_CPPFLAGS) $(KOKKOS_CXXFLAGS) $(CXXFLAGS) -c $(KOKKOS_PATH)/core/src/CppThreads/Kokkos_CppThreadsExec.cpp
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
