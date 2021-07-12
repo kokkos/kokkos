@@ -66,7 +66,16 @@ TEST(TEST_CATEGORY, reducers_struct) {
 }
 
 TEST(TEST_CATEGORY, reducers_half_t) {
-  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::execute_basic();
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_sum(10);
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_sum(101);
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_sum(202);
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_sum(303);
+
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(5);
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(10);
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(15);
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(20);
+  TestReducers<Kokkos::Experimental::half_t, TEST_EXECSPACE>::test_prod(25);
 }
 
 }  // namespace Test
