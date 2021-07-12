@@ -54,6 +54,8 @@
 
 /* Standard C++ libraries */
 
+#include <thread>
+
 #include <cstdlib>
 #include <string>
 #include <iostream>
@@ -96,29 +98,18 @@ void* internal_pthread_driver(void*) {
 // Spawn a thread
 
 bool ThreadsExec::spawn() {
-  bool result = false;
+  std::thread t(internal_pthread_driver, nullptr);
+  t.detach();
 
-  pthread_attr_t attr;
-
-  if (0 == pthread_attr_init(&attr) ||
-      0 == pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM) ||
-      0 == pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED)) {
-    pthread_t pt;
-
-    result = 0 == pthread_create(&pt, &attr, internal_pthread_driver, nullptr);
-  }
-
-  pthread_attr_destroy(&attr);
-
-  return result;
+  return true;
 }
 
 //----------------------------------------------------------------------------
 
 bool ThreadsExec::is_process() {
-  static const pthread_t master_pid = pthread_self();
+  static const std::thread::id master_pid = std::this_thread::get_id();
 
-  return pthread_equal(master_pid, pthread_self());
+  return master_pid == std::this_thread::get_id();
 }
 
 void ThreadsExec::global_lock() {
