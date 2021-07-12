@@ -47,7 +47,8 @@
 
 #if defined(KOKKOS_ENABLE_THREADS)
 namespace Kokkos {
-class Threads;  ///< Execution space with pthreads back-end.
+class PosixThreads;
+using Threads = PosixThreads;  ///< Execution space with pthreads back-end.
 }  // namespace Kokkos
 #endif
 #endif

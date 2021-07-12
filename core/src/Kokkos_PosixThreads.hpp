@@ -72,21 +72,21 @@ class ThreadsExec;
 namespace Kokkos {
 
 /** \brief  Execution space for a pool of Pthreads or C11 threads on a CPU. */
-class Threads {
+class PosixThreads {
  public:
   //! \name Type declarations that all Kokkos devices must provide.
   //@{
   //! Tag this class as a kokkos execution space
-  using execution_space = Threads;
-  using memory_space    = Kokkos::HostSpace;
+  using execution_space = PosixThreads;
+  using memory_space    = ::Kokkos::HostSpace;
 
   //! This execution space preferred device_type
-  using device_type = Kokkos::Device<execution_space, memory_space>;
+  using device_type = ::Kokkos::Device<execution_space, memory_space>;
 
-  using array_layout = Kokkos::LayoutRight;
+  using array_layout = ::Kokkos::LayoutRight;
   using size_type    = memory_space::size_type;
 
-  using scratch_memory_space = ScratchMemorySpace<Threads>;
+  using scratch_memory_space = ScratchMemorySpace<PosixThreads>;
 
   //@}
   /*------------------------------------------------------------------------*/
@@ -115,7 +115,7 @@ class Threads {
 
   /// \brief Free any resources being consumed by the device.
   ///
-  /// For the Threads device, this terminates spawned worker threads.
+  /// For the PosixThreads device, this terminates spawned worker threads.
   static void impl_finalize();
 
   //@}
@@ -148,7 +148,7 @@ class Threads {
 
   static int impl_is_initialized();
 
-  static Threads& impl_instance(int = 0);
+  static PosixThreads& impl_instance(int = 0);
 
   //----------------------------------------
 
@@ -176,7 +176,7 @@ class Threads {
 namespace Tools {
 namespace Experimental {
 template <>
-struct DeviceTypeTraits<Threads> {
+struct DeviceTypeTraits<PosixThreads> {
   static constexpr DeviceType id = DeviceType::Threads;
 };
 }  // namespace Experimental
@@ -203,8 +203,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <>
-struct MemorySpaceAccess<Kokkos::Threads::memory_space,
-                         Kokkos::Threads::scratch_memory_space> {
+struct MemorySpaceAccess<::Kokkos::PosixThreads::memory_space,
+			  ::Kokkos::PosixThreads::scratch_memory_space> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };

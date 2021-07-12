@@ -89,7 +89,7 @@ class ThreadsExec {
   };
 
  private:
-  friend class Kokkos::Threads;
+  friend class ::Kokkos::PosixThreads;
 
   // Fan-in operations' root is the highest ranking thread
   // to place the 'scan' reduction intermediate values on
