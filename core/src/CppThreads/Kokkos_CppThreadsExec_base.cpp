@@ -124,7 +124,7 @@ void ThreadsExec::global_unlock() {
 
 void ThreadsExec::wait_yield(volatile int& flag, const int value) {
   while (value == flag) {
-    sched_yield();
+    std::this_thread::yield();
   }
 }
 
