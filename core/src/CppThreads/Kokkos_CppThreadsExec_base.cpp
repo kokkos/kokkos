@@ -69,7 +69,7 @@ namespace Kokkos {
 namespace Impl {
 namespace {
 
-pthread_mutex_t host_internal_pthread_mutex = PTHREAD_MUTEX_INITIALIZER;
+std::mutex host_internal_cppthread_mutex;
 
 // Pthreads compatible driver.
 // Recovery from an exception would require constant intra-thread health
@@ -113,11 +113,11 @@ bool ThreadsExec::is_process() {
 }
 
 void ThreadsExec::global_lock() {
-  pthread_mutex_lock(&host_internal_pthread_mutex);
+  host_internal_cppthread_mutex.lock();
 }
 
 void ThreadsExec::global_unlock() {
-  pthread_mutex_unlock(&host_internal_pthread_mutex);
+  host_internal_cppthread_mutex.unlock();
 }
 
 //----------------------------------------------------------------------------
