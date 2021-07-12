@@ -37,7 +37,8 @@ ENDIF()
 SET(ALGORITHM UnitTestMain.cpp)
 
 LIST(APPEND ALGORITHM_SOURCES
-TestStdAlgorithms.cpp
+  TestStdAlgorithmsNonModSeqOps.cpp
+  TestStdAlgorithmsMinMaxOps.cpp
 )
 
 IF(Kokkos_ENABLE_OPENMP)

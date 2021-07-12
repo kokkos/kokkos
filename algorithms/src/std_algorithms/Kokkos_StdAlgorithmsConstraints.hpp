@@ -85,6 +85,10 @@ template <typename... Args>
 using is_admissible_to_kokkos_std_modifying_sequence_op =
     is_admissible_to_kokkos_std_non_modifying_sequence_op<Args...>;
 
+template <typename... Args>
+using is_admissible_to_kokkos_std_min_max_op =
+    is_admissible_to_kokkos_std_non_modifying_sequence_op<Args...>;
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
