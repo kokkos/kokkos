@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_THREADS_PARALLEL_HPP
-#define KOKKOS_THREADS_PARALLEL_HPP
+#ifndef KOKKOS_POSIXTHREADS_PARALLEL_HPP
+#define KOKKOS_POSIXTHREADS_PARALLEL_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_THREADS)
@@ -1011,4 +1011,4 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 //----------------------------------------------------------------------------
 
 #endif
-#endif /* #define KOKKOS_THREADS_PARALLEL_HPP */
+#endif /* #define KOKKOS_POSIXTHREADS_PARALLEL_HPP */

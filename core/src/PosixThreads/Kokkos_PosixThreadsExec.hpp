@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_THREADSEXEC_HPP
-#define KOKKOS_THREADSEXEC_HPP
+#ifndef KOKKOS_POSIXTHREADSEXEC_HPP
+#define KOKKOS_POSIXTHREADSEXEC_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_THREADS)
@@ -757,4 +757,4 @@ class UniqueToken<Threads, UniqueTokenScope::Global> {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 #endif
-#endif /* #define KOKKOS_THREADSEXEC_HPP */
+#endif /* #define KOKKOS_POSIXTHREADSEXEC_HPP */

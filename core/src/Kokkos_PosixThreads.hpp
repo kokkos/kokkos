@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_THREADS_HPP
-#define KOKKOS_THREADS_HPP
+#ifndef KOKKOS_POSIXTHREADS_HPP
+#define KOKKOS_POSIXTHREADS_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_THREADS)
@@ -217,9 +217,9 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
 
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_Parallel.hpp>
-#include <PosixThreads/Kokkos_ThreadsExec.hpp>
-#include <PosixThreads/Kokkos_ThreadsTeam.hpp>
-#include <PosixThreads/Kokkos_Threads_Parallel.hpp>
+#include <PosixThreads/Kokkos_PosixThreadsExec.hpp>
+#include <PosixThreads/Kokkos_PosixThreadsTeam.hpp>
+#include <PosixThreads/Kokkos_PosixThreads_Parallel.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
@@ -227,4 +227,4 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
 //----------------------------------------------------------------------------
 
 #endif /* #if defined( KOKKOS_ENABLE_THREADS ) */
-#endif /* #define KOKKOS_THREADS_HPP */
+#endif /* #define KOKKOS_POSIXTHREADS_HPP */

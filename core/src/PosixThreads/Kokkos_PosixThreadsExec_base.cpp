@@ -59,7 +59,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <Kokkos_Threads.hpp>
+#include <Kokkos_PosixThreads.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -160,7 +160,7 @@ void ThreadsExec::wait_yield(volatile int& flag, const int value) {
 #include <iostream>
 #include <stdexcept>
 
-#include <Kokkos_Threads.hpp>
+#include <Kokkos_PosixThreads.hpp>
 
 //----------------------------------------------------------------------------
 // Driver for each created pthread
