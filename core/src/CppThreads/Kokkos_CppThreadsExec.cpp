@@ -814,10 +814,10 @@ void ThreadsSpaceInitializer::initialize(const InitArguments &args) {
     } else {
       Kokkos::Threads::impl_initialize();
     }
-    // std::cout << "Kokkos::initialize() fyi: Pthread enabled and initialized"
+    // std::cout << "Kokkos::initialize() fyi: CppThread enabled and initialized"
     // << std::endl ;
   } else {
-    // std::cout << "Kokkos::initialize() fyi: Pthread enabled but not
+    // std::cout << "Kokkos::initialize() fyi: CppThread enabled but not
     // initialized" << std::endl ;
   }
 }
@@ -838,7 +838,7 @@ void ThreadsSpaceInitializer::print_configuration(std::ostream &msg,
                                                   const bool detail) {
   msg << "Host Parallel Execution Space:" << std::endl;
   msg << "  KOKKOS_ENABLE_THREADS: ";
-  msg << "yes" << std::endl;
+  msg << "yes (C++ std"":thread)" << std::endl;
 
   msg << "\nThreads Runtime Configuration:" << std::endl;
   Kokkos::Threads::print_configuration(msg, detail);
