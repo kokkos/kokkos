@@ -48,7 +48,8 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-namespace Test { namespace stdalgos{
+namespace Test {
+namespace stdalgos {
 
 template <class ViewTypeFrom, class ViewTypeTo>
 struct CopyFunctor {
@@ -61,9 +62,7 @@ struct CopyFunctor {
       : m_viewFrom(viewFromIn), m_viewTo(viewToIn) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const {
-    m_viewTo(i) = m_viewFrom(i);
-  }
+  void operator()(int i) const { m_viewTo(i) = m_viewFrom(i); }
 };
 
 template <class ItTypeFrom, class ViewTypeTo>
@@ -75,9 +74,7 @@ struct CopyFromIteratorFunctor {
       : m_itFrom(itFromIn), m_viewTo(viewToIn) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const {
-    m_viewTo() = *m_itFrom;
-  }
+  void operator()(int i) const { m_viewTo() = *m_itFrom; }
 };
 
 struct IncrementElementWiseFunctor {
@@ -89,7 +86,6 @@ struct NoOpNonMutableFunctor {
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& i) const { (void)i; }
 };
-
 
 template <class ValueType, class ViewType>
 std::enable_if_t<!std::is_same<typename ViewType::traits::array_layout,
@@ -124,6 +120,7 @@ verify_values(ValueType expected, const ViewType viewIn) {
   }
 }
 
-}}  // namespace Test::stdalgos
+}  // namespace stdalgos
+}  // namespace Test
 
 #endif

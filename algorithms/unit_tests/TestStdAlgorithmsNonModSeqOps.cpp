@@ -65,8 +65,7 @@ struct std_algorithms_non_mod_seq_ops : public ::testing::Test {
 // ------------------------------------------------------------
 
 template <class FunctorType, class ViewType>
-void test_for_each_v1(FunctorType functor, const ViewType viewIn)
-{
+void test_for_each_v1(FunctorType functor, const ViewType viewIn) {
   namespace KE = Kokkos::Experimental;
 
   KE::for_each(viewIn, functor);
@@ -77,8 +76,7 @@ void test_for_each_v1(FunctorType functor, const ViewType viewIn)
 }
 
 template <class FunctorType, class ViewType>
-void test_for_each_v2(FunctorType functor, const ViewType viewIn)
-{
+void test_for_each_v2(FunctorType functor, const ViewType viewIn) {
   namespace KE = Kokkos::Experimental;
   KE::for_each(viewIn, functor);
   stdalgos::verify_values(0, viewIn);
@@ -88,8 +86,7 @@ void test_for_each_v2(FunctorType functor, const ViewType viewIn)
 }
 
 template <class FunctorType, class ViewType>
-void test_for_each_n_v1(FunctorType functor, const ViewType viewIn)
-{
+void test_for_each_n_v1(FunctorType functor, const ViewType viewIn) {
   namespace KE = Kokkos::Experimental;
 
   KE::for_each_n(KE::begin(viewIn), 10, functor);
@@ -100,8 +97,7 @@ void test_for_each_n_v1(FunctorType functor, const ViewType viewIn)
 }
 
 template <class FunctorType, class ViewType>
-void test_for_each_n_v2(FunctorType functor, const ViewType viewIn)
-{
+void test_for_each_n_v2(FunctorType functor, const ViewType viewIn) {
   namespace KE = Kokkos::Experimental;
 
   KE::for_each_n(KE::cbegin(viewIn), 10, functor);
@@ -117,25 +113,30 @@ TEST_F(std_algorithms_non_mod_seq_ops, for_each_modifying_functor_static_view) {
   const auto fun = stdalgos::IncrementElementWiseFunctor();
   test_for_each_v1(fun, m_static_view);
 }
-TEST_F(std_algorithms_non_mod_seq_ops, for_each_modifying_functor_dynamic_view) {
+TEST_F(std_algorithms_non_mod_seq_ops,
+       for_each_modifying_functor_dynamic_view) {
   const auto fun = stdalgos::IncrementElementWiseFunctor();
   test_for_each_v1(fun, m_dynamic_view);
 }
-TEST_F(std_algorithms_non_mod_seq_ops, for_each_modifying_functor_strided_view) {
+TEST_F(std_algorithms_non_mod_seq_ops,
+       for_each_modifying_functor_strided_view) {
   const auto fun = stdalgos::IncrementElementWiseFunctor();
   test_for_each_v1(fun, m_strided_view);
 }
 
 // for_each, functor with const arg
-TEST_F(std_algorithms_non_mod_seq_ops, for_each_non_modifying_functor_static_view) {
+TEST_F(std_algorithms_non_mod_seq_ops,
+       for_each_non_modifying_functor_static_view) {
   const auto fun = stdalgos::NoOpNonMutableFunctor();
   test_for_each_v2(fun, m_static_view);
 }
-TEST_F(std_algorithms_non_mod_seq_ops, for_each_non_modifying_functor_dynamic_view) {
+TEST_F(std_algorithms_non_mod_seq_ops,
+       for_each_non_modifying_functor_dynamic_view) {
   const auto fun = stdalgos::NoOpNonMutableFunctor();
   test_for_each_v2(fun, m_dynamic_view);
 }
-TEST_F(std_algorithms_non_mod_seq_ops, for_each_non_modifying_functor_strided_view) {
+TEST_F(std_algorithms_non_mod_seq_ops,
+       for_each_non_modifying_functor_strided_view) {
   const auto fun = stdalgos::NoOpNonMutableFunctor();
   test_for_each_v2(fun, m_strided_view);
 }
@@ -156,15 +157,18 @@ TEST_F(std_algorithms_non_mod_seq_ops, for_each_modifying_lambda_strided_view) {
 }
 
 // for_each, lambda with const arg
-TEST_F(std_algorithms_non_mod_seq_ops, for_each_non_modifying_lambda_static_view) {
+TEST_F(std_algorithms_non_mod_seq_ops,
+       for_each_non_modifying_lambda_static_view) {
   const auto fun = KOKKOS_LAMBDA(const int& i) { (void)i; };
   test_for_each_v2(fun, m_static_view);
 }
-TEST_F(std_algorithms_non_mod_seq_ops, for_each_non_modifying_lambda_dynamic_view) {
+TEST_F(std_algorithms_non_mod_seq_ops,
+       for_each_non_modifying_lambda_dynamic_view) {
   const auto fun = KOKKOS_LAMBDA(const int& i) { (void)i; };
   test_for_each_v2(fun, m_dynamic_view);
 }
-TEST_F(std_algorithms_non_mod_seq_ops, for_each_non_modifying_lambda_strided_view) {
+TEST_F(std_algorithms_non_mod_seq_ops,
+       for_each_non_modifying_lambda_strided_view) {
   const auto fun = KOKKOS_LAMBDA(const int& i) { (void)i; };
   test_for_each_v2(fun, m_strided_view);
 }

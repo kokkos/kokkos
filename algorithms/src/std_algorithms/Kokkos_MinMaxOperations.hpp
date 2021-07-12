@@ -69,8 +69,7 @@ struct _StdAlgoMaxElemFunctor {
   IteratorType m_first;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i, RedValueType & value) const
-  {
+  void operator()(const int i, RedValueType& value) const {
     auto myValue = m_first + i;
     if (*myValue > value.val) {
       value.val = *myValue;
@@ -78,51 +77,45 @@ struct _StdAlgoMaxElemFunctor {
     }
   }
 
-  _StdAlgoMaxElemFunctor(IteratorType _firstIn) : m_first(_firstIn){}
+  _StdAlgoMaxElemFunctor(IteratorType _firstIn) : m_first(_firstIn) {}
 };
 
-namespace Impl{
+namespace Impl {
 template <class IteratorType>
-IteratorType max_element_impl(const std::string & labelIn,
-			      IteratorType first,
-			      IteratorType end)
-{
-  if (first == end){
+IteratorType max_element_impl(const std::string& labelIn, IteratorType first,
+                              IteratorType end) {
+  if (first == end) {
     return end;
   }
 
-  const auto numOfElements = end-first;
-  using it_scalar_type = typename IteratorType::value_type;
-  using reducer_type = Kokkos::MaxLoc<it_scalar_type,int>;
+  const auto numOfElements = end - first;
+  using it_scalar_type     = typename IteratorType::value_type;
+  using reducer_type       = Kokkos::MaxLoc<it_scalar_type, int>;
   using reducer_value_type = typename reducer_type::value_type;
 
   reducer_value_type redValue;
-  Kokkos::parallel_reduce(labelIn,
-			  numOfElements,
-			  _StdAlgoMaxElemFunctor<IteratorType, reducer_value_type>(first),
-			  reducer_type(redValue));
+  Kokkos::parallel_reduce(
+      labelIn, numOfElements,
+      _StdAlgoMaxElemFunctor<IteratorType, reducer_value_type>(first),
+      reducer_type(redValue));
 
   return first + redValue.loc;
 }
-}//end namespace Impl
-
+}  // end namespace Impl
 
 template <class IteratorType>
-IteratorType max_element(IteratorType first, IteratorType end)
-{
+IteratorType max_element(IteratorType first, IteratorType end) {
   return Impl::max_element_impl("_std_max_element_1", first, end);
 }
 
 template <class IteratorType>
-IteratorType max_element(const std::string & labelIn,
-			 IteratorType first, IteratorType end)
-{
+IteratorType max_element(const std::string& labelIn, IteratorType first,
+                         IteratorType end) {
   return Impl::max_element_impl(labelIn, first, end);
 }
 
 template <class DataType, class... Properties>
-auto max_element(const Kokkos::View<DataType, Properties...>& v)
-{
+auto max_element(const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
   static_assert(
       is_admissible_to_kokkos_std_min_max_op<ViewInType>::value,
@@ -132,9 +125,8 @@ auto max_element(const Kokkos::View<DataType, Properties...>& v)
 }
 
 template <class DataType, class... Properties>
-auto max_element(const std::string & labelIn,
-		 const Kokkos::View<DataType, Properties...>& v)
-{
+auto max_element(const std::string& labelIn,
+                 const Kokkos::View<DataType, Properties...>& v) {
   using ViewInType = Kokkos::View<DataType, Properties...>;
   static_assert(
       is_admissible_to_kokkos_std_min_max_op<ViewInType>::value,
