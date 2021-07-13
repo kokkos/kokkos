@@ -97,7 +97,7 @@ struct SuperScalar {
   }
 
   KOKKOS_INLINE_FUNCTION
-  SuperScalar operator+(const SuperScalar& src) {
+  SuperScalar operator+(const SuperScalar& src) const {
     SuperScalar tmp = *this;
     for (int i = 0; i < N; i++) {
       tmp.val[i] += src.val[i];

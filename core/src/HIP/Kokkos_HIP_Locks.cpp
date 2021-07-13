@@ -84,6 +84,12 @@ namespace Impl {
 HIPLockArrays g_host_hip_lock_arrays = {nullptr, nullptr, 0};
 
 void initialize_host_hip_lock_arrays() {
+#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
+  desul::Impl::init_lock_arrays();
+
+  DESUL_ENSURE_HIP_LOCK_ARRAYS_ON_DEVICE();
+#endif
+
   if (g_host_hip_lock_arrays.atomic != nullptr) return;
   HIP_SAFE_CALL(hipMalloc(
       &g_host_hip_lock_arrays.atomic,
@@ -103,6 +109,10 @@ void initialize_host_hip_lock_arrays() {
 }
 
 void finalize_host_hip_lock_arrays() {
+#ifdef KOKKOS_ENABLE_IMPL_DESUL_ATOMICS
+  desul::Impl::finalize_lock_arrays();
+#endif
+
   if (g_host_hip_lock_arrays.atomic == nullptr) return;
   HIP_SAFE_CALL(hipFree(g_host_hip_lock_arrays.atomic));
   g_host_hip_lock_arrays.atomic = nullptr;
