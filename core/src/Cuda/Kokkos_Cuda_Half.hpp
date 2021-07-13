@@ -372,8 +372,8 @@ class alignas(4) half_t {
     impl_type new_val = cast_to_half(rhs).val;
 #ifdef __CUDA_ARCH__
 #if (CUDA_VERSION < 10000)
-    volatile float* lhs = (float*)val_ptr;
-    val                 = __float2half(lhs[0]);
+    volatile float* new_lhs = (float*)&new_val;
+    val                     = __float2half(new_lhs[0]);
 #else
     Kokkos::atomic_store(val_ptr, *((uint16_t*)&new_val));
 #endif  // CUDA_VERSION
