@@ -74,7 +74,10 @@ struct CopyFromIteratorFunctor {
       : m_itFrom(itFromIn), m_viewTo(viewToIn) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const { m_viewTo() = *m_itFrom; }
+  void operator()(int i) const {
+    (void)i;
+    m_viewTo() = *m_itFrom;
+  }
 };
 
 struct IncrementElementWiseFunctor {
