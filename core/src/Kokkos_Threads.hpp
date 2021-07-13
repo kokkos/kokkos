@@ -42,70 +42,9 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_CPPTHREADS_WORKGRAPHPOLICY_HPP
-#define KOKKOS_CPPTHREADS_WORKGRAPHPOLICY_HPP
+#ifndef KOKKOS_THREADS_HPP
+#define KOKKOS_THREADS_HPP
 
-#include <Kokkos_Core_fwd.hpp>
 #include <CppThreads/Kokkos_CppThreads.hpp>
 
-namespace Kokkos {
-namespace Impl {
-
-template <class FunctorType, class... Traits>
-class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
-                  Kokkos::Threads> {
- private:
-  using Policy = Kokkos::WorkGraphPolicy<Traits...>;
-
-  using Self = ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
-                           Kokkos::Threads>;
-
-  Policy m_policy;
-  FunctorType m_functor;
-
-  template <class TagType>
-  typename std::enable_if<std::is_same<TagType, void>::value>::type exec_one(
-      const std::int32_t w) const noexcept {
-    m_functor(w);
-  }
-
-  template <class TagType>
-  typename std::enable_if<!std::is_same<TagType, void>::value>::type exec_one(
-      const std::int32_t w) const noexcept {
-    const TagType t{};
-    m_functor(t, w);
-  }
-
-  inline void exec_one_thread() const noexcept {
-    // Spin until COMPLETED_TOKEN.
-    // END_TOKEN indicates no work is currently available.
-
-    for (std::int32_t w = Policy::END_TOKEN;
-         Policy::COMPLETED_TOKEN != (w = m_policy.pop_work());) {
-      if (Policy::END_TOKEN != w) {
-        exec_one<typename Policy::work_tag>(w);
-        m_policy.completed_work(w);
-      }
-    }
-  }
-
-  static inline void thread_main(ThreadsExec& exec, const void* arg) noexcept {
-    const Self& self = *(static_cast<const Self*>(arg));
-    self.exec_one_thread();
-    exec.fan_in();
-  }
-
- public:
-  inline void execute() {
-    ThreadsExec::start(&Self::thread_main, this);
-    ThreadsExec::fence();
-  }
-
-  inline ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
-      : m_policy(arg_policy), m_functor(arg_functor) {}
-};
-
-}  // namespace Impl
-}  // namespace Kokkos
-
-#endif /* #define KOKKOS_CPPTHREADS_WORKGRAPHPOLICY_HPP */
+#endif

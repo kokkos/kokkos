@@ -46,7 +46,7 @@
 #define KOKKOS_DECLARE_THREADS_HPP
 
 #if defined(KOKKOS_ENABLE_THREADS)
-#include <Kokkos_CppThreads.hpp>
+#include <Kokkos_Threads.hpp>
 #endif
 
 #endif

@@ -59,7 +59,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <Kokkos_PosixThreads.hpp>
+#include <PosixThreads/Kokkos_PosixThreads.hpp>
 
 //----------------------------------------------------------------------------
 

@@ -46,7 +46,7 @@
 #define KOKKOS_POSIXTHREADS_WORKGRAPHPOLICY_HPP
 
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_PosixThreads.hpp>
+#include <PosixThreads/Kokkos_PosixThreads.hpp>
 
 namespace Kokkos {
 namespace Impl {

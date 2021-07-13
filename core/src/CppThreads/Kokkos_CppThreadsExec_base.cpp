@@ -61,7 +61,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <Kokkos_CppThreads.hpp>
+#include <CppThreads/Kokkos_CppThreads.hpp>
 
 //----------------------------------------------------------------------------
 
