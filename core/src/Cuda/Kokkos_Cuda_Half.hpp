@@ -230,11 +230,11 @@ class alignas(2) half_t {
   void atomic_add(const volatile half_t src) volatile {
 #ifdef __CUDA_ARCH__
 #if (CUDA_VERSION < 10000)
-    volatile float* lhs = (float*)&val;
-    volatile float* rhs = (float*)&src.val;
-    *lhs                = __half2float(val);
-    *rhs                = __half2float(src.val);
-    val                 = __float2half(lhs[0] + rhs[0]);
+    alignas(4) float lhs_tmp = __half2float(val),
+                     rhs_tmp = __half2float(src.val);
+    volatile float* lhs      = &lhs_tmp;
+    volatile float* rhs      = &rhs_tmp;
+    val                      = __float2half(lhs[0] + rhs[0]);
 #else
     // Cuda 10 supports __half volatile stores but not volatile arithmetic
     // operands so we use atomicAdd for cuda 10.0 instead.
@@ -255,11 +255,11 @@ class alignas(2) half_t {
   void atomic_mul(const volatile half_t src) volatile {
 #ifdef __CUDA_ARCH__
 #if (CUDA_VERSION < 10000)
-    volatile float* lhs = (float*)&val;
-    volatile float* rhs = (float*)&src.val;
-    *lhs                = __half2float(val);
-    *rhs                = __half2float(src.val);
-    val                 = __float2half(lhs[0] * rhs[0]);
+    alignas(4) float lhs_tmp = __half2float(val),
+                     rhs_tmp = __half2float(src.val);
+    volatile float* lhs      = &lhs_tmp;
+    volatile float* rhs      = &rhs_tmp;
+    val                      = __float2half(lhs[0] * rhs[0]);
 #else
     // static volatile unsigned mutex = 0; // TODO: this should not be a class
     // member. while (mutex == 1) ; mutex = 1; val = const_cast<impl_type&>(val)
@@ -371,8 +371,9 @@ class alignas(2) half_t {
     impl_type new_val = cast_to_half(rhs).val;
 #ifdef __CUDA_ARCH__
 #if (CUDA_VERSION < 10000)
-    volatile float* lhs = (float*)val_ptr;
-    val                 = __float2half(lhs[0]);
+    alignas(4) float rhs_tmp = __half2float(new_val);
+    volatile float* new_lhs  = &rhs_tmp;
+    val                      = __float2half(new_lhs[0]);
 #else
     Kokkos::atomic_store(val_ptr, *((uint16_t*)&new_val));
 #endif  // CUDA_VERSION
