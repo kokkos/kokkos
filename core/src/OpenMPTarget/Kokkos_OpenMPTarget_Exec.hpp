@@ -1358,7 +1358,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     lambda(i, TeamThread_scratch[omp_get_num_threads() * value_count]);
   }
 
-  // Reduce all paritial results within a team.
+  // Reduce all partial results within a team.
   const int team_size      = omp_get_num_threads();
   int tree_neighbor_offset = 1;
   do {

@@ -145,8 +145,8 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   using PolicyType = Kokkos::RangePolicy<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
   using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
+      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
+                                FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, TagType,
@@ -172,6 +172,12 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     if (end <= begin) return;
 
     ValueType result = ValueType();
+
+    // FIXME_OPENMPTARGET : For a single range parallel loop, the number of
+    // teams (league_size) should be chosen by the compiler for optimal
+    // performance based on the architecture.
+    // However currently we have hardcoded it to 512 as it has shown the best
+    // performance for some micro-benchmarks with LLVM compiler.
 
 #pragma omp declare reduction(                                         \
     custom:ValueType                                                   \
@@ -256,7 +262,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     const auto begin = p.begin();
     const auto end   = p.end();
 
-    enum { HasInit = ReduceFunctorHasInit<FunctorType>::value };
+    const int HasInit = ReduceFunctorHasInit<FunctorType>::value;
 
     // Initialize the result pointer.
 
@@ -404,8 +410,8 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
   using WorkRange = typename Policy::WorkRange;
 
   using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
+      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
+                                FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
@@ -449,8 +455,7 @@ class ParallelReduce<FunctorType, Kokkos::RangePolicy<Traits...>, ReducerType,
       if (m_result_ptr_num_elems <= 2) {
         ParReduceSpecialize::template execute_array<TagType, 2>(
             m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
-      }
-      if (m_result_ptr_num_elems <= 4) {
+      } else if (m_result_ptr_num_elems <= 4) {
         ParReduceSpecialize::template execute_array<TagType, 4>(
             m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 8) {
@@ -813,8 +818,8 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   using PolicyType = TeamPolicyInternal<PolicyArgs...>;
   using TagType    = typename PolicyType::work_tag;
   using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
+      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
+                                FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, TagType,
@@ -1003,9 +1008,9 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   // RangePolicy. Need a new implementation.
   static void execute_init_join(const FunctorType& f, const PolicyType& p,
                                 PointerType ptr, const bool ptr_on_device) {
-    const auto begin = p.begin();
-    const auto end   = p.end();
-    enum { HasInit = ReduceFunctorHasInit<FunctorType>::value };
+    const auto begin  = p.begin();
+    const auto end    = p.end();
+    const int HasInit = ReduceFunctorHasInit<FunctorType>::value;
 
     const auto size = end - begin;
 
@@ -1150,8 +1155,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
   using Member  = typename Policy::member_type;
 
   using ReducerConditional =
-      Kokkos::Impl::if_c<std::is_same<InvalidType, ReducerType>::value,
-                         FunctorType, ReducerType>;
+      typename std::conditional<std::is_same<InvalidType, ReducerType>::value,
+                                FunctorType, ReducerType>;
   using ReducerTypeFwd = typename ReducerConditional::type;
   using WorkTagFwd =
       std::conditional_t<std::is_same<InvalidType, ReducerType>::value, WorkTag,
@@ -1195,8 +1200,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
       if (m_result_ptr_num_elems <= 2) {
         ParReduceSpecialize::template execute_array<2>(
             m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
-      }
-      if (m_result_ptr_num_elems <= 4) {
+      } else if (m_result_ptr_num_elems <= 4) {
         ParReduceSpecialize::template execute_array<4>(
             m_functor, m_policy, m_result_ptr, m_result_ptr_on_device);
       } else if (m_result_ptr_num_elems <= 8) {
