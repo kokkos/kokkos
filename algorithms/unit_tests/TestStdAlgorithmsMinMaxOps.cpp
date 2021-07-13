@@ -48,39 +48,36 @@
 namespace Test {
 
 struct std_algorithms_min_max : public ::testing::Test {
-  static constexpr std::size_t m_numElements = 10;
-
   using value_type = int;
 
-  using static_view_t = Kokkos::View<value_type[m_numElements]>;
+  using static_view_t = Kokkos::View<value_type[10]>;
   static_view_t m_static_view{"std-algo-test-1D-contiguous-view-static"};
 
   using dyn_view_t = Kokkos::View<value_type*>;
-  dyn_view_t m_dynamic_view{"std-algo-test-1D-contiguous-view-dynamic",
-                            m_numElements};
+  dyn_view_t m_dynamic_view{"std-algo-test-1D-contiguous-view-dynamic", 10};
 
   using strided_view_t = Kokkos::View<value_type*, Kokkos::LayoutStride>;
-  Kokkos::LayoutStride layout{m_numElements, 2};
+  Kokkos::LayoutStride layout{10, 2};
   strided_view_t m_strided_view{"std-algo-test-1D-strided-view", layout};
 
   template <class ViewFromType>
   void copyViewToFixturesViews(ViewFromType viewFrom) {
     stdalgos::CopyFunctor<ViewFromType, static_view_t> F1(viewFrom,
                                                           m_static_view);
-    Kokkos::parallel_for("_std_algo_copy1", m_numElements, F1);
+    Kokkos::parallel_for("_std_algo_copy1", viewFrom.extent(0), F1);
 
     stdalgos::CopyFunctor<ViewFromType, dyn_view_t> F2(viewFrom,
                                                        m_dynamic_view);
-    Kokkos::parallel_for("_std_algo_copy2", m_numElements, F2);
+    Kokkos::parallel_for("_std_algo_copy2", viewFrom.extent(0), F2);
 
     stdalgos::CopyFunctor<ViewFromType, strided_view_t> F3(viewFrom,
                                                            m_strided_view);
-    Kokkos::parallel_for("_std_algo_copy2", m_numElements, F3);
+    Kokkos::parallel_for("_std_algo_copy2", viewFrom.extent(0), F3);
   }
 
   void fillFixtureViews(int caseNumber) {
     using tmp_view_t = Kokkos::View<value_type*>;
-    tmp_view_t tmpView("tmpView", m_numElements);
+    tmp_view_t tmpView("tmpView", 10);
     auto tmp_view_h = Kokkos::create_mirror_view(Kokkos::HostSpace(), tmpView);
     if (caseNumber == 1) {
       tmp_view_h(0) = 0;
