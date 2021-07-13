@@ -220,7 +220,7 @@ TEST_F(std_algorithms_non_mod_seq_ops, find_if_lambda) {
             KE::find_if(
                 KE::begin(m_static_view), KE::end(m_static_view),
                 KOKKOS_LAMBDA(int i) { return i != 0; }));
-  EXPECT_EQ(KE::end(m_static_view),
+  EXPECT_EQ(KE::cend(m_static_view),
             KE::find_if(
                 m_static_view, KOKKOS_LAMBDA(int i) { return i != 0; }));
 
@@ -229,7 +229,7 @@ TEST_F(std_algorithms_non_mod_seq_ops, find_if_lambda) {
             KE::find_if(
                 KE::begin(m_static_view), KE::end(m_static_view),
                 KOKKOS_LAMBDA(int i) { return i != 0; }));
-  EXPECT_EQ(KE::begin(m_static_view) + 5,
+  EXPECT_EQ(KE::cbegin(m_static_view) + 5,
             KE::find_if(
                 m_static_view, KOKKOS_LAMBDA(int i) { return i != 0; }));
 #endif
@@ -243,21 +243,21 @@ TEST_F(std_algorithms_non_mod_seq_ops, find_if_not_lambda) {
   EXPECT_EQ(KE::begin(m_static_view),
             KE::find_if_not(KE::begin(m_static_view), KE::end(m_static_view),
                             not_equals_zero));
-  EXPECT_EQ(KE::begin(m_static_view),
+  EXPECT_EQ(KE::cbegin(m_static_view),
             KE::find_if_not(m_static_view, not_equals_zero));
 
   const auto equals_zero = KOKKOS_LAMBDA(int i) { return i == 0; };
   EXPECT_EQ(KE::end(m_static_view),
             KE::find_if_not(KE::begin(m_static_view), KE::end(m_static_view),
                             equals_zero));
-  EXPECT_EQ(KE::end(m_static_view),
+  EXPECT_EQ(KE::cend(m_static_view),
             KE::find_if_not(m_static_view, equals_zero));
 
   m_static_view(5) = 1;
   EXPECT_EQ(KE::begin(m_static_view) + 5,
             KE::find_if_not(KE::begin(m_static_view), KE::end(m_static_view),
                             equals_zero));
-  EXPECT_EQ(KE::begin(m_static_view) + 5,
+  EXPECT_EQ(KE::cbegin(m_static_view) + 5,
             KE::find_if_not(m_static_view, equals_zero));
 #endif
 }

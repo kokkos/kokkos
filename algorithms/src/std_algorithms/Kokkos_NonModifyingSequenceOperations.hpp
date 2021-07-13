@@ -196,7 +196,8 @@ std::size_t count_if(const Kokkos::View<DataType, Properties...>& v,
       is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
       "Currently, Kokkos::Experimental::count_if only accepts 1D Views.");
 
-  return Kokkos::Experimental::count_if(begin(v), end(v), std::move(predicate));
+  return Kokkos::Experimental::count_if(cbegin(v), cend(v),
+                                        std::move(predicate));
 }
 
 // -------------------
@@ -232,7 +233,8 @@ std::size_t count(const Kokkos::View<DataType, Properties...>& v,
       is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
       "Currently, Kokkos::Experimental::count only accepts 1D Views.");
 
-  return Kokkos::Experimental::count_if(begin(v), end(v), EqualsVal<T>(value));
+  return Kokkos::Experimental::count_if(cbegin(v), cend(v),
+                                        EqualsVal<T>(value));
 }
 
 // -------------------
@@ -268,7 +270,8 @@ auto find_if(const Kokkos::View<DataType, Properties...>& v,
       is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
       "Currently, Kokkos::Experimental::find_if only accepts 1D Views.");
 
-  return Kokkos::Experimental::find_if(begin(v), end(v), std::move(predicate));
+  return Kokkos::Experimental::find_if(cbegin(v), cend(v),
+                                       std::move(predicate));
 }
 
 // -------------------
@@ -289,7 +292,7 @@ auto find_if_not(const Kokkos::View<DataType, Properties...>& v,
       is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
       "Currently, Kokkos::Experimental::find_if_not only accepts 1D Views.");
 
-  return Kokkos::Experimental::find_if_not(begin(v), end(v),
+  return Kokkos::Experimental::find_if_not(cbegin(v), cend(v),
                                            std::move(predicate));
 }
 
