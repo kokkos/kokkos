@@ -303,4 +303,18 @@ TEST_F(std_algorithms_non_mod_seq_ops, none_of_lambda) {
 #endif
 }
 
+TEST_F(std_algorithms_non_mod_seq_ops, copy) {
+  namespace KE     = Kokkos::Experimental;
+  m_static_view(0) = 1;
+  m_static_view(1) = 2;
+
+  KE::copy(KE::begin(m_static_view), KE::begin(m_static_view) + 2,
+           KE::begin(m_static_view) + 5);
+
+  EXPECT_EQ(0, m_static_view(4));
+  EXPECT_EQ(1, m_static_view(5));
+  EXPECT_EQ(2, m_static_view(6));
+  EXPECT_EQ(0, m_static_view(7));
+}
+
 }  // namespace Test

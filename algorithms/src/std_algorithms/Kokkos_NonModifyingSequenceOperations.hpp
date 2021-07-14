@@ -320,6 +320,18 @@ bool none_of(IteratorType first, IteratorType last, Predicate predicate) {
   return Kokkos::Experimental::find_if(first, last, predicate) == last;
 }
 
+// -------------------
+// copy
+// -------------------
+template <typename InputIterator, typename OutputIterator>
+OutputIterator copy(InputIterator first, InputIterator last,
+                    OutputIterator result) {
+  for (; first != last; ++result, ++first) {
+    *result = *first;
+  }
+  return result;
+}
+
 }  // namespace Experimental
 }  // namespace Kokkos
 
