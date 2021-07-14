@@ -354,13 +354,25 @@ bool none_of(const Kokkos::View<DataType, Properties...>& v,
 // -------------------
 // copy
 // -------------------
+template <class InputIterator, class OutputIterator>
+struct Copy {
+  InputIterator m_first;
+  OutputIterator m_dest_first;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i) const { *(m_dest_first + i) = *(m_first + i); }
+
+  Copy(InputIterator _first, OutputIterator _dest_first)
+      : m_first(_first), m_dest_first(_dest_first) {}
+};
+
 template <typename InputIterator, typename OutputIterator>
 OutputIterator copy(InputIterator first, InputIterator last,
-                    OutputIterator result) {
-  for (; first != last; ++result, ++first) {
-    *result = *first;
-  }
-  return result;
+                    OutputIterator d_first) {
+  const auto numOfElements = last - first;
+  Kokkos::parallel_for(numOfElements,
+                       Copy<InputIterator, OutputIterator>(first, d_first));
+  return d_first + numOfElements;
 }
 
 }  // namespace Experimental

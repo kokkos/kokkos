@@ -317,13 +317,17 @@ TEST_F(std_algorithms_non_mod_seq_ops, copy) {
   m_static_view(0) = 1;
   m_static_view(1) = 2;
 
-  KE::copy(KE::begin(m_static_view), KE::begin(m_static_view) + 2,
-           KE::begin(m_static_view) + 5);
+  constexpr auto size = 2;
+  auto first          = KE::begin(m_static_view);
+  auto last           = KE::begin(m_static_view) + size;
+  auto dest           = KE::begin(m_static_view) + 5;
+  auto result         = KE::copy(first, last, dest);
 
-  EXPECT_EQ(0, m_static_view(4));
-  EXPECT_EQ(1, m_static_view(5));
-  EXPECT_EQ(2, m_static_view(6));
-  EXPECT_EQ(0, m_static_view(7));
+  EXPECT_EQ(0, *(dest - 1));
+  EXPECT_EQ(1, *dest);
+  EXPECT_EQ(2, *(dest + 1));
+  EXPECT_EQ(0, *(dest + 2));
+  EXPECT_EQ(dest + size, result);
 }
 
 }  // namespace Test
