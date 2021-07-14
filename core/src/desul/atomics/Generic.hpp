@@ -238,8 +238,8 @@ atomic_fetch_oper(const Oper& op,
   T return_val;
   int done = 0;
 #ifdef __HIPCC__
-  unsigned int active = DESUL_IMPL_BALLOT_MASK(1);
-  unsigned int done_active = 0;
+  unsigned long long int active = DESUL_IMPL_BALLOT_MASK(1);
+  unsigned long long int done_active = 0;
   while (active != done_active) {
     if (!done) {
       if (Impl::lock_address_hip((void*)dest, scope)) {
@@ -305,8 +305,8 @@ atomic_oper_fetch(const Oper& op,
   T return_val;
   int done = 0;
 #ifdef __HIPCC__
-  unsigned int active = DESUL_IMPL_BALLOT_MASK(1);
-  unsigned int done_active = 0;
+  unsigned long long int active = DESUL_IMPL_BALLOT_MASK(1);
+  unsigned long long int done_active = 0;
   while (active != done_active) {
     if (!done) {
       if (Impl::lock_address_hip((void*)dest, scope)) {

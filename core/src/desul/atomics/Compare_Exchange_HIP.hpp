@@ -179,8 +179,8 @@ DESUL_INLINE_FUNCTION __device__
   // This is a way to avoid dead lock in a warp or wave front
   T return_val;
   int done = 0;
-  unsigned int active = DESUL_IMPL_BALLOT_MASK(1);
-  unsigned int done_active = 0;
+  unsigned long long int active = DESUL_IMPL_BALLOT_MASK(1);
+  unsigned long long int done_active = 0;
   while (active != done_active) {
     if (!done) {
       if (Impl::lock_address_hip((void*)dest, scope)) {
@@ -208,8 +208,8 @@ DESUL_INLINE_FUNCTION __device__
   // This is a way to avoid dead lock in a warp or wave front
   T return_val;
   int done = 0;
-  unsigned int active = DESUL_IMPL_BALLOT_MASK(1);
-  unsigned int done_active = 0;
+  unsigned long long int active = DESUL_IMPL_BALLOT_MASK(1);
+  unsigned long long int done_active = 0;
   while (active != done_active) {
     if (!done) {
       if (Impl::lock_address_hip((void*)dest, scope)) {
