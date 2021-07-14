@@ -70,6 +70,8 @@
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
+#define CUB_USE_COOPERATIVE_GROUPS
+
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <thrust/generate.h>
