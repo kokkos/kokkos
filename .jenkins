@@ -6,6 +6,11 @@ pipeline {
         CCACHE_MAXSIZE = '10G'
         CCACHE_CPP2 = 'true'
     }
+
+    options {
+        timeout(time: 6, unit: 'HOURS')
+    }
+
     stages {
         stage('Clang-Format') {
             agent {
