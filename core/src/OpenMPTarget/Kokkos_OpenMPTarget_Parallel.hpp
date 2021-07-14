@@ -284,19 +284,16 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     ValueType* scratch_ptr =
         static_cast<ValueType*>(OpenMPTargetExec::get_scratch_ptr());
 
-    // Enter this loop if the functor has an `init`
-    if constexpr (HasInit) {
-      // The `init` routine needs to be called on the device since it might need
-      // device members.
 #pragma omp target map(to : f) is_device_ptr(scratch_ptr)
-      {
+    {
+      // Enter this loop if the functor has an `init`
+      if constexpr (HasInit) {
+        // The `init` routine needs to be called on the device since it might
+        // need device members.
         ValueInit::init(f, scratch_ptr);
         if constexpr (ReduceFunctorHasFinal<FunctorType>::value)
           FunctorFinal<FunctorType, TagType>::final(f, scratch_ptr);
-      }
-    } else {
-#pragma omp target map(to : f) is_device_ptr(scratch_ptr)
-      {
+      } else {
         for (int i = 0; i < value_count; ++i) {
           static_cast<ValueType*>(scratch_ptr)[i] = ValueType();
         }
