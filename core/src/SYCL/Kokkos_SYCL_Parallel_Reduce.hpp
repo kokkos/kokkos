@@ -77,6 +77,7 @@ void subgroup_reduction(const sycl::nd_item<dim>& item,
     auto* tmp = sg.shuffle_down(local_mem, stride);
     if (id_in_sg < std::min(stride, max_index - stride))
       ValueJoin::join(selected_reducer, local_mem, tmp);
+    sg.barrier();
   }
 }
 
