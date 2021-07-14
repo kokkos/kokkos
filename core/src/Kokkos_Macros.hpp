@@ -538,8 +538,10 @@
 
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 #define KOKKOS_DEPRECATED [[deprecated]]
+#define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else
 #define KOKKOS_DEPRECATED
+#define KOKKOS_DEPRECATED_WITH_COMMENT(comment)
 #endif
 
 #define KOKKOS_IMPL_STRINGIFY(x) #x
