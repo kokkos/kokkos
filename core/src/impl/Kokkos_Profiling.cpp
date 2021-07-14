@@ -119,7 +119,6 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.declare_optimization_goal == r.declare_optimization_goal;
 }
 
-
 enum class MayRequireGlobalFencing : bool { No, Yes };
 template <typename Callback, typename... Args>
 inline void invoke_kokkosp_callback(
@@ -135,7 +134,8 @@ inline void invoke_kokkosp_callback(
              .requires_global_fencing)) {
       Kokkos::fence();
     }
-    //(*callback)(std::forward<typename LazyEvaluator<Args>::value_type>(LazyEvaluator<Args>::get(args))...);
+    //(*callback)(std::forward<typename
+    // LazyEvaluator<Args>::value_type>(LazyEvaluator<Args>::get(args))...);
     (*callback)(lazily_evaluate(args)...);
   }
 }
@@ -145,24 +145,24 @@ bool profileLibraryLoaded() {
                                        Experimental::no_profiling);
 }
 
-void beginParallelFor(const Kokkos::Tools::Experimental::LazilyEvaluatable<const std::string>& kernelPrefix, const uint32_t devID,
-                      uint64_t* kernelID) {
+void beginParallelFor(const Kokkos::Tools::Experimental::LazilyEvaluatable<
+                          const std::string>& kernelPrefix,
+                      const uint32_t devID, uint64_t* kernelID) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
-      Experimental::current_callbacks.begin_parallel_for, kernelPrefix,
-      devID, kernelID);
+      Experimental::current_callbacks.begin_parallel_for, kernelPrefix, devID,
+      kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
     auto context_id = Experimental::get_new_context_id();
     Experimental::begin_context(context_id);
-    /**
+
     Experimental::VariableValue contextValues[] = {
         Experimental::make_variable_value(
-            Experimental::kernel_name_context_variable_id, kernelPrefix),
+            Experimental::kernel_name_context_variable_id, kernelPrefix()),
         Experimental::make_variable_value(
             Experimental::kernel_type_context_variable_id, "parallel_for")};
     Experimental::set_input_values(context_id, 2, contextValues);
-    */
   }
 #endif
 }
@@ -197,6 +197,27 @@ void endParallelFor(const uint64_t kernelID) {
   }
 #endif
 }
+void beginParallelScan(const Kokkos::Tools::Experimental::LazilyEvaluatable<
+                           const std::string>& kernelPrefix,
+                       const uint32_t devID, uint64_t* kernelID) {
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::Yes,
+      Experimental::current_callbacks.begin_parallel_scan, kernelPrefix, devID,
+      kernelID);
+#ifdef KOKKOS_ENABLE_TUNING
+  if (Kokkos::tune_internals()) {
+    auto context_id = Experimental::get_new_context_id();
+    Experimental::begin_context(context_id);
+
+    Experimental::VariableValue contextValues[] = {
+        Experimental::make_variable_value(
+            Experimental::kernel_name_context_variable_id, kernelPrefix()),
+        Experimental::make_variable_value(
+            Experimental::kernel_type_context_variable_id, "parallel_scan")};
+    Experimental::set_input_values(context_id, 2, contextValues);
+  }
+#endif
+}
 
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                        uint64_t* kernelID) {
@@ -225,6 +246,28 @@ void endParallelScan(const uint64_t kernelID) {
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
     Experimental::end_context(Experimental::get_current_context_id());
+  }
+#endif
+}
+
+void beginParallelReduce(const Kokkos::Tools::Experimental::LazilyEvaluatable<
+                             const std::string>& kernelPrefix,
+                         const uint32_t devID, uint64_t* kernelID) {
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::Yes,
+      Experimental::current_callbacks.begin_parallel_reduce, kernelPrefix,
+      devID, kernelID);
+#ifdef KOKKOS_ENABLE_TUNING
+  if (Kokkos::tune_internals()) {
+    auto context_id = Experimental::get_new_context_id();
+    Experimental::begin_context(context_id);
+
+    Experimental::VariableValue contextValues[] = {
+        Experimental::make_variable_value(
+            Experimental::kernel_name_context_variable_id, kernelPrefix()),
+        Experimental::make_variable_value(
+            Experimental::kernel_type_context_variable_id, "parallel_reduce")};
+    Experimental::set_input_values(context_id, 2, contextValues);
   }
 #endif
 }

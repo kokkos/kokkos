@@ -59,28 +59,44 @@ namespace Kokkos {
 bool tune_internals() noexcept;
 
 namespace Tools {
-namespace Experimental{
-template<typename Value>
+namespace Experimental {
+template <typename Value>
 struct LazilyEvaluatable {
   std::function<Value()> creator;
   Value operator()() const { return creator(); }
 };
 
-template<typename Value>
-auto lazily_evaluate(Value&& in){ return in; }
-template<typename Value>
-auto lazily_evaluate(const LazilyEvaluatable<Value>& in){ return in(); }
-inline auto lazily_evaluate(const LazilyEvaluatable<const std::string>& in){ return in().c_str(); }
-} // end namespace Experimental
+template <typename Value>
+auto lazily_evaluate(Value&& in) {
+  return in;
+}
+template <typename Value>
+auto lazily_evaluate(const LazilyEvaluatable<Value>& in) {
+  return in();
+}
+inline auto lazily_evaluate(const LazilyEvaluatable<const std::string>& in) {
+  return in().c_str();
+}
+}  // end namespace Experimental
 bool profileLibraryLoaded();
-void beginParallelFor(const Tools::Experimental::LazilyEvaluatable<const std::string>& kernelPrefix, const uint32_t devID,
-                      uint64_t* kernelID);
+void beginParallelFor(const Tools::Experimental::LazilyEvaluatable<
+                          const std::string>& kernelPrefix,
+                      const uint32_t devID, uint64_t* kernelID);
+/** TODO Release 4.0: deprecate */
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID);
 void endParallelFor(const uint64_t kernelID);
+void beginParallelScan(const Tools::Experimental::LazilyEvaluatable<
+                           const std::string>& kernelPrefix,
+                       const uint32_t devID, uint64_t* kernelID);
+/** TODO Release 4.0: deprecate */
 void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
                        uint64_t* kernelID);
 void endParallelScan(const uint64_t kernelID);
+void beginParallelReduce(const Tools::Experimental::LazilyEvaluatable<
+                             const std::string>& kernelPrefix,
+                         const uint32_t devID, uint64_t* kernelID);
+/** TODO Release 4.0: deprecate */
 void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
                          uint64_t* kernelID);
 void endParallelReduce(const uint64_t kernelID);
@@ -189,7 +205,6 @@ void resume_tools();
 
 EventSet get_callbacks();
 void set_callbacks(EventSet new_events);
-
 
 }  // namespace Experimental
 
@@ -501,19 +516,15 @@ void report_policy_results(const size_t /**tuning_context*/,
 template <class ExecPolicy, class FunctorType>
 void begin_parallel_for(ExecPolicy& policy, FunctorType& functor,
                         const std::string& label, uint64_t& kpID) {
+  Kokkos::Tools::beginParallelFor(
+      Kokkos::Tools::Experimental::LazilyEvaluatable<const std::string>{[&]() {
+        Kokkos::Impl::ParallelConstructName<FunctorType,
+                                            typename ExecPolicy::work_tag>
+            name(label);
+        return name.get();
+      }},
+      Kokkos::Profiling::Experimental::device_id(policy.space()), &kpID);
 
-    Kokkos::Tools::beginParallelFor(
-        Kokkos::Tools::Experimental::LazilyEvaluatable<const std::string> {
-          [&](){
-            Kokkos::Impl::ParallelConstructName<FunctorType,
-              typename ExecPolicy::work_tag>
-              name(label);
-              return name.get();
-          }
-        }
-        , Kokkos::Profiling::Experimental::device_id(policy.space()),
-        &kpID);
-  
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
   if (Kokkos::tune_internals()) {
@@ -546,14 +557,14 @@ void end_parallel_for(ExecPolicy& policy, FunctorType& functor,
 template <class ExecPolicy, class FunctorType>
 void begin_parallel_scan(ExecPolicy& policy, FunctorType& functor,
                          const std::string& label, uint64_t& kpID) {
-  if (Kokkos::Tools::profileLibraryLoaded()) {
-    Kokkos::Impl::ParallelConstructName<FunctorType,
-                                        typename ExecPolicy::work_tag>
-        name(label);
-    Kokkos::Tools::beginParallelScan(
-        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
-        &kpID);
-  }
+  Kokkos::Tools::beginParallelScan(
+      Kokkos::Tools::Experimental::LazilyEvaluatable<const std::string>{[&]() {
+        Kokkos::Impl::ParallelConstructName<FunctorType,
+                                            typename ExecPolicy::work_tag>
+            name(label);
+        return name.get();
+      }},
+      Kokkos::Profiling::Experimental::device_id(policy.space()), &kpID);
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
   if (Kokkos::tune_internals()) {
@@ -586,14 +597,14 @@ void end_parallel_scan(ExecPolicy& policy, FunctorType& functor,
 template <class ReducerType, class ExecPolicy, class FunctorType>
 void begin_parallel_reduce(ExecPolicy& policy, FunctorType& functor,
                            const std::string& label, uint64_t& kpID) {
-  if (Kokkos::Tools::profileLibraryLoaded()) {
-    Kokkos::Impl::ParallelConstructName<FunctorType,
-                                        typename ExecPolicy::work_tag>
-        name(label);
-    Kokkos::Tools::beginParallelReduce(
-        name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
-        &kpID);
-  }
+  Kokkos::Tools::beginParallelReduce(
+      Kokkos::Tools::Experimental::LazilyEvaluatable<const std::string>{[&]() {
+        Kokkos::Impl::ParallelConstructName<FunctorType,
+                                            typename ExecPolicy::work_tag>
+            name(label);
+        return name.get();
+      }},
+      Kokkos::Profiling::Experimental::device_id(policy.space()), &kpID);
 #ifdef KOKKOS_ENABLE_TUNING
   size_t context_id = Kokkos::Tools::Experimental::get_new_context_id();
   ReductionSwitcher<ReducerType>::tune(context_id, label, policy, functor,
