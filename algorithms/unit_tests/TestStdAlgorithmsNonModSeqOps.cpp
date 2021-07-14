@@ -266,40 +266,49 @@ TEST_F(std_algorithms_non_mod_seq_ops, all_of_lambda) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
   namespace KE           = Kokkos::Experimental;
   const auto equals_zero = KOKKOS_LAMBDA(int i) { return i == 0; };
+
   EXPECT_EQ(true, KE::all_of(KE::begin(m_static_view), KE::end(m_static_view),
                              equals_zero));
+  EXPECT_EQ(true, KE::all_of(m_static_view, equals_zero));
 
   m_static_view(5) = 1;
   EXPECT_EQ(false, KE::all_of(KE::begin(m_static_view), KE::end(m_static_view),
                               equals_zero));
+  EXPECT_EQ(false, KE::all_of(m_static_view, equals_zero));
 #endif
 }
 
 TEST_F(std_algorithms_non_mod_seq_ops, any_of_lambda) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-  namespace KE = Kokkos::Experimental;
-  EXPECT_EQ(false, KE::any_of(
-                       KE::begin(m_static_view), KE::end(m_static_view),
-                       KOKKOS_LAMBDA(int i) { return i != 0; }));
+  namespace KE               = Kokkos::Experimental;
+  const auto not_equals_zero = KOKKOS_LAMBDA(int i) { return i != 0; };
+
+  EXPECT_EQ(false, KE::any_of(KE::begin(m_static_view), KE::end(m_static_view),
+                              not_equals_zero));
+  EXPECT_EQ(false, KE::any_of(m_static_view, not_equals_zero));
 
   m_static_view(5) = 1;
-  EXPECT_EQ(true, KE::any_of(
-                      KE::begin(m_static_view), KE::end(m_static_view),
-                      KOKKOS_LAMBDA(int i) { return i != 0; }));
+  EXPECT_EQ(true, KE::any_of(KE::begin(m_static_view), KE::end(m_static_view),
+                             not_equals_zero));
+  EXPECT_EQ(true, KE::any_of(m_static_view, not_equals_zero));
+
 #endif
 }
 
 TEST_F(std_algorithms_non_mod_seq_ops, none_of_lambda) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-  namespace KE = Kokkos::Experimental;
-  EXPECT_EQ(true, KE::none_of(
-                      KE::begin(m_static_view), KE::end(m_static_view),
-                      KOKKOS_LAMBDA(int i) { return i != 0; }));
+  namespace KE               = Kokkos::Experimental;
+  const auto not_equals_zero = KOKKOS_LAMBDA(int i) { return i != 0; };
+
+  EXPECT_EQ(true, KE::none_of(KE::begin(m_static_view), KE::end(m_static_view),
+                              not_equals_zero));
+  EXPECT_EQ(true, KE::none_of(m_static_view, not_equals_zero));
 
   m_static_view(5) = 1;
-  EXPECT_EQ(false, KE::none_of(
-                       KE::begin(m_static_view), KE::end(m_static_view),
-                       KOKKOS_LAMBDA(int i) { return i != 0; }));
+  EXPECT_EQ(false, KE::none_of(KE::begin(m_static_view), KE::end(m_static_view),
+                               not_equals_zero));
+  EXPECT_EQ(false, KE::none_of(m_static_view, not_equals_zero));
+
 #endif
 }
 

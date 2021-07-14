@@ -304,6 +304,16 @@ bool all_of(InputIterator first, InputIterator last, Predicate predicate) {
   return Kokkos::Experimental::find_if_not(first, last, predicate) == last;
 }
 
+template <class DataType, class... Properties, class Predicate>
+bool all_of(const Kokkos::View<DataType, Properties...>& v,
+            Predicate predicate) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
+      "Currently, Kokkos::Experimental::all_of only accepts 1D Views.");
+  return Kokkos::Experimental::all_of(cbegin(v), cend(v), std::move(predicate));
+}
+
 // -------------------
 // any_of
 // -------------------
@@ -312,12 +322,33 @@ bool any_of(InputIterator first, InputIterator last, Predicate predicate) {
   return Kokkos::Experimental::find_if(first, last, predicate) != last;
 }
 
+template <class DataType, class... Properties, class Predicate>
+bool any_of(const Kokkos::View<DataType, Properties...>& v,
+            Predicate predicate) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
+      "Currently, Kokkos::Experimental::any_of only accepts 1D Views.");
+  return Kokkos::Experimental::any_of(cbegin(v), cend(v), std::move(predicate));
+}
+
 // -------------------
 // none_of
 // -------------------
 template <class IteratorType, class Predicate>
 bool none_of(IteratorType first, IteratorType last, Predicate predicate) {
   return Kokkos::Experimental::find_if(first, last, predicate) == last;
+}
+
+template <class DataType, class... Properties, class Predicate>
+bool none_of(const Kokkos::View<DataType, Properties...>& v,
+             Predicate predicate) {
+  using ViewInType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      is_admissible_to_kokkos_std_non_modifying_sequence_op<ViewInType>::value,
+      "Currently, Kokkos::Experimental::none_of only accepts 1D Views.");
+  return Kokkos::Experimental::none_of(cbegin(v), cend(v),
+                                       std::move(predicate));
 }
 
 // -------------------
