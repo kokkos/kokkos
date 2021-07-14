@@ -727,7 +727,8 @@ class MemoryPool {
 
     // Determine which superblock and block
     const ptrdiff_t d =
-        ((char *)p) - ((char *)(m_sb_state_array + m_data_offset));
+        static_cast<char *>(p) -
+        reinterpret_cast<char *>(m_sb_state_array + m_data_offset);
 
     // Verify contained within the memory pool's superblocks:
     const int ok_contains =

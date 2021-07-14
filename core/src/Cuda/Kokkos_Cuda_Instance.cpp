@@ -119,7 +119,7 @@ int cuda_kernel_arch() {
   int arch    = 0;
   int *d_arch = nullptr;
 
-  cudaMalloc((void **)&d_arch, sizeof(int));
+  cudaMalloc(reinterpret_cast<void **>(&d_arch), sizeof(int));
   cudaMemcpy(d_arch, &arch, sizeof(int), cudaMemcpyDefault);
 
   query_cuda_kernel_arch<<<1, 1>>>(d_arch);
@@ -537,8 +537,9 @@ Kokkos::Cuda::initialize WARNING: Cuda is allocating into UVMSpace by default
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
   if (stream == nullptr) {
-    CUDA_SAFE_CALL(cudaMallocHost((void **)&constantMemHostStaging,
-                                  CudaTraits::ConstantMemoryUsage));
+    CUDA_SAFE_CALL(
+        cudaMallocHost(reinterpret_cast<void **>(&constantMemHostStaging),
+                       CudaTraits::ConstantMemoryUsage));
 
     CUDA_SAFE_CALL(cudaEventCreate(&constantMemReusable));
   }
