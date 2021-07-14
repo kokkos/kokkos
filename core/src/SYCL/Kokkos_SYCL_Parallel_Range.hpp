@@ -218,28 +218,35 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     const BarePolicy bare_policy(m_policy);
 
-    auto parallel_for_event = q.submit([functor, this,
-                                        bare_policy](sycl::handler& cgh) {
-      const auto range = compute_ranges();
+    auto parallel_for_event =
+        q.submit([functor, this, bare_policy](sycl::handler& cgh) {
+          const auto range                  = compute_ranges();
+          const sycl::range<3> global_range = range.get_global_range();
+          const sycl::range<3> local_range  = range.get_local_range();
+          const sycl::nd_range sycl_swapped_range{
+              sycl::range<3>{global_range[2], global_range[1], global_range[0]},
+              sycl::range<3>{local_range[2], local_range[1], local_range[0]}};
 
-      cgh.parallel_for(range, [functor, bare_policy](sycl::nd_item<3> item) {
-        const index_type local_x    = item.get_local_id(0);
-        const index_type local_y    = item.get_local_id(1);
-        const index_type local_z    = item.get_local_id(2);
-        const index_type global_x   = item.get_group(0);
-        const index_type global_y   = item.get_group(1);
-        const index_type global_z   = item.get_group(2);
-        const index_type n_global_x = item.get_group_range(0);
-        const index_type n_global_y = item.get_group_range(1);
-        const index_type n_global_z = item.get_group_range(2);
+          cgh.parallel_for(sycl_swapped_range, [functor, bare_policy](
+                                                   sycl::nd_item<3> item) {
+            // swap back for correct index calculations in DeviceIterateTile
+            const index_type local_x    = item.get_local_id(2);
+            const index_type local_y    = item.get_local_id(1);
+            const index_type local_z    = item.get_local_id(0);
+            const index_type global_x   = item.get_group(2);
+            const index_type global_y   = item.get_group(1);
+            const index_type global_z   = item.get_group(0);
+            const index_type n_global_x = item.get_group_range(2);
+            const index_type n_global_y = item.get_group_range(1);
+            const index_type n_global_z = item.get_group_range(0);
 
-        Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, Functor,
-                                        typename Policy::work_tag>(
-            bare_policy, functor, {n_global_x, n_global_y, n_global_z},
-            {global_x, global_y, global_z}, {local_x, local_y, local_z})
-            .exec_range();
-      });
-    });
+            Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, Functor,
+                                            typename Policy::work_tag>(
+                bare_policy, functor, {n_global_x, n_global_y, n_global_z},
+                {global_x, global_y, global_z}, {local_x, local_y, local_z})
+                .exec_range();
+          });
+        });
     // FIXME_SYCL remove guard once implemented for SYCL+CUDA
 #ifdef KOKKOS_ARCH_INTEL_GEN
     q.submit_barrier(sycl::vector_class<sycl::event>{parallel_for_event});
