@@ -53,6 +53,7 @@
 #include <map>
 #include <string>
 #include <type_traits>
+#include <functional>
 namespace Kokkos {
 
 // forward declaration
