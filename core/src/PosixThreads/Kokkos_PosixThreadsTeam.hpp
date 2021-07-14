@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_THREADSTEAM_HPP
-#define KOKKOS_THREADSTEAM_HPP
+#ifndef KOKKOS_POSIXTHREADSTEAM_HPP
+#define KOKKOS_POSIXTHREADSTEAM_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_THREADS)
@@ -1159,4 +1159,4 @@ KOKKOS_INLINE_FUNCTION void single(
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 #endif
-#endif /* #define KOKKOS_THREADSTEAM_HPP */
+#endif /* #define KOKKOS_POSIXTHREADSTEAM_HPP */

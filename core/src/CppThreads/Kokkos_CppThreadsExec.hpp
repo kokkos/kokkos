@@ -42,8 +42,8 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_THREADSEXEC_HPP
-#define KOKKOS_THREADSEXEC_HPP
+#ifndef KOKKOS_CPPTHREADSEXEC_HPP
+#define KOKKOS_CPPTHREADSEXEC_HPP
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_THREADS)
@@ -89,7 +89,7 @@ class ThreadsExec {
   };
 
  private:
-  friend class Kokkos::Threads;
+  friend class ::Kokkos::CppThreads;
 
   // Fan-in operations' root is the highest ranking thread
   // to place the 'scan' reduction intermediate values on
@@ -757,4 +757,4 @@ class UniqueToken<Threads, UniqueTokenScope::Global> {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 #endif
-#endif /* #define KOKKOS_THREADSEXEC_HPP */
+#endif /* #define KOKKOS_CPPTHREADSEXEC_HPP */

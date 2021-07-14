@@ -42,11 +42,11 @@
 //@HEADER
 */
 
-#ifndef KOKKOS_THREADS_WORKGRAPHPOLICY_HPP
-#define KOKKOS_THREADS_WORKGRAPHPOLICY_HPP
+#ifndef KOKKOS_CPPTHREADS_WORKGRAPHPOLICY_HPP
+#define KOKKOS_CPPTHREADS_WORKGRAPHPOLICY_HPP
 
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_Threads.hpp>
+#include <CppThreads/Kokkos_CppThreads.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -108,4 +108,4 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif /* #define KOKKOS_THREADS_WORKGRAPHPOLICY_HPP */
+#endif /* #define KOKKOS_CPPTHREADS_WORKGRAPHPOLICY_HPP */

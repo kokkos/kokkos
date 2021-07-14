@@ -253,7 +253,7 @@ class WorkGraphPolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 #endif
 
 #ifdef KOKKOS_ENABLE_THREADS
-#include "Threads/Kokkos_Threads_WorkGraphPolicy.hpp"
+#include "CppThreads/Kokkos_CppThreads_WorkGraphPolicy.hpp"
 #endif
 
 #ifdef KOKKOS_ENABLE_HPX
