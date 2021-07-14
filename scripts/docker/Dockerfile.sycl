@@ -36,8 +36,13 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
 ENV SYCL_DIR=/opt/sycl
-RUN SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
-    git clone --branch public_vklochkov_is_device_copyable --single-branch --depth 1 https://github.com/v-klochkov/llvm && \
+RUN SYCL_VERSION=20210714 && \
+    SYCL_URL=https://github.com/intel/llvm/archive/sycl-nightly && \
+    SYCL_ARCHIVE=${SYCL_VERSION}.tar.gz && \
+    SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
+    wget --quiet ${SYCL_URL}/${SYCL_ARCHIVE} && \
+    mkdir llvm && \
+    tar -xf ${SYCL_ARCHIVE} -C llvm --strip-components=1 && \
     cd llvm && \
     python3 buildbot/configure.py --cuda && \
     python3 buildbot/compile.py && \
@@ -46,7 +51,3 @@ RUN SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
     echo "${SYCL_DIR}/lib" > /etc/ld.so.conf.d/sycl.conf && ldconfig && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${SYCL_DIR}/bin:$PATH
-
-RUN apt-get update && apt-get install -y clang-tidy-8 vim gdb && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
