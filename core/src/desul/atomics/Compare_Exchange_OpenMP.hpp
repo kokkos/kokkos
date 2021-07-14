@@ -11,6 +11,10 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <cstdio>
 #include <omp.h>
 
+namespace desul
+{
+namespace Impl
+{
 static constexpr bool omp_on_host() { return true; }
 
 #pragma omp begin declare variant match(device = {kind(host)})
@@ -20,6 +24,8 @@ static constexpr bool omp_on_host() { return true; }
 #pragma omp begin declare variant match(device = {kind(nohost)})
 static constexpr bool omp_on_host() { return false; }
 #pragma omp end declare variant
+} // namespace Impl
+} // namespace desul
 
 #ifdef DESUL_HAVE_OPENMP_ATOMICS
 namespace desul {
@@ -121,7 +127,7 @@ std::enable_if_t<Impl::atomic_always_lock_free(sizeof(T)),T> atomic_compare_exch
 template <typename T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<!Impl::atomic_always_lock_free(sizeof(T)) && (sizeof(T)==16),T> atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
-  if constexpr (omp_on_host()) {
+  if constexpr (desul::Impl::omp_on_host()) {
     (void)__atomic_compare_exchange(
       dest, &compare, &value, false, GCCMemoryOrder<MemoryOrder>::value, GCCMemoryOrder<MemoryOrder>::value);
     return compare;
