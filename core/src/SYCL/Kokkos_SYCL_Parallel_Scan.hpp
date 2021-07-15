@@ -49,6 +49,72 @@
 #include <memory>
 #if defined(KOKKOS_ENABLE_SYCL)
 
+namespace Kokkos::Impl {
+template <class ValueInit, class ValueOps, class Functor, class Policy,
+          typename ValueType>
+struct FunctorWrapperRangePolicyParallelScanInitializeGlobal {
+  using WorkTag = typename Policy::work_tag;
+
+  void operator()(sycl::item<1> item) const {
+    const typename Policy::index_type id =
+        static_cast<typename Policy::index_type>(item.get_id()) + m_begin;
+    ValueType update{};
+    ValueInit::init(m_functor, &update);
+    if constexpr (std::is_same<WorkTag, void>::value)
+      m_functor(id, update, false);
+    else
+      m_functor(WorkTag(), id, update, false);
+    ValueOps::copy(m_functor, &m_global_mem[id], &update);
+  }
+
+#ifdef SYCL_DEVICE_COPYABLE
+  // We get ambiguous specialization if this class is trivially_copyable
+  ~FunctorWrapperRangePolicyParallelScanInitializeGlobal() {}
+#endif
+
+  typename Policy::index_type m_begin;
+  Functor m_functor;
+  ValueType* m_global_mem;
+};
+
+template <class ValueOps, class Functor, class Policy, typename ValueType>
+struct FunctorWrapperRangePolicyParallelScanUpdateGlobalResults {
+  using WorkTag = typename Policy::work_tag;
+
+  void operator()(sycl::item<1> item) const {
+    auto global_id = item.get_id();
+
+    ValueType update = m_global_mem[global_id];
+    if constexpr (std::is_same<WorkTag, void>::value)
+      m_functor(global_id, update, true);
+    else
+      m_functor(WorkTag(), global_id, update, true);
+    ValueOps::copy(m_functor, &m_global_mem[global_id], &update);
+  }
+
+#ifdef SYCL_DEVICE_COPYABLE
+  // We get ambiguous specialization if this class is trivially_copyable
+  ~FunctorWrapperRangePolicyParallelScanUpdateGlobalResults() {}
+#endif
+
+  Functor m_functor;
+  ValueType* m_global_mem;
+};
+}  // namespace Kokkos::Impl
+
+#ifdef SYCL_DEVICE_COPYABLE
+template <class ValueInit, class ValueOps, class Functor, class Policy,
+          typename ValueType>
+struct sycl::is_device_copyable<
+    Kokkos::Impl::FunctorWrapperRangePolicyParallelScanInitializeGlobal<
+        ValueInit, ValueOps, Functor, Policy, ValueType>> : std::true_type {};
+
+template <class ValueOps, class Functor, class Policy, typename ValueType>
+struct sycl::is_device_copyable<
+    Kokkos::Impl::FunctorWrapperRangePolicyParallelScanUpdateGlobalResults<
+        ValueOps, Functor, Policy, ValueType>> : std::true_type {};
+#endif
+
 namespace Kokkos {
 namespace Impl {
 
@@ -107,7 +173,7 @@ class ParallelScanSYCLBase {
                              &global_mem[global_id]);
             else
               ValueInit::init(functor, &local_mem[local_id]);
-            item.barrier(sycl::access::fence_space::local_space);
+            sycl::group_barrier(item.get_group());
 
             // Perform workgroup reduction
             for (size_t stride = 1; 2 * stride < wgroup_size + 1; stride *= 2) {
@@ -115,7 +181,7 @@ class ParallelScanSYCLBase {
               if (idx < wgroup_size)
                 ValueJoin::join(functor, &local_mem[idx],
                                 &local_mem[idx - stride]);
-              item.barrier(sycl::access::fence_space::local_space);
+              sycl::group_barrier(item.get_group());
             }
 
             if (local_id == 0) {
@@ -139,7 +205,7 @@ class ParallelScanSYCLBase {
                                &local_mem[idx]);
                 ValueJoin::join(functor, &local_mem[idx], &dummy);
               }
-              item.barrier(sycl::access::fence_space::local_space);
+              sycl::group_barrier(item.get_group());
             }
 
             // Write results to global memory
@@ -190,17 +256,11 @@ class ParallelScanSYCLBase {
     auto initialize_global_memory = q.submit([&](sycl::handler& cgh) {
       auto global_mem = m_scratch_space;
       auto begin      = m_policy.begin();
-      cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
-        const typename Policy::index_type id =
-            static_cast<typename Policy::index_type>(item.get_id()) + begin;
-        value_type update{};
-        ValueInit::init(functor, &update);
-        if constexpr (std::is_same<WorkTag, void>::value)
-          functor(id, update, false);
-        else
-          functor(WorkTag(), id, update, false);
-        ValueOps::copy(functor, &global_mem[id], &update);
-      });
+
+      cgh.parallel_for(sycl::range<1>(len),
+                       FunctorWrapperRangePolicyParallelScanInitializeGlobal<
+                           ValueInit, ValueOps, Functor, Policy, value_type>{
+                           begin, functor, global_mem});
     });
     // FIXME_SYCL remove guard once implemented for SYCL+CUDA
 #ifdef KOKKOS_ARCH_INTEL_GEN
@@ -215,16 +275,10 @@ class ParallelScanSYCLBase {
     // Write results to global memory
     auto update_global_results = q.submit([&](sycl::handler& cgh) {
       auto global_mem = m_scratch_space;
-      cgh.parallel_for(sycl::range<1>(len), [=](sycl::item<1> item) {
-        auto global_id = item.get_id();
-
-        value_type update = global_mem[global_id];
-        if constexpr (std::is_same<WorkTag, void>::value)
-          functor(global_id, update, true);
-        else
-          functor(WorkTag(), global_id, update, true);
-        ValueOps::copy(functor, &global_mem[global_id], &update);
-      });
+      cgh.parallel_for(
+          sycl::range<1>(len),
+          FunctorWrapperRangePolicyParallelScanUpdateGlobalResults<
+              ValueOps, Functor, Policy, value_type>{functor, global_mem});
     });
 // FIXME_SYCL remove guard once implemented for SYCL+CUDA
 #ifdef KOKKOS_ARCH_INTEL_GEN
@@ -265,14 +319,23 @@ class ParallelScanSYCLBase {
     m_scratch_space =
         static_cast<pointer_type>(instance.scratch_space(total_memory));
 
+#ifdef SYCL_DEVICE_COPYABLE
+    struct Dummy {
+    } indirectKernelMem;
+#else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = instance.m_indirectKernelMem;
+#endif
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
-    sycl::event event = sycl_direct_launch(functor_wrapper.get_functor());
+#ifdef SYCL_DEVICE_COPYABLE
+    sycl_direct_launch(functor_wrapper.get_functor());
+#else
+    sycl::event event     = sycl_direct_launch(functor_wrapper.get_functor());
     functor_wrapper.register_event(indirectKernelMem, event);
+#endif
     post_functor();
   }
 

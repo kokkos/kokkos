@@ -47,6 +47,36 @@
 
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
+namespace Kokkos::Impl {
+template <typename Functor, typename Policy>
+struct FunctorWrapperRangePolicyParallelFor {
+  using WorkTag = typename Policy::work_tag;
+
+  void operator()(sycl::item<1> item) const {
+    const typename Policy::index_type id = item.get_linear_id() + m_begin;
+    if constexpr (std::is_same<WorkTag, void>::value)
+      m_functor(id);
+    else
+      m_functor(WorkTag(), id);
+  }
+
+#ifdef SYCL_DEVICE_COPYABLE
+  // We get ambiguous specialization if this class is trivially_copyable
+  ~FunctorWrapperRangePolicyParallelFor() {}
+#endif
+
+  typename Policy::index_type m_begin;
+  Functor m_functor;
+};
+}  // namespace Kokkos::Impl
+
+#ifdef SYCL_DEVICE_COPYABLE
+template <class Functor, class Policy>
+struct sycl::is_device_copyable<
+    Kokkos::Impl::FunctorWrapperRangePolicyParallelFor<Functor, Policy>>
+    : std::true_type {};
+#endif
+
 template <class FunctorType, class... Traits>
 class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::SYCL> {
@@ -70,17 +100,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         *space.impl_internal_space_instance();
     sycl::queue& q = *instance.m_queue;
 
-    auto parallel_for_event = q.submit([functor, policy](sycl::handler& cgh) {
-      sycl::range<1> range(policy.end() - policy.begin());
-      const auto begin = policy.begin();
+    FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
+                                                            functor};
 
-      cgh.parallel_for(range, [=](sycl::item<1> item) {
-        const typename Policy::index_type id = item.get_linear_id() + begin;
-        if constexpr (std::is_same<WorkTag, void>::value)
-          functor(id);
-        else
-          functor(WorkTag(), id);
-      });
+    auto parallel_for_event = q.submit([f, policy](sycl::handler& cgh) {
+      sycl::range<1> range(policy.end() - policy.begin());
+      cgh.parallel_for(range, f);
     });
     // FIXME_SYCL remove guard once implemented for SYCL+CUDA
 #ifdef KOKKOS_ARCH_INTEL_GEN
@@ -98,23 +123,26 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute() const {
     if (m_policy.begin() == m_policy.end()) return;
 
+#ifdef SYCL_DEVICE_COPYABLE
+    struct Dummy {
+    } indirectKernelMem;
+#else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = m_policy.space()
                                 .impl_internal_space_instance()
                                 ->m_indirectKernelMem;
+#endif
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
+#ifdef SYCL_DEVICE_COPYABLE
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+#else
     sycl::event event =
         sycl_direct_launch(m_policy, functor_wrapper.get_functor());
     functor_wrapper.register_event(indirectKernelMem, event);
+#endif
   }
-
-  ParallelFor(const ParallelFor&) = delete;
-  ParallelFor(ParallelFor&&)      = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-  ParallelFor& operator=(ParallelFor&&) = delete;
-  ~ParallelFor()                        = default;
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor), m_policy(arg_policy) {}
@@ -259,21 +287,24 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   void execute() const {
+#ifdef SYCL_DEVICE_COPYABLE
+    struct Dummy {
+    } indirectKernelMem;
+#else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem =
             m_space.impl_internal_space_instance()->m_indirectKernelMem;
+#endif
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
+#ifdef SYCL_DEVICE_COPYABLE
+    sycl_direct_launch(functor_wrapper.get_functor());
+#else
     sycl::event event = sycl_direct_launch(functor_wrapper.get_functor());
     functor_wrapper.register_event(indirectKernelMem, event);
+#endif
   }
-
-  ParallelFor(const ParallelFor&) = delete;
-  ParallelFor(ParallelFor&&)      = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-  ParallelFor& operator=(ParallelFor&&) = delete;
-  ~ParallelFor()                        = default;
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),

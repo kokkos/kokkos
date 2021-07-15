@@ -431,17 +431,26 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   inline void execute() const {
     if (m_league_size == 0) return;
 
+#ifdef SYCL_DEVICE_COPYABLE
+    struct Dummy {
+    } indirectKernelMem;
+#else
     Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem&
         indirectKernelMem = m_policy.space()
                                 .impl_internal_space_instance()
                                 ->m_indirectKernelMem;
+#endif
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
 
+#ifdef SYCL_DEVICE_COPYABLE
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor());
+#else
     sycl::event event =
         sycl_direct_launch(m_policy, functor_wrapper.get_functor());
     functor_wrapper.register_event(indirectKernelMem, event);
+#endif
   }
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
@@ -682,7 +691,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                                  &results_ptr[global_id * value_count]);
                 }
               }
-              item.barrier(sycl::access::fence_space::local_space);
+              sycl::group_barrier(item.get_group());
 
               SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
                   item, local_mem.get_pointer(), results_ptr,
@@ -719,22 +728,32 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
  public:
   inline void execute() {
+#ifdef SYCL_DEVICE_COPYABLE
+    struct Dummy {
+    } indirectKernelMem, indirectReducerMem;
+#else
     Kokkos::Experimental::Impl::SYCLInternal& instance =
         *m_policy.space().impl_internal_space_instance();
     using IndirectKernelMem =
         Kokkos::Experimental::Impl::SYCLInternal::IndirectKernelMem;
     IndirectKernelMem& indirectKernelMem  = instance.m_indirectKernelMem;
     IndirectKernelMem& indirectReducerMem = instance.m_indirectReducerMem;
+#endif
 
     const auto functor_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_functor, indirectKernelMem);
     const auto reducer_wrapper = Experimental::Impl::make_sycl_function_wrapper(
         m_reducer, indirectReducerMem);
 
-    sycl::event event = sycl_direct_launch(
+#ifdef SYCL_DEVICE_COPYABLE
+    sycl_direct_launch(m_policy, functor_wrapper.get_functor(),
+                       reducer_wrapper.get_functor());
+#else
+    sycl::event event                     = sycl_direct_launch(
         m_policy, functor_wrapper.get_functor(), reducer_wrapper.get_functor());
     functor_wrapper.register_event(indirectKernelMem, event);
     reducer_wrapper.register_event(indirectReducerMem, event);
+#endif
   }
 
  private:
