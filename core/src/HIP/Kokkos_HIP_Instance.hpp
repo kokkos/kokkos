@@ -48,6 +48,7 @@
 #define KOKKOS_HIP_INSTANCE_HPP
 
 #include <Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_Error.hpp>
 
 #include <mutex>
 
@@ -166,22 +167,40 @@ class HIPInternal {
 // relative weight
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
+
+namespace Impl {
+inline void create_HIP_instances(std::vector<HIP> &instances) {
+  for (int s = 0; s < int(instances.size()); s++) {
+    hipStream_t stream;
+    HIP_SAFE_CALL(hipStreamCreate(&stream));
+    instances[s] = HIP(stream, true);
+  }
+}
+}  // namespace Impl
+
 template <class... Args>
-std::vector<HIP> partition_space(HIP space, Args...) {
-  std::vector<HIP> instances(sizeof...(Args));
+std::vector<HIP> partition_space(const HIP &, Args...) {
 #ifdef __cpp_fold_expressions
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
 #endif
-  for (int s = 0; s < int(sizeof...(Args)); s++) {
-    hipStream_t stream;
-    HIP_SAFE_CALL(hipStreamCreate(&stream));
-    instances[s] = HIP(stream, true);
-  }
+
+  std::vector<HIP> instances(sizeof...(Args));
+  Impl::create_HIP_instances(instances);
   return instances;
 }
 
+template <class T>
+std::vector<HIP> partition_space(const HIP &, std::vector<T> &weights) {
+  static_assert(
+      std::is_arithmetic<T>::value,
+      "Kokkos Error: partitioning arguments must be integers or floats");
+
+  std::vector<HIP> instances(weights.size());
+  Impl::create_HIP_instances(instances);
+  return instances;
+}
 }  // namespace Experimental
 }  // namespace Kokkos
 

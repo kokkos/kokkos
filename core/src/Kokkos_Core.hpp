@@ -296,6 +296,21 @@ std::vector<ExecSpace> partition_space(ExecSpace space, Args...) {
   for (int s = 0; s < int(sizeof...(Args)); s++) instances[s] = space;
   return instances;
 }
+
+template <class ExecSpace, class T>
+std::vector<ExecSpace> partition_space(ExecSpace space,
+                                       std::vector<T>& weights) {
+  static_assert(is_execution_space<ExecSpace>::value,
+                "Kokkos Error: partition_space expects an Execution Space as "
+                "first argument");
+  static_assert(
+      std::is_arithmetic<T>::value,
+      "Kokkos Error: partitioning arguments must be integers or floats");
+
+  std::vector<ExecSpace> instances(weights.size());
+  for (int s = 0; s < int(weights.size()); s++) instances[s] = space;
+  return instances;
+}
 }  // namespace Experimental
 }  // namespace Kokkos
 

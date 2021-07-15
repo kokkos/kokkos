@@ -251,28 +251,6 @@ class Cuda {
   Kokkos::Impl::HostSharedPtr<Impl::CudaInternal> m_space_instance;
 };
 
-namespace Experimental {
-// Partitioning an Execution Space: expects space and integer arguments for
-// relative weight
-//   Customization point for backends
-//   Default behavior is to return the passed in instance
-template <class... Args>
-std::vector<Cuda> partition_space(Cuda space, Args...) {
-  std::vector<Cuda> instances(sizeof...(Args));
-#ifdef __cpp_fold_expressions
-  static_assert(
-      (... && std::is_arithmetic_v<Args>),
-      "Kokkos Error: partitioning arguments must be integers or floats");
-#endif
-  for (int s = 0; s < int(sizeof...(Args)); s++) {
-    cudaStream_t stream;
-    CUDA_SAFE_CALL(cudaStreamCreate(&stream));
-    instances[s] = Cuda(stream, true);
-  }
-  return instances;
-}
-}  // namespace Experimental
-
 namespace Tools {
 namespace Experimental {
 template <>
