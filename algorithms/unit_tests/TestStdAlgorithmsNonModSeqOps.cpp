@@ -314,7 +314,7 @@ TEST_F(std_algorithms_non_mod_seq_ops, none_of_lambda) {
 
 TEST_F(std_algorithms_non_mod_seq_ops, copy) {
   namespace KE = Kokkos::Experimental;
-  for (int i = 0; i < m_static_view.extent(0); i++) {
+  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
     m_static_view(i) = i;
   }
 
@@ -323,7 +323,7 @@ TEST_F(std_algorithms_non_mod_seq_ops, copy) {
   auto dest  = KE::begin(m_dynamic_view);
   EXPECT_EQ(KE::end(m_dynamic_view), KE::copy(first, last, dest));
 
-  for (int i = 0; i < m_static_view.extent(0); i++) {
+  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
     EXPECT_EQ(i, m_static_view(i));
     EXPECT_EQ(i, m_dynamic_view(i));
   }
@@ -331,12 +331,12 @@ TEST_F(std_algorithms_non_mod_seq_ops, copy) {
 
 TEST_F(std_algorithms_non_mod_seq_ops, copy_view) {
   namespace KE = Kokkos::Experimental;
-  for (int i = 0; i < m_static_view.extent(0); i++) {
+  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
     m_static_view(i) = i;
   }
 
   EXPECT_EQ(KE::end(m_dynamic_view), KE::copy(m_static_view, m_dynamic_view));
-  for (int i = 0; i < m_static_view.extent(0); i++) {
+  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
     EXPECT_EQ(i, m_static_view(i));
     EXPECT_EQ(i, m_dynamic_view(i));
   }
@@ -344,16 +344,16 @@ TEST_F(std_algorithms_non_mod_seq_ops, copy_view) {
 
 TEST_F(std_algorithms_non_mod_seq_ops, copy_n) {
   namespace KE = Kokkos::Experimental;
-  for (int i = 0; i < m_static_view.extent(0); i++) {
+  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
     m_static_view(i) = i;
   }
 
-  constexpr auto range = 5;
-  auto first           = KE::begin(m_static_view);
-  auto dest            = KE::begin(m_dynamic_view);
+  constexpr std::size_t range = 5;
+  auto first                  = KE::begin(m_static_view);
+  auto dest                   = KE::begin(m_dynamic_view);
   EXPECT_EQ(dest + range, KE::copy_n(first, range, dest));
 
-  for (int i = 0; i < m_static_view.extent(0); i++) {
+  for (std::size_t i = 0; i < m_static_view.extent(0); i++) {
     EXPECT_EQ(i, m_static_view(i));
     if (i < range)
       EXPECT_EQ(i, m_dynamic_view(i));
@@ -367,8 +367,8 @@ TEST_F(std_algorithms_non_mod_seq_ops, copy_if_lambda) {
   namespace KE      = Kokkos::Experimental;
   const auto is_odd = KOKKOS_LAMBDA(const int i) { return (i % 2); };
 
-  constexpr auto range = 5;
-  for (int i = 0; i < range; i++) {
+  constexpr std::size_t range = 5;
+  for (std::size_t i = 0; i < range; i++) {
     m_static_view(i) = i;
   }
 
