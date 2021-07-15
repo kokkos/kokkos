@@ -342,6 +342,26 @@ TEST_F(std_algorithms_non_mod_seq_ops, copy_view) {
   }
 }
 
+TEST_F(std_algorithms_non_mod_seq_ops, copy_n) {
+  namespace KE = Kokkos::Experimental;
+  for (int i = 0; i < m_static_view.extent(0); i++) {
+    m_static_view(i) = i;
+  }
+
+  constexpr auto range = 5;
+  auto first           = KE::begin(m_static_view);
+  auto dest            = KE::begin(m_dynamic_view);
+  EXPECT_EQ(dest + range, KE::copy_n(first, range, dest));
+
+  for (int i = 0; i < m_static_view.extent(0); i++) {
+    EXPECT_EQ(i, m_static_view(i));
+    if (i < range)
+      EXPECT_EQ(i, m_dynamic_view(i));
+    else
+      EXPECT_EQ(0, m_dynamic_view(i));
+  }
+}
+
 TEST_F(std_algorithms_non_mod_seq_ops, copy_if_lambda) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
   namespace KE      = Kokkos::Experimental;

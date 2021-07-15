@@ -390,6 +390,18 @@ auto copy(const Kokkos::View<DataType1, Properties1...>& source,
 }
 
 // -------------------
+// copy_n
+// -------------------
+template <class InputIterator, class Size, class OutputIterator>
+OutputIterator copy_n(InputIterator first, Size count, OutputIterator result) {
+  if (count < 0) {
+    return result;
+  }
+
+  return Kokkos::Experimental::copy(first, first + count, result);
+}
+
+// -------------------
 // copy_if
 // -------------------
 template <class InputIterator, class OutputIterator, class Predicate>
