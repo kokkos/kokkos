@@ -57,6 +57,80 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
+enum class BlockType { Max, Preferred };
+
+template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
+          HIPLaunchMechanism LaunchMechanism =
+              DeduceHIPLaunchMechanism<DriverType>::launch_mechanism>
+unsigned get_preferred_blocksize_impl() {
+  // FIXME_HIP - could be if constexpr for c++17
+  if (!HIPParallelLaunch<DriverType, LaunchBounds,
+                         LaunchMechanism>::default_launchbounds()) {
+    // use the user specified value
+    return LaunchBounds::maxTperB;
+  } else {
+    if (HIPParallelLaunch<DriverType, LaunchBounds,
+                          LaunchMechanism>::get_scratch_size() > 0) {
+      return HIPTraits::ConservativeThreadsPerBlock;
+    }
+    return HIPTraits::MaxThreadsPerBlock;
+  }
+}
+
+// FIXME_HIP - entire function could be constexpr for c++17
+template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
+          HIPLaunchMechanism LaunchMechanism =
+              DeduceHIPLaunchMechanism<DriverType>::launch_mechanism>
+unsigned get_max_blocksize_impl() {
+  // FIXME_HIP - could be if constexpr for c++17
+  if (!HIPParallelLaunch<DriverType, LaunchBounds,
+                         LaunchMechanism>::default_launchbounds()) {
+    // use the user specified value
+    return LaunchBounds::maxTperB;
+  } else {
+    // we can always fit 1024 threads blocks if we only care about registers
+    // ... and don't mind spilling
+    return HIPTraits::MaxThreadsPerBlock;
+  }
+}
+
+// convenience method to select and return the proper function attributes
+// for a kernel, given the launch bounds et al.
+template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
+          BlockType BlockSize = BlockType::Max,
+          HIPLaunchMechanism LaunchMechanism =
+              DeduceHIPLaunchMechanism<DriverType>::launch_mechanism>
+hipFuncAttributes get_hip_func_attributes_impl() {
+  // FIXME_HIP - could be if constexpr for c++17
+  if (!HIPParallelLaunch<DriverType, LaunchBounds,
+                         LaunchMechanism>::default_launchbounds()) {
+    // for user defined, we *always* honor the request
+    return HIPParallelLaunch<DriverType, LaunchBounds,
+                             LaunchMechanism>::get_hip_func_attributes();
+  } else {
+    // FIXME_HIP - could be if constexpr for c++17
+    if (BlockSize == BlockType::Max) {
+      return HIPParallelLaunch<
+          DriverType, Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
+          LaunchMechanism>::get_hip_func_attributes();
+    } else {
+      const int blocksize =
+          get_preferred_blocksize_impl<DriverType, LaunchBounds,
+                                       LaunchMechanism>();
+      if (blocksize == HIPTraits::MaxThreadsPerBlock) {
+        return HIPParallelLaunch<
+            DriverType, Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
+            LaunchMechanism>::get_hip_func_attributes();
+      } else {
+        return HIPParallelLaunch<
+            DriverType,
+            Kokkos::LaunchBounds<HIPTraits::ConservativeThreadsPerBlock, 1>,
+            LaunchMechanism>::get_hip_func_attributes();
+      }
+    }
+  }
+}
+
 // Given an initial block-size limitation based on register usage
 // determine the block size to select based on LDS limitation
 template <BlockType BlockSize, class DriverType, class LaunchBounds,
@@ -121,8 +195,7 @@ unsigned hip_internal_get_block_size(const HIPInternal *hip_instance,
 //       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds>
 unsigned hip_get_preferred_blocksize() {
-  return Kokkos::Experimental::Impl::get_preferred_blocksize_impl<
-      DriverType, LaunchBounds>();
+  return get_preferred_blocksize_impl<DriverType, LaunchBounds>();
 }
 
 // Standardized blocksize deduction for parallel constructs with no LDS usage
@@ -132,8 +205,7 @@ unsigned hip_get_preferred_blocksize() {
 //       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds>
 unsigned hip_get_max_blocksize() {
-  return Kokkos::Experimental::Impl::get_max_blocksize_impl<DriverType,
-                                                            LaunchBounds>();
+  return get_max_blocksize_impl<DriverType, LaunchBounds>();
 }
 
 // Standardized blocksize deduction for non-teams parallel constructs with LDS
@@ -169,8 +241,8 @@ template <typename DriverType, typename LaunchBounds,
 unsigned hip_get_preferred_team_blocksize(HIPInternal const *hip_instance,
                                           ShmemTeamsFunctor const &f) {
   hipFuncAttributes attr =
-      Kokkos::Experimental::Impl::get_hip_func_attributes_impl<
-          DriverType, LaunchBounds, BlockType::Preferred>();
+      get_hip_func_attributes_impl<DriverType, LaunchBounds,
+                                   BlockType::Preferred>();
   // get preferred blocksize limited by register usage
   using namespace std::placeholders;
   const unsigned tperb_reg =
@@ -212,8 +284,7 @@ template <typename DriverType, typename LaunchBounds,
 unsigned hip_get_max_team_blocksize(HIPInternal const *hip_instance,
                                     ShmemTeamsFunctor const &f) {
   hipFuncAttributes attr =
-      Kokkos::Experimental::Impl::get_hip_func_attributes_impl<
-          DriverType, LaunchBounds, BlockType::Max>();
+      get_hip_func_attributes_impl<DriverType, LaunchBounds, BlockType::Max>();
   // get max blocksize
   using namespace std::placeholders;
   const unsigned tperb_reg = hip_get_max_blocksize<DriverType, LaunchBounds>();
