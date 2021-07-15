@@ -375,6 +375,23 @@ OutputIterator copy(InputIterator first, InputIterator last,
   return d_first + numOfElements;
 }
 
+template <class DataType1, class... Properties1, class DataType2,
+          class... Properties2>
+auto copy(const Kokkos::View<DataType1, Properties1...>& source,
+          Kokkos::View<DataType2, Properties2...>& dest) {
+  using ViewInType1 = Kokkos::View<DataType1, Properties1...>;
+  using ViewInType2 = Kokkos::View<DataType2, Properties2...>;
+  static_assert(is_admissible_to_kokkos_std_non_modifying_sequence_op<
+                    ViewInType1>::value and
+                    is_admissible_to_kokkos_std_non_modifying_sequence_op<
+                        ViewInType2>::value,
+                "Currently, Kokkos::Experimental::copy only accepts 1D Views.");
+  return Kokkos::Experimental::copy(cbegin(source), cend(source), begin(dest));
+}
+
+// -------------------
+// copy_if
+// -------------------
 template <class InputIterator, class OutputIterator, class Predicate>
 OutputIterator copy_if(InputIterator first, InputIterator last,
                        OutputIterator d_first, Predicate pred) {
