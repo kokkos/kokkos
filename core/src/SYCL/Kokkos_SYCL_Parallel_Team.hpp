@@ -47,7 +47,7 @@
 
 #include <Kokkos_Parallel.hpp>
 
-#include <SYCL/Kokkos_SYCL_Parallel_Reduce.hpp>  // workgroup_reduction
+#include <SYCL/Kokkos_SYCL_Parallel_Reduce.hpp>  // workgroup_reduction_with_final
 #include <SYCL/Kokkos_SYCL_Team.hpp>
 
 namespace Kokkos {
@@ -684,7 +684,8 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
               }
               item.barrier(sycl::access::fence_space::local_space);
 
-              SYCLReduction::workgroup_reduction<ValueJoin, ValueOps, WorkTag>(
+              SYCLReduction::workgroup_reduction_with_final<ValueJoin, ValueOps,
+                                                            WorkTag>(
                   item, local_mem.get_pointer(), results_ptr,
                   device_accessible_result_ptr, value_count, selected_reducer,
                   static_cast<const FunctorType&>(functor),
