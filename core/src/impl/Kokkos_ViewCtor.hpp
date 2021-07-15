@@ -293,7 +293,7 @@ struct ViewCtorProp<WithoutInitializing_t, std::string,
 } /* namespace Impl */
 
 using ViewAllocateWithoutInitializing KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use Kokkos::alloc(Kokkos::WithoutInitializing, label) instead") =
+    "Use Kokkos::view_alloc(Kokkos::WithoutInitializing, label) instead") =
     Impl::ViewCtorProp<Impl::WithoutInitializing_t, std::string,
                        Impl::ViewAllocateWithoutInitializingBackwardCompat>;
 
