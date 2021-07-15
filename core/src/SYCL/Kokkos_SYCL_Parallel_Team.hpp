@@ -403,14 +403,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       cgh.parallel_for(
           sycl::nd_range<2>(
-              sycl::range<2>(m_league_size * m_team_size, m_vector_size),
+              sycl::range<2>(m_team_size, m_league_size * m_vector_size),
               sycl::range<2>(m_team_size, m_vector_size)),
           [=](sycl::nd_item<2> item) {
             const member_type team_member(
                 team_scratch_memory_L0.get_pointer(), shmem_begin,
                 scratch_size[0],
                 static_cast<char*>(scratch_ptr[1]) +
-                    item.get_group(0) * scratch_size[1],
+                    item.get_group(1) * scratch_size[1],
                 scratch_size[1], item);
             if constexpr (std::is_same<work_tag, void>::value)
               functor(team_member);
@@ -646,7 +646,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
         cgh.parallel_for(
             sycl::nd_range<2>(
-                sycl::range<2>(m_league_size * m_team_size, m_vector_size),
+                sycl::range<2>(m_team_size, m_league_size * m_vector_size),
                 sycl::range<2>(m_team_size, m_vector_size)),
             [=](sycl::nd_item<2> item) {
               const auto local_id = item.get_local_linear_id();
@@ -667,7 +667,7 @@ class ParallelReduce<FunctorType, Kokkos::TeamPolicy<Properties...>,
                     team_scratch_memory_L0.get_pointer(), shmem_begin,
                     scratch_size[0],
                     static_cast<char*>(scratch_ptr[1]) +
-                        item.get_group(0) * scratch_size[1],
+                        item.get_group(1) * scratch_size[1],
                     scratch_size[1], item);
                 if constexpr (std::is_same<WorkTag, void>::value)
                   functor(team_member, update);
