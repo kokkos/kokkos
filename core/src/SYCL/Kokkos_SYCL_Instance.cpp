@@ -115,7 +115,6 @@ void SYCLInternal::initialize(const sycl::queue& q) {
       all_queues.push_back(&m_queue);
     }
     const sycl::device& d = m_queue->get_device();
-    std::cout << SYCL::SYCLDevice(d) << '\n';
 
     m_maxWorkgroupSize =
         d.template get_info<sycl::info::device::max_work_group_size>();
