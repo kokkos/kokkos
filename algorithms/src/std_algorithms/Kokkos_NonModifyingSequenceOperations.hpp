@@ -402,6 +402,30 @@ OutputIterator copy_n(InputIterator first, Size count, OutputIterator result) {
 }
 
 // -------------------
+// copy_backward
+// -------------------
+template <class IteratorType1, class IteratorType2>
+struct CopyBackward {
+  IteratorType1 m_last;
+  IteratorType2 m_dest_last;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i) const { *(m_dest_last - i) = *(m_last - i); }
+
+  CopyBackward(IteratorType1 _last, IteratorType2 _dest_last)
+      : m_last(_last), m_dest_last(_dest_last) {}
+};
+
+template <class IteratorType1, class IteratorType2>
+IteratorType2 copy_backward(IteratorType1 first, IteratorType1 last,
+                            IteratorType2 d_last) {
+  const auto num_elements = last - first;
+  Kokkos::parallel_for(
+      num_elements, CopyBackward<IteratorType1, IteratorType2>(last, d_last));
+  return d_last - num_elements;
+}
+
+// -------------------
 // copy_if
 // -------------------
 template <class InputIterator, class OutputIterator, class Predicate>
