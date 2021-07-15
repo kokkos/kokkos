@@ -313,21 +313,42 @@ TEST_F(std_algorithms_non_mod_seq_ops, none_of_lambda) {
 }
 
 TEST_F(std_algorithms_non_mod_seq_ops, copy) {
-  namespace KE     = Kokkos::Experimental;
-  m_static_view(0) = 1;
-  m_static_view(1) = 2;
+  namespace KE         = Kokkos::Experimental;
+  constexpr auto range = 5;
+  for (int i = 0; i < range; i++) {
+    m_static_view(i) = i;
+  }
 
-  constexpr auto size = 2;
-  auto first          = KE::begin(m_static_view);
-  auto last           = KE::begin(m_static_view) + size;
-  auto dest           = KE::begin(m_static_view) + 5;
-  auto result         = KE::copy(first, last, dest);
+  auto first = KE::begin(m_static_view);
+  auto last  = KE::begin(m_static_view) + range;
+  auto dest  = KE::begin(m_static_view) + range;
+  EXPECT_EQ(dest + range, KE::copy(first, last, dest));
 
-  EXPECT_EQ(0, *(dest - 1));
+  for (int i = 0; i < range; i++) {
+    EXPECT_EQ(i, m_static_view(i));
+    EXPECT_EQ(i, *(dest + i));
+  }
+}
+
+TEST_F(std_algorithms_non_mod_seq_ops, copy_if_lambda) {
+#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
+  namespace KE      = Kokkos::Experimental;
+  const auto is_odd = KOKKOS_LAMBDA(const int i) { return (i % 2); };
+
+  constexpr auto range = 5;
+  for (int i = 0; i < range; i++) {
+    m_static_view(i) = i;
+  }
+
+  auto first = KE::begin(m_static_view);
+  auto last  = KE::begin(m_static_view) + range;
+  auto dest  = KE::begin(m_static_view) + range;
+
+  // should only copy two elements (1 and 3)
+  EXPECT_EQ(dest + 2, KE::copy_if(first, last, dest, is_odd));
   EXPECT_EQ(1, *dest);
-  EXPECT_EQ(2, *(dest + 1));
-  EXPECT_EQ(0, *(dest + 2));
-  EXPECT_EQ(dest + size, result);
+  EXPECT_EQ(3, *(dest + 1));
+#endif
 }
 
 }  // namespace Test

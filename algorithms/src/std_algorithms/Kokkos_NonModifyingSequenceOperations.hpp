@@ -366,13 +366,24 @@ struct Copy {
       : m_first(_first), m_dest_first(_dest_first) {}
 };
 
-template <typename InputIterator, typename OutputIterator>
+template <class InputIterator, class OutputIterator>
 OutputIterator copy(InputIterator first, InputIterator last,
                     OutputIterator d_first) {
   const auto numOfElements = last - first;
   Kokkos::parallel_for(numOfElements,
                        Copy<InputIterator, OutputIterator>(first, d_first));
   return d_first + numOfElements;
+}
+
+template <class InputIterator, class OutputIterator, class Predicate>
+OutputIterator copy_if(InputIterator first, InputIterator last,
+                       OutputIterator d_first, Predicate pred) {
+  for (; first != last; ++first)
+    if (pred(*first)) {
+      *d_first = *first;
+      ++d_first;
+    }
+  return d_first;
 }
 
 }  // namespace Experimental
