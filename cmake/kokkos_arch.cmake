@@ -497,7 +497,7 @@ IF (KOKKOS_ENABLE_SYCL)
   IF(CUDA_ARCH_ALREADY_SPECIFIED)
     IF(KOKKOS_ENABLE_UNSUPPORTED_ARCHS)
       COMPILER_SPECIFIC_FLAGS(
-        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice
+        DEFAULT -fsycl-targets=nvptx64-nvidia-cuda-sycldevice -Xsycl-target-backend "${CUDA_ARCH_FLAG}=${KOKKOS_CUDA_ARCH_FLAG}"
       )
       # FIXME_SYCL The CUDA backend doesn't support printf yet.
       GLOBAL_SET(KOKKOS_IMPL_DISABLE_SYCL_DEVICE_PRINTF ON)
