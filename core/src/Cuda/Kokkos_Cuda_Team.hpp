@@ -854,14 +854,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
        i += blockDim.x) {
     closure(i);
   }
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-  KOKKOS_IMPL_CUDA_SYNCWARP_MASK(
-      blockDim.x == 32 ? 0xffffffff
-                       : ((1 << blockDim.x) - 1)
-                             << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);
-#else
-  KOKKOS_IMPL_CUDA_SYNCWARP;
-#endif
+  __syncwarp(blockDim.x == 32
+                 ? 0xffffffff
+                 : ((1 << blockDim.x) - 1)
+                       << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);
 #endif
 }
 
@@ -1100,14 +1096,10 @@ KOKKOS_INLINE_FUNCTION void single(
   (void)lambda;
 #ifdef __CUDA_ARCH__
   if (threadIdx.x == 0) lambda();
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-  KOKKOS_IMPL_CUDA_SYNCWARP_MASK(
-      blockDim.x == 32 ? 0xffffffff
-                       : ((1 << blockDim.x) - 1)
-                             << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);
-#else
-  KOKKOS_IMPL_CUDA_SYNCWARP;
-#endif
+  __syncwarp(blockDim.x == 32
+                 ? 0xffffffff
+                 : ((1 << blockDim.x) - 1)
+                       << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);
 #endif
 }
 
@@ -1118,14 +1110,10 @@ KOKKOS_INLINE_FUNCTION void single(
   (void)lambda;
 #ifdef __CUDA_ARCH__
   if (threadIdx.x == 0 && threadIdx.y == 0) lambda();
-#ifdef KOKKOS_IMPL_CUDA_SYNCWARP_NEEDS_MASK
-  KOKKOS_IMPL_CUDA_SYNCWARP_MASK(
-      blockDim.x == 32 ? 0xffffffff
-                       : ((1 << blockDim.x) - 1)
-                             << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);
-#else
-  KOKKOS_IMPL_CUDA_SYNCWARP;
-#endif
+  __syncwarp(blockDim.x == 32
+                 ? 0xffffffff
+                 : ((1 << blockDim.x) - 1)
+                       << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);
 #endif
 }
 
