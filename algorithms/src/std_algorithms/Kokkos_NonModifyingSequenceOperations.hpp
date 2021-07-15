@@ -275,6 +275,14 @@ auto find_if(const Kokkos::View<DataType, Properties...>& v,
 }
 
 // -------------------
+// find
+// -------------------
+template <class InputIterator, class T>
+InputIterator find(InputIterator first, InputIterator last, const T& value) {
+  return Kokkos::Experimental::find_if(first, last, EqualsVal<T>(value));
+}
+
+// -------------------
 // find_if_not
 // -------------------
 template <class IteratorType, class Predicate>

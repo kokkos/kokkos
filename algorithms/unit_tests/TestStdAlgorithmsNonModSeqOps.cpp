@@ -262,6 +262,18 @@ TEST_F(std_algorithms_non_mod_seq_ops, find_if_not_lambda) {
 #endif
 }
 
+TEST_F(std_algorithms_non_mod_seq_ops, find) {
+  namespace KE        = Kokkos::Experimental;
+  constexpr int value = 1;
+
+  EXPECT_EQ(KE::end(m_static_view),
+            KE::find(KE::begin(m_static_view), KE::end(m_static_view), value));
+
+  m_static_view(5) = value;
+  EXPECT_EQ(KE::begin(m_static_view) + 5,
+            KE::find(KE::begin(m_static_view), KE::end(m_static_view), value));
+}
+
 TEST_F(std_algorithms_non_mod_seq_ops, all_of_lambda) {
 #if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
   namespace KE           = Kokkos::Experimental;
