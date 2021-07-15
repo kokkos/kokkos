@@ -125,6 +125,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;HIP;SYCL)
         HostSharedPtrAccessOnDevice
         QuadPrecisionMath
         ExecSpacePartitioning
+        MathematicalSpecialFunctions
         )
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid

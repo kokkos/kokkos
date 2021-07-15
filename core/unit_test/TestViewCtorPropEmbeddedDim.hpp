@@ -157,10 +157,12 @@ TEST(TEST_CATEGORY, viewctorprop_embedded_dim) {
   TestViewCtorProp_EmbeddedDim<TEST_EXECSPACE>::test_vcpt(2, 3);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_3
 TEST(TEST_CATEGORY,
      viewctorpop_view_allocate_without_initializing_backward_compatility) {
   using deprecated_view_alloc = Kokkos::ViewAllocateWithoutInitializing;
   Kokkos::View<int**, TEST_EXECSPACE> v(deprecated_view_alloc("v"), 5, 7);
 }
+#endif
 
 }  // namespace Test

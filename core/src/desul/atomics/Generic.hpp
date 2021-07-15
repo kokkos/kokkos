@@ -59,13 +59,13 @@ struct may_exit_early<Op,
     : std::true_type {};
 
 template <typename Op, typename Scalar1, typename Scalar2>
-constexpr DESUL_FUNCTION typename std::enable_if<may_exit_early<Op, Scalar1, Scalar2>{}, bool>::type
+constexpr DESUL_FUNCTION typename std::enable_if<may_exit_early<Op, Scalar1, Scalar2>::value, bool>::type
 check_early_exit(Op const&, Scalar1 const& val1, Scalar2 const& val2) {
   return Op::check_early_exit(val1, val2);
 }
 
 template <typename Op, typename Scalar1, typename Scalar2>
-constexpr DESUL_FUNCTION typename std::enable_if<!may_exit_early<Op, Scalar1, Scalar2>{}, bool>::type
+constexpr DESUL_FUNCTION typename std::enable_if<!may_exit_early<Op, Scalar1, Scalar2>::value, bool>::type
 check_early_exit(Op const&, Scalar1 const&, Scalar2 const&) {
   return false;
 }
@@ -238,8 +238,8 @@ atomic_fetch_oper(const Oper& op,
   T return_val;
   int done = 0;
 #ifdef __HIPCC__
-  unsigned int active = DESUL_IMPL_BALLOT_MASK(1);
-  unsigned int done_active = 0;
+  unsigned long long int active = DESUL_IMPL_BALLOT_MASK(1);
+  unsigned long long int done_active = 0;
   while (active != done_active) {
     if (!done) {
       if (Impl::lock_address_hip((void*)dest, scope)) {
@@ -305,8 +305,8 @@ atomic_oper_fetch(const Oper& op,
   T return_val;
   int done = 0;
 #ifdef __HIPCC__
-  unsigned int active = DESUL_IMPL_BALLOT_MASK(1);
-  unsigned int done_active = 0;
+  unsigned long long int active = DESUL_IMPL_BALLOT_MASK(1);
+  unsigned long long int done_active = 0;
   while (active != done_active) {
     if (!done) {
       if (Impl::lock_address_hip((void*)dest, scope)) {
