@@ -198,7 +198,7 @@ class Cuda {
 
   Cuda();
 
-  Cuda(cudaStream_t stream);
+  Cuda(cudaStream_t stream, bool manage_stream = false);
 
   //--------------------------------------------------------------------------
   //! \name Device-specific functions

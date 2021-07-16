@@ -538,7 +538,7 @@ class HIP {
   using scratch_memory_space = ScratchMemorySpace<HIP>;
 
   HIP();
-  HIP(hipStream_t stream);
+  HIP(hipStream_t stream, bool manage_stream = false);
 
   //@}
   //------------------------------------

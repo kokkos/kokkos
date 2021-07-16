@@ -429,14 +429,15 @@ HIP::HIP()
       "HIP instance constructor");
 }
 
-HIP::HIP(hipStream_t const stream)
+HIP::HIP(hipStream_t const stream, bool manage_stream)
     : m_space_instance(new Impl::HIPInternal, [](Impl::HIPInternal* ptr) {
         ptr->finalize();
         delete ptr;
       }) {
   Impl::HIPInternal::singleton().verify_is_initialized(
       "HIP instance constructor");
-  m_space_instance->initialize(Impl::HIPInternal::singleton().m_hipDev, stream);
+  m_space_instance->initialize(Impl::HIPInternal::singleton().m_hipDev, stream,
+                               manage_stream);
 }
 
 void HIP::print_configuration(std::ostream& s, const bool) {
